@@ -16,12 +16,23 @@ Ordinary workflows work without AI, external calendars or Internet services.
 - A project workflow named CI Check runs all tests on each PR update.
 - Google Chrome dogfooding is authorized at http://homeassistant.local:8123/.
 - Copilot is immutable, except a narrowly reviewed project dependency-preparation setup file if needed.
+- Nonexistent local task times advance to the first valid instant at or after their intended wall time; the task is not silently dropped (confirmed 2026-10-29).
+- Collaborative allocation is configurable in the application: conserve one task total by default, or choose rounded/decimal equal shares, full points per participant or authorized manual shares. Show the actual total and preserve the chosen policy with each award (expanded owner decision 2026-10-29).
+- The selected architecture is Python/FastAPI with SQLite, a thin HA companion integration and one household per installation (confirmed 2026-10-29).
+- The UI uses Lit/TypeScript/Vite, Domus-owned HA-coherent components, a Storybook catalog and Playwright browser tests (confirmed 2026-10-29).
+- Adults complete tasks without verification by default; restricted performers need adult approval before points are awarded (confirmed 2026-10-29).
+- Barcode workflows include camera scan, manual entry, local catalog search and optional Internet product lookup; no external provider is mandatory (confirmed 2026-10-29).
+- Completion-relative schedules count from actual work completion rather than its later approval (confirmed 2026-10-29).
+- Manual shopping requests are extras by default; automatic inventory/material needs consolidate without double-counting a source requirement (confirmed 2026-10-29).
+- Simple/default and optional advanced automation editors are both included in the first release over one shared declarative engine (confirmed 2026-10-29).
+- Relative tasks show their next occurrence when work is recorded by default; each task may instead wait for approval without changing the actual-completion date anchor (confirmed 2026-10-29).
 
 ## Source boundary
 
 The attachment contains sections 1–10.1 and the beginning of 10.2. It ends after
 “Support common product identifiers such”. Missing text is not treated as an instruction.
-Barcode library details, lot allocation and several limits are explicit proposals.
+The owner completed the barcode scope on 2026-10-29 as recorded above; provider/library selection,
+lot allocation and several limits still require explicit engineering proposals and review.
 
 ## Connected domains
 

@@ -3,12 +3,12 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: application-experience
-- Last verified: 2026-10-28 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Design system review; frontend stack acceptance; real mobile/companion evidence; accessibility acceptance. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -45,7 +45,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 | application-experience-R3 | Commands MUST show pending, action-required, failed, partial and completed outcomes and preserve unsaved input on recoverable errors. |
 | application-experience-R4 | The UI MUST support mobile, tablet, desktop, keyboard navigation, accessible names/focus and light/dark themes. |
 | application-experience-R5 | English and Spanish localization MUST use stable keys and safe English fallback without localizing public service identifiers. |
-| application-experience-R6 | The UI MUST use backend permissions and validated transports, remain useful without AI and avoid private HA frontend dependencies. |
+| application-experience-R6 | The UI MUST use backend permissions and validated transports, remain useful without AI, isolate Lit presentation primitives from application/API logic, and reject private HA modules, parent-DOM/private-storage access and untrusted host messages as sources of authority. |
 
 Non-goals: changing Copilot, changing the existing gateway, building an MCP server, adding mandatory cloud/AI dependencies, or claiming production readiness from a document.
 
@@ -96,7 +96,9 @@ Recommended example: keep the defaults above. Meaningful alternative: a member s
 
 ### 8.1 Responsibilities and dependency direction
 
-Lit/TypeScript with Vite is proposed from observed gateway patterns; React remains an evaluated alternative. Presentation components call application controllers through a typed DomusPort; an HTTP adapter validates DTOs. Views do not calculate permissions, recurrence, stock consolidation or point awards. Relative URLs and deployment-aware base paths support Ingress and standalone. No private HA frontend bundles are imported.
+The owner selected Lit/TypeScript with Vite on 2026-10-29 after comparing Gateway and Symphonia. Domus owns reusable HA-coherent presentation primitives and semantic design tokens, cataloged in Storybook and exercised through Playwright. Presentation components call application controllers through a typed DomusPort; an HTTP adapter validates DTOs. Views do not calculate permissions, recurrence, stock consolidation or point awards. Relative URLs and deployment-aware base paths support Ingress and standalone. No private HA frontend bundles, parent DOM or private host storage are accessed. React is not the selected stack.
+
+HA's outer shell owns host navigation; Domus owns interior routes and content. A public host-context adapter validates message source, origin, shape and bounds, treating all accepted fields as presentation hints only. It does not assume HA user theme, locale, timezone or authentication is forwarded to an App iframe. Explicit member preferences and deterministic browser fallbacks remain usable without host hints. Host-managed safe-area padding is applied once; a full-bleed opt-in requires supported-version evidence. Vite relative assets alone do not establish deep-route reload or Ingress compatibility, so those behaviors have explicit browser cases.
 
 | Boundary | Owns | Forbidden dependency |
 |---|---|---|
@@ -160,16 +162,16 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 24 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| UI and accessibility | 11 | first-release membership permissions; a viewer account; overdue and decorative statistics |
+| UI and accessibility | 13 | first-release membership permissions; a viewer account; overdue and decorative statistics |
 | Integration and recovery | 2 | a maintenance task lacking a material; inventory read failure |
 | State and concurrency | 1 | a command in progress |
-| Deployment and contracts | 2 | localized navigation; an Ingress prefix or standalone base path |
-| Security and privacy | 2 | direct backend denial after a role change; hostile task text and no AI service |
-| **Total** | **18** | No double counting |
+| Deployment and contracts | 5 | localized navigation; an Ingress prefix or standalone base path |
+| Security and privacy | 3 | direct backend denial after a role change; hostile task text and no AI service |
+| **Total** | **24** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -191,6 +193,12 @@ Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each
 | application-experience-C16 | Security and privacy | application-experience-R6 | Given direct backend denial after a role change, the view explains the denial without relying on hidden buttons. |
 | application-experience-C17 | Deployment and contracts | application-experience-R6 | Given an Ingress prefix or standalone base path, assets and API requests resolve through their respective public roots. |
 | application-experience-C18 | Security and privacy | application-experience-R6 | Given hostile task text and no AI service, rendering stays inert and ordinary task completion still works. |
+| application-experience-C19 | Security and privacy | application-experience-R6 | Given a host-context message with a wrong source/origin or malformed fields, the adapter rejects it without changing authenticated identity, role or trusted UI context. |
+| application-experience-C20 | Deployment and contracts | application-experience-R6 | Given a private HA module import or parent-DOM/private-storage lookup in presentation source, the executable boundary check rejects it. |
+| application-experience-C21 | UI and accessibility | application-experience-R5 | Given absent public HA locale/theme hints, explicit member preferences then documented browser/English fallbacks render a usable UI without reading host internals. |
+| application-experience-C22 | UI and accessibility | application-experience-R4 | Given a narrow Ingress iframe with host-managed safe-area padding, the UI applies insets once and keeps focused fields and actions visible with the virtual keyboard. |
+| application-experience-C23 | Deployment and contracts | application-experience-R6 | Given a Storybook presentation primitive importing an API adapter or domain command, architecture validation rejects the component while pure presentation fixtures build independently. |
+| application-experience-C24 | Deployment and contracts | application-experience-R6 | Given a direct reload of an interior route under a non-root Ingress prefix, the authenticated page, assets, API and any push transport resolve within the validated deployment base. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -243,9 +251,9 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 | application-experience-R1 | application-experience-C01, application-experience-C02, application-experience-C03 |
 | application-experience-R2 | application-experience-C04, application-experience-C05, application-experience-C06 |
 | application-experience-R3 | application-experience-C07, application-experience-C08, application-experience-C09 |
-| application-experience-R4 | application-experience-C10, application-experience-C11, application-experience-C12 |
-| application-experience-R5 | application-experience-C13, application-experience-C14, application-experience-C15 |
-| application-experience-R6 | application-experience-C16, application-experience-C17, application-experience-C18 |
+| application-experience-R4 | application-experience-C10, application-experience-C11, application-experience-C12, application-experience-C22 |
+| application-experience-R5 | application-experience-C13, application-experience-C14, application-experience-C15, application-experience-C21 |
+| application-experience-R6 | application-experience-C16, application-experience-C17, application-experience-C18, application-experience-C19, application-experience-C20, application-experience-C23, application-experience-C24 |
 
 All requirement cases are reciprocal with section 14. Domain invariants are owned by pure policy, command/state rules by application use cases, provider behavior by adapters, and visible content by presentation; the boundary table in section 8 assigns these responsibilities. Evidence and user/operator documentation are linked in section 15.
 

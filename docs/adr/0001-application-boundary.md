@@ -1,6 +1,6 @@
 # ADR 0001 — Modular application with a thin HA companion
 
-- Status: Proposed
+- Status: Accepted by owner on 2026-10-29; implementation verification pending
 - Date: 2026-10-28
 - Decision owners: Domus product and architecture reviewers
 
@@ -11,9 +11,9 @@ Domus needs its own complete UI and durable household business model.
 
 ## Decision
 
-Propose one modular local server and a thin native HA companion integration.
+Use one modular local server and a thin native HA companion integration.
 Domain and application code depend on ports; frameworks and SQL remain adapters.
-Python/FastAPI, SQLite and Lit/TypeScript/Vite are proposed, pending review.
+The owner selected Python/FastAPI, SQLite and Lit/TypeScript/Vite on 2026-10-29, with one household per installation. Domus owns HA-coherent presentation components, Storybook fixtures and Playwright browser tests. Exact dependency versions, authentication, storage concurrency and the supported HA/browser matrix still require engineering evidence; this decision does not declare any implementation complete.
 
 ## Alternatives and consequences
 

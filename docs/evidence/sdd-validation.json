@@ -7,7 +7,7 @@
       "path": "specs/platform-foundation.md",
       "requirements": 6,
       "cases": 18,
-      "characters": 23996,
+      "characters": 24144,
       "status": "PASS"
     },
     {
@@ -15,31 +15,31 @@
       "path": "specs/household-identity.md",
       "requirements": 6,
       "cases": 18,
-      "characters": 24030,
+      "characters": 24521,
       "status": "PASS"
     },
     {
       "id": "household-tasks",
       "path": "specs/household-tasks.md",
       "requirements": 8,
-      "cases": 24,
-      "characters": 25534,
+      "cases": 27,
+      "characters": 27139,
       "status": "PASS"
     },
     {
       "id": "recurrence-calendar",
       "path": "specs/recurrence-calendar.md",
       "requirements": 8,
-      "cases": 24,
-      "characters": 25849,
+      "cases": 28,
+      "characters": 29417,
       "status": "PASS"
     },
     {
       "id": "points-rewards",
       "path": "specs/points-rewards.md",
       "requirements": 6,
-      "cases": 18,
-      "characters": 23481,
+      "cases": 27,
+      "characters": 28852,
       "status": "PASS"
     },
     {
@@ -47,15 +47,15 @@
       "path": "specs/shopping-management.md",
       "requirements": 7,
       "cases": 21,
-      "characters": 24792,
+      "characters": 25500,
       "status": "PASS"
     },
     {
       "id": "household-inventory",
       "path": "specs/household-inventory.md",
       "requirements": 8,
-      "cases": 24,
-      "characters": 25938,
+      "cases": 28,
+      "characters": 28518,
       "status": "PASS"
     },
     {
@@ -63,15 +63,15 @@
       "path": "specs/home-assistant-surface.md",
       "requirements": 8,
       "cases": 24,
-      "characters": 26936,
+      "characters": 27580,
       "status": "PASS"
     },
     {
       "id": "application-experience",
       "path": "specs/application-experience.md",
       "requirements": 6,
-      "cases": 18,
-      "characters": 24178,
+      "cases": 24,
+      "characters": 26974,
       "status": "PASS"
     },
     {
@@ -81,10 +81,18 @@
       "cases": 24,
       "characters": 26444,
       "status": "PASS"
+    },
+    {
+      "id": "household-automation",
+      "path": "specs/household-automation.md",
+      "requirements": 9,
+      "cases": 42,
+      "characters": 31861,
+      "status": "PASS"
     }
   ],
-  "totalCases": 213,
-  "totalRequirements": 71,
+  "totalCases": 281,
+  "totalRequirements": 80,
   "catalog": {
     "status": "BLOCKED",
     "errors": [
@@ -117,7 +125,10 @@
       "capabilities[8].tests must not be empty.",
       "capabilities[9].entrypoints must not be empty.",
       "capabilities[9].code must not be empty.",
-      "capabilities[9].tests must not be empty."
+      "capabilities[9].tests must not be empty.",
+      "capabilities[10].entrypoints must not be empty.",
+      "capabilities[10].code must not be empty.",
+      "capabilities[10].tests must not be empty."
     ]
   },
   "sources": [
@@ -166,5 +177,29 @@
   ],
   "applicationTests": "NOT IMPLEMENTED",
   "liveDogfooding": "NOT RUN",
-  "copilotChanged": false
+  "copilotChanged": false,
+  "auditedAt": "2026-10-29",
+  "pullRequestCheckAudit": {
+    "pullRequest": "https://github.com/vypdev/domus/pull/3",
+    "reviewedHead": "fa7adf1118b85e1588f0de7d71a77f47822b5000",
+    "workflowRun": "https://github.com/vypdev/domus/actions/runs/40774284194",
+    "initialAttempt": {
+      "conclusion": "failure",
+      "code": "agent.failed",
+      "stage": "progress assessment",
+      "diagnostic": "assessment-invalid",
+      "applicationTestFailure": false
+    },
+    "retryAttempt": {
+      "number": 2,
+      "conclusion": "success",
+      "job": "https://github.com/vypdev/domus/actions/runs/40774284194/job/123154135293",
+      "verification": "success"
+    },
+    "review": {
+      "conclusion": "neutral",
+      "meaning": "Review skipped because the PR remains a draft; not a clean-review claim"
+    },
+    "copilotChanges": false
+  }
 }

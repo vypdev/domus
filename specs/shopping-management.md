@@ -3,12 +3,12 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: shopping-management
-- Last verified: 2026-10-28 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Demand overlap formula approval; partial-receipt UX; price/currency precision; launch purchase-session scope. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Detailed demand-coverage and unit fixtures; partial-receipt UX; price/currency precision; launch purchase-session scope. The owner confirmed manual-extra and duplicate-safe automatic consolidation defaults on 2026-10-29. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -73,6 +73,8 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 ### 6.1 Domain model and normal path
 
 ShoppingList, Demand(source_type, source_id, product_or_free_text, amount, unit, semantics, revision), PlannedLine, PurchaseSession, PurchaseItem and Receipt. Free-text items need no product record. Demands remain individually attributable when a line is consolidated. Inventory target demand covers target minus available minus outstanding compatible supply; a task reservation is already reflected in availability and is not added twice. Manual demand is additional by default and can explicitly be marked overlapping. Quantities combine only with identical product, compatible units and declared semantics; ambiguous cases remain separate.
+
+The owner confirmed on 2026-10-29 that manual requests are additional by default and automatic stock/material demands consolidate without counting the same requirement twice. Consolidation retains each source and its coverage semantics; matching names alone do not establish overlap. If an automatic four-unit demand already covers a reserved task material, that same material is not added again; a manual extra of two still raises the purchase requirement to six. Distinct independent material needs remain additive. This rule does not silently relabel a manual extra as an automatic threshold.
 
 ### 6.2 States and alternatives
 

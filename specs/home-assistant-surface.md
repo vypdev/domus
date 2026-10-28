@@ -1,9 +1,9 @@
-# Home Assistant entities, services and household automation
+# Home Assistant entities, services and integration
 
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: home-assistant-surface
-- Last verified: 2026-10-28 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Domus exposes its household capabilities as native Home Assistant entities, services and events. The already integrated HA MCP consumes these surfaces; no gateway work or second MCP is included.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
@@ -45,7 +45,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 | home-assistant-surface-R3 | Every mutation MUST traverse the same Domus authorization, state, revision, idempotency and audit rules as the UI. |
 | home-assistant-surface-R4 | Human and technical principals MUST remain distinct; member_id and caller-provided identity fields cannot grant permissions. |
 | home-assistant-surface-R5 | Task and shopping projections MUST preserve occurrence/item identity and refuse unsupported native operations rather than corrupt richer domain states. |
-| home-assistant-surface-R6 | Automation triggers MUST be deterministic, duplicate-safe, cooldown-bounded and correlated to prevent loops. |
+| home-assistant-surface-R6 | HA-facing rule invocations MUST preserve trigger identity, rule revision, technical-principal scope and causal correlation, delegating deduplication/cooldown/loop decisions to the owning Domus automation engine rather than implementing another rule evaluator. |
 | home-assistant-surface-R7 | Both deployment targets MUST support reconnection, bounded queries and lifecycle unload without polling storms or leaking credentials. |
 | home-assistant-surface-R8 | The integration MUST expose enough query/action metadata for HA consumers while requiring no MCP implementation or gateway modification. |
 
@@ -77,7 +77,7 @@ A companion integration connects to the application through a scoped installatio
 
 ### 6.2 States and alternatives
 
-Integration setup -> connected -> stale/unavailable -> reconnecting -> connected. A command returns completed, pending projection, conflict, denied, invalid or unavailable with an operation ID. A transport timeout means outcome unknown until receipt lookup; no automatic fresh-key retry. HA automation rules may create tasks or demand from conditions with a stable trigger identity, cooldown and correlation.
+Integration setup -> connected -> stale/unavailable -> reconnecting -> connected. A command returns completed, pending projection, conflict, denied, invalid or unavailable with an operation ID. A transport timeout means outcome unknown until receipt lookup; no automatic fresh-key retry. External HA automations may call typed Domus commands or invoke a stored Domus rule with stable trigger identity and causal correlation. The in-application simple/advanced editors and durable execution policy belong to [household automation](household-automation.md); this integration owns only their HA entrypoint mapping.
 
 A duplicate uses its original operation receipt. A changed payload under the same key is a conflict. Out-of-order events use aggregate revision and source identity. Cancellation never erases an already committed ledger effect; compensation is explicit.
 
@@ -89,7 +89,6 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 | `projection_poll_seconds` | integer | 30 | 5..300 as fallback; push notifications preferred | integration; restart-safe cursor |
 | `service_max_items` | integer | 100 | 1..200; pagination required | request; not persisted |
 | `automation_mutations_enabled` | boolean | false | explicit scoped grants required | installation; revocation checked per command |
-| `automation_cooldown_seconds` | integer | 300 | 30..86400; never replaces idempotency | automation rule; versioned |
 
 These are proposed defaults pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
 
@@ -100,6 +99,8 @@ Recommended example: keep the defaults above. Meaningful alternative: a member s
 ### 8.1 Responsibilities and dependency direction
 
 The companion integration adapts public HA entity/service APIs to Domus QueryHousehold and CommandHousehold use cases. Credentials stay server-side and are distinct from human authentication. A verified HA user context can map to that user's Domus role; absent or automation context uses only explicitly configured technical grants. member_id selects an authorized target, never authenticates the caller. No arbitrary proxy to Domus HTTP or Python execution is exposed. Native task/shopping entities are projections of Domus records, not independent stores or mirrors of unrelated HA lists.
+
+Automation rule list/preview/run/enable adapters call the owning engine ports. They cannot compile a different DSL, apply their own collaboration points algorithm or maintain independent cooldown policy. Direct task/shopping commands continue to use their domain command receipts; invoking a stored rule additionally uses that rule's admitted trigger and durable run state.
 
 | Boundary | Owns | Forbidden dependency |
 |---|---|---|
@@ -214,6 +215,7 @@ The following paths are explicit proposed documentation changes relative to the 
 | Path | Change |
 |---|---|
 | specs/home-assistant-surface.md | create |
+| specs/household-automation.md | create |
 | specs/README.md | create |
 | specs/_template.md | create |
 | specs/catalog.json | create |

@@ -23,6 +23,9 @@
 | Reservation | Stock allocated to a material requirement |
 | Available stock | Physical stock minus active reservations |
 | Points entry | Immutable award, reversal or correction with a unique source |
+| Base task points | Nominal task value before the selected collaborative allocation policy |
+| Actual awarded total | Sum of immutable performer shares; may differ from base points according to the configured policy |
+| Allocation policy | Versioned household rule for conserving, rounding, decimal, full-performer or authorized manual awards |
 | Outbox / inbox | Durable event publication and deduplicated consumption records |
 | Projection | Rebuildable read model; not another source of business truth |
 | Stable | Production channel with a versioned accepted artifact |

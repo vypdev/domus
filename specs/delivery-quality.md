@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: delivery-quality
-- Last verified: 2026-10-28 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2

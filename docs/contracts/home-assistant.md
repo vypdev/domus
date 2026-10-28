@@ -20,7 +20,7 @@ and multi-instance calls must explicitly choose it. Names are stable English ide
 | sensor.domus_tasks_due | Count of pending due occurrences in household local day | freshness and bounded summary; detailed items via query_tasks |
 | sensor.domus_tasks_overdue | Count of past-due incomplete occurrences | same count/filter semantics as UI |
 | sensor.domus_low_stock_products | Count of active policies below threshold | query_inventory for details |
-| sensor.domus_member_points_<member> | Current household-week total for one member | stable member reference; ledger query for history |
+| `sensor.domus_member_points_<member>` | Current household-week total for one member | stable member reference; ledger query for history |
 | binary_sensor.domus_attention_required | Any authorized actionable household condition | bounded reason codes, never an unbounded record list |
 | calendar.domus_schedule | Planned occurrence windows and due-date markers | stable UID; actual completion is not substituted |
 | calendar.domus_completion_history | Optional separate actual-work timeline | completion UID and actual timestamp; explicit history label |
@@ -60,6 +60,11 @@ whose semantics are supported. No arbitrary SQL, Python, URL proxy, shell or raw
 | domus.receive_purchase | purchase_id, actual quantities and storage target | receipt_id and stock-posting status |
 | domus.query_members | active/member filters | role-appropriate member summaries |
 | domus.query_points | member/range/pagination | ledger entries and reconciled totals |
+| domus.query_automation_rules | rule/status filters, pagination | permission-filtered rule summaries and pinned revisions |
+| domus.query_automation_runs | rule_id, state/range filters, pagination | bounded run and per-step outcomes |
+| domus.preview_automation_rule | stored rule_id/revision and bounded sample input | pure explanation and proposed effects; no mutations |
+| domus.trigger_automation_rule | rule_id, expected_revision, trigger identity and command key | durable run_id and admission result under the rule's grants |
+| domus.set_automation_enabled | rule_id, enabled, expected_revision | administrator-authorized enable/disable and retained in-flight facts |
 | domus.get_operation | operation_id or own idempotency key | committed, pending, failed or unknown receipt |
 
 These cover initial HA consumer needs. The complete UI may use additional domain API operations;
@@ -99,6 +104,7 @@ Illustrative result:
 ```
 
 The occurrence result says the work was recorded, not that verification or rewards completed.
+Points results expose base task points, the snapshotted allocation policy/version and precision, individual shares and actual total; rounded or full-performer policies may intentionally change the total. Ordinary completion callers cannot override that household/task policy. Completion data keeps actual completed_at distinct from verified_at so approval delay cannot move relative recurrence anchors.
 Statuses: completed, pending, invalid, denied, conflict, unavailable.
 A successful empty query is completed with an empty items array, never unavailable.
 Errors include a stable safe code, retryable flag, retained-state description and operation reference when known.
@@ -124,6 +130,7 @@ No gateway-client token or per-agent administration is implemented here.
 
 HA can trigger maintenance and replenishment through these commands with stable trigger identity,
 cooldown, correlation and loop suppression. Domain effects are deterministic and audited.
+The in-app simple/default and optional advanced editors share one Domus engine. HA rule entrypoints delegate to that engine; its schema and run policy remain authoritative. External HA automations can still call ordinary typed Domus actions, with command receipts and backend permissions intact. No HA automation YAML or gateway code is rewritten.
 Events such as domus_task_completed, domus_inventory_low and domus_operation_updated contain
 bounded IDs/revisions and safe metadata, not full private records. Projection updates never retrigger
 the same causal automation indefinitely.

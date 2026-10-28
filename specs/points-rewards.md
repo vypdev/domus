@@ -3,16 +3,16 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: points-rewards
-- Last verified: 2026-10-28 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
-- Scope: Task completion produces auditable point entries. Corrections preserve history, collaborative allocation preserves the agreed award total, and optional rewards never control basic participation.
+- Scope: Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Collaborative allocation policy; verification role matrix; reward redemption rules and child-facing review. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Detailed remainder/override review; reward redemption rules and child-facing review. On 2026-10-29 the owner required in-app configurable allocation supporting conserved splits, rounded equal shares, decimal shares and full points per participant. Adults/no-verification and restricted/adult-approval are the confirmed role defaults. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
-Task completion produces auditable point entries. Corrections preserve history, collaborative allocation preserves the agreed award total, and optional rewards never control basic participation.
+Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.
 
 ```text
 Authenticated member -> validated domain command -> durable result -> household and HA projections
@@ -41,9 +41,9 @@ Goals and fixed invariants are the following normative requirements. No configur
 | Requirement | Behavior |
 |---|---|
 | points-rewards-R1 | Point awards MUST be append-only, attributable and unique for each accepted completion allocation. |
-| points-rewards-R2 | Reopening and correction MUST append compensating entries and preserve the original award and its policy snapshot. |
-| points-rewards-R3 | Collaborative awards MUST conserve the configured total and name the actual performers and their shares. |
-| points-rewards-R4 | Verification and permissions MUST prevent premature or unauthorized awards and task-value manipulation. |
+| points-rewards-R2 | Reopening and correction MUST append compensating entries for the amounts actually awarded and preserve the original award, precision and allocation-policy snapshot. |
+| points-rewards-R3 | Collaborative awards MUST apply an administrator-configurable household allocation policy, support conserved splits, rounded equal shares, two-decimal shares and full points per participant, and expose the base value, participants, policy, individual shares and actual awarded total. |
+| points-rewards-R4 | Verification and permissions MUST apply adult/no-verification and restricted/adult-approval defaults, prevent premature or unauthorized awards and deny unauthorized task-value or allocation-policy manipulation. |
 | points-rewards-R5 | Weekly, monthly and historical summaries MUST use household calendar boundaries and expose effort and participation alongside points. |
 | points-rewards-R6 | Optional rewards MUST support explicit approval, cancellation and duplicate-safe redemption without punitive or manipulative mechanics. |
 
@@ -71,7 +71,21 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 
 ### 6.1 Domain model and normal path
 
-PointsLedgerEntry has immutable ID, member, signed integer amount, completion-event source, allocation revision, reason, issuer and timestamp. Unique source/member/allocation keys prevent duplication. Reversal entries reference original entries; balances are projections. Proposed collaborative default: divide the task's fixed total equally among confirmed performers, assigning integer remainder by sorted stable member IDs and disclosing it. Task point changes affect future completions only; accepted completion snapshots its value. Rewards define optional cost, eligibility, redemption and approval; no punitive streak resets.
+PointsLedgerEntry has immutable ID, member, signed integer minor-point amount, completion-event source, allocation-policy version, precision, reason, issuer and timestamp. One point is 100 minor units so two-decimal awards use exact integer arithmetic rather than binary floating point. Unique source/member/allocation keys prevent duplicate entries. Reversal entries reference original entries; balances are projections.
+
+The owner's expanded decision on 2026-10-29 supersedes universal conservation of the task's base point value: families configure allocation in the application. A household policy supplies the default; only an administrator-authorized task override may change it. The completion and award snapshot the base value, policy/version, precision, performers, shares and actual total. A later policy edit affects future completions, not recorded or retrying awards. A member cannot choose a more rewarding policy in an ordinary completion request. Equal division of one conserved total remains the initial default; other supported modes intentionally may award less or more than that base.
+
+| Mode | Ten base points, three performers | Actual total | Meaning |
+|---|---|---:|---|
+| conserve_total, precision 0 | 3, 3, 4 | 10 | Preserve one total; explicit deterministic remainder distribution |
+| equal_share, precision 0, floor | 3, 3, 3 | 9 | Same rounded-down share for all |
+| equal_share, precision 0, ceil | 4, 4, 4 | 12 | Same rounded-up share for all |
+| equal_share, precision 2, floor | 3.33, 3.33, 3.33 | 9.99 | Two-decimal equal shares; no hidden extra 0.01 award |
+| conserve_total, precision 2 | 3.33, 3.33, 3.34 | 10 | Two-decimal split preserving the total |
+| full_per_participant | 10, 10, 10 | 30 | Every performer earns the full task value |
+| manual | Explicit authorized amounts, for example 3, 3, 4 | Sum of entered amounts | Validate every share and show the resulting total before approval |
+
+Only conserve_total enforces equality between base and awarded total. Other modes record the difference as policy semantics, not duplicate awards or an unexplained adjustment. The proposed remainder strategy rotates eligible recipients deterministically using durable allocation order; replay cannot advance it twice. Its exact fairness/tie-break rule remains an engineering review item. Task value and policy changes affect future completions only. Optional rewards define cost, eligibility, redemption and approval; no punitive streak resets.
 
 ### 6.2 States and alternatives
 
@@ -84,8 +98,11 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 | Input | Type | Recommended default | Allowed values/range | Scope/persistence |
 |---|---|---|---|---|
 | `points_enabled` | boolean | true | false hides summaries but preserves existing ledger | household; persisted |
-| `default_task_points` | integer | 0 | 0..10000; administrator-controlled | definition; accepted completion snapshots |
-| `collaborative_split` | enum | equal_fixed_total | equal_fixed_total initially; explicit weighted allocation future | household; award snapshots |
+| `default_task_points` | decimal points | 0 | 0..10000, at most 2 decimals; administrator-controlled | definition; completion snapshot, stored as minor units |
+| `collaborative_allocation_mode` | enum | conserve_total | conserve_total, equal_share, full_per_participant or manual; administrator-controlled | household default; authorized task override; completion/award snapshot |
+| `allocation_precision` | integer | 0 | 0 or 2 decimal places; exact minor-unit arithmetic | same allocation-policy snapshot |
+| `allocation_rounding` | enum | floor | floor, ceil or half_up for equal_share; reject irrelevant/contradictory combinations | same allocation-policy snapshot |
+| `allocation_remainder_strategy` | enum | rotating | proposed rotating distribution for conserve_total only; deterministic and replay-safe | durable order plus allocation-policy snapshot |
 | `rewards_enabled` | boolean | false | true or false; optional, not a launch dependency | household; persisted |
 
 These are proposed defaults pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
@@ -160,17 +177,17 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 27 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| State and concurrency | 3 | the same completion event delivered twice; a reopened task; two redemptions competing for the same available points |
+| State and concurrency | 4 | the same completion event delivered twice; a reopened task; two redemptions competing for the same available points |
 | Adapters and persistence | 2 | a displayed balance; corrected historical entries |
-| Security and privacy | 3 | a member attempting to overwrite an existing ledger amount; pending completion verification; an adult without point-administration permission |
-| Domain and configuration | 4 | a later task-value edit; 10 points and three performers; duplicate or inactive performer IDs |
-| Integration and recovery | 3 | repeated correction commands; authorized approval after a retry; a cancelled pending redemption |
-| UI and accessibility | 3 | collaborative completion; equal point totals with different durations; rewards disabled |
-| **Total** | **18** | No double counting |
+| Security and privacy | 4 | a member attempting to overwrite an existing ledger amount; pending completion verification; an adult without point-administration permission |
+| Domain and configuration | 9 | a later task-value edit; 10 points and three performers; duplicate or inactive performer IDs |
+| Integration and recovery | 4 | repeated correction commands; authorized approval after a retry; a cancelled pending redemption |
+| UI and accessibility | 4 | collaborative completion; equal point totals with different durations; rewards disabled |
+| **Total** | **27** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -180,9 +197,9 @@ Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each
 | points-rewards-C04 | State and concurrency | points-rewards-R2 | Given a reopened task, one reversal offsets its award while retaining both entries. |
 | points-rewards-C05 | Domain and configuration | points-rewards-R2 | Given a later task-value edit, the old award keeps the accepted value. |
 | points-rewards-C06 | Integration and recovery | points-rewards-R2 | Given repeated correction commands, one compensating entry is applied. |
-| points-rewards-C07 | Domain and configuration | points-rewards-R3 | Given 10 points and three performers, shares total 10 and remainder allocation is deterministic. |
+| points-rewards-C07 | Domain and configuration | points-rewards-R3 | Given conserve_total with precision 0, 10 base points and three performers, shares are 3, 3 and 4, total 10, with the extra recipient determined by the snapshotted remainder strategy. |
 | points-rewards-C08 | Domain and configuration | points-rewards-R3 | Given duplicate or inactive performer IDs, allocation is rejected before an award. |
-| points-rewards-C09 | UI and accessibility | points-rewards-R3 | Given collaborative completion, members see each share and the fixed total before submission. |
+| points-rewards-C09 | UI and accessibility | points-rewards-R3 | Given collaborative completion, members see the base points, allocation mode, each share and actual awarded total before submission. |
 | points-rewards-C10 | Security and privacy | points-rewards-R4 | Given pending completion verification, the ledger contains no award. |
 | points-rewards-C11 | Security and privacy | points-rewards-R4 | Given an adult without point-administration permission, changing an award policy is denied. |
 | points-rewards-C12 | Integration and recovery | points-rewards-R4 | Given authorized approval after a retry, the completion produces one award set. |
@@ -192,6 +209,15 @@ Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each
 | points-rewards-C16 | State and concurrency | points-rewards-R6 | Given two redemptions competing for the same available points, only the affordable transaction succeeds. |
 | points-rewards-C17 | Integration and recovery | points-rewards-R6 | Given a cancelled pending redemption, its reservation is released once. |
 | points-rewards-C18 | UI and accessibility | points-rewards-R6 | Given rewards disabled, members can complete tasks normally and no streak penalty is shown. |
+| points-rewards-C19 | Domain and configuration | points-rewards-R3 | Given equal_share with precision 0 and floor, 10 base points across three performers awards 3 each and records actual total 9. |
+| points-rewards-C20 | Domain and configuration | points-rewards-R3 | Given equal_share with precision 0 and ceil, 10 base points across three performers awards 4 each and records actual total 12. |
+| points-rewards-C21 | Domain and configuration | points-rewards-R3 | Given equal_share with precision 2 and floor, 10 base points across three performers awards exactly 3.33 each and records total 9.99 without floating-point drift. |
+| points-rewards-C22 | Domain and configuration | points-rewards-R3 | Given full_per_participant, three performers of a 10-point task each receive 10 and the recorded awarded total is 30. |
+| points-rewards-C23 | Domain and configuration | points-rewards-R3 | Given authorized manual shares 3, 3 and 4, validation records those exact amounts and total 10; invalid or duplicate performer allocations are rejected. |
+| points-rewards-C24 | State and concurrency | points-rewards-R2, points-rewards-R3 | Given a policy change after completion was recorded, a delayed award or retry uses the original snapshotted policy and does not recalculate historical shares. |
+| points-rewards-C25 | Security and privacy | points-rewards-R4 | Given a restricted performer supplying full_per_participant in an ordinary completion request, authorization rejects the policy override without increasing their award. |
+| points-rewards-C26 | Integration and recovery | points-rewards-R2 | Given a full_per_participant award of 30 actual points from a base of 10, reopening reverses all 30 actual points exactly once. |
+| points-rewards-C27 | UI and accessibility | points-rewards-R3 | Given ceil allocation producing 12 actual points from 10 base points, the application explains the selected policy and difference before the award and in its ledger history. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -242,9 +268,9 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 | Requirement | Cases |
 |---|---|
 | points-rewards-R1 | points-rewards-C01, points-rewards-C02, points-rewards-C03 |
-| points-rewards-R2 | points-rewards-C04, points-rewards-C05, points-rewards-C06 |
-| points-rewards-R3 | points-rewards-C07, points-rewards-C08, points-rewards-C09 |
-| points-rewards-R4 | points-rewards-C10, points-rewards-C11, points-rewards-C12 |
+| points-rewards-R2 | points-rewards-C04, points-rewards-C05, points-rewards-C06, points-rewards-C24, points-rewards-C26 |
+| points-rewards-R3 | points-rewards-C07, points-rewards-C08, points-rewards-C09, points-rewards-C19, points-rewards-C20, points-rewards-C21, points-rewards-C22, points-rewards-C23, points-rewards-C24, points-rewards-C27 |
+| points-rewards-R4 | points-rewards-C10, points-rewards-C11, points-rewards-C12, points-rewards-C25 |
 | points-rewards-R5 | points-rewards-C13, points-rewards-C14, points-rewards-C15 |
 | points-rewards-R6 | points-rewards-C16, points-rewards-C17, points-rewards-C18 |
 

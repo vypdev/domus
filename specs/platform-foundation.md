@@ -3,12 +3,12 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: platform-foundation
-- Last verified: 2026-10-28 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: One local modular application serves the complete household product in both a Supervisor-managed App and standalone Docker from the first release. Home Assistant owns user authentication; Domus owns its business records.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Architecture and storage review; supported Home Assistant release matrix; backup retention and restore targets. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Storage concurrency verification; supported Home Assistant release matrix; backup retention and restore targets. The owner selected Python/FastAPI, SQLite, one household per installation and a thin HA integration on 2026-10-29. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -96,7 +96,7 @@ Recommended example: keep the defaults above. Meaningful alternative: a member s
 
 ### 8.1 Responsibilities and dependency direction
 
-Application commands depend on UnitOfWork, CommandReceiptStore, EventOutbox, Clock and BackupPort. SQLite is the proposed first adapter, with migrations owned by infrastructure. FastAPI and HA integration adapters call the same use cases. Domain modules cannot import frameworks, SQL or HA. A single writer and optimistic aggregate revisions bound concurrency; no distributed transactions.
+Application commands depend on UnitOfWork, CommandReceiptStore, EventOutbox, Clock and BackupPort. SQLite is the owner-selected database, with migrations owned by infrastructure. FastAPI and HA integration adapters call the same use cases. Domain modules cannot import frameworks, SQL or HA. A single writer is the initial concurrency proposal; optimistic aggregate revisions bound races without distributed transactions.
 
 | Boundary | Owns | Forbidden dependency |
 |---|---|---|

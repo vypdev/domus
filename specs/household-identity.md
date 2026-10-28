@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: household-identity
-- Last verified: 2026-10-28 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
@@ -72,6 +72,8 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 ### 6.1 Domain model and normal path
 
 Member(id, display_name, avatar_reference, ha_user_id, optional person_entity_id, role, active, preferences, revision). The HA user association is unique within the household. A person association supplies profile/presence only. Membership can be invited -> linked -> active -> suspended -> archived; unlinking immediately removes access without deleting historical authorship.
+
+The owner confirmed on 2026-10-29 that adult performers need no completion verification by default and restricted performers require approval by an authorized adult. Administrator control of verification configuration is separate from permission to approve a restricted member's completion. The effective policy follows actual performers; an adult submitting the record does not silently turn restricted work into adult work. Explicit overrides remain administrator-controlled and audited.
 
 ### 6.2 States and alternatives
 

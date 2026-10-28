@@ -3,12 +3,12 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: household-tasks
-- Last verified: 2026-10-28 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Completion verification defaults; dependency semantics; role review; first-release advanced task-type matrix. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Dependency semantics; detailed role/override review; first-release advanced task-type matrix. The owner confirmed adult/no-verification and restricted/adult-approval defaults on 2026-10-29. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -44,7 +44,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 | household-tasks-R2 | Every transition MUST enforce the explicit state machine, expected revision, dependencies and completion requirements. |
 | household-tasks-R3 | Assignment MUST distinguish planned assignees, completion actor and actual performers and support unassigned pools, reassignment and collaboration. |
 | household-tasks-R4 | Completion and reopening MUST be idempotent and emit uniquely identified business events without duplicate downstream rewards. |
-| household-tasks-R5 | Verification MUST prevent unauthorized approval and defer points until the required verification succeeds. |
+| household-tasks-R5 | Verification MUST default to none for adult performers and authorized-adult approval for restricted performers, prevent unauthorized approval and defer points until any required verification succeeds. |
 | household-tasks-R6 | Task history MUST retain creation, assignment, transitions, completion, reopening, schedule changes and related automation actors. |
 | household-tasks-R7 | Task creation MUST support a minimal title-only path and optional advanced fields, categories, subtasks, materials and entity links. |
 | household-tasks-R8 | Every task command MUST enforce household scope and role permissions and return actionable validation, conflict and recovery results. |
@@ -79,6 +79,8 @@ TaskDefinition owns title, description, configurable category, tags, priority, e
 
 Definition: draft -> active <-> paused -> archived. Occurrence: draft -> available <-> assigned -> in_progress; available/assigned/in_progress -> blocked or completed; blocked -> available or assigned; active states -> cancelled or skipped. Reopen completed -> assigned if assignees exist, otherwise available. Verification is a separate pending/approved/rejected decision; pending completion is displayed as awaiting verification and awards no points.
 
+The owner confirmed the role defaults on 2026-10-29. Without an explicit administrator-controlled task override, adult performers need no verification and any restricted actual performer requires approval by an authorized adult. Determine that policy from the actual performers, not merely the authenticated submitter: an adult recording a restricted member's work does not silently bypass the approval step. Restricted members cannot set their own policy to none or approve their own completion. The effective policy and its revision are snapshotted with completion.
+
 A duplicate uses its original operation receipt. A changed payload under the same key is a conflict. Out-of-order events use aggregate revision and source identity. Cancellation never erases an already committed ledger effect; compensation is explicit.
 
 ## 7. User-facing configuration
@@ -86,7 +88,7 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 | Input | Type | Recommended default | Allowed values/range | Scope/persistence |
 |---|---|---|---|---|
 | `default_priority` | enum | normal | low, normal, high, urgent | household; occurrence snapshots |
-| `completion_verification` | enum | none | none or authorized_member; restricted-member default proposed as authorized_member | definition; completion snapshots |
+| `completion_verification` | enum | role_default | role_default: adults none, restricted performers authorized_adult; explicit none/authorized_adult overrides require administrator permission | definition; effective role policy and revision snapshotted at completion |
 | `dependency_policy` | enum | all_required | all_required only initially; cycles rejected | definition; versioned |
 | `category` | string reference | General | active household category; optional | definition; persisted |
 
@@ -162,17 +164,17 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 24 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 27 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Domain and configuration | 6 | an active recurring definition; a blocked prerequisite; a cyclic dependency or an incomplete required subtask |
+| Domain and configuration | 7 | an active recurring definition; a blocked prerequisite; a cyclic dependency or an incomplete required subtask |
 | Adapters and persistence | 2 | a later definition edit; assignment |
 | Integration and recovery | 5 | a one-time title-only task; a reopened completed task; pending verification |
 | State and concurrency | 4 | two concurrent transitions with the same revision; two simultaneous claims on a single-assignee task; duplicate completion commands |
 | UI and accessibility | 4 | a collaborative task; rejected verification; title-only entry on a narrow screen |
-| Security and privacy | 3 | a verifier policy requiring another member; an arbitrary history deletion request from a member; a foreign-household task ID |
-| **Total** | **24** | No double counting |
+| Security and privacy | 5 | a verifier policy requiring another member; an arbitrary history deletion request from a member; a foreign-household task ID |
+| **Total** | **27** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -200,6 +202,9 @@ Minimum: 24 distinct cases, derived from the explicit risk inventory below. Each
 | household-tasks-C22 | Security and privacy | household-tasks-R8 | Given a foreign-household task ID, the request cannot read or change it. |
 | household-tasks-C23 | UI and accessibility | household-tasks-R8 | Given a revision conflict, the form preserves entered values and offers reload/review. |
 | household-tasks-C24 | Integration and recovery | household-tasks-R8 | Given a lost completion response after commit, retry shows the committed result and history once. |
+| household-tasks-C25 | Domain and configuration | household-tasks-R5 | Given only adult performers and no explicit verification override, completion is accepted without an approval step and becomes eligible for one points allocation. |
+| household-tasks-C26 | Security and privacy | household-tasks-R5 | Given a restricted actual performer with no policy override, even an adult submitting completion leaves it awaiting authorized-adult approval and awards no points yet. |
+| household-tasks-C27 | Security and privacy | household-tasks-R8 | Given a restricted member setting verification to none, backend authorization rejects the override and retains the effective adult-approval policy. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -253,10 +258,10 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 | household-tasks-R2 | household-tasks-C04, household-tasks-C05, household-tasks-C06 |
 | household-tasks-R3 | household-tasks-C07, household-tasks-C08, household-tasks-C09 |
 | household-tasks-R4 | household-tasks-C10, household-tasks-C11, household-tasks-C12 |
-| household-tasks-R5 | household-tasks-C13, household-tasks-C14, household-tasks-C15 |
+| household-tasks-R5 | household-tasks-C13, household-tasks-C14, household-tasks-C15, household-tasks-C25, household-tasks-C26 |
 | household-tasks-R6 | household-tasks-C16, household-tasks-C17, household-tasks-C18 |
 | household-tasks-R7 | household-tasks-C19, household-tasks-C20, household-tasks-C21 |
-| household-tasks-R8 | household-tasks-C22, household-tasks-C23, household-tasks-C24 |
+| household-tasks-R8 | household-tasks-C22, household-tasks-C23, household-tasks-C24, household-tasks-C27 |
 
 All requirement cases are reciprocal with section 14. Domain invariants are owned by pure policy, command/state rules by application use cases, provider behavior by adapters, and visible content by presentation; the boundary table in section 8 assigns these responsibilities. Evidence and user/operator documentation are linked in section 15.
 

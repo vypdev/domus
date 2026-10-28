@@ -10,7 +10,7 @@ into one responsive interface. Normal operation does not require AI or cloud ser
 
 Domus is in the specification phase. No application is implemented or published yet.
 The [documentation foundation issue](https://github.com/vypdev/domus/issues/2)
-tracks ten Draft SDDs, 71 normative requirements and 213 planned acceptance cases.
+tracks eleven Draft SDDs, 80 normative requirements and 281 planned acceptance cases.
 These cases are verification plans, not executed application tests.
 
 The first usable release covers all six domains, Supervisor App/Ingress and
@@ -18,6 +18,13 @@ standalone Container, and isolated Stable and experimental Edge channels.
 Every participant uses their own Home Assistant account. The existing HA gateway
 is already integrated; Domus supplies native entities and services and does not
 implement another MCP server.
+
+The owner-selected stack is Python/FastAPI, SQLite and Lit/TypeScript/Vite, with
+one household per installation and a thin HA integration. Domus owns HA-coherent
+presentation components, a Storybook catalog and Playwright browser contracts.
+Simple/default and optional advanced automation editors are both launch scope,
+sharing one durable declarative engine. Collaborative points allocation is configurable
+in the application, with the chosen policy and actual awards preserved in the ledger.
 
 ## Read the foundation
 
@@ -35,7 +42,7 @@ implement another MCP server.
 
 Clean Architecture is mandatory. Meaningful tests accompany every implementation
 from its first change, with 100% supported first-party coverage metrics as the
-proposed enforced gate. A future project-owned workflow named **CI Check** runs
+required implementation gate. A future project-owned workflow named **CI Check** runs
 the full applicable suite for every PR update. English is used for issues,
 documentation, source identifiers and comments; the product supports English and Spanish.
 
@@ -57,6 +64,7 @@ upstream evidence validator because application entrypoints, source and tests do
 exist yet; no fake paths or gate-readiness claims are used. See the
 [adoption note](docs/copilot-adoption.md).
 
-The supplied brief ends at the beginning of section 10.2; inventory readiness requires
-reviewing the missing barcode requirements. No application build/test commands or CI
-workflow are installed by this documentation-only change.
+The supplied brief ends at the beginning of section 10.2. The owner completed the
+barcode scope on 2026-10-29: camera/manual entry, local matching and optional Internet
+product lookup. Provider feasibility and device evidence still require review.
+No application build/test commands or CI workflow are installed by this documentation-only change.

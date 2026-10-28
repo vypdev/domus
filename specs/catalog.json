@@ -7,7 +7,7 @@
       "status": "proposed",
       "scope": "One local modular application serves the complete household product in both a Supervisor-managed App and standalone Docker from the first release. Home Assistant owns user authentication; Domus owns its business records.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/platform-foundation.md"
       ],
@@ -25,7 +25,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Architecture and storage review; supported Home Assistant release matrix; backup retention and restore targets.",
+        "blockingDecisions": "Storage concurrency verification; supported Home Assistant release matrix; backup retention and restore targets. The owner selected Python/FastAPI, SQLite, one household per installation and a thin HA integration on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },
@@ -35,7 +35,7 @@
       "status": "proposed",
       "scope": "Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/household-identity.md"
       ],
@@ -63,7 +63,7 @@
       "status": "proposed",
       "scope": "Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/household-tasks.md"
       ],
@@ -81,7 +81,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Completion verification defaults; dependency semantics; role review; first-release advanced task-type matrix.",
+        "blockingDecisions": "Dependency semantics; detailed role/override review; first-release advanced task-type matrix. The owner confirmed adult/no-verification and restricted/adult-approval defaults on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },
@@ -91,7 +91,7 @@
       "status": "proposed",
       "scope": "A bounded scheduler turns task definitions into stable occurrences and a family calendar distinguishes planned start, deadline and actual completion.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/recurrence-calendar.md"
       ],
@@ -109,7 +109,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "DST gap/fold policy review; late completion policy; supported RRULE subset and calendar projection review.",
+        "blockingDecisions": "DST fold policy review; supported RRULE subset, gap-adjustment interoperability and calendar projection review. The owner confirmed DST gap advancement, actual-completion anchoring and per-task successor timing with at_completion as default on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },
@@ -117,9 +117,9 @@
       "id": "points-rewards",
       "title": "Auditable points, participation and optional rewards",
       "status": "proposed",
-      "scope": "Task completion produces auditable point entries. Corrections preserve history, collaborative allocation preserves the agreed award total, and optional rewards never control basic participation.",
+      "scope": "Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/points-rewards.md"
       ],
@@ -137,7 +137,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Collaborative allocation policy; verification role matrix; reward redemption rules and child-facing review.",
+        "blockingDecisions": "Detailed remainder/override review; reward redemption rules and child-facing review. On 2026-10-29 the owner required in-app configurable allocation supporting conserved splits, rounded equal shares, decimal shares and full points per participant. Adults/no-verification and restricted/adult-approval are the confirmed role defaults.",
         "copilotChangesAllowed": false
       }
     },
@@ -147,7 +147,7 @@
       "status": "proposed",
       "scope": "Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/shopping-management.md"
       ],
@@ -165,7 +165,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Demand overlap formula approval; partial-receipt UX; price/currency precision; launch purchase-session scope.",
+        "blockingDecisions": "Detailed demand-coverage and unit fixtures; partial-receipt UX; price/currency precision; launch purchase-session scope. The owner confirmed manual-extra and duplicate-safe automatic consolidation defaults on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },
@@ -175,7 +175,7 @@
       "status": "proposed",
       "scope": "The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/household-inventory.md"
       ],
@@ -193,17 +193,17 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Incomplete source brief after section 10.2; unit and package policy; reservation/replenishment review; barcode library and device evidence.",
+        "blockingDecisions": "Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner completed the barcode scope on 2026-10-29: camera scan plus manual entry, local catalog and optional Internet lookup.",
         "copilotChangesAllowed": false
       }
     },
     {
       "id": "home-assistant-surface",
-      "title": "Home Assistant entities, services and household automation",
+      "title": "Home Assistant entities, services and integration",
       "status": "proposed",
       "scope": "Domus exposes its household capabilities as native Home Assistant entities, services and events. The already integrated HA MCP consumes these surfaces; no gateway work or second MCP is included.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/home-assistant-surface.md"
       ],
@@ -231,7 +231,7 @@
       "status": "proposed",
       "scope": "A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/application-experience.md"
       ],
@@ -249,7 +249,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Design system review; frontend stack acceptance; real mobile/companion evidence; accessibility acceptance.",
+        "blockingDecisions": "Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },
@@ -259,7 +259,7 @@
       "status": "proposed",
       "scope": "Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-28",
+      "lastVerified": "2026-10-29",
       "specs": [
         "specs/delivery-quality.md"
       ],
@@ -278,6 +278,34 @@
         "state": "draft",
         "implementationEvidence": "absent",
         "blockingDecisions": "Runner/toolchain review; required-check configuration by maintainer; channel IDs and integration coexistence review; release publication authorization.",
+        "copilotChangesAllowed": false
+      }
+    },
+    {
+      "id": "household-automation",
+      "title": "Household automation engine and simple/advanced rule editors",
+      "status": "proposed",
+      "scope": "Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces.",
+      "owner": "Domus maintainers (review assignment pending)",
+      "lastVerified": "2026-10-29",
+      "specs": [
+        "specs/household-automation.md"
+      ],
+      "workflows": [],
+      "entrypoints": [],
+      "code": [],
+      "tests": [],
+      "documentation": [
+        "docs/product-vision.md",
+        "docs/architecture.md",
+        "docs/operations.md",
+        "docs/user-guide.md",
+        "docs/contracts/home-assistant.md"
+      ],
+      "readiness": {
+        "state": "draft",
+        "implementationEvidence": "absent",
+        "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, in-flight disable/cancel semantics, external-effect receipts and supported HA/browser evidence. Both editor modes and one engine are owner-confirmed launch scope.",
         "copilotChangesAllowed": false
       }
     }

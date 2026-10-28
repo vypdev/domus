@@ -17,8 +17,10 @@ Validate the chosen target's authentication, persistence and native HA integrati
 ## Permissions and configuration
 
 Administrators manage membership, point policies, verification, corrections and automation grants.
+Collaborative points policy is configured in the application. The preview discloses base points, rounding/precision, performer shares and actual total; only an authorized configuration change selects a different policy. Existing awards retain their snapshots, and reopening reverses the amounts actually awarded. Restricted performers need adult approval by default, while adults do not.
 Adults perform authorized household commands; restricted and viewer roles use the reviewed permission matrix.
 Technical HA commands use explicit grants without impersonating members. Domain forms do not accept tokens.
+Optional product lookup is configured through a bounded provider adapter; no external catalog is mandatory. Keep camera frames, household identity and stock history local. Provider failure leaves camera/manual entry and local catalog search usable.
 Invalid or unknown configuration versions block the affected operation and preserve prior settings.
 
 ## Recovery
