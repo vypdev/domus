@@ -8,7 +8,7 @@
 - Scope: The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner completed the barcode scope on 2026-10-29: camera scan plus manual entry, local catalog and optional Internet lookup. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner confirmed barcode scope, adjustable material recording and pending regularization rather than negative stock for task material shortfalls on 2026-10-29. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -42,7 +42,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 |---|---|
 | household-inventory-R1 | Product identity, package presentation and base measurement unit MUST be distinct and conversions exact. |
 | household-inventory-R2 | Every stock change MUST be an immutable, attributable movement; corrections append compensating records rather than deleting history. |
-| household-inventory-R3 | Stock and reservations MUST prevent accidental negative availability and handle concurrent consumption and balanced transfers. |
+| household-inventory-R3 | Stock and reservations MUST prevent accidental negative availability and handle concurrent consumption and balanced transfers; insufficient stock in an already-performed task MUST retain a pending consumption intent without inventing a stock movement or blocking completion. |
 | household-inventory-R4 | Replenishment MUST use minimum/target policies and stable source identities without duplicating task material demand or manual shopping extras. |
 | household-inventory-R5 | Receipt integration MUST post only received quantities once and preserve partial-receipt and retry history. |
 | household-inventory-R6 | Locations, optional lots and expiry information MUST remain queryable without inferring that expired stock disappeared. |
@@ -75,11 +75,15 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 
 Product owns identity, brand, category, barcode references, description, optional image, active flag and base unit. PackagePresentation owns pack count and conversion to that base unit; six 1-litre cartons may be six pieces or six litres according to a fixed product unit, never both without explicit conversion. Location, optional Lot(expiry, received_at), StockMovement, Reservation and ReplenishmentPolicy are separate records. Quantity uses exact decimal arithmetic. Transfer has balanced source/destination legs in one transaction. Availability equals physical stock minus active reservations. Consumption is explicit; estimates and predictions are future suggestions, not silent stock decrements.
 
+Task completion may submit explicitly reviewed actual material quantities in the same user action, as confirmed by the owner. Inventory processes those linked intents through the same consumption rules as a standalone movement; planned requirements are not proof of usage. Each intent has a stable completion-cycle/line identity and operation outcome. Consuming a task's own reserved material converts that reservation to consumed while decrementing physical stock in the same transaction, so availability is not charged twice. Other tasks' reservations cannot be stolen silently. A task reopen or verification rejection never adds a physical return: a real return/correction is a distinct authorized movement with an explicit reason.
+
+If a submitted material line lacks sufficient usable stock, save a pending_regularization consumption intent while the performed task completes, as confirmed by the owner. The intent is not a StockMovement and does not lower physical or available stock below zero. Keep its requested quantity, location, completion-cycle/line identity, actor and shortage reason visible. The affected quantity is labeled as recorded stock with a discrepancy requiring review, not silently presented as a verified physical count. No partial decrement within that line is silently substituted for the confirmed quantity. Authorized regularization reviews missing receipts, actual counts or erroneous usage, then posts a validated movement or records an explained correction/dismissal of the intent. A restock event alone does not settle it. Settlement, movement and operation receipt commit together; retries cannot post the line twice. A pending intent is not another reservation or purchasing demand, so it cannot double-count an existing material/replenishment source. Explicit zero usage is not_used and creates no stock movement.
+
 The owner confirmed camera scan and manual entry with optional Internet product lookup on 2026-10-29, closing the missing barcode-scope decision from the truncated attachment. Local catalog lookup runs first. An administrator may configure an external provider; unknown-code lookup is on demand by default. Only the barcode and required provider authentication leave the server boundary, never camera frames, household identity or stock history. Provider responses are untrusted candidates with source/provenance; users review a candidate before importing or matching a product/presentation. No provider is selected or advertised as available yet; feasibility, terms, rate limits and household-product coverage remain adapter review gates.
 
 ### 6.2 States and alternatives
 
-Product active -> inactive without deleting history. Reservation active -> consumed/released. Receipt -> posted movement; correction -> compensating movement. Low-stock demand open -> updated -> satisfied, retaining a stable policy/source identity. Optional lot expiration warns but does not silently remove stock.
+Product active -> inactive without deleting history. Reservation active -> consumed/released. Consumption intent -> posted or pending_regularization -> posted/corrected/dismissed with retained reason. Receipt -> posted movement; correction -> compensating movement. Low-stock demand open -> updated -> satisfied, retaining a stable policy/source identity. Optional lot expiration warns but does not silently remove stock.
 
 A duplicate uses its original operation receipt. A changed payload under the same key is a conflict. Out-of-order events use aggregate revision and source identity. Cancellation never erases an already committed ledger effect; compensation is explicit.
 
@@ -94,9 +98,9 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 | `negative_stock_policy` | enum | reject | reject initially; corrections require a reason | household invariant |
 | `external_product_lookup` | enum | off until a provider is configured, then on_demand | off, on_demand or explicit automatic_unknown; administrator-controlled provider setup | household preference; lookup operation snapshots provider/policy version |
 
-These are proposed defaults pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
+Owner-confirmed defaults are recorded as accepted choices; other defaults and bounds remain proposals pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
 
-Recommended example: keep the defaults above. Meaningful alternative: a member selects Spanish and dark theme while the same household policies remain in force. Transport secrets are installation concerns and are never domain form fields.
+Recommended example: piece-based stock with local product search, no expiry tracking and no external lookup. Meaningful alternative: a product enables lot dates and an administrator configures on-demand lookup, without changing its established base unit or ledger history. Transport secrets are installation concerns and are never domain form fields.
 
 ## 8. Clean Architecture design
 
@@ -166,18 +170,18 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 28 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 35 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Domain and configuration | 7 | a six-pack of one-litre cartons in a litre-based product; incompatible kilogram and piece units without conversion; a product with movements |
-| Adapters and persistence | 3 | an adjustment with a reason; expiration tracking disabled |
+| Domain and configuration | 9 | a six-pack of one-litre cartons in a litre-based product; incompatible kilogram and piece units without conversion; a product with movements |
+| Adapters and persistence | 4 | an adjustment with a reason; expiration tracking disabled |
 | Security and privacy | 5 | deletion of an existing movement; scanning without external lookup configured; a viewer trying stock correction |
-| State and concurrency | 4 | a corrected receipt; simultaneous consumption of the last unit; a stock transfer failure between its two legs |
-| Integration and recovery | 6 | task-reserved stock; a manual extra demand; four of six purchased units received |
+| State and concurrency | 6 | a corrected receipt; simultaneous consumption of the last unit; a stock transfer failure between its two legs |
+| Integration and recovery | 8 | task-reserved stock; a manual extra demand; four of six purchased units received |
 | UI and accessibility | 2 | an approaching expiry; denied camera permission |
 | Deployment and contracts | 1 | an inactive product or paginated stock query |
-| **Total** | **28** | No double counting |
+| **Total** | **35** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -209,6 +213,13 @@ Minimum: 28 distinct cases, derived from the explicit risk inventory below. Each
 | household-inventory-C26 | Integration and recovery | household-inventory-R7 | Given a provider timeout or rate limit, lookup reports unavailability while manual product creation and local search remain usable without a stock mutation. |
 | household-inventory-C27 | Security and privacy | household-inventory-R7 | Given hostile, oversized or incompatible provider fields, validation rejects the candidate and no script, private URL fetch or unreviewed catalog overwrite occurs. |
 | household-inventory-C28 | Security and privacy | household-inventory-R7 | Given external lookup off or no provider configured, camera/manual scanning uses local data only and no barcode, frame or household information is sent externally. |
+| household-inventory-C29 | State and concurrency | household-inventory-R2, household-inventory-R3 | Given two physical units and a two-unit reservation for the completing task, recording one actual unit leaves one physical unit and one active reserved unit; releasing the unused reservation makes one available, without charging the used unit twice. |
+| household-inventory-C30 | Integration and recovery | household-inventory-R2 | Given a task material intent already posted, replaying the completion or the linked inventory command returns that movement once and does not decrement stock again. |
+| household-inventory-C31 | Domain and configuration | household-inventory-R2 | Given task reopening or rejected verification after material consumption, physical stock does not increase; a confirmed real return appends its own linked movement. |
+| household-inventory-C32 | Integration and recovery | household-inventory-R2, household-inventory-R3 | Given a task consumption line larger than usable stock, save a pending intent and its source while the task completes, with no negative stock, partial hidden decrement or fabricated movement. |
+| household-inventory-C33 | State and concurrency | household-inventory-R2, household-inventory-R3 | Given two concurrent authorized settlements of one pending intent, at most one validated movement posts and both responses resolve the same retained intent. |
+| household-inventory-C34 | Domain and configuration | household-inventory-R3, household-inventory-R4 | Given restocking while an earlier task consumption is pending, the original intent stays visible for review, stock does not decrease automatically and no duplicate material demand is created. |
+| household-inventory-C35 | Adapters and persistence | household-inventory-R2 | Given explicit zero usage on a task material line, the linked result is not_used, no stock movement is fabricated and replay preserves the same factual result. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -259,9 +270,9 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 | Requirement | Cases |
 |---|---|
 | household-inventory-R1 | household-inventory-C01, household-inventory-C02, household-inventory-C03 |
-| household-inventory-R2 | household-inventory-C04, household-inventory-C05, household-inventory-C06 |
-| household-inventory-R3 | household-inventory-C07, household-inventory-C08, household-inventory-C09 |
-| household-inventory-R4 | household-inventory-C10, household-inventory-C11, household-inventory-C12 |
+| household-inventory-R2 | household-inventory-C04, household-inventory-C05, household-inventory-C06, household-inventory-C29, household-inventory-C30, household-inventory-C31, household-inventory-C32, household-inventory-C33, household-inventory-C35 |
+| household-inventory-R3 | household-inventory-C07, household-inventory-C08, household-inventory-C09, household-inventory-C29, household-inventory-C32, household-inventory-C33, household-inventory-C34 |
+| household-inventory-R4 | household-inventory-C10, household-inventory-C11, household-inventory-C12, household-inventory-C34 |
 | household-inventory-R5 | household-inventory-C13, household-inventory-C14, household-inventory-C15 |
 | household-inventory-R6 | household-inventory-C16, household-inventory-C17, household-inventory-C18 |
 | household-inventory-R7 | household-inventory-C19, household-inventory-C20, household-inventory-C21, household-inventory-C25, household-inventory-C26, household-inventory-C27, household-inventory-C28 |

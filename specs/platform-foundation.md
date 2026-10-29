@@ -71,7 +71,9 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 
 ### 6.1 Domain model and normal path
 
-Household, principal, command receipt, aggregate revision, audit record, outbox event, schema version and backup manifest. One household and one active database writer per installation are proposed defaults. Every record carries household identity. A command transaction commits its domain changes, command receipt and outbox together. Projections are rebuildable; business ledgers are not.
+Household, principal, command receipt, aggregate revision, audit record, outbox event, schema version and backup manifest. One household per installation is owner-confirmed; one active database writer remains an engineering proposal requiring concurrency evidence. Every record carries household identity. A command transaction commits its domain changes, command receipt and outbox together. Projections are rebuildable; business ledgers are not.
+
+Audit-display retention is distinct from command replay protection. Expiring routine activity/log data must not discard the receipt or compact replay guard needed to prevent a side-effecting command from running again. Any compaction retains command scope, payload digest and durable result reference, including closed completion cycles and per-line material identities. Backups include this evidence with the corresponding business state. Receipt lookup/replay still checks the current authenticated principal, household and permissions before revealing a result; possession of a guessed key is never authorization.
 
 ### 6.2 States and alternatives
 
@@ -88,9 +90,9 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 | `request_page_size` | integer | 50 | 1..200 | request; not persisted |
 | `audit_retention_days` | integer | 365 | 30..3650; never deletes points or stock ledgers | installation; persisted |
 
-These are proposed defaults pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
+Owner-confirmed defaults are recorded as accepted choices; other defaults and bounds remain proposals pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
 
-Recommended example: keep the defaults above. Meaningful alternative: a member selects Spanish and dark theme while the same household policies remain in force. Transport secrets are installation concerns and are never domain form fields.
+Recommended example: an explicit supervisor deployment with the household time zone selected at setup. Meaningful alternative: standalone uses the same domain contracts without assuming Supervisor or Ingress. Transport secrets are installation concerns and are never domain form fields.
 
 ## 8. Clean Architecture design
 
@@ -160,18 +162,18 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 20 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
 | Domain and configuration | 1 | an unknown schema version |
 | Adapters and persistence | 3 | committed household data; a crash between domain SQL and outbox SQL; a consistent snapshot during writes |
-| Integration and recovery | 4 | a failed migration; the same command fixtures; Internet and gateway outages |
+| Integration and recovery | 5 | a failed migration; the same command fixtures; Internet and gateway outages |
 | State and concurrency | 3 | a repeated command key and identical payload; a repeated key with a different payload; restoration of command receipts |
 | Deployment and contracts | 4 | a Supervisor test installation; standalone Compose without Supervisor; a domain import of a concrete HTTP client |
 | UI and accessibility | 1 | HA disconnection |
-| Security and privacy | 2 | an expired session during HA outage; an exception containing a credential |
-| **Total** | **18** | No double counting |
+| Security and privacy | 3 | an expired session during HA outage; an exception containing a credential |
+| **Total** | **20** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -193,6 +195,8 @@ Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each
 | platform-foundation-C16 | Deployment and contracts | platform-foundation-R6 | Given a domain import of a concrete HTTP client, the dependency-boundary check fails. |
 | platform-foundation-C17 | Security and privacy | platform-foundation-R6 | Given an exception containing a credential, logs and diagnostic exports contain only a safe code. |
 | platform-foundation-C18 | Deployment and contracts | platform-foundation-R6 | Given an application adapter cycle, the architecture check rejects the candidate. |
+| platform-foundation-C19 | Integration and recovery | platform-foundation-R2, platform-foundation-R5 | Given activity-retention cleanup after a completion and reopening, replaying the old command after restart or consistent restore still resolves its retained receipt/guard and cannot create a new completion or material movement. |
+| platform-foundation-C20 | Security and privacy | platform-foundation-R2, platform-foundation-R6 | Given an unauthorized principal presenting another member's operation key, result lookup/replay denies access and applies no effect rather than treating the receipt as authentication. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -243,11 +247,11 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 | Requirement | Cases |
 |---|---|
 | platform-foundation-R1 | platform-foundation-C01, platform-foundation-C02, platform-foundation-C03 |
-| platform-foundation-R2 | platform-foundation-C04, platform-foundation-C05, platform-foundation-C06 |
+| platform-foundation-R2 | platform-foundation-C04, platform-foundation-C05, platform-foundation-C06, platform-foundation-C19, platform-foundation-C20 |
 | platform-foundation-R3 | platform-foundation-C07, platform-foundation-C08, platform-foundation-C09 |
 | platform-foundation-R4 | platform-foundation-C10, platform-foundation-C11, platform-foundation-C12 |
-| platform-foundation-R5 | platform-foundation-C13, platform-foundation-C14, platform-foundation-C15 |
-| platform-foundation-R6 | platform-foundation-C16, platform-foundation-C17, platform-foundation-C18 |
+| platform-foundation-R5 | platform-foundation-C13, platform-foundation-C14, platform-foundation-C15, platform-foundation-C19 |
+| platform-foundation-R6 | platform-foundation-C16, platform-foundation-C17, platform-foundation-C18, platform-foundation-C20 |
 
 All requirement cases are reciprocal with section 14. Domain invariants are owned by pure policy, command/state rules by application use cases, provider behavior by adapters, and visible content by presentation; the boundary table in section 8 assigns these responsibilities. Evidence and user/operator documentation are linked in section 15.
 

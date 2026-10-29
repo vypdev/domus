@@ -18,6 +18,8 @@ Validate the chosen target's authentication, persistence and native HA integrati
 
 Administrators manage membership, point policies, verification, corrections and automation grants.
 Collaborative points policy is configured in the application. The preview discloses base points, rounding/precision, performer shares and actual total; only an authorized configuration change selects a different policy. Existing awards retain their snapshots, and reopening reverses the amounts actually awarded. Restricted performers need adult approval by default, while adults do not.
+
+Task completion reviews adjustable actual materials in the same submission by default, with a per-task separate-recording option. A stock shortfall saves performed work and a pending-regularization intent without a stock movement. Review its source and actual inventory facts before authorized settlement; restocking alone does not post the old usage. Reopening does not return materials automatically. Reversal of already-spent points can create a factual negative balance; retain delivered rewards and block new redemption until sufficient unreserved points exist.
 Adults perform authorized household commands; restricted and viewer roles use the reviewed permission matrix.
 Technical HA commands use explicit grants without impersonating members. Domain forms do not accept tokens.
 Optional product lookup is configured through a bounded provider adapter; no external catalog is mandatory. Keep camera frames, household identity and stock history local. Provider failure leaves camera/manual entry and local catalog search usable.
@@ -30,11 +32,14 @@ Invalid or unknown configuration versions block the affected operation and prese
 | Lost save response | Operation may already be committed | Look up the operation or replay its original idempotency key |
 | Stale task or stock revision | Latest backend record is intact | Review current state before deliberate resubmission |
 | Receipt saved, stock missing | Physical receipt is recorded; posting is pending | Retry only the identified stock post |
+| Task saved, material stock insufficient | Work completion and pending material intent persist; no negative stock was invented | Review actual inventory facts and explicitly resolve the retained intent |
+| Negative points after reopening | Actual reversal and delivered reward remain recorded | Earn points to cover the deficit; new redemption requires sufficient unreserved credit |
 | HA unavailable | Domain records persist; native projections may be stale | Restore HA connectivity and reconcile projections |
 | Schema too new | Database remains intact; writes are blocked | Use a compatible application or restore the paired backup |
 | Insufficient role | No denied command effect was committed | Ask an administrator to review access |
 
 Backoff is bounded. Repeated availability failures become an actionable status rather than endless notifications.
+Routine activity/log retention never deletes the command guards needed to prevent duplicate effects. Receipt access remains subject to current permissions, including after suspension.
 Logs use safe error codes and correlation IDs; exported diagnostics exclude credentials and unnecessary household details.
 
 ## Backup, upgrade and rollback

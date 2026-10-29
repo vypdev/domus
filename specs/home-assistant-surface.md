@@ -73,7 +73,9 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 
 ### 6.1 Domain model and normal path
 
-A companion integration connects to the application through a scoped installation credential and maintains projection cursors and availability. Entities have stable unique IDs based on household/record IDs, independent of renamed entity_ids. Proposed entities: sensor.domus_tasks_due, sensor.domus_tasks_overdue, sensor.domus_low_stock_products, sensor.domus_member_points_<member>, binary_sensor.domus_attention_required, calendar.domus_schedule, optional separate calendar.domus_completion_history, todo.domus_tasks and todo.domus_shopping. Rich fields stay in bounded response services. Service operations and response envelopes are defined in the linked contract document. A technical principal is not a household member and cannot assert a human identity through parameters.
+A companion integration connects to the application through a scoped installation credential and maintains projection cursors and availability. Entities have stable unique IDs based on household/record IDs, independent of renamed entity_ids. Proposed entities: sensor.domus_tasks_due, sensor.domus_tasks_overdue, sensor.domus_low_stock_products, sensor.domus_member_points_<member>, sensor.domus_member_points_balance_<member>, binary_sensor.domus_attention_required, calendar.domus_schedule, optional separate calendar.domus_completion_history, todo.domus_tasks and todo.domus_shopping. Weekly earned points use actual work dates and differ from the possibly negative lifetime balance; pending verification is never spendable credit. Rich fields stay in bounded response services. Service operations and response envelopes are defined in the linked contract document. A technical principal is not a household member and cannot assert a human identity through parameters.
+
+The complete_task service accepts explicit actual material lines with stable identities and invokes the same combined application orchestration as the UI. Its structured result distinguishes saved completion, verification, points and each posted or pending-regularization material intent. Query/settlement services expose those retained intents within the caller's grants; a stock shortfall must not be reported as failure of already-saved work. A native to-do checkbox cannot supply missing actual performers or confirm planned materials on the caller's behalf. If its supported schema cannot express a required review, reject that native mutation before applying effects and direct the caller to the form or typed service.
 
 ### 6.2 States and alternatives
 
@@ -90,9 +92,9 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 | `service_max_items` | integer | 100 | 1..200; pagination required | request; not persisted |
 | `automation_mutations_enabled` | boolean | false | explicit scoped grants required | installation; revocation checked per command |
 
-These are proposed defaults pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
+Owner-confirmed defaults are recorded as accepted choices; other defaults and bounds remain proposals pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
 
-Recommended example: keep the defaults above. Meaningful alternative: a member selects Spanish and dark theme while the same household policies remain in force. Transport secrets are installation concerns and are never domain form fields.
+Recommended example: native projections and typed queries with automation mutations disabled. Meaningful alternative: explicitly grant a technical principal one bounded action while all domain authorization and receipt rules remain enforced. Transport secrets are installation concerns and are never domain form fields.
 
 ## 8. Clean Architecture design
 
@@ -164,18 +166,18 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 24 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 29 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Adapters and HA contracts | 7 | a renamed task entity; a query with more items than its page limit; a response-service call |
+| Adapters and HA contracts | 10 | a renamed task entity; a query with more items than its page limit; a response-service call |
 | UI and accessibility | 1 | a disconnected backend |
 | Deployment and contracts | 3 | a large household; standalone Core API access; service discovery |
 | Domain and configuration | 2 | unknown service fields or unsupported contract version; an event caused by the same automation correlation |
 | State and concurrency | 3 | a repeated HA completion command; a stale expected revision; replay of the same sensor-trigger identity |
-| Security and privacy | 4 | a service principal without stock-correction grant; a caller-supplied administrator member_id; an HA automation without verified human context |
-| Integration and recovery | 4 | backend item changes; an automation disabled during a pending retry; disconnect and reconnect |
-| **Total** | **24** | No double counting |
+| Security and privacy | 5 | a service principal without stock-correction grant; a caller-supplied administrator member_id; an HA automation without verified human context |
+| Integration and recovery | 5 | backend item changes; an automation disabled during a pending retry; disconnect and reconnect |
+| **Total** | **29** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -203,6 +205,11 @@ Minimum: 24 distinct cases, derived from the explicit risk inventory below. Each
 | home-assistant-surface-C22 | Deployment and contracts | home-assistant-surface-R8 | Given service discovery, HA exposes registered schemas, selectors and response support for each proposed action. |
 | home-assistant-surface-C23 | Security and privacy | home-assistant-surface-R8 | Given diagnostic export, no installation token, upstream token or unbounded user payload is included. |
 | home-assistant-surface-C24 | Integration and recovery | home-assistant-surface-R8 | Given no gateway process during Domus acceptance, normal UI workflows and HA entity/service tests still pass. |
+| home-assistant-surface-C25 | Adapters and HA contracts | home-assistant-surface-R2, home-assistant-surface-R3 | Given complete_task with explicit material lines and a stock shortfall, the response identifies the saved completion and pending intent separately; identical-key replay duplicates neither. |
+| home-assistant-surface-C26 | Security and privacy | home-assistant-surface-R3, home-assistant-surface-R4 | Given a technical principal allowed to complete tasks but lacking a requested stock-movement grant, the combined submission cannot use task permission to bypass inventory authorization. |
+| home-assistant-surface-C27 | Adapters and HA contracts | home-assistant-surface-R5 | Given a native to-do checkbox that cannot express required performer/material review, the adapter rejects the mutation before effects and offers the supported UI/service path without silently consuming estimates. |
+| home-assistant-surface-C28 | Integration and recovery | home-assistant-surface-R2, home-assistant-surface-R8 | Given an authorized material-intent query and repeated settlement request, the same source intent and validated movement remain discoverable once with bounded results and no gateway change. |
+| home-assistant-surface-C29 | Adapters and HA contracts | home-assistant-surface-R1, home-assistant-surface-R2 | Given delayed approval or a spent-point reversal, HA projections preserve work-week totals separately from current possibly-negative balance and query results distinguish pending from spendable points. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -253,14 +260,14 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 
 | Requirement | Cases |
 |---|---|
-| home-assistant-surface-R1 | home-assistant-surface-C01, home-assistant-surface-C02, home-assistant-surface-C03 |
-| home-assistant-surface-R2 | home-assistant-surface-C04, home-assistant-surface-C05, home-assistant-surface-C06 |
-| home-assistant-surface-R3 | home-assistant-surface-C07, home-assistant-surface-C08, home-assistant-surface-C09 |
-| home-assistant-surface-R4 | home-assistant-surface-C10, home-assistant-surface-C11, home-assistant-surface-C12 |
-| home-assistant-surface-R5 | home-assistant-surface-C13, home-assistant-surface-C14, home-assistant-surface-C15 |
+| home-assistant-surface-R1 | home-assistant-surface-C01, home-assistant-surface-C02, home-assistant-surface-C03, home-assistant-surface-C29 |
+| home-assistant-surface-R2 | home-assistant-surface-C04, home-assistant-surface-C05, home-assistant-surface-C06, home-assistant-surface-C25, home-assistant-surface-C28, home-assistant-surface-C29 |
+| home-assistant-surface-R3 | home-assistant-surface-C07, home-assistant-surface-C08, home-assistant-surface-C09, home-assistant-surface-C25, home-assistant-surface-C26 |
+| home-assistant-surface-R4 | home-assistant-surface-C10, home-assistant-surface-C11, home-assistant-surface-C12, home-assistant-surface-C26 |
+| home-assistant-surface-R5 | home-assistant-surface-C13, home-assistant-surface-C14, home-assistant-surface-C15, home-assistant-surface-C27 |
 | home-assistant-surface-R6 | home-assistant-surface-C16, home-assistant-surface-C17, home-assistant-surface-C18 |
 | home-assistant-surface-R7 | home-assistant-surface-C19, home-assistant-surface-C20, home-assistant-surface-C21 |
-| home-assistant-surface-R8 | home-assistant-surface-C22, home-assistant-surface-C23, home-assistant-surface-C24 |
+| home-assistant-surface-R8 | home-assistant-surface-C22, home-assistant-surface-C23, home-assistant-surface-C24, home-assistant-surface-C28 |
 
 All requirement cases are reciprocal with section 14. Domain invariants are owned by pure policy, command/state rules by application use cases, provider behavior by adapters, and visible content by presentation; the boundary table in section 8 assigns these responsibilities. Evidence and user/operator documentation are linked in section 15.
 

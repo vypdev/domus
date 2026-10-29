@@ -20,19 +20,19 @@ Audited 2026-10-29. This is documentation validation, not application acceptance
 
 | Capability | Requirements | Planned cases | Original format/consistency |
 |---|---:|---:|---|
-| platform-foundation | 6 | 18 | PASS |
-| household-identity | 6 | 18 | PASS |
-| household-tasks | 8 | 27 | PASS |
-| recurrence-calendar | 8 | 28 | PASS |
-| points-rewards | 6 | 27 | PASS |
+| platform-foundation | 6 | 20 | PASS |
+| household-identity | 6 | 20 | PASS |
+| household-tasks | 9 | 35 | PASS |
+| recurrence-calendar | 8 | 34 | PASS |
+| points-rewards | 6 | 40 | PASS |
 | shopping-management | 7 | 21 | PASS |
-| household-inventory | 8 | 28 | PASS |
-| home-assistant-surface | 8 | 24 | PASS |
+| household-inventory | 8 | 35 | PASS |
+| home-assistant-surface | 8 | 29 | PASS |
 | application-experience | 6 | 24 | PASS |
 | delivery-quality | 8 | 24 | PASS |
 | household-automation | 9 | 42 | PASS |
 
-Totals: 80 normative requirements and 281 distinct planned cases across eleven SDDs.
+Totals: 81 normative requirements and 324 distinct planned cases across eleven SDDs.
 The owner-confirmed automation scope adds one engine capability with 42 planned cases; the HA surface remains the adapter owner.
 
 ## Catalog limitation
@@ -62,3 +62,9 @@ A local review runner cannot replace the Action's bundled authority.
 The reviewed head was fa7adf1118b85e1588f0de7d71a77f47822b5000. The initial Copilot - Commit attempt failed in automatic progress assessment with assessment-invalid, published as agent.failed. Its log did not identify an application-test or SDD-format failure. Retrying the failed job succeeded on attempt 2, including Copilot / Verification, without source/configuration changes to Copilot. [Inspect the run](https://github.com/vypdev/domus/actions/runs/40774284194).
 
 Pull-request and branch-sync workflows passed for that head. Copilot / Review was neutral because draft review is disabled; it is not an approved-review result. A new documentation commit requires its own current-head checks and cannot inherit this audit as passing evidence.
+
+## Subsequent check evidence and upstream ownership
+
+A subsequent documentation head, ce2871b15508a1de53eaceca9bada001b31c25f2, failed progress assessment in both attempts with assessment-invalid exposed as agent.failed. The [second-attempt log](https://github.com/vypdev/domus/actions/runs/40787905127/job/123168549416) did not identify an application-test or SDD-format failure. Detailed sanitized evidence is recorded in [Copilot issue #774](https://github.com/vypdev/copilot/issues/774#issuecomment-6483788546); the separate deterministic proposed-catalog limitation is reported in [Copilot issue #777](https://github.com/vypdev/copilot/issues/777). No causal link between those two failures is asserted.
+
+The current local document validation does not make either historical run green or claim current-head GitHub acceptance. New documentation commits have independent checks. Copilot and its installed resources remain unchanged while their owners investigate.

@@ -8,7 +8,7 @@
 - Scope: Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Role permission matrix review; proof of HA authentication in both deployment targets; technical service principal policy. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Role permission matrix and first-administrator/recovery review; proof of HA authentication in both deployment targets; technical service principal policy. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -79,6 +79,8 @@ The owner confirmed on 2026-10-29 that adult performers need no completion verif
 
 Unlinked membership cannot participate; linked accounts become active after administrator assignment. Suspended users retain historical attribution but cannot access protected reads or commands. The last active administrator cannot be removed.
 
+Authorization applies to operation lookup and duplicate receipts as well as new writes. Replaying a once-authorized command does not bypass a later suspension or expose the old private result to another principal. Household role revocation is checked against current local authority before returning protected data; a snapshotted execution policy is not a permission grant. First-administrator enrollment and recovery after external HA account loss require a reviewed authenticated procedure; never promote the first arbitrary browser session or silently substitute a shared administrator.
+
 A duplicate uses its original operation receipt. A changed payload under the same key is a conflict. Out-of-order events use aggregate revision and source identity. Cancellation never erases an already committed ledger effect; compensation is explicit.
 
 ## 7. User-facing configuration
@@ -90,9 +92,9 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 | `locale` | enum | browser preference | en or es, then en fallback | member; persisted |
 | `person_entity_id` | optional entity reference | none | person domain only; duplicate mapping rejected | member; persisted |
 
-These are proposed defaults pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
+Owner-confirmed defaults are recorded as accepted choices; other defaults and bounds remain proposals pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
 
-Recommended example: keep the defaults above. Meaningful alternative: a member selects Spanish and dark theme while the same household policies remain in force. Transport secrets are installation concerns and are never domain form fields.
+Recommended example: an administrator activates a linked participant with the restricted role. Meaningful alternative: a viewer can inspect permitted records without receiving mutation grants; changing role is explicit and audited. Transport secrets are installation concerns and are never domain form fields.
 
 ## 8. Clean Architecture design
 
@@ -162,18 +164,18 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 20 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
 | Domain and configuration | 3 | two members linked to one HA user; an adult creating an ordinary household task; removal of the last active administrator |
-| Security and privacy | 5 | only a person entity ID; a viewer calling task completion directly; a restricted member reading another member's private preferences |
+| Security and privacy | 7 | only a person entity ID; a viewer calling task completion directly; a restricted member reading another member's private preferences |
 | Adapters and identity | 2 | a valid HA user authentication; an archived account |
 | State and concurrency | 3 | a suspended member's existing session; concurrent reassignment and a role downgrade; a concurrent verification-policy change |
 | Deployment and contracts | 2 | a forged identity header on standalone HTTP; a verified HA session through Ingress |
 | UI and accessibility | 2 | Spanish member preferences; notification opt-out |
 | Integration and recovery | 1 | differing task durations and equal points |
-| **Total** | **18** | No double counting |
+| **Total** | **20** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -195,6 +197,8 @@ Minimum: 18 distinct cases, derived from the explicit risk inventory below. Each
 | household-identity-C16 | UI and accessibility | household-identity-R6 | Given Spanish member preferences, navigation and notification text use Spanish with English fallback for missing keys. |
 | household-identity-C17 | UI and accessibility | household-identity-R6 | Given notification opt-out, routine participation summaries are suppressed. |
 | household-identity-C18 | Integration and recovery | household-identity-R6 | Given differing task durations and equal points, participation reports show effort and counts alongside points. |
+| household-identity-C19 | Security and privacy | household-identity-R2, household-identity-R3 | Given an operation committed before the member was suspended, replay or lookup after suspension returns no protected result and cannot invoke the old privilege. |
+| household-identity-C20 | Security and privacy | household-identity-R1, household-identity-R2 | Given an unlinked authenticated user arriving before household setup is finished, access does not become administrator merely because that browser connected first. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -244,9 +248,9 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 
 | Requirement | Cases |
 |---|---|
-| household-identity-R1 | household-identity-C01, household-identity-C02, household-identity-C03 |
-| household-identity-R2 | household-identity-C04, household-identity-C05, household-identity-C06 |
-| household-identity-R3 | household-identity-C07, household-identity-C08, household-identity-C09 |
+| household-identity-R1 | household-identity-C01, household-identity-C02, household-identity-C03, household-identity-C20 |
+| household-identity-R2 | household-identity-C04, household-identity-C05, household-identity-C06, household-identity-C19, household-identity-C20 |
+| household-identity-R3 | household-identity-C07, household-identity-C08, household-identity-C09, household-identity-C19 |
 | household-identity-R4 | household-identity-C10, household-identity-C11, household-identity-C12 |
 | household-identity-R5 | household-identity-C13, household-identity-C14, household-identity-C15 |
 | household-identity-R6 | household-identity-C16, household-identity-C17, household-identity-C18 |

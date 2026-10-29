@@ -28,6 +28,8 @@ empty arrays and an explicit readiness blocker instead of referencing fake sourc
 The original validator is run unchanged against the package; failure is recorded in the validation evidence in docs/sdd-validation.md.
 A passing draft-format check cannot establish gate readiness.
 
+The truthful proposed-capability bootstrap limitation is reported in [Copilot issue #777](https://github.com/vypdev/copilot/issues/777), with a pinned-source reproducer. The separate opaque progress-assessment failure is tracked in [Copilot issue #774](https://github.com/vypdev/copilot/issues/774#issuecomment-6483788546). These reports are not evidence that the catalog caused the workflow's progress failure, and neither authorizes a local workaround or a Copilot edit.
+
 Do not patch the validator, substitute a weaker schema, change capability status, register unrelated code,
 or alter any Copilot configuration to conceal this result. Resolve the supported initialization route
 with the maintainer before attempting a feature gate. The current documentation issue is not marked

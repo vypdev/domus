@@ -20,7 +20,8 @@ and multi-instance calls must explicitly choose it. Names are stable English ide
 | sensor.domus_tasks_due | Count of pending due occurrences in household local day | freshness and bounded summary; detailed items via query_tasks |
 | sensor.domus_tasks_overdue | Count of past-due incomplete occurrences | same count/filter semantics as UI |
 | sensor.domus_low_stock_products | Count of active policies below threshold | query_inventory for details |
-| `sensor.domus_member_points_<member>` | Current household-week total for one member | stable member reference; ledger query for history |
+| `sensor.domus_member_points_<member>` | Approved net earned points attributable to actual work in the current household week | stable member reference; excludes pending points; later approval updates the original work period |
+| `sensor.domus_member_points_balance_<member>` | Current posted ledger balance for one member, possibly negative after reversal | ledger query distinguishes balance, reserved and spendable quantities; not the weekly earned total |
 | binary_sensor.domus_attention_required | Any authorized actionable household condition | bounded reason codes, never an unbounded record list |
 | calendar.domus_schedule | Planned occurrence windows and due-date markers | stable UID; actual completion is not substituted |
 | calendar.domus_completion_history | Optional separate actual-work timeline | completion UID and actual timestamp; explicit history label |
@@ -45,7 +46,7 @@ whose semantics are supported. No arbitrary SQL, Python, URL proxy, shell or raw
 | domus.update_task | definition_id or occurrence_id, expected_revision, explicit change | revised record; no historic rewrite |
 | domus.assign_task | occurrence_id, assignee_ids | assignment revision and actual unchanged facts |
 | domus.start_task | occurrence_id | state transition |
-| domus.complete_task | occurrence_id, performer_ids | completion_id and verification/award status |
+| domus.complete_task | occurrence_id, performer_ids, optional explicit material_lines with stable line IDs, actual quantities, units and storage targets | completion_id, verification/award status and per-line posted/pending-regularization material outcomes |
 | domus.verify_task | completion_id, decision, reason | authorized verification result |
 | domus.reopen_task | occurrence_id, reason | reopening and linked compensation status |
 | domus.skip_task | occurrence_id, reason | retained recurring exception |
@@ -54,12 +55,14 @@ whose semantics are supported. No arbitrary SQL, Python, URL proxy, shell or raw
 | domus.query_calendar | bounded range and filters | typed scheduled, due and completion entries |
 | domus.query_inventory | product/location/low-stock filters, pagination | physical, reserved and available quantities |
 | domus.record_stock_movement | product_id, location_id, amount, unit, movement_type, reason | immutable movement; corrections need privilege |
+| domus.query_material_consumptions | completion_id or pending status, bounded filters and pagination | linked material intents, actual quantities and posted/pending outcomes |
+| domus.resolve_material_consumption | intent_id, expected_revision, explicit settlement/correction/dismissal and reason | retained intent and validated movement when applicable; authorized, duplicate-safe resolution |
 | domus.create_shopping_demand | list_id, product_id or free_text, quantity, unit, semantics | attributable demand_id |
 | domus.query_shopping | list/status/source filters, pagination | consolidated lines with demand origins |
 | domus.record_purchase | selected demands, purchased quantities, optional session/prices | purchase_id; no implied physical receipt |
 | domus.receive_purchase | purchase_id, actual quantities and storage target | receipt_id and stock-posting status |
 | domus.query_members | active/member filters | role-appropriate member summaries |
-| domus.query_points | member/range/pagination | ledger entries and reconciled totals |
+| domus.query_points | member/work-period/range/pagination | ledger entries, actual-work-period earned totals, pending points, posted balance, reservations and spendable amount with explicit timestamps |
 | domus.query_automation_rules | rule/status filters, pagination | permission-filtered rule summaries and pinned revisions |
 | domus.query_automation_runs | rule_id, state/range filters, pagination | bounded run and per-step outcomes |
 | domus.preview_automation_rule | stored rule_id/revision and bounded sample input | pure explanation and proposed effects; no mutations |
@@ -80,6 +83,15 @@ not the caller's identity:
   "instance_id": "example-edge-instance",
   "occurrence_id": "example-occurrence",
   "performer_ids": ["example-member"],
+  "material_lines": [
+    {
+      "line_id": "example-material-line",
+      "product_id": "example-product",
+      "location_id": "example-location",
+      "quantity": "1",
+      "unit": "piece"
+    }
+  ],
   "expected_revision": 7,
   "idempotency_key": "example-completion-request"
 }
@@ -97,14 +109,25 @@ Illustrative result:
     "revision": 8,
     "completion_id": "example-completion",
     "verification_status": "pending",
-    "points_status": "not_awarded"
+    "points_status": "not_awarded",
+    "material_results": [
+      {
+        "line_id": "example-material-line",
+        "intent_id": "example-material-intent",
+        "status": "pending_regularization",
+        "reason_code": "insufficient_stock"
+      }
+    ]
   },
-  "pending": ["verification", "home_assistant_projection"]
+  "pending": ["verification", "material_regularization", "home_assistant_projection"]
 }
 ```
 
 The occurrence result says the work was recorded, not that verification or rewards completed.
+Material quantities are explicit actual usage, reviewed in the same submission by default or recorded separately according to the task setting. Per-line outcomes include posted, not_used for explicit zero usage, and pending_regularization. A pending_regularization intent is not a posted movement or negative stock, and its affected recorded quantity carries a discrepancy indicator. Later restocking alone does not settle it; an authorized reviewed action resolves the retained intent. Invalid or unauthorized material fields fail admission before new effects. Reopening or rejecting task verification does not fabricate a physical material return. Native to-do operations that cannot express required performer/material review are rejected with a supported UI/service path.
 Points results expose base task points, the snapshotted allocation policy/version and precision, individual shares and actual total; rounded or full-performer policies may intentionally change the total. Ordinary completion callers cannot override that household/task policy. Completion data keeps actual completed_at distinct from verified_at so approval delay cannot move relative recurrence anchors.
+Awards are unique per completion cycle independently of policy version, with all performer shares committed together. Reopening can leave a negative point balance when awards were already spent; new redemption remains blocked until affordability recovers, and fulfilled rewards remain fulfilled.
+Work-period reporting uses actual completed_at in the household zone. A Sunday completion approved Monday contributes to Sunday's week only after approval; credit becomes available at ledger posting. verified_at and posted_at retain their actual timestamps. Linked reversals correct the original earned-work period without concealing when the correction occurred. Period earnings, pending points and spendable balance are separate response fields.
 Statuses: completed, pending, invalid, denied, conflict, unavailable.
 A successful empty query is completed with an empty items array, never unavailable.
 Errors include a stable safe code, retryable flag, retained-state description and operation reference when known.

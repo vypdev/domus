@@ -26,6 +26,12 @@ Ordinary workflows work without AI, external calendars or Internet services.
 - Manual shopping requests are extras by default; automatic inventory/material needs consolidate without double-counting a source requirement (confirmed 2026-10-29).
 - Simple/default and optional advanced automation editors are both included in the first release over one shared declarative engine (confirmed 2026-10-29).
 - Relative tasks show their next occurrence when work is recorded by default; each task may instead wait for approval without changing the actual-completion date anchor (confirmed 2026-10-29).
+- Material quantities are reviewed and adjustable when completing a task, with both recorded in the same submission; the task configuration can use separate recording instead (confirmed 2026-10-29).
+- Material stock shortfalls do not block recording performed work: save consumption pending regularization without inventing negative stock (confirmed 2026-10-29).
+- Reopening reverses the actual point award even if spent; a factual negative balance blocks new redemptions until recovered while delivered rewards remain delivered (confirmed 2026-10-29).
+- Missed fixed-schedule occurrences are configurable per task; the default keeps all visible with explicit skip available, retaining history without completion points (confirmed 2026-10-29).
+- Recurrence changes show a preview and update only future executions that have not started, preserving started work and history (confirmed 2026-10-29).
+- Participation and earned points belong to the actual-work period; required approval controls when points become spendable without moving them to the approval week (confirmed 2026-10-29).
 
 ## Source boundary
 
@@ -53,7 +59,7 @@ all domains themselves are included at launch.
 ## Product boundaries
 
 Local-first means a local authoritative server and owned data, not an unreviewed offline-write sync protocol.
-One household per installation is proposed. Child/restricted members still use their own HA accounts.
+One household per installation is confirmed. Child/restricted members still use their own HA accounts.
 A person entity is optional profile/presence metadata and never a login.
 Points help explain participation; task counts, estimated effort and workload remain visible.
 

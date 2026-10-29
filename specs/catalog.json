@@ -53,7 +53,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Role permission matrix review; proof of HA authentication in both deployment targets; technical service principal policy.",
+        "blockingDecisions": "Role permission matrix and first-administrator/recovery review; proof of HA authentication in both deployment targets; technical service principal policy.",
         "copilotChangesAllowed": false
       }
     },
@@ -81,7 +81,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Dependency semantics; detailed role/override review; first-release advanced task-type matrix. The owner confirmed adult/no-verification and restricted/adult-approval defaults on 2026-10-29.",
+        "blockingDecisions": "Dependency semantics; detailed role/override review; first-release advanced task-type matrix. The owner confirmed role-default verification, adjustable materials in the completion submission and completion with pending material regularization when stock is insufficient on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },
@@ -109,7 +109,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "DST fold policy review; supported RRULE subset, gap-adjustment interoperability and calendar projection review. The owner confirmed DST gap advancement, actual-completion anchoring and per-task successor timing with at_completion as default on 2026-10-29.",
+        "blockingDecisions": "DST fold policy review; supported RRULE subset, gap-adjustment interoperability and calendar projection review. The owner confirmed DST gap advancement, actual-completion anchoring, per-task successor timing, missed-work defaults and previewed updates limited to unstarted future occurrences after rule edits on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },
@@ -137,7 +137,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed remainder/override review; reward redemption rules and child-facing review. On 2026-10-29 the owner required in-app configurable allocation supporting conserved splits, rounded equal shares, decimal shares and full points per participant. Adults/no-verification and restricted/adult-approval are the confirmed role defaults.",
+        "blockingDecisions": "Detailed remainder/override review; unfulfilled redemption handling after a reversal; child-facing review. The owner confirmed configurable allocation, role-default verification, negative balances after spent-point reversal and reporting in the actual-work period with spendability only after approval.",
         "copilotChangesAllowed": false
       }
     },
@@ -193,7 +193,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner completed the barcode scope on 2026-10-29: camera scan plus manual entry, local catalog and optional Internet lookup.",
+        "blockingDecisions": "Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner confirmed barcode scope, adjustable material recording and pending regularization rather than negative stock for task material shortfalls on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },

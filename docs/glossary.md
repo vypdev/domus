@@ -11,6 +11,7 @@
 | Assignee | Planned responsible member |
 | Actual performer | Member who did the work; may differ from the assignee |
 | Completion actor | Authenticated principal recording completion |
+| Completion cycle | Stable accepted performance identity; reopening closes it and a genuine later completion gets a new ID |
 | Verifier | Authorized principal approving completion when required |
 | Due date | Deadline; distinct from scheduled start and actual completion |
 | Demand | Attributable purchasing intent with additional/overlapping semantics |
@@ -20,6 +21,8 @@
 | Product | Identity of a supply, independent of package presentation |
 | Presentation | Package size and exact conversion to the product base unit |
 | Stock movement | Immutable receipt, consumption, transfer or correction entry |
+| Material consumption intent | Explicit actual-usage submission linked to a completion cycle and line; may await regularization without being a posted movement |
+| Pending regularization | Performed work is saved but an inventory discrepancy needs authorized factual review before the material intent can be settled |
 | Reservation | Stock allocated to a material requirement |
 | Available stock | Physical stock minus active reservations |
 | Points entry | Immutable award, reversal or correction with a unique source |

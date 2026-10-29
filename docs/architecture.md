@@ -68,7 +68,10 @@ The UI follows the owner's selected Symphonia/Gateway direction without inheriti
 Definitions and occurrences, product identity and presentation, demand and purchase, receipt and stock posting,
 and planned/actual actors are separate facts. Immutable stock and points ledgers use compensations.
 Points use exact signed minor units and snapshot the configured allocation policy. Conservation of the base task value applies only to the conserve_total policy; other owner-required rounding/full-award policies record their actual total explicitly. Reopening compensates those actual entries rather than assuming the base value equals the award sum.
+An allocation is unique per completion cycle independently of its policy version; all performer shares, inbox receipt and remainder-order change commit together. Closing a cycle prevents delayed approval or completion delivery from awarding it again. A genuine later completion has a separate cycle identity. Reversing spent points preserves any factual negative balance and fulfilled rewards while denying unaffordable new redemption.
+The completion application orchestration accepts explicitly reviewed material intents in the same submission, delegating quantity rules to Inventory. Stable per-line identities preserve exact outcomes on replay. A stock shortage saves performed work plus a pending-regularization intent without a fabricated movement; explicit authorized settlement is separate from future restocking. Reopening a task never proves a physical material return.
 Commands validate the authenticated principal, expected aggregate revision and idempotency key.
+Receipt lookup/replay also checks current permissions. Routine audit retention cannot remove side-effect replay protection; compact guards and lifecycle identities remain consistent with backed-up business state.
 A transaction commits domain state, operation receipt, audit reference and outbox.
 Duplicate same-key requests return the original result; changed-payload replays return conflict.
 Consumers record inbox identities with their effects. If a projection fails, the committed business operation
@@ -89,7 +92,7 @@ production entity; service commands validate installation/channel selection befo
 
 ## Calendar and optional integrations
 
-Fixed schedules preserve anchors; completion-relative rules use accepted completion. UTC instants and local
+Fixed schedules preserve anchors and retain missed occurrences visibly by default, with a per-task policy and explicit skip. Completion-relative rules anchor to actual completed_at independently of later verified_at. UTC instants and local
 date-only values remain different types. The owner-confirmed DST gap policy advances an occurrence to the first valid local instant at or after its intended time while retaining nominal identity and showing the adjustment. This is an explicit Domus policy, not unqualified RFC 5545 expansion semantics. Fold behavior remains explicit and previewed.
 External calendar sync is optional future work: start with read-only export; any two-way sync would need
 stable external UIDs, remote revision/ETag conflict detection, an explicit field owner, deletion tombstones,

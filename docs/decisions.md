@@ -19,10 +19,28 @@ Confirmed owner requirements are recorded in [product vision](product-vision.md)
 | A13 | Draft catalog retains empty implementation evidence until it exists | Audited SDK validator rejects empty code/entrypoints/tests even for proposed capabilities | Gate readiness blocked; do not change Copilot |
 | A14 | Accepted: camera scan, manual entry, local catalog and optional Internet product lookup | Local operation remains useful without an external provider; candidates retain provenance and require schema validation | Owner completed barcode scope 2026-10-29; provider feasibility/terms, library and device evidence remain required |
 | A15 | Accepted defaults: adults complete without verification; restricted performers need adult approval | Resolve effective verification from the actual performers and authorized policy, not just the submitter's role | Owner confirmed 2026-10-29; explicit task overrides and permission contracts require tests |
+| A16 | Accepted: adjustable actual material quantities in the completion form and the same submission, configurable per task | Keep one household action while Inventory owns explicit, attributable consumption and per-line receipts | Owner confirmed 2026-10-29; combined-command permission/recovery contracts require tests |
+| A17 | Accepted: insufficient stock saves performed work and a consumption intent pending regularization; no negative stock | Recording completed work must not fabricate stock or conceal unresolved materials | Owner confirmed 2026-10-29; explicit settlement and concurrent/replayed operations require tests |
+| A18 | Accepted: reverse already-spent task points in full, allow a factual negative balance, block new redemptions until recovered and retain fulfilled rewards | Preserve ledger truth without retracting delivered rewards or suppressing a correction | Owner confirmed 2026-10-29; existing unfulfilled reservations remain a review item |
+| A19 | Accepted: missed fixed-schedule occurrences are configurable per task; retain all visibly pending by default with explicit skip available | A missed chore must not become a fabricated completion or point award | Owner confirmed 2026-10-29; resume/overlap preview and alternative policy details require tests/review |
+| A20 | Accepted: recurrence edits preview the delta and update only unstarted future occurrences, preserving started work and history | Avoid changing work underway while allowing future schedules to follow the updated rule | Owner confirmed 2026-10-29; stale previews, retained exceptions and replacement identities require tests |
+| A21 | Accepted: earned points and participation use the actual-work period; required approval controls when credit becomes spendable | A Sunday completion approved Monday belongs to Sunday's week without spending unapproved points | Owner confirmed 2026-10-29; reporting, posting and reversal timestamps require boundary fixtures |
 
 All eleven SDDs remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
 The Copilot limitation is an observed constraint, not permission to change its implementation,
 installed files, statuses, or checks. Documentation can be reviewed through its existing documentation workflow.
+
+## Owner review in progress
+
+The following questions have been sent to the owner. Their recommendations are proposals, not accepted decisions; dependent contracts remain Draft until the response is recorded.
+
+| Question | Proposed direction | Owning contract |
+|---|---|---|
+| Reopening a prerequisite after its dependent task was completed | Retain actual downstream completion and points, flag the changed dependency and request review rather than automatically reopening a chain | household-tasks |
+| Disabling a rule with queued, waiting or running executions | Stop new executions and later steps, finish an already-started atomic command and retain its effects | household-automation |
+| A reversal removes backing points for an approved but unfulfilled redemption | Hold delivery for sufficient credit or an explicit reviewed resolution rather than silently fulfilling or cancelling | points-rewards |
+
+Authentication proof, first-administrator/recovery and role-matrix review, DST fold/library interoperability, adapter feasibility and numeric resource bounds remain explicit engineering/security gates. They do not reopen the owner-confirmed architecture or launch scope.
 
 ## Owner decisions recorded on 2026-10-29
 
@@ -36,3 +54,9 @@ installed files, statuses, or checks. Documentation can be reviewed through its 
 - Manual shopping requests are additional by default. Automatic stock/material requirements consolidate against their source/coverage identity without counting the same need twice.
 - Both automation editors are first-release features: simple is the default and advanced is optional. They share one declarative engine; switching editor cannot discard advanced rule fields.
 - Successor timing is configurable per task: show it when completion is recorded by default, or wait for approval. Both choices calculate its date from actual work completion; waiting for approval does not move that date.
+- Task materials default to a review of adjustable actual quantities in the completion form, recorded with the same submission and configurable per task. Inventory owns movements and permissions; reopening does not imply a physical return.
+- Insufficient material stock leaves the work completed and its consumption pending regularization, without a negative stock movement. Pending material, verification and points outcomes remain independently visible.
+- Reopening reverses points even when already spent. Preserve a resulting negative balance, block new redemptions until the deficit is recovered and sufficient points exist, and retain already-fulfilled rewards.
+- Fixed-schedule missed occurrences are configurable per task. Keep all pending occurrences visible by default; explicitly skipping one preserves its history and awards no completion points.
+- Recurrence edits show a preview and update only unstarted future occurrences, retaining started work and history. A concurrent start invalidates the preview rather than allowing a silent overwrite.
+- Earned points and participation belong to the actual-work week/month in the household zone; required approval makes credit spendable later without moving its reporting period. Keep completed_at, verified_at and ledger posted_at distinct.

@@ -1,6 +1,6 @@
 # Verification and acceptance plan
 
-The SDD inventory contains 281 distinct planned cases across eleven capabilities.
+The SDD inventory contains 324 distinct planned cases across eleven capabilities.
 The counts are derived from concrete observable scenarios and are minimums; no application tests have run.
 Formatting, catalog metadata, branch readiness and working product acceptance are separate gates.
 
@@ -13,6 +13,8 @@ Architectural rules, schema validation, permissions, replay/races and recovery a
 Use deterministic clocks, IDs, bounded provider fakes and injected transaction failures.
 
 The 2026-10-29 owner decisions add concrete cases for role-default verification, Ingress/host-context boundaries, configurable points allocation and actual-total reversals, optional external product lookup, recurrence anchored to actual work with per-task successor timing, and one automation engine with both editors. Its 42-case floor covers schema/editor round trips, permissions, durable waits/replay, partial recovery, resource/loop budgets and target/channel isolation. Case IDs, per-area budgets and reverse requirement mappings are regenerated together before running the unchanged original Copilot consistency functions.
+
+The continued owner review specifies adjustable material quantities in the completion submission, stock shortfalls retained as pending consumption without negative stock, actual-work reporting periods, recurrence-edit previews and visible missed occurrences. Ledger cases additionally cover atomic performer allocations, closed completion cycles, already-spent-point reversals and negative-balance recovery. Receipt-retention and current-authorization cases prevent cleanup or replay from bypassing domain invariants.
 
 ## CI Check contract
 
