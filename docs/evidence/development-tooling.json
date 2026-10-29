@@ -77,7 +77,7 @@
     "actualToolingImportContracts": "PASS",
     "copilotResourceHashes": "PASS: 29 installed files",
     "localDocumentLinks": "PASS",
-    "githubCurrentHead": "pending PR execution"
+    "githubCurrentHead": "Every later revision requires its own GitHub result; exact verified runs are recorded separately below."
   },
   "owningSdd": {
     "referenceRevision": "f5e5a4cf9a80248994469cd88ad55eecab5b95ca",
@@ -142,5 +142,20 @@
     "architecture/python-application.ini": "191fcdfb38bbe233172e04057763f0d7e1587549e473ad8db6a4cadcb00ddd01",
     "architecture/python-tooling.ini": "7a6930bae4fe16b2447a8b55d8199474371a453325c170e2ae1315f7b106b152",
     ".github/workflows/ci_check.yml": "e6eac7f1291d04670e8758ec1b7e3cfb2ee681ee8d1cf0f99417368f707b7b94"
-  }
+  },
+  "githubRuns": [
+    {
+      "headSha": "8a1c8fbdc50960a124fc76bc16702638845a0606",
+      "run": "https://github.com/vypdev/domus/actions/runs/40800913976",
+      "conclusion": "success",
+      "jobs": {
+        "Python tooling": "success",
+        "Python architecture contracts": "success",
+        "Local documentation links": "success",
+        "Node architecture policy": "success",
+        "CI Check": "success"
+      },
+      "scope": "This exact implementation commit only; later revisions have independent checks."
+    }
+  ]
 }

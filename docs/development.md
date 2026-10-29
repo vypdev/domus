@@ -87,7 +87,7 @@ remains separate: link success does not establish SDD gate readiness.
 The first tooling increment has 64 Python tests, 11 Node policy tests and 10 Python architecture fixture
 tests. These 85 executed tests are separate from the 353 planned product acceptance cases.
 [Tooling evidence](evidence/development-tooling.json) records exact scopes and metrics.
-Current-head GitHub execution must pass independently of local results.
+The first implementation commit, 8a1c8fbdc50960a124fc76bc16702638845a0606, passed all five jobs in [CI Check run 40800913976](https://github.com/vypdev/domus/actions/runs/40800913976). Every later head must pass independently; this recorded result does not transfer to new code.
 
 The delivery-quality catalog entry registers only existing tooling/CI evidence and stays proposed/Draft.
 Other capabilities retain empty implementation evidence. The original SDK validator still reports the
