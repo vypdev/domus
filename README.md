@@ -8,7 +8,7 @@ into one responsive interface. Normal operation does not require AI or cloud ser
 
 ## Project status
 
-Domus is in the specification phase. No application is implemented or published yet.
+Domus has started its development-tooling foundation. No household application is implemented or published yet.
 The [documentation foundation issue](https://github.com/vypdev/domus/issues/2)
 tracks eleven Draft SDDs, 82 normative requirements and 353 planned acceptance cases.
 These cases are verification plans, not executed application tests.
@@ -37,6 +37,7 @@ in the application, with the chosen policy and actual awards preserved in the le
 - [Development milestones](docs/roadmap.md)
 - [Acceptance, coverage and CI Check plan](docs/acceptance-plan.md)
 - [Specification validation evidence and limitations](docs/sdd-validation.md)
+- [Development setup, tests and CI Check](docs/development.md)
 
 ## Quality and contribution
 
@@ -60,11 +61,12 @@ preparation when necessary. Merge, release and deployment remain separately auth
 
 All SDDs remain Draft while material decisions are reviewed. Their original Copilot
 format and consistency checks pass. The proposed SDK catalog still fails the unchanged
-upstream evidence validator because application entrypoints, source and tests do not
-exist yet; no fake paths or gate-readiness claims are used. See the
+upstream evidence validator for the ten capabilities without implementation. Delivery-quality
+registers only its real partial tooling/CI evidence; no fake paths or gate-readiness claims are used. See the
 [adoption note](docs/copilot-adoption.md).
 
 The supplied brief ends at the beginning of section 10.2. The owner completed the
 barcode scope on 2026-10-29: camera/manual entry, local matching and optional Internet
 product lookup. Provider feasibility and device evidence still require review.
-No application build/test commands or CI workflow are installed by this documentation-only change.
+The initial tooling/tests and a separate CI Check workflow are now implemented; see the development guide.
+Household application, UI and HA runtime tests remain future implementation work.

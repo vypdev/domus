@@ -4,6 +4,11 @@ The SDD inventory contains 353 distinct planned cases across eleven capabilities
 The counts are derived from concrete observable scenarios and are minimums; no application tests have run.
 Formatting, catalog metadata, branch readiness and working product acceptance are separate gates.
 
+The first implementation is development tooling, with 85 executed tests recorded separately in the
+[development guide](development.md). Its coverage measures the actual Python tooling and declarative
+Node architecture policy, not the unimplemented backend/UI/HA product. The original product case floor
+remains planned; passing tooling tests does not satisfy all product acceptance cases.
+
 ## From the first source file
 
 Write meaningful behavior tests with each implementation. Enforce 100% supported first-party line, statement,

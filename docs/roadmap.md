@@ -14,6 +14,9 @@ The following milestones are internal integration steps, not proposals to drop l
 
 The product is not considered first-release complete at M2 or M3.
 Test, user documentation and failure recovery travel with each change.
+PR #3 merged the documentation foundation into develop. Issue #4 begins M1 with locked development
+toolchains, tested quality policies and the project CI Check workflow. This is partial M1 evidence;
+identity, persistence, real application/HA coverage and channel acceptance remain pending.
 No implementation begins on an invented branch: maintainers and the Action retain their installed lifecycle.
 Release, merge and deployment require the existing maintainer flow and explicit authorization.
 Future optional depth includes predictive consumption, workload recommendations, rich rewards and external calendars.

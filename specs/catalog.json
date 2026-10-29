@@ -263,21 +263,39 @@
       "specs": [
         "specs/delivery-quality.md"
       ],
-      "workflows": [],
-      "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
+      "entrypoints": [
+        ".github/workflows/ci_check.yml",
+        "tooling/domus_tooling/cli.py"
+      ],
+      "code": [
+        "tooling/domus_tooling/ci_policy.py",
+        "tooling/domus_tooling/docs.py",
+        "tooling/domus_tooling/cli.py",
+        "architecture/frontend.mjs"
+      ],
+      "tests": [
+        "tests/python/test_ci_policy.py",
+        "tests/python/test_cli.py",
+        "tests/python/test_docs.py",
+        "tests/python/test_ci_contract.py",
+        "tests/architecture/test_python_architecture.py",
+        "tests/node/architecture.test.mjs"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/development.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
-        "blockingDecisions": "Runner/toolchain review; required-check configuration by maintainer; channel IDs and integration coexistence review; release publication authorization.",
+        "implementationEvidence": "partial: tested development tooling and CI; application/HA/channel acceptance pending",
+        "blockingDecisions": "Current-head CI proof and required-check configuration by maintainer; real application/HA coverage and adapter contracts; channel IDs/integration coexistence; release publication authorization. Tooling versions and initial checks are implemented under issue #4.",
         "copilotChangesAllowed": false
       }
     },

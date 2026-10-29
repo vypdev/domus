@@ -19,7 +19,7 @@ debt or convert unknown historic intent into a design decision.
 | `household-inventory` | Proposed | The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger. | [Product catalog, pantry stock and replenishment](./household-inventory.md) | 5 paths · 2026-10-29 |
 | `home-assistant-surface` | Proposed | Domus exposes its household capabilities as native Home Assistant entities, services and events. The already integrated HA MCP consumes these surfaces; no gateway work or second MCP is included. | [Home Assistant entities, services and integration](./home-assistant-surface.md) | 5 paths · 2026-10-29 |
 | `application-experience` | Proposed | A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI. | [Responsive application, household dashboard and navigation](./application-experience.md) | 5 paths · 2026-10-29 |
-| `delivery-quality` | Proposed | Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels. | [Clean Architecture, CI Check and isolated Stable and Edge channels](./delivery-quality.md) | 5 paths · 2026-10-29 |
+| `delivery-quality` | Proposed | Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels. | [Clean Architecture, CI Check and isolated Stable and Edge channels](./delivery-quality.md) | 19 paths · 2026-10-29 |
 | `household-automation` | Proposed | Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces. | [Household automation engine and simple/advanced rule editors](./household-automation.md) | 5 paths · 2026-10-29 |
 
 ## Evidence map
@@ -128,11 +128,11 @@ debt or convert unknown historic intent into a design decision.
 - Owner: Domus maintainers (review assignment pending)
 - Last verified: 2026-10-29
 - Specifications: [`specs/delivery-quality.md`](./delivery-quality.md)
-- Workflows: Not applicable for this capability.
-- Entrypoints: Not applicable for this capability.
-- Core code: Not applicable for this capability.
-- Tests: Not applicable for this capability.
-- User documentation: [`docs/product-vision.md`](../docs/product-vision.md) · [`docs/architecture.md`](../docs/architecture.md) · [`docs/operations.md`](../docs/operations.md) · [`docs/user-guide.md`](../docs/user-guide.md) · [`docs/contracts/home-assistant.md`](../docs/contracts/home-assistant.md)
+- Workflows: [`.github/workflows/ci_check.yml`](../.github/workflows/ci_check.yml)
+- Entrypoints: [`.github/workflows/ci_check.yml`](../.github/workflows/ci_check.yml) · [`tooling/domus_tooling/cli.py`](../tooling/domus_tooling/cli.py)
+- Core code: [`tooling/domus_tooling/ci_policy.py`](../tooling/domus_tooling/ci_policy.py) · [`tooling/domus_tooling/docs.py`](../tooling/domus_tooling/docs.py) · [`tooling/domus_tooling/cli.py`](../tooling/domus_tooling/cli.py) · [`architecture/frontend.mjs`](../architecture/frontend.mjs)
+- Tests: [`tests/python/test_ci_policy.py`](../tests/python/test_ci_policy.py) · [`tests/python/test_cli.py`](../tests/python/test_cli.py) · [`tests/python/test_docs.py`](../tests/python/test_docs.py) · [`tests/python/test_ci_contract.py`](../tests/python/test_ci_contract.py) · [`tests/architecture/test_python_architecture.py`](../tests/architecture/test_python_architecture.py) · [`tests/node/architecture.test.mjs`](../tests/node/architecture.test.mjs)
+- User documentation: [`docs/product-vision.md`](../docs/product-vision.md) · [`docs/architecture.md`](../docs/architecture.md) · [`docs/operations.md`](../docs/operations.md) · [`docs/user-guide.md`](../docs/user-guide.md) · [`docs/contracts/home-assistant.md`](../docs/contracts/home-assistant.md) · [`docs/development.md`](../docs/development.md)
 
 ### `household-automation` — Household automation engine and simple/advanced rule editors
 

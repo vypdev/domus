@@ -1,0 +1,5 @@
+{
+  "name": "@domus/frontend",
+  "private": true,
+  "type": "module"
+}

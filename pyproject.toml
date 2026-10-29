@@ -1,0 +1,57 @@
+[project]
+name = "domus-tooling"
+version = "0.0.0"
+description = "Development quality gates for Domus"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "markdown-it-py==4.2.0",
+]
+
+[project.scripts]
+domus-check = "domus_tooling.cli:main"
+
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tooling/domus_tooling"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/python"]
+addopts = "-ra --strict-config --strict-markers"
+
+[tool.coverage.run]
+branch = true
+source = ["domus_tooling"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+precision = 2
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["domus_tooling"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+files = ["tooling"]
+
+[dependency-groups]
+dev = [
+    "hatchling==1.33.0",
+    "import-linter==2.15",
+    "mypy==2.4.1",
+    "pytest==9.2.0",
+    "pytest-cov==7.1.0",
+    "pyyaml==6.0.3",
+    "ruff==0.17.3",
+]

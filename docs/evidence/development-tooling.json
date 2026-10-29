@@ -1,0 +1,161 @@
+{
+  "verifiedOn": "2026-10-29",
+  "issue": "https://github.com/vypdev/domus/issues/4",
+  "sourceBase": "0833f630aeff1b48558e0192e19ef3a42c328986",
+  "scope": "Working-tree tooling verification, identified by source hashes; current-head GitHub checks run independently.",
+  "runtimes": {
+    "python": "3.14.6",
+    "uv": "0.11.29",
+    "node": "24.20.0",
+    "pnpm": "10.34.0"
+  },
+  "packages": {
+    "pytest": "9.2.0",
+    "pytest-cov": "7.1.0",
+    "coverage": "7.17.0",
+    "ruff": "0.17.3",
+    "mypy": "2.4.1",
+    "import-linter": "2.15",
+    "markdown-it-py": "4.2.0"
+  },
+  "tests": {
+    "pythonToolingAndWorkflow": 64,
+    "nodeArchitecturePolicy": 11,
+    "pythonArchitectureFixtures": 10,
+    "totalExecuted": 85,
+    "productAcceptanceCasesRemainPlanned": 353
+  },
+  "pythonCoverage": {
+    "scope": "Every domus_tooling module",
+    "statements": 73,
+    "coveredStatements": 73,
+    "branches": 34,
+    "coveredBranches": 34,
+    "percent": 100.0
+  },
+  "nodeCoverage": {
+    "scope": "Declarative architecture/frontend.mjs only; no product UI source exists",
+    "metrics": {
+      "lines": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": "Unknown"
+      }
+    },
+    "authoredFunctions": 0,
+    "authoredBranches": 0
+  },
+  "checks": {
+    "ruff": "PASS",
+    "mypy": "PASS",
+    "typescript": "PASS",
+    "actualToolingImportContracts": "PASS",
+    "copilotResourceHashes": "PASS: 29 installed files",
+    "localDocumentLinks": "PASS",
+    "githubCurrentHead": "Every later revision requires its own GitHub result; exact verified runs are recorded separately below."
+  },
+  "owningSdd": {
+    "referenceRevision": "f5e5a4cf9a80248994469cd88ad55eecab5b95ca",
+    "sourceCopiesVerified": 7,
+    "owningSpec": "specs/delivery-quality.md",
+    "baseCommit": "0833f630aeff1b48558e0192e19ef3a42c328986",
+    "format": "PASS",
+    "consistency": "PASS",
+    "canonicalHeadings": "PASS",
+    "catalog": {
+      "status": "BLOCKED",
+      "errors": [
+        "capabilities[0].entrypoints must not be empty.",
+        "capabilities[0].code must not be empty.",
+        "capabilities[0].tests must not be empty.",
+        "capabilities[1].entrypoints must not be empty.",
+        "capabilities[1].code must not be empty.",
+        "capabilities[1].tests must not be empty.",
+        "capabilities[2].entrypoints must not be empty.",
+        "capabilities[2].code must not be empty.",
+        "capabilities[2].tests must not be empty.",
+        "capabilities[3].entrypoints must not be empty.",
+        "capabilities[3].code must not be empty.",
+        "capabilities[3].tests must not be empty.",
+        "capabilities[4].entrypoints must not be empty.",
+        "capabilities[4].code must not be empty.",
+        "capabilities[4].tests must not be empty.",
+        "capabilities[5].entrypoints must not be empty.",
+        "capabilities[5].code must not be empty.",
+        "capabilities[5].tests must not be empty.",
+        "capabilities[6].entrypoints must not be empty.",
+        "capabilities[6].code must not be empty.",
+        "capabilities[6].tests must not be empty.",
+        "capabilities[7].entrypoints must not be empty.",
+        "capabilities[7].code must not be empty.",
+        "capabilities[7].tests must not be empty.",
+        "capabilities[8].entrypoints must not be empty.",
+        "capabilities[8].code must not be empty.",
+        "capabilities[8].tests must not be empty.",
+        "capabilities[10].entrypoints must not be empty.",
+        "capabilities[10].code must not be empty.",
+        "capabilities[10].tests must not be empty."
+      ]
+    },
+    "implementationScope": "Partial delivery-quality tooling only; other ten capabilities retain absent implementation evidence."
+  },
+  "productRuntimeImplemented": false,
+  "liveHomeAssistantDogfooding": "NOT RUN: no identifiable product artifact exists",
+  "copilotChanged": false,
+  "sourceSha256": {
+    "tooling/domus_tooling/__init__.py": "6c2440f4b9799284410ca165b02a1e86f3cf450082159dc15778d89a3a5b5c2f",
+    "tooling/domus_tooling/ci_policy.py": "b46800d0fe2d5a3bfafc012773e28c5d2bb90024287a1f8d5292986333f09f44",
+    "tooling/domus_tooling/cli.py": "3b4b729a490fb2fcf5efcb25210919746d9b5a5feea81ca7056e087e6ead5486",
+    "tooling/domus_tooling/docs.py": "105e2fd92220ed44c9be15e8440c08eb9faf8dee66177a8f5155a2f573b4fdde",
+    "tests/architecture/test_python_architecture.py": "de2c0cb7d25b7fe33fd2841892dedadccc401992d02afbfc52bb5ef57377c883",
+    "tests/python/test_ci_contract.py": "ddd275886616901ca69f4731d6e1b6ec63b40cf81cc624264f79f0182fa029c3",
+    "tests/python/test_ci_policy.py": "1e2832397819834825bc7233529faddfd19d55eebf4a6ace39038bb4fbd78a06",
+    "tests/python/test_cli.py": "92fb48a6a1548f7075945b22b6d5b5a803d2645d3651bfb00183f0bee45ea926",
+    "tests/python/test_docs.py": "6fae630c654952b2e507044f473edbb2a8f41ff586214a5b5d8fd331197b3975",
+    "tests/node/architecture.test.mjs": "12864abc6e1eeb40fcc6141efbbbfd40c5991509197e3c976f6593547e62bb3c",
+    "architecture/frontend.mjs": "6338a809308ea82fe404449766f98b76dac89d576b10ecec37a35116d000f6cc",
+    "architecture/python-application.ini": "191fcdfb38bbe233172e04057763f0d7e1587549e473ad8db6a4cadcb00ddd01",
+    "architecture/python-tooling.ini": "7a6930bae4fe16b2447a8b55d8199474371a453325c170e2ae1315f7b106b152",
+    ".github/workflows/ci_check.yml": "e6eac7f1291d04670e8758ec1b7e3cfb2ee681ee8d1cf0f99417368f707b7b94"
+  },
+  "githubRuns": [
+    {
+      "headSha": "8a1c8fbdc50960a124fc76bc16702638845a0606",
+      "run": "https://github.com/vypdev/domus/actions/runs/40800913976",
+      "conclusion": "success",
+      "jobs": {
+        "Python tooling": "success",
+        "Python architecture contracts": "success",
+        "Local documentation links": "success",
+        "Node architecture policy": "success",
+        "CI Check": "success"
+      },
+      "scope": "This exact implementation commit only; later revisions have independent checks."
+    }
+  ]
+}

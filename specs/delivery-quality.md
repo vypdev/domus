@@ -3,12 +3,12 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: delivery-quality
-- Last verified: 2026-10-29 (document structure only; no implementation evidence)
+- Last verified: 2026-10-29 (partial tooling verified; application/channel acceptance pending)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels.
-- Related issues/PRs: https://github.com/vypdev/domus/issues/2
+- Related issues/PRs: https://github.com/vypdev/domus/issues/2; https://github.com/vypdev/domus/issues/4
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Runner/toolchain review; required-check configuration by maintainer; channel IDs and integration coexistence review; release publication authorization. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Current-head CI proof and required-check configuration by maintainer; real application/HA coverage and adapter contracts; channel IDs/integration coexistence; release publication authorization. Tooling versions and initial checks are implemented under issue #4. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -24,7 +24,7 @@ This is a prospective Draft, not an implemented or accepted capability. The firs
 
 The owner requires full quality gates from the first code and explicit Stable/Edge channels analogous to the existing gateway, while prohibiting changes to Copilot.
 
-Current verified sequence: (1) the repository has a minimal README and installed Copilot automation; (2) no Domus application, public service or tests exist; (3) this contract proposes the behavior to build.
+The documentation foundation was merged through PR #3. Issue #4 implements locked development tooling, import/cycle contracts, local document-link checks and the project CI Check workflow with meaningful tests. The household application, public domain services, UI, HA runtime integration and channel packages remain unimplemented. This is partial delivery-quality evidence, not acceptance of every requirement below.
 
 Evidence: the owner's attached brief and subsequent decisions in [product vision](../docs/product-vision.md), the pinned [reference investigation](../docs/reference-investigation.md), and the existing repository baseline. Retrospective classification is not applicable: no as-built product baseline is reconstructed.
 
@@ -206,29 +206,60 @@ Every implemented first-party module starts with meaningful behavior tests. Targ
 
 Inject deterministic clocks, IDs, provider fakes and transaction failures. Use semantic assertions alongside golden content, real adapter contracts and disposable HA integration environments. Add Google Chrome evidence from the owner's authorized local HA for real UX; it does not replace automated tests or unit coverage. CI Check runs the complete applicable suite for every PR update.
 
+Implemented tooling evidence is documented in [development](../docs/development.md): 64 Python tests, 11 Node policy tests and 10 Python architecture fixture tests, with 100% supported Python tooling coverage. The Node module is a declarative configuration with one executable statement and no authored functions/branches; it is not product UI coverage. These results partially support the tooling aspects of R1/R2/R3/R8 and do not complete the deployment, application port, channel or Chrome cases.
+
 ## 15. Documentation and discoverability
 
-The following paths are explicit proposed documentation changes relative to the clean repository baseline; implementation source/test paths are intentionally not invented.
+Owning documentation and actual tooling paths below are relative to the merged foundation at 0833f630aeff1b48558e0192e19ef3a42c328986. Other capabilities remain prospective. No product runtime path is invented.
 
 | Path | Change |
 |---|---|
-| specs/delivery-quality.md | create |
-| specs/README.md | create |
-| specs/_template.md | create |
-| specs/catalog.json | create |
-| specs/CATALOG.md | create |
-| docs/architecture.md | create |
-| docs/product-vision.md | create |
-| docs/glossary.md | create |
-| docs/decisions.md | create |
-| docs/reference-investigation.md | create |
-| docs/copilot-adoption.md | create |
-| docs/operations.md | create |
-| docs/user-guide.md | create |
-| docs/contracts/home-assistant.md | create |
-| docs/acceptance-plan.md | create |
-| docs/roadmap.md | create |
+| specs/delivery-quality.md | update |
+| specs/catalog.json | update |
+| specs/CATALOG.md | update |
 | README.md | update |
+| docs/roadmap.md | update |
+| docs/acceptance-plan.md | update |
+| docs/sdd-validation.md | update |
+| docs/decisions.md | update |
+| specs/README.md | reference |
+| specs/_template.md | reference |
+| docs/architecture.md | reference |
+| docs/product-vision.md | reference |
+| docs/glossary.md | reference |
+| docs/reference-investigation.md | reference |
+| docs/copilot-adoption.md | update |
+| docs/operations.md | reference |
+| docs/user-guide.md | reference |
+| docs/contracts/home-assistant.md | reference |
+| docs/development.md | create |
+| docs/evidence/development-tooling.json | create |
+| .github/workflows/ci_check.yml | create |
+| .gitignore | create |
+| .python-version | create |
+| .node-version | create |
+| pyproject.toml | create |
+| uv.lock | create |
+| package.json | create |
+| pnpm-lock.yaml | create |
+| pnpm-workspace.yaml | create |
+| tsconfig.json | create |
+| vitest.config.mjs | create |
+| frontend/package.json | create |
+| architecture/python-tooling.ini | create |
+| architecture/python-application.ini | create |
+| architecture/frontend.mjs | create |
+| tooling/domus_tooling/__init__.py | create |
+| tooling/domus_tooling/ci_policy.py | create |
+| tooling/domus_tooling/docs.py | create |
+| tooling/domus_tooling/cli.py | create |
+| tests/python/test_ci_policy.py | create |
+| tests/python/test_cli.py | create |
+| tests/python/test_docs.py | create |
+| tests/python/test_ci_contract.py | create |
+| tests/architecture/test_python_architecture.py | create |
+| tests/node/architecture.test.mjs | create |
+| tests/contracts/copilot-resource-hashes.json | create |
 
 | Audience | Artifact | Required content |
 |---|---|---|

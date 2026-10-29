@@ -1,0 +1,21 @@
+{
+  "name": "domus-development",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.0",
+  "engines": {
+    "node": ">=24.20.0 <25"
+  },
+  "scripts": {
+    "test": "vitest run --coverage",
+    "test:architecture": "vitest run tests/node/architecture.test.mjs --coverage",
+    "check": "tsc --noEmit --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@vitest/coverage-v8": "5.0.5",
+    "dependency-cruiser": "18.7.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

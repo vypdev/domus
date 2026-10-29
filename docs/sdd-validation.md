@@ -1,6 +1,6 @@
 # Validation evidence
 
-Audited 2026-10-29. This is documentation validation, not application acceptance.
+Foundation audit on 2026-10-29, before tooling implementation. This historical record describes PR #3, not application acceptance. The issue #4 tooling increment and current delivery-quality SDD/catalog verification are recorded separately in [development evidence](evidence/development-tooling.json).
 
 | Check | Result | Meaning |
 |---|---|---|
@@ -68,3 +68,7 @@ Pull-request and branch-sync workflows passed for that head. Copilot / Review wa
 A subsequent documentation head, ce2871b15508a1de53eaceca9bada001b31c25f2, failed progress assessment in both attempts with assessment-invalid exposed as agent.failed. The [second-attempt log](https://github.com/vypdev/domus/actions/runs/40787905127/job/123168549416) did not identify an application-test or SDD-format failure. Detailed sanitized evidence is recorded in [Copilot issue #774](https://github.com/vypdev/copilot/issues/774#issuecomment-6483788546); the separate deterministic proposed-catalog limitation is reported in [Copilot issue #777](https://github.com/vypdev/copilot/issues/777). No causal link between those two failures is asserted.
 
 The current local document validation does not make either historical run green or claim current-head GitHub acceptance. New documentation commits have independent checks. Copilot and its installed resources remain unchanged while their owners investigate.
+
+## Tooling increment after the foundation merge
+
+Issue #4 registers real tooling/CI entrypoints, source and tests for delivery-quality only, while the capability remains proposed/Draft. The unchanged pinned SDK validator now reports 30 missing-evidence errors for the other ten capabilities. The earlier 33-error foundation result above is retained as historical evidence, not relabeled as passing. The updated owning SDD passes original format/consistency checks against its actual merged base at 0833f630aeff1b48558e0192e19ef3a42c328986. See [development](development.md) for executed tooling tests and remaining product acceptance.
