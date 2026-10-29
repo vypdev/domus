@@ -10,7 +10,7 @@ into one responsive interface. Normal operation does not require AI or cloud ser
 
 Domus is in the specification phase. No application is implemented or published yet.
 The [documentation foundation issue](https://github.com/vypdev/domus/issues/2)
-tracks eleven Draft SDDs, 81 normative requirements and 324 planned acceptance cases.
+tracks eleven Draft SDDs, 82 normative requirements and 353 planned acceptance cases.
 These cases are verification plans, not executed application tests.
 
 The first usable release covers all six domains, Supervisor App/Ingress and

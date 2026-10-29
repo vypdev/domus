@@ -13,33 +13,33 @@
     {
       "id": "household-identity",
       "path": "specs/household-identity.md",
-      "requirements": 6,
-      "cases": 20,
-      "characters": 25909,
+      "requirements": 7,
+      "cases": 30,
+      "characters": 34606,
       "status": "PASS"
     },
     {
       "id": "household-tasks",
       "path": "specs/household-tasks.md",
       "requirements": 9,
-      "cases": 35,
-      "characters": 33289,
+      "cases": 38,
+      "characters": 35269,
       "status": "PASS"
     },
     {
       "id": "recurrence-calendar",
       "path": "specs/recurrence-calendar.md",
       "requirements": 8,
-      "cases": 34,
-      "characters": 33888,
+      "cases": 37,
+      "characters": 35737,
       "status": "PASS"
     },
     {
       "id": "points-rewards",
       "path": "specs/points-rewards.md",
       "requirements": 6,
-      "cases": 40,
-      "characters": 36857,
+      "cases": 44,
+      "characters": 39241,
       "status": "PASS"
     },
     {
@@ -55,23 +55,23 @@
       "path": "specs/household-inventory.md",
       "requirements": 8,
       "cases": 35,
-      "characters": 33067,
+      "characters": 33096,
       "status": "PASS"
     },
     {
       "id": "home-assistant-surface",
       "path": "specs/home-assistant-surface.md",
       "requirements": 8,
-      "cases": 29,
-      "characters": 30433,
+      "cases": 33,
+      "characters": 32547,
       "status": "PASS"
     },
     {
       "id": "application-experience",
       "path": "specs/application-experience.md",
       "requirements": 6,
-      "cases": 24,
-      "characters": 26974,
+      "cases": 26,
+      "characters": 28218,
       "status": "PASS"
     },
     {
@@ -86,13 +86,13 @@
       "id": "household-automation",
       "path": "specs/household-automation.md",
       "requirements": 9,
-      "cases": 42,
-      "characters": 31861,
+      "cases": 45,
+      "characters": 33902,
       "status": "PASS"
     }
   ],
-  "totalCases": 324,
-  "totalRequirements": 81,
+  "totalCases": 353,
+  "totalRequirements": 82,
   "catalog": {
     "status": "BLOCKED",
     "errors": [
@@ -228,19 +228,34 @@
     "progressAssessment": "https://github.com/vypdev/copilot/issues/774#issuecomment-6483788546",
     "proposedCatalogBootstrap": "https://github.com/vypdev/copilot/issues/777"
   },
-  "ownerDecisions": [
+  "acceptedDecisionTableRows": [
     "A1",
     "A2",
     "A3",
     "A5",
+    "A6",
     "A7",
     "A10",
     "A14",
+    "A15",
     "A16",
     "A17",
     "A18",
     "A19",
     "A20",
-    "A21"
+    "A21",
+    "A22",
+    "A23",
+    "A24",
+    "A25",
+    "A26"
+  ],
+  "latestOwnerReview": [
+    "A6",
+    "A22",
+    "A23",
+    "A24",
+    "A25",
+    "A26"
   ]
 }

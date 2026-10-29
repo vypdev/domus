@@ -8,7 +8,7 @@
 - Scope: Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Role permission matrix and first-administrator/recovery review; proof of HA authentication in both deployment targets; technical service principal policy. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Detailed permission matrix/override review; authenticated recovery after external HA account loss; proof of HA identity/administrator status in both deployment targets; technical service principal policy. The owner confirmed three administrator-mapping modes with all HA administrators as the default, plus configurable household profiles and per-member permission exceptions. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -41,11 +41,12 @@ Goals and fixed invariants are the following normative requirements. No configur
 | Requirement | Behavior |
 |---|---|
 | household-identity-R1 | Every participating member MUST map to a distinct verified HA user; person entities MUST NOT authenticate users. |
-| household-identity-R2 | Permissions MUST be enforced in the backend for every read and mutation using administrator, adult, restricted and viewer roles. |
+| household-identity-R2 | Permissions MUST be enforced in the backend for every read and mutation using predefined administrator, adult, restricted and viewer profiles, administrator-configurable household grants and explicit per-member exceptions, with deterministic precedence and current-policy checks. |
 | household-identity-R3 | Suspension, role changes and unlinking MUST revoke effective access without erasing historical actor references. |
 | household-identity-R4 | Identity flows MUST work in both deployment targets without trusting arbitrary client headers or exposing HA tokens to diagnostics. |
-| household-identity-R5 | Administrators MUST retain control of point values, verification, automation settings and inventory corrections; the last administrator cannot be removed. |
+| household-identity-R5 | Administrators MUST retain control of configuring point values, verification, automation settings and privileged corrections; Domus authorization commands MUST preserve at least one active effective administrator. |
 | household-identity-R6 | Members MUST control their locale and notification preferences and view participation without treating points as the sole fairness metric. |
+| household-identity-R7 | Administrator mapping MUST support all_ha_administrators by default, setup_administrator and selected_ha_user alternatives, prove HA identity/administrator status where required and preserve last-administrator/recovery safety without granting privilege from browser arrival order or caller-supplied identity. |
 
 Non-goals: changing Copilot, changing the existing gateway, building an MCP server, adding mandatory cloud/AI dependencies, or claiming production readiness from a document.
 
@@ -73,13 +74,19 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 
 Member(id, display_name, avatar_reference, ha_user_id, optional person_entity_id, role, active, preferences, revision). The HA user association is unique within the household. A person association supplies profile/presence only. Membership can be invited -> linked -> active -> suspended -> archived; unlinking immediately removes access without deleting historical authorship.
 
+The owner confirmed predefined role profiles with administrator-adjustable household permissions and per-member exceptions. RoleProfile retains the base role, explicit grants/denials and version; a MemberPermissionOverride retains permission, allow/deny, actor, reason and revision. Within configurable permissions, an explicit member override takes precedence over the household profile, which takes precedence over the predefined default; contradictory entries at the same level are rejected, with denial as the safe result for unresolved conflicts. Identity, household scope, installation limits and domain invariants remain hard constraints. Granting one action to a restricted member does not make that performer an adult or bypass required adult verification. Only an authorized administrator edits this policy; ordinary members cannot edit their own authority. Changes invalidate effective-permission caches and are rechecked at command commit and protected-result lookup. Snapshotted policy revisions explain past operations but cannot authorize a revoked grant.
+
+AdministratorMappingPolicy is configured explicitly during setup and may later be changed through an authorized audited command. The owner requested all three modes, with all_ha_administrators as the default. In that mode, each authenticated, authoritatively verified HA administrator receives the inherited Domus administrator role; other HA users do not. setup_administrator initially grants Domus administration only to the verified HA administrator who completes setup. selected_ha_user grants it initially to the explicitly selected active HA user, chosen by the verified HA administrator configuring the installation. Subsequent explicit Domus role assignments remain audited; alternate modes do not automatically elevate every other HA administrator. Continuous inheritance of current HA administrator status applies to all_ha_administrators; the alternatives designate the recorded setup identity or selected active HA account, and the selected account need not itself be an HA administrator.
+
+Initial configuration requires an explicit setup action by a proven HA administrator. Merely loading the page does not create a household or grant privilege. The default mode may link/activate a proven HA administrator according to the selected mapping policy after setup; ordinary unlinked users still need authorized membership activation. An inherited administrator grant retains its HA source and is removed when that source is no longer valid or the mapping changes; any independent explicit grant is evaluated separately. A profile/member edit cannot silently demote a currently inherited administrator role: change the authorized mapping or its HA source. Mapping never bypasses suspension, known revocation or technical-principal boundaries. A transport credential, person entity or submitted is_admin flag is not proof of a human HA administrator.
+
 The owner confirmed on 2026-10-29 that adult performers need no completion verification by default and restricted performers require approval by an authorized adult. Administrator control of verification configuration is separate from permission to approve a restricted member's completion. The effective policy follows actual performers; an adult submitting the record does not silently turn restricted work into adult work. Explicit overrides remain administrator-controlled and audited.
 
 ### 6.2 States and alternatives
 
-Unlinked membership cannot participate; linked accounts become active after administrator assignment. Suspended users retain historical attribution but cannot access protected reads or commands. The last active administrator cannot be removed.
+Ordinary unlinked membership cannot participate; linked accounts become active after administrator assignment, with verified administrator mapping as the explicit exception above. Suspended users retain historical attribution but cannot access protected reads or commands. Domus role, profile, mapping and suspension commands cannot remove the last active effective administrator. HA can independently revoke or remove accounts; Domus must then remove invalid inherited access and surface authenticated recovery rather than keep stale privilege or give the next arbitrary browser administration. The supported recovery procedure remains an engineering/security gate.
 
-Authorization applies to operation lookup and duplicate receipts as well as new writes. Replaying a once-authorized command does not bypass a later suspension or expose the old private result to another principal. Household role revocation is checked against current local authority before returning protected data; a snapshotted execution policy is not a permission grant. First-administrator enrollment and recovery after external HA account loss require a reviewed authenticated procedure; never promote the first arbitrary browser session or silently substitute a shared administrator.
+Authorization applies to operation lookup and duplicate receipts as well as new writes. Replaying a once-authorized command does not bypass a later suspension or expose the old private result to another principal. Household role revocation is checked against current local authority before returning protected data; a snapshotted execution policy is not a permission grant. Implementing the selected initial administrator mapping and recovery after external HA account loss requires a reviewed authenticated procedure; never promote the first arbitrary browser session or silently substitute a shared administrator.
 
 A duplicate uses its original operation receipt. A changed payload under the same key is a conflict. Out-of-order events use aggregate revision and source identity. Cancellation never erases an already committed ledger effect; compensation is explicit.
 
@@ -87,14 +94,19 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 
 | Input | Type | Recommended default | Allowed values/range | Scope/persistence |
 |---|---|---|---|---|
-| `default_member_role` | enum | restricted | adult, restricted or viewer; never administrator automatically | household; assigned at activation |
+| `default_member_role` | enum | restricted | adult, restricted or viewer for ordinary activation; verified administrator mapping is a separate explicit policy | household; assigned at activation |
+| `administrator_mapping` | enum | all_ha_administrators | all_ha_administrators, setup_administrator, selected_ha_user; selected mode requires a verified active target | installation/household; versioned, audited; current HA source checked |
+| `role_permissions` | typed permission map | predefined administrator/adult/restricted/viewer profiles | supported explicit allow/deny entries; administrator-controlled, cannot weaken hard constraints | household profile revision |
+| `member_permission_overrides` | typed permission map | none | supported explicit per-member exceptions; current administrator authorization and audit required | member policy revision; caches invalidated on change |
 | `session_max_minutes` | integer | 60 | 5..240; revocation checked on each command | installation; bounded server session |
 | `locale` | enum | browser preference | en or es, then en fallback | member; persisted |
 | `person_entity_id` | optional entity reference | none | person domain only; duplicate mapping rejected | member; persisted |
 
+Administrator-owned member exceptions are part of the household authorization policy, not a self-service preference. They may change supported profile grants within hard constraints; ordinary member locale/notification settings never expand authority.
+
 Owner-confirmed defaults are recorded as accepted choices; other defaults and bounds remain proposals pending review. Invalid values and contradictory combinations are rejected before saving; unknown future values require an explicit compatibility error. Precedence is fixed invariants, installation constraints, household policy, then member preferences; lower scopes cannot expand permissions. In-flight commands snapshot relevant policy versions, while revocation is checked at the transaction boundary.
 
-Recommended example: an administrator activates a linked participant with the restricted role. Meaningful alternative: a viewer can inspect permitted records without receiving mutation grants; changing role is explicit and audited. Transport secrets are installation concerns and are never domain form fields.
+Recommended example: all_ha_administrators supplies inherited administration and an ordinary participant receives the restricted profile. Meaningful alternative: setup_administrator limits inherited initial administration to the installer, while an authorized member exception adjusts one supported action without changing identity or domain invariants. Transport secrets are installation concerns and are never domain form fields.
 
 ## 8. Clean Architecture design
 
@@ -164,25 +176,25 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 20 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 30 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Domain and configuration | 3 | two members linked to one HA user; an adult creating an ordinary household task; removal of the last active administrator |
-| Security and privacy | 7 | only a person entity ID; a viewer calling task completion directly; a restricted member reading another member's private preferences |
+| Domain and configuration | 6 | two members linked to one HA user; an adult creating an ordinary household task; removal of the last active administrator |
+| Security and privacy | 9 | only a person entity ID; a viewer calling task completion directly; a restricted member reading another member's private preferences |
 | Adapters and identity | 2 | a valid HA user authentication; an archived account |
-| State and concurrency | 3 | a suspended member's existing session; concurrent reassignment and a role downgrade; a concurrent verification-policy change |
-| Deployment and contracts | 2 | a forged identity header on standalone HTTP; a verified HA session through Ingress |
+| State and concurrency | 6 | a suspended member's existing session; concurrent reassignment and a role downgrade; a concurrent verification-policy change |
+| Deployment and contracts | 3 | a forged identity header on standalone HTTP; a verified HA session through Ingress |
 | UI and accessibility | 2 | Spanish member preferences; notification opt-out |
-| Integration and recovery | 1 | differing task durations and equal points |
-| **Total** | **20** | No double counting |
+| Integration and recovery | 2 | differing task durations and equal points |
+| **Total** | **30** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
 | household-identity-C01 | Domain and configuration | household-identity-R1 | Given two members linked to one HA user, the second association is rejected. |
 | household-identity-C02 | Security and privacy | household-identity-R1 | Given only a person entity ID, a request cannot authenticate. |
 | household-identity-C03 | Adapters and identity | household-identity-R1 | Given a valid HA user authentication, the corresponding active member is resolved without matching display names. |
-| household-identity-C04 | Security and privacy | household-identity-R2 | Given a viewer calling task completion directly, the backend denies it and preserves the task. |
+| household-identity-C04 | Security and privacy | household-identity-R2 | Given a default viewer without task-completion permission calling completion directly, the backend denies it and preserves the task. |
 | household-identity-C05 | Security and privacy | household-identity-R2 | Given a restricted member reading another member's private preferences, the backend denies the request. |
 | household-identity-C06 | Domain and configuration | household-identity-R2 | Given an adult creating an ordinary household task, the role matrix permits it and records the actor. |
 | household-identity-C07 | State and concurrency | household-identity-R3 | Given a suspended member's existing session, the next command is denied. |
@@ -199,6 +211,16 @@ Minimum: 20 distinct cases, derived from the explicit risk inventory below. Each
 | household-identity-C18 | Integration and recovery | household-identity-R6 | Given differing task durations and equal points, participation reports show effort and counts alongside points. |
 | household-identity-C19 | Security and privacy | household-identity-R2, household-identity-R3 | Given an operation committed before the member was suspended, replay or lookup after suspension returns no protected result and cannot invoke the old privilege. |
 | household-identity-C20 | Security and privacy | household-identity-R1, household-identity-R2 | Given an unlinked authenticated user arriving before household setup is finished, access does not become administrator merely because that browser connected first. |
+| household-identity-C21 | Deployment and contracts | household-identity-R1, household-identity-R7 | Given default all_ha_administrators, an authenticated proven HA administrator receives inherited Domus administration while an ordinary HA user or technical transport credential does not. |
+| household-identity-C22 | Domain and configuration | household-identity-R7 | Given setup_administrator, the proven HA administrator explicitly completing setup receives the initial role and a different HA administrator is not automatically elevated by that alternate mapping. |
+| household-identity-C23 | Security and privacy | household-identity-R1, household-identity-R7 | Given selected_ha_user, only the verified active selected account receives initial administration; caller-supplied names, forged flags or an unverified target cannot complete setup. |
+| household-identity-C24 | State and concurrency | household-identity-R3, household-identity-R7 | Given an authorized mapping change, inherited grants are reevaluated with their source and independent explicit grants stay distinct; an old mapping revision cannot authorize a later command. |
+| household-identity-C25 | Integration and recovery | household-identity-R3, household-identity-R7 | Given all_ha_administrators with externally revoked HA administrator status or a removed final account, the invalid inherited grant is not retained and authenticated recovery is required rather than promoting the next browser. |
+| household-identity-C26 | State and concurrency | household-identity-R2, household-identity-R3 | Given a household profile allowance and an explicit member denial saved during an active session, the denial takes precedence and a stale cached allowance cannot authorize the next command. |
+| household-identity-C27 | Security and privacy | household-identity-R2, household-identity-R5 | Given an unauthorized self-grant or an allowed action aimed at another household, the backend rejects the policy/command and neither profile customization nor member exceptions bypass scope or adult-verification invariants. |
+| household-identity-C28 | State and concurrency | household-identity-R5, household-identity-R7 | Given a mapping/profile/suspension change that would remove the final active effective administrator, the Domus transaction rejects it with current policy intact, including concurrent changes. |
+| household-identity-C29 | Domain and configuration | household-identity-R2 | Given a household profile denial for a supported ordinary action and an authorized explicit member allowance, the backend permits only that action within scope while unrelated denied actions remain denied. |
+| household-identity-C30 | Domain and configuration | household-identity-R2 | Given contradictory allow/deny entries for the same permission at the same precedence level, saving rejects the policy with prior effective permissions retained instead of resolving it to an accidental grant. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -248,12 +270,13 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 
 | Requirement | Cases |
 |---|---|
-| household-identity-R1 | household-identity-C01, household-identity-C02, household-identity-C03, household-identity-C20 |
-| household-identity-R2 | household-identity-C04, household-identity-C05, household-identity-C06, household-identity-C19, household-identity-C20 |
-| household-identity-R3 | household-identity-C07, household-identity-C08, household-identity-C09, household-identity-C19 |
+| household-identity-R1 | household-identity-C01, household-identity-C02, household-identity-C03, household-identity-C20, household-identity-C21, household-identity-C23 |
+| household-identity-R2 | household-identity-C04, household-identity-C05, household-identity-C06, household-identity-C19, household-identity-C20, household-identity-C26, household-identity-C27, household-identity-C29, household-identity-C30 |
+| household-identity-R3 | household-identity-C07, household-identity-C08, household-identity-C09, household-identity-C19, household-identity-C24, household-identity-C25, household-identity-C26 |
 | household-identity-R4 | household-identity-C10, household-identity-C11, household-identity-C12 |
-| household-identity-R5 | household-identity-C13, household-identity-C14, household-identity-C15 |
+| household-identity-R5 | household-identity-C13, household-identity-C14, household-identity-C15, household-identity-C27, household-identity-C28 |
 | household-identity-R6 | household-identity-C16, household-identity-C17, household-identity-C18 |
+| household-identity-R7 | household-identity-C21, household-identity-C22, household-identity-C23, household-identity-C24, household-identity-C25, household-identity-C28 |
 
 All requirement cases are reciprocal with section 14. Domain invariants are owned by pure policy, command/state rules by application use cases, provider behavior by adapters, and visible content by presentation; the boundary table in section 8 assigns these responsibilities. Evidence and user/operator documentation are linked in section 15.
 

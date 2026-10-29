@@ -8,7 +8,7 @@
 - Scope: Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2; https://github.com/vypdev/domus/pull/3
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Detailed DSL/action catalog, numeric resource limits, in-flight disable/cancel semantics, external-effect receipts and supported HA/browser evidence. Both editor modes and one engine are owner-confirmed launch scope. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -38,7 +38,7 @@ RuleDefinition is mutable through revision-controlled edits; RuleRevision is imm
 | household-automation-R2 | Triggers, condition trees and action plans MUST use validated typed schemas with explicit resource bounds; arbitrary code, unbounded loops and raw network/database access are excluded. |
 | household-automation-R3 | Every action MUST call the same authorized Domus application use case as the UI, rechecking principal grants and target scope before each side effect. |
 | household-automation-R4 | Execution MUST durably persist run identity, pinned rule revision, waits and step receipts and remain duplicate-safe across concurrent workers, retries and restart. |
-| household-automation-R5 | Editing, disabling and cancelling rules MUST have explicit in-flight semantics and retain successful steps after partial failure instead of pretending the entire run rolled back. |
+| household-automation-R5 | Editing MUST preserve active run snapshots; disabling MUST prevent new runs and later steps, finish/record already-started atomic commands and retain their effects; cancellation and partial failure MUST expose actual retained outcomes rather than claim rollback. |
 | household-automation-R6 | Causal correlation, cooldown, bounded concurrency/repetition and loop detection MUST prevent duplicate or cyclic automation storms while preserving inspectable suppression reasons. |
 | household-automation-R7 | Preview and simulation MUST explain triggers, conditions and proposed effects without side effects; real execution retains sanitized per-step history, policy revisions and actual outcomes. |
 | household-automation-R8 | Automation UI and HA-facing operations MUST expose understandable pending, action-required, denied/failed, partial and completed states with accessible English/Spanish presentation and permission-aware bounded queries. |
@@ -80,7 +80,9 @@ Actions initially create/assign tasks, create attributable shopping demand, requ
 
 Rule: draft -> validated -> enabled <-> disabled -> archived. Run: queued -> running -> waiting -> running -> completed; denied, failed, partial, timed_out and cancelled are explicit terminal outcomes. Cancellation requested during an atomic command finishes/records that command and prevents subsequent steps.
 
-A run pins its rule revision, action plan and policy at admission. Editing affects new triggers. Disablement suppresses new triggers and, by proposed default, cancels queued/waiting work before its next action; already committed actions remain. A safe retry resumes only failed/pending steps using their original command keys. Permissions and enablement are rechecked before each new action. Unsupported compensation is reported as retained effect.
+A run pins its rule revision, action plan and policy at admission. Editing affects new triggers. The owner confirmed that disablement suppresses new runs and prevents subsequent steps in queued, waiting or active runs. An atomic domain command already started may finish; its real receipt and effects remain visible. Disable admission and step admission serialize through a durable rule control revision: a worker's old enablement check is not enough to start another action after disablement. In parallel branches, only commands already started may settle; no new branch action starts. Persist the stop reason and cancellation request across restart. Re-enabling the rule admits future triggers but does not silently resume the old cancelled queue or waits. The disable response distinguishes authoritative disabled state from in-flight commands whose outcomes are still settling.
+
+A safe retry resumes only failed/pending steps using their original command keys and current grants; it cannot clear a disablement cancellation or bypass the rule's current enablement. Explicitly reviewed future execution is separate from automatically resuming cancelled work. Permissions and enablement are rechecked before each new action. Unsupported compensation is reported as retained effect; disablement does not automatically undo successful domain or external actions.
 
 The proposed default is serial execution per rule, with explicit skip_while_running and bounded_parallel alternatives. Wait deadlines, leases and cursors persist. Trigger identity plus rule revision deduplicates admissions; per-step keys deduplicate commands. Causal rule IDs/hop budgets detect loops across rules and external HA events. Cooldown limits frequency but does not establish idempotency.
 
@@ -154,7 +156,7 @@ No Domus automation data exists yet. Schemas are versioned from first implementa
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 42 distinct cases, derived from the editor, DSL, permission, durable-run, recovery and loop risk inventory. Cases are planned, not executed tests.
+Minimum: 45 distinct cases, derived from the editor, DSL, permission, durable-run, recovery and loop risk inventory. Cases are planned, not executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
@@ -163,10 +165,10 @@ Minimum: 42 distinct cases, derived from the editor, DSL, permission, durable-ru
 | Domain and planning | 7 | Explicit domain and planning scenarios below |
 | Security and permissions | 5 | Explicit security and permissions scenarios below |
 | Adapters and contracts | 4 | Explicit adapters and contracts scenarios below |
-| State and durability | 9 | Explicit state and durability scenarios below |
-| Integration and recovery | 5 | Explicit integration and recovery scenarios below |
+| State and durability | 11 | Explicit state and durability scenarios below |
+| Integration and recovery | 6 | Explicit integration and recovery scenarios below |
 | Deployment and architecture | 4 | Explicit deployment and architecture scenarios below |
-| **Total** | **42** | No double counting |
+| **Total** | **45** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -191,7 +193,7 @@ Minimum: 42 distinct cases, derived from the editor, DSL, permission, durable-ru
 | household-automation-C19 | State and durability | household-automation-R4 | Given two distinct admitted trigger events, receipts remain distinct while the selected concurrency mode is enforced. |
 | household-automation-C20 | Integration and recovery | household-automation-R4 | Given a lost step response, receipt lookup/replay resolves the known operation instead of creating a fresh-key duplicate. |
 | household-automation-C21 | State and durability | household-automation-R5 | Given a rule edit during execution, the active run keeps its pinned revision and a later trigger uses the new revision. |
-| household-automation-C22 | State and durability | household-automation-R5 | Given rule disablement, new triggers are suppressed and queued/waiting runs stop before their next action under the documented default. |
+| household-automation-C22 | State and durability | household-automation-R5 | Given rule disablement, new triggers are suppressed and queued/waiting runs stop before their next action under the owner-confirmed policy. |
 | household-automation-C23 | State and durability | household-automation-R5 | Given cancellation during one atomic domain action, that action's real result is retained and no subsequent step starts. |
 | household-automation-C24 | Integration and recovery | household-automation-R5 | Given the second action failing after the first succeeded, status is partial and lists both the committed result and failed step. |
 | household-automation-C25 | Integration and recovery | household-automation-R5 | Given retry of a partial run, completed steps keep their receipts and only the safe failed/pending portion resumes. |
@@ -212,6 +214,9 @@ Minimum: 42 distinct cases, derived from the editor, DSL, permission, durable-ru
 | household-automation-C40 | Deployment and architecture | household-automation-R9 | Given the same deterministic automation fixture in Supervisor and standalone modes, commands and run outcomes agree. |
 | household-automation-C41 | Deployment and architecture | household-automation-R9 | Given Stable and Edge with equivalent rules, an event or credential from one instance cannot execute the other's rule. |
 | household-automation-C42 | Deployment and architecture | household-automation-R9 | Given the first engine implementation, CI Check enforces meaningful first-party coverage and contract checks without editing Copilot or gateway files. |
+| household-automation-C43 | State and durability | household-automation-R4, household-automation-R5 | Given disablement racing a worker's step admission, the durable control revision prevents any action admitted after disablement while an already-started atomic command retains its actual result. |
+| household-automation-C44 | Integration and recovery | household-automation-R4, household-automation-R5 | Given a disabled rule with saved waits and queued work, restart then re-enable does not resume those cancelled runs or reset their waits; only new admitted triggers may execute. |
+| household-automation-C45 | State and durability | household-automation-R5 | Given parallel branches when disablement commits, already-started commands may settle with linked receipts but no branch starts another action or automatically compensates a retained effect. |
 
 Each row counts once. The first implementation includes deterministic clocks, IDs, injected crash points, lease races and adapter fakes, with 100% supported first-party coverage metrics in CI Check. Semantic UI assertions supplement reviewed golden fixtures; no real waits or live HA is required for unit/contract tests. Disposable HA proves integration contracts; controlled Google Chrome dogfooding on the owner's authorized local HA proves actual UI use and records cleanup. Local browser evidence does not replace automated coverage.
 
@@ -252,8 +257,8 @@ The section-14 Given/action/result rows are the executable acceptance inventory.
 | household-automation-R1 | household-automation-C01, household-automation-C02, household-automation-C03, household-automation-C04 |
 | household-automation-R2 | household-automation-C05, household-automation-C06, household-automation-C07, household-automation-C08, household-automation-C09, household-automation-C10 |
 | household-automation-R3 | household-automation-C11, household-automation-C12, household-automation-C13, household-automation-C14 |
-| household-automation-R4 | household-automation-C15, household-automation-C16, household-automation-C17, household-automation-C18, household-automation-C19, household-automation-C20 |
-| household-automation-R5 | household-automation-C21, household-automation-C22, household-automation-C23, household-automation-C24, household-automation-C25, household-automation-C26 |
+| household-automation-R4 | household-automation-C15, household-automation-C16, household-automation-C17, household-automation-C18, household-automation-C19, household-automation-C20, household-automation-C43, household-automation-C44 |
+| household-automation-R5 | household-automation-C21, household-automation-C22, household-automation-C23, household-automation-C24, household-automation-C25, household-automation-C26, household-automation-C43, household-automation-C44, household-automation-C45 |
 | household-automation-R6 | household-automation-C27, household-automation-C28, household-automation-C29, household-automation-C30 |
 | household-automation-R7 | household-automation-C31, household-automation-C32, household-automation-C33, household-automation-C34 |
 | household-automation-R8 | household-automation-C35, household-automation-C36, household-automation-C37, household-automation-C38 |

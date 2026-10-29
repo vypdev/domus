@@ -8,7 +8,7 @@
 - Scope: A bounded scheduler turns task definitions into stable occurrences and a family calendar distinguishes planned start, deadline and actual completion.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: DST fold policy review; supported RRULE subset, gap-adjustment interoperability and calendar projection review. The owner confirmed DST gap advancement, actual-completion anchoring, per-task successor timing, missed-work defaults and previewed updates limited to unstarted future occurrences after rule edits on 2026-10-29. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Supported RRULE subset, time-zone/gap/fold library interoperability and calendar projection review. The owner confirmed first-instant execution for repeated local times with a household-configurable second-instant option, alongside gap advancement, actual-completion anchoring, successor/missed-work defaults and previewed future rule edits. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -43,7 +43,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 | recurrence-calendar-R1 | Fixed recurrence MUST preserve its local calendar anchor after late completion, with a documented supported RFC 5545 subset. |
 | recurrence-calendar-R2 | Completion-relative recurrence MUST calculate one successor from actual completed_at, never shift its anchor to verified_at, default to showing it when work is recorded, support an authorized per-task at_verification alternative and handle reopening without orphaned silent work. |
 | recurrence-calendar-R3 | Materialization MUST be bounded by time horizon and per-run count and remain duplicate-free across concurrent runs and restarts. |
-| recurrence-calendar-R4 | Time handling MUST preserve IANA zones and date-only deadlines; a nonexistent scheduled wall time advances once to the first valid local instant at or after it, retaining nominal occurrence identity and showing the adjustment; fold semantics remain explicit. |
+| recurrence-calendar-R4 | Time handling MUST preserve IANA zones and date-only deadlines; a nonexistent scheduled wall time advances once to the first valid local instant at or after it; a repeated wall time MUST execute once in the first appearance by default with a household-configurable second-appearance option, retaining nominal identity and exposing the resolution. |
 | recurrence-calendar-R5 | Pausing, skipping, rescheduling and editing rules MUST preserve exceptions and history; rule edits MUST preview changes and update only future unstarted occurrences, retaining started work; missed-occurrence handling MUST be configurable per task, retain all visibly pending by default and support explicit skip without completion points. |
 | recurrence-calendar-R6 | The calendar MUST distinguish planned start, deadline and actual completion and support month, week, day and agenda views. |
 | recurrence-calendar-R7 | Calendar queries MUST support bounded ranges and member, category, status, priority and task-type filters without exposing unauthorized records. |
@@ -79,6 +79,8 @@ The owner confirmed that verification delay does not postpone the next relative 
 
 The owner confirmed on 2026-10-29 that a task must not disappear because its local clock time is in a daylight-saving gap. Domus preserves the intended local slot, then resolves the execution instant forward to the first valid local time at or after that slot. For a gap from 02:00 to 03:00, an intended 02:30 occurrence resolves to 03:00. This is a Domus scheduling policy layered explicitly over nominal recurrence generation, not a claim that raw RFC 5545 expansion uses this policy. Export includes the resolved instant and stable nominal identity; an importer must not silently reinterpret the adjustment. A date with no valid local instant at all is not assumed handled by this gap rule and remains a boundary decision for supported-zone review.
 
+The owner also confirmed repeated autumn wall times: generate one nominal occurrence, resolve it to the first appearance by default, and allow the household to choose the second appearance. Never generate both merely because two UTC instants share that wall time. Snapshot the household time policy with the rule/occurrence and show the selected appearance and resolved offset in preview/history. A later policy edit follows the existing preview/revision rules for unstarted future work; it cannot duplicate an active/completed occurrence or rewrite its recorded instant.
+
 The owner confirmed that editing recurrence first previews the affected generated occurrences and then updates only future work that has not started. The preview names retained, moved, replaced and added slots; started, completed, skipped or cancelled history is preserved. Explicit one-off exceptions and manual reschedules are retained by default and conflicts are disclosed. An affected unstarted slot that disappears is cancelled with a recurrence-replacement reason and linked replacement when one exists, not deleted. Preserve compatible assignments and annotations, and expose anything requiring review rather than dropping it. Replacement slots have the new nominal/rule identity; the old record stays traceable. Reservation/demand adjustments use their owning domain commands and do not delete manual shopping extras or change physical stock.
 
 Applying a preview checks the rule and affected occurrence revisions. If someone started an occurrence meanwhile, reject the stale plan and recalculate; never overwrite that work. A bounded accepted plan commits its rule/occurrence changes and outbox references together and returns one receipt on replay. If the selected plan exceeds the reviewed bound or overlaps retained active work, require an explicit conflict resolution or narrower plan before applying it rather than silently truncating or duplicating the work.
@@ -95,7 +97,7 @@ A duplicate uses its original operation receipt. A changed payload under the sam
 |---|---|---|---|---|
 | `materialization_horizon_days` | integer | 60 | 7..366; at most 1000 generated occurrences per definition per run | household; scheduler snapshots |
 | `missed_occurrence_policy` | enum | keep_visible, owner-confirmed | keep_visible or explicitly skip_after_review; never mark missed work as completed | per-task definition; versioned |
-| `ambiguous_local_time` | enum | first_instant | first_instant or second_instant; explicit proposal | household; rule snapshots |
+| `ambiguous_local_time` | enum | first_instant, owner-confirmed | first_instant or second_instant; exactly one appearance executes | household; rule/occurrence snapshots; future changes require preview |
 | `nonexistent_local_time` | enum | next_valid_instant | next_valid_instant; first valid local time at or after the intended time, retaining the nominal slot | household; rule snapshots |
 | `calendar_week_start` | enum | monday | monday or sunday | member preference |
 | `relative_successor_timing` | enum | at_completion | at_completion or at_verification; authorized per-task setting | definition version; completion snapshots the effective setting |
@@ -172,18 +174,18 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 34 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 37 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Domain and configuration | 9 | a Saturday rule completed on Monday; a monthly day-31 rule; an unsupported RRULE part |
-| State and concurrency | 8 | a relative 30-day rule completed late; reopening before the successor starts; parallel scheduler runs |
+| Domain and configuration | 10 | a Saturday rule completed on Monday; a monthly day-31 rule; an unsupported RRULE part |
+| State and concurrency | 9 | a relative 30-day rule completed late; reopening before the successor starts; parallel scheduler runs |
 | Integration and recovery | 7 | reopening after the successor starts; a crash after a batch commit; combined category and status filters |
-| Adapters and persistence | 3 | a date-only deadline; an edited rule; HA calendar reads after a retry |
+| Adapters and persistence | 4 | a date-only deadline; an edited rule; HA calendar reads after a retry |
 | UI and accessibility | 4 | a task scheduled yesterday and completed today; narrow-screen month view; a due-only task |
 | Security and privacy | 2 | a member filter; no external calendar setup |
 | Deployment and contracts | 1 | an excessive range |
-| **Total** | **34** | No double counting |
+| **Total** | **37** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -221,6 +223,9 @@ Minimum: 34 distinct cases, derived from the explicit risk inventory below. Each
 | recurrence-calendar-C32 | State and concurrency | recurrence-calendar-R3, recurrence-calendar-R5 | Given an occurrence started after preview, applying that stale preview returns conflict and requires a refreshed plan without overwriting the newly started work. |
 | recurrence-calendar-C33 | Integration and recovery | recurrence-calendar-R3, recurrence-calendar-R5 | Given an approved replacement plan whose response is lost, retry returns the same rule revision and linked cancelled/replacement records without duplicate slots or reservation/demand effects. |
 | recurrence-calendar-C34 | Domain and configuration | recurrence-calendar-R1, recurrence-calendar-R5 | Given an explicit future exception or a new slot overlapping retained active work, the preview preserves the exception and surfaces the overlap for resolution rather than silently moving or duplicating work. |
+| recurrence-calendar-C35 | Domain and configuration | recurrence-calendar-R3, recurrence-calendar-R4 | Given a repeated local wall time and default first_instant, one nominal occurrence resolves to its first appearance and neither scheduler replay nor the second appearance creates another occurrence. |
+| recurrence-calendar-C36 | Adapters and persistence | recurrence-calendar-R4, recurrence-calendar-R8 | Given household second_instant, one occurrence resolves to the later appearance with the selected offset/policy retained through persistence, calendar projection and export. |
+| recurrence-calendar-C37 | State and concurrency | recurrence-calendar-R3, recurrence-calendar-R4, recurrence-calendar-R5 | Given a fold-policy change after materialization, preview can update only eligible unstarted future work and preserves active/completed occurrence identity and recorded instant without a duplicate execution. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -272,12 +277,12 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 |---|---|
 | recurrence-calendar-R1 | recurrence-calendar-C01, recurrence-calendar-C02, recurrence-calendar-C03, recurrence-calendar-C29, recurrence-calendar-C34 |
 | recurrence-calendar-R2 | recurrence-calendar-C04, recurrence-calendar-C05, recurrence-calendar-C06, recurrence-calendar-C25, recurrence-calendar-C26, recurrence-calendar-C27, recurrence-calendar-C28 |
-| recurrence-calendar-R3 | recurrence-calendar-C07, recurrence-calendar-C08, recurrence-calendar-C09, recurrence-calendar-C30, recurrence-calendar-C32, recurrence-calendar-C33 |
-| recurrence-calendar-R4 | recurrence-calendar-C10, recurrence-calendar-C11, recurrence-calendar-C12 |
-| recurrence-calendar-R5 | recurrence-calendar-C13, recurrence-calendar-C14, recurrence-calendar-C15, recurrence-calendar-C29, recurrence-calendar-C30, recurrence-calendar-C31, recurrence-calendar-C32, recurrence-calendar-C33, recurrence-calendar-C34 |
+| recurrence-calendar-R3 | recurrence-calendar-C07, recurrence-calendar-C08, recurrence-calendar-C09, recurrence-calendar-C30, recurrence-calendar-C32, recurrence-calendar-C33, recurrence-calendar-C35, recurrence-calendar-C37 |
+| recurrence-calendar-R4 | recurrence-calendar-C10, recurrence-calendar-C11, recurrence-calendar-C12, recurrence-calendar-C35, recurrence-calendar-C36, recurrence-calendar-C37 |
+| recurrence-calendar-R5 | recurrence-calendar-C13, recurrence-calendar-C14, recurrence-calendar-C15, recurrence-calendar-C29, recurrence-calendar-C30, recurrence-calendar-C31, recurrence-calendar-C32, recurrence-calendar-C33, recurrence-calendar-C34, recurrence-calendar-C37 |
 | recurrence-calendar-R6 | recurrence-calendar-C16, recurrence-calendar-C17, recurrence-calendar-C18 |
 | recurrence-calendar-R7 | recurrence-calendar-C19, recurrence-calendar-C20, recurrence-calendar-C21 |
-| recurrence-calendar-R8 | recurrence-calendar-C22, recurrence-calendar-C23, recurrence-calendar-C24 |
+| recurrence-calendar-R8 | recurrence-calendar-C22, recurrence-calendar-C23, recurrence-calendar-C24, recurrence-calendar-C36 |
 
 All requirement cases are reciprocal with section 14. Domain invariants are owned by pure policy, command/state rules by application use cases, provider behavior by adapters, and visible content by presentation; the boundary table in section 8 assigns these responsibilities. Evidence and user/operator documentation are linked in section 15.
 

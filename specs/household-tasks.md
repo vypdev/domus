@@ -8,7 +8,7 @@
 - Scope: Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Dependency semantics; detailed role/override review; first-release advanced task-type matrix. The owner confirmed role-default verification, adjustable materials in the completion submission and completion with pending material regularization when stock is insufficient on 2026-10-29. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Detailed role/override review; first-release advanced task-type matrix. The owner confirmed role-default verification, material-completion handling and preservation of completed downstream work/points when its prerequisite is reopened on 2026-10-29. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -41,7 +41,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 | Requirement | Behavior |
 |---|---|
 | household-tasks-R1 | A task definition and occurrence MUST have separate stable identities; completing an occurrence never destroys its definition. |
-| household-tasks-R2 | Every transition MUST enforce the explicit state machine, expected revision, dependencies and completion requirements. |
+| household-tasks-R2 | Every transition MUST enforce the explicit state machine, expected revision, dependencies and completion requirements; reopening a prerequisite MUST retain already-completed downstream work and points with a visible review condition, without automatic cascading reopening. |
 | household-tasks-R3 | Assignment MUST distinguish planned assignees, completion actor and actual performers and support unassigned pools, reassignment and collaboration. |
 | household-tasks-R4 | Completion and reopening MUST be idempotent and emit uniquely identified business events without duplicate downstream rewards. |
 | household-tasks-R5 | Verification MUST default to none for adult performers and authorized-adult approval for restricted performers, prevent unauthorized approval and defer points until any required verification succeeds. |
@@ -91,6 +91,8 @@ The owner confirmed the role defaults on 2026-10-29. Without an explicit adminis
 A duplicate uses its original operation receipt. A changed payload under the same key is a conflict. Out-of-order events use aggregate revision and source identity. Cancellation never erases an already committed ledger effect; compensation is explicit.
 
 Each accepted completion has a stable completion-cycle ID. Reopening closes that cycle; a genuine later completion gets a new ID. A delayed completion or approval from the closed cycle cannot create a new award or re-complete the occurrence. Reopening does not prove that consumed supplies physically returned: inventory remains unchanged unless an authorized, separately confirmed return/correction movement records actual facts. Rejection of verification likewise cannot fabricate returned stock.
+
+The owner confirmed that reopening a prerequisite does not reopen its completed dependents or reverse their points. Keep each dependent's completed state, performer/time, accepted completion cycle, points, materials and recurrence facts. Record a separate dependency_attention condition naming the reopened prerequisite and request review. This condition is not a new completion, reversal or forced stock return. An authorized review can resolve the dependency through the normal prerequisite or dependency-edit commands, with actor/reason/history; it cannot erase real downstream work. Unstarted or unfinished dependents continue to enforce the ordinary prerequisite gate before completion. Replayed or stale dependency events are compared with current prerequisite revision so they cannot duplicate notices or reintroduce a resolved warning.
 
 ## 7. User-facing configuration
 
@@ -174,17 +176,17 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 35 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 38 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
 | Domain and configuration | 8 | an active recurring definition; a blocked prerequisite; a cyclic dependency or an incomplete required subtask |
 | Adapters and persistence | 2 | a later definition edit; assignment |
-| Integration and recovery | 7 | a one-time title-only task; a reopened completed task; pending verification |
-| State and concurrency | 6 | two concurrent transitions with the same revision; two simultaneous claims on a single-assignee task; duplicate completion commands |
-| UI and accessibility | 6 | a collaborative task; rejected verification; title-only entry on a narrow screen |
+| Integration and recovery | 8 | a one-time title-only task; a reopened completed task; pending verification |
+| State and concurrency | 7 | two concurrent transitions with the same revision; two simultaneous claims on a single-assignee task; duplicate completion commands |
+| UI and accessibility | 7 | a collaborative task; rejected verification; title-only entry on a narrow screen |
 | Security and privacy | 6 | a verifier policy requiring another member; an arbitrary history deletion request from a member; a foreign-household task ID |
-| **Total** | **35** | No double counting |
+| **Total** | **38** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -223,6 +225,9 @@ Minimum: 35 distinct cases, derived from the explicit risk inventory below. Each
 | household-tasks-C33 | State and concurrency | household-tasks-R4, household-tasks-R5 | Given reopening followed by a genuine new completion, delayed approval of the old cycle cannot approve or award the new cycle; identities and history remain distinct. |
 | household-tasks-C34 | Integration and recovery | household-tasks-R4, household-tasks-R9 | Given work performed with insufficient material stock, submission saves one completion and a pending_regularization intent, creates no negative stock, and retains the same pending result on replay. |
 | household-tasks-C35 | UI and accessibility | household-tasks-R5, household-tasks-R9 | Given a completed task with one posted material line and one shortfall, the result names the posted and pending quantities separately and shows verification/points independently rather than calling the whole submission failed. |
+| household-tasks-C36 | Integration and recovery | household-tasks-R2, household-tasks-R4 | Given a completed dependent and its prerequisite being reopened, the dependent retains completion, points, materials and recurrence facts while a linked review condition appears; no automatic reopening or compensation chain occurs. |
+| household-tasks-C37 | UI and accessibility | household-tasks-R2, household-tasks-R6 | Given dependency_attention on completed work, the UI retains its actual completion and points, names the changed prerequisite and offers an authorized review without presenting the work as unperformed. |
+| household-tasks-C38 | State and concurrency | household-tasks-R2, household-tasks-R4 | Given reviewed dependency recovery followed by a delayed or repeated old reopen event, revision checks keep the resolved state and do not duplicate warnings, completions or awards. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -273,11 +278,11 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 | Requirement | Cases |
 |---|---|
 | household-tasks-R1 | household-tasks-C01, household-tasks-C02, household-tasks-C03 |
-| household-tasks-R2 | household-tasks-C04, household-tasks-C05, household-tasks-C06 |
+| household-tasks-R2 | household-tasks-C04, household-tasks-C05, household-tasks-C06, household-tasks-C36, household-tasks-C37, household-tasks-C38 |
 | household-tasks-R3 | household-tasks-C07, household-tasks-C08, household-tasks-C09 |
-| household-tasks-R4 | household-tasks-C10, household-tasks-C11, household-tasks-C12, household-tasks-C29, household-tasks-C31, household-tasks-C33, household-tasks-C34 |
+| household-tasks-R4 | household-tasks-C10, household-tasks-C11, household-tasks-C12, household-tasks-C29, household-tasks-C31, household-tasks-C33, household-tasks-C34, household-tasks-C36, household-tasks-C38 |
 | household-tasks-R5 | household-tasks-C13, household-tasks-C14, household-tasks-C15, household-tasks-C25, household-tasks-C26, household-tasks-C33, household-tasks-C35 |
-| household-tasks-R6 | household-tasks-C16, household-tasks-C17, household-tasks-C18 |
+| household-tasks-R6 | household-tasks-C16, household-tasks-C17, household-tasks-C18, household-tasks-C37 |
 | household-tasks-R7 | household-tasks-C19, household-tasks-C20, household-tasks-C21 |
 | household-tasks-R8 | household-tasks-C22, household-tasks-C23, household-tasks-C24, household-tasks-C27, household-tasks-C32 |
 | household-tasks-R9 | household-tasks-C20, household-tasks-C28, household-tasks-C29, household-tasks-C30, household-tasks-C31, household-tasks-C32, household-tasks-C34, household-tasks-C35 |

@@ -53,7 +53,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Role permission matrix and first-administrator/recovery review; proof of HA authentication in both deployment targets; technical service principal policy.",
+        "blockingDecisions": "Detailed permission matrix/override review; authenticated recovery after external HA account loss; proof of HA identity/administrator status in both deployment targets; technical service principal policy. The owner confirmed three administrator-mapping modes with all HA administrators as the default, plus configurable household profiles and per-member permission exceptions.",
         "copilotChangesAllowed": false
       }
     },
@@ -81,7 +81,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Dependency semantics; detailed role/override review; first-release advanced task-type matrix. The owner confirmed role-default verification, adjustable materials in the completion submission and completion with pending material regularization when stock is insufficient on 2026-10-29.",
+        "blockingDecisions": "Detailed role/override review; first-release advanced task-type matrix. The owner confirmed role-default verification, material-completion handling and preservation of completed downstream work/points when its prerequisite is reopened on 2026-10-29.",
         "copilotChangesAllowed": false
       }
     },
@@ -109,7 +109,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "DST fold policy review; supported RRULE subset, gap-adjustment interoperability and calendar projection review. The owner confirmed DST gap advancement, actual-completion anchoring, per-task successor timing, missed-work defaults and previewed updates limited to unstarted future occurrences after rule edits on 2026-10-29.",
+        "blockingDecisions": "Supported RRULE subset, time-zone/gap/fold library interoperability and calendar projection review. The owner confirmed first-instant execution for repeated local times with a household-configurable second-instant option, alongside gap advancement, actual-completion anchoring, successor/missed-work defaults and previewed future rule edits.",
         "copilotChangesAllowed": false
       }
     },
@@ -137,7 +137,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed remainder/override review; unfulfilled redemption handling after a reversal; child-facing review. The owner confirmed configurable allocation, role-default verification, negative balances after spent-point reversal and reporting in the actual-work period with spendability only after approval.",
+        "blockingDecisions": "Detailed remainder/override review; child-facing review. The owner confirmed configurable allocation, role-default verification, actual-work reporting, factual negative balances and a funding hold on approved/unfulfilled redemptions without sufficient backing after reversal.",
         "copilotChangesAllowed": false
       }
     },
@@ -305,7 +305,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, in-flight disable/cancel semantics, external-effect receipts and supported HA/browser evidence. Both editor modes and one engine are owner-confirmed launch scope.",
+        "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects.",
         "copilotChangesAllowed": false
       }
     }

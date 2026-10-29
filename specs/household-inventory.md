@@ -206,7 +206,7 @@ Minimum: 35 distinct cases, derived from the explicit risk inventory below. Each
 | household-inventory-C19 | UI and accessibility | household-inventory-R7 | Given denied camera permission, the scan view offers manual barcode and product entry. |
 | household-inventory-C20 | Domain and configuration | household-inventory-R7 | Given a malformed supported GTIN, local check-digit validation identifies the error. |
 | household-inventory-C21 | Security and privacy | household-inventory-R7 | Given scanning without external lookup configured, no image or barcode leaves the installation. |
-| household-inventory-C22 | Security and privacy | household-inventory-R8 | Given a viewer trying stock correction, authorization rejects it. |
+| household-inventory-C22 | Security and privacy | household-inventory-R8 | Given a default viewer without a stock-correction grant, authorization rejects the correction. |
 | household-inventory-C23 | Integration and recovery | household-inventory-R8 | Given a restored backup, physical stock and reservations reconcile to the original ledger. |
 | household-inventory-C24 | Deployment and contracts | household-inventory-R8 | Given an inactive product or paginated stock query, history remains available and result bounds are enforced. |
 | household-inventory-C25 | Adapters and persistence | household-inventory-R7 | Given an unknown local barcode and an enabled on-demand external lookup, the adapter sends only the barcode and required provider authentication and returns a bounded candidate with source provenance. |

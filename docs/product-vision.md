@@ -32,6 +32,12 @@ Ordinary workflows work without AI, external calendars or Internet services.
 - Missed fixed-schedule occurrences are configurable per task; the default keeps all visible with explicit skip available, retaining history without completion points (confirmed 2026-10-29).
 - Recurrence changes show a preview and update only future executions that have not started, preserving started work and history (confirmed 2026-10-29).
 - Participation and earned points belong to the actual-work period; required approval controls when points become spendable without moving them to the approval week (confirmed 2026-10-29).
+- Reopening a prerequisite preserves completed dependents and their points and raises a review condition rather than automatically reopening a chain (confirmed 2026-10-29).
+- Disabling automation stops new runs and subsequent steps while an already-started atomic command finishes and retains its effects (confirmed 2026-10-29).
+- Approved unfulfilled rewards without sufficient backing wait for credit recovery or an explicit authorized resolution; delivery is blocked while unfunded (confirmed 2026-10-29).
+- Administrator mapping supports all HA administrators by default, the verified setup administrator only, or an explicitly selected HA user (confirmed 2026-10-29).
+- Predefined permission profiles are adjustable per household with explicit per-member exceptions (confirmed 2026-10-29).
+- Repeated autumn times execute once at the first appearance by default; the household may select the second (confirmed 2026-10-29).
 
 ## Source boundary
 

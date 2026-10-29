@@ -1,6 +1,6 @@
 # Verification and acceptance plan
 
-The SDD inventory contains 324 distinct planned cases across eleven capabilities.
+The SDD inventory contains 353 distinct planned cases across eleven capabilities.
 The counts are derived from concrete observable scenarios and are minimums; no application tests have run.
 Formatting, catalog metadata, branch readiness and working product acceptance are separate gates.
 
@@ -12,9 +12,11 @@ Do not mask untested paths with broad exclusions or count generated/third-party 
 Architectural rules, schema validation, permissions, replay/races and recovery are executable checks from the start.
 Use deterministic clocks, IDs, bounded provider fakes and injected transaction failures.
 
-The 2026-10-29 owner decisions add concrete cases for role-default verification, Ingress/host-context boundaries, configurable points allocation and actual-total reversals, optional external product lookup, recurrence anchored to actual work with per-task successor timing, and one automation engine with both editors. Its 42-case floor covers schema/editor round trips, permissions, durable waits/replay, partial recovery, resource/loop budgets and target/channel isolation. Case IDs, per-area budgets and reverse requirement mappings are regenerated together before running the unchanged original Copilot consistency functions.
+The 2026-10-29 owner decisions add concrete cases for role-default verification, Ingress/host-context boundaries, configurable points allocation and actual-total reversals, optional external product lookup, recurrence anchored to actual work with per-task successor timing, and one automation engine with both editors. Its 45-case floor covers schema/editor round trips, permissions, durable waits/replay, partial recovery, resource/loop budgets and target/channel isolation. Case IDs, per-area budgets and reverse requirement mappings are regenerated together before running the unchanged original Copilot consistency functions.
 
 The continued owner review specifies adjustable material quantities in the completion submission, stock shortfalls retained as pending consumption without negative stock, actual-work reporting periods, recurrence-edit previews and visible missed occurrences. Ledger cases additionally cover atomic performer allocations, closed completion cycles, already-spent-point reversals and negative-balance recovery. Receipt-retention and current-authorization cases prevent cleanup or replay from bypassing domain invariants.
+
+The latest owner decisions add prerequisite-review preservation, durable disablement fencing and approved-reward funding holds, including admission/fulfillment/reversal races and restart. Identity cases cover all three administrator mappings, current HA-source revocation, configurable household profiles, member-override precedence and last-administrator safety. Repeated-time cases cover the first/second appearance and one-execution identity; UI/HA cases exercise the same policies without trusting a role label, transport credential or host hint as authority.
 
 ## CI Check contract
 

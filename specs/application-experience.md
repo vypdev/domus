@@ -73,6 +73,8 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 
 Routes: Dashboard, Tasks, Calendar, Shopping, Inventory, Family and Settings. A view model owns loading, data freshness, empty, validation, authorization, conflict, pending and partial states. Dashboard prioritizes today's tasks, overdue, my tasks, unclaimed work, shopping requirements, low stock, upcoming expirations/maintenance, recent completion, weekly points and participation. Optional recommendations are explicitly labeled and never silently execute. Displayed capabilities derive from backend permissions, which remain authoritative.
 
+Explicit setup presents the three administrator-mapping modes with all HA administrators selected by default, while the backend proves setup authority. Settings exposes household permission profiles and per-member exceptions to authorized administrators, with effective-grant provenance and current policy revisions. Controls follow effective permissions rather than assuming a role label alone fixes every grant. A missing identity/administrator proof is a blocked setup state, not a reason to trust host UI hints or choose a weaker mapping silently.
+
 ### 6.2 States and alternatives
 
 View idle -> loading -> ready/empty/error. Command draft -> validating -> submitting -> saved/pending/partial/conflict/denied. The client retains form data on a failure or conflict. A local server outage is not an offline-write queue; pending drafts remain visible without falsely claiming saved work.
@@ -162,22 +164,22 @@ Both Supervisor and standalone are first-release acceptance targets. Stable and 
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 24 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 26 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| UI and accessibility | 13 | first-release membership permissions; a viewer account; overdue and decorative statistics |
+| UI and accessibility | 14 | first-release membership permissions; a viewer account; overdue and decorative statistics |
 | Integration and recovery | 2 | a maintenance task lacking a material; inventory read failure |
 | State and concurrency | 1 | a command in progress |
 | Deployment and contracts | 5 | localized navigation; an Ingress prefix or standalone base path |
-| Security and privacy | 3 | direct backend denial after a role change; hostile task text and no AI service |
-| **Total** | **24** | No double counting |
+| Security and privacy | 4 | direct backend denial after a role change; hostile task text and no AI service |
+| **Total** | **26** | No double counting |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
 | application-experience-C01 | UI and accessibility | application-experience-R1 | Given first-release membership permissions, a user can navigate all domain routes and return to the previous filter state. |
 | application-experience-C02 | Integration and recovery | application-experience-R1 | Given a maintenance task lacking a material, the user can inspect the linked inventory shortfall and shopping demand. |
-| application-experience-C03 | UI and accessibility | application-experience-R1 | Given a viewer account, visible controls reflect read-only access while routes remain understandable. |
+| application-experience-C03 | UI and accessibility | application-experience-R1 | Given a default viewer account without mutation exceptions, visible controls reflect read-only access while routes remain understandable. |
 | application-experience-C04 | UI and accessibility | application-experience-R2 | Given overdue and decorative statistics, the dashboard presents actionable tasks before summary charts. |
 | application-experience-C05 | Integration and recovery | application-experience-R2 | Given inventory read failure, the dashboard shows unavailable stock facts rather than zero low-stock products. |
 | application-experience-C06 | UI and accessibility | application-experience-R2 | Given an empty new household, the dashboard offers authorized setup actions without false completed statistics. |
@@ -199,6 +201,8 @@ Minimum: 24 distinct cases, derived from the explicit risk inventory below. Each
 | application-experience-C22 | UI and accessibility | application-experience-R4 | Given a narrow Ingress iframe with host-managed safe-area padding, the UI applies insets once and keeps focused fields and actions visible with the virtual keyboard. |
 | application-experience-C23 | Deployment and contracts | application-experience-R6 | Given a Storybook presentation primitive importing an API adapter or domain command, architecture validation rejects the component while pure presentation fixtures build independently. |
 | application-experience-C24 | Deployment and contracts | application-experience-R6 | Given a direct reload of an interior route under a non-root Ingress prefix, the authenticated page, assets, API and any push transport resolve within the validated deployment base. |
+| application-experience-C25 | UI and accessibility | application-experience-R6 | Given an authorized administrator editing a profile/member exception, the UI exposes the effective grant source and retained policy revision, and a later backend revocation updates controls without losing a denied user's draft. |
+| application-experience-C26 | Security and privacy | application-experience-R6 | Given explicit setup, all three mapping modes are available with all_ha_administrators as default; failed proof of setup authority blocks saving and no browser/host field silently grants administration. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -253,7 +257,7 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 | application-experience-R3 | application-experience-C07, application-experience-C08, application-experience-C09 |
 | application-experience-R4 | application-experience-C10, application-experience-C11, application-experience-C12, application-experience-C22 |
 | application-experience-R5 | application-experience-C13, application-experience-C14, application-experience-C15, application-experience-C21 |
-| application-experience-R6 | application-experience-C16, application-experience-C17, application-experience-C18, application-experience-C19, application-experience-C20, application-experience-C23, application-experience-C24 |
+| application-experience-R6 | application-experience-C16, application-experience-C17, application-experience-C18, application-experience-C19, application-experience-C20, application-experience-C23, application-experience-C24, application-experience-C25, application-experience-C26 |
 
 All requirement cases are reciprocal with section 14. Domain invariants are owned by pure policy, command/state rules by application use cases, provider behavior by adapters, and visible content by presentation; the boundary table in section 8 assigns these responsibilities. Evidence and user/operator documentation are linked in section 15.
 

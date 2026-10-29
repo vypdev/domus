@@ -21,19 +21,19 @@ Audited 2026-10-29. This is documentation validation, not application acceptance
 | Capability | Requirements | Planned cases | Original format/consistency |
 |---|---:|---:|---|
 | platform-foundation | 6 | 20 | PASS |
-| household-identity | 6 | 20 | PASS |
-| household-tasks | 9 | 35 | PASS |
-| recurrence-calendar | 8 | 34 | PASS |
-| points-rewards | 6 | 40 | PASS |
+| household-identity | 7 | 30 | PASS |
+| household-tasks | 9 | 38 | PASS |
+| recurrence-calendar | 8 | 37 | PASS |
+| points-rewards | 6 | 44 | PASS |
 | shopping-management | 7 | 21 | PASS |
 | household-inventory | 8 | 35 | PASS |
-| home-assistant-surface | 8 | 29 | PASS |
-| application-experience | 6 | 24 | PASS |
+| home-assistant-surface | 8 | 33 | PASS |
+| application-experience | 6 | 26 | PASS |
 | delivery-quality | 8 | 24 | PASS |
-| household-automation | 9 | 42 | PASS |
+| household-automation | 9 | 45 | PASS |
 
-Totals: 81 normative requirements and 324 distinct planned cases across eleven SDDs.
-The owner-confirmed automation scope adds one engine capability with 42 planned cases; the HA surface remains the adapter owner.
+Totals: 82 normative requirements and 353 distinct planned cases across eleven SDDs.
+The owner-confirmed automation scope adds one engine capability with 45 planned cases; the HA surface remains the adapter owner.
 
 ## Catalog limitation
 

@@ -13,6 +13,9 @@
 | Completion actor | Authenticated principal recording completion |
 | Completion cycle | Stable accepted performance identity; reopening closes it and a genuine later completion gets a new ID |
 | Verifier | Authorized principal approving completion when required |
+| Permission profile | Predefined role with administrator-adjustable household grants, subject to explicit member exceptions and hard domain constraints |
+| Inherited administrator grant | Domus administration derived from a verified HA source under the configured mapping policy, with provenance and current revocation checks |
+| Dependency attention | Separate review condition retaining completed downstream work after its prerequisite changes |
 | Due date | Deadline; distinct from scheduled start and actual completion |
 | Demand | Attributable purchasing intent with additional/overlapping semantics |
 | Shopping line | Reversible aggregation of compatible demands, retaining sources |
@@ -29,6 +32,7 @@
 | Base task points | Nominal task value before the selected collaborative allocation policy |
 | Actual awarded total | Sum of immutable performer shares; may differ from base points according to the configured policy |
 | Allocation policy | Versioned household rule for conserving, rounding, decimal, full-performer or authorized manual awards |
+| Funding hold | Approved but unfulfilled redemption lacking sufficient backing; approval/reservation persist while delivery is blocked |
 | Outbox / inbox | Durable event publication and deduplicated consumption records |
 | Projection | Rebuildable read model; not another source of business truth |
 | Stable | Production channel with a versioned accepted artifact |

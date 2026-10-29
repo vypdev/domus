@@ -14,6 +14,8 @@ Use one versioned declarative model and durable engine behind simple and advance
 
 Keep domain invariants in their owning modules. Run receipts, pinned rule revisions, durable waits, current permission checks and causal budgets define replay, edits, cancellation and partial recovery. The simple form preserves unsupported advanced fields and directs editing to advanced mode.
 
+The owner confirmed disablement semantics on 2026-10-29: stop new runs and subsequent steps, let an already-started atomic command finish and preserve its actual effects. Durable control revisions fence queued/waiting and parallel work; restart or re-enable cannot silently resume cancelled runs. Numeric limits and the implementation of those guarantees still require evidence.
+
 ## Consequences and alternatives
 
 Two unrelated rule engines would duplicate behavior and complicate recovery, so they are rejected. Arbitrary scripts and raw backend/network passthrough are outside this declarative contract. More combinations require meaningful schema, race, replay, loop, browser and recovery tests from first implementation. Numeric limits, action catalog and supported-version proof remain engineering gates before Ready for implementation.

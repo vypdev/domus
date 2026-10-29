@@ -25,6 +25,10 @@ Technical HA commands use explicit grants without impersonating members. Domain 
 Optional product lookup is configured through a bounded provider adapter; no external catalog is mandatory. Keep camera frames, household identity and stock history local. Provider failure leaves camera/manual entry and local catalog search usable.
 Invalid or unknown configuration versions block the affected operation and preserve prior settings.
 
+Administrator mapping defaults to all_ha_administrators; setup_administrator and selected_ha_user are explicit alternatives. Verify current HA identity/administrator status through the reviewed adapter, retain grant provenance and revoke invalid inherited grants. Household role profiles and member exceptions are configurable through current administrator authority; known suspension and hard domain constraints remain enforced. Changing a mapping or profile through Domus cannot remove its last active effective administrator. External HA account loss requires the reviewed authenticated recovery procedure, never a browser-order fallback.
+
+Reopening a prerequisite preserves already-completed downstream work and points and raises dependency_attention. Approved unfulfilled redemptions without backing enter funding_hold with approval/reservation retained; delivery cannot proceed until funding is sufficient or an explicit authorized resolution occurs. Disabling a rule fences new admissions and subsequent steps while recording the result of already-started atomic commands. Restart/re-enable does not silently resume its cancelled queue or waits.
+
 ## Recovery
 
 | Symptom | Retained fact | Next action |
@@ -34,6 +38,9 @@ Invalid or unknown configuration versions block the affected operation and prese
 | Receipt saved, stock missing | Physical receipt is recorded; posting is pending | Retry only the identified stock post |
 | Task saved, material stock insufficient | Work completion and pending material intent persist; no negative stock was invented | Review actual inventory facts and explicitly resolve the retained intent |
 | Negative points after reopening | Actual reversal and delivered reward remain recorded | Earn points to cover the deficit; new redemption requires sufficient unreserved credit |
+| Completed work has dependency attention | Real downstream completion, points and material facts persist | Review the linked reopened prerequisite; do not cascade reopening automatically |
+| Approved reward has a funding hold | Approval and reservation persist; delivery has not occurred | Recover sufficient credit or explicitly review/cancel; do not bypass affordability |
+| Rule disabled with a settling command | New work is fenced; the started command's actual result remains | Inspect the retained receipt; do not resume cancelled waits on re-enable |
 | HA unavailable | Domain records persist; native projections may be stale | Restore HA connectivity and reconcile projections |
 | Schema too new | Database remains intact; writes are blocked | Use a compatible application or restore the paired backup |
 | Insufficient role | No denied command effect was committed | Ask an administrator to review access |
