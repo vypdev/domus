@@ -43,6 +43,6 @@ Only then may a contributor check out that ref and incorporate this prepared pac
 is created, renamed, force-pushed or deleted by this contributor.
 A linked PR carries validation and unresolved decisions; maintainers own merge and deployment.
 
-No runtime package, pnpm task or CI workflow exists in Domus yet. Commands appearing in the unchanged
-upstream standard are upstream commands, not installed Domus capabilities. The draft-check runner shipped
-outside this repository is a review aid and does not replace the Action's bundled authority.
+The specification foundation had no runtime package, pnpm task or project CI. Issue #4 now adds a development-tooling package, locked dependencies, tests and a separate project-owned CI Check workflow, documented in [development](development.md). Household application/runtime capabilities remain prospective. Commands in the unchanged upstream standard are not Domus commands unless the development guide verifies them. The original draft-check runner outside this repository remains a review aid and does not replace the Action's bundled authority.
+
+The current catalog registers only real delivery-quality tooling/CI evidence. Its proposed/Draft status remains unchanged, and the other ten capabilities retain absent implementation evidence. The pinned original validator therefore reports 30 remaining missing-evidence errors; the foundation's original 33-error result is preserved separately. This is ordinary evidence registration after implementation, not a schema/status bypass or a Copilot change.
