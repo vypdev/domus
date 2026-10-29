@@ -1,0 +1,261 @@
+{
+  "referenceRevision": "f5e5a4cf9a80248994469cd88ad55eecab5b95ca",
+  "prerequisiteStructure": "PASS",
+  "drafts": [
+    {
+      "id": "platform-foundation",
+      "path": "specs/platform-foundation.md",
+      "requirements": 6,
+      "cases": 20,
+      "characters": 25661,
+      "status": "PASS"
+    },
+    {
+      "id": "household-identity",
+      "path": "specs/household-identity.md",
+      "requirements": 7,
+      "cases": 30,
+      "characters": 34606,
+      "status": "PASS"
+    },
+    {
+      "id": "household-tasks",
+      "path": "specs/household-tasks.md",
+      "requirements": 9,
+      "cases": 38,
+      "characters": 35269,
+      "status": "PASS"
+    },
+    {
+      "id": "recurrence-calendar",
+      "path": "specs/recurrence-calendar.md",
+      "requirements": 8,
+      "cases": 37,
+      "characters": 35737,
+      "status": "PASS"
+    },
+    {
+      "id": "points-rewards",
+      "path": "specs/points-rewards.md",
+      "requirements": 6,
+      "cases": 44,
+      "characters": 39241,
+      "status": "PASS"
+    },
+    {
+      "id": "shopping-management",
+      "path": "specs/shopping-management.md",
+      "requirements": 7,
+      "cases": 21,
+      "characters": 25500,
+      "status": "PASS"
+    },
+    {
+      "id": "household-inventory",
+      "path": "specs/household-inventory.md",
+      "requirements": 8,
+      "cases": 35,
+      "characters": 33096,
+      "status": "PASS"
+    },
+    {
+      "id": "home-assistant-surface",
+      "path": "specs/home-assistant-surface.md",
+      "requirements": 8,
+      "cases": 33,
+      "characters": 32547,
+      "status": "PASS"
+    },
+    {
+      "id": "application-experience",
+      "path": "specs/application-experience.md",
+      "requirements": 6,
+      "cases": 26,
+      "characters": 28218,
+      "status": "PASS"
+    },
+    {
+      "id": "delivery-quality",
+      "path": "specs/delivery-quality.md",
+      "requirements": 8,
+      "cases": 24,
+      "characters": 26444,
+      "status": "PASS"
+    },
+    {
+      "id": "household-automation",
+      "path": "specs/household-automation.md",
+      "requirements": 9,
+      "cases": 45,
+      "characters": 33902,
+      "status": "PASS"
+    }
+  ],
+  "totalCases": 353,
+  "totalRequirements": 82,
+  "catalog": {
+    "status": "BLOCKED",
+    "errors": [
+      "capabilities[0].entrypoints must not be empty.",
+      "capabilities[0].code must not be empty.",
+      "capabilities[0].tests must not be empty.",
+      "capabilities[1].entrypoints must not be empty.",
+      "capabilities[1].code must not be empty.",
+      "capabilities[1].tests must not be empty.",
+      "capabilities[2].entrypoints must not be empty.",
+      "capabilities[2].code must not be empty.",
+      "capabilities[2].tests must not be empty.",
+      "capabilities[3].entrypoints must not be empty.",
+      "capabilities[3].code must not be empty.",
+      "capabilities[3].tests must not be empty.",
+      "capabilities[4].entrypoints must not be empty.",
+      "capabilities[4].code must not be empty.",
+      "capabilities[4].tests must not be empty.",
+      "capabilities[5].entrypoints must not be empty.",
+      "capabilities[5].code must not be empty.",
+      "capabilities[5].tests must not be empty.",
+      "capabilities[6].entrypoints must not be empty.",
+      "capabilities[6].code must not be empty.",
+      "capabilities[6].tests must not be empty.",
+      "capabilities[7].entrypoints must not be empty.",
+      "capabilities[7].code must not be empty.",
+      "capabilities[7].tests must not be empty.",
+      "capabilities[8].entrypoints must not be empty.",
+      "capabilities[8].code must not be empty.",
+      "capabilities[8].tests must not be empty.",
+      "capabilities[9].entrypoints must not be empty.",
+      "capabilities[9].code must not be empty.",
+      "capabilities[9].tests must not be empty.",
+      "capabilities[10].entrypoints must not be empty.",
+      "capabilities[10].code must not be empty.",
+      "capabilities[10].tests must not be empty."
+    ]
+  },
+  "sources": [
+    {
+      "path": "src/domain/pre_branch_sdd.ts",
+      "sha": "17d2d99471f7371a393c2976bf9fd30ca63e2c83",
+      "url": "https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/src/domain/pre_branch_sdd.ts",
+      "sha256": "636db20b18cd7b694c2d68e2d5fc53f5387daae90bcb231c98c2c2534d6125c3"
+    },
+    {
+      "path": "src/domain/sdd_draft_consistency.ts",
+      "sha": "c1487eac45d12911052df9ce72ac1cdcb54e0b96",
+      "url": "https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/src/domain/sdd_draft_consistency.ts",
+      "sha256": "04b6c1eebee7284270b8ad08107c2b2d01c4b3d059d5603a4eecab92616223fd"
+    },
+    {
+      "path": "src/domain/sdd_catalog_compatibility.ts",
+      "sha": "b63305a368e68ff6cf7b1689a604d004765ff48e",
+      "url": "https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/src/domain/sdd_catalog_compatibility.ts",
+      "sha256": "0036d4417892aa35ed450a43b696bae02154a073f4723916a5ada8c53ca1f0eb"
+    },
+    {
+      "path": "src/domain/sdd_validation_diagnostic.ts",
+      "sha": "af7888055cc9d13547afd8482045639d78a4552d",
+      "url": "https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/src/domain/sdd_validation_diagnostic.ts",
+      "sha256": "1906276928b2fae7d81855da29a67154abad22bd0eaab1c7046fe4b67afb30b8"
+    },
+    {
+      "path": "src/domain/specification_catalog_path_policy.cjs",
+      "sha": "3232beb9092401cab6a033ebb9434f9ae3117d03",
+      "url": "https://github.com/vypdev/copilot/blob/master/src/domain/specification_catalog_path_policy.cjs",
+      "sha256": "263227b049b5aa2ebdfa9c44ae1e10eaa541c87fdb8d01644856493018b2aca7"
+    },
+    {
+      "path": "src/domain/sdd_prerequisite_policy.cjs",
+      "sha": "06b58c28ff34fa15b662ea9ace69bf0a72ed522f",
+      "url": "https://github.com/vypdev/copilot/blob/master/src/domain/sdd_prerequisite_policy.cjs",
+      "sha256": "e4224fd266a82eb6ec34dc4471d92d8bf48629fc99723f0696bfed8ac1c2ee70"
+    },
+    {
+      "path": "src/infrastructure/specification_catalog_validator.cjs",
+      "sha": "7e32e203d5cf2e71f3a944e05c461a3e7f73a903",
+      "url": "https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/src/infrastructure/specification_catalog_validator.cjs",
+      "sha256": "2310e14413baeba83d474f3b4d58944e18df19d3ec0c82a948157a8de0ec774c"
+    }
+  ],
+  "applicationTests": "NOT IMPLEMENTED",
+  "liveDogfooding": "NOT RUN",
+  "copilotChanged": false,
+  "auditedAt": "2026-10-29",
+  "pullRequestCheckAudit": {
+    "pullRequest": "https://github.com/vypdev/domus/pull/3",
+    "reviewedHead": "fa7adf1118b85e1588f0de7d71a77f47822b5000",
+    "workflowRun": "https://github.com/vypdev/domus/actions/runs/40774284194",
+    "initialAttempt": {
+      "conclusion": "failure",
+      "code": "agent.failed",
+      "stage": "progress assessment",
+      "diagnostic": "assessment-invalid",
+      "applicationTestFailure": false
+    },
+    "retryAttempt": {
+      "number": 2,
+      "conclusion": "success",
+      "job": "https://github.com/vypdev/domus/actions/runs/40774284194/job/123154135293",
+      "verification": "success"
+    },
+    "review": {
+      "conclusion": "neutral",
+      "meaning": "Review skipped because the PR remains a draft; not a clean-review claim"
+    },
+    "copilotChanges": false
+  },
+  "subsequentHeadCheckAudit": {
+    "reviewedHead": "ce2871b15508a1de53eaceca9bada001b31c25f2",
+    "workflowRun": "https://github.com/vypdev/domus/actions/runs/40787905127",
+    "attempts": [
+      {
+        "number": 1,
+        "conclusion": "failure",
+        "job": "https://github.com/vypdev/domus/actions/runs/40787905127/job/123165609347"
+      },
+      {
+        "number": 2,
+        "conclusion": "failure",
+        "job": "https://github.com/vypdev/domus/actions/runs/40787905127/job/123168549416"
+      }
+    ],
+    "stage": "progress assessment",
+    "diagnostic": "assessment-invalid",
+    "publishedCode": "agent.failed",
+    "applicationTestFailureIdentified": false,
+    "copilotChanges": false,
+    "scope": "Historical head only; the next documentation commit has independent checks."
+  },
+  "upstreamReports": {
+    "progressAssessment": "https://github.com/vypdev/copilot/issues/774#issuecomment-6483788546",
+    "proposedCatalogBootstrap": "https://github.com/vypdev/copilot/issues/777"
+  },
+  "acceptedDecisionTableRows": [
+    "A1",
+    "A2",
+    "A3",
+    "A5",
+    "A6",
+    "A7",
+    "A10",
+    "A14",
+    "A15",
+    "A16",
+    "A17",
+    "A18",
+    "A19",
+    "A20",
+    "A21",
+    "A22",
+    "A23",
+    "A24",
+    "A25",
+    "A26"
+  ],
+  "latestOwnerReview": [
+    "A6",
+    "A22",
+    "A23",
+    "A24",
+    "A25",
+    "A26"
+  ]
+}
