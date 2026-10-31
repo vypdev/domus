@@ -3,7 +3,8 @@
 The documentation foundation was merged through [PR #3](https://github.com/vypdev/domus/pull/3).
 [Issue #4](https://github.com/vypdev/domus/issues/4) starts M1 with real development tooling, tests and CI.
 The issue #6 checkpoints introduce storage, pure identity policy, local authorization and session leases.
-HA protocol authentication, membership use cases, product UI, packages and channels remain pending.
+HA protocol adapters now have provider/loopback tests. Browser authentication/session wiring,
+membership use cases, product UI, packages and channels remain pending.
 
 ## Reproduce the environment
 
@@ -115,3 +116,8 @@ The subsequent [identity-policy evidence](evidence/m1-identity-policy.json) reco
 permission precedence, transaction-bound authorization, schema 2 migration and bounded session leases.
 Provider fixtures are not live HA acceptance. The [migration guide](migrations-identity-storage.md)
 identifies the frozen schema 1 input and the fail-closed unconfigured-household state.
+
+The [HA protocol adapters](ha-identity-protocol.md) use HTTP provider fixtures and ephemeral loopback
+WebSocket servers. Local sandboxes that forbid listening sockets need permission for the backend
+suite; no test contacts the owner's HA. [Protocol evidence](evidence/m1-ha-protocol.json) identifies
+the reviewed Core blobs, fixed dependency versions and outstanding live/package journeys.

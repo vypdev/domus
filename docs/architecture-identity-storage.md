@@ -1,8 +1,8 @@
 # Identity and storage implementation boundaries
 
 Status: the M1 storage kernel, pure identity policy, transaction-bound local authorization and
-session-lease core are implemented on the Action-managed issue #6 branch. HA protocol adapters,
-membership use cases, recovery, snapshots, HTTP/console entrypoints and live deployment acceptance
+session-lease core and HA protocol adapters are implemented on the Action-managed issue #6 branch.
+Browser/session wiring, membership use cases, recovery, snapshots, HTTP/console entrypoints and live deployment acceptance
 remain pending. The [owning companion](../specs/platform-foundation-identity-sqlite.md) retains
 the complete increment contract; this checkpoint does not complete M1 or the product.
 
@@ -51,7 +51,14 @@ monotonic deadline. Rejection, expiry and identity mismatch deny access. A condi
 refresh cannot resurrect logout or overwrite a concurrently changed identity. Leases never contain
 HA tokens or enter SQLite; their private session handles are omitted from diagnostic representations.
 Restart requires authentication. This is tested with semantic
-provider fixtures, not a claim that the live HA protocol is implemented.
+provider fixtures, not a claim of authentication on the owner's live HA.
+
+The [HA adapters](ha-identity-protocol.md) now implement fixed operator endpoints, private OAuth
+form exchange and correlated WebSocket proof, with explicit active/non-system provenance and
+administrator/owner semantics. Supervisor's actual peer and a single candidate subject header precede
+fresh Core lookup. The real pinned WebSocket client is exercised against disposable loopback servers,
+including a negative cross-origin redirect fixture. HTTP/console entrypoints and complete session
+credential wiring remain pending; no request may authenticate by constructing an adapter value.
 
 The composition and entrypoint packages reserve the accepted architecture boundaries. They do not
 contain an HTTP server, CLI or product UI yet and are not registered as implemented entrypoints.
@@ -74,3 +81,5 @@ See [development checks](development.md), [owner decisions](decisions.md),
 [the companion](../specs/platform-foundation-identity-sqlite.md), and
 [initial storage evidence](evidence/m1-storage-kernel.json) and
 [identity-policy checkpoint evidence](evidence/m1-identity-policy.json).
+The subsequent [protocol evidence](evidence/m1-ha-protocol.json) identifies the adapter sources,
+reviewed Core blobs, fictitious provider fixtures and outstanding live/package acceptance.

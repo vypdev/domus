@@ -21,8 +21,9 @@ No implementation begins on an invented branch: maintainers and the Action retai
 Issue #6 now has its Action-published companion and verified branch. Its first source checkpoint adds
 the tested SQLite transaction kernel, semantic ports, separate backend coverage and actual import graph.
 The next checkpoint adds pure identity/permission rules, current local authorization, uniquely linked
-member/policy storage, schema 2 migration and bounded session leases. HA protocols, membership use cases,
-recovery, snapshots, HTTP/console entrypoints and deployment acceptance remain
+member/policy storage, schema 2 migration and bounded session leases. HA protocol adapters now have
+provider/loopback evidence. Browser/session wiring, membership use cases, recovery, snapshots,
+HTTP/console entrypoints and deployment acceptance remain
 incomplete M1 work; the source checkpoint does not complete M1 or change first-release scope.
 Release, merge and deployment require the existing maintainer flow and explicit authorization.
 Future optional depth includes predictive consumption, workload recommendations, rich rewards and external calendars.

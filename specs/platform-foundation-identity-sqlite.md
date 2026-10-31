@@ -371,6 +371,7 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `docs/architecture-identity-storage.md` | create |
 | `docs/migrations-identity-storage.md` | create |
 | `docs/compatibility-home-assistant.md` | create |
+| `docs/ha-identity-protocol.md` | create |
 | `backend/pyproject.toml` | create |
 | `backend/src/domus/__init__.py` | create |
 | `backend/src/domus/application/__init__.py` | create |
@@ -390,6 +391,10 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `backend/src/domus/infrastructure/sqlite.py` | create |
 | `backend/src/domus/infrastructure/sqlite_identity.py` | create |
 | `backend/src/domus/infrastructure/memory_sessions.py` | create |
+| `backend/src/domus/infrastructure/ha_config.py` | create |
+| `backend/src/domus/infrastructure/ha_http.py` | create |
+| `backend/src/domus/infrastructure/ha_websocket.py` | create |
+| `backend/src/domus/infrastructure/ha_ingress.py` | create |
 | `tests/backend/test_atomic_commands.py` | create |
 | `tests/backend/test_sqlite_transactions.py` | create |
 | `tests/backend/test_storage_values.py` | create |
@@ -397,9 +402,13 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/backend/test_membership_authorization.py` | create |
 | `tests/backend/test_sqlite_identity.py` | create |
 | `tests/backend/test_session_leases.py` | create |
+| `tests/backend/test_ha_http.py` | create |
+| `tests/backend/test_ha_websocket.py` | create |
+| `tests/backend/test_ha_ingress.py` | create |
 | `tests/fixtures/sqlite/v1.sql` | create |
 | `docs/evidence/m1-storage-kernel.json` | create |
 | `docs/evidence/m1-identity-policy.json` | create |
+| `docs/evidence/m1-ha-protocol.json` | create |
 | `docs/evidence/home-assistant-reference.json` | create |
 | `pyproject.toml` | update |
 | `uv.lock` | update |
@@ -485,3 +494,7 @@ The first implementation supplies immutable values, semantic transaction ports, 
 ### Identity policy and session-lease checkpoint — 2026-10-31
 
 The next checkpoint supplies pure eligible-human/mapping/permission rules, current local authorization before replay, uniquely linked member/policy repositories, an atomic schema 1-to-2 upgrade and a bounded in-memory session-lease core. Provider fixtures exercise outage reads, rejection, expiry and logout races. No HA protocol authentication, membership command entrypoint, console recovery, snapshot or packaged/live acceptance is claimed. See [the migration guide](../docs/migrations-identity-storage.md) and [identified evidence](../docs/evidence/m1-identity-policy.json). The owning specifications remain Draft.
+
+### HA protocol adapter checkpoint — 2026-10-31
+
+Fixed operator endpoints, bounded OAuth form transport, correlated WebSocket current-user/directory proof and the Supervisor peer/subject boundary are implemented. Standalone proof requires a server-exchanged client grant: Core rejects system users for client-bound refresh tokens and checks active users during authentication. Directory proof checks exact boolean owner/active/system flags and administrator group IDs. Real loopback client fixtures include redirect refusal and cleanup; they do not establish authentication on the owner's HA. Browser state/PKCE attempt/session wiring, membership commands, recovery, snapshots, API/console and package/live acceptance remain pending. See [protocol boundaries](../docs/ha-identity-protocol.md) and [identified evidence](../docs/evidence/m1-ha-protocol.json).

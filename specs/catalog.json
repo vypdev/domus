@@ -28,7 +28,11 @@
         "backend/src/domus/application/identity_ports.py",
         "backend/src/domus/application/sessions.py",
         "backend/src/domus/infrastructure/sqlite_identity.py",
-        "backend/src/domus/infrastructure/memory_sessions.py"
+        "backend/src/domus/infrastructure/memory_sessions.py",
+        "backend/src/domus/infrastructure/ha_config.py",
+        "backend/src/domus/infrastructure/ha_http.py",
+        "backend/src/domus/infrastructure/ha_websocket.py",
+        "backend/src/domus/infrastructure/ha_ingress.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -37,7 +41,10 @@
         "tests/backend/test_identity_policy.py",
         "tests/backend/test_membership_authorization.py",
         "tests/backend/test_session_leases.py",
-        "tests/backend/test_sqlite_identity.py"
+        "tests/backend/test_sqlite_identity.py",
+        "tests/backend/test_ha_http.py",
+        "tests/backend/test_ha_websocket.py",
+        "tests/backend/test_ha_ingress.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -48,12 +55,13 @@
         "docs/architecture-identity-storage.md",
         "docs/development.md",
         "docs/compatibility-home-assistant.md",
-        "docs/migrations-identity-storage.md"
+        "docs/migrations-identity-storage.md",
+        "docs/ha-identity-protocol.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: tested storage, pure identity policy, local authorization and session leases; HA protocols, membership commands, recovery, snapshots and API pending",
-        "blockingDecisions": "Full identity/persistence/recovery acceptance, snapshot/restore implementation, packaged deployment/channel proof and exact HA matrix acceptance remain pending; partial real-file/process transaction evidence is implemented under issue #6.",
+        "implementationEvidence": "partial: tested storage, pure policy, local authority, session leases and HA protocol adapters; complete browser/household/recovery journeys pending",
+        "blockingDecisions": "Complete browser state/PKCE/session and member command wiring; console recovery, snapshots, strict API/console contracts and exact live/package/channel acceptance remain pending. Offline protocol fixtures do not establish live identity or packaged trust boundaries.",
         "copilotChangesAllowed": false
       }
     },
@@ -76,13 +84,20 @@
         "backend/src/domus/application/identity_ports.py",
         "backend/src/domus/application/sessions.py",
         "backend/src/domus/infrastructure/sqlite_identity.py",
-        "backend/src/domus/infrastructure/memory_sessions.py"
+        "backend/src/domus/infrastructure/memory_sessions.py",
+        "backend/src/domus/infrastructure/ha_config.py",
+        "backend/src/domus/infrastructure/ha_http.py",
+        "backend/src/domus/infrastructure/ha_websocket.py",
+        "backend/src/domus/infrastructure/ha_ingress.py"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
         "tests/backend/test_membership_authorization.py",
         "tests/backend/test_session_leases.py",
-        "tests/backend/test_sqlite_identity.py"
+        "tests/backend/test_sqlite_identity.py",
+        "tests/backend/test_ha_http.py",
+        "tests/backend/test_ha_websocket.py",
+        "tests/backend/test_ha_ingress.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -91,12 +106,13 @@
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
         "docs/architecture-identity-storage.md",
-        "docs/migrations-identity-storage.md"
+        "docs/migrations-identity-storage.md",
+        "docs/ha-identity-protocol.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: pure mappings/permissions, transaction-bound local authorization, member/policy storage and session leases; HA proof and complete product journeys pending",
-        "blockingDecisions": "HA protocol identity/administrator proof in both targets; membership/setup commands and API; console-approved recovery; technical principal policy; complete live/package acceptance remain pending. Accepted defaults and precedence have pure policy tests, not complete domain or deployment acceptance.",
+        "implementationEvidence": "partial: tested storage, pure policy, local authority, session leases and HA protocol adapters; complete browser/household/recovery journeys pending",
+        "blockingDecisions": "Complete browser state/PKCE/session and member command wiring; console recovery, snapshots, strict API/console contracts and exact live/package/channel acceptance remain pending. Offline protocol fixtures do not establish live identity or packaged trust boundaries.",
         "copilotChangesAllowed": false
       }
     },
