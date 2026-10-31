@@ -1,0 +1,118 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5",
+  "packageVersion": "0.0.0-edge.3",
+  "runtimeCommit": "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5",
+  "runtimeArchiveSha256": "15bcd701696204b3362cebe5901feb3d0072c9bac1db2ef2cbc5007e9ed73717",
+  "sourceArchiveVerification": {
+    "commit": "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5",
+    "archiveSha256": "15bcd701696204b3362cebe5901feb3d0072c9bac1db2ef2cbc5007e9ed73717",
+    "matchedTrackedFiles": 272,
+    "comparison": "Every archive regular file matched its exact git-tree blob; no extraction or execution",
+    "sourceByteIdentical": true
+  },
+  "localImage": {
+    "tag": "domus-edge-review:0.0.0-edge.3",
+    "id": "sha256:9ff296232909a4042c7b33c1787c5674f2f0017ff23a08eca43c30e968f50d15",
+    "architecture": "arm64",
+    "python": "3.14.6",
+    "sqlite": "3.46.1",
+    "buildCommand": "docker build --build-arg BUILD_ARCH=aarch64 -t domus-edge-review:0.0.0-edge.3 addon-edge",
+    "runtimePinOverridden": false
+  },
+  "previousImage": {
+    "tag": "domus-edge-review:0.0.0-edge.2",
+    "id": "sha256:5d3c87fd549d40c82ec3e60d6b3c4a778579dea1cafceddedecd865de13ce32d",
+    "runtimeCommit": "d013cf2c8b932d0e00f5858053cbc0e663d5eee1",
+    "schema": 3
+  },
+  "containerTests": 15,
+  "containerCommand": "DOMUS_TEST_IMAGE=domus-edge-review:0.0.0-edge.3 DOMUS_PREVIOUS_IMAGE=domus-edge-review:0.0.0-edge.2 .venv/bin/pytest tests/containers -q --no-cov --tb=short",
+  "containerSeconds": 126.61,
+  "backendTests": 1299,
+  "backendCoverage": {
+    "covered_lines": 4684,
+    "num_statements": 4684,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 132,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 1302,
+    "num_partial_branches": 0,
+    "covered_branches": 1302,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "assertions": [
+    "The exact default Supervisor folder builds reviewed source/checksum/frozen dependencies and reports the correct immutable runtime/image version",
+    "Actual packaged Python3.14.6 and SQLite3.46.1 execute native and standalone production listeners as the runtime UID; unauthenticated access does not obtain a session",
+    "Real console snapshot/prepare/independent inspect/activate/status/resume commands run as UID65532 with no network or host port; runtime and offline leases exclude concurrent activation",
+    "Both compositions restart on verified selected state; later commands replay as historical with unchanged facts, real acknowledgement or suppressed delivery, and correct private ownership/modes",
+    "Source-checkpoint rollback reconciles newer work, preserves three original operations and event sequence, and retrying an old activation reports historical without switching back",
+    "Real process termination after durable intent and after root pointer replacement blocks both runtime starts; same-input activation or same-ID sealed-input resume recovers exactly once",
+    "Actual Edge.2/schema-3 image data migrates to4 preserving UUID and original one-effect command replay; its pre-upgrade snapshot is inspectable and restores through target-only migration",
+    "The actual older image refuses flat future schema and selected generations, preserving the hash and inventory of every installation file; the new image can restart afterwards",
+    "CI builds both the current default package and separately pinned immutable previous image on native amd64/aarch64 before every container suite",
+    "Every owned container and named volume is removed by its fixture; current and rollback images remain retained"
+  ],
+  "testFirst": "Package tests first failed expected new version/source pins before changing the package. Initial image cases caught a missing configured Host in the standalone test probe; the probe was corrected without weakening production host/origin checks. Final15 pass.",
+  "tooling": {
+    "tests": 66,
+    "statements": 73,
+    "branches": 34,
+    "coveragePercent": 100,
+    "protectedCopilotResourcesUnchanged": 29,
+    "ruff": "PASS",
+    "mypy": "PASS: 68 backend + 4 tooling modules",
+    "architectureNegativeFixtures": 41,
+    "applicationContractsKept": 3,
+    "applicationContractsBroken": 0,
+    "graphFiles": 103,
+    "graphDependencies": 542
+  },
+  "runtimeSourceCI": {
+    "head": "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5",
+    "url": "https://github.com/vypdev/domus/actions/runs/41220481891",
+    "result": "PASS: all project groups; those image cases still used Edge.2, separate from this new package proof"
+  },
+  "installedTarget": "Owner Edge.2 remains installed on schema3; no update, owner snapshot, restore, household/member/recovery grant, device or user changes in this increment.",
+  "limits": [
+    "Pre-publication local arm64 image evidence; exact package-head native amd64/aarch64 CI is a separate required gate",
+    "Disposable fixtures use fictitious human/command authority and no HA network; not live HA sign-in, household or restore acceptance",
+    "Both production entrypoints are exercised from the image, but full standalone distribution/companion/browser and all channel/release acceptance remain pending",
+    "No automatic snapshot schedule, retention/pruning or root safety-metadata editing",
+    "Complete current-head Bugbot review with no unresolved findings and full supported coverage remain merge conditions; draft/skipped/neutral review is insufficient"
+  ],
+  "sourceSha256": {
+    "addon-edge/Dockerfile": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
+    "addon-edge/config.yaml": "b20cbe1daa7e163b668ec100ee1b19864414767401761a7c8dbfd42d312e2e10",
+    "addon-edge/README.md": "dea41515d94d2017c6b3ac2413ef4ed58579e6a038cfc58841e58b1138527d14",
+    "addon-edge/DOCS.md": "fadbd32c89704e485ece3f51aa8af20a44bfba337a29a66bf2ff5daaf9d1512e",
+    "addon-edge/CHANGELOG.md": "a293b9707ecdb50a8c450e950b8b8631567131831651962ebcd84a7ae704da03",
+    "tests/backend/test_app_package.py": "77d6ebd8e1295a3edb17b7fb9e260766a34d72903897feb7f3019d7d9a47abbc",
+    "tests/containers/test_app_image.py": "7d7679d9b8520e591e7fa10f7dd2cfc115ee9f93061b565728ae6a9a739199bd",
+    "tests/containers/test_app_compatibility.py": "ae4d567df8662e7b5c2afd7c1c97fb7c4906a5f60450d5174cd5b98c90b7185e",
+    "tests/containers/restore_fixture.py": "45bc4b9603102fc5af2e23efc23f1e2c4e318093dab665616b42fdd62f3de756",
+    ".github/workflows/ci_check.yml": "6af0f129d2f778e4c5233dad6a38bbb53e09536e55ed68b87c7a930120423e0a",
+    "tests/python/test_ci_contract.py": "ef522bbe01f5954f8fb93e12605163b7ba855c6c06bd5ba20157a3cf393bbb13"
+  },
+  "sddValidation": {
+    "restoration": {
+      "format": "PASS",
+      "consistency": "PASS",
+      "canonicalSections": 20,
+      "characters": 31520
+    },
+    "primaryCompanion": {
+      "format": "PASS",
+      "consistency": "PASS",
+      "characters": 69863
+    },
+    "catalog": "PASS: 11 capabilities, generated rendering current",
+    "validator": "Byte-verified unchanged upstream policies"
+  },
+  "localDocumentation": "PASS"
+}

@@ -1,0 +1,73 @@
+{
+  "verifiedOn": "2026-10-31",
+  "scope": "Owner-authorized native HA connection preview, not complete M1 or production support",
+  "packageCommit": "650f1517f0e15664ea455628e63154dada0414f2",
+  "runtimeCommit": "98bd12f1bf141ba64053730b2686bd848aee1b1c",
+  "runtimeArchiveSha256": "4531e8b013e288bcc717c72452c57018a1158f4aa6054f277b19b05d6baaa63f",
+  "sourceBinding": "Manifest version and immutable Dockerfile source/checksum; the HA-built image digest was not independently read",
+  "app": {
+    "id": "62fdc661_domus_edge",
+    "version": "0.0.0-edge.1",
+    "channel": "edge",
+    "repository": "https://github.com/vypdev/domus#feature/6-implement-home-assistant-identity-and-sqlite-platform-persistence",
+    "safeBrowserUrl": "http://homeassistant.local:8123/app/62fdc661_domus_edge",
+    "state": "Installed and running; retained for continued authorized development",
+    "startOnBoot": false,
+    "watchdog": false,
+    "automaticUpdates": false,
+    "sidebarEntry": false
+  },
+  "homeAssistant": {
+    "core": "2026.10.4",
+    "supervisor": "2026.10.5",
+    "os": "18.3",
+    "frontend": "20260930.5"
+  },
+  "browser": "Google Chrome, existing owner Home Assistant session",
+  "assertions": {
+    "repositoryAddition": "PASS",
+    "installation": "PASS",
+    "start": "PASS",
+    "openWebUi": "PASS: Domus Edge / Development preview / Connected to Home Assistant",
+    "existingHaSession": "PASS: No additional login required",
+    "normalNativeChromeReload": "PASS: connection page restored",
+    "householdSetupUnavailable": "PASS: displayed explicitly; no business records created"
+  },
+  "instrumentationObservation": {
+    "initialSymptom": "HA iframe request remained stalled before sending while the task debugger was attached",
+    "isolation": "The same frame destination rendered as a top-level page; no application log error explained the parent stall",
+    "resolutionObserved": "Canceling only the task-owned Chrome debugger attachment immediately let the existing iframe load; normal native Chrome reload also passed",
+    "boundaryChanges": "None: peer, headers, credentials, permissions and app source were not relaxed",
+    "limitation": "Observed browser instrumentation interaction, not a proven general browser or application defect"
+  },
+  "ci": {
+    "head": "650f1517f0e15664ea455628e63154dada0414f2",
+    "url": "https://github.com/vypdev/domus/actions/runs/41184982619",
+    "result": "PASS: all six project-required job groups, including actual native amd64 and aarch64 container builds/tests",
+    "doesNotTransferToLaterHeads": true
+  },
+  "permissions": {
+    "coreApiTechnicalAdministrator": true,
+    "supervisorManagementApi": false,
+    "hostPorts": {},
+    "hostMounts": [],
+    "privilegedCapabilities": [],
+    "humanPrincipal": "Fresh exact HA user; transport administrator access is not a household grant",
+    "credentialLifecycle": "HA/Supervisor owns provisioning and platform lifecycle; Domus keeps its private runtime copy outside business storage and responses"
+  },
+  "cleanup": {
+    "retained": "Only the authorized repository/app and its native app tab for ongoing testing",
+    "closed": "Owned diagnostic log and About tabs; Chrome DevTools",
+    "debugger": "Detached from the owned app tab before final normal reload",
+    "businessData": "No household, member, entity, device, automation or user changes",
+    "secrets": "No credentials, session cookies, OAuth codes or opaque Ingress URLs retained in this receipt or repository",
+    "previousStandaloneGrant": "Earlier owned OAuth test revoked on shutdown: revoked=1, unconfirmed=0; that browser return remains unaccepted"
+  },
+  "remaining": [
+    "Public household commands and product UI",
+    "Native persistence and local read-grace sessions",
+    "Recovery and snapshot/restore",
+    "Stable/Edge data isolation acceptance and stable release",
+    "Standalone packaged browser acceptance"
+  ]
+}

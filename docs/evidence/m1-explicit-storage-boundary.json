@@ -1,0 +1,52 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "f9220511448d87bf8766ead2d677b5cd88c8e91b",
+  "scope": "Prevent native and standalone explicit-file runtimes from bypassing the managed-directory lifecycle",
+  "backendTests": 897,
+  "backendCoverage": {
+    "covered_lines": 3325,
+    "num_statements": 3325,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 122,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 860,
+    "num_partial_branches": 0,
+    "covered_branches": 860,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "testFirst": "The four active/closed owned-directory factory cases first failed because both factories accepted the managed database; the guard test first failed because its helper did not exist.",
+  "assertions": [
+    "Native and standalone explicit-file runtime factories reject owned parent metadata before SQLite initialization, for both active and stopped managed installations",
+    "Rejection preserves database bytes and leaves the original runtime lease effective",
+    "Broken marker symlinks still identify managed storage; missing parent errors are sanitized",
+    "The console attachment and runtime factories share one marker refusal rule"
+  ],
+  "architecture": {
+    "files": 89,
+    "dependencies": 401,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 56 backend source files"
+  },
+  "limits": [
+    "Trusted local operator paths remain a boundary; this does not protect against an owner replacing metadata or paths",
+    "The installed stateless Edge preview and its package are unchanged",
+    "Standalone managed-directory startup and restore activation are not implemented by this correction"
+  ],
+  "priorHeadCI": {
+    "head": "f9220511448d87bf8766ead2d677b5cd88c8e91b",
+    "url": "https://github.com/vypdev/domus/actions/runs/41202996001",
+    "result": "PASS: all six required project groups; not acceptance of later changes"
+  },
+  "sourceSha256": {
+    "backend/src/domus/composition/ingress.py": "7447608e616cd5a70652b1c02c5ddab81ea42fc8c6228cb1a0eecd60e2d029a9",
+    "backend/src/domus/composition/server.py": "58c83542654a5cd1360297557c513285277d1093cf5f3b6de27e79cc79ac35cb",
+    "backend/src/domus/infrastructure/owned_storage.py": "8f19e7c60d28edd20ca335d50198e59204f5be27ea1d32b8a048494264326266",
+    "tests/backend/test_owned_storage.py": "907aa96886a1eb9f7fa40b3e1bd97796c2798592343420deddf840129a4cdd80"
+  }
+}

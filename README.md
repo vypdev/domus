@@ -8,10 +8,13 @@ into one responsive interface. Normal operation does not require AI or cloud ser
 
 ## Project status
 
-Domus has started its development-tooling foundation. No household application is implemented or published yet.
+Domus has tested backend storage, identity policy and a standalone authentication API/CLI in development.
+A stateless Edge HA app preview now uses native Ingress authentication without another sign-in.
+The household product, product UI, production packages and release artifacts remain incomplete.
 The [documentation foundation issue](https://github.com/vypdev/domus/issues/2)
 tracks eleven Draft SDDs, 82 normative requirements and 353 planned acceptance cases.
 These cases are verification plans, not executed application tests.
+The M1 identity/storage companion adds its own 61-case plan; partial backend evidence does not complete it.
 
 The first usable release covers all six domains, Supervisor App/Ingress and
 standalone Container, and isolated Stable and experimental Edge channels.
@@ -38,12 +41,16 @@ in the application, with the chosen policy and actual awards preserved in the le
 - [Acceptance, coverage and CI Check plan](docs/acceptance-plan.md)
 - [Specification validation evidence and limitations](docs/sdd-validation.md)
 - [Development setup, tests and CI Check](docs/development.md)
+- [Home Assistant app installation and development preview](docs/installation-home-assistant.md)
+- [Implemented authentication journey and limits](docs/identity-household.md)
+- [Authentication server configuration](docs/configuration.md)
+- [Identity/storage operations and pending commands](docs/operations-identity-storage.md)
 
 ## Quality and contribution
 
 Clean Architecture is mandatory. Meaningful tests accompany every implementation
 from its first change, with 100% supported first-party coverage metrics as the
-required implementation gate. A future project-owned workflow named **CI Check** runs
+required implementation gate. The project-owned workflow named **CI Check** runs
 the full applicable suite for every PR update. English is used for issues,
 documentation, source identifiers and comments; the product supports English and Spanish.
 
@@ -60,13 +67,15 @@ preparation when necessary. Merge, release and deployment remain separately auth
 ## Readiness limitations
 
 All SDDs remain Draft while material decisions are reviewed. Their original Copilot
-format and consistency checks pass. The proposed SDK catalog still fails the unchanged
-upstream evidence validator for the ten capabilities without implementation. Delivery-quality
-registers only its real partial tooling/CI evidence; no fake paths or gate-readiness claims are used. See the
+format and consistency checks pass. The corrected upstream catalog validator accepts truthful
+proposed capabilities with empty implementation arrays. Platform, identity and delivery-quality
+register only their real partial evidence; no fake paths or gate-readiness claims are used. See the
 [adoption note](docs/copilot-adoption.md).
 
 The supplied brief ends at the beginning of section 10.2. The owner completed the
 barcode scope on 2026-10-29: camera/manual entry, local matching and optional Internet
 product lookup. Provider feasibility and device evidence still require review.
 The initial tooling/tests and a separate CI Check workflow are now implemented; see the development guide.
-Household application, UI and HA runtime tests remain future implementation work.
+Complete household commands, UI, console recovery, snapshots, Supervisor session/listener wiring
+and live/package acceptance remain pending. The authentication checkpoint uses real adapters and
+offline provider/loopback fixtures; it is not a completed or published household release.

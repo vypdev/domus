@@ -1,0 +1,69 @@
+{
+  "observedOn": "2026-10-31",
+  "completedAtUtc": "2026-10-31T17:16:59Z",
+  "sourceBase": "0484ba7cf3786fffac9c678032790e0690710fcb",
+  "packageVersion": "0.0.0-edge.3",
+  "runtimeSourcePin": "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5",
+  "runtimeArchiveSha256": "15bcd701696204b3362cebe5901feb3d0072c9bac1db2ef2cbc5007e9ed73717",
+  "target": {
+    "origin": "http://homeassistant.local:8123",
+    "appId": "62fdc661_domus_edge",
+    "entry": "http://homeassistant.local:8123/app/62fdc661_domus_edge",
+    "haPlatformVersionReference": "Earlier m1-native-ha-acceptance.json About observation; platform versions were not reread during this bounded app update"
+  },
+  "observations": [
+    "Before the update, the existing Domus app was running at Edge.2; its four operational switches were off",
+    "Refresh of the existing development repository offered Edge.3 and displayed the expected English release notes; no new repository or permission was added",
+    "The retain-previous-version backup option was explicitly enabled before confirming update; the resulting backup artifact was not inspected",
+    "Supervisor completed update and reported installed/latest version Edge.3 and the app running",
+    "The sole persisted public origin remained http://homeassistant.local:8123; no configuration save was needed",
+    "Open Web UI followed by a real Chrome toolbar reload showed Connected to Home Assistant and No additional login is required using the existing HA session",
+    "Domus-only restart completed; another real Chrome toolbar reload showed the same connected page through existing HA authentication",
+    "Start-on-boot, watchdog, automatic-update and sidebar switches remained off; no host port, mount, API role or protection-mode change was requested"
+  ],
+  "browserEvidence": {
+    "method": "Google Chrome visible UI, accessibility and screenshot observations in the task",
+    "caveat": "Some automation snapshots cached previous HA SPA state. Actual Chrome tab selection, removal of the debugging banner and fresh native-toolbar reload established current rendered version and connection state; cached observations were not used as acceptance.",
+    "publicEntryOnly": true,
+    "screenshotsExportedToRepository": false
+  },
+  "dataImpact": "Updated/restarted only the existing Domus development app through Supervisor and requested its normal previous-version backup. The packaged startup lifecycle handles its additive schema4 upgrade. No household/member, recovery approval/grant, points, automation, authored HA entity/device/user change or Domus manual snapshot/restore was created on the owner installation.",
+  "runtimeDataInspection": {
+    "expectedBusinessSchemaFromReviewedPin": 4,
+    "directlyQueriedOwnerSQLite": false,
+    "ownerUUIDHistoryOrCapabilityBytesExtracted": false
+  },
+  "separateImageEvidence": {
+    "head": "0484ba7cf3786fffac9c678032790e0690710fcb",
+    "run": "https://github.com/vypdev/domus/actions/runs/41222154726",
+    "amd64Job": 124598791305,
+    "aarch64Job": 124598791230,
+    "casesPerArchitecture": 15,
+    "result": "PASS on both native CPU families; current default Edge.3 and immutable previous Edge.2 are built and exercised",
+    "backendTests": 1299,
+    "statements": 4684,
+    "branches": 1302,
+    "coveragePercent": 100,
+    "localImage": "sha256:9ff296232909a4042c7b33c1787c5674f2f0017ff23a08eca43c30e968f50d15",
+    "python": "3.14.6",
+    "sqlite": "3.46.1"
+  },
+  "limits": [
+    "Bounded native app update/configuration/session/reload/restart acceptance, not complete M1, household UI or product acceptance",
+    "Owner filesystem identity/history and process capabilities were not extracted; those assertions come from separately identified real-image fixtures",
+    "No live owner restore, household command, outage/revocation or console recovery was exercised",
+    "Selecting a previous-version backup does not establish that its artifact is restorable; no owner backup restore was attempted",
+    "Complete standalone companion/browser, Stable/Edge distribution and all remaining functional domains/release gates remain pending",
+    "Merge still requires complete current-head Bugbot review with no unresolved findings and full supported coverage; skipped/neutral review is insufficient"
+  ],
+  "privacy": "This receipt retains only the public app entry and minimal version/status evidence. Opaque Ingress routes, session cookies, Supervisor tokens, human HA IDs and credentials are omitted. No owner screenshot was uploaded to GitHub.",
+  "sourceSha256": {
+    "addon-edge/Dockerfile": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
+    "addon-edge/config.yaml": "b20cbe1daa7e163b668ec100ee1b19864414767401761a7c8dbfd42d312e2e10",
+    "backend/src/domus/composition/ha_app.py": "e0ffe36478881ff11367c7ba5467438ebef54af7d4bfb00bf14350893b15e1b3",
+    "backend/src/domus/composition/ingress.py": "7447608e616cd5a70652b1c02c5ddab81ea42fc8c6228cb1a0eecd60e2d029a9",
+    "backend/src/domus/entrypoints/native_http.py": "59dce651bbab80a36a0bec435c581b247ad9b8aac6b53406bd577cbd0a7b15c7",
+    "backend/src/domus/infrastructure/owned_storage.py": "c994557ba584bc0292c8fef432afe8725b532a5976c91faa39ebdbe70b4c4192",
+    "backend/src/domus/infrastructure/sqlite_activation.py": "6191814bfcb73ac35613f6592fd27f74cbf88baf81394091caecbdae3e29ab8a"
+  }
+}

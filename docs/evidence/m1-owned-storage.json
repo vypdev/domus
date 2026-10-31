@@ -1,0 +1,69 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "d1571d0531f11122cead73ef31ebf96a69681e2c",
+  "scope": "POSIX owned-directory lifecycle, automatic persisted UUID/channel identity and native CLI composition; no image or live HA update",
+  "backendTests": 698,
+  "backendCoverage": {
+    "covered_lines": 2599,
+    "num_statements": 2599,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 105,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 654,
+    "num_partial_branches": 0,
+    "covered_branches": 654,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": ".venv/bin/pytest tests/backend -q -W error::ResourceWarning --cov=domus --cov-branch --cov-report=term-missing",
+  "testFirst": "The owned-storage behavioral suite first failed collection because its module did not exist; native owned-runtime tests first failed because the factory and CLI option did not exist.",
+  "assertions": [
+    "An empty private directory receives one initializing UUID/channel marker, real SQLite schema and durable ready marker before HTTP; no household or membership is implicitly created",
+    "Restart preserves UUID, household and same-key original command result; native composition initializes storage exactly once, then uses existing-only mode on restart",
+    "A lifecycle lock excludes a concurrent process; close and abrupt process death release ownership",
+    "Actual child-process death before and after schema commit resumes only the durable initializing UUID",
+    "Failed ready-marker atomic replacement leaves a resumable original identity; owned abandoned staging is cleaned under lock",
+    "Ready metadata refuses missing, empty, corrupt or foreign SQLite without rewriting the original marker or database",
+    "Missing marker never adopts a preexisting database, sidecar or staged metadata; channel mismatch and invalid exact-field metadata fail closed",
+    "Private ownership, exact file/directory modes, no-follow opens, regular files and single links reject symlinks, hardlinks, FIFOs and shared files without altering external targets",
+    "Existing-only initialization still performs the explicit v1-to-v2 migration while preserving household, audit and outbox history",
+    "Configuration fails before persistent records; failed later runtime composition releases the directory lock; partial and competing CLI identity options are rejected",
+    "POSIX locking remains infrastructure-only and negative architecture fixtures reject fcntl in both domain and application"
+  ],
+  "architecture": {
+    "files": 81,
+    "dependencies": 323,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 48 backend source files",
+    "negativeFixtures": 41
+  },
+  "schema": "Business schema 2 unchanged; separate version-1 initialization metadata contains only UUID/channel/state and no credentials",
+  "trustBoundary": "POSIX filesystem, trusted operator-owned private directory and parents. Every process accessing these files must honor the protocol. No protection from the local owner or unauthorized manual path/metadata replacement is claimed.",
+  "installedPreview": "Edge 0.0.0-edge.1 is unchanged, stateless and does not enable owned storage. Supervisor data-directory provisioning for the packaged runtime UID is not yet accepted.",
+  "remaining": [
+    "Provision private /data child ownership in the HA package without running the server with excess privilege",
+    "Updated immutable app package and CPU-family/container/live acceptance",
+    "Product UI, console-approved recovery, consistent snapshot/restore and full M1",
+    "Complete standalone companion authority and both deployment/channel acceptance"
+  ],
+  "priorHeadCI": {
+    "head": "d1571d0531f11122cead73ef31ebf96a69681e2c",
+    "url": "https://github.com/vypdev/domus/actions/runs/41196324078",
+    "result": "PASS: six required project groups; does not establish later source acceptance"
+  },
+  "copilot": "Unchanged; same prior-head scope-clause-limit reported with exact reference 84adb289-e365-444d-9b90-6fb006e71b9c in vypdev/copilot#828 comment 6542747656",
+  "sourceSha256": {
+    "backend/src/domus/infrastructure/owned_storage.py": "129c408aeb31fc60d750fa200c18b6b253953f9b6402b048597a39c068824a25",
+    "backend/src/domus/infrastructure/sqlite.py": "5250ae3afb977e38e59b6c1f61eea99b2db63ca4a9294821b85d0157f5eeaa43",
+    "backend/src/domus/composition/ingress.py": "83f41e9a27d5f92753250dc0182ee99b4a99147bf3fdf4ac561e6e17711b0b05",
+    "tests/backend/test_owned_storage.py": "5de672ee9452d8820fdbf5cea49c410ec0f0d34101ebb5198a02ac4aea5e4285",
+    "tests/backend/test_native_http.py": "821080e530ea71a4a9d365a733ad02bf0617abd1cc284e246beda6bcab3cfe73",
+    "architecture/python-application.ini": "4a9671bb02806eba3c614936079cbd8cb014f8b6851d01566770987fdeee6384",
+    "tests/architecture/test_python_architecture.py": "c6128140c8233497474092e1b78fadcc5ed087ad7e20167cfb8dd0c45e366b16"
+  }
+}

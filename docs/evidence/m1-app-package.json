@@ -1,0 +1,67 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "98bd12f1bf141ba64053730b2686bd848aee1b1c",
+  "runtimeSource": "98bd12f1bf141ba64053730b2686bd848aee1b1c",
+  "runtimeMatchesCurrentBackend": true,
+  "sourceArchiveSha256": "4531e8b013e288bcc717c72452c57018a1158f4aa6054f277b19b05d6baaa63f",
+  "appVersion": "0.0.0-edge.1",
+  "channel": "edge",
+  "scope": "Stateless native authentication preview; no household setup or production release",
+  "localContainer": {
+    "architecture": "arm64",
+    "imageId": "sha256:ab1979eb1e00cf9aaf40dae3acb448bf87199fe0fff095429cdfcd6477fade62",
+    "tests": "PASS: 3 actual image/listener/lifecycle cases",
+    "network": "none; fictional token only",
+    "cleanup": "Owned test containers removed; reviewed image retained"
+  },
+  "localTests": {
+    "backend": 415,
+    "tooling": 66,
+    "architectureFixtures": 39,
+    "nodePolicy": 11,
+    "nativeContainer": 3,
+    "totalExecuted": 534
+  },
+  "backendCoverage": {
+    "covered_lines": 1525,
+    "num_statements": 1525,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 89,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 402,
+    "num_partial_branches": 0,
+    "covered_branches": 402,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "ciContract": "Every PR head runs all six required jobs; containers matrix builds/tests on native amd64 and aarch64; aggregate fails closed",
+  "ciNativeArchitectures": "PENDING: exact pushed package head",
+  "liveHAInstallation": "PENDING: not installed; no native Ingress compatibility claim",
+  "stableProduction": "PENDING: no stable package or release published",
+  "permissions": {
+    "coreApi": true,
+    "supervisorManagementApi": false,
+    "hostPorts": {},
+    "hostMounts": [],
+    "privilegedCapabilities": [],
+    "runtimeUidGid": "65532:65532",
+    "humanIdentity": "Fresh exact user; no technical-account promotion or second sign-in"
+  },
+  "sourceSha256": {
+    "repository.yaml": "a3667e020e7ac2bf404b906fdaba221b47fd6d42160b73616067c10d3ed817f6",
+    "addon-edge/config.yaml": "687efe603dc18a669b38a187c7af4b5ae0f4a4c9e6188441c6462198ccf6e1d1",
+    "addon-edge/Dockerfile": "dfe8b2515b171ce1fcf8b6f16278e92bb46323611e6553f1d21f0e42d78f8981",
+    "addon-edge/README.md": "38ba9af604de7c964799452ca7841ec3765e5081150b59c994d461feca8cc8c9",
+    "addon-edge/DOCS.md": "d953dbddee2e4260aa72247f230b8d8509b696a9985e0a696dc16af35bfd2de3",
+    "addon-edge/CHANGELOG.md": "751bae503ccef45b538a4bc26153b382d8f711be846237ae1b03d99141493ca9",
+    "tests/backend/test_app_package.py": "a85c51ab7a1d06fff6d9253a43998cb56ecdf040047bce28ab11192a51fd051b",
+    "tests/containers/test_app_image.py": "7cdad0f0e22cc0df2b957e78027682ffcd0e7928a0570b63d5a97f1ed6b9c865",
+    ".github/workflows/ci_check.yml": "f86ebbc6e9167c01776f3fe27706431a690370a61fe4141cc5f2f90abda3b37c",
+    "tooling/domus_tooling/ci_policy.py": "3ff09d02aff0aa0403a79d22b9ad7f690a55cb7ecff0375dd780eb8c158fa9e8",
+    "tests/python/test_ci_contract.py": "194a06fd741a7fd12a4d0119d9d44c9b4f39886e6e5444b8bf87b5ab4ac613fa"
+  }
+}

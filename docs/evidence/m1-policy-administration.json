@@ -1,0 +1,68 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "508d4143ea6b8c813c729a2f0d597a9b178e9226",
+  "scope": "Application-layer household policy edits and shared administrator proof preparation; no public HTTP or installed image change",
+  "testFirst": "Policy behavior tests initially failed because policy_commands did not exist, then passed after implementation",
+  "backendTests": 545,
+  "policyTests": 23,
+  "backendCoverage": {
+    "covered_lines": 1884,
+    "num_statements": 1884,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 104,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 504,
+    "num_partial_branches": 0,
+    "covered_branches": 504,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": ".venv/bin/pytest tests/backend -q -W error::ResourceWarning --cov=domus --cov-branch --cov-report=term-missing",
+  "assertions": [
+    "Revisioned profile/mapping changes commit policy, receipt, audit and outbox together without rewriting members",
+    "Selected eligible ordinary HA users can hold deliberate Domus administrator authority and edit policy",
+    "Changing mapping removes inherited grants and preserves independent explicit administrator profiles",
+    "Setup-only mode binds the unique committed setup actor; missing, malformed or ambiguous audit provenance fails closed",
+    "Selected/setup targets must be active linked eligible humans; setup target must remain a current HA administrator",
+    "No external lookup holds the SQLite writer lock; fresh actor reproof follows external preparation",
+    "Current authority, unchanged member/policy snapshot and a remaining eligible administrator are checked in the writer transaction",
+    "Source outage or confirmed lack of another eligible administrator leaves the existing policy unchanged",
+    "An interleaved member/policy change is a conflict instead of silently overwriting current authority",
+    "Canonical rule order, authorization before receipt replay, stale revision conflicts and restart durability are verified",
+    "All previously passing member concurrency and same-key activation cases remain passing after shared proof extraction"
+  ],
+  "architecture": {
+    "files": 69,
+    "dependencies": 219,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 38 backend source files"
+  },
+  "schema": "Still schema 2; bounded setup-provenance read uses existing immutable audit without a data migration",
+  "priorHeadCI": {
+    "head": "508d4143ea6b8c813c729a2f0d597a9b178e9226",
+    "url": "https://github.com/vypdev/domus/actions/runs/41189807524",
+    "result": "PASS: all project-required groups including native amd64/aarch64 containers; not acceptance of later source"
+  },
+  "installedPreview": "Still stateless 0.0.0-edge.1, immutable runtime 98bd12f1bf141ba64053730b2686bd848aee1b1c; these commands are not installed",
+  "remaining": [
+    "Public command/query API and UI",
+    "Console-approved recovery",
+    "Snapshot/restore",
+    "Native installation persistence and local read-grace sessions",
+    "Complete standalone/channel acceptance"
+  ],
+  "sourceSha256": {
+    "backend/src/domus/application/administrator_proof.py": "c4735b83498970eddbde8a69c9e653829545b0589737df25ce76d2b536b0adfc",
+    "backend/src/domus/application/policy_commands.py": "bc588b5b5feb72fd5cb57d7b4a10ef5a05ae48da5ec042fd569142ce50fedeb6",
+    "backend/src/domus/application/member_commands.py": "d3e93982d2e42d9a57771269ec0ccd4692fcd196189922bb09e7b0398b924649",
+    "backend/src/domus/application/ports.py": "c10bf976c39def1dd163c5d21b04135bce75631d33e99ad9735e8f1a12fcf38c",
+    "backend/src/domus/infrastructure/sqlite.py": "fe6e04aedcf70f25218038497b139c14a4c96398e0f8f6bb924660ccaf94110e",
+    "tests/backend/test_policy_commands.py": "e0e69dab7d2942838fe05136c6c5ffdb7e027dcc52f8c9df78f07fd3e9b1728e",
+    "tests/backend/test_member_commands.py": "4daf5f8efefab0c9580027a4ae770997ed76b315d5295f6f7bd1e7cb155f53cd"
+  }
+}

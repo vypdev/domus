@@ -44,6 +44,38 @@ def test_required_jobs_always_reach_a_fail_closed_aggregate() -> None:
         assert "if" not in jobs[name], f"{name} must not skip applicable PR updates"
 
 
+def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> None:
+    jobs = workflow()["jobs"]
+    container = jobs["containers"]
+    assert container["strategy"]["fail-fast"] == "false"
+    assert container["strategy"]["matrix"]["include"] == [
+        {"runner": "ubuntu-latest", "arch": "amd64"},
+        {"runner": "ubuntu-24.04-arm", "arch": "aarch64"},
+    ]
+    assert container["runs-on"] == "${{ matrix.runner }}"
+    commands = [step["run"] for step in container["steps"] if "run" in step]
+    assert (
+        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-ci addon-edge"
+        in commands
+    )
+    assert "uv run pytest tests/containers --no-cov" in commands
+    assert any(
+        "DOMUS_SOURCE_COMMIT=d013cf2c8b932d0e00f5858053cbc0e663d5eee1" in command
+        and "DOMUS_SOURCE_SHA256=fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c"
+        in command
+        and "BUILD_VERSION=0.0.0-edge.2" in command
+        and "-t domus-app-previous addon-edge" in command
+        for command in commands
+    )
+    verification = next(
+        step
+        for step in container["steps"]
+        if step.get("run") == "uv run pytest tests/containers --no-cov"
+    )
+    assert verification["env"]["DOMUS_PREVIOUS_IMAGE"] == "domus-app-previous"
+    assert "containers" in jobs["aggregate"]["needs"]
+
+
 def test_ci_is_read_only_with_immutable_actions_and_locked_installs() -> None:
     config = workflow()
     assert config["permissions"] == {"contents": "read"}
@@ -75,13 +107,28 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
             continue
         suffix = Path(relative).suffix
         if suffix == ".py":
-            assert relative.startswith("tooling/domus_tooling/"), (
+            assert relative.startswith(("tooling/domus_tooling/", "backend/src/domus/")), (
                 f"Register {relative} in its own tested coverage/architecture gate before adding it"
             )
         elif suffix in {".js", ".mjs", ".cjs", ".ts", ".tsx"}:
             assert relative in declared_node_configuration, (
                 f"Register {relative} in its own tested coverage/architecture gate before adding it"
             )
+
+
+def test_backend_cannot_inherit_the_tooling_coverage_result() -> None:
+    jobs = workflow()["jobs"]
+    backend_commands = [step["run"] for step in jobs["backend"]["steps"] if "run" in step]
+    assert any(
+        "pytest tests/backend" in command and "--cov=domus " in command
+        for command in backend_commands
+    )
+    assert "backend" in REQUIRED_JOBS
+    assert "backend" in jobs["aggregate"]["needs"]
+    architecture_commands = [step["run"] for step in jobs["architecture"]["steps"] if "run" in step]
+    assert "uv run lint-imports --config architecture/python-application.ini --no-cache" in (
+        architecture_commands
+    )
 
 
 @pytest.mark.parametrize("relative,expected", sorted(json.loads(PROTECTED.read_text()).items()))

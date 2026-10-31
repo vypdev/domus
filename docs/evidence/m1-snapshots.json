@@ -1,0 +1,94 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "58d88faf1026d31007a805ebde8290ab12af2cab",
+  "scope": "Manual private SQLite snapshot creation and inspection, pure manifest/application contracts and console composition; restore activation and newer-history policy remain pending",
+  "backendTests": 892,
+  "backendCoverage": {
+    "covered_lines": 3309,
+    "num_statements": 3309,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 122,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 862,
+    "num_partial_branches": 0,
+    "covered_branches": 862,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": "COVERAGE_FILE=/private/tmp/domus-snapshot-backend.coverage .venv/bin/pytest tests/backend -q -W error::ResourceWarning --cov=domus --cov-branch --cov-report=term-missing",
+  "testFirst": "Manifest, archive and application tests first failed import because their modules did not exist; console tests first failed because snapshot was not an admitted subcommand.",
+  "assertions": [
+    "One pinned read transaction and the SQLite backup API produce a coherent committed database including receipt/audit/outbox and recovery records",
+    "A real concurrent WAL change commits to the source while the archive preserves the earlier coherent household and evidence view",
+    "Private destination is created exclusively, never replacing an existing complete or partial output; manifest publication occurs only after verification/hash/flush steps",
+    "Output failure after successful publication reports uncertainty; the intact result remains independently inspectable",
+    "Inspection requires only the expected installation UUID/channel, without access to an active source; it never migrates an archive",
+    "Exact private file inventory, regular single-link files, owner/mode/no-follow checks and bounded strict metadata reject incomplete/unsafe bundles",
+    "Hashes/size, matching ready identity, exact compatible schema, physical integrity, foreign keys, singleton/delivery constraints, domain record parsing and atomic evidence linkage are cross-checked",
+    "Real physical index damage, missing evidence, unknown columns, corrupt JSON, mismatched checkpoint/schema/identity and altered bytes are rejected",
+    "Logical deadline checks bound backup/hash steps and interrupt SQLite query work; failures retain private diagnostics without a success manifest",
+    "Historical v1/v2 fixtures inspect without rewriting/migrating their files; new capture requires initialized current schema 3",
+    "Application ports reject a result for another request or installation; domain/application remain free of concrete SQL/filesystem/clock dependencies",
+    "Both native owned-data attachment and explicit standalone source selection work through the registered domus-admin entrypoint; inspection has no HA token or HTTP route"
+  ],
+  "architecture": {
+    "files": 89,
+    "dependencies": 400,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 56 backend source files",
+    "negativeFixtures": 41
+  },
+  "tooling": {
+    "tests": 66,
+    "statements": 73,
+    "branches": 34,
+    "coveragePercent": 100,
+    "protectedCopilotResourcesUnchanged": 29
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "sqlite": "3.53.3",
+    "scope": "local backend/real-file tests; not owner native package acceptance"
+  },
+  "format": "Version 1 private directory with domus.sqlite3, ready installation.json and manifest.json. Business schema remains 3. Auth credentials/local leases are not persisted in business schema or collected from other sources.",
+  "checkpoint": "captured_at is the local UTC reading within the selected view; last_committed_at is the greatest retained receipt timestamp or null before any command; hashes/ID identify the exact artifact",
+  "remaining": [
+    "Restore preparation/activation into a new same-installation/channel directory with writes stopped",
+    "Owner choice on newer replay history when restoring an earlier checkpoint",
+    "Native private-directory provisioning and updated package/live acceptance",
+    "Standalone companion authority, product UI and full deployment/channel/domain acceptance"
+  ],
+  "installedPreview": "Edge 0.0.0-edge.1 / runtime 98bd12f1bf141ba64053730b2686bd848aee1b1c is unchanged. No owner HA backup, recovery grant or household data was created in this increment.",
+  "priorHeadCI": {
+    "head": "58d88faf1026d31007a805ebde8290ab12af2cab",
+    "url": "https://github.com/vypdev/domus/actions/runs/41199857142",
+    "result": "PASS: all six required project groups; not proof for later source"
+  },
+  "primaryReferences": [
+    "https://docs.python.org/3.14/library/sqlite3.html#sqlite3.Connection.backup",
+    "https://www.sqlite.org/backup.html"
+  ],
+  "copilot": "Unchanged. Scope admission failures tracked in vypdev/copilot#828; assessment admission failure in #829. No checks or merge review gates were relaxed.",
+  "sourceSha256": {
+    "backend/src/domus/domain/snapshots.py": "5d2dd581122a0d720e36d06196461878c5e8ecd5e49d5e924deceb95a4dfd36a",
+    "backend/src/domus/application/snapshots.py": "c4f0862f590d222711018de3b23a7155f5702375ce6ece7dd0e2170c86a22ca4",
+    "backend/src/domus/infrastructure/sqlite_snapshots.py": "156491e1146df811b9ea89ecff43f14de12a1be25a949cb7c3394740ea223e07",
+    "backend/src/domus/composition/admin.py": "51837e1adcfe15377cf46efe42f398f34d09413ed07f7e610e9dd50be42a5a3b",
+    "tests/backend/test_snapshot_values.py": "3ab87ef3b77e19fec92b2ecf0336a24596c542e25f6d6aeb243ebab2ac6c2df8",
+    "tests/backend/test_snapshot_commands.py": "1b4a41f183cb687fc9c43d605eed3abe75afa1a5d454bc458620035afdada988",
+    "tests/backend/test_sqlite_snapshots.py": "e1b2d89dbfa47986c2c71c3c270232e66fc06e0f549f295311993c2434b20a04",
+    "tests/backend/test_snapshot_console.py": "60dcbd33dc5e60037b6e4c74f9985b538be3ca3f877a34c2be4561ee5baf95ea"
+  },
+  "historicalEvidence": {
+    "verifiedSourceHead": "f9220511448d87bf8766ead2d677b5cd88c8e91b",
+    "meaning": "All measurements, schema numbers, assertions and sourceSha256 values describe this exact historical source tree, not a later reviewed head. The pre-change sourceBase remains provenance of the preparation baseline.",
+    "verification": "Every recorded sourceSha256 was checked against git show <verifiedSourceHead>:<path>; all match. Original measurements and digests are retained unchanged.",
+    "currentEvidence": "docs/evidence/m1-review-fixes.json",
+    "currentGuide": "docs/snapshots.md"
+  }
+}

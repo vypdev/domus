@@ -1,0 +1,127 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "03e5e8265b96f4407aeaff3d2b946db923cba771",
+  "scope": "A30 pure complete-operation reconciliation, semantic preparation/inspection and real private blocked SQLite candidate; runtime history integration and offline activation remain pending",
+  "backendTests": 1088,
+  "newRestorationTests": 134,
+  "backendCoverage": {
+    "covered_lines": 3761,
+    "num_statements": 3761,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 126,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 992,
+    "num_partial_branches": 0,
+    "covered_branches": 992,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": "COVERAGE_FILE=/private/tmp/domus-restoration-backend.coverage .venv/bin/pytest tests/backend -q -W error::ResourceWarning --tb=short --cov=domus --cov-branch --cov-report=json:/private/tmp/domus-restoration-coverage.json --cov-report=term:skip-covered",
+  "testFirst": "Pure evidence/reconciliation tests, then application/prepared-value tests, then real SQLite preparation tests each initially failed import before their corresponding module existed. Negative and concurrent cases followed as the adapter was implemented. A final-inspection deadline test first failed with DID NOT RAISE StorageFailure, then passed after adding the completion deadline check.",
+  "assertions": [
+    "Complete immutable receipt/audit/event facts, command scope, ID/position uniqueness and monotonic acknowledgement are validated; clock order is not ancestry",
+    "Streaming reconciliation preserves first archive provenance, later historical facts and forward reselection without another execution; incomplete checkpoint prefixes conflict",
+    "A real coherent current read transaction remains fixed across a concurrent WAL commit; later activation must reject its stale binding",
+    "Preparation independently verifies the selected checkpoint, copies exact bytes without migration, streams complete operation history and publishes a bound manifest last",
+    "Empty checkpoint does not implicitly recreate a later household; compatible schema 1/2 checkpoint bytes remain unchanged",
+    "Both frozen schema fixtures remain unmodified; legacy preparation inputs replace only their intentionally dummy digest in a disposable database with a real 64-character digest",
+    "Managed startup/attachment and native/standalone explicit-file factories reject both complete and journal-bearing partial candidates without changing their files",
+    "Original source and snapshot bytes remain unchanged; targets never overwrite an existing complete or partial candidate",
+    "Independent inspection validates exact private inventory, hashes/size, blocked identity, schema/records, checkpoint projection/counts and position high-water",
+    "Rehashed malformed/deep/oversized journal or manifest, wrong identity/schema/last commit/size/current flags/counts, source conflicts and changed snapshot bytes fail",
+    "Output flush failure or deadline after manifest publication preserves uncertainty and leaves the same independently inspectable candidate",
+    "Independent inspection rechecks its deadline after the complete journal projection and cannot publish success if the final validation exhausts its budget"
+  ],
+  "format": {
+    "version": 1,
+    "files": [
+      "domus.sqlite3",
+      "installation.json",
+      "operations.jsonl",
+      "restore.json"
+    ],
+    "identityState": "restore_pending",
+    "operationLineBytesMax": 262144,
+    "documentBytesMax": 65536,
+    "manifestBytesMax": 16384,
+    "directoryMode": "0700",
+    "fileMode": "0600",
+    "sourceSchemas": [
+      1,
+      2,
+      3
+    ],
+    "schemaMigration": false
+  },
+  "architecture": {
+    "files": 94,
+    "dependencies": 444,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 60 backend source files",
+    "negativeFixtures": 41
+  },
+  "tooling": {
+    "tests": 66,
+    "statements": 73,
+    "branches": 34,
+    "coveragePercent": 100,
+    "protectedCopilotResourcesUnchanged": 29,
+    "nodeTests": 11,
+    "typescript": "PASS",
+    "ruff": "PASS",
+    "localDocumentation": "PASS",
+    "toolingArchitectureContractsKept": 2
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "sqlite": "3.53.3",
+    "scope": "Local real-file tests, not packaged restoration or owner HA acceptance"
+  },
+  "installedRuntime": "Edge 0.0.0-edge.2 / d013cf2c8b932d0e00f5858053cbc0e663d5eee1 remains unchanged. No owner household, restore, recovery grant or device changes in this increment.",
+  "remaining": [
+    "Import retained operations and later acknowledgements into runtime history storage without recreating checkpoint business rows",
+    "Authorize current actor before historical replay/disclosure and distinguish historical result from current committed state",
+    "Suppress historical outbox delivery while preserving actual acknowledgement and global sequence high-water",
+    "Prevent restoring consumed/canceled recovery approval under another command key",
+    "Stop writes, verify unchanged source binding, activate offline with durable transition/rollback and recover interruption",
+    "Expose the reviewed console flow, update migrations/contracts and verify both deployment modes and packaged SQLite",
+    "Product UI, standalone companion and complete domain/channel/release acceptance"
+  ],
+  "priorHeadCI": {
+    "head": "03e5e8265b96f4407aeaff3d2b946db923cba771",
+    "url": "https://github.com/vypdev/domus/actions/runs/41210424715",
+    "result": "PASS: all project groups, including both pinned real-image architectures; the existing package does not include or validate restoration sources"
+  },
+  "review": "Draft PR remains unmerged; a skipped/neutral Bugbot check is not full current-head review acceptance",
+  "copilot": "Unchanged; terminal scope/assessment admission bugs remain tracked in vypdev/copilot#828 and #829 without check relaxation",
+  "sourceSha256": {
+    "backend/src/domus/domain/restoration.py": "adff09c838c534f28cd4daee817c9386dfb11f00dd52650d4deaf57ed208bad3",
+    "backend/src/domus/application/restoration.py": "32a301e9d733f453526dbba70dbe99c036d6485a4c9bc8483d4f52456534a6eb",
+    "backend/src/domus/infrastructure/sqlite_restoration.py": "da94614422789dc73663f7685bbaa6d75073668e3e350509b4c394b1108f6604",
+    "backend/src/domus/infrastructure/owned_storage.py": "9067ec47b84ce87d37b48f2883903510a2ad7fe731ac4c7f58857ee57a913414",
+    "tests/backend/test_restoration_values.py": "ec520c3caeaa5446fab493c8ab583c73dab71908223522adac9c9ff074dd39b4",
+    "tests/backend/test_restoration_commands.py": "faa0150e8c1fd78f6fb328dd4cdbbda7c80d97fab606ff14cb85ba8c76d10a99",
+    "tests/backend/test_sqlite_restoration.py": "5088d4a8b762e8932bcff4e243d6e7978802a78b70a3a9137624f37315cb5116"
+  },
+  "sddValidation": {
+    "restoration": {
+      "canonicalSections": 20,
+      "characters": 22895,
+      "format": "PASS",
+      "consistency": "PASS",
+      "completeRestoreDone": false
+    },
+    "primaryCompanion": {
+      "characters": 69851,
+      "format": "PASS",
+      "consistency": "PASS"
+    },
+    "catalog": "PASS: 11 capabilities; generated rendering current",
+    "validator": "Byte-verified unchanged upstream policies; new companion checked against sourceBase inventory"
+  }
+}

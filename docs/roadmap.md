@@ -16,7 +16,19 @@ The product is not considered first-release complete at M2 or M3.
 Test, user documentation and failure recovery travel with each change.
 PR #3 merged the documentation foundation into develop. Issue #4 begins M1 with locked development
 toolchains, tested quality policies and the project CI Check workflow. This is partial M1 evidence;
-identity, persistence, real application/HA coverage and channel acceptance remain pending.
+the complete identity/persistence journeys, real HA coverage and channel acceptance remain pending.
 No implementation begins on an invented branch: maintainers and the Action retain their installed lifecycle.
+Issue #6 now has its Action-published companion and verified branch. Its first source checkpoint adds
+the tested SQLite transaction kernel, semantic ports, separate backend coverage and actual import graph.
+The next checkpoint adds pure identity/permission rules, current local authorization, uniquely linked
+member/policy storage, schema 2 migration and bounded session leases. HA protocol adapters now have
+provider/loopback evidence. Standalone browser/session authentication and its HTTP/CLI entrypoints
+now have executable offline coverage. Membership/policy and recovery use cases, manual snapshots,
+business HTTP/console entrypoints and verified offline restore/resume/rollback are implemented and
+tested locally and in the real Edge.3 arm64 image, including actual Edge.2 upgrade/refusal.
+Edge.3 image CI passes on both CPU families and its owner update/session/reload/restart acceptance is bounded. Complete deployment restore,
+product UI, live household/recovery, standalone companion/browser and full
+channel/release acceptance remain M1 work. These source checkpoints do not complete M1 or reduce
+first-release scope.
 Release, merge and deployment require the existing maintainer flow and explicit authorization.
 Future optional depth includes predictive consumption, workload recommendations, rich rewards and external calendars.

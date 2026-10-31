@@ -1,0 +1,1032 @@
+{
+  "observedOn": "2026-10-31",
+  "sourceBase": "8b59a0435fbb11f069298d23cc5e0735c9547bb1",
+  "issue": 6,
+  "pullRequest": 7,
+  "scope": "In-scope identity, authorization, persistence and offline restoration foundation; not complete M1 or product acceptance",
+  "backend": {
+    "tests": 1387,
+    "statements": 4692,
+    "branches": 1304,
+    "missingStatements": 0,
+    "missingBranches": 0,
+    "percent": 100,
+    "python": "3.14.6",
+    "sqlite": "3.53.3",
+    "command": "pytest tests/backend -q -W error::ResourceWarning --cov=domus --cov-branch"
+  },
+  "caseCounts": {
+    "identity": 61,
+    "restoration": 18,
+    "total": 79
+  },
+  "cases": [
+    {
+      "case": "platform-foundation-identity-sqlite-C01",
+      "requirements": [
+        "ID-01"
+      ],
+      "scenario": "Reject an inactive, system, or malformed HA human proof.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_only_exact_boolean_active_nonsystem_human_is_eligible",
+        "tests/backend/test_ha_websocket.py::test_malformed_or_nonhuman_current_user_cannot_become_identity"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C02",
+      "requirements": [
+        "ID-01"
+      ],
+      "scenario": "Reject mismatched request correlation and expired proof.",
+      "selectors": [
+        "tests/backend/test_ha_websocket.py::test_response_correlation_and_success_are_exact",
+        "tests/backend/test_session_leases.py::test_missing_expired_and_backwards_clock_leases_cannot_invoke_provider"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C03",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Default mapping grants each currently proven HA administrator and no nonadministrator.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_all_administrators_mapping_uses_current_proof_and_retains_explicit_grants"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C04",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Setup-administrator mode grants only designated proven setup administrator.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_setup_mapping_requires_the_designated_current_ha_administrator"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C05",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Selected-user mode permits an explicitly selected active human who is not an HA administrator.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_selected_mapping_does_not_require_selected_human_to_be_ha_administrator"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C06",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Mapping/source change revokes inherited grant but preserves independent explicit grant.",
+      "selectors": [
+        "tests/backend/test_policy_commands.py::test_selected_mapping_grants_an_ordinary_active_human_and_revokes_only_inheritance",
+        "tests/backend/test_policy_commands.py::test_mapping_change_preserves_independently_granted_administrator_profile"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C07",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Verify administrator, adult, restricted and viewer default permission matrix.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_default_profile_matrix"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C08",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Verify exception/profile/default/deny precedence and reject same-level contradiction.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_member_then_profile_then_default_precedence_and_undefined_denial",
+        "tests/backend/test_identity_policy.py::test_invalid_enums_rules_mutable_lists_and_same_level_duplicates_are_rejected"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C09",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Enforce hard scope, suspension, restricted approval and last-administrator constraints over overrides.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_restricted_work_is_assigned_to_actual_member_and_cannot_skip_adult_approval",
+        "tests/backend/test_identity_policy.py::test_own_scoped_actions_require_explicit_self_even_for_administrator",
+        "tests/backend/test_member_commands.py::test_concurrent_self_suspension_cannot_remove_both_remaining_administrators"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C10",
+      "requirements": [
+        "ID-03"
+      ],
+      "scenario": "Recovery eligibility requires current HA administrator and exact selected/setup-only mode.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_recovery_is_narrowly_available_only_to_current_ha_administrator_in_alternate_modes"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C11",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Canonical payload digest and receipt scope distinguish identical payload from changed payload.",
+      "selectors": [
+        "tests/backend/test_storage_values.py::test_canonical_payload_is_detached_from_callers_and_ignores_object_key_order",
+        "tests/backend/test_storage_values.py::test_command_key_scopes_receipts_by_household_actor_action_and_key"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C12",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Validate installation UUID/channel/schema marker and reject future or unrelated schema before writes.",
+      "selectors": [
+        "tests/backend/test_sqlite_transactions.py::test_schema_and_ownership_rejection_happens_before_file_writes"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C13",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Strict DTO rejects unknown, unbounded, malformed and cross-field-invalid values.",
+      "selectors": [
+        "tests/backend/test_household_http.py::test_invalid_or_forged_setup_is_safe_and_leaves_no_records",
+        "tests/backend/test_household_http.py::test_ambiguous_malformed_or_nonobject_json_never_reaches_a_command"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C14",
+      "requirements": [
+        "ID-06"
+      ],
+      "scenario": "Pure policy decision branches cover allow, deny, stale, suspension and undefined action.",
+      "selectors": [
+        "tests/backend/test_identity_policy.py::test_member_then_profile_then_default_precedence_and_undefined_denial",
+        "tests/backend/test_identity_policy.py::test_inactive_local_state_denies_even_independent_and_inherited_administration",
+        "tests/backend/test_member_commands.py::test_invalid_and_stale_member_changes_never_request_target_proof"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C15",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "First browser arrival cannot create household or administrator authority.",
+      "selectors": [
+        "tests/backend/test_household_commands.py::test_first_arriving_ordinary_user_never_initializes_the_household",
+        "tests/backend/test_household_runtime.py::test_actual_runtime_wires_all_household_services_without_implicit_setup"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C16",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Verified self-enrollment remains pending until authorized activation.",
+      "selectors": [
+        "tests/backend/test_household_commands.py::test_own_enrollment_is_pending_and_a_retry_has_one_stable_member",
+        "tests/backend/test_household_commands.py::test_ha_admin_activation_exception_applies_only_to_explicit_enrollment_in_default_mapping"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C17",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Administrator edits use optimistic revision and transaction-time current policy.",
+      "selectors": [
+        "tests/backend/test_member_commands.py::test_external_proof_cannot_commit_against_changed_local_authority_state",
+        "tests/backend/test_policy_commands.py::test_policy_changed_while_resolving_target_is_not_overwritten"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C18",
+      "requirements": [
+        "ID-02"
+      ],
+      "scenario": "Suspension and revocation deny protected action and private preferences remain private.",
+      "selectors": [
+        "tests/backend/test_member_commands.py::test_suspension_takes_effect_on_existing_authenticated_authority_immediately",
+        "tests/backend/test_identity_policy.py::test_own_scoped_actions_require_explicit_self_even_for_administrator"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C19",
+      "requirements": [
+        "ID-03"
+      ],
+      "scenario": "Console approval is exact-target bound, expires at ten minutes and cannot be retargeted.",
+      "selectors": [
+        "tests/backend/test_recovery_console.py::test_explicit_console_approves_exact_displayed_target_and_cannot_complete_human_step",
+        "tests/backend/test_recovery_commands.py::test_approval_has_ten_full_minutes_from_confirmation_and_replay_never_extends_it"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C20",
+      "requirements": [
+        "ID-03"
+      ],
+      "scenario": "Recovery completion requires fresh same-target administrator proof and is single use.",
+      "selectors": [
+        "tests/backend/test_recovery_commands.py::test_recovery_grants_only_explicit_administration_after_console_and_fresh_proof",
+        "tests/backend/test_recovery_commands.py::test_concurrent_completion_has_one_grant_and_one_consumed_request"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C21",
+      "requirements": [
+        "ID-03"
+      ],
+      "scenario": "Wrong identity, channel, mapping revision, expiry or concurrent completion creates no grant.",
+      "selectors": [
+        "tests/backend/test_recovery_commands.py::test_approval_cannot_be_retargeted_or_used_after_source_or_binding_change",
+        "tests/backend/test_recovery_commands.py::test_policy_change_during_terminal_confirmation_is_detected_before_approval",
+        "tests/backend/test_recovery_commands.py::test_expiration_does_not_extend_on_approval_and_grants_nothing"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C22",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Identical authorized retry after restart returns original result before stale-write revision handling.",
+      "selectors": [
+        "tests/backend/test_atomic_commands.py::test_restart_replay_returns_original_result_without_fresh_effect",
+        "tests/backend/test_household_commands.py::test_authorized_setup_retry_reuses_receipt_after_restart_and_payload_conflicts"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C23",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Same scoped key with changed payload returns conflict without new effect.",
+      "selectors": [
+        "tests/backend/test_atomic_commands.py::test_changed_payload_conflicts_and_revoked_permission_hides_even_old_result"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C24",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Current permissions govern receipt lookup after actor revocation.",
+      "selectors": [
+        "tests/backend/test_membership_authorization.py::test_fresh_source_revocation_denies_original_receipt_before_result_disclosure",
+        "tests/backend/test_household_commands.py::test_setup_retry_after_actor_loses_administration_cannot_disclose_the_old_receipt"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C25",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Competing writers serialize and produce bounded busy or revision conflict without partial effects.",
+      "selectors": [
+        "tests/backend/test_sqlite_transactions.py::test_reader_cannot_write_and_an_external_writer_returns_bounded_busy",
+        "tests/backend/test_sqlite_transactions.py::test_expected_revision_prevents_lost_updates_and_second_household"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C26",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Injected failure rolls back domain state, receipt, audit and outbox atomically.",
+      "selectors": [
+        "tests/backend/test_sqlite_transactions.py::test_business_exception_rolls_back_every_fact",
+        "tests/backend/test_recovery_commands.py::test_late_outbox_failure_rolls_back_consumption_grant_and_all_evidence"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C27",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Cleanup preserves replay protection and authorized old retry cannot duplicate effect.",
+      "selectors": [
+        "tests/backend/test_household_runtime.py::test_owned_standalone_restart_preserves_identity_household_and_replay_not_session",
+        "tests/backend/test_sqlite_transactions.py::test_outbox_acknowledgement_is_durable_and_duplicate_safe"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C28",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Restore preserves receipt/replay evidence and identical authorized retry remains idempotent.",
+      "selectors": [
+        "tests/backend/test_sqlite_activation.py::test_actual_compositions_reauthenticate_and_replay_historical_work_after_activation",
+        "tests/backend/test_restored_commands.py::test_historical_http_replay_is_truthful_and_requires_current_authority"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C29",
+      "requirements": [
+        "ID-01"
+      ],
+      "scenario": "Standalone OAuth uses fixed origin, state, S256 PKCE, bounded single-use attempt and server form exchange.",
+      "selectors": [
+        "tests/backend/test_authentication_flow.py::test_start_uses_pkce_s256_and_completion_consumes_browser_bound_attempt",
+        "tests/backend/test_ha_http.py::test_code_exchange_is_exact_server_side_form_and_token_repr_is_redacted"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C30",
+      "requirements": [
+        "ID-01"
+      ],
+      "scenario": "Standalone rejects request-chosen host/redirect, Ingress headers and technical transport credential as human identity.",
+      "selectors": [
+        "tests/backend/test_auth_http.py::test_standalone_rejects_wrong_host_and_ingress_identity_headers",
+        "tests/backend/test_ha_http.py::test_provider_status_is_allowlisted_and_redirects_are_never_followed",
+        "tests/backend/test_ha_http.py::test_invalid_operator_origin_is_rejected_before_io"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C31",
+      "requirements": [
+        "ID-01"
+      ],
+      "scenario": "HA adapter handles timeout, unavailable, revoked token, malformed/oversized response and cleanup without secret leakage.",
+      "selectors": [
+        "tests/backend/test_ha_http.py::test_network_errors_are_availability_without_transport_detail",
+        "tests/backend/test_ha_http.py::test_invalid_duplicate_oversized_and_non_utf8_response_fails_closed",
+        "tests/backend/test_auth_http.py::test_outage_status_is_read_only_and_logout_still_clears_local_access"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C32",
+      "requirements": [
+        "ID-01"
+      ],
+      "scenario": "Supervisor adapter accepts only actual peer 172.30.32.2 and requires fresh Core lookup of active non-system human and actual admin source.",
+      "selectors": [
+        "tests/backend/test_ha_ingress.py::test_actual_supervisor_peer_is_required_before_any_lookup_or_forwarded_header",
+        "tests/backend/test_ha_websocket.py::test_directory_rejects_missing_inactive_technical_malformed_or_duplicate_subject"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C33",
+      "requirements": [
+        "ID-01"
+      ],
+      "scenario": "Supervisor arbitrary forwarding headers and transport token alone cannot assert user or role.",
+      "selectors": [
+        "tests/backend/test_ha_ingress.py::test_core_proof_overrules_header_name_and_transport_privilege",
+        "tests/backend/test_ha_ingress.py::test_lookup_must_match_candidate_and_failures_never_fall_back_to_headers"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C34",
+      "requirements": [
+        "ID-01"
+      ],
+      "scenario": "HA outage permits bounded read-only access until original expiry but no mutation or session extension.",
+      "selectors": [
+        "tests/backend/test_session_leases.py::test_outage_read_uses_latest_proof_but_write_is_blocked_without_extension",
+        "tests/backend/test_native_http.py::test_native_outage_reads_have_original_expiry_and_writes_remain_blocked"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C35",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Stable API errors expose allowlisted details/correlation and map 401, 403, 404, 409, 422 and 503 safely.",
+      "selectors": [
+        "tests/backend/test_auth_http.py::test_error_envelope_maps_only_known_failures_and_never_echoes_provider_detail",
+        "tests/backend/test_household_http.py::test_missing_operation_returns_safe_scoped_404_and_openapi_declares_all_routes",
+        "tests/backend/test_household_http.py::test_busy_writer_returns_retry_guidance_without_new_key_or_partial_effect"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C36",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Cookie mutation requires valid Origin/CSRF checks and actor is never taken from submitted member ID.",
+      "selectors": [
+        "tests/backend/test_household_http.py::test_writes_require_origin_csrf_unique_idempotency_and_strict_empty_query",
+        "tests/backend/test_household_http.py::test_invalid_or_forged_setup_is_safe_and_leaves_no_records",
+        "tests/backend/test_native_http.py::test_native_write_boundary_cannot_be_replaced_by_forwarding_or_forged_csrf"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C37",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "SQLite uses parameterized operations, separate unit-of-work connections and bounded BEGIN IMMEDIATE writer wait.",
+      "selectors": [
+        "tests/backend/test_sqlite_transactions.py::test_display_text_is_bound_as_data_instead_of_executed_as_sql",
+        "tests/backend/test_sqlite_transactions.py::test_reader_cannot_write_and_an_external_writer_returns_bounded_busy"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C38",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Atomic migration failure leaves recoverable prior database and performs no partial schema change.",
+      "selectors": [
+        "tests/backend/test_sqlite_identity.py::test_failed_v1_upgrade_rolls_back_new_tables_and_keeps_old_state",
+        "tests/backend/test_sqlite_history_integrity.py::test_interrupted_schema_three_upgrade_rolls_back_the_new_history_table"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C39",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Real database file restart preserves household, policy, receipt, audit and outbox.",
+      "selectors": [
+        "tests/backend/test_household_runtime.py::test_owned_standalone_restart_preserves_identity_household_and_replay_not_session",
+        "tests/backend/test_policy_commands.py::test_restart_preserves_policy_revision_provenance_and_authorized_replay"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C40",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Consistent snapshot verifies integrity/manifest/identity and restores to new same-UUID/channel directory.",
+      "selectors": [
+        "tests/backend/test_sqlite_snapshots.py::test_snapshot_contains_verified_private_identity_checkpoint_and_all_atomic_records",
+        "tests/backend/test_sqlite_activation.py::test_real_activation_and_restart_keep_checkpoint_state_plus_later_receipts"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C41",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Corrupt, future, unrelated, wrong-instance or wrong-channel restore candidate cannot replace active DB.",
+      "selectors": [
+        "tests/backend/test_sqlite_snapshots.py::test_changed_files_never_verify_and_do_not_change_the_source",
+        "tests/backend/test_sqlite_restoration.py::test_scope_changes_and_snapshot_replacement_fail_before_any_output",
+        "tests/backend/test_activation_failures.py::test_unbound_or_stale_preparation_is_inspectable_but_not_activatable"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C42",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "OpenAPI and route contract includes specified session, household, member, authorization, operation and recovery routes.",
+      "selectors": [
+        "tests/backend/test_household_http.py::test_published_household_openapi_matches_the_composed_server",
+        "tests/backend/test_native_http.py::test_published_native_openapi_matches_actual_private_session_and_household_contract",
+        "tests/backend/test_recovery_http.py::test_strict_recovery_routes_reject_forged_target_and_allow_owner_cancellation"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C43",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Standalone auth start/callback/logout routes and Supervisor-prefixed routing obey common server contract.",
+      "selectors": [
+        "tests/backend/test_auth_http.py::test_happy_path_sets_secure_host_only_cookies_and_identity_view_has_no_credentials",
+        "tests/backend/test_auth_http.py::test_successful_logout_uses_original_cookie_and_empty_strict_body",
+        "tests/backend/test_native_http.py::test_native_root_schema_and_method_bounds_are_verified_without_leaking_cookies"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C44",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Recovery approval has console command only and no HTTP approval route.",
+      "selectors": [
+        "tests/backend/test_auth_http.py::test_openapi_contract_and_no_http_console_approval",
+        "tests/backend/test_recovery_console.py::test_actual_console_process_requires_and_accepts_a_real_pty"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C45",
+      "requirements": [
+        "ID-06"
+      ],
+      "scenario": "Every PR head including docs-only runs tooling, frontend, documentation and backend suites in fail-closed aggregate.",
+      "selectors": [
+        "tests/python/test_ci_contract.py::test_every_pr_update_and_merge_queue_run_without_path_filters",
+        "tests/python/test_ci_contract.py::test_required_jobs_always_reach_a_fail_closed_aggregate"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C46",
+      "requirements": [
+        "ID-06"
+      ],
+      "scenario": "Backend coverage scope includes authored unimported runtime modules and enforces supported statements/lines and branches at 100%.",
+      "selectors": [
+        "tests/python/test_ci_contract.py::test_new_runtime_sources_require_an_explicit_coverage_scope",
+        "tests/python/test_ci_contract.py::test_backend_cannot_inherit_the_tooling_coverage_result"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C47",
+      "requirements": [
+        "ID-06"
+      ],
+      "scenario": "Actual product import graph rejects outward imports and cycles; no broad coverage exclusions hide logic.",
+      "selectors": [
+        "tests/architecture/test_python_architecture.py::test_dependencies_point_inward",
+        "tests/architecture/test_python_architecture.py::test_inner_framework_or_io_dependency_is_rejected",
+        "tests/architecture/test_python_architecture.py::test_cycle_inside_domain_is_rejected"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C48",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Pending enrollment response states current status, completed proof, next action and no active access.",
+      "selectors": [
+        "tests/backend/test_response_readability.py::test_authorization_explains_current_membership_and_next_action_without_implicit_access",
+        "tests/backend/test_response_readability.py::test_enrollment_receipt_describes_original_effect_even_after_current_status_changes"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C49",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Blocked pre-commit error names impact, cause, action and retained state without claiming a commit.",
+      "selectors": [
+        "tests/backend/test_household_http.py::test_invalid_or_forged_setup_is_safe_and_leaves_no_records",
+        "tests/backend/test_auth_http.py::test_error_envelope_maps_only_known_failures_and_never_echoes_provider_detail"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C50",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Committed effect with pending outbox is presented as committed and inspectable by operation ID.",
+      "selectors": [
+        "tests/backend/test_household_http.py::test_explicit_setup_authorization_queries_and_original_receipt",
+        "tests/backend/test_household_http.py::test_delivery_state_is_observed_and_reads_hide_other_member_private_fields"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C51",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "Error/console rendering sanitizes untrusted Markdown, HTML, mentions, commands, markers and URLs.",
+      "selectors": [
+        "tests/backend/test_response_readability.py::test_console_rejects_untrusted_request_text_without_echo_prompt_or_saved_effect",
+        "tests/backend/test_response_readability.py::test_missing_operation_is_readable_english_json_without_untrusted_diagnostic_rendering"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C52",
+      "requirements": [
+        "ID-05"
+      ],
+      "scenario": "API codes remain stable, user text has English fallback, narrow layout and text states remain understandable without color.",
+      "selectors": [
+        "tests/backend/test_response_readability.py::test_missing_operation_is_readable_english_json_without_untrusted_diagnostic_rendering",
+        "tests/backend/test_response_readability.py::test_authorization_explains_current_membership_and_next_action_without_implicit_access"
+      ],
+      "evidenceKind": "automated fixture",
+      "limitation": "API/console text only; assistant inspection is not independent human UX approval. Product UI/narrow-screen browser acceptance is outside issue #6 and remains pending."
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C53",
+      "requirements": [
+        "ID-01",
+        "ID-05"
+      ],
+      "scenario": "Standalone protocol fixtures prove OAuth callback/current-user proof and reject invalid state, PKCE, correlation and credentials.",
+      "selectors": [
+        "tests/backend/test_authentication_flow.py::test_wrong_browser_binding_cannot_consume_legitimate_attempt",
+        "tests/backend/test_authentication_flow.py::test_competing_callbacks_only_one_can_take_the_attempt",
+        "tests/backend/test_ha_websocket.py::test_response_correlation_and_success_are_exact",
+        "tests/backend/test_ha_http.py::test_invalid_code_or_pkce_verifier_is_not_transmitted"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C54",
+      "requirements": [
+        "ID-01",
+        "ID-05"
+      ],
+      "scenario": "Supervisor fixtures prove socket peer boundary, fresh identity lookup and prefixed routing without trusting forwarded headers.",
+      "selectors": [
+        "tests/backend/test_native_http.py::test_native_private_listener_rejects_direct_requests_even_with_copied_headers",
+        "tests/backend/test_ha_ingress.py::test_core_proof_overrules_header_name_and_transport_privilege",
+        "tests/backend/test_native_http.py::test_native_root_schema_and_method_bounds_are_verified_without_leaking_cookies"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C55",
+      "requirements": [
+        "ID-02",
+        "ID-04"
+      ],
+      "scenario": "Real-file integration proves atomic commit and rollback of state, receipt, audit and outbox across process restart.",
+      "selectors": [
+        "tests/backend/test_sqlite_transactions.py::test_process_death_cannot_commit_partial_business_or_replay_facts",
+        "tests/backend/test_sqlite_transactions.py::test_committed_household_receipt_audit_and_outbox_survive_reopen",
+        "tests/backend/test_sqlite_identity.py::test_membership_and_policy_failure_rolls_back_together"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C56",
+      "requirements": [
+        "ID-03",
+        "ID-04"
+      ],
+      "scenario": "Recovery race and replay fixtures prove both authorities and atomic single-use grant/evidence.",
+      "selectors": [
+        "tests/backend/test_recovery_http.py::test_actual_http_and_terminal_journey_needs_both_authorities_and_preserves_mapping",
+        "tests/backend/test_recovery_commands.py::test_concurrent_completion_has_one_grant_and_one_consumed_request",
+        "tests/backend/test_recovery_commands.py::test_late_outbox_failure_rolls_back_consumption_grant_and_all_evidence"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C57",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Real-file concurrent processes verify serialized writers, bounded busy result, stale revision conflict and no duplicate effects.",
+      "selectors": [
+        "tests/backend/test_sqlite_transactions.py::test_separate_process_observes_bounded_busy_then_committed_revision",
+        "tests/backend/test_atomic_commands.py::test_overlapping_identical_commands_commit_once_and_retry_the_winning_receipt",
+        "tests/backend/test_member_commands.py::test_two_identical_concurrent_activations_have_one_effect_and_the_same_receipt"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C58",
+      "requirements": [
+        "ID-04"
+      ],
+      "scenario": "Backup/reopen verifies checkpoint, identity/channel and audit/outbox; restoring older state retains readable later processed evidence without executing effects again.",
+      "selectors": [
+        "tests/backend/test_sqlite_activation.py::test_real_activation_and_restart_keep_checkpoint_state_plus_later_receipts",
+        "tests/backend/test_sqlite_activation.py::test_supported_rollback_checkpoint_reconciles_newer_work_and_never_reactivates_an_old_key",
+        "tests/backend/test_restoration_values.py::test_later_acknowledgement_is_preserved_for_current_and_historical_events"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C59",
+      "requirements": [
+        "ID-06"
+      ],
+      "scenario": "CI coverage and architecture commands evaluate actual backend modules and fail when threshold or import contract is violated.",
+      "selectors": [
+        "tests/python/test_ci_contract.py::test_backend_cannot_inherit_the_tooling_coverage_result",
+        "tests/architecture/test_python_architecture.py::test_inner_layer_cannot_import_infrastructure",
+        "tests/architecture/test_python_architecture.py::test_entrypoint_cannot_import_storage_adapter"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C60",
+      "requirements": [
+        "ID-07"
+      ],
+      "scenario": "Exact reference target matrix records protocol, package and live/browser evidence as pending until run on identified artifact/version.",
+      "selectors": [],
+      "evidenceKind": "bounded artifact/browser observation",
+      "documents": [
+        "docs/compatibility-home-assistant.md",
+        "docs/evidence/m1-edge3-ha-acceptance.json"
+      ]
+    },
+    {
+      "case": "platform-foundation-identity-sqlite-C61",
+      "requirements": [
+        "ID-07"
+      ],
+      "scenario": "Authorized local HA/Chrome proof, if run, records exact artifact/version, owned test data and cleanup; absent live proof is explicitly pending.",
+      "selectors": [],
+      "evidenceKind": "bounded artifact/browser observation",
+      "documents": [
+        "docs/compatibility-home-assistant.md",
+        "docs/evidence/m1-edge3-ha-acceptance.json"
+      ]
+    },
+    {
+      "case": "platform-restoration-C01",
+      "requirements": [
+        "REST-01"
+      ],
+      "scenario": "Reject invalid/incomplete evidence values.",
+      "selectors": [
+        "tests/backend/test_restoration_values.py::test_incomplete_or_inconsistent_atomic_facts_are_rejected",
+        "tests/backend/test_restoration_values.py::test_record_parser_rejects_unknown_missing_and_invalid_fields"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C02",
+      "requirements": [
+        "REST-01"
+      ],
+      "scenario": "Reject key or operation identity collisions.",
+      "selectors": [
+        "tests/backend/test_restoration_values.py::test_same_command_with_different_committed_facts_is_never_silently_selected",
+        "tests/backend/test_restoration_values.py::test_frontiers_must_have_unique_sorted_scopes_and_operation_identities"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C03",
+      "requirements": [
+        "REST-01"
+      ],
+      "scenario": "Checkpoint facts must be explained by current retained frontier, independent of clocks.",
+      "selectors": [
+        "tests/backend/test_restoration_values.py::test_a_checkpoint_cannot_omit_an_earlier_retained_operation",
+        "tests/backend/test_restoration_values.py::test_wall_clock_regression_does_not_change_the_operation_frontier"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C04",
+      "requirements": [
+        "REST-02"
+      ],
+      "scenario": "Later facts become historical without changing checkpoint state.",
+      "selectors": [
+        "tests/backend/test_restoration_values.py::test_later_operations_are_historical_and_not_selected_business_state",
+        "tests/backend/test_sqlite_activation.py::test_real_activation_and_restart_keep_checkpoint_state_plus_later_receipts"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C05",
+      "requirements": [
+        "REST-03"
+      ],
+      "scenario": "Preserve real acknowledgement; do not enqueue rolled-away effects.",
+      "selectors": [
+        "tests/backend/test_restoration_values.py::test_later_acknowledgement_is_preserved_for_current_and_historical_events",
+        "tests/backend/test_sqlite_history.py::test_historical_lookup_retains_original_result_and_never_enters_pending_delivery"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C06",
+      "requirements": [
+        "REST-02"
+      ],
+      "scenario": "Empty and repeated restorations retain scope/history and sequence high-water marks.",
+      "selectors": [
+        "tests/backend/test_restoration_values.py::test_empty_checkpoint_keeps_complete_history_without_recreating_a_household",
+        "tests/backend/test_restoration_values.py::test_repeated_restore_keeps_first_history_and_can_select_a_known_effect_again",
+        "tests/backend/test_sqlite_history.py::test_current_import_keeps_provenance_and_acknowledgement_and_advances_next_position"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C07",
+      "requirements": [
+        "REST-04"
+      ],
+      "scenario": "Reject a result bound to another selection/installation.",
+      "selectors": [
+        "tests/backend/test_restoration_commands.py::test_application_rejects_misdirected_results",
+        "tests/backend/test_restoration_commands.py::test_preparation_requires_an_explicit_matching_checkpoint_before_port_io"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C08",
+      "requirements": [
+        "REST-05"
+      ],
+      "scenario": "Changed source cannot activate a stale candidate.",
+      "selectors": [
+        "tests/backend/test_activation_failures.py::test_unbound_or_stale_preparation_is_inspectable_but_not_activatable",
+        "tests/backend/test_sqlite_activation.py::test_activation_requires_stopped_runtime_and_current_source_before_any_transition"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C09",
+      "requirements": [
+        "REST-06"
+      ],
+      "scenario": "Same-key historical replay never executes a second effect.",
+      "selectors": [
+        "tests/backend/test_restored_commands.py::test_historical_http_replay_is_truthful_and_requires_current_authority",
+        "tests/backend/test_sqlite_activation.py::test_actual_compositions_reauthenticate_and_replay_historical_work_after_activation"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C10",
+      "requirements": [
+        "REST-02"
+      ],
+      "scenario": "Real history rows retain original receipt/audit/event facts and current authorization.",
+      "selectors": [
+        "tests/backend/test_sqlite_history.py::test_historical_lookup_retains_original_result_and_never_enters_pending_delivery",
+        "tests/backend/test_sqlite_history_integrity.py::test_conflicting_import_is_atomic_even_if_the_caller_commits_after_catching_it",
+        "tests/backend/test_restored_commands.py::test_historical_http_replay_is_truthful_and_requires_current_authority"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C11",
+      "requirements": [
+        "REST-04"
+      ],
+      "scenario": "Private copy verifies hashes/schema/integrity without changing source.",
+      "selectors": [
+        "tests/backend/test_sqlite_restoration.py::test_preparation_seals_checkpoint_bytes_and_complete_later_history_without_source_mutation",
+        "tests/backend/test_sqlite_restoration.py::test_current_history_is_one_coherent_read_view_during_a_concurrent_wal_commit"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C12",
+      "requirements": [
+        "REST-04"
+      ],
+      "scenario": "Prepared/incomplete candidate cannot start through any runtime path.",
+      "selectors": [
+        "tests/backend/test_sqlite_restoration.py::test_prepared_copy_is_rejected_without_mutation_by_every_managed_and_explicit_runtime",
+        "tests/backend/test_sqlite_restoration.py::test_a_partial_restore_signal_blocks_direct_paths_even_if_identity_is_missing"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C13",
+      "requirements": [
+        "REST-02"
+      ],
+      "scenario": "Frozen historical schemas migrate atomically with retained records.",
+      "selectors": [
+        "tests/backend/test_sqlite_history.py::test_frozen_old_schema_migrates_without_losing_existing_evidence",
+        "tests/backend/test_sqlite_history_integrity.py::test_interrupted_schema_three_upgrade_rolls_back_the_new_history_table",
+        "tests/backend/test_activation_compatibility.py::test_real_activation_upgrades_only_target_from_frozen_source_and_checkpoint"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C14",
+      "requirements": [
+        "REST-05"
+      ],
+      "scenario": "An unaware older image refuses new metadata/schema without data loss.",
+      "selectors": [
+        "tests/containers/test_app_compatibility.py::test_actual_older_image_refuses_selected_generation_without_changing_any_file",
+        "tests/containers/test_app_compatibility.py::test_real_schema_three_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C15",
+      "requirements": [
+        "REST-06"
+      ],
+      "scenario": "Historical response distinguishes rolled-away effect from current committed state.",
+      "selectors": [
+        "tests/backend/test_restored_commands.py::test_historical_http_replay_is_truthful_and_requires_current_authority",
+        "tests/backend/test_response_readability.py::test_historical_enrollment_does_not_claim_membership_survived_restoration",
+        "tests/backend/test_restored_commands.py::test_console_replay_cannot_claim_a_rolled_away_approval_is_current"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C16",
+      "requirements": [
+        "REST-04"
+      ],
+      "scenario": "Post-publication output failure preserves uncertainty without secrets.",
+      "selectors": [
+        "tests/backend/test_sqlite_restoration.py::test_output_flush_failure_preserves_uncertainty_and_an_independently_inspectable_bundle",
+        "tests/backend/test_sqlite_restoration.py::test_deadline_expiring_after_manifest_flush_reports_uncertainty"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C17",
+      "requirements": [
+        "REST-06"
+      ],
+      "scenario": "Consumed/canceled recovery cannot be rearmed by an old checkpoint/new key.",
+      "selectors": [
+        "tests/backend/test_activation_compatibility.py::test_actual_activation_of_old_approval_cannot_rearm_closed_recovery",
+        "tests/backend/test_restored_commands.py::test_restoring_an_approval_cannot_rearm_closed_recovery_with_another_key"
+      ],
+      "evidenceKind": "automated fixture"
+    },
+    {
+      "case": "platform-restoration-C18",
+      "requirements": [
+        "REST-05"
+      ],
+      "scenario": "Actual interrupted activation/restart preserves old data and starts only verified state.",
+      "selectors": [
+        "tests/backend/test_sqlite_activation.py::test_faulted_transition_preserves_source_and_resumes_exact_input_without_second_effect",
+        "tests/backend/test_sqlite_activation.py::test_process_death_after_pointer_rename_releases_leases_and_resumes_without_external_input",
+        "tests/containers/test_app_image.py::test_packaged_process_death_blocks_start_and_resumes_the_exact_transition"
+      ],
+      "evidenceKind": "automated fixture"
+    }
+  ],
+  "inspection": "Assistant inspected API/console semantic assertions and static English text. No independent human approval or product UI browser readability acceptance is claimed.",
+  "ownerVersionObservation": {
+    "method": "Read-only Google Chrome /config/info on owner installation",
+    "core": "2026.10.4",
+    "supervisor": "2026.10.5",
+    "operatingSystem": "18.3",
+    "frontend": "20260930.5",
+    "dataImpact": "No configuration, household, HA entity, user or recovery changes"
+  },
+  "review": {
+    "status": "pending",
+    "reason": "Published PR is draft and Bugbot skips drafts. Complete review of the eventual ready/current head with no unresolved findings is required before merge."
+  },
+  "packageBoundary": "Edge.3 remains pinned to faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5. The new source response explanations are not installed on the owner target. Existing package/browser evidence remains limited to its exact immutable pin.",
+  "pending": [
+    "Current-head CI and complete Bugbot review",
+    "Independent human API/console readability review",
+    "Standalone live browser return and companion authority",
+    "Live owner household/recovery/restore commands",
+    "Product UI, HA entities/services, remaining household domains, complete Stable/Edge distribution and release"
+  ],
+  "sourceSha256": {
+    "backend/src/domus/entrypoints/household_http.py": "f4856a94fa4979b0cc4dd6b5670f6741371efadc794d69e6e186b07493549cab",
+    "tests/backend/test_identity_policy.py": "2e4e35737f813df2d5eec44874d84b4ce63ff5c061ee040a58d42f423bff72fd",
+    "tests/backend/test_response_readability.py": "2cbc02a1823bc001f4a0dae42d8f37d4922d01fb2b822710ceafbc889e845731",
+    "docs/contracts/household-api.openapi.json": "908ec8ba85db2beb0586261ee1731721dbfae3412fea2f9e6ea92d406d36ecce",
+    "docs/contracts/native-household-api.openapi.json": "e6e4d5236e869e9b58c7f5551f1cdbd9dc95123681e124b93c474c796bace664"
+  },
+  "historicalEvidence": {
+    "verifiedSourceHead": "ead7dde44f57d32d5a42797a811e798d92b36a89",
+    "meaning": "All measurements, schema numbers, assertions and sourceSha256 values describe this exact historical source tree, not a later reviewed head. The pre-change sourceBase remains provenance of the preparation baseline.",
+    "verification": "Every recorded sourceSha256 was checked against git show <verifiedSourceHead>:<path>; all match. Original measurements and digests are retained unchanged.",
+    "currentEvidence": "docs/evidence/m1-review-fixes.json",
+    "currentGuide": "docs/m1-acceptance-audit.md"
+  }
+}

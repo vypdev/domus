@@ -1,0 +1,61 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "146b984a71a2c7f753e442a544f6b0f87a6801ae",
+  "scope": "Application-layer member activation/profile/status/exceptions with last-administrator safeguards; no HTTP or installed image change",
+  "testFirst": "New behavioral tests initially failed at import because the use case did not exist, then passed with its implementation",
+  "backendTests": 522,
+  "memberTests": 40,
+  "backendCoverage": {
+    "covered_lines": 1785,
+    "num_statements": 1785,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 103,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 476,
+    "num_partial_branches": 0,
+    "covered_branches": 476,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": ".venv/bin/pytest tests/backend -q -W error::ResourceWarning --cov=domus --cov-branch --cov-report=term-missing",
+  "assertions": [
+    "Only a current administrator may replace profile/status/exceptions; immutable HA linkage and actor scope are preserved",
+    "Active target requires exact fresh eligible human; unavailable deactivation needs a proven remaining administrator",
+    "Fresh actor reproof after external lookup blocks known revocation, identity mismatch or source outage",
+    "Snapshot/CAS and last eligible administrator are checked before save inside the same SQLite writer transaction",
+    "Real-file simultaneous self-suspension leaves one administrator and only one new receipt/audit/outbox effect",
+    "Real-file identical concurrent activations reuse one receipt with one effect",
+    "Current local suspension immediately blocks privilege and receipt replay; ordinary members cannot promote themselves",
+    "Archived reactivation is explicit and preserves linkage/history; malformed batches cannot invent remaining authority",
+    "Policy/member state changing during external lookup yields conflict without partial command evidence",
+    "Restart preserves authorized receipts; reordered equivalent permission rules have the same canonical payload"
+  ],
+  "architecture": {
+    "files": 67,
+    "dependencies": 205,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 36 backend source files"
+  },
+  "priorHeadCI": {
+    "head": "146b984a71a2c7f753e442a544f6b0f87a6801ae",
+    "url": "https://github.com/vypdev/domus/actions/runs/41189342234",
+    "result": "PASS: six project-required groups including both native container architectures; not acceptance of later source"
+  },
+  "installedPreview": "Still stateless 0.0.0-edge.1, immutable runtime 98bd12f1bf141ba64053730b2686bd848aee1b1c; none of these commands installed",
+  "remaining": [
+    "Policy edit commands and their last-administrator safeguards",
+    "Public command/query API and UI",
+    "Recovery, snapshots and restore",
+    "Native installation persistence and local read-grace sessions",
+    "Complete standalone/channel acceptance"
+  ],
+  "sourceSha256": {
+    "backend/src/domus/application/member_commands.py": "e7668c1f0044b005881be2ae1d1354131859b8c8ccc1084a905b3b044898b7ac",
+    "tests/backend/test_member_commands.py": "4daf5f8efefab0c9580027a4ae770997ed76b315d5295f6f7bd1e7cb155f53cd"
+  }
+}

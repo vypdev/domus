@@ -72,3 +72,21 @@ The current local document validation does not make either historical run green 
 ## Tooling increment after the foundation merge
 
 Issue #4 registers real tooling/CI entrypoints, source and tests for delivery-quality only, while the capability remains proposed/Draft. The unchanged pinned SDK validator now reports 30 missing-evidence errors for the other ten capabilities. The earlier 33-error foundation result above is retained as historical evidence, not relabeled as passing. The updated owning SDD passes original format/consistency checks against its actual merged base at 0833f630aeff1b48558e0192e19ef3a42c328986. See [development](development.md) for executed tooling tests and remaining product acceptance.
+
+## Reviewed bootstrap fix and M1 publication — 2026-10-31
+
+Current reviewed Copilot v3 revision 3e7ceea08e6131360e026937d1c0cc1b120472e0 accepts
+explicitly empty implementation arrays for proposed capabilities. The original current catalog validator
+returns zero errors for Domus. The 33/30-error results above describe their exact older snapshots and
+remain historical evidence.
+
+The normal issue #6 workflow published the [companion](../specs/platform-foundation-identity-sqlite.md)
+at commit 3fdf4f841e7e2f6d37f8ebfd4b8d80f1ce90090f, verified the exact remote branch and applied
+branched. The original platform and identity owners were preserved. Current platform evidence describes
+the partial storage, pure policy, local authorization, session-lease and HA protocol checkpoints.
+Standalone authentication now has HTTP/CLI wiring and offline browser/session fixtures; complete
+membership commands, business API, recovery and target acceptance remain pending.
+See [storage evidence](evidence/m1-storage-kernel.json) and
+[identity-policy evidence](evidence/m1-identity-policy.json) and
+[standalone authentication evidence](evidence/m1-standalone-auth.json). Copilot and its installed resources remain
+unchanged, and no manual branch exception was executed.
