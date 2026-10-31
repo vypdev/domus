@@ -1,9 +1,10 @@
 # Manual SQLite snapshots
 
 Status: local snapshot creation and inspection are implemented, with real SQLite/ASGI-era business
-records, private filesystem checks and a console entrypoint. Restore preparation/activation and
-its treatment of newer replay history remain pending. The owner's installed Edge 0.0.0-edge.1
-connection preview is unchanged. No automatic backup frequency, rotation or retention is introduced.
+records, private filesystem checks and a console entrypoint. Pure restore reconciliation and private
+blocked preparation/inspection are now tested locally; runtime history integration and activation
+remain pending. The owner's installed persistent Edge 0.0.0-edge.2 is unchanged by this increment.
+No automatic backup frequency, rotation or retention is introduced.
 
 ## Create a snapshot
 
@@ -83,7 +84,8 @@ See [source-identified evidence](evidence/m1-snapshots.json), [owned data](owned
 The restore flow must still preserve the selected checkpoint and replay safeguards before activation
 in a new matching directory, with writes stopped. The owner accepted [A30](decisions.md): restore the
 checkpoint's state while retaining readable later receipts/history as already processed, without
-executing their effects again. Evidence reconciliation and safe activation are still unimplemented.
+executing their effects again. [Preparation](restoration.md) seals those facts beside the original
+checkpoint, without importing them into runtime storage or enabling activation yet.
 
 Implementation references: [Python sqlite3 backup interface](https://docs.python.org/3.14/library/sqlite3.html#sqlite3.Connection.backup)
 and [SQLite backup semantics](https://www.sqlite.org/backup.html). The inspected local runtime is

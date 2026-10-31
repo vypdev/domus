@@ -17,6 +17,8 @@ _NEXT = ".installation.next"
 _DATABASE = "domus.sqlite3"
 _LOCK = "runtime.lock"
 _MAINTENANCE = "maintenance.lock"
+RESTORE_MANIFEST = "restore.json"
+RESTORE_OPERATIONS = "operations.jsonl"
 _ALLOWED = {
     _MARKER,
     _NEXT,
@@ -133,6 +135,8 @@ def _open(root: Path, channel: str, *, attach: bool) -> OwnedStorage:
         info = os.fstat(directory)
         if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
             raise DatabaseRejected("unsafe_installation_directory")
+        if {RESTORE_MANIFEST, RESTORE_OPERATIONS} & set(os.listdir(directory)):
+            raise DatabaseRejected("restore_not_active")
         if not attach:
             lock = _acquire(directory, _LOCK, fcntl.LOCK_EX)
         maintenance = _acquire(directory, _MAINTENANCE, fcntl.LOCK_SH if attach else fcntl.LOCK_EX)

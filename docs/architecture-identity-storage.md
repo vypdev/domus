@@ -71,6 +71,13 @@ the SQLite adapter owns filesystem checks, read transactions, backup, hashes and
 Only the installation-console composition selects paths. [Manual snapshot evidence](evidence/m1-snapshots.json)
 does not establish restore activation or newer-history reconciliation.
 
+Restoration now adds pure complete-operation evidence and streaming reconciliation. Its semantic
+application port binds preparation to an explicit checkpoint and installation. The SQLite adapter
+seals the exact old database plus later facts in a new blocked directory, then independently verifies
+hashes, projection and counts. It never replaces active data or starts a runtime. Historical replay,
+runtime history storage, recovery rearm prevention and verified activation remain pending. See
+[preparation boundaries](restoration.md) and the [complete SDD](../specs/platform-restoration.md).
+
 One household per installation is reinforced by a singleton constraint. Household writes compare
 the expected revision, and other input values use parameterized SQL. Outbox acknowledgements are
 durable and duplicate-safe; delivering those events to HA is future work.

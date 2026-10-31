@@ -10,7 +10,8 @@
       "lastVerified": "2026-10-31",
       "specs": [
         "specs/platform-foundation.md",
-        "specs/platform-foundation-identity-sqlite.md"
+        "specs/platform-foundation-identity-sqlite.md",
+        "specs/platform-restoration.md"
       ],
       "workflows": [
         ".github/workflows/ci_check.yml"
@@ -81,7 +82,10 @@
         "backend/src/domus/domain/snapshots.py",
         "backend/src/domus/application/snapshots.py",
         "backend/src/domus/infrastructure/sqlite_snapshots.py",
-        "backend/src/domus/composition/ha_app.py"
+        "backend/src/domus/composition/ha_app.py",
+        "backend/src/domus/domain/restoration.py",
+        "backend/src/domus/application/restoration.py",
+        "backend/src/domus/infrastructure/sqlite_restoration.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -125,7 +129,10 @@
         "tests/backend/test_snapshot_commands.py",
         "tests/backend/test_sqlite_snapshots.py",
         "tests/backend/test_snapshot_console.py",
-        "tests/backend/test_ha_app_launcher.py"
+        "tests/backend/test_ha_app_launcher.py",
+        "tests/backend/test_restoration_values.py",
+        "tests/backend/test_restoration_commands.py",
+        "tests/backend/test_sqlite_restoration.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -165,12 +172,14 @@
         "docs/evidence/m1-ha-app-bootstrap.json",
         "addon-edge/translations/en.yaml",
         "docs/evidence/m1-persistent-app-package.json",
-        "docs/evidence/m1-persistent-ha-acceptance.json"
+        "docs/evidence/m1-persistent-ha-acceptance.json",
+        "docs/restoration.md",
+        "docs/evidence/m1-restoration-planning.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage and both household APIs; managed data, console recovery, manual snapshots and persistent Edge.2 package; both image architectures and owner start/reload/restart pass; full M1 remains pending",
-        "blockingDecisions": "Implement accepted A30 restore/replay-history policy, product UI and live household/recovery acceptance, standalone companion/browser and complete deployment/channel acceptance. No restore-history product choice remains unanswered.",
+        "implementationEvidence": "partial: identity/storage and both household APIs; persistent Edge.2 owner start/reload/restart; manual snapshots plus pure restore reconciliation and blocked SQLite preparation/inspection; full M1 remains pending",
+        "blockingDecisions": "Implement accepted A30 runtime history/replay, recovery rearm guards and verified offline restore activation; product UI/live household/recovery, standalone companion/browser and full deployment/channel acceptance. No restore-history product choice remains unanswered.",
         "copilotChangesAllowed": false
       }
     },
