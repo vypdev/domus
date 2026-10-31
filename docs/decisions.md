@@ -34,6 +34,8 @@ Confirmed owner requirements are recorded in [product vision](product-vision.md)
 | A28 | Accepted: HA outage permits existing-session local queries only until original expiry; all changes remain blocked | Known revocation still applies and availability failure cannot renew authority | Owner confirmed 2026-10-29; concrete identity/session adapter proof pending |
 | A29 | Accepted: administrator manages configuration/members/privileged corrections; adult handles daily operations and restricted-work approval; restricted completes assigned work and adds own shopping requests; viewer queries; all edit own preferences | Provide usable defaults within the already accepted household/member customization model | Owner confirmed 2026-10-31; concrete permission policy and API tests pending |
 | A30 | Accepted: restoring an older checkpoint restores its state while retaining readable later committed receipts and history as already processed | Prevent duplicate execution without silently reapplying later business changes | Owner confirmed 2026-10-31; consistent evidence reconciliation and activation tests remain required |
+| A31 | Accepted: an authorized adult who performed the work may approve by default; configurable household policy and administrator-authorized task override | Supports family workflows while allowing an independent-adult alternative; restricted self-approval and revoked authority remain denied | Owner confirmed 2026-10-31; completion snapshots, current-permission and replay contracts remain implementation gates |
+| A32 | Accepted: a restricted member may record only materials linked to an authorized task by default, without general inventory permission; configurable by household/task | Preserve valid performed work and narrowly scoped usage; disabled authority retains unposted materials for explicit authorized follow-up | Owner confirmed 2026-10-31; product/unit/location, stock, current-authority and deduplication contracts remain implementation gates |
 
 All eleven owning SDDs and the M1 companion remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
 The Copilot limitation is an observed constraint, not permission to change its implementation,
@@ -84,3 +86,11 @@ operations. Do not execute their effects again or silently advance the restored 
 or incomplete evidence must be handled explicitly before activation. This choice is separate from
 backup scheduling/retention, which remains unselected. The implementation and restore acceptance
 are still pending.
+
+## Task approval and material authority
+
+On 2026-10-31 the owner confirmed A31: an adult with current approval authority may approve work in which that adult participated by default. Household configuration and an administrator-authorized task override may require an independent adult instead. Restricted self-approval remains denied; completion snapshots do not replace current authorization.
+
+The owner also confirmed A32: a restricted member authorized for the task may record only its linked materials without general stock permission by default. This is configurable by household/task. Retain valid performed work and visibly unposted usage when configured authority is absent; forged or unrelated material input is still denied. Actual quantities remain adjustable, Inventory owns stock rules, approval controls points independently, and reopening/rejection does not imply a physical return.
+
+The [task contract](../specs/household-tasks.md) owns the eleven additional acceptance scenarios. Inventory, identity and points link their related rules without counting duplicate cases. These remain prospective domain additions, not implemented task services in the M1 identity foundation. Engineering state labels and bounds remain review items; the defaults above are already owner-confirmed.

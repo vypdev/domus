@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: points-rewards
-- Last verified: 2026-10-29 (document structure only; no implementation evidence)
+- Last verified: 2026-10-31 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
@@ -24,7 +24,7 @@ This is a prospective Draft, not an implemented or accepted capability. The firs
 
 A mutable points integer cannot explain duplicate awards, reopened tasks, policy changes or who earned credit.
 
-Current verified sequence: (1) the repository has a minimal README and installed Copilot automation; (2) no Domus application, public service or tests exist; (3) this contract proposes the behavior to build.
+At the original documentation baseline on 2026-10-28, these domain workflows had no implementation. The merged M1 identity/storage foundation now has separate backend evidence. The task approval and material-authority additions in this review remain prospective; this documentation change adds no runtime behavior.
 
 Evidence: the owner's attached brief and subsequent decisions in [product vision](../docs/product-vision.md), the pinned [reference investigation](../docs/reference-investigation.md), and the existing repository baseline. Retrospective classification is not applicable: no as-built product baseline is reconstructed.
 
@@ -43,7 +43,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 | points-rewards-R1 | Point awards MUST be append-only, attributable and unique for each accepted completion cycle; all performer shares MUST commit atomically and a policy/version change MUST NOT admit a second award set. |
 | points-rewards-R2 | Reopening and correction MUST append compensating entries for the amounts actually awarded and preserve the original award, precision and allocation-policy snapshot. |
 | points-rewards-R3 | Collaborative awards MUST apply an administrator-configurable household allocation policy, support conserved splits, rounded equal shares, two-decimal shares and full points per participant, and expose the base value, participants, policy, individual shares and actual awarded total. |
-| points-rewards-R4 | Verification and permissions MUST apply adult/no-verification and restricted/adult-approval defaults, prevent premature or unauthorized awards and deny unauthorized task-value or allocation-policy manipulation. |
+| points-rewards-R4 | Verification and permissions MUST apply adult/no-verification and restricted/adult-approval defaults, prevent premature or unauthorized awards and deny unauthorized task-value or allocation-policy manipulation. The snapshotted household/task participation rule MUST allow approval by an authorized adult performer by default; current authority and any configured independent-adult requirement still gate one award. |
 | points-rewards-R5 | Weekly, monthly and historical earned-point/participation summaries MUST attribute work to actual completed_at under household calendar boundaries, expose effort and participation, and distinguish pending points from posted spendable balance; later approval MUST NOT move the work to another period. |
 | points-rewards-R6 | Optional rewards MUST support explicit approval, cancellation and duplicate-safe redemption; reversal MUST preserve factual negative balances and fulfilled rewards, block unaffordable new redemptions and hold approved/unfulfilled rewards without sufficient backing until credit recovers or an explicit authorized resolution occurs. |
 
@@ -88,6 +88,10 @@ The owner's expanded decision on 2026-10-29 supersedes universal conservation of
 Only conserve_total enforces equality between base and awarded total. Other modes record the difference as policy semantics, not duplicate awards or an unexplained adjustment. The proposed remainder strategy rotates eligible recipients deterministically using durable allocation order; replay cannot advance it twice. Its exact fairness/tie-break rule remains an engineering review item. Task value and policy changes affect future completions only. Optional rewards define cost, eligibility, redemption and approval; no punitive streak resets.
 
 Validate precision against the actual policy rather than silently rounding stored facts. For conserve_total at precision 0, a base of 10.50 cannot be represented as integer shares summing exactly to that base: reject the combination and offer precision 2. Full-performer and manual shares must also be representable at the selected precision. equal_share may intentionally change the total through its explicit rounding policy. Individual award shares are nonnegative; negative ledger entries arise from separately authorized reversal/correction or spending, never a disguised negative performer allocation.
+
+The owner confirmed on 2026-10-31 that an authorized adult may approve a completion in which that adult participated by default. The household setting supplies the default and an explicit administrator-authorized task override takes precedence. A configured requirement for an independent adult denies approval by every actual performer; a completion's submitter is not used as a substitute for its performer set. Restricted performers never become adult verifiers through this option. Only currently authorized adults may approve, including after a lost response or policy change. Snapshot the effective participation rule and policy revisions with the completion, alongside its existing role-default verification policy. Later configuration edits govern future completions; they cannot silently waive an earlier pending decision. Current membership, adult status and approval permission are still checked when approval commits. A new completion cycle receives its own snapshot; delayed approval of a closed cycle remains inert. This policy does not add verification to adult-only work unless another explicit rule requires it.
+
+Physical material usage and its task-scoped permission remain independent of point approval: a posted movement does not authorize points, and an unposted intent does not erase performed work. Only a required valid approval makes the completion eligible for its single allocation; rejection/reopening cannot fabricate returned stock. The [Tasks acceptance inventory](household-tasks.md) owns the distinct new participation/material scenarios without counting them again here.
 
 ### 6.2 States and alternatives
 
@@ -181,7 +185,7 @@ Show operation state and projection freshness to members; expose sanitized corre
 
 ## 13. Compatibility, migration, rollout, and rollback
 
-No existing Domus application data requires migration yet. The first schema is versioned from its first implementation. Upgrade fixtures cover pending operations and ledger compatibility; a backup precedes destructive migration. Unknown future schemas block writes. Downgrade requires a compatible image/database pair, never silent interpretation of newer data.
+The existing M1 database is versioned and its identity, household, history and operation records must be preserved. Implementing these prospective task policies requires reviewed compatible migrations; this documentation-only change introduces no new stored domain records. Upgrade fixtures cover pending operations and ledger compatibility; a backup precedes destructive migration. Unknown future schemas block writes. Downgrade requires a compatible image/database pair, never silent interpretation of newer data.
 
 Both Supervisor and standalone are first-release acceptance targets. Stable and Edge use separate credentials, IDs, volumes and endpoint bindings. Experimental artifacts cannot automatically promote production. Publication, merge and deployment remain in the existing authorized maintainer lifecycle.
 
@@ -197,7 +201,7 @@ Minimum: 44 distinct cases, derived from the explicit risk inventory below. Each
 | Domain and configuration | 13 | a later task-value edit; 10 points and three performers; duplicate or inactive performer IDs |
 | Integration and recovery | 8 | repeated correction commands; authorized approval after a retry; a cancelled pending redemption |
 | UI and accessibility | 5 | collaborative completion; equal point totals with different durations; rewards disabled |
-| **Total** | **44** | No double counting |
+| Total | 44 | Distinct inventory cases; repeated executions do not add cases. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -252,27 +256,32 @@ Inject deterministic clocks, IDs, provider fakes and transaction failures. Use s
 
 ## 15. Documentation and discoverability
 
-The following paths are explicit proposed documentation changes relative to the clean repository baseline; implementation source/test paths are intentionally not invented.
+The following documentation operations are relative to develop at e8fa5bbc9ffa179aa7559831f5f3d067c9c9c65c. This policy refinement adds no runtime or test implementation evidence.
 
 | Path | Change |
 |---|---|
-| specs/points-rewards.md | create |
-| specs/README.md | create |
-| specs/_template.md | create |
-| specs/catalog.json | create |
-| specs/CATALOG.md | create |
-| docs/architecture.md | create |
-| docs/product-vision.md | create |
-| docs/glossary.md | create |
-| docs/decisions.md | create |
-| docs/reference-investigation.md | create |
-| docs/copilot-adoption.md | create |
-| docs/operations.md | create |
-| docs/user-guide.md | create |
-| docs/contracts/home-assistant.md | create |
-| docs/acceptance-plan.md | create |
-| docs/roadmap.md | create |
+| specs/points-rewards.md | update |
+| specs/README.md | reference |
+| specs/_template.md | reference |
+| specs/catalog.json | update |
+| specs/CATALOG.md | update |
+| docs/architecture.md | reference |
+| docs/product-vision.md | reference |
+| docs/glossary.md | reference |
+| docs/decisions.md | update |
+| docs/reference-investigation.md | reference |
+| docs/copilot-adoption.md | reference |
+| docs/operations.md | reference |
+| docs/user-guide.md | update |
+| docs/contracts/home-assistant.md | reference |
+| docs/acceptance-plan.md | update |
+| docs/roadmap.md | reference |
 | README.md | update |
+| specs/household-tasks.md | update |
+| specs/household-identity.md | update |
+| specs/household-inventory.md | update |
+| docs/sdd-validation.md | update |
+| docs/evidence/task-policy-sdd-review.json | create |
 
 | Audience | Artifact | Required content |
 |---|---|---|

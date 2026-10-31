@@ -3,12 +3,12 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: household-tasks
-- Last verified: 2026-10-29 (document structure only; no implementation evidence)
+- Last verified: 2026-10-31 (owner-confirmed policy and document structure; task implementation pending)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Detailed role/override review; first-release advanced task-type matrix. The owner confirmed role-default verification, material-completion handling and preservation of completed downstream work/points when its prerequisite is reopened on 2026-10-29. Catalog gate prerequisites remain unverified.
+- Open decisions blocking readiness: Executable role/override review; first-release advanced task-type matrix. Adult participation approval and scoped material defaults are owner-confirmed; engineering labels/bounds remain review items. The owner confirmed role-default verification, material-completion handling and preservation of completed downstream work/points when its prerequisite is reopened on 2026-10-29. Catalog gate prerequisites remain unverified.
 
 ## 1. Executive summary
 
@@ -24,7 +24,7 @@ This is a prospective Draft, not an implemented or accepted capability. The firs
 
 A title and completed flag cannot represent recurring or collaborative household work, material requirements, verification and auditable corrections.
 
-Current verified sequence: (1) the repository has a minimal README and installed Copilot automation; (2) no Domus application, public service or tests exist; (3) this contract proposes the behavior to build.
+At the original documentation baseline on 2026-10-28, these domain workflows had no implementation. The merged M1 identity/storage foundation now has separate backend evidence. The task approval and material-authority additions in this review remain prospective; this documentation change adds no runtime behavior.
 
 Evidence: the owner's attached brief and subsequent decisions in [product vision](../docs/product-vision.md), the pinned [reference investigation](../docs/reference-investigation.md), and the existing repository baseline. Retrospective classification is not applicable: no as-built product baseline is reconstructed.
 
@@ -44,11 +44,11 @@ Goals and fixed invariants are the following normative requirements. No configur
 | household-tasks-R2 | Every transition MUST enforce the explicit state machine, expected revision, dependencies and completion requirements; reopening a prerequisite MUST retain already-completed downstream work and points with a visible review condition, without automatic cascading reopening. |
 | household-tasks-R3 | Assignment MUST distinguish planned assignees, completion actor and actual performers and support unassigned pools, reassignment and collaboration. |
 | household-tasks-R4 | Completion and reopening MUST be idempotent and emit uniquely identified business events without duplicate downstream rewards. |
-| household-tasks-R5 | Verification MUST default to none for adult performers and authorized-adult approval for restricted performers, prevent unauthorized approval and defer points until any required verification succeeds. |
+| household-tasks-R5 | Verification MUST default to none for adult performers and authorized-adult approval for restricted performers, prevent unauthorized approval and defer points until any required verification succeeds. Approval by an authorized adult who performed the work MUST be allowed by default, configurable by household and authorized task override, without permitting restricted self-approval. |
 | household-tasks-R6 | Task history MUST retain creation, assignment, transitions, completion, reopening, schedule changes and related automation actors. |
 | household-tasks-R7 | Task creation MUST support a minimal title-only path and optional advanced fields, categories, subtasks, materials and entity links. |
 | household-tasks-R8 | Every task command MUST enforce household scope and role permissions and return actionable validation, conflict and recovery results. |
-| household-tasks-R9 | Material recording MUST default to an adjustable review in the completion form, configurable per task; one explicit submission MUST retain linked outcomes without duplicate stock changes, insufficient stock MUST leave completed work saved with consumption pending regularization rather than negative stock, and reopening MUST NOT imply a physical material return. |
+| household-tasks-R9 | Material recording MUST default to an adjustable review in the completion form, configurable per task; one explicit submission MUST retain linked outcomes without duplicate stock changes, insufficient stock MUST leave completed work saved with consumption pending regularization rather than negative stock, and reopening MUST NOT imply a physical material return. Authorized task-linked consumption MUST be allowed by default without general inventory permission, configurable by household/task; a normal lack of material authority MUST retain valid work and visibly unposted usage without an unauthorized movement. |
 
 Non-goals: changing Copilot, changing the existing gateway, building an MCP server, adding mandatory cloud/AI dependencies, or claiming production readiness from a document.
 
@@ -78,15 +78,23 @@ TaskDefinition owns title, description, configurable category, tags, priority, e
 
 The owner confirmed adjustable material quantities in the completion form, submitted with the task completion, configurable per task. The default review shows planned quantities, units and storage targets; the member explicitly confirms actual usage, including zero for an unused material. A zero line is retained as not_used without fabricating a zero-quantity stock movement. Merely displaying the form or marking an unrelated task complete never consumes stock. A separate-recording task option retains an explicit later inventory action. The effective mode and submitted lines are snapshotted; the server validates stock permissions, product/unit/location compatibility and stable line identities rather than trusting the client preview.
 
-One application orchestration accepts the completion and explicit material intents under the same operation receipt. Inventory still owns consumption rules and movement records; this is one user submission, not a second implementation of inventory policy in Tasks. Stable child identities link each consumption line to its completion cycle and deduplicate whole-request or line retries. Invalid input or unauthorized intents fail admission before any new completion or movement; a genuine stock shortfall is a recoverable business outcome rather than invalid identity or permission.
+One application orchestration accepts the completion and explicit material intents under the same operation receipt. Inventory still owns consumption rules and movement records; this is one user submission, not a second implementation of inventory policy in Tasks. Stable child identities link each consumption line to its completion cycle and deduplicate whole-request or line retries. Invalid input, forged or foreign references, unrelated material substitutions and missing task-completion authority fail admission before new effects. Otherwise valid linked usage lacking configured material authority retains valid performed work and unposted usage as described below; stock shortage is a separate recoverable outcome.
 
 The owner confirmed that insufficient stock must not block recording work already performed. Save the completion and the affected intent as pending_regularization, with submitted quantity, source and safe reason; do not post an impossible movement or negative stock. Report each material line separately, including any successful lines, without presenting pending ones as consumed. Existing performer-verification and point rules still apply independently, and recurrence uses actual completion. An authorized member reviews actual inventory facts and explicitly resolves the pending intent; purchasing new stock alone does not silently post an old consumption. Settlement retains the same linked intent identity, handles races/replays once and leaves a visible audit trail.
+
+The owner confirmed on 2026-10-31 that a restricted member authorized to complete a task may explicitly record consumption of that task's linked materials by default, without general inventory permission. The household supplies this task-scoped default and an administrator-authorized per-task override may change it. Explicit applicable member denials, installation limits and current task authorization still take precedence; absence of a general stock grant is distinct from an explicit denial of the scoped material action. Resolve eligible material identities, products, units and locations from the server-owned task/completion snapshot; a client-provided task ID or material line is not a general stock grant. Keep the previously accepted adjustable actual quantities, including zero usage. This authority cannot add unrelated products, change storage targets, edit stock arbitrarily, configure its own permission or reach another household. Inventory remains responsible for validating and posting every movement, usable stock and reservations.
+
+If task-scoped consumption is disabled and the actor lacks the applicable inventory authority, retain otherwise valid performed work and the validated linked usage as visibly unposted pending authorization. Do not claim that stock was consumed, discard the reported work or silently request broader access. This normal policy outcome is distinct from forged identity, unrelated/foreign material references or invalid quantities, which still fail admission before new side effects. A later grant or adult approval does not automatically execute a retained material intent: an authorized explicit settlement reuses its completion-cycle/line identity and rechecks current authority and stock. Stock shortage remains pending_regularization, with no negative stock; it is not the same reason as missing authority. Engineering state labels and schema bounds remain subject to implementation review.
+
+Verification controls point eligibility independently of physical usage. An eligible material movement may post while work awaits adult approval; rejection or reopening never fabricates a physical return. Replaying the original completion, approving it or changing either policy cannot consume again. Retained receipts/history explain the original effective policy but never authorize a newly revoked movement.
 
 ### 6.2 States and alternatives
 
 Definition: draft -> active <-> paused -> archived. Occurrence: draft -> available <-> assigned -> in_progress; available/assigned/in_progress -> blocked or completed; blocked -> available or assigned; active states -> cancelled or skipped. Reopen completed -> assigned if assignees exist, otherwise available. Verification is a separate pending/approved/rejected decision; pending completion is displayed as awaiting verification and awards no points.
 
 The owner confirmed the role defaults on 2026-10-29. Without an explicit administrator-controlled task override, adult performers need no verification and any restricted actual performer requires approval by an authorized adult. Determine that policy from the actual performers, not merely the authenticated submitter: an adult recording a restricted member's work does not silently bypass the approval step. Restricted members cannot set their own policy to none or approve their own completion. The effective policy and its revision are snapshotted with completion.
+
+The owner confirmed on 2026-10-31 that an authorized adult may approve a completion in which that adult participated by default. The household setting supplies the default and an explicit administrator-authorized task override takes precedence. A configured requirement for an independent adult denies approval by every actual performer; a completion's submitter is not used as a substitute for its performer set. Restricted performers never become adult verifiers through this option. Only currently authorized adults may approve, including after a lost response or policy change. Snapshot the effective participation rule and policy revisions with the completion, alongside its existing role-default verification policy. Later configuration edits govern future completions; they cannot silently waive an earlier pending decision. Current membership, adult status and approval permission are still checked when approval commits. A new completion cycle receives its own snapshot; delayed approval of a closed cycle remains inert. This policy does not add verification to adult-only work unless another explicit rule requires it.
 
 A duplicate uses its original operation receipt. A changed payload under the same key is a conflict. Out-of-order events use aggregate revision and source identity. Cancellation never erases an already committed ledger effect; compensation is explicit.
 
@@ -100,6 +108,8 @@ The owner confirmed that reopening a prerequisite does not reopen its completed 
 |---|---|---|---|---|
 | `default_priority` | enum | normal | low, normal, high, urgent | household; occurrence snapshots |
 | `completion_verification` | enum | role_default | role_default: adults none, restricted performers authorized_adult; explicit none/authorized_adult overrides require administrator permission | definition; effective role policy and revision snapshotted at completion |
+| `adult_performer_may_approve` | boolean | true | household default; administrator-authorized task override; false requires an adult outside the actual performer set | effective value and policy revisions snapshotted at completion; current authority always rechecked |
+| `task_scoped_material_consumption` | boolean | true | household default; administrator-authorized task override; only validated task-linked material usage, never general stock authority | policy and material snapshot retained with completion; revoked authority cannot post a new movement |
 | `dependency_policy` | enum | all_required | all_required only initially; cycles rejected | definition; versioned |
 | `category` | string reference | General | active household category; optional | definition; persisted |
 | `material_recording` | enum | review_on_completion | review_on_completion or separate_recording; explicit actual quantities, no silent consumption | definition; mode and material lines snapshotted for each completion |
@@ -153,6 +163,7 @@ English and Spanish use stable translation keys, base-language matching and Engl
 | Failure | Retained facts | Retry / action | Cleanup |
 |---|---|---|---|
 | Invalid or denied input | Existing business records and form draft | Correct fields or request the proper role | No side effects |
+| Valid work with missing material authority | Performed work and validated linked usage remain; no stock movement | Explicit settlement by a currently authorized actor | Never treat a later grant or task approval as automatic consumption |
 | Stale revision | Current committed aggregate; user's entered fields | Review current state and submit a new deliberate operation | No automatic overwrite |
 | Lost response after commit | Domain result and receipt | Look up or replay the same key | Never issue a fresh-key duplicate |
 | Downstream projection unavailable | Successful domain result and durable pending event | Bounded backoff, then visible retry | Acknowledge outbox only after safe consumption |
@@ -170,23 +181,23 @@ Show operation state and projection freshness to members; expose sanitized corre
 
 ## 13. Compatibility, migration, rollout, and rollback
 
-No existing Domus application data requires migration yet. The first schema is versioned from its first implementation. Upgrade fixtures cover pending operations and ledger compatibility; a backup precedes destructive migration. Unknown future schemas block writes. Downgrade requires a compatible image/database pair, never silent interpretation of newer data.
+The existing M1 database is versioned and its identity, household, history and operation records must be preserved. Implementing these prospective task policies requires reviewed compatible migrations; this documentation-only change introduces no new stored domain records. Upgrade fixtures cover pending operations and ledger compatibility; a backup precedes destructive migration. Unknown future schemas block writes. Downgrade requires a compatible image/database pair, never silent interpretation of newer data.
 
 Both Supervisor and standalone are first-release acceptance targets. Stable and Edge use separate credentials, IDs, volumes and endpoint bindings. Experimental artifacts cannot automatically promote production. Publication, merge and deployment remain in the existing authorized maintainer lifecycle.
 
 ## 14. Testing strategy and numeric budget
 
-Minimum: 38 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
+Minimum: 49 distinct cases, derived from the explicit risk inventory below. Each inventory row counts once. The budget is a floor, not a claim of completeness or executed tests.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Domain and configuration | 8 | an active recurring definition; a blocked prerequisite; a cyclic dependency or an incomplete required subtask |
+| Domain and configuration | 11 | an active recurring definition; a blocked prerequisite; a cyclic dependency or an incomplete required subtask; authorized adult participation, household/task precedence and narrow material authority |
 | Adapters and persistence | 2 | a later definition edit; assignment |
-| Integration and recovery | 8 | a one-time title-only task; a reopened completed task; pending verification |
-| State and concurrency | 7 | two concurrent transitions with the same revision; two simultaneous claims on a single-assignee task; duplicate completion commands |
-| UI and accessibility | 7 | a collaborative task; rejected verification; title-only entry on a narrow screen |
-| Security and privacy | 6 | a verifier policy requiring another member; an arbitrary history deletion request from a member; a foreign-household task ID |
-| **Total** | **38** | No double counting |
+| Integration and recovery | 9 | a one-time title-only task; a reopened completed task; pending verification; completion-policy snapshots across edit/restart and closed cycles |
+| State and concurrency | 9 | two concurrent transitions with the same revision; two simultaneous claims on a single-assignee task; duplicate completion commands; current approval revocation and explicit material settlement replay |
+| UI and accessibility | 8 | a collaborative task; rejected verification; title-only entry on a narrow screen; retained work with separately unposted material authorization |
+| Security and privacy | 10 | a verifier policy requiring another member; an arbitrary history deletion request from a member; a foreign-household task ID; independent-adult configuration, unauthorized policy edits, unrelated material input and explicit member denial |
+| Total | 49 | Distinct inventory cases; repeated executions do not add cases. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -228,6 +239,17 @@ Minimum: 38 distinct cases, derived from the explicit risk inventory below. Each
 | household-tasks-C36 | Integration and recovery | household-tasks-R2, household-tasks-R4 | Given a completed dependent and its prerequisite being reopened, the dependent retains completion, points, materials and recurrence facts while a linked review condition appears; no automatic reopening or compensation chain occurs. |
 | household-tasks-C37 | UI and accessibility | household-tasks-R2, household-tasks-R6 | Given dependency_attention on completed work, the UI retains its actual completion and points, names the changed prerequisite and offers an authorized review without presenting the work as unperformed. |
 | household-tasks-C38 | State and concurrency | household-tasks-R2, household-tasks-R4 | Given reviewed dependency recovery followed by a delayed or repeated old reopen event, revision checks keep the resolved state and do not duplicate warnings, completions or awards. |
+| household-tasks-C39 | Domain and configuration | household-tasks-R5 | Given a required verification with an authorized adult among the actual performers and no participation override, that adult may approve once; restricted performers still cannot approve and the completion identity is unchanged. |
+| household-tasks-C40 | Security and privacy | household-tasks-R5 | Given a snapshotted independent-adult requirement, an adult actual performer is denied approval while an authorized adult outside that performer set can approve; no premature award exists. |
+| household-tasks-C41 | Domain and configuration | household-tasks-R5 | Given opposite household and administrator-authorized task participation settings, the explicit task value determines the new completion snapshot in either direction; an absent override inherits the household value. |
+| household-tasks-C42 | Security and privacy | household-tasks-R5, household-tasks-R8, household-tasks-R9 | Given an ordinary restricted member editing either participation-approval policy or task-scoped material authority, the edit is denied without changing the policy or granting inventory access. |
+| household-tasks-C43 | State and concurrency | household-tasks-R4, household-tasks-R5, household-tasks-R8 | Given an adult who performed the work losing current approval authority before commit or replay, approval is denied and no second decision or reward appears despite the retained completion policy snapshot. |
+| household-tasks-C44 | Integration and recovery | household-tasks-R4, household-tasks-R5 | Given pending verification followed by a household/task participation-policy edit and restart, the original completion retains its effective rule; a genuine later completion uses its new snapshot and an old-cycle approval cannot authorize it. |
+| household-tasks-C45 | Domain and configuration | household-tasks-R8, household-tasks-R9 | Given a restricted member authorized for the task but lacking general inventory permission, default task-scoped authority admits the reviewed linked material intent with adjusted actual quantities; the member gains no general stock permission. |
+| household-tasks-C46 | Security and privacy | household-tasks-R8, household-tasks-R9 | Given a task-scoped material submission that substitutes an unrelated product, unauthorized location or foreign-household material identity, validation denies it before new task or stock effects; a task ID alone cannot authorize the substitution. |
+| household-tasks-C47 | UI and accessibility | household-tasks-R5, household-tasks-R9 | Given disabled task-scoped consumption and no applicable inventory authority for otherwise valid linked usage, the task result retains performed work and separately names unposted material authorization; approval/points status is shown independently and stock is unchanged. |
+| household-tasks-C48 | State and concurrency | household-tasks-R4, household-tasks-R9 | Given retained unposted material usage followed by a permission grant, nothing posts automatically; explicit authorized settlement reuses the original cycle/line identity, rechecks stock and posts at most once across concurrent retry or approval. |
+| household-tasks-C49 | Security and privacy | household-tasks-R8, household-tasks-R9 | Given enabled household/task material policy but a current explicit member denial of scoped material consumption, valid performed work is retained with unposted usage and no new movement; the default cannot override that denial or grant general stock access. |
 
 Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
 
@@ -235,27 +257,32 @@ Inject deterministic clocks, IDs, provider fakes and transaction failures. Use s
 
 ## 15. Documentation and discoverability
 
-The following paths are explicit proposed documentation changes relative to the clean repository baseline; implementation source/test paths are intentionally not invented.
+The following documentation operations are relative to develop at e8fa5bbc9ffa179aa7559831f5f3d067c9c9c65c. This policy refinement adds no runtime or test implementation evidence.
 
 | Path | Change |
 |---|---|
-| specs/household-tasks.md | create |
-| specs/README.md | create |
-| specs/_template.md | create |
-| specs/catalog.json | create |
-| specs/CATALOG.md | create |
-| docs/architecture.md | create |
-| docs/product-vision.md | create |
-| docs/glossary.md | create |
-| docs/decisions.md | create |
-| docs/reference-investigation.md | create |
-| docs/copilot-adoption.md | create |
-| docs/operations.md | create |
-| docs/user-guide.md | create |
-| docs/contracts/home-assistant.md | create |
-| docs/acceptance-plan.md | create |
-| docs/roadmap.md | create |
+| specs/household-tasks.md | update |
+| specs/README.md | reference |
+| specs/_template.md | reference |
+| specs/catalog.json | update |
+| specs/CATALOG.md | update |
+| docs/architecture.md | reference |
+| docs/product-vision.md | reference |
+| docs/glossary.md | reference |
+| docs/decisions.md | update |
+| docs/reference-investigation.md | reference |
+| docs/copilot-adoption.md | reference |
+| docs/operations.md | reference |
+| docs/user-guide.md | update |
+| docs/contracts/home-assistant.md | reference |
+| docs/acceptance-plan.md | update |
+| docs/roadmap.md | reference |
 | README.md | update |
+| specs/household-identity.md | update |
+| specs/household-inventory.md | update |
+| specs/points-rewards.md | update |
+| docs/sdd-validation.md | update |
+| docs/evidence/task-policy-sdd-review.json | create |
 
 | Audience | Artifact | Required content |
 |---|---|---|
@@ -280,12 +307,12 @@ Acceptance includes normal, alternative, invalid, duplicate, concurrent, partial
 | household-tasks-R1 | household-tasks-C01, household-tasks-C02, household-tasks-C03 |
 | household-tasks-R2 | household-tasks-C04, household-tasks-C05, household-tasks-C06, household-tasks-C36, household-tasks-C37, household-tasks-C38 |
 | household-tasks-R3 | household-tasks-C07, household-tasks-C08, household-tasks-C09 |
-| household-tasks-R4 | household-tasks-C10, household-tasks-C11, household-tasks-C12, household-tasks-C29, household-tasks-C31, household-tasks-C33, household-tasks-C34, household-tasks-C36, household-tasks-C38 |
-| household-tasks-R5 | household-tasks-C13, household-tasks-C14, household-tasks-C15, household-tasks-C25, household-tasks-C26, household-tasks-C33, household-tasks-C35 |
+| household-tasks-R4 | household-tasks-C10, household-tasks-C11, household-tasks-C12, household-tasks-C29, household-tasks-C31, household-tasks-C33, household-tasks-C34, household-tasks-C36, household-tasks-C38, household-tasks-C43, household-tasks-C44, household-tasks-C48 |
+| household-tasks-R5 | household-tasks-C13, household-tasks-C14, household-tasks-C15, household-tasks-C25, household-tasks-C26, household-tasks-C33, household-tasks-C35, household-tasks-C39, household-tasks-C40, household-tasks-C41, household-tasks-C42, household-tasks-C43, household-tasks-C44, household-tasks-C47 |
 | household-tasks-R6 | household-tasks-C16, household-tasks-C17, household-tasks-C18, household-tasks-C37 |
 | household-tasks-R7 | household-tasks-C19, household-tasks-C20, household-tasks-C21 |
-| household-tasks-R8 | household-tasks-C22, household-tasks-C23, household-tasks-C24, household-tasks-C27, household-tasks-C32 |
-| household-tasks-R9 | household-tasks-C20, household-tasks-C28, household-tasks-C29, household-tasks-C30, household-tasks-C31, household-tasks-C32, household-tasks-C34, household-tasks-C35 |
+| household-tasks-R8 | household-tasks-C22, household-tasks-C23, household-tasks-C24, household-tasks-C27, household-tasks-C32, household-tasks-C42, household-tasks-C43, household-tasks-C45, household-tasks-C46, household-tasks-C49 |
+| household-tasks-R9 | household-tasks-C20, household-tasks-C28, household-tasks-C29, household-tasks-C30, household-tasks-C31, household-tasks-C32, household-tasks-C34, household-tasks-C35, household-tasks-C42, household-tasks-C45, household-tasks-C46, household-tasks-C47, household-tasks-C48, household-tasks-C49 |
 
 All requirement cases are reciprocal with section 14. Domain invariants are owned by pure policy, command/state rules by application use cases, provider behavior by adapters, and visible content by presentation; the boundary table in section 8 assigns these responsibilities. Evidence and user/operator documentation are linked in section 15.
 

@@ -9,12 +9,14 @@ into one responsive interface. Normal operation does not require AI or cloud ser
 ## Project status
 
 Domus has tested backend storage, identity policy and a standalone authentication API/CLI in development.
-A stateless Edge HA app preview now uses native Ingress authentication without another sign-in.
+The Edge HA app preview uses native Ingress authentication and owned storage without another sign-in.
 The household product, product UI, production packages and release artifacts remain incomplete.
-The [documentation foundation issue](https://github.com/vypdev/domus/issues/2)
-tracks eleven Draft SDDs, 82 normative requirements and 353 planned acceptance cases.
-These cases are verification plans, not executed application tests.
-The M1 identity/storage companion adds its own 61-case plan; partial backend evidence does not complete it.
+The [documentation foundation](https://github.com/vypdev/domus/issues/2) initially covered eleven SDDs,
+82 requirements and 353 cases. The current catalog contains thirteen Draft SDDs across eleven
+capabilities, 95 requirements and 443 inventory cases, including both platform companions and the
+[confirmed task-policy refinement](docs/decisions.md). These are verification plans, not a claim that
+443 product journeys have executed or passed. The unpublished UI proposal in issue #8 is excluded.
+[Current acceptance boundaries](docs/acceptance-plan.md) distinguish implementation and remaining work.
 
 The first usable release covers all six domains, Supervisor App/Ingress and
 standalone Container, and isolated Stable and experimental Edge channels.
