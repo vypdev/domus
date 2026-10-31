@@ -23,6 +23,9 @@ _MAINTENANCE = "maintenance.lock"
 RESTORE_MANIFEST = "restore.json"
 RESTORE_OPERATIONS = "operations.jsonl"
 GENERATION_MARKER = "generation.json"
+ACTIVATION_MANIFEST = "activation.json"
+ACTIVATION_NEXT = "activation.json.next"
+SNAPSHOT_MANIFEST = "manifest.json"
 _GENERATIONS = "generations"
 _ARCHIVES = "archives"
 _ALLOWED = {
@@ -193,7 +196,14 @@ def _open(root: Path, channel: str, *, attach: bool) -> OwnedStorage:
         if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
             raise DatabaseRejected("unsafe_installation_directory")
         present = set(os.listdir(directory))
-        if {RESTORE_MANIFEST, RESTORE_OPERATIONS, GENERATION_MARKER} & present:
+        if {
+            RESTORE_MANIFEST,
+            RESTORE_OPERATIONS,
+            GENERATION_MARKER,
+            ACTIVATION_MANIFEST,
+            ACTIVATION_NEXT,
+            SNAPSHOT_MANIFEST,
+        } & present:
             raise DatabaseRejected("restore_not_active")
         if _MARKER in present:
             _metadata(directory)
@@ -203,7 +213,9 @@ def _open(root: Path, channel: str, *, attach: bool) -> OwnedStorage:
         names = set(os.listdir(directory))
         metadata = _metadata(directory) if _MARKER in names else None
         selection = metadata[2] if metadata is not None else None
-        subdirectories = {_GENERATIONS, _ARCHIVES} if selection is not None else set()
+        subdirectories = (
+            {_GENERATIONS, _ARCHIVES, "activations"} if selection is not None else set()
+        )
         if names - _ALLOWED - subdirectories:
             raise DatabaseRejected("unexpected_installation_artifact")
         for name in names:
@@ -300,7 +312,15 @@ def attach_database(path: Path, installation: Installation) -> SQLiteDatabase:
 
 
 def _no_owned_marker(directory: int) -> None:
-    for name in (_MARKER, GENERATION_MARKER, RESTORE_MANIFEST, RESTORE_OPERATIONS):
+    for name in (
+        _MARKER,
+        GENERATION_MARKER,
+        RESTORE_MANIFEST,
+        RESTORE_OPERATIONS,
+        ACTIVATION_MANIFEST,
+        ACTIVATION_NEXT,
+        SNAPSHOT_MANIFEST,
+    ):
         try:
             os.stat(name, dir_fd=directory, follow_symlinks=False)
         except FileNotFoundError:

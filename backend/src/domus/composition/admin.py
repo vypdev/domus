@@ -8,6 +8,7 @@ from typing import TextIO
 
 from domus.application.recovery_commands import RecoveryConsole
 from domus.application.snapshots import SnapshotCommands
+from domus.composition.restore import execute as restore
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.console_recovery import TerminalRecoveryConfirmation
@@ -70,12 +71,24 @@ def main(
     operations = snapshots.add_subparsers(dest="operation", required=True)
     for operation in ("create", "inspect"):
         operations.add_parser(operation).add_argument("location", type=Path)
+    restoration = subcommands.add_parser("restore")
+    restoration.add_argument("--timeout", type=float, default=30)
+    restore_operations = restoration.add_subparsers(dest="operation", required=True)
+    prepare = restore_operations.add_parser("prepare")
+    prepare.add_argument("snapshot", type=Path)
+    prepare.add_argument("location", type=Path)
+    for operation in ("inspect", "activate"):
+        restore_operations.add_parser(operation).add_argument("location", type=Path)
+    for operation in ("resume", "status"):
+        restore_operations.add_parser(operation).add_argument("restore_id")
     args = parser.parse_args(argv)
     incoming = sys.stdin if input_stream is None else input_stream
     outgoing = sys.stdout if output_stream is None else output_stream
     errors = sys.stderr if error_stream is None else error_stream
     owned: OwnedStorage | None = None
     try:
+        if args.command == "restore":
+            return restore(args, outgoing, SystemClock())
         if args.command == "snapshot" and args.operation == "inspect":
             if (
                 args.data_directory is not None
@@ -127,7 +140,8 @@ def main(
     except DomusError:
         errors.write(
             "Domus could not complete or confirm the console operation. Inspect the same recovery "
-            "request or snapshot candidate before retrying. Existing records are retained.\n"
+            "request, snapshot candidate or activation before retrying. "
+            "Existing records are retained.\n"
         )
         return 2
     except OSError:

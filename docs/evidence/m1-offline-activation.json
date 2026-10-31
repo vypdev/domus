@@ -1,0 +1,121 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "0e86193b69371e5c27b23923ea740f34d7ef49e8",
+  "scope": "Actual offline activation/resume/status and rollback with managed source binding, retained history, target-only migration and both composed APIs; actual package/deployment acceptance remains pending",
+  "backendTests": 1299,
+  "newExecutedCases": 115,
+  "backendCoverage": {
+    "covered_lines": 4684,
+    "num_statements": 4684,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 132,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 1302,
+    "num_partial_branches": 0,
+    "covered_branches": 1302,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": "COVERAGE_FILE=/private/tmp/domus-activation-backend.coverage .venv/bin/pytest tests/backend -q -W error::ResourceWarning --tb=short --cov=domus --cov-branch --cov-report=json:/private/tmp/domus-activation-coverage.json --cov-report=term:skip-covered",
+  "assertions": [
+    "New format-2 preparation binds UUID/channel/schema/current generation or flat managed identity plus the complete operation frontier; legacy format 1 remains inspectable but cannot activate",
+    "Exclusive runtime and maintenance leases precede read-only source validation; live runtime/shared console/second activator cannot overlap; original source is not migrated",
+    "A durable pending marker and orphan intent stage block normal and explicit-file startup; exact sealed private input and a verified standard source-checkpoint precede target publication",
+    "Only a new blocked target is migrated/imported; all files and directories are verified/flushed before one atomic root pointer replacement; source bytes remain intact",
+    "Ten durable-boundary faults plus a real process exit after root pointer rename retain source and resume the same transition without a second business effect",
+    "Status distinguishes pending, selected active and historical completed activations; completed inspection can share live runtime; retry of an old activation never switches back",
+    "Partial owned targets/checkpoints can be rebuilt only with unchanged source and exact input; changed source, conflicting receipts, altered target/checkpoint, unknown/unsafe files and foreign installations fail closed",
+    "Actual standalone and native HTTP compositions reauthenticate after activation, retain checkpoint state and replay later commands as historical with original operation ID and suppressed event delivery",
+    "Frozen schemas 1/2/3 activate through the real protocol into schema 4 while source/checkpoint bytes remain unchanged",
+    "Actual restoration of an old approved recovery cannot rearm consumed/canceled recovery under new keys or grant the historical target membership",
+    "The pre-activation source-checkpoint is independently inspectable and supports a subsequent rollback preparation reconciled with newer work; historical receipts and sequence high-water survive",
+    "Actual console prepare/inspect/activate/resume/status commands validate exact managed configuration and return safe truthful state; no HTTP restore endpoint or new human authorization flow"
+  ],
+  "testFirst": "Initial activation tests and negative contracts were added while the protocol was developed; intermediate complete-suite coverage failed at 97.84% and 99.72% before missing real error/identity cases were supplied. Final suite passes without exclusions added.",
+  "formats": {
+    "businessSchema": 4,
+    "preparedManifest": 2,
+    "legacyPreparedInspectable": 1,
+    "rootSelection": 2,
+    "activationRecord": 1,
+    "slotIdentity": 1,
+    "automaticBackupSchedule": false,
+    "pruning": false
+  },
+  "architecture": {
+    "files": 103,
+    "dependencies": 542,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 68 backend source files",
+    "negativeFixtures": 41
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "sqlite": "3.53.3",
+    "scope": "Local real SQLite files, process termination and actual ASGI compositions/console; not owner HA restore or new package execution"
+  },
+  "installedRuntime": "Owner Edge.2 / d013cf2c8b932d0e00f5858053cbc0e663d5eee1 / schema 3 unchanged. No live restore, snapshot, household, recovery grant, device or user changes.",
+  "priorHeadCI": {
+    "head": "0e86193b69371e5c27b23923ea740f34d7ef49e8",
+    "url": "https://github.com/vypdev/domus/actions/runs/41215442133",
+    "result": "PASS: all project groups; image tests cover the pinned existing package rather than these new sources"
+  },
+  "remaining": [
+    "Review complete current-head Bugbot findings and full supported CI",
+    "Build and execute restore in actual supported images and both deployment modes; packaged SQLite may differ",
+    "Product UI, live household/recovery and full standalone companion/browser acceptance",
+    "All remaining functional domains/channels/releases; M1 and full product are not complete"
+  ],
+  "copilot": "All installed resources untouched. A draft/skipped/neutral Bugbot review is not no-findings acceptance.",
+  "sourceSha256": {
+    "backend/src/domus/domain/activation.py": "fcb2e47e939127d5e254e2136fb7f1459b40fa8c8561100579fced49666ad0fe",
+    "backend/src/domus/application/activation.py": "c0c51350b074424837251068ec416f9be1e23ec1a9a4bfdcd19c3724ae736f08",
+    "backend/src/domus/composition/restore.py": "fe4f5040a99db1404938e402eefa54fc93139055a5bc92abdfb7bf35d0c87297",
+    "backend/src/domus/infrastructure/offline_storage.py": "16795918af0b4b21bc17aa6a52706fb92aa4d40850c489587bcffa7511b0fc30",
+    "backend/src/domus/infrastructure/restore_source.py": "71917a2db52f5f6794504fd8caa7fd23b0732e8328760c728ea3f082acd2d203",
+    "backend/src/domus/infrastructure/sqlite_activation.py": "6191814bfcb73ac35613f6592fd27f74cbf88baf81394091caecbdae3e29ab8a",
+    "backend/src/domus/domain/restoration.py": "4bb02d6633a0c81c1ce0cb58ae73dd300813b7ed40f495de521a0290d7b2ce0f",
+    "backend/src/domus/domain/snapshots.py": "81060c12e0ef06c7329bc3be780d321f40426d36e87e42fea5e85ad075bf7f19",
+    "backend/src/domus/composition/admin.py": "042c66929a738b97fe7a1dcc3ccda7cc2ccdccdbc2b48cc36065c45989c30aae",
+    "backend/src/domus/infrastructure/owned_storage.py": "c994557ba584bc0292c8fef432afe8725b532a5976c91faa39ebdbe70b4c4192",
+    "backend/src/domus/infrastructure/sqlite_restoration.py": "2f28207974082bdee48d72afdca08956e077b957377b1a2894b3eb6f4e6c224a",
+    "tests/backend/test_activation_values.py": "3b0a226c2803df8f35f65c756ff3d7ce883848fded656a038b6fb02bebdde85f",
+    "tests/backend/test_activation_console.py": "e4c9d5d68a06b7b7ee8c890a0d43b3e811a04fba8a08774bcb6db6ccf8d5b7e7",
+    "tests/backend/test_restore_source.py": "090492ebd9bca26ee08715377af793abd9cbe9dbdb6ee7f77fc560b48aeb0353",
+    "tests/backend/test_offline_storage.py": "19b09e0ebf62654175387c44194b2beb76b05f1d3133f178bf7156d5fa12453f",
+    "tests/backend/test_sqlite_activation.py": "d4f13336143c11904236031d7caa3b3c1629db1c16e5cdbe05daf8716a94651c",
+    "tests/backend/test_activation_failures.py": "0fde2358c8d90fe988d772c72aa4d89ed2e5d20d082e9bfa27fa962bc4eef6f4",
+    "tests/backend/test_activation_compatibility.py": "f4e0e0b42da5c592390ab738ebe6f4a5dc95fd1c7c3ae4ca3959bac79b969a31"
+  },
+  "tooling": {
+    "tests": 66,
+    "statements": 73,
+    "branches": 34,
+    "coveragePercent": 100,
+    "protectedCopilotResourcesUnchanged": 29,
+    "ruff": "PASS",
+    "localDocumentation": "PASS",
+    "mypy": "PASS: 4 tooling modules"
+  },
+  "sddValidation": {
+    "restoration": {
+      "format": "PASS",
+      "consistency": "PASS",
+      "canonicalSections": 20,
+      "characters": 31099
+    },
+    "primaryCompanion": {
+      "format": "PASS",
+      "consistency": "PASS",
+      "characters": 69863,
+      "scope": "Unchanged full requirement/case inventory"
+    },
+    "catalog": "PASS: 11 capabilities, generated rendering current",
+    "validator": "Byte-verified unchanged upstream policies"
+  }
+}

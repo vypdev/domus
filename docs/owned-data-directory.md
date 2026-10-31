@@ -34,8 +34,8 @@ private directories. This option generates the installation UUID only on the fir
 start and preserves it across restarts. It cannot be combined with --database or --instance-id.
 Repeat --public-origin for configured HA origins; its existing validation still precedes data writes.
 The explicit database/UUID development contract remains available for independent files. Both native
-and standalone explicit-file runtimes reject any installation.json, generation.json, restore.json or
-operations.jsonl entry in the parent directory, including a broken symlink, before opening SQLite.
+and standalone explicit-file runtimes reject installation, generation, snapshot, restore or activation
+metadata and operations.jsonl entries in the parent directory, including broken symlinks, before SQLite.
 They cannot bypass owned-directory or partial-restore lifecycle guards.
 
 The runtime must have exclusive access to this directory. A nonblocking POSIX process lock is held
@@ -75,15 +75,16 @@ that operator replacing paths or editing metadata. The protocol does not authori
 SQLite, installation metadata and replay evidence form one operational unit. Do not delete the marker
 to resolve a startup failure, copy a database alone into an empty directory, or run a standalone
 explicit-database process concurrently against these files. [Manual snapshots](snapshots.md) can be
-created and inspected. Restore activation remains pending; no backup schedule or pruning is introduced.
+created and inspected. Offline console restoration is implemented locally; actual package/deployment
+acceptance remains pending. No backup schedule or pruning is introduced.
 
 ## Selected generations
 
 The new source runtime also reads a strict format-2 root identity selecting one generation ID under
 the fixed generations directory. This is filesystem identity format 2, independent of business
 SQLite schema 4. Existing flat format-1 installations retain their normal behavior and are not
-silently converted by startup. A future verified activator must publish the selection; no such
-command is exposed yet. Do not construct or edit these files manually.
+silently converted by startup. The offline activator publishes a verified selection only after
+exclusive source validation and target preparation. Do not construct or edit these files manually.
 
 The selected private slot contains domus.sqlite3, a ready format-1 installation.json and a
 generation.json matching the root selection. UUID/channel and exact selection must agree. Root-level
@@ -100,9 +101,13 @@ archive directories fail. Both composed APIs retain the selected household and o
 across restart, leaving retained flat bytes unchanged. A prepared restore publishes its blocked
 identity before copying database bytes; rejected startup does not add lock files to it.
 
-These are startup-selection prerequisites, not production activation acceptance. Atomic publication,
-unchanged-source checks, durable transition recovery and actual packaged/owner restore acceptance
-remain pending. See [generation evidence](evidence/m1-generation-selection.json) and the
+The console activator holds both root leases exclusively, revalidates bound source history, captures
+a source-checkpoint and imports/migrates only a blocked new slot before publishing the root selection.
+Pending activation metadata blocks all startup; resume finishes the same durable transition.
+The activations directory retains sealed inputs, rollback snapshots and immutable completion receipts.
+Actual-image/deployment restore acceptance remains pending. See
+[offline activation](restoration.md), [activation evidence](evidence/m1-offline-activation.json),
+[generation evidence](evidence/m1-generation-selection.json) and the
 [complete restoration contract](../specs/platform-restoration.md). The installed Edge.2 remains unchanged.
 
 ## Verification and packaging boundary

@@ -1,10 +1,11 @@
 # Checkpoint restoration and retained history
 
-Status: pure reconciliation and private SQLite preparation/inspection are implemented and tested
-locally on issue #6. Schema-4 runtime history/replay and recovery guards are tested with synthetic
-offline fixtures. **Production activation remains pending.** There is no restore
-console command or HTTP endpoint yet. The installed Edge.2 image remains unchanged. This work does
-not complete M1 or validate a restoration on the owner's Home Assistant.
+Status: preparation, offline activation, interruption recovery, inspection and console commands are
+implemented and tested locally on issue #6. Real activations exercise both HTTP compositions,
+frozen schemas 1/2/3, retained history and closed recovery guards. **Packaged restore acceptance is
+pending.** The installed Edge.2 image remains unchanged. This work does not complete M1 or validate
+a restoration on the owner's Home Assistant. Restore authority belongs to the installation console;
+there is no restore HTTP endpoint.
 
 The owner accepted [A30](decisions.md): select the checkpoint's business state while preserving
 readable later receipts and history as already processed. Retaining history must prevent duplicate
@@ -27,12 +28,15 @@ copies exact snapshot database bytes and seals four files:
 | domus.sqlite3 | Original checkpoint database, with its verified schema and checksum |
 | installation.json | Same installation UUID/channel with state restore_pending |
 | operations.jsonl | Complete selected/current operation projection, including retained later facts |
-| restore.json | Format-1 prepared manifest; written last after data verification and flush |
+| restore.json | Format-2 prepared manifest with managed source binding; written last after data verification and flush |
 
 Each directory is mode 0700; files are owner-only regular single-link mode 0600. No-follow, bounded
 strict parsing, exact inventory, logical deadline and checksum checks apply. Checksums detect changed
 bytes; they do not replace the local owner's trust boundary. The manifest binds the original
 checkpoint, source-frontier digest, journal/identity hashes, total/current counts and position high-water.
+The source binding includes UUID/channel, source schema, selected generation or flat identity and
+canonical identity digest. Legacy format-1 preparations remain inspectable; prepare them again before
+activation. A bare explicit development database cannot provide managed activation authority.
 
 Managed startup and console attachment reject complete or journal-bearing partial candidates before
 creating runtime lock files. The blocked identity is written before database bytes, and both
@@ -68,8 +72,54 @@ An error or deadline after manifest publication reports uncertainty; inspect tha
 than retrying into it. Never claim that an output error proves no artifact was written.
 
 Preparation keeps checkpoint schema 1, 2, 3 or 4 unchanged. Later acknowledgements and rolled-away
-facts remain sealed in the journal until a future verified activation flow imports them. The current
-preparation command does not migrate or activate the candidate.
+facts remain sealed in the journal until activation imports them. Preparation alone does not migrate
+or activate the candidate.
+
+## Console activation and interruption recovery
+
+Stop the Domus runtime before preparation or activation. Run as its owning runtime UID. The console
+acquires both root leases exclusively, rereads the existing managed identity and validates the
+source read-only without migrating it. The snapshot and output parent must already be trusted and
+private. These commands work with the same managed-root protocol in native and standalone modes:
+
+```sh
+domus-admin --channel edge --data-directory /owned/domus \
+  restore prepare /owned/backups/manual-001 /owned/recovery/prepared-001
+domus-admin --channel edge --instance-id <persisted-installation-uuid> \
+  restore inspect /owned/recovery/prepared-001
+domus-admin --channel edge --data-directory /owned/domus \
+  restore activate /owned/recovery/prepared-001
+```
+
+Keep the returned restore ID. Activation rechecks the complete source frontier and generation before
+persisting a pending marker. That marker blocks all normal startup, including explicit-file bypass.
+Domus seals the input under activations/<id>/input, captures a verified pre-activation source snapshot
+under activations/<id>/source-checkpoint, and copies the checkpoint into generations/<id>. Migration
+and transactional history import affect only that new blocked target. Original source bytes remain
+unchanged. After verification and flushes, one atomic root installation.json replacement selects the
+new generation. A durable completion receipt precedes removal of the pending marker.
+
+```sh
+domus-admin --channel edge --data-directory /owned/domus restore status <restore-id>
+domus-admin --channel edge --data-directory /owned/domus restore resume <restore-id>
+```
+
+Status reports pending, active or historical. Active means this completed activation's generation is
+selected; subsequent business writes may exist. Historical means another generation is selected and
+retrying the old activation will not switch back. Completed status can be inspected alongside the
+runtime; pending inspection and all activation/resume operations require exclusive offline leases.
+
+An interrupted first input copy may require the exact original preparation: run activate with that
+same path again. Once the sealed input verifies, resume needs only its ID. Before selection it may
+rebuild a validated owned partial target; after selection it verifies and finishes that exact target.
+Unknown artifacts, changed source/bindings, conflicting receipts or altered materialized data block
+resume and retain evidence. An error after publication means uncertain completion, not proof that
+the pointer stayed unchanged. Inspect the same ID before retrying. Do not remove safety metadata.
+
+The retained source-checkpoint is a standard independently inspectable snapshot and a supported input
+for a new preparation. To reverse a restore, prepare from that checkpoint against the latest selected
+source, then activate the new restore ID. This reconciles operations performed since activation.
+Never reverse the root pointer manually: doing so would omit later receipts and recovery guards.
 
 ## Implemented runtime history
 
@@ -95,19 +145,20 @@ grant founder provenance. Restored consumed/canceled recovery has a separate ind
 approval cannot grant access under a new key, pending lists exclude it and target ownership precedes
 closure disclosure. An authorized original-key retry may still return its historical result.
 
-Before activation, remaining work must stop writes, prove the source binding is unchanged, apply
-the verified import/migration to a blocked candidate, switch durably and recover interruption with
-rollback data retained. Both deployment modes and the actual packaged SQLite still require restore
-acceptance. The owner's installed Edge.2 remains on schema 3; it was not updated to this code.
+The real offline activator now applies these rules, including repeated restoration and rollback
+using the latest history. Process-death and durable-boundary fault tests verify retained source,
+blocked partial startup and same-ID recovery. Both deployment packages and the actual packaged SQLite
+still require restore acceptance. The owner's installed Edge.2 remains on schema 3; it was not updated
+to this code.
 No automatic snapshot frequency or retention is selected. See
 [runtime history evidence](evidence/m1-runtime-history.json).
 
 Managed startup now also understands an explicit format-2 root generation selection while retaining
 flat format-1 compatibility. Each selected slot has bound identity and a marker that blocks direct
-slot startup; root leases still apply. Both composed APIs and snapshot/preparation fixtures exercise
-that layout. No production command publishes a new selection yet. This is a prerequisite for the
-future atomic switch, not completed activation. See [data layout](owned-data-directory.md) and
-[generation evidence](evidence/m1-generation-selection.json).
+slot startup; root leases still apply. Both composed APIs exercise actual activation and subsequent
+historical replay. See [data layout](owned-data-directory.md),
+[generation evidence](evidence/m1-generation-selection.json) and
+[offline activation evidence](evidence/m1-offline-activation.json).
 
 See the [complete restoration SDD](../specs/platform-restoration.md),
 [source-identified preparation evidence](evidence/m1-restoration-planning.json),

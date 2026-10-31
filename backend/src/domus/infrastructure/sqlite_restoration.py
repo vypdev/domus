@@ -33,6 +33,7 @@ from domus.infrastructure.owned_storage import (
     _identity,
     _write_identity,
 )
+from domus.infrastructure.restore_source import BoundFrontier, source_binding
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_history import encode_operation, iter_operations, last_committed_at
 from domus.infrastructure.sqlite_snapshots import (
@@ -187,20 +188,11 @@ class SQLiteRestorations:
         digest, size = _hash(target, _DATABASE, budget)
         if (digest, size) != (checkpoint.database_sha256, checkpoint.database_bytes):
             raise DatabaseRejected("snapshot_checksum_mismatch")
-        source_hash = hashlib.sha256(
-            JsonDocument.from_value(
-                {
-                    "instance_id": self.installation.instance_id,
-                    "channel": self.installation.channel,
-                    "schema_version": source_version,
-                }
-            ).encoded.encode("utf-8")
-        )
-
-        def frontier() -> Iterator[RetainedOperation]:
-            for item in _operations(current, budget):
-                source_hash.update(_encoded(item))
-                yield item
+        with _directory(
+            cast(SQLiteDatabase, self.database).path.parent, private=False
+        ) as source_dir:
+            binding = source_binding(source_dir, self.installation, source_version)
+        frontier = BoundFrontier(current, binding, budget.check)
 
         journal_hash = hashlib.sha256()
         count = active = highwater = 0
@@ -210,7 +202,7 @@ class SQLiteRestorations:
             descriptor = _file(target, _OPERATIONS, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             with os.fdopen(descriptor, "wb") as output:
                 for item in reconcile_operations(
-                    _operations(selected, budget), frontier(), restore_id
+                    _operations(selected, budget), frontier, restore_id
                 ):
                     budget.check()
                     encoded = _encoded(item)
@@ -225,13 +217,14 @@ class SQLiteRestorations:
         result = PreparedRestoration(
             restore_id,
             checkpoint,
-            source_hash.hexdigest(),
+            frontier.fingerprint(),
             journal_hash.hexdigest(),
             identity_hash,
             count,
             active,
             highwater,
             self.clock.now(),
+            binding,
         )
         budget.check()
         descriptor = _file(target, RESTORE_MANIFEST, os.O_CREAT | os.O_EXCL | os.O_WRONLY)

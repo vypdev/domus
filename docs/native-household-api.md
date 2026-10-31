@@ -8,7 +8,7 @@ Automatic identity and private data use the [owned lifecycle](owned-data-directo
 
 The installed Edge.2 pin remains on schema 3. The new schema-4 runtime tests additionally exercise
 historical replay, suppressed delivery and recovery closure through this same native composition.
-That new code is not yet packaged or installed; verified offline restoration and full acceptance
+That new code is not yet packaged or installed; offline restoration is tested locally and full acceptance
 remain pending. See [history boundaries](restoration.md).
 
 ## Authentication and session binding

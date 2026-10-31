@@ -90,7 +90,8 @@ apply. Operation queries report delivery=suppressed for historical undelivered e
 if acknowledgement genuinely occurred. Current operations retain pending/delivered and may include
 first archive provenance when selected again. Historical setup does not create a household, and
 consumed/canceled recovery cannot reuse an old approval under a new key. These are exercised with
-synthetic offline state in both HTTP compositions; a production restore command is not exposed yet.
+both synthetic fixtures and real offline activations in both HTTP compositions. The installation
+console exposes restore preparation/activation/resume; actual package acceptance remains pending.
 
 ## HA availability and remaining deployment work
 

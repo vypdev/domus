@@ -39,11 +39,11 @@ Schema 4 permits historical facts to outlive a current household without recreat
 Its separate infrastructure-only import preserves current acknowledgements and the global outbox
 sequence, validates complete retained history and rolls back its savepoint on failure. New snapshots
 include that history. [Runtime lookup and recovery guards](restoration.md) are tested through both
-APIs; verified offline activation is still pending. The schema-3 fixture was captured from
+APIs and actual offline activations; packaged restore acceptance is still pending. The schema-3 fixture was captured from
 002a982ee60b8aa22a707de402ab1e8fc0306be5 before changing the schema, independently of new constants.
 
 Rollback needs a compatible application/database pair. Never run an older application on schema 4
 or decrement `user_version` manually. [Snapshot creation/inspection](snapshots.md) is implemented;
-restore and verified activation to a new
-same-installation/channel directory, destructive-upgrade backups, package hooks and operational
+offline restoration to a verified same-installation/channel generation is implemented locally.
+Actual-image restore, destructive-upgrade backups, package hooks and operational
 recovery/retention acceptance remain pending in the [M1 companion](../specs/platform-foundation-identity-sqlite.md).

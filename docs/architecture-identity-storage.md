@@ -59,8 +59,8 @@ The path-free GenerationSelection value adds strict version-2 root metadata. Man
 selects only its private bound slot after rereading selection under the root leases; legacy flat
 data stays readable but cannot override a selected generation. Slots reject direct lifecycle and
 explicit-file bypass. Blocked restore identity now precedes database copying, and every managed
-identity/journal signal blocks direct startup. No production writer publishes generations yet;
-offline activation and interruption recovery remain pending. See
+identity/journal signal blocks direct startup. The offline console now publishes only a bound,
+verified target under exclusive root leases and resumes its durable transition. See
 [generation evidence](evidence/m1-generation-selection.json).
 
 Schema 2 added uniquely linked members and revisioned household policy. Its explicit additive
@@ -88,8 +88,9 @@ lookup. An infrastructure-only transactional import preserves acknowledgements, 
 and first archive provenance. Current authority still precedes replay/disclosure, and indexed recovery
 closure guards prevent old approvals from granting access again. Both APIs distinguish historical
 results and suppressed delivery; current setup provenance reads only current audit. Verified offline
-activation remains pending. See
-[preparation boundaries](restoration.md) and the [complete SDD](../specs/platform-restoration.md).
+activation now has real local console, fault, frozen-schema and both-composition tests; package and
+owner acceptance remain pending. See
+[restoration boundaries](restoration.md) and the [complete SDD](../specs/platform-restoration.md).
 
 One household per installation is reinforced by a singleton constraint. Household writes compare
 the expected revision, and other input values use parameterized SQL. Outbox acknowledgements are

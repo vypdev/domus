@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from typing import cast
 
 from domus.domain.errors import InvalidInput
 from domus.domain.storage import Installation, JsonDocument, validate_identifier
@@ -58,3 +59,26 @@ class Snapshot:
                 "identity_sha256": self.identity_sha256,
             }
         )
+
+    @classmethod
+    def from_value(cls, value: object) -> Snapshot:
+        if type(value) is not dict:
+            raise InvalidInput("invalid_snapshot")
+        data = cast(dict[str, object], value)
+        try:
+            result = cls(
+                cast(str, data["snapshot_id"]),
+                Installation(cast(str, data["instance_id"]), cast(str, data["channel"])),
+                cast(int, data["schema_version"]),
+                cast(int, data["captured_at"]),
+                cast(int | None, data["last_committed_at"]),
+                cast(str, data["database_sha256"]),
+                cast(int, data["database_bytes"]),
+                cast(str, data["identity_sha256"]),
+                cast(int, data["format_version"]),
+            )
+            if result.document().decode() != data:
+                raise InvalidInput("invalid_snapshot")
+            return result
+        except KeyError:
+            raise InvalidInput("invalid_snapshot") from None

@@ -214,6 +214,59 @@ def reconcile_operations(
 
 
 @dataclass(frozen=True, slots=True)
+class RestoreSource:
+    installation: Installation
+    schema_version: int
+    generation_id: str | None
+    identity_sha256: str | None
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.installation, Installation)
+            or type(self.schema_version) is not int
+            or not 1 <= self.schema_version <= 2**31 - 1
+            or (self.generation_id is not None and self.identity_sha256 is None)
+        ):
+            raise InvalidInput("invalid_restore_source")
+        if self.generation_id is not None:
+            validate_identifier(self.generation_id)
+        if self.identity_sha256 is not None and (
+            type(self.identity_sha256) is not str
+            or not re.fullmatch(r"[a-f0-9]{64}", self.identity_sha256)
+        ):
+            raise InvalidInput("invalid_restore_source")
+
+    def document(self) -> JsonDocument:
+        return JsonDocument.from_value(
+            {
+                "instance_id": self.installation.instance_id,
+                "channel": self.installation.channel,
+                "schema_version": self.schema_version,
+                "generation_id": self.generation_id,
+                "identity_sha256": self.identity_sha256,
+            }
+        )
+
+    @classmethod
+    def from_value(cls, value: object) -> RestoreSource:
+        if type(value) is not dict or set(value) != {
+            "instance_id",
+            "channel",
+            "schema_version",
+            "generation_id",
+            "identity_sha256",
+        }:
+            raise InvalidInput("invalid_restore_source")
+        data = cast(dict[str, object], value)
+        return cls(
+            Installation(cast(str, data["instance_id"]), cast(str, data["channel"])),
+            cast(int, data["schema_version"]),
+            cast(str | None, data["generation_id"]),
+            cast(str | None, data["identity_sha256"]),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class PreparedRestoration:
     restore_id: str
     checkpoint: Snapshot
@@ -224,11 +277,19 @@ class PreparedRestoration:
     current_operations: int
     highwater: int
     prepared_at: int
+    source: RestoreSource | None = None
 
     def __post_init__(self) -> None:
         validate_identifier(self.restore_id)
         if (
             not isinstance(self.checkpoint, Snapshot)
+            or (
+                self.source is not None
+                and (
+                    not isinstance(self.source, RestoreSource)
+                    or self.source.installation != self.installation
+                )
+            )
             or any(
                 type(value) is not int or not 0 <= value <= 2**63 - 1
                 for value in (
@@ -252,21 +313,22 @@ class PreparedRestoration:
         return self.checkpoint.installation
 
     def document(self) -> JsonDocument:
-        return JsonDocument.from_value(
-            {
-                "format_version": 1,
-                "state": "prepared",
-                "restore_id": self.restore_id,
-                "checkpoint": self.checkpoint.document().decode(),
-                "source_frontier_sha256": self.source_frontier_sha256,
-                "operations_sha256": self.operations_sha256,
-                "identity_sha256": self.identity_sha256,
-                "operation_count": self.operation_count,
-                "current_operations": self.current_operations,
-                "highwater": self.highwater,
-                "prepared_at": self.prepared_at,
-            }
-        )
+        value: JsonObject = {
+            "format_version": 2 if self.source is not None else 1,
+            "state": "prepared",
+            "restore_id": self.restore_id,
+            "checkpoint": self.checkpoint.document().decode(),
+            "source_frontier_sha256": self.source_frontier_sha256,
+            "operations_sha256": self.operations_sha256,
+            "identity_sha256": self.identity_sha256,
+            "operation_count": self.operation_count,
+            "current_operations": self.current_operations,
+            "highwater": self.highwater,
+            "prepared_at": self.prepared_at,
+        }
+        if self.source is not None:
+            value["source"] = self.source.document().decode()
+        return JsonDocument.from_value(value)
 
     @classmethod
     def from_value(cls, value: object) -> PreparedRestoration:
@@ -274,7 +336,7 @@ class PreparedRestoration:
             raise InvalidInput("invalid_restore_preparation")
         data = cast(dict[str, object], value)
         try:
-            if type(data["format_version"]) is not int or data["format_version"] != 1:
+            if type(data["format_version"]) is not int or data["format_version"] not in (1, 2):
                 raise InvalidInput("invalid_restore_preparation")
             snapshot = data["checkpoint"]
             if type(snapshot) is not dict:
@@ -301,6 +363,7 @@ class PreparedRestoration:
                 cast(int, data["current_operations"]),
                 cast(int, data["highwater"]),
                 cast(int, data["prepared_at"]),
+                RestoreSource.from_value(data["source"]) if data["format_version"] == 2 else None,
             )
             if result.document().decode() != data:
                 raise InvalidInput("invalid_restore_preparation")

@@ -23,8 +23,11 @@ the tested SQLite transaction kernel, semantic ports, separate backend coverage 
 The next checkpoint adds pure identity/permission rules, current local authorization, uniquely linked
 member/policy storage, schema 2 migration and bounded session leases. HA protocol adapters now have
 provider/loopback evidence. Standalone browser/session authentication and its HTTP/CLI entrypoints
-now have executable offline coverage. Membership use cases, recovery, snapshots,
-business HTTP/console entrypoints and deployment acceptance remain
-incomplete M1 work; the source checkpoint does not complete M1 or change first-release scope.
+now have executable offline coverage. Membership/policy and recovery use cases, manual snapshots,
+business HTTP/console entrypoints and verified offline restore/resume/rollback are implemented and
+tested locally. Persistent Edge.2 has bounded owner startup/reload/restart acceptance. Restore on
+actual images/deployments, product UI, live household/recovery, standalone companion/browser and full
+channel/release acceptance remain M1 work. These source checkpoints do not complete M1 or reduce
+first-release scope.
 Release, merge and deployment require the existing maintainer flow and explicit authorization.
 Future optional depth includes predictive consumption, workload recommendations, rich rewards and external calendars.

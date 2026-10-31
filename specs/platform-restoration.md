@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-31
 - Catalog capability ID: platform-foundation
-- Last verified: 2026-10-31; local reconciliation, history and generation startup; activation pending
+- Last verified: 2026-10-31; local offline activation/resume and both compositions; package acceptance pending
 - Owners: Domus maintainers
 - Scope: complete M1 snapshot restoration with retained replay evidence, explicit preparation and verified offline activation.
 - Related issues/PRs: [Issue #6](https://github.com/vypdev/domus/issues/6), [PR #7](https://github.com/vypdev/domus/pull/7)
@@ -227,15 +227,44 @@ explicit-file startup of a slot is refused. Missing, foreign, pending or unsafe 
 an empty database or another identity. Old flat data may remain as retained rollback evidence but
 cannot override a format-2 selection.
 
-This permits a future activator to materialize and verify a new private slot inside the existing
-owned root, flush it and atomically publish one root pointer last. The native runtime need not rename
-root-owned /data siblings or gain privileges. Startup support alone does not authorize or implement
-publication. Source-generation binding, stopped-write verification, durable transition status,
-interruption recovery and complete CLI/package acceptance remain required before activation.
+The offline activator materializes and verifies a new private slot inside the existing owned root,
+flushes it and atomically publishes one root pointer last. The native runtime need not rename
+root-owned /data siblings or gain privileges. Source binding, exclusive stopped-write verification,
+durable transition status and interruption recovery now have executable console/local evidence.
+Actual package and complete deployment acceptance remain required.
 
 Prepared restore identity must be written before database bytes. All managed signals, including a
 journal without the final manifest or a generation marker without the normal identity, block explicit
 file bypass. A rejected start must not add lock files to a blocked candidate.
+
+### Offline activation and recovery protocol
+
+New preparations use format 2 with an explicit source binding: installation/channel, source schema,
+selected generation or flat state and canonical managed identity digest. The complete operation
+frontier digest includes this binding. Legacy format-1 preparations remain inspectable but lack the
+binding required for publication; re-prepare them. Bare explicit development files remain usable for
+preparation/inspection; production activation requires an existing managed root in either mode.
+
+An offline capability acquires both the installation runtime lease and maintenance lease exclusively,
+then rereads existing ready identity/selection and validates the source read-only without migration.
+Neither ordinary shared console attachment nor a caller-supplied boolean grants this capability.
+
+Activation validates the selected bound preparation and unchanged source before publishing a durable
+pending transition. This marker blocks all normal startup. Retain a sealed input in private root
+activation storage, capture a verified pre-activation source snapshot, and materialize a new blocked
+target slot; migrate/import only that target. The source snapshot is a supported rollback checkpoint,
+still reconciled against latest history before any later activation. Verify final
+identity, schema, history, counts and hashes, then flush all files/directories. Publish the one root
+selection atomically last, persist the completion receipt and retire the pending marker only after
+the selected result is proven. Old source data remains recoverable, including flat source files.
+
+Resume uses the same bound transition and sealed input. Before pointer publication it rechecks source
+and may rebuild only a validated, owned, unselected partial target from the sealed input. After pointer
+publication it verifies the selected complete target and finishes that exact transition; it cannot
+silently choose the old source, another input or another generation. Errors after publication preserve
+uncertainty. Inspect distinguishes pending, selected active and previously activated historical state.
+Repeated activation never switches back after a newer transition. Rollback also reconciles the latest
+history; retaining old files is not permission to drop guards or run an incompatible older image.
 
 ### 8.3 Executable architecture constraints
 
@@ -362,6 +391,21 @@ Planned file footprint (implementation is staged; presence is not completion):
 | `backend/src/domus/infrastructure/owned_storage.py` | update |
 | `docs/owned-data-directory.md` | update |
 | `backend/src/domus/domain/generations.py` | create |
+| `backend/src/domus/domain/activation.py` | create |
+| `backend/src/domus/domain/snapshots.py` | update |
+| `backend/src/domus/application/activation.py` | create |
+| `backend/src/domus/composition/restore.py` | create |
+| `backend/src/domus/infrastructure/restore_source.py` | create |
+| `backend/src/domus/infrastructure/offline_storage.py` | create |
+| `backend/src/domus/infrastructure/sqlite_activation.py` | create |
+| `tests/backend/test_restore_source.py` | create |
+| `tests/backend/test_offline_storage.py` | create |
+| `tests/backend/test_activation_values.py` | create |
+| `tests/backend/test_sqlite_activation.py` | create |
+| `tests/backend/test_activation_failures.py` | create |
+| `tests/backend/test_activation_compatibility.py` | create |
+| `tests/backend/test_activation_console.py` | create |
+| `docs/evidence/m1-offline-activation.json` | create |
 | `tests/backend/test_generation_values.py` | create |
 | `tests/backend/test_owned_generations.py` | create |
 | `docs/evidence/m1-generation-selection.json` | create |
