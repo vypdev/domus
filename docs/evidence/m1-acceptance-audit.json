@@ -1021,5 +1021,12 @@
     "tests/backend/test_response_readability.py": "2cbc02a1823bc001f4a0dae42d8f37d4922d01fb2b822710ceafbc889e845731",
     "docs/contracts/household-api.openapi.json": "908ec8ba85db2beb0586261ee1731721dbfae3412fea2f9e6ea92d406d36ecce",
     "docs/contracts/native-household-api.openapi.json": "e6e4d5236e869e9b58c7f5551f1cdbd9dc95123681e124b93c474c796bace664"
+  },
+  "historicalEvidence": {
+    "verifiedSourceHead": "ead7dde44f57d32d5a42797a811e798d92b36a89",
+    "meaning": "All measurements, schema numbers, assertions and sourceSha256 values describe this exact historical source tree, not a later reviewed head. The pre-change sourceBase remains provenance of the preparation baseline.",
+    "verification": "Every recorded sourceSha256 was checked against git show <verifiedSourceHead>:<path>; all match. Original measurements and digests are retained unchanged.",
+    "currentEvidence": "docs/evidence/m1-review-fixes.json",
+    "currentGuide": "docs/m1-acceptance-audit.md"
   }
 }

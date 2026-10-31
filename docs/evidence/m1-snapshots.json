@@ -83,5 +83,12 @@
     "tests/backend/test_snapshot_commands.py": "1b4a41f183cb687fc9c43d605eed3abe75afa1a5d454bc458620035afdada988",
     "tests/backend/test_sqlite_snapshots.py": "e1b2d89dbfa47986c2c71c3c270232e66fc06e0f549f295311993c2434b20a04",
     "tests/backend/test_snapshot_console.py": "60dcbd33dc5e60037b6e4c74f9985b538be3ca3f877a34c2be4561ee5baf95ea"
+  },
+  "historicalEvidence": {
+    "verifiedSourceHead": "f9220511448d87bf8766ead2d677b5cd88c8e91b",
+    "meaning": "All measurements, schema numbers, assertions and sourceSha256 values describe this exact historical source tree, not a later reviewed head. The pre-change sourceBase remains provenance of the preparation baseline.",
+    "verification": "Every recorded sourceSha256 was checked against git show <verifiedSourceHead>:<path>; all match. Original measurements and digests are retained unchanged.",
+    "currentEvidence": "docs/evidence/m1-review-fixes.json",
+    "currentGuide": "docs/snapshots.md"
   }
 }
