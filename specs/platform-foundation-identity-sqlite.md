@@ -384,7 +384,7 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `backend/src/domus/domain/__init__.py` | create |
 | `backend/src/domus/domain/errors.py` | create |
 | `backend/src/domus/domain/identity.py` | create |
-| `backend/src/domus/domain/sessions.py` | create |
+| `backend/src/domus/application/session_values.py` | create |
 | `backend/src/domus/domain/storage.py` | create |
 | `backend/src/domus/entrypoints/__init__.py` | create |
 | `backend/src/domus/infrastructure/__init__.py` | create |
@@ -422,6 +422,23 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `docs/sdd-validation.md` | update |
 | `specs/catalog.json` | update |
 | `specs/CATALOG.md` | update |
+| `backend/src/domus/application/authentication.py` | create |
+| `backend/src/domus/application/authentication_values.py` | create |
+| `backend/src/domus/composition/server.py` | create |
+| `backend/src/domus/entrypoints/http.py` | create |
+| `backend/src/domus/infrastructure/auth_runtime.py` | create |
+| `backend/src/domus/infrastructure/memory_attempts.py` | create |
+| `backend/src/domus/infrastructure/standalone_sessions.py` | create |
+| `tests/backend/test_authentication_flow.py` | create |
+| `tests/backend/test_standalone_sessions.py` | create |
+| `tests/backend/test_auth_http.py` | create |
+| `tests/backend/test_auth_runtime.py` | create |
+| `tests/backend/test_auth_server.py` | create |
+| `docs/contracts/auth-api.openapi.json` | create |
+| `docs/evidence/m1-standalone-auth.json` | create |
+| `architecture/python-application.ini` | update |
+| `tests/architecture/test_python_architecture.py` | update |
+| `README.md` | update |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -498,3 +515,9 @@ The next checkpoint supplies pure eligible-human/mapping/permission rules, curre
 ### HA protocol adapter checkpoint — 2026-10-31
 
 Fixed operator endpoints, bounded OAuth form transport, correlated WebSocket current-user/directory proof and the Supervisor peer/subject boundary are implemented. Standalone proof requires a server-exchanged client grant: Core rejects system users for client-bound refresh tokens and checks active users during authentication. Directory proof checks exact boolean owner/active/system flags and administrator group IDs. Real loopback client fixtures include redirect refusal and cleanup; they do not establish authentication on the owner's HA. Browser state/PKCE attempt/session wiring, membership commands, recovery, snapshots, API/console and package/live acceptance remain pending. See [protocol boundaries](../docs/ha-identity-protocol.md) and [identified evidence](../docs/evidence/m1-ha-protocol.json).
+
+### Standalone authentication API/CLI checkpoint — 2026-10-31
+
+The browser flow, strict API and standalone CLI now compose the tested adapters. Five-minute state/PKCE/browser-bound attempts are single use; private credentials remain bounded process memory; session deadlines do not extend on refresh or outage. Ephemeral authentication/session contracts belong to application, outside household domain entities. Cookies, exact Origin, session-bound CSRF, bounded HTTP input and safe errors are tested, including concurrent callbacks, logout, shutdown and partial upstream cleanup. Unknown remote revocation is null, never invented success.
+
+The actual OpenAPI covers auth start/callback/logout/CSRF and own session; full household/member/policy/operation/recovery routes remain pending. See [user identity](../docs/identity-household.md), [configuration](../docs/configuration.md), [operations](../docs/operations-identity-storage.md), [OpenAPI](../docs/contracts/auth-api.openapi.json) and [identified evidence](../docs/evidence/m1-standalone-auth.json). Supervisor session/private-listener wiring, recovery, snapshots and exact live/package/channel acceptance remain outstanding. No household setup, release or completed M1 is claimed.

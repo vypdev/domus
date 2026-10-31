@@ -15,7 +15,10 @@
       "workflows": [
         ".github/workflows/ci_check.yml"
       ],
-      "entrypoints": [],
+      "entrypoints": [
+        "backend/src/domus/composition/server.py",
+        "backend/src/domus/entrypoints/http.py"
+      ],
       "code": [
         "backend/src/domus/domain/errors.py",
         "backend/src/domus/domain/storage.py",
@@ -23,7 +26,6 @@
         "backend/src/domus/application/commands.py",
         "backend/src/domus/infrastructure/sqlite.py",
         "backend/src/domus/domain/identity.py",
-        "backend/src/domus/domain/sessions.py",
         "backend/src/domus/application/authorization.py",
         "backend/src/domus/application/identity_ports.py",
         "backend/src/domus/application/sessions.py",
@@ -32,7 +34,15 @@
         "backend/src/domus/infrastructure/ha_config.py",
         "backend/src/domus/infrastructure/ha_http.py",
         "backend/src/domus/infrastructure/ha_websocket.py",
-        "backend/src/domus/infrastructure/ha_ingress.py"
+        "backend/src/domus/infrastructure/ha_ingress.py",
+        "backend/src/domus/application/authentication.py",
+        "backend/src/domus/application/authentication_values.py",
+        "backend/src/domus/composition/server.py",
+        "backend/src/domus/entrypoints/http.py",
+        "backend/src/domus/infrastructure/auth_runtime.py",
+        "backend/src/domus/infrastructure/memory_attempts.py",
+        "backend/src/domus/infrastructure/standalone_sessions.py",
+        "backend/src/domus/application/session_values.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -44,7 +54,12 @@
         "tests/backend/test_sqlite_identity.py",
         "tests/backend/test_ha_http.py",
         "tests/backend/test_ha_websocket.py",
-        "tests/backend/test_ha_ingress.py"
+        "tests/backend/test_ha_ingress.py",
+        "tests/backend/test_authentication_flow.py",
+        "tests/backend/test_standalone_sessions.py",
+        "tests/backend/test_auth_http.py",
+        "tests/backend/test_auth_runtime.py",
+        "tests/backend/test_auth_server.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -56,12 +71,16 @@
         "docs/development.md",
         "docs/compatibility-home-assistant.md",
         "docs/migrations-identity-storage.md",
-        "docs/ha-identity-protocol.md"
+        "docs/ha-identity-protocol.md",
+        "docs/identity-household.md",
+        "docs/configuration.md",
+        "docs/operations-identity-storage.md",
+        "docs/contracts/auth-api.openapi.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: tested storage, pure policy, local authority, session leases and HA protocol adapters; complete browser/household/recovery journeys pending",
-        "blockingDecisions": "Complete browser state/PKCE/session and member command wiring; console recovery, snapshots, strict API/console contracts and exact live/package/channel acceptance remain pending. Offline protocol fixtures do not establish live identity or packaged trust boundaries.",
+        "implementationEvidence": "partial: tested storage/policy, HA adapters and standalone browser authentication API/CLI; household commands, recovery, snapshots and Supervisor/live/package acceptance pending",
+        "blockingDecisions": "Complete household/member/policy/operation/recovery surfaces, console approval, snapshots, Supervisor session/private listener and exact live/package/channel acceptance remain pending. Current auth wiring has offline contract evidence, not an owner-HA login or complete M1 acceptance.",
         "copilotChangesAllowed": false
       }
     },
@@ -76,10 +95,12 @@
         "specs/household-identity.md"
       ],
       "workflows": [],
-      "entrypoints": [],
+      "entrypoints": [
+        "backend/src/domus/composition/server.py",
+        "backend/src/domus/entrypoints/http.py"
+      ],
       "code": [
         "backend/src/domus/domain/identity.py",
-        "backend/src/domus/domain/sessions.py",
         "backend/src/domus/application/authorization.py",
         "backend/src/domus/application/identity_ports.py",
         "backend/src/domus/application/sessions.py",
@@ -88,7 +109,15 @@
         "backend/src/domus/infrastructure/ha_config.py",
         "backend/src/domus/infrastructure/ha_http.py",
         "backend/src/domus/infrastructure/ha_websocket.py",
-        "backend/src/domus/infrastructure/ha_ingress.py"
+        "backend/src/domus/infrastructure/ha_ingress.py",
+        "backend/src/domus/application/authentication.py",
+        "backend/src/domus/application/authentication_values.py",
+        "backend/src/domus/composition/server.py",
+        "backend/src/domus/entrypoints/http.py",
+        "backend/src/domus/infrastructure/auth_runtime.py",
+        "backend/src/domus/infrastructure/memory_attempts.py",
+        "backend/src/domus/infrastructure/standalone_sessions.py",
+        "backend/src/domus/application/session_values.py"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -97,7 +126,12 @@
         "tests/backend/test_sqlite_identity.py",
         "tests/backend/test_ha_http.py",
         "tests/backend/test_ha_websocket.py",
-        "tests/backend/test_ha_ingress.py"
+        "tests/backend/test_ha_ingress.py",
+        "tests/backend/test_authentication_flow.py",
+        "tests/backend/test_standalone_sessions.py",
+        "tests/backend/test_auth_http.py",
+        "tests/backend/test_auth_runtime.py",
+        "tests/backend/test_auth_server.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -107,12 +141,16 @@
         "docs/contracts/home-assistant.md",
         "docs/architecture-identity-storage.md",
         "docs/migrations-identity-storage.md",
-        "docs/ha-identity-protocol.md"
+        "docs/ha-identity-protocol.md",
+        "docs/identity-household.md",
+        "docs/configuration.md",
+        "docs/operations-identity-storage.md",
+        "docs/contracts/auth-api.openapi.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: tested storage, pure policy, local authority, session leases and HA protocol adapters; complete browser/household/recovery journeys pending",
-        "blockingDecisions": "Complete browser state/PKCE/session and member command wiring; console recovery, snapshots, strict API/console contracts and exact live/package/channel acceptance remain pending. Offline protocol fixtures do not establish live identity or packaged trust boundaries.",
+        "implementationEvidence": "partial: tested storage/policy, HA adapters and standalone browser authentication API/CLI; household commands, recovery, snapshots and Supervisor/live/package acceptance pending",
+        "blockingDecisions": "Complete household/member/policy/operation/recovery surfaces, console approval, snapshots, Supervisor session/private listener and exact live/package/channel acceptance remain pending. Current auth wiring has offline contract evidence, not an owner-HA login or complete M1 acceptance.",
         "copilotChangesAllowed": false
       }
     },

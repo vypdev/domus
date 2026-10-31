@@ -55,6 +55,7 @@ files = ["tooling"]
 [dependency-groups]
 dev = [
     "hatchling==1.33.0",
+    "httpx2==2.16.0",
     "import-linter==2.15",
     "mypy==2.4.1",
     "pytest==9.2.0",

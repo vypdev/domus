@@ -2,15 +2,22 @@
 
 from dataclasses import dataclass
 
-from domus.application.identity_ports import LeaseClock, LiveIdentity, SessionLeases
+from domus.application.identity_ports import LeaseClock, LiveIdentity, SessionAccess
+from domus.application.session_values import SessionLease
 from domus.domain.errors import IdentityRejected, IdentityUnavailable, Unauthenticated
 from domus.domain.identity import HumanIdentity
-from domus.domain.sessions import SessionLease
+
+
+@dataclass(frozen=True, slots=True)
+class SessionStatus:
+    human: HumanIdentity
+    fresh: bool
+    expires_at: int
 
 
 @dataclass
 class SessionGuard:
-    sessions: SessionLeases
+    sessions: SessionAccess
     identity: LiveIdentity
     clock: LeaseClock
 
@@ -19,17 +26,19 @@ class SessionGuard:
             self.sessions.remove(lease.session_id)
             raise Unauthenticated("session_expired")
 
-    def _prove(self, session_id: str, *, write: bool) -> HumanIdentity:
+    def _prove(self, session_id: str, *, write: bool) -> SessionStatus:
         lease = self.sessions.get(session_id)
         if lease is None:
             raise Unauthenticated("session_required")
         self._require_time(lease)
+        fresh = True
         try:
             human = self.identity.prove(session_id)
         except IdentityUnavailable:
             if write:
                 raise
             human = lease.human
+            fresh = False
         except Unauthenticated:
             self.sessions.remove(session_id)
             raise
@@ -39,10 +48,13 @@ class SessionGuard:
             raise IdentityRejected("identity_mismatch")
         if not self.sessions.refresh(lease, human):
             raise Unauthenticated("session_changed")
-        return human
+        return SessionStatus(human, fresh, lease.expires_at)
 
     def read(self, session_id: str) -> HumanIdentity:
-        return self._prove(session_id, write=False)
+        return self._prove(session_id, write=False).human
 
     def write(self, session_id: str) -> HumanIdentity:
-        return self._prove(session_id, write=True)
+        return self._prove(session_id, write=True).human
+
+    def status(self, session_id: str) -> SessionStatus:
+        return self._prove(session_id, write=False)

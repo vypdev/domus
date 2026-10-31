@@ -3,9 +3,9 @@
 from dataclasses import replace
 from threading import Lock
 
+from domus.application.session_values import SessionLease
 from domus.domain.errors import Conflict, IdentityUnavailable, InvalidInput
 from domus.domain.identity import HumanIdentity
-from domus.domain.sessions import SessionLease
 
 
 class MemorySessions:

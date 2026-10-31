@@ -1,8 +1,9 @@
 # HA identity protocol adapters
 
 Status: fixed endpoint configuration, OAuth form transport, correlated WebSocket proof and the
-Supervisor identity boundary are implemented as adapters. Authentication entrypoints, bounded
-single-use browser attempts, credential/session wiring and live/package acceptance remain pending.
+Supervisor identity boundary are implemented as adapters. Standalone authentication now has bounded
+browser attempts, private session wiring and strict API/CLI entrypoints. Live/package acceptance,
+Supervisor session/listener wiring and complete household commands remain pending.
 Do not expose these private adapters directly as endpoints that accept a submitted token or actor.
 
 ## Standalone
@@ -19,9 +20,10 @@ client ID and S256 verifier. Refresh uses the same client ID; revoke uses `/auth
 adapter disables redirects and environment proxies, retains TLS verification, refuses unsolicited
 content encoding, bounds decoded responses and redacts transport errors/token representations.
 
-The next browser/application boundary must issue and atomically consume state, PKCE and a browser-bound
-attempt, perform Origin/CSRF validation, retain credentials privately in memory and issue a bounded
-server-owned session. There is no caller-supplied bearer-token login route in this checkpoint.
+The browser/application boundary atomically consumes state, PKCE and a browser-bound attempt,
+performs Origin/CSRF validation, retains credentials privately in memory and issues a bounded
+server-owned session. There is no caller-supplied bearer-token login route. See the implemented
+[identity journey](identity-household.md) and [operator contract](operations-identity-storage.md).
 
 `auth/current_user` proves the exact user ID and exact boolean administrator flag. Its schema does
 not contain active/system-generated flags. The adapter therefore requires a server-exchanged

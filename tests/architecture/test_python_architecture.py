@@ -60,10 +60,34 @@ def test_inner_layer_cannot_import_infrastructure(tmp_path: Path, layer: str) ->
 
 
 @pytest.mark.parametrize(
-    "dependency", ["fastapi", "homeassistant", "httpx", "sqlite3", "sqlalchemy"]
+    "dependency",
+    [
+        "fastapi",
+        "homeassistant",
+        "httpx",
+        "httpx2",
+        "websockets",
+        "uvicorn",
+        "starlette",
+        "pydantic",
+        "requests",
+        "sqlite3",
+        "sqlalchemy",
+        "subprocess",
+        "asyncio",
+        "time",
+        "secrets",
+        "pathlib",
+        "os",
+    ],
 )
-def test_inner_framework_or_io_dependency_is_rejected(tmp_path: Path, dependency: str) -> None:
-    result = check(tmp_path, {"domain/invalid.py": f"import {dependency}\n"})
+@pytest.mark.parametrize("layer", ["domain", "application"])
+def test_inner_framework_or_io_dependency_is_rejected(
+    tmp_path: Path,
+    dependency: str,
+    layer: str,
+) -> None:
+    result = check(tmp_path, {f"{layer}/invalid.py": f"import {dependency}\n"})
     assert result.returncode != 0
     assert "Domain and application exclude concrete frameworks and I/O BROKEN" in result.stdout
 

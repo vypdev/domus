@@ -1,4 +1,4 @@
-"""Nonpersistent session metadata uses monotonic deadlines, never browser claims."""
+"""Private application session metadata uses monotonic deadlines, never browser claims."""
 
 from dataclasses import dataclass, field
 

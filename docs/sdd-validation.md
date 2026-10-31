@@ -83,8 +83,10 @@ remain historical evidence.
 The normal issue #6 workflow published the [companion](../specs/platform-foundation-identity-sqlite.md)
 at commit 3fdf4f841e7e2f6d37f8ebfd4b8d80f1ce90090f, verified the exact remote branch and applied
 branched. The original platform and identity owners were preserved. Current platform evidence describes
-the partial storage, pure policy, local authorization and session-lease checkpoints; HA protocols,
-complete membership commands, API, recovery and target acceptance remain pending.
+the partial storage, pure policy, local authorization, session-lease and HA protocol checkpoints.
+Standalone authentication now has HTTP/CLI wiring and offline browser/session fixtures; complete
+membership commands, business API, recovery and target acceptance remain pending.
 See [storage evidence](evidence/m1-storage-kernel.json) and
-[identity-policy evidence](evidence/m1-identity-policy.json). Copilot and its installed resources remain
+[identity-policy evidence](evidence/m1-identity-policy.json) and
+[standalone authentication evidence](evidence/m1-standalone-auth.json). Copilot and its installed resources remain
 unchanged, and no manual branch exception was executed.

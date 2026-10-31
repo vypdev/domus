@@ -3,8 +3,8 @@
 The documentation foundation was merged through [PR #3](https://github.com/vypdev/domus/pull/3).
 [Issue #4](https://github.com/vypdev/domus/issues/4) starts M1 with real development tooling, tests and CI.
 The issue #6 checkpoints introduce storage, pure identity policy, local authorization and session leases.
-HA protocol adapters now have provider/loopback tests. Browser authentication/session wiring,
-membership use cases, product UI, packages and channels remain pending.
+HA protocol adapters have provider/loopback tests and the standalone authentication API/CLI is wired.
+Membership commands, product UI, Supervisor runtime, packages and channels remain pending.
 
 ## Reproduce the environment
 
@@ -104,7 +104,7 @@ empty implementation evidence. Reviewed Copilot v3 revision
 [issue #777](https://github.com/vypdev/copilot/issues/777): truthful proposed capabilities may retain
 empty implementation arrays. The current original validator accepts the catalog without changing
 Copilot or manufacturing paths. Historical failure reports remain historical evidence.
-The entire delivery-quality capability still needs application coverage, real deployment/HA adapter
+The entire delivery-quality capability still needs complete application/UI coverage, real deployment/HA
 contracts, Stable/Edge isolation and controlled Chrome evidence before acceptance.
 
 The storage checkpoint has its own [architecture and limits](architecture-identity-storage.md),
@@ -121,3 +121,12 @@ The [HA protocol adapters](ha-identity-protocol.md) use HTTP provider fixtures a
 WebSocket servers. Local sandboxes that forbid listening sockets need permission for the backend
 suite; no test contacts the owner's HA. [Protocol evidence](evidence/m1-ha-protocol.json) identifies
 the reviewed Core blobs, fixed dependency versions and outstanding live/package journeys.
+
+The [standalone authentication checkpoint](identity-household.md) now has strict API/CLI wiring,
+single-use browser-bound attempts, private token refresh, safe logout and shutdown-race tests.
+Use [configuration](configuration.md) and [operations](operations-identity-storage.md) for this current
+surface. The import contract rejects both inner layers importing every declared concrete SDK,
+filesystem/process I/O or global time/entropy source. Its expanded negative matrix has 39 fixtures.
+FastAPI/Uvicorn are fixed runtime dependencies. httpx2 is a separate fixed development dependency
+required by Starlette's current TestClient; the HA transport retains its independently tested HTTPX
+version. No deprecated TestClient fallback or Copilot modification is used.

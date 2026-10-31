@@ -5,6 +5,7 @@ from dataclasses import replace
 
 import pytest
 
+from domus.application.session_values import SessionLease
 from domus.application.sessions import SessionGuard
 from domus.domain.errors import (
     Conflict,
@@ -14,7 +15,6 @@ from domus.domain.errors import (
     Unauthenticated,
 )
 from domus.domain.identity import HumanIdentity
-from domus.domain.sessions import SessionLease
 from domus.infrastructure.memory_sessions import MemorySessions
 
 HUMAN = HumanIdentity("ha_1", True, True, False)
@@ -88,6 +88,15 @@ def test_outage_read_uses_latest_proof_but_write_is_blocked_without_extension() 
     with pytest.raises(IdentityUnavailable, match="ha_unavailable"):
         guard.write("session_1")
     assert sessions.get("session_1").expires_at == 200
+
+
+def test_session_status_distinguishes_fresh_proof_from_bounded_read_grace() -> None:
+    guard, _, verifier, _ = fixture()
+    status = guard.status("session_1")
+    assert status.human == HUMAN and status.fresh and status.expires_at == 200
+    verifier.error = IdentityUnavailable("ha_unavailable")
+    status = guard.status("session_1")
+    assert status.human == HUMAN and not status.fresh and status.expires_at == 200
 
 
 @pytest.mark.parametrize("time", [-1, 200, 201])

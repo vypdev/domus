@@ -5,7 +5,7 @@ on 2026-10-31. Version visibility is not a verified Domus API principal or a pac
 
 | Target | Core | Supervisor | HA OS | Frontend | Domus acceptance |
 |---|---|---|---|---|---|
-| Standalone reference | 2026.10.4 | Not applicable | Not applicable | Not a server dependency | Offline protocol fixtures pass; API/session wiring, package and live proof pending |
+| Standalone reference | 2026.10.4 | Not applicable | Not applicable | Not a server dependency | Offline protocol, session and authentication API/CLI fixtures pass; package and live proof pending |
 | Owner Supervisor/Ingress reference | 2026.10.4 | 2026.10.5 | 18.3 | 20260930.5 | Pending implemented artifact, package and live/browser cases |
 
 The current Supervisor observation supersedes the historical 2026.10.3 value in the clarification
@@ -30,3 +30,5 @@ See [the companion contract](../specs/platform-foundation-identity-sqlite.md) an
 
 The [protocol checkpoint](ha-identity-protocol.md) has provider/loopback fixtures against the reviewed
 Core schema. It does not promote either matrix row to supported or establish real HA authentication.
+The [standalone authentication checkpoint](identity-household.md) adds browser-bound login and
+cookie/session HTTP fixtures. It has not yet authorized an account on the owner's HA.

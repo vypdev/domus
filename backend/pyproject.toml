@@ -4,9 +4,14 @@ version = "0.0.0"
 description = "Local household application backend for Domus"
 requires-python = ">=3.14,<3.15"
 dependencies = [
+    "fastapi==0.162.0",
     "httpx==0.28.1",
+    "uvicorn==0.54.0",
     "websockets==17.4",
 ]
+
+[project.scripts]
+domus-server = "domus.composition.server:main"
 
 [build-system]
 requires = ["hatchling==1.33.0"]

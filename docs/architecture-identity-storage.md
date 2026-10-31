@@ -1,8 +1,8 @@
 # Identity and storage implementation boundaries
 
 Status: the M1 storage kernel, pure identity policy, transaction-bound local authorization and
-session-lease core and HA protocol adapters are implemented on the Action-managed issue #6 branch.
-Browser/session wiring, membership use cases, recovery, snapshots, HTTP/console entrypoints and live deployment acceptance
+session-lease core, HA adapters and standalone authentication API/CLI are implemented on the Action-managed issue #6 branch.
+Membership use cases, recovery, snapshots, full business API, Supervisor runtime wiring and live deployment acceptance
 remain pending. The [owning companion](../specs/platform-foundation-identity-sqlite.md) retains
 the complete increment contract; this checkpoint does not complete M1 or the product.
 
@@ -27,7 +27,8 @@ It checks that policy inside the write transaction before examining a previous r
 authorized replay returns the original result; changed payload conflicts. A new effect, receipt,
 audit fact and outbox event commit together. `HouseholdAccess` and `MembershipAuthorization` now
 resolve current membership/policy inside that transaction and bind the action to the proven actor.
-They do not authenticate a submitted identity; the HA adapter and use-case entrypoints are pending.
+They do not authenticate a submitted identity; only provider proof supplies it. Household command
+entrypoints remain pending.
 
 `domus.infrastructure.sqlite` implements those ports with separate connections and explicit SQL
 transactions. Reads are query-only. Writers use `BEGIN IMMEDIATE` and a bounded wait, with no hidden
@@ -57,11 +58,22 @@ The [HA adapters](ha-identity-protocol.md) now implement fixed operator endpoint
 form exchange and correlated WebSocket proof, with explicit active/non-system provenance and
 administrator/owner semantics. Supervisor's actual peer and a single candidate subject header precede
 fresh Core lookup. The real pinned WebSocket client is exercised against disposable loopback servers,
-including a negative cross-origin redirect fixture. HTTP/console entrypoints and complete session
-credential wiring remain pending; no request may authenticate by constructing an adapter value.
+including a negative cross-origin redirect fixture. No request may authenticate by constructing
+an adapter value. Supervisor runtime wiring and complete household endpoints remain pending.
 
-The composition and entrypoint packages reserve the accepted architecture boundaries. They do not
-contain an HTTP server, CLI or product UI yet and are not registered as implemented entrypoints.
+`domus.application.authentication_values` and `session_values` own ephemeral login/lease contracts;
+private browser/session material stays outside household domain entities. Application orchestration
+atomically consumes browser-bound attempts before exchange and checks the returned target/deadline.
+Concurrent callbacks cannot exchange twice.
+
+`domus.infrastructure.standalone_sessions` privately binds HA credentials to leases, serializes fresh
+proof/refresh per session and cannot restore a concurrently removed record. Unknown upstream
+revocation is null, never fabricated success. Credentials remain bounded memory only.
+
+`domus.entrypoints.http` owns strict DTOs, cookie/origin/CSRF checks, HTTP bounds, safe errors and actual
+OpenAPI. `domus.composition.server` wires the standalone auth-only CLI with one worker, disabled proxy
+rewriting and no access/query logging. Sign-in creates no household. See [configuration](configuration.md),
+[the user journey](identity-household.md) and [operations](operations-identity-storage.md).
 
 ## Verification scope
 

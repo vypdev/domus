@@ -2,8 +2,9 @@
 
 from typing import Protocol
 
+from domus.application.authentication_values import LoginAttempt
+from domus.application.session_values import SessionLease
 from domus.domain.identity import HumanIdentity
-from domus.domain.sessions import SessionLease
 
 
 class LeaseClock(Protocol):
@@ -22,9 +23,31 @@ class LiveIdentity(Protocol):
     def prove(self, session_id: str) -> HumanIdentity: ...
 
 
-class SessionLeases(Protocol):
+class SessionAccess(Protocol):
     def get(self, session_id: str) -> SessionLease | None: ...
-    def add(self, lease: SessionLease) -> None: ...
     def refresh(self, expected: SessionLease, human: HumanIdentity) -> bool: ...
     def remove(self, session_id: str) -> None: ...
+
+
+class SessionLeases(SessionAccess, Protocol):
+    def add(self, lease: SessionLease) -> None: ...
     def discard_expired(self, now: int) -> int: ...
+
+
+class LoginAttempts(Protocol):
+    def add(self, attempt: LoginAttempt, now: int) -> None: ...
+    def take(self, state_digest: str, browser_digest: str, now: int) -> LoginAttempt: ...
+
+
+class LoginProvider(Protocol):
+    """Own provider credentials, exact endpoint and cleanup outside business storage."""
+
+    def authorization_url(self, state: str, challenge: str) -> str: ...
+    def sign_in(
+        self, code: str, verifier: str, session_id: str, issued_at: int, expires_at: int
+    ) -> SessionLease: ...
+    def sign_out(self, session_id: str) -> bool | None: ...
+
+
+class LoginEntropy(Protocol):
+    def new(self) -> str: ...
