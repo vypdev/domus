@@ -5,6 +5,11 @@ and requires no second login. The [native persistent development runtime](native
 has a separate explicit database/UUID/fixed-origin contract; it is not in the installed preview.
 The options below apply to the independent standalone runtime.
 
+The native CLI also supports [--data-directory](owned-data-directory.md) for an existing private
+0700 directory owned by its runtime UID. It generates/preserves installation identity, checks files
+and holds the process lock until shutdown. Use it with --public-origin; do not also supply
+--database or --instance-id. The installed stateless Edge preview does not enable it yet.
+
 Status: these options run the standalone API. `--database` additionally wires the persistent
 [household API](household-api.md); omitting it keeps the authentication preview. This is not a deployment
 package or complete M1 acceptance. Both installation modes and Stable/Edge

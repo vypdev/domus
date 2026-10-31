@@ -79,6 +79,7 @@ def test_inner_layer_cannot_import_infrastructure(tmp_path: Path, layer: str) ->
         "secrets",
         "pathlib",
         "os",
+        "fcntl",
     ],
 )
 @pytest.mark.parametrize("layer", ["domain", "application"])

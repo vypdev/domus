@@ -374,3 +374,120 @@ def test_published_native_openapi_matches_actual_private_session_and_household_c
     assert actual["paths"] == reference["paths"]
     assert actual["components"] == reference["components"]
     runtime.close()
+
+
+def test_owned_native_runtime_restarts_with_same_uuid_household_and_original_operation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "owned"
+    root.mkdir(mode=0o700)
+    lookup = Lookup()
+    monkeypatch.setattr(ingress, "HomeAssistantWebSocket", lambda _: lookup)
+
+    def start():
+        runtime = ingress.create_owned_runtime("private-supervisor-token", "edge", root, (ORIGIN,))
+        client = TestClient(
+            runtime.app, base_url=ORIGIN, client=("172.30.32.2", 12000), headers=dict(HEADERS)
+        )
+        return runtime, client
+
+    first, client = start()
+    original = setup(client)
+    identity = first.storage.installation
+    first.close()
+    second, client = start()
+    assert second.storage.installation == identity
+    assert client.get("/api/v1/household").json()["name"] == "Home"
+    assert setup(client) == original
+    second.close()
+
+
+def test_owned_runtime_closes_directory_lease_if_later_composition_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from domus.domain.errors import StorageFailure
+    from domus.infrastructure.owned_storage import open_storage
+
+    root = tmp_path / "owned"
+    root.mkdir(mode=0o700)
+
+    def fail(*args):
+        raise StorageFailure("injected_composition_failure")
+
+    monkeypatch.setattr(ingress, "_compose_business", fail)
+    with pytest.raises(StorageFailure, match="injected_composition_failure"):
+        ingress.create_owned_runtime("private-supervisor-token", "edge", root, (ORIGIN,))
+    open_storage(root, "edge").close()
+
+
+@pytest.mark.parametrize(
+    "token,origins",
+    [("bad token", (ORIGIN,)), ("private-supervisor-token", ("http://invalid/path",))],
+)
+def test_owned_runtime_rejects_configuration_before_creating_persistent_records(
+    tmp_path: Path, token: str, origins: tuple[str, ...]
+) -> None:
+    root = tmp_path / "owned"
+    root.mkdir(mode=0o700)
+    with pytest.raises(InvalidInput):
+        ingress.create_owned_runtime(token, "edge", root, origins)
+    assert list(root.iterdir()) == []
+
+
+def test_owned_native_cli_keeps_directory_locked_until_listener_stops(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from domus.domain.errors import StorageBusy
+    from domus.infrastructure.owned_storage import open_storage
+
+    root = tmp_path / "owned"
+    root.mkdir(mode=0o700)
+    monkeypatch.setenv("SUPERVISOR_TOKEN", "private-supervisor-token")
+
+    def run(app, **kwargs):
+        with pytest.raises(StorageBusy, match="installation_in_use"):
+            open_storage(root, "edge")
+        assert "/api/v1/household" in app.openapi()["paths"]
+
+    monkeypatch.setattr(ingress.uvicorn, "run", run)
+    assert (
+        ingress.main(
+            ["--channel", "edge", "--data-directory", str(root), "--public-origin", ORIGIN]
+        )
+        == 0
+    )
+    open_storage(root, "edge").close()
+
+
+@pytest.mark.parametrize(
+    "options",
+    [[], ["--instance-id", INSTANCE], ["--instance-id", INSTANCE, "--public-origin", ORIGIN]],
+)
+def test_owned_cli_rejects_incomplete_or_competing_identity_options(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, options: list[str]
+) -> None:
+    root = tmp_path / "owned"
+    root.mkdir(mode=0o700)
+    monkeypatch.setenv("SUPERVISOR_TOKEN", "private-supervisor-token")
+    assert ingress.main(["--channel", "edge", "--data-directory", str(root), *options]) == 2
+    assert list(root.iterdir()) == []
+
+
+def test_owned_runtime_initializes_sqlite_once_and_restarts_in_existing_only_mode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from domus.infrastructure.sqlite import SQLiteDatabase
+
+    root = tmp_path / "owned"
+    root.mkdir(mode=0o700)
+    original = SQLiteDatabase.initialize
+    modes = []
+
+    def initialize(self, *, require_existing=False):
+        modes.append(require_existing)
+        return original(self, require_existing=require_existing)
+
+    monkeypatch.setattr(SQLiteDatabase, "initialize", initialize)
+    ingress.create_owned_runtime("private-supervisor-token", "edge", root, (ORIGIN,)).close()
+    ingress.create_owned_runtime("private-supervisor-token", "edge", root, (ORIGIN,)).close()
+    assert modes == [False, True]

@@ -45,6 +45,12 @@ the writer lock. Initial schema creation uses transactional DDL, without `execut
 Unknown/future schemas and wrong ownership are refused. Receipts are retained and are never pruned
 with activity; a future retention feature must preserve replay protection.
 
+`domus.infrastructure.owned_storage` owns POSIX directory/file validation, lifecycle locking and
+durable initialization/ready metadata. It generates a UUID only for an empty private directory and
+passes an existing-only mode to SQLite after readiness, preventing silent empty replacement. The
+native composition initializes storage once before starting HTTP and releases ownership at shutdown.
+All filesystem/locking primitives remain outside pure inner layers. See [data lifecycle](owned-data-directory.md).
+
 Schema 2 adds uniquely linked members and revisioned household policy. Its explicit additive
 upgrade accepts the owned schema 1 checkpoint and preserves household data, receipts, audit and
 outbox. Failure rolls back the entire DDL migration. The frozen old-schema fixture is independent

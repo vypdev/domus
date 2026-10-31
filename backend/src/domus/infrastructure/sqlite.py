@@ -344,21 +344,24 @@ class SQLiteDatabase:
             raise DatabaseRejected("invalid_database") from None
         return int(version)
 
-    def initialize(self) -> None:
-        try:
-            descriptor = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        except FileExistsError:
-            pass
-        except OSError:
-            raise StorageFailure("storage_failure") from None
-        else:
-            os.close(descriptor)
+    def initialize(self, *, require_existing: bool = False) -> None:
+        if not require_existing:
+            try:
+                descriptor = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            except FileExistsError:
+                pass
+            except OSError:
+                raise StorageFailure("storage_failure") from None
+            else:
+                os.close(descriptor)
         with self._connection() as connection:
-            self._inspect(connection, allow_empty=True, allow_previous=True)
+            self._inspect(connection, allow_empty=not require_existing, allow_previous=True)
             connection.execute("PRAGMA foreign_keys=ON")
             try:
                 connection.execute("BEGIN IMMEDIATE")
-                version = self._inspect(connection, allow_empty=True, allow_previous=True)
+                version = self._inspect(
+                    connection, allow_empty=not require_existing, allow_previous=True
+                )
                 if version == 0:
                     for statement in SCHEMA_STATEMENTS:
                         connection.execute(statement)

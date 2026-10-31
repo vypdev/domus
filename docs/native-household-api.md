@@ -3,7 +3,8 @@
 Status: persistent native runtime, local session leases and common household routes are implemented
 and tested with real ASGI/SQLite composition. This runtime has not been installed in the owner's HA.
 The installed Edge 0.0.0-edge.1 remains the accepted stateless connection preview. App data-directory
-initialization, automatic installation identity and the product UI still need packaging work.
+ownership and the product UI still need packaging work. Automatic installation identity inside an
+already provisioned private directory is now available through the [owned data CLI](owned-data-directory.md).
 
 ## Authentication and session binding
 
@@ -73,7 +74,7 @@ SUPERVISOR_TOKEN is provisioned privately by HA and must never be copied into a 
 This listener is exclusively for the Supervisor private container network, binds no public app port
 in the reviewed manifest and disables proxy-header rewriting/access logs. GET /health is nonpersonal
 process readiness for Supervisor/loopback, not an HA availability or authenticated-user claim.
-Packaged directory ownership, automatic UUID creation, complete UI, recovery/snapshots and the updated
+Packaged directory ownership, complete UI, recovery/snapshots and the updated
 installed artifact remain pending. Do not infer those from passing local fixtures.
 
 ## Reviewed primary sources

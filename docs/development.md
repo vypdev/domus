@@ -183,3 +183,10 @@ Domus administrator grant. Fixed configured origins prevent forwarding headers f
 [published OpenAPI](contracts/native-household-api.openapi.json) record the current runtime.
 Owned data-directory/UUID packaging, the UI, recovery/snapshots and complete deployment acceptance
 remain pending. The installed Edge 0.0.0-edge.1 has not been updated with these services.
+
+The [owned data checkpoint](owned-data-directory.md) now persists initialization/ready metadata and
+automatic UUID/channel identity inside an existing private directory. Native --data-directory holds
+its POSIX process lock through the listener lifetime. Real-file/process tests reject missing or empty
+ready data, cross-channel adoption, unsafe files and interrupted metadata; a compatible v1 migration
+preserves history. The package still needs to provision writable private data for its nonroot server
+and verify upgrade/restart on the actual target. See [evidence](evidence/m1-owned-storage.json).

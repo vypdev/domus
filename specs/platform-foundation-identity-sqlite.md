@@ -492,6 +492,10 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `docs/native-household-api.md` | create |
 | `docs/contracts/native-household-api.openapi.json` | create |
 | `docs/evidence/m1-native-household-api.json` | create |
+| `backend/src/domus/infrastructure/owned_storage.py` | create |
+| `tests/backend/test_owned_storage.py` | create |
+| `docs/owned-data-directory.md` | create |
+| `docs/evidence/m1-owned-storage.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -576,7 +580,9 @@ all planned acceptance cases. The specifications remain Draft.
 | Standalone household API | [Receipt](../docs/evidence/m1-household-api.json), [guide](../docs/household-api.md) and [schema](../docs/contracts/household-api.openapi.json): strict DTOs/queries, production SQLite/session composition, scoped reads, restart/replay, ambiguous JSON and response-uncertainty recovery. |
 | Native household API | [Receipt](../docs/evidence/m1-native-household-api.json), [guide](../docs/native-household-api.md) and [schema](../docs/contracts/native-household-api.openapi.json): shared services, fixed origins, existing upstream-session binding, bounded leases, scoped CSRF and original-deadline outage reads. Writes require fresh proof. A selected ordinary HA human keeps independent Domus authority. This runtime is tested locally and has not replaced the installed preview. |
 
+| Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json) and [guide](../docs/owned-data-directory.md): persisted UUID/channel, initialization/ready states, exclusive process lease, private files, process-death resumption and existing-only ready SQLite. Native CLI is tested; packaged /data provisioning remains pending. |
+
 No test credentials enter business storage, evidence, responses or snapshots. Native authentication
-is independent of standalone OAuth. Current outstanding work includes native persistent app data/UUID
+is independent of standalone OAuth. Current outstanding work includes native private data provisioning, updated app
 packaging and UI, recovery, snapshots, standalone companion authority and complete deployment/channel
 acceptance. Passing protocol/ASGI fixtures never establishes those remaining live gates.

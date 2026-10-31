@@ -60,7 +60,12 @@ The [native persistent runtime](native-household-api.md) clears only its local b
 Supervisor owns its upstream cookie and transport grant. Reopening through HA freshly proves the
 human, while the matching SQLite records and receipts survive. Its fixed-origin configuration and
 original lease deadline apply independently of forwarding headers. This runtime is not yet the
-installed Edge app; owned data/UUID packaging and updated live acceptance remain pending.
+installed Edge app; private-directory provisioning and updated live acceptance remain pending.
+
+The [owned data lifecycle](owned-data-directory.md) now persists UUID/channel initialization state
+and holds a process lock for the native listener. A ready installation refuses missing/empty SQLite
+instead of recreating it. Interrupted first initialization resumes only the stored UUID. Metadata,
+database and replay records must remain together; deleting identity metadata is not a recovery step.
 
 See [configuration](configuration.md), [user identity journey](identity-household.md),
 [implementation boundaries](architecture-identity-storage.md), [the M1 companion](../specs/platform-foundation-identity-sqlite.md)

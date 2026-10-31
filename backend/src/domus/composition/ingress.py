@@ -26,6 +26,7 @@ from domus.infrastructure.ha_directory import HomeAssistantDirectory
 from domus.infrastructure.ha_ingress import SupervisorIdentity
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.ingress_sessions import IngressSessions
+from domus.infrastructure.owned_storage import OwnedStorage, open_storage
 from domus.infrastructure.sqlite import SQLiteDatabase
 
 
@@ -33,9 +34,29 @@ from domus.infrastructure.sqlite import SQLiteDatabase
 class NativeRuntime:
     app: FastAPI
     sessions: IngressSessions = field(repr=False)
+    storage: OwnedStorage | None = field(default=None, repr=False)
 
     def close(self) -> None:
-        self.sessions.close()
+        try:
+            self.sessions.close()
+        finally:
+            if self.storage is not None:
+                self.storage.close()
+
+
+def create_owned_runtime(
+    token: str, channel: str, data_directory: Path, public_origins: tuple[str, ...]
+) -> NativeRuntime:
+    origins = PublicOrigins(public_origins).values
+    identity = SupervisorIdentity(HomeAssistantWebSocket(HAEndpoint.supervisor()), token)
+    storage = open_storage(data_directory, channel)
+    try:
+        runtime = _compose_business(identity, storage.database, origins)
+        runtime.storage = storage
+        return runtime
+    except BaseException:
+        storage.close()
+        raise
 
 
 def create_business_runtime(
@@ -47,15 +68,20 @@ def create_business_runtime(
 ) -> NativeRuntime:
     installation = Installation(instance_id, channel)
     origins = PublicOrigins(public_origins).values
-    lookup = HomeAssistantWebSocket(HAEndpoint.supervisor())
-    identity = SupervisorIdentity(lookup, token)
-    clock, entropy = MonotonicClock(), SecureEntropy()
-    sessions = IngressSessions(
-        identity, installation, clock, entropy, entropy.new().encode("ascii")
-    )
+    identity = SupervisorIdentity(HomeAssistantWebSocket(HAEndpoint.supervisor()), token)
     store = SQLiteDatabase(database, installation)
     store.initialize()
-    directory = HomeAssistantDirectory(lookup, token)
+    return _compose_business(identity, store, origins)
+
+
+def _compose_business(
+    identity: SupervisorIdentity, store: SQLiteDatabase, origins: tuple[str, ...]
+) -> NativeRuntime:
+    clock, entropy = MonotonicClock(), SecureEntropy()
+    sessions = IngressSessions(
+        identity, store.installation, clock, entropy, entropy.new().encode("ascii")
+    )
+    directory = HomeAssistantDirectory(identity.lookup, identity.transport_token)
     utc, identifiers, zones = SystemClock(), SecureIdentifiers(), TimeZoneCatalog()
 
     def context(request: Request) -> NativeHTTPContext:
@@ -76,7 +102,11 @@ def create_business_runtime(
         return NativeHTTPContext(services, actor.status, actor.csrf, actor.verify_csrf)
 
     app = create_native_app(
-        context, origins, channel, clock, correlation=lambda: "cor_" + entropy.new()
+        context,
+        origins,
+        store.installation.channel,
+        clock,
+        correlation=lambda: "cor_" + entropy.new(),
     )
     return NativeRuntime(app, sessions)
 
@@ -88,16 +118,25 @@ def create_runtime(token: str, channel: str) -> FastAPI:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run the Domus native HA authentication preview.")
+    parser = argparse.ArgumentParser(description="Run Domus behind private Home Assistant Ingress.")
     parser.add_argument("--channel", required=True, choices=("stable", "edge"))
-    parser.add_argument("--database", type=Path)
+    data = parser.add_mutually_exclusive_group()
+    data.add_argument("--database", type=Path)
+    data.add_argument("--data-directory", type=Path)
     parser.add_argument("--instance-id")
     parser.add_argument("--public-origin", action="append", default=[])
     args = parser.parse_args(argv)
     token = os.environ.pop("SUPERVISOR_TOKEN", "")
     runtime = None
     try:
-        if args.database is not None:
+        if args.data_directory is not None:
+            if args.instance_id or not args.public_origin:
+                raise InvalidInput("invalid_persistent_configuration")
+            runtime = create_owned_runtime(
+                token, args.channel, args.data_directory, tuple(args.public_origin)
+            )
+            app = runtime.app
+        elif args.database is not None:
             if not args.instance_id or not args.public_origin:
                 raise InvalidInput("invalid_persistent_configuration")
             runtime = create_business_runtime(
@@ -109,7 +148,11 @@ def main(argv: list[str] | None = None) -> int:
                 raise InvalidInput("invalid_persistent_configuration")
             app = create_runtime(token, args.channel)
     except DomusError:
-        print("Start this runtime as a Home Assistant app with Core API access.", file=sys.stderr)
+        print(
+            "Start Domus as a Home Assistant app with valid configuration and owned data. "
+            "Existing household records are retained.",
+            file=sys.stderr,
+        )
         return 2
     try:
         uvicorn.run(
