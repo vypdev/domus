@@ -9,7 +9,8 @@
       "owner": "Domus maintainers (review assignment pending)",
       "lastVerified": "2026-10-29",
       "specs": [
-        "specs/platform-foundation.md"
+        "specs/platform-foundation.md",
+        "specs/platform-foundation-identity-sqlite.md"
       ],
       "workflows": [],
       "entrypoints": [],
