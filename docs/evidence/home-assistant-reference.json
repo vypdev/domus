@@ -1,0 +1,16 @@
+{
+  "observedOn": "2026-10-31",
+  "method": "Read-only Google Chrome About screen on the owner-authorized local HA",
+  "entryPath": "/home/overview",
+  "aboutPath": "/config/info",
+  "installationMethod": "Home Assistant OS",
+  "versions": {
+    "core": "2026.10.4",
+    "supervisor": "2026.10.5",
+    "operatingSystem": "18.3",
+    "frontend": "20260930.5"
+  },
+  "limitations": "Version observation only; no verified API principal or Domus runtime acceptance",
+  "credentialsExtracted": false,
+  "householdConfigurationChanged": false
+}

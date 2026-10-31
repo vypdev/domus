@@ -41,6 +41,33 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  backend:
+    name: Backend application
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.29"
+          enable-cache: false
+      - run: uv sync --frozen
+      - run: uv run mypy backend/src
+      - name: Test every authored backend module with separate coverage
+        run: uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml
+      - name: Retain backend coverage
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: backend-coverage-${{ github.sha }}
+          path: |
+            coverage-backend.json
+            coverage-backend.xml
+          if-no-files-found: error
+          retention-days: 7
+
   node:
     name: Node architecture policy
     runs-on: ubuntu-latest
@@ -83,6 +110,7 @@ jobs:
           enable-cache: false
       - run: uv sync --frozen
       - run: uv run lint-imports --config architecture/python-tooling.ini --no-cache
+      - run: uv run lint-imports --config architecture/python-application.ini --no-cache
       - run: uv run pytest tests/architecture
 
   documentation:
@@ -103,7 +131,7 @@ jobs:
   aggregate:
     name: CI Check
     if: ${{ always() }}
-    needs: [python, node, architecture, documentation]
+    needs: [python, backend, node, architecture, documentation]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:

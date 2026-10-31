@@ -7,26 +7,41 @@
       "status": "proposed",
       "scope": "One local modular application serves the complete household product in both a Supervisor-managed App and standalone Docker from the first release. Home Assistant owns user authentication; Domus owns its business records.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-10-31",
       "specs": [
         "specs/platform-foundation.md",
         "specs/platform-foundation-identity-sqlite.md"
       ],
-      "workflows": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
       "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "code": [
+        "backend/src/domus/domain/errors.py",
+        "backend/src/domus/domain/storage.py",
+        "backend/src/domus/application/ports.py",
+        "backend/src/domus/application/commands.py",
+        "backend/src/domus/infrastructure/sqlite.py"
+      ],
+      "tests": [
+        "tests/backend/test_storage_values.py",
+        "tests/backend/test_sqlite_transactions.py",
+        "tests/backend/test_atomic_commands.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/architecture-identity-storage.md",
+        "docs/development.md",
+        "docs/compatibility-home-assistant.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
-        "blockingDecisions": "Storage concurrency verification; supported Home Assistant release matrix; backup retention and restore targets. The owner selected Python/FastAPI, SQLite, one household per installation and a thin HA integration on 2026-10-29.",
+        "implementationEvidence": "partial: tested storage kernel and actual backend CI/import graph; HA identity, policy, recovery, snapshots and API pending",
+        "blockingDecisions": "Full identity/persistence/recovery acceptance, snapshot/restore implementation, packaged deployment/channel proof and exact HA matrix acceptance remain pending; partial real-file/process transaction evidence is implemented under issue #6.",
         "copilotChangesAllowed": false
       }
     },
@@ -260,7 +275,7 @@
       "status": "proposed",
       "scope": "Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-10-31",
       "specs": [
         "specs/delivery-quality.md"
       ],
@@ -295,7 +310,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: tested development tooling and CI; application/HA/channel acceptance pending",
+        "implementationEvidence": "partial: tooling plus separately tested storage kernel/backend CI and actual import graph; UI/HA/channel acceptance pending",
         "blockingDecisions": "Current-head CI proof and required-check configuration by maintainer; real application/HA coverage and adapter contracts; channel IDs/integration coexistence; release publication authorization. Tooling versions and initial checks are implemented under issue #4.",
         "copilotChangesAllowed": false
       }

@@ -75,13 +75,28 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
             continue
         suffix = Path(relative).suffix
         if suffix == ".py":
-            assert relative.startswith("tooling/domus_tooling/"), (
+            assert relative.startswith(("tooling/domus_tooling/", "backend/src/domus/")), (
                 f"Register {relative} in its own tested coverage/architecture gate before adding it"
             )
         elif suffix in {".js", ".mjs", ".cjs", ".ts", ".tsx"}:
             assert relative in declared_node_configuration, (
                 f"Register {relative} in its own tested coverage/architecture gate before adding it"
             )
+
+
+def test_backend_cannot_inherit_the_tooling_coverage_result() -> None:
+    jobs = workflow()["jobs"]
+    backend_commands = [step["run"] for step in jobs["backend"]["steps"] if "run" in step]
+    assert any(
+        "pytest tests/backend" in command and "--cov=domus " in command
+        for command in backend_commands
+    )
+    assert "backend" in REQUIRED_JOBS
+    assert "backend" in jobs["aggregate"]["needs"]
+    architecture_commands = [step["run"] for step in jobs["architecture"]["steps"] if "run" in step]
+    assert "uv run lint-imports --config architecture/python-application.ini --no-cache" in (
+        architecture_commands
+    )
 
 
 @pytest.mark.parametrize("relative,expected", sorted(json.loads(PROTECTED.read_text()).items()))

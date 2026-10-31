@@ -2,6 +2,12 @@ version = 1
 revision = 3
 requires-python = "==3.14.*"
 
+[manifest]
+members = [
+    "domus-server",
+    "domus-tooling",
+]
+
 [[package]]
 name = "ast-serialize"
 version = "0.13.1"
@@ -127,10 +133,16 @@ wheels = [
 ]
 
 [[package]]
+name = "domus-server"
+version = "0.0.0"
+source = { editable = "backend" }
+
+[[package]]
 name = "domus-tooling"
 version = "0.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "domus-server" },
     { name = "markdown-it-py" },
 ]
 
@@ -146,7 +158,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "markdown-it-py", specifier = "==4.2.0" }]
+requires-dist = [
+    { name = "domus-server", editable = "backend" },
+    { name = "markdown-it-py", specifier = "==4.2.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [

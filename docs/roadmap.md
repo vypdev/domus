@@ -18,5 +18,9 @@ PR #3 merged the documentation foundation into develop. Issue #4 begins M1 with 
 toolchains, tested quality policies and the project CI Check workflow. This is partial M1 evidence;
 identity, persistence, real application/HA coverage and channel acceptance remain pending.
 No implementation begins on an invented branch: maintainers and the Action retain their installed lifecycle.
+Issue #6 now has its Action-published companion and verified branch. Its first source checkpoint adds
+the tested SQLite transaction kernel, semantic ports, separate backend coverage and actual import graph.
+HA identity, membership, recovery, snapshots, HTTP/console entrypoints and deployment acceptance remain
+incomplete M1 work; the source checkpoint does not complete M1 or change first-release scope.
 Release, merge and deployment require the existing maintainer flow and explicit authorization.
 Future optional depth includes predictive consumption, workload recommendations, rich rewards and external calendars.

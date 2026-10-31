@@ -2,7 +2,8 @@
 
 The documentation foundation was merged through [PR #3](https://github.com/vypdev/domus/pull/3).
 [Issue #4](https://github.com/vypdev/domus/issues/4) starts M1 with real development tooling, tests and CI.
-The household application, HA authentication, product UI, deployment packages and channels remain unimplemented.
+The issue #6 checkpoint introduces the tested storage kernel and application transaction ports.
+HA authentication, membership policy, product UI, deployment packages and channels remain pending.
 
 ## Reproduce the environment
 
@@ -15,7 +16,9 @@ uv sync --frozen
 pnpm install --frozen-lockfile
 ```
 
-The Python tooling distribution is domus-tooling, not the application server. The frontend workspace
+The Python tooling distribution is domus-tooling. The separate domus-server workspace distribution
+contains the actual backend modules under backend/src/domus and has its own coverage gate.
+The frontend workspace
 currently declares its package boundary only; Lit/Vite application source and its own coverage gate
 belong to the first frontend implementation. No empty application package is used as implementation evidence.
 
@@ -25,10 +28,13 @@ belong to the first frontend implementation. No empty application package is use
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy tooling
+uv run mypy backend/src
 uv run pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing
+uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing
 pnpm check
 pnpm test
 uv run lint-imports --config architecture/python-tooling.ini --no-cache
+uv run lint-imports --config architecture/python-application.ini --no-cache
 uv run pytest tests/architecture
 uv run domus-check docs
 ```
@@ -45,7 +51,7 @@ file until its own applicable coverage/architecture gate is registered.
 
 - architecture/python-tooling.ini checks the actual tooling package: pure CI policy cannot import its
   CLI/filesystem adapters, concrete I/O or framework modules, and modules remain acyclic.
-- architecture/python-application.ini is exercised against disposable fixture packages. Composition
+- architecture/python-application.ini checks the actual backend and disposable negative fixture packages. Composition
   wires adapters; entrypoints and infrastructure are independent; application depends inward on domain.
   Inner layers cannot import HA, HTTP, SQL or concrete frameworks. Recursive cycle checks have an
   explicit depth budget of 100; the normal package layout is shallow. A deeper layout needs review.
@@ -54,8 +60,8 @@ file until its own applicable coverage/architecture gate is registered.
   type-only imports, cycles and unresolved imports are checked.
 
 Fixture packages are owned test data, not shipped application modules or product implementation evidence.
-When the real domus or HA integration package is introduced, wire its real graph into CI alongside its
-own tests. The inventory guard prevents that source from silently inheriting a tooling-only green result.
+The real domus graph is now wired into CI alongside its own tests. A future HA integration must add
+its own scope. The inventory guard prevents runtime source from inheriting a tooling-only green result.
 
 The selected TypeScript 6.0.3 is inside dependency-cruiser 18.7.0's inspected supported range,
 >=2.0.0 and <7.0.0. The executable parser check fails if that support is lost during a dependency update.
@@ -66,13 +72,14 @@ See the primary [dependency-cruiser API](https://github.com/sverweij/dependency-
 
 ## CI Check
 
-The project-owned .github/workflows/ci_check.yml runs Python tooling, Node policy, Python architecture
+The project-owned .github/workflows/ci_check.yml runs Python tooling, the separate backend suite,
+Node policy, Python architecture
 contracts and local documentation links for every PR update, including drafts and documentation changes.
 It also runs on develop/master pushes and merge-queue validation. There are no path filters or job
 conditions hiding applicable suites. Actions are pinned to immutable commits and installs use lockfiles.
 
-The final CI Check job always evaluates all four required job results. Missing, malformed, unexpected,
-failed, skipped, cancelled or pending results prevent success. Only four explicit successful results pass.
+The final CI Check job always evaluates all five required job results. Missing, malformed, unexpected,
+failed, skipped, cancelled or pending results prevent success. Only five explicit successful results pass.
 The workflow uses read-only repository permissions, does not persist checkout credentials and does not
 publish artifacts to a release or deploy. Coverage reports are retained for seven days under the checked SHA.
 
@@ -89,8 +96,16 @@ tests. These 85 executed tests are separate from the 353 planned product accepta
 [Tooling evidence](evidence/development-tooling.json) records exact scopes and metrics.
 The first implementation commit, 8a1c8fbdc50960a124fc76bc16702638845a0606, passed all five jobs in [CI Check run 40800913976](https://github.com/vypdev/domus/actions/runs/40800913976). Every later head must pass independently; this recorded result does not transfer to new code.
 
-The delivery-quality catalog entry registers only existing tooling/CI evidence and stays proposed/Draft.
-Other capabilities retain empty implementation evidence. The original SDK validator still reports the
-remaining missing evidence; this is not a workaround for [Copilot issue #777](https://github.com/vypdev/copilot/issues/777).
+Delivery-quality and platform-foundation register only their real partial evidence and stay proposed/Draft.
+Other capabilities retain empty implementation evidence. Reviewed Copilot v3 revision
+3e7ceea08e6131360e026937d1c0cc1b120472e0 resolves
+[issue #777](https://github.com/vypdev/copilot/issues/777): truthful proposed capabilities may retain
+empty implementation arrays. The current original validator accepts the catalog without changing
+Copilot or manufacturing paths. Historical failure reports remain historical evidence.
 The entire delivery-quality capability still needs application coverage, real deployment/HA adapter
 contracts, Stable/Edge isolation and controlled Chrome evidence before acceptance.
+
+The storage checkpoint has its own [architecture and limits](architecture-identity-storage.md),
+[source-identified evidence](evidence/m1-storage-kernel.json) and
+[current HA reference matrix](compatibility-home-assistant.md). It does not implement a human
+authentication entrypoint, snapshot command or HTTP server yet.

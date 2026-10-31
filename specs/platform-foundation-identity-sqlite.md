@@ -10,7 +10,7 @@
 - Required review gates: product UX, architecture, testing, documentation, security/operations
 - Open decisions blocking readiness: none; review gates and target-specific acceptance remain required before readiness.
 
-This companion preserves the ownership and invariants of `specs/platform-foundation.md` and `specs/household-identity.md`; it does not create a new capability owner. Both owning specifications remain Draft with authentication, concurrency, and recovery proof outstanding. The catalog at `0012a172492515e282be09c37921f4014a451e64` records no implementation or test evidence for `platform-foundation`. PR #5 supplied tooling and architecture tests, not the runtime specified here. This is a proposed contract, not a claim of implementation or passing acceptance.
+This companion preserves the ownership and invariants of `specs/platform-foundation.md` and `specs/household-identity.md`; it does not create a new capability owner. Both owning specifications remain Draft with full identity, persistence and recovery acceptance outstanding. The catalog at `0012a172492515e282be09c37921f4014a451e64` records no implementation or test evidence for `platform-foundation`. PR #5 supplied tooling and architecture tests, not the runtime specified here. This is a proposed contract, not a claim of implementation or passing acceptance.
 
 ## 1. Executive summary
 
@@ -39,7 +39,7 @@ These are the supplied baseline facts. No runtime acceptance is inferred from th
 - Code/workflow/documentation references: immutable-base catalog evidence lists `docs/product-vision.md`, `docs/architecture.md`, `docs/operations.md`, `docs/user-guide.md`, and `docs/contracts/home-assistant.md`; implementation and test arrays for this capability are empty.
 - Incidents or concrete examples: no incident is supplied. Current absence of runtime evidence is the concrete limitation.
 - External primary sources: [HA WebSocket API](https://developers.home-assistant.io/docs/api/websocket/) · [HA authorization API](https://developers.home-assistant.io/docs/auth_api/).
-- Unknowns: no fresh live HA result is available. The observed reference matrix is standalone Core 2026.10.4; Supervisor target Core 2026.10.4, Supervisor 2026.10.3, HA OS 18.3, Frontend 20260930.5. Every row is pending until the exact protocol, package, and live/browser cases execute. Other versions are unverified.
+- Unknowns: the owner HA About screen was inspected read-only on 2026-10-31; this is version evidence only, not runtime acceptance. The observed reference matrix is standalone Core 2026.10.4; Supervisor target Core 2026.10.4, Supervisor 2026.10.5, HA OS 18.3, Frontend 20260930.5. Every row is pending until the exact protocol, package, and live/browser cases execute. Other versions are unverified.
 
 ### 2.4 Retrospective classification (as-built baselines only)
 
@@ -78,7 +78,7 @@ A **human identity** is the active, non-system HA user proven by the server. A *
 
 ### 4.3 Fixed product/safety invariants
 
-1. Identity, administrator status, and actor never come from submitted IDs, person entities, forwarding/Ingress headers, or installation transport credentials. Standalone never accepts Ingress identity headers. Supervisor trusts only the actual peer `172.30.32.2` on a private listener with proxy-header rewriting disabled; it requires remote user ID and fresh Core proof. Its fixed Core proxy/token is transport authority only.
+1. Identity, administrator status, and actor never come from submitted IDs, person entities, untrusted forwarding/Ingress headers, or installation transport credentials. Standalone never accepts Ingress identity headers. Supervisor trusts only the actual peer `172.30.32.2` on a private listener with proxy-header rewriting disabled; it requires remote user ID and fresh Core proof. Its fixed Core proxy/token is transport authority only.
 2. Standalone uses a fixed operator-configured HA origin and exact Domus public client/callback origin, OAuth state and S256 PKCE, server-side form token exchange, bounded single-use attempts, and server-owned bounded sessions; no central client registration or client secret. Validate URLs and bound I/O; never accept request-chosen hosts, redirects, or proxies.
 3. Current HA identity/administrator source and current Domus authorization govern protected actions. HA outage permits existing sessions to query local data only until original absolute expiry, with current local policy and known revocation checks; no extension or mutation. Explicit HA rejection invalidates access.
 4. Policy precedence is hard identity/scope/domain constraints, member exception, household profile adjustment, predefined profile, then deny. Same-level contradiction is rejected. Exceptions cannot create administrator identity, bypass restricted-performer approval, cross scope, or weaken invariants. Private preferences of another member are denied by default.
@@ -111,7 +111,7 @@ Text equivalent: HA entry or pending enrollment -> server identity proof -> curr
 ### 6.1 Happy path
 
 1. Standalone completes state/PKCE authorization and server-side token exchange, then current-user WebSocket proof; Supervisor validates actual peer and Ingress identity, then performs fresh Core lookup. Adapters reject inactive, system, malformed, oversized, expired, rejected, or mismatched/correlation-invalid proof.
-2. An eligible administrator explicitly creates the household and selects an administrator mapping. The default is `all_ha_administrators`. A proven, unlinked human may enroll but remains pending until an authorized administrator activates and links them.
+2. An eligible administrator explicitly creates the household and selects an administrator mapping. The default is `all_ha_administrators`. An ordinary proven, unlinked human may enroll but remains pending until authorized activation. In all_ha_administrators mode, an explicitly enrolling current HA administrator may activate through the verified mapping exception; page arrival never initializes the household or grants an ordinary user access.
 3. Each protected use case checks HA status/source and current local policy inside its transaction. Mutations require expected revisions and `Idempotency-Key`.
 4. SQLite commits domain state, scoped receipt, audit and outbox in one transaction. Identical authorized replay returns the retained result; different payload conflicts. Restart and verified restore preserve replay guards.
 
@@ -270,7 +270,7 @@ Snapshots are consistent SQLite snapshots including identity/schema, business st
 - Deprecated behavior and compatibility window: none established. Support only exact independently tested Core/Supervisor/protocol combinations; retain a versioned contract matrix. Other versions remain unverified.
 - Rollout stages/feature flag if needed: land contracts/architecture checks, pure policies, use cases, adapters, endpoint wiring, then real-file/security and target acceptance. No feature flag may weaken identity or policy invariants.
 - Rollback and irreversible effects: take pre-upgrade recovery snapshot before destructive migration, paired with compatible application/configuration. Atomic transactions prevent partial domain effects. Restore verified same-installation/channel snapshot to a new directory; do not activate a corrupt/future/wrong-identity candidate. Preserve receipts across rollback/restore.
-- Compatibility matrix: standalone Core 2026.10.4; Supervisor/Ingress Core 2026.10.4, Supervisor 2026.10.3, HA OS 18.3, Frontend 20260930.5. All pending. Only exact passed artifact/version combinations may be called supported. Actual current versions must be added and tested when connectivity allows. Both deployment targets remain required for first usable release.
+- Compatibility matrix: standalone Core 2026.10.4; Supervisor/Ingress Core 2026.10.4, Supervisor 2026.10.5, HA OS 18.3, Frontend 20260930.5. All pending. Only exact passed artifact/version combinations may be called supported. Actual current versions must be added and tested when connectivity allows. Both deployment targets remain required for first usable release.
 
 ## 14. Testing strategy and numeric budget
 
@@ -371,6 +371,33 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `docs/architecture-identity-storage.md` | create |
 | `docs/migrations-identity-storage.md` | create |
 | `docs/compatibility-home-assistant.md` | create |
+| `backend/pyproject.toml` | create |
+| `backend/src/domus/__init__.py` | create |
+| `backend/src/domus/application/__init__.py` | create |
+| `backend/src/domus/application/commands.py` | create |
+| `backend/src/domus/application/ports.py` | create |
+| `backend/src/domus/composition/__init__.py` | create |
+| `backend/src/domus/domain/__init__.py` | create |
+| `backend/src/domus/domain/errors.py` | create |
+| `backend/src/domus/domain/storage.py` | create |
+| `backend/src/domus/entrypoints/__init__.py` | create |
+| `backend/src/domus/infrastructure/__init__.py` | create |
+| `backend/src/domus/infrastructure/sqlite.py` | create |
+| `tests/backend/test_atomic_commands.py` | create |
+| `tests/backend/test_sqlite_transactions.py` | create |
+| `tests/backend/test_storage_values.py` | create |
+| `docs/evidence/m1-storage-kernel.json` | create |
+| `docs/evidence/home-assistant-reference.json` | create |
+| `pyproject.toml` | update |
+| `uv.lock` | update |
+| `.github/workflows/ci_check.yml` | update |
+| `tooling/domus_tooling/ci_policy.py` | update |
+| `tests/python/test_ci_contract.py` | update |
+| `docs/development.md` | update |
+| `docs/decisions.md` | update |
+| `docs/copilot-adoption.md` | update |
+| `docs/roadmap.md` | update |
+| `docs/sdd-validation.md` | update |
 | `specs/catalog.json` | update |
 | `specs/CATALOG.md` | update |
 
@@ -438,3 +465,6 @@ These are executable acceptance requirements, not reports of tests already run.
 - Related specs/ADRs/issues/PRs: `specs/household-identity.md`; `specs/platform-foundation.md`; `specs/delivery-quality.md`; [Issue #6](https://github.com/vypdev/domus/issues/6); [PR #5](https://github.com/vypdev/domus/pull/5); [Copilot upstream report #774](https://github.com/vypdev/copilot/issues/774); [Copilot upstream report #777](https://github.com/vypdev/copilot/issues/777).
 - Decisions and rejected alternatives: retain HA auth and HTTP/SQLite as replaceable adapters around pure policies and use cases; server-side HA proof is required; use explicit transaction boundaries and parameterized SQLite operations; API schemas are entrypoint DTOs, not domain entities. Recovery requires current HA administrator proof plus installation-console approval; no shared secret or HTTP approval. Backup scope is explicit consistent snapshot/restore primitive, not an automatic scheduler. No untested version is promised.
 - Follow-up work explicitly outside this spec: other household domains, product UI, HA entity/service integration, complete package and Stable/Edge deployment acceptance, Supervisor backup hooks and operational retention/recovery objectives, release publication. Both deployment targets remain required for first usable release. Merge/release/deployment is not authorized by this draft.
+### Storage kernel implementation checkpoint — 2026-10-31
+
+The first implementation supplies immutable values, semantic transaction ports, authorization-before-replay orchestration and the real SQLite adapter. Separate coverage and actual import-graph checks are wired into CI. HA proof, concrete membership policy, recovery, snapshots, HTTP/console routes and target acceptance remain pending. See [implementation boundaries](../docs/architecture-identity-storage.md) and [source-identified evidence](../docs/evidence/m1-storage-kernel.json). Planned cases are not all executed merely because this partial kernel has complete coverage.

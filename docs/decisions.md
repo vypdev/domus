@@ -30,14 +30,17 @@ Confirmed owner requirements are recorded in [product vision](product-vision.md)
 | A24 | Accepted: an approved unfulfilled reward without sufficient backing enters a funding hold until credit recovers or an explicit authorized resolution occurs; delivery remains blocked while unfunded | Preserve approval/reservation without automatic cancellation, delivery or fabricated credit | Owner confirmed 2026-10-29; reversal/fulfillment/cancellation races require tests |
 | A25 | Accepted: all_ha_administrators is the default administrator mapping; setup_administrator and selected_ha_user are supported configuration alternatives | The owner explicitly requested all three modes and selected the all-HA-administrators mode as default | Owner confirmed 2026-10-29; authoritative HA proof, source revocation and authenticated recovery require evidence |
 | A26 | Accepted: predefined permission profiles are adjustable per household with explicit per-member exceptions | Households can tailor grants without replacing verified identity or domain invariants | Owner confirmed 2026-10-29; detailed permission matrix, deterministic precedence and cache/revocation tests remain required |
+| A27 | Accepted: setup-only/selected-user administrator recovery requires a current HA administrator plus explicit installation-console approval | Bind both authorities to the same target and installation; preserve the mapping and history | Owner confirmed 2026-10-29; runtime expiry, single-use and race proof pending |
+| A28 | Accepted: HA outage permits existing-session local queries only until original expiry; all changes remain blocked | Known revocation still applies and availability failure cannot renew authority | Owner confirmed 2026-10-29; concrete identity/session adapter proof pending |
+| A29 | Accepted: administrator manages configuration/members/privileged corrections; adult handles daily operations and restricted-work approval; restricted completes assigned work and adds own shopping requests; viewer queries; all edit own preferences | Provide usable defaults within the already accepted household/member customization model | Owner confirmed 2026-10-31; concrete permission policy and API tests pending |
 
-All eleven SDDs remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
+All eleven owning SDDs and the M1 companion remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
 The Copilot limitation is an observed constraint, not permission to change its implementation,
 installed files, statuses, or checks. Documentation can be reviewed through its existing documentation workflow.
 
 ## Review status
 
-The latest owner-question batches are answered and recorded in A6 and A22–A26. Administrator mapping supports all three requested modes; the default is all_ha_administrators, superseding the installer's-only recommendation from the question.
+The latest owner-question batches are answered and recorded in A6 and A22–A29. Administrator mapping supports all three requested modes; the default is all_ha_administrators, superseding the installer's-only recommendation from the question.
 
 All SDDs remain Draft. Authentication/administrator proof and recovery, the detailed permission matrix, time-zone/library interoperability, adapter feasibility and numeric resource bounds still need explicit engineering/security review and executable evidence. These gates do not reopen the accepted architecture, product policies or launch scope.
 
@@ -65,3 +68,11 @@ All SDDs remain Draft. Authentication/administrator proof and recovery, the deta
 - Administrator mapping is configurable: all HA administrators by default, only the verified setup administrator, or an explicitly selected HA user. Prove identity and the relevant HA privilege; retain each grant's source and enforce revocation.
 - Predefined administrator/adult/restricted/viewer profiles support household adjustments and per-member exceptions. Backend authorization, scope, ledger integrity and required adult verification remain enforced.
 - Repeated autumn wall times execute once at the first appearance by default, with a household option for the second. Preserve nominal identity and disclose the resolved instant.
+
+## Backup sequencing for M1
+
+The owner has not selected a new automatic backup frequency or retention policy. This increment
+implements the consistent snapshot/restore primitive; Supervisor packaging will participate in HA
+backups, and standalone snapshots remain explicit local operations. Scheduling/retention and
+package-specific recovery objectives remain deployment/operations review items. No daily/weekly
+rotation or recovery-time SLA is recorded as owner-approved.

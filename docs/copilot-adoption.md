@@ -22,8 +22,8 @@ Every case is planned acceptance work, not a claim that tests exist.
 
 ## Catalog limitation
 
-The audited SDK version-1 validator requires nonempty entrypoints, code and tests arrays for every capability,
-including status proposed. Domus has no implementation files yet. The proposed catalog therefore preserves
+The initially audited SDK version-1 validator required nonempty entrypoints, code and tests arrays for every capability,
+including status proposed. At that foundation snapshot Domus had no implementation files. The proposed catalog preserved
 empty arrays and an explicit readiness blocker instead of referencing fake source or calling documents code.
 The original validator is run unchanged against the package; failure is recorded in the validation evidence in docs/sdd-validation.md.
 A passing draft-format check cannot establish gate readiness.
@@ -45,4 +45,10 @@ A linked PR carries validation and unresolved decisions; maintainers own merge a
 
 The specification foundation had no runtime package, pnpm task or project CI. Issue #4 now adds a development-tooling package, locked dependencies, tests and a separate project-owned CI Check workflow, documented in [development](development.md). Household application/runtime capabilities remain prospective. Commands in the unchanged upstream standard are not Domus commands unless the development guide verifies them. The original draft-check runner outside this repository remains a review aid and does not replace the Action's bundled authority.
 
-The current catalog registers only real delivery-quality tooling/CI evidence. Its proposed/Draft status remains unchanged, and the other ten capabilities retain absent implementation evidence. The pinned original validator therefore reports 30 remaining missing-evidence errors; the foundation's original 33-error result is preserved separately. This is ordinary evidence registration after implementation, not a schema/status bypass or a Copilot change.
+The tooling checkpoint registered real delivery-quality evidence and reduced the original pinned validator's
+errors from 33 to 30; those reports remain historical. On 2026-10-31, reviewed v3 revision
+3e7ceea08e6131360e026937d1c0cc1b120472e0 accepted the truthful proposed catalog with zero errors.
+The Action then published the issue #6 companion and verified its managed branch at
+3fdf4f841e7e2f6d37f8ebfd4b8d80f1ce90090f. No manual branch or validation bypass was used.
+The current storage checkpoint adds only actual partial platform evidence; statuses remain proposed/Draft,
+missing entrypoints remain empty and HA/runtime acceptance is not inferred. Copilot stays unchanged.
