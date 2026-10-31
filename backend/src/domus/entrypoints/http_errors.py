@@ -66,6 +66,17 @@ PUBLIC_CODES = frozenset(
         "operation_missing",
         "storage_busy",
         "invalid_ingress_subject",
+        "recovery_unavailable",
+        "recovery_missing",
+        "recovery_expired",
+        "recovery_not_pending",
+        "recovery_not_approved",
+        "recovery_closed",
+        "recovery_binding_changed",
+        "recovery_capacity",
+        "recovery_pending",
+        "recovery_exists",
+        "invalid_recovery_time",
     }
 )
 

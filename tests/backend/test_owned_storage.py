@@ -358,3 +358,143 @@ def test_ready_owned_directory_permits_explicit_v1_migration_without_recreating_
         assert unit.audit.entries("home")[0].operation_id == "old-operation"
         assert unit.outbox.pending()[0].event_id == "old-operation"
     owned.close()
+
+
+def test_console_attachment_coexists_with_one_runtime_without_reinitializing_schema(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from domus.infrastructure.owned_storage import attach_storage
+
+    root = directory(tmp_path)
+    runtime = open_storage(root, "edge")
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Console attachment must not initialize or migrate")
+
+    monkeypatch.setattr(SQLiteDatabase, "initialize", forbidden)
+    console = attach_storage(root, "edge")
+    assert console.installation == runtime.installation
+    with console.database.write() as unit:
+        unit.households.save(Household("home", "Console operation", "UTC", 1), 0)
+    with runtime.database.read() as unit:
+        assert unit.households.current().name == "Console operation"
+    with pytest.raises(StorageBusy):
+        open_storage(root, "edge")
+    console.close()
+    runtime.close()
+
+
+def test_console_guard_prevents_migration_until_attachment_closes(tmp_path: Path) -> None:
+    from domus.infrastructure.owned_storage import attach_storage
+
+    root = directory(tmp_path)
+    open_storage(root, "edge").close()
+    console = attach_storage(root, "edge")
+    with pytest.raises(StorageBusy, match="installation_in_use"):
+        open_storage(root, "edge")
+    console.close()
+    open_storage(root, "edge").close()
+
+
+@pytest.mark.parametrize("state", ["empty", "initializing", "wrong_channel", "missing_database"])
+def test_console_attachment_requires_ready_owned_data_and_never_creates_uuid_or_database(
+    tmp_path: Path, state: str
+) -> None:
+    from domus.infrastructure.owned_storage import attach_storage
+
+    root = directory(tmp_path)
+    if state != "empty":
+        open_storage(root, "edge").close()
+    if state == "initializing":
+        value = marker(root)
+        value["state"] = "initializing"
+        (root / "installation.json").write_text(json.dumps(value))
+    elif state == "missing_database":
+        (root / "domus.sqlite3").unlink()
+    before = {p.name: p.read_bytes() for p in root.iterdir()}
+    with pytest.raises(DatabaseRejected):
+        attach_storage(root, "stable" if state == "wrong_channel" else "edge")
+    for name, value in before.items():
+        assert (root / name).read_bytes() == value
+    if state in ("empty", "missing_database"):
+        assert not (root / "domus.sqlite3").exists()
+
+
+def test_console_attachment_rejects_bad_channel_missing_directory_and_exclusive_maintenance(
+    tmp_path: Path,
+) -> None:
+    import fcntl
+
+    from domus.infrastructure.owned_storage import attach_storage
+
+    root = directory(tmp_path)
+    open_storage(root, "edge").close()
+    with pytest.raises(InvalidInput):
+        attach_storage(root, "invalid")
+    with pytest.raises(StorageFailure):
+        attach_storage(tmp_path / "missing", "edge")
+    descriptor = os.open(root / "maintenance.lock", os.O_RDWR)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with pytest.raises(StorageBusy):
+            attach_storage(root, "edge")
+    finally:
+        os.close(descriptor)
+
+
+def test_lock_io_failure_closes_descriptors_and_does_not_claim_ownership(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import fcntl
+
+    root = directory(tmp_path)
+    original = fcntl.flock
+
+    def fail(*args):
+        raise OSError("injected lock device error")
+
+    monkeypatch.setattr(fcntl, "flock", fail)
+    with pytest.raises(StorageFailure):
+        open_storage(root, "edge")
+    monkeypatch.setattr(fcntl, "flock", original)
+    open_storage(root, "edge").close()
+
+
+def test_explicit_console_attachment_validates_existing_private_database_without_initializing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from domus.domain.storage import Installation
+    from domus.infrastructure.owned_storage import attach_database
+
+    path = tmp_path / "explicit.sqlite3"
+    identity = Installation("047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6", "edge")
+    SQLiteDatabase(path, identity).initialize()
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Attachment must not initialize")
+
+    monkeypatch.setattr(SQLiteDatabase, "initialize", forbidden)
+    attached = attach_database(path, identity)
+    with attached.read() as unit:
+        assert unit.households.current() is None
+    with pytest.raises(StorageFailure):
+        attach_database(tmp_path / "missing", identity)
+    with pytest.raises(DatabaseRejected):
+        attach_database(path, Installation(identity.instance_id, "stable"))
+
+
+def test_explicit_attachment_cannot_bypass_owned_protocol_or_shared_parent_permissions(
+    tmp_path: Path,
+) -> None:
+    from domus.infrastructure.owned_storage import attach_database
+
+    root = directory(tmp_path)
+    owned = open_storage(root, "edge")
+    identity = owned.installation
+    owned.close()
+    with pytest.raises(InvalidInput, match="owned_directory_required"):
+        attach_database(root / "domus.sqlite3", identity)
+    (root / "installation.json").unlink()
+    root.chmod(0o777)
+    with pytest.raises(DatabaseRejected, match="unsafe_installation_directory"):
+        attach_database(root / "domus.sqlite3", identity)

@@ -74,8 +74,13 @@ SUPERVISOR_TOKEN is provisioned privately by HA and must never be copied into a 
 This listener is exclusively for the Supervisor private container network, binds no public app port
 in the reviewed manifest and disables proxy-header rewriting/access logs. GET /health is nonpersonal
 process readiness for Supervisor/loopback, not an HA availability or authenticated-user claim.
-Packaged directory ownership, complete UI, recovery/snapshots and the updated
+Packaged directory ownership, complete UI, snapshots and the updated
 installed artifact remain pending. Do not infer those from passing local fixtures.
+
+[Administrator recovery](administrator-recovery.md) now shares this boundary and the standalone
+application services. Human request/status/completion/cancellation are authenticated routes; approval
+is available exclusively from the installation console. Schema 3 migration and local fixtures do not
+establish recovery acceptance in the old installed preview.
 
 ## Reviewed primary sources
 

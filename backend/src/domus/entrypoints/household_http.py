@@ -15,6 +15,7 @@ from domus.application.household_commands import HouseholdCommands, SetupHouseho
 from domus.application.household_queries import AccessState, HouseholdQueries
 from domus.application.member_commands import MemberCommands, UpdateMember
 from domus.application.policy_commands import PolicyCommands, UpdatePolicy
+from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.identity import (
     AdministratorMapping,
@@ -35,6 +36,8 @@ class HouseholdHTTPContext:
     household: HouseholdCommands
     members: MemberCommands
     policy: PolicyCommands
+    recovery: RecoveryCommands
+    recovery_queries: Callable[[], RecoveryQueries]
 
 
 class _JSONRoute(APIRoute):
@@ -86,6 +89,25 @@ class HouseholdUpdateRequest(StrictModel):
 
 class EnrollmentRequest(StrictModel):
     expected_revision: int = Field(ge=0, le=0)
+
+
+class RecoveryTransitionRequest(StrictModel):
+    expected_revision: int = Field(ge=1, le=2**63 - 1)
+
+
+class RecoveryResponse(StrictModel):
+    request_id: str
+    state: Literal["pending", "approved", "consumed", "canceled", "expired"]
+    revision: int
+    target_ha_user_id: str
+    mapping_mode: Literal["setup_administrator", "selected_ha_user"]
+    policy_revision: int
+    member_id: str | None
+    member_revision: int
+    created_at: int
+    expires_at: int
+    approved_at: int | None
+    closed_at: int | None
 
 
 class MemberUpdateRequest(StrictModel):
@@ -286,5 +308,49 @@ def create_household_router(
             ),
         )
         return _receipt(result)
+
+    @router.post("/recovery/requests", response_model=ReceiptResponse, openapi_extra=write_contract)
+    def start_recovery(
+        request: Request, body: EnrollmentRequest, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).recovery.start(_key(request), body.expected_revision))
+
+    @router.get("/recovery/requests/{request_id}", response_model=RecoveryResponse)
+    def recovery_status(
+        request_id: str, request: Request, query: Annotated[_EmptyQuery, Query()]
+    ) -> RecoveryResponse:
+        return RecoveryResponse.model_validate(
+            context(request).recovery_queries().get(request_id).decode()
+        )
+
+    @router.post(
+        "/recovery/requests/{request_id}/complete",
+        response_model=ReceiptResponse,
+        openapi_extra=write_contract,
+    )
+    def complete_recovery(
+        request_id: str,
+        request: Request,
+        body: RecoveryTransitionRequest,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> ReceiptResponse:
+        return _receipt(
+            context(request).recovery.complete(_key(request), request_id, body.expected_revision)
+        )
+
+    @router.post(
+        "/recovery/requests/{request_id}/cancel",
+        response_model=ReceiptResponse,
+        openapi_extra=write_contract,
+    )
+    def cancel_recovery(
+        request_id: str,
+        request: Request,
+        body: RecoveryTransitionRequest,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> ReceiptResponse:
+        return _receipt(
+            context(request).recovery.cancel(_key(request), request_id, body.expected_revision)
+        )
 
     return router

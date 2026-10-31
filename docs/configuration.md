@@ -10,6 +10,11 @@ The native CLI also supports [--data-directory](owned-data-directory.md) for an 
 and holds the process lock until shutdown. Use it with --public-origin; do not also supply
 --database or --instance-id. The installed stateless Edge preview does not enable it yet.
 
+[domus-admin recovery approve](administrator-recovery.md) uses --data-directory and --channel to
+attach to ready native data, or --database plus --instance-id and --channel for an explicit standalone
+file. It does not create/migrate storage and needs no HA token. New approval requires real terminal
+input/output and the exact displayed request/target confirmation. HTTP cannot supply console authority.
+
 Status: these options run the standalone API. `--database` additionally wires the persistent
 [household API](household-api.md); omitting it keeps the authentication preview. This is not a deployment
 package or complete M1 acceptance. Both installation modes and Stable/Edge

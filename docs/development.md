@@ -6,7 +6,7 @@ The issue #6 checkpoints introduce storage, pure identity policy, local authoriz
 HA protocol adapters have provider/loopback tests and the standalone authentication API/CLI is wired.
 Explicit setup, own enrollment and household edits now have application-layer commands. The native
 Ingress connection preview and immutable-source Edge package are installed and tested on the owner's HA.
-Native persistent API wiring is tested locally. Its app packaging, recovery, snapshots, product UI and complete
+Native persistent API wiring and console-approved recovery are tested locally. App packaging, snapshots, product UI and complete
 Stable/Edge release acceptance remain pending.
 
 ## Reproduce the environment
@@ -190,3 +190,10 @@ its POSIX process lock through the listener lifetime. Real-file/process tests re
 ready data, cross-channel adoption, unsafe files and interrupted metadata; a compatible v1 migration
 preserves history. The package still needs to provision writable private data for its nonroot server
 and verify upgrade/restart on the actual target. See [evidence](evidence/m1-owned-storage.json).
+
+The [administrator recovery checkpoint](administrator-recovery.md) adds the pure bound lifecycle,
+schema 3 migration, same-target fresh completion proof and a console-only approval command. Both
+production HTTP compositions share the human routes. Tests exercise real SQLite races/rollback,
+terminal confirmation in a separate PTY process, approval output uncertainty and native/standalone
+request-to-completion journeys. [Evidence](evidence/m1-administrator-recovery.json) identifies source
+and remaining live/package work. Recovery has not been installed in the owner's stateless Edge preview.

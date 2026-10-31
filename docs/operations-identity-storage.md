@@ -1,9 +1,9 @@
 # Identity and storage operations
 
-Status: standalone authentication API/CLI, transactional SQLite core and schema 2 are implemented.
-Application-layer household/member/policy commands and standalone public routes are implemented.
-Console recovery approval, snapshot/restore commands, persistent Supervisor runtime wiring and
-complete deployment acceptance remain pending. Do not use SQL edits to bypass setup.
+Status: both persistent household APIs, bounded sessions, transactional SQLite schema 3 and
+[console-approved administrator recovery](administrator-recovery.md) are implemented. Snapshot/restore,
+private app data provisioning and complete deployment acceptance remain pending. The installed Edge
+preview is unchanged. Do not use SQL edits to bypass setup.
 
 ## Authentication API
 
@@ -20,7 +20,8 @@ All API responses disable caching and referrer forwarding. Errors use a stable c
 next action and server-created correlation; input/provider details are not reflected. Framework
 validation cannot echo an authorization code. Unknown paths and methods do not redirect. There is no
 HTTP recovery-approval route. The standalone [household/member/policy/operation routes](household-api.md)
-are enabled by --database; recovery routes remain pending.
+are enabled by --database. Both persistent compositions also expose own recovery request/status,
+completion and cancellation, with approval available only through domus-admin in a real console.
 
 ## Retained state and recovery
 
@@ -48,13 +49,13 @@ record cleanup without retaining credentials or unnecessary personal data.
 
 SQLite commits household state, policy, scoped receipts, audit and outbox atomically. Outbox delivery
 failure does not reverse a committed business result. Retain replay evidence across restart, migration,
-cleanup and future restore. [Schema 1-to-2 migration](migrations-identity-storage.md) is additive and
+cleanup and future restore. [Schema 1/2-to-3 migration](migrations-identity-storage.md) is additive and
 atomic; old households without policy fail closed rather than promoting a browser.
 
-Console-approved administrator recovery must still require a fresh current HA administrator, exact
-target/request/UUID/channel/mapping binding, ten-minute expiry and atomic single use. Snapshot/restore
-must still verify consistent schema/identity/integrity/checksum and activate only a new owned directory.
-These commands are not yet present. No automatic backup frequency or retention has been approved.
+[Administrator recovery](administrator-recovery.md) now requires fresh current HA administrator proof,
+exact target/request/UUID/channel/mapping/revision binding, ten-minute expiry and atomic single use.
+Snapshot/restore must still verify consistent schema/identity/integrity/checksum and activate only a
+new owned directory; those commands remain pending. No automatic backup schedule/retention is approved.
 
 The [native persistent runtime](native-household-api.md) clears only its local bindings on shutdown;
 Supervisor owns its upstream cookie and transport grant. Reopening through HA freshly proves the

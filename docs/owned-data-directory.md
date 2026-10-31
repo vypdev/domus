@@ -25,6 +25,12 @@ until shutdown, including the listener's lifetime. Another process gets installa
 than racing migrations or silently starting a second writer. Closing or process death releases the
 lock. All entrypoints that access these files must honor the same ownership protocol.
 
+Startup holds maintenance.lock exclusively during initialization/migration, then retains a shared
+guard while serving. [Console approval](administrator-recovery.md) attaches to ready matching data
+with another shared guard, without migration, UUID generation or a second server lease. It can run
+alongside the one server. An active console attachment prevents startup migration until it closes.
+The explicit-file console refuses an owned-directory marker so it cannot bypass these guards.
+
 ## Durable states
 
 | State | Startup behavior |
@@ -50,8 +56,8 @@ that operator replacing paths or editing metadata. The protocol does not authori
 
 SQLite, installation metadata and replay evidence form one operational unit. Do not delete the marker
 to resolve a startup failure, copy a database alone into an empty directory, or run a standalone
-explicit-database process concurrently against these files. Consistent snapshot/restore and console
-recovery are still pending; no automatic backup schedule or retention is introduced.
+explicit-database process concurrently against these files. Consistent snapshot/restore commands
+remain pending; no automatic backup schedule or retention is introduced.
 
 ## Verification and packaging boundary
 

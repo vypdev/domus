@@ -14,6 +14,7 @@ from domus.application.household_commands import HouseholdCommands
 from domus.application.household_queries import HouseholdQueries
 from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
+from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.household_http import HouseholdHTTPContext
@@ -98,6 +99,8 @@ def _compose_business(
             HouseholdCommands(store, actor, directory, zones, utc, identifiers),
             MemberCommands(store, actor, directory, utc, identifiers),
             PolicyCommands(store, actor, directory, utc, identifiers),
+            RecoveryCommands(store, actor, store.installation, utc, identifiers),
+            lambda: RecoveryQueries(store, actor.read(), store.installation, utc),
         )
         return NativeHTTPContext(services, actor.status, actor.csrf, actor.verify_csrf)
 

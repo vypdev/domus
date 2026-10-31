@@ -2,7 +2,8 @@
 
 Status: strict HTTP routes, local queries, standalone SQLite composition and the
 [native persistent runtime](native-household-api.md) are implemented. Native persistent app packaging,
-the product UI, recovery and snapshots are still pending. The installed Edge 0.0.0-edge.1 app remains
+the product UI and snapshots are still pending. [Console-approved recovery](administrator-recovery.md)
+is implemented through the same authenticated boundary. The installed Edge 0.0.0-edge.1 app remains
 the earlier stateless connection preview; it contains none of these routes.
 
 ## Run with persistent standalone data

@@ -4,6 +4,7 @@ from contextlib import AbstractContextManager
 from typing import Protocol
 
 from domus.domain.identity import HouseholdPolicy, Member
+from domus.domain.recovery import RecoveryRequest
 from domus.domain.storage import AuditEntry, CommandKey, Household, OutboxEvent, Receipt
 
 
@@ -31,6 +32,14 @@ class Members(Protocol):
 class Policies(Protocol):
     def get(self, household_id: str) -> HouseholdPolicy | None: ...
     def save(self, policy: HouseholdPolicy, expected_revision: int) -> None: ...
+
+
+class Recoveries(Protocol):
+    def get(self, household_id: str, request_id: str) -> RecoveryRequest | None: ...
+    def pending(
+        self, household_id: str, now: int, *, limit: int = 257
+    ) -> tuple[RecoveryRequest, ...]: ...
+    def save(self, request: RecoveryRequest, expected_revision: int) -> None: ...
 
 
 class Audit(Protocol):
@@ -61,6 +70,8 @@ class UnitOfWork(Protocol):
     def members(self) -> Members: ...
     @property
     def policies(self) -> Policies: ...
+    @property
+    def recoveries(self) -> Recoveries: ...
 
 
 class Transactions(Protocol):

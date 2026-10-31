@@ -4,7 +4,7 @@ Status: the M1 storage kernel, pure identity policy, transaction-bound local aut
 session-lease core, HA adapters, standalone authentication API/CLI and application household/member/policy
 commands are implemented on the Action-managed issue #6 branch. The native connection preview is
 installed and accepted on the identified owner target. Both standalone and native persistent household
-APIs are tested locally. Recovery, snapshots, native persistent packaging/UI and complete deployment acceptance
+APIs and console-approved recovery are tested locally. Snapshots, native persistent packaging/UI and complete deployment acceptance
 remain pending. The [owning companion](../specs/platform-foundation-identity-sqlite.md) retains
 the complete increment contract; this checkpoint does not complete M1 or the product.
 
@@ -51,10 +51,16 @@ passes an existing-only mode to SQLite after readiness, preventing silent empty 
 native composition initializes storage once before starting HTTP and releases ownership at shutdown.
 All filesystem/locking primitives remain outside pure inner layers. See [data lifecycle](owned-data-directory.md).
 
-Schema 2 adds uniquely linked members and revisioned household policy. Its explicit additive
+Schema 2 added uniquely linked members and revisioned household policy. Its explicit additive
 upgrade accepts the owned schema 1 checkpoint and preserves household data, receipts, audit and
 outbox. Failure rolls back the entire DDL migration. The frozen old-schema fixture is independent
 of current schema constants. See [migration limits](migrations-identity-storage.md).
+
+Schema 3 adds recovery requests. The pure model binds target, installation/channel, policy/mapping
+and member revisions to fixed ten-minute request and approval windows. Human commands require fresh provider proof;
+the separate console use case obtains an explicit terminal decision outside the writer lock. The
+transaction rechecks binding and commits approval or consumption/grant with receipt/audit/outbox.
+Both HTTP compositions expose human routes while only domus-admin wires the console confirmation port.
 
 One household per installation is reinforced by a singleton constraint. Household writes compare
 the expected revision, and other input values use parameterized SQL. Outbox acknowledgements are
@@ -121,7 +127,7 @@ These fixtures alone do not establish live HA or complete packaged acceptance. T
 [member](evidence/m1-member-administration.json) and [policy](evidence/m1-policy-administration.json)
 checkpoints add real-file authority races, canonical retries and provenance checks. The
 [HTTP checkpoint](evidence/m1-household-api.json) adds production standalone composition, strict JSON,
-read-grace/authority boundaries and schema tests. Native persistent packaging, recovery and full M1
+read-grace/authority boundaries and schema tests. Native persistent packaging, snapshots and full M1
 acceptance remain outstanding.
 
 See [development checks](development.md), [owner decisions](decisions.md),

@@ -7,7 +7,9 @@ from domus.application.household_queries import HouseholdQueries
 from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
 from domus.application.ports import Transactions
+from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.sessions import SessionGuard
+from domus.domain.storage import Installation
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock, TimeZoneCatalog
 from domus.infrastructure.session_access import SessionActor, SessionDirectory
@@ -15,7 +17,10 @@ from domus.infrastructure.standalone_sessions import StandaloneIdentity
 
 
 def standalone_context(
-    store: Transactions, guard: SessionGuard, identity: StandaloneIdentity
+    store: Transactions,
+    guard: SessionGuard,
+    identity: StandaloneIdentity,
+    installation: Installation,
 ) -> Callable[[str], HouseholdHTTPContext]:
     clock, identifiers, zones = SystemClock(), SecureIdentifiers(), TimeZoneCatalog()
 
@@ -26,6 +31,8 @@ def standalone_context(
             HouseholdCommands(store, actor, directory, zones, clock, identifiers),
             MemberCommands(store, actor, directory, clock, identifiers),
             PolicyCommands(store, actor, directory, clock, identifiers),
+            RecoveryCommands(store, actor, installation, clock, identifiers),
+            lambda: RecoveryQueries(store, actor.read(), installation, clock),
         )
 
     return context

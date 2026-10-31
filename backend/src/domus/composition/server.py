@@ -56,7 +56,7 @@ def create_runtime(
     if database is not None:
         store = SQLiteDatabase(database, installation)
         store.initialize()
-        context = standalone_context(store, guard, identity)
+        context = standalone_context(store, guard, identity, installation)
     app = create_app(
         authentication,
         guard,

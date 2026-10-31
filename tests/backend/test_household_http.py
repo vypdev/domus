@@ -15,6 +15,7 @@ from domus.application.household_commands import HouseholdCommands
 from domus.application.household_queries import HouseholdQueries
 from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
+from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.sessions import SessionGuard
 from domus.domain.errors import IdentityUnavailable
 from domus.domain.identity import HumanIdentity
@@ -53,6 +54,8 @@ def fixture(tmp_path: Path) -> tuple:
             HouseholdCommands(store, actor, directory, Zones(), clock, identifiers),
             MemberCommands(store, actor, directory, clock, identifiers),
             PolicyCommands(store, actor, directory, clock, identifiers),
+            RecoveryCommands(store, actor, store.installation, clock, identifiers),
+            lambda: RecoveryQueries(store, guard.read(session_id), store.installation, clock),
         )
 
     app = create_app(

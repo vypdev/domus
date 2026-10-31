@@ -34,6 +34,7 @@ _ORIGINAL_PERMISSION = {
     "household.update": Permission.HOUSEHOLD_MANAGE,
     "member.update": Permission.MEMBERS_MANAGE,
     "policy.update": Permission.POLICY_MANAGE,
+    "recovery.complete": Permission.POLICY_MANAGE,
 }
 
 
@@ -171,7 +172,11 @@ class HouseholdQueries:
             )
             if receipt is None:
                 raise NotFound("operation_missing")
-            if receipt.command.action != "member.enroll":
+            if receipt.command.action not in (
+                "member.enroll",
+                "recovery.request",
+                "recovery.cancel",
+            ):
                 original = _ORIGINAL_PERMISSION.get(receipt.command.action)
                 if original is None:
                     raise Forbidden("permission_denied")

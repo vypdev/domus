@@ -149,6 +149,7 @@ Duplicate identical commands return original authorized results. Changed-payload
 | Member exception | Bounded action decision | No exception | Allow/deny supported ordinary permissions; constraints always deny | Member policy; administrator-only revisioned edit |
 | Session lifetime | Bounded duration | Operator/product bounded value | Fixed maximum; absolute expiry, no outage extension | Server session state, not business DB |
 | SQLite writer wait | Duration | 250 ms | Fixed bounded budget | Adapter policy; busy returns retryable 503 |
+| Pending recovery request lifetime | Duration | 10 minutes | Fixed | Must be approved while live |
 | Recovery approval lifetime | Duration | 10 minutes | Fixed, not configurable | Target/request-bound, single use |
 | Installation identity | UUID + channel | Generated once at installation | `stable` or `edge`; exact configured match | Persistent DB metadata; mismatch forbids mutation |
 
@@ -496,6 +497,19 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/backend/test_owned_storage.py` | create |
 | `docs/owned-data-directory.md` | create |
 | `docs/evidence/m1-owned-storage.json` | create |
+| `backend/src/domus/domain/recovery.py` | create |
+| `backend/src/domus/application/recovery_commands.py` | create |
+| `backend/src/domus/infrastructure/sqlite_recovery.py` | create |
+| `backend/src/domus/composition/admin.py` | create |
+| `backend/src/domus/entrypoints/console_recovery.py` | create |
+| `tests/backend/test_recovery_values.py` | create |
+| `tests/backend/test_sqlite_recovery.py` | create |
+| `tests/backend/test_recovery_commands.py` | create |
+| `tests/backend/test_recovery_console.py` | create |
+| `tests/backend/test_recovery_http.py` | create |
+| `tests/fixtures/sqlite/v2.sql` | create |
+| `docs/administrator-recovery.md` | create |
+| `docs/evidence/m1-administrator-recovery.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -582,7 +596,9 @@ all planned acceptance cases. The specifications remain Draft.
 
 | Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json) and [guide](../docs/owned-data-directory.md): persisted UUID/channel, initialization/ready states, exclusive process lease, private files, process-death resumption and existing-only ready SQLite. Native CLI is tested; packaged /data provisioning remains pending. |
 
+| Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json) and [guide](../docs/administrator-recovery.md): schema 3, both human APIs and console-only approval, fresh completion, atomic single use, real terminal and SQLite races/rollback. Package/live recovery acceptance and snapshots remain pending. |
+
 No test credentials enter business storage, evidence, responses or snapshots. Native authentication
 is independent of standalone OAuth. Current outstanding work includes native private data provisioning, updated app
-packaging and UI, recovery, snapshots, standalone companion authority and complete deployment/channel
+packaging and UI, snapshots, standalone companion authority and complete deployment/channel
 acceptance. Passing protocol/ASGI fixtures never establishes those remaining live gates.
