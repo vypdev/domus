@@ -88,6 +88,8 @@ If task-scoped consumption is disabled and the actor lacks the applicable invent
 
 Verification controls point eligibility independently of physical usage. An eligible material movement may post while work awaits adult approval; rejection or reopening never fabricates a physical return. Replaying the original completion, approving it or changing either policy cannot consume again. Retained receipts/history explain the original effective policy but never authorize a newly revoked movement.
 
+The owner confirmed on 2026-10-31 that a restricted member may claim an available task for themselves when it is offered to their profile. This is enabled by default and configurable per household/task. Current eligibility, capacity, profile/member exceptions and explicit applicable denials are checked at commit; competing claims cannot silently reassign work. Claiming does not waive adult verification or authorize another person as claimant. The backend companion specifies and tests this contract independently of the existing 49-case inventory.
+
 ### 6.2 States and alternatives
 
 Definition: draft -> active <-> paused -> archived. Occurrence: draft -> available <-> assigned -> in_progress; available/assigned/in_progress -> blocked or completed; blocked -> available or assigned; active states -> cancelled or skipped. Reopen completed -> assigned if assignees exist, otherwise available. Verification is a separate pending/approved/rejected decision; pending completion is displayed as awaiting verification and awards no points.

@@ -37,6 +37,8 @@ Confirmed owner requirements are recorded in [product vision](product-vision.md)
 | A31 | Accepted: an authorized adult who performed the work may approve by default; configurable household policy and administrator-authorized task override | Supports family workflows while allowing an independent-adult alternative; restricted self-approval and revoked authority remain denied | Owner confirmed 2026-10-31; completion snapshots, current-permission and replay contracts remain implementation gates |
 | A32 | Accepted: a restricted member may record only materials linked to an authorized task by default, without general inventory permission; configurable by household/task | Preserve valid performed work and narrowly scoped usage; disabled authority retains unposted materials for explicit authorized follow-up | Owner confirmed 2026-10-31; product/unit/location, stock, current-authority and deduplication contracts remain implementation gates |
 
+| A33 | Accepted: restricted members may self-claim available work offered to their profile by default; configurable household/task | Check current eligibility, capacity and explicit denials without silent reassignment; required adult approval remains | Owner confirmed 2026-10-31; task-execution-foundation cases and actual runtime proof remain required |
+
 All eleven owning SDDs and the M1 companion remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
 The Copilot limitation is an observed constraint, not permission to change its implementation,
 installed files, statuses, or checks. Documentation can be reviewed through its existing documentation workflow.

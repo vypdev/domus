@@ -8,7 +8,7 @@
 - Scope: Specify a durable first backend increment for task definitions, occurrences, completion cycles, authorization, and honest consumer integration seams.
 - Related issues/PRs: [Issue #13](https://github.com/vypdev/domus/issues/13); merged PR #12 is historical context.
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: None among the supplied product decisions. Readiness remains Draft until the companion is validated and published on its exact managed branch, reviewers validate contracts and evidence, and implementation/composition constraints are made executable. This specification does not establish implementation or runtime acceptance.
+- Open decisions blocking readiness: Whether pending prerequisite approval permits dependent completion is awaiting the owner; unrelated rules can proceed. Readiness remains Draft until the companion is validated and published on its exact managed branch, reviewers validate contracts and evidence, and implementation/composition constraints are made executable. This specification does not establish implementation or runtime acceptance.
 
 ## 1. Executive summary
 
@@ -16,7 +16,7 @@ This new companion to `specs/household-tasks.md` defines a backend foundation fo
 
 An adult creates “Wipe table” -> the definition and available occurrence are committed together -> an eligible member claims it -> assigned members perform it -> a completion cycle records performers and actual time -> required adult approval is recorded -> uniquely identified events are available to real consumers.
 
-The companion preserves all 49 existing cases in `specs/household-tasks.md`; its added cases use the `task-execution-foundation-CNN` namespace. Existing owning specifications remain `specs/household-tasks.md` and its cited capability references; this companion does not yet own itself in the catalog. Catalog `code`, `tests`, and `workflows` arrays are empty for household-tasks at the verified base: there is no implementation evidence to claim. Source paths cited below establish current locations only.
+The companion preserves all 49 existing cases in `specs/household-tasks.md`; its added cases use the `task-execution-foundation-CNN` namespace. The Action registered both documents under household-tasks in commit d4f3f911dd145d77255f47a882542f08e5c98055. Catalog implementation arrays remain empty at publication: a registered contract is not implementation evidence.
 
 ## 2. Problem, current behavior, and evidence
 
@@ -151,7 +151,7 @@ Definition states: `draft -> active`; `active <-> paused`; `draft|active|paused 
 | State | Entered when | User-visible meaning | Allowed next states | Recovery/owner |
 |---|---|---|---|---|
 | draft | Explicit occurrence preparation | Not offered yet | available | Task application publishes after validation |
-| available | Initial atomic create or release/unblock without assignees | Eligible to claim/assign | assigned, blocked, cancelled, skipped | Authorized task command |
+| available | Initial atomic create or release/unblock without assignees | Eligible to claim/assign | assigned, blocked, completed, cancelled, skipped | Authorized task command; completion requires its separate performer authority |
 | assigned | Assignees set | Work has named responsibility | available, in_progress, blocked, completed, cancelled, skipped | Assignment or valid transition |
 | in_progress | Assigned work starts | Work underway | blocked, completed, cancelled, skipped | Assigned member or authorized manager |
 | blocked | Explicit block or unmet condition | Cannot currently proceed | assigned if assignees remain; otherwise available | Resolve reason and transition |
@@ -168,7 +168,7 @@ Every mutation requires expected revision. Existing receipt replay occurs after 
 | Input | Type | Recommended default | Allowed values/range | Scope/persistence |
 |---|---|---|---|---|
 | claim_allowed | boolean | true for eligible available work | true/false | Household default, task override; reread at claim commit |
-| eligible_roles | unique Role list | Existing configured eligible profiles | bounded known roles | Household/task; reread at commit with member exceptions |
+| eligible_roles | unique Role list | administrator, adult, restricted | bounded known roles | Household/task; reread at commit with member exceptions |
 | verification | enum | role_default | `role_default`, `authorized_adult` | Definition snapshot per completion cycle |
 | adult_performer_may_approve | boolean | true | true/false | Household/task; effective value snapshotted; current approval authority rechecked |
 | task_scoped_material_consumption | boolean | true | true/false | Household/task; explicit applicable member denial takes precedence |
@@ -178,6 +178,14 @@ Every mutation requires expected revision. Existing receipt replay occurs after 
 | title/description/tags/priority | bounded text/list/enum | Required title; empty description/tags; normal priority | title 1..160; description 0..4000; up to 16 unique tags, each <=64; low/normal/high/urgent | Definition; updates revisioned |
 
 Policy PUT is administrator-controlled. Cross-field validation rejects unknown roles/values, duplicate tags/IDs, foreign material lines, invalid quantities, unbounded lists, and unsupported providers. Unknown future persisted enum values fail closed and remain inspectable for migration; absent fields receive documented defaults only in migration. No arbitrary URLs, code, refs, secrets, product IDs, units, or locations are accepted. Recommended configuration enables eligible self-claim with adult verification for restricted performers. A meaningful alternative disables self-claim for a household while retaining adult-managed assignment. No configuration can weaken human proof, current authorization, revision checks, performer attribution, or consumer ownership.
+
+### Executable policy refinements before implementation
+
+The Action published this Draft before source changes. The declared paths below are concrete planned leaves; they confer no implementation credit. Domain value objects use exact enums/booleans, valid UTF-8 text without control characters (U+0000 through U+001F or U+007F), bounded unique tuples and positive signed-64-bit revisions. UTC milliseconds are nonnegative signed-64-bit integers. Invalid values cannot be reconstructed permissively from storage. Ordinary title-only creation is active/available; an explicitly draft definition creates a draft occurrence. Initial definition states are draft or active; paused/archived are later transitions. Pausing/archiving stops new occurrence creation but retains existing work and history.
+
+New proposed semantic permission IDs are tasks.read, tasks.claim, tasks.manage, tasks.record_for_others and tasks.material_use. These are additive to the existing tasks.create/complete/approve/configure. Defaults: all profiles can read household tasks; administrator/adult/restricted can claim eligible work and use scoped linked materials; administrator/adult can manage work and record on behalf of others. Viewer mutations remain denied by default. Household/profile/member adjustments apply under the accepted precedence. Claim is a real independent action; it must not pretend an available task was already assigned to evade the existing restricted-completion scope. Restricted completion still requires actual assignment and its own participation. Policy configuration stays administrator-controlled; approval still requires a current adult and approval permission. A new permission never turns a technical identity into a person.
+
+This first pure-policy checkpoint does not yet decide whether a pending prerequisite approval satisfies completion eligibility: the owner has been asked. No completion-gate implementation or acceptance claim may assume that answer. Graph shape/acyclicity and all unrelated lifecycle/claim/verification rules can be implemented independently. Subsequent contract refinements must be recorded before their source changes.
 
 ### Proposed HTTP contract
 
@@ -241,7 +249,7 @@ Text equivalent: both HTTP compositions call shared Application services; Applic
 
 ### 8.3 Executable architecture constraints
 
-Every authored runtime leaf must be declared in the companion before publication and enter backend scope/coverage from its first change. Dependency graph and cycle checks cover all runtime files, including composition, HTTP, migration, restore, and unimported modules. Tests enforce Domain has no inward provider/framework imports; Application references semantic ports only; SQLite/provider mapping remains outer; both compositions invoke the same application services. Schema/OpenAPI contract checks parse generated structure and reject undeclared routes/fields. Existing CI Check required groups run on every PR commit; immutable Copilot checks remain unchanged.
+Every authored runtime leaf must be declared in the companion before its first source change and enter backend scope/coverage from its first change. Dependency graph and cycle checks cover all runtime files, including composition, HTTP, migration, restore, and unimported modules. Tests enforce Domain has no inward provider/framework imports; Application references semantic ports only; SQLite/provider mapping remains outer; both compositions invoke the same application services. Schema/OpenAPI contract checks parse generated structure and reject undeclared routes/fields. Existing CI Check required groups run on every PR commit; immutable Copilot checks remain unchanged.
 
 ## 9. UI/UX and content contract
 
@@ -288,7 +296,7 @@ Concrete state variants:
 
 **Partial success:** “Work saved; material usage not posted — The completion is retained, but the Inventory consumer is unavailable. No stock movement was created. An authorized operator can inspect the pending intent and retry settlement after service returns.”
 
-**Completed:** “Wipe table — Approved. The cycle is closed and the approval is recorded. Points delivery is shown separately and only after the real Points consumer confirms it.”
+**Completed:** “Wipe table — Approved. The work and approval are recorded. Points delivery is shown separately and only after the real Points consumer confirms it.” Approval does not close the cycle; reopening does.
 
 ### 9.3 Issue, PR, and comment behavior
 
@@ -410,33 +418,94 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | Path | Change |
 |---|---|
 | `specs/task-execution-foundation.md` | create |
-| `specs/household-tasks.md` | reference |
-| `specs/catalog.json` | reference |
-| `specs/CATALOG.md` | reference |
+| `specs/household-tasks.md` | update |
+| `specs/catalog.json` | update |
+| `specs/CATALOG.md` | update |
 | `specs/_template.md` | reference |
-| `README.md` | reference |
-| `docs/architecture.md` | reference |
-| `docs/decisions.md` | reference |
-| `docs/roadmap.md` | reference |
+| `README.md` | update |
+| `docs/architecture.md` | update |
+| `docs/decisions.md` | update |
+| `docs/roadmap.md` | update |
 | `docs/m1-acceptance-audit.md` | reference |
 | `docs/product-vision.md` | reference |
 | `docs/operations.md` | reference |
-| `docs/user-guide.md` | reference |
+| `docs/user-guide.md` | update |
 | `docs/contracts/home-assistant.md` | reference |
 | `backend/src/domus/application/commands.py` | reference |
-| `backend/src/domus/infrastructure/sqlite.py` | reference |
-| `backend/src/domus/http/openapi.json` | create |
+| `backend/src/domus/infrastructure/sqlite.py` | update |
 | `docs/tasks/execution.md` | create |
 | `docs/tasks/operator-recovery.md` | create |
 | `docs/tasks/migration.md` | create |
+| `backend/src/domus/domain/task_values.py` | create |
+| `backend/src/domus/domain/task_policy.py` | create |
+| `backend/src/domus/domain/tasks.py` | create |
+| `backend/src/domus/application/task_ports.py` | create |
+| `backend/src/domus/application/task_authorization.py` | create |
+| `backend/src/domus/application/task_commands.py` | create |
+| `backend/src/domus/application/task_queries.py` | create |
+| `backend/src/domus/application/task_materials.py` | create |
+| `backend/src/domus/infrastructure/sqlite_tasks.py` | create |
+| `backend/src/domus/infrastructure/sqlite_task_schema.py` | create |
+| `backend/src/domus/infrastructure/sqlite_task_integrity.py` | create |
+| `backend/src/domus/infrastructure/task_materials.py` | create |
+| `backend/src/domus/infrastructure/task_cursor.py` | create |
+| `backend/src/domus/entrypoints/task_http.py` | create |
+| `backend/src/domus/entrypoints/task_dto.py` | create |
+| `backend/src/domus/composition/tasks.py` | create |
+| `tests/backend/test_task_values.py` | create |
+| `tests/backend/test_task_policy.py` | create |
+| `tests/backend/test_tasks.py` | create |
+| `tests/backend/test_task_authorization.py` | create |
+| `tests/backend/test_task_commands.py` | create |
+| `tests/backend/test_task_queries.py` | create |
+| `tests/backend/test_task_materials.py` | create |
+| `tests/backend/test_sqlite_tasks.py` | create |
+| `tests/backend/test_sqlite_task_integrity.py` | create |
+| `tests/backend/test_task_http.py` | create |
+| `tests/backend/test_task_runtime.py` | create |
+| `tests/backend/test_task_restoration.py` | create |
+| `docs/evidence/task-execution-foundation.json` | create |
+| `tooling/domus_tooling/backend_coverage.py` | create |
+| `tests/python/test_backend_coverage.py` | create |
+| `docs/household-api.md` | update |
+| `docs/native-household-api.md` | update |
+| `docs/sdd-validation.md` | update |
+| `docs/development.md` | update |
+| `specs/README.md` | update |
+| `specs/household-identity.md` | update |
+| `backend/src/domus/domain/identity.py` | update |
+| `backend/src/domus/application/ports.py` | update |
+| `backend/src/domus/infrastructure/sqlite_snapshots.py` | update |
+| `backend/src/domus/infrastructure/sqlite_history.py` | update |
+| `backend/src/domus/composition/household.py` | update |
+| `backend/src/domus/composition/ingress.py` | update |
+| `backend/src/domus/composition/server.py` | update |
+| `backend/src/domus/entrypoints/household_http.py` | update |
+| `backend/src/domus/entrypoints/http.py` | update |
+| `backend/src/domus/entrypoints/native_http.py` | update |
+| `docs/contracts/household-api.openapi.json` | update |
+| `docs/contracts/native-household-api.openapi.json` | update |
+| `tooling/domus_tooling/cli.py` | update |
+| `tests/python/test_cli.py` | update |
+| `.github/workflows/ci_check.yml` | update |
+| `tests/python/test_ci_contract.py` | update |
+| `tests/architecture/test_python_architecture.py` | update |
+| `tests/backend/test_identity_policy.py` | update |
+| `tests/backend/test_household_runtime.py` | update |
+| `tests/backend/test_sqlite_transactions.py` | update |
+| `tests/backend/test_sqlite_snapshots.py` | update |
+| `tests/backend/test_sqlite_restoration.py` | update |
+| `tests/backend/test_sqlite_history_integrity.py` | update |
+| `tests/backend/test_owned_generations.py` | update |
+| `tests/backend/test_restored_commands.py` | update |
 
-User guide must show title-only creation, claim, completion, and approval defaults. Setup documentation covers existing proof/session/permissions and states no new gateway/login. Operator guide covers pending consumers, replay, restore, settlement, and recovery. Contributor/architecture documentation shows ports, identity ownership, migration, OpenAPI, and coverage inventory. OpenAPI is generated/contract-validated from the proposed route contract; its planned path must follow the repository’s actual API artifact convention during publication review. Documentation examples are synchronized with contract fixtures. Validate links, route navigation, spec/catalog structure, and `pnpm run validate:specifications`; no missing artifact is treated as existing evidence.
+User guide must show title-only creation, claim, completion, and approval defaults. Setup documentation covers existing proof/session/permissions and states no new gateway/login. Operator guide covers pending consumers, replay, restore, settlement, and recovery. Contributor/architecture documentation shows ports, identity ownership, migration, OpenAPI, and coverage inventory. OpenAPI is generated/contract-validated from the proposed route contract; its planned path must follow the repository’s actual API artifact convention during publication review. Documentation examples are synchronized with contract fixtures. Validate links, route navigation, spec/catalog structure, and the unchanged pinned SDK format/consistency/catalog validators and `uv run domus-check docs`; no missing artifact is treated as existing evidence.
 
 ## 16. Acceptance
 
 These are executable acceptance scenarios for future implementation; none is represented as run or passed.
 
-1. Given a verified adult and an empty title-only create request with a valid idempotency key, when the command commits, then one definition, one available occurrence, one receipt, and one uniquely identified event exist atomically; replay returns the same facts.
+1. Given a verified adult and a valid title-only create request with an idempotency key, when the command commits, then one definition, one available occurrence, one receipt, and one uniquely identified event exist atomically; replay returns the same facts. An empty title is invalid and produces none of those effects.
 2. Given an available task offered to a restricted member’s profile and claim enabled, when that member claims at the current revision, then the server assigns the authenticated actor; concurrent claims yield one winner and required approval remains in force.
 3. Given a completion with multiple actual performers, when saved, then assigned members, performer set, recording actor, performed time, policy snapshot, recorded time, and cycle ID remain distinct and queryable.
 4. Given any restricted performer, when an adult approval is pending or rejected, then no Points award is reported; an authorized adult may approve under current authority and the cycle snapshot rules.
@@ -490,7 +559,7 @@ These are executable acceptance scenarios for future implementation; none is rep
 - [ ] Failure, partial success, retry, idempotency, concurrency, revocation, restore, security, and cleanup scenarios pass.
 - [ ] Required CI jobs pass at current head and full-context Bugbot has no unresolved findings; immutable Copilot checks remain intact.
 - [ ] Real SQLite/loopback and port-fake evidence are distinguished; owner HA adoption and real consumer delivery are required before integrated release claims.
-- [ ] `specs/catalog.json` evidence and `specs/CATALOG.md` are current and `pnpm run validate:specifications` passes.
+- [ ] `specs/catalog.json` evidence and `specs/CATALOG.md` are current and the unchanged pinned SDK format/consistency/catalog validators and `uv run domus-check docs` passes.
 - [ ] No readiness-blocking decision remains unresolved; Draft readiness blockers are not waived by this document.
 
 ## 20. References and decisions
