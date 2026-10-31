@@ -7,7 +7,15 @@
     "checkJs": true,
     "strict": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["architecture/frontend.mjs", "vitest.config.mjs"]
+  "include": [
+    "architecture/frontend.mjs",
+    "vitest.config.mjs",
+    "tooling/*.mjs",
+    "tests/node/frontend-coverage.test.mjs",
+    "tests/frontend-toolchain/*.mjs"
+  ]
 }

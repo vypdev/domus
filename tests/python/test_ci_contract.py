@@ -101,7 +101,11 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         .decode()
         .split("\0")
     )
-    declared_node_configuration = {"architecture/frontend.mjs", "vitest.config.mjs"}
+    declared_node_configuration = {
+        "architecture/frontend.mjs",
+        "vitest.config.mjs",
+        "tooling/frontend-coverage.mjs",
+    }
     for relative in paths:
         if not relative or relative.startswith("tests/"):
             continue
@@ -110,10 +114,32 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
             assert relative.startswith(("tooling/domus_tooling/", "backend/src/domus/")), (
                 f"Register {relative} in its own tested coverage/architecture gate before adding it"
             )
-        elif suffix in {".js", ".mjs", ".cjs", ".ts", ".tsx"}:
+        elif suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".mts", ".cts", ".tsx"}:
             assert relative in declared_node_configuration, (
                 f"Register {relative} in its own tested coverage/architecture gate before adding it"
             )
+
+
+def test_frontend_toolchain_requires_actual_execution_and_separate_artifacts() -> None:
+    jobs = workflow()["jobs"]
+    job = jobs["frontend_toolchain"]
+    commands = [step["run"] for step in job["steps"] if "run" in step]
+    assert commands == [
+        "pnpm install --frozen-lockfile",
+        "pnpm --filter @domus/frontend-toolchain exec playwright install --with-deps chromium",
+        "pnpm check:frontend-toolchain",
+        "pnpm test:frontend-toolchain",
+        "pnpm build:frontend-toolchain",
+        "pnpm test:frontend-browser",
+        "pnpm test:frontend-guards",
+    ]
+    artifact = next(step for step in job["steps"] if "path" in step.get("with", {}))
+    assert artifact["if"] == "${{ always() }}"
+    assert artifact["with"]["if-no-files-found"] == "error"
+    assert "frontend-toolchain" in artifact["with"]["name"]
+    assert "coverage-negative/" in artifact["with"]["path"]
+    assert "storybook-static/" in artifact["with"]["path"]
+    assert "frontend_toolchain" in jobs["aggregate"]["needs"]
 
 
 def test_backend_cannot_inherit_the_tooling_coverage_result() -> None:

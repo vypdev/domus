@@ -1,4 +1,5 @@
 packages:
   - frontend
+  - tests/fixtures/frontend-toolchain
 onlyBuiltDependencies:
   - esbuild

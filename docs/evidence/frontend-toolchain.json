@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-31T21:06:17.717906+00:00",
+  "baseCommit": "302e440362359f530bee7c09445792e13a59300d",
+  "scope": "Locked development toolchain, reusable coverage policy and fictional framework fixture only. No product UI or HA acceptance.",
+  "runtime": {
+    "node": "24.20.0",
+    "pnpm": "10.34.0",
+    "python": "3.14.6",
+    "platform": "darwin-arm64",
+    "browser": [
+      "chromium 156.0.8078.4"
+    ]
+  },
+  "packages": {
+    "@playwright/test": "1.64.1",
+    "@storybook/web-components-vite": "10.6.5",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@vitest/browser-playwright": "5.0.5",
+    "@vitest/coverage-v8": "5.0.5",
+    "playwright": "1.64.1",
+    "storybook": "10.6.5",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5",
+    "lit": "3.3.3"
+  },
+  "executions": {
+    "frozen": {
+      "command": "pnpm install --frozen-lockfile --offline --ignore-scripts --store-dir /private/tmp/domus-ui-pnpm-store",
+      "exit": 0,
+      "elapsedSeconds": 0.35
+    },
+    "check": {
+      "command": "pnpm check",
+      "exit": 0,
+      "elapsedSeconds": 2.14
+    },
+    "fixture-check": {
+      "command": "pnpm check:frontend-toolchain",
+      "exit": 0,
+      "elapsedSeconds": 3.49
+    },
+    "policy": {
+      "command": "pnpm test",
+      "exit": 0,
+      "elapsedSeconds": 1.27
+    },
+    "unit": {
+      "command": "pnpm test:frontend-toolchain",
+      "exit": 0,
+      "elapsedSeconds": 3.02
+    },
+    "build": {
+      "command": "pnpm build:frontend-toolchain",
+      "exit": 0,
+      "elapsedSeconds": 3.12
+    },
+    "browser": {
+      "command": "pnpm test:frontend-browser",
+      "exit": 0,
+      "elapsedSeconds": 4.28
+    },
+    "guards": {
+      "command": "pnpm test:frontend-guards",
+      "exit": 0,
+      "elapsedSeconds": 5.09
+    }
+  },
+  "counts": {
+    "nodePolicy": 34,
+    "pythonTooling": 72,
+    "pythonArchitecture": 41,
+    "chromiumComponent": 1,
+    "builtOutputJourneys": 4,
+    "guardHarness": 5
+  },
+  "coverage": {
+    "nodePolicy": {
+      "total": {
+        "lines": {
+          "total": 21,
+          "covered": 21,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 24,
+          "covered": 24,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 3,
+          "covered": 3,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 19,
+          "covered": 19,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "architecture/frontend.mjs": {
+        "lines": {
+          "total": 1,
+          "covered": 1,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1,
+          "covered": 1,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "tooling/frontend-coverage.mjs": {
+        "lines": {
+          "total": 20,
+          "covered": 20,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 23,
+          "covered": 23,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 3,
+          "covered": 3,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 19,
+          "covered": 19,
+          "skipped": 0,
+          "pct": 100
+        }
+      }
+    },
+    "frameworkFixture": {
+      "total": {
+        "lines": {
+          "total": 7,
+          "covered": 7,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 8,
+          "covered": 8,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 3,
+          "covered": 3,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 2,
+          "covered": 2,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "tests/fixtures/frontend-toolchain/src/probe-toggle.ts": {
+        "lines": {
+          "total": 7,
+          "covered": 7,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 8,
+          "covered": 8,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 3,
+          "covered": 3,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 2,
+          "covered": 2,
+          "skipped": 0,
+          "pct": 100
+        }
+      }
+    },
+    "pythonTooling": {
+      "statements": 73,
+      "branches": 34,
+      "missedStatements": 0,
+      "missedBranches": 0,
+      "percent": 100
+    }
+  },
+  "negativeAssertions": [
+    "Owned story number title rejected by TS2322 despite the catalog dependency declaration exception.",
+    "Unimported TS and JS modules both appeared with zero coverage; all-four-metric thresholds rejected the execution.",
+    "A real producer report with an omitted branch metric failed the independent evidence command.",
+    "Both Playwright-owned listeners were closed after the positive journeys and after an intentionally failing test."
+  ],
+  "typing": {
+    "allOwnedSource": "strict:true; owned JS uses checkJs:true",
+    "runtimeDependencyDeclarations": "skipLibCheck:false",
+    "catalogDependencyDeclarations": "skipLibCheck:true, bounded to Storybook declarations with observed TS2578/TS2344 under TypeScript 6.0.3; owned catalog code remains checked",
+    "vendorPatches": false
+  },
+  "architecture": {
+    "backendFiles": 103,
+    "backendDependencies": 542,
+    "contractsKept": true,
+    "fixtureIsProductGraph": false
+  },
+  "ci": {
+    "requiredJob": "frontend_toolchain",
+    "requiredJobCount": 7,
+    "hostedCurrentHeadResult": "Separate PR gate; not established by local execution.",
+    "everyPrUpdate": true,
+    "publicationCredentials": false
+  },
+  "limitations": [
+    "The household entry interface and its 48 proposed cases remain unimplemented by this fixture.",
+    "No owner HA connection, household mutation, native Ingress or standalone OAuth journey was exercised.",
+    "This is Chromium fixture evidence, not owner Chrome dogfooding or a full product accessibility audit.",
+    "Both deployment targets, companion integration, all product domains and Stable/Edge acceptance retain their own obligations."
+  ],
+  "sourceSHA256": {
+    ".github/workflows/ci_check.yml": "1de07cebe727d5df3775d343671de644db8d90c0bbf5181a06313a0518ebea15",
+    "package.json": "5a8c87356b7d5e61e37939b6ac02b8c89a8395a5105fd13b5bc16b847669b26d",
+    "pnpm-lock.yaml": "4c2a4d20344ce08b016a631abf7007d61ad530e69924e8424824a4d4ae898e37",
+    "pnpm-workspace.yaml": "3ff964b95dc43a67634a20f4a81c01d7d2c1d5d6d9ab005f9d9c6655141a8373",
+    "tsconfig.json": "196d8607cdfe9d3ed08522505263b712c9881c73cb8dcb91e8a6ab0c4f443a9b",
+    "tooling/frontend-coverage.mjs": "64d11908eeb2f2bf92cfeff86ff6c818bb80a1555873ca543ceff7e5b56d35ae",
+    "tooling/domus_tooling/ci_policy.py": "ad62b739c37a988e44d2ed398a03467585711c0d990e5b627858ddb067f74692",
+    "tests/python/test_ci_policy.py": "ed24d9514f11d22ac9cc8aa11684d5f27586d9c033f79f793a3f5421e9956ee2",
+    "tests/python/test_ci_contract.py": "63a7ea8c7f71c11c068c9f27937d9c0b34a6cb754967368e3b1a545f57d7014b",
+    "tests/node/frontend-coverage.test.mjs": "5f8201434c6f2d7855327b6e9e713a6f421c11413addffc72f36489b7fd9f6e8",
+    "tests/frontend-toolchain/guards.test.mjs": "8774610531a472a9c705e25debeb5c7dcbe5b043dd2231333c451d6852f002de",
+    "tests/frontend-toolchain/coverage-evidence.test.mjs": "ba724ab123f9234482462afe7603a382eb140a4c025061c330421b3ab5b5c8be",
+    "tests/fixtures/frontend-toolchain/package.json": "fcd65ec68d64428041c5434c486fa2f1b7ff96e4d6894e8997d94d8cd80ce6af",
+    "tests/fixtures/frontend-toolchain/index.html": "7f3db5d8007e283da8c4b09a294ec86bd93693bd9bb3bc793ec8a8567f78c49d",
+    "tests/fixtures/frontend-toolchain/src/probe-toggle.ts": "9469550a8f8a0df553e989a3f2fa1700aebfeef93987ac4008f32c86e157b4f6",
+    "tests/fixtures/frontend-toolchain/unit/component.test.ts": "5fac3886bc2eb94992a89f824a8e74ccd2cba0c80f794f9198fb6db7044bf278",
+    "tests/fixtures/frontend-toolchain/stories/toggle.stories.ts": "1b66125a0354e716657e6a51cc4fd8f95e3a2368803d3faab7ff5ef4b98a1d0f",
+    "tests/fixtures/frontend-toolchain/vite.config.ts": "0c95c9a1b22513c4e1dcd2aee000dfd8440eeaca116a66474040d45ea61687e7",
+    "tests/fixtures/frontend-toolchain/vitest.config.ts": "37e44814f74f7ae9fe5b5fa1b07c9ce77dc9e100da51e440d28ce9a8ea33d098",
+    "tests/fixtures/frontend-toolchain/playwright.config.ts": "8b884a6315651e60d066942bb3d1b094b5405f34f8721c931408cace54f12bee",
+    "tests/fixtures/frontend-toolchain/.storybook/main.ts": "9f5260659c6c6d17f0967fba2cdd94acaaada89d2a81d49c2a88c3e6f7776724",
+    "tests/fixtures/frontend-toolchain/tsconfig.json": "27da56015a52ff864925afcb2e3061003a2563ab01039b6b8ab8a6abb6731417",
+    "tests/fixtures/frontend-toolchain/tsconfig.catalog.json": "3515582d1d17b2141a0545141f940efde9e24d8a51ae8fe65fa3143b64ea7e56",
+    "tests/fixtures/frontend-toolchain/e2e/probe.spec.ts": "0592dfe584b48745cb4290bc5fc67039d8b7b54cce8858b5d0e3da65218ce3c3"
+  }
+}

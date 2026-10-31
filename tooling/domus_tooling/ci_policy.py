@@ -2,7 +2,15 @@
 
 from collections.abc import Mapping
 
-REQUIRED_JOBS = ("python", "backend", "node", "architecture", "documentation", "containers")
+REQUIRED_JOBS = (
+    "python",
+    "backend",
+    "node",
+    "frontend_toolchain",
+    "architecture",
+    "documentation",
+    "containers",
+)
 
 
 def evaluate_jobs(results: Mapping[str, object]) -> tuple[str, ...]:
