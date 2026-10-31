@@ -1,8 +1,8 @@
 # Identity and household access
 
 Status: standalone authentication, the installed native HA authentication preview and application-layer
-household setup, own enrollment and household edits are implemented. Public command routes, member/policy
-administration, recovery, product UI and Supervisor local read-grace sessions remain pending.
+household setup, own enrollment, household edits and member administration are implemented. Public command
+routes, household-policy edits, recovery, product UI and Supervisor local read-grace sessions remain pending.
 
 ## Home Assistant app
 

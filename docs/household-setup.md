@@ -1,7 +1,7 @@
 # Household setup command checkpoint
 
-Status: application use cases and real SQLite tests implemented. HTTP/UI wiring and member/policy
-administration are pending. The installed Edge 0.0.0-edge.1 connection preview contains none of these
+Status: application use cases, member administration and real SQLite tests implemented. HTTP/UI wiring
+and household-policy administration are pending. The installed Edge 0.0.0-edge.1 connection preview contains none of these
 commands and creates no household data.
 
 ## Explicit setup
@@ -29,8 +29,8 @@ An eligible human explicitly enrolls their own HA identity. The command cannot s
 actor, profile or active status. New ordinary members are pending viewers. A current HA administrator
 becomes active on enrollment only under the all-administrators mapping. Existing suspended or
 archived membership blocks enrollment and replay; account linkage and history are retained.
-Activation and profile assignment by an authorized administrator still require their own command
-implementation. Capacity is 256 total member records, including archived history; saturation rejects
+Activation and profile assignment are explicit administrator commands. Capacity is 256 total member
+records, including archived history; saturation rejects
 new enrollment without removing an actor or appending partial evidence.
 
 An active member with current household-management permission may edit the home name and timezone.
@@ -46,13 +46,36 @@ authorized replay does not depend on recontacting an unrelated selected target o
 Every new effect rechecks local authority and replay inside the serialized writer transaction.
 No external directory or timezone preparation holds that writer lock.
 
+## Administrator member changes
+
+The member-update command replaces the target's profile, status and ordinary permission exceptions
+at an expected revision. It cannot replace the member ID, HA linkage or household. Activating or
+editing an active target requires fresh exact eligible-human proof; deactivating an unavailable target
+is possible when the freshly proven actor still guarantees a remaining administrator. Administrator
+permission is checked again inside the writer transaction. After any external lookup the actor is
+reproved, so a known source rejection or identity change blocks the command.
+
+Before saving, the command checks that the full policy/member snapshot used to prepare proof is still
+current and that a currently eligible administrator remains in the proposed state. Relevant alternative
+administrators are verified in one bounded batch when required; missing/ineligible users cannot satisfy
+the safeguard. A source outage blocks instead of becoming a claim of absence. Two concurrent removals
+cannot both commit from the same old administrator inventory. No proof or directory lookup holds the
+SQLite writer lock. HA proof and SQL still cannot form a globally atomic snapshot across systems.
+
+Suspension applies immediately to existing local authorization and old-receipt access. An authorized
+administrator can deliberately reactivate an archived member after fresh HA proof, preserving the same
+linkage and history. Identical concurrent updates share one effect and receipt. Rule order is normalized
+for idempotency. Member transitions, audit, receipt and outbox share one commit; a stale inventory or
+revision returns a conflict without automatic rebase. See
+[the member checkpoint evidence](evidence/m1-member-administration.json).
+
 The HA directory adapter performs at most one bounded lookup for a batch of up to 256 exact user IDs.
 Confirmed missing, inactive or system users are omitted. Malformed or duplicate directory records,
 transport failure and authorization denial raise instead of returning a misleading partial result.
 Technical transport privilege supplies facts and never becomes the human's household grant.
 
-These are application boundaries, not a new public API. Member activation/editing, policy changes,
-last-administrator command safeguards, console recovery, snapshot/restore, native local sessions and
+These are application boundaries, not a new public API. Household policy changes and their
+last-administrator safeguards, console recovery, snapshot/restore, native local sessions and
 production installation persistence remain outstanding. See
 [the governing companion](../specs/platform-foundation-identity-sqlite.md),
 [identity behavior](identity-household.md) and [evidence](evidence/m1-household-commands.json).

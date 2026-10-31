@@ -455,6 +455,9 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/containers/test_app_image.py` | create |
 | `docs/evidence/m1-app-package.json` | create |
 | `README.md` | update |
+| `backend/src/domus/application/member_commands.py` | create |
+| `tests/backend/test_member_commands.py` | create |
+| `docs/evidence/m1-member-administration.json` | create |
 | `backend/src/domus/application/household_commands.py` | create |
 | `backend/src/domus/infrastructure/application_runtime.py` | create |
 | `backend/src/domus/infrastructure/ha_directory.py` | create |
@@ -581,3 +584,12 @@ rollback and restart tests accompany the bounded HA directory and runtime adapte
 [source-identified evidence](../docs/evidence/m1-household-commands.json). Public command routes,
 member/policy administration, recovery, snapshots, native persistence/read grace and full deployment
 acceptance remain pending. The specifications stay Draft.
+
+
+### Member administration checkpoint
+
+Explicit member activation, profile/status/exception edits and last-administrator safeguards now have
+[application use cases and real SQLite tests](../docs/evidence/m1-member-administration.json).
+Fresh proof is prepared outside the writer lock; current local authority, unchanged member/policy
+inventory and a remaining eligible administrator are checked before the atomic commit. Policy edit
+commands, public API/UI, recovery and the remaining deployment gates are still pending.
