@@ -6,7 +6,7 @@ The issue #6 checkpoints introduce storage, pure identity policy, local authoriz
 HA protocol adapters have provider/loopback tests and the standalone authentication API/CLI is wired.
 Explicit setup, own enrollment and household edits now have application-layer commands. The native
 Ingress connection preview and immutable-source Edge package are installed and tested on the owner's HA.
-Public command wiring, household-policy administration, recovery, snapshots, product UI and complete
+Public command wiring, recovery, snapshots, product UI and complete
 Stable/Edge release acceptance remain pending.
 
 ## Reproduce the environment
@@ -159,3 +159,9 @@ activation, profiles/status/exception edits and last-administrator checks agains
 It tests real SQLite interleavings, fresh actor reproof, local authority revocation, archived-linkage
 preservation, rollback-free conflicts and same-key concurrent receipt reuse. Coverage includes the
 complete authored backend; neither these use cases nor their later source are in the installed image.
+
+The [policy-administration checkpoint](evidence/m1-policy-administration.json) adds revisioned
+mapping/profile changes with preserved setup provenance and independent grants. A shared application
+helper prepares bounded human facts for member and policy safeguards, with no framework imports.
+Current local authority and inventory remain transactional. Source/audit corruption, lost authority,
+source outage, stale state, rollback-free conflicts and restart/replay behavior have real-file tests.

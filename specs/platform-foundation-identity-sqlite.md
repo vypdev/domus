@@ -455,6 +455,10 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/containers/test_app_image.py` | create |
 | `docs/evidence/m1-app-package.json` | create |
 | `README.md` | update |
+| `backend/src/domus/application/administrator_proof.py` | create |
+| `backend/src/domus/application/policy_commands.py` | create |
+| `tests/backend/test_policy_commands.py` | create |
+| `docs/evidence/m1-policy-administration.json` | create |
 | `backend/src/domus/application/member_commands.py` | create |
 | `tests/backend/test_member_commands.py` | create |
 | `docs/evidence/m1-member-administration.json` | create |
@@ -532,43 +536,24 @@ These are executable acceptance requirements, not reports of tests already run.
 - Related specs/ADRs/issues/PRs: `specs/household-identity.md`; `specs/platform-foundation.md`; `specs/delivery-quality.md`; [Issue #6](https://github.com/vypdev/domus/issues/6); [PR #5](https://github.com/vypdev/domus/pull/5); [Copilot upstream report #774](https://github.com/vypdev/copilot/issues/774); [Copilot upstream report #777](https://github.com/vypdev/copilot/issues/777).
 - Decisions and rejected alternatives: retain HA auth and HTTP/SQLite as replaceable adapters around pure policies and use cases; server-side HA proof is required; use explicit transaction boundaries and parameterized SQLite operations; API schemas are entrypoint DTOs, not domain entities. Recovery requires current HA administrator proof plus installation-console approval; no shared secret or HTTP approval. Backup scope is explicit consistent snapshot/restore primitive, not an automatic scheduler. No untested version is promised.
 - Follow-up work explicitly outside this spec: other household domains, product UI, HA entity/service integration, complete package and Stable/Edge deployment acceptance, Supervisor backup hooks and operational retention/recovery objectives, release publication. Both deployment targets remain required for first usable release. Merge/release/deployment is not authorized by this draft.
-### Storage kernel implementation checkpoint — 2026-10-31
+### Historical partial implementation checkpoints — 2026-10-31
 
-The first implementation supplies immutable values, semantic transaction ports, authorization-before-replay orchestration and the real SQLite adapter. Separate coverage and actual import-graph checks are wired into CI. HA proof, concrete membership policy, recovery, snapshots, HTTP/console routes and target acceptance remain pending. See [implementation boundaries](../docs/architecture-identity-storage.md) and [source-identified evidence](../docs/evidence/m1-storage-kernel.json). Planned cases are not all executed merely because this partial kernel has complete coverage.
+Each immutable receipt records the source, executed scope and outstanding work at that checkpoint;
+none marks all planned acceptance cases complete. The specifications remain Draft.
 
-### Identity policy and session-lease checkpoint — 2026-10-31
+| Checkpoint | Evidence and boundary |
+|---|---|
+| SQLite kernel | [Receipt](../docs/evidence/m1-storage-kernel.json): values, ports, atomic receipts/audit/outbox and real SQLite; no authentication at that point. |
+| Identity policy/session leases | [Receipt](../docs/evidence/m1-identity-policy.json): pure mappings/permissions, current local authorization, schema 1-to-2 migration and absolute leases; provider fixtures only. |
+| HA protocols | [Receipt](../docs/evidence/m1-ha-protocol.json): fixed endpoints, bounded OAuth/WebSocket and Supervisor peer/source checks; no live acceptance at that point. |
+| Standalone API/CLI | [Receipt](../docs/evidence/m1-standalone-auth.json): state/PKCE/browser-bound attempts, strict cookies/CSRF and bounded cleanup; full household routes pending. |
+| Native connection preview | [Receipt](../docs/evidence/m1-ingress-preview.json): private Ingress listener and fresh exact-human proof without second login; no business data or local read grace. |
+| Edge package | [Receipt](../docs/evidence/m1-app-package.json): immutable source/checksum, nonroot runtime and native CPU-family container CI; the then-pending live test is recorded below. |
 
-The next checkpoint supplies pure eligible-human/mapping/permission rules, current local authorization before replay, uniquely linked member/policy repositories, an atomic schema 1-to-2 upgrade and a bounded in-memory session-lease core. Provider fixtures exercise outage reads, rejection, expiry and logout races. No HA protocol authentication, membership command entrypoint, console recovery, snapshot or packaged/live acceptance is claimed. See [the migration guide](../docs/migrations-identity-storage.md) and [identified evidence](../docs/evidence/m1-identity-policy.json). The owning specifications remain Draft.
-
-### HA protocol adapter checkpoint — 2026-10-31
-
-Fixed operator endpoints, bounded OAuth form transport, correlated WebSocket current-user/directory proof and the Supervisor peer/subject boundary are implemented. Standalone proof requires a server-exchanged client grant: Core rejects system users for client-bound refresh tokens and checks active users during authentication. Directory proof checks exact boolean owner/active/system flags and administrator group IDs. Real loopback client fixtures include redirect refusal and cleanup; they do not establish authentication on the owner's HA. Browser state/PKCE attempt/session wiring, membership commands, recovery, snapshots, API/console and package/live acceptance remain pending. See [protocol boundaries](../docs/ha-identity-protocol.md) and [identified evidence](../docs/evidence/m1-ha-protocol.json).
-
-### Standalone authentication API/CLI checkpoint — 2026-10-31
-
-The browser flow, strict API and standalone CLI now compose the tested adapters. Five-minute state/PKCE/browser-bound attempts are single use; private credentials remain bounded process memory; session deadlines do not extend on refresh or outage. Ephemeral authentication/session contracts belong to application, outside household domain entities. Cookies, exact Origin, session-bound CSRF, bounded HTTP input and safe errors are tested, including concurrent callbacks, logout, shutdown and partial upstream cleanup. Unknown remote revocation is null, never invented success.
-
-The actual OpenAPI covers auth start/callback/logout/CSRF and own session; full household/member/policy/operation/recovery routes remain pending. See [user identity](../docs/identity-household.md), [configuration](../docs/configuration.md), [operations](../docs/operations-identity-storage.md), [OpenAPI](../docs/contracts/auth-api.openapi.json) and [identified evidence](../docs/evidence/m1-standalone-auth.json). Supervisor session/private-listener wiring, recovery, snapshots and exact live/package/channel acceptance remain outstanding. No household setup, release or completed M1 is claimed.
-
-### Native HA preview checkpoint
-
-The operational Ingress preview uses existing HA authentication without a second OAuth login. Its
-private listener rejects other peers and forged/ambiguous source metadata; the root status page and
-own-identity route require fresh exact-user Core proof. Only nonpersonal process health is also
-available on container loopback. Shared bounded HTTP input protections cover both adapters. There
-are no business mutations, household database, local outage-grace session or product UI in this
-preview. Packaging, source/artifact binding, live Ingress and channel acceptance remain pending;
-see [the installation journey](../docs/installation-home-assistant.md) and
-[identified preview evidence](../docs/evidence/m1-ingress-preview.json).
-
-The Edge authentication preview now has an experimental, manual-start app manifest and immutable
-source/checksum-bound local build. It requests Core API access, publishes no host port and runs
-without host mounts, Supervisor management API or root privileges. It is stateless and does not
-implement a persisted installation or household setup. CI Check requires real image/listener tests
-on native amd64 and aarch64; local container proof does not replace installed Ingress acceptance.
-Stable production packaging and the complete product remain pending. See
-[package evidence](../docs/evidence/m1-app-package.json).
-
+The earlier authorized standalone browser return failed after exchanging one delegated grant.
+Shutdown confirmed revocation (revoked=1, unconfirmed=0). Its acceptance remains pending. No test
+credentials are persisted in business storage, evidence, responses or snapshots. Native installation
+is an independent journey, not a prerequisite standalone OAuth login.
 
 ### Native acceptance and household command checkpoint
 
@@ -593,3 +578,12 @@ Explicit member activation, profile/status/exception edits and last-administrato
 Fresh proof is prepared outside the writer lock; current local authority, unchanged member/policy
 inventory and a remaining eligible administrator are checked before the atomic commit. Policy edit
 commands, public API/UI, recovery and the remaining deployment gates are still pending.
+
+
+### Household policy administration checkpoint
+
+[Policy commands and evidence](../docs/evidence/m1-policy-administration.json) now cover explicit
+mapping/profile changes, preserved setup provenance and independent grants, fresh actor/target proof,
+and transaction-time last-administrator safety. Shared proof preparation preserves member race tests.
+Public command/query wiring, recovery, snapshots, native persistence/read grace and full deployment
+acceptance remain pending. No later commands are claimed present in the installed stateless preview.

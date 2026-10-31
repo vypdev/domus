@@ -1,7 +1,7 @@
 # Household setup command checkpoint
 
-Status: application use cases, member administration and real SQLite tests implemented. HTTP/UI wiring
-and household-policy administration are pending. The installed Edge 0.0.0-edge.1 connection preview contains none of these
+Status: application household/member/policy use cases and real SQLite tests implemented. HTTP/UI wiring
+is pending. The installed Edge 0.0.0-edge.1 connection preview contains none of these
 commands and creates no household data.
 
 ## Explicit setup
@@ -69,13 +69,39 @@ for idempotency. Member transitions, audit, receipt and outbox share one commit;
 revision returns a conflict without automatic rebase. See
 [the member checkpoint evidence](evidence/m1-member-administration.json).
 
+## Household policy changes
+
+Current household administrators may explicitly replace the mapping and household profile adjustments
+at an expected policy revision. Adjustments cannot grant administrator-only permissions or weaken
+domain constraints. An active selected ordinary HA human can administer the household, including
+changing policy, through that deliberate Domus grant. Technical directory privilege supplies human
+facts; it never replaces the command actor's own permission.
+
+Selected/setup targets must already have an active linked membership and fresh eligible-human proof.
+The setup-only mode is tied to the unique committed setup actor in durable audit; the request cannot
+designate a different founder. The designated founder must still be a current HA administrator.
+Missing or ambiguous setup provenance blocks this mapping instead of inventing a new installer.
+The bounded audit lookup returns at most two candidates; no complete audit is materialized.
+
+A mapping change recalculates inherited authority and preserves independent administrator profiles.
+The proposed policy must retain a freshly eligible administrator. An alternate administrator lookup
+is bounded; unavailable or rejected proof cannot turn into a guessed grant. After external proof the
+actor is reproved. Inside the writer transaction the actor must still have current policy-management
+permission, the member/policy inventory must still match, and the proposed state must retain an
+administrator. No member row is rewritten merely to change household policy.
+
+Policy, receipt, audit and outbox commit together. Reordered equivalent adjustments share a canonical
+payload. Authorized replay survives restart and occurs before stale-revision checks, but a mapping
+change that removes the actor's permission also removes their ability to disclose an old privileged
+receipt. See [policy evidence](evidence/m1-policy-administration.json).
+
 The HA directory adapter performs at most one bounded lookup for a batch of up to 256 exact user IDs.
 Confirmed missing, inactive or system users are omitted. Malformed or duplicate directory records,
 transport failure and authorization denial raise instead of returning a misleading partial result.
 Technical transport privilege supplies facts and never becomes the human's household grant.
 
-These are application boundaries, not a new public API. Household policy changes and their
-last-administrator safeguards, console recovery, snapshot/restore, native local sessions and
+These are application boundaries, not a new public API. Public command/query wiring, console
+recovery, snapshot/restore, native local sessions and
 production installation persistence remain outstanding. See
 [the governing companion](../specs/platform-foundation-identity-sqlite.md),
 [identity behavior](identity-household.md) and [evidence](evidence/m1-household-commands.json).

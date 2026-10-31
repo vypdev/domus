@@ -2,8 +2,8 @@
 
 Status: fixed endpoint configuration, OAuth form transport, correlated WebSocket proof and the
 Supervisor identity boundary are implemented as adapters. Standalone authentication now has bounded
-browser attempts, private session wiring and strict API/CLI entrypoints. Live/package acceptance,
-Supervisor local read-grace sessions and complete household commands remain pending. The native
+browser attempts, private session wiring and strict API/CLI entrypoints. Complete deployment acceptance,
+Supervisor local read-grace sessions and public household command wiring remain pending. The native
 preview now has a private-listener entrypoint and fresh per-request identity checks, without OAuth.
 Do not expose these private adapters directly as endpoints that accept a submitted token or actor.
 
@@ -47,9 +47,10 @@ The exact target must be active and non-system. An exact boolean owner or member
 `system-admin` establishes administrator status; another row's privilege never transfers to the target.
 Directory permission denial is distinct from rejecting the requesting user's own authentication.
 
-Native preview fixtures now exercise the private listener policy, disabled proxy-header rewriting
-and validated base path. Package/live proof, absence of a published host port in the actual artifact
-and local read-grace session binding remain pending. Ingress uses
+Native preview fixtures exercise the private listener policy, disabled proxy-header rewriting
+and validated base path. The immutable-source Edge app publishes no host port and its
+[installed connection preview](evidence/m1-native-ha-acceptance.json) passed on the exact owner target.
+Local read-grace session binding and complete production package acceptance remain pending. Ingress uses
 HA's native authentication rather than adding a second OAuth login. Core logout, Ingress cookie
 expiry and Domus session expiry are separate contracts; no instant global logout claim is made here.
 

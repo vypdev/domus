@@ -54,7 +54,9 @@
         "backend/src/domus/application/household_commands.py",
         "backend/src/domus/infrastructure/application_runtime.py",
         "backend/src/domus/infrastructure/ha_directory.py",
-        "backend/src/domus/application/member_commands.py"
+        "backend/src/domus/application/member_commands.py",
+        "backend/src/domus/application/administrator_proof.py",
+        "backend/src/domus/application/policy_commands.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -79,7 +81,8 @@
         "tests/backend/test_household_commands.py",
         "tests/backend/test_application_runtime.py",
         "tests/backend/test_ha_directory.py",
-        "tests/backend/test_member_commands.py"
+        "tests/backend/test_member_commands.py",
+        "tests/backend/test_policy_commands.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -100,12 +103,13 @@
         "docs/household-setup.md",
         "docs/evidence/m1-household-commands.json",
         "docs/evidence/m1-native-ha-acceptance.json",
-        "docs/evidence/m1-member-administration.json"
+        "docs/evidence/m1-member-administration.json",
+        "docs/evidence/m1-policy-administration.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, authentication, installed native connection preview, application household commands and member administration; full M1 pending",
-        "blockingDecisions": "Engineering proof remains: policy edit commands, public command/query API and UI, recovery, snapshots, native persistence/read-grace sessions and complete standalone/channel acceptance. Installed Edge 0.0.0-edge.1 is only a stateless connection preview.",
+        "implementationEvidence": "partial: identity/storage, authentication, installed native connection preview and application household/member/policy commands; full M1 pending",
+        "blockingDecisions": "Engineering proof remains: public command/query API and UI, recovery, snapshots, native persistence/read-grace sessions and complete standalone/channel acceptance. Installed Edge 0.0.0-edge.1 is only a stateless connection preview.",
         "copilotChangesAllowed": false
       }
     },
@@ -151,7 +155,9 @@
         "backend/src/domus/application/household_commands.py",
         "backend/src/domus/infrastructure/application_runtime.py",
         "backend/src/domus/infrastructure/ha_directory.py",
-        "backend/src/domus/application/member_commands.py"
+        "backend/src/domus/application/member_commands.py",
+        "backend/src/domus/application/administrator_proof.py",
+        "backend/src/domus/application/policy_commands.py"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -171,7 +177,8 @@
         "tests/backend/test_household_commands.py",
         "tests/backend/test_application_runtime.py",
         "tests/backend/test_ha_directory.py",
-        "tests/backend/test_member_commands.py"
+        "tests/backend/test_member_commands.py",
+        "tests/backend/test_policy_commands.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -190,12 +197,13 @@
         "docs/household-setup.md",
         "docs/evidence/m1-household-commands.json",
         "docs/evidence/m1-native-ha-acceptance.json",
-        "docs/evidence/m1-member-administration.json"
+        "docs/evidence/m1-member-administration.json",
+        "docs/evidence/m1-policy-administration.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, authentication, installed native connection preview, application household commands and member administration; full M1 pending",
-        "blockingDecisions": "Engineering proof remains: policy edit commands, public command/query API and UI, recovery, snapshots, native persistence/read-grace sessions and complete standalone/channel acceptance. Installed Edge 0.0.0-edge.1 is only a stateless connection preview.",
+        "implementationEvidence": "partial: identity/storage, authentication, installed native connection preview and application household/member/policy commands; full M1 pending",
+        "blockingDecisions": "Engineering proof remains: public command/query API and UI, recovery, snapshots, native persistence/read-grace sessions and complete standalone/channel acceptance. Installed Edge 0.0.0-edge.1 is only a stateless connection preview.",
         "copilotChangesAllowed": false
       }
     },

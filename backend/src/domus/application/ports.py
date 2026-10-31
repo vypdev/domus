@@ -36,6 +36,9 @@ class Policies(Protocol):
 class Audit(Protocol):
     def append(self, entry: AuditEntry) -> None: ...
     def entries(self, household_id: str) -> tuple[AuditEntry, ...]: ...
+    def setup_actor(self, household_id: str) -> str | None:
+        """The unique committed setup actor; missing is not permission to retarget."""
+        ...
 
 
 class Outbox(Protocol):

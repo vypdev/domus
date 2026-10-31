@@ -1,8 +1,10 @@
 # Identity and storage implementation boundaries
 
 Status: the M1 storage kernel, pure identity policy, transaction-bound local authorization and
-session-lease core, HA adapters and standalone authentication API/CLI are implemented on the Action-managed issue #6 branch.
-Membership use cases, recovery, snapshots, full business API, Supervisor runtime wiring and live deployment acceptance
+session-lease core, HA adapters, standalone authentication API/CLI and application household/member/policy
+commands are implemented on the Action-managed issue #6 branch. The native connection preview is
+installed and accepted on the identified owner target. Recovery, snapshots, the full business API,
+persistent Supervisor runtime wiring and complete deployment acceptance
 remain pending. The [owning companion](../specs/platform-foundation-identity-sqlite.md) retains
 the complete increment contract; this checkpoint does not complete M1 or the product.
 
@@ -27,8 +29,13 @@ It checks that policy inside the write transaction before examining a previous r
 authorized replay returns the original result; changed payload conflicts. A new effect, receipt,
 audit fact and outbox event commit together. `HouseholdAccess` and `MembershipAuthorization` now
 resolve current membership/policy inside that transaction and bind the action to the proven actor.
-They do not authenticate a submitted identity; only provider proof supplies it. Household command
-entrypoints remain pending.
+They do not authenticate a submitted identity; only provider proof supplies it. Household HTTP command
+entrypoints remain pending. [The application commands](household-setup.md) explicitly initialize,
+enroll, edit members and replace policy. External proof preparation holds no writer lock. Before
+save, administrator transitions compare the prepared inventory, recheck current local authority and
+preserve a proven eligible administrator. Shared application proof preparation imports only ports
+and domain values. Setup-only mapping uses the unique durable setup audit actor; a missing or
+ambiguous record cannot establish a new founder.
 
 `domus.infrastructure.sqlite` implements those ports with separate connections and explicit SQL
 transactions. Reads are query-only. Writers use `BEGIN IMMEDIATE` and a bounded wait, with no hidden
@@ -59,7 +66,7 @@ form exchange and correlated WebSocket proof, with explicit active/non-system pr
 administrator/owner semantics. Supervisor's actual peer and a single candidate subject header precede
 fresh Core lookup. The real pinned WebSocket client is exercised against disposable loopback servers,
 including a negative cross-origin redirect fixture. No request may authenticate by constructing
-an adapter value. Supervisor runtime wiring and complete household endpoints remain pending.
+an adapter value. Persistent Supervisor wiring and complete household endpoints remain pending.
 
 `domus.application.authentication_values` and `session_values` own ephemeral login/lease contracts;
 private browser/session material stays outside household domain entities. Application orchestration
@@ -75,6 +82,11 @@ OpenAPI. `domus.composition.server` wires the standalone auth-only CLI with one 
 rewriting and no access/query logging. Sign-in creates no household. See [configuration](configuration.md),
 [the user journey](identity-household.md) and [operations](operations-identity-storage.md).
 
+`domus.composition.ingress` wires the stateless native preview and its private HTTP listener. The
+installed Edge image binds an immutable older runtime and contains no application commands or
+business database. [Exact native acceptance](evidence/m1-native-ha-acceptance.json) is separate from
+protocol fixtures and does not establish complete product or standalone browser acceptance.
+
 ## Verification scope
 
 The separate backend CI job measures every authored `domus` module at 100% supported line/statement
@@ -87,7 +99,10 @@ two-process writer contention/stale revisions, overlapping identical commands, c
 denial, schema/ownership refusal without changing existing file bytes, and initial migration rollback.
 Additional tests cover policy precedence/source revocation, concrete authorization before replay,
 schema 1 upgrades, duplicate HA linkage, scoped optimistic writes, and session outage/expiry/races.
-These fixtures do not establish HA authentication, complete membership commands or packaged acceptance.
+These fixtures alone do not establish live HA or complete packaged acceptance. The separate
+[member](evidence/m1-member-administration.json) and [policy](evidence/m1-policy-administration.json)
+checkpoints add real-file authority races, canonical retries and provenance checks. Public command
+wiring, recovery and full M1 acceptance remain outstanding.
 
 See [development checks](development.md), [owner decisions](decisions.md),
 [the companion](../specs/platform-foundation-identity-sqlite.md), and

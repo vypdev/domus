@@ -1,8 +1,8 @@
 # Identity and storage operations
 
 Status: standalone authentication API/CLI, transactional SQLite core and schema 2 are implemented.
-Application-layer household/member commands are implemented. Public command routes, household-policy
-edits, console recovery approval, snapshot/restore commands, persistent Supervisor runtime wiring and
+Application-layer household/member/policy commands are implemented. Public command routes,
+console recovery approval, snapshot/restore commands, persistent Supervisor runtime wiring and
 complete deployment acceptance remain pending. Do not use SQL edits to bypass setup.
 
 ## Authentication API

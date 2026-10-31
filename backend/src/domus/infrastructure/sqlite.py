@@ -25,6 +25,7 @@ from domus.domain.storage import (
     JsonDocument,
     OutboxEvent,
     Receipt,
+    validate_identifier,
 )
 from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
 
@@ -201,6 +202,22 @@ class SQLiteAudit:
                 "SELECT * FROM audit WHERE household_id=? ORDER BY rowid", (household_id,)
             )
         )
+
+    def setup_actor(self, household_id: str) -> str | None:
+        rows = self.connection.execute(
+            "SELECT actor_id FROM audit WHERE household_id=? AND action='household.setup' LIMIT 2",
+            (household_id,),
+        ).fetchall()
+        if not rows:
+            return None
+        if len(rows) != 1:
+            raise StorageFailure("invalid_setup_provenance")
+        try:
+            actor_id: str = rows[0]["actor_id"]
+            validate_identifier(actor_id)
+            return actor_id
+        except InvalidInput:
+            raise StorageFailure("invalid_setup_provenance") from None
 
 
 @dataclass

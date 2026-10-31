@@ -3,21 +3,20 @@
 from dataclasses import dataclass, replace
 from typing import cast
 
+from domus.application.administrator_proof import exact_human, remaining_humans
 from domus.application.authorization import HouseholdAccess, MembershipAuthorization
 from domus.application.commands import AtomicCommands, Change
 from domus.application.identity_ports import CurrentHuman, HumanDirectory
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
-from domus.domain.errors import Conflict, Forbidden, StorageFailure
+from domus.domain.errors import Conflict, StorageFailure
 from domus.domain.identity import (
     HouseholdPolicy,
     HumanIdentity,
-    MappingMode,
     Member,
     MemberStatus,
     Permission,
     PermissionRule,
     Role,
-    effective_role,
     ensure_administrator,
 )
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
@@ -68,12 +67,6 @@ class _Snapshot:
     members: tuple[Member, ...]
 
 
-def _exact_human(human: HumanIdentity, user_id: str) -> HumanIdentity:
-    if not isinstance(human, HumanIdentity) or human.ha_user_id != user_id:
-        raise Forbidden("identity_mismatch")
-    return human
-
-
 @dataclass
 class MemberCommands:
     transactions: Transactions
@@ -110,7 +103,7 @@ class MemberCommands:
         humans = {human.ha_user_id: human}
         external = False
         if proposed.status is MemberStatus.ACTIVE and proposed.ha_user_id != human.ha_user_id:
-            humans[proposed.ha_user_id] = _exact_human(
+            humans[proposed.ha_user_id] = exact_human(
                 self.directory.get(proposed.ha_user_id), proposed.ha_user_id
             )
             external = True
@@ -118,38 +111,13 @@ class MemberCommands:
             proposed if member.member_id == proposed.member_id else member
             for member in snapshot.members
         )
-        if not any(
-            member.ha_user_id in humans
-            and effective_role(humans[member.ha_user_id], member, snapshot.policy)
-            is Role.ADMINISTRATOR
-            for member in members
-        ):
-            candidates = tuple(
-                member.ha_user_id
-                for member in members
-                if member.status is MemberStatus.ACTIVE
-                and member.ha_user_id not in humans
-                and (
-                    member.role is Role.ADMINISTRATOR
-                    or snapshot.policy.mapping.mode is MappingMode.ALL
-                    or snapshot.policy.mapping.target_ha_user_id == member.ha_user_id
-                )
-            )
-            if candidates:
-                resolved = self.directory.eligible(candidates)
-                if type(resolved) is not tuple or len(resolved) > len(candidates):
-                    raise Forbidden("identity_mismatch")
-                for candidate in resolved:
-                    if (
-                        not isinstance(candidate, HumanIdentity)
-                        or candidate.ha_user_id not in candidates
-                        or candidate.ha_user_id in humans
-                    ):
-                        raise Forbidden("identity_mismatch")
-                    humans[candidate.ha_user_id] = candidate
-                external = True
+        resolved, batch = remaining_humans(
+            snapshot.policy, members, tuple(humans.values()), self.directory
+        )
+        humans = {person.ha_user_id: person for person in resolved}
+        external = external or batch
         if external:
-            humans[human.ha_user_id] = _exact_human(self.actor.current(), human.ha_user_id)
+            humans[human.ha_user_id] = exact_human(self.actor.current(), human.ha_user_id)
         return tuple(humans.values())
 
     def update(self, key: str, request: UpdateMember) -> Receipt:
