@@ -25,6 +25,8 @@ from domus.infrastructure.ha_config import HAEndpoint, OAuthConfiguration, Publi
         ("http://domus.example:80", "http://domus.example"),
         ("https://[::1]:443", "https://[::1]"),
         ("http://[::1]:80", "http://[::1]"),
+        ("https://[0:0:0:0:0:0:0:1]:443", "https://[::1]"),
+        ("http://[0:0:0:0:0:0:0:1]:8123", "http://[::1]:8123"),
         ("https://domus.example:8443", "https://domus.example:8443"),
         ("http://domus.example:8123", "http://domus.example:8123"),
     ],
@@ -53,19 +55,26 @@ def test_standalone_oauth_public_client_and_callback_share_canonical_https_origi
     assert config.callback_url == "https://domus.example/api/v1/auth/callback"
 
 
-@pytest.mark.parametrize("scheme,port", [("https", 443), ("http", 80)])
+@pytest.mark.parametrize(
+    "configured_origin, origin",
+    [
+        ("https://domus.example:443", "https://domus.example"),
+        ("http://domus.example:80", "http://domus.example"),
+        ("https://[0:0:0:0:0:0:0:1]:443", "https://[::1]"),
+        ("http://[0:0:0:0:0:0:0:1]:80", "http://[::1]"),
+    ],
+)
 def test_native_browser_can_setup_with_explicit_default_port_in_operator_configuration(
-    tmp_path, monkeypatch, scheme, port
+    tmp_path, monkeypatch, configured_origin, origin
 ):
     lookup = Lookup()
     monkeypatch.setattr(ingress, "HomeAssistantWebSocket", lambda _: lookup)
-    origin = f"{scheme}://domus.example"
     runtime = ingress.create_business_runtime(
         "private-supervisor-token",
         "edge",
         tmp_path / "domus.sqlite3",
         INSTANCE,
-        (origin + f":{port}",),
+        (configured_origin,),
     )
     try:
         client = TestClient(

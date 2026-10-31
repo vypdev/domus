@@ -29,7 +29,7 @@ def _origin(value: str) -> str:
         ):
             raise ValueError("invalid origin")
         try:
-            ipaddress.ip_address(host)
+            host = ipaddress.ip_address(host).compressed
         except ValueError:
             label = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
             if len(host) > 253 or not re.fullmatch(rf"{label}(?:\.{label})*", host):

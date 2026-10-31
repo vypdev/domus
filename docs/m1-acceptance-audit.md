@@ -94,3 +94,8 @@ implemented native sessions/offline restoration from unexecuted live acceptance.
 proposals are archived; the published household API is the current wire contract. Failed partial
 snapshots retain diagnostic evidence and cannot be overwritten, as required by the explicit operator
 contract and real-file failure tests. These source corrections are outside the installed Edge.3 pin.
+
+Four further unit/native cases exposed the same origin mismatch for expanded IPv6 literals. The
+parser now uses canonical compressed IP addresses as well as normalized default ports. The follow-up
+in the same evidence record preserves the earlier run and reports **1,411 tests**, **24 review
+regressions** and the unchanged **4,704 statements / 1,308 branches at 100%**.

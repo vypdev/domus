@@ -56,5 +56,19 @@
     "tests/backend/test_review_regressions.py": "4f2891f6985969883ef34a05405527a5500987b9883dc5e1cb1a695ee6a41bf4",
     "docs/contracts/auth-api.openapi.json": "3559a1548e4920ab38d3b5b25c5b1b62d93e52fb0e993543fa2af407b1aa0d0f",
     "docs/contracts/household-api.openapi.json": "c757e63fed28cf46247b8379fa9faee23a5b694f5841967d781a09d8febff44f"
+  },
+  "canonicalIPFollowup": {
+    "sourceBase": "e26a1e6390c7a5136d5d195af37f1d6f52c00372",
+    "behavior": "Expanded IPv6 literals serialize to their canonical compressed address as browsers do; default ports are omitted and non-default ports retained. Exact Origin denial remains in force.",
+    "testFirst": "Four additional unit/native composed regressions failed before IP canonicalization; then the complete backend suite passed.",
+    "reviewRegressionCases": 24,
+    "backendTests": 1411,
+    "statements": 4704,
+    "branches": 1308,
+    "percent": 100.0,
+    "sourceSha256": {
+      "backend/src/domus/infrastructure/ha_config.py": "e9a33ffe459b45d9b7efe946e8991c4c7363fb6d4d83b0d8d3923deb214c095f",
+      "tests/backend/test_review_regressions.py": "6d4279ad5ad54e359fd3e3182d0c27a3c6146742230a0c81e11566e27db855cb"
+    }
   }
 }
