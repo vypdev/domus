@@ -4,7 +4,10 @@ The documentation foundation was merged through [PR #3](https://github.com/vypde
 [Issue #4](https://github.com/vypdev/domus/issues/4) starts M1 with real development tooling, tests and CI.
 The issue #6 checkpoints introduce storage, pure identity policy, local authorization and session leases.
 HA protocol adapters have provider/loopback tests and the standalone authentication API/CLI is wired.
-Membership commands, product UI, Supervisor runtime, packages and channels remain pending.
+Explicit setup, own enrollment and household edits now have application-layer commands. The native
+Ingress connection preview and immutable-source Edge package are installed and tested on the owner's HA.
+Public command wiring, member/policy administration, recovery, snapshots, product UI and complete
+Stable/Edge release acceptance remain pending.
 
 ## Reproduce the environment
 
@@ -138,4 +141,15 @@ private listener and serves an operational connection page without OAuth or its 
 Its source-bound Edge package has a separate [package receipt](evidence/m1-app-package.json).
 The owner selected native HA installation as the next dogfooding path after the independent browser
 session return failed. The test OAuth grant was revoked successfully; this does not establish native
-Ingress compatibility. Both deployment targets remain required for the first usable release.
+Ingress compatibility by itself. The subsequent
+[native acceptance receipt](evidence/m1-native-ha-acceptance.json) records successful installation,
+start, Open Web UI and normal reload of the exact Edge preview on the identified HA target.
+Both deployment targets remain required for the first usable release.
+
+The [household command checkpoint](household-setup.md) uses application ports for current human proof,
+directory lookup, UTC clock, secure identifiers and IANA timezone validation. External preparation is
+outside SQLite writer transactions. Its real-file tests cover one complete concurrent setup winner,
+rollback, restart, current-authorization-before-replay and pending enrollment. The bounded HA batch
+directory distinguishes confirmed ineligibility from source failure; malformed or duplicate records
+cannot become partial success. [Source-identified evidence](evidence/m1-household-commands.json)
+records the implemented scope and coverage. These commands are not in the installed preview image.

@@ -1,14 +1,28 @@
 # Identity and household access
 
-Status: standalone authentication and a native HA authentication preview are implemented. Household setup,
-enrollment/member/policy commands, recovery, product UI and Supervisor local read-grace sessions remain
-pending. SQLite member/policy storage and the pure authorization rules have independent tests.
+Status: standalone authentication, the installed native HA authentication preview and application-layer
+household setup, own enrollment and household edits are implemented. Public command routes, member/policy
+administration, recovery, product UI and Supervisor local read-grace sessions remain pending.
 
 ## Home Assistant app
 
 Open the installed app through HA's Open Web UI or sidebar entry. Ingress uses the existing HA
 session; no additional Domus login is required. See [app installation](installation-home-assistant.md)
-for the current preview and outstanding packaging/installation evidence.
+for the accepted connection preview and its exact runtime/package boundaries.
+
+## Explicit household setup and enrollment
+
+The [household command checkpoint](household-setup.md) implements the use cases against real SQLite.
+Opening the installed preview does not call them or create records. A future setup form must invoke
+explicit setup with current human HA administrator proof. All three accepted mappings are implemented;
+all current HA administrators is the default. Selected-user mapping also permits a verified ordinary
+HA human. Inherited administration is separate from an independently granted administrator profile.
+
+An eligible human explicitly joining the configured home becomes pending with the viewer profile.
+The exception is a current HA administrator joining under the default all-administrators mapping:
+that member becomes active. Suspended or archived members cannot reactivate themselves by joining
+again. Only the server chooses the command actor. Household edits require current household-management
+permission. Current authority is checked before any old receipt is disclosed, including after restart.
 
 ## Independent Docker sign-in
 

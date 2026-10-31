@@ -12,8 +12,9 @@ pending. Connection failure is reported without granting default administrator a
 The container requests Core API access to verify individual HA users. HA grants this technical
 connection administrator privileges, which the app never treats as the human's permissions.
 It requests no Supervisor management API, host port, host network, privileged capabilities, devices
-or host-directory mounts. Runtime execution uses UID/GID 65532. Tokens remain process memory and
-never appear in the web page, logs or business storage.
+or host-directory mounts. Runtime execution uses UID/GID 65532. Domus reads the Supervisor-provided
+credential into private runtime memory and does not write it into its web page, logs or business
+storage. HA/Supervisor owns provisioning and the credential's platform lifecycle.
 
 Stop the app to end the preview. This does not sign out your HA frontend. There is no Domus OAuth
 grant to revoke for this native mode. Remove the development app/repository after its owned test;

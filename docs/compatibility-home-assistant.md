@@ -1,21 +1,29 @@
 # Home Assistant reference and acceptance matrix
 
-Status: pending application acceptance. The owner's HA was inspected read-only in Google Chrome
-on 2026-10-31. Version visibility is not a verified Domus API principal or a packaged-runtime test.
+Status: native authentication preview accepted on the exact owner target below on 2026-10-31.
+Complete M1, standalone browser return and production compatibility remain pending.
 
 | Target | Core | Supervisor | HA OS | Frontend | Domus acceptance |
 |---|---|---|---|---|---|
-| Standalone reference | 2026.10.4 | Not applicable | Not applicable | Not a server dependency | Offline protocol, session and authentication API/CLI fixtures pass; package and live proof pending |
-| Owner Supervisor/Ingress reference | 2026.10.4 | 2026.10.5 | 18.3 | 20260930.5 | Pending implemented artifact, package and live/browser cases |
+| Standalone reference | 2026.10.4 | Not applicable | Not applicable | Not a server dependency | Offline fixtures pass; live browser return failed; owned OAuth grant revoked; acceptance pending |
+| Owner Supervisor/Ingress reference | 2026.10.4 | 2026.10.5 | 18.3 | 20260930.5 | Edge 0.0.0-edge.1 installed and running; Open Web UI and normal Chrome reload pass with the existing HA sign-in |
 
 The current Supervisor observation supersedes the historical 2026.10.3 value in the clarification
 history. That earlier version has not passed Domus acceptance. Every other combination is unverified
 until tested. Both deployment targets remain required for the first usable release.
 
-The authorized browser entry is `/home/overview`; the version observation used `/config/info`.
-No credentials, private frontend state or HA tokens were extracted. No entity, device, automation
-or HA configuration was changed. [Observation metadata](evidence/home-assistant-reference.json)
-contains versions and scope only.
+The authorized browser entry is `/home/overview`; version observations used `/config/info`.
+The earlier [read-only observation](evidence/home-assistant-reference.json) remains historical.
+The owner then authorized adding the development repository and installing/starting its Edge app.
+No entities, devices, automations, household records or users were changed. No credentials, private
+frontend state, session cookies or HA tokens were extracted into evidence. The app remains running
+for development with automatic update and start on boot disabled.
+
+[Native acceptance evidence](evidence/m1-native-ha-acceptance.json) identifies the package/runtime
+commits, checksum, safe outer browser URL, exact versions, assertions and retained app state.
+The initial iframe request stalled while Chrome's task debugger was attached. Detaching that
+debugger resumed loading; normal native Chrome reload also passed. No application authentication,
+peer or permission boundary was weakened. The installed preview has no household database or commands.
 
 ## Required evidence before support claims
 
@@ -29,6 +37,8 @@ See [the companion contract](../specs/platform-foundation-identity-sqlite.md) an
 [implementation boundaries](architecture-identity-storage.md).
 
 The [protocol checkpoint](ha-identity-protocol.md) has provider/loopback fixtures against the reviewed
-Core schema. It does not promote either matrix row to supported or establish real HA authentication.
-The [standalone authentication checkpoint](identity-household.md) adds browser-bound login and
-cookie/session HTTP fixtures. It has not yet authorized an account on the owner's HA.
+Core schema. Those fixtures alone cannot promote a matrix row. The
+[standalone authentication checkpoint](identity-household.md) adds browser-bound login and
+cookie/session HTTP fixtures. A live test exchanged one delegated grant, but did not establish a
+working browser session return. Shutdown confirmed revocation of that owned grant. Native preview
+acceptance does not establish standalone acceptance or general support for these versions.

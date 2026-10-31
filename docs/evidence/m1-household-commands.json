@@ -1,0 +1,60 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "650f1517f0e15664ea455628e63154dada0414f2",
+  "scope": "Application-layer explicit household setup, own enrollment and household edits; no public command routes or installed runtime change",
+  "backendTests": 482,
+  "backendCoverage": {
+    "covered_lines": 1701,
+    "num_statements": 1701,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 103,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 450,
+    "num_partial_branches": 0,
+    "covered_branches": 450,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": ".venv/bin/pytest tests/backend -q -W error::ResourceWarning --cov=domus --cov-branch --cov-report=term-missing",
+  "assertions": [
+    "Real SQLite atomic home/policy/members/receipt/audit/outbox setup and all three administrator mappings",
+    "Fresh current actor; no first-arrival authority; selected ordinary human must be independently verified",
+    "Inherited administrator source is separate from an explicit profile grant",
+    "Own pending enrollment; only all-HA-admin mapping activates a current admin on explicit enrollment",
+    "Suspended and archived members cannot reenroll or replay; capacity preserves linked actor history",
+    "Authorized replay before external preparation and revision checks; current authorization still precedes receipt disclosure",
+    "No external target/timezone lookup while holding SQLite writer lock",
+    "Real-file concurrent setup has one complete winner; injected linkage conflict rolls back all records; clean retry works",
+    "Restart preserves results; changed idempotency payload and stale revisions conflict without effects",
+    "HA batch lookup distinguishes confirmed negative eligibility from malformed, duplicate, forbidden or unavailable source",
+    "Native directory permission denial maps to safe HTTP 403 instead of unexpected 500"
+  ],
+  "architecture": "Actual backend import graph: 66 files, 196 dependencies; all 3 contracts kept; mypy backend/src passes",
+  "installedPreview": "Unchanged 0.0.0-edge.1 runtime 98bd12f1bf141ba64053730b2686bd848aee1b1c; none of these new application commands are installed",
+  "remaining": [
+    "Member activation and profile/policy administration",
+    "Last-administrator command safeguards",
+    "Public command/query API and setup UI",
+    "Recovery and snapshot/restore",
+    "Native persistent installation and read-grace sessions",
+    "Complete deployment/channel acceptance"
+  ],
+  "sourceSha256": {
+    "backend/src/domus/application/household_commands.py": "878d5138026593e47f7f444bd4095d0eb7c0edcc43ebedccc18e9ba41ad28673",
+    "backend/src/domus/application/commands.py": "f6c3d600be23aceb0a3e2a1e3dce8f67ed1e3d7ee4010e4868a75098091739d2",
+    "backend/src/domus/application/identity_ports.py": "45d04bd3abe05d81d6e24f55e645e52ff9ddea341bdf0ee648ea59e68d713c0d",
+    "backend/src/domus/application/ports.py": "61ece246e74cc846d4503bab3aa2de0eb04024e8b31a25b5d3bedd42b14aff48",
+    "backend/src/domus/infrastructure/application_runtime.py": "30ed2ddfd31dd7dbc6d65f8330555e1b13fa390fb45a9a9027ff732e4113bbe5",
+    "backend/src/domus/infrastructure/ha_directory.py": "4e81ad4b5c67b412f83a1436b693918310f6f26a9871b83f225eaeb9d65e1f05",
+    "backend/src/domus/infrastructure/ha_websocket.py": "39bf7cddc367086c7d9ce600858664ffb505d77faa6f7ce623f21a0d0f58eaaf",
+    "backend/src/domus/entrypoints/ingress_http.py": "a21ac3facf4e319c3bb1f90acee223b9ee4b2c128fbcbf503cc69df7b70a6c6f",
+    "tests/backend/test_household_commands.py": "7824162bb1b67fcf1e1dfed8bf9c80b4768ea72e7d5cad96797d8429ad4d43d1",
+    "tests/backend/test_application_runtime.py": "58cb8226a9e679aa2646b95954d089a4cb2d05ea1a3e83af85a23fcb075f8256",
+    "tests/backend/test_ha_directory.py": "844e5bc36cde54b266aab3e8ba57ef14fcac3ccfab1c948b782bc136dc773385",
+    "tests/backend/test_ingress_http.py": "414f88ccc2a1218b23db6e29f9f8efbd2d10c42988055abf0d6e04bf5a43c93b"
+  }
+}

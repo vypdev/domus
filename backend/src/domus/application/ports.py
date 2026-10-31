@@ -76,3 +76,9 @@ class Clock(Protocol):
 
 class Identifiers(Protocol):
     def new(self) -> str: ...
+
+
+class TimeZones(Protocol):
+    """Validate an exact configured zone against the installation's timezone catalog."""
+
+    def require(self, time_zone: str) -> None: ...

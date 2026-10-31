@@ -1,8 +1,10 @@
 # Home Assistant app installation
 
 Status: native Ingress authentication preview and source-bound Edge app package implemented.
-Local arm64 container tests pass. Exact-head CI on both CPU families and installation proof remain
-independent gates. No production release is available; the complete product remains under development.
+Local arm64 container tests and both native CPU families in CI pass for package commit
+650f1517f0e15664ea455628e63154dada0414f2. Edge 0.0.0-edge.1 is installed and running on the owner's
+HA; Open Web UI and normal Chrome reload use the existing HA session successfully. No production
+release is available; the complete product remains under development.
 
 ## Intended user journey
 
@@ -23,13 +25,21 @@ https://github.com/vypdev/domus#feature/6-implement-home-assistant-identity-and-
 ```
 
 This is a disposable development repository, not the permanent production channel. The Action owns
-the branch lifecycle. Remove its owned test app/repository after acceptance; production installation
+the branch lifecycle. The owner has retained its app for continued development. Remove the owned
+test app/repository when that testing ends; production installation
 must use the eventual published stable repository. Do not add the default repository URL yet:
 the default branch does not contain this preview package.
 
 Select Domus Edge 0.0.0-edge.1. Supervisor builds the app locally; the Dockerfile fetches immutable
 runtime commit 98bd12f1bf141ba64053730b2686bd848aee1b1c and verifies its SHA-256 before extracting it.
 Python/uv image digests and the dependency lock are fixed. No registry login is needed.
+
+The installed app is `62fdc661_domus_edge`. Open it at
+[Domus Edge in the owner's HA](http://homeassistant.local:8123/app/62fdc661_domus_edge).
+The connection preview, including a normal reload, passed on Core 2026.10.4, Supervisor 2026.10.5,
+HA OS 18.3 and Frontend 20260930.5. Start on boot, watchdog and automatic updates remain disabled.
+[The native acceptance receipt](evidence/m1-native-ha-acceptance.json) records the bounded scope.
+It does not claim that later source changes are in this immutable-source image.
 
 ## Current native preview
 

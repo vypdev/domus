@@ -7,6 +7,26 @@ from domus.application.session_values import SessionLease
 from domus.domain.identity import HumanIdentity
 
 
+class CurrentHuman(Protocol):
+    """Obtain fresh server-side human proof for a mutation; never a submitted DTO."""
+
+    def current(self) -> HumanIdentity: ...
+
+
+class HumanDirectory(Protocol):
+    """Resolve one exact, currently eligible human through a configured authority."""
+
+    def get(self, ha_user_id: str) -> HumanIdentity: ...
+
+    def eligible(self, ha_user_ids: tuple[str, ...]) -> tuple[HumanIdentity, ...]:
+        """Return only confirmed eligible requested humans from one bounded lookup.
+
+        Omission means confirmed absence/ineligibility. Transport, authorization
+        or malformed-source failures must raise, never become partial success.
+        """
+        ...
+
+
 class LeaseClock(Protocol):
     """Process-local monotonic milliseconds; never persisted across a restart."""
 

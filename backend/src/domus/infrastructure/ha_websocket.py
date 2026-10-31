@@ -140,13 +140,30 @@ class HomeAssistantWebSocket:
 
     def directory_user(self, transport_token: str, ha_user_id: str) -> HumanIdentity:
         """Supervisor's credential only transports the exact subject lookup."""
-        _user_id(ha_user_id)
+        humans = self.directory_users(transport_token, (ha_user_id,))
+        if not humans:
+            raise IdentityRejected("ha_subject_rejected")
+        return humans[0]
+
+    def directory_users(
+        self, transport_token: str, ha_user_ids: tuple[str, ...]
+    ) -> tuple[HumanIdentity, ...]:
+        """One current directory response; errors cannot masquerade as absent humans."""
+        if type(ha_user_ids) is not tuple or len(ha_user_ids) > 256:
+            raise InvalidInput("invalid_ha_directory")
+        for user_id in ha_user_ids:
+            _user_id(user_id)
+        requested = set(ha_user_ids)
+        if len(requested) != len(ha_user_ids):
+            raise InvalidInput("invalid_ha_directory")
+        if not requested:
+            return ()
         records = self._request(transport_token, "config/auth/list")
         try:
             if not isinstance(records, list) or len(records) > 256:
                 raise InvalidInput("invalid_ha_directory")
             seen: set[str] = set()
-            target: JsonObject | None = None
+            humans: dict[str, HumanIdentity] = {}
             for record in records:
                 if not isinstance(record, dict):
                     raise InvalidInput("invalid_ha_directory")
@@ -154,25 +171,26 @@ class HomeAssistantWebSocket:
                 if identity in seen:
                     raise InvalidInput("invalid_ha_directory")
                 seen.add(identity)
-                if identity == ha_user_id:
-                    target = record
-            if target is None:
-                raise IdentityRejected("ha_subject_rejected")
-            owner = target["is_owner"]
-            if type(owner) is not bool:
-                raise InvalidInput("invalid_ha_directory")
-            groups = target["group_ids"]
-            if (
-                not isinstance(groups, list)
-                or len(groups) > 32
-                or any(not isinstance(group, str) for group in groups)
-            ):
-                raise InvalidInput("invalid_ha_directory")
-            return HumanIdentity(
-                ha_user_id,
-                owner or "system-admin" in groups,
-                cast(bool, target["is_active"]),
-                cast(bool, target["system_generated"]),
-            )
+                if identity not in requested:
+                    continue
+                owner, active, system = (
+                    record["is_owner"],
+                    record["is_active"],
+                    record["system_generated"],
+                )
+                if any(type(value) is not bool for value in (owner, active, system)):
+                    raise InvalidInput("invalid_ha_directory")
+                groups = record["group_ids"]
+                if (
+                    not isinstance(groups, list)
+                    or len(groups) > 32
+                    or any(not isinstance(group, str) for group in groups)
+                ):
+                    raise InvalidInput("invalid_ha_directory")
+                if active and not system:
+                    humans[identity] = HumanIdentity(
+                        identity, bool(owner or "system-admin" in groups), True, False
+                    )
+            return tuple(humans[user_id] for user_id in ha_user_ids if user_id in humans)
         except DomusError, KeyError:
             raise IdentityRejected("ha_subject_rejected") from None

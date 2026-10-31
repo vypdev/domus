@@ -116,6 +116,15 @@ def create_ingress_app(
             status, code = 503, "ha_unavailable"
         elif isinstance(error, Unauthenticated):
             status, code = 401, "ha_rejected"
+        elif isinstance(error, Forbidden):
+            status, code = (
+                403,
+                (
+                    "ha_directory_forbidden"
+                    if error.code == "ha_directory_forbidden"
+                    else "request_forbidden"
+                ),
+            )
         elif isinstance(error, HTTPException):
             status, code = error.status_code, "resource_unavailable"
         return _blocked(status, code, request.state.correlation_id)

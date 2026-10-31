@@ -3,7 +3,13 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from domus.domain.errors import DomusError, IdentityRejected, IdentityUnavailable, InvalidInput
+from domus.domain.errors import (
+    DomusError,
+    Forbidden,
+    IdentityRejected,
+    IdentityUnavailable,
+    InvalidInput,
+)
 from domus.domain.identity import HumanIdentity
 from domus.entrypoints.ingress_http import create_ingress_app
 from domus.infrastructure.ha_config import HAEndpoint
@@ -110,6 +116,8 @@ def test_missing_malformed_or_duplicate_identity_is_never_a_default_user(subject
     [
         (IdentityUnavailable("private-upstream-detail"), 503),
         (IdentityRejected("private-upstream-detail"), 401),
+        (Forbidden("private-upstream-detail"), 403),
+        (Forbidden("ha_directory_forbidden"), 403),
         (DomusError("private-upstream-detail"), 500),
         (RuntimeError("private-upstream-detail"), 500),
     ],

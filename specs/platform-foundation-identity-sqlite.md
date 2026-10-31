@@ -455,6 +455,15 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/containers/test_app_image.py` | create |
 | `docs/evidence/m1-app-package.json` | create |
 | `README.md` | update |
+| `backend/src/domus/application/household_commands.py` | create |
+| `backend/src/domus/infrastructure/application_runtime.py` | create |
+| `backend/src/domus/infrastructure/ha_directory.py` | create |
+| `tests/backend/test_household_commands.py` | create |
+| `tests/backend/test_application_runtime.py` | create |
+| `tests/backend/test_ha_directory.py` | create |
+| `docs/household-setup.md` | create |
+| `docs/evidence/m1-household-commands.json` | create |
+| `docs/evidence/m1-native-ha-acceptance.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -556,3 +565,19 @@ implement a persisted installation or household setup. CI Check requires real im
 on native amd64 and aarch64; local container proof does not replace installed Ingress acceptance.
 Stable production packaging and the complete product remain pending. See
 [package evidence](../docs/evidence/m1-app-package.json).
+
+
+### Native acceptance and household command checkpoint
+
+Edge 0.0.0-edge.1 passed owner-authorized installation, start, Open Web UI and normal Chrome reload
+with the existing HA session on the exact target in [native evidence](../docs/evidence/m1-native-ha-acceptance.json).
+Both CPU families passed CI for package commit 650f1517f0e15664ea455628e63154dada0414f2.
+This accepts the stateless connection preview only; later source is not in its immutable runtime.
+
+[Household use cases](../docs/household-setup.md) now implement explicit three-mode setup, own pending
+enrollment and revision-checked household edits through pure ports and atomic SQLite commands.
+Current authority precedes replay; external proof does not hold the writer lock. Real-file race,
+rollback and restart tests accompany the bounded HA directory and runtime adapters; see
+[source-identified evidence](../docs/evidence/m1-household-commands.json). Public command routes,
+member/policy administration, recovery, snapshots, native persistence/read grace and full deployment
+acceptance remain pending. The specifications stay Draft.

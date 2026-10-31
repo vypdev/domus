@@ -28,6 +28,19 @@ class AtomicCommands:
     clock: Clock
     identifiers: Identifiers
 
+    def replay(self, command: CommandKey, payload: JsonDocument) -> Receipt | None:
+        """Authorize a read-only retry before preparing any external proof.
+
+        A new effect still enters execute(), which checks current authority and
+        replay again in the writer transaction. No provider I/O holds its lock.
+        """
+        with self.transactions.read() as unit:
+            self.authorization.require(command, unit)
+            previous = unit.receipts.get(command)
+            if previous is not None and previous.payload_fingerprint != payload.fingerprint:
+                raise Conflict("idempotency_conflict")
+            return previous
+
     def execute(
         self,
         command: CommandKey,
