@@ -54,6 +54,21 @@ review. Merge requires all current-head CI groups, full supported coverage and a
 Bugbot review without unresolved findings. The audit records this as pending rather than claiming
 the gate passed. Copilot implementation and installed resources remain untouched.
 
+The first ready review completed every one of its 30 code partitions, covering all 204 changed
+files, but reported partial context because three older human comments did not fit its conversation
+budget. The [exact original maintainer clarifications](evidence/issue6-human-clarifications.json)
+preserve all nine public source comments before redundant restatements are compacted in the live
+conversation. Their substantive decisions and the normative SDD requirements are unchanged; bot
+comments, original issue requirements and generated configuration are untouched. This preserves
+reviewable original evidence rather than treating omitted discussion as complete.
+
+That review found one valid stale schema number in the snapshot guide, corrected to schema 4.
+Two claimed syntax errors are false positives for the required Python 3.14 runtime:
+[PEP 758](https://peps.python.org/pep-0758/) permits the exact exception handlers without parentheses.
+Both exact modules compile and their focused suite passes (134 tests including snapshot checks).
+The false positives are [reported upstream](https://github.com/vypdev/copilot/issues/831) and require
+evidence-based review reconciliation; partial review still cannot authorize merge.
+
 Issue #6 excludes the product UI, companion HA entity/service integration and complete release/channel
 distribution. They remain part of the full product goal and require their own Action-admitted work.
 The next interface increment must consume these application contracts, preserve Clean Architecture,

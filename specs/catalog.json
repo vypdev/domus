@@ -205,7 +205,8 @@
         "docs/evidence/m1-restoration-app-package.json",
         "docs/evidence/m1-edge3-ha-acceptance.json",
         "docs/m1-acceptance-audit.md",
-        "docs/evidence/m1-acceptance-audit.json"
+        "docs/evidence/m1-acceptance-audit.json",
+        "docs/evidence/issue6-human-clarifications.json"
       ],
       "readiness": {
         "state": "draft",
@@ -392,7 +393,8 @@
         "docs/evidence/m1-restoration-app-package.json",
         "docs/evidence/m1-edge3-ha-acceptance.json",
         "docs/m1-acceptance-audit.md",
-        "docs/evidence/m1-acceptance-audit.json"
+        "docs/evidence/m1-acceptance-audit.json",
+        "docs/evidence/issue6-human-clarifications.json"
       ],
       "readiness": {
         "state": "draft",

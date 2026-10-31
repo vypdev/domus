@@ -532,6 +532,7 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/backend/test_response_readability.py` | create |
 | `docs/m1-acceptance-audit.md` | create |
 | `docs/evidence/m1-acceptance-audit.json` | create |
+| `docs/evidence/issue6-human-clarifications.json` | create |
 | `docs/evidence/m1-restoration-app-package.json` | create |
 | `docs/evidence/m1-edge3-ha-acceptance.json` | create |
 
