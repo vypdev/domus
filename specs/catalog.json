@@ -624,7 +624,8 @@
         "tooling/domus_tooling/ci_policy.py",
         "tooling/domus_tooling/docs.py",
         "tooling/domus_tooling/cli.py",
-        "architecture/frontend.mjs"
+        "architecture/frontend.mjs",
+        "tooling/frontend-coverage.mjs"
       ],
       "tests": [
         "tests/python/test_ci_policy.py",
@@ -633,7 +634,12 @@
         "tests/python/test_ci_contract.py",
         "tests/architecture/test_python_architecture.py",
         "tests/node/architecture.test.mjs",
-        "tests/containers/test_app_image.py"
+        "tests/containers/test_app_image.py",
+        "tests/node/frontend-coverage.test.mjs",
+        "tests/frontend-toolchain/coverage-evidence.test.mjs",
+        "tests/frontend-toolchain/guards.test.mjs",
+        "tests/fixtures/frontend-toolchain/unit/component.test.ts",
+        "tests/fixtures/frontend-toolchain/e2e/probe.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -641,11 +647,12 @@
         "docs/operations.md",
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
-        "docs/development.md"
+        "docs/development.md",
+        "docs/evidence/frontend-toolchain.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: tooling plus separately tested storage kernel/backend CI and actual import graph; UI/HA/channel acceptance pending",
+        "implementationEvidence": "partial: tooling, identity/storage backend and separate fictional frontend framework fixture; product UI/HA/channel acceptance pending",
         "blockingDecisions": "Current-head CI proof and required-check configuration by maintainer; real application/HA coverage and adapter contracts; channel IDs/integration coexistence; release publication authorization. Tooling versions and initial checks are implemented under issue #4.",
         "copilotChangesAllowed": false
       }

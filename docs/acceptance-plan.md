@@ -1,12 +1,15 @@
 # Verification and acceptance plan
 
 The SDD inventory contains 353 distinct planned cases across eleven capabilities.
-The counts are derived from concrete observable scenarios and are minimums; no application tests have run.
+The counts are derived from concrete observable scenarios and are minimums. The merged identity/storage
+foundation has separate backend evidence in the [M1 audit](m1-acceptance-audit.md); the full product case
+inventory is not complete.
 Formatting, catalog metadata, branch readiness and working product acceptance are separate gates.
 
 The first implementation is development tooling, with 85 executed tests recorded separately in the
 [development guide](development.md). Its coverage measures the actual Python tooling and declarative
-Node architecture policy, not the unimplemented backend/UI/HA product. The original product case floor
+Node architecture policy. Later backend evidence and fictional framework-fixture evidence remain
+separate from product UI/HA acceptance. The original product case floor
 remains planned; passing tooling tests does not satisfy all product acceptance cases.
 
 ## From the first source file
@@ -50,3 +53,12 @@ Cross-domain maintenance/material/receipt/points scenarios reconcile ledger tota
 Failure and compensation paths remain understandable. Documentation and actual schemas agree.
 Every material decision is resolved before the owning SDD becomes Ready for implementation.
 No release, production install or promotion is authorized by this package.
+
+## Frontend framework fixture boundary
+
+Issue #9 adds real framework execution under the existing delivery-quality contract.
+The [development guide](development.md) and [source evidence](evidence/frontend-toolchain.json)
+record strict type checking, complete four-metric fixture coverage, real coverage/type negatives,
+Vite/Storybook builds and four keyboard/layout browser journeys. CI Check requires this job in
+addition to every existing suite. The fixture is test data outside product runtime; its test count
+and coverage never satisfy the household UI's 48 cases, owner HA acceptance or channel packaging.

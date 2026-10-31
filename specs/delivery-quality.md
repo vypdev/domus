@@ -3,10 +3,10 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: delivery-quality
-- Last verified: 2026-10-29 (partial tooling verified; application/channel acceptance pending)
+- Last verified: 2026-10-31 (partial tooling/backend/framework fixture evidence; product UI/channel acceptance pending)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels.
-- Related issues/PRs: https://github.com/vypdev/domus/issues/2; https://github.com/vypdev/domus/issues/4
+- Related issues/PRs: https://github.com/vypdev/domus/issues/2; https://github.com/vypdev/domus/issues/4; https://github.com/vypdev/domus/issues/9
 - Required review gates: product UX, architecture, testing, documentation, security/operations
 - Open decisions blocking readiness: Current-head CI proof and required-check configuration by maintainer; real application/HA coverage and adapter contracts; channel IDs/integration coexistence; release publication authorization. Tooling versions and initial checks are implemented under issue #4. Catalog gate prerequisites remain unverified.
 
@@ -24,7 +24,7 @@ This is a prospective Draft, not an implemented or accepted capability. The firs
 
 The owner requires full quality gates from the first code and explicit Stable/Edge channels analogous to the existing gateway, while prohibiting changes to Copilot.
 
-The documentation foundation was merged through PR #3. Issue #4 implements locked development tooling, import/cycle contracts, local document-link checks and the project CI Check workflow with meaningful tests. The household application, public domain services, UI, HA runtime integration and channel packages remain unimplemented. This is partial delivery-quality evidence, not acceptance of every requirement below.
+The documentation foundation was merged through PR #3. Issue #4 implements locked development tooling, import/cycle contracts, local document-link checks and the project CI Check workflow with meaningful tests. PR #7 subsequently supplies the separately tested identity/storage backend and an immutable native Edge preview. Issue #9 adds locked frontend framework execution using a fictional test fixture. Product domain services, the household UI, companion integration and complete both-target/channel acceptance remain pending. This is partial delivery-quality evidence, not acceptance of every requirement below.
 
 Evidence: the owner's attached brief and subsequent decisions in [product vision](../docs/product-vision.md), the pinned [reference investigation](../docs/reference-investigation.md), and the existing repository baseline. Retrospective classification is not applicable: no as-built product baseline is reconstructed.
 
@@ -202,11 +202,11 @@ Minimum: 24 distinct cases, derived from the explicit risk inventory below. Each
 | delivery-quality-C23 | Workflow contracts | delivery-quality-R8 | Given dependency preparation, only the existing project-owned setup action is eligible for the owner's stated exception. |
 | delivery-quality-C24 | Workflow contracts | delivery-quality-R8 | Given a future Copilot limitation, the task reports it without patching the bot, weakening checks or inventing evidence. |
 
-Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. No application coverage currently exists.
+Every implemented first-party module starts with meaningful behavior tests. Target and proposed merge gate: 100% lines/statements/functions/branches where the selected tools expose those metrics, enforced separately across backend, frontend and integration code. Third-party/generated artifacts are distinguished from authored source; broad exclusions cannot hide untested logic. Backend coverage has its own scope; product UI/integration coverage remains pending. Framework-fixture coverage is development infrastructure.
 
 Inject deterministic clocks, IDs, provider fakes and transaction failures. Use semantic assertions alongside golden content, real adapter contracts and disposable HA integration environments. Add Google Chrome evidence from the owner's authorized local HA for real UX; it does not replace automated tests or unit coverage. CI Check runs the complete applicable suite for every PR update.
 
-Implemented tooling evidence is documented in [development](../docs/development.md): 64 Python tests, 11 Node policy tests and 10 Python architecture fixture tests, with 100% supported Python tooling coverage. The Node module is a declarative configuration with one executable statement and no authored functions/branches; it is not product UI coverage. These results partially support the tooling aspects of R1/R2/R3/R8 and do not complete the deployment, application port, channel or Chrome cases.
+Historical initial tooling evidence is documented in [development](../docs/development.md): 64 Python tests, 11 Node policy tests and 10 Python architecture fixture tests, with 100% supported Python tooling coverage. The Node module is a declarative configuration with one executable statement and no authored functions/branches; it is not product UI coverage. The later [frontend framework evidence](../docs/evidence/frontend-toolchain.json) records actual execution, separate four-metric policy/fixture coverage and negative guards; it does not implement application-experience. These results partially support the tooling aspects of R1/R2/R3/R8 and do not complete the deployment, application port, channel or Chrome cases.
 
 ## 15. Documentation and discoverability
 
@@ -234,6 +234,12 @@ Owning documentation and actual tooling paths below are relative to the merged f
 | docs/contracts/home-assistant.md | reference |
 | docs/development.md | create |
 | docs/evidence/development-tooling.json | create |
+| docs/evidence/frontend-toolchain.json | create |
+| tooling/frontend-coverage.mjs | create |
+| tests/node/frontend-coverage.test.mjs | create |
+| tests/frontend-toolchain/coverage-evidence.test.mjs | create |
+| tests/frontend-toolchain/guards.test.mjs | create |
+| tests/fixtures/frontend-toolchain/package.json | create |
 | .github/workflows/ci_check.yml | create |
 | .gitignore | create |
 | .python-version | create |

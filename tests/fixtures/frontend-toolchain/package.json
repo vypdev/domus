@@ -1,0 +1,35 @@
+{
+  "name": "@domus/frontend-toolchain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.0",
+  "engines": {
+    "node": ">=24.20.0 <25"
+  },
+  "scripts": {
+    "check": "pnpm run check:runtime && pnpm run check:catalog",
+    "build": "vite build",
+    "test": "vitest run --coverage",
+    "storybook:build": "storybook build --disable-telemetry --quiet",
+    "browser": "playwright test",
+    "check:runtime": "tsc --noEmit -p tsconfig.json",
+    "check:catalog": "tsc --noEmit -p tsconfig.catalog.json"
+  },
+  "dependencies": {
+    "lit": "3.3.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@storybook/web-components-vite": "10.6.5",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@vitest/browser-playwright": "5.0.5",
+    "@vitest/coverage-v8": "5.0.5",
+    "playwright": "1.64.1",
+    "storybook": "10.6.5",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

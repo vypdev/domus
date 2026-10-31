@@ -46,9 +46,9 @@ uv run domus-check docs
 
 Python coverage includes all modules of domus_tooling, including modules not exercised by a test.
 Coverage.py exposes executable statements/lines and branches here; both must reach 100%.
-The Node report measures the authored declarative frontend import policy: one executable configuration
-statement, with no authored functions/branches. Its four reported metrics are enforced at 100%,
-but this is not application UI coverage. Tests, generated dependencies and framework configuration
+The Node report measures the authored frontend import policy and reusable coverage policy. Its four
+reported metrics are enforced at 100% globally and per file. This is tooling coverage, separate from
+the fictional framework fixture and future application UI coverage. Tests, generated dependencies and framework configuration
 are distinct from runtime source. A source-inventory test rejects a new backend, UI or HA runtime
 file until its own applicable coverage/architecture gate is registered.
 
@@ -78,12 +78,12 @@ See the primary [dependency-cruiser API](https://github.com/sverweij/dependency-
 ## CI Check
 
 The project-owned .github/workflows/ci_check.yml runs Python tooling, the separate backend suite,
-Node policy, Python architecture
+Node policy, real frontend framework execution, Python architecture
 contracts and local documentation links for every PR update, including drafts and documentation changes.
 It also runs on develop/master pushes and merge-queue validation. There are no path filters or job
 conditions hiding applicable suites. Actions are pinned to immutable commits and installs use lockfiles.
 
-The final CI Check job always evaluates all six required job results, including the container matrix.
+The final CI Check job always evaluates all seven required job results, including the container matrix.
 Missing, malformed, unexpected, failed, skipped, cancelled or pending results prevent success.
 Every required job must explicitly succeed. The container job builds and tests the exact Supervisor
 app folder on native amd64 and aarch64 runners; it never publishes images or installs into live HA.
@@ -212,3 +212,54 @@ retains the lock through the listener and releases it even if credential cleanup
 real household/original-operation restart, lost sessions, channel/cookie separation and console
 attachment. [Evidence](evidence/m1-standalone-owned-storage.json) records this local composition
 checkpoint; complete standalone deployment and owner browser acceptance remain pending.
+
+## Frontend framework infrastructure
+
+[Issue #9](https://github.com/vypdev/domus/issues/9) establishes actual framework execution with a
+fictional fixture in tests/fixtures/frontend-toolchain. It is a development workspace, outside
+frontend/src, with no household, HA, authentication or release behavior. Issue #8 still owns the
+unimplemented household interface and its own product tests.
+
+The workspace locks Lit 3.3.3, Vite 8.3.5, Storybook/web-components-vite 10.6.5,
+Vitest/coverage-v8/browser-playwright 5.0.5, Playwright 1.64.1 and TypeScript 6.0.3.
+It uses the existing Node 24.20.0/pnpm 10.34.0 baseline. Run these commands after the frozen install:
+
+```sh
+pnpm --filter @domus/frontend-toolchain exec playwright install chromium
+pnpm check:frontend-toolchain
+pnpm test:frontend-toolchain
+pnpm build:frontend-toolchain
+pnpm test:frontend-browser
+pnpm test:frontend-guards
+```
+
+CI installs Chromium with its Linux dependencies using --with-deps. Local environments must provide
+Python 3 for the disposable static Storybook server. Loopback socket restrictions require permission
+for browser/component tests; these commands do not contact the owner's HA. Ports 56171 and 56172
+are fixture-only, refuse existing listeners and are managed by Playwright. Run browser and guard
+commands sequentially, after both builds. The guards inject owned temporary negative fixtures and
+remove them in finally blocks. They also verify server cleanup after a deliberate browser-test failure.
+
+The reusable tooling/frontend-coverage.mjs policy includes unimported JS/TS runtime extensions and
+requires 100% lines, statements, functions and branches globally and per file. The independent source
+inventory check rejects missing files or supported metrics. Real negative executions add uncovered
+JS and TS modules and remove a branch metric from a produced report; both commands must fail.
+An empty fixture report cannot establish support. Policy coverage, fixture coverage and future product
+coverage have separate scopes and artifacts. Declaration files are type-checked, not executable runtime.
+
+Both TypeScript projects check owned code strictly. Runtime/configuration/tests use skipLibCheck:false.
+Storybook 10.6.5's third-party declarations have TS2578/TS2344 errors with TypeScript 6.0.3; only
+the catalog project uses skipLibCheck:true for dependency declarations. Owned runtime, stories and
+Storybook configuration remain strictly checked. The guard deliberately supplies an invalid owned
+story title and requires TS2322. No vendor declaration or Copilot resource is patched.
+
+The component test exercises actual Lit DOM state, reflected ARIA state and composed bubbling events.
+Four Playwright journeys exercise the built Vite entry and actual built Storybook story at 320px and
+1280px: keyboard focus, Enter/Space activation, accessible button names, 44px target height, containment
+and absence of page errors. This is bounded fixture accessibility evidence, not a full product audit.
+
+[Source-identified evidence](evidence/frontend-toolchain.json) distinguishes local commands, coverage,
+builds and browser assertions. Current-head hosted CI/Bugbot are separate PR gates. Fixture output
+is not a Domus installation, product UI, native Ingress/standalone OAuth proof, owner Chrome
+dogfooding or evidence for the 48 proposed household-interface cases. Stable/Edge and both deployment
+targets retain their own pending acceptance obligations.

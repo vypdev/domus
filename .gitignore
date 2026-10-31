@@ -12,3 +12,8 @@ coverage-*.json
 coverage-*.xml
 dist/
 htmlcov/
+storybook-static/
+playwright-report/
+test-results/
+.vitest/
+coverage-negative/

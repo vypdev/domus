@@ -49,3 +49,10 @@ def test_reports_every_missing_job_in_stable_order() -> None:
     assert evaluate_jobs({}) == tuple(
         f"{name}: missing or invalid job result" for name in REQUIRED_JOBS
     )
+
+
+@pytest.mark.parametrize("conclusion", ["failure", "cancelled", "skipped", "pending", None])
+def test_framework_execution_cannot_be_omitted_from_success(conclusion: object) -> None:
+    jobs = successful_jobs()
+    jobs["frontend_toolchain"] = {"result": conclusion}
+    assert evaluate_jobs(jobs) == (f"frontend_toolchain: expected success, received {conclusion}",)
