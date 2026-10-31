@@ -1,6 +1,6 @@
 # Administrator access recovery
 
-Status: the target-bound recovery model, SQLite schema 3, human routes in both native/standalone
+Status: the target-bound recovery model, SQLite schema 4, human routes in both native/standalone
 compositions and installation-console command are implemented. Tests include actual ASGI/SQLite
 journeys and a separate process using a real terminal. Edge.2 packages these services; the owner has
 verified its connection page and restart, without exercising live recovery. Edge.3 adds retained
@@ -72,11 +72,17 @@ instead of bypassing that protocol. All normal SQLite writer/revision guards sti
 
 A canceled/interrupted terminal does not approve. If output fails after commit, the CLI reports that
 it could not confirm the result and instructs inspection or retry of the same request; it does not
-claim no effect. Repeating approval for an already approved live request returns the same receipt.
+claim no effect. Repeating the identical approval returns its original receipt even after normal
+consumption, cancellation, expiry or policy changes. This is a read-only lookup by the bound local
+installation console; it never approves again, renews a deadline or grants access. New approvals
+still require a live unchanged binding and exact terminal confirmation; human completion still
+requires fresh current HA proof. Restoration closure guards continue to block old approvals.
+The returned result describes the original operation, so inspect current request status before acting.
 Existing business and replay records are retained on rejected or uncertain commands.
 
 See [source-identified evidence](evidence/m1-administrator-recovery.json),
 [migration behavior](migrations-identity-storage.md), [owned data](owned-data-directory.md),
 [HTTP contracts](household-api.md) and [remaining operational work](operations-identity-storage.md).
-Consistent snapshot/restore, packaged directory provisioning and owner HA recovery acceptance are
-still pending. No automatic backup frequency or retention is introduced.
+Consistent snapshot/restore and packaged directory provisioning have separate real-file/image proof;
+owner HA recovery/restore and complete deployment acceptance remain pending. No automatic backup
+frequency or retention is introduced.

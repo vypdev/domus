@@ -84,11 +84,13 @@ inspection needs no HA token or additional HA authorization. No HTTP backup endp
 
 See [source-identified evidence](evidence/m1-snapshots.json), [owned data](owned-data-directory.md),
 [migrations](migrations-identity-storage.md) and [operator limits](operations-identity-storage.md).
-The restore flow must still preserve the selected checkpoint and replay safeguards before activation
-in a new matching directory, with writes stopped. The owner accepted [A30](decisions.md): restore the
+The implemented offline restore flow preserves the selected checkpoint and replay safeguards before
+activation in a new matching generation, with writes stopped. The owner accepted [A30](decisions.md): restore the
 checkpoint's state while retaining readable later receipts/history as already processed, without
 executing their effects again. [Preparation](restoration.md) seals those facts beside the original
-checkpoint, without importing them into runtime storage or enabling activation yet.
+checkpoint. A separate verified offline activation imports history into the new generation before
+atomic selection; same-ID resume handles interruption. See [the complete flow](restoration.md).
+Real-file and image proof does not establish live owner restore or complete deployment acceptance.
 
 Implementation references: [Python sqlite3 backup interface](https://docs.python.org/3.14/library/sqlite3.html#sqlite3.Connection.backup)
 and [SQLite backup semantics](https://www.sqlite.org/backup.html). The inspected local runtime is

@@ -80,12 +80,12 @@ This listener is exclusively for the Supervisor private container network, binds
 in the reviewed manifest and disables proxy-header rewriting/access logs. GET /health is nonpersonal
 process readiness for Supervisor/loopback, not an HA availability or authenticated-user claim.
 Packaged ownership/startup and both native CPU-family image checks pass. The complete UI, live
-household/recovery operations and restore remain pending. Packaged snapshot create/inspect commands
+household/recovery operations and live owner restore remain pending. Packaged snapshot create/inspect commands
 also pass with the image's SQLite 3.46.1 in isolated fixtures, without creating an owner Domus snapshot.
 
 [Administrator recovery](administrator-recovery.md) now shares this boundary and the standalone
 application services. Human request/status/completion/cancellation are authenticated routes; approval
-is available exclusively from the installation console. Schema 3 migration and local fixtures do not
+is available exclusively from the installation console. Schema 4 migration and local fixtures do not
 establish live recovery acceptance in the installed package.
 
 ## Reviewed primary sources

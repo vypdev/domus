@@ -28,8 +28,8 @@ def configuration() -> OAuthConfiguration:
 
 def test_configuration_normalizes_fixed_origins_and_supervisor_socket_path() -> None:
     config = OAuthConfiguration(HAEndpoint("https://HA.EXAMPLE:443/"), "https://DOMUS.EXAMPLE/")
-    assert config.ha.origin == "https://ha.example:443"
-    assert config.ha.websocket_url == "wss://ha.example:443/api/websocket"
+    assert config.ha.origin == "https://ha.example"
+    assert config.ha.websocket_url == "wss://ha.example/api/websocket"
     assert config.client_id == "https://domus.example/"
     assert config.callback_url == "https://domus.example/api/v1/auth/callback"
     assert (

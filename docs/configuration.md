@@ -2,14 +2,19 @@
 
 For the native HA app, follow [app installation](installation-home-assistant.md). It uses Ingress
 and requires no second login. The [native persistent development runtime](native-household-api.md)
-also has an explicit database/UUID/fixed-origin development contract. Installed Edge.2 uses the
+also has an explicit database/UUID/fixed-origin development contract. Installed Edge.3 uses the
 managed-directory launcher described below.
 The options below apply to the independent standalone runtime.
+
+Trusted origins omit scheme-default ports after validation: `https://domus.example:443` becomes
+`https://domus.example`, and HTTP port 80 is likewise omitted. Non-default ports are retained.
+Native Origin/CSRF checks remain exact against the canonical configured origins; equivalent duplicate
+entries are rejected. Standalone OAuth client and callback URLs use the same canonical public origin.
 
 Both CLIs support [--data-directory](owned-data-directory.md) for an existing private
 0700 directory owned by its runtime UID. It generates/preserves installation identity, checks files
 and holds the process lock until shutdown. Use it with --public-origin; do not also supply
---database or --instance-id. Installed Edge.2 wires this lifecycle through its fixed launcher.
+--database or --instance-id. Installed Edge.3 wires this lifecycle through its fixed launcher.
 Both explicit-file runtime modes reject a parent installation.json marker before SQLite initialization.
 Use the owned-directory entrypoint for managed data; an explicit file cannot bypass its locks.
 

@@ -156,7 +156,8 @@
         "tests/backend/test_activation_compatibility.py",
         "tests/containers/test_app_compatibility.py",
         "tests/containers/restore_fixture.py",
-        "tests/backend/test_response_readability.py"
+        "tests/backend/test_response_readability.py",
+        "tests/backend/test_review_regressions.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -206,7 +207,8 @@
         "docs/evidence/m1-edge3-ha-acceptance.json",
         "docs/m1-acceptance-audit.md",
         "docs/evidence/m1-acceptance-audit.json",
-        "docs/evidence/issue6-human-clarifications.json"
+        "docs/evidence/issue6-human-clarifications.json",
+        "docs/evidence/m1-review-fixes.json"
       ],
       "readiness": {
         "state": "draft",
@@ -348,7 +350,8 @@
         "tests/containers/test_app_image.py",
         "tests/containers/test_app_compatibility.py",
         "tests/containers/restore_fixture.py",
-        "tests/backend/test_response_readability.py"
+        "tests/backend/test_response_readability.py",
+        "tests/backend/test_review_regressions.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -394,7 +397,8 @@
         "docs/evidence/m1-edge3-ha-acceptance.json",
         "docs/m1-acceptance-audit.md",
         "docs/evidence/m1-acceptance-audit.json",
-        "docs/evidence/issue6-human-clarifications.json"
+        "docs/evidence/issue6-human-clarifications.json",
+        "docs/evidence/m1-review-fixes.json"
       ],
       "readiness": {
         "state": "draft",

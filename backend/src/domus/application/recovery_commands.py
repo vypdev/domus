@@ -287,6 +287,32 @@ class RecoveryCommands:
         return self._commands(human, command.action, request_id).execute(command, payload, apply)
 
 
+def _console_request(
+    command: CommandKey, unit: UnitOfWork, installation: Installation, request_id: str
+) -> RecoveryRequest:
+    if (
+        command.actor_id != "installation-console"
+        or command.action != "recovery.approve"
+        or command.key != request_id
+    ):
+        raise Forbidden("permission_denied")
+    value = _request(unit, command.household_id, request_id)
+    _require_open(unit, command.household_id, request_id)
+    if value.installation != installation:
+        raise Conflict("recovery_binding_changed")
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class _ConsoleReceiptAuthority:
+    installation: Installation
+    request_id: str
+
+    def require(self, command: CommandKey, unit: UnitOfWork) -> None:
+        # Only read-only receipt lookup uses this authority; no effect executor receives it.
+        _console_request(command, unit, self.installation, self.request_id)
+
+
 @dataclass(frozen=True, slots=True)
 class _ConsoleAuthority:
     installation: Installation
@@ -294,14 +320,7 @@ class _ConsoleAuthority:
     request_id: str
 
     def require(self, command: CommandKey, unit: UnitOfWork) -> None:
-        if (
-            command.actor_id != "installation-console"
-            or command.action != "recovery.approve"
-            or command.key != self.request_id
-        ):
-            raise Forbidden("permission_denied")
-        value = _request(unit, command.household_id, self.request_id)
-        _require_open(unit, command.household_id, self.request_id)
+        value = _console_request(command, unit, self.installation, self.request_id)
         value.require_current(
             self.installation,
             _policy(unit, command.household_id),
@@ -329,7 +348,12 @@ class RecoveryConsole:
         authority = _ConsoleAuthority(self.installation, self.clock, request_id)
         commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
         payload = JsonDocument.from_value({"request_id": request_id, "expected_revision": 1})
-        previous = commands.replay(command, payload)
+        previous = AtomicCommands(
+            self.transactions,
+            _ConsoleReceiptAuthority(self.installation, request_id),
+            self.clock,
+            self.identifiers,
+        ).replay(command, payload)
         if previous is not None:
             return previous
         with self.transactions.read() as unit:

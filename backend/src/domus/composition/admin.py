@@ -127,8 +127,9 @@ def main(
                     "message": (
                         "This approval is historical and has no effect in current state."
                         if receipt.historical
-                        else "Console approval was saved. The same target must freshly prove "
-                        "HA administrator status to finish."
+                        else "Console approval was saved by this operation. Check the request's "
+                        "current status before attempting completion, which still requires "
+                        "fresh HA administrator proof."
                     ),
                 },
                 ensure_ascii=True,

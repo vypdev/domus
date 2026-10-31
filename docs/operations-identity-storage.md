@@ -1,10 +1,10 @@
 # Identity and storage operations
 
-Status: both persistent household APIs, bounded sessions, transactional SQLite schema 3 and
+Status: both persistent household APIs, bounded sessions, transactional SQLite schema 4 and
 [console-approved administrator recovery](administrator-recovery.md) are implemented. Manual
-[snapshot creation/inspection](snapshots.md) is also available. Persistent Edge.2 now passes private
-data startup, existing-session access, reload and restart on the owner target. Restore, product UI,
-live household/recovery commands and complete deployment acceptance remain pending. Do not use SQL
+[snapshot creation/inspection](snapshots.md) and verified offline [restoration](restoration.md) are
+also available. Edge.3 passes bounded owner update, existing-session access, reload and restart.
+Product UI, live household/recovery/restore and complete deployment acceptance remain pending. Do not use SQL
 edits to bypass setup.
 
 ## Authentication API
@@ -51,14 +51,15 @@ record cleanup without retaining credentials or unnecessary personal data.
 
 SQLite commits household state, policy, scoped receipts, audit and outbox atomically. Outbox delivery
 failure does not reverse a committed business result. Retain replay evidence across restart, migration,
-cleanup and future restore. [Schema 1/2-to-3 migration](migrations-identity-storage.md) is additive and
+cleanup and restore. [Schema 1/2/3-to-4 migration](migrations-identity-storage.md) is additive and
 atomic; old households without policy fail closed rather than promoting a browser.
 
 [Administrator recovery](administrator-recovery.md) now requires fresh current HA administrator proof,
 exact target/request/UUID/channel/mapping/revision binding, ten-minute expiry and atomic single use.
 Snapshot creation/inspection now verifies checkpoint/schema/identity/integrity/checksum through the
-installation console. Restore and activation into a new owned directory remain pending, including the
-implementation of the accepted [A30](decisions.md) policy for retaining later processed history.
+installation console. Offline restore preparation, activation/resume and rollback implement the
+accepted [A30](decisions.md) policy for retaining later processed history. Real-file/process and
+packaged-image evidence is separate from unexecuted live owner restore acceptance.
 No automatic backup schedule/retention is approved.
 
 The [native persistent runtime](native-household-api.md) clears only its local bindings on shutdown;

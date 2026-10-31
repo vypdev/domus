@@ -34,7 +34,10 @@ def _origin(value: str) -> str:
             label = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
             if len(host) > 253 or not re.fullmatch(rf"{label}(?:\.{label})*", host):
                 raise ValueError("invalid host") from None
-        return f"{url.scheme}://{url.netloc.lower()}"
+        authority = f"[{host}]" if ":" in host else host
+        if port is not None and port != (443 if url.scheme == "https" else 80):
+            authority += f":{port}"
+        return f"{url.scheme}://{authority}"
     except ValueError:
         raise InvalidInput("invalid_origin") from None
 

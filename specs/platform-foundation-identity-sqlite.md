@@ -186,6 +186,8 @@ Text equivalent: entrypoints call application use cases; application depends inw
 
 - Pure decisions: identity eligibility, mapping grants, permission precedence, scope, last-admin safety, revisions and recovery eligibility.
 - Application contracts: immutable use-case input/output; actor derives only from proven session; mutations carry expected revision and idempotency key.
+- Normative wire contracts are the published standalone/native household OpenAPI documents and their route guide. Setup is POST /api/v1/household; enrollment is POST /api/v1/members/enrollment; member replacement is PUT /api/v1/members/{member_id}. These supersede historical pre-implementation route examples, whose original text remains archived. Both compositions share the same household router; no earlier public client compatibility is claimed.
+- Operator origins omit explicit scheme-default ports before exact browser-origin checks. A bound installation console may read its original approval receipt after normal closure/expiry without granting or renewing approval; new effects retain every live-binding/confirmation check and restoration closure guards still apply.
 - Semantic ports: identity proof/current source, unit-of-work/repository, clock/IDs, snapshot/restore and audit/outbox capabilities without provider DTOs.
 - Durable state/schema ownership: SQLite adapter owns versioned schema, application marker, installation UUID, channel, business records, policy revisions, receipts, audit and outbox. Credentials/tokens are excluded.
 - Concurrency/idempotency strategy: separate per-unit-of-work connections and `BEGIN IMMEDIATE`; 250 ms initial busy budget; transaction-time authorization. Busy is retryable `storage_busy`/503 with `Retry-After` guidance. Identical scoped key/digest returns original result before old expected-revision evaluation; changed payload is `idempotency_conflict`/409; stale new write is `revision_conflict`/409. No automatic new-key retries or silent rebase.
@@ -530,6 +532,8 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `docs/evidence/m1-persistent-app-package.json` | create |
 | `docs/evidence/m1-persistent-ha-acceptance.json` | create |
 | `tests/backend/test_response_readability.py` | create |
+| `tests/backend/test_review_regressions.py` | create |
+| `docs/evidence/m1-review-fixes.json` | create |
 | `docs/m1-acceptance-audit.md` | create |
 | `docs/evidence/m1-acceptance-audit.json` | create |
 | `docs/evidence/issue6-human-clarifications.json` | create |
@@ -588,7 +592,7 @@ These are executable acceptance requirements, not reports of tests already run.
 - [ ] Identity proof, all mapping defaults, profiles/exceptions, recovery, stale revisions, suspension and last-administrator safety pass.
 - [ ] SQLite migration, atomic rollback, restart, concurrency, replay, backup and restore pass on real files.
 - [ ] API validation, session/CSRF/origin, safe errors and both wiring contracts pass; deployment/package claims remain limited to exact proven targets.
-- [ ] Primary response states, sanitization, accessibility, localization fallback, and manual readability evidence are reviewed.
+- [x] Primary response states, sanitization, accessibility, localization fallback, and manual API/console readability evidence are reviewed (owner confirmation on 2026-10-31; product UI remains outside this increment).
 - [ ] User/setup/operator/contributor, configuration, migration, compatibility and recovery documentation is complete and discoverable.
 - [ ] Every-PR CI runs all applicable suites, including docs-only updates, with fail-closed aggregate; merge review gate is complete and current-head.
 - [ ] `specs/catalog.json` and generated `specs/CATALOG.md` accurately reflect evidence and specification validation passes.
@@ -605,8 +609,9 @@ These are executable acceptance requirements, not reports of tests already run.
 The [acceptance audit](../docs/m1-acceptance-audit.md) maps all 61 identity and 18 restoration
 cases to exact semantic tests or bounded observations. Its [receipt](../docs/evidence/m1-acceptance-audit.json)
 records 1,387 backend tests, 4,692 statements and 1,304 branches at 100% supported coverage.
-Independent human readability review and complete current-head Bugbot review remain pending;
-skipped draft review is not acceptance. Specifications remain Draft.
+The [review corrections](../docs/evidence/m1-review-fixes.json) add 20 regression cases, 1,407 tests
+and 100% coverage. The owner confirmed API/console text clarity; complete current-head Bugbot review
+remains pending. Skipped draft review is not acceptance. Specifications remain Draft.
 
 Earlier immutable receipts remain indexed by the catalog and implementation/user guides. The
 [real-image restoration receipt](../docs/evidence/m1-restoration-app-package.json) adds Edge.3

@@ -286,7 +286,16 @@ def create_app(
         cookie(response, settings.browser_cookie, result.browser_token, 300)
         return response
 
-    @app.get("/api/v1/auth/callback", status_code=303, response_class=RedirectResponse)
+    @app.get(
+        "/api/v1/auth/callback",
+        status_code=303,
+        response_class=RedirectResponse,
+        description=(
+            "Exactly one of code or error is required, together with state and the bound browser "
+            "cookie. Providing both outcomes or neither returns 422 without consuming the attempt. "
+            "A code completes authorization; an error records a declined authorization."
+        ),
+    )
     def callback(request: Request, parameters: Annotated[CallbackQuery, Query()]) -> Response:
         try:
             browser = cast(str, _cookie(request.scope, settings.browser_cookie))

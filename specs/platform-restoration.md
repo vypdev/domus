@@ -389,6 +389,7 @@ Planned file footprint (implementation is staged; presence is not completion):
 | `docs/m1-acceptance-audit.md` | create |
 | `docs/evidence/m1-acceptance-audit.json` | create |
 | `docs/evidence/issue6-human-clarifications.json` | create |
+| `docs/evidence/m1-review-fixes.json` | create |
 | `backend/src/domus/domain/restoration.py` | create |
 | `backend/src/domus/application/restoration.py` | create |
 | `backend/src/domus/infrastructure/sqlite_restoration.py` | create |

@@ -2,9 +2,10 @@
 
 Status: fixed endpoint configuration, OAuth form transport, correlated WebSocket proof and the
 Supervisor identity boundary are implemented as adapters. Standalone authentication now has bounded
-browser attempts, private session wiring and strict API/CLI entrypoints. Complete deployment acceptance,
-Supervisor local read-grace sessions and public household command wiring remain pending. The native
-preview now has a private-listener entrypoint and fresh per-request identity checks, without OAuth.
+browser attempts, private session wiring and strict API/CLI entrypoints. Both persistent household
+compositions and Supervisor local read-grace sessions are implemented. Native access uses a private
+listener and fresh per-request identity checks without OAuth. Complete deployment and live
+outage/revocation/household/recovery/restore acceptance remain pending.
 Do not expose these private adapters directly as endpoints that accept a submitted token or actor.
 
 ## Standalone

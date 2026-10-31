@@ -12,7 +12,7 @@ establish the stated behavior. Case counts are planned acceptance cases, not pyt
 
 ## Verification and changes
 
-The complete backend run passes **1,387 tests**, with **4,692 statements and 1,304 branches at
+The initial audit at `ead7dde` passed **1,387 tests**, with **4,692 statements and 1,304 branches at
 100% supported coverage**, including every authored backend module. No coverage omission or custom
 exclusion was added. The independent default-permission matrix now checks every role/permission pair.
 New composed tests exercise both transports, every membership state, unsupported locale fallback,
@@ -29,8 +29,9 @@ actual composed servers.
 
 API/console content was inspected by the assistant as plain text with explicit status, impact,
 retained state and next action. Unsupported locales retain stable codes and English text; untrusted
-diagnostics do not become HTML, Markdown, mentions, commands or URLs. Independent human readability
-review remains required. Product UI and mobile browser layout acceptance belong to subsequent work.
+diagnostics do not become HTML, Markdown, mentions, commands or URLs. On 2026-10-31 the owner explicitly
+confirmed that the pending/historical explanations and exact console approval steps are clear.
+This human content review does not establish product UI or mobile browser layout acceptance.
 
 ## Exact deployment boundaries
 
@@ -73,3 +74,23 @@ Issue #6 excludes the product UI, companion HA entity/service integration and co
 distribution. They remain part of the full product goal and require their own Action-admitted work.
 The next interface increment must consume these application contracts, preserve Clean Architecture,
 and start with component, browser, accessibility and coverage checks.
+
+## Review corrections
+
+The [follow-up evidence](evidence/m1-review-fixes.json) adds 20 distinct regression cases and a
+complete **1,407-test** run at **100%** of **4,704 statements / 1,308 branches**. Default HTTP/HTTPS
+ports now serialize consistently with browser origins, preserving exact Origin/CSRF checks and
+non-default port isolation. The real native composed setup succeeds under that configuration.
+
+A bound installation console can recover its original approval receipt after normal consumption,
+cancellation, expiry or policy changes. This path only reads the receipt; new approval still requires
+the live unchanged request and exact terminal confirmation, and completion still needs fresh HA
+administrator proof. Restoration closure guards remain in force. The CLI describes the original
+operation and directs inspection of current status, without announcing a new usable approval.
+
+The actual OpenAPI callback operation now documents that exactly one of code or error is required;
+invalid combinations preserve the bound attempt. Current operator guides distinguish schema 4 and
+implemented native sessions/offline restoration from unexecuted live acceptance. Historical route
+proposals are archived; the published household API is the current wire contract. Failed partial
+snapshots retain diagnostic evidence and cannot be overwritten, as required by the explicit operator
+contract and real-file failure tests. These source corrections are outside the installed Edge.3 pin.

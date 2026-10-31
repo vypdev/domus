@@ -147,7 +147,7 @@
     "securitySchemes": {
       "DomusSession": {
         "in": "cookie",
-        "name": "__Host-domus-edge-047cc6fbdfb0-session",
+        "name": "__Host-domus-edge-session",
         "type": "apiKey"
       }
     }
@@ -160,6 +160,7 @@
   "paths": {
     "/api/v1/auth/callback": {
       "get": {
+        "description": "Exactly one of code or error is required, together with state and the bound browser cookie. Providing both outcomes or neither returns 422 without consuming the attempt. A code completes authorization; an error records a declined authorization.",
         "operationId": "callback_api_v1_auth_callback_get",
         "parameters": [
           {

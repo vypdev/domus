@@ -1,0 +1,60 @@
+{
+  "observedOn": "2026-10-31",
+  "sourceBase": "d67475a92792a109eef67df1c1e98039a6bcd43f",
+  "pullRequest": 7,
+  "backend": {
+    "tests": 1407,
+    "statements": 4704,
+    "branches": 1308,
+    "missingStatements": 0,
+    "missingBranches": 0,
+    "percent": 100,
+    "python": "3.14.6",
+    "sqlite": "3.53.3"
+  },
+  "testFirst": {
+    "newDistinctCases": 20,
+    "initialRun": "15 failed / 4 passed before fixes; the later real-console rendering regression brings the new total to 20",
+    "fullRun": "1407 passed; all authored backend modules covered without new exclusions"
+  },
+  "fixes": [
+    {
+      "finding": "default-port-origin-normalization",
+      "behavior": "Canonical configured origins omit scheme-default ports; native browser-origin writes succeed and unrelated ports remain denied; equivalent duplicate configurations fail closed."
+    },
+    {
+      "finding": "console-approval-replay-after-consumption",
+      "behavior": "Read-only same-command console receipt lookup requires exact installation/actor/action/request binding and retains restoration closure guards. It may recover the original receipt after normal consumption/cancellation/expiry/policy change, without new confirmation, state change, grant, audit/event or deadline extension. Fresh approval/completion controls are unchanged."
+    },
+    {
+      "finding": "callback-result-xor",
+      "behavior": "The generated actual callback operation documents code/error XOR; both invalid combinations return 422 without consuming the browser-bound attempt. Auth and composed household OpenAPI contracts are regenerated."
+    },
+    {
+      "finding": "stale-operator-documentation",
+      "behavior": "Current schema4, migration1/2/3-to4, implemented native read grace and offline restore are distinguished from bounded package and pending live acceptance."
+    }
+  ],
+  "contractClarifications": [
+    "Current published household routes are authoritative; historical proposed spellings remain archived rather than becoming a compatibility promise.",
+    "Partial snapshot destinations intentionally remain inspectable and are never silently overwritten or deleted; the explicit operator cleanup rule and real-file failure tests remain unchanged."
+  ],
+  "humanContentReview": {
+    "state": "confirmed",
+    "source": "Direct owner reply in this task on 2026-10-31",
+    "scope": "Pending/historical API explanations and exact target-bound console approval steps",
+    "doesNotEstablish": "Product UI/mobile acceptance, complete Bugbot review or release readiness"
+  },
+  "review": "All current-head CI groups and complete Bugbot review without unresolved findings remain required before merge. Earlier partial reviews are not acceptance.",
+  "packageBoundary": "These source review fixes are not in immutable installed Edge.3 pin faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5. No owner deployment/configuration/data changed.",
+  "sourceSha256": {
+    "backend/src/domus/infrastructure/ha_config.py": "693cdca3fee12c5def5393e3f7d4eff16fe539e44619cc346f600bfbddbfc1cf",
+    "backend/src/domus/application/recovery_commands.py": "2b8c198cde97f0213ec1612ea32bce5e00637aab99862fe08b59418d3c64af49",
+    "backend/src/domus/composition/admin.py": "020abd88d8b9f26a429169bd1a51dd7b7ae960f0a96b53e2099bd2321debbff5",
+    "backend/src/domus/entrypoints/http.py": "5d194cef73aa9fa7edea2a1e292c09e6345ecc9f7002540bce4c8b85c4158cf7",
+    "tests/backend/test_ha_http.py": "dbd88c7f9281997c80f419619afa533f384f0584c228065c3774642a02118c41",
+    "tests/backend/test_review_regressions.py": "4f2891f6985969883ef34a05405527a5500987b9883dc5e1cb1a695ee6a41bf4",
+    "docs/contracts/auth-api.openapi.json": "3559a1548e4920ab38d3b5b25c5b1b62d93e52fb0e993543fa2af407b1aa0d0f",
+    "docs/contracts/household-api.openapi.json": "c757e63fed28cf46247b8379fa9faee23a5b694f5841967d781a09d8febff44f"
+  }
+}
