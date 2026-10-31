@@ -1,8 +1,9 @@
 # Identity and storage operations
 
 Status: both persistent household APIs, bounded sessions, transactional SQLite schema 3 and
-[console-approved administrator recovery](administrator-recovery.md) are implemented. Snapshot/restore,
-private app data provisioning and complete deployment acceptance remain pending. The installed Edge
+[console-approved administrator recovery](administrator-recovery.md) are implemented. Manual
+[snapshot creation/inspection](snapshots.md) is also available. Restore, private app data provisioning
+and complete deployment acceptance remain pending. The installed Edge
 preview is unchanged. Do not use SQL edits to bypass setup.
 
 ## Authentication API
@@ -54,8 +55,9 @@ atomic; old households without policy fail closed rather than promoting a browse
 
 [Administrator recovery](administrator-recovery.md) now requires fresh current HA administrator proof,
 exact target/request/UUID/channel/mapping/revision binding, ten-minute expiry and atomic single use.
-Snapshot/restore must still verify consistent schema/identity/integrity/checksum and activate only a
-new owned directory; those commands remain pending. No automatic backup schedule/retention is approved.
+Snapshot creation/inspection now verifies checkpoint/schema/identity/integrity/checksum through the
+installation console. Restore and activation into a new owned directory remain pending, including the
+decision about newer replay history. No automatic backup schedule/retention is approved.
 
 The [native persistent runtime](native-household-api.md) clears only its local bindings on shutdown;
 Supervisor owns its upstream cookie and transport grant. Reopening through HA freshly proves the

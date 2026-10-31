@@ -510,6 +510,15 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/fixtures/sqlite/v2.sql` | create |
 | `docs/administrator-recovery.md` | create |
 | `docs/evidence/m1-administrator-recovery.json` | create |
+| `backend/src/domus/domain/snapshots.py` | create |
+| `backend/src/domus/application/snapshots.py` | create |
+| `backend/src/domus/infrastructure/sqlite_snapshots.py` | create |
+| `tests/backend/test_snapshot_values.py` | create |
+| `tests/backend/test_snapshot_commands.py` | create |
+| `tests/backend/test_sqlite_snapshots.py` | create |
+| `tests/backend/test_snapshot_console.py` | create |
+| `docs/snapshots.md` | create |
+| `docs/evidence/m1-snapshots.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -582,23 +591,21 @@ all planned acceptance cases. The specifications remain Draft.
 
 | Checkpoint | Evidence and boundary |
 |---|---|
-| SQLite kernel | [Receipt](../docs/evidence/m1-storage-kernel.json): atomic real-file storage, receipts/audit/outbox. |
-| Identity policy and leases | [Receipt](../docs/evidence/m1-identity-policy.json): mappings/permissions, current authorization, schema migration and absolute leases. |
-| HA protocols | [Receipt](../docs/evidence/m1-ha-protocol.json): fixed endpoints, bounded OAuth/WebSocket and exact Supervisor proof. |
-| Standalone authentication | [Receipt](../docs/evidence/m1-standalone-auth.json): state/PKCE/browser binding, cookie/CSRF and cleanup. The earlier owner browser return failed; shutdown confirmed grant revocation (revoked=1, unconfirmed=0). Standalone acceptance remains pending. |
-| Native connection preview | [Receipt](../docs/evidence/m1-ingress-preview.json): private Ingress/fresh human proof without another login, no business data or read grace. |
-| Edge package and live preview | [Package](../docs/evidence/m1-app-package.json) and [native acceptance](../docs/evidence/m1-native-ha-acceptance.json): immutable runtime, nonroot image, both CPU-family CI, owner-authorized install/start/Open Web UI/Chrome reload on the exact HA target. Edge 0.0.0-edge.1 remains this stateless preview; later services are not installed. |
-| Household commands | [Receipt](../docs/evidence/m1-household-commands.json) and [guide](../docs/household-setup.md): explicit three-mode setup, own enrollment, revisioned edits, fresh preparation and transactional authorization before replay. |
-| Member administration | [Receipt](../docs/evidence/m1-member-administration.json): activation, profile/status/exceptions and current-proof last-administrator safeguards, including races. |
-| Policy administration | [Receipt](../docs/evidence/m1-policy-administration.json): mapping/profile edits, preserved setup provenance and independent grants, transaction-time inventory/authority checks. |
-| Standalone household API | [Receipt](../docs/evidence/m1-household-api.json), [guide](../docs/household-api.md) and [schema](../docs/contracts/household-api.openapi.json): strict DTOs/queries, production SQLite/session composition, scoped reads, restart/replay, ambiguous JSON and response-uncertainty recovery. |
-| Native household API | [Receipt](../docs/evidence/m1-native-household-api.json), [guide](../docs/native-household-api.md) and [schema](../docs/contracts/native-household-api.openapi.json): shared services, fixed origins, existing upstream-session binding, bounded leases, scoped CSRF and original-deadline outage reads. Writes require fresh proof. A selected ordinary HA human keeps independent Domus authority. This runtime is tested locally and has not replaced the installed preview. |
-
-| Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json) and [guide](../docs/owned-data-directory.md): persisted UUID/channel, initialization/ready states, exclusive process lease, private files, process-death resumption and existing-only ready SQLite. Native CLI is tested; packaged /data provisioning remains pending. |
-
-| Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json) and [guide](../docs/administrator-recovery.md): schema 3, both human APIs and console-only approval, fresh completion, atomic single use, real terminal and SQLite races/rollback. Package/live recovery acceptance and snapshots remain pending. |
+| SQLite kernel | [Receipt](../docs/evidence/m1-storage-kernel.json): atomic storage and replay records. |
+| Identity policy and leases | [Receipt](../docs/evidence/m1-identity-policy.json): mappings, permissions and absolute leases. |
+| HA protocols | [Receipt](../docs/evidence/m1-ha-protocol.json): fixed endpoints and bounded exact-human proof. |
+| Standalone authentication | [Receipt](../docs/evidence/m1-standalone-auth.json): browser-bound auth and cleanup. Owner browser return failed; its grant was revoked (1 confirmed, 0 unknown). Acceptance remains pending. |
+| Installed Edge preview | [Package](../docs/evidence/m1-app-package.json), [protocol preview](../docs/evidence/m1-ingress-preview.json) and [acceptance](../docs/evidence/m1-native-ha-acceptance.json): Edge 0.0.0-edge.1 passed install/start/Open Web UI/Chrome reload. It remains stateless; later services are not installed. |
+| Household commands | [Receipt](../docs/evidence/m1-household-commands.json) and [guide](../docs/household-setup.md): explicit setup/enrollment and revisioned edits. |
+| Member administration | [Receipt](../docs/evidence/m1-member-administration.json): activation, profile/status/exceptions and last-admin safety. |
+| Policy administration | [Receipt](../docs/evidence/m1-policy-administration.json): mapping/profile edits, provenance and independent grants. |
+| Standalone household API | [Receipt](../docs/evidence/m1-household-api.json), [guide](../docs/household-api.md), [schema](../docs/contracts/household-api.openapi.json): strict queries/commands and real session/SQLite composition. |
+| Native household API | [Receipt](../docs/evidence/m1-native-household-api.json), [guide](../docs/native-household-api.md), [schema](../docs/contracts/native-household-api.openapi.json): shared services, fixed origins, leases/CSRF and outage reads. Locally tested, not installed. |
+| Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json) and [guide](../docs/owned-data-directory.md): persisted UUID/channel, private files and lifecycle guards. Packaged /data provisioning pending. |
+| Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json) and [guide](../docs/administrator-recovery.md): both human APIs, console-only approval and atomic consumption; live/package acceptance pending. |
+| Snapshot creation/inspection | [Receipt](../docs/evidence/m1-snapshots.json) and [guide](../docs/snapshots.md): consistent private bundles and strict checks. Restore activation/newer-history policy remain pending. |
 
 No test credentials enter business storage, evidence, responses or snapshots. Native authentication
 is independent of standalone OAuth. Current outstanding work includes native private data provisioning, updated app
-packaging and UI, snapshots, standalone companion authority and complete deployment/channel
+packaging and UI, restore activation/newer-history policy, standalone companion authority and complete deployment/channel
 acceptance. Passing protocol/ASGI fixtures never establishes those remaining live gates.

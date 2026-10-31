@@ -56,8 +56,8 @@ that operator replacing paths or editing metadata. The protocol does not authori
 
 SQLite, installation metadata and replay evidence form one operational unit. Do not delete the marker
 to resolve a startup failure, copy a database alone into an empty directory, or run a standalone
-explicit-database process concurrently against these files. Consistent snapshot/restore commands
-remain pending; no automatic backup schedule or retention is introduced.
+explicit-database process concurrently against these files. [Manual snapshots](snapshots.md) can be
+created and inspected. Restore activation remains pending; no backup schedule or pruning is introduced.
 
 ## Verification and packaging boundary
 

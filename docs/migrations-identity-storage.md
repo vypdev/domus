@@ -35,6 +35,7 @@ authorization. Recovery approval consumption and the explicit grant commit with 
 audit and outbox. Credentials and session leases are absent from every business schema version.
 
 Rollback needs a compatible application/database pair. Never run an older application on schema 3
-or decrement `user_version` manually. Snapshot/restore primitives, verified activation to a new
+or decrement `user_version` manually. [Snapshot creation/inspection](snapshots.md) is implemented;
+restore and verified activation to a new
 same-installation/channel directory, destructive-upgrade backups, package hooks and operational
 recovery/retention acceptance remain pending in the [M1 companion](../specs/platform-foundation-identity-sqlite.md).

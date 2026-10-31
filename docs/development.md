@@ -6,7 +6,8 @@ The issue #6 checkpoints introduce storage, pure identity policy, local authoriz
 HA protocol adapters have provider/loopback tests and the standalone authentication API/CLI is wired.
 Explicit setup, own enrollment and household edits now have application-layer commands. The native
 Ingress connection preview and immutable-source Edge package are installed and tested on the owner's HA.
-Native persistent API wiring and console-approved recovery are tested locally. App packaging, snapshots, product UI and complete
+Native persistent API wiring, console-approved recovery and manual snapshots are tested locally.
+App packaging, restore activation, product UI and complete
 Stable/Edge release acceptance remain pending.
 
 ## Reproduce the environment
@@ -197,3 +198,9 @@ production HTTP compositions share the human routes. Tests exercise real SQLite 
 terminal confirmation in a separate PTY process, approval output uncertainty and native/standalone
 request-to-completion journeys. [Evidence](evidence/m1-administrator-recovery.json) identifies source
 and remaining live/package work. Recovery has not been installed in the owner's stateless Edge preview.
+
+The [snapshot checkpoint](snapshots.md) adds pure metadata, semantic application ports and a private
+SQLite backup/inspection adapter. Tests use real files, concurrent WAL changes, physical index damage,
+corrupt records/manifests, incomplete publication, deadlines and both console source selections.
+[Evidence](evidence/m1-snapshots.json) records the exact coverage and boundaries. Restore activation
+and its treatment of newer replay history remain pending; the installed HA app is unchanged.

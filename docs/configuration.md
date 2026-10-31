@@ -15,6 +15,11 @@ attach to ready native data, or --database plus --instance-id and --channel for 
 file. It does not create/migrate storage and needs no HA token. New approval requires real terminal
 input/output and the exact displayed request/target confirmation. HTTP cannot supply console authority.
 
+[domus-admin snapshot](snapshots.md) provides explicit create/inspect operations. Creation uses the
+same source selection as approval and requires a new private destination. Inspection instead requires
+only --instance-id and --channel, without an active --database/--data-directory. Its --timeout defaults
+to 30 seconds and accepts finite positive values up to 3600. It does not add a schedule or retention.
+
 Status: these options run the standalone API. `--database` additionally wires the persistent
 [household API](household-api.md); omitting it keeps the authentication preview. This is not a deployment
 package or complete M1 acceptance. Both installation modes and Stable/Edge

@@ -4,7 +4,8 @@ Status: the M1 storage kernel, pure identity policy, transaction-bound local aut
 session-lease core, HA adapters, standalone authentication API/CLI and application household/member/policy
 commands are implemented on the Action-managed issue #6 branch. The native connection preview is
 installed and accepted on the identified owner target. Both standalone and native persistent household
-APIs and console-approved recovery are tested locally. Snapshots, native persistent packaging/UI and complete deployment acceptance
+APIs, console-approved recovery and manual snapshots are tested locally. Restore activation,
+native persistent packaging/UI and complete deployment acceptance
 remain pending. The [owning companion](../specs/platform-foundation-identity-sqlite.md) retains
 the complete increment contract; this checkpoint does not complete M1 or the product.
 
@@ -61,6 +62,11 @@ and member revisions to fixed ten-minute request and approval windows. Human com
 the separate console use case obtains an explicit terminal decision outside the writer lock. The
 transaction rechecks binding and commits approval or consumption/grant with receipt/audit/outbox.
 Both HTTP compositions expose human routes while only domus-admin wires the console confirmation port.
+
+Snapshot metadata remains pure and path-free. Application use cases consume a semantic archive port;
+the SQLite adapter owns filesystem checks, read transactions, backup, hashes and integrity inspection.
+Only the installation-console composition selects paths. [Manual snapshot evidence](evidence/m1-snapshots.json)
+does not establish restore activation or newer-history reconciliation.
 
 One household per installation is reinforced by a singleton constraint. Household writes compare
 the expected revision, and other input values use parameterized SQL. Outbox acknowledgements are
