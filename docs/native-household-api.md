@@ -1,15 +1,15 @@
 # Native Home Assistant household API
 
 Status: persistent native runtime, local session leases and common household routes are implemented
-and tested with real ASGI/SQLite composition. Edge 0.0.0-edge.2 now packages this runtime and passes
-owner update/configuration/start, existing-session access, normal reload and restart. The product UI
+and tested with real ASGI/SQLite composition. Edge 0.0.0-edge.3 now packages this runtime and passes
+owner update, preserved-origin configuration, existing-session access, normal reload and restart. The product UI
 is still a connection page. Live household/recovery commands are not inferred from that acceptance.
 Automatic identity and private data use the [owned lifecycle](owned-data-directory.md).
 
-The installed Edge.2 pin remains on schema 3. The new schema-4 runtime tests additionally exercise
-historical replay, suppressed delivery and recovery closure through this same native composition.
-Edge.3 now packages that code and passes local real-image restoration/upgrade tests. It is not yet
-installed on the owner target; complete deployment and live acceptance remain pending. See [history boundaries](restoration.md).
+The Edge.3 pin includes schema 4, historical replay, suppressed delivery and recovery closure through
+this same composition. Real-image restoration/upgrade cases pass on both native CPU families.
+[Owner connection acceptance](evidence/m1-edge3-ha-acceptance.json) proves a narrower live scope;
+complete deployment and live household/recovery/restore acceptance remain pending. See [history boundaries](restoration.md).
 
 ## Authentication and session binding
 

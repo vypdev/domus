@@ -327,8 +327,8 @@ introduced; record actual failures in the existing Copilot reports without waiti
 ## 13. Compatibility, migration, rollout, and rollback
 
 Support verified compatible historical snapshots through explicit migrations on the candidate only.
-The installed Edge.2/schema-3 image remains unchanged until a later immutable package passes all
-gates. New metadata must block older/unaware runtime paths. Pair image/configuration/schema for
+Edge.3 now packages schema 4 and passes both CPU-family image suites. Its bounded owner
+update/session/reload/restart acceptance is separate from live restore acceptance. New metadata must block older/unaware runtime paths. Pair image/configuration/schema for
 rollback; never strip history to make an older image start. Both deployment modes remain required.
 
 ## 14. Testing strategy and numeric budget
@@ -411,6 +411,7 @@ Planned file footprint (implementation is staged; presence is not completion):
 | `tests/containers/test_app_compatibility.py` | create |
 | `.github/workflows/ci_check.yml` | update |
 | `docs/evidence/m1-restoration-app-package.json` | create |
+| `docs/evidence/m1-edge3-ha-acceptance.json` | create |
 | `tests/backend/test_generation_values.py` | create |
 | `tests/backend/test_owned_generations.py` | create |
 | `docs/evidence/m1-generation-selection.json` | create |

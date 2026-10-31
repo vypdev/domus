@@ -1,8 +1,9 @@
 # Household setup command checkpoint
 
 Status: application household/member/policy use cases, standalone HTTP wiring and real SQLite tests
-are implemented. Native persistent wiring and UI are pending. The installed Edge 0.0.0-edge.1 connection preview contains none of these
-commands and creates no household data.
+are implemented in both native and standalone compositions and packaged in Edge.3. The current
+[owner acceptance](evidence/m1-edge3-ha-acceptance.json) covers its connection page/restart only;
+product UI and live household setup remain pending. Startup never implicitly creates a household.
 
 ## Explicit setup
 

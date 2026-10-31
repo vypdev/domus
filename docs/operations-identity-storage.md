@@ -65,7 +65,7 @@ The [native persistent runtime](native-household-api.md) clears only its local b
 Supervisor owns its upstream cookie and transport grant. Reopening through HA freshly proves the
 human, while the matching SQLite records and receipts survive. Its fixed-origin configuration and
 original lease deadline apply independently of forwarding headers. This runtime is not yet the
-original Edge.1 preview. Edge.2 now packages it and passes owner start/reload/restart; complete UI and
+original Edge.1 preview. Edge.3 now packages it and passes owner update/session/reload/restart; complete UI and
 live household/recovery/restore acceptance remain pending.
 
 The [owned data lifecycle](owned-data-directory.md) now persists UUID/channel initialization state

@@ -26,7 +26,7 @@ provider/loopback evidence. Standalone browser/session authentication and its HT
 now have executable offline coverage. Membership/policy and recovery use cases, manual snapshots,
 business HTTP/console entrypoints and verified offline restore/resume/rollback are implemented and
 tested locally and in the real Edge.3 arm64 image, including actual Edge.2 upgrade/refusal.
-Persistent Edge.2 has bounded owner startup/reload/restart acceptance. Complete deployment restore,
+Edge.3 image CI passes on both CPU families and its owner update/session/reload/restart acceptance is bounded. Complete deployment restore,
 product UI, live household/recovery, standalone companion/browser and full
 channel/release acceptance remain M1 work. These source checkpoints do not complete M1 or reduce
 first-release scope.

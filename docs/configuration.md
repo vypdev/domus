@@ -86,7 +86,7 @@ credentials or provider payloads. No credential is supplied as a CLI argument or
 
 ## Native package launcher
 
-The installed Edge.2 domus-ha-app --channel edge entrypoint has fixed /data paths and UID/GID 65532.
+The installed Edge.3 domus-ha-app --channel edge entrypoint has fixed /data paths and UID/GID 65532.
 Its only options.json field is public_origins:
 an array of one to four distinct origins used to open HA, such as http://homeassistant.local:8123.
 Scheme/host/port must be explicit and no path, query, credentials or fragment is accepted. Values

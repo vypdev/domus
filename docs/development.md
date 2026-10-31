@@ -182,22 +182,23 @@ fresh writes, rejection, restart, concurrent bootstrap and a selected ordinary H
 Domus administrator grant. Fixed configured origins prevent forwarding headers from selecting trust.
 [Its evidence](evidence/m1-native-household-api.json) and
 [published OpenAPI](contracts/native-household-api.openapi.json) record the current runtime.
-Owned data-directory/UUID packaging, the UI, recovery/snapshots and complete deployment acceptance
-remain pending. The installed Edge 0.0.0-edge.1 has not been updated with these services.
+Owned identity, recovery/snapshots and restoration are now packaged in Edge.3. The complete UI,
+standalone companion and full deployment/live household acceptance remain pending;
+[current owner evidence](evidence/m1-edge3-ha-acceptance.json) covers connection/reload/restart.
 
 The [owned data checkpoint](owned-data-directory.md) now persists initialization/ready metadata and
 automatic UUID/channel identity inside an existing private directory. Native --data-directory holds
 its POSIX process lock through the listener lifetime. Real-file/process tests reject missing or empty
 ready data, cross-channel adoption, unsafe files and interrupted metadata; a compatible v1 migration
-preserves history. The package still needs to provision writable private data for its nonroot server
-and verify upgrade/restart on the actual target. See [evidence](evidence/m1-owned-storage.json).
+preserves history. The package provisions only its private child before dropping privileges;
+Edge.3 update/reload/restart now has bounded owner evidence. See [evidence](evidence/m1-owned-storage.json).
 
 The [administrator recovery checkpoint](administrator-recovery.md) adds the pure bound lifecycle,
 schema 3 migration, same-target fresh completion proof and a console-only approval command. Both
 production HTTP compositions share the human routes. Tests exercise real SQLite races/rollback,
 terminal confirmation in a separate PTY process, approval output uncertainty and native/standalone
 request-to-completion journeys. [Evidence](evidence/m1-administrator-recovery.json) identifies source
-and remaining live/package work. Recovery has not been installed in the owner's stateless Edge preview.
+and remaining live work. Recovery is packaged in installed Edge.3; live recovery was not exercised.
 
 The [snapshot checkpoint](snapshots.md) adds pure metadata, semantic application ports and a private
 SQLite backup/inspection adapter. Tests use real files, concurrent WAL changes, physical index damage,

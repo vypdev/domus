@@ -5,7 +5,8 @@ records, private filesystem checks and a console entrypoint. Pure restore reconc
 blocked preparation/inspection, runtime history/replay, recovery guards and offline activation/resume
 are now tested in the local Edge.3 image with SQLite 3.46.1, including restoration of an actual
 Edge.2/schema-3 snapshot. Complete deployment acceptance remains pending. The owner's installed
-persistent Edge 0.0.0-edge.2 is unchanged by this increment.
+persistent Edge.3 now has bounded update/session/restart acceptance; no owner Domus snapshot or restore
+was executed. See [live scope](evidence/m1-edge3-ha-acceptance.json).
 No automatic backup frequency, rotation or retention is introduced.
 
 ## Create a snapshot

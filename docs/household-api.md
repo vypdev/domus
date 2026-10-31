@@ -1,11 +1,10 @@
 # Household API checkpoint
 
 Status: strict HTTP routes, local queries, standalone SQLite composition, manual snapshots and the
-[native persistent runtime](native-household-api.md) are implemented. The installed Edge.2 packages
-the persistent schema-3 runtime and passes bounded owner start/reload/restart acceptance. Schema-4
-history-aware responses and recovery guards are now tested locally; that new code is not installed
-on the owner HA. Verified restore activation, the product UI and complete deployment acceptance
-remain pending. [Console-approved recovery](administrator-recovery.md) shares the authenticated boundary.
+[native persistent runtime](native-household-api.md) are implemented. The earlier Edge.2 packages
+the persistent runtime. Edge.3 now includes schema 4/history and verified offline restoration, with
+real-image proof on both CPU families and bounded owner update/session/reload/restart acceptance.
+The product UI and complete deployment/live household/recovery/restore acceptance remain pending. [Console-approved recovery](administrator-recovery.md) shares the authenticated boundary.
 
 ## Run with persistent standalone data
 

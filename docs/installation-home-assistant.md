@@ -1,10 +1,11 @@
 # Home Assistant app installation
 
-Status: persistent Edge 0.0.0-edge.2 is installed and running on the owner's HA. Update, origin
-configuration, start, existing-session access, normal Chrome reload and app restart passed on
-2026-10-31. Both native CPU-family container jobs pass for package head fcbf786. The complete product
-UI, live household/recovery operations and restore remain pending; no production release is available.
-[Owner acceptance](evidence/m1-persistent-ha-acceptance.json) is separate from the original Edge.1 preview.
+Status: Edge 0.0.0-edge.3 is installed and running on the owner's HA. Its update from Edge.2,
+preserved origin, existing-session access, normal Chrome reload and Domus-only restart passed on
+2026-10-31. Package head 0484ba7 passes every CI group, including all 15 image cases on native amd64
+and aarch64. The complete UI, live household/recovery/restore and production release remain pending.
+[Edge.3 owner acceptance](evidence/m1-edge3-ha-acceptance.json) is separate from the earlier
+[persistent Edge.2 receipt](evidence/m1-persistent-ha-acceptance.json) and Edge.1 preview.
 
 ## Intended user journey
 
@@ -30,8 +31,8 @@ test app/repository when that testing ends; production installation
 must use the eventual published stable repository. Do not add the default repository URL yet:
 the default branch does not contain this preview package.
 
-The development package is now Domus Edge 0.0.0-edge.3; the owner still runs the separately verified
-Edge.2 until a deliberate update. Supervisor builds the app locally and verifies its immutable runtime
+The development package is Domus Edge 0.0.0-edge.3, now installed after a deliberate owner-target
+update from Edge.2. Supervisor builds the app locally and verifies its immutable runtime
 archive before extracting it; the exact pins are recorded below. The original Edge.1 used runtime
 98bd12f1bf141ba64053730b2686bd848aee1b1c.
 Python/uv image digests and the dependency lock are fixed. No registry login is needed.
@@ -65,7 +66,8 @@ administrator credential; it must stay private and must never substitute for the
 The first preview is deliberately stateless and runs as UID/GID 65532. It does not establish persisted
 installation identity, household setup, backup behavior or production acceptance. Container tests use
 fictional tokens with networking disabled, exercise the real listener and remove only their own
-temporary containers. That original image remains available locally as the previous rollback artifact.
+temporary containers. The original source remains identified in its historical receipt; current
+review/rollback images are Edge.3 and Edge.2.
 
 The later [persistent native API](native-household-api.md) is a tested development CLI with SQLite,
 bounded Ingress sessions and the shared household routes. Edge.2 now packages it with private data and automatic identity. Product UI and live household/recovery
@@ -122,5 +124,6 @@ changing any file. An older image alone is not a valid rollback for newer data.
 The every-PR CI builds both the current and immutable previous image on native amd64 and aarch64
 and runs the same 15 container cases. Current package-head CI is separate evidence from the
 pre-publication local run. [Package evidence](evidence/m1-restoration-app-package.json) records exact
-sources and assertions. No live owner update or restoration occurred during this package increment;
-the connection page and existing permissions remain unchanged.
+sources and assertions. A subsequent [owner update](evidence/m1-edge3-ha-acceptance.json) verifies
+Edge.3 installed/running, preserved origin and existing-session access after reload/restart. No live
+restoration was performed; complete restore acceptance is separate from this connection-page proof.

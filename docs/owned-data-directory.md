@@ -1,8 +1,9 @@
 # Owned data directory
 
 Status: the private-directory lifecycle and both persistent CLIs are implemented and tested on
-POSIX filesystems. Edge 0.0.0-edge.2 is installed on the owner's Supervisor and passes configured
-start, existing-session access, normal reload and restart. [Owner evidence](evidence/m1-persistent-ha-acceptance.json)
+POSIX filesystems. Edge 0.0.0-edge.3 is installed on the owner's Supervisor and passes update,
+existing-session access, normal reload and restart with its origin preserved.
+[Current owner evidence](evidence/m1-edge3-ha-acceptance.json)
 records that bounded scope; real-image storage/replay evidence is separate from live household commands.
 
 ## Runtime commands
@@ -108,7 +109,7 @@ The activations directory retains sealed inputs, rollback snapshots and immutabl
 Actual-image/deployment restore acceptance remains pending. See
 [offline activation](restoration.md), [activation evidence](evidence/m1-offline-activation.json),
 [generation evidence](evidence/m1-generation-selection.json) and the
-[complete restoration contract](../specs/platform-restoration.md). The installed Edge.2 remains unchanged.
+[complete restoration contract](../specs/platform-restoration.md). The installed Edge.3 has bounded connection/restart acceptance; live restore is separate.
 
 ## Verification and packaging boundary
 

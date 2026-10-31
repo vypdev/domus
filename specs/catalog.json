@@ -201,12 +201,13 @@
         "docs/evidence/m1-runtime-history.json",
         "docs/evidence/m1-generation-selection.json",
         "docs/evidence/m1-offline-activation.json",
-        "docs/evidence/m1-restoration-app-package.json"
+        "docs/evidence/m1-restoration-app-package.json",
+        "docs/evidence/m1-edge3-ha-acceptance.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, both household APIs, snapshots and verified offline restoration; real local Edge.3 image exercises both compositions, interruption, actual Edge.2/schema-3 upgrade, retained replay and older-image refusal; owner Edge.2 startup verified; full M1 pending",
-        "blockingDecisions": "Current package-head native CPU-family CI and complete deployment/live restore, product UI/live household/recovery, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice.",
+        "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending",
+        "blockingDecisions": "Complete deployment/live household/recovery/restore, product UI, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice. Complete current-head Bugbot review remains required.",
         "copilotChangesAllowed": false
       }
     },
@@ -384,12 +385,13 @@
         "docs/evidence/m1-runtime-history.json",
         "docs/evidence/m1-generation-selection.json",
         "docs/evidence/m1-offline-activation.json",
-        "docs/evidence/m1-restoration-app-package.json"
+        "docs/evidence/m1-restoration-app-package.json",
+        "docs/evidence/m1-edge3-ha-acceptance.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, both household APIs, snapshots and verified offline restoration; real local Edge.3 image exercises both compositions, interruption, actual Edge.2/schema-3 upgrade, retained replay and older-image refusal; owner Edge.2 startup verified; full M1 pending",
-        "blockingDecisions": "Current package-head native CPU-family CI and complete deployment/live restore, product UI/live household/recovery, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice.",
+        "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending",
+        "blockingDecisions": "Complete deployment/live household/recovery/restore, product UI, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice. Complete current-head Bugbot review remains required.",
         "copilotChangesAllowed": false
       }
     },
