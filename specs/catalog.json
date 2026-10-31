@@ -17,7 +17,9 @@
       ],
       "entrypoints": [
         "backend/src/domus/composition/server.py",
-        "backend/src/domus/entrypoints/http.py"
+        "backend/src/domus/entrypoints/http.py",
+        "backend/src/domus/composition/ingress.py",
+        "backend/src/domus/entrypoints/ingress_http.py"
       ],
       "code": [
         "backend/src/domus/domain/errors.py",
@@ -42,7 +44,10 @@
         "backend/src/domus/infrastructure/auth_runtime.py",
         "backend/src/domus/infrastructure/memory_attempts.py",
         "backend/src/domus/infrastructure/standalone_sessions.py",
-        "backend/src/domus/application/session_values.py"
+        "backend/src/domus/application/session_values.py",
+        "backend/src/domus/composition/ingress.py",
+        "backend/src/domus/entrypoints/ingress_http.py",
+        "backend/src/domus/entrypoints/bounded_http.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -59,7 +64,9 @@
         "tests/backend/test_standalone_sessions.py",
         "tests/backend/test_auth_http.py",
         "tests/backend/test_auth_runtime.py",
-        "tests/backend/test_auth_server.py"
+        "tests/backend/test_auth_server.py",
+        "tests/backend/test_ingress_http.py",
+        "tests/backend/test_ingress_server.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -75,12 +82,13 @@
         "docs/identity-household.md",
         "docs/configuration.md",
         "docs/operations-identity-storage.md",
-        "docs/contracts/auth-api.openapi.json"
+        "docs/contracts/auth-api.openapi.json",
+        "docs/installation-home-assistant.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: tested storage/policy, HA adapters and standalone browser authentication API/CLI; household commands, recovery, snapshots and Supervisor/live/package acceptance pending",
-        "blockingDecisions": "Complete household/member/policy/operation/recovery surfaces, console approval, snapshots, Supervisor session/private listener and exact live/package/channel acceptance remain pending. Current auth wiring has offline contract evidence, not an owner-HA login or complete M1 acceptance.",
+        "implementationEvidence": "partial: storage/policy, HA adapters, standalone authentication and native Ingress authentication preview; complete business commands, recovery, snapshots, package/live/channel acceptance pending",
+        "blockingDecisions": "Engineering proof remains: business/recovery commands, snapshots, Ingress local read-grace sessions and exact package/live/channel acceptance. Native preview performs fresh per-request proof and has no business mutations. No complete M1 acceptance or production readiness is claimed.",
         "copilotChangesAllowed": false
       }
     },
@@ -97,7 +105,9 @@
       "workflows": [],
       "entrypoints": [
         "backend/src/domus/composition/server.py",
-        "backend/src/domus/entrypoints/http.py"
+        "backend/src/domus/entrypoints/http.py",
+        "backend/src/domus/composition/ingress.py",
+        "backend/src/domus/entrypoints/ingress_http.py"
       ],
       "code": [
         "backend/src/domus/domain/identity.py",
@@ -117,7 +127,10 @@
         "backend/src/domus/infrastructure/auth_runtime.py",
         "backend/src/domus/infrastructure/memory_attempts.py",
         "backend/src/domus/infrastructure/standalone_sessions.py",
-        "backend/src/domus/application/session_values.py"
+        "backend/src/domus/application/session_values.py",
+        "backend/src/domus/composition/ingress.py",
+        "backend/src/domus/entrypoints/ingress_http.py",
+        "backend/src/domus/entrypoints/bounded_http.py"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -131,7 +144,9 @@
         "tests/backend/test_standalone_sessions.py",
         "tests/backend/test_auth_http.py",
         "tests/backend/test_auth_runtime.py",
-        "tests/backend/test_auth_server.py"
+        "tests/backend/test_auth_server.py",
+        "tests/backend/test_ingress_http.py",
+        "tests/backend/test_ingress_server.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -145,12 +160,13 @@
         "docs/identity-household.md",
         "docs/configuration.md",
         "docs/operations-identity-storage.md",
-        "docs/contracts/auth-api.openapi.json"
+        "docs/contracts/auth-api.openapi.json",
+        "docs/installation-home-assistant.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: tested storage/policy, HA adapters and standalone browser authentication API/CLI; household commands, recovery, snapshots and Supervisor/live/package acceptance pending",
-        "blockingDecisions": "Complete household/member/policy/operation/recovery surfaces, console approval, snapshots, Supervisor session/private listener and exact live/package/channel acceptance remain pending. Current auth wiring has offline contract evidence, not an owner-HA login or complete M1 acceptance.",
+        "implementationEvidence": "partial: storage/policy, HA adapters, standalone authentication and native Ingress authentication preview; complete business commands, recovery, snapshots, package/live/channel acceptance pending",
+        "blockingDecisions": "Engineering proof remains: business/recovery commands, snapshots, Ingress local read-grace sessions and exact package/live/channel acceptance. Native preview performs fresh per-request proof and has no business mutations. No complete M1 acceptance or production readiness is claimed.",
         "copilotChangesAllowed": false
       }
     },

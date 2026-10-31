@@ -1,10 +1,16 @@
 # Identity and household access
 
-Status: the standalone authentication journey and its API/CLI are implemented. Household setup,
-enrollment/member/policy commands, recovery, product UI and Supervisor session/listener wiring remain
+Status: standalone authentication and a native HA authentication preview are implemented. Household setup,
+enrollment/member/policy commands, recovery, product UI and Supervisor local read-grace sessions remain
 pending. SQLite member/policy storage and the pure authorization rules have independent tests.
 
-## Sign in
+## Home Assistant app
+
+Open the installed app through HA's Open Web UI or sidebar entry. Ingress uses the existing HA
+session; no additional Domus login is required. See [app installation](installation-home-assistant.md)
+for the current preview and outstanding packaging/installation evidence.
+
+## Independent Docker sign-in
 
 Open the configured Domus `/api/v1/auth/start` URL. Home Assistant authenticates your own HA account
 and authorizes the local Domus client. Domus receives a delegated HA credential with your HA account's
@@ -14,6 +20,8 @@ are entered only into HA. No local password, shared PIN, person entity or submit
 The browser returns to the fixed callback. A five-minute server-side attempt checks state, S256 PKCE
 and a private browser binding before its single use. Invalid, expired, duplicate or wrong-browser
 attempts cannot exchange a code. A declined authorization consumes the bound attempt without access.
+If the browser binding is missing, invalid or expired, the error explains how to restart at
+`/api/v1/auth/start` and finish within five minutes. It never exchanges an unbound callback code.
 The callback redirects to `/api/v1/session`, removing code/state from the final URL. That response
 contains verified identity and the current access state; it contains no HA token or session cookie.
 

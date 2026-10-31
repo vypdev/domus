@@ -438,6 +438,13 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `docs/evidence/m1-standalone-auth.json` | create |
 | `architecture/python-application.ini` | update |
 | `tests/architecture/test_python_architecture.py` | update |
+| `backend/src/domus/entrypoints/bounded_http.py` | create |
+| `backend/src/domus/entrypoints/ingress_http.py` | create |
+| `backend/src/domus/composition/ingress.py` | create |
+| `tests/backend/test_ingress_http.py` | create |
+| `tests/backend/test_ingress_server.py` | create |
+| `docs/installation-home-assistant.md` | create |
+| `docs/evidence/m1-ingress-preview.json` | create |
 | `README.md` | update |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
@@ -521,3 +528,14 @@ Fixed operator endpoints, bounded OAuth form transport, correlated WebSocket cur
 The browser flow, strict API and standalone CLI now compose the tested adapters. Five-minute state/PKCE/browser-bound attempts are single use; private credentials remain bounded process memory; session deadlines do not extend on refresh or outage. Ephemeral authentication/session contracts belong to application, outside household domain entities. Cookies, exact Origin, session-bound CSRF, bounded HTTP input and safe errors are tested, including concurrent callbacks, logout, shutdown and partial upstream cleanup. Unknown remote revocation is null, never invented success.
 
 The actual OpenAPI covers auth start/callback/logout/CSRF and own session; full household/member/policy/operation/recovery routes remain pending. See [user identity](../docs/identity-household.md), [configuration](../docs/configuration.md), [operations](../docs/operations-identity-storage.md), [OpenAPI](../docs/contracts/auth-api.openapi.json) and [identified evidence](../docs/evidence/m1-standalone-auth.json). Supervisor session/private-listener wiring, recovery, snapshots and exact live/package/channel acceptance remain outstanding. No household setup, release or completed M1 is claimed.
+
+### Native HA preview checkpoint
+
+The operational Ingress preview uses existing HA authentication without a second OAuth login. Its
+private listener rejects other peers and forged/ambiguous source metadata; the root status page and
+own-identity route require fresh exact-user Core proof. Only nonpersonal process health is also
+available on container loopback. Shared bounded HTTP input protections cover both adapters. There
+are no business mutations, household database, local outage-grace session or product UI in this
+preview. Packaging, source/artifact binding, live Ingress and channel acceptance remain pending;
+see [the installation journey](../docs/installation-home-assistant.md) and
+[identified preview evidence](../docs/evidence/m1-ingress-preview.json).

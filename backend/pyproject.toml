@@ -12,6 +12,7 @@ dependencies = [
 
 [project.scripts]
 domus-server = "domus.composition.server:main"
+domus-ingress = "domus.composition.ingress:main"
 
 [build-system]
 requires = ["hatchling==1.33.0"]

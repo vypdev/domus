@@ -206,6 +206,54 @@ def test_duplicate_callback_fields_or_browser_cookie_cannot_consume_attempt() ->
     )
 
 
+@pytest.mark.parametrize("binding", ["missing", "malformed", "wrong", "expired"])
+def test_invalid_login_binding_explains_restart_without_exchanging_code(
+    binding: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, _, oauth, socket, clock, settings = fixture()
+    start = client.get("/api/v1/auth/start")
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    if binding == "missing":
+        client.cookies.clear()
+    elif binding == "malformed":
+        client.cookies.clear()
+        client.cookies.set(settings.browser_cookie, "invalid!binding")
+    elif binding == "wrong":
+        client.cookies.clear()
+        client.cookies.set(settings.browser_cookie, "w" * 43)
+    else:
+        clock.value += 300_000
+
+    def forbidden_exchange(*args: object) -> None:
+        pytest.fail("An invalid browser attempt must not exchange an HA code")
+
+    monkeypatch.setattr(oauth, "exchange", forbidden_exchange)
+    response = client.get("/api/v1/auth/callback", params={"state": state, "code": "private-code"})
+    assert response.status_code == 401
+    assert response.json()["code"] in ("invalid_login_attempt", "login_attempt_expired")
+    assert "sign-in attempt" in response.json()["message"]
+    assert "/api/v1/auth/start" in response.json()["action_required"]
+    assert "five minutes" in response.json()["action_required"]
+    assert "private-code" not in response.text and state not in response.text
+    assert client.cookies.get(settings.session_cookie) is None
+    assert socket.tokens == [] and oauth.revoked == []
+
+
+def test_missing_browser_binding_can_recover_through_a_new_bound_attempt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    values = iter(value * 43 for value in ("s", "v", "b", "t", "v", "c", "x"))
+    monkeypatch.setattr(Entropy, "new", lambda self: next(values))
+    client, _, _, _, _, _ = fixture()
+    start = client.get("/api/v1/auth/start")
+    state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
+    client.cookies.clear()
+    rejected = client.get("/api/v1/auth/callback", params={"state": state, "code": "code"})
+    assert rejected.status_code == 401
+    login(client)
+    assert client.get("/api/v1/session").json()["access"] == "full"
+
+
 def test_reauthentication_rotates_cookie_and_removes_previous_browser_session() -> None:
     client, identity, _, _, _, settings = fixture()
     login(client)
@@ -417,7 +465,7 @@ def test_body_deadline_and_disconnect_never_call_inner_application(
     monkeypatch: pytest.MonkeyPatch,
     disconnect: bool,
 ) -> None:
-    from domus.entrypoints import http
+    from domus.entrypoints import bounded_http
 
     settings = HTTPSettings("https://domus.example", "domus-edge", b"k" * 32)
     scope = {
@@ -445,6 +493,6 @@ def test_body_deadline_and_disconnect_never_call_inner_application(
     async def forbidden(*arguments: object) -> None:
         pytest.fail("No application action is allowed before receiving a valid body")
 
-    monkeypatch.setattr(http, "timeout", immediate_deadline)
+    monkeypatch.setattr(bounded_http, "timeout", immediate_deadline)
     asyncio.run(_HTTPBoundary(forbidden, settings, lambda: "cor_test")(scope, receive, send))
     assert sent == [] if disconnect else sent[0]["status"] == 408
