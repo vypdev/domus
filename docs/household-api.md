@@ -91,7 +91,8 @@ if acknowledgement genuinely occurred. Current operations retain pending/deliver
 first archive provenance when selected again. Historical setup does not create a household, and
 consumed/canceled recovery cannot reuse an old approval under a new key. These are exercised with
 both synthetic fixtures and real offline activations in both HTTP compositions. The installation
-console exposes restore preparation/activation/resume; actual package acceptance remains pending.
+console exposes restore preparation/activation/resume; local Edge.3 image cases pass. Complete
+deployment and live acceptance remain pending.
 
 ## HA availability and remaining deployment work
 

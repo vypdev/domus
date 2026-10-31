@@ -151,9 +151,17 @@ jobs:
       - run: uv sync --frozen
       - name: Build the exact Supervisor app folder
         run: docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-ci addon-edge
+      - name: Build the immutable previous image for upgrade and downgrade checks
+        run: >-
+          docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
+          --build-arg BUILD_VERSION=0.0.0-edge.2
+          --build-arg DOMUS_SOURCE_COMMIT=d013cf2c8b932d0e00f5858053cbc0e663d5eee1
+          --build-arg DOMUS_SOURCE_SHA256=fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c
+          -t domus-app-previous addon-edge
       - name: Verify the real image, listener and cleanup
         env:
           DOMUS_TEST_IMAGE: domus-app-ci
+          DOMUS_PREVIOUS_IMAGE: domus-app-previous
         run: uv run pytest tests/containers --no-cov
 
   aggregate:

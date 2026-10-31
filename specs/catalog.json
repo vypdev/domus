@@ -153,7 +153,9 @@
         "tests/backend/test_offline_storage.py",
         "tests/backend/test_sqlite_activation.py",
         "tests/backend/test_activation_failures.py",
-        "tests/backend/test_activation_compatibility.py"
+        "tests/backend/test_activation_compatibility.py",
+        "tests/containers/test_app_compatibility.py",
+        "tests/containers/restore_fixture.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -198,12 +200,13 @@
         "docs/evidence/m1-restoration-planning.json",
         "docs/evidence/m1-runtime-history.json",
         "docs/evidence/m1-generation-selection.json",
-        "docs/evidence/m1-offline-activation.json"
+        "docs/evidence/m1-offline-activation.json",
+        "docs/evidence/m1-restoration-app-package.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage and both household APIs; persistent Edge.2 owner startup; manual snapshots, bound restore preparation, schema-4 history/recovery guards and real offline activation/resume/rollback with console and both-composition tests; full M1 remains pending",
-        "blockingDecisions": "Actual-image restore and deployment acceptance, native product UI/live household/recovery, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice.",
+        "implementationEvidence": "partial: identity/storage, both household APIs, snapshots and verified offline restoration; real local Edge.3 image exercises both compositions, interruption, actual Edge.2/schema-3 upgrade, retained replay and older-image refusal; owner Edge.2 startup verified; full M1 pending",
+        "blockingDecisions": "Current package-head native CPU-family CI and complete deployment/live restore, product UI/live household/recovery, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice.",
         "copilotChangesAllowed": false
       }
     },
@@ -336,7 +339,10 @@
         "tests/backend/test_offline_storage.py",
         "tests/backend/test_sqlite_activation.py",
         "tests/backend/test_activation_failures.py",
-        "tests/backend/test_activation_compatibility.py"
+        "tests/backend/test_activation_compatibility.py",
+        "tests/containers/test_app_image.py",
+        "tests/containers/test_app_compatibility.py",
+        "tests/containers/restore_fixture.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -377,12 +383,13 @@
         "docs/evidence/m1-persistent-ha-acceptance.json",
         "docs/evidence/m1-runtime-history.json",
         "docs/evidence/m1-generation-selection.json",
-        "docs/evidence/m1-offline-activation.json"
+        "docs/evidence/m1-offline-activation.json",
+        "docs/evidence/m1-restoration-app-package.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage and both household APIs; persistent Edge.2 owner startup; manual snapshots, bound restore preparation, schema-4 history/recovery guards and real offline activation/resume/rollback with console and both-composition tests; full M1 remains pending",
-        "blockingDecisions": "Actual-image restore and deployment acceptance, native product UI/live household/recovery, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice.",
+        "implementationEvidence": "partial: identity/storage, both household APIs, snapshots and verified offline restoration; real local Edge.3 image exercises both compositions, interruption, actual Edge.2/schema-3 upgrade, retained replay and older-image refusal; owner Edge.2 startup verified; full M1 pending",
+        "blockingDecisions": "Current package-head native CPU-family CI and complete deployment/live restore, product UI/live household/recovery, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice.",
         "copilotChangesAllowed": false
       }
     },

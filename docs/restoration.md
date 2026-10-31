@@ -2,7 +2,9 @@
 
 Status: preparation, offline activation, interruption recovery, inspection and console commands are
 implemented and tested locally on issue #6. Real activations exercise both HTTP compositions,
-frozen schemas 1/2/3, retained history and closed recovery guards. **Packaged restore acceptance is
+frozen schemas 1/2/3, retained history and closed recovery guards. Edge.3 now packages this source;
+15 local real-image cases include both compositions, actual previous-image upgrade/refusal and
+process-death recovery with SQLite 3.46.1. **Complete deployment and live restore acceptance remain
 pending.** The installed Edge.2 image remains unchanged. This work does not complete M1 or validate
 a restoration on the owner's Home Assistant. Restore authority belongs to the installation console;
 there is no restore HTTP endpoint.
@@ -148,8 +150,9 @@ closure disclosure. An authorized original-key retry may still return its histor
 The real offline activator now applies these rules, including repeated restoration and rollback
 using the latest history. Process-death and durable-boundary fault tests verify retained source,
 blocked partial startup and same-ID recovery. Both deployment packages and the actual packaged SQLite
-still require restore acceptance. The owner's installed Edge.2 remains on schema 3; it was not updated
-to this code.
+still require complete deployment acceptance. The local Edge.3 image now passes the packaged protocol;
+its [separate receipt](evidence/m1-restoration-app-package.json) identifies exact scope. The owner's
+installed Edge.2 remains on schema 3; it was not updated to this code.
 No automatic snapshot frequency or retention is selected. See
 [runtime history evidence](evidence/m1-runtime-history.json).
 

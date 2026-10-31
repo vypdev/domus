@@ -2,8 +2,9 @@
 
 Status: the target-bound recovery model, SQLite schema 3, human routes in both native/standalone
 compositions and installation-console command are implemented. Tests include actual ASGI/SQLite
-journeys and a separate process using a real terminal. These services are not installed in the
-owner's Edge 0.0.0-edge.1 connection preview. Full packaging/live acceptance remains pending.
+journeys and a separate process using a real terminal. Edge.2 packages these services; the owner has
+verified its connection page and restart, without exercising live recovery. Edge.3 adds retained
+closure guards and real-image restoration tests. Full live recovery acceptance remains pending.
 
 ## Recover access
 

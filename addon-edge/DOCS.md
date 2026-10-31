@@ -24,10 +24,18 @@ storage. HA/Supervisor owns provisioning and the credential's platform lifecycle
 
 Stop the app to close its local sessions and release storage locks. Household records and original
 operation receipts remain in /data/domus. Do not remove the installation marker, copy SQLite alone
-or share this data with Stable. Restoring older checkpoints is not enabled yet. App removal with data
+or share this data with Stable. Edge.3 includes console-only restoration to a new verified generation;
+it preserves later operation evidence without reapplying rolled-away effects. Stop the app before
+restore preparation/activation. Inspect and resume the same activation ID after an uncertain result.
+The retained source-checkpoint supports deliberate rollback reconciled against the latest history.
+Do not switch root pointers or run an older image manually. See the
+[restoration guide](https://github.com/vypdev/domus/blob/feature/6-implement-home-assistant-identity-and-sqlite-platform-persistence/docs/restoration.md)
+for the exact console commands. Restore is not available from the connection page.
+App removal with data
 deletion removes the app's private records; use deliberate operator backup procedures before removal.
-Changing public_origins requires a restart. Edge.2 is marked as a breaking version so an unattended
-update cannot cross its new configuration boundary.
+Changing public_origins requires a restart. Edge.2 and Edge.3 are marked as breaking versions so an
+unattended update cannot cross their configuration and schema/history boundaries. Schema 4 refuses
+downgrade by Edge.2; recovery requires a compatible image/data checkpoint pair.
 
 Stopping does not sign out your HA frontend. There is no Domus OAuth
 grant to revoke for this native mode. Remove the development app/repository after its owned test;

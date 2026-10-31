@@ -25,8 +25,9 @@ member/policy storage, schema 2 migration and bounded session leases. HA protoco
 provider/loopback evidence. Standalone browser/session authentication and its HTTP/CLI entrypoints
 now have executable offline coverage. Membership/policy and recovery use cases, manual snapshots,
 business HTTP/console entrypoints and verified offline restore/resume/rollback are implemented and
-tested locally. Persistent Edge.2 has bounded owner startup/reload/restart acceptance. Restore on
-actual images/deployments, product UI, live household/recovery, standalone companion/browser and full
+tested locally and in the real Edge.3 arm64 image, including actual Edge.2 upgrade/refusal.
+Persistent Edge.2 has bounded owner startup/reload/restart acceptance. Complete deployment restore,
+product UI, live household/recovery, standalone companion/browser and full
 channel/release acceptance remain M1 work. These source checkpoints do not complete M1 or reduce
 first-release scope.
 Release, merge and deployment require the existing maintainer flow and explicit authorization.

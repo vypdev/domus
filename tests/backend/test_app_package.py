@@ -13,12 +13,12 @@ def test_repository_and_edge_manifest_offer_native_ha_entry_without_user_credent
     manifest = yaml.safe_load((ROOT / "addon-edge/config.yaml").read_text())
     assert repository["url"] == "https://github.com/vypdev/domus"
     assert manifest["slug"] == "domus_edge" and manifest["stage"] == "experimental"
-    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.2"
+    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.3"
     assert manifest["ingress"] is True and manifest["ingress_port"] == 8099
     assert manifest["panel_admin"] is False and manifest["homeassistant_api"] is True
     assert manifest["options"] == {"public_origins": []}
     assert manifest["schema"] == {"public_origins": ["url"]}
-    assert manifest["breaking_versions"] == ["0.0.0-edge.2"]
+    assert manifest["breaking_versions"] == ["0.0.0-edge.2", "0.0.0-edge.3"]
     assert set(manifest["arch"]) == {"amd64", "aarch64"}
 
 
@@ -39,6 +39,12 @@ def test_build_pins_source_checksum_bases_lock_and_nonroot_native_entrypoint() -
     commits = re.findall(r"^ARG DOMUS_SOURCE_COMMIT=(\w+)$", source, re.MULTILINE)
     assert len(commits) == 2 and len(set(commits)) == 1
     assert re.fullmatch(r"[a-f0-9]{40}", commits[0])
+    assert commits[0] == "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5"
+    assert (
+        "DOMUS_SOURCE_SHA256=15bcd701696204b3362cebe5901feb3d0072c9bac1db2ef2cbc5007e9ed73717"
+        in source
+    )
+    assert "ARG BUILD_VERSION=0.0.0-edge.3" in source
     assert re.search(r"^ARG DOMUS_SOURCE_SHA256=[a-f0-9]{64}$", source, re.MULTILINE)
     assert "sha256sum --check" in source
     assert "https://codeload.github.com/vypdev/domus/tar.gz/${DOMUS_SOURCE_COMMIT}" in source

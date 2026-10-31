@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.0-edge.3
+
+- Preserve complete original operation history separately from restored household state in SQLite schema 4.
+- Add console-only restore preparation, verification, activation, status and interruption recovery.
+- Retain a verified pre-activation source checkpoint; rollback also preserves newer replay evidence.
+- Migrate only a verified target during restoration and retain original source data.
+- Prevent reusing consumed or canceled recovery approval after restoring an older checkpoint.
+- Mark the schema/history boundary as breaking: an older image must not open schema 4 or selected generations.
+- Keep the complete product UI, live restore and production acceptance pending.
+
 ## 0.0.0-edge.2
 
 - Add private persistent installation identity and SQLite household/member/policy/recovery services.

@@ -10,7 +10,7 @@ UI, live household/recovery operations and restore remain pending; no production
 
 1. Add the published Domus app repository from Settings > Apps > Install app > Repositories.
 2. Install Domus Edge for development, or the separately published stable app for production.
-3. For Edge.2, configure the HA browser origins, then start and select Open Web UI. Optionally enable its sidebar entry.
+3. Configure the HA browser origins, then start and select Open Web UI. Optionally enable its sidebar entry.
 4. Use the existing Home Assistant session. There is no second Domus sign-in or password.
 
 The independent Docker installation has a separate OAuth journey because it runs outside the
@@ -30,8 +30,9 @@ test app/repository when that testing ends; production installation
 must use the eventual published stable repository. Do not add the default repository URL yet:
 the default branch does not contain this preview package.
 
-Select Domus Edge 0.0.0-edge.2. Supervisor builds the app locally and verifies its immutable runtime
-archive before extracting it; the exact pin is recorded below. The original Edge.1 used runtime
+The development package is now Domus Edge 0.0.0-edge.3; the owner still runs the separately verified
+Edge.2 until a deliberate update. Supervisor builds the app locally and verifies its immutable runtime
+archive before extracting it; the exact pins are recorded below. The original Edge.1 used runtime
 98bd12f1bf141ba64053730b2686bd848aee1b1c.
 Python/uv image digests and the dependency lock are fixed. No registry login is needed.
 
@@ -102,3 +103,24 @@ and [private data lifecycle](owned-data-directory.md).
 Official references: [Ingress authentication and relative paths](https://contributors.home-assistant.io/apps/guides/ingress/),
 [repository installation and branch selection](https://contributors.home-assistant.io/apps/guides/repository/),
 [Core API proxy permissions](https://contributors.home-assistant.io/apps/guides/communication/).
+
+## Restoration-capable Edge.3
+
+Edge 0.0.0-edge.3 pins runtime faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5 and archive SHA-256
+15bcd701696204b3362cebe5901feb3d0072c9bac1db2ef2cbc5007e9ed73717. Its source archive was compared
+byte for byte against all 272 tracked files of that commit. The default Supervisor folder builds
+the pin with frozen dependencies; no test-only runtime override is needed.
+
+It adds schema-4 retained history and the [console restoration protocol](restoration.md). Local real
+arm64-image tests use SQLite 3.46.1, exercise both runtime compositions, snapshot/prepare/inspect/
+activate/status/resume, later-history rollback, process death and startup refusal while pending.
+The actual previous Edge.2 image upgrades through schema 3 to 4 while keeping UUID and original
+operation replay. Its pre-upgrade snapshot remains independently inspectable and restorable into
+a migrated new generation. Edge.2 refuses both a flat schema 4 and selected generations without
+changing any file. An older image alone is not a valid rollback for newer data.
+
+The every-PR CI builds both the current and immutable previous image on native amd64 and aarch64
+and runs the same 15 container cases. Current package-head CI is separate evidence from the
+pre-publication local run. [Package evidence](evidence/m1-restoration-app-package.json) records exact
+sources and assertions. No live owner update or restoration occurred during this package increment;
+the connection page and existing permissions remain unchanged.

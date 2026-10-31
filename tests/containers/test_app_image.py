@@ -5,6 +5,7 @@ import os
 import subprocess
 import time
 import uuid
+from pathlib import Path
 
 import pytest
 
@@ -32,7 +33,7 @@ def test_image_pins_the_private_launcher_and_installs_a_nonroot_readable_runtime
     assert config["Entrypoint"] == ["/app/.venv/bin/domus-ha-app", "--channel", "edge"]
     assert config["Labels"]["io.hass.type"] == "app"
     assert config["Labels"]["org.opencontainers.image.revision"] == (
-        "d013cf2c8b932d0e00f5858053cbc0e663d5eee1"
+        "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5"
     )
     assert not any(value.startswith("SUPERVISOR_TOKEN=") for value in config["Env"])
     probe = docker(
@@ -60,7 +61,7 @@ def test_image_requires_supervisor_configuration_and_never_falls_back_to_an_admi
     assert "Traceback" not in result.stderr
 
 
-def ready(name: str) -> None:
+def ready(name: str, *, standalone: bool = False) -> None:
     deadline = time.monotonic() + 20
     while True:
         result = docker(
@@ -68,8 +69,16 @@ def ready(name: str) -> None:
             name,
             "/app/.venv/bin/python",
             "-c",
-            "import urllib.request; "
-            "urllib.request.urlopen('http://127.0.0.1:8099/health', timeout=2)",
+            "import urllib.request,urllib.error; "
+            + (
+                "\ntry: urllib.request.urlopen(urllib.request.Request("
+                "'http://127.0.0.1:8099/api/v1/session',"
+                "headers={'Host':'domus.fixture'}), timeout=2)"
+                "\nexcept urllib.error.HTTPError as error: assert error.code==401"
+                "\nelse: raise AssertionError('Unauthenticated session was accepted')"
+                if standalone
+                else "urllib.request.urlopen('http://127.0.0.1:8099/health', timeout=2)"
+            ),
         )
         if result.returncode == 0 or time.monotonic() >= deadline:
             break
@@ -245,7 +254,7 @@ def snapshot_roundtrip(name: str, instance_id: str) -> None:
     assert created.returncode == 0, created.stderr
     original = json.loads(created.stdout)
     assert original["state"] == "created"
-    assert original["snapshot"]["schema_version"] == 3
+    assert original["snapshot"]["schema_version"] == 4
     assert original["snapshot"]["last_committed_at"] == 100
     inspected = docker(
         "exec",
@@ -351,3 +360,285 @@ with closing(attach_storage(Path('/data/domus'),'edge')) as storage:
         assert unit.households.current().name == 'Container fixture'
         assert len(unit.audit.entries('container-home')) == len(unit.outbox.pending()) == 1
 """
+
+
+def packaged_fixture(image: str, volume: str, operation: str, *arguments: str):
+    source = Path(__file__).with_name("restore_fixture.py").read_text()
+    return docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--user",
+        "65532:65532",
+        "--volume",
+        volume + ":/data",
+        "--entrypoint",
+        "/app/.venv/bin/python",
+        image,
+        "-c",
+        source,
+        operation,
+        *arguments,
+    )
+
+
+def console(image: str, volume: str, *arguments: str):
+    return docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--user",
+        "65532:65532",
+        "--volume",
+        volume + ":/data",
+        "--entrypoint",
+        "/app/.venv/bin/domus-admin",
+        image,
+        "--channel",
+        "edge",
+        *arguments,
+    )
+
+
+def successful(result):
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+@pytest.fixture
+def restore_runtime(image: str, data_volume: str, request):
+    mode = request.param
+    delivery = request.node.callspec.params.get("delivery", "suppressed")
+    prepared = docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--volume",
+        data_volume + ":/data",
+        "--entrypoint",
+        "/app/.venv/bin/python",
+        image,
+        "-c",
+        "import os; os.mkdir('/data/snapshots',0o700); os.chown('/data/snapshots',65532,65532); "
+        + (
+            "os.mkdir('/data/domus',0o700); os.chown('/data/domus',65532,65532)"
+            if mode == "standalone"
+            else ""
+        ),
+    )
+    assert prepared.returncode == 0, prepared.stderr
+    name = "domus-restore-test-" + uuid.uuid4().hex
+    configuration = (
+        [
+            "--user",
+            "65532:65532",
+            "--entrypoint",
+            "/app/.venv/bin/domus-server",
+            image,
+            "--channel",
+            "edge",
+            "--data-directory",
+            "/data/domus",
+            "--ha-url",
+            "http://ha.fixture",
+            "--public-origin",
+            "https://domus.fixture",
+            "--host",
+            "0.0.0.0",
+        ]
+        if mode == "standalone"
+        else ["--env", "SUPERVISOR_TOKEN=fixture-supervisor-token", image]
+    )
+    try:
+        result = docker(
+            "run",
+            "--detach",
+            "--init",
+            "--network",
+            "none",
+            "--name",
+            name,
+            "--volume",
+            data_volume + ":/data",
+            *configuration,
+        )
+        assert result.returncode == 0, result.stderr
+        ready(name, standalone=mode == "standalone")
+        identity = successful(packaged_fixture(image, data_volume, "initialize"))
+        successful(
+            console(
+                image,
+                data_volume,
+                "--data-directory",
+                "/data/domus",
+                "snapshot",
+                "create",
+                "/data/snapshots/manual",
+            )
+        )
+        successful(packaged_fixture(image, data_volume, "later", delivery))
+        stopped(name)
+        prepared = successful(
+            console(
+                image,
+                data_volume,
+                "--data-directory",
+                "/data/domus",
+                "restore",
+                "prepare",
+                "/data/snapshots/manual",
+                "/data/snapshots/prepared",
+            )
+        )
+        assert prepared["state"] == "prepared"
+        verified = successful(
+            console(
+                image,
+                data_volume,
+                "--instance-id",
+                identity["instance_id"],
+                "restore",
+                "inspect",
+                "/data/snapshots/prepared",
+            )
+        )
+        assert verified["state"] == "verified" and verified["prepared"] == prepared["prepared"]
+        yield name, data_volume, identity, prepared["prepared"]["restore_id"], mode
+    finally:
+        result = docker("rm", "--force", name)
+        assert result.returncode == 0 or "No such container" in result.stderr, result.stderr
+
+
+@pytest.mark.parametrize("restore_runtime", ["native", "standalone"], indirect=True)
+@pytest.mark.parametrize("delivery", ["suppressed", "delivered"])
+def test_packaged_console_restore_restart_and_latest_history_rollback(
+    image: str, restore_runtime, delivery
+):
+    name, volume, identity, identifier, mode = restore_runtime
+    activated = successful(
+        console(
+            image,
+            volume,
+            "--data-directory",
+            "/data/domus",
+            "restore",
+            "activate",
+            "/data/snapshots/prepared",
+        )
+    )
+    assert activated["state"] == "active"
+    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 4
+    assert docker("start", name).returncode == 0
+    ready(name, standalone=mode == "standalone")
+    active = successful(packaged_fixture(image, volume, "active", delivery))
+    assert active["generation_id"] == identifier
+    state = successful(
+        console(image, volume, "--data-directory", "/data/domus", "restore", "status", identifier)
+    )
+    assert state["state"] == "active"
+    assert (
+        console(
+            image, volume, "--data-directory", "/data/domus", "restore", "resume", identifier
+        ).returncode
+        == 2
+    )
+    successful(packaged_fixture(image, volume, "after"))
+    stopped(name)
+    checkpoint = "/data/domus/activations/" + identifier + "/source-checkpoint"
+    successful(
+        console(
+            image,
+            volume,
+            "--data-directory",
+            "/data/domus",
+            "restore",
+            "prepare",
+            checkpoint,
+            "/data/snapshots/rollback",
+        )
+    )
+    second = successful(
+        console(
+            image,
+            volume,
+            "--data-directory",
+            "/data/domus",
+            "restore",
+            "activate",
+            "/data/snapshots/rollback",
+        )
+    )
+    assert second["state"] == "active"
+    historical = successful(
+        console(
+            image,
+            volume,
+            "--data-directory",
+            "/data/domus",
+            "restore",
+            "activate",
+            "/data/snapshots/prepared",
+        )
+    )
+    assert historical["state"] == "historical"
+    assert docker("start", name).returncode == 0
+    ready(name, standalone=mode == "standalone")
+    rollback = successful(packaged_fixture(image, volume, "rollback"))
+    assert (
+        rollback["instance_id"] == identity["instance_id"]
+        and rollback["flat_sha256"] == active["flat_sha256"]
+    )
+    stopped(name)
+
+
+@pytest.mark.parametrize("restore_runtime", ["native", "standalone"], indirect=True)
+@pytest.mark.parametrize("point", ["pending", "selected"])
+def test_packaged_process_death_blocks_start_and_resumes_the_exact_transition(
+    image: str, restore_runtime, point
+):
+    name, volume, _, identifier, mode = restore_runtime
+    terminated = packaged_fixture(image, volume, "fault", point)
+    assert terminated.returncode == 37, terminated.stderr
+    status = successful(
+        console(image, volume, "--data-directory", "/data/domus", "restore", "status", identifier)
+    )
+    assert status["state"] == "pending"
+    assert docker("start", name).returncode == 0
+    assert docker("wait", name).stdout.strip() == "2"
+    logs = docker("logs", name)
+    assert "fixture-supervisor-token" not in logs.stdout + logs.stderr
+    if point == "pending":
+        assert (
+            console(
+                image, volume, "--data-directory", "/data/domus", "restore", "resume", identifier
+            ).returncode
+            == 2
+        )
+        resumed = successful(
+            console(
+                image,
+                volume,
+                "--data-directory",
+                "/data/domus",
+                "restore",
+                "activate",
+                "/data/snapshots/prepared",
+            )
+        )
+    else:
+        resumed = successful(
+            console(
+                image, volume, "--data-directory", "/data/domus", "restore", "resume", identifier
+            )
+        )
+    assert resumed["state"] == "active"
+    assert docker("start", name).returncode == 0
+    ready(name, standalone=mode == "standalone")
+    assert (
+        successful(packaged_fixture(image, volume, "active", "suppressed"))["generation_id"]
+        == identifier
+    )
+    stopped(name)

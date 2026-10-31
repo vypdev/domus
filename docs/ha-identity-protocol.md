@@ -50,7 +50,8 @@ Directory permission denial is distinct from rejecting the requesting user's own
 Native preview fixtures exercise the private listener policy, disabled proxy-header rewriting
 and validated base path. The immutable-source Edge app publishes no host port and its
 [installed connection preview](evidence/m1-native-ha-acceptance.json) passed on the exact owner target.
-Local read-grace session binding and complete production package acceptance remain pending. Ingress uses
+Bounded local read-grace session binding is implemented and packaged. Complete production and
+live outage/revocation acceptance remain pending. Ingress uses
 HA's native authentication rather than adding a second OAuth login. Core logout, Ingress cookie
 expiry and Domus session expiry are separate contracts; no instant global logout claim is made here.
 

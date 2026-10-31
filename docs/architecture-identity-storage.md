@@ -88,8 +88,9 @@ lookup. An infrastructure-only transactional import preserves acknowledgements, 
 and first archive provenance. Current authority still precedes replay/disclosure, and indexed recovery
 closure guards prevent old approvals from granting access again. Both APIs distinguish historical
 results and suppressed delivery; current setup provenance reads only current audit. Verified offline
-activation now has real local console, fault, frozen-schema and both-composition tests; package and
-owner acceptance remain pending. See
+activation now has real console, fault, frozen-schema and both-composition tests. The local Edge.3
+image additionally passes actual previous-image upgrade/refusal and restore with SQLite 3.46.1;
+complete deployment and owner acceptance remain pending. See
 [restoration boundaries](restoration.md) and the [complete SDD](../specs/platform-restoration.md).
 
 One household per installation is reinforced by a singleton constraint. Household writes compare

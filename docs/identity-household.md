@@ -4,7 +4,8 @@ Status: standalone authentication, the installed native HA authentication previe
 setup, own enrollment, household/member/policy edits and their HTTP routes are implemented. The
 [persistent native runtime](native-household-api.md) now shares those routes with bounded local
 read-grace sessions and CSRF. [Administrator recovery](administrator-recovery.md) now combines current
-HA authority and explicit local console approval. App packaging and product UI remain pending. The installed
+HA authority and explicit local console approval. Edge.2 packages these services; Edge.3 adds
+retained-history restoration. Product UI and complete live/deployment acceptance remain pending. The installed
 Edge 0.0.0-edge.1 still contains only the stateless connection preview.
 
 ## Home Assistant app

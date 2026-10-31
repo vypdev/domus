@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-31
 - Catalog capability ID: platform-foundation
-- Last verified: 2026-10-31; local offline activation/resume and both compositions; package acceptance pending
+- Last verified: 2026-10-31; real arm64 Edge.3 restore/upgrade/refusal; full deployment acceptance pending
 - Owners: Domus maintainers
 - Scope: complete M1 snapshot restoration with retained replay evidence, explicit preparation and verified offline activation.
 - Related issues/PRs: [Issue #6](https://github.com/vypdev/domus/issues/6), [PR #7](https://github.com/vypdev/domus/pull/7)
@@ -406,6 +406,11 @@ Planned file footprint (implementation is staged; presence is not completion):
 | `tests/backend/test_activation_compatibility.py` | create |
 | `tests/backend/test_activation_console.py` | create |
 | `docs/evidence/m1-offline-activation.json` | create |
+| `tests/containers/test_app_image.py` | update |
+| `tests/containers/restore_fixture.py` | create |
+| `tests/containers/test_app_compatibility.py` | create |
+| `.github/workflows/ci_check.yml` | update |
+| `docs/evidence/m1-restoration-app-package.json` | create |
 | `tests/backend/test_generation_values.py` | create |
 | `tests/backend/test_owned_generations.py` | create |
 | `docs/evidence/m1-generation-selection.json` | create |
@@ -488,5 +493,7 @@ recovery; console/docs/contracts; complete coverage and both real-image/deployme
 A30 is accepted on 2026-10-31. [Parent M1 contract](platform-foundation-identity-sqlite.md) ID-04 remains
 in force. [Snapshot evidence](../docs/evidence/m1-snapshots.json) and
 [persistent package evidence](../docs/evidence/m1-persistent-app-package.json) prove earlier primitives,
-not restoration. Other functional domains/product UI, standalone companion authority, complete channel
+not restoration. [Real-image restore evidence](../docs/evidence/m1-restoration-app-package.json)
+adds local packaged activation, interruption and previous-image compatibility. Other functional
+domains/product UI, standalone companion authority, complete channel
 acceptance and release remain in the full product scope, outside this focused restore specification.

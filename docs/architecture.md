@@ -89,7 +89,8 @@ The [native persistent runtime](native-household-api.md) binds bounded in-memory
 Supervisor session, exact human, installation/channel and Ingress path. It shares the standalone
 household DTOs and application use cases; fresh Core proof and transaction-time Domus authorization
 remain distinct. Configured public origins and scoped CSRF protect writes independently of forwarded
-metadata. Native persistent packaging and UI are still pending; the installed preview is stateless.
+metadata. Edge.2 packages private persistence and is installed; Edge.3 adds locally tested restoration.
+The complete UI and full deployment acceptance remain pending.
 HA OAuth or an equivalent supported HA authentication flow is a required proof step before implementation readiness.
 No child PIN, shared adult session or parallel Domus password store is proposed.
 
