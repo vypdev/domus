@@ -15,17 +15,14 @@ from typing import cast
 from domus.application.ports import Clock
 from domus.domain.errors import Conflict, DatabaseRejected, DomusError, InvalidInput, StorageFailure
 from domus.domain.restoration import (
-    OperationEvidence,
     PreparedRestoration,
     RetainedOperation,
     reconcile_operations,
 )
 from domus.domain.snapshots import Snapshot
 from domus.domain.storage import (
-    AuditEntry,
     Installation,
     JsonDocument,
-    OutboxEvent,
     _unique_object,
     validate_identifier,
 )
@@ -36,7 +33,8 @@ from domus.infrastructure.owned_storage import (
     _identity,
     _write_identity,
 )
-from domus.infrastructure.sqlite import SQLiteDatabase, _receipt
+from domus.infrastructure.sqlite import SQLiteDatabase
+from domus.infrastructure.sqlite_history import encode_operation, iter_operations, last_committed_at
 from domus.infrastructure.sqlite_snapshots import (
     SQLiteSnapshots,
     _Budget,
@@ -52,42 +50,11 @@ _ROW_LIMIT = 262_144
 
 
 def _encoded(value: RetainedOperation) -> bytes:
-    return (
-        json.dumps(value.value(), sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n"
-    ).encode("utf-8")
+    return (encode_operation(value) + "\n").encode("utf-8")
 
 
 def _operations(connection: sqlite3.Connection, budget: _Budget) -> Iterator[RetainedOperation]:
-    for row in connection.execute(
-        "SELECT r.*,a.detail AS audit_detail,o.payload AS event_payload,o.position,o.delivered "
-        "FROM receipts r JOIN audit a ON a.operation_id=r.operation_id "
-        "JOIN outbox o ON o.event_id=r.operation_id "
-        "ORDER BY r.household_id,r.actor_id,r.action,r.command_key"
-    ):
-        budget.check()
-        receipt = _receipt(row)
-        assert receipt is not None
-        yield RetainedOperation(
-            OperationEvidence(
-                receipt,
-                AuditEntry(
-                    receipt.operation_id,
-                    receipt.command,
-                    JsonDocument(row["audit_detail"]),
-                    receipt.created_at,
-                ),
-                OutboxEvent(
-                    receipt.operation_id,
-                    receipt.command.household_id,
-                    receipt.command.action,
-                    JsonDocument(row["event_payload"]),
-                    receipt.created_at,
-                ),
-                row["position"],
-                bool(row["delivered"]),
-            ),
-            True,
-        )
+    return iter_operations(connection, budget.check)
 
 
 def _read_operations(directory: int, budget: _Budget) -> Iterator[RetainedOperation]:
@@ -308,9 +275,7 @@ class SQLiteRestorations:
                 count = active = highwater = 0
                 with _connection(database.path, budget, readonly=True) as selected:
                     version = _verify_database(selected, database, previous=True)
-                    committed = selected.execute("SELECT max(created_at) FROM receipts").fetchone()[
-                        0
-                    ]
+                    committed = last_committed_at(selected)
                     if (
                         version != checkpoint.schema_version
                         or committed != checkpoint.last_committed_at

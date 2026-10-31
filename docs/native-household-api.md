@@ -6,6 +6,11 @@ owner update/configuration/start, existing-session access, normal reload and res
 is still a connection page. Live household/recovery commands are not inferred from that acceptance.
 Automatic identity and private data use the [owned lifecycle](owned-data-directory.md).
 
+The installed Edge.2 pin remains on schema 3. The new schema-4 runtime tests additionally exercise
+historical replay, suppressed delivery and recovery closure through this same native composition.
+That new code is not yet packaged or installed; verified offline restoration and full acceptance
+remain pending. See [history boundaries](restoration.md).
+
 ## Authentication and session binding
 
 Open Domus through its HA app page. Supervisor authenticates the existing Ingress session and strips

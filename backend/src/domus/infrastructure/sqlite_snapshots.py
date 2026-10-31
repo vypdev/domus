@@ -32,6 +32,11 @@ from domus.infrastructure.sqlite import (
     SQLiteUnit,
     _storage_error,
 )
+from domus.infrastructure.sqlite_history import (
+    HISTORY_STATEMENTS,
+    last_committed_at,
+    verify_history,
+)
 from domus.infrastructure.sqlite_recovery import _record as _recovery
 
 _DATABASE = "domus.sqlite3"
@@ -108,6 +113,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *BASE_STATEMENTS,
             *(IDENTITY_STATEMENTS if version >= 2 else ()),
             *(RECOVERY_STATEMENTS if version >= 3 else ()),
+            *(HISTORY_STATEMENTS if version >= 4 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -171,6 +177,8 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
                 value = cast(RecoveryRequest, _recovery(row))
                 if value.installation != installation:
                     raise DatabaseRejected("invalid_snapshot_database")
+        if version >= 4:
+            verify_history(connection)
     except DomusError as error:
         raise DatabaseRejected("invalid_snapshot_records") from error
 
@@ -267,7 +275,7 @@ class SQLiteSnapshots:
                 with _connection(self.database.path, budget, readonly=True) as source:
                     source.execute("BEGIN")
                     version = _verify_database(source, self.database, previous=False)
-                    committed = source.execute("SELECT max(created_at) FROM receipts").fetchone()[0]
+                    committed = last_committed_at(source)
                     captured = self.clock.now()
                     with _directory(self.location.parent, private=False) as parent:
                         try:
@@ -344,9 +352,7 @@ class SQLiteSnapshots:
                 database = SQLiteDatabase(self.location / _DATABASE, self.installation)
                 with _connection(database.path, budget, readonly=True) as connection:
                     version = _verify_database(connection, database, previous=True)
-                    committed = connection.execute(
-                        "SELECT max(created_at) FROM receipts"
-                    ).fetchone()[0]
+                    committed = last_committed_at(connection)
                     if version != result.schema_version or committed != result.last_committed_at:
                         raise DatabaseRejected("snapshot_checkpoint_mismatch")
                 return result

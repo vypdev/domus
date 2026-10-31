@@ -37,7 +37,7 @@ def test_snapshot_contains_verified_private_identity_checkpoint_and_all_atomic_r
     before = store.path.read_bytes()
     result = snapshots.create("snapshot-1")
     assert (
-        result.schema_version == 3
+        result.schema_version == 4
         and result.captured_at == 2000
         and result.last_committed_at == 100
     )
@@ -406,7 +406,7 @@ def test_inspection_missing_directory_and_publication_error_do_not_touch_source(
         assert len(unit.audit.entries("home")) == 1
 
 
-@pytest.mark.parametrize("version", [1, 2])
+@pytest.mark.parametrize("version", [1, 2, 3])
 def test_compatible_historical_schema_is_inspected_without_migrating_archive(
     tmp_path: Path, version: int
 ) -> None:

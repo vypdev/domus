@@ -153,6 +153,19 @@ class Household:
 
 
 @dataclass(frozen=True, slots=True)
+class RestorationProvenance:
+    """First archival provenance and whether the original effect is in current state."""
+
+    archived_by: str
+    current: bool
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.archived_by)
+        if type(self.current) is not bool:
+            raise InvalidInput("invalid_restoration_provenance")
+
+
+@dataclass(frozen=True, slots=True)
 class Receipt:
     """The original committed result, scoped independently of its public identifier."""
 
@@ -161,6 +174,19 @@ class Receipt:
     operation_id: str
     result: JsonDocument
     created_at: int
+    restoration: RestorationProvenance | None = None
+
+    def __post_init__(self) -> None:
+        if self.restoration is not None and not isinstance(self.restoration, RestorationProvenance):
+            raise InvalidInput("invalid_receipt_provenance")
+
+    @property
+    def historical(self) -> bool:
+        return self.restoration is not None and not self.restoration.current
+
+    @property
+    def archived_by(self) -> str | None:
+        return self.restoration.archived_by if self.restoration is not None else None
 
 
 @dataclass(frozen=True, slots=True)

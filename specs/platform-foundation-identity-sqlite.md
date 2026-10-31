@@ -613,7 +613,7 @@ all planned acceptance cases. The specifications remain Draft.
 | Native household API | [Receipt](../docs/evidence/m1-native-household-api.json): services, origins, leases/CSRF, outage reads. |
 | Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json): UUID/channel, private files and guards. |
 | Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json): human APIs, console approval and atomic consumption; live recovery pending. |
-| Snapshot creation/inspection | [Receipt](../docs/evidence/m1-snapshots.json): private bundles/checks; restore implementation pending. |
+| Snapshot creation/inspection | [Receipt](../docs/evidence/m1-snapshots.json): private bundles/checks; history runtime tested; activation pending. |
 | Explicit-file boundary | [Receipt](../docs/evidence/m1-explicit-storage-boundary.json): both factories refuse owned markers. |
 | Standalone owned data | [Receipt](../docs/evidence/m1-standalone-owned-storage.json): identity, restart/replay and locks. |
 | HA launcher preparation | [Receipt](../docs/evidence/m1-ha-app-bootstrap.json): private child and privilege-drop unit checks. |

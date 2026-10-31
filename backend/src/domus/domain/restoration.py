@@ -34,6 +34,7 @@ class OperationEvidence:
             or not isinstance(a, AuditEntry)
             or not isinstance(e, OutboxEvent)
             or not isinstance(r.command, CommandKey)
+            or r.restoration is not None
             or type(self.position) is not int
             or not 1 <= self.position <= 2**63 - 1
             or type(self.delivered) is not bool

@@ -2,8 +2,9 @@
 
 Status: local snapshot creation and inspection are implemented, with real SQLite/ASGI-era business
 records, private filesystem checks and a console entrypoint. Pure restore reconciliation and private
-blocked preparation/inspection are now tested locally; runtime history integration and activation
-remain pending. The owner's installed persistent Edge 0.0.0-edge.2 is unchanged by this increment.
+blocked preparation/inspection, runtime history/replay and recovery guards are now tested locally;
+verified offline activation remains pending. The owner's installed persistent Edge 0.0.0-edge.2 is
+unchanged by this increment.
 No automatic backup frequency, rotation or retention is introduced.
 
 ## Create a snapshot

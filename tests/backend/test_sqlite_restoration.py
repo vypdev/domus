@@ -395,7 +395,7 @@ def test_empty_checkpoint_keeps_later_setup_as_history_without_creating_a_househ
     assert inspect_at(target, store.installation) == result
 
 
-@pytest.mark.parametrize("version", [1, 2])
+@pytest.mark.parametrize("version", [1, 2, 3])
 def test_compatible_legacy_checkpoint_is_copied_without_migration(tmp_path, version):
     from test_snapshot_values import INSTALLATION
 

@@ -27,10 +27,11 @@ from domus.domain.storage import (
     Receipt,
     validate_identifier,
 )
+from domus.infrastructure.sqlite_history import HISTORY_STATEMENTS, SQLiteHistory
 from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
 from domus.infrastructure.sqlite_recovery import SQLiteRecoveries
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -76,10 +77,16 @@ RECOVERY_STATEMENTS = (
     "created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, detail TEXT NOT NULL)",
     "CREATE INDEX recovery_pending ON recovery_requests(household_id,state,expires_at)",
 )
-SCHEMA_STATEMENTS = (*BASE_STATEMENTS, *IDENTITY_STATEMENTS, *RECOVERY_STATEMENTS)
+SCHEMA_STATEMENTS = (
+    *BASE_STATEMENTS,
+    *IDENTITY_STATEMENTS,
+    *RECOVERY_STATEMENTS,
+    *HISTORY_STATEMENTS,
+)
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
-TABLES = IDENTITY_TABLES | {"recovery_requests"}
+RECOVERY_TABLES = IDENTITY_TABLES | {"recovery_requests"}
+TABLES = RECOVERY_TABLES | {"retained_operations"}
 
 
 def _scope(command: CommandKey) -> tuple[str, str, str, str]:
@@ -164,23 +171,39 @@ class SQLiteReceipts:
     connection: sqlite3.Connection
 
     def get(self, command: CommandKey) -> Receipt | None:
-        return _receipt(
+        original = _receipt(
             self.connection.execute(
                 "SELECT * FROM receipts WHERE household_id=? AND actor_id=? "
                 "AND action=? AND command_key=?",
                 _scope(command),
             ).fetchone()
         )
+        return SQLiteHistory(self.connection).receipt(command, original)
 
     def get_operation(self, household_id: str, actor_id: str, operation_id: str) -> Receipt | None:
-        return _receipt(
+        original = _receipt(
             self.connection.execute(
                 "SELECT * FROM receipts WHERE household_id=? AND actor_id=? AND operation_id=?",
                 (household_id, actor_id, operation_id),
             ).fetchone()
         )
+        history = SQLiteHistory(self.connection)
+        if original is not None:
+            return history.receipt(original.command, original)
+        return history.operation(household_id, actor_id, operation_id)
 
     def add(self, receipt: Receipt) -> None:
+        if receipt.restoration is not None:
+            raise InvalidInput("receipt_projection_not_storable")
+        if (
+            self.connection.execute(
+                "SELECT 1 FROM retained_operations WHERE operation_id=? OR "
+                "(household_id=? AND actor_id=? AND action=? AND command_key=?) LIMIT 1",
+                (receipt.operation_id, *_scope(receipt.command)),
+            ).fetchone()
+            is not None
+        ):
+            raise Conflict("operation_collision")
         self.connection.execute(
             "INSERT INTO receipts VALUES (?,?,?,?,?,?,?,?)",
             (
@@ -276,7 +299,7 @@ class SQLiteOutbox:
             "SELECT delivered FROM outbox WHERE event_id=?", (event_id,)
         ).fetchone()
         if row is None:
-            return None
+            return SQLiteHistory(self.connection).delivery(event_id)
         value = row["delivered"]
         if type(value) is not int or value not in (0, 1):
             raise StorageFailure("invalid_operation_record")
@@ -340,9 +363,11 @@ class SQLiteDatabase:
             }
             if version == 0 and application_id == 0 and not objects and allow_empty:
                 return 0
-            if version != SCHEMA_VERSION and not (allow_previous and version in (1, 2)):
+            if version != SCHEMA_VERSION and not (allow_previous and version in (1, 2, 3)):
                 raise DatabaseRejected("unsupported_schema")
-            expected_tables = {1: BASE_TABLES, 2: IDENTITY_TABLES}.get(version, TABLES)
+            expected_tables = {1: BASE_TABLES, 2: IDENTITY_TABLES, 3: RECOVERY_TABLES}.get(
+                version, TABLES
+            )
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
             identity = connection.execute("SELECT instance_id,channel FROM installation").fetchone()
@@ -382,11 +407,11 @@ class SQLiteDatabase:
                     )
                     connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
-                elif version in (1, 2):
+                elif version in (1, 2, 3):
                     migration = (
-                        (*IDENTITY_STATEMENTS, *RECOVERY_STATEMENTS)
-                        if version == 1
-                        else RECOVERY_STATEMENTS
+                        *(IDENTITY_STATEMENTS if version == 1 else ()),
+                        *(RECOVERY_STATEMENTS if version < 3 else ()),
+                        *HISTORY_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)

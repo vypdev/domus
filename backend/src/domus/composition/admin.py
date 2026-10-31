@@ -107,11 +107,14 @@ def main(
         outgoing.write(
             json.dumps(
                 {
-                    "state": "committed",
+                    "state": "historical" if receipt.historical else "committed",
+                    "archived_by": receipt.archived_by,
                     "operation_id": receipt.operation_id,
                     "result": receipt.result.decode(),
                     "message": (
-                        "Console approval was saved. The same target must freshly prove "
+                        "This approval is historical and has no effect in current state."
+                        if receipt.historical
+                        else "Console approval was saved. The same target must freshly prove "
                         "HA administrator status to finish."
                     ),
                 },

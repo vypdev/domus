@@ -74,8 +74,13 @@ does not establish restore activation or newer-history reconciliation.
 Restoration now adds pure complete-operation evidence and streaming reconciliation. Its semantic
 application port binds preparation to an explicit checkpoint and installation. The SQLite adapter
 seals the exact old database plus later facts in a new blocked directory, then independently verifies
-hashes, projection and counts. It never replaces active data or starts a runtime. Historical replay,
-runtime history storage, recovery rearm prevention and verified activation remain pending. See
+hashes, projection and counts. It never replaces active data or starts a runtime. Schema 4 now retains
+original complete facts separately from checkpoint rows and provides history-aware receipt/delivery
+lookup. An infrastructure-only transactional import preserves acknowledgements, sequence high-water
+and first archive provenance. Current authority still precedes replay/disclosure, and indexed recovery
+closure guards prevent old approvals from granting access again. Both APIs distinguish historical
+results and suppressed delivery; current setup provenance reads only current audit. Verified offline
+activation remains pending. See
 [preparation boundaries](restoration.md) and the [complete SDD](../specs/platform-restoration.md).
 
 One household per installation is reinforced by a singleton constraint. Household writes compare

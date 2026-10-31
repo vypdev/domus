@@ -1,7 +1,8 @@
 # Checkpoint restoration and retained history
 
 Status: pure reconciliation and private SQLite preparation/inspection are implemented and tested
-locally on issue #6. **Activation and runtime historical replay are pending.** There is no restore
+locally on issue #6. Schema-4 runtime history/replay and recovery guards are tested with synthetic
+offline fixtures. **Production activation remains pending.** There is no restore
 console command or HTTP endpoint yet. The installed Edge.2 image remains unchanged. This work does
 not complete M1 or validate a restoration on the owner's Home Assistant.
 
@@ -65,13 +66,40 @@ Conflicts or copy/validation failures leave source data intact and retain privat
 An error or deadline after manifest publication reports uncertainty; inspect that same target rather
 than retrying into it. Never claim that an output error proves no artifact was written.
 
-The current candidate keeps checkpoint schema 1, 2 or 3 unchanged. Later acknowledgements and
-rolled-away facts are sealed in the journal; they have **not** been imported into runtime storage.
-Before any activation, remaining work must implement history-aware storage/replay and delivery
-suppression, sequence preservation, current authorization before historical disclosure, consumed
-recovery guards, stopped-write source revalidation, durable offline switching and interruption/rollback
-recovery. Repeated restoration must preserve all prior history. Both deployment modes still require
-full acceptance. No automatic snapshot frequency or retention is selected.
+Preparation keeps checkpoint schema 1, 2, 3 or 4 unchanged. Later acknowledgements and rolled-away
+facts remain sealed in the journal until a future verified activation flow imports them. The current
+preparation command does not migrate or activate the candidate.
+
+## Implemented runtime history
+
+Schema 4 adds retained_operations without a current-household foreign key. An infrastructure-only
+import validates complete original facts, selected current projection, prior history, first archive
+provenance and sequence continuity. It requires an existing caller-owned transaction and uses a
+savepoint, so an error cannot leave partial changes even if the caller subsequently commits. Normal
+application ports cannot select an archive or invoke import. Migration from frozen schemas 1/2/3
+is additive and transactional; failure retains the original schema and bytes.
+
+Current receipt lookup falls back to retained history. It still checks current authorization before
+replay/disclosure, returns the original result and conflicts on changed payload. Projection metadata
+does not enter original complete evidence. Both standalone and native APIs return state=historical
+and archived_by for rolled-away work, with an explicit message that its effect is absent from current
+state. A historical event has delivery=suppressed unless it was actually acknowledged, in which case
+delivery=delivered preserves that fact. It never enters the pending queue or accepts a fabricated
+acknowledgement. Current operations may retain first archive provenance if selected again.
+
+New event positions remain above every retained position. New snapshots and repeated preparation
+retain historical facts and their delivery/provenance; last_committed_at includes historical receipts
+and remains a timestamp summary, not ancestry proof. Historical setup cannot create a household or
+grant founder provenance. Restored consumed/canceled recovery has a separate indexed guard: an old
+approval cannot grant access under a new key, pending lists exclude it and target ownership precedes
+closure disclosure. An authorized original-key retry may still return its historical result.
+
+Before activation, remaining work must stop writes, prove the source binding is unchanged, apply
+the verified import/migration to a blocked candidate, switch durably and recover interruption with
+rollback data retained. Both deployment modes and the actual packaged SQLite still require restore
+acceptance. The owner's installed Edge.2 remains on schema 3; it was not updated to this code.
+No automatic snapshot frequency or retention is selected. See
+[runtime history evidence](evidence/m1-runtime-history.json).
 
 See the [complete restoration SDD](../specs/platform-restoration.md),
 [source-identified preparation evidence](evidence/m1-restoration-planning.json),

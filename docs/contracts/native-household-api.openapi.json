@@ -446,6 +446,17 @@
             "title": "Action Required",
             "type": "string"
           },
+          "archived_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived By"
+          },
           "created_at": {
             "title": "Created At",
             "type": "integer"
@@ -453,7 +464,8 @@
           "delivery": {
             "enum": [
               "pending",
-              "delivered"
+              "delivered",
+              "suppressed"
             ],
             "title": "Delivery",
             "type": "string"
@@ -475,8 +487,11 @@
             "type": "object"
           },
           "state": {
-            "const": "committed",
             "default": "committed",
+            "enum": [
+              "committed",
+              "historical"
+            ],
             "title": "State",
             "type": "string"
           }
@@ -632,6 +647,17 @@
             "title": "Action Required",
             "type": "string"
           },
+          "archived_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived By"
+          },
           "created_at": {
             "title": "Created At",
             "type": "integer"
@@ -653,8 +679,11 @@
             "type": "object"
           },
           "state": {
-            "const": "committed",
             "default": "committed",
+            "enum": [
+              "committed",
+              "historical"
+            ],
             "title": "State",
             "type": "string"
           }

@@ -35,6 +35,7 @@ class Policies(Protocol):
 
 
 class Recoveries(Protocol):
+    def closed_before_restoration(self, household_id: str, request_id: str) -> bool: ...
     def get(self, household_id: str, request_id: str) -> RecoveryRequest | None: ...
     def pending(
         self, household_id: str, now: int, *, limit: int = 257

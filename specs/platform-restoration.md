@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-31
 - Catalog capability ID: platform-foundation
-- Last verified: 2026-10-31; local reconciliation/preparation only, complete restoration pending
+- Last verified: 2026-10-31; local reconciliation/preparation and runtime history, activation pending
 - Owners: Domus maintainers
 - Scope: complete M1 snapshot restoration with retained replay evidence, explicit preparation and verified offline activation.
 - Related issues/PRs: [Issue #6](https://github.com/vypdev/domus/issues/6), [PR #7](https://github.com/vypdev/domus/pull/7)
@@ -32,7 +32,7 @@ consumed recovery approval. Keeping later business state instead would violate t
 1. Edge.2 packages schema 3 and consistent snapshot create/inspect.
 2. Both managed runtimes persist identity and refuse explicit-file bypass.
 3. Owner update/start/reload/restart passed. Pure reconciliation and private blocked preparation
-   are implemented locally; runtime history integration and activation remain pending.
+   and runtime history/replay guards are implemented locally; activation remains pending.
 4. A30 explicitly selects checkpoint state plus retained later processed history.
 
 ### 2.3 Evidence
@@ -188,10 +188,34 @@ do not impose that single-object limit on their aggregate. Identity/position uni
 with history; payloads are streamed. A checkpoint must contain every known position through its
 high-water; missing earlier facts are rejected independently of wall-clock ordering.
 
-Current schema 1/2/3 inspection does not import the journal into runtime tables or make the candidate
+Current schema 1/2/3/4 inspection does not import the journal into runtime tables or make the candidate
 servable. Independent preparation inspection verifies projection against checkpoint facts, counts,
 hashes and private inventory. Activation must later revalidate the source digest under stopped writes;
 the digest is a binding, not authentication or proof of unchanged live data by itself.
+
+### Runtime history design
+
+Schema 4 adds retained_operations without current-household foreign keys. Complete immutable evidence
+is stored separately from the selected business rows, with current/historical placement and first
+archive provenance. Current records may advance acknowledgement; historical suppression never marks
+delivery. The outbox sequence remains above every retained position. Frozen v3 input joins v1/v2
+migration fixtures; older runtimes reject schema 4.
+
+Runtime receipt lookup checks current records and then retained history. A receipt may carry explicit
+restoration provenance for presentation; complete evidence always contains original facts, without
+that projection metadata. Current authorization remains before both replay and disclosure. Historical
+responses say the original effect is absent from current state and expose suppressed delivery
+separately from real prior acknowledgement. Current setup provenance never reads historical audit.
+A resource guard rejects an old consumed/canceled recovery even under a new idempotency key.
+Its indexed closed_recovery_id is derived from original terminal results and cross-checked against
+those facts. Pending recovery queries exclude guarded resources without rewriting checkpoint state.
+Original-key replay can return historical recovery results after current authority checks; a new
+effect cannot reuse the old approval. Other humans cannot probe its closure before target ownership.
+
+History import is an infrastructure-only operation on a verified candidate inside a caller-owned
+transaction, with its own savepoint. It preserves exact original facts, checks the selected current
+projection, retains all prior history and updates acknowledgement/sequence monotonically. It never
+grants activation authority or writes into an active owner installation.
 
 ### 8.3 Executable architecture constraints
 
@@ -311,7 +335,7 @@ Planned file footprint (implementation is staged; presence is not completion):
 | `specs/platform-restoration.md` | create |
 | `specs/catalog.json` | update |
 | `specs/CATALOG.md` | update |
-| `specs/platform-foundation-identity-sqlite.md` | reference |
+| `specs/platform-foundation-identity-sqlite.md` | update |
 | `backend/src/domus/domain/restoration.py` | create |
 | `backend/src/domus/application/restoration.py` | create |
 | `backend/src/domus/infrastructure/sqlite_restoration.py` | create |
@@ -324,6 +348,33 @@ Planned file footprint (implementation is staged; presence is not completion):
 | `docs/snapshots.md` | update |
 | `docs/architecture-identity-storage.md` | update |
 | `docs/decisions.md` | reference |
+| `backend/src/domus/domain/storage.py` | update |
+| `backend/src/domus/infrastructure/sqlite.py` | update |
+| `backend/src/domus/infrastructure/sqlite_history.py` | create |
+| `backend/src/domus/infrastructure/sqlite_snapshots.py` | update |
+| `backend/src/domus/application/ports.py` | update |
+| `backend/src/domus/application/recovery_commands.py` | update |
+| `backend/src/domus/infrastructure/sqlite_recovery.py` | update |
+| `backend/src/domus/entrypoints/household_http.py` | update |
+| `backend/src/domus/composition/admin.py` | update |
+| `tests/backend/test_sqlite_history.py` | create |
+| `tests/backend/test_sqlite_history_integrity.py` | create |
+| `backend/src/domus/domain/recovery.py` | update |
+| `tests/backend/test_restored_commands.py` | create |
+| `tests/backend/test_storage_values.py` | update |
+| `tests/backend/test_sqlite_identity.py` | update |
+| `tests/backend/test_sqlite_recovery.py` | update |
+| `tests/backend/test_sqlite_snapshots.py` | update |
+| `tests/backend/test_household_http.py` | update |
+| `tests/backend/test_native_http.py` | update |
+| `tests/backend/test_recovery_commands.py` | update |
+| `tests/fixtures/sqlite/v3.sql` | create |
+| `docs/contracts/household-api.openapi.json` | update |
+| `docs/contracts/native-household-api.openapi.json` | update |
+| `docs/migrations-identity-storage.md` | update |
+| `docs/household-api.md` | update |
+| `docs/native-household-api.md` | update |
+| `docs/evidence/m1-runtime-history.json` | create |
 
 ## 16. Acceptance scenarios
 

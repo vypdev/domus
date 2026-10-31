@@ -1,10 +1,11 @@
 # Household API checkpoint
 
-Status: strict HTTP routes, local queries, standalone SQLite composition and the
-[native persistent runtime](native-household-api.md) are implemented. Native persistent app packaging,
-the product UI and snapshots are still pending. [Console-approved recovery](administrator-recovery.md)
-is implemented through the same authenticated boundary. The installed Edge 0.0.0-edge.1 app remains
-the earlier stateless connection preview; it contains none of these routes.
+Status: strict HTTP routes, local queries, standalone SQLite composition, manual snapshots and the
+[native persistent runtime](native-household-api.md) are implemented. The installed Edge.2 packages
+the persistent schema-3 runtime and passes bounded owner start/reload/restart acceptance. Schema-4
+history-aware responses and recovery guards are now tested locally; that new code is not installed
+on the owner HA. Verified restore activation, the product UI and complete deployment acceptance
+remain pending. [Console-approved recovery](administrator-recovery.md) shares the authenticated boundary.
 
 ## Run with persistent standalone data
 
@@ -75,12 +76,21 @@ evidence. An unexpected 500 cannot prove that a change was not committed: its me
 uncertainty and instructs the client to retry the original payload/key or inspect the operation.
 An injected failure after commit verifies that this retry returns one original effect and receipt.
 
-A successful write returns `state=committed`, operation ID, original result and UTC creation time.
+A new successful write returns `state=committed`, operation ID, original result and UTC creation time.
 It does not claim that outbox delivery has completed. The operation query observes pending/delivered
 from the exact event record, without guessing from a limited queue page. Missing/corrupt atomic
 records fail safely. Another actor's operation returns a scoped 404 after current authorization;
 unlinked or suspended actors cannot probe its existence. Privilege loss also blocks disclosure of
 old privileged results. HTTP has no recovery-approval endpoint.
+
+After a verified history import, replay of rolled-away work instead returns state=historical and
+archived_by with the original result/time. Its message explicitly says the effect is absent from
+current state; it does not execute the change again. Current authority and payload equality still
+apply. Operation queries report delivery=suppressed for historical undelivered events, or delivered
+if acknowledgement genuinely occurred. Current operations retain pending/delivered and may include
+first archive provenance when selected again. Historical setup does not create a household, and
+consumed/canceled recovery cannot reuse an old approval under a new key. These are exercised with
+synthetic offline state in both HTTP compositions; a production restore command is not exposed yet.
 
 ## HA availability and remaining deployment work
 

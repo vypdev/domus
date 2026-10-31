@@ -11,9 +11,24 @@ from domus.domain.identity import (
     Member,
     validate_revision,
 )
-from domus.domain.storage import Installation, JsonDocument, validate_identifier
+from domus.domain.storage import Installation, JsonDocument, Receipt, validate_identifier
 
 RECOVERY_LIFETIME = 600_000
+
+
+def closed_recovery(receipt: Receipt) -> str | None:
+    """Original terminal facts identify a resource that restoration must never rearm."""
+    expected = {"recovery.complete": "recovered", "recovery.cancel": "canceled"}.get(
+        receipt.command.action
+    )
+    if expected is None:
+        return None
+    result = receipt.result.decode()
+    request_id = result.get("request_id")
+    if not isinstance(request_id, str) or result.get("state") != expected:
+        raise InvalidInput("invalid_recovery_history")
+    validate_identifier(request_id)
+    return request_id
 
 
 class RecoveryState(StrEnum):

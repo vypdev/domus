@@ -65,6 +65,11 @@ def _own(
     return value
 
 
+def _require_open(unit: UnitOfWork, household_id: str, request_id: str) -> None:
+    if unit.recoveries.closed_before_restoration(household_id, request_id):
+        raise Conflict("recovery_closed")
+
+
 def _view(value: RecoveryRequest, now: int) -> JsonDocument:
     state = value.visible_state(now)
     return JsonDocument.from_value(
@@ -95,10 +100,9 @@ class RecoveryQueries:
 
     def get(self, request_id: str) -> JsonDocument:
         with self.transactions.read() as unit:
-            return _view(
-                _own(unit, self.household_id, request_id, self.human, self.installation),
-                self.clock.now(),
-            )
+            value = _own(unit, self.household_id, request_id, self.human, self.installation)
+            _require_open(unit, self.household_id, request_id)
+            return _view(value, self.clock.now())
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,6 +212,7 @@ class RecoveryCommands:
 
         def apply(unit: UnitOfWork) -> Change:
             value = _own(unit, self.household_id, request_id, human, self.installation)
+            _require_open(unit, self.household_id, request_id)
             if value.revision != expected_revision:
                 raise Conflict("revision_conflict")
             current = unit.members.by_user(self.household_id, human.ha_user_id)
@@ -267,6 +272,7 @@ class RecoveryCommands:
 
         def apply(unit: UnitOfWork) -> Change:
             current = _own(unit, self.household_id, request_id, human, self.installation)
+            _require_open(unit, self.household_id, request_id)
             if current.revision != expected_revision:
                 raise Conflict("revision_conflict")
             value = current.cancel(self.clock.now())
@@ -295,6 +301,7 @@ class _ConsoleAuthority:
         ):
             raise Forbidden("permission_denied")
         value = _request(unit, command.household_id, self.request_id)
+        _require_open(unit, command.household_id, self.request_id)
         value.require_current(
             self.installation,
             _policy(unit, command.household_id),

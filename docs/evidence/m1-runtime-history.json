@@ -1,0 +1,117 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "002a982ee60b8aa22a707de402ab1e8fc0306be5",
+  "scope": "Schema-4 history-aware runtime receipt/delivery lookup, transactional retained-fact import, sequence continuity, truthful responses in both APIs and guards against rearming consumed/canceled recovery; verified offline activation remains pending",
+  "backendTests": 1140,
+  "backendCoverage": {
+    "covered_lines": 3959,
+    "num_statements": 3959,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 127,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 1068,
+    "num_partial_branches": 0,
+    "covered_branches": 1068,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": "COVERAGE_FILE=/private/tmp/domus-history-backend.coverage .venv/bin/pytest tests/backend -q -W error::ResourceWarning --tb=short --cov=domus --cov-branch --cov-report=json:/private/tmp/domus-history-coverage.json --cov-report=term:skip-covered",
+  "newExecutedCases": 52,
+  "assertions": [
+    "Retained complete original receipt/audit/event facts have no current-household foreign key and do not recreate checkpoint business rows",
+    "Caller-owned transaction plus import savepoint preserve earlier facts even when a caller catches a conflict and commits; duplicate positions/IDs, missing prior history/current facts, changed immutable facts, provenance and acknowledgement regression reject atomically",
+    "Current receipt lookup falls back to retained history; current authority precedes replay and own-operation disclosure; both standalone and native composed APIs report historical state and suppressed delivery truthfully",
+    "Historical undelivered events remain absent from pending delivery and reject acknowledgement; actual prior acknowledgements remain delivered; current events may advance acknowledgement",
+    "New event positions stay above retained high-water; current setup provenance reads only current audit and historical setup does not create a household",
+    "Recovery terminal guards derive and cross-check an indexed request ID from original results; new-key completion/cancellation and console approval cannot reuse a restored old approval",
+    "Original-key recovery replay may return a historical result after existing current authority checks; another human receives scoped NotFound before closure disclosure; guarded requests do not consume pending capacity",
+    "Console replay of a rolled-away approval reports historical/no-current-effect rather than claiming a current approval or requesting another terminal confirmation",
+    "Independent frozen v1/v2/v3 fixtures upgrade additively to schema 4 without losing receipt/audit/outbox data; an injected history-index failure rolls back the schema-3 upgrade and retains exact original bytes",
+    "New snapshots and repeated preparation preserve prior history, first archive and actual delivery; checkpoint last_committed_at summarizes all retained receipts without serving as ancestry proof",
+    "Corrupt/mismatched history documents or indexed fields, current projection, sequence type/duplicates/regression and invalid delivery cannot verify",
+    "Three independently valid 60,000-character result/audit/event documents survive real SQLite import and lookup without an incorrect aggregate 65,536-byte limit"
+  ],
+  "testFirst": "New history tests first failed import for missing RestorationProvenance. Historical HTTP tests first returned committed and recovery-rearm tests DID NOT RAISE Conflict. Retained-history snapshot first returned null last_committed_at instead of the original receipt time. Each corresponding behavior was then implemented and reverified.",
+  "architecture": {
+    "files": 96,
+    "dependencies": 458,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 61 backend source files",
+    "negativeFixtures": 41
+  },
+  "tooling": {
+    "tests": 66,
+    "statements": 73,
+    "branches": 34,
+    "coveragePercent": 100,
+    "protectedCopilotResourcesUnchanged": 29,
+    "nodeTests": 11,
+    "typescript": "PASS",
+    "ruff": "PASS",
+    "localDocumentation": "PASS"
+  },
+  "frozenSchema3": {
+    "source": "002a982ee60b8aa22a707de402ab1e8fc0306be5",
+    "path": "tests/fixtures/sqlite/v3.sql",
+    "capture": "Captured real schema/data and version/application markers before editing schema constants; never regenerated from schema 4"
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "sqlite": "3.53.3",
+    "scope": "Local/CI real SQLite and composed ASGI fixtures; synthetic offline substitution is not the production activation protocol"
+  },
+  "installedRuntime": "Owner Edge.2 / d013cf2c8b932d0e00f5858053cbc0e663d5eee1 / schema 3 remains unchanged. No owner household, recovery grant, restore, device or user change.",
+  "priorHeadCI": {
+    "head": "002a982ee60b8aa22a707de402ab1e8fc0306be5",
+    "url": "https://github.com/vypdev/domus/actions/runs/41210642698",
+    "result": "PASS for all project groups; pinned real-image checks do not validate unpackaged schema-4 history sources"
+  },
+  "remaining": [
+    "Stopped-write source revalidation and verified migration/import on a blocked candidate",
+    "Durable offline activation with retained rollback and interruption recovery in both modes",
+    "Reviewed restore console and complete actual-image/owner restoration acceptance",
+    "Product UI, standalone companion and full deployment/channel/domain/release acceptance"
+  ],
+  "copilot": "Untouched. Existing scope/assessment admission errors reported in vypdev/copilot#828/#829. Draft/skipped Bugbot does not satisfy the complete current-head no-findings merge gate.",
+  "sourceSha256": {
+    "backend/src/domus/domain/storage.py": "9c72aedf54c63d6fa0d85f0e8c044d56c7ceefc23eea123b45d096da96a6c75d",
+    "backend/src/domus/domain/recovery.py": "0bbe731961d4481e8002382ab0c9948fd415534b0cbbc03bdf0a0e35676f0cb0",
+    "backend/src/domus/domain/restoration.py": "ae49272c569367f3838e4c620c3663e09915c0e13d8367ab78eb8a6510d34a0b",
+    "backend/src/domus/application/ports.py": "9a69ed47ea778d4cc0879b14aa8a6a495c2b5ac773d4571e882e2e24c60ac94d",
+    "backend/src/domus/application/recovery_commands.py": "db557340004facafcf8ba1f8556f5930444cdd03087a912526e11d13295fccd4",
+    "backend/src/domus/infrastructure/sqlite.py": "6141041285514d019a1c4522b7679328ba585dba0eff9e91ccc83bd969e34516",
+    "backend/src/domus/infrastructure/sqlite_history.py": "e7f8d4f2b79aed851a4056364f67d1c7806c52d011b46c597968bea86dd1d144",
+    "backend/src/domus/infrastructure/sqlite_recovery.py": "01fa6b8896674ce8203073c468eccb7033a9824052d7db3a853c80a2df6e2650",
+    "backend/src/domus/infrastructure/sqlite_snapshots.py": "6fda2192a3c9bb17559e2402071288ae7a5cfeb36539eba325831b51c3314f2b",
+    "backend/src/domus/infrastructure/sqlite_restoration.py": "9fee481e4d4a912f2918758e6310b477e5d70268a95c9406171bd26156eb49a6",
+    "backend/src/domus/entrypoints/household_http.py": "dd320215ad4adaa2f4e6acc5654ab28ab9cde3582aa220641167d48f71e92ea4",
+    "backend/src/domus/composition/admin.py": "4cee63ea117b272ee9d9b1dbd07fc08ce059465f3f173eb48f392a0ea1ab9319",
+    "tests/backend/test_sqlite_history.py": "aea9143e2eab56315212d6420f46f2ae36d6b7fc6da0291eb735bf8c705b45ec",
+    "tests/backend/test_sqlite_history_integrity.py": "32412cb036e9e06a7bfc0c8e993737db936b83644c5a1021238efcf8e4a74fa7",
+    "tests/backend/test_restored_commands.py": "655d0f66efe32388c0c553acdd9bc60bf74bc3b2b58af0a699b7ed6335a8be10",
+    "tests/fixtures/sqlite/v3.sql": "6da0e3610518a9f6ecc20a93347feca423b9408fde7216c43ace657cad654cb0",
+    "docs/contracts/household-api.openapi.json": "fb7bb13acc1d1c3f0c7b01f157b9edb9c104087758e556434085bffbd8c7d1ed",
+    "docs/contracts/native-household-api.openapi.json": "f838eafa44157752a6538f4ae61f4cb29963a10e85bb5da224dd5b1c0fc443dd"
+  },
+  "sddValidation": {
+    "restoration": {
+      "canonicalSections": 20,
+      "characters": 26223,
+      "format": "PASS",
+      "consistency": "PASS"
+    },
+    "primaryCompanion": {
+      "characters": 69863,
+      "format": "PASS",
+      "consistency": "PASS",
+      "scope": "Original requirements and all planned cases retained; only checkpoint wording changed"
+    },
+    "catalog": "PASS: 11 capabilities; full M1 remains draft",
+    "validator": "Byte-verified unchanged upstream policies; no Copilot changes"
+  }
+}

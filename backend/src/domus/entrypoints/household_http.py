@@ -168,7 +168,8 @@ class AccessResponse(StrictModel):
 
 
 class ReceiptResponse(StrictModel):
-    state: Literal["committed"] = "committed"
+    state: Literal["committed", "historical"] = "committed"
+    archived_by: str | None = None
     operation_id: str
     result: dict[str, JsonValue]
     created_at: int
@@ -179,11 +180,28 @@ class ReceiptResponse(StrictModel):
 
 
 class OperationResponse(ReceiptResponse):
-    delivery: Literal["pending", "delivered"]
+    delivery: Literal["pending", "delivered", "suppressed"]
 
 
 def _receipt(receipt: Receipt) -> ReceiptResponse:
+    if receipt.historical:
+        return ReceiptResponse(
+            state="historical",
+            archived_by=receipt.archived_by,
+            operation_id=receipt.operation_id,
+            result=receipt.result.decode(),
+            created_at=receipt.created_at,
+            message=(
+                "This operation was processed before restoration. "
+                "Its effect is absent from current state."
+            ),
+            action_required=(
+                "Review current state before requesting new work. "
+                "Keep the original key and operation ID."
+            ),
+        )
     return ReceiptResponse(
+        archived_by=receipt.archived_by,
         operation_id=receipt.operation_id,
         result=receipt.result.decode(),
         created_at=receipt.created_at,
@@ -236,7 +254,13 @@ def create_household_router(
         result = context(request).queries().operation(operation_id)
         return OperationResponse(
             **_receipt(result.receipt).model_dump(),
-            delivery="delivered" if result.delivered else "pending",
+            delivery=(
+                "delivered"
+                if result.delivered
+                else "suppressed"
+                if result.receipt.historical
+                else "pending"
+            ),
         )
 
     @router.post("/household", response_model=ReceiptResponse, openapi_extra=write_contract)

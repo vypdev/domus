@@ -8,6 +8,7 @@ from domus.domain.errors import Conflict, DomusError, InvalidInput, StorageFailu
 from domus.domain.identity import AdministratorMapping, MappingMode
 from domus.domain.recovery import RecoveryRequest, RecoveryState, validate_recovery_time
 from domus.domain.storage import Installation, JsonDocument
+from domus.infrastructure.sqlite_history import SQLiteHistory
 
 _COLUMNS = (
     "request_id",
@@ -70,6 +71,9 @@ def _record(row: sqlite3.Row | None) -> RecoveryRequest | None:
 class SQLiteRecoveries:
     connection: sqlite3.Connection
 
+    def closed_before_restoration(self, household_id: str, request_id: str) -> bool:
+        return SQLiteHistory(self.connection).closed_recovery(household_id, request_id)
+
     def get(self, household_id: str, request_id: str) -> RecoveryRequest | None:
         return _record(
             self.connection.execute(
@@ -87,9 +91,11 @@ class SQLiteRecoveries:
         return tuple(
             cast(RecoveryRequest, _record(row))
             for row in self.connection.execute(
-                "SELECT * FROM recovery_requests WHERE household_id=? "
-                "AND state IN ('pending','approved') AND created_at<=? AND expires_at>? "
-                "ORDER BY request_id LIMIT ?",
+                "SELECT r.* FROM recovery_requests r WHERE r.household_id=? "
+                "AND r.state IN ('pending','approved') AND r.created_at<=? AND r.expires_at>? "
+                "AND NOT EXISTS (SELECT 1 FROM retained_operations h WHERE "
+                "h.household_id=r.household_id AND h.closed_recovery_id=r.request_id "
+                "AND h.current=0) ORDER BY r.request_id LIMIT ?",
                 (household_id, now, now, limit),
             )
         )
