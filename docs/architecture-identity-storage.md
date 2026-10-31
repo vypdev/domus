@@ -49,7 +49,8 @@ with activity; a future retention feature must preserve replay protection.
 `domus.infrastructure.owned_storage` owns POSIX directory/file validation, lifecycle locking and
 durable initialization/ready metadata. It generates a UUID only for an empty private directory and
 passes an existing-only mode to SQLite after readiness, preventing silent empty replacement. The
-native composition initializes storage once before starting HTTP and releases ownership at shutdown.
+native and standalone compositions initialize storage once before starting HTTP and release ownership
+at shutdown, including listener failures. Standalone credential shutdown cannot prevent lease release.
 Both explicit-file runtime factories reject an owned marker before SQLite initialization, even when
 the owned runtime is stopped. Console attachment applies the same boundary.
 All filesystem/locking primitives remain outside pure inner layers. See [data lifecycle](owned-data-directory.md).

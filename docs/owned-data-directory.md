@@ -1,10 +1,10 @@
 # Owned data directory
 
-Status: the private-directory lifecycle and native persistent CLI are implemented and tested on
+Status: the private-directory lifecycle and both persistent CLIs are implemented and tested on
 POSIX filesystems. The installed Edge 0.0.0-edge.1 remains the stateless connection preview. This
 checkpoint does not establish writable storage for the packaged UID on the owner's Supervisor.
 
-## Native development command
+## Runtime commands
 
 An operator first provisions one existing directory owned by the runtime user with mode 0700. Run:
 
@@ -13,6 +13,20 @@ domus-ingress --channel edge \
   --data-directory /owned/app-data/domus \
   --public-origin http://homeassistant.local:8123
 ```
+
+The independent runtime uses the same storage protocol without a manually supplied UUID:
+
+```sh
+domus-server --ha-url http://homeassistant.local:8123 \
+  --public-origin https://domus.example --channel edge \
+  --data-directory /owned/app-data/domus
+```
+
+For loopback development, use --public-origin http://127.0.0.1:8099 and --development-http. That
+option requires a loopback listener. The standalone server still authenticates each user through HA;
+persisting installation identity does not persist authorization tokens or sessions. Native Ingress
+continues using the existing HA session without another login. Both compositions share the same
+household use cases; these commands do not implicitly create a household or member.
 
 The real path is operator configuration, never a browser field. Keep Stable and Edge in separate
 private directories. This option generates the installation UUID only on the first valid empty
@@ -69,6 +83,10 @@ private permissions and refusal of missing/corrupt/foreign data. The architectur
 and other concrete I/O outside domain/application.
 The [explicit-file boundary evidence](evidence/m1-explicit-storage-boundary.json) additionally covers
 both runtime factories against active and closed owned directories without changing database bytes.
+The [standalone composition evidence](evidence/m1-standalone-owned-storage.json) covers automatic
+identity, original-operation replay, session loss on restart, channel separation, one initialization
+per startup and lease release after composition/listener/shutdown failures. Snapshot and recovery
+console attachment uses --data-directory for either mode.
 
 Supervisor supplies an app's own /data mount. The final package must provision its private child
 directory for the runtime UID, preserve it on upgrade and prove that behavior on both CPU families.

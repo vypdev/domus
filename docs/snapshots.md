@@ -7,7 +7,7 @@ connection preview is unchanged. No automatic backup frequency, rotation or rete
 
 ## Create a snapshot
 
-Run the console as the runtime UID that owns the data. For a ready native data directory:
+Run the console as the runtime UID that owns the data. For a ready managed data directory in either mode:
 
 ```sh
 domus-admin --channel edge --data-directory /data/domus \
@@ -75,7 +75,7 @@ domus-admin --channel edge --instance-id <persisted-installation-uuid> \
 
 Deadline checks run between copy/hash steps and through SQLite's query progress handler. Checksums
 detect changed bytes; the local operator and private directory remain the trust boundary. Keep the
-whole bundle private and intact. Native creation attaches through the shared maintenance guard;
+whole bundle private and intact. Managed-directory creation attaches through the shared maintenance guard;
 inspection needs no HA token or additional HA authorization. No HTTP backup endpoint is exposed.
 
 See [source-identified evidence](evidence/m1-snapshots.json), [owned data](owned-data-directory.md),

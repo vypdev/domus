@@ -21,7 +21,7 @@ All API responses disable caching and referrer forwarding. Errors use a stable c
 next action and server-created correlation; input/provider details are not reflected. Framework
 validation cannot echo an authorization code. Unknown paths and methods do not redirect. There is no
 HTTP recovery-approval route. The standalone [household/member/policy/operation routes](household-api.md)
-are enabled by --database. Both persistent compositions also expose own recovery request/status,
+are enabled by --data-directory or --database. Both persistent compositions also expose own recovery request/status,
 completion and cancellation, with approval available only through domus-admin in a real console.
 
 ## Retained state and recovery
@@ -66,7 +66,7 @@ original lease deadline apply independently of forwarding headers. This runtime 
 installed Edge app; private-directory provisioning and updated live acceptance remain pending.
 
 The [owned data lifecycle](owned-data-directory.md) now persists UUID/channel initialization state
-and holds a process lock for the native listener. A ready installation refuses missing/empty SQLite
+and holds a process lock for either listener. A ready installation refuses missing/empty SQLite
 instead of recreating it. Interrupted first initialization resumes only the stored UUID. Metadata,
 database and replay records must remain together; deleting identity metadata is not a recovery step.
 

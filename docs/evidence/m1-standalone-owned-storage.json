@@ -1,0 +1,64 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "48c06bf4c89fbb16fcd6807e5357208b6eb245f3",
+  "scope": "Standalone managed-directory runtime/CLI reuses private storage lifecycle without manually supplied installation UUID",
+  "backendTests": 913,
+  "backendCoverage": {
+    "covered_lines": 3351,
+    "num_statements": 3351,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 122,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 868,
+    "num_partial_branches": 0,
+    "covered_branches": 868,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "testFirst": "New factory and failure-cleanup tests first failed because create_owned_runtime/_compose did not exist; managed CLI tests failed because --data-directory was unavailable and the parser required a manually supplied UUID.",
+  "assertions": [
+    "Provider/public configuration is validated before persistent writes; invalid channel also leaves empty data untouched",
+    "One real managed directory preserves generated UUID/channel, household state and exact original command result through authenticated composed-runtime restarts",
+    "Server restart discards sessions; no token or lease is restored from SQLite",
+    "Owned storage initializes once per startup and reopens ready data in existing-only mode",
+    "Stable/Edge use separate generated identities, cookie namespaces and directories; cross-channel reuse is rejected without changing database bytes",
+    "A competing managed runtime is rejected while shared console attachment remains possible",
+    "Composition failures including KeyboardInterrupt release storage; credential shutdown failure cannot retain the lease",
+    "The real CLI holds its lease through the listener and releases it on normal return and listener failure",
+    "Managed data cannot be combined with explicit UUID/file identity; missing explicit identity never starts a listener or creates data"
+  ],
+  "architecture": {
+    "files": 89,
+    "dependencies": 401,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 56 backend source files"
+  },
+  "businessSchema": 3,
+  "metadataFormat": 1,
+  "limits": [
+    "Local real-file/provider-fixture composition only; not complete standalone Docker/browser/companion acceptance",
+    "The installed stateless Edge preview is unchanged; no owner HA requests or live business records were created",
+    "Restore activation/newer-history choice, private native package provisioning and product UI remain pending"
+  ],
+  "priorHeadCI": {
+    "head": "48c06bf4c89fbb16fcd6807e5357208b6eb245f3",
+    "url": "https://github.com/vypdev/domus/actions/runs/41203516820",
+    "result": "PASS: all six required project groups; not acceptance of later code"
+  },
+  "sourceSha256": {
+    "backend/src/domus/composition/server.py": "676e4f0cd295229c587bf35de2f1ef6023e101913b3407476f4c495817855cb4",
+    "tests/backend/test_household_runtime.py": "ba21e9bd708991954c7ab246970a8b8ecd2c3d38de25453abd0ed8c3925b9d69"
+  },
+  "tooling": {
+    "tests": 66,
+    "statements": 73,
+    "branches": 34,
+    "coveragePercent": 100,
+    "protectedCopilotResourcesUnchanged": 29
+  }
+}

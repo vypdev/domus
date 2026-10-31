@@ -5,7 +5,7 @@ and requires no second login. The [native persistent development runtime](native
 has a separate explicit database/UUID/fixed-origin contract; it is not in the installed preview.
 The options below apply to the independent standalone runtime.
 
-The native CLI also supports [--data-directory](owned-data-directory.md) for an existing private
+Both CLIs support [--data-directory](owned-data-directory.md) for an existing private
 0700 directory owned by its runtime UID. It generates/preserves installation identity, checks files
 and holds the process lock until shutdown. Use it with --public-origin; do not also supply
 --database or --instance-id. The installed stateless Edge preview does not enable it yet.
@@ -13,7 +13,7 @@ Both explicit-file runtime modes reject a parent installation.json marker before
 Use the owned-directory entrypoint for managed data; an explicit file cannot bypass its locks.
 
 [domus-admin recovery approve](administrator-recovery.md) uses --data-directory and --channel to
-attach to ready native data, or --database plus --instance-id and --channel for an explicit standalone
+attach to ready managed data in either mode, or --database plus --instance-id and --channel for an explicit standalone
 file. It does not create/migrate storage and needs no HA token. New approval requires real terminal
 input/output and the exact displayed request/target confirmation. HTTP cannot supply console authority.
 
@@ -22,8 +22,8 @@ same source selection as approval and requires a new private destination. Inspec
 only --instance-id and --channel, without an active --database/--data-directory. Its --timeout defaults
 to 30 seconds and accepts finite positive values up to 3600. It does not add a schedule or retention.
 
-Status: these options run the standalone API. `--database` additionally wires the persistent
-[household API](household-api.md); omitting it keeps the authentication preview. This is not a deployment
+Status: these options run the standalone API. `--data-directory` or `--database` additionally wires the
+persistent [household API](household-api.md); omitting both keeps the authentication preview. This is not a deployment
 package or complete M1 acceptance. Both installation modes and Stable/Edge
 remain first-release requirements. Production channels/artifacts have not been published.
 
@@ -31,12 +31,13 @@ remain first-release requirements. Production channels/artifacts have not been p
 |---|---|---|
 | --ha-url | Required | One fixed HTTP(S) origin; no userinfo, query, fragment, arbitrary path or request override |
 | --public-origin | Required | Exact Domus website/client/callback origin; HTTPS except explicitly enabled loopback development |
-| --instance-id | Required | Canonical nonzero UUID supplied by the installation; never silently regenerate/adopt |
+| --instance-id | Required without --data-directory; forbidden with it | Canonical nonzero UUID supplied by the installation for preview/explicit files; managed data generates it only on a valid empty start |
 | --channel | Required | stable or edge; keep installation IDs, data, credentials and endpoint bindings separate |
 | --development-http | Disabled | Permits a loopback public HTTP origin; development listener must bind loopback |
 | --host | 127.0.0.1 | Listener binding; development accepts only 127.0.0.1 or ::1 |
 | --port | 8099 | Integer 1–65535; no fallback to a different port or origin |
 | --database | Omitted: authentication preview | Owned SQLite file with an existing parent directory; validates the configured UUID/channel and keeps state across restart |
+| --data-directory | Omitted; mutually exclusive with --database | Existing runtime-owned 0700 directory; automatically preserves UUID/channel and holds runtime/maintenance guards until shutdown |
 
 Example using the nonsecret UUID fixture from the tests; use the installation's own persistent UUID
 for an actual installation:
@@ -50,7 +51,7 @@ uv run --frozen domus-server \
   --development-http
 ```
 
-The example omits --database and opens no business database. With --database, schema initialization
+The example omits both storage selections and opens no business database. With either selection, schema initialization
 still creates no household or member: explicit authorized API commands do that. Identity
 proof and session cookies are scoped to the configured installation/channel; that is not package or
 Stable/Edge coexistence acceptance. Production HTTPS termination and private deployment wiring

@@ -204,3 +204,10 @@ SQLite backup/inspection adapter. Tests use real files, concurrent WAL changes, 
 corrupt records/manifests, incomplete publication, deadlines and both console source selections.
 [Evidence](evidence/m1-snapshots.json) records the exact coverage and boundaries. Restore activation
 and its treatment of newer replay history remain pending; the installed HA app is unchanged.
+
+The standalone CLI now shares --data-directory and its durable UUID/channel lifecycle with the
+native runtime. It validates provider/public origins before storage, initializes exactly once,
+retains the lock through the listener and releases it even if credential cleanup fails. Tests verify
+real household/original-operation restart, lost sessions, channel/cookie separation and console
+attachment. [Evidence](evidence/m1-standalone-owned-storage.json) records this local composition
+checkpoint; complete standalone deployment and owner browser acceptance remain pending.
