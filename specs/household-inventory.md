@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: household-inventory
-- Last verified: 2026-10-29 (document structure only; no implementation evidence)
+- Last verified: 2026-10-31 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
@@ -24,7 +24,7 @@ This is a prospective Draft, not an implemented or accepted capability. The firs
 
 A large pantry contains long-life supplies in different packages and storage places. Editing a quantity directly loses receipt, consumption and adjustment history.
 
-Current verified sequence: (1) the repository has a minimal README and installed Copilot automation; (2) no Domus application, public service or tests exist; (3) this contract proposes the behavior to build.
+At the original documentation baseline on 2026-10-28, these domain workflows had no implementation. The merged M1 identity/storage foundation now has separate backend evidence. The task approval and material-authority additions in this review remain prospective; this documentation change adds no runtime behavior.
 
 Evidence: the owner's attached brief and subsequent decisions in [product vision](../docs/product-vision.md), the pinned [reference investigation](../docs/reference-investigation.md), and the existing repository baseline. Retrospective classification is not applicable: no as-built product baseline is reconstructed.
 
@@ -47,7 +47,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 | household-inventory-R5 | Receipt integration MUST post only received quantities once and preserve partial-receipt and retry history. |
 | household-inventory-R6 | Locations, optional lots and expiry information MUST remain queryable without inferring that expired stock disappeared. |
 | household-inventory-R7 | Barcode entry MUST support camera scanning, manual fallback, local validation/catalog search and optional configured Internet product lookup, with explicit camera permission, safe candidate validation and usable local operation when lookup is absent or fails. |
-| household-inventory-R8 | Inventory permissions, inactive products, backup/restore and pagination MUST preserve ledger integrity and household privacy. |
+| household-inventory-R8 | Inventory permissions, inactive products, backup/restore and pagination MUST preserve ledger integrity and household privacy. Validated task-linked consumption MUST accept the configured narrow task authority by default without general inventory permission, while unrelated movements still require their own grants. |
 
 Non-goals: changing Copilot, changing the existing gateway, building an MCP server, adding mandatory cloud/AI dependencies, or claiming production readiness from a document.
 
@@ -75,15 +75,23 @@ Text equivalent: authenticated entry -> authorization and validation -> durable 
 
 Product owns identity, brand, category, barcode references, description, optional image, active flag and base unit. PackagePresentation owns pack count and conversion to that base unit; six 1-litre cartons may be six pieces or six litres according to a fixed product unit, never both without explicit conversion. Location, optional Lot(expiry, received_at), StockMovement, Reservation and ReplenishmentPolicy are separate records. Quantity uses exact decimal arithmetic. Transfer has balanced source/destination legs in one transaction. Availability equals physical stock minus active reservations. Consumption is explicit; estimates and predictions are future suggestions, not silent stock decrements.
 
-Task completion may submit explicitly reviewed actual material quantities in the same user action, as confirmed by the owner. Inventory processes those linked intents through the same consumption rules as a standalone movement; planned requirements are not proof of usage. Each intent has a stable completion-cycle/line identity and operation outcome. Consuming a task's own reserved material converts that reservation to consumed while decrementing physical stock in the same transaction, so availability is not charged twice. Other tasks' reservations cannot be stolen silently. A task reopen or verification rejection never adds a physical return: a real return/correction is a distinct authorized movement with an explicit reason.
+Task completion may submit explicitly reviewed actual material quantities in the same user action, as confirmed by the owner. Inventory processes those linked intents through the same stock/movement rules as a standalone movement, with validated task-scoped or applicable inventory authority; planned requirements are not proof of usage. Each intent has a stable completion-cycle/line identity and operation outcome. Consuming a task's own reserved material converts that reservation to consumed while decrementing physical stock in the same transaction, so availability is not charged twice. Other tasks' reservations cannot be stolen silently. A task reopen or verification rejection never adds a physical return: a real return/correction is a distinct authorized movement with an explicit reason.
 
 If a submitted material line lacks sufficient usable stock, save a pending_regularization consumption intent while the performed task completes, as confirmed by the owner. The intent is not a StockMovement and does not lower physical or available stock below zero. Keep its requested quantity, location, completion-cycle/line identity, actor and shortage reason visible. The affected quantity is labeled as recorded stock with a discrepancy requiring review, not silently presented as a verified physical count. No partial decrement within that line is silently substituted for the confirmed quantity. Authorized regularization reviews missing receipts, actual counts or erroneous usage, then posts a validated movement or records an explained correction/dismissal of the intent. A restock event alone does not settle it. Settlement, movement and operation receipt commit together; retries cannot post the line twice. A pending intent is not another reservation or purchasing demand, so it cannot double-count an existing material/replenishment source. Explicit zero usage is not_used and creates no stock movement.
 
 The owner confirmed camera scan and manual entry with optional Internet product lookup on 2026-10-29, closing the missing barcode-scope decision from the truncated attachment. Local catalog lookup runs first. An administrator may configure an external provider; unknown-code lookup is on demand by default. Only the barcode and required provider authentication leave the server boundary, never camera frames, household identity or stock history. Provider responses are untrusted candidates with source/provenance; users review a candidate before importing or matching a product/presentation. No provider is selected or advertised as available yet; feasibility, terms, rate limits and household-product coverage remain adapter review gates.
 
+The owner confirmed on 2026-10-31 that a restricted member authorized to complete a task may explicitly record consumption of that task's linked materials by default, without general inventory permission. The household supplies this task-scoped default and an administrator-authorized per-task override may change it. Explicit applicable member denials, installation limits and current task authorization still take precedence; absence of a general stock grant is distinct from an explicit denial of the scoped material action. Resolve eligible material identities, products, units and locations from the server-owned task/completion snapshot; a client-provided task ID or material line is not a general stock grant. Keep the previously accepted adjustable actual quantities, including zero usage. This authority cannot add unrelated products, change storage targets, edit stock arbitrarily, configure its own permission or reach another household. Inventory remains responsible for validating and posting every movement, usable stock and reservations.
+
+If task-scoped consumption is disabled and the actor lacks the applicable inventory authority, retain otherwise valid performed work and the validated linked usage as visibly unposted pending authorization. Do not claim that stock was consumed, discard the reported work or silently request broader access. This normal policy outcome is distinct from forged identity, unrelated/foreign material references or invalid quantities, which still fail admission before new side effects. A later grant or adult approval does not automatically execute a retained material intent: an authorized explicit settlement reuses its completion-cycle/line identity and rechecks current authority and stock. Stock shortage remains pending_regularization, with no negative stock; it is not the same reason as missing authority. Engineering state labels and schema bounds remain subject to implementation review.
+
+Verification controls point eligibility independently of physical usage. An eligible material movement may post while work awaits adult approval; rejection or reopening never fabricates a physical return. Replaying the original completion, approving it or changing either policy cannot consume again. Retained receipts/history explain the original effective policy but never authorize a newly revoked movement.
+
+The distinct new cross-domain scenarios are owned by the [Tasks acceptance inventory](household-tasks.md); this document does not count copies of them as new cases.
+
 ### 6.2 States and alternatives
 
-Product active -> inactive without deleting history. Reservation active -> consumed/released. Consumption intent -> posted or pending_regularization -> posted/corrected/dismissed with retained reason. Receipt -> posted movement; correction -> compensating movement. Low-stock demand open -> updated -> satisfied, retaining a stable policy/source identity. Optional lot expiration warns but does not silently remove stock.
+Product active -> inactive without deleting history. Reservation active -> consumed/released. Consumption intent -> pending_authorization, posted or pending_regularization -> posted/corrected/dismissed with retained reason. A pending_authorization intent stays unposted until explicit authorized settlement rechecks authority and stock; that settlement may post it or retain a stock shortfall as pending_regularization. These are proposed engineering state labels for the owner-confirmed retained-work outcome. Receipt -> posted movement; correction -> compensating movement. Low-stock demand open -> updated -> satisfied, retaining a stable policy/source identity. Optional lot expiration warns but does not silently remove stock.
 
 A duplicate uses its original operation receipt. A changed payload under the same key is a conflict. Out-of-order events use aggregate revision and source identity. Cancellation never erases an already committed ledger effect; compensation is explicit.
 
@@ -147,6 +155,7 @@ English and Spanish use stable translation keys, base-language matching and Engl
 | Failure | Retained facts | Retry / action | Cleanup |
 |---|---|---|---|
 | Invalid or denied input | Existing business records and form draft | Correct fields or request the proper role | No side effects |
+| Valid work with missing material authority | Performed work and validated linked usage remain; no stock movement | Explicit settlement by a currently authorized actor | Never treat a later grant or task approval as automatic consumption |
 | Stale revision | Current committed aggregate; user's entered fields | Review current state and submit a new deliberate operation | No automatic overwrite |
 | Lost response after commit | Domain result and receipt | Look up or replay the same key | Never issue a fresh-key duplicate |
 | Downstream projection unavailable | Successful domain result and durable pending event | Bounded backoff, then visible retry | Acknowledge outbox only after safe consumption |
@@ -164,7 +173,7 @@ Show operation state and projection freshness to members; expose sanitized corre
 
 ## 13. Compatibility, migration, rollout, and rollback
 
-No existing Domus application data requires migration yet. The first schema is versioned from its first implementation. Upgrade fixtures cover pending operations and ledger compatibility; a backup precedes destructive migration. Unknown future schemas block writes. Downgrade requires a compatible image/database pair, never silent interpretation of newer data.
+The existing M1 database is versioned and its identity, household, history and operation records must be preserved. Implementing these prospective task policies requires reviewed compatible migrations; this documentation-only change introduces no new stored domain records. Upgrade fixtures cover pending operations and ledger compatibility; a backup precedes destructive migration. Unknown future schemas block writes. Downgrade requires a compatible image/database pair, never silent interpretation of newer data.
 
 Both Supervisor and standalone are first-release acceptance targets. Stable and Edge use separate credentials, IDs, volumes and endpoint bindings. Experimental artifacts cannot automatically promote production. Publication, merge and deployment remain in the existing authorized maintainer lifecycle.
 
@@ -181,7 +190,7 @@ Minimum: 35 distinct cases, derived from the explicit risk inventory below. Each
 | Integration and recovery | 8 | task-reserved stock; a manual extra demand; four of six purchased units received |
 | UI and accessibility | 2 | an approaching expiry; denied camera permission |
 | Deployment and contracts | 1 | an inactive product or paginated stock query |
-| **Total** | **35** | No double counting |
+| Total | 35 | Distinct inventory cases; repeated executions do not add cases. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -227,27 +236,32 @@ Inject deterministic clocks, IDs, provider fakes and transaction failures. Use s
 
 ## 15. Documentation and discoverability
 
-The following paths are explicit proposed documentation changes relative to the clean repository baseline; implementation source/test paths are intentionally not invented.
+The following documentation operations are relative to develop at e8fa5bbc9ffa179aa7559831f5f3d067c9c9c65c. This policy refinement adds no runtime or test implementation evidence.
 
 | Path | Change |
 |---|---|
-| specs/household-inventory.md | create |
-| specs/README.md | create |
-| specs/_template.md | create |
-| specs/catalog.json | create |
-| specs/CATALOG.md | create |
-| docs/architecture.md | create |
-| docs/product-vision.md | create |
-| docs/glossary.md | create |
-| docs/decisions.md | create |
-| docs/reference-investigation.md | create |
-| docs/copilot-adoption.md | create |
-| docs/operations.md | create |
-| docs/user-guide.md | create |
-| docs/contracts/home-assistant.md | create |
-| docs/acceptance-plan.md | create |
-| docs/roadmap.md | create |
+| specs/household-inventory.md | update |
+| specs/README.md | reference |
+| specs/_template.md | reference |
+| specs/catalog.json | update |
+| specs/CATALOG.md | update |
+| docs/architecture.md | reference |
+| docs/product-vision.md | reference |
+| docs/glossary.md | reference |
+| docs/decisions.md | update |
+| docs/reference-investigation.md | reference |
+| docs/copilot-adoption.md | reference |
+| docs/operations.md | reference |
+| docs/user-guide.md | update |
+| docs/contracts/home-assistant.md | reference |
+| docs/acceptance-plan.md | update |
+| docs/roadmap.md | reference |
 | README.md | update |
+| specs/household-tasks.md | update |
+| specs/household-identity.md | update |
+| specs/points-rewards.md | update |
+| docs/sdd-validation.md | update |
+| docs/evidence/task-policy-sdd-review.json | create |
 
 | Audience | Artifact | Required content |
 |---|---|---|

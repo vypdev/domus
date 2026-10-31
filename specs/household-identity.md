@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-28
 - Catalog capability ID: household-identity
-- Last verified: 2026-10-29 (document structure only; no implementation evidence)
+- Last verified: 2026-10-31 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/2
@@ -24,7 +24,7 @@ This is a prospective Draft, not an implemented or accepted capability. The firs
 
 HA users and person entities have different meanings. The owner confirmed individual HA accounts for every participant; a shared adult identity or independent Domus PIN would contradict that requirement.
 
-Current verified sequence: (1) the repository has a minimal README and installed Copilot automation; (2) no Domus application, public service or tests exist; (3) this contract proposes the behavior to build.
+At the original documentation baseline on 2026-10-28, these domain workflows had no implementation. The merged M1 identity/storage foundation now has separate backend evidence. The task approval and material-authority additions in this review remain prospective; this documentation change adds no runtime behavior.
 
 Evidence: the owner's attached brief and subsequent decisions in [product vision](../docs/product-vision.md), the pinned [reference investigation](../docs/reference-investigation.md), and the existing repository baseline. Retrospective classification is not applicable: no as-built product baseline is reconstructed.
 
@@ -41,7 +41,7 @@ Goals and fixed invariants are the following normative requirements. No configur
 | Requirement | Behavior |
 |---|---|
 | household-identity-R1 | Every participating member MUST map to a distinct verified HA user; person entities MUST NOT authenticate users. |
-| household-identity-R2 | Permissions MUST be enforced in the backend for every read and mutation using predefined administrator, adult, restricted and viewer profiles, administrator-configurable household grants and explicit per-member exceptions, with deterministic precedence and current-policy checks. |
+| household-identity-R2 | Permissions MUST be enforced in the backend for every read and mutation using predefined administrator, adult, restricted and viewer profiles, administrator-configurable household grants and explicit per-member exceptions, with deterministic precedence and current-policy checks. Task-specific material authority MUST remain bounded to validated linked usage and MUST NOT grant general stock access; an adult participation option MUST NOT make a restricted member an adult verifier. |
 | household-identity-R3 | Suspension, role changes and unlinking MUST revoke effective access without erasing historical actor references. |
 | household-identity-R4 | Identity flows MUST work in both deployment targets without trusting arbitrary client headers or exposing HA tokens to diagnostics. |
 | household-identity-R5 | Administrators MUST retain control of configuring point values, verification, automation settings and privileged corrections; Domus authorization commands MUST preserve at least one active effective administrator. |
@@ -81,6 +81,8 @@ AdministratorMappingPolicy is configured explicitly during setup and may later b
 Initial configuration requires an explicit setup action by a proven HA administrator. Merely loading the page does not create a household or grant privilege. The default mode may link/activate a proven HA administrator according to the selected mapping policy after setup; ordinary unlinked users still need authorized membership activation. An inherited administrator grant retains its HA source and is removed when that source is no longer valid or the mapping changes; any independent explicit grant is evaluated separately. A profile/member edit cannot silently demote a currently inherited administrator role: change the authorized mapping or its HA source. Mapping never bypasses suspension, known revocation or technical-principal boundaries. A transport credential, person entity or submitted is_admin flag is not proof of a human HA administrator.
 
 The owner confirmed on 2026-10-29 that adult performers need no completion verification by default and restricted performers require approval by an authorized adult. Administrator control of verification configuration is separate from permission to approve a restricted member's completion. The effective policy follows actual performers; an adult submitting the record does not silently turn restricted work into adult work. Explicit overrides remain administrator-controlled and audited.
+
+The owner-confirmed participation and material defaults are defined in [Tasks](household-tasks.md), including household policy, administrator-authorized task precedence and completion snapshots. An authorized adult performer may approve by default; a restricted member remains ineligible to approve. Current membership/permission checks still apply. The narrow material authority is only for reviewed usage of server-validated materials linked to a task the actor may complete; it never enables general inventory operations. Disabling that authority retains valid work and visibly unposted usage. The task acceptance inventory owns the distinct new policy scenarios; they are not counted again here. These task-domain permissions are prospective additions, not a claim that the identity foundation already exposes them.
 
 ### 6.2 States and alternatives
 
@@ -170,7 +172,7 @@ Show operation state and projection freshness to members; expose sanitized corre
 
 ## 13. Compatibility, migration, rollout, and rollback
 
-No existing Domus application data requires migration yet. The first schema is versioned from its first implementation. Upgrade fixtures cover pending operations and ledger compatibility; a backup precedes destructive migration. Unknown future schemas block writes. Downgrade requires a compatible image/database pair, never silent interpretation of newer data.
+The existing M1 database is versioned and its identity, household, history and operation records must be preserved. Implementing these prospective task policies requires reviewed compatible migrations; this documentation-only change introduces no new stored domain records. Upgrade fixtures cover pending operations and ledger compatibility; a backup precedes destructive migration. Unknown future schemas block writes. Downgrade requires a compatible image/database pair, never silent interpretation of newer data.
 
 Both Supervisor and standalone are first-release acceptance targets. Stable and Edge use separate credentials, IDs, volumes and endpoint bindings. Experimental artifacts cannot automatically promote production. Publication, merge and deployment remain in the existing authorized maintainer lifecycle.
 
@@ -187,7 +189,7 @@ Minimum: 30 distinct cases, derived from the explicit risk inventory below. Each
 | Deployment and contracts | 3 | a forged identity header on standalone HTTP; a verified HA session through Ingress |
 | UI and accessibility | 2 | Spanish member preferences; notification opt-out |
 | Integration and recovery | 2 | differing task durations and equal points |
-| **Total** | **30** | No double counting |
+| Total | 30 | Distinct inventory cases; repeated executions do not add cases. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -228,27 +230,32 @@ Inject deterministic clocks, IDs, provider fakes and transaction failures. Use s
 
 ## 15. Documentation and discoverability
 
-The following paths are explicit proposed documentation changes relative to the clean repository baseline; implementation source/test paths are intentionally not invented.
+The following documentation operations are relative to develop at e8fa5bbc9ffa179aa7559831f5f3d067c9c9c65c. This policy refinement adds no runtime or test implementation evidence.
 
 | Path | Change |
 |---|---|
-| specs/household-identity.md | create |
-| specs/README.md | create |
-| specs/_template.md | create |
-| specs/catalog.json | create |
-| specs/CATALOG.md | create |
-| docs/architecture.md | create |
-| docs/product-vision.md | create |
-| docs/glossary.md | create |
-| docs/decisions.md | create |
-| docs/reference-investigation.md | create |
-| docs/copilot-adoption.md | create |
-| docs/operations.md | create |
-| docs/user-guide.md | create |
-| docs/contracts/home-assistant.md | create |
-| docs/acceptance-plan.md | create |
-| docs/roadmap.md | create |
+| specs/household-identity.md | update |
+| specs/README.md | reference |
+| specs/_template.md | reference |
+| specs/catalog.json | update |
+| specs/CATALOG.md | update |
+| docs/architecture.md | reference |
+| docs/product-vision.md | reference |
+| docs/glossary.md | reference |
+| docs/decisions.md | update |
+| docs/reference-investigation.md | reference |
+| docs/copilot-adoption.md | reference |
+| docs/operations.md | reference |
+| docs/user-guide.md | update |
+| docs/contracts/home-assistant.md | reference |
+| docs/acceptance-plan.md | update |
+| docs/roadmap.md | reference |
 | README.md | update |
+| specs/household-tasks.md | update |
+| specs/household-inventory.md | update |
+| specs/points-rewards.md | update |
+| docs/sdd-validation.md | update |
+| docs/evidence/task-policy-sdd-review.json | create |
 
 | Audience | Artifact | Required content |
 |---|---|---|

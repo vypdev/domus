@@ -403,7 +403,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending; 79 normative cases traced in acceptance audit; source membership explanations tested in both compositions",
-        "blockingDecisions": "Complete deployment/live household/recovery/restore, product UI, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice. Complete current-head Bugbot review remains required.",
+        "blockingDecisions": "Complete deployment/live household/recovery/restore, product UI, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice. Complete current-head Bugbot review remains required. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
         "copilotChangesAllowed": false
       }
     },
@@ -413,7 +413,7 @@
       "status": "proposed",
       "scope": "Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-10-31",
       "specs": [
         "specs/household-tasks.md"
       ],
@@ -431,7 +431,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed role/override review; first-release advanced task-type matrix. The owner confirmed role-default verification, material-completion handling and preservation of completed downstream work/points when its prerequisite is reopened on 2026-10-29.",
+        "blockingDecisions": "Executable current-authority/override contracts; first-release advanced task-type matrix. The owner confirmed role-default verification, material-completion handling and preservation of completed downstream work/points when its prerequisite is reopened on 2026-10-29. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
         "copilotChangesAllowed": false
       }
     },
@@ -469,7 +469,7 @@
       "status": "proposed",
       "scope": "Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-10-31",
       "specs": [
         "specs/points-rewards.md"
       ],
@@ -487,7 +487,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed remainder/override review; child-facing review. The owner confirmed configurable allocation, role-default verification, actual-work reporting, factual negative balances and a funding hold on approved/unfulfilled redemptions without sufficient backing after reversal.",
+        "blockingDecisions": "Detailed remainder/override review; child-facing review. The owner confirmed configurable allocation, role-default verification, actual-work reporting, factual negative balances and a funding hold on approved/unfulfilled redemptions without sufficient backing after reversal. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
         "copilotChangesAllowed": false
       }
     },
@@ -525,7 +525,7 @@
       "status": "proposed",
       "scope": "The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-10-31",
       "specs": [
         "specs/household-inventory.md"
       ],
@@ -543,7 +543,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner confirmed barcode scope, adjustable material recording and pending regularization rather than negative stock for task material shortfalls on 2026-10-29.",
+        "blockingDecisions": "Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner confirmed barcode scope, adjustable material recording and pending regularization rather than negative stock for task material shortfalls on 2026-10-29. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
         "copilotChangesAllowed": false
       }
     },

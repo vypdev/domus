@@ -12,11 +12,11 @@ debt or convert unknown historic intent into a design decision.
 |---|---|---|---|---|
 | `platform-foundation` | Proposed | One local modular application serves the complete household product in both a Supervisor-managed App and standalone Docker from the first release. Home Assistant owns user authentication; Domus owns its business records. | [Local application platform and persistence](./platform-foundation.md) + 2 companion | 187 paths · 2026-10-31 |
 | `household-identity` | Proposed | Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity. | [Household members&#44; Home Assistant identity and permissions](./household-identity.md) | 164 paths · 2026-10-31 |
-| `household-tasks` | Proposed | Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence. | [Task definitions&#44; occurrences and household execution](./household-tasks.md) | 5 paths · 2026-10-29 |
+| `household-tasks` | Proposed | Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence. | [Task definitions&#44; occurrences and household execution](./household-tasks.md) | 5 paths · 2026-10-31 |
 | `recurrence-calendar` | Proposed | A bounded scheduler turns task definitions into stable occurrences and a family calendar distinguishes planned start, deadline and actual completion. | [Recurrence engine and family calendar](./recurrence-calendar.md) | 5 paths · 2026-10-29 |
-| `points-rewards` | Proposed | Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation. | [Auditable points&#44; participation and optional rewards](./points-rewards.md) | 5 paths · 2026-10-29 |
+| `points-rewards` | Proposed | Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation. | [Auditable points&#44; participation and optional rewards](./points-rewards.md) | 5 paths · 2026-10-31 |
 | `shopping-management` | Proposed | Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts. | [Shared shopping demand&#44; purchases and receipt](./shopping-management.md) | 5 paths · 2026-10-29 |
-| `household-inventory` | Proposed | The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger. | [Product catalog&#44; pantry stock and replenishment](./household-inventory.md) | 5 paths · 2026-10-29 |
+| `household-inventory` | Proposed | The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger. | [Product catalog&#44; pantry stock and replenishment](./household-inventory.md) | 5 paths · 2026-10-31 |
 | `home-assistant-surface` | Proposed | Domus exposes its household capabilities as native Home Assistant entities, services and events. The already integrated HA MCP consumes these surfaces; no gateway work or second MCP is included. | [Home Assistant entities&#44; services and integration](./home-assistant-surface.md) | 5 paths · 2026-10-29 |
 | `application-experience` | Proposed | A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI. | [Responsive application&#44; household dashboard and navigation](./application-experience.md) | 5 paths · 2026-10-29 |
 | `delivery-quality` | Proposed | Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels. | [Clean Architecture&#44; CI Check and isolated Stable and Edge channels](./delivery-quality.md) | 27 paths · 2026-10-31 |
@@ -49,7 +49,7 @@ debt or convert unknown historic intent into a design decision.
 ### `household-tasks` — Task definitions&#44; occurrences and household execution
 
 - Owner: Domus maintainers (review assignment pending)
-- Last verified: 2026-10-29
+- Last verified: 2026-10-31
 - Specifications: [`specs/household-tasks.md`](./household-tasks.md)
 - Workflows: Not applicable for this capability.
 - Entrypoints: Not yet implemented (proposed capability).
@@ -71,7 +71,7 @@ debt or convert unknown historic intent into a design decision.
 ### `points-rewards` — Auditable points&#44; participation and optional rewards
 
 - Owner: Domus maintainers (review assignment pending)
-- Last verified: 2026-10-29
+- Last verified: 2026-10-31
 - Specifications: [`specs/points-rewards.md`](./points-rewards.md)
 - Workflows: Not applicable for this capability.
 - Entrypoints: Not yet implemented (proposed capability).
@@ -93,7 +93,7 @@ debt or convert unknown historic intent into a design decision.
 ### `household-inventory` — Product catalog&#44; pantry stock and replenishment
 
 - Owner: Domus maintainers (review assignment pending)
-- Last verified: 2026-10-29
+- Last verified: 2026-10-31
 - Specifications: [`specs/household-inventory.md`](./household-inventory.md)
 - Workflows: Not applicable for this capability.
 - Entrypoints: Not yet implemented (proposed capability).

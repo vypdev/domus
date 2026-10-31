@@ -1,6 +1,7 @@
 # Intended household journey
 
-Domus is not implemented yet. This guide describes the first integrated release.
+These complete household workflows are still under development. This guide describes the intended
+first integrated release. The [current HA preview](installation-home-assistant.md) describes what is available today.
 
 Open Domus, sign in with your own Home Assistant account and use Dashboard, Tasks, Calendar, Shopping,
 Inventory, Family or Settings. English and Spanish are supported. Your role controls permitted actions,
@@ -15,6 +16,16 @@ schedule, recurrence and verification. Claim available work or inspect assignmen
 When completing, name the actual performers. A task awaiting verification does not award points yet.
 For tasks with materials, review the planned amounts, adjust them to actual usage and submit them with completion. An unused material can explicitly have zero usage. The task can instead be configured for separate recording. Insufficient stock keeps the work completed and the affected consumption pending regularization; the result shows which material lines posted and which need review without inventing negative stock. Reopening or rejecting verification does not automatically return consumed supplies.
 Adults need no verification by default; restricted performers require authorized-adult approval unless an administrator has explicitly configured a permitted task override. Recording someone else's work does not change that performer's role.
+An adult with approval permission may approve work in which they participated by default. Household
+configuration or an administrator-authorized task setting may require an adult who did not perform
+that work instead. Restricted members cannot approve their own work.
+
+Restricted members may confirm actual usage of the materials linked to a task they are authorized
+to complete, without general inventory access. Household/task policy and explicit member denials
+still apply. If the required material authority is absent, valid performed work stays recorded and
+the result identifies material usage awaiting authorized follow-up. A later permission grant or
+task approval does not silently consume that material.
+
 Completing a recurring occurrence leaves its definition intact. Reopening retains history and reverses
 awards with visible ledger entries.
 If a prerequisite is reopened after dependent work was completed, that dependent keeps its completion and points. Domus marks the changed dependency for review and links the prerequisite; it does not reopen a chain of work automatically.

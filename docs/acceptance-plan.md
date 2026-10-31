@@ -1,6 +1,6 @@
 # Verification and acceptance plan
 
-The SDD inventory contains 353 distinct planned cases across eleven capabilities.
+The catalog-listed SDDs contain 443 distinct inventory case IDs across eleven capabilities: the original 353-case foundation, 79 platform companion cases and eleven new task-policy cases. The proposed household-interface companion in issue #8 is not yet published and its 48 cases are excluded from this total.
 The counts are derived from concrete observable scenarios and are minimums. The merged identity/storage
 foundation has separate backend evidence in the [M1 audit](m1-acceptance-audit.md); the full product case
 inventory is not complete.
@@ -62,3 +62,7 @@ record strict type checking, complete four-metric fixture coverage, real coverag
 Vite/Storybook builds and four keyboard/layout browser journeys. CI Check requires this job in
 addition to every existing suite. The fixture is test data outside product runtime; its test count
 and coverage never satisfy the household UI's 48 cases, owner HA acceptance or channel packaging.
+
+## Task policy refinement
+
+The eleven additional task cases preserve every existing ID and exercise owner-confirmed adult participation approval and narrow material authority, including explicit member denial. Other affected SDDs reference those scenarios instead of counting duplicate copies. The total is a prospective inventory count, not 443 executed or accepted product journeys. Required current authorization, completion-cycle isolation, point verification and stock integrity remain separate assertions.

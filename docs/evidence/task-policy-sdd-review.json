@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-31",
+  "baseCommit": "e8fa5bbc9ffa179aa7559831f5f3d067c9c9c65c",
+  "issue": 11,
+  "kind": "Prospective task-policy documentation review; no runtime changes or new executed product tests",
+  "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+  "policyByteIdentity": "verified",
+  "formatAndConsistency": [
+    {
+      "file": "specs/household-tasks.md",
+      "originalCases": 38,
+      "currentCases": 49,
+      "originalCaseRowsRetained": true,
+      "format": "PASS",
+      "consistency": "PASS",
+      "sha256": "d2c0b1b313979988ff4ac7ecbda1fbd56f5d554e3cea02f51760df3db6550ae4"
+    },
+    {
+      "file": "specs/household-identity.md",
+      "originalCases": 30,
+      "currentCases": 30,
+      "originalCaseRowsRetained": true,
+      "format": "PASS",
+      "consistency": "PASS",
+      "sha256": "31b509eb5aa73d26f932c9251e202c6915c4c67f760dc953be478c75c7c25caa"
+    },
+    {
+      "file": "specs/household-inventory.md",
+      "originalCases": 35,
+      "currentCases": 35,
+      "originalCaseRowsRetained": true,
+      "format": "PASS",
+      "consistency": "PASS",
+      "sha256": "3d7b0de83ee2e000f930e57a56dbb5a26139fc47305d515d26e66632bf0bef1a"
+    },
+    {
+      "file": "specs/points-rewards.md",
+      "originalCases": 44,
+      "currentCases": 44,
+      "originalCaseRowsRetained": true,
+      "format": "PASS",
+      "consistency": "PASS",
+      "sha256": "34e27ff720f310753a58edbc8b1e139f48a1e37e1516337610ecb8a3bc2a83c7"
+    }
+  ],
+  "catalogInventory": {
+    "capabilities": 11,
+    "documents": 13,
+    "requirements": 95,
+    "distinctCaseIDs": 443,
+    "historicalFoundationCases": 353,
+    "platformCompanionCases": 79,
+    "newTaskCases": 11,
+    "unpublishedUiProposalCasesIncluded": false
+  },
+  "ownerConfirmed": [
+    "Authorized adult participation approval allowed by default, configurable household/task.",
+    "Restricted task-linked material consumption allowed by default without general stock permission, configurable household/task; retain valid work."
+  ],
+  "engineeringReview": [
+    "Permission/schema state labels and bounded fields remain engineering review, not additional owner-approved product choices.",
+    "New task/inventory/points behavior remains unimplemented."
+  ],
+  "implementationEvidenceAdded": false,
+  "hostedCurrentHeadAcceptance": "Separate CI Check and complete Bugbot gates; local document validation does not establish them."
+}

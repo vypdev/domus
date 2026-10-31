@@ -90,3 +90,18 @@ See [storage evidence](evidence/m1-storage-kernel.json) and
 [identity-policy evidence](evidence/m1-identity-policy.json) and
 [standalone authentication evidence](evidence/m1-standalone-auth.json). Copilot and its installed resources remain
 unchanged, and no manual branch exception was executed.
+
+## Task-policy reconciliation — 2026-10-31
+
+Issue #11 incorporates the owner-confirmed adult participation approval and scoped material defaults.
+The four affected SDDs pass the unchanged format and consistency functions from byte-verified
+Copilot revision 3e7ceea08e6131360e026937d1c0cc1b120472e0 against the develop base
+e8fa5bbc9ffa179aa7559831f5f3d067c9c9c65c. Every original case row is retained; eleven new task
+cases include explicit member denial and are not counted again in related capabilities.
+
+The catalog now has thirteen Draft SDDs, 95 normative requirements and 443 distinct inventory IDs
+across eleven capabilities. The historical 82/353 result above remains the PR #3 baseline, not a
+current total. The unpublished household-interface proposal remains outside the catalog/count.
+These documentation checks add no executed product journey or implementation evidence. The original
+catalog validator and local links are separate from hosted current-head CI and complete Bugbot review.
+[Policy review evidence](evidence/task-policy-sdd-review.json) records provenance, identities and counts.
