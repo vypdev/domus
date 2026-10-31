@@ -1,0 +1,108 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "5ac4da7658647bc2ea93a0e85974565c8e379ee9",
+  "scope": "Path-free generation selection, strict legacy/selected managed startup, root-lease reread, direct-slot/partial-restore bypass refusal and identity-before-copy; verified publication/activation remains pending",
+  "backendTests": 1184,
+  "newExecutedCases": 44,
+  "backendCoverage": {
+    "covered_lines": 4031,
+    "num_statements": 4031,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 127,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 1090,
+    "num_partial_branches": 0,
+    "covered_branches": 1090,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": "COVERAGE_FILE=/private/tmp/domus-generations-backend.coverage .venv/bin/pytest tests/backend -q -W error::ResourceWarning --tb=short --cov=domus --cov-branch --cov-report=json:/private/tmp/domus-generations-coverage.json --cov-report=term:skip-covered",
+  "assertions": [
+    "GenerationSelection is immutable, exact/versioned, bound to installation/channel and contains only a validated ID rather than a path",
+    "Legacy flat format 1 remains unchanged; format-2 root selection chooses only generations/<id>/domus.sqlite3 and never falls back to retained flat data",
+    "Private regular single-link files, exact selected-slot inventory, format-1 ready identity and matching generation marker validate before SQLite initialization; missing/empty/foreign/pending/corrupt/nested/unsafe selections do not rewrite source or identity",
+    "Root runtime/maintenance leases still cover the whole installation; console attaches to the same selected database without a second runtime",
+    "Selection is reread after acquiring leases; a real metadata change before lease acquisition cannot leave startup using a cached earlier generation",
+    "Both actual composed APIs retain the selected household and original receipt across shutdown/restart while retained flat bytes remain unchanged",
+    "Real snapshot create/independent inspect and blocked restore prepare/inspect work in private root archives outside the selected source slot",
+    "Symlinked generation container, slot and archives directories are refused without following them; missing retained flat data is not recreated",
+    "Direct managed startup, console attachment and explicit file helpers refuse a slot even if its normal identity is missing",
+    "Restore preparation persists blocked identity before any database bytes; an injected copy interruption verifies that managed and both actual explicit runtime factories refuse startup without adding locks or files",
+    "A restore manifest or operations journal alone blocks direct explicit paths even if installation identity is missing"
+  ],
+  "testFirst": "Generation tests first failed import before the model existed. The lease-reread regression initially selected generation-1 after metadata had advanced to generation-2; it passed after rereading under the leases.",
+  "formats": {
+    "legacyRoot": 1,
+    "selectedRoot": 2,
+    "slotIdentity": 1,
+    "slotGenerationMarker": 2,
+    "businessSchema": 4,
+    "automaticLegacyConversion": false,
+    "activationCommand": false,
+    "newPermissions": false
+  },
+  "architecture": {
+    "files": 97,
+    "dependencies": 465,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 62 backend source files",
+    "negativeFixtures": 41
+  },
+  "tooling": {
+    "tests": 66,
+    "statements": 73,
+    "branches": 34,
+    "coveragePercent": 100,
+    "protectedCopilotResourcesUnchanged": 29,
+    "ruff": "PASS",
+    "localDocumentation": "PASS"
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "sqlite": "3.53.3",
+    "scope": "Real local files and synthetic prepared/generation layouts, both composed APIs; not a production restore or owner HA acceptance"
+  },
+  "installedRuntime": "Owner Edge.2 / d013cf2c8b932d0e00f5858053cbc0e663d5eee1 / schema 3 unchanged. No live restore, household, recovery grant, device or user changes.",
+  "priorHeadCI": {
+    "head": "5ac4da7658647bc2ea93a0e85974565c8e379ee9",
+    "url": "https://github.com/vypdev/domus/actions/runs/41213120152",
+    "result": "PASS: all project groups; image tests validate the pinned existing package, not unpackaged generation/history sources"
+  },
+  "remaining": [
+    "Exclusive offline guard and unchanged source/generation binding",
+    "Verified candidate migration/history import and durable pointer publication",
+    "Transition inspection, output uncertainty and interruption recovery with rollback data retained",
+    "Reviewed restore console, actual-image and both deployment/owner acceptance",
+    "Product UI, standalone companion and complete functional domains/channels/releases"
+  ],
+  "copilot": "All installed resources untouched. Current-head full no-findings Bugbot review and full supported coverage remain required; a draft/skipped review is not acceptance.",
+  "sourceSha256": {
+    "backend/src/domus/domain/generations.py": "bd8d665c7b6e832f881784c07475d2b8911c08d0894cf8e125681a9f27e1ba97",
+    "backend/src/domus/infrastructure/owned_storage.py": "da3afd4f52ee55ff258fa44e180964beddbe5c9b6a5b216f349f93f55bffa069",
+    "backend/src/domus/infrastructure/sqlite_restoration.py": "8637c6bba89a720aa2ccaac44a6cc0292cd66b36f578307732f3f4139c5f9f39",
+    "tests/backend/test_generation_values.py": "6e7f9a8853e0297e02ba5a94e7871ace8628291e759423edbfbb34a34a869054",
+    "tests/backend/test_owned_generations.py": "5d46b3bb21534c9794ad0f2fbae10757b8ab5a6826f8bba8971b65c3be49248a",
+    "tests/backend/test_sqlite_restoration.py": "b29ee50f1bebf869a11ac36babe663b93bcaa599a2fddb43fe2dcda380825a30"
+  },
+  "sddValidation": {
+    "restoration": {
+      "format": "PASS",
+      "consistency": "PASS",
+      "canonicalSections": 20,
+      "characters": 27917
+    },
+    "primaryCompanion": {
+      "format": "PASS",
+      "consistency": "PASS",
+      "characters": 69863,
+      "scope": "Unchanged original requirement/case inventory"
+    },
+    "catalog": "PASS: 11 capabilities; generated rendering current",
+    "validator": "Byte-verified unchanged upstream policies"
+  }
+}

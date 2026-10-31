@@ -173,6 +173,7 @@ class SQLiteRestorations:
         budget: _Budget,
     ) -> PreparedRestoration:
         checkpoint = cast(Snapshot, self.checkpoint)
+        _write_identity(target, self.installation, "restore_pending", create=True)
         with _directory(cast(Path, self.snapshot_location), private=True) as archive:
             source_fd = _file(archive, _DATABASE)
             with os.fdopen(source_fd, "rb") as source:
@@ -220,7 +221,6 @@ class SQLiteRestorations:
                     highwater = max(highwater, item.evidence.position)
                 output.flush()
                 os.fsync(output.fileno())
-        _write_identity(target, self.installation, "restore_pending", create=True)
         identity_hash, _ = _hash(target, _IDENTITY, budget)
         result = PreparedRestoration(
             restore_id,

@@ -86,7 +86,8 @@
         "backend/src/domus/domain/restoration.py",
         "backend/src/domus/application/restoration.py",
         "backend/src/domus/infrastructure/sqlite_restoration.py",
-        "backend/src/domus/infrastructure/sqlite_history.py"
+        "backend/src/domus/infrastructure/sqlite_history.py",
+        "backend/src/domus/domain/generations.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -137,7 +138,9 @@
         "tests/backend/test_sqlite_history.py",
         "tests/backend/test_sqlite_history_integrity.py",
         "tests/backend/test_restored_commands.py",
-        "tests/fixtures/sqlite/v3.sql"
+        "tests/fixtures/sqlite/v3.sql",
+        "tests/backend/test_generation_values.py",
+        "tests/backend/test_owned_generations.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -180,12 +183,13 @@
         "docs/evidence/m1-persistent-ha-acceptance.json",
         "docs/restoration.md",
         "docs/evidence/m1-restoration-planning.json",
-        "docs/evidence/m1-runtime-history.json"
+        "docs/evidence/m1-runtime-history.json",
+        "docs/evidence/m1-generation-selection.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage and both household APIs, persistent Edge.2 owner startup acceptance; manual snapshots, blocked restore preparation and schema-4 runtime history/replay, suppression, sequence and recovery guards; full M1 remains pending",
-        "blockingDecisions": "Implement verified offline restore import/activation and interruption recovery; native product UI/live household/recovery, standalone companion/browser and full deployment/channel acceptance. No unanswered A30 product choice.",
+        "implementationEvidence": "partial: identity/storage and both household APIs; persistent Edge.2 owner startup; manual snapshots, blocked restore preparation, runtime history/recovery guards and legacy/selected-generation startup; full M1 remains pending",
+        "blockingDecisions": "Implement stopped-write source revalidation, verified generation publication and interruption recovery; packaged restore, native product UI/live household/recovery, standalone companion/browser and full deployment/channel acceptance. No unanswered A30 product choice.",
         "copilotChangesAllowed": false
       }
     },
@@ -259,7 +263,8 @@
         "backend/src/domus/application/snapshots.py",
         "backend/src/domus/infrastructure/sqlite_snapshots.py",
         "backend/src/domus/composition/ha_app.py",
-        "backend/src/domus/infrastructure/sqlite_history.py"
+        "backend/src/domus/infrastructure/sqlite_history.py",
+        "backend/src/domus/domain/generations.py"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -302,7 +307,9 @@
         "tests/backend/test_sqlite_history.py",
         "tests/backend/test_sqlite_history_integrity.py",
         "tests/backend/test_restored_commands.py",
-        "tests/fixtures/sqlite/v3.sql"
+        "tests/fixtures/sqlite/v3.sql",
+        "tests/backend/test_generation_values.py",
+        "tests/backend/test_owned_generations.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -341,12 +348,13 @@
         "addon-edge/translations/en.yaml",
         "docs/evidence/m1-persistent-app-package.json",
         "docs/evidence/m1-persistent-ha-acceptance.json",
-        "docs/evidence/m1-runtime-history.json"
+        "docs/evidence/m1-runtime-history.json",
+        "docs/evidence/m1-generation-selection.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage and both household APIs, persistent Edge.2 owner startup acceptance; manual snapshots, blocked restore preparation and schema-4 runtime history/replay, suppression, sequence and recovery guards; full M1 remains pending",
-        "blockingDecisions": "Implement verified offline restore import/activation and interruption recovery; native product UI/live household/recovery, standalone companion/browser and full deployment/channel acceptance. No unanswered A30 product choice.",
+        "implementationEvidence": "partial: identity/storage and both household APIs; persistent Edge.2 owner startup; manual snapshots, blocked restore preparation, runtime history/recovery guards and legacy/selected-generation startup; full M1 remains pending",
+        "blockingDecisions": "Implement stopped-write source revalidation, verified generation publication and interruption recovery; packaged restore, native product UI/live household/recovery, standalone companion/browser and full deployment/channel acceptance. No unanswered A30 product choice.",
         "copilotChangesAllowed": false
       }
     },

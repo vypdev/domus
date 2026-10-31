@@ -35,7 +35,8 @@ bytes; they do not replace the local owner's trust boundary. The manifest binds 
 checkpoint, source-frontier digest, journal/identity hashes, total/current counts and position high-water.
 
 Managed startup and console attachment reject complete or journal-bearing partial candidates before
-creating runtime lock files. Both explicit-file runtime factories reject the owned identity marker.
+creating runtime lock files. The blocked identity is written before database bytes, and both
+explicit-file runtime factories reject every managed identity/journal/generation signal.
 An incomplete candidate never becomes an implicit empty installation. Removing metadata manually
 is unsupported and would discard its safety protocol.
 
@@ -100,6 +101,13 @@ rollback data retained. Both deployment modes and the actual packaged SQLite sti
 acceptance. The owner's installed Edge.2 remains on schema 3; it was not updated to this code.
 No automatic snapshot frequency or retention is selected. See
 [runtime history evidence](evidence/m1-runtime-history.json).
+
+Managed startup now also understands an explicit format-2 root generation selection while retaining
+flat format-1 compatibility. Each selected slot has bound identity and a marker that blocks direct
+slot startup; root leases still apply. Both composed APIs and snapshot/preparation fixtures exercise
+that layout. No production command publishes a new selection yet. This is a prerequisite for the
+future atomic switch, not completed activation. See [data layout](owned-data-directory.md) and
+[generation evidence](evidence/m1-generation-selection.json).
 
 See the [complete restoration SDD](../specs/platform-restoration.md),
 [source-identified preparation evidence](evidence/m1-restoration-planning.json),

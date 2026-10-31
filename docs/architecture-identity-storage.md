@@ -55,6 +55,14 @@ Both explicit-file runtime factories reject an owned marker before SQLite initia
 the owned runtime is stopped. Console attachment applies the same boundary.
 All filesystem/locking primitives remain outside pure inner layers. See [data lifecycle](owned-data-directory.md).
 
+The path-free GenerationSelection value adds strict version-2 root metadata. Managed startup
+selects only its private bound slot after rereading selection under the root leases; legacy flat
+data stays readable but cannot override a selected generation. Slots reject direct lifecycle and
+explicit-file bypass. Blocked restore identity now precedes database copying, and every managed
+identity/journal signal blocks direct startup. No production writer publishes generations yet;
+offline activation and interruption recovery remain pending. See
+[generation evidence](evidence/m1-generation-selection.json).
+
 Schema 2 added uniquely linked members and revisioned household policy. Its explicit additive
 upgrade accepts the owned schema 1 checkpoint and preserves household data, receipts, audit and
 outbox. Failure rolls back the entire DDL migration. The frozen old-schema fixture is independent

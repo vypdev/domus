@@ -3,12 +3,15 @@
 import fcntl
 import os
 import stat
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import cast
 from uuid import uuid4
 
 from domus.domain.errors import DatabaseRejected, InvalidInput, StorageBusy, StorageFailure
+from domus.domain.generations import GenerationSelection
 from domus.domain.storage import Installation, JsonDocument
 from domus.infrastructure.sqlite import SQLiteDatabase
 
@@ -19,6 +22,9 @@ _LOCK = "runtime.lock"
 _MAINTENANCE = "maintenance.lock"
 RESTORE_MANIFEST = "restore.json"
 RESTORE_OPERATIONS = "operations.jsonl"
+GENERATION_MARKER = "generation.json"
+_GENERATIONS = "generations"
+_ARCHIVES = "archives"
 _ALLOWED = {
     _MARKER,
     _NEXT,
@@ -36,6 +42,7 @@ class OwnedStorage:
     _directory: int | None = field(repr=False)
     _lock: int | None = field(repr=False)
     _maintenance: int | None = field(default=None, repr=False)
+    generation_id: str | None = None
 
     def close(self) -> None:
         descriptors = self._maintenance, self._lock, self._directory
@@ -68,8 +75,8 @@ def _file(directory: int, name: str, flags: int = os.O_RDONLY) -> int:
     return descriptor
 
 
-def _identity(directory: int) -> tuple[Installation, str]:
-    descriptor = _file(directory, _MARKER)
+def _document(directory: int, name: str) -> JsonDocument:
+    descriptor = _file(directory, name)
     try:
         content = os.read(descriptor, 1025)
     finally:
@@ -77,7 +84,17 @@ def _identity(directory: int) -> tuple[Installation, str]:
     try:
         if len(content) > 1024:
             raise InvalidInput("invalid_document")
-        value = JsonDocument(content.decode("utf-8")).decode()
+        return JsonDocument(content.decode("utf-8"))
+    except InvalidInput, UnicodeError:
+        raise DatabaseRejected("invalid_installation_identity") from None
+
+
+def _metadata(directory: int) -> tuple[Installation, str, GenerationSelection | None]:
+    try:
+        value = _document(directory, _MARKER).decode()
+        if value.get("schema_version") == 2:
+            selection = GenerationSelection.from_value(value)
+            return selection.installation, "ready", selection
         if (
             set(value) != {"schema_version", "instance_id", "channel", "state"}
             or type(value["schema_version"]) is not int
@@ -86,9 +103,49 @@ def _identity(directory: int) -> tuple[Installation, str]:
         ):
             raise InvalidInput("invalid_document")
         installation = Installation(cast(str, value["instance_id"]), cast(str, value["channel"]))
-        return installation, value["state"]
-    except InvalidInput, UnicodeError:
+        return installation, value["state"], None
+    except InvalidInput:
         raise DatabaseRejected("invalid_installation_identity") from None
+
+
+def _identity(directory: int) -> tuple[Installation, str]:
+    installation, state, _ = _metadata(directory)
+    return installation, state
+
+
+@contextmanager
+def _private_directory(parent: int, name: str) -> Iterator[int]:
+    descriptor = os.open(
+        name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=parent
+    )
+    try:
+        info = os.fstat(descriptor)
+        if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
+            raise DatabaseRejected("unsafe_installation_directory")
+        yield descriptor
+    finally:
+        os.close(descriptor)
+
+
+def _generation_database(root: Path, directory: int, selection: GenerationSelection) -> Path:
+    with _private_directory(directory, _GENERATIONS) as generations:
+        with _private_directory(generations, selection.generation_id) as slot:
+            names = set(os.listdir(slot))
+            required = {_MARKER, _DATABASE, GENERATION_MARKER}
+            allowed = required | {_DATABASE + suffix for suffix in ("-journal", "-wal", "-shm")}
+            if not required <= names or names - allowed:
+                raise DatabaseRejected("invalid_generation_artifacts")
+            for name in names:
+                os.close(_file(slot, name))
+            installation, state, nested = _metadata(slot)
+            if (
+                installation != selection.installation
+                or state != "ready"
+                or nested is not None
+                or _document(slot, GENERATION_MARKER) != selection.document()
+            ):
+                raise DatabaseRejected("invalid_generation_identity")
+    return root / _GENERATIONS / selection.generation_id / _DATABASE
 
 
 def _write_identity(
@@ -135,29 +192,46 @@ def _open(root: Path, channel: str, *, attach: bool) -> OwnedStorage:
         info = os.fstat(directory)
         if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
             raise DatabaseRejected("unsafe_installation_directory")
-        if {RESTORE_MANIFEST, RESTORE_OPERATIONS} & set(os.listdir(directory)):
+        present = set(os.listdir(directory))
+        if {RESTORE_MANIFEST, RESTORE_OPERATIONS, GENERATION_MARKER} & present:
             raise DatabaseRejected("restore_not_active")
+        if _MARKER in present:
+            _metadata(directory)
         if not attach:
             lock = _acquire(directory, _LOCK, fcntl.LOCK_EX)
         maintenance = _acquire(directory, _MAINTENANCE, fcntl.LOCK_SH if attach else fcntl.LOCK_EX)
         names = set(os.listdir(directory))
-        if names - _ALLOWED:
+        metadata = _metadata(directory) if _MARKER in names else None
+        selection = metadata[2] if metadata is not None else None
+        subdirectories = {_GENERATIONS, _ARCHIVES} if selection is not None else set()
+        if names - _ALLOWED - subdirectories:
             raise DatabaseRejected("unexpected_installation_artifact")
         for name in names:
-            os.close(_file(directory, name))
+            if name in subdirectories:
+                with _private_directory(directory, name):
+                    pass
+            else:
+                os.close(_file(directory, name))
         if _MARKER not in names:
             if attach or names - {_LOCK, _MAINTENANCE}:
                 raise DatabaseRejected("missing_installation_identity")
             installation, state = Installation(str(uuid4()), channel), "initializing"
             _write_identity(directory, installation, state, create=True)
         else:
-            installation, state = _identity(directory)
+            installation, state, _ = cast(
+                tuple[Installation, str, GenerationSelection | None], metadata
+            )
         if installation.channel != channel:
             raise DatabaseRejected("installation_channel_mismatch")
         ready = state == "ready"
-        if ready and _DATABASE not in names:
+        if ready and selection is None and _DATABASE not in names:
             raise DatabaseRejected("missing_installation_database")
-        database = SQLiteDatabase(root / _DATABASE, installation)
+        path = (
+            _generation_database(root, directory, selection)
+            if selection is not None
+            else root / _DATABASE
+        )
+        database = SQLiteDatabase(path, installation)
         if attach:
             if not ready:
                 raise DatabaseRejected("installation_not_ready")
@@ -171,7 +245,14 @@ def _open(root: Path, channel: str, *, attach: bool) -> OwnedStorage:
                 os.unlink(_NEXT, dir_fd=directory)
                 os.fsync(directory)
             fcntl.flock(maintenance, fcntl.LOCK_SH)
-        return OwnedStorage(installation, database, directory, lock, maintenance)
+        return OwnedStorage(
+            installation,
+            database,
+            directory,
+            lock,
+            maintenance,
+            selection.generation_id if selection is not None else None,
+        )
     except BaseException:
         _close(maintenance, lock, directory)
         raise
@@ -219,11 +300,12 @@ def attach_database(path: Path, installation: Installation) -> SQLiteDatabase:
 
 
 def _no_owned_marker(directory: int) -> None:
-    try:
-        os.stat(_MARKER, dir_fd=directory, follow_symlinks=False)
-    except FileNotFoundError:
-        return
-    raise InvalidInput("owned_directory_required")
+    for name in (_MARKER, GENERATION_MARKER, RESTORE_MANIFEST, RESTORE_OPERATIONS):
+        try:
+            os.stat(name, dir_fd=directory, follow_symlinks=False)
+        except FileNotFoundError:
+            continue
+        raise InvalidInput("owned_directory_required")
 
 
 def reject_owned_database(path: Path) -> None:

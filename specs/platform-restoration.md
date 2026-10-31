@@ -3,7 +3,7 @@
 - Status: Draft
 - Date: 2026-10-31
 - Catalog capability ID: platform-foundation
-- Last verified: 2026-10-31; local reconciliation/preparation and runtime history, activation pending
+- Last verified: 2026-10-31; local reconciliation, history and generation startup; activation pending
 - Owners: Domus maintainers
 - Scope: complete M1 snapshot restoration with retained replay evidence, explicit preparation and verified offline activation.
 - Related issues/PRs: [Issue #6](https://github.com/vypdev/domus/issues/6), [PR #7](https://github.com/vypdev/domus/pull/7)
@@ -217,6 +217,26 @@ transaction, with its own savepoint. It preserves exact original facts, checks t
 projection, retains all prior history and updates acknowledgement/sequence monotonically. It never
 grants activation authority or writes into an active owner installation.
 
+### Managed generation selection
+
+Keep existing format-1 flat installations readable. A format-2 root identity selects one validated
+generation ID under a fixed private generations directory, preserving UUID/channel. Root-level
+runtime/maintenance leases continue to protect the whole installation. A selected slot has its own
+ready format-1 identity and a generation marker that binds the root selection; direct managed or
+explicit-file startup of a slot is refused. Missing, foreign, pending or unsafe slots never create
+an empty database or another identity. Old flat data may remain as retained rollback evidence but
+cannot override a format-2 selection.
+
+This permits a future activator to materialize and verify a new private slot inside the existing
+owned root, flush it and atomically publish one root pointer last. The native runtime need not rename
+root-owned /data siblings or gain privileges. Startup support alone does not authorize or implement
+publication. Source-generation binding, stopped-write verification, durable transition status,
+interruption recovery and complete CLI/package acceptance remain required before activation.
+
+Prepared restore identity must be written before database bytes. All managed signals, including a
+journal without the final manifest or a generation marker without the normal identity, block explicit
+file bypass. A rejected start must not add lock files to a blocked candidate.
+
 ### 8.3 Executable architecture constraints
 
 Existing import-linter direction/purity/acyclic contracts and negative fixtures apply. Every new
@@ -340,6 +360,11 @@ Planned file footprint (implementation is staged; presence is not completion):
 | `backend/src/domus/application/restoration.py` | create |
 | `backend/src/domus/infrastructure/sqlite_restoration.py` | create |
 | `backend/src/domus/infrastructure/owned_storage.py` | update |
+| `docs/owned-data-directory.md` | update |
+| `backend/src/domus/domain/generations.py` | create |
+| `tests/backend/test_generation_values.py` | create |
+| `tests/backend/test_owned_generations.py` | create |
+| `docs/evidence/m1-generation-selection.json` | create |
 | `tests/backend/test_restoration_values.py` | create |
 | `tests/backend/test_restoration_commands.py` | create |
 | `tests/backend/test_sqlite_restoration.py` | create |

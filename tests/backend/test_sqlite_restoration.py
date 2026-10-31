@@ -522,3 +522,69 @@ def test_inspection_cannot_report_success_after_its_last_validation_exceeds_the_
     )
     with pytest.raises(StorageFailure):
         inspector.inspect()
+
+
+def test_blocked_identity_precedes_database_creation_and_prevents_partial_direct_start(
+    tmp_path, monkeypatch
+):
+    from domus.composition import ingress, server
+
+    adapter, store, _, target = fixture(tmp_path)
+    original = sqlite_restoration._file
+    observed = False
+
+    def inspect_before_database(directory, name, flags=sqlite_restoration.os.O_RDONLY):
+        nonlocal observed
+        if name == "domus.sqlite3" and flags & sqlite_restoration.os.O_CREAT:
+            observed = True
+            assert (
+                json.loads((target / "installation.json").read_text())["state"] == "restore_pending"
+            )
+            before = {p.name: p.read_bytes() for p in target.iterdir()}
+            for attempt in (
+                lambda: open_storage(target, "edge"),
+                lambda: attach_storage(target, "edge"),
+                lambda: ingress.create_business_runtime(
+                    "fixture-token",
+                    "edge",
+                    target / "domus.sqlite3",
+                    store.installation.instance_id,
+                    ("http://ha.local",),
+                ),
+                lambda: server.create_runtime(
+                    "http://ha.local",
+                    "https://domus.example",
+                    store.installation.instance_id,
+                    "edge",
+                    database=target / "domus.sqlite3",
+                ),
+            ):
+                with pytest.raises(DomusError):
+                    attempt()
+                assert before == {p.name: p.read_bytes() for p in target.iterdir()}
+            raise OSError("interrupted before checkpoint bytes")
+        return original(directory, name, flags)
+
+    monkeypatch.setattr(sqlite_restoration, "_file", inspect_before_database)
+    with pytest.raises(StorageFailure):
+        adapter.prepare("restore-1")
+    assert observed and not (target / "domus.sqlite3").exists()
+
+
+@pytest.mark.parametrize("signal", ["restore.json", "operations.jsonl"])
+def test_a_partial_restore_signal_blocks_direct_paths_even_if_identity_is_missing(tmp_path, signal):
+    from domus.infrastructure.owned_storage import attach_database, reject_owned_database
+
+    adapter, store, _, target = fixture(tmp_path)
+    adapter.prepare("restore-1")
+    for name in ("installation.json", "restore.json", "operations.jsonl"):
+        if name != signal:
+            (target / name).unlink()
+    before = {p.name: p.read_bytes() for p in target.iterdir()}
+    for attempt in (
+        lambda: reject_owned_database(target / "domus.sqlite3"),
+        lambda: attach_database(target / "domus.sqlite3", store.installation),
+    ):
+        with pytest.raises(DomusError):
+            attempt()
+        assert before == {p.name: p.read_bytes() for p in target.iterdir()}
