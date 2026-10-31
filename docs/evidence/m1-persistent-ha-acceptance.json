@@ -1,0 +1,52 @@
+{
+  "observedOn": "2026-10-31",
+  "completedAtUtc": "2026-10-31T13:43:31Z",
+  "sourceBase": "fcbf78635a5ed4df77714b12e41d9bd8da3e1fe2",
+  "packageVersion": "0.0.0-edge.2",
+  "runtimeSourcePin": "d013cf2c8b932d0e00f5858053cbc0e663d5eee1",
+  "runtimeArchiveSha256": "fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c",
+  "target": {
+    "origin": "http://homeassistant.local:8123",
+    "appId": "62fdc661_domus_edge",
+    "entry": "http://homeassistant.local:8123/app/62fdc661_domus_edge",
+    "haPlatformVersionReference": "m1-native-ha-acceptance.json; prior About observation, not re-read during this bounded update"
+  },
+  "observations": [
+    "Supervisor offered Edge.2 from the existing Action-managed development repository and displayed the installed version as Edge.2 after update",
+    "Retain-previous-version backup option was explicitly selected; the resulting backup artifact was not inspected",
+    "Empty prior app options refused startup without a server; the new English-labelled public_origins form appeared after reloading HA configuration",
+    "The sole configured origin http://homeassistant.local:8123 was saved, then Supervisor reported the app running",
+    "Open Web UI and a normal Chrome toolbar reload showed the new persistent runtime text: Connected to Home Assistant; No additional login is required; The household interface is being prepared",
+    "A restart of Domus only completed and another normal reload showed the same new connected page through existing HA authentication",
+    "Start on boot, watchdog, automatic updates and sidebar switches remained off; no host port, mount, API role or protection-mode change was made"
+  ],
+  "dataImpact": "Created the app private directory/installation UUID/schema through its packaged lifecycle and saved its one browser origin. No household/member, recovery approval/grant, points, automation, HA entity/device/user change or Domus snapshot was created on the owner installation.",
+  "separateContainerEvidence": {
+    "localImage": "sha256:5d3c87fd549d40c82ec3e60d6b3c4a778579dea1cafceddedecd865de13ce32d",
+    "architecture": "arm64",
+    "python": "3.14.6",
+    "sqlite": "3.46.1",
+    "tests": 4,
+    "extendedAssertions": "Real packaged domus-admin snapshot create and independent inspect agree on exact manifest/checkpoint after fixture restart/replay; output parent provisioned explicitly by the fixture operator",
+    "priorPackageCI": "https://github.com/vypdev/domus/actions/runs/41205183680",
+    "amd64Job": 124548701006,
+    "aarch64Job": 124548700851,
+    "result": "All six project groups pass; four real-image cases pass on both native CPU families before the additional packaged snapshot assertion"
+  },
+  "limits": [
+    "Owner browser evidence proves bounded update/configuration/start/session access/reload/restart, not full M1 or product acceptance",
+    "Actual owner UID/capability/UUID/history bytes were not extracted; kernel and replay assertions are from the separate real-image fixture tests",
+    "Live household commands, outage/revocation, console recovery and restore were not exercised on the owner installation",
+    "Standalone companion/browser acceptance, product UI and complete Stable/Edge deployment remain pending"
+  ],
+  "restoreDecision": "Owner confirmed A30: restore checkpoint state while retaining readable later receipts/history as processed; implementation remains pending",
+  "privacy": "No raw Ingress path/session cookie, Supervisor token, human HA ID or credential is retained in this receipt. All opaque browser observations were redacted.",
+  "sourceSha256": {
+    "addon-edge/Dockerfile": "72364890d6295530fdf74afef786f53804ca39cc6c6379b817a25f3f31e65d75",
+    "addon-edge/config.yaml": "54f147389ce93031eff7be484446dddffb9d2c144dc6406c0b1498bfe9337af4",
+    "backend/src/domus/composition/ha_app.py": "e0ffe36478881ff11367c7ba5467438ebef54af7d4bfb00bf14350893b15e1b3",
+    "backend/src/domus/composition/ingress.py": "7447608e616cd5a70652b1c02c5ddab81ea42fc8c6228cb1a0eecd60e2d029a9",
+    "backend/src/domus/entrypoints/native_http.py": "59dce651bbab80a36a0bec435c581b247ad9b8aac6b53406bd577cbd0a7b15c7",
+    "tests/containers/test_app_image.py": "dd59fde501cdef7cc7d15d43468fecdbb750f161eb861ac038a34b4485a6705a"
+  }
+}

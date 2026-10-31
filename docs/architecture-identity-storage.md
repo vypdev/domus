@@ -2,10 +2,10 @@
 
 Status: the M1 storage kernel, pure identity policy, transaction-bound local authorization and
 session-lease core, HA adapters, standalone authentication API/CLI and application household/member/policy
-commands are implemented on the Action-managed issue #6 branch. The native connection preview is
-installed and accepted on the identified owner target. Both standalone and native persistent household
+commands are implemented on the Action-managed issue #6 branch. Persistent Edge.2 passes bounded
+owner startup/session/reload/restart acceptance. Both standalone and native persistent household
 APIs, console-approved recovery and manual snapshots are tested locally. Restore activation,
-native persistent packaging/UI and complete deployment acceptance
+native product UI and complete deployment acceptance
 remain pending. The [owning companion](../specs/platform-foundation-identity-sqlite.md) retains
 the complete increment contract; this checkpoint does not complete M1 or the product.
 
@@ -89,7 +89,8 @@ administrator/owner semantics. Supervisor's actual peer and a single candidate s
 fresh Core lookup. The real pinned WebSocket client is exercised against disposable loopback servers,
 including a negative cross-origin redirect fixture. No request may authenticate by constructing
 an adapter value. The [native persistent runtime](native-household-api.md) now shares the household
-routes, bounded local leases and fixed-origin CSRF; its updated app package remains pending.
+routes, bounded local leases and fixed-origin CSRF. Edge.2 packages it and passes both native CPU-family
+image checks plus bounded owner start/reload/restart acceptance.
 
 `domus.application.authentication_values` and `session_values` own ephemeral login/lease contracts;
 private browser/session material stays outside household domain entities. Application orchestration
@@ -108,10 +109,11 @@ composition.household, private session actors/directory and local query services
 no household. See [configuration](configuration.md),
 [the user journey](identity-household.md) and [operations](operations-identity-storage.md).
 
-`domus.composition.ingress` wires the stateless native preview and its private HTTP listener. The
-installed Edge image binds an immutable older runtime and contains no application commands or
-business database. [Exact native acceptance](evidence/m1-native-ha-acceptance.json) is separate from
-protocol fixtures and does not establish complete product or standalone browser acceptance.
+`domus.composition.ingress` wires both native runtime forms. Installed Edge.2 uses
+`domus.composition.ha_app` to provision its private child and exec the persistent runtime without
+root privileges. [Original preview acceptance](evidence/m1-native-ha-acceptance.json) is distinct from
+[persistent owner acceptance](evidence/m1-persistent-ha-acceptance.json). Neither establishes complete
+product, live household-command or standalone-browser acceptance.
 
 Its optional persistent composition uses the same household router and services as standalone.
 Infrastructure binds local leases to keyed digests of the existing Supervisor session and installation

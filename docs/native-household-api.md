@@ -1,10 +1,10 @@
 # Native Home Assistant household API
 
 Status: persistent native runtime, local session leases and common household routes are implemented
-and tested with real ASGI/SQLite composition. This runtime has not been installed in the owner's HA.
-The installed Edge 0.0.0-edge.1 remains the accepted stateless connection preview. App data-directory
-ownership and the product UI still need packaging work. Automatic installation identity inside an
-already provisioned private directory is now available through the [owned data CLI](owned-data-directory.md).
+and tested with real ASGI/SQLite composition. Edge 0.0.0-edge.2 now packages this runtime and passes
+owner update/configuration/start, existing-session access, normal reload and restart. The product UI
+is still a connection page. Live household/recovery commands are not inferred from that acceptance.
+Automatic identity and private data use the [owned lifecycle](owned-data-directory.md).
 
 ## Authentication and session binding
 
@@ -74,20 +74,22 @@ SUPERVISOR_TOKEN is provisioned privately by HA and must never be copied into a 
 This listener is exclusively for the Supervisor private container network, binds no public app port
 in the reviewed manifest and disables proxy-header rewriting/access logs. GET /health is nonpersonal
 process readiness for Supervisor/loopback, not an HA availability or authenticated-user claim.
-Packaged directory ownership, complete UI, snapshots and the updated
-installed artifact remain pending. Do not infer those from passing local fixtures.
+Packaged ownership/startup and both native CPU-family image checks pass. The complete UI, live
+household/recovery operations and restore remain pending. Packaged snapshot create/inspect commands
+also pass with the image's SQLite 3.46.1 in isolated fixtures, without creating an owner Domus snapshot.
 
 [Administrator recovery](administrator-recovery.md) now shares this boundary and the standalone
 application services. Human request/status/completion/cancellation are authenticated routes; approval
 is available exclusively from the installation console. Schema 3 migration and local fixtures do not
-establish recovery acceptance in the old installed preview.
+establish live recovery acceptance in the installed package.
 
 ## Reviewed primary sources
 
 - [Core 2026.10.4 Ingress proxy](https://github.com/home-assistant/core/blob/2026.10.4/homeassistant/components/hassio/ingress.py): generated base path and forwarding behavior.
 - [Supervisor 2026.10.5 Ingress](https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/api/ingress.py): validates cookie, resolves user and replaces human headers; cookies are forwarded.
 - [Supervisor cookie name](https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/api/const.py) and [session generation](https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/ingress.py): ingress_session and 128 lowercase hexadecimal characters.
-- [Supervisor app data mount](https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/docker/app.py) and [directory lifecycle](https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/apps/app.py): own /data is supplied by the platform. Writable private storage for the packaged UID still needs explicit acceptance.
+- [Supervisor app data mount](https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/docker/app.py) and [directory lifecycle](https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/apps/app.py): own /data is supplied by the platform; Domus provisions only its private child.
 
 See [native checkpoint evidence](evidence/m1-native-household-api.json) and
-[installed preview evidence](evidence/m1-native-ha-acceptance.json). These describe different artifacts.
+[original preview evidence](evidence/m1-native-ha-acceptance.json) and
+[persistent owner acceptance](evidence/m1-persistent-ha-acceptance.json). These describe different artifacts/scopes.

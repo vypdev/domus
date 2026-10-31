@@ -33,6 +33,7 @@ Confirmed owner requirements are recorded in [product vision](product-vision.md)
 | A27 | Accepted: setup-only/selected-user administrator recovery requires a current HA administrator plus explicit installation-console approval | Bind both authorities to the same target and installation; preserve the mapping and history | Owner confirmed 2026-10-29; runtime expiry, single-use and race proof pending |
 | A28 | Accepted: HA outage permits existing-session local queries only until original expiry; all changes remain blocked | Known revocation still applies and availability failure cannot renew authority | Owner confirmed 2026-10-29; concrete identity/session adapter proof pending |
 | A29 | Accepted: administrator manages configuration/members/privileged corrections; adult handles daily operations and restricted-work approval; restricted completes assigned work and adds own shopping requests; viewer queries; all edit own preferences | Provide usable defaults within the already accepted household/member customization model | Owner confirmed 2026-10-31; concrete permission policy and API tests pending |
+| A30 | Accepted: restoring an older checkpoint restores its state while retaining readable later committed receipts and history as already processed | Prevent duplicate execution without silently reapplying later business changes | Owner confirmed 2026-10-31; consistent evidence reconciliation and activation tests remain required |
 
 All eleven owning SDDs and the M1 companion remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
 The Copilot limitation is an observed constraint, not permission to change its implementation,
@@ -76,3 +77,10 @@ implements the consistent snapshot/restore primitive; Supervisor packaging will 
 backups, and standalone snapshots remain explicit local operations. Scheduling/retention and
 package-specific recovery objectives remain deployment/operations review items. No daily/weekly
 rotation or recovery-time SLA is recorded as owner-approved.
+
+On 2026-10-31 the owner accepted A30: if later operations remain readable in current storage,
+restore the selected checkpoint's business state and retain those later receipts/history as processed
+operations. Do not execute their effects again or silently advance the restored state. Conflicting
+or incomplete evidence must be handled explicitly before activation. This choice is separate from
+backup scheduling/retention, which remains unselected. The implementation and restore acceptance
+are still pending.

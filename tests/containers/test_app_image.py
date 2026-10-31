@@ -212,10 +212,58 @@ for path in ('/', '/api/v1/identity'):
             "print(open('/data/domus/installation.json').read())",
         )
         assert after.returncode == 0 and after.stdout == before.stdout
+        snapshot_roundtrip(name, json.loads(after.stdout)["instance_id"])
         stopped(name)
     finally:
         removed = docker("rm", "--force", name)
         assert removed.returncode == 0 or "No such container" in removed.stderr, removed.stderr
+
+
+def snapshot_roundtrip(name: str, instance_id: str) -> None:
+    prepared = docker(
+        "exec",
+        name,
+        "/app/.venv/bin/python",
+        "-c",
+        "import os; os.mkdir('/data/snapshots',0o700); os.chown('/data/snapshots',65532,65532)",
+    )
+    assert prepared.returncode == 0, prepared.stderr
+    created = docker(
+        "exec",
+        "--user",
+        "65532:65532",
+        name,
+        "/app/.venv/bin/domus-admin",
+        "--channel",
+        "edge",
+        "--data-directory",
+        "/data/domus",
+        "snapshot",
+        "create",
+        "/data/snapshots/manual-001",
+    )
+    assert created.returncode == 0, created.stderr
+    original = json.loads(created.stdout)
+    assert original["state"] == "created"
+    assert original["snapshot"]["schema_version"] == 3
+    assert original["snapshot"]["last_committed_at"] == 100
+    inspected = docker(
+        "exec",
+        "--user",
+        "65532:65532",
+        name,
+        "/app/.venv/bin/domus-admin",
+        "--channel",
+        "edge",
+        "--instance-id",
+        instance_id,
+        "snapshot",
+        "inspect",
+        "/data/snapshots/manual-001",
+    )
+    assert inspected.returncode == 0, inspected.stderr
+    verified = json.loads(inspected.stdout)
+    assert verified["state"] == "verified" and verified["snapshot"] == original["snapshot"]
 
 
 def test_real_launcher_refuses_invalid_options_without_provisioning(

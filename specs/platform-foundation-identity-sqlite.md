@@ -247,6 +247,8 @@ English is the language for repository issues, documentation, source identifiers
 
 Snapshots are consistent SQLite snapshots including identity/schema, business state, receipts/replay guards, audit and outbox. Standalone creates snapshots explicitly through installation console and retains successful snapshots until operator removal; no automatic pruning. Supervisor packaging should participate in the operator's normal HA backup using suitable hooks; actual packaging and schedule/retention acceptance remain pending. Restore targets a new owned data directory for the same installation UUID and channel, with writes stopped; verify marker, schema, integrity, manifest/checksum and identity before activation. The visible recovery point is the selected snapshot's committed checkpoint timestamp. No 24-hour RPO or recovery-time SLA is claimed. Pair compatible application/configuration for rollback. Credentials and browser tokens are excluded; users reauthenticate. Cleanup must never remove replay protection while a retry could recur.
 
+Owner decision A30: when later committed evidence remains readable in current data, restore the selected business checkpoint and retain later receipts/history as already processed. Do not reapply their business changes or redeliver processed effects. Conflicting/incomplete evidence must be resolved before activation; never silently discard it.
+
 ## 11. Security, permissions, and privacy
 
 1. Require current proven human identity and current Domus policy for protected actions. The three mapping modes and precedence are fixed in section 4; pending users have no active access. Suspension/revocation, scope, stale revisions and last-active-administrator safety are enforced transactionally.
@@ -346,7 +348,7 @@ Budgets are minimum distinct cases; inventory rows define the cases and the publ
 | platform-foundation-identity-sqlite-C55 | Integration/security/migration | ID-02, ID-04 | Real-file integration proves atomic commit and rollback of state, receipt, audit and outbox across process restart. |
 | platform-foundation-identity-sqlite-C56 | Integration/security/migration | ID-03, ID-04 | Recovery race and replay fixtures prove both authorities and atomic single-use grant/evidence. |
 | platform-foundation-identity-sqlite-C57 | Integration/security/migration | ID-04 | Real-file concurrent processes verify serialized writers, bounded busy result, stale revision conflict and no duplicate effects. |
-| platform-foundation-identity-sqlite-C58 | Integration/security/migration | ID-04 | Backup/reopen integration verifies consistent committed checkpoint, identity/channel, audit/outbox and replay protection. |
+| platform-foundation-identity-sqlite-C58 | Integration/security/migration | ID-04 | Backup/reopen verifies checkpoint, identity/channel and audit/outbox; restoring older state retains readable later processed evidence without executing effects again. |
 | platform-foundation-identity-sqlite-C59 | Integration/security/migration | ID-06 | CI coverage and architecture commands evaluate actual backend modules and fail when threshold or import contract is violated. |
 | platform-foundation-identity-sqlite-C60 | Integration/security/migration | ID-07 | Exact reference target matrix records protocol, package and live/browser evidence as pending until run on identified artifact/version. |
 | platform-foundation-identity-sqlite-C61 | Integration/security/migration | ID-07 | Authorized local HA/Chrome proof, if run, records exact artifact/version, owned test data and cleanup; absent live proof is explicitly pending. |
@@ -526,6 +528,7 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `docs/evidence/m1-ha-app-bootstrap.json` | create |
 | `addon-edge/translations/en.yaml` | create |
 | `docs/evidence/m1-persistent-app-package.json` | create |
+| `docs/evidence/m1-persistent-ha-acceptance.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -598,25 +601,26 @@ all planned acceptance cases. The specifications remain Draft.
 
 | Checkpoint | Evidence and boundary |
 |---|---|
-| SQLite kernel | [Receipt](../docs/evidence/m1-storage-kernel.json): atomic storage and replay records. |
-| Identity policy and leases | [Receipt](../docs/evidence/m1-identity-policy.json): mappings, permissions and absolute leases. |
-| HA protocols | [Receipt](../docs/evidence/m1-ha-protocol.json): fixed endpoints and bounded exact-human proof. |
+| SQLite kernel | [Receipt](../docs/evidence/m1-storage-kernel.json): atomic commits/replay. |
+| Identity policy and leases | [Receipt](../docs/evidence/m1-identity-policy.json): mappings/permissions/leases. |
+| HA protocols | [Receipt](../docs/evidence/m1-ha-protocol.json): fixed endpoints and exact-human proof. |
 | Standalone authentication | [Receipt](../docs/evidence/m1-standalone-auth.json): browser-bound auth/cleanup. Browser return unaccepted; grant revoked (1 confirmed, 0 unknown). |
-| Installed Edge preview | [Package](../docs/evidence/m1-app-package.json), [protocol](../docs/evidence/m1-ingress-preview.json), [acceptance](../docs/evidence/m1-native-ha-acceptance.json): Edge 0.0.0-edge.1 install/start/UI/reload passed. Stateless; later services absent. |
-| Household commands | [Receipt](../docs/evidence/m1-household-commands.json) and [guide](../docs/household-setup.md): explicit setup/enrollment and revisioned edits. |
-| Member administration | [Receipt](../docs/evidence/m1-member-administration.json): activation, profile/status/exceptions and last-admin safety. |
-| Policy administration | [Receipt](../docs/evidence/m1-policy-administration.json): mapping/profile edits, provenance and independent grants. |
+| Original Edge.1 | [Receipt](../docs/evidence/m1-native-ha-acceptance.json): stateless install/start/UI/reload passed. |
+| Household commands | [Receipt](../docs/evidence/m1-household-commands.json): explicit setup/enrollment and edits. |
+| Member administration | [Receipt](../docs/evidence/m1-member-administration.json): membership and last-admin safety. |
+| Policy administration | [Receipt](../docs/evidence/m1-policy-administration.json): mappings/profiles and provenance. |
 | Standalone household API | [Receipt](../docs/evidence/m1-household-api.json): queries/commands and real session/SQLite composition. |
-| Native household API | [Receipt](../docs/evidence/m1-native-household-api.json): services, origins, leases/CSRF, outage reads. Not installed. |
-| Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json) and [guide](../docs/owned-data-directory.md): persisted UUID/channel, private files and lifecycle guards. Packaged /data provisioning pending. |
-| Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json) and [guide](../docs/administrator-recovery.md): both human APIs, console-only approval and atomic consumption; live/package acceptance pending. |
-| Snapshot creation/inspection | [Receipt](../docs/evidence/m1-snapshots.json) and [guide](../docs/snapshots.md): consistent private bundles and strict checks. Restore activation/newer-history policy remain pending. |
-| Explicit-file boundary | [Receipt](../docs/evidence/m1-explicit-storage-boundary.json): both runtime factories reject owned markers before SQLite initialization. |
-| Standalone owned data | [Receipt](../docs/evidence/m1-standalone-owned-storage.json): automatic identity, restart/replay and listener-lifetime locks. |
-| HA launcher preparation | [Receipt](../docs/evidence/m1-ha-app-bootstrap.json): fixed private child and ordered privilege drop. Image/kernel acceptance pending. |
-| Persistent Edge.2 package | [Receipt](../docs/evidence/m1-persistent-app-package.json): immutable runtime, private volume and real nonroot restart/replay. Owner acceptance pending. |
+| Native household API | [Receipt](../docs/evidence/m1-native-household-api.json): services, origins, leases/CSRF, outage reads. |
+| Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json): UUID/channel, private files and guards. |
+| Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json): human APIs, console approval and atomic consumption; live recovery pending. |
+| Snapshot creation/inspection | [Receipt](../docs/evidence/m1-snapshots.json): private bundles/checks; restore implementation pending. |
+| Explicit-file boundary | [Receipt](../docs/evidence/m1-explicit-storage-boundary.json): both factories refuse owned markers. |
+| Standalone owned data | [Receipt](../docs/evidence/m1-standalone-owned-storage.json): identity, restart/replay and locks. |
+| HA launcher preparation | [Receipt](../docs/evidence/m1-ha-app-bootstrap.json): private child and privilege-drop unit checks. |
+| Persistent Edge.2 package | [Receipt](../docs/evidence/m1-persistent-app-package.json): immutable image, volume and kernel/replay checks. |
+| Persistent owner acceptance | [Receipt](../docs/evidence/m1-persistent-ha-acceptance.json): Edge.2 update/config/start/access/reload/restart passed. |
 
 No test credentials enter business storage, evidence, responses or snapshots. Native authentication
-is independent of standalone OAuth. Current outstanding work includes native private data provisioning, updated app
-packaging and UI, restore activation/newer-history policy, standalone companion authority and complete deployment/channel
+is independent of standalone OAuth. Outstanding work includes product UI, restore activation and the accepted A30
+history policy, live household/recovery commands, standalone companion authority and complete deployment/channel
 acceptance. Passing protocol/ASGI fixtures never establishes those remaining live gates.

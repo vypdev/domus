@@ -1,10 +1,10 @@
 # Home Assistant app installation
 
-Status: native Ingress authentication preview and source-bound Edge app package implemented.
-Local arm64 container tests and both native CPU families in CI pass for package commit
-650f1517f0e15664ea455628e63154dada0414f2. Edge 0.0.0-edge.1 is installed and running on the owner's
-HA; Open Web UI and normal Chrome reload use the existing HA session successfully. No production
-release is available; the complete product remains under development.
+Status: persistent Edge 0.0.0-edge.2 is installed and running on the owner's HA. Update, origin
+configuration, start, existing-session access, normal Chrome reload and app restart passed on
+2026-10-31. Both native CPU-family container jobs pass for package head fcbf786. The complete product
+UI, live household/recovery operations and restore remain pending; no production release is available.
+[Owner acceptance](evidence/m1-persistent-ha-acceptance.json) is separate from the original Edge.1 preview.
 
 ## Intended user journey
 
@@ -30,8 +30,9 @@ test app/repository when that testing ends; production installation
 must use the eventual published stable repository. Do not add the default repository URL yet:
 the default branch does not contain this preview package.
 
-Select Domus Edge 0.0.0-edge.1. Supervisor builds the app locally; the Dockerfile fetches immutable
-runtime commit 98bd12f1bf141ba64053730b2686bd848aee1b1c and verifies its SHA-256 before extracting it.
+Select Domus Edge 0.0.0-edge.2. Supervisor builds the app locally and verifies its immutable runtime
+archive before extracting it; the exact pin is recorded below. The original Edge.1 used runtime
+98bd12f1bf141ba64053730b2686bd848aee1b1c.
 Python/uv image digests and the dependency lock are fixed. No registry login is needed.
 
 The installed app is `62fdc661_domus_edge`. Open it at
@@ -41,7 +42,7 @@ HA OS 18.3 and Frontend 20260930.5. Start on boot, watchdog and automatic update
 [The native acceptance receipt](evidence/m1-native-ha-acceptance.json) records the bounded scope.
 It does not claim that later source changes are in this immutable-source image.
 
-## Current native preview
+## Original Edge.1 preview
 
 The preview runs with `domus-ingress --channel edge` inside the Supervisor container. Configuration
 supplies SUPERVISOR_TOKEN privately; no human enters or copies a token. The private listener accepts
@@ -63,19 +64,18 @@ administrator credential; it must stay private and must never substitute for the
 The first preview is deliberately stateless and runs as UID/GID 65532. It does not establish persisted
 installation identity, household setup, backup behavior or production acceptance. Container tests use
 fictional tokens with networking disabled, exercise the real listener and remove only their own
-temporary containers. The image remains available locally as the current review/rollback artifact.
+temporary containers. That original image remains available locally as the previous rollback artifact.
 
 The later [persistent native API](native-household-api.md) is a tested development CLI with SQLite,
-bounded Ingress sessions and the shared household routes. It has not replaced this installed preview.
-App data ownership, automatic installation identity and product UI must be packaged and verified
-before those later services can be accepted through this installation journey.
+bounded Ingress sessions and the shared household routes. Edge.2 now packages it with private data and automatic identity. Product UI and live household/recovery
+acceptance remain pending; the earlier preview evidence does not establish those later services.
 
-## Persistent Edge.2 candidate
+## Persistent Edge.2
 
 Edge 0.0.0-edge.2 now packages immutable runtime d013cf2c8b932d0e00f5858053cbc0e663d5eee1,
 archive SHA-256 fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c.
-The owner still has Edge.1 until an explicit update is performed and verified. Source preparation
-is not installed-runtime evidence.
+The owner update and configured startup are now verified; source preparation and image checks remain
+separate from the bounded [live receipt](evidence/m1-persistent-ha-acceptance.json).
 
 In the app Configuration tab, set public_origins to one to four exact URLs used to open HA, including
 scheme and port when present, for example http://homeassistant.local:8123. No paths or credentials.
@@ -89,13 +89,14 @@ No host port, mount, capability, management API or protection-mode change is req
 installation persists its UUID/channel and SQLite schema before listening, without creating a home.
 Identity, household records and operation receipts survive restart; sessions are memory-only. The
 initial page is still a connection preview. Household/member/policy/recovery APIs are now packaged,
-while the complete interface, restore activation and live acceptance remain pending.
+while the complete interface, restore activation and live household/recovery operations remain pending.
 
 Local isolated arm64 tests verify process IDs/groups/capabilities, private ownership, inability to
 regain root, forged-direct-request rejection, shared console attachment, an excluded second runtime
 and one-effect original-command replay after restart. Storage records use a fictitious test authority;
-these tests do not prove a live human sign-in. Both native CPU-family CI checks and updated owner
-Chrome/Ingress acceptance are separate gates. See [package evidence](evidence/m1-persistent-app-package.json)
+these tests do not prove a live human sign-in. Both native CPU-family CI checks also pass. Owner
+Chrome/Ingress access, normal reload and app restart pass separately; household commands, outage
+behavior and recovery were not exercised on the owner's HA. See [package evidence](evidence/m1-persistent-app-package.json)
 and [private data lifecycle](owned-data-directory.md).
 
 Official references: [Ingress authentication and relative paths](https://contributors.home-assistant.io/apps/guides/ingress/),

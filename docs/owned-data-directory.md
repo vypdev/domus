@@ -1,8 +1,9 @@
 # Owned data directory
 
 Status: the private-directory lifecycle and both persistent CLIs are implemented and tested on
-POSIX filesystems. The installed Edge 0.0.0-edge.1 remains the stateless connection preview. This
-checkpoint does not establish writable storage for the packaged UID on the owner's Supervisor.
+POSIX filesystems. Edge 0.0.0-edge.2 is installed on the owner's Supervisor and passes configured
+start, existing-session access, normal reload and restart. [Owner evidence](evidence/m1-persistent-ha-acceptance.json)
+records that bounded scope; real-image storage/replay evidence is separate from live household commands.
 
 ## Runtime commands
 
@@ -90,8 +91,8 @@ console attachment uses --data-directory for either mode.
 
 Supervisor supplies an app's own /data mount. The final package must provision its private child
 directory for the runtime UID, preserve it on upgrade and prove that behavior on both CPU families.
-The old nonroot connection-preview image does not yet do this. No package, manifest permission or
-live HA data was changed in this checkpoint. See [native API](native-household-api.md),
+The original nonroot Edge.1 preview did not do this; Edge.2 now packages the launcher and passed
+both native CPU-family container checks and owner startup/restart. See [native API](native-household-api.md),
 [installed preview](installation-home-assistant.md) and [operator limits](operations-identity-storage.md).
 
 ### Packaged launcher preparation
@@ -109,7 +110,7 @@ Symlinks, special options files and multiply linked options fail.
 
 Before executing the fixed Ingress entrypoint, it clears supplementary groups, sets GID/UID 65532,
 checks all real/effective IDs and passes only a fixed environment with the private Supervisor token.
-There is no root server fallback. The owned-directory protocol then governs SQLite. This launcher is
-prepared in source; the installed image does not use it. Local file and ordered-syscall tests do not
-prove Linux kernel privilege dropping or the final image. The next immutable package must exercise
-those checks on both CPU families. See [evidence](evidence/m1-ha-app-bootstrap.json).
+There is no root server fallback. The owned-directory protocol then governs SQLite. The installed
+Edge.2 image uses this launcher. [Unit evidence](evidence/m1-ha-app-bootstrap.json) is distinct from
+the [real-image kernel checks](evidence/m1-persistent-app-package.json) on both CPU families and the
+bounded owner acceptance. Live household/recovery/restore acceptance is not inferred from startup.

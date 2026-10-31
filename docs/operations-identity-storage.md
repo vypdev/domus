@@ -2,9 +2,10 @@
 
 Status: both persistent household APIs, bounded sessions, transactional SQLite schema 3 and
 [console-approved administrator recovery](administrator-recovery.md) are implemented. Manual
-[snapshot creation/inspection](snapshots.md) is also available. Restore, private app data provisioning
-and complete deployment acceptance remain pending. The installed Edge
-preview is unchanged. Do not use SQL edits to bypass setup.
+[snapshot creation/inspection](snapshots.md) is also available. Persistent Edge.2 now passes private
+data startup, existing-session access, reload and restart on the owner target. Restore, product UI,
+live household/recovery commands and complete deployment acceptance remain pending. Do not use SQL
+edits to bypass setup.
 
 ## Authentication API
 
@@ -57,13 +58,15 @@ atomic; old households without policy fail closed rather than promoting a browse
 exact target/request/UUID/channel/mapping/revision binding, ten-minute expiry and atomic single use.
 Snapshot creation/inspection now verifies checkpoint/schema/identity/integrity/checksum through the
 installation console. Restore and activation into a new owned directory remain pending, including the
-decision about newer replay history. No automatic backup schedule/retention is approved.
+implementation of the accepted [A30](decisions.md) policy for retaining later processed history.
+No automatic backup schedule/retention is approved.
 
 The [native persistent runtime](native-household-api.md) clears only its local bindings on shutdown;
 Supervisor owns its upstream cookie and transport grant. Reopening through HA freshly proves the
 human, while the matching SQLite records and receipts survive. Its fixed-origin configuration and
 original lease deadline apply independently of forwarding headers. This runtime is not yet the
-installed Edge app; private-directory provisioning and updated live acceptance remain pending.
+original Edge.1 preview. Edge.2 now packages it and passes owner start/reload/restart; complete UI and
+live household/recovery/restore acceptance remain pending.
 
 The [owned data lifecycle](owned-data-directory.md) now persists UUID/channel initialization state
 and holds a process lock for either listener. A ready installation refuses missing/empty SQLite

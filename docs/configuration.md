@@ -2,13 +2,14 @@
 
 For the native HA app, follow [app installation](installation-home-assistant.md). It uses Ingress
 and requires no second login. The [native persistent development runtime](native-household-api.md)
-has a separate explicit database/UUID/fixed-origin contract; it is not in the installed preview.
+also has an explicit database/UUID/fixed-origin development contract. Installed Edge.2 uses the
+managed-directory launcher described below.
 The options below apply to the independent standalone runtime.
 
 Both CLIs support [--data-directory](owned-data-directory.md) for an existing private
 0700 directory owned by its runtime UID. It generates/preserves installation identity, checks files
 and holds the process lock until shutdown. Use it with --public-origin; do not also supply
---database or --instance-id. The installed stateless Edge preview does not enable it yet.
+--database or --instance-id. Installed Edge.2 wires this lifecycle through its fixed launcher.
 Both explicit-file runtime modes reject a parent installation.json marker before SQLite initialization.
 Use the owned-directory entrypoint for managed data; an explicit file cannot bypass its locks.
 
@@ -83,10 +84,10 @@ The command disables proxy-header rewriting and access logs, so OAuth callback q
 Private HA wire logging is disabled. Logs contain allowlisted codes and cleanup counts, never raw
 credentials or provider payloads. No credential is supplied as a CLI argument or stored in SQLite.
 
-## Prepared native package launcher
+## Native package launcher
 
-The source-only domus-ha-app --channel edge command has fixed /data paths and UID/GID 65532. It is
-not the entrypoint of installed Edge 0.0.0-edge.1 yet. Its only options.json field is public_origins:
+The installed Edge.2 domus-ha-app --channel edge entrypoint has fixed /data paths and UID/GID 65532.
+Its only options.json field is public_origins:
 an array of one to four distinct origins used to open HA, such as http://homeassistant.local:8123.
 Scheme/host/port must be explicit and no path, query, credentials or fragment is accepted. Values
 normalize through the same PublicOrigins adapter as the native CLI. The file is bounded to 16,384

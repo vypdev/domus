@@ -81,7 +81,9 @@ inspection needs no HA token or additional HA authorization. No HTTP backup endp
 See [source-identified evidence](evidence/m1-snapshots.json), [owned data](owned-data-directory.md),
 [migrations](migrations-identity-storage.md) and [operator limits](operations-identity-storage.md).
 The restore flow must still preserve the selected checkpoint and replay safeguards before activation
-in a new matching directory, with writes stopped. Its newer-history decision is awaiting owner input.
+in a new matching directory, with writes stopped. The owner accepted [A30](decisions.md): restore the
+checkpoint's state while retaining readable later receipts/history as already processed, without
+executing their effects again. Evidence reconciliation and safe activation are still unimplemented.
 
 Implementation references: [Python sqlite3 backup interface](https://docs.python.org/3.14/library/sqlite3.html#sqlite3.Connection.backup)
 and [SQLite backup semantics](https://www.sqlite.org/backup.html). The inspected local runtime is
