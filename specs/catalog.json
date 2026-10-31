@@ -413,26 +413,35 @@
       "status": "proposed",
       "scope": "Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-31",
+      "lastVerified": "2026-11-01",
       "specs": [
         "specs/household-tasks.md",
         "specs/task-execution-foundation.md"
       ],
-      "workflows": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
       "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "code": [
+        "backend/src/domus/domain/task_values.py",
+        "backend/src/domus/domain/task_policy.py"
+      ],
+      "tests": [
+        "tests/backend/test_task_values.py",
+        "tests/backend/test_task_policy.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/evidence/task-execution-foundation.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
-        "blockingDecisions": "Executable current-authority/override contracts; first-release advanced task-type matrix. The owner confirmed role-default verification, material-completion handling and preservation of completed downstream work/points when its prerequisite is reopened on 2026-10-29. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
+        "implementationEvidence": "partial: immutable task values and pure lifecycle/profile/performer/graph rules; 192 policy tests, 153 statements and 58 branches at 100%; no task commands, durable task records or HTTP routes yet",
+        "blockingDecisions": "Prerequisite approval timing awaits the owner. Eligible restricted self-claim is confirmed and its pure profile/policy predicate is tested; current authority, assignment/capacity, transactional execution, actual Inventory/Points consumers, task UI and deployment acceptance remain unimplemented.",
         "copilotChangesAllowed": false
       }
     },

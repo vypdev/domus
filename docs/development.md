@@ -263,3 +263,17 @@ builds and browser assertions. Current-head hosted CI/Bugbot are separate PR gat
 is not a Domus installation, product UI, native Ingress/standalone OAuth proof, owner Chrome
 dogfooding or evidence for the 48 proposed household-interface cases. Stable/Edge and both deployment
 targets retain their own pending acceptance obligations.
+
+## Task execution policy checkpoint
+
+Issue #13 has an Action-published [backend companion](../specs/task-execution-foundation.md).
+Its first source checkpoint contains immutable task values and pure lifecycle, profile eligibility,
+performer verification and acyclic graph rules. These helpers never authenticate or authorize a
+request. Actual task commands, repositories, APIs and consumers are subsequent work.
+
+Run `uv run pytest tests/backend/test_task_values.py tests/backend/test_task_policy.py` for the
+new policy assertions, and the existing complete backend coverage command for the complete source
+scope. The whole-source check includes both new runtime modules immediately. Local WebSocket
+fixtures bind disposable loopback ports; a sandbox that denies listeners must permit that test
+operation rather than skipping the adapter cases. No owner HA is needed for this checkpoint.
+[Evidence](evidence/task-execution-foundation.json) records measured scopes and remaining work.

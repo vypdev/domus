@@ -1,0 +1,143 @@
+"""Immutable task inputs and policy values; construction does not prove authority."""
+
+from dataclasses import dataclass
+from enum import StrEnum
+
+from domus.domain.errors import InvalidInput
+from domus.domain.identity import Role
+from domus.domain.storage import validate_identifier
+
+
+class DefinitionState(StrEnum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    ARCHIVED = "archived"
+
+
+class OccurrenceState(StrEnum):
+    DRAFT = "draft"
+    AVAILABLE = "available"
+    ASSIGNED = "assigned"
+    IN_PROGRESS = "in_progress"
+    BLOCKED = "blocked"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    SKIPPED = "skipped"
+
+
+class Priority(StrEnum):
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"
+
+
+class VerificationMode(StrEnum):
+    ROLE_DEFAULT = "role_default"
+    ADULT = "authorized_adult"
+
+
+class MaterialRecording(StrEnum):
+    REVIEW_ON_COMPLETION = "review_on_completion"
+    SEPARATE = "separate_recording"
+
+
+def validate_task_text(
+    value: str, maximum: int, *, required: bool, multiline: bool = False
+) -> None:
+    if (
+        not isinstance(value, str)
+        or len(value) > maximum
+        or (required and not value.strip())
+        or any(
+            (ord(char) < 32 and (not multiline or char not in "\t\n\r")) or ord(char) == 127
+            for char in value
+        )
+    ):
+        raise InvalidInput("invalid_task_text")
+    try:
+        value.encode("utf-8")
+    except UnicodeError:
+        raise InvalidInput("invalid_task_text") from None
+
+
+def validate_task_ids(values: tuple[str, ...]) -> None:
+    if type(values) is not tuple or len(values) > 32:
+        raise InvalidInput("invalid_task_ids")
+    for value in values:
+        validate_identifier(value)
+    if len(set(values)) != len(values):
+        raise InvalidInput("invalid_task_ids")
+
+
+@dataclass(frozen=True, slots=True)
+class TaskContent:
+    title: str
+    description: str = ""
+    priority: Priority = Priority.NORMAL
+    tags: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        validate_task_text(self.title, 160, required=True)
+        validate_task_text(self.description, 4000, required=False, multiline=True)
+        if not isinstance(self.priority, Priority):
+            raise InvalidInput("invalid_task_priority")
+        if type(self.tags) is not tuple or len(self.tags) > 16:
+            raise InvalidInput("invalid_task_tags")
+        for tag in self.tags:
+            validate_task_text(tag, 64, required=True)
+        if len(set(self.tags)) != len(self.tags):
+            raise InvalidInput("invalid_task_tags")
+
+
+@dataclass(frozen=True, slots=True)
+class TaskRules:
+    """Resolved task policy; current human and member grants are checked separately."""
+
+    claim_allowed: bool = True
+    eligible_roles: tuple[Role, ...] = (Role.ADMINISTRATOR, Role.ADULT, Role.RESTRICTED)
+    verification: VerificationMode = VerificationMode.ROLE_DEFAULT
+    adult_performer_may_approve: bool = True
+    task_scoped_material_consumption: bool = True
+    material_recording: MaterialRecording = MaterialRecording.REVIEW_ON_COMPLETION
+    point_value_minor: int = 0
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.claim_allowed) is not bool
+            or type(self.adult_performer_may_approve) is not bool
+            or type(self.task_scoped_material_consumption) is not bool
+            or type(self.eligible_roles) is not tuple
+            or len(self.eligible_roles) > len(Role)
+            or any(not isinstance(role, Role) for role in self.eligible_roles)
+            or len(set(self.eligible_roles)) != len(self.eligible_roles)
+            or not isinstance(self.verification, VerificationMode)
+            or not isinstance(self.material_recording, MaterialRecording)
+            or type(self.point_value_minor) is not int
+            or not 0 <= self.point_value_minor <= 1_000_000
+        ):
+            raise InvalidInput("invalid_task_rules")
+
+
+@dataclass(frozen=True, slots=True)
+class TaskPerformer:
+    """Member/role facts supplied by application proof, snapshotted at completion."""
+
+    member_id: str
+    role: Role
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.member_id)
+        if not isinstance(self.role, Role):
+            raise InvalidInput("invalid_task_performer")
+
+
+def validate_performers(performers: tuple[TaskPerformer, ...]) -> None:
+    if (
+        type(performers) is not tuple
+        or not 1 <= len(performers) <= 32
+        or any(not isinstance(performer, TaskPerformer) for performer in performers)
+    ):
+        raise InvalidInput("invalid_task_performers")
+    validate_task_ids(tuple(performer.member_id for performer in performers))

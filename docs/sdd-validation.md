@@ -105,3 +105,22 @@ current total. The unpublished household-interface proposal remains outside the 
 These documentation checks add no executed product journey or implementation evidence. The original
 catalog validator and local links are separate from hosted current-head CI and complete Bugbot review.
 [Policy review evidence](evidence/task-policy-sdd-review.json) records provenance, identities and counts.
+
+## Task execution contract and first policy checkpoint — 2026-11-01
+
+The Action registered the task-execution companion on its exact issue #13 branch at
+`d4f3f911dd145d77255f47a882542f08e5c98055`. Original pinned format and consistency/path
+validation passed against immutable base `a63b2315cd5121dde9585ba8875e286fdef5330e`.
+Before runtime source changes, commit `48d8be0` published concrete planned module/test paths,
+permission boundaries and the confirmed self-claim policy. Subsequent local refinements preserve
+all 49 original household-task case rows and all 42 companion case rows.
+
+The current inventory is fourteen Draft SDDs across eleven capabilities, 109 requirements and
+485 distinct planned case IDs. The earlier thirteen/95/443 count describes the issue #11 snapshot.
+The household-interface proposal remains unpublished and excluded from these totals.
+
+The first executable task checkpoint is pure policy: 192 new tests, with all 153 statements and
+58 branches covered. The whole backend passes 1,603 tests with all 4,857 statements and 1,366
+branches covered. These are measured assertions and coverage, not 485 completed product journeys.
+Task command authorization, SQLite records, HTTP and real consumer delivery remain unimplemented;
+prerequisite approval timing awaits the owner. See [checkpoint evidence](evidence/task-execution-foundation.json).

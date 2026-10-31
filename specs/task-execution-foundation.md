@@ -181,7 +181,7 @@ Policy PUT is administrator-controlled. Cross-field validation rejects unknown r
 
 ### Executable policy refinements before implementation
 
-The Action published this Draft before source changes. The declared paths below are concrete planned leaves; they confer no implementation credit. Domain value objects use exact enums/booleans, valid UTF-8 text without control characters (U+0000 through U+001F or U+007F), bounded unique tuples and positive signed-64-bit revisions. UTC milliseconds are nonnegative signed-64-bit integers. Invalid values cannot be reconstructed permissively from storage. Ordinary title-only creation is active/available; an explicitly draft definition creates a draft occurrence. Initial definition states are draft or active; paused/archived are later transitions. Pausing/archiving stops new occurrence creation but retains existing work and history.
+The Action published this Draft before source changes. The declared paths below are concrete planned leaves; they confer no implementation credit. Domain value objects use exact enums/booleans, valid UTF-8 text without control characters (U+0000 through U+001F or U+007F), except tab/newline/carriage return in multiline descriptions and reasons, bounded unique tuples and positive signed-64-bit revisions. UTC milliseconds are nonnegative signed-64-bit integers. Invalid values cannot be reconstructed permissively from storage. Ordinary title-only creation is active/available; an explicitly draft definition creates a draft occurrence. Initial definition states are draft or active; paused/archived are later transitions. Pausing/archiving stops new occurrence creation but retains existing work and history.
 
 New proposed semantic permission IDs are tasks.read, tasks.claim, tasks.manage, tasks.record_for_others and tasks.material_use. These are additive to the existing tasks.create/complete/approve/configure. Defaults: all profiles can read household tasks; administrator/adult/restricted can claim eligible work and use scoped linked materials; administrator/adult can manage work and record on behalf of others. Viewer mutations remain denied by default. Household/profile/member adjustments apply under the accepted precedence. Claim is a real independent action; it must not pretend an available task was already assigned to evade the existing restricted-completion scope. Restricted completion still requires actual assignment and its own participation. Policy configuration stays administrator-controlled; approval still requires a current adult and approval permission. A new permission never turns a technical identity into a person.
 
@@ -471,7 +471,7 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `docs/native-household-api.md` | update |
 | `docs/sdd-validation.md` | update |
 | `docs/development.md` | update |
-| `specs/README.md` | update |
+| `specs/README.md` | reference |
 | `specs/household-identity.md` | update |
 | `backend/src/domus/domain/identity.py` | update |
 | `backend/src/domus/application/ports.py` | update |

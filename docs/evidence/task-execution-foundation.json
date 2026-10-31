@@ -1,0 +1,96 @@
+{
+  "verifiedAtUTC": "2026-10-31T23:06:57.531845+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/13",
+  "sourceBase": "48d8be0",
+  "sourceIdentity": "Working source hashes below; source registration is not completed task API acceptance.",
+  "sources": {
+    "backend/src/domus/domain/task_values.py": "c82769b04fce829cf7d49cfd903243e5cfc1a40738408b1aed049e5f4a1120ee",
+    "backend/src/domus/domain/task_policy.py": "1fabca13cde3978213d103306fac6372de4a6e86b4a91aaafe3212f321e18b4b",
+    "tests/backend/test_task_values.py": "e1c0e5d6ca1c2834aed35ce30478dfd7c3ffa5b5f960435de988062b95fc5b7b",
+    "tests/backend/test_task_policy.py": "39479f8ad56b13de8d83e526306cc55ec9632736da93d2dc0e79a3174142ffd6"
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "coverage": "7.17.0"
+  },
+  "tests": {
+    "newPurePolicy": 192,
+    "wholeBackend": 1603,
+    "existingTooling": 72,
+    "architectureFixtures": 41
+  },
+  "purePolicyCoverage": {
+    "covered_lines": 153,
+    "num_statements": 153,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 0,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 58,
+    "num_partial_branches": 0,
+    "covered_branches": 58,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "wholeBackendCoverage": {
+    "covered_lines": 4857,
+    "num_statements": 4857,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 132,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 1366,
+    "num_partial_branches": 0,
+    "covered_branches": 1366,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "architecture": {
+    "actualGraphFiles": 105,
+    "actualGraphDependencies": 552,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "strictBackendTypes": "PASS"
+  },
+  "commands": [
+    "uv run pytest tests/backend/test_task_values.py tests/backend/test_task_policy.py --cov=domus.domain.task_values --cov=domus.domain.task_policy --cov-branch",
+    "uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml",
+    "uv run mypy backend/src",
+    "uv run lint-imports --config architecture/python-application.ini --no-cache",
+    "uv run pytest tests/python tests/architecture --no-cov",
+    "uv run ruff check .",
+    "uv run ruff format --check .",
+    "uv run domus-check docs"
+  ],
+  "assertions": [
+    "Exact text/enum/boolean/list/point bounds reject malformed values without silently trimming or rounding.",
+    "Independent lifecycle tables forbid arbitrary generic completion/reopening and require meaningful block/cancel/skip reasons.",
+    "Restricted profile eligibility is configurable; a pure match is not a permission grant.",
+    "Actual performers determine required adult verification; adult participation and independent-adult alternatives are distinct.",
+    "Unknown, duplicate, self and cyclic dependency edges fail; a 3000-node graph avoids recursive stack failure."
+  ],
+  "executionLimits": [
+    "The first full sandbox run could not bind loopback WebSocket fixtures (50 listener-related failures); the complete unchanged suite was rerun with local-listener permission and all 1603 passed. No test was skipped to obtain coverage.",
+    "Coverage.py default non-executable/abstract exclusions are unchanged; no omit/pragma/no-branch or source-scope narrowing was introduced.",
+    "The two modules have no HTTP/HA/SQL/clock/entropy dependencies and do not yet create or persist task records.",
+    "Current task command authorization, capacity/races, SQLite migration/restore, HTTP and actual downstream consumers remain unimplemented.",
+    "Prerequisite approval gating awaits the owner. This checkpoint implements no assumed answer.",
+    "No actual owner HA, browser UI, package adoption or release acceptance was performed. Hosted CI/current-head Bugbot remain separate future evidence."
+  ],
+  "inventory": {
+    "capabilities": 11,
+    "draftSDDs": 14,
+    "requirements": 109,
+    "distinctPlannedCases": 485,
+    "newCompanionCases": 42,
+    "originalHouseholdTaskCasesRetained": 49,
+    "caseCredit": "Planned inventory is distinct from parametrized test executions; no full companion acceptance claimed."
+  },
+  "copilotChanged": false
+}
