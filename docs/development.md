@@ -6,7 +6,7 @@ The issue #6 checkpoints introduce storage, pure identity policy, local authoriz
 HA protocol adapters have provider/loopback tests and the standalone authentication API/CLI is wired.
 Explicit setup, own enrollment and household edits now have application-layer commands. The native
 Ingress connection preview and immutable-source Edge package are installed and tested on the owner's HA.
-Public command wiring, recovery, snapshots, product UI and complete
+Native persistent wiring, recovery, snapshots, product UI and complete
 Stable/Edge release acceptance remain pending.
 
 ## Reproduce the environment
@@ -165,3 +165,11 @@ mapping/profile changes with preserved setup provenance and independent grants. 
 helper prepares bounded human facts for member and policy safeguards, with no framework imports.
 Current local authority and inventory remain transactional. Source/audit corruption, lost authority,
 source outage, stale state, rollback-free conflicts and restart/replay behavior have real-file tests.
+
+The [household HTTP checkpoint](household-api.md) exposes local authorization/roster/policy/operation
+queries and strict write DTOs. The standalone --database option wires the real session, private
+directory, use cases and SQLite adapter. Tests include actual composed-runtime restart, channel
+refusal, CSRF/origin/idempotency, ambiguous JSON refusal, HA outage read grace and credential
+logout/expiry races. [Its evidence](evidence/m1-household-api.json) and
+[published OpenAPI](contracts/household-api.openapi.json) identify the implemented surface.
+Recovery and native persistence/UI remain outstanding; no new runtime was installed on the owner's HA.

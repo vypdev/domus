@@ -12,7 +12,7 @@ from fastapi import FastAPI, Query, Request, Security
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.security import APIKeyCookie
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import Field, model_validator
 from starlette.exceptions import HTTPException
 from starlette.types import ASGIApp, Scope
 
@@ -26,9 +26,13 @@ from domus.domain.errors import (
     IdentityRejected,
     IdentityUnavailable,
     InvalidInput,
+    NotFound,
+    StorageBusy,
     Unauthenticated,
 )
 from domus.entrypoints.bounded_http import BoundedHTTP
+from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
+from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,6 +114,31 @@ _PUBLIC_CODES = frozenset(
         "invalid_request",
         "sign_in_declined",
         "request_forbidden",
+        "invalid_household",
+        "invalid_time_zone",
+        "invalid_revision",
+        "invalid_administrator_mapping",
+        "invalid_policy",
+        "invalid_permission_rule",
+        "protected_permission",
+        "invalid_profile_rule",
+        "invalid_member",
+        "invalid_permission_rules",
+        "invalid_profile_rules",
+        "invalid_idempotency_key",
+        "household_exists",
+        "member_exists",
+        "member_missing",
+        "member_capacity",
+        "mapping_target_inactive",
+        "setup_provenance_required",
+        "setup_administrator_mismatch",
+        "ha_administrator_required",
+        "identity_state_changed",
+        "last_administrator",
+        "household_configuration_required",
+        "operation_missing",
+        "storage_busy",
     }
 )
 
@@ -123,18 +152,30 @@ def _error(status: int, code: str, correlation: str) -> JSONResponse:
             "message": (
                 "The sign-in attempt is missing, expired or no longer valid."
                 if restart_login
-                else "The request was not accepted. No household change was made."
+                else (
+                    "Domus could not confirm the request result."
+                    if status == 500
+                    else "The request was not accepted. No household change was made."
+                )
             ),
             "action_required": (
                 "Start a new sign-in at /api/v1/auth/start and complete it within five minutes. "
                 "Existing household records are retained."
                 if restart_login
-                else "Review the request or sign in again. Existing household records are retained."
+                else (
+                    "For a household change, retry the same payload and Idempotency-Key or check "
+                    "its operation ID. Do not start a replacement command."
+                    if status == 500
+                    else (
+                        "Review the request or sign in again. "
+                        "Existing household records are retained."
+                    )
+                )
             ),
             "correlation_id": correlation,
         },
         status_code=status,
-        headers=_SECURITY_HEADERS,
+        headers={**_SECURITY_HEADERS, **({"Retry-After": "1"} if code == "storage_busy" else {})},
     )
 
 
@@ -196,20 +237,11 @@ class _HTTPBoundary(BoundedHTTP):
                 raise Forbidden("request_forbidden")
 
 
-class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+_Strict = StrictModel
 
 
 class EmptyRequest(_Strict):
     pass
-
-
-class ErrorResponse(_Strict):
-    state: Literal["blocked"]
-    code: str
-    message: str
-    action_required: str
-    correlation_id: str
 
 
 class CallbackQuery(_Strict):
@@ -254,6 +286,7 @@ def create_app(
     settings: HTTPSettings,
     *,
     correlation: Callable[[], str],
+    household_context: Callable[[str], HouseholdHTTPContext] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="Domus",
@@ -283,6 +316,8 @@ def create_app(
             (InvalidInput, 422),
             (Conflict, 409),
             (IdentityUnavailable, 503),
+            (StorageBusy, 503),
+            (NotFound, 404),
         ):
             if isinstance(failure, kind):
                 status = code
@@ -415,4 +450,11 @@ def create_app(
             ),
         )
 
+    if household_context is not None:
+        factory = household_context
+
+        def context(request: Request) -> HouseholdHTTPContext:
+            return factory(cast(str, _cookie(request.scope, settings.session_cookie)))
+
+        app.include_router(create_household_router(context, security=session_security))
     return app

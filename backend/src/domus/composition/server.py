@@ -1,15 +1,17 @@
-"""Compose the standalone authentication runtime; household commands are not wired yet."""
+"""Compose standalone authentication and optional private SQLite household services."""
 
 import argparse
 import logging
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
 
 from domus.application.authentication import Authentication
 from domus.application.sessions import SessionGuard
+from domus.composition.household import standalone_context
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.http import HTTPSettings, create_app
@@ -18,6 +20,7 @@ from domus.infrastructure.ha_config import HAEndpoint, OAuthConfiguration
 from domus.infrastructure.ha_http import HomeAssistantOAuth
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
+from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.standalone_sessions import StandaloneIdentity
 
 
@@ -37,6 +40,7 @@ def create_runtime(
     channel: str,
     *,
     development_http: bool = False,
+    database: Path | None = None,
 ) -> AuthenticationRuntime:
     installation = Installation(instance_id, channel)
     config = OAuthConfiguration(HAEndpoint(ha_origin), public_origin, development_http)
@@ -47,19 +51,26 @@ def create_runtime(
     authentication = Authentication(MemoryLoginAttempts(), identity, clock, entropy)
     tag = f"domus-{installation.channel}-{installation.instance_id.replace('-', '')[:12]}"
     settings = HTTPSettings(config.public_origin, tag, entropy.new().encode("ascii"))
+    guard = SessionGuard(identity, identity, clock)
+    context = None
+    if database is not None:
+        store = SQLiteDatabase(database, installation)
+        store.initialize()
+        context = standalone_context(store, guard, identity)
     app = create_app(
         authentication,
-        SessionGuard(identity, identity, clock),
+        guard,
         identity,
         settings,
         correlation=lambda: "cor_" + entropy.new(),
+        household_context=context,
     )
     return AuthenticationRuntime(app, identity)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Run the Domus standalone authentication checkpoint."
+        description="Run Domus standalone; --database enables persistent household services."
     )
     parser.add_argument("--ha-url", required=True)
     parser.add_argument("--public-origin", required=True)
@@ -68,6 +79,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--development-http", action="store_true")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8099)
+    parser.add_argument(
+        "--database", type=Path, help="Owned SQLite file; parent directory must exist."
+    )
     args = parser.parse_args(argv)
     try:
         if not 1 <= args.port <= 65535:
@@ -80,6 +94,7 @@ def main(argv: list[str] | None = None) -> int:
             args.instance_id,
             args.channel,
             development_http=args.development_http,
+            database=args.database,
         )
     except DomusError as error:
         print(f"Configuration rejected: {error.code}", file=sys.stderr)

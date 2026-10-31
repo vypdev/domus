@@ -455,6 +455,18 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/containers/test_app_image.py` | create |
 | `docs/evidence/m1-app-package.json` | create |
 | `README.md` | update |
+| `backend/src/domus/application/household_queries.py` | create |
+| `backend/src/domus/entrypoints/household_http.py` | create |
+| `backend/src/domus/entrypoints/http_contract.py` | create |
+| `backend/src/domus/composition/household.py` | create |
+| `backend/src/domus/infrastructure/session_access.py` | create |
+| `tests/backend/test_household_queries.py` | create |
+| `tests/backend/test_household_http.py` | create |
+| `tests/backend/test_household_runtime.py` | create |
+| `tests/backend/test_session_directory.py` | create |
+| `docs/household-api.md` | create |
+| `docs/contracts/household-api.openapi.json` | create |
+| `docs/evidence/m1-household-api.json` | create |
 | `backend/src/domus/application/administrator_proof.py` | create |
 | `backend/src/domus/application/policy_commands.py` | create |
 | `tests/backend/test_policy_commands.py` | create |
@@ -587,3 +599,14 @@ mapping/profile changes, preserved setup provenance and independent grants, fres
 and transaction-time last-administrator safety. Shared proof preparation preserves member race tests.
 Public command/query wiring, recovery, snapshots, native persistence/read grace and full deployment
 acceptance remain pending. No later commands are claimed present in the installed stateless preview.
+
+
+### Standalone household HTTP checkpoint
+
+[Household API](../docs/household-api.md) and [source-identified evidence](../docs/evidence/m1-household-api.json)
+now record strict local queries and household/member/policy routes, server-bound session actors,
+private directory preparation and --database composition. Real ASGI/SQLite tests cover scoped reads,
+privileged receipt access, strict JSON, Origin/CSRF/idempotency, outage/expiry/logout races, restart,
+channel refusal and the [published OpenAPI](../docs/contracts/household-api.openapi.json).
+Native persistence/session/CSRF wiring and UI, recovery, snapshots, standalone companion authority
+and complete deployment/channel acceptance remain pending. The installed native preview is unchanged.

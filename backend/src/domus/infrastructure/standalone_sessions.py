@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 from domus.application.authentication_values import validate_login_material
 from domus.application.identity_ports import LeaseClock
 from domus.application.session_values import SessionLease
+from domus.application.sessions import SessionGuard
 from domus.domain.errors import Conflict, DomusError, IdentityRejected, InvalidInput
 from domus.domain.identity import HumanIdentity
 from domus.infrastructure.ha_http import HomeAssistantOAuth, OAuthTokens
@@ -139,6 +140,28 @@ class StandaloneIdentity:
             credentials = self._credentials.get(session_id)
             self.remove(session_id)
         return None if credentials is None else self._revoke(credentials.tokens)
+
+    def directory(self, session_id: str, ha_user_ids: tuple[str, ...]) -> tuple[HumanIdentity, ...]:
+        if not ha_user_ids:
+            return ()
+        SessionGuard(self, self, self.clock).write(session_id)
+        with self._lock:
+            selected = self._credentials.get(session_id)
+            if selected is None:
+                raise IdentityRejected("session_changed")
+        with selected.gate:
+            with self._lock:
+                if self._credentials.get(session_id) is not selected:
+                    raise IdentityRejected("session_changed")
+            humans = self.socket.directory_users(selected.tokens.access_token, ha_user_ids)
+            with self._lock:
+                lease = self.leases.get(session_id)
+                if self._credentials.get(session_id) is not selected or lease is None:
+                    raise IdentityRejected("session_changed")
+                if not lease.valid_at(self.clock.now()):
+                    self.remove(session_id)
+                    raise IdentityRejected("session_expired")
+            return humans
 
     def shutdown(self) -> tuple[int, int]:
         """Erase every local credential; at most two bounded remote revoke calls."""

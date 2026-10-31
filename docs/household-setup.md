@@ -1,7 +1,7 @@
 # Household setup command checkpoint
 
-Status: application household/member/policy use cases and real SQLite tests implemented. HTTP/UI wiring
-is pending. The installed Edge 0.0.0-edge.1 connection preview contains none of these
+Status: application household/member/policy use cases, standalone HTTP wiring and real SQLite tests
+are implemented. Native persistent wiring and UI are pending. The installed Edge 0.0.0-edge.1 connection preview contains none of these
 commands and creates no household data.
 
 ## Explicit setup
@@ -100,8 +100,8 @@ Confirmed missing, inactive or system users are omitted. Malformed or duplicate 
 transport failure and authorization denial raise instead of returning a misleading partial result.
 Technical transport privilege supplies facts and never becomes the human's household grant.
 
-These are application boundaries, not a new public API. Public command/query wiring, console
-recovery, snapshot/restore, native local sessions and
+The [standalone household API](household-api.md) now exposes these commands and current local queries.
+Native persistent wiring, console recovery, snapshot/restore, native local sessions and
 production installation persistence remain outstanding. See
 [the governing companion](../specs/platform-foundation-identity-sqlite.md),
 [identity behavior](identity-household.md) and [evidence](evidence/m1-household-commands.json).

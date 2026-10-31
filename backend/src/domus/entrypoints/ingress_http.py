@@ -21,7 +21,7 @@ from domus.domain.errors import (
 )
 from domus.domain.identity import HumanIdentity
 from domus.entrypoints.bounded_http import BoundedHTTP
-from domus.entrypoints.http import ErrorResponse
+from domus.entrypoints.http_contract import ErrorResponse
 
 IdentityProof = Callable[[str, tuple[tuple[str, str], ...]], HumanIdentity]
 _STYLE = (

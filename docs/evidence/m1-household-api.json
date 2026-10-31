@@ -1,0 +1,83 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "16f28de5bcff87aba9aa0da4422042e2bb05b0cb",
+  "scope": "Strict household HTTP routes and local queries, production standalone session/SQLite composition and published OpenAPI; native installation unchanged",
+  "backendTests": 597,
+  "backendCoverage": {
+    "covered_lines": 2184,
+    "num_statements": 2184,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 105,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 552,
+    "num_partial_branches": 0,
+    "covered_branches": 552,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": ".venv/bin/pytest tests/backend -q -W error::ResourceWarning --cov=domus --cov-branch --cov-report=term-missing",
+  "testFirst": "Query, HTTP and session-adapter behavioral suites first failed at import because their modules did not exist; composed-runtime tests also verify the production wiring",
+  "assertions": [
+    "Explicit setup/enrollment, household/member/policy edits and local access/roster/policy/operation reads exercise real ASGI sessions and SQLite",
+    "Standalone --database initializes only schema, persists state and receipts across restart and rejects cross-channel adoption without changing existing bytes",
+    "No request actor or household selector is accepted; current local authority precedes every disclosure and privileged receipt lookup",
+    "Pending/unlinked people see only own access state; ordinary roster omits other humans HA linkage/exceptions",
+    "Writes require exact Origin, session CSRF, one bounded idempotency key and expected revision",
+    "Duplicate/malformed/nonobject/nonfinite JSON, ambiguous media, forged fields and protected overrides fail before effects",
+    "Busy writer returns storage_busy/503 and Retry-After: 1; identical request succeeds after release with one atomic effect",
+    "Outbox status is observed by exact event ID; missing/corrupt atomic records are not reported as success",
+    "Original unexpired HA-outage lease permits local reads, never writes; expiry/logout/source mismatch invalidate access",
+    "Private directory resolution uses refreshed delegated material, rejects logout/expiry races and never exposes credentials",
+    "The published OpenAPI paths/components equal the actual composed server; old auth-only schema remains independently checked",
+    "An injected response failure after commit reports uncertainty; retrying the same payload/key recovers one original effect instead of duplicating it",
+    "Own effective role is separate from the explicit member profile, preserving current mapped administrator semantics"
+  ],
+  "architecture": {
+    "files": 74,
+    "dependencies": 265,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 43 backend source files",
+    "negativeFixtures": 39
+  },
+  "schema": "Schema 2 unchanged; exact outbox delivery lookup is a read of existing data",
+  "installedPreview": "Still Edge 0.0.0-edge.1 / runtime 98bd12f1bf141ba64053730b2686bd848aee1b1c; none of these HTTP services are installed in the owner HA",
+  "standaloneDirectoryLimitation": "Current directory lookup uses the actors delegated HA grant; ordinary HA accounts may be denied lookup of other humans. Complete first-release companion/installation authority remains required, without borrowing technical privilege as the human role.",
+  "liveStandalone": "No new owner HA OAuth session requested; earlier browser return remains unaccepted and its grant was revoked",
+  "remaining": [
+    "Native persistent/session/CSRF wiring and setup UI",
+    "Console-approved recovery",
+    "Snapshot/restore",
+    "Complete standalone companion authority",
+    "Stable/Edge and both deployment-target acceptance"
+  ],
+  "priorHeadCI": {
+    "head": "16f28de5bcff87aba9aa0da4422042e2bb05b0cb",
+    "url": "https://github.com/vypdev/domus/actions/runs/41190401094",
+    "result": "PASS: six required project groups; not evidence for later code"
+  },
+  "copilot": "Unchanged; assessment-text-limit on the preceding head reported separately in https://github.com/vypdev/copilot/issues/829; scope-phase failures remain in #828",
+  "sourceSha256": {
+    "backend/src/domus/application/household_queries.py": "538c7cb118e62b613ceba15190c818b62e388cd5c09d6f1dc09a08a707958c17",
+    "backend/src/domus/application/ports.py": "75bacb56266f0ddd959c35735b448d7143be6e037ac53bd82ae9ba4255e9066f",
+    "backend/src/domus/domain/errors.py": "cb225b0e35434526fbad3603843a061fe6894001fc13e019eab7e44642196cd4",
+    "backend/src/domus/entrypoints/household_http.py": "c9e89371b30f21abfcb020c95c05755263aefc2d8a4af38b685920e316a8224e",
+    "backend/src/domus/entrypoints/http_contract.py": "13ef85b4ce8f439f5da5ba88b97651501ac8d6b673b2fa09f24d5772a1f71cba",
+    "backend/src/domus/entrypoints/http.py": "3aaa471e92d998db4e95656e4f08338abd8fa924505c4939687ee50a35655215",
+    "backend/src/domus/entrypoints/ingress_http.py": "8bae77cabbd5794f608bb0af12a2a8d63462e88cb75410d0411ba2ca44409af4",
+    "backend/src/domus/composition/household.py": "1a31a2de029870c5efa3d8c8c7ac2368bbe6069068424e3c67b55b5a6fc93f53",
+    "backend/src/domus/composition/server.py": "57e575090ed3f2e1b33fde2204eedd5dd3e53b3f8375740b39262c4d8d1976b1",
+    "backend/src/domus/infrastructure/session_access.py": "4389717f7a2cc9992f9cd24961294c2e2ace9c5950f7cceddc721e592a5c7220",
+    "backend/src/domus/infrastructure/standalone_sessions.py": "144d691be8589c9f9ecd539717e6497cdb718c28033fd39992271ac674b32252",
+    "backend/src/domus/infrastructure/sqlite.py": "2a97ed3eb70cd3a216440f6bf8ec3ad749bdb764c4c0ebafb488a37fae0445db",
+    "tests/backend/test_household_queries.py": "77c0209abda26319ae0f1e1ade640c98f777772812ca4c20612398df8d91c348",
+    "tests/backend/test_household_http.py": "63eae3829a488aba02db1e7d93faca0f3747a28b10c481620eb03ab588b20b28",
+    "tests/backend/test_household_runtime.py": "0e8f3f40e4ccb5182775daa98c074a7915431add72a642b061162aca64a43f76",
+    "tests/backend/test_session_directory.py": "906110b82cb3a91594d02c15dad5c2eb850e45443e36a4bb9e13bb3744739423",
+    "docs/contracts/household-api.openapi.json": "0018cd9f58d8c02f4cbf18291724880b25858d26f0147e2e7478a125590a4f20"
+  }
+}

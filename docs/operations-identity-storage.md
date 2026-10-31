@@ -1,8 +1,8 @@
 # Identity and storage operations
 
 Status: standalone authentication API/CLI, transactional SQLite core and schema 2 are implemented.
-Application-layer household/member/policy commands are implemented. Public command routes,
-console recovery approval, snapshot/restore commands, persistent Supervisor runtime wiring and
+Application-layer household/member/policy commands and standalone public routes are implemented.
+Console recovery approval, snapshot/restore commands, persistent Supervisor runtime wiring and
 complete deployment acceptance remain pending. Do not use SQL edits to bypass setup.
 
 ## Authentication API
@@ -19,7 +19,8 @@ complete deployment acceptance remain pending. Do not use SQL edits to bypass se
 All API responses disable caching and referrer forwarding. Errors use a stable code, state, impact,
 next action and server-created correlation; input/provider details are not reflected. Framework
 validation cannot echo an authorization code. Unknown paths and methods do not redirect. There is no
-HTTP recovery-approval route. Household/member/policy/operation/recovery routes remain to be wired.
+HTTP recovery-approval route. The standalone [household/member/policy/operation routes](household-api.md)
+are enabled by --database; recovery routes remain pending.
 
 ## Retained state and recovery
 

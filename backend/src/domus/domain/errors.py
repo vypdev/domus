@@ -17,6 +17,10 @@ class Conflict(DomusError):
     """Current durable state conflicts with the requested transition."""
 
 
+class NotFound(DomusError):
+    """An authorized scoped lookup has no matching record."""
+
+
 class Forbidden(DomusError):
     """Current authority does not permit the requested action."""
 

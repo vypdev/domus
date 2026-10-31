@@ -3,8 +3,9 @@
 For the native HA app, follow [app installation](installation-home-assistant.md). It uses Ingress
 and requires no second login. The options below apply to the independent standalone runtime.
 
-Status: these options run the standalone authentication API. They do not constitute a deployment
-package, a household setup command or complete M1 acceptance. Both installation modes and Stable/Edge
+Status: these options run the standalone API. `--database` additionally wires the persistent
+[household API](household-api.md); omitting it keeps the authentication preview. This is not a deployment
+package or complete M1 acceptance. Both installation modes and Stable/Edge
 remain first-release requirements. Production channels/artifacts have not been published.
 
 | Option | Required/default | Contract |
@@ -16,6 +17,7 @@ remain first-release requirements. Production channels/artifacts have not been p
 | --development-http | Disabled | Permits a loopback public HTTP origin; development listener must bind loopback |
 | --host | 127.0.0.1 | Listener binding; development accepts only 127.0.0.1 or ::1 |
 | --port | 8099 | Integer 1–65535; no fallback to a different port or origin |
+| --database | Omitted: authentication preview | Owned SQLite file with an existing parent directory; validates the configured UUID/channel and keeps state across restart |
 
 Example using the nonsecret UUID fixture from the tests; use the installation's own persistent UUID
 for an actual installation:
@@ -29,7 +31,8 @@ uv run --frozen domus-server \
   --development-http
 ```
 
-The command creates no household/business records and opens no business database yet. Identity
+The example omits --database and opens no business database. With --database, schema initialization
+still creates no household or member: explicit authorized API commands do that. Identity
 proof and session cookies are scoped to the configured installation/channel; that is not package or
 Stable/Edge coexistence acceptance. Production HTTPS termination and private deployment wiring
 remain deployment gates. The server uses one worker because authentication state is process-local.

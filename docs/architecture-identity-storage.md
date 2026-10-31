@@ -29,8 +29,9 @@ It checks that policy inside the write transaction before examining a previous r
 authorized replay returns the original result; changed payload conflicts. A new effect, receipt,
 audit fact and outbox event commit together. `HouseholdAccess` and `MembershipAuthorization` now
 resolve current membership/policy inside that transaction and bind the action to the proven actor.
-They do not authenticate a submitted identity; only provider proof supplies it. Household HTTP command
-entrypoints remain pending. [The application commands](household-setup.md) explicitly initialize,
+They do not authenticate a submitted identity; only provider proof supplies it. The standalone
+[household HTTP API](household-api.md) now adapts server-bound application services.
+[The application commands](household-setup.md) explicitly initialize,
 enroll, edit members and replace policy. External proof preparation holds no writer lock. Before
 save, administrator transitions compare the prepared inventory, recheck current local authority and
 preserve a proven eligible administrator. Shared application proof preparation imports only ports
@@ -78,8 +79,11 @@ proof/refresh per session and cannot restore a concurrently removed record. Unkn
 revocation is null, never fabricated success. Credentials remain bounded memory only.
 
 `domus.entrypoints.http` owns strict DTOs, cookie/origin/CSRF checks, HTTP bounds, safe errors and actual
-OpenAPI. `domus.composition.server` wires the standalone auth-only CLI with one worker, disabled proxy
-rewriting and no access/query logging. Sign-in creates no household. See [configuration](configuration.md),
+OpenAPI. `domus.entrypoints.household_http` owns strict business DTOs and uses a common HTTP contract
+module, separate from domain records. `domus.composition.server` wires the standalone CLI with one
+worker, disabled proxy rewriting and no access/query logging. Its optional --database enables
+composition.household, private session actors/directory and local query services. Sign-in creates
+no household. See [configuration](configuration.md),
 [the user journey](identity-household.md) and [operations](operations-identity-storage.md).
 
 `domus.composition.ingress` wires the stateless native preview and its private HTTP listener. The
@@ -101,8 +105,10 @@ Additional tests cover policy precedence/source revocation, concrete authorizati
 schema 1 upgrades, duplicate HA linkage, scoped optimistic writes, and session outage/expiry/races.
 These fixtures alone do not establish live HA or complete packaged acceptance. The separate
 [member](evidence/m1-member-administration.json) and [policy](evidence/m1-policy-administration.json)
-checkpoints add real-file authority races, canonical retries and provenance checks. Public command
-wiring, recovery and full M1 acceptance remain outstanding.
+checkpoints add real-file authority races, canonical retries and provenance checks. The
+[HTTP checkpoint](evidence/m1-household-api.json) adds production standalone composition, strict JSON,
+read-grace/authority boundaries and schema tests. Native persistent wiring, recovery and full M1
+acceptance remain outstanding.
 
 See [development checks](development.md), [owner decisions](decisions.md),
 [the companion](../specs/platform-foundation-identity-sqlite.md), and

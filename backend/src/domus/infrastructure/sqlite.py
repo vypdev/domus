@@ -261,6 +261,17 @@ class SQLiteOutbox:
             == 1
         )
 
+    def delivered(self, event_id: str) -> bool | None:
+        row = self.connection.execute(
+            "SELECT delivered FROM outbox WHERE event_id=?", (event_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        value = row["delivered"]
+        if type(value) is not int or value not in (0, 1):
+            raise StorageFailure("invalid_operation_record")
+        return value == 1
+
 
 class SQLiteUnit:
     def __init__(self, connection: sqlite3.Connection) -> None:
