@@ -93,3 +93,23 @@ directory for the runtime UID, preserve it on upgrade and prove that behavior on
 The old nonroot connection-preview image does not yet do this. No package, manifest permission or
 live HA data was changed in this checkpoint. See [native API](native-household-api.md),
 [installed preview](installation-home-assistant.md) and [operator limits](operations-identity-storage.md).
+
+### Packaged launcher preparation
+
+domus-ha-app --channel edge prepares the Supervisor package, using only the fixed /data path.
+It validates the Supervisor token and bounded /data/options.json before creating anything. That file
+contains only public_origins: one to four distinct HA browser origins. It never accepts a data path,
+command, UID or credential from a browser. Existing native sessions still supply human authentication.
+
+The launcher starts as container root only to create /data/domus for UID/GID 65532. An existing child
+must already have that owner/group and mode 0700. It never recursively changes ownership or repairs
+existing data. An interrupted ownership step may require explicit operator investigation; no existing
+files are adopted. The root-owned /data parent and options must not be writable by group/others.
+Symlinks, special options files and multiply linked options fail.
+
+Before executing the fixed Ingress entrypoint, it clears supplementary groups, sets GID/UID 65532,
+checks all real/effective IDs and passes only a fixed environment with the private Supervisor token.
+There is no root server fallback. The owned-directory protocol then governs SQLite. This launcher is
+prepared in source; the installed image does not use it. Local file and ordered-syscall tests do not
+prove Linux kernel privilege dropping or the final image. The next immutable package must exercise
+those checks on both CPU families. See [evidence](evidence/m1-ha-app-bootstrap.json).

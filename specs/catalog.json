@@ -27,7 +27,8 @@
         "backend/src/domus/composition/household.py",
         "backend/src/domus/entrypoints/native_http.py",
         "backend/src/domus/composition/admin.py",
-        "backend/src/domus/entrypoints/console_recovery.py"
+        "backend/src/domus/entrypoints/console_recovery.py",
+        "backend/src/domus/composition/ha_app.py"
       ],
       "code": [
         "backend/src/domus/domain/errors.py",
@@ -79,7 +80,8 @@
         "backend/src/domus/entrypoints/console_recovery.py",
         "backend/src/domus/domain/snapshots.py",
         "backend/src/domus/application/snapshots.py",
-        "backend/src/domus/infrastructure/sqlite_snapshots.py"
+        "backend/src/domus/infrastructure/sqlite_snapshots.py",
+        "backend/src/domus/composition/ha_app.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -122,7 +124,8 @@
         "tests/backend/test_snapshot_values.py",
         "tests/backend/test_snapshot_commands.py",
         "tests/backend/test_sqlite_snapshots.py",
-        "tests/backend/test_snapshot_console.py"
+        "tests/backend/test_snapshot_console.py",
+        "tests/backend/test_ha_app_launcher.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -158,7 +161,8 @@
         "docs/snapshots.md",
         "docs/evidence/m1-snapshots.json",
         "docs/evidence/m1-explicit-storage-boundary.json",
-        "docs/evidence/m1-standalone-owned-storage.json"
+        "docs/evidence/m1-standalone-owned-storage.json",
+        "docs/evidence/m1-ha-app-bootstrap.json"
       ],
       "readiness": {
         "state": "draft",
@@ -187,7 +191,8 @@
         "backend/src/domus/composition/household.py",
         "backend/src/domus/entrypoints/native_http.py",
         "backend/src/domus/composition/admin.py",
-        "backend/src/domus/entrypoints/console_recovery.py"
+        "backend/src/domus/entrypoints/console_recovery.py",
+        "backend/src/domus/composition/ha_app.py"
       ],
       "code": [
         "backend/src/domus/domain/identity.py",
@@ -234,7 +239,8 @@
         "backend/src/domus/entrypoints/console_recovery.py",
         "backend/src/domus/domain/snapshots.py",
         "backend/src/domus/application/snapshots.py",
-        "backend/src/domus/infrastructure/sqlite_snapshots.py"
+        "backend/src/domus/infrastructure/sqlite_snapshots.py",
+        "backend/src/domus/composition/ha_app.py"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -272,7 +278,8 @@
         "tests/backend/test_snapshot_values.py",
         "tests/backend/test_snapshot_commands.py",
         "tests/backend/test_sqlite_snapshots.py",
-        "tests/backend/test_snapshot_console.py"
+        "tests/backend/test_snapshot_console.py",
+        "tests/backend/test_ha_app_launcher.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -306,7 +313,8 @@
         "docs/snapshots.md",
         "docs/evidence/m1-snapshots.json",
         "docs/evidence/m1-explicit-storage-boundary.json",
-        "docs/evidence/m1-standalone-owned-storage.json"
+        "docs/evidence/m1-standalone-owned-storage.json",
+        "docs/evidence/m1-ha-app-bootstrap.json"
       ],
       "readiness": {
         "state": "draft",

@@ -82,3 +82,13 @@ Request forwarding/Ingress headers cannot change identity, callback, public orig
 The command disables proxy-header rewriting and access logs, so OAuth callback queries are not logged.
 Private HA wire logging is disabled. Logs contain allowlisted codes and cleanup counts, never raw
 credentials or provider payloads. No credential is supplied as a CLI argument or stored in SQLite.
+
+## Prepared native package launcher
+
+The source-only domus-ha-app --channel edge command has fixed /data paths and UID/GID 65532. It is
+not the entrypoint of installed Edge 0.0.0-edge.1 yet. Its only options.json field is public_origins:
+an array of one to four distinct origins used to open HA, such as http://homeassistant.local:8123.
+Scheme/host/port must be explicit and no path, query, credentials or fragment is accepted. Values
+normalize through the same PublicOrigins adapter as the native CLI. The file is bounded to 16,384
+bytes; unknown/duplicate fields and unsafe ownership/mode are rejected. It supplies no UUID: owned
+storage generates one only on a valid empty first start. See [provisioning](owned-data-directory.md).

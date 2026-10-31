@@ -1,0 +1,60 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "78766a05e96a34ce4fe54df54af27aac688a1aa9",
+  "scope": "Source preparation for a fixed-path HA app launcher; not yet the installed or candidate image entrypoint",
+  "backendTests": 953,
+  "backendCoverage": {
+    "covered_lines": 3434,
+    "num_statements": 3434,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 122,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 888,
+    "num_partial_branches": 0,
+    "covered_branches": 888,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "testFirst": "Launcher tests first failed import because the composition module did not exist.",
+  "assertions": [
+    "Bounded strict options and validated transport precede any private child provisioning",
+    "Only fixed /data/domus is provisioned; existing data receives no recursive ownership/permission repair",
+    "Private child ownership/group/mode, trusted root parent/options and no-follow single-link regular options are checked",
+    "Configuration rejects malformed/duplicate/unknown fields, invalid origins, oversized payloads, unsafe files, symlinks, FIFOs and competing ownership without launching",
+    "Privilege-drop orchestration clears supplementary groups, sets GID then UID and verifies every real/effective ID before fixed exec",
+    "The child environment excludes Python injection/proxy/unrelated secrets and passes only fixed runtime values plus private Supervisor transport",
+    "Ownership/drop/exec failures never invoke a root server fallback and emit sanitized guidance"
+  ],
+  "architecture": {
+    "files": 90,
+    "dependencies": 411,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 57 backend source files"
+  },
+  "limits": [
+    "Local unit tests perform real filesystem operations under the invoking UID; privilege syscalls and exec are controlled doubles",
+    "Actual Linux kernel UID/capability behavior, immutable package pin/build and native amd64/aarch64 acceptance are the next required steps",
+    "Installed Edge 0.0.0-edge.1 and its permissions remain unchanged; no owner HA data or settings were changed",
+    "An interrupted new-directory ownership step fails closed and may require explicit operator investigation; existing data is never repaired or adopted"
+  ],
+  "priorHeadCI": {
+    "head": "78766a05e96a34ce4fe54df54af27aac688a1aa9",
+    "url": "https://github.com/vypdev/domus/actions/runs/41203889095",
+    "result": "PASS: all project groups; image cases cover the old immutable preview"
+  },
+  "primaryReferences": [
+    "https://contributors.home-assistant.io/apps/guides/options/",
+    "https://contributors.home-assistant.io/apps/reference/configuration/",
+    "https://contributors.home-assistant.io/apps/guides/security/"
+  ],
+  "sourceSha256": {
+    "backend/src/domus/composition/ha_app.py": "e0ffe36478881ff11367c7ba5467438ebef54af7d4bfb00bf14350893b15e1b3",
+    "backend/pyproject.toml": "f8411bc202e8573063500f8e7ef51da37ae2f84b8000a0babd0d1e6d2345b8db",
+    "tests/backend/test_ha_app_launcher.py": "1e12080d7c4aa4e90e65d3184f9a83c8b95ea5520d542fefea24c705f40aa7f5"
+  }
+}
