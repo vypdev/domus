@@ -155,7 +155,8 @@
         "tests/backend/test_activation_failures.py",
         "tests/backend/test_activation_compatibility.py",
         "tests/containers/test_app_compatibility.py",
-        "tests/containers/restore_fixture.py"
+        "tests/containers/restore_fixture.py",
+        "tests/backend/test_response_readability.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -202,11 +203,13 @@
         "docs/evidence/m1-generation-selection.json",
         "docs/evidence/m1-offline-activation.json",
         "docs/evidence/m1-restoration-app-package.json",
-        "docs/evidence/m1-edge3-ha-acceptance.json"
+        "docs/evidence/m1-edge3-ha-acceptance.json",
+        "docs/m1-acceptance-audit.md",
+        "docs/evidence/m1-acceptance-audit.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending",
+        "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending; 79 normative cases traced in acceptance audit; source membership explanations tested in both compositions",
         "blockingDecisions": "Complete deployment/live household/recovery/restore, product UI, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice. Complete current-head Bugbot review remains required.",
         "copilotChangesAllowed": false
       }
@@ -343,7 +346,8 @@
         "tests/backend/test_activation_compatibility.py",
         "tests/containers/test_app_image.py",
         "tests/containers/test_app_compatibility.py",
-        "tests/containers/restore_fixture.py"
+        "tests/containers/restore_fixture.py",
+        "tests/backend/test_response_readability.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -386,11 +390,13 @@
         "docs/evidence/m1-generation-selection.json",
         "docs/evidence/m1-offline-activation.json",
         "docs/evidence/m1-restoration-app-package.json",
-        "docs/evidence/m1-edge3-ha-acceptance.json"
+        "docs/evidence/m1-edge3-ha-acceptance.json",
+        "docs/m1-acceptance-audit.md",
+        "docs/evidence/m1-acceptance-audit.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending",
+        "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending; 79 normative cases traced in acceptance audit; source membership explanations tested in both compositions",
         "blockingDecisions": "Complete deployment/live household/recovery/restore, product UI, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice. Complete current-head Bugbot review remains required.",
         "copilotChangesAllowed": false
       }

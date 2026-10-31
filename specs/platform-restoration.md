@@ -8,7 +8,7 @@
 - Scope: complete M1 snapshot restoration with retained replay evidence, explicit preparation and verified offline activation.
 - Related issues/PRs: [Issue #6](https://github.com/vypdev/domus/issues/6), [PR #7](https://github.com/vypdev/domus/pull/7)
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: none for A30; implementation and complete activation evidence remain required.
+- Open decisions blocking readiness: none for A30; complete current-head review and target-specific acceptance remain required.
 
 ## 1. Executive summary
 
@@ -29,10 +29,10 @@ consumed recovery approval. Keeping later business state instead would violate t
 
 ### 2.2 Current behavior
 
-1. Edge.2 packages schema 3 and consistent snapshot create/inspect.
+1. Edge.3 packages schema 4, retained history and verified offline restoration; Edge.2 is the previous-image compatibility fixture.
 2. Both managed runtimes persist identity and refuse explicit-file bypass.
-3. Owner update/start/reload/restart passed. Pure reconciliation and private blocked preparation
-   and runtime history/replay guards are implemented locally; activation remains pending.
+3. Owner Edge.3 update/session/reload/restart passed. Reconciliation, blocked preparation, history
+   guards and offline activation have real-file/process and native amd64/aarch64 image evidence.
 4. A30 explicitly selects checkpoint state plus retained later processed history.
 
 ### 2.3 Evidence
@@ -41,7 +41,7 @@ consumed recovery approval. Keeping later business state instead would violate t
   [snapshot guide](../docs/snapshots.md), [owner acceptance](../docs/evidence/m1-persistent-ha-acceptance.json).
 - Example: revision 2 is checkpointed, revision 3 commits, restore returns revision 2; retrying revision
   3's original key yields a historical result without rerunning the update.
-- Unknowns: complete implementation/runtime evidence is pending. No restore SLA is promised.
+- Unknowns: live owner restore and complete deployment/channel acceptance remain pending. No restore SLA is promised.
 
 ### 2.4 Retrospective classification (as-built baselines only)
 
@@ -375,6 +375,7 @@ fixtures. Run complete supported coverage and exact-head CI, including packaged 
 |---|---|---|---|
 | Operator | docs/snapshots.md | Preparation, verification, activation, failure and rollback | Executable CLI examples |
 | Contributor | docs/architecture-identity-storage.md | Policy/port/adapter boundaries and history schema | Import/schema checks |
+| Reviewer | docs/m1-acceptance-audit.md | Exact case selectors, source/package boundary and pending review | docs/evidence/m1-acceptance-audit.json |
 | Owner | docs/decisions.md | A30 and unchanged scheduling choices | Explicit accepted policy |
 
 Planned file footprint (implementation is staged; presence is not completion):
@@ -385,6 +386,8 @@ Planned file footprint (implementation is staged; presence is not completion):
 | `specs/catalog.json` | update |
 | `specs/CATALOG.md` | update |
 | `specs/platform-foundation-identity-sqlite.md` | update |
+| `docs/m1-acceptance-audit.md` | create |
+| `docs/evidence/m1-acceptance-audit.json` | create |
 | `backend/src/domus/domain/restoration.py` | create |
 | `backend/src/domus/application/restoration.py` | create |
 | `backend/src/domus/infrastructure/sqlite_restoration.py` | create |

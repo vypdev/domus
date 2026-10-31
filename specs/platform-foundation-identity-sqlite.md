@@ -3,14 +3,14 @@
 - Status: Draft
 - Date: 2026-10-31
 - Catalog capability ID: `platform-foundation`
-- Last verified: not applicable (prospective companion)
+- Last verified: 2026-10-31; source fixtures and bounded Edge.3 acceptance; complete review pending
 - Owners: Domus maintainers (review assignment pending)
 - Scope: Specify the next M1 increment: verified human Home Assistant identity, household authorization, and durable SQLite persistence in the existing `platform-foundation` capability.
-- Related issues/PRs: [Issue #6](https://github.com/vypdev/domus/issues/6) · [PR #5](https://github.com/vypdev/domus/pull/5)
+- Related issues/PRs: [Issue #6](https://github.com/vypdev/domus/issues/6) · [PR #7](https://github.com/vypdev/domus/pull/7)
 - Required review gates: product UX, architecture, testing, documentation, security/operations
 - Open decisions blocking readiness: none; review gates and target-specific acceptance remain required before readiness.
 
-This companion preserves the ownership and invariants of `specs/platform-foundation.md` and `specs/household-identity.md`; it does not create a new capability owner. Both owning specifications remain Draft with full identity, persistence and recovery acceptance outstanding. The catalog at `0012a172492515e282be09c37921f4014a451e64` records no implementation or test evidence for `platform-foundation`. PR #5 supplied tooling and architecture tests, not the runtime specified here. This is a proposed contract, not a claim of implementation or passing acceptance.
+This companion preserves the ownership and invariants of `specs/platform-foundation.md` and `specs/household-identity.md`; it does not create a competing owner. At the original baseline `0012a172492515e282be09c37921f4014a451e64`, PR #5 supplied tooling rather than this runtime. The source implementation and bounded package/browser evidence now appear in section 20 and the acceptance audit. Draft status remains until the required review gates pass; neither this foundation increment nor its fixtures establish complete M1 or product acceptance.
 
 ## 1. Executive summary
 
@@ -529,6 +529,11 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `addon-edge/translations/en.yaml` | create |
 | `docs/evidence/m1-persistent-app-package.json` | create |
 | `docs/evidence/m1-persistent-ha-acceptance.json` | create |
+| `tests/backend/test_response_readability.py` | create |
+| `docs/m1-acceptance-audit.md` | create |
+| `docs/evidence/m1-acceptance-audit.json` | create |
+| `docs/evidence/m1-restoration-app-package.json` | create |
+| `docs/evidence/m1-edge3-ha-acceptance.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -594,33 +599,20 @@ These are executable acceptance requirements, not reports of tests already run.
 - Related specs/ADRs/issues/PRs: `specs/household-identity.md`; `specs/platform-foundation.md`; `specs/delivery-quality.md`; [Issue #6](https://github.com/vypdev/domus/issues/6); [PR #5](https://github.com/vypdev/domus/pull/5); [Copilot upstream report #774](https://github.com/vypdev/copilot/issues/774); [Copilot upstream report #777](https://github.com/vypdev/copilot/issues/777).
 - Decisions and rejected alternatives: retain HA auth and HTTP/SQLite as replaceable adapters around pure policies and use cases; server-side HA proof is required; use explicit transaction boundaries and parameterized SQLite operations; API schemas are entrypoint DTOs, not domain entities. Recovery requires current HA administrator proof plus installation-console approval; no shared secret or HTTP approval. Backup scope is explicit consistent snapshot/restore primitive, not an automatic scheduler. No untested version is promised.
 - Follow-up work explicitly outside this spec: other household domains, product UI, HA entity/service integration, complete package and Stable/Edge deployment acceptance, Supervisor backup hooks and operational retention/recovery objectives, release publication. Both deployment targets remain required for first usable release. Merge/release/deployment is not authorized by this draft.
-### Partial implementation checkpoints — 2026-10-31
+### Implementation evidence — 2026-10-31
 
-Each immutable receipt identifies source, executed scope and limits. These checkpoints do not complete
-all planned acceptance cases. The specifications remain Draft.
+The [acceptance audit](../docs/m1-acceptance-audit.md) maps all 61 identity and 18 restoration
+cases to exact semantic tests or bounded observations. Its [receipt](../docs/evidence/m1-acceptance-audit.json)
+records 1,387 backend tests, 4,692 statements and 1,304 branches at 100% supported coverage.
+Independent human readability review and complete current-head Bugbot review remain pending;
+skipped draft review is not acceptance. Specifications remain Draft.
 
-| Checkpoint | Evidence and boundary |
-|---|---|
-| SQLite kernel | [Receipt](../docs/evidence/m1-storage-kernel.json): atomic commits/replay. |
-| Identity policy and leases | [Receipt](../docs/evidence/m1-identity-policy.json): mappings/permissions/leases. |
-| HA protocols | [Receipt](../docs/evidence/m1-ha-protocol.json): fixed endpoints and exact-human proof. |
-| Standalone authentication | [Receipt](../docs/evidence/m1-standalone-auth.json): browser-bound auth/cleanup. Browser return unaccepted; grant revoked (1 confirmed, 0 unknown). |
-| Original Edge.1 | [Receipt](../docs/evidence/m1-native-ha-acceptance.json): stateless install/start/UI/reload passed. |
-| Household commands | [Receipt](../docs/evidence/m1-household-commands.json): explicit setup/enrollment and edits. |
-| Member administration | [Receipt](../docs/evidence/m1-member-administration.json): membership and last-admin safety. |
-| Policy administration | [Receipt](../docs/evidence/m1-policy-administration.json): mappings/profiles and provenance. |
-| Standalone household API | [Receipt](../docs/evidence/m1-household-api.json): queries/commands and real session/SQLite composition. |
-| Native household API | [Receipt](../docs/evidence/m1-native-household-api.json): services, origins, leases/CSRF, outage reads. |
-| Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json): UUID/channel, private files and guards. |
-| Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json): human APIs, console approval and atomic consumption; live recovery pending. |
-| Snapshot creation/inspection | [Receipt](../docs/evidence/m1-snapshots.json): private bundles/checks; history runtime tested; activation pending. |
-| Explicit-file boundary | [Receipt](../docs/evidence/m1-explicit-storage-boundary.json): both factories refuse owned markers. |
-| Standalone owned data | [Receipt](../docs/evidence/m1-standalone-owned-storage.json): identity, restart/replay and locks. |
-| HA launcher preparation | [Receipt](../docs/evidence/m1-ha-app-bootstrap.json): private child and privilege-drop unit checks. |
-| Persistent Edge.2 package | [Receipt](../docs/evidence/m1-persistent-app-package.json): immutable image, volume and kernel/replay checks. |
-| Persistent owner acceptance | [Receipt](../docs/evidence/m1-persistent-ha-acceptance.json): Edge.2 update/config/start/access/reload/restart passed. |
-
-No test credentials enter business storage, evidence, responses or snapshots. Native authentication
-is independent of standalone OAuth. Outstanding work includes product UI, restore activation and the accepted A30
-history policy, live household/recovery commands, standalone companion authority and complete deployment/channel
-acceptance. Passing protocol/ASGI fixtures never establishes those remaining live gates.
+Earlier immutable receipts remain indexed by the catalog and implementation/user guides. The
+[real-image restoration receipt](../docs/evidence/m1-restoration-app-package.json) adds Edge.3
+activation/resume and previous-image upgrade/refusal on native amd64/aarch64. The
+[owner receipt](../docs/evidence/m1-edge3-ha-acceptance.json) proves bounded update/configuration/
+session/reload/restart only. New source response explanations are outside that immutable pin.
+No credentials enter household storage, responses, snapshots or evidence. Native authentication
+is independent of standalone OAuth. Standalone browser return is unaccepted; its owned grant
+was revoked (1 confirmed, 0 unknown). Live household/recovery/restore, product UI, standalone
+companion authority, full deployment/channel and release acceptance remain pending.

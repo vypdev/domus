@@ -4,6 +4,10 @@
       "AccessResponse": {
         "additionalProperties": false,
         "properties": {
+          "action_required": {
+            "title": "Action Required",
+            "type": "string"
+          },
           "effective_role": {
             "anyOf": [
               {
@@ -27,6 +31,10 @@
                 "type": "null"
               }
             ]
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
           },
           "permission_scope": {
             "const": "household_administration",
@@ -67,7 +75,9 @@
           "policy_revision",
           "effective_role",
           "permission_scope",
-          "permissions"
+          "permissions",
+          "message",
+          "action_required"
         ],
         "title": "AccessResponse",
         "type": "object"

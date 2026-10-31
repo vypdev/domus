@@ -48,6 +48,13 @@ must derive assignment/ownership facts on the server. A member's roster profile 
 profile, not a claim of another person's currently inherited HA administrator source. The own access
 view separately reports effective_role from that person's verified source and the current mapping.
 
+Source authorization responses also include `message` and `action_required`: pending membership
+states that the verified account was linked, access is not active, and an administrator must review
+it. Enrollment receipts describe what the original operation did; replay after later activation
+does not describe the old pending state as current. Historical receipts retain their absent-current-effect
+warning. These source contract explanations are tested in both HTTP compositions and are not in the
+immutable installed Edge.3 runtime pin. See the [acceptance audit](m1-acceptance-audit.md).
+
 Pending/unlinked people can see their own access state without gaining household reads. Suspended
 or archived members cannot self-reactivate. Active members may see their own linkage/exceptions;
 ordinary roster reads omit those fields for everyone else. Policy and operation queries reread local

@@ -120,25 +120,69 @@ def test_wrong_identity_and_cross_household_never_resolve_a_role() -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "role,permission,expected",
-    [
-        (Role.ADMINISTRATOR, Permission.MEMBERS_MANAGE, True),
-        (Role.ADMINISTRATOR, Permission.AUTOMATIONS_CONFIGURE, True),
-        (Role.ADULT, Permission.TASKS_CREATE, True),
-        (Role.ADULT, Permission.SHOPPING_MANAGE, True),
-        (Role.ADULT, Permission.TASKS_APPROVE, True),
-        (Role.ADULT, Permission.POLICY_MANAGE, False),
-        (Role.RESTRICTED, Permission.SHOPPING_REQUEST, True),
-        (Role.RESTRICTED, Permission.TASKS_CREATE, False),
-        (Role.RESTRICTED, Permission.TASKS_APPROVE, False),
-        (Role.VIEWER, Permission.HOUSEHOLD_READ, True),
-        (Role.VIEWER, Permission.TASKS_COMPLETE, False),
-        (Role.VIEWER, Permission.INVENTORY_MANAGE, False),
-    ],
-)
-def test_default_profile_matrix(role: Role, permission: Permission, expected: bool) -> None:
-    assert allows(human(), member(role), policy(), permission, "home") is expected
+@pytest.mark.parametrize("role", list(Role))
+@pytest.mark.parametrize("permission", list(Permission))
+def test_default_profile_matrix(role: Role, permission: Permission) -> None:
+    # Independent owner-approved baseline, not the production DEFAULTS table.
+    expected = {
+        Role.ADMINISTRATOR: {
+            "household.read",
+            "household.manage",
+            "members.read",
+            "members.manage",
+            "policy.manage",
+            "preferences.read",
+            "preferences.write",
+            "operations.read",
+            "tasks.create",
+            "tasks.complete",
+            "tasks.approve",
+            "tasks.configure",
+            "shopping.request",
+            "shopping.manage",
+            "inventory.manage",
+            "automations.configure",
+            "points.manage",
+        },
+        Role.ADULT: {
+            "household.read",
+            "members.read",
+            "preferences.read",
+            "preferences.write",
+            "operations.read",
+            "tasks.create",
+            "tasks.complete",
+            "tasks.approve",
+            "shopping.request",
+            "shopping.manage",
+            "inventory.manage",
+        },
+        Role.RESTRICTED: {
+            "household.read",
+            "members.read",
+            "preferences.read",
+            "preferences.write",
+            "operations.read",
+            "tasks.complete",
+            "shopping.request",
+        },
+        Role.VIEWER: {
+            "household.read",
+            "members.read",
+            "preferences.read",
+            "preferences.write",
+            "operations.read",
+        },
+    }
+    assert allows(
+        human(),
+        member(role),
+        policy(),
+        permission,
+        "home",
+        subject_member_id="member_1",
+        assigned_to=("member_1",),
+    ) is (permission.value in expected[role])
 
 
 def test_restricted_work_is_assigned_to_actual_member_and_cannot_skip_adult_approval() -> None:

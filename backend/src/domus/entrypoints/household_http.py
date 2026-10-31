@@ -12,7 +12,7 @@ from pydantic import Field
 from starlette.responses import Response
 
 from domus.application.household_commands import HouseholdCommands, SetupHousehold
-from domus.application.household_queries import AccessState, HouseholdQueries
+from domus.application.household_queries import AccessState, AccessView, HouseholdQueries
 from domus.application.member_commands import MemberCommands, UpdateMember
 from domus.application.policy_commands import PolicyCommands, UpdatePolicy
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
@@ -165,6 +165,8 @@ class AccessResponse(StrictModel):
     effective_role: Role | None
     permission_scope: Literal["household_administration"]
     permissions: tuple[Permission, ...]
+    message: str
+    action_required: str
 
 
 class ReceiptResponse(StrictModel):
@@ -181,6 +183,50 @@ class ReceiptResponse(StrictModel):
 
 class OperationResponse(ReceiptResponse):
     delivery: Literal["pending", "delivered", "suppressed"]
+
+
+def _access(view: AccessView) -> AccessResponse:
+    message, action = {
+        "unconfigured": (
+            "The household is not configured. Signing in did not create it.",
+            "Set up the household explicitly with fresh Home Assistant administrator proof."
+            if view.setup_allowed
+            else "Ask a Home Assistant administrator to set up the household.",
+        ),
+        "not_enrolled": (
+            "This Home Assistant account has no membership in this household.",
+            "Request account linkage explicitly. Household access begins after activation.",
+        ),
+        "pending": (
+            "Your verified Home Assistant account was linked. "
+            "The membership is pending and household access is not active.",
+            "Ask a household administrator to review and activate your membership.",
+        ),
+        "active": (
+            "Your household membership is active. Current permissions apply to each request.",
+            "No membership action is required. Changes also require fresh Home Assistant proof.",
+        ),
+        "suspended": (
+            "Your membership is suspended and household access is blocked.",
+            "Ask a household administrator to review the suspension.",
+        ),
+        "archived": (
+            "Your membership is archived and household access is blocked.",
+            "Ask a household administrator to review and reactivate your existing membership.",
+        ),
+    }[view.state]
+    return AccessResponse(
+        state=view.state,
+        setup_allowed=view.setup_allowed,
+        enrollment_allowed=view.enrollment_allowed,
+        member=MemberResponse.model_validate(view.member) if view.member is not None else None,
+        policy_revision=view.policy_revision,
+        effective_role=view.effective_role,
+        permission_scope=view.permission_scope,
+        permissions=view.permissions,
+        message=message,
+        action_required=action,
+    )
 
 
 def _receipt(receipt: Receipt) -> ReceiptResponse:
@@ -200,12 +246,30 @@ def _receipt(receipt: Receipt) -> ReceiptResponse:
                 "Keep the original key and operation ID."
             ),
         )
-    return ReceiptResponse(
+    response = ReceiptResponse(
         archived_by=receipt.archived_by,
         operation_id=receipt.operation_id,
         result=receipt.result.decode(),
         created_at=receipt.created_at,
     )
+    if receipt.command.action == "member.enroll":
+        pending = response.result["status"] == "pending"
+        response.message = (
+            "This operation verified and linked your Home Assistant account and saved the "
+            "membership as pending. It did not activate household access."
+            if pending
+            else "This operation linked your verified Home Assistant account and activated "
+            "its household membership."
+        )
+        response.action_required = (
+            "Check your current membership status. If still pending, ask a household "
+            "administrator to review it. Keep the original operation ID and retry only "
+            "the same payload and key."
+            if pending
+            else "Check your current membership status and permissions before requesting work. "
+            "Keep the original operation ID and retry only the same payload and key."
+        )
+    return response
 
 
 def _key(request: Request) -> str:
@@ -228,7 +292,7 @@ def create_household_router(
 
     @router.get("/authorization", response_model=AccessResponse, response_model_exclude_none=True)
     def access(request: Request, query: Annotated[_EmptyQuery, Query()]) -> AccessResponse:
-        return AccessResponse.model_validate(context(request).queries().access())
+        return _access(context(request).queries().access())
 
     @router.get("/household", response_model=HouseholdResponse)
     def household(request: Request, query: Annotated[_EmptyQuery, Query()]) -> HouseholdResponse:
