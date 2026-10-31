@@ -79,8 +79,10 @@ contracts and local documentation links for every PR update, including drafts an
 It also runs on develop/master pushes and merge-queue validation. There are no path filters or job
 conditions hiding applicable suites. Actions are pinned to immutable commits and installs use lockfiles.
 
-The final CI Check job always evaluates all five required job results. Missing, malformed, unexpected,
-failed, skipped, cancelled or pending results prevent success. Only five explicit successful results pass.
+The final CI Check job always evaluates all six required job results, including the container matrix.
+Missing, malformed, unexpected, failed, skipped, cancelled or pending results prevent success.
+Every required job must explicitly succeed. The container job builds and tests the exact Supervisor
+app folder on native amd64 and aarch64 runners; it never publishes images or installs into live HA.
 The workflow uses read-only repository permissions, does not persist checkout credentials and does not
 publish artifacts to a release or deploy. Coverage reports are retained for seven days under the checked SHA.
 
@@ -130,3 +132,10 @@ filesystem/process I/O or global time/entropy source. Its expanded negative matr
 FastAPI/Uvicorn are fixed runtime dependencies. httpx2 is a separate fixed development dependency
 required by Starlette's current TestClient; the HA transport retains its independently tested HTTPX
 version. No deprecated TestClient fallback or Copilot modification is used.
+
+The [native HA preview](installation-home-assistant.md) composes existing Ingress/Core proof on a
+private listener and serves an operational connection page without OAuth or its own browser cookie.
+Its source-bound Edge package has a separate [package receipt](evidence/m1-app-package.json).
+The owner selected native HA installation as the next dogfooding path after the independent browser
+session return failed. The test OAuth grant was revoked successfully; this does not establish native
+Ingress compatibility. Both deployment targets remain required for the first usable release.

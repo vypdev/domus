@@ -1,8 +1,8 @@
 # Home Assistant app installation
 
-Status: native Ingress authentication preview implemented; app packaging and installation proof
-are being prepared. No production release is available. The complete household product remains
-under development.
+Status: native Ingress authentication preview and source-bound Edge app package implemented.
+Local arm64 container tests pass. Exact-head CI on both CPU families and installation proof remain
+independent gates. No production release is available; the complete product remains under development.
 
 ## Intended user journey
 
@@ -13,6 +13,23 @@ under development.
 
 The independent Docker installation has a separate OAuth journey because it runs outside the
 Supervisor. That journey is not an installation prerequisite for the HA app.
+
+## Reviewed development repository
+
+For the issue #6 preview, copy this exact branch URL into the HA repository dialog:
+
+```text
+https://github.com/vypdev/domus#feature/6-implement-home-assistant-identity-and-sqlite-platform-persistence
+```
+
+This is a disposable development repository, not the permanent production channel. The Action owns
+the branch lifecycle. Remove its owned test app/repository after acceptance; production installation
+must use the eventual published stable repository. Do not add the default repository URL yet:
+the default branch does not contain this preview package.
+
+Select Domus Edge 0.0.0-edge.1. Supervisor builds the app locally; the Dockerfile fetches immutable
+runtime commit 98bd12f1bf141ba64053730b2686bd848aee1b1c and verifies its SHA-256 before extracting it.
+Python/uv image digests and the dependency lock are fixed. No registry login is needed.
 
 ## Current native preview
 
@@ -28,9 +45,15 @@ is available to Supervisor and container loopback and is not a claim of HA avail
 no household commands, local read-grace sessions or business database in this preview. A failed fresh
 proof blocks access. It is not complete M1, the product UI or a production compatibility claim.
 
-The eventual app manifest must enable Ingress and Core API access, publish no host port, and keep
-Stable and Edge as distinct apps with separate data. Core API access gives the container a technical
-HA administrator credential; it must stay private and must never substitute for the human principal.
+The Edge manifest enables Ingress and Core API access, publishes no host port and requests no
+Supervisor management API or host mounts/privileges. Stable and Edge must remain distinct apps with
+separate data when Stable is published. Core API access gives the container a technical HA
+administrator credential; it must stay private and must never substitute for the human principal.
+
+The first preview is deliberately stateless and runs as UID/GID 65532. It does not establish persisted
+installation identity, household setup, backup behavior or production acceptance. Container tests use
+fictional tokens with networking disabled, exercise the real listener and remove only their own
+temporary containers. The image remains available locally as the current review/rollback artifact.
 
 Official references: [Ingress authentication and relative paths](https://contributors.home-assistant.io/apps/guides/ingress/),
 [repository installation and branch selection](https://contributors.home-assistant.io/apps/guides/repository/),

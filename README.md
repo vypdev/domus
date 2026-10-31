@@ -9,7 +9,8 @@ into one responsive interface. Normal operation does not require AI or cloud ser
 ## Project status
 
 Domus has tested backend storage, identity policy and a standalone authentication API/CLI in development.
-The functional household product, UI, deployment packages and release artifacts remain incomplete.
+A stateless Edge HA app preview now uses native Ingress authentication without another sign-in.
+The household product, product UI, production packages and release artifacts remain incomplete.
 The [documentation foundation issue](https://github.com/vypdev/domus/issues/2)
 tracks eleven Draft SDDs, 82 normative requirements and 353 planned acceptance cases.
 These cases are verification plans, not executed application tests.
@@ -40,6 +41,7 @@ in the application, with the chosen policy and actual awards preserved in the le
 - [Acceptance, coverage and CI Check plan](docs/acceptance-plan.md)
 - [Specification validation evidence and limitations](docs/sdd-validation.md)
 - [Development setup, tests and CI Check](docs/development.md)
+- [Home Assistant app installation and development preview](docs/installation-home-assistant.md)
 - [Implemented authentication journey and limits](docs/identity-household.md)
 - [Authentication server configuration](docs/configuration.md)
 - [Identity/storage operations and pending commands](docs/operations-identity-storage.md)

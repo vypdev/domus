@@ -19,7 +19,10 @@
         "backend/src/domus/composition/server.py",
         "backend/src/domus/entrypoints/http.py",
         "backend/src/domus/composition/ingress.py",
-        "backend/src/domus/entrypoints/ingress_http.py"
+        "backend/src/domus/entrypoints/ingress_http.py",
+        "repository.yaml",
+        "addon-edge/config.yaml",
+        "addon-edge/Dockerfile"
       ],
       "code": [
         "backend/src/domus/domain/errors.py",
@@ -66,7 +69,9 @@
         "tests/backend/test_auth_runtime.py",
         "tests/backend/test_auth_server.py",
         "tests/backend/test_ingress_http.py",
-        "tests/backend/test_ingress_server.py"
+        "tests/backend/test_ingress_server.py",
+        "tests/backend/test_app_package.py",
+        "tests/containers/test_app_image.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -87,7 +92,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: storage/policy, HA adapters, standalone authentication and native Ingress authentication preview; complete business commands, recovery, snapshots, package/live/channel acceptance pending",
+        "implementationEvidence": "partial: identity/storage, standalone authentication, native HA preview and immutable-source Edge package; complete commands, recovery, snapshots, local Ingress sessions and live/channel acceptance pending",
         "blockingDecisions": "Engineering proof remains: business/recovery commands, snapshots, Ingress local read-grace sessions and exact package/live/channel acceptance. Native preview performs fresh per-request proof and has no business mutations. No complete M1 acceptance or production readiness is claimed.",
         "copilotChangesAllowed": false
       }
@@ -395,7 +400,8 @@
         "tests/python/test_docs.py",
         "tests/python/test_ci_contract.py",
         "tests/architecture/test_python_architecture.py",
-        "tests/node/architecture.test.mjs"
+        "tests/node/architecture.test.mjs",
+        "tests/containers/test_app_image.py"
       ],
       "documentation": [
         "docs/product-vision.md",

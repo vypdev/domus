@@ -44,6 +44,24 @@ def test_required_jobs_always_reach_a_fail_closed_aggregate() -> None:
         assert "if" not in jobs[name], f"{name} must not skip applicable PR updates"
 
 
+def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> None:
+    jobs = workflow()["jobs"]
+    container = jobs["containers"]
+    assert container["strategy"]["fail-fast"] == "false"
+    assert container["strategy"]["matrix"]["include"] == [
+        {"runner": "ubuntu-latest", "arch": "amd64"},
+        {"runner": "ubuntu-24.04-arm", "arch": "aarch64"},
+    ]
+    assert container["runs-on"] == "${{ matrix.runner }}"
+    commands = [step["run"] for step in container["steps"] if "run" in step]
+    assert (
+        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-ci addon-edge"
+        in commands
+    )
+    assert "uv run pytest tests/containers --no-cov" in commands
+    assert "containers" in jobs["aggregate"]["needs"]
+
+
 def test_ci_is_read_only_with_immutable_actions_and_locked_installs() -> None:
     config = workflow()
     assert config["permissions"] == {"contents": "read"}

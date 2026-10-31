@@ -445,6 +445,15 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/backend/test_ingress_server.py` | create |
 | `docs/installation-home-assistant.md` | create |
 | `docs/evidence/m1-ingress-preview.json` | create |
+| `repository.yaml` | create |
+| `addon-edge/config.yaml` | create |
+| `addon-edge/Dockerfile` | create |
+| `addon-edge/README.md` | create |
+| `addon-edge/DOCS.md` | create |
+| `addon-edge/CHANGELOG.md` | create |
+| `tests/backend/test_app_package.py` | create |
+| `tests/containers/test_app_image.py` | create |
+| `docs/evidence/m1-app-package.json` | create |
 | `README.md` | update |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
@@ -539,3 +548,11 @@ are no business mutations, household database, local outage-grace session or pro
 preview. Packaging, source/artifact binding, live Ingress and channel acceptance remain pending;
 see [the installation journey](../docs/installation-home-assistant.md) and
 [identified preview evidence](../docs/evidence/m1-ingress-preview.json).
+
+The Edge authentication preview now has an experimental, manual-start app manifest and immutable
+source/checksum-bound local build. It requests Core API access, publishes no host port and runs
+without host mounts, Supervisor management API or root privileges. It is stateless and does not
+implement a persisted installation or household setup. CI Check requires real image/listener tests
+on native amd64 and aarch64; local container proof does not replace installed Ingress acceptance.
+Stable production packaging and the complete product remain pending. See
+[package evidence](../docs/evidence/m1-app-package.json).

@@ -1,5 +1,8 @@
 # Authentication checkpoint configuration
 
+For the native HA app, follow [app installation](installation-home-assistant.md). It uses Ingress
+and requires no second login. The options below apply to the independent standalone runtime.
+
 Status: these options run the standalone authentication API. They do not constitute a deployment
 package, a household setup command or complete M1 acceptance. Both installation modes and Stable/Edge
 remain first-release requirements. Production channels/artifacts have not been published.
