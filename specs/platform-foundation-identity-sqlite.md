@@ -524,6 +524,8 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `backend/src/domus/composition/ha_app.py` | create |
 | `tests/backend/test_ha_app_launcher.py` | create |
 | `docs/evidence/m1-ha-app-bootstrap.json` | create |
+| `addon-edge/translations/en.yaml` | create |
+| `docs/evidence/m1-persistent-app-package.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -604,14 +606,15 @@ all planned acceptance cases. The specifications remain Draft.
 | Household commands | [Receipt](../docs/evidence/m1-household-commands.json) and [guide](../docs/household-setup.md): explicit setup/enrollment and revisioned edits. |
 | Member administration | [Receipt](../docs/evidence/m1-member-administration.json): activation, profile/status/exceptions and last-admin safety. |
 | Policy administration | [Receipt](../docs/evidence/m1-policy-administration.json): mapping/profile edits, provenance and independent grants. |
-| Standalone household API | [Receipt](../docs/evidence/m1-household-api.json), [guide](../docs/household-api.md), [schema](../docs/contracts/household-api.openapi.json): strict queries/commands and real session/SQLite composition. |
-| Native household API | [Receipt](../docs/evidence/m1-native-household-api.json), [guide](../docs/native-household-api.md), [schema](../docs/contracts/native-household-api.openapi.json): services, origins, leases/CSRF, outage reads. Not installed. |
+| Standalone household API | [Receipt](../docs/evidence/m1-household-api.json): queries/commands and real session/SQLite composition. |
+| Native household API | [Receipt](../docs/evidence/m1-native-household-api.json): services, origins, leases/CSRF, outage reads. Not installed. |
 | Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json) and [guide](../docs/owned-data-directory.md): persisted UUID/channel, private files and lifecycle guards. Packaged /data provisioning pending. |
 | Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json) and [guide](../docs/administrator-recovery.md): both human APIs, console-only approval and atomic consumption; live/package acceptance pending. |
 | Snapshot creation/inspection | [Receipt](../docs/evidence/m1-snapshots.json) and [guide](../docs/snapshots.md): consistent private bundles and strict checks. Restore activation/newer-history policy remain pending. |
 | Explicit-file boundary | [Receipt](../docs/evidence/m1-explicit-storage-boundary.json): both runtime factories reject owned markers before SQLite initialization. |
 | Standalone owned data | [Receipt](../docs/evidence/m1-standalone-owned-storage.json): automatic identity, restart/replay and listener-lifetime locks. |
 | HA launcher preparation | [Receipt](../docs/evidence/m1-ha-app-bootstrap.json): fixed private child and ordered privilege drop. Image/kernel acceptance pending. |
+| Persistent Edge.2 package | [Receipt](../docs/evidence/m1-persistent-app-package.json): immutable runtime, private volume and real nonroot restart/replay. Owner acceptance pending. |
 
 No test credentials enter business storage, evidence, responses or snapshots. Native authentication
 is independent of standalone OAuth. Current outstanding work includes native private data provisioning, updated app

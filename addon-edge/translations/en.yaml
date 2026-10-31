@@ -1,0 +1,7 @@
+configuration:
+  public_origins:
+    name: Home Assistant browser origins
+    description: >-
+      The URLs used to open Home Assistant, including scheme and port when present,
+      for example http://homeassistant.local:8123. Enter one to four distinct origins
+      without paths. Restart Domus after changing them. Your existing HA sign-in is used.

@@ -1,5 +1,5 @@
 name: Domus Edge
-version: "0.0.0-edge.1"
+version: "0.0.0-edge.2"
 slug: domus_edge
 description: Development preview of the local Domus household application
 url: https://github.com/vypdev/domus
@@ -9,6 +9,8 @@ arch:
 startup: application
 boot: manual
 stage: experimental
+breaking_versions:
+  - "0.0.0-edge.2"
 init: true
 timeout: 30
 ingress: true
@@ -20,5 +22,8 @@ homeassistant_api: true
 hassio_api: false
 auth_api: false
 ports: {}
-options: {}
-schema: {}
+options:
+  public_origins: []
+schema:
+  public_origins:
+    - url

@@ -22,15 +22,17 @@ def image() -> str:
     return value
 
 
-def test_image_contains_only_the_nonroot_native_runtime_and_source_identity(image: str) -> None:
+def test_image_pins_the_private_launcher_and_installs_a_nonroot_readable_runtime(
+    image: str,
+) -> None:
     result = docker("image", "inspect", image)
     assert result.returncode == 0, result.stderr
     config = json.loads(result.stdout)[0]["Config"]
-    assert config["User"] == "65532:65532"
-    assert config["Entrypoint"] == ["/app/.venv/bin/domus-ingress", "--channel", "edge"]
+    assert config["User"] == "0:0"
+    assert config["Entrypoint"] == ["/app/.venv/bin/domus-ha-app", "--channel", "edge"]
     assert config["Labels"]["io.hass.type"] == "app"
     assert config["Labels"]["org.opencontainers.image.revision"] == (
-        "98bd12f1bf141ba64053730b2686bd848aee1b1c"
+        "d013cf2c8b932d0e00f5858053cbc0e663d5eee1"
     )
     assert not any(value.startswith("SUPERVISOR_TOKEN=") for value in config["Env"])
     probe = docker(
@@ -38,6 +40,8 @@ def test_image_contains_only_the_nonroot_native_runtime_and_source_identity(imag
         "--rm",
         "--network",
         "none",
+        "--user",
+        "65532:65532",
         "--entrypoint",
         "/app/.venv/bin/python",
         image,
@@ -52,46 +56,110 @@ def test_image_requires_supervisor_configuration_and_never_falls_back_to_an_admi
 ) -> None:
     result = docker("run", "--rm", "--network", "none", image)
     assert result.returncode == 2
-    assert "Home Assistant app" in result.stderr
+    assert "Domus could not start" in result.stderr
     assert "Traceback" not in result.stderr
 
 
-def test_real_listener_serves_process_health_and_rejects_forged_direct_ingress(image: str) -> None:
-    name = "domus-preview-test-" + uuid.uuid4().hex
-    started = docker(
-        "run",
-        "--detach",
-        "--init",
-        "--network",
-        "none",
-        "--name",
-        name,
-        "--env",
-        "SUPERVISOR_TOKEN=fixture-supervisor-token",
-        image,
-    )
+def ready(name: str) -> None:
+    deadline = time.monotonic() + 20
+    while True:
+        result = docker(
+            "exec",
+            name,
+            "/app/.venv/bin/python",
+            "-c",
+            "import urllib.request; "
+            "urllib.request.urlopen('http://127.0.0.1:8099/health', timeout=2)",
+        )
+        if result.returncode == 0 or time.monotonic() >= deadline:
+            break
+        time.sleep(0.1)
+    assert result.returncode == 0, result.stderr
+
+
+def stopped(name: str) -> None:
+    result = docker("stop", "--time", "15", name)
+    assert result.returncode == 0, result.stderr
+    state = docker("inspect", "--format", "{{json .State}}", name)
+    finished = json.loads(state.stdout)
+    assert finished["ExitCode"] in (0, 143)
+    assert finished["OOMKilled"] is False and finished["Error"] == ""
+
+
+@pytest.fixture
+def data_volume(image: str):
+    volume = "domus-persistent-data-" + uuid.uuid4().hex
+    assert docker("volume", "create", volume).returncode == 0
     try:
+        prepared = docker(
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--volume",
+            volume + ":/data",
+            "--entrypoint",
+            "/app/.venv/bin/python",
+            image,
+            "-c",
+            "import pathlib,json,os; p=pathlib.Path('/data/options.json'); "
+            "p.write_text(json.dumps({'public_origins':['http://homeassistant.local:8123']})); "
+            "p.chmod(0o600); os.chmod('/data',0o755)",
+        )
+        assert prepared.returncode == 0, prepared.stderr
+        yield volume
+    finally:
+        removed = docker("volume", "rm", volume)
+        assert removed.returncode == 0, removed.stderr
+
+
+def test_real_nonroot_listener_rejects_forgery_and_retains_storage_and_replay_on_restart(
+    image: str,
+    data_volume: str,
+) -> None:
+    name = "domus-persistent-test-" + uuid.uuid4().hex
+    try:
+        started = docker(
+            "run",
+            "--detach",
+            "--init",
+            "--network",
+            "none",
+            "--name",
+            name,
+            "--volume",
+            data_volume + ":/data",
+            "--env",
+            "SUPERVISOR_TOKEN=fixture-supervisor-token",
+            image,
+        )
         assert started.returncode == 0, started.stderr
-        deadline = time.monotonic() + 20
-        while True:
-            ready = docker(
-                "exec",
-                name,
-                "/app/.venv/bin/python",
-                "-c",
-                "import urllib.request; "
-                "urllib.request.urlopen('http://127.0.0.1:8099/health', timeout=2)",
-            )
-            if ready.returncode == 0 or time.monotonic() >= deadline:
-                break
-            time.sleep(0.1)
-        assert ready.returncode == 0, ready.stderr
+        ready(name)
         probe = docker(
             "exec",
             name,
             "/app/.venv/bin/python",
             "-c",
-            """import json, urllib.error, urllib.request
+            r"""import json, pathlib, urllib.error, urllib.request
+servers = []
+for process in pathlib.Path('/proc').iterdir():
+    if process.name.isdecimal():
+        try:
+            command = (process / 'cmdline').read_bytes().split(b'\0')
+            if b'/app/.venv/bin/domus-ingress' in command:
+                servers.append((process / 'status').read_text())
+        except FileNotFoundError:
+            pass
+assert len(servers) == 1
+status = dict(line.split(':', 1) for line in servers[0].splitlines() if ':' in line)
+assert status['Uid'].split() == status['Gid'].split() == ['65532'] * 4
+assert status['Groups'].strip() == ''
+assert all(int(status[key].strip(), 16) == 0 for key in ('CapEff','CapPrm','CapAmb'))
+root = pathlib.Path('/data/domus')
+assert root.stat().st_uid == root.stat().st_gid == 65532
+assert root.stat().st_mode & 0o777 == 0o700
+for path in root.iterdir():
+    assert path.stat().st_uid == 65532 and path.stat().st_mode & 0o777 == 0o600
 base = 'http://127.0.0.1:8099'
 health = json.load(urllib.request.urlopen(base + '/health'))
 assert health == {'status': 'ready', 'scope': 'process'}
@@ -112,13 +180,126 @@ for path in ('/', '/api/v1/identity'):
 """,
         )
         assert probe.returncode == 0, probe.stderr
-        stopped = docker("stop", "--time", "15", name)
-        assert stopped.returncode == 0, stopped.stderr
-        state = docker("inspect", "--format", "{{json .State}}", name)
-        finished = json.loads(state.stdout)
-        # Uvicorn re-raises a captured SIGTERM after draining the server.
-        assert finished["ExitCode"] in (0, 143)
-        assert finished["OOMKilled"] is False and finished["Error"] == ""
+        before = docker(
+            "exec",
+            name,
+            "/app/.venv/bin/python",
+            "-c",
+            "print(open('/data/domus/installation.json').read())",
+        )
+        assert before.returncode == 0, before.stderr
+        for retry in range(2):
+            result = docker(
+                "exec",
+                "--user",
+                "65532:65532",
+                name,
+                "/app/.venv/bin/python",
+                "-c",
+                _STORAGE_COMMAND,
+                str(retry),
+            )
+            assert result.returncode == 0, result.stderr
+            if retry == 0:
+                stopped(name)
+                assert docker("start", name).returncode == 0
+                ready(name)
+        after = docker(
+            "exec",
+            name,
+            "/app/.venv/bin/python",
+            "-c",
+            "print(open('/data/domus/installation.json').read())",
+        )
+        assert after.returncode == 0 and after.stdout == before.stdout
+        stopped(name)
     finally:
         removed = docker("rm", "--force", name)
-        assert removed.returncode == 0, removed.stderr
+        assert removed.returncode == 0 or "No such container" in removed.stderr, removed.stderr
+
+
+def test_real_launcher_refuses_invalid_options_without_provisioning(
+    image: str, data_volume: str
+) -> None:
+    changed = docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--volume",
+        data_volume + ":/data",
+        "--entrypoint",
+        "/app/.venv/bin/python",
+        image,
+        "-c",
+        "open('/data/options.json','w').write('{\"public_origins\":[]}')",
+    )
+    assert changed.returncode == 0, changed.stderr
+    result = docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--volume",
+        data_volume + ":/data",
+        "--env",
+        "SUPERVISOR_TOKEN=fixture-supervisor-token",
+        image,
+    )
+    assert result.returncode == 2 and "Domus could not start" in result.stderr
+    inspected = docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--volume",
+        data_volume + ":/data",
+        "--entrypoint",
+        "/app/.venv/bin/python",
+        image,
+        "-c",
+        "import pathlib; assert not pathlib.Path('/data/domus').exists()",
+    )
+    assert inspected.returncode == 0, inspected.stderr
+
+
+_STORAGE_COMMAND = """import os,sys
+from contextlib import closing
+from pathlib import Path
+from domus.application.commands import AtomicCommands, Change
+from domus.domain.storage import CommandKey, Household, JsonDocument
+from domus.infrastructure.owned_storage import attach_storage, open_storage
+from domus.domain.errors import StorageBusy
+assert os.getuid() == 65532 and not os.access('/data/options.json', os.W_OK)
+try:
+    os.setuid(0)
+except PermissionError:
+    pass
+else:
+    raise AssertionError('Runtime can regain root')
+try:
+    open_storage(Path('/data/domus'),'edge')
+except StorageBusy:
+    pass
+else:
+    raise AssertionError('A second runtime bypassed the lease')
+class Authorization:
+    def require(self, command, unit): pass
+class Clock:
+    def now(self): return 100
+class Identifiers:
+    def new(self): return 'container-fixture-operation'
+def apply(unit):
+    assert sys.argv[1] == '0', 'Replay ran the effect again'
+    unit.households.save(Household('container-home','Container fixture','UTC',1),0)
+    value=JsonDocument.from_value({'household_id':'container-home','revision':1})
+    return Change(value,value,value)
+with closing(attach_storage(Path('/data/domus'),'edge')) as storage:
+    key=CommandKey('container-home','fixture-actor','fixture.create','fixture-request')
+    receipt=AtomicCommands(storage.database,Authorization(),Clock(),Identifiers()).execute(
+        key,JsonDocument.from_value({'name':'Container fixture'}),apply)
+    assert receipt.operation_id == 'container-fixture-operation'
+    with storage.database.read() as unit:
+        assert unit.households.current().name == 'Container fixture'
+        assert len(unit.audit.entries('container-home')) == len(unit.outbox.pending()) == 1
+"""

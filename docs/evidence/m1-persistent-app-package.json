@@ -1,0 +1,75 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "d013cf2c8b932d0e00f5858053cbc0e663d5eee1",
+  "packageVersion": "0.0.0-edge.2",
+  "runtimeCommit": "d013cf2c8b932d0e00f5858053cbc0e663d5eee1",
+  "runtimeArchiveSha256": "fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c",
+  "localImage": {
+    "tag": "domus-edge-review:0.0.0-edge.2",
+    "id": "sha256:5d3c87fd549d40c82ec3e60d6b3c4a778579dea1cafceddedecd865de13ce32d",
+    "architecture": "arm64",
+    "python": "3.14.6",
+    "sqlite": "3.46.1"
+  },
+  "backendTests": 954,
+  "backendCoverage": {
+    "covered_lines": 3434,
+    "num_statements": 3434,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 122,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 888,
+    "num_partial_branches": 0,
+    "covered_branches": 888,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "containerTests": 4,
+  "containerCommand": "DOMUS_TEST_IMAGE=domus-edge-review:0.0.0-edge.2 .venv/bin/pytest tests/containers -q --no-cov",
+  "assertions": [
+    "Image builds the immutable checked archive with frozen dependencies and the registered launcher entrypoint",
+    "A root-owned named-volume fixture is provisioned only inside the app data mount, with no network or host ports",
+    "The real server process has four UID/GID values of 65532, no supplementary groups and zero permitted/effective/ambient capabilities",
+    "The runtime identity cannot regain root or write root-owned options; private directory/files have correct ownership and 0700/0600 modes",
+    "A real listener serves process health but rejects forged direct Ingress before any HA connection",
+    "A second runtime is excluded while console attachment can run concurrently",
+    "A canonical fictitious AtomicCommands fixture preserves household, original receipt, audit and pending outbox exactly once across stop/start; UUID/channel marker is unchanged",
+    "Missing transport or invalid public_origins refuses startup without a root server or new private data",
+    "Owned temporary containers and volumes are removed; the two review/rollback images are retained"
+  ],
+  "architecture": {
+    "files": 90,
+    "dependencies": 411,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 57 backend source files"
+  },
+  "limits": [
+    "Local native aarch64 image evidence; exact-head CI must separately build/exercise amd64 and aarch64",
+    "Storage fixtures use a fictitious authority and do not establish real HA human acceptance",
+    "The owner still runs Edge 0.0.0-edge.1 until a verified manual update; no live app setting or household record changed in this increment",
+    "Full product UI, restore activation/newer replay-history policy, companion authority and complete deployment/channel acceptance remain pending",
+    "Snapshot output parents remain explicit operator provisioning; no backup scheduler or pruning was added"
+  ],
+  "configuration": {
+    "public_origins": "one to four fixed HA browser origins; default empty refuses startup",
+    "breakingVersion": "0.0.0-edge.2",
+    "bootstrap": "container root provisions /data/domus then execs server as 65532; no host privilege, mount, API role or exposed port added"
+  },
+  "runtimeSourceCI": {
+    "head": "d013cf2c8b932d0e00f5858053cbc0e663d5eee1",
+    "url": "https://github.com/vypdev/domus/actions/runs/41204679962",
+    "result": "PASS: six project groups; the source-head image cases still use the previous immutable preview, not this new package"
+  },
+  "sourceSha256": {
+    "addon-edge/Dockerfile": "72364890d6295530fdf74afef786f53804ca39cc6c6379b817a25f3f31e65d75",
+    "addon-edge/config.yaml": "54f147389ce93031eff7be484446dddffb9d2c144dc6406c0b1498bfe9337af4",
+    "addon-edge/translations/en.yaml": "898d1c9a7e67eea8e1d72e4c2305131655a65dee78c03ce6af9074cb41067347",
+    "tests/backend/test_app_package.py": "ff31a0e314104a352bbc178fd386dca95320f4fda221da6bc1c8a706974e121b",
+    "tests/containers/test_app_image.py": "14474f5b9a5c198e884198a56ba429e50e73b03db1cb1601ee7a68a1bc4b74ba"
+  }
+}
