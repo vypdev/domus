@@ -14,7 +14,7 @@ type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, J
 type JsonObject = dict[str, JsonValue]
 
 
-def _identifier(value: str) -> None:
+def validate_identifier(value: str) -> None:
     if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}", value):
         raise InvalidInput("invalid_identifier")
 
@@ -116,7 +116,7 @@ class CommandKey:
 
     def __post_init__(self) -> None:
         for value in (self.household_id, self.actor_id, self.action, self.key):
-            _identifier(value)
+            validate_identifier(value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,7 +129,7 @@ class Household:
     revision: int
 
     def __post_init__(self) -> None:
-        _identifier(self.household_id)
+        validate_identifier(self.household_id)
         if (
             not isinstance(self.name, str)
             or not isinstance(self.time_zone, str)

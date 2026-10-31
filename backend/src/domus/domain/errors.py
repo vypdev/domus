@@ -21,6 +21,18 @@ class Forbidden(DomusError):
     """Current authority does not permit the requested action."""
 
 
+class Unauthenticated(DomusError):
+    """No current eligible identity/session can establish access."""
+
+
+class IdentityRejected(Unauthenticated):
+    """An explicit upstream rejection invalidates local session authority."""
+
+
+class IdentityUnavailable(DomusError):
+    """A bounded provider availability failure; never a mutation grant."""
+
+
 class StorageBusy(DomusError):
     """A bounded writer slot was not obtained; identical retry is possible."""
 

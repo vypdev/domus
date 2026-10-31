@@ -21,12 +21,23 @@
         "backend/src/domus/domain/storage.py",
         "backend/src/domus/application/ports.py",
         "backend/src/domus/application/commands.py",
-        "backend/src/domus/infrastructure/sqlite.py"
+        "backend/src/domus/infrastructure/sqlite.py",
+        "backend/src/domus/domain/identity.py",
+        "backend/src/domus/domain/sessions.py",
+        "backend/src/domus/application/authorization.py",
+        "backend/src/domus/application/identity_ports.py",
+        "backend/src/domus/application/sessions.py",
+        "backend/src/domus/infrastructure/sqlite_identity.py",
+        "backend/src/domus/infrastructure/memory_sessions.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
         "tests/backend/test_sqlite_transactions.py",
-        "tests/backend/test_atomic_commands.py"
+        "tests/backend/test_atomic_commands.py",
+        "tests/backend/test_identity_policy.py",
+        "tests/backend/test_membership_authorization.py",
+        "tests/backend/test_session_leases.py",
+        "tests/backend/test_sqlite_identity.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -36,11 +47,12 @@
         "docs/contracts/home-assistant.md",
         "docs/architecture-identity-storage.md",
         "docs/development.md",
-        "docs/compatibility-home-assistant.md"
+        "docs/compatibility-home-assistant.md",
+        "docs/migrations-identity-storage.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: tested storage kernel and actual backend CI/import graph; HA identity, policy, recovery, snapshots and API pending",
+        "implementationEvidence": "partial: tested storage, pure identity policy, local authorization and session leases; HA protocols, membership commands, recovery, snapshots and API pending",
         "blockingDecisions": "Full identity/persistence/recovery acceptance, snapshot/restore implementation, packaged deployment/channel proof and exact HA matrix acceptance remain pending; partial real-file/process transaction evidence is implemented under issue #6.",
         "copilotChangesAllowed": false
       }
@@ -51,25 +63,40 @@
       "status": "proposed",
       "scope": "Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-10-31",
       "specs": [
         "specs/household-identity.md"
       ],
       "workflows": [],
       "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "code": [
+        "backend/src/domus/domain/identity.py",
+        "backend/src/domus/domain/sessions.py",
+        "backend/src/domus/application/authorization.py",
+        "backend/src/domus/application/identity_ports.py",
+        "backend/src/domus/application/sessions.py",
+        "backend/src/domus/infrastructure/sqlite_identity.py",
+        "backend/src/domus/infrastructure/memory_sessions.py"
+      ],
+      "tests": [
+        "tests/backend/test_identity_policy.py",
+        "tests/backend/test_membership_authorization.py",
+        "tests/backend/test_session_leases.py",
+        "tests/backend/test_sqlite_identity.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/architecture-identity-storage.md",
+        "docs/migrations-identity-storage.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed permission matrix/override review; authenticated recovery after external HA account loss; proof of HA identity/administrator status in both deployment targets; technical service principal policy. The owner confirmed three administrator-mapping modes with all HA administrators as the default, plus configurable household profiles and per-member permission exceptions.",
+        "implementationEvidence": "partial: pure mappings/permissions, transaction-bound local authorization, member/policy storage and session leases; HA proof and complete product journeys pending",
+        "blockingDecisions": "HA protocol identity/administrator proof in both targets; membership/setup commands and API; console-approved recovery; technical principal policy; complete live/package acceptance remain pending. Accepted defaults and precedence have pure policy tests, not complete domain or deployment acceptance.",
         "copilotChangesAllowed": false
       }
     },

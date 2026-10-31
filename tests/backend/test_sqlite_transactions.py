@@ -273,10 +273,10 @@ def test_initialization_rechecks_ownership_after_obtaining_the_writer(
     first = True
 
     def change_after_preflight(
-        connection: sqlite3.Connection, *, allow_empty: bool = False
-    ) -> bool:
+        connection: sqlite3.Connection, *, allow_empty: bool = False, allow_previous: bool = False
+    ) -> int:
         nonlocal first
-        result = inspect(connection, allow_empty=allow_empty)
+        result = inspect(connection, allow_empty=allow_empty, allow_previous=allow_previous)
         if first:
             first = False
             with closing(sqlite3.connect(path, autocommit=True)) as external:

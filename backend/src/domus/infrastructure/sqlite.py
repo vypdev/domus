@@ -26,10 +26,11 @@ from domus.domain.storage import (
     OutboxEvent,
     Receipt,
 )
+from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 APPLICATION_ID = 0x444F4D55
-SCHEMA_STATEMENTS = (
+BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
     "instance_id TEXT NOT NULL, channel TEXT NOT NULL CHECK(channel IN ('stable','edge')))",
     "CREATE TABLE households(household_id TEXT PRIMARY KEY, singleton INTEGER NOT NULL "
@@ -51,7 +52,23 @@ SCHEMA_STATEMENTS = (
     "delivered INTEGER NOT NULL DEFAULT 0 CHECK(delivered IN (0,1)))",
     "CREATE INDEX outbox_pending ON outbox(delivered,position)",
 )
-TABLES = {"installation", "households", "receipts", "audit", "outbox"}
+IDENTITY_STATEMENTS = (
+    "CREATE TABLE members(member_id TEXT PRIMARY KEY, "
+    "household_id TEXT NOT NULL REFERENCES households(household_id), ha_user_id TEXT NOT NULL, "
+    "role TEXT NOT NULL CHECK(role IN ('administrator','adult','restricted','viewer')), "
+    "status TEXT NOT NULL CHECK(status IN ('pending','active','suspended','archived')), "
+    "revision INTEGER NOT NULL CHECK(revision>=1), exceptions TEXT NOT NULL, "
+    "UNIQUE(household_id,ha_user_id))",
+    "CREATE TABLE household_policy(household_id TEXT PRIMARY KEY "
+    "REFERENCES households(household_id), mapping_mode TEXT NOT NULL, target_ha_user_id TEXT, "
+    "revision INTEGER NOT NULL CHECK(revision>=1), adjustments TEXT NOT NULL, "
+    "CHECK((mapping_mode='all_ha_administrators' AND target_ha_user_id IS NULL) "
+    "OR (mapping_mode IN ('setup_administrator','selected_ha_user') "
+    "AND target_ha_user_id IS NOT NULL)))",
+)
+SCHEMA_STATEMENTS = (*BASE_STATEMENTS, *IDENTITY_STATEMENTS)
+BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
+TABLES = BASE_TABLES | {"members", "household_policy"}
 
 
 def _scope(command: CommandKey) -> tuple[str, str, str, str]:
@@ -234,6 +251,8 @@ class SQLiteUnit:
         self.receipts = SQLiteReceipts(connection)
         self.audit = SQLiteAudit(connection)
         self.outbox = SQLiteOutbox(connection)
+        self.members = SQLiteMembers(connection)
+        self.policies = SQLitePolicies(connection)
 
 
 class SQLiteDatabase:
@@ -263,7 +282,13 @@ class SQLiteDatabase:
         finally:
             connection.close()
 
-    def _inspect(self, connection: sqlite3.Connection, *, allow_empty: bool = False) -> bool:
+    def _inspect(
+        self,
+        connection: sqlite3.Connection,
+        *,
+        allow_empty: bool = False,
+        allow_previous: bool = False,
+    ) -> int:
         try:
             version = connection.execute("PRAGMA user_version").fetchone()[0]
             application_id = connection.execute("PRAGMA application_id").fetchone()[0]
@@ -275,10 +300,11 @@ class SQLiteDatabase:
                 )
             }
             if version == 0 and application_id == 0 and not objects and allow_empty:
-                return False
-            if version != SCHEMA_VERSION:
+                return 0
+            if version != SCHEMA_VERSION and not (allow_previous and version == 1):
                 raise DatabaseRejected("unsupported_schema")
-            if application_id != APPLICATION_ID or objects != TABLES:
+            expected_tables = BASE_TABLES if version == 1 else TABLES
+            if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
             identity = connection.execute("SELECT instance_id,channel FROM installation").fetchone()
             if identity is None or tuple(identity) != (
@@ -288,7 +314,7 @@ class SQLiteDatabase:
                 raise DatabaseRejected("installation_mismatch")
         except sqlite3.Error:
             raise DatabaseRejected("invalid_database") from None
-        return True
+        return int(version)
 
     def initialize(self) -> None:
         try:
@@ -300,11 +326,12 @@ class SQLiteDatabase:
         else:
             os.close(descriptor)
         with self._connection() as connection:
-            self._inspect(connection, allow_empty=True)
+            self._inspect(connection, allow_empty=True, allow_previous=True)
             connection.execute("PRAGMA foreign_keys=ON")
             try:
                 connection.execute("BEGIN IMMEDIATE")
-                if not self._inspect(connection, allow_empty=True):
+                version = self._inspect(connection, allow_empty=True, allow_previous=True)
+                if version == 0:
                     for statement in SCHEMA_STATEMENTS:
                         connection.execute(statement)
                     connection.execute(
@@ -312,6 +339,10 @@ class SQLiteDatabase:
                         (self.installation.instance_id, self.installation.channel),
                     )
                     connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
+                    connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
+                elif version == 1:
+                    for statement in IDENTITY_STATEMENTS:
+                        connection.execute(statement)
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
                 connection.execute("COMMIT")
             except BaseException as error:

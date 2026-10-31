@@ -2,8 +2,8 @@
 
 The documentation foundation was merged through [PR #3](https://github.com/vypdev/domus/pull/3).
 [Issue #4](https://github.com/vypdev/domus/issues/4) starts M1 with real development tooling, tests and CI.
-The issue #6 checkpoint introduces the tested storage kernel and application transaction ports.
-HA authentication, membership policy, product UI, deployment packages and channels remain pending.
+The issue #6 checkpoints introduce storage, pure identity policy, local authorization and session leases.
+HA protocol authentication, membership use cases, product UI, packages and channels remain pending.
 
 ## Reproduce the environment
 
@@ -97,7 +97,8 @@ tests. These 85 executed tests are separate from the 353 planned product accepta
 The first implementation commit, 8a1c8fbdc50960a124fc76bc16702638845a0606, passed all five jobs in [CI Check run 40800913976](https://github.com/vypdev/domus/actions/runs/40800913976). Every later head must pass independently; this recorded result does not transfer to new code.
 
 Delivery-quality and platform-foundation register only their real partial evidence and stay proposed/Draft.
-Other capabilities retain empty implementation evidence. Reviewed Copilot v3 revision
+The identity capability now registers its partial pure/local evidence; other product domains retain
+empty implementation evidence. Reviewed Copilot v3 revision
 3e7ceea08e6131360e026937d1c0cc1b120472e0 resolves
 [issue #777](https://github.com/vypdev/copilot/issues/777): truthful proposed capabilities may retain
 empty implementation arrays. The current original validator accepts the catalog without changing
@@ -109,3 +110,8 @@ The storage checkpoint has its own [architecture and limits](architecture-identi
 [source-identified evidence](evidence/m1-storage-kernel.json) and
 [current HA reference matrix](compatibility-home-assistant.md). It does not implement a human
 authentication entrypoint, snapshot command or HTTP server yet.
+
+The subsequent [identity-policy evidence](evidence/m1-identity-policy.json) records pure mappings,
+permission precedence, transaction-bound authorization, schema 2 migration and bounded session leases.
+Provider fixtures are not live HA acceptance. The [migration guide](migrations-identity-storage.md)
+identifies the frozen schema 1 input and the fail-closed unconfigured-household state.

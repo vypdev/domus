@@ -112,7 +112,7 @@ Text equivalent: HA entry or pending enrollment -> server identity proof -> curr
 
 1. Standalone completes state/PKCE authorization and server-side token exchange, then current-user WebSocket proof; Supervisor validates actual peer and Ingress identity, then performs fresh Core lookup. Adapters reject inactive, system, malformed, oversized, expired, rejected, or mismatched/correlation-invalid proof.
 2. An eligible administrator explicitly creates the household and selects an administrator mapping. The default is `all_ha_administrators`. An ordinary proven, unlinked human may enroll but remains pending until authorized activation. In all_ha_administrators mode, an explicitly enrolling current HA administrator may activate through the verified mapping exception; page arrival never initializes the household or grants an ordinary user access.
-3. Each protected use case checks HA status/source and current local policy inside its transaction. Mutations require expected revisions and `Idempotency-Key`.
+3. Each protected use case obtains fresh HA status/source before entering SQLite and checks current local policy inside its transaction. An HA proof and a local commit cannot be atomic across systems; a concurrent independent HA revocation must not be represented as an atomic directory snapshot. Mutations require expected revisions and `Idempotency-Key`.
 4. SQLite commits domain state, scoped receipt, audit and outbox in one transaction. Identical authorized replay returns the retained result; different payload conflicts. Restart and verified restore preserve replay guards.
 
 ### 6.2 Alternative paths
@@ -133,7 +133,7 @@ Text equivalent: HA entry or pending enrollment -> server identity proof -> curr
 | Pending member | Verified human enrolls without activation | Request awaits administrator | Active, suspended, denied | Administrator activates or rejects |
 | Active member | Verified linkage and permitted status | Profile/overrides apply within invariants | Suspended, revoked, pending | Administrator changes with revision |
 | Recovery pending | Eligible admin requests recovery | Console approval needed before expiry | Approved, expired, canceled | Operator approves exact target locally |
-| Recovery approved | Bound console approval consumed for completion | Target must freshly reprove | Recovered, expired, denied | HA proof and one atomic transaction |
+| Recovery approved | Bound console approval awaits atomic completion | Target must freshly reprove; approval is consumed only with the grant | Recovered, expired, denied | HA proof and one atomic transaction |
 | Read-only outage | HA unavailable but original session unexpired | Local queries only | Authenticated after fresh proof, expired, denied | No extension; explicit rejection denies |
 | Denied/expired | Proof, scope or lifetime fails | Action unavailable | New authentication where allowed | No partial mutation; safe error |
 
@@ -375,18 +375,31 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `backend/src/domus/__init__.py` | create |
 | `backend/src/domus/application/__init__.py` | create |
 | `backend/src/domus/application/commands.py` | create |
+| `backend/src/domus/application/authorization.py` | create |
+| `backend/src/domus/application/identity_ports.py` | create |
+| `backend/src/domus/application/sessions.py` | create |
 | `backend/src/domus/application/ports.py` | create |
 | `backend/src/domus/composition/__init__.py` | create |
 | `backend/src/domus/domain/__init__.py` | create |
 | `backend/src/domus/domain/errors.py` | create |
+| `backend/src/domus/domain/identity.py` | create |
+| `backend/src/domus/domain/sessions.py` | create |
 | `backend/src/domus/domain/storage.py` | create |
 | `backend/src/domus/entrypoints/__init__.py` | create |
 | `backend/src/domus/infrastructure/__init__.py` | create |
 | `backend/src/domus/infrastructure/sqlite.py` | create |
+| `backend/src/domus/infrastructure/sqlite_identity.py` | create |
+| `backend/src/domus/infrastructure/memory_sessions.py` | create |
 | `tests/backend/test_atomic_commands.py` | create |
 | `tests/backend/test_sqlite_transactions.py` | create |
 | `tests/backend/test_storage_values.py` | create |
+| `tests/backend/test_identity_policy.py` | create |
+| `tests/backend/test_membership_authorization.py` | create |
+| `tests/backend/test_sqlite_identity.py` | create |
+| `tests/backend/test_session_leases.py` | create |
+| `tests/fixtures/sqlite/v1.sql` | create |
 | `docs/evidence/m1-storage-kernel.json` | create |
+| `docs/evidence/m1-identity-policy.json` | create |
 | `docs/evidence/home-assistant-reference.json` | create |
 | `pyproject.toml` | update |
 | `uv.lock` | update |
@@ -468,3 +481,7 @@ These are executable acceptance requirements, not reports of tests already run.
 ### Storage kernel implementation checkpoint — 2026-10-31
 
 The first implementation supplies immutable values, semantic transaction ports, authorization-before-replay orchestration and the real SQLite adapter. Separate coverage and actual import-graph checks are wired into CI. HA proof, concrete membership policy, recovery, snapshots, HTTP/console routes and target acceptance remain pending. See [implementation boundaries](../docs/architecture-identity-storage.md) and [source-identified evidence](../docs/evidence/m1-storage-kernel.json). Planned cases are not all executed merely because this partial kernel has complete coverage.
+
+### Identity policy and session-lease checkpoint — 2026-10-31
+
+The next checkpoint supplies pure eligible-human/mapping/permission rules, current local authorization before replay, uniquely linked member/policy repositories, an atomic schema 1-to-2 upgrade and a bounded in-memory session-lease core. Provider fixtures exercise outage reads, rejection, expiry and logout races. No HA protocol authentication, membership command entrypoint, console recovery, snapshot or packaged/live acceptance is claimed. See [the migration guide](../docs/migrations-identity-storage.md) and [identified evidence](../docs/evidence/m1-identity-policy.json). The owning specifications remain Draft.
