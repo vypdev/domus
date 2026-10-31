@@ -27,7 +27,7 @@ from domus.infrastructure.ha_directory import HomeAssistantDirectory
 from domus.infrastructure.ha_ingress import SupervisorIdentity
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.ingress_sessions import IngressSessions
-from domus.infrastructure.owned_storage import OwnedStorage, open_storage
+from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
 from domus.infrastructure.sqlite import SQLiteDatabase
 
 
@@ -70,6 +70,7 @@ def create_business_runtime(
     installation = Installation(instance_id, channel)
     origins = PublicOrigins(public_origins).values
     identity = SupervisorIdentity(HomeAssistantWebSocket(HAEndpoint.supervisor()), token)
+    reject_owned_database(database)
     store = SQLiteDatabase(database, installation)
     store.initialize()
     return _compose_business(identity, store, origins)

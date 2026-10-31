@@ -202,13 +202,34 @@ def attach_database(path: Path, installation: Installation) -> SQLiteDatabase:
             info = os.fstat(directory)
             if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o022:
                 raise DatabaseRejected("unsafe_installation_directory")
-            if _MARKER in os.listdir(directory):
-                raise InvalidInput("owned_directory_required")
+            _no_owned_marker(directory)
             os.close(_file(directory, path.name))
             database = SQLiteDatabase(path, installation)
             with database.read():
                 pass
             return database
+        finally:
+            os.close(directory)
+    except OSError:
+        raise StorageFailure("storage_failure") from None
+
+
+def _no_owned_marker(directory: int) -> None:
+    try:
+        os.stat(_MARKER, dir_fd=directory, follow_symlinks=False)
+    except FileNotFoundError:
+        return
+    raise InvalidInput("owned_directory_required")
+
+
+def reject_owned_database(path: Path) -> None:
+    """Explicit runtime files cannot bypass owned-directory startup/lifecycle rules."""
+    try:
+        directory = os.open(
+            path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+        )
+        try:
+            _no_owned_marker(directory)
         finally:
             os.close(directory)
     except OSError:

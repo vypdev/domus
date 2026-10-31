@@ -9,6 +9,8 @@ The native CLI also supports [--data-directory](owned-data-directory.md) for an 
 0700 directory owned by its runtime UID. It generates/preserves installation identity, checks files
 and holds the process lock until shutdown. Use it with --public-origin; do not also supply
 --database or --instance-id. The installed stateless Edge preview does not enable it yet.
+Both explicit-file runtime modes reject a parent installation.json marker before SQLite initialization.
+Use the owned-directory entrypoint for managed data; an explicit file cannot bypass its locks.
 
 [domus-admin recovery approve](administrator-recovery.md) uses --data-directory and --channel to
 attach to ready native data, or --database plus --instance-id and --channel for an explicit standalone

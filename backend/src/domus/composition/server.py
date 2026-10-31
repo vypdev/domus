@@ -20,6 +20,7 @@ from domus.infrastructure.ha_config import HAEndpoint, OAuthConfiguration
 from domus.infrastructure.ha_http import HomeAssistantOAuth
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
+from domus.infrastructure.owned_storage import reject_owned_database
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.standalone_sessions import StandaloneIdentity
 
@@ -54,6 +55,7 @@ def create_runtime(
     guard = SessionGuard(identity, identity, clock)
     context = None
     if database is not None:
+        reject_owned_database(database)
         store = SQLiteDatabase(database, installation)
         store.initialize()
         context = standalone_context(store, guard, identity, installation)

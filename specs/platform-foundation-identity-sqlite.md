@@ -519,6 +519,7 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `tests/backend/test_snapshot_console.py` | create |
 | `docs/snapshots.md` | create |
 | `docs/evidence/m1-snapshots.json` | create |
+| `docs/evidence/m1-explicit-storage-boundary.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -604,6 +605,7 @@ all planned acceptance cases. The specifications remain Draft.
 | Owned data lifecycle | [Receipt](../docs/evidence/m1-owned-storage.json) and [guide](../docs/owned-data-directory.md): persisted UUID/channel, private files and lifecycle guards. Packaged /data provisioning pending. |
 | Administrator recovery | [Receipt](../docs/evidence/m1-administrator-recovery.json) and [guide](../docs/administrator-recovery.md): both human APIs, console-only approval and atomic consumption; live/package acceptance pending. |
 | Snapshot creation/inspection | [Receipt](../docs/evidence/m1-snapshots.json) and [guide](../docs/snapshots.md): consistent private bundles and strict checks. Restore activation/newer-history policy remain pending. |
+| Explicit-file boundary | [Receipt](../docs/evidence/m1-explicit-storage-boundary.json): both runtime factories reject owned markers before SQLite initialization. |
 
 No test credentials enter business storage, evidence, responses or snapshots. Native authentication
 is independent of standalone OAuth. Current outstanding work includes native private data provisioning, updated app

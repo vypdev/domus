@@ -50,6 +50,8 @@ with activity; a future retention feature must preserve replay protection.
 durable initialization/ready metadata. It generates a UUID only for an empty private directory and
 passes an existing-only mode to SQLite after readiness, preventing silent empty replacement. The
 native composition initializes storage once before starting HTTP and releases ownership at shutdown.
+Both explicit-file runtime factories reject an owned marker before SQLite initialization, even when
+the owned runtime is stopped. Console attachment applies the same boundary.
 All filesystem/locking primitives remain outside pure inner layers. See [data lifecycle](owned-data-directory.md).
 
 Schema 2 added uniquely linked members and revisioned household policy. Its explicit additive
@@ -133,7 +135,7 @@ These fixtures alone do not establish live HA or complete packaged acceptance. T
 [member](evidence/m1-member-administration.json) and [policy](evidence/m1-policy-administration.json)
 checkpoints add real-file authority races, canonical retries and provenance checks. The
 [HTTP checkpoint](evidence/m1-household-api.json) adds production standalone composition, strict JSON,
-read-grace/authority boundaries and schema tests. Native persistent packaging, snapshots and full M1
+read-grace/authority boundaries and schema tests. Native persistent packaging, restore and full M1
 acceptance remain outstanding.
 
 See [development checks](development.md), [owner decisions](decisions.md),

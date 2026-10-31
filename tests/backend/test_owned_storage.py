@@ -498,3 +498,53 @@ def test_explicit_attachment_cannot_bypass_owned_protocol_or_shared_parent_permi
     root.chmod(0o777)
     with pytest.raises(DatabaseRejected, match="unsafe_installation_directory"):
         attach_database(root / "domus.sqlite3", identity)
+
+
+@pytest.mark.parametrize("runtime_kind", ["native", "standalone"])
+@pytest.mark.parametrize("active", [False, True])
+def test_explicit_runtime_cannot_bypass_owned_directory_lifecycle(
+    tmp_path: Path, runtime_kind: str, active: bool
+) -> None:
+    from domus.composition import ingress, server
+
+    root = directory(tmp_path)
+    owned = open_storage(root, "edge")
+    path, identity = owned.database.path, owned.installation
+    if not active:
+        owned.close()
+    before = path.read_bytes()
+    try:
+        with pytest.raises(InvalidInput, match="owned_directory_required"):
+            if runtime_kind == "native":
+                ingress.create_business_runtime(
+                    "fixture-supervisor-token",
+                    "edge",
+                    path,
+                    identity.instance_id,
+                    ("http://homeassistant.local:8123",),
+                )
+            else:
+                server.create_runtime(
+                    "http://ha.local",
+                    "https://domus.example",
+                    identity.instance_id,
+                    "edge",
+                    database=path,
+                )
+        assert path.read_bytes() == before
+        if active:
+            with pytest.raises(StorageBusy):
+                open_storage(root, "edge")
+    finally:
+        owned.close()
+
+
+def test_explicit_runtime_guard_recognizes_even_a_broken_owned_marker(tmp_path: Path) -> None:
+    from domus.infrastructure.owned_storage import reject_owned_database
+
+    root = directory(tmp_path)
+    (root / "installation.json").symlink_to(root / "absent")
+    with pytest.raises(InvalidInput, match="owned_directory_required"):
+        reject_owned_database(root / "domus.sqlite3")
+    with pytest.raises(StorageFailure):
+        reject_owned_database(tmp_path / "absent" / "database")

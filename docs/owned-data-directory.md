@@ -18,7 +18,9 @@ The real path is operator configuration, never a browser field. Keep Stable and 
 private directories. This option generates the installation UUID only on the first valid empty
 start and preserves it across restarts. It cannot be combined with --database or --instance-id.
 Repeat --public-origin for configured HA origins; its existing validation still precedes data writes.
-The explicit database/UUID development contract remains available independently.
+The explicit database/UUID development contract remains available for independent files. Both native
+and standalone explicit-file runtimes reject any installation.json entry in the parent directory,
+including a broken symlink, before opening SQLite. They cannot bypass owned-directory lifecycle guards.
 
 The runtime must have exclusive access to this directory. A nonblocking POSIX process lock is held
 until shutdown, including the listener's lifetime. Another process gets installation_in_use rather
@@ -29,7 +31,7 @@ Startup holds maintenance.lock exclusively during initialization/migration, then
 guard while serving. [Console approval](administrator-recovery.md) attaches to ready matching data
 with another shared guard, without migration, UUID generation or a second server lease. It can run
 alongside the one server. An active console attachment prevents startup migration until it closes.
-The explicit-file console refuses an owned-directory marker so it cannot bypass these guards.
+The explicit-file console applies the same owned-marker refusal.
 
 ## Durable states
 
@@ -65,6 +67,8 @@ created and inspected. Restore activation remains pending; no backup schedule or
 after schema commit, interrupted marker replacement, restart/replay, v1 migration, strict metadata,
 private permissions and refusal of missing/corrupt/foreign data. The architecture policy keeps fcntl
 and other concrete I/O outside domain/application.
+The [explicit-file boundary evidence](evidence/m1-explicit-storage-boundary.json) additionally covers
+both runtime factories against active and closed owned directories without changing database bytes.
 
 Supervisor supplies an app's own /data mount. The final package must provision its private child
 directory for the runtime UID, preserve it on upgrade and prove that behavior on both CPU families.
