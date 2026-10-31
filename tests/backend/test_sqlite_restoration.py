@@ -501,3 +501,24 @@ def test_deadline_expiring_after_manifest_flush_reports_uncertainty(tmp_path, mo
     with pytest.raises(StorageFailure):
         adapter.prepare("restore-1")
     assert inspect_at(target, store.installation).restore_id == "restore-1"
+
+
+def test_inspection_cannot_report_success_after_its_last_validation_exceeds_the_deadline(
+    tmp_path, monkeypatch
+):
+    adapter, store, _, target = fixture(tmp_path)
+    adapter.prepare("restore-1")
+    now = 0
+    original = sqlite_restoration._read_operations
+
+    def read_then_expire(directory, budget):
+        nonlocal now
+        yield from original(directory, budget)
+        now = 100
+
+    monkeypatch.setattr(sqlite_restoration, "_read_operations", read_then_expire)
+    inspector = SQLiteRestorations(
+        None, None, target, store.installation, Clock(), monotonic=lambda: now
+    )
+    with pytest.raises(StorageFailure):
+        inspector.inspect()

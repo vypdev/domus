@@ -1,12 +1,12 @@
 {
   "verifiedOn": "2026-10-31",
-  "sourceBase": "47a0f240c3f1300e61645a8792c3ee43ab04088d",
+  "sourceBase": "03e5e8265b96f4407aeaff3d2b946db923cba771",
   "scope": "A30 pure complete-operation reconciliation, semantic preparation/inspection and real private blocked SQLite candidate; runtime history integration and offline activation remain pending",
-  "backendTests": 1087,
-  "newRestorationTests": 133,
+  "backendTests": 1088,
+  "newRestorationTests": 134,
   "backendCoverage": {
-    "covered_lines": 3760,
-    "num_statements": 3760,
+    "covered_lines": 3761,
+    "num_statements": 3761,
     "percent_covered": 100.0,
     "percent_covered_display": "100.00",
     "missing_lines": 0,
@@ -21,7 +21,7 @@
     "percent_branches_covered_display": "100.00"
   },
   "command": "COVERAGE_FILE=/private/tmp/domus-restoration-backend.coverage .venv/bin/pytest tests/backend -q -W error::ResourceWarning --tb=short --cov=domus --cov-branch --cov-report=json:/private/tmp/domus-restoration-coverage.json --cov-report=term:skip-covered",
-  "testFirst": "Pure evidence/reconciliation tests, then application/prepared-value tests, then real SQLite preparation tests each initially failed import before their corresponding module existed. Negative and concurrent cases followed as the adapter was implemented.",
+  "testFirst": "Pure evidence/reconciliation tests, then application/prepared-value tests, then real SQLite preparation tests each initially failed import before their corresponding module existed. Negative and concurrent cases followed as the adapter was implemented. A final-inspection deadline test first failed with DID NOT RAISE StorageFailure, then passed after adding the completion deadline check.",
   "assertions": [
     "Complete immutable receipt/audit/event facts, command scope, ID/position uniqueness and monotonic acknowledgement are validated; clock order is not ancestry",
     "Streaming reconciliation preserves first archive provenance, later historical facts and forward reselection without another execution; incomplete checkpoint prefixes conflict",
@@ -33,7 +33,8 @@
     "Original source and snapshot bytes remain unchanged; targets never overwrite an existing complete or partial candidate",
     "Independent inspection validates exact private inventory, hashes/size, blocked identity, schema/records, checkpoint projection/counts and position high-water",
     "Rehashed malformed/deep/oversized journal or manifest, wrong identity/schema/last commit/size/current flags/counts, source conflicts and changed snapshot bytes fail",
-    "Output flush failure or deadline after manifest publication preserves uncertainty and leaves the same independently inspectable candidate"
+    "Output flush failure or deadline after manifest publication preserves uncertainty and leaves the same independently inspectable candidate",
+    "Independent inspection rechecks its deadline after the complete journal projection and cannot publish success if the final validation exhausts its budget"
   ],
   "format": {
     "version": 1,
@@ -92,20 +93,20 @@
     "Product UI, standalone companion and complete domain/channel/release acceptance"
   ],
   "priorHeadCI": {
-    "head": "47a0f240c3f1300e61645a8792c3ee43ab04088d",
-    "url": "https://github.com/vypdev/domus/actions/runs/41207327261",
-    "result": "PASS: all project CI groups; not evidence for new restoration sources"
+    "head": "03e5e8265b96f4407aeaff3d2b946db923cba771",
+    "url": "https://github.com/vypdev/domus/actions/runs/41210424715",
+    "result": "PASS: all project groups, including both pinned real-image architectures; the existing package does not include or validate restoration sources"
   },
   "review": "Draft PR remains unmerged; a skipped/neutral Bugbot check is not full current-head review acceptance",
   "copilot": "Unchanged; terminal scope/assessment admission bugs remain tracked in vypdev/copilot#828 and #829 without check relaxation",
   "sourceSha256": {
     "backend/src/domus/domain/restoration.py": "adff09c838c534f28cd4daee817c9386dfb11f00dd52650d4deaf57ed208bad3",
     "backend/src/domus/application/restoration.py": "32a301e9d733f453526dbba70dbe99c036d6485a4c9bc8483d4f52456534a6eb",
-    "backend/src/domus/infrastructure/sqlite_restoration.py": "1aef292f49e8ce7ba1fef300c18597ff606ce381e45c7ce351185199cbe60572",
+    "backend/src/domus/infrastructure/sqlite_restoration.py": "da94614422789dc73663f7685bbaa6d75073668e3e350509b4c394b1108f6604",
     "backend/src/domus/infrastructure/owned_storage.py": "9067ec47b84ce87d37b48f2883903510a2ad7fe731ac4c7f58857ee57a913414",
     "tests/backend/test_restoration_values.py": "ec520c3caeaa5446fab493c8ab583c73dab71908223522adac9c9ff074dd39b4",
     "tests/backend/test_restoration_commands.py": "faa0150e8c1fd78f6fb328dd4cdbbda7c80d97fab606ff14cb85ba8c76d10a99",
-    "tests/backend/test_sqlite_restoration.py": "5fd59bacdee367c3b9f593fd4c192bc9d600cb43a947062782821b1e628b2f18"
+    "tests/backend/test_sqlite_restoration.py": "5088d4a8b762e8932bcff4e243d6e7978802a78b70a3a9137624f37315cb5116"
   },
   "sddValidation": {
     "restoration": {

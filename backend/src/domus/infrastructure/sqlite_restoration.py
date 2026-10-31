@@ -335,6 +335,7 @@ class SQLiteRestorations:
                     result.highwater,
                 ):
                     raise DatabaseRejected("invalid_restore_counts")
+                budget.check()
                 return result
         except OSError:
             raise StorageFailure("restore_storage_failure") from None
