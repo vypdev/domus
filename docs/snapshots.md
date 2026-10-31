@@ -61,8 +61,8 @@ private ownership/modes, regular singly linked files, strict bounded manifest/id
 hashes/size, compatible schema definition, physical integrity, foreign keys, business record shapes
 and atomic receipt/audit/outbox linkage. Wrong installation/channel, changed bytes, incomplete files,
 special files and corrupt records are rejected. Inspection never migrates the archive. Compatible
-historical schema 1/2 fixtures are inspected in place; capture currently requires the initialized
-current schema 3. Credentials and session leases are not stored in those business schemas or collected
+historical schema 1/2/3 fixtures are inspected in place; capture currently requires the initialized
+current schema 4. Credentials and session leases are not stored in those business schemas or collected
 from environment, browser, app configuration or other directories.
 
 The capture timestamp is the local UTC reading at the selected database view. last_committed_at is
