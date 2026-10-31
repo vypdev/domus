@@ -483,6 +483,15 @@ Define changed-module backend coverage as 100% of supported executable statement
 | `docs/household-setup.md` | create |
 | `docs/evidence/m1-household-commands.json` | create |
 | `docs/evidence/m1-native-ha-acceptance.json` | create |
+| `backend/src/domus/entrypoints/native_http.py` | create |
+| `backend/src/domus/entrypoints/http_errors.py` | create |
+| `backend/src/domus/entrypoints/ingress_boundary.py` | create |
+| `backend/src/domus/infrastructure/ingress_sessions.py` | create |
+| `tests/backend/test_ingress_sessions.py` | create |
+| `tests/backend/test_native_http.py` | create |
+| `docs/native-household-api.md` | create |
+| `docs/contracts/native-household-api.openapi.json` | create |
+| `docs/evidence/m1-native-household-api.json` | create |
 
 The new user guide must explain normal sign-in, explicit setup, pending enrollment, defaults and examples. Setup documentation covers HA prerequisites, origin, both deployment paths, permissions, and credential handling. Configuration reference documents every bounded value and precedence. Operator guidance covers state, outage, recovery command, errors, snapshots, restore, replay and cleanup. Migration/compatibility docs explain atomic versioned migration, supported exact matrix, paired rollback, and pending deployment acceptance. Contributor architecture docs show ports, trust boundaries, actual import checks, tests and route contracts. Link and validate examples against fixtures; update catalog evidence only when implementation actually exists. Document standalone explicit snapshots and Supervisor's intended HA backup participation without claiming schedule/retention acceptance.
 
@@ -548,65 +557,26 @@ These are executable acceptance requirements, not reports of tests already run.
 - Related specs/ADRs/issues/PRs: `specs/household-identity.md`; `specs/platform-foundation.md`; `specs/delivery-quality.md`; [Issue #6](https://github.com/vypdev/domus/issues/6); [PR #5](https://github.com/vypdev/domus/pull/5); [Copilot upstream report #774](https://github.com/vypdev/copilot/issues/774); [Copilot upstream report #777](https://github.com/vypdev/copilot/issues/777).
 - Decisions and rejected alternatives: retain HA auth and HTTP/SQLite as replaceable adapters around pure policies and use cases; server-side HA proof is required; use explicit transaction boundaries and parameterized SQLite operations; API schemas are entrypoint DTOs, not domain entities. Recovery requires current HA administrator proof plus installation-console approval; no shared secret or HTTP approval. Backup scope is explicit consistent snapshot/restore primitive, not an automatic scheduler. No untested version is promised.
 - Follow-up work explicitly outside this spec: other household domains, product UI, HA entity/service integration, complete package and Stable/Edge deployment acceptance, Supervisor backup hooks and operational retention/recovery objectives, release publication. Both deployment targets remain required for first usable release. Merge/release/deployment is not authorized by this draft.
-### Historical partial implementation checkpoints — 2026-10-31
+### Partial implementation checkpoints — 2026-10-31
 
-Each immutable receipt records the source, executed scope and outstanding work at that checkpoint;
-none marks all planned acceptance cases complete. The specifications remain Draft.
+Each immutable receipt identifies source, executed scope and limits. These checkpoints do not complete
+all planned acceptance cases. The specifications remain Draft.
 
 | Checkpoint | Evidence and boundary |
 |---|---|
-| SQLite kernel | [Receipt](../docs/evidence/m1-storage-kernel.json): values, ports, atomic receipts/audit/outbox and real SQLite; no authentication at that point. |
-| Identity policy/session leases | [Receipt](../docs/evidence/m1-identity-policy.json): pure mappings/permissions, current local authorization, schema 1-to-2 migration and absolute leases; provider fixtures only. |
-| HA protocols | [Receipt](../docs/evidence/m1-ha-protocol.json): fixed endpoints, bounded OAuth/WebSocket and Supervisor peer/source checks; no live acceptance at that point. |
-| Standalone API/CLI | [Receipt](../docs/evidence/m1-standalone-auth.json): state/PKCE/browser-bound attempts, strict cookies/CSRF and bounded cleanup; full household routes pending. |
-| Native connection preview | [Receipt](../docs/evidence/m1-ingress-preview.json): private Ingress listener and fresh exact-human proof without second login; no business data or local read grace. |
-| Edge package | [Receipt](../docs/evidence/m1-app-package.json): immutable source/checksum, nonroot runtime and native CPU-family container CI; the then-pending live test is recorded below. |
+| SQLite kernel | [Receipt](../docs/evidence/m1-storage-kernel.json): atomic real-file storage, receipts/audit/outbox. |
+| Identity policy and leases | [Receipt](../docs/evidence/m1-identity-policy.json): mappings/permissions, current authorization, schema migration and absolute leases. |
+| HA protocols | [Receipt](../docs/evidence/m1-ha-protocol.json): fixed endpoints, bounded OAuth/WebSocket and exact Supervisor proof. |
+| Standalone authentication | [Receipt](../docs/evidence/m1-standalone-auth.json): state/PKCE/browser binding, cookie/CSRF and cleanup. The earlier owner browser return failed; shutdown confirmed grant revocation (revoked=1, unconfirmed=0). Standalone acceptance remains pending. |
+| Native connection preview | [Receipt](../docs/evidence/m1-ingress-preview.json): private Ingress/fresh human proof without another login, no business data or read grace. |
+| Edge package and live preview | [Package](../docs/evidence/m1-app-package.json) and [native acceptance](../docs/evidence/m1-native-ha-acceptance.json): immutable runtime, nonroot image, both CPU-family CI, owner-authorized install/start/Open Web UI/Chrome reload on the exact HA target. Edge 0.0.0-edge.1 remains this stateless preview; later services are not installed. |
+| Household commands | [Receipt](../docs/evidence/m1-household-commands.json) and [guide](../docs/household-setup.md): explicit three-mode setup, own enrollment, revisioned edits, fresh preparation and transactional authorization before replay. |
+| Member administration | [Receipt](../docs/evidence/m1-member-administration.json): activation, profile/status/exceptions and current-proof last-administrator safeguards, including races. |
+| Policy administration | [Receipt](../docs/evidence/m1-policy-administration.json): mapping/profile edits, preserved setup provenance and independent grants, transaction-time inventory/authority checks. |
+| Standalone household API | [Receipt](../docs/evidence/m1-household-api.json), [guide](../docs/household-api.md) and [schema](../docs/contracts/household-api.openapi.json): strict DTOs/queries, production SQLite/session composition, scoped reads, restart/replay, ambiguous JSON and response-uncertainty recovery. |
+| Native household API | [Receipt](../docs/evidence/m1-native-household-api.json), [guide](../docs/native-household-api.md) and [schema](../docs/contracts/native-household-api.openapi.json): shared services, fixed origins, existing upstream-session binding, bounded leases, scoped CSRF and original-deadline outage reads. Writes require fresh proof. A selected ordinary HA human keeps independent Domus authority. This runtime is tested locally and has not replaced the installed preview. |
 
-The earlier authorized standalone browser return failed after exchanging one delegated grant.
-Shutdown confirmed revocation (revoked=1, unconfirmed=0). Its acceptance remains pending. No test
-credentials are persisted in business storage, evidence, responses or snapshots. Native installation
-is an independent journey, not a prerequisite standalone OAuth login.
-
-### Native acceptance and household command checkpoint
-
-Edge 0.0.0-edge.1 passed owner-authorized installation, start, Open Web UI and normal Chrome reload
-with the existing HA session on the exact target in [native evidence](../docs/evidence/m1-native-ha-acceptance.json).
-Both CPU families passed CI for package commit 650f1517f0e15664ea455628e63154dada0414f2.
-This accepts the stateless connection preview only; later source is not in its immutable runtime.
-
-[Household use cases](../docs/household-setup.md) now implement explicit three-mode setup, own pending
-enrollment and revision-checked household edits through pure ports and atomic SQLite commands.
-Current authority precedes replay; external proof does not hold the writer lock. Real-file race,
-rollback and restart tests accompany the bounded HA directory and runtime adapters; see
-[source-identified evidence](../docs/evidence/m1-household-commands.json). Public command routes,
-member/policy administration, recovery, snapshots, native persistence/read grace and full deployment
-acceptance remain pending. The specifications stay Draft.
-
-
-### Member administration checkpoint
-
-Explicit member activation, profile/status/exception edits and last-administrator safeguards now have
-[application use cases and real SQLite tests](../docs/evidence/m1-member-administration.json).
-Fresh proof is prepared outside the writer lock; current local authority, unchanged member/policy
-inventory and a remaining eligible administrator are checked before the atomic commit. Policy edit
-commands, public API/UI, recovery and the remaining deployment gates are still pending.
-
-
-### Household policy administration checkpoint
-
-[Policy commands and evidence](../docs/evidence/m1-policy-administration.json) now cover explicit
-mapping/profile changes, preserved setup provenance and independent grants, fresh actor/target proof,
-and transaction-time last-administrator safety. Shared proof preparation preserves member race tests.
-Public command/query wiring, recovery, snapshots, native persistence/read grace and full deployment
-acceptance remain pending. No later commands are claimed present in the installed stateless preview.
-
-
-### Standalone household HTTP checkpoint
-
-[Household API](../docs/household-api.md) and [source-identified evidence](../docs/evidence/m1-household-api.json)
-now record strict local queries and household/member/policy routes, server-bound session actors,
-private directory preparation and --database composition. Real ASGI/SQLite tests cover scoped reads,
-privileged receipt access, strict JSON, Origin/CSRF/idempotency, outage/expiry/logout races, restart,
-channel refusal and the [published OpenAPI](../docs/contracts/household-api.openapi.json).
-Native persistence/session/CSRF wiring and UI, recovery, snapshots, standalone companion authority
-and complete deployment/channel acceptance remain pending. The installed native preview is unchanged.
+No test credentials enter business storage, evidence, responses or snapshots. Native authentication
+is independent of standalone OAuth. Current outstanding work includes native persistent app data/UUID
+packaging and UI, recovery, snapshots, standalone companion authority and complete deployment/channel
+acceptance. Passing protocol/ASGI fixtures never establishes those remaining live gates.

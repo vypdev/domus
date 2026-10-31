@@ -1,8 +1,9 @@
 # Household API checkpoint
 
-Status: strict HTTP routes, local queries and standalone SQLite composition are implemented.
-Native persistent wiring, the product UI, recovery and snapshots are still pending. The installed
-Edge 0.0.0-edge.1 app remains the earlier stateless connection preview; it contains none of these routes.
+Status: strict HTTP routes, local queries, standalone SQLite composition and the
+[native persistent runtime](native-household-api.md) are implemented. Native persistent app packaging,
+the product UI, recovery and snapshots are still pending. The installed Edge 0.0.0-edge.1 app remains
+the earlier stateless connection preview; it contains none of these routes.
 
 ## Run with persistent standalone data
 

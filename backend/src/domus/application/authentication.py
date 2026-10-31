@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from domus.application.authentication_values import LoginAttempt, validate_login_material
 from domus.application.identity_ports import LeaseClock, LoginAttempts, LoginEntropy, LoginProvider
-from domus.application.session_values import SessionLease
+from domus.application.session_values import SessionLease, validate_session_lifetime
 from domus.domain.errors import IdentityRejected, InvalidInput
 from domus.domain.storage import validate_identifier
 
@@ -30,8 +30,7 @@ class Authentication:
     lifetime: int = 3_600_000
 
     def __post_init__(self) -> None:
-        if type(self.lifetime) is not int or not 300_000 <= self.lifetime <= 28_800_000:
-            raise InvalidInput("invalid_session_lifetime")
+        validate_session_lifetime(self.lifetime)
 
     def _material(self) -> str:
         value = self.entropy.new()

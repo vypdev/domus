@@ -6,7 +6,7 @@ The issue #6 checkpoints introduce storage, pure identity policy, local authoriz
 HA protocol adapters have provider/loopback tests and the standalone authentication API/CLI is wired.
 Explicit setup, own enrollment and household edits now have application-layer commands. The native
 Ingress connection preview and immutable-source Edge package are installed and tested on the owner's HA.
-Native persistent wiring, recovery, snapshots, product UI and complete
+Native persistent API wiring is tested locally. Its app packaging, recovery, snapshots, product UI and complete
 Stable/Edge release acceptance remain pending.
 
 ## Reproduce the environment
@@ -172,4 +172,14 @@ directory, use cases and SQLite adapter. Tests include actual composed-runtime r
 refusal, CSRF/origin/idempotency, ambiguous JSON refusal, HA outage read grace and credential
 logout/expiry races. [Its evidence](evidence/m1-household-api.json) and
 [published OpenAPI](contracts/household-api.openapi.json) identify the implemented surface.
-Recovery and native persistence/UI remain outstanding; no new runtime was installed on the owner's HA.
+Recovery and native persistent packaging/UI remained outstanding at that checkpoint.
+
+The [native household API checkpoint](native-household-api.md) now wires the same services to real
+SQLite through private Supervisor Ingress. Tests bind local leases and CSRF to installation/channel,
+exact human, app path and the existing upstream session. They cover original-deadline outage reads,
+fresh writes, rejection, restart, concurrent bootstrap and a selected ordinary HA user's independent
+Domus administrator grant. Fixed configured origins prevent forwarding headers from selecting trust.
+[Its evidence](evidence/m1-native-household-api.json) and
+[published OpenAPI](contracts/native-household-api.openapi.json) record the current runtime.
+Owned data-directory/UUID packaging, the UI, recovery/snapshots and complete deployment acceptance
+remain pending. The installed Edge 0.0.0-edge.1 has not been updated with these services.

@@ -56,6 +56,12 @@ target/request/UUID/channel/mapping binding, ten-minute expiry and atomic single
 must still verify consistent schema/identity/integrity/checksum and activate only a new owned directory.
 These commands are not yet present. No automatic backup frequency or retention has been approved.
 
+The [native persistent runtime](native-household-api.md) clears only its local bindings on shutdown;
+Supervisor owns its upstream cookie and transport grant. Reopening through HA freshly proves the
+human, while the matching SQLite records and receipts survive. Its fixed-origin configuration and
+original lease deadline apply independently of forwarding headers. This runtime is not yet the
+installed Edge app; owned data/UUID packaging and updated live acceptance remain pending.
+
 See [configuration](configuration.md), [user identity journey](identity-household.md),
 [implementation boundaries](architecture-identity-storage.md), [the M1 companion](../specs/platform-foundation-identity-sqlite.md)
 and [compatibility gates](compatibility-home-assistant.md).

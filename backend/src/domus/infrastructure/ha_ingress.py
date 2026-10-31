@@ -18,11 +18,11 @@ class SupervisorIdentity:
             raise InvalidInput("ingress_requires_supervisor")
         _secret(self.transport_token)
 
-    def prove(self, peer: str, headers: tuple[tuple[str, str], ...]) -> HumanIdentity:
-        """peer must be the socket peer with proxy rewriting disabled by wiring.
+    def subject(self, peer: str, headers: tuple[tuple[str, str], ...]) -> str:
+        """Return only a trusted candidate, never human or administrator proof.
 
-        Forwarded headers, names, display names and X-Ingress-Path never prove
-        a human or administrator. Duplicate subject headers are rejected.
+        peer must be the socket peer with proxy rewriting disabled by wiring.
+        Forwarded headers and names cannot supply it. Duplicate subjects fail.
         """
         if peer != "172.30.32.2":
             raise IdentityRejected("untrusted_ingress_peer")
@@ -30,9 +30,12 @@ class SupervisorIdentity:
         try:
             if len(candidates) != 1:
                 raise InvalidInput("invalid_ha_user_id")
-            subject = _user_id(candidates[0])
+            return _user_id(candidates[0])
         except InvalidInput:
             raise IdentityRejected("invalid_ingress_subject") from None
+
+    def prove(self, peer: str, headers: tuple[tuple[str, str], ...]) -> HumanIdentity:
+        subject = self.subject(peer, headers)
         human = self.lookup.directory_user(self.transport_token, subject)
         if human.ha_user_id != subject:
             raise IdentityRejected("identity_mismatch")

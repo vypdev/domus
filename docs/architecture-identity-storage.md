@@ -3,8 +3,8 @@
 Status: the M1 storage kernel, pure identity policy, transaction-bound local authorization and
 session-lease core, HA adapters, standalone authentication API/CLI and application household/member/policy
 commands are implemented on the Action-managed issue #6 branch. The native connection preview is
-installed and accepted on the identified owner target. Recovery, snapshots, the full business API,
-persistent Supervisor runtime wiring and complete deployment acceptance
+installed and accepted on the identified owner target. Both standalone and native persistent household
+APIs are tested locally. Recovery, snapshots, native persistent packaging/UI and complete deployment acceptance
 remain pending. The [owning companion](../specs/platform-foundation-identity-sqlite.md) retains
 the complete increment contract; this checkpoint does not complete M1 or the product.
 
@@ -67,7 +67,8 @@ form exchange and correlated WebSocket proof, with explicit active/non-system pr
 administrator/owner semantics. Supervisor's actual peer and a single candidate subject header precede
 fresh Core lookup. The real pinned WebSocket client is exercised against disposable loopback servers,
 including a negative cross-origin redirect fixture. No request may authenticate by constructing
-an adapter value. Persistent Supervisor wiring and complete household endpoints remain pending.
+an adapter value. The [native persistent runtime](native-household-api.md) now shares the household
+routes, bounded local leases and fixed-origin CSRF; its updated app package remains pending.
 
 `domus.application.authentication_values` and `session_values` own ephemeral login/lease contracts;
 private browser/session material stays outside household domain entities. Application orchestration
@@ -91,6 +92,13 @@ installed Edge image binds an immutable older runtime and contains no applicatio
 business database. [Exact native acceptance](evidence/m1-native-ha-acceptance.json) is separate from
 protocol fixtures and does not establish complete product or standalone browser acceptance.
 
+Its optional persistent composition uses the same household router and services as standalone.
+Infrastructure binds local leases to keyed digests of the existing Supervisor session and installation
+context; no raw cookie is persisted. The native entrypoint verifies configured origins and CSRF,
+while the application still requires fresh human proof and current transaction-time Domus authority.
+Technical Core directory access never sets the actor's role. See the
+[native runtime evidence](evidence/m1-native-household-api.json) for exact tests and remaining packaging.
+
 ## Verification scope
 
 The separate backend CI job measures every authored `domus` module at 100% supported line/statement
@@ -107,7 +115,7 @@ These fixtures alone do not establish live HA or complete packaged acceptance. T
 [member](evidence/m1-member-administration.json) and [policy](evidence/m1-policy-administration.json)
 checkpoints add real-file authority races, canonical retries and provenance checks. The
 [HTTP checkpoint](evidence/m1-household-api.json) adds production standalone composition, strict JSON,
-read-grace/authority boundaries and schema tests. Native persistent wiring, recovery and full M1
+read-grace/authority boundaries and schema tests. Native persistent packaging, recovery and full M1
 acceptance remain outstanding.
 
 See [development checks](development.md), [owner decisions](decisions.md),

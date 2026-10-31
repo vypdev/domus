@@ -84,6 +84,12 @@ Supervisor mode uses App/Ingress packaging and persistent App storage. Standalon
 binding, an owned data volume, Core APIs and authenticated access; it assumes no Supervisor or Ingress.
 Both map verified individual HA users to Domus membership and roles. Ingress headers are accepted only
 behind a verified trust boundary; standalone never trusts a browser-supplied identity header.
+
+The [native persistent runtime](native-household-api.md) binds bounded in-memory leases to the
+Supervisor session, exact human, installation/channel and Ingress path. It shares the standalone
+household DTOs and application use cases; fresh Core proof and transaction-time Domus authorization
+remain distinct. Configured public origins and scoped CSRF protect writes independently of forwarded
+metadata. Native persistent packaging and UI are still pending; the installed preview is stateless.
 HA OAuth or an equivalent supported HA authentication flow is a required proof step before implementation readiness.
 No child PIN, shared adult session or parallel Domus password store is proposed.
 

@@ -24,7 +24,8 @@
         "addon-edge/config.yaml",
         "addon-edge/Dockerfile",
         "backend/src/domus/entrypoints/household_http.py",
-        "backend/src/domus/composition/household.py"
+        "backend/src/domus/composition/household.py",
+        "backend/src/domus/entrypoints/native_http.py"
       ],
       "code": [
         "backend/src/domus/domain/errors.py",
@@ -63,7 +64,11 @@
         "backend/src/domus/entrypoints/household_http.py",
         "backend/src/domus/entrypoints/http_contract.py",
         "backend/src/domus/composition/household.py",
-        "backend/src/domus/infrastructure/session_access.py"
+        "backend/src/domus/infrastructure/session_access.py",
+        "backend/src/domus/entrypoints/native_http.py",
+        "backend/src/domus/entrypoints/http_errors.py",
+        "backend/src/domus/entrypoints/ingress_boundary.py",
+        "backend/src/domus/infrastructure/ingress_sessions.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -93,7 +98,9 @@
         "tests/backend/test_household_queries.py",
         "tests/backend/test_household_http.py",
         "tests/backend/test_household_runtime.py",
-        "tests/backend/test_session_directory.py"
+        "tests/backend/test_session_directory.py",
+        "tests/backend/test_ingress_sessions.py",
+        "tests/backend/test_native_http.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -118,12 +125,15 @@
         "docs/evidence/m1-policy-administration.json",
         "docs/household-api.md",
         "docs/contracts/household-api.openapi.json",
-        "docs/evidence/m1-household-api.json"
+        "docs/evidence/m1-household-api.json",
+        "docs/native-household-api.md",
+        "docs/contracts/native-household-api.openapi.json",
+        "docs/evidence/m1-native-household-api.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, authentication, installed native connection preview and standalone household/member/policy HTTP services with local queries; full M1 pending",
-        "blockingDecisions": "Engineering proof remains: native persistent/session/CSRF wiring and UI, recovery, snapshots, standalone companion authority and complete deployment/channel acceptance. Installed Edge 0.0.0-edge.1 is only the earlier stateless connection preview.",
+        "implementationEvidence": "partial: identity/storage, authentication, installed native connection preview and both standalone/native household APIs with local queries and bounded sessions; full M1 pending",
+        "blockingDecisions": "Engineering proof remains: native persistent app data/UUID packaging and UI, recovery, snapshots, standalone companion authority and complete deployment/channel acceptance. Installed Edge 0.0.0-edge.1 remains the stateless connection preview.",
         "copilotChangesAllowed": false
       }
     },
@@ -144,7 +154,8 @@
         "backend/src/domus/composition/ingress.py",
         "backend/src/domus/entrypoints/ingress_http.py",
         "backend/src/domus/entrypoints/household_http.py",
-        "backend/src/domus/composition/household.py"
+        "backend/src/domus/composition/household.py",
+        "backend/src/domus/entrypoints/native_http.py"
       ],
       "code": [
         "backend/src/domus/domain/identity.py",
@@ -178,7 +189,11 @@
         "backend/src/domus/entrypoints/household_http.py",
         "backend/src/domus/entrypoints/http_contract.py",
         "backend/src/domus/composition/household.py",
-        "backend/src/domus/infrastructure/session_access.py"
+        "backend/src/domus/infrastructure/session_access.py",
+        "backend/src/domus/entrypoints/native_http.py",
+        "backend/src/domus/entrypoints/http_errors.py",
+        "backend/src/domus/entrypoints/ingress_boundary.py",
+        "backend/src/domus/infrastructure/ingress_sessions.py"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -203,7 +218,9 @@
         "tests/backend/test_household_queries.py",
         "tests/backend/test_household_http.py",
         "tests/backend/test_household_runtime.py",
-        "tests/backend/test_session_directory.py"
+        "tests/backend/test_session_directory.py",
+        "tests/backend/test_ingress_sessions.py",
+        "tests/backend/test_native_http.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -226,12 +243,15 @@
         "docs/evidence/m1-policy-administration.json",
         "docs/household-api.md",
         "docs/contracts/household-api.openapi.json",
-        "docs/evidence/m1-household-api.json"
+        "docs/evidence/m1-household-api.json",
+        "docs/native-household-api.md",
+        "docs/contracts/native-household-api.openapi.json",
+        "docs/evidence/m1-native-household-api.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, authentication, installed native connection preview and standalone household/member/policy HTTP services with local queries; full M1 pending",
-        "blockingDecisions": "Engineering proof remains: native persistent/session/CSRF wiring and UI, recovery, snapshots, standalone companion authority and complete deployment/channel acceptance. Installed Edge 0.0.0-edge.1 is only the earlier stateless connection preview.",
+        "implementationEvidence": "partial: identity/storage, authentication, installed native connection preview and both standalone/native household APIs with local queries and bounded sessions; full M1 pending",
+        "blockingDecisions": "Engineering proof remains: native persistent app data/UUID packaging and UI, recovery, snapshots, standalone companion authority and complete deployment/channel acceptance. Installed Edge 0.0.0-edge.1 remains the stateless connection preview.",
         "copilotChangesAllowed": false
       }
     },

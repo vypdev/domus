@@ -2,7 +2,6 @@
 
 import base64
 import hashlib
-import re
 from collections.abc import Callable
 from typing import cast
 
@@ -22,6 +21,7 @@ from domus.domain.errors import (
 from domus.domain.identity import HumanIdentity
 from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.http_contract import ErrorResponse
+from domus.entrypoints.ingress_boundary import require_ingress_source
 
 IdentityProof = Callable[[str, tuple[tuple[str, str], ...]], HumanIdentity]
 _STYLE = (
@@ -73,23 +73,7 @@ class _IngressBoundary(BoundedHTTP):
         super().__init__(app, self._allowed, correlation, _blocked, _HEADERS)
 
     def _allowed(self, scope: Scope) -> None:
-        headers = scope["headers"]
-        if (
-            len(headers) > 100
-            or sum(len(key) + len(value) for key, value in headers) > 16_384
-            or scope.get("query_string", b"")
-        ):
-            raise InvalidInput("invalid_request")
-        peer = scope.get("client")
-        if scope["path"] == "/health" and peer and peer[0] in ("127.0.0.1", "::1", "172.30.32.2"):
-            return
-        if peer is None or peer[0] != "172.30.32.2":
-            raise Forbidden("ingress_access_required")
-        prefixes = [value for key, value in headers if key.lower() == b"x-ingress-path"]
-        if len(prefixes) != 1 or not re.fullmatch(
-            rb"/api/hassio_ingress/[A-Za-z0-9_-]{16,256}", prefixes[0]
-        ):
-            raise Forbidden("ingress_access_required")
+        require_ingress_source(scope)
         if scope["method"] not in ("GET", "HEAD"):
             raise Forbidden("request_forbidden")
 

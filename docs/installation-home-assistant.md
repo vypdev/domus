@@ -65,6 +65,11 @@ installation identity, household setup, backup behavior or production acceptance
 fictional tokens with networking disabled, exercise the real listener and remove only their own
 temporary containers. The image remains available locally as the current review/rollback artifact.
 
+The later [persistent native API](native-household-api.md) is a tested development CLI with SQLite,
+bounded Ingress sessions and the shared household routes. It has not replaced this installed preview.
+App data ownership, automatic installation identity and product UI must be packaged and verified
+before those later services can be accepted through this installation journey.
+
 Official references: [Ingress authentication and relative paths](https://contributors.home-assistant.io/apps/guides/ingress/),
 [repository installation and branch selection](https://contributors.home-assistant.io/apps/guides/repository/),
 [Core API proxy permissions](https://contributors.home-assistant.io/apps/guides/communication/).

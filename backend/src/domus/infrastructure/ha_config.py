@@ -72,6 +72,19 @@ class HAEndpoint:
 
 
 @dataclass(frozen=True, slots=True)
+class PublicOrigins:
+    values: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if type(self.values) is not tuple or not 1 <= len(self.values) <= 4:
+            raise InvalidInput("invalid_public_origins")
+        normalized = tuple(_origin(value) for value in self.values)
+        if len(set(normalized)) != len(normalized):
+            raise InvalidInput("invalid_public_origins")
+        object.__setattr__(self, "values", normalized)
+
+
+@dataclass(frozen=True, slots=True)
 class OAuthConfiguration:
     ha: HAEndpoint
     public_origin: str

@@ -1,7 +1,9 @@
 # Authentication checkpoint configuration
 
 For the native HA app, follow [app installation](installation-home-assistant.md). It uses Ingress
-and requires no second login. The options below apply to the independent standalone runtime.
+and requires no second login. The [native persistent development runtime](native-household-api.md)
+has a separate explicit database/UUID/fixed-origin contract; it is not in the installed preview.
+The options below apply to the independent standalone runtime.
 
 Status: these options run the standalone API. `--database` additionally wires the persistent
 [household API](household-api.md); omitting it keeps the authentication preview. This is not a deployment

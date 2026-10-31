@@ -7,6 +7,11 @@ from domus.domain.identity import HumanIdentity
 from domus.domain.storage import validate_identifier
 
 
+def validate_session_lifetime(lifetime: int) -> None:
+    if type(lifetime) is not int or not 300_000 <= lifetime <= 28_800_000:
+        raise InvalidInput("invalid_session_lifetime")
+
+
 @dataclass(frozen=True, slots=True)
 class SessionLease:
     session_id: str = field(repr=False)

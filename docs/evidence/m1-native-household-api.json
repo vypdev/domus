@@ -1,0 +1,123 @@
+{
+  "verifiedOn": "2026-10-31",
+  "sourceBase": "4646ee174ab6f2b044ca323176fab3bed475c513",
+  "scope": "Native persistent ASGI/SQLite composition, bounded Ingress leases, fixed-origin CSRF and shared household services; package and owner installation unchanged",
+  "backendTests": 642,
+  "backendCoverage": {
+    "covered_lines": 2464,
+    "num_statements": 2464,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100.00",
+    "missing_lines": 0,
+    "excluded_lines": 105,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100.00",
+    "num_branches": 610,
+    "num_partial_branches": 0,
+    "covered_branches": 610,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100.00"
+  },
+  "command": ".venv/bin/pytest tests/backend -q -W error::ResourceWarning --cov=domus --cov-branch --cov-report=term-missing",
+  "environment": "Python 3.14.6; loopback protocol fixtures require local socket permission. The restricted-sandbox attempt was not accepted as a pass; the complete socket-enabled run passed.",
+  "assertions": [
+    "Only the actual Supervisor peer, exactly one subject/base path and one valid upstream session cookie reach protected routes; no client metadata alone creates human proof",
+    "Keyed bindings include installation UUID, channel, human and Ingress path; raw cookies do not enter persistent data or diagnostic representations",
+    "Safe reads establish a lease only after exact fresh HA proof; existing fresh reads retain the original absolute deadline",
+    "Bounded HA availability failure permits existing local reads only until that deadline; writes require fresh proof and cannot bootstrap from CSRF",
+    "Explicit rejection invalidates local access; later outage cannot resurrect it; shutdown blocks late bootstrap and clears bindings",
+    "Concurrent bootstrap preserves one original lease and failed conditional refresh denies access",
+    "Fixed configured origins are validated before SQLite; supplied forwarding headers cannot change accepted origins",
+    "CSRF is bound to the local lease epoch and exact installation/channel/session/human/path; restart and changed upstream session cannot reuse it",
+    "Shared household setup/enrollment/member/policy/query services preserve transactional authority, idempotency and receipt/audit/outbox behavior",
+    "Selected ordinary HA human can administer Domus through the configured mapping while remaining non-administrator in HA; Core directory privilege is transport only",
+    "Injected response failure after commit preserves uncertainty and identical retry recovers exactly one result",
+    "Actual native OpenAPI paths/components match the published contract; private process health and preview behavior remain separate"
+  ],
+  "architecture": {
+    "files": 78,
+    "dependencies": 312,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "mypy": "PASS: 47 backend source files",
+    "negativeFixtures": 39
+  },
+  "schema": "Business schema 2 unchanged; no upstream cookie, technical token, local session lease or CSRF is persisted",
+  "installedPreview": "Still Edge 0.0.0-edge.1 / runtime 98bd12f1bf141ba64053730b2686bd848aee1b1c. These native household services have not been installed on the owner HA.",
+  "upstreamSource": [
+    {
+      "repository": "home-assistant/core",
+      "ref": "2026.10.4",
+      "path": "homeassistant/components/hassio/ingress.py",
+      "gitBlob": "d2ca7316fa8a0d39d923fcac1e8fa7348c64c02c",
+      "url": "https://github.com/home-assistant/core/blob/2026.10.4/homeassistant/components/hassio/ingress.py"
+    },
+    {
+      "repository": "home-assistant/supervisor",
+      "ref": "2026.10.5",
+      "path": "supervisor/api/ingress.py",
+      "gitBlob": "2e3559531112c59070dca7c7aa5b7a972e129cbf",
+      "url": "https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/api/ingress.py"
+    },
+    {
+      "repository": "home-assistant/supervisor",
+      "ref": "2026.10.5",
+      "path": "supervisor/api/const.py",
+      "gitBlob": "92d88ba18ff2358205c48dbb35b58e0c2e034e0d",
+      "url": "https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/api/const.py"
+    },
+    {
+      "repository": "home-assistant/supervisor",
+      "ref": "2026.10.5",
+      "path": "supervisor/ingress.py",
+      "gitBlob": "df50996b8a71cedfb92e858b25bb1634adba0b79",
+      "url": "https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/ingress.py"
+    },
+    {
+      "repository": "home-assistant/supervisor",
+      "ref": "2026.10.5",
+      "path": "supervisor/docker/app.py",
+      "gitBlob": "4dcb3c53feeddc6f433e458db44db7ca9134d6b6",
+      "url": "https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/docker/app.py"
+    },
+    {
+      "repository": "home-assistant/supervisor",
+      "ref": "2026.10.5",
+      "path": "supervisor/apps/app.py",
+      "gitBlob": "312f0d4ff48b6a322f4f52fe836bfc0ff51cb716",
+      "url": "https://github.com/home-assistant/supervisor/blob/2026.10.5/supervisor/apps/app.py"
+    }
+  ],
+  "dataMountBoundary": "Supervisor supplies the own /data mount. Packaged UID write permission has not been measured on the owner target and is not inferred from source mkdir behavior.",
+  "remaining": [
+    "Owned data-directory initialization and automatic persisted installation UUID",
+    "Updated native app packaging and live acceptance",
+    "Lit product UI with Storybook/Playwright",
+    "Console-approved recovery and snapshot/restore",
+    "Complete standalone companion authority and browser acceptance",
+    "Stable/Edge and both deployment-target acceptance"
+  ],
+  "priorHeadCI": {
+    "head": "4646ee174ab6f2b044ca323176fab3bed475c513",
+    "url": "https://github.com/vypdev/domus/actions/runs/41192762015",
+    "result": "PASS: all six required project groups; not evidence for later source"
+  },
+  "copilot": "Unchanged; scope and assessment admission failures are tracked in vypdev/copilot issues #828 and #829. No checks or merge gates relaxed.",
+  "sourceSha256": {
+    "backend/src/domus/application/authentication.py": "3ab940f76455365c4d40d40645c5f9ba5a65754e382665a0266057baaae04bf8",
+    "backend/src/domus/application/session_values.py": "f124c2405362cbd782394e69759ac2f88041910e771447eaf40c82ad3d993e50",
+    "backend/src/domus/composition/ingress.py": "a0048823c2cd79b650454487c013390f791c27c06c6206f3bd63bfbe6cb879ee",
+    "backend/src/domus/entrypoints/http.py": "94f72ea399337ef9c51656d28a790aba04ea75240a9858ac00bab4a6a25cb32c",
+    "backend/src/domus/entrypoints/http_errors.py": "8f28f35510770fe8786d4a5dfd0f845d579c3e734426be16b0344472fb4f5d02",
+    "backend/src/domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
+    "backend/src/domus/entrypoints/ingress_http.py": "f6557eb5481d132131f66ad7691e30c223c63a66a6f0ae5754c9fba3bc7f3626",
+    "backend/src/domus/entrypoints/native_http.py": "59dce651bbab80a36a0bec435c581b247ad9b8aac6b53406bd577cbd0a7b15c7",
+    "backend/src/domus/infrastructure/ha_config.py": "42d0631cc584369a743027e90e275a17c0ec935ac0d14b8e0ad4c10b488aa1cf",
+    "backend/src/domus/infrastructure/ha_ingress.py": "e1da730ab4092afbf9630ff3a8d5c31285d7a8b99e1acc7080082ffdf4023dc7",
+    "backend/src/domus/infrastructure/ingress_sessions.py": "9f95f69f124fca64b9420458580bbad9907f027754c3413284ce7513a3d9907a",
+    "tests/backend/test_ingress_sessions.py": "c1196ebf2f9d2ab265fd14d93166147e0aa71b02e94bd9d406dde2ae6f739d60",
+    "tests/backend/test_native_http.py": "39d8c6f52992212463934a972c4954ee4a620b48996906987d2dac7f89390538",
+    "docs/contracts/native-household-api.openapi.json": "97f93a1f6bce3397a081644466ffd2be73d7c32f53b30554183c1352b00e530a"
+  }
+}

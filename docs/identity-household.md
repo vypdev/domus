@@ -1,9 +1,10 @@
 # Identity and household access
 
-Status: standalone authentication, the installed native HA authentication preview and application-layer
-household setup, own enrollment, household/member/policy edits and their standalone HTTP routes are
-implemented. Native persistent command wiring, recovery, product UI and Supervisor local read-grace
-sessions remain pending. See [the household API](household-api.md) for current routes and limits.
+Status: standalone authentication, the installed native HA authentication preview and household
+setup, own enrollment, household/member/policy edits and their HTTP routes are implemented. The
+[persistent native runtime](native-household-api.md) now shares those routes with bounded local
+read-grace sessions and CSRF. Its app packaging, recovery and product UI remain pending. The installed
+Edge 0.0.0-edge.1 still contains only the stateless connection preview.
 
 ## Home Assistant app
 
