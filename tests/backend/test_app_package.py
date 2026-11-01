@@ -1,6 +1,7 @@
 """App manifest and build contract prevent new exposure or mutable runtime sources."""
 
 import hashlib
+import json
 import re
 from pathlib import Path
 
@@ -52,6 +53,12 @@ def test_build_pins_source_checksum_bases_lock_and_nonroot_native_entrypoint() -
         in source
     )
     assert "ARG BUILD_VERSION=0.0.0-edge.5" in source
+    candidate = json.loads((ROOT / "docs/evidence/household-entry-interface.json").read_text())[
+        "imageCandidate"
+    ]
+    assert candidate["sourceCommit"] == commits[0]
+    assert candidate["version"] == "0.0.0-edge.5"
+    assert "DOMUS_SOURCE_SHA256=" + candidate["sourceSHA256"] in source
     assert re.search(r"^ARG DOMUS_SOURCE_SHA256=[a-f0-9]{64}$", source, re.MULTILINE)
     assert "sha256sum --check" in source
     assert "https://codeload.github.com/vypdev/domus/tar.gz/${DOMUS_SOURCE_COMMIT}" in source

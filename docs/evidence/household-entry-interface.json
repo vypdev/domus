@@ -1,8 +1,8 @@
 {
-  "verifiedAtUTC": "2026-11-01T17:33:34.755303+00:00",
+  "verifiedAtUTC": "2026-11-01T17:37:00.028413+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
-  "sourceIdentity": "Package the published reviewed source271a3a0 as distinct Edge.5 with verified codeload checksum and131byte-compared runtime/build files. Runtime matches the577/45/18tested correction source; no further runtime change. Schema7/privilege scope and actual legacy builders remain unchanged. Image execution/new-head CI/native findings verification remain separate.",
+  "sourceBase": "6c4f19fa217ec13b80365aa8ba6afae2391857e5",
+  "sourceIdentity": "Align actual-image revision/version assertions with reviewed imageCandidate metadata, which the backend package guard independently matches to exact Docker source/version/checksum. This replaces the stale Edge.4 image expectation; no production, recipe or runtime change after6c4f19f. Five package guards pass;19container cases collect. Actual hosted image execution is still required.",
   "sources": {
     ".github/workflows/ci_check.yml": "cd11d915b1ba84625e42454c02fe4f7c2a764d905a8cedf4e623f1ab2681e702",
     ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
@@ -74,7 +74,7 @@
     "specs/CATALOG.md": "190504c90f98f7bf949ec0a84ecb5e926cf49bbbe9490205787fea4c4a817427",
     "specs/catalog.json": "33914aaebb6354bcd89831abe74409c3be66e69614862398ee3e394211e42f8d",
     "specs/household-entry-interface.md": "58ac9f6cb330b30aff2f518802832701df5ab0b4c6b9d4952dd7a92874b1fb6c",
-    "tests/backend/test_app_package.py": "e227b40c78ffefdff51fcb2340c5963230cb74b9f5aeb5a90333c2aa005d75b6",
+    "tests/backend/test_app_package.py": "c50c0a96b85aebb090d5f905c09300bdf98f72191a347a38d2365e085394eff8",
     "tests/backend/test_auth_http.py": "bd492bc9b7af7d4984645755e4b598d905b5e43a180540b3d2afabb5b07e4a10",
     "tests/backend/test_entry_context.py": "fcbb14ebd36b566ec96c5c52ffafe1b49d5e6bd5fc7873a2b6547074381cd55a",
     "tests/backend/test_entry_wire.py": "f52c0f2dd911017287197e7f7ba27934f2a9cf8ac89e9adae90595d36a4f3173",
@@ -87,7 +87,7 @@
     "tests/browser/entry_server.py": "9c05735f3fc8dd9f3665f152f25a1c9c68505243dd620bc721777bc8429e7e4f",
     "tests/containers/restore_fixture.py": "dc980694e27ca2cf5621117fb7be8355d1ea3d6b4345a4109033a926c66c71b8",
     "tests/containers/test_app_compatibility.py": "b0e8bd6d7e0923bf062533ae3ccb525a6af24e1a5935392f936e7be96b4e1f9e",
-    "tests/containers/test_app_image.py": "5b09654bc0d680c0809c75dadfdc630646f4588846a9dd5e67e05920a9f44917",
+    "tests/containers/test_app_image.py": "e054685c5f5accd98b754777747fe5521dc5f1d0638058cd2f0099a2ccdc3ec4",
     "tests/containers/test_app_ui.py": "130464df86cc7431e617434b3e35b1d040717d9081713527859d8ceff52fff4e",
     "tests/containers/ui_fixture.py": "9e24ada5cd164a9ea5515c64cc1c922c218fc6a4d51cc91fd3c8ac7e5cc6234e",
     "tests/fixtures/edge3-app/Dockerfile": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
@@ -1933,6 +1933,7 @@
     "packagePolicy": "5existing backend package guards pass with exact new version/pin/checksum. No permission, source guard, frozen legacy recipe or existing breaking-version marker removed.",
     "actualImageExecution": "Pending hosted native CPU jobs; no local Docker execution claimed.",
     "ownerState": "Edge.4 still running and Edge.3 retained/stopped; no owner update to Edge.5 has been performed.",
-    "restorationDocumentation": "Replace a branch-lifecycle-dependent guide URL with the exact published source271a3a0."
+    "restorationDocumentation": "Replace a branch-lifecycle-dependent guide URL with the exact published source271a3a0.",
+    "imageExpectation": "Actual container checks compare both source revision and app version to imageCandidate. Existing backend package guards tie that metadata to the exact reviewed Docker source/version/checksum before building images."
   }
 }

@@ -32,9 +32,13 @@ def test_image_pins_the_private_launcher_and_installs_a_nonroot_readable_runtime
     assert config["User"] == "0:0"
     assert config["Entrypoint"] == ["/app/.venv/bin/domus-ha-app", "--channel", "edge"]
     assert config["Labels"]["io.hass.type"] == "app"
-    assert config["Labels"]["org.opencontainers.image.revision"] == (
-        "9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af"
-    )
+    expected = json.loads(
+        (
+            Path(__file__).resolve().parents[2] / "docs/evidence/household-entry-interface.json"
+        ).read_text()
+    )["imageCandidate"]
+    assert config["Labels"]["org.opencontainers.image.revision"] == expected["sourceCommit"]
+    assert config["Labels"]["io.hass.version"] == expected["version"]
     assert not any(value.startswith("SUPERVISOR_TOKEN=") for value in config["Env"])
     probe = docker(
         "run",
