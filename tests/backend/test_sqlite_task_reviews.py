@@ -36,7 +36,7 @@ def rows(connection):
     }
 
 
-def test_original_schema6_migration_adds_only_indexes_and_projects_existing_cause(tmp_path):
+def test_original_schema6_migration_preserves_rows_and_projects_existing_cause(tmp_path):
     store = frozen(tmp_path / "old.sqlite3")
     with store._connection() as connection:
         original = rows(connection)
@@ -44,8 +44,12 @@ def test_original_schema6_migration_adds_only_indexes_and_projects_existing_caus
         pytest.fail("Old storage requires explicit migration")
     store.initialize(require_existing=True)
     with store._connection() as connection:
-        assert rows(connection) == original
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
+        upgraded = rows(connection)
+        added = {"recurrence_rules", "recurrence_progress", "recurrence_slots"}
+        assert set(upgraded) == set(original) | added
+        assert all(upgraded[table] == values for table, values in original.items())
+        assert all(upgraded[table] == [] for table in added)
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 8
     service = queries(store, HumanIdentity("ha_admin", True, True, False))
     detail = service.occurrence("identity-15")
     assert detail.dependency_review_required and len(detail.dependency_reviews.items) == 1
@@ -315,7 +319,7 @@ def test_original_schema6_checkpoint_activation_migrates_only_the_prepared_targe
             SQLiteSnapshots(selected.database, tmp_path / "new-checkpoint", INSTALLATION, Clock())
             .create("new")
             .schema_version
-            == 7
+            == 8
         )
     finally:
         selected.close()

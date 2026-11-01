@@ -1,4 +1,6 @@
-# Recurrence temporal foundation
+# Recurrence architecture and implementation evidence
+
+## Temporal checkpoint
 
 The first source checkpoint implements immutable [temporal facts](../backend/src/domus/domain/recurrence_time.py),
 the [semantic application port](../backend/src/domus/application/recurrence_ports.py), and a
@@ -42,11 +44,11 @@ loading in domain/application modules. Real disposable negative import graphs ex
 layers. The implementation, tests and verification limits are recorded in
 [checkpoint evidence](evidence/recurrence-execution.json).
 
-Rule parsing/expansion, task classification, schema 8, durable materialization, source consumption,
-preview/apply, calendar queries, the composed runner and actual image/browser/HA acceptance remain
-outstanding. All 52 companion cases and 37 original owning cases remain requirements. This
-checkpoint does not establish those journeys, a shipped package, Stable distribution or the first
-all-domain release.
+At this temporal checkpoint, rule parsing/expansion, task classification, schema 8, durable
+materialization, source consumption, preview/apply, calendar queries, the composed runner and actual
+image/browser/HA acceptance remained outstanding. All 52 companion cases and 37 original owning
+cases remained requirements. The later checkpoints below record subsequent source progress;
+this original evidence does not establish a shipped package or the first all-domain release.
 
 ## Bounded rule and planning checkpoint
 
@@ -85,3 +87,43 @@ before future exception filtering; explicit exception/addition provenance, recei
 historical restore non-recreation and atomic persistence remain required. The current cursor is
 not exposed as a public authorization token. No scheduled task is created by this checkpoint.
 See [rule/planning evidence](evidence/recurrence-rules.json) for measured results and remaining scope.
+
+## Owned fixed-recurrence storage
+
+The current [records](../backend/src/domus/domain/recurrence_records.py) remain pure immutable
+facts. A record constructor grants no human or technical authority. Rule record revisions support
+compare-and-swap updates. A separate pattern revision changes only when the pattern or time policy
+changes, so a pause does not invent a new nominal obligation. Cursor binding includes the complete
+canonical pattern and time-policy snapshot.
+
+The [repository port](../backend/src/domus/application/recurrence_ports.py) is part of the existing
+unit of work. Its [SQLite adapter](../backend/src/domus/infrastructure/sqlite_recurrence.py) never
+commits independently. Schema 8 stores rules, matching progress and immutable nominal slots with
+scoped definition/occurrence relationships. Deferred constraints require matching rule/progress
+pattern revisions and the exact slot command receipt before commit. A failed partial update leaves
+all prior rows intact; previous slot snapshots survive a valid pattern/progress replacement.
+
+A slot key hashes installation, channel, household, schedule, pattern revision and the tagged
+nominal value. It is independent of the task identifier and mutable record revision. The technical
+command namespace is fixed. It does not create a current human identity or bypass future runner
+authorization. Receipt, audit and outbox records still share the existing atomic transaction.
+
+[Closed versioned codecs](../backend/src/domus/infrastructure/sqlite_recurrence_records.py) reject
+unknown fields/versions, duplicate JSON keys, noncanonical date/time tags and corrupt header/body
+bindings. Date-only records retain dates without a fabricated UTC midnight. The existing canonical
+JSON byte bound applies. Snapshot inspection additionally verifies current source/cursor binding,
+installation scope and the slot/occurrence identifiers in original receipt results. It rejects
+progress above the configured count, future slot generations and contradictory snapshots in the
+same generation. Legitimate older generations remain valid after edits. Incomplete or inconsistent
+records are rejected without rewriting their source.
+
+The [migration guide](tasks/migration.md) distinguishes current source schema 8 from the immutable
+installed Edge.5 schema 7. CI builds a separate checked-out-source image for both CPU architectures
+and retains Edge.5 as a genuine old-image compatibility control. Its version is ci-current and it
+has no publication/deployment step. Actual hosted build/test outcomes remain required evidence.
+
+These are repository and migration capabilities. Scheduled human commands, actual fixed/relative
+materialization, lifecycle consumption, restore non-recreation, preview/apply, protected calendar
+queries and composed runners remain unfinished. The four additional storage refinements do not
+recount the retained 52 companion or 37 original owner cases. See
+[storage evidence](evidence/recurrence-storage.json) for exact tests and acceptance limits.

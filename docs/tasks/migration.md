@@ -1,8 +1,9 @@
 # Task storage migration and compatibility
 
-The development task source uses SQLite schema 7. Installed Edge.3 remains the separately pinned
-M1 schema-4 package. Source migration tests do not upgrade that installation or establish a released
-package upgrade. Keep the exact application/data pair and installation/channel identity.
+The development source uses SQLite schema 8 for fixed recurrence storage. The installed immutable
+Edge.5 package uses schema 7; retained Edge.3 remains the separately pinned M1 schema-4 package.
+Current source tests do not upgrade those installations or establish a released package upgrade.
+Keep the exact application/data pair and installation/channel identity.
 
 | Schema | Added task state | Preservation |
 |---|---|---|
@@ -10,8 +11,9 @@ package upgrade. Keep the exact application/data pair and installation/channel i
 | 5 | Task policy, definitions, occurrences and completion cycles with scoped constraints | Existing household/member/history rows are retained |
 | 6 | Frozen material bindings, usage intents, strict codecs and compare-and-set guards | Legacy task/request evidence remains readable; original hashes/receipts stay unchanged |
 | 7 | Three causal-evidence indexes on the existing outbox | No business table, task row, receipt or event is rewritten |
+| 8 | Scoped recurrence rules, matching durable progress and immutable nominal slots | Original task, receipt, audit, outbox and historical records remain authoritative |
 
-Initialization accepts an empty owned destination or supported versions 1–6, verifies the application
+Initialization accepts an empty owned destination or supported versions 1–7, verifies the application
 marker and installation/channel, then repeats inspection inside the bounded writer transaction.
 Additive DDL, any required legacy-document upgrade and user_version advancement share that transaction.
 An unsupported future version, mismatched identity or unrelated database is rejected. Normal runtime
@@ -47,18 +49,32 @@ acceptance. Its retained receipt proves that operation was processed before rest
 apply the effect again. Queries distinguish current facts and historical outcomes. Current authority
 is still required to recover a result. Old material/approval evidence never becomes a current grant.
 
-Rollback requires a compatible application/data pair. An older runtime must refuse schema 7 rather
-than attempt a downgrade. To reverse a restore, prepare from its retained source-checkpoint against
+Rollback requires a compatible application/data pair. A schema-7 runtime must refuse schema 8.
+To reverse a restore, prepare from its retained source-checkpoint against
 the latest selected source and activate a new verified restore ID; do not reverse the pointer manually.
 
 ## Source evidence and limits
 
-Frozen SQL fixtures for versions 1–6 come from their original runtime checkpoints. In particular,
+Frozen SQL fixtures for versions 1–7 come from their original runtime checkpoints. In particular,
 the v6 input comes from immutable 7beb63c and includes a reopened prerequisite, completed dependent
 work, an approved closed cycle, confirmed material correction and restored-away settlement. The
 schema-7 tests retain every original table row and prove failed index DDL rolls back exact database
 bytes. Actual old-checkpoint inspection/activation tests preserve input/source bytes and upgrade
 only the prepared target.
+
+The genuine schema-7 fixture was created under source 64908ee before recurrence DDL changes. It
+contains a household, members, a completed task/cycle and original operation evidence. Its SHA-256
+is c5ca7b2383e9f75561a59b9ea0bbbd98736ae400b19e735b5a6fdf90ca139ea5. Existing fixtures are unchanged.
+Schema-8 tests reject ordinary schema-7 read/write transactions before explicit initialization,
+retain original receipts during migration, and roll back new DDL plus version advancement after
+injected failures. Rule, matching pattern progress and exact slot command proof use deferred
+constraints within the same transaction. Snapshot inspection also checks the new documents,
+headers, installation identity, cursor binding and original effect references.
+
+The current-source CI image builds the checked-out backend and frontend for both architectures.
+The immutable Edge.5 image supplies real schema-7 upgrade and refusal controls; CI does not move
+its source pin or publish an owner package. Actual hosted image results remain a separate required
+gate. See [storage evidence](../evidence/recurrence-storage.json) for the current measured scope.
 
 Those observations are retained in [task evidence](../evidence/task-execution-foundation.json).
 They are distinct from image/cross-architecture adoption, real consumer ledgers and a restoration on

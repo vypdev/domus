@@ -1,0 +1,159 @@
+{
+  "status": "partial; storage boundary implemented, complete recurrence feature remains in progress",
+  "recordedAtUTC": "2026-11-01T22:18:53.593225+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "sourceBase": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+  "developmentBase": "3131810082760a98ee4af66f11bb65eaac49cc3b",
+  "backendSourceInventorySHA256": "37ab8446a4584c54f2a3a2fd7af2fb5e2b7ec6371cbc4f5b3e27b7146aee1700",
+  "implemented": [
+    "Pure scoped fixed-rule/progress/slot records and stable nominal command identity",
+    "Strict bounded versioned codecs and typed semantic unit-of-work repository",
+    "SQLite schema8 with scoped task/rule relationships, deferred matching progress and exact original receipt namespace",
+    "Compare-and-swap persistence, immutable original slot snapshots and atomic partial-edit refusal",
+    "Explicit supported-source migration, genuine schema7 fixture and injected DDL rollback",
+    "Snapshot physical/semantic recurrence verification with source/cursor/result binding"
+  ],
+  "testsFirst": {
+    "repository": "Initial 8 executions failed because SQLiteUnit had no recurrence repository, before its implementation. Original earlier missing-symbol output remains retained.",
+    "codec": "Original collection failed with missing domus.infrastructure.sqlite_recurrence_records before its implementation; original output retained."
+  },
+  "focused": {
+    "executions": 102,
+    "authoredBehaviorModules": 4,
+    "coverageTotals": {
+      "covered_lines": 282,
+      "num_statements": 282,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 74,
+      "num_partial_branches": 0,
+      "covered_branches": 74,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "scope": "Storage/domain/codec boundaries; not94 independent accepted product journeys."
+  },
+  "completeBackend": {
+    "executions": 3500,
+    "authoredModules": 122,
+    "coverageTotals": {
+      "covered_lines": 8706,
+      "num_statements": 8706,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 267,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2482,
+      "num_partial_branches": 0,
+      "covered_branches": 2482,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentPerModuleAudit": "passed",
+    "durationSeconds": 103.73,
+    "loopback": "Final campaign permits disposable local fake-HA servers. Earlier sandbox-denied sockets are not product failures or successful evidence.",
+    "testRefinement": "Final full campaign includes both independent-writer cases, actual TaskOccurrence rollback and the six source/count integrity regressions."
+  },
+  "checks": {
+    "strictTypes": {
+      "result": "passed",
+      "files": 122
+    },
+    "ruffCheck": "passed",
+    "ruffFormat": {
+      "result": "passed",
+      "files": 235
+    },
+    "architecture": {
+      "result": "passed",
+      "contractsKept": 3,
+      "contractsBroken": 0,
+      "filesAnalyzed": 166,
+      "dependencies": 1022
+    },
+    "originalPinnedSdd": {
+      "result": "passed",
+      "upstreamRevision": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "policyModulesByteVerified": 7,
+      "immutableBaseOwners": 18,
+      "retainedOwnersUnchanged": true,
+      "currentCompanionSHA256": "8f933d1d31842a92bdb9061fdb2dc54cc6b67f3d34cde9c1f9c6124515fc0cb1",
+      "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
+    },
+    "packageAndArchitectureTests": {
+      "result": "passed",
+      "executions": 52,
+      "requires": "Fresh frontend build and current backend wheel; both completed before acceptance."
+    }
+  },
+  "migration": {
+    "currentSourceSchema": 8,
+    "supportedHistoricalSchemas": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "schema7FixtureSHA256": "c5ca7b2383e9f75561a59b9ea0bbbd98736ae400b19e735b5a6fdf90ca139ea5",
+    "originalSchema7Source": "64908ee59705e6e9dc6e4a06a8d828bf5eea6d4f",
+    "originalFixtureBytesUnchanged": true,
+    "rollback": "Compatible complete application/database/generation pair; no version-number downgrade."
+  },
+  "additionalStorageCaseObservations": {
+    "recurrence-storage-C01": "Partial: strict codec input byte bound tested; actual per-slot/batch execution and receipt sizing remain to implement.",
+    "recurrence-storage-C02": "Repository/codec canonical tags, closed versions/fields and header/body corruption are tested.",
+    "recurrence-storage-C03": "Ordinary schema7 reads/writes refuse before explicit initialization; successful source migration and failure rollback are tested.",
+    "recurrence-storage-C04": "A current slot without the exact scoped actor/action/key receipt cannot commit; rollback and valid evidence are tested."
+  },
+  "images": {
+    "currentSource": "CI builds checked-out backend/frontend with ci-current label on amd64 and aarch64; actual hosted results are pending.",
+    "schema7Control": {
+      "version": "0.0.0-edge.5",
+      "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+      "scope": "Immutable owner-package fixture used for actual schema7 upgrade/refusal checks, without changing its pin."
+    },
+    "smoke": "Current recurrence/time/codec program passes a host control; actual CPU-image execution remains pending CI.",
+    "localDocker": "Not run; no local Docker engine was started."
+  },
+  "specification": {
+    "publishedActionRun": 41351649126,
+    "publishedCommit": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+    "retainedExecutionCases": 52,
+    "retainedOriginalOwnerCases": 37,
+    "newIndependentStorageCases": 4,
+    "reviewCorrection": "The first publication four broad integration cases overlap retained owners. Their historical IDs and owner mapping remain explicit; they are not counted as additional independent journeys."
+  },
+  "copilotReports": [
+    "https://github.com/vypdev/copilot/issues/763#issuecomment-6563925226",
+    "https://github.com/vypdev/copilot/issues/835#issuecomment-6564066025"
+  ],
+  "retainedEvidence": {
+    "directory": "/private/tmp/domus-recurrence-storage-64908ee",
+    "scope": "Necessary original failures, exact source manifest, final full coverage/output, focused boundary coverage, original SDK proofs and genuine schema7 input. Compact and relocate after this local verification iteration; keep pending authored integration/stash until verified publication."
+  },
+  "pending": [
+    "Current-authorized scheduled creation and reviewed attachment",
+    "Actual fixed and completion-relative materialization and cycle/source handling",
+    "Historical restore non-recreation by the actual recurrence consumer",
+    "Pause/resume/skip/reschedule and reviewed preview/apply use cases",
+    "Task classification, protected calendar query/HTTP and native/standalone runner composition",
+    "Actual hosted images, runtime/browser/HA and complete52-case/first all-domain release acceptance"
+  ],
+  "ownerHa": "Installed Edge.5 and retained Edge.3 are unchanged. No new owner update, release, registry publication or deployment is performed.",
+  "integrityRegressions": {
+    "before": "Six targeted tests failed before the additional source/count checks; original output is retained.",
+    "after": "Progress above COUNT, future/missing sources and same-generation pattern contradictions are refused. Legitimate older slot snapshots remain valid.",
+    "domainPolicy": "Pure matches_schedule/consistent_with relationships are shared by persistence and snapshot inspection; they grant no authority."
+  }
+}

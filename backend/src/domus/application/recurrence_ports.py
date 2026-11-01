@@ -2,8 +2,15 @@
 
 from typing import Protocol
 
+from domus.domain.recurrence_records import (
+    FixedProgress,
+    FixedSchedule,
+    ScheduledSlot,
+    ScheduleState,
+)
 from domus.domain.recurrence_rules import FixedPattern, PeriodCandidates
 from domus.domain.recurrence_time import NominalTime, RelativeInterval, ResolvedTime, TimePolicy
+from domus.domain.storage import Installation
 
 
 class RecurrenceTimes(Protocol):
@@ -19,3 +26,31 @@ class RecurrenceTimes(Protocol):
 
 class NominalExpansion(Protocol):
     def period(self, pattern: FixedPattern, index: int) -> PeriodCandidates: ...
+
+
+class RecurrenceRepository(Protocol):
+    @property
+    def installation(self) -> Installation: ...
+
+    def schedule(self, household_id: str, schedule_id: str) -> FixedSchedule | None: ...
+    def progress(self, household_id: str, schedule_id: str) -> FixedProgress | None: ...
+    def slot(self, household_id: str, slot_key: str) -> ScheduledSlot | None: ...
+    def save_schedule(self, value: FixedSchedule, expected_revision: int) -> None: ...
+    def save_progress(self, value: FixedProgress, expected_revision: int) -> None: ...
+    def add_slot(self, value: ScheduledSlot) -> None: ...
+    def schedules(
+        self,
+        household_id: str,
+        *,
+        limit: int = 25,
+        after: str | None = None,
+        state: ScheduleState | None = None,
+    ) -> tuple[FixedSchedule, ...]: ...
+    def slots(
+        self,
+        household_id: str,
+        schedule_id: str,
+        *,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> tuple[ScheduledSlot, ...]: ...
