@@ -132,6 +132,8 @@ Text equivalent: opening verifies and reads; an authorized deliberate action is 
 
 Duplicate submission is disabled in flight. No automatic retry, rebase or new key follows timeout, transport loss or uncertain 500. Reuse only the original command after full fresh identical-context proof and deliberate recovery. A retired view's response cannot replace a newer view or subject. Partial completion and receipts never assert current membership.
 
+The Application controller refreshes proof/current state before setup, enrollment, recovery or resolved-request dismissal. Server ports bind every read and send to the expected context as an assertion, never an actor selector; concrete adapters must reject a mismatch. Prepared/uncertain work blocks a new key. Recovery checks the original command independently of new-write eligibility: pending own enrollment may recover its original receipt; setup requires current setup permission or active household-management permission. Dismissal never evicts unresolved work. A late receipt is retained without renewing an expired session or exposing expired authority. Reads and all continuations are generation-fenced; cancellation cannot undo a sent command. Native sign-out never invokes standalone revocation, and standalone logout proceeds even when owned storage clearing is unconfirmed.
+
 Existing internal routes are protocol routes, not file names. Browser requests resolve relative equivalents under `application_base`, never the origin root through Ingress.
 
 | Route | Contract |

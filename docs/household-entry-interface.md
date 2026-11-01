@@ -1,8 +1,8 @@
 # Household entry interface foundation
 
-The development branch implements pure entry/setup decisions and the bounded request journal with
-its owned sessionStorage adapter. The product entry page, controller, HTTP adapters and static
-delivery remain to be implemented.
+The development branch implements pure entry/setup decisions, the bounded request journal with
+its owned sessionStorage adapter, and the generation-fenced entry controller. The product entry
+page, HTTP adapters and static delivery remain to be implemented.
 These tests do not add a working interface to the owner's installed Edge.3 application.
 
 The [entry specification](../specs/household-entry-interface.md) retains eight requirements and 48
@@ -51,9 +51,42 @@ prepared request before any send. The journal cannot grant access or prove curre
 Involuntary session loss detaches memory and retains local recovery evidence. Explicit logout clears
 memory first and removes/verifies only the owned key. Failed cleanup is reported as uncertain; it
 never restores authority. A storage failure after receiving a server receipt does not negate that
-receipt or justify a new request key. The controller and real lost-response/server-commit journeys
-remain to be wired and tested; current adapter tests use simulated receipts plus actual isolated
+receipt or justify a new request key. Adapter tests use simulated receipts plus actual isolated
 Chromium sessionStorage, without contacting the owner's HA.
+
+## Entry controller
+
+Opening and refreshing read session, current authorization and permitted household facts. They
+create no household or membership. Semantic server ports must bind each read and command to the
+expected installation/channel/subject, reject a mismatch, and return strictly decoded immutable
+facts. Expected context is an assertion, never an actor selector. Concrete HTTP enforcement remains
+required. Domain and Application import no browser, storage, transport or framework API.
+
+Setup, enrollment, original-request recovery and resolved-request dismissal obtain fresh session
+and current state. Setup uses the explicit validated default mapping. Recovery is separate from
+eligibility for a new effect: pending enrollment may check its original request; setup recovery
+requires current setup permission or an active household-management grant. The server independently
+enforces current original-command authority and idempotency. Rejection, missing proof, grace,
+suspended/archived linkage and incompatible context never become a cached grant.
+
+One command is allowed in flight, including its preflight and receipt reconciliation. A new key is
+not generated while unexpired prepared/uncertain work exists. Prepare must persist and read back
+before send. No opening, refresh, receipt, timeout or transport failure automatically resubmits.
+Deliberate recovery reuses the exact original key/payload, creation/deadline and known operation
+identity; changes observed during fresh reads fail closed. Dismissal cannot evict unresolved work.
+
+Every replacement view cancels owned reads and fences all late results, including rejected reads,
+sent responses and logout callbacks. Cancellation never claims to undo a command. Involuntary loss
+or teardown detaches memory and preserves local recovery evidence. Tick uses the semantic anchored
+clock; it never renews a session. Tick hides expired recovery records and completed results; a fresh
+verified opening prunes expired stored records. A receipt arriving after session expiry remains
+evidence of the earlier effect but cannot expose expired authority. Explicit standalone logout attempts actual logout even
+if owned storage clearing fails. Native logout clears owned presentation/data and explains that HA
+owns sign-out; it never invokes standalone revocation. Cleanup/revocation uncertainty stays explicit.
+
+The controller tests use real Chromium and semantic server fakes, including one processed effect
+whose first response is lost and then recovered after controller/storage-adapter recreation. These
+are Application tests, not real HTTP/SQLite, rendered journeys, owner HA or package acceptance.
 
 ## Development checks
 
@@ -80,7 +113,7 @@ Model execution is separate from rendering, accessibility, integration, package 
 
 ## Remaining delivery
 
-Deliberate command recovery in the generation-fenced controller, strict HTTP adapters, server-owned
+Strict HTTP adapters that fulfill the controller's context-binding contract, server-owned
 context and base-relative delivery remain required. The owned Lit UI
 must demonstrate both locales, all primary states, accessibility, responsive layouts, Storybook and
 both browser compositions. The all-domain first release, both targets and isolated channels remain
