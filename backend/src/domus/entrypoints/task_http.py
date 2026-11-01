@@ -11,7 +11,6 @@ from domus.application.task_commands import TaskCommands
 from domus.application.task_queries import (
     DefinitionSummary,
     OccurrenceSummary,
-    TaskDetail,
     TaskHistoryItem,
     TaskPage,
     TaskPolicyView,
@@ -31,7 +30,6 @@ from domus.application.task_requests import (
     VerifyTask,
 )
 from domus.domain.task_values import DefinitionState
-from domus.domain.tasks import TaskDefinition
 from domus.entrypoints.household_http import (
     OperationResponse,
     ReceiptResponse,
@@ -56,6 +54,12 @@ from domus.entrypoints.task_dto import (
     TransitionBody,
     UpdateDefinitionBody,
     VerifyBody,
+)
+from domus.entrypoints.task_response import (
+    TaskDefinition,
+    TaskDetail,
+    definition_response,
+    detail_response,
 )
 
 
@@ -120,7 +124,7 @@ def create_task_router(
     def definition(
         definition_id: Identifier, request: Request, query: Annotated[_EmptyQuery, Query()]
     ) -> TaskDefinition:
-        return context(request).queries().definition(definition_id)
+        return definition_response(context(request).queries().definition(definition_id))
 
     @router.put(
         "/definitions/{definition_id}", response_model=ReceiptResponse, openapi_extra=write_contract
@@ -189,7 +193,7 @@ def create_task_router(
     def occurrence(
         occurrence_id: Identifier, request: Request, query: Annotated[_EmptyQuery, Query()]
     ) -> TaskDetail:
-        return context(request).queries().occurrence(occurrence_id)
+        return detail_response(context(request).queries().occurrence(occurrence_id))
 
     @router.put(
         "/occurrences/{occurrence_id}/assignment",

@@ -6,6 +6,7 @@ from collections.abc import Callable
 from domus.domain.errors import StorageFailure
 from domus.domain.identity import HouseholdPolicy, Member
 from domus.domain.task_policy import validate_dependency_graph
+from domus.infrastructure.sqlite_task_materials import SQLiteTaskMaterials
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
 
@@ -25,8 +26,10 @@ def verify_task_records(
     household_id: str,
     members: tuple[Member, ...],
     identity_policy: HouseholdPolicy | None,
+    *,
+    record_version: int = 2,
 ) -> None:
-    repository = SQLiteTasks(connection)
+    repository = SQLiteTasks(connection, record_version=record_version)
     policy = repository.policy(household_id)
     definitions = _collect(
         lambda after: repository.definitions(household_id, limit=101, after=after),
@@ -86,3 +89,22 @@ def verify_task_records(
             or (cycle.closed_at is None and cycle_work.current_cycle_id != cycle.cycle_id)
         ):
             raise StorageFailure("invalid_task_references")
+
+    if record_version == 2:
+        material_repository = SQLiteTaskMaterials(connection)
+        for cycle in cycles.values():
+            original = occurrences[cycle.occurrence_id].definition_snapshot
+            intents = material_repository.list(household_id, cycle.cycle_id, limit=101)
+            lines = {line.line_id: line for line in original.materials}
+            if {value.line.line_id for value in intents} != set(lines):
+                raise StorageFailure("invalid_material_references")
+            for value in intents:
+                if (
+                    value.occurrence_id != cycle.occurrence_id
+                    or value.line != lines[value.line.line_id]
+                    or value.recorded_by != cycle.recorded_by
+                    or value.performed_at != cycle.performed_at
+                    or value.created_at != cycle.recorded_at
+                    or value.recording_mode is not cycle.rules.material_recording
+                ):
+                    raise StorageFailure("invalid_material_references")

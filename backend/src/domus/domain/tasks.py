@@ -6,6 +6,7 @@ from typing import Self
 from domus.domain.errors import Conflict, Forbidden, InvalidInput
 from domus.domain.identity import validate_revision
 from domus.domain.storage import validate_identifier
+from domus.domain.task_material_values import MaterialLine, validate_material_lines
 from domus.domain.task_policy import (
     can_approve,
     next_definition_state,
@@ -59,8 +60,10 @@ class TaskDefinition:
     overrides: TaskOverrides = TaskOverrides()
     state: DefinitionState = DefinitionState.ACTIVE
     revision: int = 1
+    materials: tuple[MaterialLine, ...] = ()
 
     def __post_init__(self) -> None:
+        validate_material_lines(self.materials, self.household_id)
         validate_identifier(self.definition_id)
         validate_identifier(self.household_id)
         validate_revision(self.revision)
@@ -73,18 +76,29 @@ class TaskDefinition:
             raise InvalidInput("invalid_task_definition")
 
     def revise(
-        self, content: TaskContent, overrides: TaskOverrides, state: DefinitionState
+        self,
+        content: TaskContent,
+        overrides: TaskOverrides,
+        state: DefinitionState,
+        *,
+        materials: tuple[MaterialLine, ...] | None = None,
     ) -> Self:
         candidate = replace(
             self,
             content=content,
+            materials=self.materials if materials is None else materials,
             overrides=overrides,
             state=state,
             revision=next_task_revision(self.revision),
         )
         if self.state is DefinitionState.ARCHIVED:
             raise Conflict("task_transition_conflict")
-        if (content, overrides, state) == (self.content, self.overrides, self.state):
+        if (content, overrides, state, candidate.materials) == (
+            self.content,
+            self.overrides,
+            self.state,
+            self.materials,
+        ):
             raise Conflict("task_unchanged")
         if state is not self.state:
             next_definition_state(self.state, state)

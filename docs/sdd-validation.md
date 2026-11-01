@@ -312,3 +312,41 @@ migration, not generated from a later schema or counted as a new migration passi
 The previous HTTP head has complete project CI; its separate Copilot assessment rejection is
 reported upstream without modifying Copilot or weakening acceptance. Finished-feature current-head
 CI and complete full-context Bugbot with no unresolved findings remain mandatory before merge.
+
+
+## Material SQLite and canonical read checkpoint
+
+Schema 6 now persists cycle/line-unique material intents with scoped foreign keys, immutable source
+and effect guards, exact CAS and strict codecs. Definition/occurrence documents explicitly migrate
+from version 1 to version 2; normal current reads never guess omitted materials. Checkpoint inspection
+rejects intents detached from their original cycle/line/recorder/time/mode; reopening retains them.
+The original frozen schema-5 SQL is 41,026 bytes with SHA256
+`d93e1cbfb0547b53308ee6ac485ca895c0269dd286c29656618da60d5c20de50`, generated and
+reopened using immutable 17ea907. Real migration preserves receipts/audit/events/cycles/retained
+facts byte-for-byte, including the historical completion; actual original-key TaskCommands replay
+returns its original absent effect. Failed DDL/document translation rolls back the old database.
+Actual old checkpoint inspection/offline activation upgrades only its prepared target and retains
+source/checkpoint bytes and the schema-5 rollback checkpoint.
+
+Outer read DTOs and compact definition-edit evidence emit canonical decimal strings in both actual
+ASGI compositions. Existing OpenAPI paths/security/schema values remain, with additive material
+response facts. A 32-line maximum-size snapshot and compact audit/event budget are exercised.
+The first full interim campaign found two original contract snapshot failures (2,454 passed);
+canonical quantity tests then reproduced nested value objects in reads and edit receipts. The DTO
+and compact-output fixes retain the original equality assertions. The original failure report is
+separate from the final passing source measurements.
+
+The final complete backend passes 2,459 tests and covers all 6,774 statements/1,898 branches across
+all 95 authored files. All source files appear in the produced coverage inventory. Fifty-nine new
+executions cover storage, migration, rollback, corruption, original retry, bounds and both read/edit
+compositions. The 27 task modules cover 2,018 statements/578 branches. Strict types/formatting,
+113 tooling/architecture fixtures, the 131-file/763-dependency inward/acyclic graph, local links and
+original pinned SDD/catalog validation pass; all original case rows remain unchanged.
+
+This checkpoint does not provide material selection/completion/settlement commands, material write
+DTOs, actual Inventory movements, owner HA/UI/package adoption or complete product acceptance.
+Current material-task authority binding, original-request compatibility under the later new fields,
+compound CAS transitions and consumer/review projections remain required next work. The previous
+material-core head has fully green project CI; its recurring Copilot assessment rejection is reported
+upstream unchanged. Finished-feature current-head CI and complete Bugbot without unresolved findings
+remain mandatory before merge.

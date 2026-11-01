@@ -12,7 +12,7 @@
 
 ## 1. Executive summary
 
-This new companion to `specs/household-tasks.md` defines a backend foundation for creating a title-only task and its first occurrence atomically, assigning or self-claiming eligible work, recording actual performers, and retaining completion, verification, and reopening history. Its default allows a restricted member to claim available work offered to their profile. Claiming never waives required adult approval. Task execution is authoritative only for task facts; Inventory and Points consumers remain owners of their own ledgers.
+This companion to `specs/household-tasks.md` defines atomic title-only creation, eligible assignment/self-claim, actual performers and durable completion/verification/reopening history. Restricted members may claim eligible available work by default; adult approval remains required. Tasks owns task facts; Inventory and Points own their ledgers.
 
 An adult creates “Wipe table” -> the definition and available occurrence are committed together -> an eligible member claims it -> assigned members perform it -> a completion cycle records performers and actual time -> required adult approval is recorded -> uniquely identified events are available to real consumers.
 
@@ -22,7 +22,7 @@ The companion preserves all 49 existing cases in `specs/household-tasks.md`; its
 
 ### 2.1 Problem
 
-Households need durable task work that survives edits, retries, concurrency, restart, and restore. A single mutable “completed” flag cannot distinguish a recurring definition from its occurrences, identify actual performers, preserve approval facts, or safely represent reopening. Restricted members need a truthful way to claim eligible free work while required approval remains intact. The backend must also avoid implying that absent Inventory or Points consumers have accepted effects.
+Task work must survive edits, retries, concurrency, restart and restore. A mutable “completed” flag loses definition/occurrence identity, performers, approval and reopening facts. Restricted members need eligible self-claim with approval intact. Absent Inventory or Points consumers cannot imply accepted effects.
 
 ### 2.2 Current behavior
 
@@ -490,6 +490,7 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `backend/src/domus/infrastructure/task_cursor.py` | create |
 | `backend/src/domus/entrypoints/task_http.py` | create |
 | `backend/src/domus/entrypoints/task_dto.py` | create |
+| `backend/src/domus/entrypoints/task_response.py` | create |
 | `backend/src/domus/entrypoints/http_errors.py` | update |
 | `backend/src/domus/composition/tasks.py` | create |
 | `tests/backend/test_task_values.py` | create |
@@ -506,6 +507,11 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `tests/backend/test_sqlite_tasks.py` | create |
 | `tests/backend/test_sqlite_task_records.py` | create |
 | `tests/fixtures/sqlite/v4.sql` | create |
+| `tests/fixtures/sqlite/v5.sql` | create |
+| `backend/src/domus/infrastructure/sqlite_task_material_schema.py` | create |
+| `backend/src/domus/infrastructure/sqlite_task_material_records.py` | create |
+| `backend/src/domus/infrastructure/sqlite_task_materials.py` | create |
+| `tests/backend/test_sqlite_task_materials.py` | create |
 | `tests/backend/test_restore_source.py` | update |
 | `tests/backend/test_activation_compatibility.py` | update |
 | `tests/backend/test_sqlite_identity.py` | update |
@@ -592,13 +598,13 @@ These are executable acceptance scenarios for future implementation; none is rep
 
 ## 18. Implementation sequence
 
-1. Publish this validated companion on the exact linked managed branch; preserve the existing household-tasks specification and all 49 baseline cases.
-2. Finalize executable route/OpenAPI, schema, dependency graph, module inventory, policy decisions, and docs contract before source changes.
-3. Implement pure Domain policies/value objects and exhaustive tests.
-4. Implement Application commands, queries, authorization rechecks, receipts, transaction/outbox orchestration, and race tests.
-5. Implement SQLite schema/migrations, restart/rollback/restore, then semantic Inventory and event adapters with honest pending behavior.
-6. Wire both existing Python compositions and bounded HTTP DTOs; deliver user/setup/operator/contributor docs with fixtures.
-7. Complete meaningful module and whole-backend coverage, real-file SQLite and loopback evidence, full required CI, full-context Bugbot, and later real HA plus actual Inventory/Points consumer acceptance. No implementation begins before companion publication and exact branch validation.
+1. Publish the validated companion on the linked managed branch; preserve all 49 owning cases.
+2. Finalize route/OpenAPI, schema, graph, inventory, policy and documentation contracts before code.
+3. Implement pure Domain policies and exhaustive tests.
+4. Implement Application commands, queries, current authority, receipts, atomic outbox and races.
+5. Implement SQLite migration/restart/rollback/restore and semantic Inventory/event adapters with explicit pending states.
+6. Wire both Python compositions and bounded DTOs; document users, setup, operations and contribution.
+7. Require whole-backend/per-module coverage, real SQLite/loopback, all CI and full-context Bugbot. Later actual HA and Inventory/Points acceptance remain mandatory. Companion publication and exact branch validation precede implementation.
 
 ## 19. Definition of Done
 

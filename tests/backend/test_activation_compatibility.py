@@ -79,7 +79,7 @@ def test_real_activation_upgrades_only_target_from_frozen_source_and_checkpoint(
     selected = open_storage(root, "edge")
     try:
         with selected.database._connection() as connection:
-            assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
+            assert connection.execute("PRAGMA user_version").fetchone()[0] == 6
             assert connection.execute("SELECT COUNT(*) FROM retained_operations").fetchone()[0] == (
                 2 if version == 4 else 1
             )

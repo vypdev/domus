@@ -118,7 +118,7 @@ def test_record_shape_and_version_are_never_guessed(
     elif change == "missing":
         del value["revision"]
     else:
-        value["version"] = 2 if change == "future" else True
+        value["version"] = 3 if change == "future" else True
     with pytest.raises(StorageFailure):
         reader(json.dumps(value))
 

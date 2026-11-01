@@ -108,3 +108,39 @@ def test_unwired_native_factory_does_not_advertise_task_capability():
     assert "/api/v1/household" in paths and not any(
         path.startswith("/api/v1/tasks") for path in paths
     )
+
+
+def test_both_read_compositions_render_material_quantities_as_canonical_decimal_strings(api):
+    from test_task_material_values import line
+    from test_tasks import definition
+
+    from domus.domain.task_material_values import MaterialQuantity
+    from domus.domain.task_values import TaskRules
+    from domus.domain.tasks import HouseholdTaskPolicy
+
+    material = replace(line(), planned_quantity=MaterialQuantity("0.25"))
+    original = definition(created_at=100, materials=(material,))
+    work = original.new_occurrence("material-occurrence", 100)
+    with api.store.write() as unit:
+        unit.tasks.save_policy(HouseholdTaskPolicy("home", TaskRules()), 0)
+        unit.tasks.save_definition(original, 0)
+        unit.tasks.save_occurrence(work, 0)
+    item = api.client.get("/api/v1/tasks/definitions/definition")
+    assert item.status_code == 200, item.text
+    assert item.json()["materials"][0]["planned_quantity"] == "0.25"
+    detail = api.client.get("/api/v1/tasks/occurrences/material-occurrence")
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["work"]["definition_snapshot"] == item.json()
+    edited = api.client.put(
+        "/api/v1/tasks/definitions/definition",
+        json={"title": "Renamed", "expected_revision": 1, "state": "active"},
+        headers=api.headers("rename-material-definition"),
+    )
+    assert edited.status_code == 200, edited.text
+    result = edited.json()["result"]["materials"][0]
+    assert result["planned_quantity"] == "0.25"
+    assert result["reference_id"] == material.binding.reference_id
+    assert "binding" not in result
+    schemas = api.client.get("/api/v1/openapi.json").json()["components"]["schemas"]
+    assert "MaterialQuantity" not in schemas
+    assert schemas["MaterialLine"]["properties"]["planned_quantity"]["type"] == "string"

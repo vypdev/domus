@@ -102,6 +102,7 @@ class SQLiteTasks(TaskRepository):
     """The enclosing unit owns begin/commit/rollback; these methods never commit independently."""
 
     connection: sqlite3.Connection
+    record_version: int = 2
 
     def history(
         self, household_id: str, occurrence_id: str, *, limit: int = 25, after: int = 0
@@ -176,7 +177,7 @@ class SQLiteTasks(TaskRepository):
                 "SELECT * FROM task_definitions WHERE household_id=? AND definition_id=?",
                 (household_id, definition_id),
             ).fetchone(),
-            read_definition,
+            lambda encoded: read_definition(encoded, version=self.record_version),
             _definition_headers,
         )
 
@@ -212,7 +213,15 @@ class SQLiteTasks(TaskRepository):
             (*parameters, limit),
         )
         return tuple(
-            cast(TaskDefinition, _model(row, read_definition, _definition_headers)) for row in rows
+            cast(
+                TaskDefinition,
+                _model(
+                    row,
+                    lambda encoded: read_definition(encoded, version=self.record_version),
+                    _definition_headers,
+                ),
+            )
+            for row in rows
         )
 
     def occurrence(self, household_id: str, occurrence_id: str) -> TaskOccurrence | None:
@@ -223,7 +232,7 @@ class SQLiteTasks(TaskRepository):
                 "SELECT * FROM task_occurrences WHERE household_id=? AND occurrence_id=?",
                 (household_id, occurrence_id),
             ).fetchone(),
-            read_occurrence,
+            lambda encoded: read_occurrence(encoded, version=self.record_version),
             _occurrence_headers,
         )
 
@@ -276,7 +285,15 @@ class SQLiteTasks(TaskRepository):
             (*parameters, limit),
         )
         return tuple(
-            cast(TaskOccurrence, _model(row, read_occurrence, _occurrence_headers)) for row in rows
+            cast(
+                TaskOccurrence,
+                _model(
+                    row,
+                    lambda encoded: read_occurrence(encoded, version=self.record_version),
+                    _occurrence_headers,
+                ),
+            )
+            for row in rows
         )
 
     def cycle(self, household_id: str, cycle_id: str) -> TaskCycle | None:

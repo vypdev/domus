@@ -1,11 +1,14 @@
 """Shared transaction-scoped task facts for commands and read-only planning."""
 
+import json
+from dataclasses import asdict
 from typing import cast
 
 from domus.application.ports import UnitOfWork
 from domus.domain.errors import Conflict, StorageFailure
+from domus.domain.storage import JsonDocument
 from domus.domain.task_values import OccurrenceState, TaskRequirement, TaskRules
-from domus.domain.tasks import TaskCycle, TaskOccurrence
+from domus.domain.tasks import TaskCycle, TaskDefinition, TaskOccurrence
 
 
 def current_cycle(unit: UnitOfWork, work: TaskOccurrence, cycle_id: str) -> TaskCycle:
@@ -43,3 +46,20 @@ def resolved_rules(unit: UnitOfWork, work: TaskOccurrence) -> tuple[TaskRules, i
     if policy is None:
         raise StorageFailure("invalid_task_references")
     return work.definition_snapshot.overrides.resolve(policy.rules), policy.revision
+
+
+def definition_result(value: TaskDefinition) -> JsonDocument:
+    """Bounded command evidence uses reference facts; queries retain full binding snapshots."""
+    result = asdict(value)
+    del result["materials"]
+    if value.materials:
+        result["materials"] = [
+            {
+                "line_id": line.line_id,
+                "reference_id": line.binding.reference_id,
+                "binding_revision": line.binding.revision,
+                "planned_quantity": line.planned_quantity.value,
+            }
+            for line in value.materials
+        ]
+    return JsonDocument(json.dumps(result, ensure_ascii=False))

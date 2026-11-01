@@ -9,7 +9,12 @@ from domus.application.commands import AtomicCommands, Change
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.task_authorization import TaskAccess, TaskCommandAuthorization
-from domus.application.task_facts import current_cycle, required_work, resolved_rules
+from domus.application.task_facts import (
+    current_cycle,
+    definition_result,
+    required_work,
+    resolved_rules,
+)
 from domus.application.task_requests import (
     AssignTask as AssignTask,
 )
@@ -331,7 +336,7 @@ class TaskCommands:
             overrides = previous.overrides if request.overrides is None else request.overrides
             updated = previous.revise(request.content, overrides, request.state)
             unit.tasks.save_definition(updated, request.expected_revision)
-            result = JsonDocument(json.dumps(asdict(updated), ensure_ascii=False))
+            result = definition_result(updated)
             return _change("task.definition.updated", request, result)
 
         return self._execute(

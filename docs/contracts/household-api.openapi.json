@@ -586,6 +586,78 @@
         "title": "MappingResponse",
         "type": "object"
       },
+      "MaterialBinding": {
+        "description": "A semantic port must resolve existence and authority; construction proves neither.",
+        "properties": {
+          "household_id": {
+            "title": "Household Id",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "title": "Label",
+            "type": "string"
+          },
+          "location_id": {
+            "title": "Location Id",
+            "type": "string"
+          },
+          "precision": {
+            "title": "Precision",
+            "type": "integer"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "reference_id": {
+            "title": "Reference Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "unit_id": {
+            "title": "Unit Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "household_id",
+          "reference_id",
+          "product_id",
+          "unit_id",
+          "location_id",
+          "revision",
+          "precision"
+        ],
+        "title": "MaterialBinding",
+        "type": "object"
+      },
+      "MaterialLine": {
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/MaterialBinding"
+          },
+          "line_id": {
+            "title": "Line Id",
+            "type": "string"
+          },
+          "planned_quantity": {
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Planned Quantity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "line_id",
+          "binding",
+          "planned_quantity"
+        ],
+        "title": "MaterialLine",
+        "type": "object"
+      },
       "MaterialRecording": {
         "enum": [
           "review_on_completion",
@@ -1652,6 +1724,14 @@
           "household_id": {
             "title": "Household Id",
             "type": "string"
+          },
+          "materials": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/MaterialLine"
+            },
+            "title": "Materials",
+            "type": "array"
           },
           "overrides": {
             "$ref": "#/components/schemas/TaskOverrides",

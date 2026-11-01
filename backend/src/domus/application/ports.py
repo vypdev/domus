@@ -3,6 +3,7 @@
 from contextlib import AbstractContextManager
 from typing import Protocol
 
+from domus.application.task_material_ports import TaskMaterialRepository
 from domus.application.task_ports import TaskRepository
 from domus.domain.identity import HouseholdPolicy, Member
 from domus.domain.recovery import RecoveryRequest
@@ -60,6 +61,9 @@ class Outbox(Protocol):
 
 
 class UnitOfWork(Protocol):
+    @property
+    def task_materials(self) -> TaskMaterialRepository: ...
+
     @property
     def tasks(self) -> TaskRepository: ...
 

@@ -38,6 +38,11 @@ definition snapshot, current policy rules, required work, current cycle and acti
 not authorize a later change; the command checks again. GET `/policy` returns defaults with revision
 zero when absent and never initializes them.
 
+Definition reads include frozen material binding/planned-quantity facts. A quantity is a canonical
+decimal string such as `"0.25"`, never a floating-point number or an internal `{value: ...}` object.
+Task write requests still reject material selections/usage until their command integration is
+complete. A planned material line does not mean that stock was consumed.
+
 ## Edit and assign
 
 PUT `/policy` requires an expected revision and nested `rules`. Revision zero initializes absent

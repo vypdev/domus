@@ -20,6 +20,7 @@ from domus.domain.task_values import (
     VerificationState,
 )
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
+from domus.infrastructure.sqlite_task_material_records import line_value, read_line
 
 _RULE_FIELDS = (
     "claim_allowed",
@@ -39,9 +40,9 @@ def _object(value: JsonValue, keys: tuple[str, ...]) -> JsonObject:
     return value
 
 
-def _record(value: JsonValue, keys: tuple[str, ...]) -> JsonObject:
+def _record(value: JsonValue, keys: tuple[str, ...], version: int = 1) -> JsonObject:
     result = _object(value, ("version", *keys))
-    if type(result["version"]) is not int or result["version"] != 1:
+    if type(result["version"]) is not int or result["version"] != version:
         raise InvalidInput("unsupported_task_record")
     return result
 
@@ -112,7 +113,8 @@ def _overrides(value: JsonValue) -> TaskOverrides:
 
 def _definition_value(value: TaskDefinition) -> JsonObject:
     return {
-        "version": 1,
+        "version": 2,
+        "materials": [line_value(item) for item in value.materials],
         "definition_id": value.definition_id,
         "household_id": value.household_id,
         "content": {
@@ -128,10 +130,11 @@ def _definition_value(value: TaskDefinition) -> JsonObject:
     }
 
 
-def _definition(value: JsonValue) -> TaskDefinition:
+def _definition(value: JsonValue, version: int = 2) -> TaskDefinition:
     row = _record(
         value,
         (
+            *(("materials",) if version == 2 else ()),
             "definition_id",
             "household_id",
             "content",
@@ -140,6 +143,7 @@ def _definition(value: JsonValue) -> TaskDefinition:
             "state",
             "revision",
         ),
+        version,
     )
     content = _object(row["content"], ("title", "description", "priority", "tags"))
     return TaskDefinition(
@@ -155,6 +159,7 @@ def _definition(value: JsonValue) -> TaskDefinition:
         _overrides(row["overrides"]),
         DefinitionState(cast(str, row["state"])),
         cast(int, row["revision"]),
+        () if version == 1 else tuple(read_line(item) for item in _array(row["materials"])),
     )
 
 
@@ -176,7 +181,7 @@ def definition_document(value: TaskDefinition) -> JsonDocument:
 def occurrence_document(value: TaskOccurrence) -> JsonDocument:
     return JsonDocument.from_value(
         {
-            "version": 1,
+            "version": 2,
             "occurrence_id": value.occurrence_id,
             "household_id": value.household_id,
             "definition_snapshot": _definition_value(value.definition_snapshot),
@@ -237,7 +242,7 @@ def _policy(value: JsonValue) -> HouseholdTaskPolicy:
     )
 
 
-def _occurrence(value: JsonValue) -> TaskOccurrence:
+def _occurrence(value: JsonValue, version: int = 2) -> TaskOccurrence:
     row = _record(
         value,
         (
@@ -255,11 +260,12 @@ def _occurrence(value: JsonValue) -> TaskOccurrence:
             "current_cycle_revision",
             "state_reason",
         ),
+        version,
     )
     return TaskOccurrence(
         cast(str, row["occurrence_id"]),
         cast(str, row["household_id"]),
-        _definition(row["definition_snapshot"]),
+        _definition(row["definition_snapshot"], version),
         cast(int, row["created_at"]),
         OccurrenceState(cast(str, row["state"])),
         cast(int, row["revision"]),
@@ -328,12 +334,12 @@ def read_policy(encoded: str) -> HouseholdTaskPolicy:
     return _decode(encoded, _policy)
 
 
-def read_definition(encoded: str) -> TaskDefinition:
-    return _decode(encoded, _definition)
+def read_definition(encoded: str, *, version: int = 2) -> TaskDefinition:
+    return _decode(encoded, lambda value: _definition(value, version))
 
 
-def read_occurrence(encoded: str) -> TaskOccurrence:
-    return _decode(encoded, _occurrence)
+def read_occurrence(encoded: str, *, version: int = 2) -> TaskOccurrence:
+    return _decode(encoded, lambda value: _occurrence(value, version))
 
 
 def read_cycle(encoded: str) -> TaskCycle:

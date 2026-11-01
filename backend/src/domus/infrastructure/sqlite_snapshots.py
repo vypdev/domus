@@ -39,6 +39,7 @@ from domus.infrastructure.sqlite_history import (
 )
 from domus.infrastructure.sqlite_recovery import _record as _recovery
 from domus.infrastructure.sqlite_task_integrity import verify_task_records
+from domus.infrastructure.sqlite_task_material_schema import MATERIAL_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS
 
 _DATABASE = "domus.sqlite3"
@@ -117,6 +118,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(RECOVERY_STATEMENTS if version >= 3 else ()),
             *(HISTORY_STATEMENTS if version >= 4 else ()),
             *(TASK_STATEMENTS if version >= 5 else ()),
+            *(MATERIAL_STATEMENTS if version >= 6 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -176,7 +178,9 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
                 members = unit.members.list(row[0])
                 policy = unit.policies.get(row[0])
                 if version >= 5:
-                    verify_task_records(connection, row[0], members, policy)
+                    verify_task_records(
+                        connection, row[0], members, policy, record_version=1 if version == 5 else 2
+                    )
         if version >= 3:
             for row in connection.execute("SELECT * FROM recovery_requests"):
                 value = cast(RecoveryRequest, _recovery(row))

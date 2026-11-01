@@ -268,7 +268,7 @@ targets retain their own pending acceptance obligations.
 
 Issue #13 has an Action-published [backend companion](../specs/task-execution-foundation.md).
 The current source implements immutable task rules, typed policy/definition/occurrence/cycle
-repositories, schema-5 migration/checkpoint integration, current authority and durable creation,
+repositories, schema-6 migration/checkpoint integration, current authority and durable creation,
 assignment, claim, progress, completion, verification and reopening commands, plus policy, definition,
 occurrence and dependency editors. Application queries now expose bounded definitions/occurrences,
 current detail/action hints, restoration-aware history and own-operation lookup. Both business compositions now expose task HTTP behind their existing session, Origin and CSRF
@@ -382,16 +382,13 @@ confirmation. A correction needs new movement/operation identities; returning to
 confirmed amount needs no new movement. Dismissal cannot erase confirmed consumption. Exact proof
 replay is inert, and foreign/stale/conflicting proof cannot overwrite a later intent.
 
-These are pure-model and semantic-port tests. The services are not yet wired to task persistence or
-HTTP; existing task routes still reject material fields. No material stock, ledger or real-consumer
-acceptance is claimed. Required next work:
+The pure processor still needs command integration; task write routes reject material fields.
+SQLite material persistence and read DTOs are now implemented as described below. No stock ledger or
+real-consumer acceptance is claimed. Required next work:
 
-- Declare/migrate a material schema using the frozen pre-material schema-5 input from immutable
-  17ea907, preserving earlier frozen fixtures and processed historical operations.
-- Extend definition/occurrence snapshots and original canonical requests compatibly. Omitted new
+- Extend original canonical requests compatibly. Omitted new
   material fields must retain old request fingerprints; explicit replacement/clear stays distinct.
-- Persist intent source facts and each compound state transition under the one writer/receipt/audit
-  boundary, with CAS, immutable-source guards, cycle/line uniqueness and restore inspection. Recording
+- Connect the persisted intent transitions to the one writer/receipt/audit boundary. Recording
   plus confirmation and correction plus confirmation can each advance resource revision twice; store
   those transitions atomically rather than assuming every final projection advances exactly once.
 - Bind actual current task/material authority and transaction-local Inventory semantics. Providers
@@ -403,3 +400,26 @@ acceptance is claimed. Required next work:
   ordinary consumer unavailability after valid performance remains a pending outcome.
 - Keep real Inventory/Points/recurrence/review projections and full product UI/deployment acceptance
   separate until their owning implementations supply evidence.
+
+
+## Material persistence and read projection
+
+Schema 6 adds cycle/line-unique material intents, scoped foreign keys, immutable submission guards,
+strict versioned codecs and exact revision CAS. The unit owns the transaction; material repositories
+never commit separately. Reopening a cycle retains its physical consumption facts. Checkpoint
+inspection verifies each intent against the original occurrence line, cycle, recorder, performed and
+recorded times and recording policy. Altered/missing source lines or facts fail closed.
+
+Definition/occurrence storage documents use explicit version 2. Migration translates exact version-1
+records to empty material lists; normal current reads do not guess missing fields. Schema 1–5 inputs
+remain supported. The frozen v5 SQL comes from immutable 17ea907, not the new implementation, and
+preserves an approved closed cycle plus restored-away completion. Migration retains receipts, audit,
+source events, cycles and retained-operation records byte-for-byte. The original completion can be
+retried through TaskCommands without allocation or re-execution. DDL and document failures roll back.
+Actual offline activation migrates only its prepared target; source/checkpoint bytes remain intact.
+
+Read responses use outer DTOs so planned quantities appear as canonical strings such as "0.25".
+Both composed OpenAPI snapshots preserve existing paths, security and schema values while adding
+TaskDefinition.materials and two response schemas. The domain has no Pydantic/FastAPI dependency.
+Material write DTOs, explicit settlement commands and real Inventory acceptance still require the
+next integration; SQLite and labeled confirmation fixtures do not establish actual stock movements.

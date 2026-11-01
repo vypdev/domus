@@ -44,14 +44,14 @@ def task_command(store, actor, identifiers, action, permission, key, payload, ap
     return commands.execute(CommandKey("home", actor.human.ha_user_id, action, key), payload, apply)
 
 
-def populated(tmp_path: Path):
+def populated(tmp_path: Path, *, materials=()):
     tmp_path.mkdir(mode=0o700, exist_ok=True)
     commands, store, actor, _, identifiers = fixture(tmp_path / "domus.sqlite3")
     commands.setup("setup", SetupHousehold("Home", "UTC"))
     with store.write() as unit:
         for name, role in [("child", Role.RESTRICTED), ("other", Role.ADULT)]:
             unit.members.save(Member(name, "home", "ha_" + name, role, MemberStatus.ACTIVE, 1), 0)
-    item = definition(created_at=110)
+    item = definition(created_at=110, materials=materials)
     work = item.new_occurrence("occurrence", 120)
     payload = JsonDocument.from_value({"title": item.content.title, "expected_revision": 0})
 
@@ -158,7 +158,7 @@ def test_actual_unit_snapshot_and_reopen_keep_task_cycles_and_one_atomic_receipt
     before = store.path.read_bytes()
     snapshots = SQLiteSnapshots(store, tmp_path / "snapshot", store.installation, Clock())
     checkpoint = snapshots.create("tasks")
-    assert checkpoint.schema_version == 5 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 6 and snapshots.inspect() == checkpoint
     assert store.path.read_bytes() == before
     copy = SQLiteDatabase(tmp_path / "snapshot/domus.sqlite3", store.installation)
     with copy.read() as unit:
@@ -433,5 +433,5 @@ def test_schema4_upgrade_failure_preserves_the_exact_old_database_and_history(
         assert unit.tasks.policy("home") is None and unit.tasks.definitions("home") == ()
         assert unit.receipts.get_operation("home", "human", "operation-a").historical
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 6
         assert connection.execute("SELECT count(*) FROM retained_operations").fetchone()[0] == 2
