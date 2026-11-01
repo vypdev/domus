@@ -42,11 +42,14 @@ class HomeAssistant:
         }
         self.subject = "a" * 32
         self.outage = False
+        self.rejected = False
         self.grants = {}
         self.token_subjects = {}
         self.revoked = 0
 
     def person(self, user_id: str) -> HumanIdentity:
+        if self.rejected:
+            raise IdentityRejected("ha_subject_rejected")
         if self.outage:
             raise IdentityUnavailable("ha_unavailable")
         if user_id not in self.people:
@@ -215,13 +218,16 @@ class Fixture:
             response = JSONResponse(self.stats())
         elif path == "/__fixture__/identity" and request.method == "POST":
             values = await request.json()
-            assert set(values) <= {"subject", "outage"}
+            assert set(values) <= {"subject", "outage", "rejected"}
             if "subject" in values:
                 assert values["subject"] in self.ha.people
                 self.ha.subject = values["subject"]
             if "outage" in values:
                 assert type(values["outage"]) is bool
                 self.ha.outage = values["outage"]
+            if "rejected" in values:
+                assert type(values["rejected"]) is bool
+                self.ha.rejected = values["rejected"]
             response = JSONResponse({"state": "changed", "fixture": True})
         elif self.mode == "standalone" and path == "/auth/authorize":
             query = parse_qs(scope["query_string"].decode())

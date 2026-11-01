@@ -442,3 +442,25 @@ test('native identity replacement retires the previous person draft even after s
   await expect(page.getByLabel('Household name', {exact: true})).toHaveValue('');
   expect((await stats(request, mode)).counts.households).toBe(0);
 });
+
+test('native rejected human proof loads safe reopening guidance without disclosing household facts', async ({page, context, request}) => {
+  const mode = 'native';
+  await request.post(origin(mode) + '/__fixture__/reset');
+  await open(page, context, mode); await create(page, 'Private existing household');
+  await expect(page.getByText('Private existing household', {exact: true})).toBeVisible();
+  const before = await stats(request, mode), errors: string[] = [], resources: number[] = [], sessions: number[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('response', response => {
+    if (response.url().startsWith(base(mode) + '/assets/')) resources.push(response.status());
+    if (response.url() === base(mode) + '/api/v1/session') sessions.push(response.status());
+  });
+  expect((await request.post(origin(mode) + '/__fixture__/identity', {data: {rejected: true}})).ok()).toBe(true);
+  expect((await page.reload())?.status()).toBe(200);
+  await expect(page.getByRole('heading', {name: 'Verify your access', exact: true})).toBeVisible();
+  await expect(page.getByRole('button', {name: 'Reopen Domus', exact: true})).toBeVisible();
+  await expect(page.getByText('Private existing household', {exact: true})).toHaveCount(0);
+  await expect(page.getByRole('button', {name: 'Create household', exact: true})).toHaveCount(0);
+  expect(resources.length).toBeGreaterThan(0); expect(resources.every(status => status === 200)).toBe(true);
+  expect(sessions).toEqual([401]); expect(errors).toEqual([]);
+  expect((await stats(request, mode)).counts).toEqual(before.counts);
+});

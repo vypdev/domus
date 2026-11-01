@@ -73,7 +73,7 @@ The eleven additional task cases preserve every existing ID and exercise owner-c
 
 The original 48-case companion inventory is unchanged. Its Domain/Application/Adapters cases have
 bounded real-Chromium proof in 565 unit/component cases across all fifteen runtime modules, with
-100% statements, branches, functions and lines and independent source inventory. The 42 separate
+100% statements, branches, functions and lines and independent source inventory. The 43 separate
 built-product browser cases use both actual Python/SQLite compositions with fictional HA/Supervisor;
 the eighteen catalog cases exercise fourteen fictional states and 56 ordinary matrix renderings.
 Matrix renders and repeated executions are not additional inventory cases. Raw original failures,
@@ -93,6 +93,9 @@ does not recreate its rolled-away effect. Installation/channel rebinding, indepe
 races, failed owned-storage cleanup, missing cookies, forged CSRF/Origin and local deadline wake are
 also exercised. The raw Origin attack uses the real server's denial; the virtual browser clock does
 not claim server-clock advancement. Edge/Stable fixture binding does not prove Stable distribution.
+Rejected native identity renders safe reopening guidance from the nonpersonal document while the
+actual session API denies access; three additional composed cases cover unknown/revoked/mismatched
+subjects with unchanged household/receipt counts. This is not an exception to personal API proof.
 
 The owner-approved separate Edge.4 installation starts and renders within the actual HA Ingress
 iframe, verifies the current HA account without another login, switches English/Spanish and refreshes

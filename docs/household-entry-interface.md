@@ -223,6 +223,12 @@ interface. Standalone serves the nonpersonal document before sign-in. Personal A
 require current proof, context assertions and their existing command authorization. These document
 routes are excluded from personal API schemas. Standalone OAuth now returns to the fixed root,
 removing callback parameters before the interface independently reads current session facts.
+Unknown, revoked or mismatched human proof still receives 401 from session, authorization, household
+and CSRF APIs. Source-bound static delivery neither calls the HA directory nor creates a lease/grant.
+The rendered native product shows verification/reopening guidance without personal facts or setup
+controls. This distinction is covered by three composed identity-denial regressions and a real
+built-product browser journey. The contrary Bugbot suggestion is reported in
+[Copilot #847](https://github.com/vypdev/copilot/issues/847); native finding resolution remains separate.
 
 The inert version-1 JSON bootstrap contains exactly version, deployment, application_base and
 style_nonce. The browser verifies it against its actual canonical location and derives origin only
@@ -237,7 +243,7 @@ unavailable browser capabilities and scheduling failures produce bounded guidanc
 reload. Replacing or detaching the owned element releases its resources. The actual module performs
 no setup or enrollment automatically and never inspects HA's parent document or private storage.
 
-Forty-two Playwright cases exercise the built product against both real Python compositions and
+Forty-three Playwright cases exercise the built product against both real Python compositions and
 SQLite, wrapped by fictional loopback HA/Supervisor providers. They prove explicit keyboard setup,
 inert household text, exact original-key recovery after a committed response is lost, unchanged
 receipt/audit/outbox counts, blocked writes on silent storage failure, logout versus native close,
