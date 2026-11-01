@@ -227,7 +227,8 @@
       "owner": "Domus maintainers (review assignment pending)",
       "lastVerified": "2026-10-31",
       "specs": [
-        "specs/household-identity.md"
+        "specs/household-identity.md",
+        "specs/household-administration.md"
       ],
       "workflows": [],
       "entrypoints": [
