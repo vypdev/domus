@@ -1,8 +1,8 @@
 {
-  "verifiedAtUTC": "2026-11-01T17:37:00.028413+00:00",
+  "verifiedAtUTC": "2026-11-01T17:50:56.638708+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "6c4f19fa217ec13b80365aa8ba6afae2391857e5",
-  "sourceIdentity": "Align actual-image revision/version assertions with reviewed imageCandidate metadata, which the backend package guard independently matches to exact Docker source/version/checksum. This replaces the stale Edge.4 image expectation; no production, recipe or runtime change after6c4f19f. Five package guards pass;19container cases collect. Actual hosted image execution is still required.",
+  "sourceBase": "6e05ba740af6c03cfff3509e0f687bac2a9f06f5",
+  "sourceIdentity": "Correct stale household API checkpoint prose after complete6e05ba7 CI success. Edge.5 actualamd64/aarch64 images each pass19cases against immutable source271a3a0 and exact UI bytes. All runtime/recipe/test inputs are unchanged by this documentation correction. Owner Edge.4 remains running; Edge.5 update is not executed and awaits explicit owner authorization.",
   "sources": {
     ".github/workflows/ci_check.yml": "cd11d915b1ba84625e42454c02fe4f7c2a764d905a8cedf4e623f1ab2681e702",
     ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
@@ -24,7 +24,7 @@
     "docs/contracts/auth-api.openapi.json": "17933ff4fb9c416371ee20453c1d77131fdf24202d372ef72074f80ef263d0a7",
     "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
     "docs/contracts/native-household-api.openapi.json": "ee51af3265d0faabc824e085d2ad2c1335faedfe12c251076a332db1557e776f",
-    "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
+    "docs/household-api.md": "732cb0cc3cf8f7e9c0fb01066d8d235e3b4015d9fa4179988c6fc294caf475dc",
     "docs/household-entry-interface.md": "859fc1a8878419aa4abf9fa95370124670aed78e53a05f604f036a1e36d34e0a",
     "docs/identity-household.md": "bea265f43775ee0021f5cbe245df9a66b9e926fb1553e36a945cf00a6ad2ac12",
     "docs/native-household-api.md": "9339c60fcd5e774591ab07c0233110475bd7f607d15bc9aeacbea48411b8989a",
@@ -610,11 +610,11 @@
     "The119e504whole project gate caught two existing backend package assertions still requiring Edge.3/the old three-stage build. Corrected those existing assertions for the reviewed five-stage build, preserving external digest/source/checksum/privilege checks and adding the frozen legacy guard; removed duplicate new tooling assertions. Corrected whole backend2984cases passes100% and tooling148passes100%."
   ],
   "limitations": [
-    "Source271a3a0 passes577Chromium/45product/18catalog and wheel; Edge.5 version/pin/checksum131-file archive comparison and5package guards pass. New-head hosted CPU execution/review is independent.",
-    "Owner still runs immutable Edge.4. No Edge.5 owner adoption claim.",
-    "Two valid findings corrected; missing-await finding is countered with unchanged source/execution and reportedupstream848; native verification remains separate.",
-    "All48original case rows unchanged and concretely audited. This increment does not complete other domain screens/Stable distribution/all-domain release.",
-    "No Copilot/gateway/resource/credential change; reported infrastructure failures do not substitute for product coverage or finding resolution."
+    "Complete6e05ba7 product CI succeeds, including actual Edge.5 images19cases each CPU. This subsequent documentation-only correction still gets independent current-head CI/review.",
+    "Owner Edge.4 is still running; no owner Edge.5 adoption claim. Update authorization is pending.",
+    "Existing six native findings are resolved; the new documentation-version finding is corrected and awaits native verification. No manual resolution.",
+    "All48original case rows preserved/audited; this does not complete household administration, other domain screens, Stable distribution or all-domain release.",
+    "Copilot scope/assessment/context failures remain reported and separate from product gates; no Copilot/gateway/resource/credential change."
   ],
   "rawEvidence": "/private/tmp/domus-review-corrections-retained/measurements.tar.gz",
   "previousModelEvidence": {
@@ -1508,7 +1508,7 @@
     "schemaVersion": 7,
     "priorInstalledVersion": "0.0.0-edge.4",
     "priorInstalledSchema": 7,
-    "actualImageExecution": "PENDING:actualamd64/aarch64 new-recipe execution. PriorEdge.4 both-CPU19case results remain separately recorded and are not claimed for Edge.5.",
+    "actualImageExecution": "PASS:6e05ba7 actualamd64/aarch64 jobs124925062079/124925062049 each execute19cases. Exact UI/version/revision, schema3/4 upgrades, restore and old-image refusal pass. Owner update remains separate.",
     "legacyRecipeSHA256": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
     "architecture": "Build-only Node stage; exact compiled resources enter the noneditable Python wheel. Final image copies Python runtime only. Same private listener, accepted Ingress and unchanged Supervisor privilege scope.",
     "assertions": [
@@ -1931,9 +1931,52 @@
     "schemaVersion": 7,
     "version": "0.0.0-edge.5",
     "packagePolicy": "5existing backend package guards pass with exact new version/pin/checksum. No permission, source guard, frozen legacy recipe or existing breaking-version marker removed.",
-    "actualImageExecution": "Pending hosted native CPU jobs; no local Docker execution claimed.",
-    "ownerState": "Edge.4 still running and Edge.3 retained/stopped; no owner update to Edge.5 has been performed.",
+    "actualImageExecution": "PASS:6e05ba7 actualamd64/aarch64 jobs124925062079/124925062049 each execute19cases. Exact UI/version/revision, schema3/4 upgrades, restore and old-image refusal pass. Owner update remains separate.",
+    "ownerState": "Observed owner Edge.4 running; update dialog offers Edge.5. No update executed. Explicit owner authorization requested after automatic approval rejection. Edge.3 retained/stopped.",
     "restorationDocumentation": "Replace a branch-lifecycle-dependent guide URL with the exact published source271a3a0.",
     "imageExpectation": "Actual container checks compare both source revision and app version to imageCandidate. Existing backend package guards tie that metadata to the exact reviewed Docker source/version/checksum before building images."
+  },
+  "edge5HostedProof": {
+    "sourceRevision": "6e05ba740af6c03cfff3509e0f687bac2a9f06f5",
+    "aggregate": {
+      "id": 124926099504,
+      "result": "SUCCESS"
+    },
+    "images": {
+      "amd64": {
+        "job": 124925062079,
+        "cases": 19,
+        "result": "PASS",
+        "raw": "/private/tmp/domus-review-corrections-retained/hosted-amd64-6e05ba7.out"
+      },
+      "aarch64": {
+        "job": 124925062049,
+        "cases": 19,
+        "result": "PASS",
+        "raw": "/private/tmp/domus-review-corrections-retained/hosted-aarch64-6e05ba7.out"
+      }
+    },
+    "otherJobs": {
+      "backend": 124925062033,
+      "frontend": 124925061951,
+      "tooling": 124925061978,
+      "node": 124925061741,
+      "architecture": 124925061944,
+      "docs": 124925062012,
+      "frontendToolchain": 124925061924
+    },
+    "review": "Earlier six native threads resolved; one new stale installed-version documentation finding is corrected in this increment. New-head review remains separate.",
+    "scopeFailure": {
+      "reference": "502f14a8-76d0-4e45-8aae-0bd7c73d4a4b",
+      "phase": "scope",
+      "reason": "scope-clause-limit",
+      "field": "$.lines",
+      "originalIssueLine": "L97",
+      "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6561151365"
+    }
+  },
+  "documentationVersionCorrection": {
+    "finding": "https://github.com/vypdev/domus/pull/15#discussion_r4436676043",
+    "change": "Remove stale installedEdge.3 claims from the current protocol description; use shared-runtime language and link dated package/owner evidence. Update implemented entry UI/task API/native directory wording while retaining historical checkpoints and remaining standalone-companion limitations."
   }
 }
