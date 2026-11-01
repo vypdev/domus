@@ -46,6 +46,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["domus", "domus_tooling"]
+known-third-party = ["coverage"]
 
 [tool.mypy]
 python_version = "3.14"

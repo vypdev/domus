@@ -12,9 +12,8 @@ from io import StringIO
 from pathlib import Path
 from typing import NoReturn, cast
 
-from coverage.exceptions import CoverageException
-
 from coverage import Coverage, __version__
+from coverage.exceptions import CoverageException
 
 MAX_REPORT_BYTES = 64 * 1024 * 1024
 _MAX_PROBLEMS = 20

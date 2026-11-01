@@ -577,3 +577,11 @@ bytes. This is validation of the new auditor against identical-source full execu
 local backend rerun. Current-head hosted CI still executes the entire backend and auditor together.
 Architecture/type/format/docs and original pinned SDD checks remain separate gates. Actual consumers,
 product UI, owner/package adoption and complete first-release acceptance are still unproven.
+
+The first hosted run at ca78c0e passed all 2,899 backend tests and the independent source audit.
+Python tooling stopped at Ruff before its tests: the ignored local frontend coverage directory
+had made automatic import classification differ from a clean hosted checkout. Explicitly declaring
+Coverage.py as a third-party import in project-owned Ruff settings makes the required ordering
+deterministic without changing coverage configuration. The corrected source passes all 146 tooling
+tests at 100% statement/branch coverage, Ruff and strict typing for 109 files. The hosted failure is
+retained separately from successful backend execution; it is not a Copilot defect or a passing CI run.

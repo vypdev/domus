@@ -1,5 +1,5 @@
 {
-  "verifiedAtUTC": "2026-11-01T09:09:54.699380+00:00",
+  "verifiedAtUTC": "2026-11-01T09:20:29.160215+00:00",
   "issue": "https://github.com/vypdev/domus/issues/13",
   "pullRequest": "https://github.com/vypdev/domus/pull/14",
   "sourceBase": "cd0795125274678432464f976c86995925562882",
@@ -91,8 +91,9 @@
     "tests/fixtures/sqlite/v6.sql": "af84ed25f3bf5ffe7da5a8f1b9ff8163bd2aa27641283aa79c0c60edd5927f11",
     "tests/python/test_backend_coverage.py": "849d8ef67edc576897055bd7da5e78ff11cc3ac6908efff6954d0789e23acdc1",
     "tests/python/test_ci_contract.py": "4b7579d9b0d1c738b9b19477859725d2e553b3f23a0693679741edfb439cd252",
-    "tooling/domus_tooling/backend_coverage.py": "0c99dd6d0401c1e25ae6ab3b8ed9c92e2b472771cb78bcce33b82dae151ce476",
-    "tooling/domus_tooling/cli.py": "dc4ddf26cfd4f0e40de11b96eeced41235a1832eba618b5070248bc808014a4e"
+    "tooling/domus_tooling/backend_coverage.py": "d0cacb38ff4ddba1b8e57e1789a29300d520bbcbfd0c94588d91e26dce2755f3",
+    "tooling/domus_tooling/cli.py": "dc4ddf26cfd4f0e40de11b96eeced41235a1832eba618b5070248bc808014a4e",
+    "pyproject.toml": "46e9bd656fc33535403195aa6b9743e17847581863add8a73a22381bcb5b9127"
   },
   "wholeBackendSourceInventory": {
     "backend/src/domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
@@ -232,7 +233,8 @@
       "currentBackendSourceHashesMatchOriginalMeasurement": true,
       "sourceReportSHA256": "05c916b441abfea9b94274a66a0eb7de1124c0b89f1a9ff3c8ec3d305bf91e39",
       "newAuditorAcceptedOriginalMeasurement": true
-    }
+    },
+    "importClassificationFixTooling": 146
   },
   "coverage": {
     "authoredBackendFiles": 104,
@@ -845,7 +847,7 @@
       "authoredFiles": 5,
       "sourceHashes": {
         "tooling/domus_tooling/__init__.py": "6c2440f4b9799284410ca165b02a1e86f3cf450082159dc15778d89a3a5b5c2f",
-        "tooling/domus_tooling/backend_coverage.py": "0c99dd6d0401c1e25ae6ab3b8ed9c92e2b472771cb78bcce33b82dae151ce476",
+        "tooling/domus_tooling/backend_coverage.py": "d0cacb38ff4ddba1b8e57e1789a29300d520bbcbfd0c94588d91e26dce2755f3",
         "tooling/domus_tooling/ci_policy.py": "ad62b739c37a988e44d2ed398a03467585711c0d990e5b627858ddb067f74692",
         "tooling/domus_tooling/cli.py": "dc4ddf26cfd4f0e40de11b96eeced41235a1832eba618b5070248bc808014a4e",
         "tooling/domus_tooling/docs.py": "105e2fd92220ed44c9be15e8440c08eb9faf8dee66177a8f5155a2f573b4fdde"
@@ -2793,5 +2795,34 @@
     "measurementIsolation": "Nested specimen collection initially disturbed the parent coverage observation. Specimen execution now uses subprocesses; a dependency-error branch also has a direct parent behavior assertion. Initial 77.88% and 99.04% campaigns are retained as failures, not acceptance. Final strict-100% measurement passes without scope/configuration/pragmas/threshold weakening.",
     "realBackend": "Original complete cd07951 JSON passed the new verifier after all 104 current backend source hashes matched its immutable measurement. 2899 tests,7605 statements,2146 branches. No backend runtime source changed and no new local backend rerun is claimed; current-head CI still runs the full backend and auditor.",
     "scope": "Development verification only. Does not prove real consumers, UI, packaged installation/owner HA adoption, full feature completion or no-findings Bugbot acceptance."
+  },
+  "hostedCoverageAuditCheckpoint": {
+    "headRevision": "ca78c0e65625cc64b91b62e0cd55cb8b41d91fd3",
+    "runId": 41292017933,
+    "backendJobId": 124805016633,
+    "backendConclusion": "success",
+    "backendTests": 2899,
+    "independentAuditStep": "success",
+    "artifactId": 13077588552,
+    "mergeRevision": "318353103c3a45ce1e0439d66a0303ec89018911",
+    "pythonToolingConclusion": "failure before tests, Ruff I001",
+    "aggregateConclusion": "failure",
+    "cause": "Ignored generated coverage directory changed local import inference. Explicit project-owned third-party classification and normal import ordering make clean and artifact-bearing checkouts consistent.",
+    "fixValidation": "146 tooling tests, 214 statements/98 branches, every file 100%; Ruff check/format and strict typing 109 files pass. Backend runtime source unchanged.",
+    "artifactSHA256": "0abc813716c4915573c76459a9b74d1c0b6dee762432ee7b70ead0067ae72a70",
+    "sourceFiles": 104
+  },
+  "importClassificationCorrection": {
+    "sourceBase": "ca78c0e65625cc64b91b62e0cd55cb8b41d91fd3",
+    "semanticChanges": false,
+    "coverageConfigurationChanged": false,
+    "newTests": 0,
+    "rawEvidence": "/private/tmp/domus-coverage-import-fix-checkpoint-retained/measurements.tar.gz",
+    "commands": [
+      ".venv/bin/ruff check .",
+      ".venv/bin/ruff format --check .",
+      ".venv/bin/mypy tooling backend/src",
+      "COVERAGE_FILE=/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling.coverage .venv/bin/pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling-coverage.json --cov-report=xml:/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling-coverage.xml -q --basetemp=$TMPDIR/domus-coverage-import-fix-pytest-ca78c0e"
+    ]
   }
 }

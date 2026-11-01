@@ -5,7 +5,7 @@
 - Catalog capability ID: household-tasks
 - Last verified: not applicable (prospective companion; catalog evidence verified at `a63b2315cd5121dde9585ba8875e286fdef5330e`)
 - Owners: Domus maintainers (review assignment pending)
-- Scope: Specify a durable first backend increment for task definitions, occurrences, completion cycles, authorization, and honest consumer integration seams.
+- Scope: Durable task definitions, occurrences, completion cycles, authorization, and consumer integration seams.
 - Related issues/PRs: [Issue #13](https://github.com/vypdev/domus/issues/13); merged PR #12 is historical context.
 - Required review gates: product UX, architecture, testing, documentation, security/operations
 - Open decisions blocking readiness: A37 confirms manual manager acceptance; full contract/runtime/composition review remains required. Draft is not acceptance.
@@ -558,6 +558,7 @@ After pytest, backend CI runs `domus-check backend-coverage --report coverage-ba
 | `tests/backend/test_task_restoration.py` | create |
 | `docs/evidence/task-execution-foundation.json` | create |
 | `tooling/domus_tooling/backend_coverage.py` | create |
+| `pyproject.toml` | update |
 | `tests/python/test_backend_coverage.py` | create |
 | `docs/household-api.md` | update |
 | `docs/native-household-api.md` | update |
