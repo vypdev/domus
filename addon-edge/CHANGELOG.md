@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.0-edge.5
+
+- Translate the technical membership status in both English and Spanish.
+- Preserve the setup draft while switching languages with technical details expanded.
+- Verify original receipts survive actual browser-tab closure without automatic duplicate work.
+- Keep SQLite schema 7 and the existing identity, private listener and Core API permission scope.
+- Pin the corrected reviewed source and its verified archive checksum as a distinct immutable build.
+
 ## 0.0.0-edge.4
 
 - Add the English/Spanish household entry UI through the existing Ingress session and private listener.

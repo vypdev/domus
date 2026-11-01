@@ -1,16 +1,16 @@
 {
-  "verifiedAtUTC": "2026-11-01T17:30:12.542410+00:00",
+  "verifiedAtUTC": "2026-11-01T17:33:34.755303+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "ecdd85b4b08479eede41a517f9acdfdde9393b17",
-  "sourceIdentity": "Correct technical state localization and first-error provider assertions.12new locale/state regressions fail before the text fix; full577Chromium cases/15modules pass all4metrics100%. A typed detail-leak control passes2old assertions but fails2corrected assertions; adapter restored byte-for-byte. Original allegedly missing-await test passes unchanged. Product45cases and catalog18cases pass. Current corrected UI is not yet in the installed Edge.4 immutable9f5cabe image; next step is a distinct immutable Edge.5 package.",
+  "sourceBase": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+  "sourceIdentity": "Package the published reviewed source271a3a0 as distinct Edge.5 with verified codeload checksum and131byte-compared runtime/build files. Runtime matches the577/45/18tested correction source; no further runtime change. Schema7/privilege scope and actual legacy builders remain unchanged. Image execution/new-head CI/native findings verification remain separate.",
   "sources": {
     ".github/workflows/ci_check.yml": "cd11d915b1ba84625e42454c02fe4f7c2a764d905a8cedf4e623f1ab2681e702",
     ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
-    "addon-edge/CHANGELOG.md": "eac08873b4825d5dc560604e1490159854ce238e8e21f5266a868f4ff90f0d6c",
-    "addon-edge/DOCS.md": "b319549e99d1b9e2ce4a3a0c378e75fd37037974b0ebef21c701a538a90d86ca",
-    "addon-edge/Dockerfile": "da97a9b014cde2237afe88a8e3f2604275cdb19da1a8f565a07266a75938d3af",
-    "addon-edge/README.md": "026924808c18ec20d509aa7371952038b88ccb2abe3683f3e245118397b27452",
-    "addon-edge/config.yaml": "1f49cb87004637a01b264e78d2a9518f0913f00a4fa07ce00feb56a76eea7f68",
+    "addon-edge/CHANGELOG.md": "ece3dde0b47d32da481ac52055ae525b28cd4b83c1534d482d809e4aa207d401",
+    "addon-edge/DOCS.md": "cba4e5ef7b6550f5e61707c635aee339b4ab97e62f5c617fd7fe31c01d921d70",
+    "addon-edge/Dockerfile": "aea2d7bc4d135e49827508f011bc1fadbd5f0d3f93b47538e07ed56652b5e28d",
+    "addon-edge/README.md": "61e15eb9c2e305fda216bdb29e70659d09c7ee1c1539857f3a110cc5acc7eb6d",
+    "addon-edge/config.yaml": "1d3352e1d1ecdd1b6550a947b2a6cf28e49faf70b49ad9ee6e21f1c2d4e81363",
     "architecture/frontend.mjs": "a86a96f92fb770a8f9f848f9c4d3246fbdd1f41d57c06c913331d7b7a29a5888",
     "backend/pyproject.toml": "0413c7626999c1667d78de5a06cdf41abc46ab86d6dcddf0c492830979090d95",
     "backend/src/domus/composition/ingress.py": "a7fb583db905a349875ba271ace55216d83d22c70788e5b7f36fb948a9d38951",
@@ -25,7 +25,7 @@
     "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
     "docs/contracts/native-household-api.openapi.json": "ee51af3265d0faabc824e085d2ad2c1335faedfe12c251076a332db1557e776f",
     "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
-    "docs/household-entry-interface.md": "b6aef5f23c7a2c8c72b15f5dd07afbc7624a77fc777657e50881f0096765fc63",
+    "docs/household-entry-interface.md": "859fc1a8878419aa4abf9fa95370124670aed78e53a05f604f036a1e36d34e0a",
     "docs/identity-household.md": "bea265f43775ee0021f5cbe245df9a66b9e926fb1553e36a945cf00a6ad2ac12",
     "docs/native-household-api.md": "9339c60fcd5e774591ab07c0233110475bd7f607d15bc9aeacbea48411b8989a",
     "frontend/.storybook/main.ts": "5956fa6d05a5ab5e8c4d96ee67ff430ba0688c00f242d0346a35ded5db659be2",
@@ -74,7 +74,7 @@
     "specs/CATALOG.md": "190504c90f98f7bf949ec0a84ecb5e926cf49bbbe9490205787fea4c4a817427",
     "specs/catalog.json": "33914aaebb6354bcd89831abe74409c3be66e69614862398ee3e394211e42f8d",
     "specs/household-entry-interface.md": "58ac9f6cb330b30aff2f518802832701df5ab0b4c6b9d4952dd7a92874b1fb6c",
-    "tests/backend/test_app_package.py": "2aa4bcb0f99c713382ac6ff5e0c5d42f0ab8bf9fc5afc2ecb7858a4e7e0754c3",
+    "tests/backend/test_app_package.py": "e227b40c78ffefdff51fcb2340c5963230cb74b9f5aeb5a90333c2aa005d75b6",
     "tests/backend/test_auth_http.py": "bd492bc9b7af7d4984645755e4b598d905b5e43a180540b3d2afabb5b07e4a10",
     "tests/backend/test_entry_context.py": "fcbb14ebd36b566ec96c5c52ffafe1b49d5e6bd5fc7873a2b6547074381cd55a",
     "tests/backend/test_entry_wire.py": "f52c0f2dd911017287197e7f7ba27934f2a9cf8ac89e9adae90595d36a4f3173",
@@ -610,11 +610,11 @@
     "The119e504whole project gate caught two existing backend package assertions still requiring Edge.3/the old three-stage build. Corrected those existing assertions for the reviewed five-stage build, preserving external digest/source/checksum/privilege checks and adding the frozen legacy guard; removed duplicate new tooling assertions. Corrected whole backend2984cases passes100% and tooling148passes100%."
   ],
   "limitations": [
-    "Current577/45/18local campaigns pass; full new-head hosted gates and native finding verification are independent.",
-    "Installed owner Edge.4 still uses immutable9f5cabe; corrected technical-state UI needs a distinct Edge.5 package.",
-    "Two valid new findings are corrected; the missing-await finding is countered with immutable source and unchanged execution, reportedupstream848. No manual finding resolution.",
-    "Original48case audit is cross-layer execution, not48new browser cases or completion of other domains/Stable distribution.",
-    "Reported Copilot scope/assessment/context failures remain separate; no Copilot/gateway/resource/credential change."
+    "Source271a3a0 passes577Chromium/45product/18catalog and wheel; Edge.5 version/pin/checksum131-file archive comparison and5package guards pass. New-head hosted CPU execution/review is independent.",
+    "Owner still runs immutable Edge.4. No Edge.5 owner adoption claim.",
+    "Two valid findings corrected; missing-await finding is countered with unchanged source/execution and reportedupstream848; native verification remains separate.",
+    "All48original case rows unchanged and concretely audited. This increment does not complete other domain screens/Stable distribution/all-domain release.",
+    "No Copilot/gateway/resource/credential change; reported infrastructure failures do not substitute for product coverage or finding resolution."
   ],
   "rawEvidence": "/private/tmp/domus-review-corrections-retained/measurements.tar.gz",
   "previousModelEvidence": {
@@ -1442,26 +1442,26 @@
     "bootstrap": "Closed version1 deployment/application_base/style_nonce; canonical actual location comparison; no identity/installation/authority. Style nonce is public CSP capability only.",
     "resources": "Bounded closed Vite manifest/resource snapshot; symlink/undeclared/inline rejection. Same-listener source binding; strict CSP except successful shell self resources and nonce styles. No personal root OpenAPI route.",
     "actualProductFiles": {
-      ".vite/manifest.json": "9be52b2642b4be124614567da171315fc21877d057e7d2eedb6f15785655b337",
+      ".vite/manifest.json": "afef466068e828bcace738f006ba2ac686cf98d2e7c49a491063cb541f6e6fbc",
+      "assets/index-B3OD6Vk8.js": "1a581437439073008f292ddaf9e7184d61680c3f126b3e8820d728de32b8b91a",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-DVL9AS32.js": "de4d772ac440f13544d0c6435b096091603636b27245fdecbcbf388121213505",
-      "index.html": "15de670c1043b2e8df3eb76f9cb3cfedd440681987bfde7ca7a129752af5763d"
+      "index.html": "869951816a93d66729f398965152ad6cc68865f815430a71e808f528af8484b9"
     },
     "wheel": {
       "file": "domus_server-0.0.0-py3-none-any.whl",
-      "sha256": "8c044f11adbac4c3907c3be986dcb0260092d8c23d75afbeb83cf7aa1a7ba99e",
-      "exactResourcesAndFixtureExclusion": "PASS; package-final.out and ci-package-final.out"
+      "sha256": "5c98711d9d41e8cc5e94cb57b02b09e5d710e253cf943eff42e9148e09aac422",
+      "exactResourcesAndFixtureExclusion": "PASS:wheel-acceptance.out in review-corrections measurements archive."
     },
     "browserResults": {
-      "startTime": "2026-11-01T15:19:33.918Z",
-      "duration": 11394.226,
-      "expected": 22,
+      "startTime": "2026-11-01T17:24:10.524Z",
+      "duration": 25129.96,
+      "expected": 45,
       "skipped": 0,
       "unexpected": 0,
       "flaky": 0
     },
-    "proof": "Both actual server compositions, real SQLite single-effect exact-key recovery and immutable audit/outbox/receipt counts, source-relative requests, explicit enrollment, current proofs, cookie/Origin/CSRF, native close versus standalone revoke, failed storage/module, original grace deadline, account draft retirement, Spanish360px/CSP fallback.",
-    "manualInspection": "Actual prefixed product Spanish360px original screenshot inspected: readable/wrapped mapping, associated labels, visible keyboard focus, no horizontal overflow and distinct setup/refresh/close actions. Agent visual QA, not owner approval.",
+    "proof": "Current577unit/component/45real composed product/18catalog and actual wheel proof is tied to the published source271a3a0. Built resources are the exact expected bytes for the new Edge.5 image. Actual CPU image acceptance is pending, not inferred from the source build.",
+    "manualInspection": "Both original Spanish360px product screenshots inspected: expanded technical status is localized, associated fields/actions wrap, drafts survive locale changes, native close and standalone sign-out remain distinct. Catalog originals retained. Agent visual QA of fictional data, not owner approval of a new installed version.",
     "testOnlyBoundary": "Loopback fixture monkeypatches only provider constructors in a disposable test process; real state/browser nonce/S256 callback and source/cookie policies stay active. No release bypass and no browser control fixture in the actual wheel.",
     "logoutRaceFix": {
       "finding": "https://github.com/vypdev/domus/pull/15#discussion_r4436188164",
@@ -1471,7 +1471,8 @@
         "realBackendBrowserFailures": 2
       },
       "currentRegressionProof": "Both actual backends commit once, a stale DOM logout intent preserves the journal and busy state, response is then lost, exact original recovery succeeds and SQLite receipt/audit/outbox/member counts are unchanged."
-    }
+    },
+    "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9"
   },
   "previousDeliveryEvidence": {
     "sourceRevision": "04fc72da07d5510c269179538f0b7a3ac4b983c2",
@@ -1492,10 +1493,10 @@
     "review": "12/12 code partitions;81files109fragments;0open/0reopened/2fixed/0verification-required/0unknown. Conversation still9fetched4retained5omitted,limitReachedtrue; neutral/partial is not complete review acceptance."
   },
   "imageCandidate": {
-    "sourceCommit": "9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
-    "sourceURL": "https://codeload.github.com/vypdev/domus/tar.gz/9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
-    "sourceSHA256": "00290ba2611aa40183e4cb3e2c4cd36e5a60e483a6996a116e956386338d29b5",
-    "sourceBytes": 1028445,
+    "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+    "sourceURL": "https://codeload.github.com/vypdev/domus/tar.gz/271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+    "sourceSHA256": "5cc9a963b6f064aa48be256a9d5a4274f8c52c878e4ad7f84517cd33f41056c8",
+    "sourceBytes": 1048063,
     "nodeImage": "node:24.20.0-bookworm-slim",
     "nodeIndexDigest": "sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
     "linuxArchitectures": [
@@ -1503,11 +1504,11 @@
       "arm64",
       "ppc64le"
     ],
-    "version": "0.0.0-edge.4",
+    "version": "0.0.0-edge.5",
     "schemaVersion": 7,
-    "priorInstalledVersion": "0.0.0-edge.3",
-    "priorInstalledSchema": 4,
-    "actualImageExecution": "PASS:19cases each on actualamd64/aarch64 at119e504 and unchanged recipes/runtime/helpers at6435dec;6435dec CI aggregateSUCCESS after corrected package assertions. Separate owner Edge.4 installation/Ingress observation is recorded independently.",
+    "priorInstalledVersion": "0.0.0-edge.4",
+    "priorInstalledSchema": 7,
+    "actualImageExecution": "PENDING:actualamd64/aarch64 new-recipe execution. PriorEdge.4 both-CPU19case results remain separately recorded and are not claimed for Edge.5.",
     "legacyRecipeSHA256": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
     "architecture": "Build-only Node stage; exact compiled resources enter the noneditable Python wheel. Final image copies Python runtime only. Same private listener, accepted Ingress and unchanged Supervisor privilege scope.",
     "assertions": [
@@ -1516,7 +1517,8 @@
       "Actual schema3and4 images upgrade to7 with installation identity and replay retained; inspect/restore pre-upgrade snapshots and refuse downgrade unchanged.",
       "Old-image generation-selection refusal, current console restore/rollback and process-death recovery remain required."
     ],
-    "nodeOfficialSource": "https://hub.docker.com/_/node"
+    "nodeOfficialSource": "https://hub.docker.com/_/node",
+    "archiveRuntimeAndBuildFilesVerified": 131
   },
   "previousImageCandidateEvidence": {
     "sourceRevision": "119e5041ff397f565ffb14a4798c0bbb5780f7b8",
@@ -1844,7 +1846,93 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "index.html": "869951816a93d66729f398965152ad6cc68865f815430a71e808f528af8484b9"
     },
-    "packageState": "Built/tested source candidate only. productDelivery still identifies the existing immutable Edge.4 image; Edge.5 must pin the published corrected source before adoption.",
-    "schemaVersion": 7
+    "packageState": "Distinct Edge.5 recipe now pins source271a3a0 and verified checksum. Current productDelivery identifies its expected bytes; prior immutable Edge.4 proof is preserved separately. Actual new image/current-head gates pending.",
+    "schemaVersion": 7,
+    "publishedSource": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9"
+  },
+  "previousEdge4ProductDelivery": {
+    "sourceCommit": "9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
+    "version": "0.0.0-edge.4",
+    "delivery": {
+      "bootstrap": "Closed version1 deployment/application_base/style_nonce; canonical actual location comparison; no identity/installation/authority. Style nonce is public CSP capability only.",
+      "resources": "Bounded closed Vite manifest/resource snapshot; symlink/undeclared/inline rejection. Same-listener source binding; strict CSP except successful shell self resources and nonce styles. No personal root OpenAPI route.",
+      "actualProductFiles": {
+        ".vite/manifest.json": "afef466068e828bcace738f006ba2ac686cf98d2e7c49a491063cb541f6e6fbc",
+        "assets/index-B3OD6Vk8.js": "1a581437439073008f292ddaf9e7184d61680c3f126b3e8820d728de32b8b91a",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "869951816a93d66729f398965152ad6cc68865f815430a71e808f528af8484b9"
+      },
+      "wheel": {
+        "file": "domus_server-0.0.0-py3-none-any.whl",
+        "sha256": "5c98711d9d41e8cc5e94cb57b02b09e5d710e253cf943eff42e9148e09aac422",
+        "exactResourcesAndFixtureExclusion": "PASS:wheel-acceptance.out in review-corrections measurements archive."
+      },
+      "browserResults": {
+        "startTime": "2026-11-01T17:24:10.524Z",
+        "duration": 25129.96,
+        "expected": 45,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "proof": "Current577unit/component/45real composed product/18catalog and actual wheel proof is tied to the published source271a3a0. Built resources are the exact expected bytes for the new Edge.5 image. Actual CPU image acceptance is pending, not inferred from the source build.",
+      "manualInspection": "Both original Spanish360px product screenshots inspected: expanded technical status is localized, associated fields/actions wrap, drafts survive locale changes, native close and standalone sign-out remain distinct. Catalog originals retained. Agent visual QA of fictional data, not owner approval of a new installed version.",
+      "testOnlyBoundary": "Loopback fixture monkeypatches only provider constructors in a disposable test process; real state/browser nonce/S256 callback and source/cookie policies stay active. No release bypass and no browser control fixture in the actual wheel.",
+      "logoutRaceFix": {
+        "finding": "https://github.com/vypdev/domus/pull/15#discussion_r4436188164",
+        "rule": "Refuse deliberate logout at Application and composition boundaries during the entire in-flight command. Do not stop lifecycle before refusing. No erase/revoke while running; normal logout resumes after bounded completion. Unload/teardown still hides presentation and preserves stored recovery.",
+        "preFix": {
+          "chromiumFailures": 8,
+          "realBackendBrowserFailures": 2
+        },
+        "currentRegressionProof": "Both actual backends commit once, a stale DOM logout intent preserves the journal and busy state, response is then lost, exact original recovery succeeds and SQLite receipt/audit/outbox/member counts are unchanged."
+      },
+      "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9"
+    }
+  },
+  "previousEdge4ImageCandidate": {
+    "sourceCommit": "9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
+    "sourceURL": "https://codeload.github.com/vypdev/domus/tar.gz/9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
+    "sourceSHA256": "00290ba2611aa40183e4cb3e2c4cd36e5a60e483a6996a116e956386338d29b5",
+    "sourceBytes": 1028445,
+    "nodeImage": "node:24.20.0-bookworm-slim",
+    "nodeIndexDigest": "sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+    "linuxArchitectures": [
+      "amd64",
+      "arm64",
+      "ppc64le"
+    ],
+    "version": "0.0.0-edge.4",
+    "schemaVersion": 7,
+    "priorInstalledVersion": "0.0.0-edge.3",
+    "priorInstalledSchema": 4,
+    "actualImageExecution": "PASS:19cases each on actualamd64/aarch64 at119e504 and unchanged recipes/runtime/helpers at6435dec;6435dec CI aggregateSUCCESS after corrected package assertions. Separate owner Edge.4 installation/Ingress observation is recorded independently.",
+    "legacyRecipeSHA256": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
+    "architecture": "Build-only Node stage; exact compiled resources enter the noneditable Python wheel. Final image copies Python runtime only. Same private listener, accepted Ingress and unchanged Supervisor privilege scope.",
+    "assertions": [
+      "UI bytes exactly match verified product build; no Node/npm/pnpm/pytest/tooling or browser controls in runtime.",
+      "Actual standalone same-listener document/assets/HEAD/MIME/CSP/auth failures and empty business tables.",
+      "Actual schema3and4 images upgrade to7 with installation identity and replay retained; inspect/restore pre-upgrade snapshots and refuse downgrade unchanged.",
+      "Old-image generation-selection refusal, current console restore/rollback and process-death recovery remain required."
+    ],
+    "nodeOfficialSource": "https://hub.docker.com/_/node"
+  },
+  "edge5Package": {
+    "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+    "sourceSHA256": "5cc9a963b6f064aa48be256a9d5a4274f8c52c878e4ad7f84517cd33f41056c8",
+    "sourceBytes": 1048063,
+    "comparedRuntimeAndBuildFiles": 131,
+    "productFiles": {
+      ".vite/manifest.json": "afef466068e828bcace738f006ba2ac686cf98d2e7c49a491063cb541f6e6fbc",
+      "assets/index-B3OD6Vk8.js": "1a581437439073008f292ddaf9e7184d61680c3f126b3e8820d728de32b8b91a",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "869951816a93d66729f398965152ad6cc68865f815430a71e808f528af8484b9"
+    },
+    "schemaVersion": 7,
+    "version": "0.0.0-edge.5",
+    "packagePolicy": "5existing backend package guards pass with exact new version/pin/checksum. No permission, source guard, frozen legacy recipe or existing breaking-version marker removed.",
+    "actualImageExecution": "Pending hosted native CPU jobs; no local Docker execution claimed.",
+    "ownerState": "Edge.4 still running and Edge.3 retained/stopped; no owner update to Edge.5 has been performed.",
+    "restorationDocumentation": "Replace a branch-lifecycle-dependent guide URL with the exact published source271a3a0."
   }
 }

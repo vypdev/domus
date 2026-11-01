@@ -6,8 +6,9 @@ lifecycle composition, an owned English/Spanish Lit view, the product module ent
 same-listener built UI delivery. Strict frontend HTTP adapters attach and
 decode the server context contract. Both server compositions
 now expose verified session context and enforce supplied context assertions before protected work.
-Edge.4 packages this interface; its separate owner installation has passed the Ingress identity and
-English/Spanish opening checks described below. The retained Edge.3 application is unchanged.
+Edge.4 packages the original interface; its separate owner installation has passed the Ingress identity
+and English/Spanish opening checks below. The technical-status correction is in the distinct Edge.5
+candidate. The retained Edge.3 application is unchanged.
 
 The [entry specification](../specs/household-entry-interface.md) retains eight requirements and 48
 planned acceptance cases. The first model tests exercise membership decisions, explicit setup
@@ -323,7 +324,8 @@ Model execution is separate from rendering, accessibility, integration, package 
 This maps each original household-entry-interface case to concrete executed proof. The 577 Chromium
 unit/component executions, 45 product journeys and 18 catalog journeys are separate counts, not
 replacement case IDs. Backend and image proof retain their own source identities. The corrected UI
-still needs its new immutable package pin and final current-head gates before this increment merges.
+has a new immutable Edge.5 pin and still needs actual image execution and final current-head gates
+before this increment merges.
 
 | Original case | Executed proof |
 |---|---|
@@ -383,7 +385,7 @@ progress and merge; product findings still require resolution and full product c
 
 ## Remaining delivery
 
-The Edge.4 candidate pins runtime source 9f5cabe and its verified source archive. Its separate
+The Edge.5 candidate pins corrected runtime source 271a3a0 and its verified source archive. Its separate
 Node/pnpm build stage includes the exact UI in the noneditable Python installation and leaves
 build tools out of the final image. Real amd64/aarch64 image execution, including UI resource bytes,
 same-listener delivery, actual Edge.2/3 data upgrades, restore and downgrade refusal, remains an
