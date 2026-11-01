@@ -223,3 +223,32 @@ changes and ledger/reversal/replay remain engineering gates; this is a contract 
 Points runtime evidence. Public task queries/history/API, actual material/consumer/review projections,
 UI, both deployment targets and isolated channels still need implementation/acceptance. Current-head
 hosted CI and complete full-context Bugbot remain independent merge gates.
+
+## Task queries, signed pagination and history — 2026-11-01
+
+Application reads now expose bounded definition/occurrence summaries, current detail and action hints,
+policy defaults without initialization, safe shared history and authorized own-operation lookup.
+Every transaction rechecks membership/read authority. Signed cursors bind the full query context and
+expire after five minutes by default; neither possession nor an action hint grants a later write.
+Current and retained facts merge by durable position without duplicating current projections.
+History omits raw HA identities/canonical requests, marks absent restored effects and distinguishes
+generic outbox acknowledgement from actual consumer acceptance.
+
+The final full backend run passes 2,170 tests: all 6,071 statements and 1,722 branches covered across
+all 83 authored files, with exact coverage/source inventory equality. Fifteen task modules contribute
+1,353 statements and 412 branches, all covered. The 126 new cases include cross-context/expired/tampered
+cursors, current revocation, bounded multi-page SQL history, corrupt evidence, original configuration
+and on-behalf authority, side-effect-free planning, and actual offline checkpoint activation followed
+by historical lookup and deliberate fresh work. Existing coverage configuration remains unchanged.
+
+All 113 tooling/architecture fixtures, strict types, formatting, local links and the full dependency
+graph pass. The unchanged original pinned SDK validates the SDD/catalog, declared leaves and retained
+case rows. Fourteen Draft SDDs/109 requirements/485 planned cases still do not count as executed product
+journeys. Original source-identified measurements and historical scopes remain in the
+[task evidence](evidence/task-execution-foundation.json).
+
+This is application/SQLite evidence with explicit provider fixtures. Both task HTTP compositions,
+materials/settlement, real consumers, dependency-review projection, UI/package/live HA acceptance and
+isolated Stable/Edge delivery remain required. The prior editor head has fully green project CI; its
+separate Copilot assessment failure is reported upstream. Current-head CI and complete full-context
+Bugbot remain required before merging the finished feature. Copilot and the gateway are unchanged.

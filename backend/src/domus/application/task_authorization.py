@@ -1,8 +1,23 @@
 """Current task authority reads local facts; performer snapshots never confer grants."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
+from typing import cast
 
 from domus.application.ports import UnitOfWork
+from domus.application.task_requests import (
+    AssignTask,
+    ClaimTask,
+    CompleteTask,
+    CreateTask,
+    CreateTaskOccurrence,
+    ReopenTask,
+    TaskRequest,
+    TransitionTask,
+    UpdateTaskDefinition,
+    UpdateTaskDependencies,
+    UpdateTaskPolicy,
+    VerifyTask,
+)
 from domus.domain.errors import Forbidden, InvalidInput, StorageFailure
 from domus.domain.identity import (
     HumanIdentity,
@@ -13,9 +28,15 @@ from domus.domain.identity import (
     allows,
     effective_role,
 )
-from domus.domain.storage import CommandKey, validate_identifier
+from domus.domain.restoration import OperationEvidence
+from domus.domain.storage import CommandKey, JsonDocument, JsonObject, validate_identifier
 from domus.domain.task_policy import can_approve, claim_matches_task
-from domus.domain.task_values import OccurrenceState, TaskPerformer, validate_task_ids
+from domus.domain.task_values import (
+    OccurrenceState,
+    TaskOverrides,
+    TaskPerformer,
+    validate_task_ids,
+)
 from domus.domain.tasks import TaskCycle, TaskOccurrence
 
 _TASK_PERMISSIONS = frozenset(
@@ -225,3 +246,86 @@ class TaskCommandAuthorization:
             raise Forbidden("permission_denied")
         if self.needs_configuration:
             self.access.require(unit, self.household_id, Permission.TASKS_CONFIGURE)
+
+
+_RECORDED: dict[str, tuple[type[TaskRequest], str]] = {
+    "task.create": (CreateTask, "task.created"),
+    "task.assign": (AssignTask, "task.assigned"),
+    "task.claim": (ClaimTask, "task.claimed"),
+    "task.transition": (TransitionTask, "task.transitioned"),
+    "task.complete": (CompleteTask, "task.completed"),
+    "task.verify": (VerifyTask, "task.verified"),
+    "task.reopen": (ReopenTask, "task.reopened"),
+    "task.policy.update": (UpdateTaskPolicy, "task.policy.updated"),
+    "task.definition.update": (UpdateTaskDefinition, "task.definition.updated"),
+    "task.occurrence.create": (CreateTaskOccurrence, "task.occurrence.created"),
+    "task.dependencies.update": (UpdateTaskDependencies, "task.dependencies.updated"),
+}
+
+
+def recorded_request(evidence: OperationEvidence) -> JsonObject:
+    """Verify immutable evidence shape, not new-work preconditions or current authority."""
+    receipt = evidence.receipt
+    contract = _RECORDED.get(receipt.command.action)
+    detail = evidence.audit.detail.decode()
+    request = detail.get("request")
+    if (
+        contract is None
+        or set(detail) != {"transition", "request", "result"}
+        or detail["transition"] != contract[1]
+        or not isinstance(request, dict)
+        or set(request) != {item.name for item in fields(contract[0])}
+        or JsonDocument.from_value(request).fingerprint != receipt.payload_fingerprint
+        or detail["result"] != receipt.result.decode()
+        or evidence.event.payload
+        != JsonDocument.from_value({"version": 1, "kind": contract[1], **receipt.result.decode()})
+    ):
+        raise StorageFailure("invalid_task_operation")
+    return request
+
+
+def recorded_authorization(
+    access: TaskAccess, evidence: OperationEvidence
+) -> TaskCommandAuthorization:
+    """Recover only authority selectors. Retained requests are never executed as new commands."""
+    request = recorded_request(evidence)
+    action = evidence.receipt.command.action
+    occurrence_id = request.get("occurrence_id")
+    definition_id = request.get("definition_id")
+    performers = request.get("performer_ids", [])
+    overrides = request.get("overrides")
+    try:
+        for identity in (occurrence_id, definition_id):
+            if identity is not None:
+                validate_identifier(cast(str, identity))
+        if not isinstance(performers, list):
+            raise InvalidInput("invalid_task_performer")
+        performer_ids = tuple(cast(list[str], performers))
+        validate_task_ids(performer_ids)
+        if action == "task.complete" and not performer_ids:
+            raise InvalidInput("invalid_task_performer")
+        if (action == "task.create" or overrides is not None) and (
+            not isinstance(overrides, dict)
+            or set(overrides) != {item.name for item in fields(TaskOverrides)}
+        ):
+            raise InvalidInput("invalid_task_rules")
+        target = (
+            OccurrenceState(cast(str, request["target"])) if action == "task.transition" else None
+        )
+    except InvalidInput, ValueError:
+        raise StorageFailure("invalid_task_operation") from None
+    return TaskCommandAuthorization(
+        access,
+        evidence.receipt.command.household_id,
+        action,
+        occurrence_id=cast(str | None, occurrence_id),
+        definition_id=cast(str | None, definition_id),
+        performer_ids=performer_ids,
+        transition_target=target,
+        needs_configuration=(action == "task.definition.update" and overrides is not None)
+        or (
+            action == "task.create"
+            and isinstance(overrides, dict)
+            and any(value is not None for value in overrides.values())
+        ),
+    )

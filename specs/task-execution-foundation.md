@@ -182,11 +182,11 @@ Policy PUT is administrator-controlled. Cross-field validation rejects unknown r
 
 ### Executable policy refinements before implementation
 
-The Action published this Draft before source changes. The declared paths below are concrete planned leaves; they confer no implementation credit. Domain value objects use exact enums/booleans, valid UTF-8 text without control characters (U+0000 through U+001F or U+007F), except tab/newline/carriage return in multiline descriptions and reasons, bounded unique tuples and positive signed-64-bit revisions. UTC milliseconds are nonnegative signed-64-bit integers. Invalid values cannot be reconstructed permissively from storage. Ordinary title-only creation is active/available; an explicitly draft definition creates a draft occurrence. Initial definition states are draft or active; paused/archived are later transitions. Pausing/archiving stops new occurrence creation but retains existing work and history.
+Publish this Draft before code. Planned leaves in section 15 confer no implementation credit. Values use exact enums/booleans, valid UTF-8, bounded unique tuples, positive signed-64-bit revisions and nonnegative signed-64-bit UTC milliseconds. Reject control characters U+0000 through U+001F/U+007F except tab/LF/CR in multiline descriptions/reasons. Initial definitions are draft/active; paused/archived definitions stop new work and preserve history.
 
-Semantic permission IDs tasks.read, tasks.claim, tasks.manage, tasks.record_for_others and tasks.material_use are additive to the existing tasks.create/complete/approve/configure. Defaults: all profiles can read household tasks; administrator/adult/restricted can claim eligible work and use scoped linked materials; administrator/adult can manage work and record on behalf of others. Viewer mutations remain denied by default. Household/profile/member adjustments apply under the accepted precedence. Claim is a real independent action; it must not pretend an available task was already assigned to evade the existing restricted-completion scope. Restricted completion still requires actual assignment and its own participation. Policy configuration stays administrator-controlled; approval still requires a current adult and approval permission. A new permission never turns a technical identity into a person.
+Additional semantic permissions are tasks.read, tasks.claim, tasks.manage, tasks.record_for_others and tasks.material_use; retain tasks.create/complete/approve/configure. All profiles read tasks by default. Administrator/adult/restricted profiles may claim eligible work and use linked materials; administrator/adult profiles manage and record for others. Viewer mutations default to denied. Accepted household/profile/member precedence applies. Claim is independent of completion: restricted completion still requires actual assignment and self-participation. Task configuration stays administrator-only; approval requires a current adult and grant. Technical credentials never confer human authority.
 
-Every command rereads active membership, identity mapping and profile/member grants inside its transaction. Only the actor supplies current HA proof; other performers retain their current local profiles. Historical role/rule snapshots never confer present authority. Typed requests and shared authorization support lifecycle/editor commands; public queries/routes, material handling and actual consumers remain pending.
+Every command rereads active membership, identity mapping and profile/member grants inside its transaction. Only the actor supplies current HA proof; other performers retain their current local profiles. Historical role/rule snapshots never confer present authority. Typed requests, shared authorization and bounded reads support lifecycle/editors; public routes, materials and actual consumers remain pending.
 
 Creation, assignment and claim commands obtain fresh human proof before entering the writer transaction. First task creation initializes absent household task defaults in that same transaction, never on a read. A title-only request creates an active definition and available occurrence; an explicitly draft request creates draft work. Supplying any non-inherited task-rule override requires administrator task-configuration authority as well as task-creation authority, including on receipt replay. Assignment requires current management permission and at most 32 distinct active household members; an empty assignment explicitly releases eligible work. Self-claim is exclusive for available unassigned work: it derives the sole assignee from the current actor, has one winner under contention, and never appends a claimant to already assigned work. Current authority and eligibility are checked before receipt disclosure; state/revision preconditions follow receipt lookup, so replay of a successful claim remains possible after that claim changed the state. Definition, first occurrence, any initial defaults, receipt, audit and outbox commit together or roll back together. These commands do not confirm any downstream consumer delivery.
 
@@ -201,6 +201,8 @@ Definition overrides are nullable: omitted/cleared values inherit current househ
 Definitions, occurrences and completion cycles have explicit stable IDs, household scope, positive signed-64-bit revisions and supplied timestamps. Cycle performed time cannot exceed recorded time; verification cannot predate recording; closing cannot predate either fact. Approval records a decision without closing the cycle. Only reopening closes it. Completed state requires a current cycle; other states cannot retain an active cycle pointer. Scope, current cycle and definition-snapshot revisions must agree before completion, verification or reopening. Closing preserves the original cycle record, material intent identity and attribution.
 
 Pure requirement evaluation supports the confirmed performed default and configurable approved alternative. A completion uses the gate in its own resolved rule snapshot; a caller cannot select a conflicting weaker gate. Both require completed work; rejected verification never satisfies a requirement. Approved mode accepts no-verification-needed or approved work; performed mode additionally accepts pending approval. Both use the exact server-resolved required occurrence set. Prerequisites and required subtasks each allow 32 IDs; their combined deduplicated graph therefore allows 64 edges per node. Iterative cycle detection remains independent of Python recursion depth.
+
+Queries recheck current read grants in one transaction without creating defaults. Keyset pages default to 25, max 100; signed cursors expire after five minutes, bind actor/installation/channel/household/query/filters/limit and confer no snapshot or write authority. Restart can invalidate cursors. Action hints use current grants/state. Bounded history merges current/retained operation positions, marks restoration, hides HA identities/requests and distinguishes outbox acknowledgement from consumer delivery. Own operation lookup rechecks original command authority from the canonical retained request. Shared readers unify facts.
 
 ### Proposed HTTP contract
 
@@ -459,11 +461,13 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `backend/src/domus/application/task_commands.py` | create |
 | `backend/src/domus/application/task_requests.py` | create |
 | `backend/src/domus/application/task_queries.py` | create |
+| `backend/src/domus/application/task_facts.py` | create |
 | `backend/src/domus/application/task_materials.py` | create |
 | `backend/src/domus/infrastructure/sqlite_tasks.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_records.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_schema.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_integrity.py` | create |
+| `backend/src/domus/infrastructure/sqlite_task_history.py` | create |
 | `backend/src/domus/infrastructure/task_materials.py` | create |
 | `backend/src/domus/infrastructure/task_cursor.py` | create |
 | `backend/src/domus/entrypoints/task_http.py` | create |
@@ -477,6 +481,8 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `tests/backend/test_task_execution_commands.py` | create |
 | `tests/backend/test_task_edit_commands.py` | create |
 | `tests/backend/test_task_queries.py` | create |
+| `tests/backend/test_task_cursor.py` | create |
+| `tests/backend/test_sqlite_task_history.py` | create |
 | `tests/backend/test_task_materials.py` | create |
 | `tests/backend/test_sqlite_tasks.py` | create |
 | `tests/backend/test_sqlite_task_records.py` | create |

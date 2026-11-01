@@ -270,8 +270,9 @@ Issue #13 has an Action-published [backend companion](../specs/task-execution-fo
 The current source implements immutable task rules, typed policy/definition/occurrence/cycle
 repositories, schema-5 migration/checkpoint integration, current authority and durable creation,
 assignment, claim, progress, completion, verification and reopening commands, plus policy, definition,
-occurrence and dependency editors. Public task queries/history and HTTP, material intents/settlement,
-dependency-review projections and actual consumer delivery remain required before completion.
+occurrence and dependency editors. Application queries now expose bounded definitions/occurrences,
+current detail/action hints, restoration-aware history and own-operation lookup. Public task HTTP,
+material intents/settlement, dependency-review projections and actual consumers remain incomplete.
 
 Domain never authenticates or authorizes requests. TaskAccess rereads current active membership,
 identity mapping, profile/member rules and stored assignment inside the caller transaction. Claim
@@ -290,6 +291,27 @@ also accepts pending approval. Required subtasks use the same explicit gate. App
 a cycle. Reopen closes it without erasing facts or automatically reopening completed dependents.
 Source events identify the full cycle and causal revision, while consumer delivery remains explicitly
 unconfirmed. They do not prove ledger compensation, stock movement or a finished review projection.
+
+TaskQueries receives a server-proven human or valid outage read lease. Every page rereads local
+membership and task-read authority in one read transaction. Policy reads return revision zero and
+documented defaults when absent, without creating records. Lists return summaries with 25 items by
+default and at most 100, using one lookahead row. Detail resolves current rules, immutable work and
+actual dependency/cycle facts through the shared task_facts readers. Allowed actions describe current
+self-performance/state/permission possibilities; every write still obtains fresh proof and rechecks.
+
+The outer TaskCursor signs bounded keyset positions with HMAC-SHA256 and an injected process key.
+Tokens expire after five minutes by default and bind account, installation, channel, household, query,
+filters and page size through a context digest. A restart/key change may require refreshing a list.
+Pagination is not a cross-page snapshot: concurrent edits may change later pages. No tokens contain
+raw HA identifiers or grant write authority.
+
+Task history merges at most two bounded SQL pages of current and retained evidence by durable outbox
+position. Current retained projections appear once; historical effects remain explicitly absent and
+their delivery suppressed. Shared history reveals local member IDs and selected facts, without raw
+HA identities or canonical requests. Own-operation reads require current read/own-operation grants
+and reconstruct original command authority from matching immutable request/result/event evidence,
+including configuration and on-behalf scope. They never execute retained requests. Outbox
+acknowledgement remains separate from unimplemented consumer acceptance.
 
 Typed requests live in task_requests and command authorization is shared in task_authorization;
 task_commands re-exports its established request names. Policy revision zero initializes absent

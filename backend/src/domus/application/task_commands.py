@@ -9,6 +9,7 @@ from domus.application.commands import AtomicCommands, Change
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.task_authorization import TaskAccess, TaskCommandAuthorization
+from domus.application.task_facts import current_cycle, required_work, resolved_rules
 from domus.application.task_requests import (
     AssignTask as AssignTask,
 )
@@ -46,14 +47,13 @@ from domus.application.task_requests import (
 from domus.application.task_requests import (
     VerifyTask as VerifyTask,
 )
-from domus.domain.errors import Conflict, Forbidden, StorageFailure
+from domus.domain.errors import Conflict, Forbidden
 from domus.domain.identity import MemberStatus
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
 from domus.domain.task_policy import validate_dependency_graph
 from domus.domain.task_values import (
     OccurrenceState,
     TaskOverrides,
-    TaskRequirement,
     TaskRules,
 )
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
@@ -93,34 +93,6 @@ def _change(transition: str, request: TaskRequest, result: JsonDocument) -> Chan
     )
     event = JsonDocument.from_value({"version": 1, "kind": transition, **result.decode()})
     return Change(result, detail, event)
-
-
-def _cycle(unit: UnitOfWork, work: TaskOccurrence, cycle_id: str) -> TaskCycle:
-    if work.current_cycle_id != cycle_id:
-        raise Conflict("task_cycle_conflict")
-    cycle = unit.tasks.cycle(work.household_id, cycle_id)
-    if (
-        cycle is None
-        or cycle.household_id != work.household_id
-        or cycle.occurrence_id != work.occurrence_id
-        or cycle.revision != work.current_cycle_revision
-        or cycle.closed_at is not None
-    ):
-        raise StorageFailure("invalid_task_references")
-    return cycle
-
-
-def _requirements(unit: UnitOfWork, work: TaskOccurrence) -> tuple[TaskRequirement, ...]:
-    result = []
-    for identity in sorted(set(work.prerequisite_ids) | set(work.required_subtask_ids)):
-        required = unit.tasks.occurrence(work.household_id, identity)
-        if required is None:
-            raise StorageFailure("invalid_task_references")
-        verification = None
-        if required.state is OccurrenceState.COMPLETED:
-            verification = _cycle(unit, required, cast(str, required.current_cycle_id)).verification
-        result.append(TaskRequirement(identity, required.state, verification))
-    return tuple(result)
 
 
 def _cycle_result(
@@ -269,11 +241,8 @@ class TaskCommands:
             work = _occurrence(unit, self.household_id, request)
             actor = access.performance_actor(unit, work, request.performer_ids)
             performers = access.performers(unit, work, request.performer_ids)
-            policy = unit.tasks.policy(self.household_id)
-            if policy is None:
-                raise StorageFailure("invalid_task_references")
-            rules = work.definition_snapshot.overrides.resolve(policy.rules)
-            requirements = _requirements(unit, work)
+            rules, task_policy_revision = resolved_rules(unit, work)
+            requirements = required_work(unit, work)
             saved = TaskCycle.record(
                 self.identifiers.new(),
                 self.household_id,
@@ -282,7 +251,7 @@ class TaskCommands:
                 performers=performers,
                 rules=rules,
                 definition_revision=work.definition_snapshot.revision,
-                task_policy_revision=policy.revision,
+                task_policy_revision=task_policy_revision,
                 identity_policy_revision=actor.identity_policy_revision,
                 performed_at=request.performed_at,
                 recorded_at=self.clock.now(),
@@ -304,7 +273,7 @@ class TaskCommands:
     def verify(self, key: str, request: VerifyTask) -> Receipt:
         def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
             work = _occurrence(unit, self.household_id, request)
-            current = _cycle(unit, work, request.cycle_id)
+            current = current_cycle(unit, work, request.cycle_id)
             verifier = access.approver(unit, work, current)
             updated, saved = work.verify(
                 current, request.decision, verifier, self.clock.now(), request.reason
@@ -320,7 +289,7 @@ class TaskCommands:
     def reopen(self, key: str, request: ReopenTask) -> Receipt:
         def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
             work = _occurrence(unit, self.household_id, request)
-            current = _cycle(unit, work, request.cycle_id)
+            current = current_cycle(unit, work, request.cycle_id)
             updated, closed = work.reopen(current, self.clock.now(), request.reason)
             unit.tasks.save_cycle(closed, current.revision)
             unit.tasks.save_occurrence(updated, request.expected_revision)

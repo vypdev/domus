@@ -1,12 +1,25 @@
-"""Task persistence contracts expose domain facts, not SQL, cursors or provider DTOs."""
+"""Task persistence and opaque pagination contracts expose domain facts and bounded reads."""
 
 from typing import Protocol
 
+from domus.domain.restoration import RetainedOperation
+from domus.domain.storage import JsonDocument
 from domus.domain.task_values import DefinitionState, OccurrenceState
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
 
 
+class TaskCursors(Protocol):
+    def encode(self, binding: JsonDocument, after: str) -> str: ...
+    def decode(self, binding: JsonDocument, token: str) -> str: ...
+
+
 class TaskRepository(Protocol):
+    def history(
+        self, household_id: str, occurrence_id: str, *, limit: int = 25, after: int = 0
+    ) -> tuple[RetainedOperation, ...]: ...
+    def operation(
+        self, household_id: str, actor_id: str, operation_id: str
+    ) -> RetainedOperation | None: ...
     def policy(self, household_id: str) -> HouseholdTaskPolicy | None: ...
     def save_policy(self, value: HouseholdTaskPolicy, expected_revision: int) -> None: ...
     def definition(self, household_id: str, definition_id: str) -> TaskDefinition | None: ...

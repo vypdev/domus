@@ -7,9 +7,11 @@ from typing import cast
 
 from domus.application.task_ports import TaskRepository
 from domus.domain.errors import Conflict, InvalidInput, StorageFailure
+from domus.domain.restoration import RetainedOperation
 from domus.domain.storage import validate_identifier
 from domus.domain.task_values import DefinitionState, OccurrenceState, VerificationState
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
+from domus.infrastructure.sqlite_task_history import SQLiteTaskHistory
 from domus.infrastructure.sqlite_task_records import (
     cycle_document,
     definition_document,
@@ -100,6 +102,18 @@ class SQLiteTasks(TaskRepository):
     """The enclosing unit owns begin/commit/rollback; these methods never commit independently."""
 
     connection: sqlite3.Connection
+
+    def history(
+        self, household_id: str, occurrence_id: str, *, limit: int = 25, after: int = 0
+    ) -> tuple[RetainedOperation, ...]:
+        return SQLiteTaskHistory(self.connection).history(
+            household_id, occurrence_id, limit=limit, after=after
+        )
+
+    def operation(
+        self, household_id: str, actor_id: str, operation_id: str
+    ) -> RetainedOperation | None:
+        return SQLiteTaskHistory(self.connection).operation(household_id, actor_id, operation_id)
 
     def _write(
         self,
