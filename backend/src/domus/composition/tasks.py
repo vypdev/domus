@@ -5,6 +5,7 @@ from typing import Protocol
 
 from domus.application.ports import Transactions
 from domus.application.task_commands import TaskCommands
+from domus.application.task_events import TaskEventFeed, TaskEventSource
 from domus.application.task_queries import TaskQueries
 from domus.domain.identity import HumanIdentity
 from domus.domain.storage import Installation
@@ -17,6 +18,10 @@ from domus.infrastructure.task_cursor import TaskCursor
 class TaskSession(Protocol):
     def read(self) -> HumanIdentity: ...
     def current(self) -> HumanIdentity: ...
+
+
+def task_event_source(store: Transactions, installation: Installation) -> TaskEventSource:
+    return TaskEventFeed(store, installation)
 
 
 def task_contexts(

@@ -10,7 +10,13 @@ from domus.domain.errors import InvalidInput
 from domus.domain.identity import validate_revision
 from domus.domain.restoration import OperationEvidence
 from domus.domain.storage import JsonDocument, JsonObject, validate_identifier
-from domus.domain.task_values import validate_task_ids, validate_task_text, validate_task_time
+from domus.domain.task_events import (
+    operation_request,
+    recorded_dependencies,
+    validate_completion,
+    validate_reopening,
+)
+from domus.domain.task_values import validate_task_text, validate_task_time
 from domus.domain.tasks import TaskCycle
 
 
@@ -22,115 +28,6 @@ class DependencyRelationship(StrEnum):
 class DependencyReviewState(StrEnum):
     PENDING = "pending"
     REVIEWED = "reviewed"
-
-
-def recorded_dependencies(result: JsonObject) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    occurrence_id = cast(str, result.get("occurrence_id"))
-    validate_identifier(occurrence_id)
-    values = []
-    for name in ("prerequisite_ids", "required_subtask_ids"):
-        raw = result.get(name)
-        if not isinstance(raw, list):
-            raise InvalidInput("invalid_dependency_review")
-        identities = tuple(cast(list[str], raw))
-        validate_task_ids(identities)
-        if occurrence_id in identities:
-            raise InvalidInput("invalid_dependency_review")
-        values.append(identities)
-    return values[0], values[1]
-
-
-def _cycle_snapshot(value: TaskCycle) -> JsonDocument:
-    return JsonDocument(json.dumps(asdict(value)))
-
-
-def _request(evidence: OperationEvidence) -> JsonObject:
-    value = evidence.audit.detail.decode().get("request")
-    if not isinstance(value, dict):
-        raise InvalidInput("invalid_dependency_review")
-    return value
-
-
-def _root(evidence: OperationEvidence, cycle: TaskCycle, action: str) -> JsonObject:
-    result, request = evidence.receipt.result.decode(), _request(evidence)
-    expected = cast(int, request.get("expected_revision"))
-    validate_revision(expected)
-    validate_revision(cast(int, result.get("revision")))
-    validate_identifier(cast(str, result.get("definition_id")))
-    actual = {
-        name: result.get(name) for name in ("occurrence_id", "definition_revision", "revision")
-    }
-    wanted = {
-        "occurrence_id": cycle.occurrence_id,
-        "definition_revision": cycle.definition_revision,
-        "revision": expected + 1,
-    }
-    if (
-        evidence.receipt.command.action != action
-        or evidence.receipt.command.household_id != cycle.household_id
-        or request.get("occurrence_id") != cycle.occurrence_id
-        or JsonDocument.from_value(actual) != JsonDocument.from_value(wanted)
-    ):
-        raise InvalidInput("invalid_dependency_review")
-    return result
-
-
-def validate_completion(evidence: OperationEvidence, cycle: TaskCycle) -> JsonObject:
-    result = _root(evidence, cycle, "task.complete")
-    request = _request(evidence)
-    original = TaskCycle.record(
-        cycle.cycle_id,
-        cycle.household_id,
-        cycle.occurrence_id,
-        recorded_by=cycle.recorded_by,
-        performers=cycle.performers,
-        rules=cycle.rules,
-        definition_revision=cycle.definition_revision,
-        task_policy_revision=cycle.task_policy_revision,
-        identity_policy_revision=cycle.identity_policy_revision,
-        performed_at=cycle.performed_at,
-        recorded_at=cycle.recorded_at,
-    )
-    if (
-        result.get("state") != "completed"
-        or JsonDocument.from_value({"cycle": result.get("cycle")})
-        != JsonDocument.from_value({"cycle": _cycle_snapshot(original).decode()})
-        or JsonDocument.from_value(
-            {name: request.get(name) for name in ("performer_ids", "performed_at")}
-        )
-        != JsonDocument.from_value(
-            {
-                "performer_ids": [v.member_id for v in cycle.performers],
-                "performed_at": cycle.performed_at,
-            }
-        )
-    ):
-        raise InvalidInput("invalid_dependency_review")
-    recorded_dependencies(result)
-    return result
-
-
-def validate_reopening(evidence: OperationEvidence, cycle: TaskCycle) -> JsonObject:
-    result = _root(evidence, cycle, "task.reopen")
-    request = _request(evidence)
-    reason = cast(str, request.get("reason"))
-    validate_task_text(reason, 1000, required=True, multiline=True)
-    assignees = result.get("assignee_ids")
-    if not isinstance(assignees, list):
-        raise InvalidInput("invalid_dependency_review")
-    validate_task_ids(tuple(cast(list[str], assignees)))
-    if (
-        cycle.closed_at is None
-        or request.get("cycle_id") != cycle.cycle_id
-        or result.get("compensates_cycle_id") != cycle.cycle_id
-        or result.get("dependency_review_required") is not True
-        or result.get("state") != ("assigned" if assignees else "available")
-        or result.get("state_reason") != reason
-        or JsonDocument.from_value({"cycle": result.get("cycle")})
-        != JsonDocument.from_value({"cycle": _cycle_snapshot(cycle).decode()})
-    ):
-        raise InvalidInput("invalid_dependency_review")
-    return result
 
 
 @dataclass(frozen=True, slots=True)
@@ -269,7 +166,7 @@ class DependencyReviewDecision:
 
 def recorded_review(evidence: OperationEvidence) -> DependencyReviewDecision:
     """Decode original scope and reason; stored reviewer facts never grant current authority."""
-    result, request = evidence.receipt.result.decode(), _request(evidence)
+    result, request = evidence.receipt.result.decode(), operation_request(evidence)
     raw = result.get("review")
     if not isinstance(raw, dict) or set(raw) != {
         item.name for item in fields(DependencyReviewDecision)

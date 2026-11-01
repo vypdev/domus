@@ -497,3 +497,40 @@ the final campaign added 24 strict-wire/cursor/old-checkpoint cases. No owner HA
 Points/Inventory or full-product acceptance is claimed. Actual consumers, remaining task integration
 and the complete first release are still required. Current-head CI and complete full-context Bugbot
 without unresolved findings remain separate merge gates.
+
+
+## Typed task lifecycle source checkpoint
+
+The increment over immutable 487506f completes the composition-only source contract for later
+owning consumers. Domain validates original completion/verification/reopening snapshots and stable
+installation/channel/household-bound event/cycle keys; the stable cycle key excludes policy/event
+revision. Application exposes bounded source pages, SQLite reads only current paired evidence, and
+both business runtimes wire the same read-only port. The authentication-only standalone runtime
+without business storage supplies no source. No HTTP route, worker, ledger or side effect is added.
+
+Shared lifecycle evidence validation now serves both dependency reviews and consumer facts. Raw
+receipt/audit/outbox header checks are centralized for all task-history readers. Original snapshots
+remain distinct from later approval/closure: a pending completion cannot become an approved source
+event after the fact. Pending/rejected work cannot signal award eligibility; rejection/reopening
+signals closure. Owning consumers still need durable inbox/closed-cycle/allocation protection and
+actual confirmation. Source facts and transport acknowledgement are not proof of accepted effects.
+
+The 46 new cases execute in the final 2,899-case backend campaign. All 7,605 statements and 2,146
+branches in all 104 authored backend files are covered; 36 task modules contribute 2,840 statements
+and 824 branches. Exact source and report inventories match with no coverage configuration or
+pragma changes. Current API schemas are unchanged. Tests include both business compositions,
+strict source/model bounds, original verification/reopening snapshots, key isolation, corrupt or
+missing source facts, more than 100 events, transport-acknowledged reads, independent original-v6
+migration, and actual restore retaining historical approval/reopening without redelivering them.
+
+The first source tests failed for missing TaskEventFeed. An intermediate refactor omitted the shared
+recorded_dependencies import; existing review regressions caught it before publication. Missing
+new test imports were corrected before the final campaign. All 113 tooling/architecture fixtures,
+strict types (108 files including tooling), formatting and three inward/acyclic contracts
+(140 files/880 dependencies) pass. Unchanged pinned format/consistency/catalog checks retain all
+original case rows; the SDD's concise wording preserves its behavior and planned inventory.
+
+These are real application/ASGI/SQLite source assertions with labeled fake HA transports. Real
+Points/Inventory/recurrence consumers, product UI, packaging/owner HA adoption and full first-release
+acceptance remain unproven. Complete feature acceptance, current-head hosted CI and full-context
+Bugbot without unresolved findings remain required before merge.

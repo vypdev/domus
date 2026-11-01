@@ -7,7 +7,7 @@ from typing import cast
 
 from domus.application.task_ports import TaskRepository, TaskReviewEvidence
 from domus.domain.errors import Conflict, InvalidInput, StorageFailure
-from domus.domain.restoration import RetainedOperation
+from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import validate_identifier
 from domus.domain.task_reviews import DependencyReviewState
 from domus.domain.task_values import DefinitionState, OccurrenceState, VerificationState
@@ -105,6 +105,13 @@ class SQLiteTasks(TaskRepository):
 
     connection: sqlite3.Connection
     record_version: int = 2
+
+    def lifecycle_events(
+        self, household_id: str, *, limit: int = 25, after: int = 0
+    ) -> tuple[OperationEvidence, ...]:
+        return SQLiteTaskHistory(self.connection).lifecycle_events(
+            household_id, limit=limit, after=after
+        )
 
     def review_evidence(
         self,

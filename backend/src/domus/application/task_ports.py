@@ -24,6 +24,10 @@ class TaskReviewEvidence:
 
 
 class TaskRepository(Protocol):
+    def lifecycle_events(
+        self, household_id: str, *, limit: int = 25, after: int = 0
+    ) -> tuple[OperationEvidence, ...]: ...
+
     def review_evidence(
         self,
         household_id: str,

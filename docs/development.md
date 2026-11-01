@@ -403,6 +403,30 @@ receipt/audit/event share one writer. Work/cycle revisions stay unchanged.
 Required next work: actual Inventory/Points/recurrence services and
 their integration, and UI/package/owner acceptance. Semantic fixtures do not establish those results.
 
+## Typed lifecycle event source
+
+Both business runtimes expose the same internal `task_events` read port. An authentication-only
+standalone runtime without business storage has no source. This is trusted composition wiring,
+not a new HTTP route, login, human grant or worker that performs side effects.
+
+The feed pages current completion, verification and reopening operations by durable position
+(25 by default, at most 100). It validates paired original receipts/audit/events and typed
+work/cycles, then reconstructs each event's original temporal snapshot. An approved or closed
+current cycle cannot turn its earlier pending completion event into an approved one. Unknown
+versions, incoherent scope/stage, missing sources and altered evidence fail closed.
+
+Event keys bind installation, channel, household and original operation; stable cycle keys omit
+event/policy revision so another event cannot permit a second allocation for one cycle. The source
+retains definition, occurrence, cycle, effective policy, performers and original timestamps. Its
+`points_eligible` and `closes_awards` values are source facts only: owning consumers must enforce
+their durable inbox, closed-cycle protection, per-cycle allocation uniqueness and actual effects.
+
+Transport-acknowledged events remain readable for independent consumers. Restored-away operations
+are excluded from current delivery even while retained history preserves them. Source reads never
+acknowledge outbox delivery, settle materials or confirm a ledger effect. Consumers persist their
+own last processed item position; `next_position` continues the current page sequence. The existing
+missing Inventory behavior and unconfirmed consumer status remain truthful until real wiring exists.
+
 ## Dependency-review projection and manager acceptance
 
 Schema 7 adds only three causal-evidence indexes. It creates no second task, points, stock or review

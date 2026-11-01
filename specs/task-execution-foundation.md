@@ -222,6 +222,10 @@ Settlement targets the original cycle/intent, including closed cycles; expected_
 
 Derive causes from live complete/reopen evidence, never a second ledger. Reopen follows dependent completion and precedes its closure by outbox position; timestamps may tie. Freeze dependency lists/gate, deduplicate overlapping links, bind cause to dependent cycle/source event/revisions and exclude restored-away effects. Validate coherent evidence/current typed cycles. Reads show current source state/verification/satisfaction separately. Use one authorized transaction, pages 25/max100 and signed context cursors. A37: current tasks.manage may accept a cause with a meaningful reason even while source is pending; preserve its visible condition. Acknowledgement is atomic original evidence, cause revision 1 to 2; retries reauthorize before disclosure, and old acceptance never clears a later cause. No work/cycle/points/material mutation or automatic closure.
 
+### Lifecycle source for consumers
+
+Trusted runtimes expose an internal read-only typed feed (25/default, 100/max) by live event position, including transport-acknowledged rows but excluding restored-away effects. Validate paired evidence and typed work/cycles; retain original completion/verification/reopening snapshots and definition/cycle/policy/time identities. Source keys bind installation/channel/household/event; stable cycle keys exclude event/policy revision. Pending/rejected work is not award-eligible; rejection/reopening closes eligibility. Consumers own durable inbox/closure/allocation and actual confirmation. Reads never acknowledge, settle or claim delivery, create no HTTP/login surface, and share semantics in both runtimes; absent consumer wiring stays unconfirmed.
+
 ### HTTP contract
 
 Both business compositions expose shared services under `/api/v1/tasks`. Mutations require current session/proof, Origin, CSRF, `Idempotency-Key`, and `expected_revision` (`0` create, positive update). Household, actor, installation, and channel derive server-side. Reject unknown fields. Lists use limit default 25, max 100, cursor max 512; keyset cursors bind query/context without cross-page snapshot guarantees.
@@ -250,7 +254,7 @@ Both business compositions expose shared services under `/api/v1/tasks`. Mutatio
 
 Wire bodies use top-level content, nested overrides/rules and strict IDs. Omitted/null update overrides preserve; an empty object resets inheritance. Create defaults revision to zero. Unavailable Inventory linking fails before writes; completion retains pending usage. Only business compositions expose tasks. Native GET queries retain bounded, nonduplicate pairs and header/peer policy. Material reads recheck tasks.read and frozen lines/cycle/recorder/time/mode; corrupted references fail closed. Live views distinguish desired quantity from confirmed_quantity, confirmed_effect_revision and posted_at; receipt outcomes remain immutable.
 
-Responses use existing `ReceiptResponse`, `OperationResponse`, and `ErrorResponse` contracts. Receipt result retains immutable resource/cycle/revision/material facts, never current grants. Resources expose IDs, revisions, states, snapshots, and allowed actions; occurrence includes assignees, dependencies, performers, times, verification, and material outcomes. Material outcome includes intent/cycle/line IDs, submitted canonical quantity, status, reason code, safe message/action, nullable actual movement ID, and revision. `posted` requires actual Inventory confirmation; invalid forged/foreign material rejects before effects. Other valid work may save with visibly unposted outcomes. Current reads show present settlement state separately from original receipt.
+Use existing ReceiptResponse/OperationResponse/ErrorResponse. Immutable receipts retain resource/cycle/revision/material facts, never grants. Reads expose IDs/revisions/states/snapshots/action hints, assignees/dependencies/performers/times/verification and material outcomes. Outcomes carry intent/cycle/line IDs, submitted canonical quantity, status/reason/message/action, nullable actual movement and revision. Posted needs Inventory confirmation; forged/foreign usage fails before effects, valid pending work survives. Current settlement and original result stay distinct.
 
 ## 8. Clean Architecture
 
@@ -395,9 +399,9 @@ Errors follow impact -> cause -> action -> retained state. A committed task comp
 
 ## 14. Testing strategy
 
-Budget counts distinct planned executable cases for this companion only. Existing cases `household-tasks-C01` through `household-tasks-C49` remain owned by the baseline and are not counted here. No case below is an executed test or implementation evidence. Python metrics use pinned pytest 9.2.0, pytest-cov 7.1.0, and Coverage.py from `uv.lock`: executed statements/lines and branches both 100%, zero missed statements and missing branch destinations, for each authored backend module and whole backend. No unsupported function metric, exclusions, pragmas, denominator narrowing, or unimported-module omission. Composition, HTTP, migrations, restore, and all new runtime files count immediately. Existing CI command uses backend source and branch coverage; add fail-closed produced-JSON inventory/per-file line and branch audit if needed to include unimported runtime negatives. Existing required CI groups and aggregate remain mandatory on every commit, with current-head complete results and full-context Bugbot without unresolved findings.
+The 42 planned cases belong only to this companion; the 49 baseline task cases stay unchanged/uncredited. IDs are not execution evidence. Pin pytest 9.2.0, pytest-cov 7.1.0 and Coverage.py from uv.lock. Require 100% statements/lines and branches, zero misses, globally/per authored file, including new/unimported runtime, composition, HTTP, migration and restore. No unsupported function metric, exclusions, pragmas or denominator narrowing. Audit JSON against exact source inventory. All existing CI groups/aggregate and complete current-head full-context Bugbot without findings gate each commit.
 
-Pure policy uses exhaustive decision tables and 100% branches. Use deterministic clocks/IDs, SQLite temp files and controlled concurrent transactions; no real waits or live services. Port fakes are explicitly fake and cannot establish consumer acceptance. Loopback HTTP and real SQLite evidence are reported separately from owner HA adoption. Golden content fixtures require semantic assertions for action, retained facts, links, escaping, and state. Manual evidence reviews narrow/mobile readability, light/dark contrast, and Spanish owner-facing communication. Minimum distinct cases: 42, allocated below; inventory rows are the complete new case set.
+Use exhaustive pure tables, deterministic clocks/IDs, real SQLite temp files and controlled races, without live waits/services. Label fakes; separate loopback/SQLite from consumer/owner adoption. Goldens assert action, retained facts, links, escaping and state. Human review covers mobile/narrow readability, light/dark contrast and Spanish owner communication. Rows below are the full new inventory.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
@@ -486,6 +490,10 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `backend/src/domus/application/task_requests.py` | create |
 | `backend/src/domus/application/task_queries.py` | create |
 | `backend/src/domus/application/task_facts.py` | create |
+| `backend/src/domus/domain/task_events.py` | create |
+| `backend/src/domus/application/task_events.py` | create |
+| `tests/backend/test_task_events.py` | create |
+| `tests/backend/test_sqlite_task_events.py` | create |
 | `backend/src/domus/domain/task_reviews.py` | create |
 | `backend/src/domus/application/task_reviews.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_reviews.py` | create |

@@ -125,6 +125,10 @@ confirmed consumption while preserving original facts and requiring Inventory co
 
 ## Dependency review
 
+The internal source for future domain consumers is documented in
+[development](../development.md#typed-lifecycle-event-source). It exposes original lifecycle facts
+through both business runtimes without adding a human HTTP surface or claiming consumer delivery.
+
 Reopening a prerequisite or required subtask preserves already-completed dependent work. Each
 original dependent cycle exposes a distinct cause for each later source reopening in that cycle's
 completion-to-reopening interval. Durable outbox positions determine order even when timestamps tie.

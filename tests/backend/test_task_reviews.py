@@ -17,13 +17,11 @@ from domus.application.task_requests import ReviewTaskDependency
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
 from domus.domain.identity import Permission, PermissionRule
 from domus.domain.storage import JsonDocument
+from domus.domain.task_events import recorded_dependencies, validate_completion, validate_reopening
 from domus.domain.task_reviews import (
     DependencyReviewDecision,
     dependency_review_cause,
-    recorded_dependencies,
     recorded_review,
-    validate_completion,
-    validate_reopening,
     validate_review_interval,
 )
 from domus.domain.task_values import TaskContent

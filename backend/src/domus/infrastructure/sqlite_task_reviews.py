@@ -8,8 +8,9 @@ from domus.application.task_ports import TaskReviewEvidence
 from domus.domain.errors import InvalidInput, StorageFailure
 from domus.domain.restoration import OperationEvidence
 from domus.domain.storage import validate_identifier
-from domus.domain.task_reviews import DependencyReviewState, recorded_dependencies
-from domus.infrastructure.sqlite_task_history import SQLiteTaskHistory
+from domus.domain.task_events import recorded_dependencies
+from domus.domain.task_reviews import DependencyReviewState
+from domus.infrastructure.sqlite_task_history import _CURRENT, SQLiteTaskHistory
 
 REVIEW_STATEMENTS = (
     "CREATE INDEX task_cycle_event_page ON outbox("
@@ -21,45 +22,12 @@ REVIEW_STATEMENTS = (
     "json_extract(payload,'$.review.cause.source_operation_id'),position)",
 )
 
-_CURRENT = (
-    "SELECT r.*,a.detail AS audit_detail,o.payload AS event_payload,o.position,o.delivered,"
-    "a.household_id AS review_audit_household,a.actor_id AS review_audit_actor,"
-    "a.action AS review_audit_action,a.command_key AS review_audit_key,"
-    "a.created_at AS review_audit_time,o.household_id AS review_event_household,"
-    "o.event_type AS review_event_action,o.created_at AS review_event_time "
-    "FROM receipts r JOIN audit a ON a.operation_id=r.operation_id "
-    "JOIN outbox o ON o.event_id=r.operation_id "
-)
-
 
 @dataclass
 class SQLiteTaskReviews:
     connection: sqlite3.Connection
 
     def _evidence(self, row: sqlite3.Row) -> OperationEvidence:
-        if tuple(
-            row[name]
-            for name in (
-                "review_audit_household",
-                "review_audit_actor",
-                "review_audit_action",
-                "review_audit_key",
-                "review_audit_time",
-                "review_event_household",
-                "review_event_action",
-                "review_event_time",
-            )
-        ) != (
-            row["household_id"],
-            row["actor_id"],
-            row["action"],
-            row["command_key"],
-            row["created_at"],
-            row["household_id"],
-            row["action"],
-            row["created_at"],
-        ):
-            raise StorageFailure("invalid_dependency_review")
         return SQLiteTaskHistory(self.connection)._live(row).evidence
 
     def _one(

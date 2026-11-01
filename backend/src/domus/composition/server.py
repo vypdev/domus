@@ -11,8 +11,9 @@ from fastapi import FastAPI
 
 from domus.application.authentication import Authentication
 from domus.application.sessions import SessionGuard
+from domus.application.task_events import TaskEventSource
 from domus.composition.household import standalone_context
-from domus.composition.tasks import task_contexts
+from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.http import HTTPSettings, create_app
@@ -33,6 +34,7 @@ class AuthenticationRuntime:
     app: FastAPI
     identity: StandaloneIdentity = field(repr=False)
     storage: OwnedStorage | None = field(default=None, repr=False)
+    task_events: TaskEventSource | None = field(default=None, repr=False)
 
     def close(self) -> tuple[int, int]:
         try:
@@ -93,9 +95,11 @@ def _compose(
     guard = SessionGuard(identity, identity, clock)
     context = None
     tasks = None
+    events = None
     if store is not None:
         context = standalone_context(store, guard, identity, installation)
         factory = task_contexts(store, installation)
+        events = task_event_source(store, installation)
 
         def session_tasks(session_id: str) -> TaskHTTPContext:
             return factory(SessionActor(guard, session_id))
@@ -110,7 +114,7 @@ def _compose(
         household_context=context,
         task_context=tasks,
     )
-    return AuthenticationRuntime(app, identity)
+    return AuthenticationRuntime(app, identity, task_events=events)
 
 
 def main(argv: list[str] | None = None) -> int:

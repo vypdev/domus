@@ -5,16 +5,67 @@ import sqlite3
 from dataclasses import dataclass
 
 from domus.domain.errors import InvalidInput, StorageFailure
-from domus.domain.restoration import RetainedOperation
+from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import validate_identifier
-from domus.infrastructure.sqlite_history import _CURRENT, SQLiteHistory, _evidence, _record, _same
+from domus.infrastructure.sqlite_history import SQLiteHistory, _evidence, _record, _same
+
+_CURRENT = (
+    "SELECT r.*,a.detail AS audit_detail,o.payload AS event_payload,o.position,o.delivered,"
+    "a.household_id AS review_audit_household,a.actor_id AS review_audit_actor,"
+    "a.action AS review_audit_action,a.command_key AS review_audit_key,"
+    "a.created_at AS review_audit_time,o.household_id AS review_event_household,"
+    "o.event_type AS review_event_action,o.created_at AS review_event_time "
+    "FROM receipts r JOIN audit a ON a.operation_id=r.operation_id "
+    "JOIN outbox o ON o.event_id=r.operation_id "
+)
 
 
 @dataclass
 class SQLiteTaskHistory:
     connection: sqlite3.Connection
 
+    def lifecycle_events(
+        self, household_id: str, *, limit: int = 25, after: int = 0
+    ) -> tuple[OperationEvidence, ...]:
+        validate_identifier(household_id)
+        if type(limit) is not int or not 1 <= limit <= 101:
+            raise InvalidInput("invalid_page_size")
+        if type(after) is not int or not 0 <= after <= 2**63 - 1:
+            raise InvalidInput("invalid_task_position")
+        return tuple(
+            self._live(row).evidence
+            for row in self.connection.execute(
+                _CURRENT + "WHERE r.household_id=? "
+                "AND r.action IN ('task.complete','task.verify','task.reopen') "
+                "AND o.position>? ORDER BY o.position LIMIT ?",
+                (household_id, after, limit),
+            )
+        )
+
     def _live(self, row: sqlite3.Row) -> RetainedOperation:
+        if tuple(
+            row[name]
+            for name in (
+                "review_audit_household",
+                "review_audit_actor",
+                "review_audit_action",
+                "review_audit_key",
+                "review_audit_time",
+                "review_event_household",
+                "review_event_action",
+                "review_event_time",
+            )
+        ) != (
+            row["household_id"],
+            row["actor_id"],
+            row["action"],
+            row["command_key"],
+            row["created_at"],
+            row["household_id"],
+            row["action"],
+            row["created_at"],
+        ):
+            raise StorageFailure("invalid_dependency_review")
         try:
             evidence = _evidence(row)
         except InvalidInput:
