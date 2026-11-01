@@ -583,7 +583,8 @@
       "owner": "Domus maintainers (review assignment pending)",
       "lastVerified": "2026-10-29",
       "specs": [
-        "specs/application-experience.md"
+        "specs/application-experience.md",
+        "specs/household-entry-interface.md"
       ],
       "workflows": [],
       "entrypoints": [],

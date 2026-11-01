@@ -18,7 +18,7 @@ debt or convert unknown historic intent into a design decision.
 | `shopping-management` | Proposed | Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts. | [Shared shopping demand&#44; purchases and receipt](./shopping-management.md) | 5 paths · 2026-10-29 |
 | `household-inventory` | Proposed | The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger. | [Product catalog&#44; pantry stock and replenishment](./household-inventory.md) | 5 paths · 2026-10-31 |
 | `home-assistant-surface` | Proposed | Domus exposes its household capabilities as native Home Assistant entities, services and events. The already integrated HA MCP consumes these surfaces; no gateway work or second MCP is included. | [Home Assistant entities&#44; services and integration](./home-assistant-surface.md) | 5 paths · 2026-10-29 |
-| `application-experience` | Proposed | A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI. | [Responsive application&#44; household dashboard and navigation](./application-experience.md) | 5 paths · 2026-10-29 |
+| `application-experience` | Proposed | A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI. | [Responsive application&#44; household dashboard and navigation](./application-experience.md) + 1 companion | 5 paths · 2026-10-29 |
 | `delivery-quality` | Proposed | Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels. | [Clean Architecture&#44; CI Check and isolated Stable and Edge channels](./delivery-quality.md) | 27 paths · 2026-10-31 |
 | `household-automation` | Proposed | Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces. | [Household automation engine and simple&#47;advanced rule editors](./household-automation.md) | 5 paths · 2026-10-29 |
 
@@ -116,7 +116,7 @@ debt or convert unknown historic intent into a design decision.
 
 - Owner: Domus maintainers (review assignment pending)
 - Last verified: 2026-10-29
-- Specifications: [`specs/application-experience.md`](./application-experience.md)
+- Specifications: [`specs/application-experience.md`](./application-experience.md) · [`specs/household-entry-interface.md`](./household-entry-interface.md)
 - Workflows: Not applicable for this capability.
 - Entrypoints: Not yet implemented (proposed capability).
 - Core code: Not yet implemented (proposed capability).
