@@ -382,24 +382,23 @@ confirmation. A correction needs new movement/operation identities; returning to
 confirmed amount needs no new movement. Dismissal cannot erase confirmed consumption. Exact proof
 replay is inert, and foreign/stale/conflicting proof cannot overwrite a later intent.
 
-The pure processor still needs command integration; task write routes reject material fields.
-SQLite material persistence and read DTOs are now implemented as described below. No stock ledger or
-real-consumer acceptance is claimed. Required next work:
+TaskCommands now connects material selection and initial completion to these semantics. The typed
+application requests preserve legacy fingerprints when new fields are omitted/null; explicit empty
+lists remain distinct. The HTTP write models still reject material inputs pending the next boundary
+integration. Explicit post/correct/dismiss and current/historical material query projections remain
+incomplete. The confirmed-consumption correction default is awaiting owner review.
 
-- Extend original canonical requests compatibly. Omitted new
-  material fields must retain old request fingerprints; explicit replacement/clear stays distinct.
-- Connect the persisted intent transitions to the one writer/receipt/audit boundary. Recording
-  plus confirmation and correction plus confirmation can each advance resource revision twice; store
-  those transitions atomically rather than assuming every final projection advances exactly once.
-- Bind actual current task/material authority and transaction-local Inventory semantics. Providers
-  must not perform network I/O or independent commits under that writer.
-- Wire adjustable completion usage and explicit settlement in both HTTP compositions, truthful
-  current/historical outcomes, concurrency/replay/rollback and actual migration/restoration tests.
-  Map quantity values to canonical wire strings; keep bounded compact outcomes in receipt/event
-  documents and full intent/binding records separate. Resolve admission unavailability explicitly;
-  ordinary consumer unavailability after valid performance remains a pending outcome.
-- Keep real Inventory/Points/recurrence/review projections and full product UI/deployment acceptance
-  separate until their owning implementations supply evidence.
+Required next work:
+
+- Wire material request/response models and explicit settlement in both HTTP compositions.
+- Add current and historical-cycle material projections; original receipts must retain original facts.
+- Reauthorize each settlement using current grants and the original command's scope before receipt
+  disclosure, preserving safe retry after later corrections and restoration. Initial grant facts
+  never authorize a new movement.
+- Store each correction/confirmation CAS step atomically with its receipt/audit/source event. A
+  compound correction may advance resource revision twice; do not skip the intermediate revision.
+- Keep actual Inventory/Points/recurrence/review implementations and UI/package/owner acceptance
+  separate until their owning services supply evidence.
 
 
 ## Material persistence and read projection
@@ -423,3 +422,35 @@ Both composed OpenAPI snapshots preserve existing paths, security and schema val
 TaskDefinition.materials and two response schemas. The domain has no Pydantic/FastAPI dependency.
 Material write DTOs, explicit settlement commands and real Inventory acceptance still require the
 next integration; SQLite and labeled confirmation fixtures do not establish actual stock movements.
+
+
+## Material selection and initial completion commands
+
+Create/update requests select only reference IDs and canonical planned quantities. Task authority
+and current inventory.manage are required for explicit linking/replacement/clear, including receipt
+replay/lookup. Inventory resolves household/target/unit/precision; callers cannot substitute them.
+Unchanged targets preserve line identity, changed targets get a new line, and old occurrences retain
+their frozen snapshots. Omitted updates preserve materials.
+
+CompleteTask accepts optional actual usages keyed by frozen line ID. It validates all identities and
+precision before work effects. Every planned line gets one intent: missing actuals remain unknown;
+zero never asks for a movement; separate recording waits for deliberate settlement. Current scoped
+use needs tasks.material_use and current performance authority plus the effective task-scoped policy,
+or applicable general inventory authority. A member's explicit scoped denial still applies. Normal
+denial retains valid work and pending authorization; shortage/binding changes require regularization;
+known provider absence retains pending processing. Approval, grant/stock changes, reopen and original
+retry never trigger consumption.
+
+The one writer saves the cycle/work, initial intent, any confirmed/deferred single-step CAS, compact
+per-line outcomes, original receipt, audit and outbox. A provider factory only binds local semantic
+services; it may perform no remote I/O or independent commit. Known binding unavailability uses the
+pure MissingTaskInventory default. The outer UnavailableTaskInventory remains an alias to that
+single semantic implementation, with no transport/ledger implementation hidden in Application.
+Unexpected binding failures fail closed and roll back.
+
+Tests use a fictional Inventory provider attached to the caller's real SQLite transaction. They prove
+child SQL effect rollback with failed task audit, one completion under contention, recovery after real
+commit/lost return, mixed confirmed/pending lines, current profile/member precedence, maximum
+32-line document budgets and actual offline restoration with historical same-key retry. This is not
+real Inventory policy, coupled ledger restoration or owner HA/package acceptance. Canonical new audit
+fields are checked strictly while original schema-5 completion fingerprints and receipts remain valid.

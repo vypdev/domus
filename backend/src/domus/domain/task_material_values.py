@@ -147,10 +147,14 @@ def validate_material_selections(values: tuple[MaterialSelection, ...]) -> None:
     _bounded(values, MaterialSelection, "reference_id")
 
 
+def validate_material_usage_values(values: tuple[MaterialUsage, ...]) -> None:
+    _bounded(values, MaterialUsage, "line_id")
+
+
 def validate_material_usages(
     values: tuple[MaterialUsage, ...], lines: tuple[MaterialLine, ...]
 ) -> None:
-    _bounded(values, MaterialUsage, "line_id")
+    validate_material_usage_values(values)
     _bounded(lines, MaterialLine, "line_id")
     if len({line.binding.household_id for line in lines}) > 1:
         raise InvalidInput("invalid_material_scope")

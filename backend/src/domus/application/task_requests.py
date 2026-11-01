@@ -2,10 +2,18 @@
 
 import json
 from dataclasses import asdict, dataclass
+from typing import cast
 
 from domus.domain.errors import InvalidInput
 from domus.domain.identity import validate_revision
-from domus.domain.storage import JsonDocument, validate_identifier
+from domus.domain.storage import JsonDocument, JsonObject, JsonValue, validate_identifier
+from domus.domain.task_material_values import (
+    MaterialQuantity,
+    MaterialSelection,
+    MaterialUsage,
+    validate_material_selections,
+    validate_material_usage_values,
+)
 from domus.domain.task_values import (
     DefinitionState,
     OccurrenceState,
@@ -23,7 +31,15 @@ from domus.domain.task_values import (
 class TaskRequest:
     def document(self) -> JsonDocument:
         # Tuples and string enums become JSON arrays and exact enum values.
-        return JsonDocument(json.dumps(asdict(self), ensure_ascii=False))
+        value = asdict(self)
+        for field, quantity in (("materials", "planned_quantity"), ("material_usages", "quantity")):
+            if field in value:
+                if value[field] is None:
+                    del value[field]
+                else:
+                    for item in value[field]:
+                        item[quantity] = item[quantity]["value"]
+        return JsonDocument(json.dumps(value, ensure_ascii=False))
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +48,7 @@ class CreateTask(TaskRequest):
     overrides: TaskOverrides = TaskOverrides()
     state: DefinitionState = DefinitionState.ACTIVE
     expected_revision: int = 0
+    materials: tuple[MaterialSelection, ...] | None = None
 
     def __post_init__(self) -> None:
         if (
@@ -43,6 +60,8 @@ class CreateTask(TaskRequest):
             or self.state not in (DefinitionState.DRAFT, DefinitionState.ACTIVE)
         ):
             raise InvalidInput("invalid_task_create")
+        if self.materials is not None:
+            validate_material_selections(self.materials)
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +113,7 @@ class TransitionTask(OccurrenceRequest):
 class CompleteTask(OccurrenceRequest):
     performer_ids: tuple[str, ...]
     performed_at: int
+    material_usages: tuple[MaterialUsage, ...] | None = None
 
     def __post_init__(self) -> None:
         OccurrenceRequest.__post_init__(self)
@@ -101,6 +121,8 @@ class CompleteTask(OccurrenceRequest):
         if not self.performer_ids:
             raise InvalidInput("invalid_task_performer")
         validate_task_time(self.performed_at)
+        if self.material_usages is not None:
+            validate_material_usage_values(self.material_usages)
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,6 +176,7 @@ class UpdateTaskDefinition(TaskRequest):
     content: TaskContent
     state: DefinitionState
     overrides: TaskOverrides | None = None
+    materials: tuple[MaterialSelection, ...] | None = None
 
     def __post_init__(self) -> None:
         validate_identifier(self.definition_id)
@@ -164,6 +187,8 @@ class UpdateTaskDefinition(TaskRequest):
             or (self.overrides is not None and not isinstance(self.overrides, TaskOverrides))
         ):
             raise InvalidInput("invalid_task_definition")
+        if self.materials is not None:
+            validate_material_selections(self.materials)
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,3 +219,38 @@ class UpdateTaskDependencies(OccurrenceRequest):
         OccurrenceRequest.__post_init__(self)
         validate_task_ids(self.prerequisite_ids)
         validate_task_ids(self.required_subtask_ids)
+
+
+def _material_rows(value: JsonValue, keys: tuple[str, str]) -> list[JsonObject]:
+    if (
+        type(value) is not list
+        or len(value) > 32
+        or any(type(item) is not dict or set(item) != set(keys) for item in value)
+    ):
+        raise InvalidInput("invalid_material_list")
+    return cast(list[JsonObject], value)
+
+
+def validate_recorded_material_request(request: JsonObject) -> None:
+    """Decode new fields in immutable audit evidence, never execute a historical command."""
+    if "materials" in request:
+        validate_material_selections(
+            tuple(
+                MaterialSelection(
+                    cast(str, value["reference_id"]),
+                    MaterialQuantity(cast(str, value["planned_quantity"])),
+                )
+                for value in _material_rows(
+                    request["materials"], ("reference_id", "planned_quantity")
+                )
+            )
+        )
+    if "material_usages" in request:
+        validate_material_usage_values(
+            tuple(
+                MaterialUsage(
+                    cast(str, value["line_id"]), MaterialQuantity(cast(str, value["quantity"]))
+                )
+                for value in _material_rows(request["material_usages"], ("line_id", "quantity"))
+            )
+        )

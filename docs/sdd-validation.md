@@ -350,3 +350,36 @@ compound CAS transitions and consumer/review projections remain required next wo
 material-core head has fully green project CI; its recurring Copilot assessment rejection is reported
 upstream unchanged. Finished-feature current-head CI and complete Bugbot without unresolved findings
 remain mandatory before merge.
+
+
+## Material request and initial completion checkpoint
+
+Typed application requests now select Inventory references/quantities and report actual usages of
+frozen lines. Omitted/null new fields stay absent from canonical documents; explicit empty arrays
+remain distinct. Original schema-5 completion replay still passes. Strict immutable-evidence decoding
+accepts the exact known old/new shapes and rejects malformed, duplicate or noncanonical material data.
+Current Inventory authority is required again for linking and original receipt disclosure.
+
+Initial completion validates all usage identities/precision, retains one intent per frozen line,
+checks current scoped/general authority and saves cycle/work/intent/CAS/receipt/audit/outbox under one
+writer. Missing actual, explicit zero, separate recording, denied, shortage, changed binding and
+unavailable outcomes remain distinct. Approval/reopen/retry never consumes again. The semantic
+absence default has one pure implementation with a compatibility outer alias; no stock calculations
+or provider I/O enter inner layers.
+
+All 77 new cases pass, including attached fictional SQL effect/task rollback, contention, actual
+commit/lost return, mixed lines, current grants, strict new audit fields, bounded maximum outcomes
+and actual main-database offline activation with historical material completion replay. Confirmations
+are explicit semantic fakes; the attached SQL fixture is not real Inventory or coupled ledger restore.
+A binding-unavailability regression initially failed instead of saving valid work; the known absence
+now becomes pending processing while unexpected failures still roll back. HTTP material write/settlement
+and current/historical query integration, confirmed-correction policy review, actual consumers and
+all UI/deployment acceptance remain incomplete.
+
+The final full backend passes 2,536 tests with all 6,896 statements/1,934 branches covered across
+all 96 authored files. The 28 task modules cover 2,140 statements/614 branches. Strict types/formatting,
+113 tooling/architecture fixtures, the 132-file/781-dependency inward/acyclic graph, links and original
+pinned SDD/catalog checks pass. All case rows and fourteen/109/485 planned inventory remain intact.
+The previous persistence head has complete project CI; original upstream Copilot failures remain
+separate and unchanged. Current-head project CI and complete Bugbot without unresolved findings
+remain mandatory before merge.

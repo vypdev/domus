@@ -8,7 +8,7 @@
 - Scope: Specify a durable first backend increment for task definitions, occurrences, completion cycles, authorization, and honest consumer integration seams.
 - Related issues/PRs: [Issue #13](https://github.com/vypdev/domus/issues/13); merged PR #12 is historical context.
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: None among supplied product choices. Action published the companion and managed branch before code. Complete contract/runtime/composition review remains required; Draft is not acceptance.
+- Open decisions blocking readiness: Confirmed-consumption correction default awaits owner review. Companion/branch were published before code. Complete contract/runtime/composition review remains required; Draft is not acceptance.
 
 ## 1. Executive summary
 
@@ -30,14 +30,14 @@ Verified facts at the immutable base:
 
 1. The household-tasks capability is proposed and its existing specification is `specs/household-tasks.md`, with 49 reserved cases `household-tasks-C01` through `household-tasks-C49`.
 2. The M1 source includes identity, household, transaction, receipt, outbox, recovery, and offline restoration foundations. It declares task-related permission enums, but no task entities, repositories, commands, or task API.
-3. The supplied capability catalog lists no task workflows, entrypoints, code, or tests. The existing broad Draft specification’s cases are not evidence of implementation.
+3. The base catalog lists no task workflows, entrypoints, code or tests; Draft cases confer no implementation evidence.
 4. At the pinned base no task routes exist. Later sections define the required two-composition contract.
 
 ### 2.3 Evidence
 
 - Code/workflow/documentation references: `specs/catalog.json`; `specs/household-tasks.md`; `docs/architecture.md`; `docs/decisions.md`; `docs/roadmap.md`; `docs/m1-acceptance-audit.md`; `backend/src/domus/application/commands.py`; `backend/src/domus/infrastructure/sqlite.py`.
-- Immutable base: commit `a63b2315cd5121dde9585ba8875e286fdef5330e`, tree `60842b62c64c28fe337891344a0eadea1ca8aac5`. Supplied blob identities confirm the cited files at that snapshot; this is evidence of source location, not execution support.
-- Related issue: https://github.com/vypdev/domus/issues/13. The owner supplied the checkout, API, lifecycle, material, and coverage decisions as authorized answers on 2026-10-31.
+- Immutable base: commit `a63b2315cd5121dde9585ba8875e286fdef5330e`, tree `60842b62c64c28fe337891344a0eadea1ca8aac5`. Blob identities locate source, not execution support.
+- Related issue: https://github.com/vypdev/domus/issues/13. Owner answers on 2026-10-31 authorize checkout/API/lifecycle/material/coverage choices.
 - External primary sources: not applicable; product and repository contract evidence is local.
 - Unknowns: maintainers’ final review assignment; implementation feasibility findings that require code; actual Home Assistant adoption and consumer delivery, which require later integration evidence.
 
@@ -212,7 +212,9 @@ Intent source quantity, cycle/time, recorder, binding/line snapshot, mode and in
 
 Resource revision guards edits; an independent effect revision changes only with corrected desired quantity. Its source key stays stable through pending retries and current actor changes. Posted/corrected state needs matching actual Inventory confirmation, including source scope, quantity, effect revision, movement/operation IDs and time. Correction preserves submitted quantity and the last confirmed effect until Inventory confirms the requested total; Tasks never compute stock deltas. Returning a pending correction to the already confirmed quantity needs no new movement. Dismiss cannot erase a confirmed effect. Exact confirmation replay is inert; stale/foreign confirmations cannot overwrite later intent state. All transitions validate supplied monotone time and revision exhaustion.
 
-The processor uses transaction-local Inventory/current-authority ports and reauthorizes explicit post/correct/dismiss. Completion retains ordinary denied usage. Pending consumer results certify no new movement, not delivery. Unavailable adapters never confirm stock. Pure/port fixtures do not establish persistence/HTTP/real-consumer integration; those remain required.
+The processor uses transaction-local Inventory/current-authority ports and reauthorizes explicit post/correct/dismiss. Completion retains ordinary denied usage. Pending certifies no new movement, not delivery; absence never confirms stock. Pure/port fixtures alone establish no integrated consumer acceptance.
+
+Material requests use `materials` selections on create/update and `material_usages` on completion. Omitted/null new fields stay absent from canonical payloads, preserving old fingerprints; explicit empty lists remain distinct. References/actuals use canonical strings. Linking requires current task create/manage plus inventory.manage, including explicit replacement/clear. Scoped use requires tasks.material_use plus current performance authority and effective scoped policy, or applicable general Inventory authority. No initial grant snapshot authorizes a later step. Validate all usage identities/precision before work effects. Record one intent per frozen line; missing actuals stay unknown. One writer saves initial intent and each subsequent CAS transition with work/receipt/audit/outbox. A missing optional Inventory provider retains valid usage as pending processing; approval/replay/reopen never invokes it again. Actual ledger acceptance remains separate.
 
 ### HTTP contract
 
@@ -269,17 +271,17 @@ Text equivalent: both HTTP compositions call shared Application services; Applic
 
 ### 8.2 Contracts, state, and trust boundaries
 
-- Pure decisions: transitions, dependency/subtask readiness, claim eligibility, performer/verification policy, and material outcome classification.
-- Application contracts: bounded commands/queries, expected revision, idempotency key, immutable receipt, operation lookup, safe history, and current allowed actions.
-- Semantic ports: task repository/unit of work, current authorization, server-owned material resolution and Inventory validation/settlement, durable event acknowledgement, clock and ID generation supplied at boundary.
-- Durable state/schema ownership: Tasks owns definitions, occurrence snapshots, cycles, task history, material intent references/status, receipt facts, and task event identities. Inventory owns stock and movements; Points owns awards.
-- Concurrency/idempotency: SQLite writer transaction rechecks authorization and revision; unique command receipt, entity revision, event ID, cycle ID, and child intent constraints. Claim contention has one winner; loser observes conflict/current state, never silent reassignment.
-- Trust: request bodies, IDs, comments, imported/restored data, provider payloads, and event deliveries are untrusted. Actor, household, installation, and channel are bound from verified context. Selected performer/member IDs require separate on-behalf authority.
-- Provider errors: distinguish invalid/foreign input, denied authority, conflict/stale revision, unavailable consumer, and internal failure; retain safe pending outcome only after command validity is established.
+- Pure decisions cover transitions, required work, claim, performers/verification and material outcomes.
+- Bounded commands/queries retain expected revision, key, immutable receipt, operation/history and current action hints.
+- Semantic repository/UOW, authorization, material resolution/settlement, event acknowledgement, clock and IDs cross boundaries.
+- Tasks owns definitions/snapshots/cycles/history/intents/receipts/event identity; Inventory owns stock/movements; Points owns awards.
+- One SQLite writer rechecks authority/revision. Unique receipts/events/cycles/child intents and CAS give claim one winner; losers conflict without reassignment.
+- Bodies, IDs, comments, imports/restores, provider data and events are untrusted. Verified context binds actor/household/installation/channel; selected performers need on-behalf authority.
+- Distinguish invalid/foreign, denied, conflict/stale, unavailable and internal failures. Only otherwise valid work may retain safe pending outcomes.
 
 ### 8.3 Executable architecture constraints
 
-Every authored runtime leaf must be declared in the companion before its first source change and enter backend scope/coverage from its first change. Dependency graph and cycle checks cover all runtime files, including composition, HTTP, migration, restore, and unimported modules. Tests enforce Domain has no inward provider/framework imports; Application references semantic ports only; SQLite/provider mapping remains outer; both compositions invoke the same application services. Schema/OpenAPI contract checks parse generated structure and reject undeclared routes/fields. Existing CI Check required groups run on every PR commit; immutable Copilot checks remain unchanged.
+Declare each runtime leaf before code and include every authored file in coverage and dependency/cycle checks, including compositions, HTTP, migrations/restores and unimported modules. Enforce pure Domain, semantic Application, outer provider/SQLite mapping and shared services in both compositions. Parse generated schema/OpenAPI and reject undeclared routes/fields. All CI Check groups run per PR commit; Copilot checks remain immutable.
 
 ## 9. UI/UX and content contract
 
@@ -481,6 +483,8 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `backend/src/domus/application/task_material_ports.py` | create |
 | `tests/backend/test_task_material_values.py` | create |
 | `backend/src/domus/application/task_materials.py` | create |
+| `backend/src/domus/application/task_material_commands.py` | create |
+| `tests/backend/test_task_material_commands.py` | create |
 | `backend/src/domus/infrastructure/sqlite_tasks.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_records.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_schema.py` | create |
@@ -558,7 +562,7 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `tests/backend/test_owned_generations.py` | update |
 | `tests/backend/test_restored_commands.py` | update |
 
-User guide must show title-only creation, claim, completion, and approval defaults. Setup documentation covers existing proof/session/permissions and states no new gateway/login. Operator guide covers pending consumers, replay, restore, settlement, and recovery. Contributor/architecture documentation shows ports, identity ownership, migration, OpenAPI, and coverage inventory. OpenAPI is generated/contract-validated from the proposed route contract; its planned path must follow the repository’s actual API artifact convention during publication review. Documentation examples are synchronized with contract fixtures. Validate links, route navigation, spec/catalog structure, and the unchanged pinned SDK format/consistency/catalog validators and `uv run domus-check docs`; no missing artifact is treated as existing evidence.
+Document title-only creation, claim, completion/approval defaults, existing proof/session/permissions, pending consumers, replay/restore/settlement/recovery, ports, migration, OpenAPI and coverage. Add no gateway/login. Synchronize examples with fixtures and actual API artifact conventions. Validate links/navigation, spec/catalog and unchanged pinned format/consistency/catalog checks plus `uv run domus-check docs`. Missing artifacts confer no evidence.
 
 ## 16. Acceptance
 

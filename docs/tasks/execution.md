@@ -40,8 +40,9 @@ zero when absent and never initializes them.
 
 Definition reads include frozen material binding/planned-quantity facts. A quantity is a canonical
 decimal string such as `"0.25"`, never a floating-point number or an internal `{value: ...}` object.
-Task write requests still reject material selections/usage until their command integration is
-complete. A planned material line does not mean that stock was consumed.
+Task HTTP write requests still reject material selections/usage until their boundary integration
+is complete. The shared application commands already support these typed values; no real Inventory
+provider or product material form is supplied by that internal checkpoint. A planned material line does not mean that stock was consumed.
 
 ## Edit and assign
 

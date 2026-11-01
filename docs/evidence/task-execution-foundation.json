@@ -1,23 +1,23 @@
 {
-  "verifiedAtUTC": "2026-11-01T03:47:01.273727+00:00",
+  "verifiedAtUTC": "2026-11-01T04:35:45.441299+00:00",
   "issue": "https://github.com/vypdev/domus/issues/13",
   "pullRequest": "https://github.com/vypdev/domus/pull/14",
-  "sourceBase": "bef50570bf5bb3825df4171e959a5ad18d2c46ae",
-  "sourceIdentity": "Working-source schema-6 material durability and canonical read/compact-edit-output checkpoint over sourceBase; current exact source/test hashes follow. Material selection/completion/settlement commands and actual Inventory remain incomplete.",
+  "sourceBase": "daeb398a8b839df2ebb901af09e421303aa4ab3c",
+  "sourceIdentity": "Working-source typed material selection/initial completion checkpoint over sourceBase; exact runtime/test hashes follow. HTTP material write/settlement and current/historical material projections, correction authority review and actual Inventory remain incomplete.",
   "sources": {
-    "backend/src/domus/application/task_authorization.py": "bf4498c309e8e66d3ebbe54160c7df8794060b3436a207d7ed3a895e500fbd18",
-    "backend/src/domus/application/task_commands.py": "203445b30f608a6cd656f2be84938f1d382c657bf6708c70d281f150a7c203b3",
+    "backend/src/domus/application/task_authorization.py": "677c5c3a2db17c52dc64d298a46a67816bee0372ce7a93c848fab26bfc8851a6",
+    "backend/src/domus/application/task_commands.py": "329c42ac29f104c29bd90059733d2bb5e76cd78f637d703e942e52069bf743c8",
     "backend/src/domus/application/task_facts.py": "96c553048fae8ccfdbccecbf27e043ca1aa08deac52abf403057cb44ab3ab860",
-    "backend/src/domus/application/task_material_ports.py": "40803565171e7f4c4cd9278ccd800e24183805a8dceed9ca2425d9ccf5bcaea0",
+    "backend/src/domus/application/task_material_ports.py": "87ba7e535f5a864829fdba3a9cfdea2fb5723908611455cf1dd2db10f9d43952",
     "backend/src/domus/application/task_materials.py": "14a9847b3b7c65cf55a0f9b9699cedd9118ab5dd5681b7e47c818de32d462249",
     "backend/src/domus/application/task_ports.py": "a99fb7c07699463e7e5f7cd1d422aeb16c3af417a1f8ca3dad98f9c442abae46",
     "backend/src/domus/application/task_queries.py": "19d5e27cb3b9730622e8adc099d95307ab021e2694a03975e0a950f769d2cf8a",
-    "backend/src/domus/application/task_requests.py": "db11d0d452a83d084e17b871f6bd6c219fd8f1203cba94eb9e1c87825dc99994",
+    "backend/src/domus/application/task_requests.py": "6f297b061a14b4e5454e81fd3a65de0a6c10b0d606fac52fb5a2d0b2adaf6e49",
     "backend/src/domus/composition/ingress.py": "34aaf82a652c26790daa3129e6f85ab3b37202dfda7401e230bf7fbe669e8182",
     "backend/src/domus/composition/server.py": "c97c61485c957f575069751bab714d9b23c0115d1ec39757b7147a50dacb14e0",
     "backend/src/domus/composition/tasks.py": "955f4b50e54caa6b413479552d9e3b020a83318998108c71b77796793ed91834",
     "backend/src/domus/domain/errors.py": "0af3fadacc89835a4778b07ec45a1cf45539825c3756f44e8f78cebb37f354b6",
-    "backend/src/domus/domain/task_material_values.py": "6dca4efad13bbb75693c6b57ade8f73b6c1d9500abfc7bb22bca69a15fcdce89",
+    "backend/src/domus/domain/task_material_values.py": "e3bc290538de9d6ef243cd35624e2fac294f72ade1245621a8ec42cad3991b31",
     "backend/src/domus/domain/task_materials.py": "b30d1929fdfafdc92a93bedcbcc61e9edc1b04d0ad079e0e8e80bf77fb89430c",
     "backend/src/domus/domain/task_policy.py": "5a7cb62237a233cbeb958295e35914c01ae73cc2058f146554325fc91ba40a52",
     "backend/src/domus/domain/task_values.py": "3439561cd1030dc9e779a9f7430d59a3bbf58b8ffea107fc1df4fe3efe0e345b",
@@ -33,7 +33,7 @@
     "backend/src/domus/infrastructure/sqlite_task_schema.py": "d220bef0bf8f8c180401367094f00fba8bc7248d2faf54700e09d0f4a6b61922",
     "backend/src/domus/infrastructure/sqlite_tasks.py": "ccdcab646ede88bf3caea2b3f1149f139f41b00c7df067c03e338717d8596de1",
     "backend/src/domus/infrastructure/task_cursor.py": "b21dbb915ce874b51008689d05abb4480cb7a65aabc5851f9500e51238bb6b5f",
-    "backend/src/domus/infrastructure/task_materials.py": "2dc7906e4bd5e5b1c4d0be39073e1e7a2f143b24a7f9bb5dd23a1a6ba3aa4597",
+    "backend/src/domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f",
     "tests/backend/test_household_http.py": "4230ca4fdacad8e304fddfdf00e575e823d9b74b8c9b4fb38f5ab96f228beaa3",
     "tests/backend/test_sqlite_task_history.py": "2cf1bdd8fa2fd3ded5da6f4e508a3437ed6be034c8fbfd6e4e85deb25f561fde",
     "tests/backend/test_sqlite_task_integrity.py": "a9b9e430933ffbbf4430cb06ea854090223ef181b7ffe59737110bffe9bb8db6",
@@ -67,7 +67,9 @@
     "tests/backend/test_sqlite_history.py": "a508decbb693cd03f9ff2c84f93a83bf2a948ff6f5a5f34eae4a92bb12df6961",
     "tests/backend/test_sqlite_identity.py": "d5962e45c0968eb1f7ae1ddb5951d6df82350031b9f7250954c41b743897f08d",
     "tests/backend/test_sqlite_recovery.py": "4494208ae5472667bdf4b324d87bf3e5b94794f3485d2806c5c511eeca3fa283",
-    "tests/backend/test_sqlite_snapshots.py": "f1be6a83005707ae57856a06626a73f0c0a0c150ff27fa46203d4c3de47238c1"
+    "tests/backend/test_sqlite_snapshots.py": "f1be6a83005707ae57856a06626a73f0c0a0c150ff27fa46203d4c3de47238c1",
+    "backend/src/domus/application/task_material_commands.py": "9b3ae1955e25305d8b281bca5a865fce45e1889463a98e354227197344de8d59",
+    "tests/backend/test_task_material_commands.py": "ae9d1ba358befed77919b8d48d855cde05ff94994a6a58d5002acfb46aed8684"
   },
   "wholeBackendSourceInventory": {
     "backend/src/domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
@@ -89,14 +91,15 @@
     "backend/src/domus/application/session_values.py": "f124c2405362cbd782394e69759ac2f88041910e771447eaf40c82ad3d993e50",
     "backend/src/domus/application/sessions.py": "4e21d9b3bd917a18b8b996cc43757cd1a341a0a53d4ed2b3db77688f0fbf5a8c",
     "backend/src/domus/application/snapshots.py": "c4f0862f590d222711018de3b23a7155f5702375ce6ece7dd0e2170c86a22ca4",
-    "backend/src/domus/application/task_authorization.py": "bf4498c309e8e66d3ebbe54160c7df8794060b3436a207d7ed3a895e500fbd18",
-    "backend/src/domus/application/task_commands.py": "203445b30f608a6cd656f2be84938f1d382c657bf6708c70d281f150a7c203b3",
+    "backend/src/domus/application/task_authorization.py": "677c5c3a2db17c52dc64d298a46a67816bee0372ce7a93c848fab26bfc8851a6",
+    "backend/src/domus/application/task_commands.py": "329c42ac29f104c29bd90059733d2bb5e76cd78f637d703e942e52069bf743c8",
     "backend/src/domus/application/task_facts.py": "96c553048fae8ccfdbccecbf27e043ca1aa08deac52abf403057cb44ab3ab860",
-    "backend/src/domus/application/task_material_ports.py": "40803565171e7f4c4cd9278ccd800e24183805a8dceed9ca2425d9ccf5bcaea0",
+    "backend/src/domus/application/task_material_commands.py": "9b3ae1955e25305d8b281bca5a865fce45e1889463a98e354227197344de8d59",
+    "backend/src/domus/application/task_material_ports.py": "87ba7e535f5a864829fdba3a9cfdea2fb5723908611455cf1dd2db10f9d43952",
     "backend/src/domus/application/task_materials.py": "14a9847b3b7c65cf55a0f9b9699cedd9118ab5dd5681b7e47c818de32d462249",
     "backend/src/domus/application/task_ports.py": "a99fb7c07699463e7e5f7cd1d422aeb16c3af417a1f8ca3dad98f9c442abae46",
     "backend/src/domus/application/task_queries.py": "19d5e27cb3b9730622e8adc099d95307ab021e2694a03975e0a950f769d2cf8a",
-    "backend/src/domus/application/task_requests.py": "db11d0d452a83d084e17b871f6bd6c219fd8f1203cba94eb9e1c87825dc99994",
+    "backend/src/domus/application/task_requests.py": "6f297b061a14b4e5454e81fd3a65de0a6c10b0d606fac52fb5a2d0b2adaf6e49",
     "backend/src/domus/composition/__init__.py": "a902d8faf7dd19da6829fb730d81e32d34ec38ee6cfafd676966a95d0ad31366",
     "backend/src/domus/composition/admin.py": "020abd88d8b9f26a429169bd1a51dd7b7ae960f0a96b53e2099bd2321debbff5",
     "backend/src/domus/composition/ha_app.py": "e0ffe36478881ff11367c7ba5467438ebef54af7d4bfb00bf14350893b15e1b3",
@@ -114,7 +117,7 @@
     "backend/src/domus/domain/restoration.py": "4bb02d6633a0c81c1ce0cb58ae73dd300813b7ed40f495de521a0290d7b2ce0f",
     "backend/src/domus/domain/snapshots.py": "81060c12e0ef06c7329bc3be780d321f40426d36e87e42fea5e85ad075bf7f19",
     "backend/src/domus/domain/storage.py": "9c72aedf54c63d6fa0d85f0e8c044d56c7ceefc23eea123b45d096da96a6c75d",
-    "backend/src/domus/domain/task_material_values.py": "6dca4efad13bbb75693c6b57ade8f73b6c1d9500abfc7bb22bca69a15fcdce89",
+    "backend/src/domus/domain/task_material_values.py": "e3bc290538de9d6ef243cd35624e2fac294f72ade1245621a8ec42cad3991b31",
     "backend/src/domus/domain/task_materials.py": "b30d1929fdfafdc92a93bedcbcc61e9edc1b04d0ad079e0e8e80bf77fb89430c",
     "backend/src/domus/domain/task_policy.py": "5a7cb62237a233cbeb958295e35914c01ae73cc2058f146554325fc91ba40a52",
     "backend/src/domus/domain/task_values.py": "3439561cd1030dc9e779a9f7430d59a3bbf58b8ffea107fc1df4fe3efe0e345b",
@@ -164,14 +167,14 @@
     "backend/src/domus/infrastructure/sqlite_tasks.py": "ccdcab646ede88bf3caea2b3f1149f139f41b00c7df067c03e338717d8596de1",
     "backend/src/domus/infrastructure/standalone_sessions.py": "144d691be8589c9f9ecd539717e6497cdb718c28033fd39992271ac674b32252",
     "backend/src/domus/infrastructure/task_cursor.py": "b21dbb915ce874b51008689d05abb4480cb7a65aabc5851f9500e51238bb6b5f",
-    "backend/src/domus/infrastructure/task_materials.py": "2dc7906e4bd5e5b1c4d0be39073e1e7a2f143b24a7f9bb5dd23a1a6ba3aa4597"
+    "backend/src/domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
   "runtime": {
     "python": "3.14.6",
     "coverage": "7.17.0"
   },
   "tests": {
-    "wholeBackend": 2459,
+    "wholeBackend": 2536,
     "existingTooling": 72,
     "architectureFixtures": 41,
     "currentAuthorityAndIdentityProfiles": 151,
@@ -184,55 +187,56 @@
     "newTaskQueriesHistoryAndCursors": 126,
     "newTaskHTTPAndRuntime": 86,
     "newMaterialCoreAndPorts": 144,
-    "newMaterialStorageAndRead": 59
+    "newMaterialStorageAndRead": 59,
+    "newMaterialSelectionAndInitialCompletionCommands": 77
   },
   "coverage": {
-    "authoredBackendFiles": 95,
+    "authoredBackendFiles": 96,
     "wholeBackend": {
-      "covered_lines": 6774,
-      "num_statements": 6774,
+      "covered_lines": 6896,
+      "num_statements": 6896,
       "percent_covered": 100.0,
       "percent_covered_display": "100.00",
       "missing_lines": 0,
-      "excluded_lines": 204,
+      "excluded_lines": 205,
       "percent_statements_covered": 100.0,
       "percent_statements_covered_display": "100.00",
-      "num_branches": 1898,
+      "num_branches": 1934,
       "num_partial_branches": 0,
-      "covered_branches": 1898,
+      "covered_branches": 1934,
       "missing_branches": 0,
       "percent_branches_covered": 100.0,
       "percent_branches_covered_display": "100.00"
     },
     "taskModules": {
       "backend/src/domus/application/task_authorization.py": {
-        "covered_lines": 143,
-        "num_statements": 143,
+        "covered_lines": 181,
+        "num_statements": 181,
         "percent_covered": 100.0,
         "percent_covered_display": "100.00",
         "missing_lines": 0,
         "excluded_lines": 0,
         "percent_statements_covered": 100.0,
         "percent_statements_covered_display": "100.00",
-        "num_branches": 62,
+        "num_branches": 72,
         "num_partial_branches": 0,
-        "covered_branches": 62,
+        "covered_branches": 72,
         "missing_branches": 0,
         "percent_branches_covered": 100.0,
         "percent_branches_covered_display": "100.00"
       },
       "backend/src/domus/application/task_commands.py": {
-        "covered_lines": 178,
-        "num_statements": 178,
+        "covered_lines": 197,
+        "num_statements": 197,
         "percent_covered": 100.0,
         "percent_covered_display": "100.00",
         "missing_lines": 0,
         "excluded_lines": 0,
         "percent_statements_covered": 100.0,
         "percent_statements_covered_display": "100.00",
-        "num_branches": 20,
+        "num_branches": 22,
         "num_partial_branches": 0,
-        "covered_branches": 20,
+        "covered_branches": 22,
         "missing_branches": 0,
         "percent_branches_covered": 100.0,
         "percent_branches_covered_display": "100.00"
@@ -253,13 +257,29 @@
         "percent_branches_covered": 100.0,
         "percent_branches_covered_display": "100.00"
       },
-      "backend/src/domus/application/task_material_ports.py": {
-        "covered_lines": 26,
-        "num_statements": 26,
+      "backend/src/domus/application/task_material_commands.py": {
+        "covered_lines": 37,
+        "num_statements": 37,
         "percent_covered": 100.0,
         "percent_covered_display": "100.00",
         "missing_lines": 0,
-        "excluded_lines": 17,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 4,
+        "num_partial_branches": 0,
+        "covered_branches": 4,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_material_ports.py": {
+        "covered_lines": 31,
+        "num_statements": 31,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 18,
         "percent_statements_covered": 100.0,
         "percent_statements_covered_display": "100.00",
         "num_branches": 4,
@@ -318,17 +338,17 @@
         "percent_branches_covered_display": "100.00"
       },
       "backend/src/domus/application/task_requests.py": {
-        "covered_lines": 98,
-        "num_statements": 98,
+        "covered_lines": 125,
+        "num_statements": 125,
         "percent_covered": 100.0,
         "percent_covered_display": "100.00",
         "missing_lines": 0,
         "excluded_lines": 0,
         "percent_statements_covered": 100.0,
         "percent_statements_covered_display": "100.00",
-        "num_branches": 18,
+        "num_branches": 38,
         "num_partial_branches": 0,
-        "covered_branches": 18,
+        "covered_branches": 38,
         "missing_branches": 0,
         "percent_branches_covered": 100.0,
         "percent_branches_covered_display": "100.00"
@@ -350,8 +370,8 @@
         "percent_branches_covered_display": "100.00"
       },
       "backend/src/domus/domain/task_material_values.py": {
-        "covered_lines": 101,
-        "num_statements": 101,
+        "covered_lines": 103,
+        "num_statements": 103,
         "percent_covered": 100.0,
         "percent_covered_display": "100.00",
         "missing_lines": 0,
@@ -622,8 +642,8 @@
         "percent_branches_covered_display": "100.00"
       },
       "backend/src/domus/infrastructure/task_materials.py": {
-        "covered_lines": 8,
-        "num_statements": 8,
+        "covered_lines": 2,
+        "num_statements": 2,
         "percent_covered": 100.0,
         "percent_covered_display": "100.00",
         "missing_lines": 0,
@@ -643,22 +663,22 @@
     "inventory": "Exact source-file equality plus zero missed statements and branch destinations for every authored file.",
     "wholeSourceInventoryExactlyMatchesCoverage": true,
     "taskModuleTotals": {
-      "files": 27,
-      "statements": 2018,
-      "branches": 578,
+      "files": 28,
+      "statements": 2140,
+      "branches": 614,
       "allCovered": true
     }
   },
   "architecture": {
-    "analyzedFiles": 131,
-    "dependencies": 763,
+    "analyzedFiles": 132,
+    "dependencies": 781,
     "contractsKept": 3,
     "contractsBroken": 0,
-    "strictBackendTypes": "PASS; 95 backend files (99 including tooling)"
+    "strictBackendTypes": "PASS; 96 backend files, 100 including tooling"
   },
   "commands": [
-    "COVERAGE_FILE=/private/tmp/domus-material-storage-full.coverage .venv/bin/pytest tests/backend --basetemp=$TMPDIR/domus-material-storage-verified-pytest-bef5057 --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-material-storage-full-coverage.json --cov-report=xml:/private/tmp/domus-material-storage-full-coverage.xml (private parent/process group verified)",
-    ".venv/bin/pytest -q tests/backend/test_sqlite_task_materials.py --cov=domus.infrastructure.sqlite_task_materials --cov=domus.infrastructure.sqlite_task_material_records --cov=domus.infrastructure.sqlite_task_material_schema --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-material-storage-focused-coverage.json (56 then-current cases; final full run includes subsequent additional budget case and two read cases)",
+    "COVERAGE_FILE=/private/tmp/domus-material-completion-full.coverage .venv/bin/pytest tests/backend --basetemp=$TMPDIR/domus-material-completion-final-pytest-daeb398 --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-material-completion-full-coverage.json --cov-report=xml:/private/tmp/domus-material-completion-full-coverage.xml (private parent/process group verified)",
+    ".venv/bin/pytest -q tests/backend/test_task_material_commands.py --cov=domus.application.task_material_commands --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-task-material-command-focused.json (68 then-current helper cases; final whole backend includes all subsequent 77 new cases)",
     ".venv/bin/mypy backend/src tooling",
     ".venv/bin/lint-imports --config architecture/python-application.ini --no-cache",
     ".venv/bin/lint-imports --config architecture/python-tooling.ini --no-cache",
@@ -704,7 +724,7 @@
   "sddAndCatalogValidation": {
     "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
     "base": "a63b2315cd5121dde9585ba8875e286fdef5330e",
-    "source": "bef50570bf5bb3825df4171e959a5ad18d2c46ae",
+    "source": "daeb398a8b839df2ebb901af09e421303aa4ab3c",
     "catalogSHA256": "522b4be55ee8abcf295c58d200caf6141efee837988864c4ebf4a0c53d9846bd",
     "catalog": "PASS",
     "affectedSdds": "PASS; household-tasks, household-identity, points-rewards, task-execution-foundation",
@@ -738,7 +758,7 @@
   },
   "limits": [
     "The full backend run uses temporary loopback WebSocket listeners and was run with local-listener permission. No tests were skipped to obtain coverage.",
-    "Material pure/port processing, scoped SQLite/schema-6 durability and canonical definition/occurrence reads are implemented. Task material selection/completion/settlement commands and write DTOs, current-material authority binding, dependency review and actual Inventory/Points/recurrence consumers remain incomplete. Existing task write routes still reject material fields.",
+    "Typed application material selection/initial completion, canonical request compatibility, current linking/scoped usage, transaction-bound intents/compact outcomes and schema-6 persistence are implemented. HTTP material write DTOs, explicit settlement/current-historical material projections, confirmed-correction authority review, dependency review and actual Inventory/Points/recurrence remain incomplete. HTTP still rejects material inputs.",
     "Restoration tests use an explicit fake HA identity provider with actual local MembershipAuthorization, AtomicCommands, SQLite and restore services. They are not owner HA access/adoption proof.",
     "No owner Chrome UI, package deployment, Stable/Edge adoption, HA entity/service or complete product acceptance was performed. Hosted current-head CI and complete Bugbot are separate gates.",
     "Historical authority checkpoint: its first full run found two stale OpenAPI Permission enums (1906 passed, 2 failed). Only those enum references were synchronized; its final run including stale-record negatives passed 1910 tests. The current material core checkpoint is independently measured above. This material persistence/read checkpoint has independent source measurements."
@@ -849,61 +869,51 @@
     "A stale assignment cannot authorize completion after release, and a supplied occurrence with a weaker override cannot replace the persisted snapshot. Both negative tests failed before the current-record lookup was implemented."
   ],
   "rawMeasurements": {
-    "archive": "/private/tmp/domus-material-storage-checkpoint-retained/measurements.tar.gz",
-    "archiveSHA256": "b898f00900777084613bdfed88c91cbd7a3d1cc8a073bed49609313472bfa08a",
+    "archive": "/private/tmp/domus-material-completion-checkpoint-retained/measurements.tar.gz",
+    "archiveSHA256": "da90a8565ed84043fffc3de9bf95d166c3cac501ffcec75f39bc42a264a6189f",
     "members": [
       {
-        "name": "domus-material-storage-focused-coverage.json",
-        "sha256": "dd993516c497e095da12054eb4b6f8b7cfb53d87123f9b1c49620cace5e44f3e",
-        "size": 14624
+        "name": "domus-task-material-command-focused.json",
+        "sha256": "987174ce2cada4f02aeb971ea31aba3fa9e72c63b4439a501b0f2d33cfcf7b7e",
+        "size": 5757
       },
       {
-        "name": "domus-material-storage-full-coverage.json",
-        "sha256": "ab17f48b585fbb210a42a29a71343aa7af854e353ce414465e76a3047cb41668",
-        "size": 917055
+        "name": "domus-material-completion-full-coverage.json",
+        "sha256": "c7c2f37f7f424a580a5c0c33af69715837ee8620e594a541b79eacb73140878b",
+        "size": 929250
       },
       {
-        "name": "domus-material-storage-full-coverage.xml",
-        "sha256": "184c408a0d8f81a27f0858557aac3a29102019f07c895676ff456bb32ed85414",
-        "size": 303468
+        "name": "domus-material-completion-full-coverage.xml",
+        "sha256": "36108260bc4b594ab233c0dabd72a28297d7c3ca78002c2cb4c51e3727cdae84",
+        "size": 308865
       },
       {
-        "name": "domus-material-storage-full-output.txt",
-        "sha256": "abe2bd3c7eb15db3ac608f501c9ab52da3321680f574014e4dcfc57de39599d8",
-        "size": 19790
+        "name": "domus-material-completion-full-output.txt",
+        "sha256": "598ea70787429a3f2dff387d15aea854c71984a4a068c088a109eab276aa34bd",
+        "size": 20059
       },
       {
-        "name": "domus-material-storage-full.coverage",
-        "sha256": "8fcc17ce2e049b4ea9bb7cbbb9c46e984ad82ba1de7661f3f030aef6eade1d3e",
-        "size": 512000
+        "name": "domus-material-completion-full.coverage",
+        "sha256": "291855b9173c56d2e2ce27d8bc8ec422276ca520db52e9eb681c885b084c5d8f",
+        "size": 520192
       },
       {
-        "name": "domus-material-storage-initial-output.txt",
-        "sha256": "b4780b8b736c85ec4e8540ec4fbe780048c3b1904cf470a1a306812e829bae6c",
-        "size": 23311
-      },
-      {
-        "name": "domus-material-storage-initial-coverage.json",
-        "sha256": "0ddf9e44cfd2df34206d3516b60278a2db7612aad8014bf56ce5f11fffd7da67",
-        "size": 910786
-      },
-      {
-        "name": "domus-material-storage-architecture.txt",
-        "sha256": "d9ad52010bba224444c4d02f95980a50943151ca07cea2a9d4bbdf7714699929",
+        "name": "domus-material-completion-architecture.txt",
+        "sha256": "e486279027e993ab6dd6e17998fabcb4970220acbc2a5aefe69a1f70120b88f1",
         "size": 959
       },
       {
         "name": "domus-task-foundation-published-validation.json",
-        "sha256": "b162622acc4eb83c68a67f0ec710f379b802378530083e1014b93b14f74a5e5c",
+        "sha256": "a3c7fb4f95610ddfd0355eef3d5e0f8b979e5c1b3d83bb3a1578deb11ce6307e",
         "size": 326
       },
       {
         "name": "domus-task-storage-sdd-catalog-validation.json",
-        "sha256": "6ecc4e7d26c653e79302dfb4c3e873ed5f6fd1cf3ee23f7808a8383cd1d12503",
+        "sha256": "ce89d9a80dbf24d811e62a87363a7a86dd02a9931321b25b3fade022a3bc4c2e",
         "size": 586
       }
     ],
-    "consumer": "Original final whole-backend/material/storage/read measurements, pinned SDD and import graph for current in-flight PR review. Initial two contract failures retain a separate interim working-tree scope; no package or actual Inventory delivery is implied."
+    "consumer": "Original full backend, focused helper, dependency and unchanged pinned SDD measurements for current PR review/reproduction. Fictional attached SQL effects are separate from actual Inventory policy/package/owner acceptance."
   },
   "historicalAuthorityCheckpoint": {
     "sourceRevision": "e439a70cdde86ff4f1294a466d8ac0cdd46c64f4",
@@ -1290,8 +1300,8 @@
   "sddFormatValidation": {
     "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
     "base": "a63b2315cd5121dde9585ba8875e286fdef5330e",
-    "source": "bef50570bf5bb3825df4171e959a5ad18d2c46ae",
-    "markdownSHA256": "0fc9c7cc204039e7c24afd0085605e1b8c0dce65982684c6236e9b7b924fb31a",
+    "source": "daeb398a8b839df2ebb901af09e421303aa4ab3c",
+    "markdownSHA256": "fb814b9edc721f62ce1e32adcc6f3e09b7a0cd8e01affa8690c0f29359704c6e",
     "format": "PASS",
     "consistency": "PASS",
     "diagnostic": null
@@ -1577,10 +1587,10 @@
       "Dumped database reopens with baseline runtime; historical receipt and absent active cycle verified.",
       "Original create request lacks future material fields; preserve canonical retry compatibility."
     ],
-    "consumer": "Later material command/canonical-request compatibility and review reproduction; original generator/provenance/source archive remain retained for that next integration.",
+    "consumer": "Material HTTP legacy request compatibility and active frozen-input provenance review; original generator/provenance/archive remain retained until those gates finish.",
     "retainedDirectory": "/private/tmp/domus-schema5-frozen-17ea907",
     "generatorSHA256": "10bf0ed79d2a3c6666da7ad6edce251dfb2d096e7930d9cd81c520da910cddc0",
-    "status": "Original immutable schema-5 input now used successfully in real schema-6 migration, old receipt replay, strict old checkpoint inspection and actual offline activation; SQL bytes/hash unchanged.",
+    "status": "Original immutable schema-5 input remains byte-identical and passes current schema-6 migration, strict old checkpoint inspection, offline activation and original TaskCommands completion retry after optional material fields were added without changing legacy canonical fingerprints.",
     "repositoryPath": "tests/fixtures/sqlite/v5.sql"
   },
   "historicalMaterialCoreCheckpoint": {
@@ -1713,5 +1723,130 @@
       "originalLog": "domus-material-storage-initial-output.txt in rawMeasurements archive."
     },
     "scope": "Actual SQLite and composed ASGI evidence, not material write/real ledger/owner HA/package acceptance. Material processor still needs task transaction and authorization binding."
+  },
+  "historicalMaterialPersistenceCheckpoint": {
+    "sourceRevision": "daeb398a8b839df2ebb901af09e421303aa4ab3c",
+    "verifiedAtUTC": "2026-11-01T03:47:01.273727+00:00",
+    "tests": {
+      "wholeBackend": 2459,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48,
+      "newTaskExecution": 46,
+      "commandsExecutionAndAuthorityFocused": 114,
+      "newTaskEditors": 41,
+      "editorsLifecycleAuthorityAndDomainFocused": 223,
+      "newTaskQueriesHistoryAndCursors": 126,
+      "newTaskHTTPAndRuntime": 86,
+      "newMaterialCoreAndPorts": 144,
+      "newMaterialStorageAndRead": 59
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 6774,
+      "num_statements": 6774,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 204,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1898,
+      "num_partial_branches": 0,
+      "covered_branches": 1898,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 95,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-material-storage-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "b898f00900777084613bdfed88c91cbd7a3d1cc8a073bed49609313472bfa08a",
+      "members": [
+        {
+          "name": "domus-material-storage-focused-coverage.json",
+          "sha256": "dd993516c497e095da12054eb4b6f8b7cfb53d87123f9b1c49620cace5e44f3e",
+          "size": 14624
+        },
+        {
+          "name": "domus-material-storage-full-coverage.json",
+          "sha256": "ab17f48b585fbb210a42a29a71343aa7af854e353ce414465e76a3047cb41668",
+          "size": 917055
+        },
+        {
+          "name": "domus-material-storage-full-coverage.xml",
+          "sha256": "184c408a0d8f81a27f0858557aac3a29102019f07c895676ff456bb32ed85414",
+          "size": 303468
+        },
+        {
+          "name": "domus-material-storage-full-output.txt",
+          "sha256": "abe2bd3c7eb15db3ac608f501c9ab52da3321680f574014e4dcfc57de39599d8",
+          "size": 19790
+        },
+        {
+          "name": "domus-material-storage-full.coverage",
+          "sha256": "8fcc17ce2e049b4ea9bb7cbbb9c46e984ad82ba1de7661f3f030aef6eade1d3e",
+          "size": 512000
+        },
+        {
+          "name": "domus-material-storage-initial-output.txt",
+          "sha256": "b4780b8b736c85ec4e8540ec4fbe780048c3b1904cf470a1a306812e829bae6c",
+          "size": 23311
+        },
+        {
+          "name": "domus-material-storage-initial-coverage.json",
+          "sha256": "0ddf9e44cfd2df34206d3516b60278a2db7612aad8014bf56ce5f11fffd7da67",
+          "size": 910786
+        },
+        {
+          "name": "domus-material-storage-architecture.txt",
+          "sha256": "d9ad52010bba224444c4d02f95980a50943151ca07cea2a9d4bbdf7714699929",
+          "size": 959
+        },
+        {
+          "name": "domus-task-foundation-published-validation.json",
+          "sha256": "b162622acc4eb83c68a67f0ec710f379b802378530083e1014b93b14f74a5e5c",
+          "size": 326
+        },
+        {
+          "name": "domus-task-storage-sdd-catalog-validation.json",
+          "sha256": "6ecc4e7d26c653e79302dfb4c3e873ed5f6fd1cf3ee23f7808a8383cd1d12503",
+          "size": 586
+        }
+      ],
+      "consumer": "Original final whole-backend/material/storage/read measurements, pinned SDD and import graph for current in-flight PR review. Initial two contract failures retain a separate interim working-tree scope; no package or actual Inventory delivery is implied."
+    },
+    "hostedCI": {
+      "sourceRevision": "daeb398a8b839df2ebb901af09e421303aa4ab3c",
+      "run": "https://github.com/vypdev/domus/actions/runs/41270616677",
+      "aggregateCheck": 124743095893,
+      "conclusion": "success",
+      "allRequiredGroups": "success, including frontend and both existing image architectures; not actual material package/consumer adoption",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "phase": "scope",
+        "reason": "scope-clause-limit",
+        "field": "$.lines",
+        "originalIssueLine": "L111",
+        "reference": "74708ed5-5e48-4956-906c-7ff7203271bd",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/828#issuecomment-6551159222"
+      }
+    },
+    "note": "Historical material durability/read checkpoint; current initial material commands require independent current-head CI and finished-feature full-context review."
+  },
+  "materialInitialCommandAssertions": {
+    "requests": "Typed create/update selections and completion actuals; strict canonical decimal strings. Omitted/null new fields stay absent, preserving original fingerprints; explicit empty arrays remain distinct. Immutable operation decoders accept exact old/new shapes, never arbitrary omissions or null added fields.",
+    "linking": "Current task create/manage and inventory.manage apply to linking/replacement/clear, execution and original receipt replay/lookup. The semantic catalog resolves actual targets/precision. Stable targets retain line ID, changed targets receive a new ID, old work snapshots remain intact.",
+    "authority": "Current tasks.material_use plus scoped policy/current performance authority or applicable general Inventory authority. Scoped member denials take precedence, while a general-stock denial alone is not a scoped-action denial. Frozen initial authorization is a fact, not a later grant. The current binding supplies initial POST only; explicit correction/dismissal authority is not yet exposed.",
+    "completion": "Validate all usage identities/unit precision before new work effects. Retain one intent for each frozen line. Unknown actual, explicit zero, separate, ordinary denial, shortage/binding change and unavailability have distinct states. Approval/grant/stock/reopen/original retry do not settle.",
+    "atomicity": "Cycle/work, initial intent, each confirmed/deferred exact CAS transition, compact outcomes, receipt/audit/outbox share one writer. Fictional Inventory uses real attached SQLite under that same transaction. Injected task audit failure rolls back its child SQL movement and all task facts; concurrent different-key completion has one winner.",
+    "uncertainty": "A wrapper raises after actual SQLite commit. Original-key retry recovers one cycle/child effect without another provider call. This is local application return uncertainty, distinct from previous actual composed HTTP response-failure proof.",
+    "restoration": "Real main-database checkpoint preparation/offline activation removes later task/intent state while retaining historical operation evidence. Same-key completion/history/own receipt works with canonical new fields and calls no Inventory. The attached fictional consumer stays separate; no coupled real-ledger restoration is claimed.",
+    "budget": "Maximum-length IDs, 32 performers/assignees/materials and 64 required-work edges with maximum quantities/times/revisions fit result/audit/event 65,536-byte limits in posted/authorization/regularization/processing states. No fields/lines are truncated.",
+    "absence": "One pure MissingTaskInventory semantic implementation supplies default absence; the outer UnavailableTaskInventory is a compatibility alias. Known provider-binding unavailability retains pending work; unexpected binding failures fail closed. No framework/I/O or second stock ledger enters Application.",
+    "regression": "The configured-provider binding-unavailability test initially raised IntegrationUnavailable rather than retaining valid work. The narrow known-absence fallback now passes; the separate unexpected-failure rollback test prevents broad error masking.",
+    "testFirst": "New request tests first failed because the fields did not exist; integration tests first failed because the inventory factory was absent. Final full regression and current meaningful cases pass.",
+    "scope": "77 new application/SQL-fake cases, not material write HTTP/real Inventory/owner UI/package acceptance. Correction default awaits owner review; remaining first-release obligations stay mandatory."
   }
 }

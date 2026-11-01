@@ -3,7 +3,10 @@
 from dataclasses import dataclass, fields
 from typing import cast
 
+from domus.application.authorization import HouseholdAccess
 from domus.application.ports import UnitOfWork
+from domus.application.task_facts import resolved_rules
+from domus.application.task_material_ports import TaskMaterialAuthority
 from domus.application.task_requests import (
     AssignTask,
     ClaimTask,
@@ -17,6 +20,7 @@ from domus.application.task_requests import (
     UpdateTaskDependencies,
     UpdateTaskPolicy,
     VerifyTask,
+    validate_recorded_material_request,
 )
 from domus.domain.errors import Forbidden, InvalidInput, StorageFailure
 from domus.domain.identity import (
@@ -30,6 +34,8 @@ from domus.domain.identity import (
 )
 from domus.domain.restoration import OperationEvidence
 from domus.domain.storage import CommandKey, JsonDocument, JsonObject, validate_identifier
+from domus.domain.task_material_values import MaterialAction
+from domus.domain.task_materials import MaterialIntent
 from domus.domain.task_policy import can_approve, claim_matches_task
 from domus.domain.task_values import (
     OccurrenceState,
@@ -196,6 +202,7 @@ class TaskCommandAuthorization:
     performer_ids: tuple[str, ...] = ()
     transition_target: OccurrenceState | None = None
     definition_id: str | None = None
+    needs_material_link: bool = False
 
     def require(self, command: CommandKey, unit: UnitOfWork) -> None:
         if (
@@ -244,6 +251,10 @@ class TaskCommandAuthorization:
                 self.access.require(unit, self.household_id, permission, work)
         else:
             raise Forbidden("permission_denied")
+        if self.needs_material_link:
+            HouseholdAccess(self.access.human).require(
+                unit, self.household_id, Permission.INVENTORY_MANAGE
+            )
         if self.needs_configuration:
             self.access.require(unit, self.household_id, Permission.TASKS_CONFIGURE)
 
@@ -263,6 +274,18 @@ _RECORDED: dict[str, tuple[type[TaskRequest], str]] = {
 }
 
 
+def _request_shape(request: JsonObject, kind: type[TaskRequest]) -> bool:
+    names = {item.name for item in fields(kind)}
+    optional = (
+        {"materials"}
+        if kind in (CreateTask, UpdateTaskDefinition)
+        else {"material_usages"}
+        if kind is CompleteTask
+        else set()
+    )
+    return names - optional <= set(request) <= names
+
+
 def recorded_request(evidence: OperationEvidence) -> JsonObject:
     """Verify immutable evidence shape, not new-work preconditions or current authority."""
     receipt = evidence.receipt
@@ -274,13 +297,17 @@ def recorded_request(evidence: OperationEvidence) -> JsonObject:
         or set(detail) != {"transition", "request", "result"}
         or detail["transition"] != contract[1]
         or not isinstance(request, dict)
-        or set(request) != {item.name for item in fields(contract[0])}
+        or not _request_shape(request, contract[0])
         or JsonDocument.from_value(request).fingerprint != receipt.payload_fingerprint
         or detail["result"] != receipt.result.decode()
         or evidence.event.payload
         != JsonDocument.from_value({"version": 1, "kind": contract[1], **receipt.result.decode()})
     ):
         raise StorageFailure("invalid_task_operation")
+    try:
+        validate_recorded_material_request(request)
+    except InvalidInput, TypeError, ValueError:
+        raise StorageFailure("invalid_task_operation") from None
     return request
 
 
@@ -322,6 +349,7 @@ def recorded_authorization(
         definition_id=cast(str | None, definition_id),
         performer_ids=performer_ids,
         transition_target=target,
+        needs_material_link="materials" in request,
         needs_configuration=(action == "task.definition.update" and overrides is not None)
         or (
             action == "task.create"
@@ -329,3 +357,53 @@ def recorded_authorization(
             and any(value is not None for value in overrides.values())
         ),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class TaskMaterialAccess(TaskMaterialAuthority):
+    """Current transaction authority for catalog linking and initial task-linked consumption."""
+
+    access: TaskAccess
+    unit: UnitOfWork
+    household_id: str
+
+    def link_actor(self, household_id: str) -> str:
+        if household_id != self.household_id:
+            raise Forbidden("permission_denied")
+        return (
+            HouseholdAccess(self.access.human)
+            .require(self.unit, household_id, Permission.INVENTORY_MANAGE)
+            .member_id
+        )
+
+    def require(self, intent: MaterialIntent, action: MaterialAction) -> str:
+        if intent.household_id != self.household_id or action is not MaterialAction.POST:
+            raise Forbidden("permission_denied")
+        work = self.unit.tasks.occurrence(self.household_id, intent.occurrence_id)
+        cycle = self.unit.tasks.cycle(self.household_id, intent.cycle_id)
+        if (
+            work is None
+            or cycle is None
+            or cycle.occurrence_id != intent.occurrence_id
+            or intent.line not in work.definition_snapshot.materials
+            or intent.recorded_by != cycle.recorded_by
+            or intent.performed_at != cycle.performed_at
+            or intent.created_at != cycle.recorded_at
+            or intent.recording_mode is not cycle.rules.material_recording
+        ):
+            raise StorageFailure("invalid_material_references")
+        actor = self.access.require(
+            self.unit, self.household_id, Permission.TASKS_MATERIAL_USE, work
+        )
+        try:
+            HouseholdAccess(self.access.human).require(
+                self.unit, self.household_id, Permission.INVENTORY_MANAGE
+            )
+        except Forbidden:
+            rules, _ = resolved_rules(self.unit, work)
+            if not rules.task_scoped_material_consumption:
+                raise Forbidden("permission_denied") from None
+            self.access.performance_actor(
+                self.unit, work, tuple(value.member_id for value in cycle.performers)
+            )
+        return actor.member.member_id

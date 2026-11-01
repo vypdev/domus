@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol, cast
 
-from domus.domain.errors import InvalidInput
+from domus.domain.errors import IntegrationUnavailable, InvalidInput
 from domus.domain.storage import JsonDocument, validate_identifier
 from domus.domain.task_material_values import (
     MaterialAction,
@@ -100,3 +100,15 @@ class TaskMaterialRepository(Protocol):
         self, household_id: str, cycle_id: str, *, limit: int = 25, after: str | None = None
     ) -> tuple[MaterialIntent, ...]: ...
     def save(self, value: MaterialIntent, expected_revision: int) -> None: ...
+
+
+class MissingTaskInventory:
+    """Pure semantic default: an absent optional provider cannot assert catalog or stock facts."""
+
+    def resolve(
+        self, household_id: str, actor_member_id: str, reference_id: str
+    ) -> MaterialBinding | None:
+        raise IntegrationUnavailable("inventory_unavailable")
+
+    def settle(self, request: MaterialPostingRequest) -> InventoryMaterialResult:
+        return InventoryMaterialResult(pending_reason=MaterialPendingReason.INVENTORY_UNAVAILABLE)

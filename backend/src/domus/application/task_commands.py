@@ -8,13 +8,19 @@ from typing import cast
 from domus.application.commands import AtomicCommands, Change
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
-from domus.application.task_authorization import TaskAccess, TaskCommandAuthorization
+from domus.application.task_authorization import (
+    TaskAccess,
+    TaskCommandAuthorization,
+    TaskMaterialAccess,
+)
 from domus.application.task_facts import (
     current_cycle,
     definition_result,
     required_work,
     resolved_rules,
 )
+from domus.application.task_material_commands import TaskMaterialCommands, material_result
+from domus.application.task_material_ports import MissingTaskInventory, TaskInventory
 from domus.application.task_requests import (
     AssignTask as AssignTask,
 )
@@ -52,9 +58,10 @@ from domus.application.task_requests import (
 from domus.application.task_requests import (
     VerifyTask as VerifyTask,
 )
-from domus.domain.errors import Conflict, Forbidden
+from domus.domain.errors import Conflict, Forbidden, IntegrationUnavailable
 from domus.domain.identity import MemberStatus
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
+from domus.domain.task_material_values import validate_material_usages
 from domus.domain.task_policy import validate_dependency_graph
 from domus.domain.task_values import (
     OccurrenceState,
@@ -141,9 +148,27 @@ class TaskCommands:
     clock: Clock
     identifiers: Identifiers
     household_id: str = "home"
+    inventory_factory: Callable[[UnitOfWork], TaskInventory] | None = None
 
     def __post_init__(self) -> None:
         validate_identifier(self.household_id)
+
+    def _materials(self, unit: UnitOfWork, access: TaskAccess) -> TaskMaterialCommands:
+        try:
+            inventory = (
+                MissingTaskInventory()
+                if self.inventory_factory is None
+                else self.inventory_factory(unit)
+            )
+        except IntegrationUnavailable:
+            inventory = MissingTaskInventory()
+        return TaskMaterialCommands(
+            unit,
+            TaskMaterialAccess(access, unit, self.household_id),
+            inventory,
+            self.clock,
+            self.identifiers,
+        )
 
     def _execute(
         self,
@@ -157,6 +182,7 @@ class TaskCommands:
         performer_ids: tuple[str, ...] = (),
         transition_target: OccurrenceState | None = None,
         definition_id: str | None = None,
+        needs_material_link: bool = False,
     ) -> Receipt:
         human = self.actor.current()
         access = TaskAccess(human)
@@ -170,6 +196,7 @@ class TaskCommands:
             performer_ids=performer_ids,
             transition_target=transition_target,
             definition_id=definition_id,
+            needs_material_link=needs_material_link,
         )
         return AtomicCommands(self.transactions, authority, self.clock, self.identifiers).execute(
             command, request.document(), lambda unit: apply(unit, access)
@@ -179,6 +206,11 @@ class TaskCommands:
         def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
             if unit.tasks.policy(self.household_id) is None:
                 unit.tasks.save_policy(HouseholdTaskPolicy(self.household_id, TaskRules()), 0)
+            materials = (
+                ()
+                if request.materials is None
+                else self._materials(unit, access).link(request.materials)
+            )
             now = self.clock.now()
             item = TaskDefinition(
                 self.identifiers.new(),
@@ -187,6 +219,7 @@ class TaskCommands:
                 now,
                 request.overrides,
                 request.state,
+                materials=materials,
             )
             work = item.new_occurrence(self.identifiers.new(), now)
             unit.tasks.save_definition(item, 0)
@@ -199,6 +232,7 @@ class TaskCommands:
             request,
             apply,
             needs_configuration=request.overrides != TaskOverrides(),
+            needs_material_link=request.materials is not None,
         )
 
     def assign(self, key: str, request: AssignTask) -> Receipt:
@@ -244,6 +278,9 @@ class TaskCommands:
     def complete(self, key: str, request: CompleteTask) -> Receipt:
         def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
             work = _occurrence(unit, self.household_id, request)
+            validate_material_usages(
+                request.material_usages or (), work.definition_snapshot.materials
+            )
             actor = access.performance_actor(unit, work, request.performer_ids)
             performers = access.performers(unit, work, request.performer_ids)
             rules, task_policy_revision = resolved_rules(unit, work)
@@ -264,7 +301,15 @@ class TaskCommands:
             updated = work.complete(saved, requirements=requirements)
             unit.tasks.save_cycle(saved, 0)
             unit.tasks.save_occurrence(updated, request.expected_revision)
-            return _change("task.completed", request, _cycle_result(updated, saved))
+            result = _cycle_result(updated, saved)
+            if work.definition_snapshot.materials:
+                materials = self._materials(unit, access).complete(
+                    work, saved, request.material_usages or ()
+                )
+                value = result.decode()
+                value["materials"] = [material_result(material) for material in materials]
+                result = JsonDocument.from_value(value)
+            return _change("task.completed", request, result)
 
         return self._execute(
             key,
@@ -334,7 +379,14 @@ class TaskCommands:
             if previous.revision != request.expected_revision:
                 raise Conflict("revision_conflict")
             overrides = previous.overrides if request.overrides is None else request.overrides
-            updated = previous.revise(request.content, overrides, request.state)
+            materials = (
+                None
+                if request.materials is None
+                else self._materials(unit, access).link(request.materials, previous.materials)
+            )
+            updated = previous.revise(
+                request.content, overrides, request.state, materials=materials
+            )
             unit.tasks.save_definition(updated, request.expected_revision)
             result = definition_result(updated)
             return _change("task.definition.updated", request, result)
@@ -346,6 +398,7 @@ class TaskCommands:
             apply,
             definition_id=request.definition_id,
             needs_configuration=request.overrides is not None,
+            needs_material_link=request.materials is not None,
         )
 
     def create_occurrence(self, key: str, request: CreateTaskOccurrence) -> Receipt:
