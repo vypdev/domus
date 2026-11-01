@@ -1,0 +1,75 @@
+{
+  "status": "partial",
+  "recordedAtUTC": "2026-11-01T19:40:28.047444+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/16",
+  "sourceBase": "91fced344cdb48931cb5be748bbc590936aaa00a",
+  "sourceIdentity": "Working-source pure member-model checkpoint over the Action-published companion; exact backend inventory hash below.",
+  "backendInventorySHA256": "c36bf70308f24b405bf0c46d12be1c811ca5b14d4dc41e679880ae06289beb5e",
+  "newSourceSHA256": "2790ca55a7b37a390d006165a44520085e1ff513783b9cf1a7b681435b8ae4d2",
+  "newTestsSHA256": "9a38730cf5a955812ea689338272b804535cd47aac403454fa2097ebc1d4f28d",
+  "implemented": "Pure immutable scoped public alias and private preference records; nullable alias/browser locale, closed EN/ES locale, exact summary boolean, positive bounded revisions, UTF-8 and all Cc controls, code-point length and literal-text preservation. No identity/role/status grants are stored in these values.",
+  "testsFirst": "The newly authored test first failed collection because domus.domain.member_profiles did not exist; the original failure output is retained locally. The model was then implemented.",
+  "focused": {
+    "tests": 138,
+    "statements": 42,
+    "branches": 10,
+    "coveragePercent": 100
+  },
+  "completeBackend": {
+    "tests": 3125,
+    "authoredModules": 108,
+    "coverageTotals": {
+      "covered_lines": 7942,
+      "num_statements": 7942,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 225,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2238,
+      "num_partial_branches": 0,
+      "covered_branches": 2238,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentAudit": "passed"
+  },
+  "checks": {
+    "strictTypes": {
+      "result": "passed",
+      "sourceFiles": 108
+    },
+    "ruffCheck": "passed",
+    "ruffFormat": "passed",
+    "documentationLinks": "passed",
+    "architecture": {
+      "command": "lint-imports --config architecture/python-application.ini --no-cache",
+      "kept": 3,
+      "broken": 0
+    },
+    "backendCoverageAudit": {
+      "result": "passed",
+      "command": "domus-check backend-coverage --report coverage.json"
+    },
+    "scope": "Tool outcomes observed in this local working-source campaign; not hosted CI or feature acceptance."
+  },
+  "sdd": {
+    "minimumCases": 72,
+    "publishedCaseRowsPreservedVerbatim": 24,
+    "additionalBoundaryCases": 48,
+    "requirements": 8,
+    "originalPinnedFormat": "passed",
+    "originalPinnedConsistency": "passed",
+    "upstreamRevision": "3e7ceea08e6131360e026937d1c0cc1b120472e0"
+  },
+  "rawMeasurements": {
+    "archive": "/private/tmp/domus-member-models-91fced3-retained/evidence.tar.gz",
+    "sha256": "62717cb6807f68b9fd9c837278107accf9d7457a4cd1bccbb01dcab70417a5e3",
+    "consumer": "Original failing and passing model/backend measurements, source inventory and pinned SDD reproduction retained for current PR review; disposable coverage databases, XML and pytest cache removed.",
+    "privateLocalOnly": true
+  },
+  "pending": "Current-authorized application/HTTP/profile-source behavior, private preference disclosure guards, schema9 after actual recurrence schema8, separate administration journal, real EN/ES workspace, product browser/image/owner acceptance and complete issue16 acceptance. Existing runtime APIs and packaged Edge.5 do not expose these new models.",
+  "acceptance": "138 parameterized unit executions and a complete backend campaign are not 72 completed administration journeys. No notification delivery, HA metadata availability, schema migration, package/adoption, all-domain release or Stable distribution acceptance is claimed."
+}
