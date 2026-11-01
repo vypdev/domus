@@ -8,195 +8,58 @@ from typing import cast
 from domus.application.commands import AtomicCommands, Change
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
-from domus.application.task_authorization import TaskAccess
-from domus.domain.errors import Conflict, Forbidden, InvalidInput, StorageFailure
-from domus.domain.identity import MemberStatus, Permission, validate_revision
+from domus.application.task_authorization import TaskAccess, TaskCommandAuthorization
+from domus.application.task_requests import (
+    AssignTask as AssignTask,
+)
+from domus.application.task_requests import (
+    ClaimTask as ClaimTask,
+)
+from domus.application.task_requests import (
+    CompleteTask as CompleteTask,
+)
+from domus.application.task_requests import (
+    CreateTask as CreateTask,
+)
+from domus.application.task_requests import (
+    CreateTaskOccurrence as CreateTaskOccurrence,
+)
+from domus.application.task_requests import (
+    OccurrenceRequest,
+    TaskRequest,
+)
+from domus.application.task_requests import (
+    ReopenTask as ReopenTask,
+)
+from domus.application.task_requests import (
+    TransitionTask as TransitionTask,
+)
+from domus.application.task_requests import (
+    UpdateTaskDefinition as UpdateTaskDefinition,
+)
+from domus.application.task_requests import (
+    UpdateTaskDependencies as UpdateTaskDependencies,
+)
+from domus.application.task_requests import (
+    UpdateTaskPolicy as UpdateTaskPolicy,
+)
+from domus.application.task_requests import (
+    VerifyTask as VerifyTask,
+)
+from domus.domain.errors import Conflict, Forbidden, StorageFailure
+from domus.domain.identity import MemberStatus
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
+from domus.domain.task_policy import validate_dependency_graph
 from domus.domain.task_values import (
-    DefinitionState,
     OccurrenceState,
-    TaskContent,
     TaskOverrides,
     TaskRequirement,
     TaskRules,
-    VerificationState,
-    validate_task_ids,
-    validate_task_text,
-    validate_task_time,
 )
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
 
 
-@dataclass(frozen=True, slots=True)
-class _Request:
-    def document(self) -> JsonDocument:
-        # Tuples and string enums become JSON arrays and exact enum values.
-        return JsonDocument(json.dumps(asdict(self), ensure_ascii=False))
-
-
-@dataclass(frozen=True, slots=True)
-class CreateTask(_Request):
-    content: TaskContent
-    overrides: TaskOverrides = TaskOverrides()
-    state: DefinitionState = DefinitionState.ACTIVE
-    expected_revision: int = 0
-
-    def __post_init__(self) -> None:
-        if (
-            type(self.expected_revision) is not int
-            or self.expected_revision != 0
-            or not isinstance(self.content, TaskContent)
-            or not isinstance(self.overrides, TaskOverrides)
-            or not isinstance(self.state, DefinitionState)
-            or self.state not in (DefinitionState.DRAFT, DefinitionState.ACTIVE)
-        ):
-            raise InvalidInput("invalid_task_create")
-
-
-@dataclass(frozen=True, slots=True)
-class _ExistingTask(_Request):
-    occurrence_id: str
-    expected_revision: int
-
-    def __post_init__(self) -> None:
-        validate_identifier(self.occurrence_id)
-        validate_revision(self.expected_revision)
-
-
-@dataclass(frozen=True, slots=True)
-class AssignTask(_ExistingTask):
-    assignee_ids: tuple[str, ...]
-
-    def __post_init__(self) -> None:
-        _ExistingTask.__post_init__(self)
-        validate_task_ids(self.assignee_ids)
-
-
-@dataclass(frozen=True, slots=True)
-class ClaimTask(_ExistingTask):
-    pass
-
-
-@dataclass(frozen=True, slots=True)
-class TransitionTask(_ExistingTask):
-    target: OccurrenceState
-    reason: str = ""
-
-    def __post_init__(self) -> None:
-        _ExistingTask.__post_init__(self)
-        if not isinstance(self.target, OccurrenceState) or self.target in (
-            OccurrenceState.DRAFT,
-            OccurrenceState.COMPLETED,
-        ):
-            raise InvalidInput("invalid_task_transition")
-        validate_task_text(
-            self.reason,
-            1000,
-            required=self.target
-            in (OccurrenceState.BLOCKED, OccurrenceState.CANCELLED, OccurrenceState.SKIPPED),
-            multiline=True,
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class CompleteTask(_ExistingTask):
-    performer_ids: tuple[str, ...]
-    performed_at: int
-
-    def __post_init__(self) -> None:
-        _ExistingTask.__post_init__(self)
-        validate_task_ids(self.performer_ids)
-        if not self.performer_ids:
-            raise InvalidInput("invalid_task_performer")
-        validate_task_time(self.performed_at)
-
-
-@dataclass(frozen=True, slots=True)
-class VerifyTask(_ExistingTask):
-    cycle_id: str
-    decision: VerificationState
-    reason: str = ""
-
-    def __post_init__(self) -> None:
-        _ExistingTask.__post_init__(self)
-        validate_identifier(self.cycle_id)
-        if not isinstance(self.decision, VerificationState) or self.decision not in (
-            VerificationState.APPROVED,
-            VerificationState.REJECTED,
-        ):
-            raise InvalidInput("invalid_task_verification")
-        validate_task_text(
-            self.reason, 1000, required=self.decision is VerificationState.REJECTED, multiline=True
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class ReopenTask(_ExistingTask):
-    cycle_id: str
-    reason: str
-
-    def __post_init__(self) -> None:
-        _ExistingTask.__post_init__(self)
-        validate_identifier(self.cycle_id)
-        validate_task_text(self.reason, 1000, required=True, multiline=True)
-
-
-_SCOPED_PERMISSIONS = {
-    "task.assign": Permission.TASKS_MANAGE,
-    "task.claim": Permission.TASKS_CLAIM,
-    "task.transition": Permission.TASKS_MANAGE,
-    "task.complete": Permission.TASKS_COMPLETE,
-    "task.verify": Permission.TASKS_APPROVE,
-    "task.reopen": Permission.TASKS_MANAGE,
-}
-
-
-@dataclass(frozen=True, slots=True)
-class _TaskAuthority:
-    access: TaskAccess
-    household_id: str
-    action: str
-    occurrence_id: str | None = None
-    needs_configuration: bool = False
-    performer_ids: tuple[str, ...] = ()
-    transition_target: OccurrenceState | None = None
-
-    def require(self, command: CommandKey, unit: UnitOfWork) -> None:
-        if (
-            command.household_id != self.household_id
-            or command.actor_id != self.access.human.ha_user_id
-            or command.action != self.action
-        ):
-            raise Forbidden("permission_denied")
-        if self.action == "task.create" and self.occurrence_id is None:
-            self.access.require(unit, self.household_id, Permission.TASKS_CREATE)
-        elif self.action in _SCOPED_PERMISSIONS and self.occurrence_id is not None:
-            work = unit.tasks.occurrence(self.household_id, self.occurrence_id)
-            if work is None:
-                raise Forbidden("permission_denied")
-            if self.action == "task.claim":
-                self.access.claim(unit, work)
-            elif self.action == "task.complete":
-                self.access.performance_actor(unit, work, self.performer_ids)
-            else:
-                permission = _SCOPED_PERMISSIONS[self.action]
-                if self.action == "task.transition":
-                    if not isinstance(self.transition_target, OccurrenceState):
-                        raise Forbidden("permission_denied")
-                    if self.transition_target in (
-                        OccurrenceState.IN_PROGRESS,
-                        OccurrenceState.BLOCKED,
-                        OccurrenceState.ASSIGNED,
-                    ):
-                        permission = Permission.TASKS_COMPLETE
-                self.access.require(unit, self.household_id, permission, work)
-        else:
-            raise Forbidden("permission_denied")
-        if self.needs_configuration:
-            self.access.require(unit, self.household_id, Permission.TASKS_CONFIGURE)
-
-
-def _occurrence(unit: UnitOfWork, household_id: str, request: _ExistingTask) -> TaskOccurrence:
+def _occurrence(unit: UnitOfWork, household_id: str, request: OccurrenceRequest) -> TaskOccurrence:
     # Authority resolved this resource in the same transaction before receipt lookup.
     work = cast(TaskOccurrence, unit.tasks.occurrence(household_id, request.occurrence_id))
     if work.revision != request.expected_revision:
@@ -214,11 +77,13 @@ def _result(work: TaskOccurrence) -> JsonDocument:
             "state": work.state.value,
             "assignee_ids": list(work.assignee_ids),
             "state_reason": work.state_reason,
+            "prerequisite_ids": list(work.prerequisite_ids),
+            "required_subtask_ids": list(work.required_subtask_ids),
         }
     )
 
 
-def _change(transition: str, request: _Request, result: JsonDocument) -> Change:
+def _change(transition: str, request: TaskRequest, result: JsonDocument) -> Change:
     detail = JsonDocument.from_value(
         {
             "transition": transition,
@@ -270,6 +135,28 @@ def _cycle_result(
     return JsonDocument.from_value(value)
 
 
+def _assignees(unit: UnitOfWork, household_id: str, member_ids: tuple[str, ...]) -> None:
+    for member_id in member_ids:
+        member = unit.members.get(household_id, member_id)
+        if member is None or member.status is not MemberStatus.ACTIVE:
+            raise Forbidden("task_assignee_denied")
+
+
+def _graph(unit: UnitOfWork, proposed: TaskOccurrence) -> None:
+    graph: dict[str, tuple[str, ...]] = {}
+    after: str | None = None
+    while batch := unit.tasks.occurrences(proposed.household_id, limit=101, after=after):
+        for work in batch:
+            graph[work.occurrence_id] = tuple(
+                set(work.prerequisite_ids) | set(work.required_subtask_ids)
+            )
+        after = batch[-1].occurrence_id
+    graph[proposed.occurrence_id] = tuple(
+        set(proposed.prerequisite_ids) | set(proposed.required_subtask_ids)
+    )
+    validate_dependency_graph(graph)
+
+
 @dataclass
 class TaskCommands:
     transactions: Transactions
@@ -285,25 +172,27 @@ class TaskCommands:
         self,
         key: str,
         action: str,
-        request: _Request,
+        request: TaskRequest,
         apply: Callable[[UnitOfWork, TaskAccess], Change],
         *,
         occurrence_id: str | None = None,
         needs_configuration: bool = False,
         performer_ids: tuple[str, ...] = (),
         transition_target: OccurrenceState | None = None,
+        definition_id: str | None = None,
     ) -> Receipt:
         human = self.actor.current()
         access = TaskAccess(human)
         command = CommandKey(self.household_id, human.ha_user_id, action, key)
-        authority = _TaskAuthority(
-            access,
-            self.household_id,
-            action,
-            occurrence_id,
-            needs_configuration,
-            performer_ids,
-            transition_target,
+        authority = TaskCommandAuthorization(
+            access=access,
+            household_id=self.household_id,
+            action=action,
+            occurrence_id=occurrence_id,
+            needs_configuration=needs_configuration,
+            performer_ids=performer_ids,
+            transition_target=transition_target,
+            definition_id=definition_id,
         )
         return AtomicCommands(self.transactions, authority, self.clock, self.identifiers).execute(
             command, request.document(), lambda unit: apply(unit, access)
@@ -338,10 +227,7 @@ class TaskCommands:
     def assign(self, key: str, request: AssignTask) -> Receipt:
         def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
             work = _occurrence(unit, self.household_id, request)
-            for member_id in request.assignee_ids:
-                member = unit.members.get(self.household_id, member_id)
-                if member is None or member.status is not MemberStatus.ACTIVE:
-                    raise Forbidden("task_assignee_denied")
+            _assignees(unit, self.household_id, request.assignee_ids)
             updated = work.assign(request.assignee_ids)
             unit.tasks.save_occurrence(updated, request.expected_revision)
             return _change("task.assigned", request, _result(updated))
@@ -442,4 +328,82 @@ class TaskCommands:
 
         return self._execute(
             key, "task.reopen", request, apply, occurrence_id=request.occurrence_id
+        )
+
+    def update_policy(self, key: str, request: UpdateTaskPolicy) -> Receipt:
+        def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
+            previous = unit.tasks.policy(self.household_id)
+            revision = 0 if previous is None else previous.revision
+            if revision != request.expected_revision:
+                raise Conflict("revision_conflict")
+            updated = (
+                HouseholdTaskPolicy(self.household_id, request.rules)
+                if previous is None
+                else previous.revise(request.rules)
+            )
+            unit.tasks.save_policy(updated, revision)
+            result = JsonDocument(
+                json.dumps(
+                    {"revision": updated.revision, "rules": asdict(updated.rules)},
+                    ensure_ascii=False,
+                )
+            )
+            return _change("task.policy.updated", request, result)
+
+        return self._execute(key, "task.policy.update", request, apply)
+
+    def update_definition(self, key: str, request: UpdateTaskDefinition) -> Receipt:
+        def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
+            previous = cast(
+                TaskDefinition, unit.tasks.definition(self.household_id, request.definition_id)
+            )
+            if previous.revision != request.expected_revision:
+                raise Conflict("revision_conflict")
+            overrides = previous.overrides if request.overrides is None else request.overrides
+            updated = previous.revise(request.content, overrides, request.state)
+            unit.tasks.save_definition(updated, request.expected_revision)
+            result = JsonDocument(json.dumps(asdict(updated), ensure_ascii=False))
+            return _change("task.definition.updated", request, result)
+
+        return self._execute(
+            key,
+            "task.definition.update",
+            request,
+            apply,
+            definition_id=request.definition_id,
+            needs_configuration=request.overrides is not None,
+        )
+
+    def create_occurrence(self, key: str, request: CreateTaskOccurrence) -> Receipt:
+        def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
+            item = cast(
+                TaskDefinition, unit.tasks.definition(self.household_id, request.definition_id)
+            )
+            _assignees(unit, self.household_id, request.assignee_ids)
+            work = item.new_occurrence(
+                self.identifiers.new(),
+                self.clock.now(),
+                assignees=request.assignee_ids,
+                prerequisites=request.prerequisite_ids,
+                required_subtasks=request.required_subtask_ids,
+                due_at=request.due_at,
+            )
+            _graph(unit, work)
+            unit.tasks.save_occurrence(work, 0)
+            return _change("task.occurrence.created", request, _result(work))
+
+        return self._execute(
+            key, "task.occurrence.create", request, apply, definition_id=request.definition_id
+        )
+
+    def update_dependencies(self, key: str, request: UpdateTaskDependencies) -> Receipt:
+        def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
+            previous = _occurrence(unit, self.household_id, request)
+            updated = previous.dependencies(request.prerequisite_ids, request.required_subtask_ids)
+            _graph(unit, updated)
+            unit.tasks.save_occurrence(updated, request.expected_revision)
+            return _change("task.dependencies.updated", request, _result(updated))
+
+        return self._execute(
+            key, "task.dependencies.update", request, apply, occurrence_id=request.occurrence_id
         )

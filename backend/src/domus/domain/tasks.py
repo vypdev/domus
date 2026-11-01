@@ -344,6 +344,22 @@ class TaskOccurrence:
             self, state=state, state_reason=reason, revision=next_task_revision(self.revision)
         )
 
+    def dependencies(self, prerequisites: tuple[str, ...], subtasks: tuple[str, ...]) -> Self:
+        if self.state in (
+            OccurrenceState.COMPLETED,
+            OccurrenceState.CANCELLED,
+            OccurrenceState.SKIPPED,
+        ):
+            raise Conflict("task_transition_conflict")
+        if (prerequisites, subtasks) == (self.prerequisite_ids, self.required_subtask_ids):
+            raise Conflict("task_unchanged")
+        return replace(
+            self,
+            prerequisite_ids=prerequisites,
+            required_subtask_ids=subtasks,
+            revision=next_task_revision(self.revision),
+        )
+
     def complete(self, cycle: TaskCycle, *, requirements: tuple[TaskRequirement, ...]) -> Self:
         require_completion_state(self.state)
         if not isinstance(cycle, TaskCycle):

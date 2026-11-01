@@ -200,3 +200,26 @@ Pinned original SDD/catalog checks preserve the same fourteen/109/485 planned in
 original case rows. Source events explicitly leave consumer delivery unconfirmed; material settlement,
 review/ledger/recurrence projections, public task queries/editors/API and deployment acceptance remain
 separate required work. No partial feature merge or neutral draft review is counted as acceptance.
+
+
+## Task editors and owner-confirmed remainder rotation — 2026-11-01
+
+Policy, definition, occurrence and dependency editors now share current command authorization and
+bounded typed requests. Definition edits retain prior snapshots; explicit override replacement/reset
+requires current configuration authority. Every graph page is validated in the writer transaction:
+late-page cycles and competing opposite edges cannot commit. Real-file fault injection and actual
+offline activation prove atomic rollback and historical replay of all four editors.
+
+The complete backend passes 2,044 tests, with all 5,741 statements and 1,624 branches covered across
+79 authored files. Eleven task modules account for 1,023 statements and 314 branches. The 41 editor
+cases join lifecycle, authority and Domain assertions in a 223-test focused run. Strict types,
+formatting, all 113 tooling/architecture fixtures, the complete graph and local links pass.
+Original pinned validation preserves task/identity/Points/companion case rows and the fourteen/109/485
+planned inventory. Redundant checkpoint prose was shortened to retain the unchanged SDK document
+length limit; requirements and case rows were not dropped.
+
+A35 records the owner's same-task conserved-remainder rotation default. Points tie-breaks, participant
+changes and ledger/reversal/replay remain engineering gates; this is a contract decision without
+Points runtime evidence. Public task queries/history/API, actual material/consumer/review projections,
+UI, both deployment targets and isolated channels still need implementation/acceptance. Current-head
+hosted CI and complete full-context Bugbot remain independent merge gates.

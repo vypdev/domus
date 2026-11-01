@@ -9,13 +9,12 @@ from test_household_commands import Actor, Clock, Identifiers
 from test_household_commands import fixture as household_fixture
 
 from domus.application.household_commands import SetupHousehold
-from domus.application.task_authorization import TaskAccess
+from domus.application.task_authorization import TaskAccess, TaskCommandAuthorization
 from domus.application.task_commands import (
     AssignTask,
     ClaimTask,
     CreateTask,
     TaskCommands,
-    _TaskAuthority,
 )
 from domus.domain.errors import (
     Conflict,
@@ -293,7 +292,7 @@ def test_current_claim_exception_denies_an_original_receipt_and_retains_work(tmp
 )
 def test_server_authority_binds_household_actor_and_action_before_any_receipt(tmp_path, changes):
     _, store, actor, _ = fixture(tmp_path)
-    auth = _TaskAuthority(TaskAccess(actor.human), "home", "task.create")
+    auth = TaskCommandAuthorization(TaskAccess(actor.human), "home", "task.create")
     key = CommandKey(
         **{
             "household_id": "home",
@@ -323,7 +322,7 @@ def test_unknown_actions_missing_scope_and_missing_tasks_are_not_mutation_author
     tmp_path, action, occurrence_id
 ):
     _, store, actor, _ = fixture(tmp_path)
-    auth = _TaskAuthority(TaskAccess(actor.human), "home", action, occurrence_id)
+    auth = TaskCommandAuthorization(TaskAccess(actor.human), "home", action, occurrence_id)
     with store.write() as unit:
         with pytest.raises(Forbidden):
             auth.require(CommandKey("home", "ha_admin", action, "forged"), unit)

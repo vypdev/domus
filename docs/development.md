@@ -269,9 +269,9 @@ targets retain their own pending acceptance obligations.
 Issue #13 has an Action-published [backend companion](../specs/task-execution-foundation.md).
 The current source implements immutable task rules, typed policy/definition/occurrence/cycle
 repositories, schema-5 migration/checkpoint integration, current authority and durable creation,
-assignment, claim, progress, completion, verification and reopening commands. Public task queries,
-editors and HTTP, material intents/settlement, dependency-review projections and actual downstream
-consumer delivery remain required before the draft feature is complete.
+assignment, claim, progress, completion, verification and reopening commands, plus policy, definition,
+occurrence and dependency editors. Public task queries/history and HTTP, material intents/settlement,
+dependency-review projections and actual consumer delivery remain required before completion.
 
 Domain never authenticates or authorizes requests. TaskAccess rereads current active membership,
 identity mapping, profile/member rules and stored assignment inside the caller transaction. Claim
@@ -291,13 +291,22 @@ a cycle. Reopen closes it without erasing facts or automatically reopening compl
 Source events identify the full cycle and causal revision, while consumer delivery remains explicitly
 unconfirmed. They do not prove ledger compensation, stock movement or a finished review projection.
 
+Typed requests live in task_requests and command authorization is shared in task_authorization;
+task_commands re-exports its established request names. Policy revision zero initializes absent
+defaults, and positive revisions update existing configuration under administrator authority.
+Definition edits preserve existing occurrence snapshots. Omitted overrides preserve their values;
+explicit replacement/reset needs configuration authority even on replay. New occurrences snapshot
+the current definition and reject paused/archived parents. Dependency edits require management and
+nonterminal work, and validate every household graph page before writing. Real opposite-edge races
+cannot commit a cycle. Source results retain dependency IDs without rewriting completed history.
+
 SQLite owns transaction/foreign-key/CAS enforcement and strict versioned record decoding. It rejects
 unknown/missing/future data without invented defaults. Scoped deferred foreign keys bind both sides
 of the active cycle and revision. Initialization migrates frozen schemas 1–4 atomically; the independent
 schema-4 input retains current/historical operation evidence, and earlier fixtures remain byte-unchanged.
 Snapshot inspection checks all pages, references, DAG and cycle facts. Offline activation restores
 older business state while retaining later receipts as processed; production command replay cannot
-reapply restored-away creation, claim, completion, verification or reopening.
+reapply restored-away lifecycle or editor changes.
 
 Run the focused source contracts, then the complete backend coverage command:
 
@@ -305,6 +314,7 @@ Run the focused source contracts, then the complete backend coverage command:
 uv run pytest tests/backend/test_task_values.py tests/backend/test_task_policy.py tests/backend/test_tasks.py
 uv run pytest tests/backend/test_task_authorization.py tests/backend/test_identity_policy.py
 uv run pytest tests/backend/test_task_commands.py tests/backend/test_task_execution_commands.py tests/backend/test_task_restoration.py
+uv run pytest tests/backend/test_task_edit_commands.py
 uv run pytest tests/backend/test_sqlite_tasks.py tests/backend/test_sqlite_task_integrity.py
 ```
 

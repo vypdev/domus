@@ -379,12 +379,11 @@ def test_execution_requests_reject_malformed_values_before_any_effect(build_requ
 
 
 def test_transition_authority_fails_closed_when_server_target_context_is_missing(tmp_path):
-    from domus.application.task_authorization import TaskAccess
-    from domus.application.task_commands import _TaskAuthority
+    from domus.application.task_authorization import TaskAccess, TaskCommandAuthorization
     from domus.domain.storage import CommandKey
 
     commands, _, store, occurrence_id, _, _ = prepared(tmp_path)
-    authority = _TaskAuthority(
+    authority = TaskCommandAuthorization(
         TaskAccess(commands.actor.current()), "home", "task.transition", occurrence_id
     )
     with store.read() as unit:

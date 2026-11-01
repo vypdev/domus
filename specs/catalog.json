@@ -432,7 +432,8 @@
         "backend/src/domus/infrastructure/sqlite_tasks.py",
         "backend/src/domus/infrastructure/sqlite_task_integrity.py",
         "backend/src/domus/application/task_authorization.py",
-        "backend/src/domus/application/task_commands.py"
+        "backend/src/domus/application/task_commands.py",
+        "backend/src/domus/application/task_requests.py"
       ],
       "tests": [
         "tests/backend/test_task_values.py",
@@ -444,7 +445,8 @@
         "tests/backend/test_task_restoration.py",
         "tests/backend/test_task_authorization.py",
         "tests/backend/test_task_commands.py",
-        "tests/backend/test_task_execution_commands.py"
+        "tests/backend/test_task_execution_commands.py",
+        "tests/backend/test_task_edit_commands.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -456,8 +458,8 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: lifecycle/rules, schema-5 storage/restore, current authority and durable creation/assignment/claim/progress/completion/verification/reopening; 2003 whole-backend tests, 5623 statements and 1598 branches at 100%; task queries/editors/HTTP and actual material/consumer/review projections remain incomplete",
-        "blockingDecisions": "A34 confirms configurable prerequisite gating, performed by default. Policy/definition/dependency editors, bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
+        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete",
+        "blockingDecisions": "A34 prerequisite gating and A35 same-task points remainder rotation are owner-confirmed. Bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }
     },
@@ -495,7 +497,7 @@
       "status": "proposed",
       "scope": "Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-31",
+      "lastVerified": "2026-11-01",
       "specs": [
         "specs/points-rewards.md"
       ],
@@ -513,7 +515,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed remainder/override review; child-facing review. The owner confirmed configurable allocation, role-default verification, actual-work reporting, factual negative balances and a funding hold on approved/unfulfilled redemptions without sufficient backing after reversal. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
+        "blockingDecisions": "A35 confirms same-task conserved-remainder rotation by default. Exact tie-break/participant-set behavior, durable ledger/reversal/reward contracts, child-facing UX, real consumers and deployment evidence remain required.",
         "copilotChangesAllowed": false
       }
     },

@@ -13,9 +13,9 @@ from domus.domain.identity import (
     allows,
     effective_role,
 )
-from domus.domain.storage import validate_identifier
+from domus.domain.storage import CommandKey, validate_identifier
 from domus.domain.task_policy import can_approve, claim_matches_task
-from domus.domain.task_values import TaskPerformer, validate_task_ids
+from domus.domain.task_values import OccurrenceState, TaskPerformer, validate_task_ids
 from domus.domain.tasks import TaskCycle, TaskOccurrence
 
 _TASK_PERMISSIONS = frozenset(
@@ -147,3 +147,81 @@ class TaskAccess:
         ):
             raise Forbidden("task_approval_denied")
         return actor.performer
+
+
+_SCOPED_PERMISSIONS = {
+    "task.assign": Permission.TASKS_MANAGE,
+    "task.claim": Permission.TASKS_CLAIM,
+    "task.transition": Permission.TASKS_MANAGE,
+    "task.complete": Permission.TASKS_COMPLETE,
+    "task.verify": Permission.TASKS_APPROVE,
+    "task.reopen": Permission.TASKS_MANAGE,
+    "task.dependencies.update": Permission.TASKS_MANAGE,
+}
+_GLOBAL_PERMISSIONS = {
+    "task.create": Permission.TASKS_CREATE,
+    "task.policy.update": Permission.TASKS_CONFIGURE,
+}
+_DEFINITION_ACTIONS = frozenset({"task.definition.update", "task.occurrence.create"})
+
+
+@dataclass(frozen=True, slots=True)
+class TaskCommandAuthorization:
+    access: TaskAccess
+    household_id: str
+    action: str
+    occurrence_id: str | None = None
+    needs_configuration: bool = False
+    performer_ids: tuple[str, ...] = ()
+    transition_target: OccurrenceState | None = None
+    definition_id: str | None = None
+
+    def require(self, command: CommandKey, unit: UnitOfWork) -> None:
+        if (
+            command.household_id != self.household_id
+            or command.actor_id != self.access.human.ha_user_id
+            or command.action != self.action
+        ):
+            raise Forbidden("permission_denied")
+        if (
+            self.action in _GLOBAL_PERMISSIONS
+            and self.occurrence_id is None
+            and self.definition_id is None
+        ):
+            self.access.require(unit, self.household_id, _GLOBAL_PERMISSIONS[self.action])
+        elif (
+            self.action in _DEFINITION_ACTIONS
+            and self.definition_id is not None
+            and self.occurrence_id is None
+        ):
+            self.access.require(unit, self.household_id, Permission.TASKS_MANAGE)
+            if unit.tasks.definition(self.household_id, self.definition_id) is None:
+                raise Forbidden("permission_denied")
+        elif (
+            self.action in _SCOPED_PERMISSIONS
+            and self.occurrence_id is not None
+            and self.definition_id is None
+        ):
+            work = unit.tasks.occurrence(self.household_id, self.occurrence_id)
+            if work is None:
+                raise Forbidden("permission_denied")
+            if self.action == "task.claim":
+                self.access.claim(unit, work)
+            elif self.action == "task.complete":
+                self.access.performance_actor(unit, work, self.performer_ids)
+            else:
+                permission = _SCOPED_PERMISSIONS[self.action]
+                if self.action == "task.transition":
+                    if not isinstance(self.transition_target, OccurrenceState):
+                        raise Forbidden("permission_denied")
+                    if self.transition_target in (
+                        OccurrenceState.IN_PROGRESS,
+                        OccurrenceState.BLOCKED,
+                        OccurrenceState.ASSIGNED,
+                    ):
+                        permission = Permission.TASKS_COMPLETE
+                self.access.require(unit, self.household_id, permission, work)
+        else:
+            raise Forbidden("permission_denied")
+        if self.needs_configuration:
+            self.access.require(unit, self.household_id, Permission.TASKS_CONFIGURE)
