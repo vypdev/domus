@@ -64,7 +64,7 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
         and "DOMUS_SOURCE_SHA256=fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c"
         in command
         and "BUILD_VERSION=0.0.0-edge.2" in command
-        and "-t domus-app-previous addon-edge" in command
+        and "-t domus-app-previous tests/fixtures/edge3-app" in command
         for command in commands
     )
     verification = next(
@@ -73,6 +73,8 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
         if step.get("run") == "uv run pytest tests/containers --no-cov"
     )
     assert verification["env"]["DOMUS_PREVIOUS_IMAGE"] == "domus-app-previous"
+    assert verification["env"]["DOMUS_UPGRADE_IMAGE"] == "domus-app-installed"
+    assert any("-t domus-app-installed tests/fixtures/edge3-app" in command for command in commands)
     assert "containers" in jobs["aggregate"]["needs"]
 
 

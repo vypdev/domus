@@ -20,14 +20,27 @@ from test_app_image import restore_runtime as restore_runtime
 
 
 @pytest.fixture
-def previous_image():
-    value = os.environ.get("DOMUS_PREVIOUS_IMAGE")
-    assert value, "Set DOMUS_PREVIOUS_IMAGE to the reviewed schema-3 Edge.2 image"
+def previous_image(request):
+    version = getattr(request, "param", "edge2")
+    variable, revision, label = {
+        "edge2": (
+            "DOMUS_PREVIOUS_IMAGE",
+            "d013cf2c8b932d0e00f5858053cbc0e663d5eee1",
+            "0.0.0-edge.2",
+        ),
+        "edge3": (
+            "DOMUS_UPGRADE_IMAGE",
+            "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5",
+            "0.0.0-edge.3",
+        ),
+    }[version]
+    value = os.environ.get(variable)
+    assert value, "Set " + variable + " to the reviewed immutable " + label + " image"
     result = docker("image", "inspect", value)
     assert result.returncode == 0, result.stderr
     labels = json.loads(result.stdout)[0]["Config"]["Labels"]
-    assert labels["org.opencontainers.image.revision"] == "d013cf2c8b932d0e00f5858053cbc0e663d5eee1"
-    assert labels["io.hass.version"] == "0.0.0-edge.2"
+    assert labels["org.opencontainers.image.revision"] == revision
+    assert labels["io.hass.version"] == label
     return value
 
 
@@ -72,6 +85,7 @@ def refuse_old_image(image, previous, volume):
 
 
 @pytest.mark.parametrize("restore_runtime", ["native", "standalone"], indirect=True)
+@pytest.mark.parametrize("previous_image", ["edge2", "edge3"], indirect=True)
 def test_actual_older_image_refuses_selected_generation_without_changing_any_file(
     image, previous_image, restore_runtime
 ):
@@ -97,8 +111,11 @@ def test_actual_older_image_refuses_selected_generation_without_changing_any_fil
     stopped(name)
 
 
-def test_real_schema_three_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot(
-    image, previous_image, data_volume
+@pytest.mark.parametrize(
+    "previous_image,old_schema", [("edge2", 3), ("edge3", 4)], indirect=["previous_image"]
+)
+def test_real_older_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot(
+    image, previous_image, data_volume, old_schema
 ):
     old = "domus-upgrade-old-" + uuid.uuid4().hex
     new = "domus-upgrade-new-" + uuid.uuid4().hex
@@ -146,10 +163,10 @@ def test_real_schema_three_image_upgrades_replays_and_restores_its_pre_upgrade_s
                 "/data/domus",
                 "snapshot",
                 "create",
-                "/data/snapshots/schema3",
+                "/data/snapshots/previous",
             )
         )
-        assert checkpoint["snapshot"]["schema_version"] == 3
+        assert checkpoint["snapshot"]["schema_version"] == old_schema
         instance_id = checkpoint["snapshot"]["instance_id"]
         stopped(old)
         result = docker(
@@ -187,10 +204,10 @@ def test_real_schema_three_image_upgrades_replays_and_restores_its_pre_upgrade_s
                 "/data/domus",
                 "snapshot",
                 "create",
-                "/data/snapshots/schema4",
+                "/data/snapshots/current",
             )
         )
-        assert current["snapshot"]["schema_version"] == 4
+        assert current["snapshot"]["schema_version"] == 7
         assert current["snapshot"]["instance_id"] == instance_id
         inspected = successful(
             console(
@@ -200,7 +217,7 @@ def test_real_schema_three_image_upgrades_replays_and_restores_its_pre_upgrade_s
                 instance_id,
                 "snapshot",
                 "inspect",
-                "/data/snapshots/schema3",
+                "/data/snapshots/previous",
             )
         )
         assert inspected["snapshot"] == checkpoint["snapshot"]
@@ -215,8 +232,8 @@ def test_real_schema_three_image_upgrades_replays_and_restores_its_pre_upgrade_s
                 "/data/domus",
                 "restore",
                 "prepare",
-                "/data/snapshots/schema3",
-                "/data/snapshots/prepared3",
+                "/data/snapshots/previous",
+                "/data/snapshots/prepared-previous",
             )
         )
         active = successful(
@@ -227,7 +244,7 @@ def test_real_schema_three_image_upgrades_replays_and_restores_its_pre_upgrade_s
                 "/data/domus",
                 "restore",
                 "activate",
-                "/data/snapshots/prepared3",
+                "/data/snapshots/prepared-previous",
             )
         )
         assert active["state"] == "active"

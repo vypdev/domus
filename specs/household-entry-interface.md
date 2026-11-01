@@ -418,6 +418,18 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/tests/e2e/catalog.spec.ts` | create |
 | `tests/browser/entry_server.py` | create |
 | `tests/packaging/test_ui_wheel.py` | create |
+| `tests/python/test_app_package.py` | create |
+| `tests/fixtures/edge3-app/Dockerfile` | create |
+| `tests/containers/test_app_ui.py` | create |
+| `tests/containers/ui_fixture.py` | create |
+| `tests/containers/test_app_image.py` | update |
+| `tests/containers/test_app_compatibility.py` | update |
+| `tests/containers/restore_fixture.py` | update |
+| `addon-edge/Dockerfile` | update |
+| `addon-edge/config.yaml` | update |
+| `addon-edge/README.md` | update |
+| `addon-edge/DOCS.md` | update |
+| `addon-edge/CHANGELOG.md` | update |
 | `backend/src/domus/entrypoints/ui_http.py` | create |
 | `backend/src/domus/entrypoints/ui_bundle.py` | create |
 | `tests/backend/test_ui_bundle.py` | create |
@@ -467,8 +479,6 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `vitest.config.mjs` | reference |
 | `tooling/frontend-coverage.mjs` | reference |
 | `docs/evidence/frontend-toolchain.json` | reference |
-| `addon-edge/Dockerfile` | reference |
-| `addon-edge/config.yaml` | reference |
 | `docs/acceptance-plan.md` | update |
 
 Create paths are proposed, not evidence of current files. Existing paths are base-verified. Declare refinements before code. Label protocol notation. User docs cover normal path/defaults; setup owners get permissions and configuration; operators get state/recovery/cleanup; contributors get architecture/contracts; migration and troubleshooting remain discoverable. Keep evidence and cleanup current. Fixture proof is separate from owner adoption.

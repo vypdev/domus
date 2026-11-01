@@ -275,8 +275,15 @@ Model execution is separate from rendering, accessibility, integration, package 
 
 ## Remaining delivery
 
-Exact immutable image packaging, complete accessibility/lifecycle acceptance and owner adoption
-remain required. The built-product fixture proof does not replace that acceptance or a complete
+The Edge.4 candidate pins runtime source 9f5cabe and its verified source archive. Its separate
+Node/pnpm build stage includes the exact UI in the noneditable Python installation and leaves
+build tools out of the final image. Real amd64/aarch64 image execution, including UI resource bytes,
+same-listener delivery, actual Edge.2/3 data upgrades, restore and downgrade refusal, remains an
+independent CI gate. The frozen legacy builder is the byte-identical published Edge.3 recipe;
+old-image tests cannot accidentally build new source or depend on the new frontend build stage.
+
+Actual image/upgrade results, complete accessibility/lifecycle acceptance and owner adoption
+remain required. Source/policy tests and collected image cases do not replace that acceptance or a complete
 current-head review. The all-domain first release,
 both targets and isolated channels remain
 required. Follow the existing [identity](identity-household.md) and [setup](household-setup.md) contracts.

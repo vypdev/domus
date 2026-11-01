@@ -1,11 +1,16 @@
 {
-  "verifiedAtUTC": "2026-11-01T15:23:11.707223+00:00",
+  "verifiedAtUTC": "2026-11-01T15:42:27.914680+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "04fc72da07d5510c269179538f0b7a3ac4b983c2",
-  "sourceIdentity": "Current fix for valid Bugbot in-flight logout finding. Controller and runtime both refuse logout while a command owns preflight/send/reconciliation, preserving journal, runtime and exact recovery. Backend107 modules are unchanged from fully verified04fc72d.",
+  "sourceBase": "9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
+  "sourceIdentity": "Edge.4 candidate package pins the actual fully tested9f5cabe runtime/UI, immutable archive and multi-architecture Node builder. Current changes are build recipes, image acceptance tests and docs; backend/frontend runtime sources are unchanged. Actual new-image build/upgrade execution remains pending until current CI proves it.",
   "sources": {
-    ".github/workflows/ci_check.yml": "6380afbca2e5b64b9939c0e085a50120a9cb072ae2f93baa32b9fb7d55db37bd",
+    ".github/workflows/ci_check.yml": "cd11d915b1ba84625e42454c02fe4f7c2a764d905a8cedf4e623f1ab2681e702",
     ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
+    "addon-edge/CHANGELOG.md": "eac08873b4825d5dc560604e1490159854ce238e8e21f5266a868f4ff90f0d6c",
+    "addon-edge/DOCS.md": "b319549e99d1b9e2ce4a3a0c378e75fd37037974b0ebef21c701a538a90d86ca",
+    "addon-edge/Dockerfile": "da97a9b014cde2237afe88a8e3f2604275cdb19da1a8f565a07266a75938d3af",
+    "addon-edge/README.md": "026924808c18ec20d509aa7371952038b88ccb2abe3683f3e245118397b27452",
+    "addon-edge/config.yaml": "1f49cb87004637a01b264e78d2a9518f0913f00a4fa07ce00feb56a76eea7f68",
     "architecture/frontend.mjs": "a86a96f92fb770a8f9f848f9c4d3246fbdd1f41d57c06c913331d7b7a29a5888",
     "backend/pyproject.toml": "0413c7626999c1667d78de5a06cdf41abc46ab86d6dcddf0c492830979090d95",
     "backend/src/domus/composition/ingress.py": "a7fb583db905a349875ba271ace55216d83d22c70788e5b7f36fb948a9d38951",
@@ -19,7 +24,7 @@
     "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
     "docs/contracts/native-household-api.openapi.json": "ee51af3265d0faabc824e085d2ad2c1335faedfe12c251076a332db1557e776f",
     "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
-    "docs/household-entry-interface.md": "4a4045118d3bffbb80f46e139e165a8713d0ce68afdf2d9aa3823f19545577f5",
+    "docs/household-entry-interface.md": "d77d313956ed8e842da6474691ec3f46231f167e5d08d748645fed1300f83dfa",
     "docs/identity-household.md": "bea265f43775ee0021f5cbe245df9a66b9e926fb1553e36a945cf00a6ad2ac12",
     "docs/native-household-api.md": "9339c60fcd5e774591ab07c0233110475bd7f607d15bc9aeacbea48411b8989a",
     "frontend/.storybook/main.ts": "5956fa6d05a5ab5e8c4d96ee67ff430ba0688c00f242d0346a35ded5db659be2",
@@ -67,7 +72,7 @@
     "pnpm-lock.yaml": "6cdeedbfcb2d9412cd0ad131daef6a559cd8a67de925806022eee4ae90506218",
     "specs/CATALOG.md": "190504c90f98f7bf949ec0a84ecb5e926cf49bbbe9490205787fea4c4a817427",
     "specs/catalog.json": "33914aaebb6354bcd89831abe74409c3be66e69614862398ee3e394211e42f8d",
-    "specs/household-entry-interface.md": "11717e1142a00e4a235a852ffbe8688f4f0f1d2d9108eb0286b949bf4dc7da49",
+    "specs/household-entry-interface.md": "ca687109459e30a9620a24ce229fb92fe62146149366a5f8ba440e38d614d3e1",
     "tests/backend/test_auth_http.py": "bd492bc9b7af7d4984645755e4b598d905b5e43a180540b3d2afabb5b07e4a10",
     "tests/backend/test_entry_context.py": "fcbb14ebd36b566ec96c5c52ffafe1b49d5e6bd5fc7873a2b6547074381cd55a",
     "tests/backend/test_entry_wire.py": "f52c0f2dd911017287197e7f7ba27934f2a9cf8ac89e9adae90595d36a4f3173",
@@ -78,10 +83,17 @@
     "tests/backend/test_ui_http.py": "b89802b78e2a0ef3a76d8209968a8637e6a731840aba32fbdba12a6e132fd821",
     "tests/backend/test_ui_session.py": "2178147c1a64738756270e8d126249089eec717a35ec16b7ddc46f32b6b1c3f7",
     "tests/browser/entry_server.py": "98fc0aeff59cfc2788404916f366be3df5f133ac4165f18511b3ad16d53033af",
+    "tests/containers/restore_fixture.py": "dc980694e27ca2cf5621117fb7be8355d1ea3d6b4345a4109033a926c66c71b8",
+    "tests/containers/test_app_compatibility.py": "b0e8bd6d7e0923bf062533ae3ccb525a6af24e1a5935392f936e7be96b4e1f9e",
+    "tests/containers/test_app_image.py": "5b09654bc0d680c0809c75dadfdc630646f4588846a9dd5e67e05920a9f44917",
+    "tests/containers/test_app_ui.py": "130464df86cc7431e617434b3e35b1d040717d9081713527859d8ceff52fff4e",
+    "tests/containers/ui_fixture.py": "9e24ada5cd164a9ea5515c64cc1c922c218fc6a4d51cc91fd3c8ac7e5cc6234e",
+    "tests/fixtures/edge3-app/Dockerfile": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
     "tests/frontend/coverage-evidence.test.mjs": "0800f9fc96533cd4a60aaf9c36efbcfbd4ee8d58ad21b500e1a4bf7e54018239",
     "tests/node/architecture.test.mjs": "9006d683d320a18564ff73ef76da8006941ba49a72ac5fe15b4feab78c0dc8b6",
     "tests/packaging/test_ui_wheel.py": "13bb2321b8712fcd907a67a824f9c0106168e616e1bcf80900c50bc306152555",
-    "tests/python/test_ci_contract.py": "2e0d59b5ace7b53455296b49da3a7b98c3aa11606f6545216b2deeacba9b483e",
+    "tests/python/test_app_package.py": "d50ee358a84054657d41d26a76e05674f93270db08d964ec5f81803ca052540b",
+    "tests/python/test_ci_contract.py": "db6964d10c9bc4f31c43094d1d3ea900a9692ead70bc9a908b40db6bec5ec94e",
     "tooling/domus_tooling/ci_policy.py": "50cb5904499d61bab1e8ba8d385be4338a970056b255e97fe2234fda5503ae26"
   },
   "runtime": {
@@ -96,12 +108,12 @@
     "applicationModel": 565,
     "sourceInventoryAudit": 1,
     "nodePolicies": 38,
-    "pythonTooling": 148,
+    "pythonTooling": 151,
     "unimportedRuntimeIncluded": true,
     "runtimeSourceFiles": 15,
     "plannedCases": 48,
-    "claim": "565 actual Chromium unit/component cases and22 actual product browser cases pass, including8 controller/runtime and2 real ASGI/SQLite regressions for in-flight logout. All15 runtime modules and four coverage metrics100%. Backend2983-case/107-module proof and18 catalog cases are inherited unchanged from04fc72d; no needless backend rerun is claimed. All48 original SDD cases remain prospective until full feature acceptance.",
-    "pythonToolingOrigin": "Backend and Python tooling sources are unchanged from04fc72d; its complete hosted aggregate/backend/frontend/tooling/architecture and both container jobs passed. Current frontend fix has its own proof and will receive new-head CI.",
+    "claim": "Runtime proof is inherited from fully CI-verified9f5cabe:565 Chromium cases/15runtime modules100%,22real backend product browser cases,2983backend cases/107modules100%. Current151 tooling cases pass at100%;19actual-image cases collect but are not yet executed. Policy/source/collection is not image or owner acceptance. All48 original SDD case rows remain unchanged.",
+    "pythonToolingOrigin": "Current151-case full tooling run passes with214 statements/98branches100%, including immutable package/privilege/build scope guards. Actual new-image Docker execution is pending on the required CI matrix.",
     "controllerCases": 73,
     "frontendOrigin": "Current15-module Chromium measurement includes synchronous in-flight logout refusal at both orchestration boundaries.",
     "httpCases": 169,
@@ -112,7 +124,8 @@
     "backendCases": 2983,
     "backendSourceFiles": 107,
     "productBrowserCases": 22,
-    "wheelAcceptanceCases": 1
+    "wheelAcceptanceCases": 1,
+    "containerCasesCollected": 19
   },
   "coverage": {
     "frontend": {
@@ -582,20 +595,21 @@
     "uv run pytest tests/backend --cov=domus --cov-branch (real loopback network allowed)",
     "uv run domus-check backend-coverage --report coverage-backend-final.json",
     "pnpm --filter @domus/frontend exec vitest run tests/controller.test.ts tests/runtime.test.ts --no-coverage -t 'logout cannot retire|logout during a command'",
-    "pnpm --filter @domus/frontend exec playwright test -c playwright.entry.config.ts --grep 'stale logout'"
+    "pnpm --filter @domus/frontend exec playwright test -c playwright.entry.config.ts --grep 'stale logout'",
+    "uv run pytest tests/python --cov=domus_tooling --cov-branch (151passes)",
+    "uv run pytest tests/containers --collect-only --no-cov (19collected; not execution)"
   ],
   "interimFailures": [
-    "Bugbot finding4436188164 reproduced:8 controller/runtime tests failed because logout closed the controller and erased in-flight recovery evidence. Two built-product real ASGI/SQLite cases reproduced the same committed-response race in native and standalone. Raw original failures/traces/screenshots retained.",
-    "After the production guard, a timer assertion incorrectly required zero prior cancellations; it now compares before/after call counts to prove logout adds none. The published renderer can show loading during a pending command, so the integration test asserts preserved busy/nonclosed state instead of inventing a sending render. Original intermediate failure is retained.",
-    "Final full frontend565 cases pass with all1093 statements/791 branches/212 functions/737 lines100%; product22 cases and actual wheel acceptance pass without retries."
+    "Three new package-policy cases failed against the old Edge.3 manifest/source and missing frozen legacy recipe. All pass after preparing the explicit Edge.4 package.",
+    "The original SDK correctly rejected duplicate source-table declarations when existing addon references became updates. Removed only duplicate reference rows; format/consistency/catalog now pass with all48original cases preserved. No Copilot bug or source modification is involved."
   ],
   "limitations": [
-    "Native Supervisor immutable image, source/package pin and owner installation remain Edge.3/faa1654; no owner HA state or installed package changed.",
-    "Twenty product cases use actual Domus ASGI/SQLite and fictional loopback HA/Supervisor. They do not establish real owner HA or complete accessibility/lifecycle acceptance.",
-    "Inherited04fc72d hosted CI passed, but review was partial and retained one valid open finding. This source fixes that finding; native resolution and complete current-head review/CI remain pending. Current context evidence reported in vypdev/copilot#843,comment6559903211.",
-    "No Copilot resources/configuration/credentials, gateway, remote branch lifecycle, release or authentication bypass was changed."
+    "Candidate Edge.4 is not yet built/adopted. Owner-installed Edge.3 remains unchanged; schema4to7 must be proven in real immutable-image upgrade/restore/downgrade tests before owner update.",
+    "Native/standalone product browser565/22 and backend2983full proof are inherited unchanged from published9f5cabe; current package policy tests do not establish new-container execution.",
+    "Native Bugbot resolved both findings at9f5cabe and full CI passed. Full review remains partial solely from the reported bounded conversation fetch; new candidate CI/review remains separate.",
+    "No Copilot resources/configuration/credentials, gateway, remote branch lifecycle, privilege scope, release or owner HA state was changed."
   ],
-  "rawEvidence": "/private/tmp/domus-logout-race-checkpoint-retained/measurements.tar.gz",
+  "rawEvidence": "/private/tmp/domus-image-ui-checkpoint-retained/measurements.tar.gz",
   "previousModelEvidence": {
     "sourceRevision": "695e5c31a466b8a42c8840c46f708141979b35e4",
     "sourceBase": "82519ee4e547dc347b8d0a18352bd1acc7783d70",
@@ -1461,5 +1475,40 @@
     "rawEvidence": "/private/tmp/domus-entry-delivery-checkpoint-retained/measurements.tar.gz",
     "hostedAggregate": "CI Check124888676428 success; https://github.com/vypdev/domus/actions/runs/41319945761",
     "review": "12/12 code partitions,81 files/109fragments; partial conversation9fetched/4retained/5omitted/0truncated,limitReachedtrue. One valid finding published; https://github.com/vypdev/copilot/issues/843#issuecomment-6559903211"
+  },
+  "previousLogoutFixEvidence": {
+    "sourceRevision": "9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
+    "frontendCases": 565,
+    "productBrowserCases": 22,
+    "rawEvidence": "/private/tmp/domus-logout-race-checkpoint-retained/measurements.tar.gz",
+    "hostedAggregate": "CI Check124891940509 success",
+    "review": "12/12 code partitions;81files109fragments;0open/0reopened/2fixed/0verification-required/0unknown. Conversation still9fetched4retained5omitted,limitReachedtrue; neutral/partial is not complete review acceptance."
+  },
+  "imageCandidate": {
+    "sourceCommit": "9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
+    "sourceURL": "https://codeload.github.com/vypdev/domus/tar.gz/9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
+    "sourceSHA256": "00290ba2611aa40183e4cb3e2c4cd36e5a60e483a6996a116e956386338d29b5",
+    "sourceBytes": 1028445,
+    "nodeImage": "node:24.20.0-bookworm-slim",
+    "nodeIndexDigest": "sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+    "linuxArchitectures": [
+      "amd64",
+      "arm64",
+      "ppc64le"
+    ],
+    "version": "0.0.0-edge.4",
+    "schemaVersion": 7,
+    "priorInstalledVersion": "0.0.0-edge.3",
+    "priorInstalledSchema": 4,
+    "actualImageExecution": "PENDING; required amd64/aarch64 CI jobs must build new recipe and real Edge.2/3 images, then exercise all19container cases.",
+    "legacyRecipeSHA256": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
+    "architecture": "Build-only Node stage; exact compiled resources enter the noneditable Python wheel. Final image copies Python runtime only. Same private listener, accepted Ingress and unchanged Supervisor privilege scope.",
+    "assertions": [
+      "UI bytes exactly match verified product build; no Node/npm/pnpm/pytest/tooling or browser controls in runtime.",
+      "Actual standalone same-listener document/assets/HEAD/MIME/CSP/auth failures and empty business tables.",
+      "Actual schema3and4 images upgrade to7 with installation identity and replay retained; inspect/restore pre-upgrade snapshots and refuse downgrade unchanged.",
+      "Old-image generation-selection refusal, current console restore/rollback and process-death recovery remain required."
+    ],
+    "nodeOfficialSource": "https://hub.docker.com/_/node"
   }
 }
