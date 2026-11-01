@@ -55,8 +55,16 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
     assert container["runs-on"] == "${{ matrix.runner }}"
     commands = [step["run"] for step in container["steps"] if "run" in step]
     assert (
-        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-ci addon-edge"
+        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-edge5 addon-edge"
         in commands
+    )
+    assert any(
+        "docker build --file tests/fixtures/current-app/Dockerfile" in command
+        and "--build-arg BUILD_ARCH=${{ matrix.arch }}" in command
+        and "--build-arg DOMUS_SOURCE_COMMIT=${{ github.sha }}" in command
+        and "--build-arg BUILD_VERSION=ci-current" in command
+        and command.rstrip().endswith("-t domus-app-ci .")
+        for command in commands
     )
     assert "uv run pytest tests/containers --no-cov" in commands
     assert any(
@@ -74,6 +82,9 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
     )
     assert verification["env"]["DOMUS_PREVIOUS_IMAGE"] == "domus-app-previous"
     assert verification["env"]["DOMUS_UPGRADE_IMAGE"] == "domus-app-installed"
+    assert verification["env"]["DOMUS_TEST_IMAGE"] == "domus-app-ci"
+    assert verification["env"]["DOMUS_TEST_SOURCE_COMMIT"] == "${{ github.sha }}"
+    assert verification["env"]["DOMUS_SCHEMA7_IMAGE"] == "domus-app-edge5"
     assert any("-t domus-app-installed tests/fixtures/edge3-app" in command for command in commands)
     assert "containers" in jobs["aggregate"]["needs"]
 

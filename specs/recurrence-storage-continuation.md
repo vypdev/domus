@@ -125,6 +125,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | specs/CATALOG.md | update |
 | .dockerignore | create |
 | .github/workflows/ci_check.yml | update |
+| tests/python/test_ci_contract.py | update |
 | tests/fixtures/current-app/Dockerfile | create |
 | tests/containers/test_app_image.py | update |
 | tests/containers/test_app_compatibility.py | update |

@@ -1,6 +1,6 @@
 {
   "status": "partial; storage boundary implemented, complete recurrence feature remains in progress",
-  "recordedAtUTC": "2026-11-01T22:18:53.593225+00:00",
+  "recordedAtUTC": "2026-11-01T22:47:25.560889+00:00",
   "issue": "https://github.com/vypdev/domus/issues/20",
   "sourceBase": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
   "developmentBase": "3131810082760a98ee4af66f11bb65eaac49cc3b",
@@ -85,13 +85,34 @@
       "policyModulesByteVerified": 7,
       "immutableBaseOwners": 18,
       "retainedOwnersUnchanged": true,
-      "currentCompanionSHA256": "8f933d1d31842a92bdb9061fdb2dc54cc6b67f3d34cde9c1f9c6124515fc0cb1",
+      "currentCompanionSHA256": "b56cfc4be7260bfa56cb1f3d392d40b7a814a8d4a488ce5225d9d17d507a96c6",
       "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
     },
     "packageAndArchitectureTests": {
       "result": "passed",
       "executions": 52,
       "requires": "Fresh frontend build and current backend wheel; both completed before acceptance."
+    },
+    "pythonTooling": {
+      "result": "passed locally after updating the old-image CI contract assertion",
+      "executions": 148,
+      "coverageTotals": {
+        "covered_lines": 214,
+        "num_statements": 214,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 98,
+        "num_partial_branches": 0,
+        "covered_branches": 98,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "sourceChanged": "Only test_ci_contract assertions; no tooling implementation or coverage threshold changed."
     }
   },
   "migration": {
@@ -117,14 +138,32 @@
     "recurrence-storage-C04": "A current slot without the exact scoped actor/action/key receipt cannot commit; rollback and valid evidence are tested."
   },
   "images": {
-    "currentSource": "CI builds checked-out backend/frontend with ci-current label on amd64 and aarch64; actual hosted results are pending.",
+    "currentSource": "Actual hosted amd64/aarch64 current-source image tests passed on f835775; a fresh run is required for subsequent commits.",
     "schema7Control": {
       "version": "0.0.0-edge.5",
       "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
       "scope": "Immutable owner-package fixture used for actual schema7 upgrade/refusal checks, without changing its pin."
     },
-    "smoke": "Current recurrence/time/codec program passes a host control; actual CPU-image execution remains pending CI.",
-    "localDocker": "Not run; no local Docker engine was started."
+    "smoke": "Pinned recurrence planning, closed record codecs and source relationships execute successfully in both actual CPU images; host control is separate.",
+    "localDocker": "Not run; no local Docker engine was started.",
+    "hosted": {
+      "headRevision": "f835775b2f230db956750a224f8ebd6cc8bbbb5f",
+      "checkoutRevision": "11170de5541bc045f2ec16fd76a08100576c8b0b",
+      "checkoutTree": "81c7125fddf509c319889cfe76381e95b20e32ba",
+      "checkoutTreeEqualsReviewedHeadTree": true,
+      "runId": 41357396927,
+      "amd64": {
+        "jobId": 125000308389,
+        "executions": 23,
+        "result": "passed"
+      },
+      "aarch64": {
+        "jobId": 125000308453,
+        "executions": 23,
+        "result": "passed"
+      },
+      "aggregate": "Failed only on the old-image tooling contract assertion at this head; that test is corrected locally. No aggregate success is claimed until the fresh current-head run passes."
+    }
   },
   "specification": {
     "publishedActionRun": 41351649126,
@@ -136,7 +175,9 @@
   },
   "copilotReports": [
     "https://github.com/vypdev/copilot/issues/763#issuecomment-6563925226",
-    "https://github.com/vypdev/copilot/issues/835#issuecomment-6564066025"
+    "https://github.com/vypdev/copilot/issues/835#issuecomment-6564066025",
+    "https://github.com/vypdev/copilot/issues/851",
+    "https://github.com/vypdev/copilot/issues/843#issuecomment-6565011301"
   ],
   "retainedEvidence": {
     "directory": "/private/tmp/domus-recurrence-storage-64908ee",
@@ -155,5 +196,28 @@
     "before": "Six targeted tests failed before the additional source/count checks; original output is retained.",
     "after": "Progress above COUNT, future/missing sources and same-generation pattern contradictions are refused. Legitimate older slot snapshots remain valid.",
     "domainPolicy": "Pure matches_schedule/consistent_with relationships are shared by persistence and snapshot inspection; they grant no authority."
+  },
+  "nativeReview": {
+    "headRevision": "f835775b2f230db956750a224f8ebd6cc8bbbb5f",
+    "runId": 41357396827,
+    "jobId": 125000308666,
+    "checkRunId": 125001100160,
+    "codePartitionsCompleted": 4,
+    "codePartitionsAssigned": 4,
+    "filesAssigned": 39,
+    "diffFragments": 42,
+    "candidateFindings": 0,
+    "publishedFindings": 0,
+    "reviewThreads": 0,
+    "overall": "partial; neutral, not a complete review",
+    "humanConversation": {
+      "fetched": 2,
+      "retained": 1,
+      "omitted": 1,
+      "truncated": 0,
+      "limitReached": true
+    },
+    "issueComments": "Separately complete:6 fetched/6 retained; no overall prompt-text omission is inferred from one dimension.",
+    "manualSupplement": "Both maintainer-account proposed-SDD comments were manually inspected. They are consumer-agent review inputs, not fresh owner product answers. Full retained scope/constraints remain explicit."
   }
 }
