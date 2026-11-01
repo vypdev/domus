@@ -418,7 +418,7 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/tests/e2e/catalog.spec.ts` | create |
 | `tests/browser/entry_server.py` | create |
 | `tests/packaging/test_ui_wheel.py` | create |
-| `tests/python/test_app_package.py` | create |
+| `tests/backend/test_app_package.py` | update |
 | `tests/fixtures/edge3-app/Dockerfile` | create |
 | `tests/containers/test_app_ui.py` | create |
 | `tests/containers/ui_fixture.py` | create |

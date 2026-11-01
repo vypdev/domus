@@ -1,6 +1,8 @@
 # Verification and acceptance plan
 
-The catalog-listed SDDs contain 443 distinct inventory case IDs across eleven capabilities: the original 353-case foundation, 79 platform companion cases and eleven new task-policy cases. The proposed household-interface companion in issue #8 is not yet published and its 48 cases are excluded from this total.
+The catalog-listed SDDs contain 533 distinct inventory case IDs across eleven capabilities and
+fifteen documents: the original 353-case foundation, 79 platform companion cases, eleven task-policy
+cases, 42 task-execution companion cases and the 48 household-entry cases published in PR #15.
 The counts are derived from concrete observable scenarios and are minimums. The merged identity/storage
 foundation has separate backend evidence in the [M1 audit](m1-acceptance-audit.md); the full product case
 inventory is not complete.
@@ -65,4 +67,29 @@ and coverage never satisfy the household UI's 48 cases, owner HA acceptance or c
 
 ## Task policy refinement
 
-The eleven additional task cases preserve every existing ID and exercise owner-confirmed adult participation approval and narrow material authority, including explicit member denial. Other affected SDDs reference those scenarios instead of counting duplicate copies. The total is a prospective inventory count, not 443 executed or accepted product journeys. Required current authorization, completion-cycle isolation, point verification and stock integrity remain separate assertions.
+The eleven additional task cases preserve every existing ID and exercise owner-confirmed adult participation approval and narrow material authority, including explicit member denial. Other affected SDDs reference those scenarios instead of counting duplicate copies. The total is a prospective inventory count, not 533 executed or accepted product journeys. Required current authorization, completion-cycle isolation, point verification and stock integrity remain separate assertions.
+
+## Household entry evidence boundary
+
+The original 48-case companion inventory is unchanged. Its Domain/Application/Adapters cases have
+bounded real-Chromium proof in 565 unit/component cases across all fifteen runtime modules, with
+100% statements, branches, functions and lines and independent source inventory. The 22 separate
+built-product browser cases use both actual Python/SQLite compositions with fictional HA/Supervisor;
+the eighteen catalog cases exercise fourteen fictional states and 56 ordinary matrix renderings.
+Matrix renders and repeated executions are not additional inventory cases. Raw original failures,
+passing results and source/artifact identities are linked from the
+[entry evidence](evidence/household-entry-interface.json).
+
+The exact Edge.4 recipe at 119e504 built and passed all nineteen real-image cases on both amd64 and
+aarch64. The image tests verify exact installed UI bytes, same-listener standalone delivery without
+implicit records, actual schema-3/4 image upgrade to schema 7, replay, restoration, interrupted
+activation and old-image refusal. Its project aggregate correctly failed two obsolete package
+assertions; corrected complete local backend proof passes 2,984 cases at 100%. This is separate
+from new-head CI and from the reported Copilot assessment/context failures.
+
+Full companion acceptance still needs rendered integration evidence for installation/channel
+rebinding, historical same-key recovery after an actual restoration and racing setup in independent
+browser contexts, plus the owner-installed new native interface. Existing semantic fakes, backend
+restoration tests and the old installed Edge.3 connected page do not substitute for those journeys.
+Current UI/entry acceptance does not complete other domain screens, Stable distribution, M1 or the
+first all-domain release.
