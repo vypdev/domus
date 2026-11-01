@@ -13,5 +13,5 @@
     "checkJs": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "tests/*.test.ts", "vitest.config.ts"]
+  "include": ["src", "tests/*.test.ts", "tests/e2e", "vitest.config.ts", "playwright.config.ts"]
 }

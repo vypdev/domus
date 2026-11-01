@@ -134,6 +134,8 @@ Duplicate submission is disabled in flight. No automatic retry, rebase or new ke
 
 The Application controller refreshes proof/current state before setup, enrollment, recovery or resolved-request dismissal. Server ports bind every read and send to the expected context as an assertion, never an actor selector; concrete adapters must reject a mismatch. Prepared/uncertain work blocks a new key. Recovery checks the original command independently of new-write eligibility: pending own enrollment may recover its original receipt; setup requires current setup permission or active household-management permission. Dismissal never evicts unresolved work. A late receipt is retained without renewing an expired session or exposing expired authority. Reads and all continuations are generation-fenced; cancellation cannot undo a sent command. Native sign-out never invokes standalone revocation, and standalone logout proceeds even when owned storage clearing is unconfirmed.
 
+Browser composition uses a nonrewinding server/monotonic clock and 128-bit Web Crypto request keys without weak fallback. Clock regression, invalid samples and overflow fail closed. Fixed navigation has no arbitrary redirect argument. Lifecycle timers use original session/request deadlines, with visibility rechecks and generation/epoch fences; renderer or cancellation failure cannot restore authority. Ordinary exit disposes owned listeners/reads/timers without deleting server history. A persisted pagehide hides personal facts and retains tab recovery data; persisted pageshow composes a new controller and verifies current facts before exposing it, never automatically resending retained work. Logout stops that lifecycle before upstream confirmation. Presentation emits semantic intents, retains same-context drafts, associates/focuses errors and blocks new changes visibly when recovery storage is unavailable. A verified account/installation/channel change or closed view retires private drafts before rendering; live input binding clears a rapid pending edit from the actual DOM. Closed reentry is not disabled by a retired pending command.
+
 Existing internal routes are protocol routes, not file names. Browser requests resolve relative equivalents under `application_base`, never the origin root through Ingress.
 
 | Route | Contract |
@@ -375,6 +377,10 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/src/application/entry-controller.ts` | create |
 | `frontend/src/adapters/http.ts` | create |
 | `frontend/src/adapters/http-values.ts` | create |
+| `frontend/src/adapters/browser-capabilities.ts` | create |
+| `frontend/src/composition/entry-runtime.ts` | create |
+| `frontend/tests/capabilities.test.ts` | create |
+| `frontend/tests/runtime.test.ts` | create |
 | `frontend/tests/fixtures/entry-wire.json` | create |
 | `tests/backend/test_entry_wire.py` | create |
 | `frontend/src/adapters/session-journal.ts` | create |
@@ -387,6 +393,7 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/vitest.config.ts` | create |
 | `frontend/playwright.config.ts` | create |
 | `frontend/tsconfig.json` | create |
+| `frontend/tsconfig.catalog.json` | create |
 | `frontend/.storybook/main.ts` | create |
 | `frontend/.storybook/preview.ts` | create |
 | `frontend/stories/entry.stories.ts` | create |
@@ -399,6 +406,7 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/tests/component.test.ts` | create |
 | `frontend/tests/language.test.ts` | create |
 | `frontend/tests/e2e/entry.spec.ts` | create |
+| `frontend/tests/e2e/catalog.spec.ts` | create |
 | `tests/browser/entry_server.py` | create |
 | `backend/src/domus/entrypoints/ui_http.py` | create |
 | `backend/src/domus/entrypoints/entry_context.py` | create |

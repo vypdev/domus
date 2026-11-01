@@ -160,12 +160,17 @@ jobs:
       - run: pnpm --filter @domus/frontend exec playwright install --with-deps chromium
       - run: pnpm check:frontend
       - run: pnpm test:frontend
+      - run: pnpm build:frontend-catalog
+      - run: pnpm test:frontend-catalog
       - name: Retain distinct application coverage
         if: ${{ always() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: frontend-application-${{ github.sha }}
-          path: frontend/coverage/
+          path: |
+            frontend/coverage/
+            frontend/storybook-static/
+            frontend/test-results/
           if-no-files-found: error
           retention-days: 7
 

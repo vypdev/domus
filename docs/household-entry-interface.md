@@ -1,8 +1,9 @@
 # Household entry interface foundation
 
 The development branch implements pure entry/setup decisions, the bounded request journal with
-its owned sessionStorage adapter, and the generation-fenced entry controller. The product entry
-page and static delivery remain to be implemented. Strict frontend HTTP adapters now attach and
+its owned sessionStorage adapter, the generation-fenced entry controller, browser capability and
+lifecycle composition, and an owned English/Spanish Lit view. The product entrypoint and backend
+static delivery remain to be implemented. Strict frontend HTTP adapters attach and
 decode the server context contract. Both server compositions
 now expose verified session context and enforce supplied context assertions before protected work.
 These tests do not add a working interface to the owner's installed Edge.3 application.
@@ -154,6 +155,50 @@ and deliberate same-key recovery. Production imports of test/story fixtures are 
 type-only imports. These are boundary/conformance tests; complete browser-to-backend product journeys,
 rendered UI, HA adoption and package acceptance remain pending.
 
+## Browser composition and presentation
+
+The server-anchored clock advances by monotonic elapsed time, rounds to integer milliseconds and
+cannot rewind after fresh proof. Invalid samples, regression, provider failure and overflow fail
+closed for the page. Web Crypto supplies exactly 128 random bits per request key; there is no weak
+random or timestamp fallback. Navigation has only fixed same-origin sign-in/reopen destinations;
+native never starts standalone OAuth.
+
+The runtime composes these adapters with the actual controller, HTTP and journal. It publishes
+loading/current views, schedules the nearest session/request deadline with bounded intermediate
+ticks, and rechecks expiry on visibility changes without automatically refreshing authority. Exit
+retires owned reads, timers, listeners and presentation. A persisted pagehide retains original tab
+recovery data but closes access; persisted pageshow creates a fresh controller and obtains proof
+again without sending the retained command. Timer epochs and controller generations fence late
+callbacks, including a command response from before restoration. Explicit logout stops the local
+lifecycle before upstream confirmation. Renderer/cancellation failures cannot restore authority.
+
+The Lit view emits semantic intents only. It renders actual setup/join/membership/denied/unavailable,
+grace, receipt and original-request states. Drafts survive refresh/language changes, errors have
+associated descriptions and focus, storage failure visibly blocks new writes, and closed views
+retain reentry even when a retired command is still pending. Household text stays inert; raw result
+blobs, request keys/payloads, human/installation IDs and private Ingress data are not displayed.
+English and Spanish have stable complete keys, with English fallback for unsupported language or
+missing localized keys. Deadlines are explicitly UTC. The current design uses owned components,
+system fonts and light/dark CSS with reduced-motion support.
+
+Private drafts survive ordinary refresh within the same verified context but are retired before
+rendering another installation/channel/account or a closed view. Live value binding also clears an
+already edited DOM input when identity changes before Lit has committed the input event's update.
+
+The built Storybook catalog contains fourteen fictional states and has no server connection. Its
+eighteen Playwright cases cover the full English/Spanish by native/standalone display matrix,
+actual keyboard submission and draft retention, error focus, and 360-pixel light/dark layouts with
+measured primary-button contrast and rapid-edit account isolation. These are built component-catalog journeys, not product backend
+or owner HA acceptance. Four representative original screenshots are retained with the evidence.
+The dedicated every-PR frontend job builds/exercises this catalog and retains its outputs separately
+from application coverage; production imports from stories/configuration are rejected.
+
+Runtime/application typechecking remains strict with dependency declarations checked. As in the
+existing framework fixture, the separate catalog typecheck skips dependency declaration checking:
+the locked Storybook web-components package has an unused expected-error directive and incompatible
+generic declaration under TypeScript 6. The original failure is retained. Authored story/configuration
+code remains strict, real build/browser checks run, and no dependency source was patched.
+
 ## Development checks
 
 From the root, using the locked Node and pnpm versions:
@@ -163,6 +208,8 @@ pnpm install --frozen-lockfile
 pnpm --filter @domus/frontend exec playwright install chromium
 pnpm check:frontend
 pnpm test:frontend
+pnpm build:frontend-catalog
+pnpm test:frontend-catalog
 pnpm test
 ```
 
@@ -179,8 +226,8 @@ Model execution is separate from rendering, accessibility, integration, package 
 
 ## Remaining delivery
 
-Clock/entropy/navigation composition, base-relative built delivery and actual browser-to-backend
-journeys remain required. The owned Lit UI
-must demonstrate both locales, all primary states, accessibility, responsive layouts, Storybook and
-both browser compositions. The all-domain first release, both targets and isolated channels remain
+Product entrypoint wiring, base-relative built delivery, actual browser-to-backend journeys,
+real product CSP/asset delivery, complete accessibility/teardown and owner adoption remain required.
+The implemented view/catalog proof does not replace that acceptance. The all-domain first release,
+both targets and isolated channels remain
 required. Follow the existing [identity](identity-household.md) and [setup](household-setup.md) contracts.

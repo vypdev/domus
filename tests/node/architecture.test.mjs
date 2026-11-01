@@ -27,13 +27,15 @@ async function check(files) {
 }
 
 describe("executable frontend architecture policy", () => {
-  it.each([false, true])("rejects production importing a fixture, including type-only=%s", async typeOnly => {
-    const statement = typeOnly ? "import type {Fixture} from '../../tests/fixture'; export type Value = Fixture;"
-      : "import {value} from '../../tests/fixture'; export const result = value;";
-    expect(await check({
-      "../tests/fixture.ts": "export interface Fixture { fake: true; } export const value = true;",
-      "composition/main.ts": statement,
-    })).toContain("production-no-test-imports");
+  it.each(["tests/fixture.ts", "stories/fixture.stories.ts", ".storybook/fixture.ts"])("rejects production importing %s", async fixture => {
+    for (const typeOnly of [false, true]) {
+      const statement = typeOnly ? `import type {Fixture} from '../../${fixture}'; export type Value = Fixture;`
+        : `import {value} from '../../${fixture}'; export const result = value;`;
+      expect(await check({
+        ["../" + fixture]: "export interface Fixture { fake: true; } export const value = true;",
+        "composition/main.ts": statement,
+      })).toContain("production-no-test-imports");
+    }
   });
   it("checks the actual authored application graph as well as negative fixtures", async () => {
     const result = await cruise(["frontend/src"], {

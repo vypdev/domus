@@ -631,7 +631,12 @@
         "frontend/src/application/entry-controller.ts",
         "backend/src/domus/entrypoints/entry_context.py",
         "frontend/src/adapters/http.ts",
-        "frontend/src/adapters/http-values.ts"
+        "frontend/src/adapters/http-values.ts",
+        "frontend/src/adapters/browser-capabilities.ts",
+        "frontend/src/composition/entry-runtime.ts",
+        "frontend/src/presentation/domus-app.ts",
+        "frontend/src/presentation/messages.ts",
+        "frontend/src/presentation/styles.ts"
       ],
       "tests": [
         "frontend/tests/domain.test.ts",
@@ -644,7 +649,12 @@
         "tests/backend/test_entry_context.py",
         "frontend/tests/http.test.ts",
         "frontend/tests/fixtures/entry-wire.json",
-        "tests/backend/test_entry_wire.py"
+        "tests/backend/test_entry_wire.py",
+        "frontend/tests/capabilities.test.ts",
+        "frontend/tests/runtime.test.ts",
+        "frontend/tests/component.test.ts",
+        "frontend/tests/language.test.ts",
+        "frontend/tests/e2e/catalog.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -657,7 +667,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial entry/controller/journal and strict HTTP/context/receipt/logout adapter: 379 real Chromium cases; all four metrics at 100% on seven frontend runtime modules. The 37 Node graph/policy cases include production/test type/value negatives; two actual backend cases check wire conformance. Complete backend proof at ca55cdb covers 105 modules and 2,932 cases. Built UI, composition, rendered browser journeys and adoption remain incomplete.",
+        "implementationEvidence": "Partial entry UI/controller/journal/HTTP and browser lifecycle composition: 490 Chromium cases, all four metrics at 100% on twelve runtime modules. Fourteen fictional Storybook states and eighteen built-catalog browser cases cover both locales/deployments, keyboard, focus and narrow light/dark layouts. Product entrypoint/static delivery, actual backend browser journeys, full acceptance and owner adoption remain incomplete.",
         "blockingDecisions": "Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29.",
         "copilotChangesAllowed": false
       }
