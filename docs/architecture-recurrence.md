@@ -117,13 +117,40 @@ progress above the configured count, future slot generations and contradictory s
 same generation. Legitimate older generations remain valid after edits. Incomplete or inconsistent
 records are rejected without rewriting their source.
 
+The pure [membership check](../backend/src/domus/domain/recurrence_membership.py) also verifies that
+the nominal is a real candidate of the original pattern and fits COUNT/UNTIL. Matching headers and
+an exact receipt cannot turn an arbitrary date into scheduled work. COUNT uses actual nominal rank,
+including omitted invalid dates and the truncated initial period. Gregorian cycles preserve the
+original interval phase and bound distant rank calculation; bounded memoization only avoids
+recomputing pure period counts. Constructor, closed decoding and checkpoint inspection share this
+invariant. A corrupt current or historical slot is rejected rather than silently reinterpreted.
+
 The [migration guide](tasks/migration.md) distinguishes current source schema 8 from the immutable
 installed Edge.5 schema 7. CI builds a separate checked-out-source image for both CPU architectures
 and retains Edge.5 as a genuine old-image compatibility control. Its version is ci-current and it
 has no publication/deployment step. Actual hosted build/test outcomes remain required evidence.
 
-These are repository and migration capabilities. Scheduled human commands, actual fixed/relative
-materialization, lifecycle consumption, restore non-recreation, preview/apply, protected calendar
-queries and composed runners remain unfinished. The four additional storage refinements do not
+These are repository and migration capabilities. Actual fixed/relative materialization, lifecycle
+consumption, restore non-recreation, preview/apply, protected calendar queries and composed runners
+remain unfinished. The four additional storage refinements do not
 recount the retained 52 companion or 37 original owner cases. See
 [storage evidence](evidence/recurrence-storage.json) for exact tests and acceptance limits.
+
+## Authorized new fixed-task creation
+
+The application [creation command](../backend/src/domus/application/recurrence_commands.py) validates
+new active fixed tasks with current HA proof and the existing task-create, privileged override and
+inventory-link permissions. It shares [task definition creation](../backend/src/domus/application/task_creation.py)
+with the ordinary manual path. A definition, rule, unconsumed progress and original receipt/audit/outbox
+commit together. Manual creation retains its one initial occurrence; scheduled creation creates none
+until real materialization, so validation cannot consume or duplicate its first obligation.
+
+Pinned zone/data validation and bounded DTSTART preflight occur outside the writer transaction,
+including for date-only rules. The command returns an authorized original receipt before provider
+work and checks current local grants again before new writes. A rejected/unresolved start is not
+silently moved. The result explicitly reports pending processing and no first occurrence; it does
+not imply runner execution, task performance, points, inventory consumption or downstream delivery.
+
+This is an application use case, with no new public route or deployed interface yet. Draft/relative
+configuration, reviewed attachment, protected operation recovery queries and full runtime/HA
+acceptance remain required. See [creation evidence](evidence/recurrence-creation.json).

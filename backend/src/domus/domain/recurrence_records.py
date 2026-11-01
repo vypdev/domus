@@ -5,6 +5,7 @@ from enum import StrEnum
 
 from domus.domain.errors import InvalidInput
 from domus.domain.identity import validate_revision
+from domus.domain.recurrence_membership import accepts_fixed_slot
 from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot, cursor_binding
 from domus.domain.recurrence_rules import FixedPattern, NominalDate
 from domus.domain.recurrence_time import TimePolicy
@@ -106,6 +107,7 @@ class ScheduledSlot:
                 and self.planned.resolved.policy != self.schedule.policy
             )
             or self.created_at < self.schedule.created_at
+            or not accepts_fixed_slot(self.schedule.pattern, self.planned)
         ):
             raise InvalidInput("invalid_recurrence_slot")
 

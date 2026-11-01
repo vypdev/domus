@@ -35,7 +35,7 @@ def test_closed_codecs_round_trip_every_pattern_selector_and_time_snapshot(timed
         Frequency.YEARLY,
         2,
         Weekday.SU,
-        (ByDay(Weekday.MO, 1), ByDay(Weekday.FR)),
+        (ByDay(Weekday.MO, 1), ByDay(Weekday.TH)),
         (1, 12),
         (-1, 1),
         (-1, 1),

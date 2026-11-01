@@ -3,6 +3,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from datetime import date
 from threading import Barrier
 
 import pytest
@@ -10,7 +11,8 @@ from test_sqlite_recurrence import prepared, save_slot, slot, source7
 from test_sqlite_snapshots import Clock
 
 from domus.domain.errors import Conflict, DatabaseRejected, StorageFailure
-from domus.domain.recurrence_planning import FixedCursor, cursor_binding
+from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot, cursor_binding
+from domus.domain.recurrence_rules import NominalDate
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_recurrence_integrity import verify_recurrence_records
 from domus.infrastructure.sqlite_recurrence_records import (
@@ -42,6 +44,56 @@ def test_checkpoint_verifies_and_reopens_real_rule_progress_slot_and_original_re
         assert unit.recurrence.progress("home", "rule") == progress
         assert unit.recurrence.slot("home", value.key) == value
         assert unit.receipts.get(value.command).result.decode()["slot_key"] == value.key
+
+
+def test_self_consistent_slot_headers_and_exact_receipt_cannot_bypass_nominal_count(tmp_path):
+    store, rule, progress, value = committed(tmp_path)
+    # Construct a legitimate second daily nominal under the original unlimited rule, then corrupt
+    # both stored source snapshots to COUNT1. All keys, headers and evidence still agree.
+    later = replace(value, planned=PlannedFixedSlot(NominalDate(date(2026, 1, 2)), None))
+    bounded = replace(rule, pattern=replace(rule.pattern, count=1))
+    document = slot_document(later).decode()
+    document["schedule"]["pattern"]["count"] = 1
+    result = json.dumps({"slot_key": later.key, "occurrence_id": later.occurrence_id})
+    with store._connection() as connection:
+        connection.execute(
+            "UPDATE recurrence_rules SET document=?", (schedule_document(bounded).encoded,)
+        )
+        connection.execute(
+            "UPDATE recurrence_progress SET document=?",
+            (
+                progress_document(
+                    replace(
+                        progress,
+                        cursor=FixedCursor(cursor_binding(bounded.pattern, bounded.policy)),
+                    )
+                ).encoded,
+            ),
+        )
+        connection.execute(
+            "UPDATE recurrence_slots SET slot_key=?,nominal_value=?,document=?",
+            (later.key, "2026-01-02", json.dumps(document)),
+        )
+        connection.execute(
+            "UPDATE receipts SET command_key=?,result=? WHERE command_key=?",
+            (later.key, result, value.key),
+        )
+        connection.execute(
+            "UPDATE audit SET command_key=? WHERE command_key=?", (later.key, value.key)
+        )
+        connection.execute(
+            "UPDATE outbox SET payload=? WHERE event_type='recurrence.materialize'", (result,)
+        )
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+    before = store.path.read_bytes()
+    with store.read() as unit:
+        assert unit.recurrence.schedule("home", "rule") == bounded
+        assert unit.receipts.get(later.command).result.decode()["slot_key"] == later.key
+        with pytest.raises(StorageFailure, match="invalid_recurrence_record"):
+            unit.recurrence.slot("home", later.key)
+    with pytest.raises(DatabaseRejected, match="invalid_snapshot_records"):
+        SQLiteSnapshots(store, tmp_path / "bad-count", store.installation, Clock()).create("bad")
+    assert store.path.read_bytes() == before
 
 
 @pytest.mark.parametrize(

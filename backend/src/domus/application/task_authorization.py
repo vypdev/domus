@@ -193,6 +193,7 @@ _SCOPED_PERMISSIONS = {
 }
 _GLOBAL_PERMISSIONS = {
     "task.create": Permission.TASKS_CREATE,
+    "recurrence.fixed.create": Permission.TASKS_CREATE,
     "task.policy.update": Permission.TASKS_CONFIGURE,
 }
 _DEFINITION_ACTIONS = frozenset({"task.definition.update", "task.occurrence.create"})

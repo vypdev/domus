@@ -1,6 +1,5 @@
 """Closed calendar patterns and nominal period facts; no provider or scheduling authority."""
 
-import hashlib
 import json
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -8,6 +7,7 @@ from enum import StrEnum
 
 from domus.domain.errors import InvalidInput
 from domus.domain.recurrence_time import MAX_INSTANT_MS, NominalTime
+from domus.domain.storage import JsonDocument
 
 
 class Frequency(StrEnum):
@@ -129,8 +129,7 @@ class FixedPattern:
         for name in ("by_month", "by_month_day", "by_set_position"):
             object.__setattr__(self, name, tuple(sorted(getattr(self, name))))
 
-    @property
-    def fingerprint(self) -> str:
+    def document(self) -> JsonDocument:
         value = {
             "version": 1,
             "start_kind": "date" if isinstance(self.start, NominalDate) else "time",
@@ -147,9 +146,11 @@ class FixedPattern:
             if isinstance(self.until, NominalDate)
             else self.until,
         }
-        return hashlib.sha256(
-            json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
+        return JsonDocument(json.dumps(value))
+
+    @property
+    def fingerprint(self) -> str:
+        return self.document().fingerprint
 
 
 def slot_datetime(slot: NominalSlot) -> datetime:

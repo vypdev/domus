@@ -138,8 +138,15 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/application/fixed_recurrence.py | update |
 | backend/src/domus/application/ports.py | update |
 | backend/src/domus/application/recurrence_ports.py | update |
+| backend/src/domus/application/recurrence_commands.py | create |
+| backend/src/domus/application/task_creation.py | create |
+| backend/src/domus/application/task_commands.py | update |
+| backend/src/domus/application/task_authorization.py | update |
 | backend/src/domus/domain/recurrence_planning.py | update |
 | backend/src/domus/domain/recurrence_records.py | create |
+| backend/src/domus/domain/recurrence_membership.py | create |
+| backend/src/domus/domain/recurrence_rules.py | update |
+| backend/src/domus/infrastructure/recurrence_time.py | update |
 | backend/src/domus/infrastructure/sqlite.py | update |
 | backend/src/domus/infrastructure/sqlite_snapshots.py | update |
 | backend/src/domus/infrastructure/sqlite_recurrence.py | create |
@@ -147,6 +154,8 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/infrastructure/sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence.py | create |
 | tests/backend/test_recurrence_records.py | create |
+| tests/backend/test_recurrence_creation.py | create |
+| tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
 | backend/src/domus/infrastructure/sqlite_recurrence_integrity.py | create |
@@ -163,6 +172,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_sqlite_task_reviews.py | update |
 | tests/backend/test_task_restoration.py | update |
 | docs/architecture-recurrence.md | update |
+| docs/evidence/recurrence-creation.json | create |
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
 
@@ -191,6 +201,10 @@ The retained owner's reciprocal mappings remain unchanged. New mappings above co
 ## 18. Implementation sequence
 
 After normal branch admission: restore the privately preserved test-first draft; implement pure records and scoped SQLite adapter; implement schema-8 migration and complete snapshot verification; exercise negative boundaries and real transactions; then continue all retained authorized execution, relative lifecycle, restoration, preview, calendar/API and runner work. Update evidence, documentation and applicable images before review. Administration schema 9 follows the actual recurrence merge.
+
+The next application increment implements new active fixed-task creation through existing task-create, configuration-override and inventory-link authority. It saves the shared task definition, rule, unconsumed cursor and original command evidence together. It deliberately creates no manual initial occurrence; actual materialization remains required. Date-only configuration still validates its actual pinned zone/data policy without storing a fabricated instant. Preflight provider work holds no writer lock, and current local authority is checked again in the commit. Authorized original receipts precede provider work; changed keys/payloads and revoked authority retain existing semantics. Draft configuration, relative creation, reviewed attachment, public HTTP/operation queries and composed runners remain unfinished.
+
+Bugbot identified a storage boundary missing from the first kernel: a correctly scoped slot could name a nominal outside its pattern or COUNT/UNTIL end. Validate actual finite-period candidate membership and nominal rank in the pure record constructor, so closed decoding and checkpoint inspection enforce the same invariant. COUNT rank preserves interval phase, initial-period truncation, omitted invalid dates and Gregorian repetition; bounded pure memoization is an optimization, never evidence or authority. Do not weaken the existing slot/receipt/source relationships or alter the schema to mask corrupt records. A codec fixture must itself describe a real candidate. These are refinements of retained RCE/storage integrity obligations, not additional counted product journeys.
 
 ## 19. Definition of Done
 

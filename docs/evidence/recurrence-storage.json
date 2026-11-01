@@ -85,7 +85,7 @@
       "policyModulesByteVerified": 7,
       "immutableBaseOwners": 18,
       "retainedOwnersUnchanged": true,
-      "currentCompanionSHA256": "eeeaa3703ac2dd58fa1428e8ff274e0cc84b089241e3b26637a2b3587ffda34b",
+      "currentCompanionSHA256": "890d10fb2c9abd3717f984853f178e15976423bdc2e49371eb7ad0ac4b0ab341",
       "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
     },
     "packageAndArchitectureTests": {
@@ -271,5 +271,15 @@
     "aarch64": "passed",
     "frontend": "failed on the independently investigated contention expectation; local repair49pass is not yet hostedCI success",
     "aggregate": "failed"
+  },
+  "laterApplicationIncrement": "docs/evidence/recurrence-creation.json; this kernel report retains its original3500-test source and acceptance scope.",
+  "hostedBrowserRepair": {
+    "headRevision": "ec6a7198baf867b4b4392b5202d8345e90fcf2fd",
+    "runId": 41360326797,
+    "frontendJob": 125009131653,
+    "aggregateJob": 125010374783,
+    "amd64Job": 125009131683,
+    "aarch64Job": 125009131691,
+    "result": "All applicable CI Check suites passed; Copilot separately found one real nominal-membership issue, now corrected locally and awaiting publication/review. Full recurrence remains incomplete."
   }
 }

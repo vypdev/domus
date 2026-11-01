@@ -4,7 +4,7 @@ from test_app_image import docker
 from test_app_image import image as image
 
 
-def test_current_image_executes_recurrence_planning_and_closed_record_codecs(image):
+def test_current_image_executes_recurrence_creation_planning_and_closed_record_codecs(image):
     result = docker(
         "run",
         "--rm",
@@ -17,15 +17,25 @@ def test_current_image_executes_recurrence_planning_and_closed_record_codecs(ima
         image,
         "-c",
         """
+from dataclasses import replace
 from datetime import datetime
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
+from domus.application.household_commands import HouseholdCommands, SetupHousehold
+from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
+from domus.application.task_requests import CreateTask
+from domus.domain.errors import InvalidInput
+from domus.domain.identity import HumanIdentity
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_records import FixedProgress, FixedSchedule, ScheduledSlot
 from domus.domain.recurrence_rule_text import parse_fixed_pattern
 from domus.domain.recurrence_time import NominalTime, TimePolicy, TimeResolution
 from domus.domain.storage import Installation
+from domus.domain.task_values import TaskContent
+from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock, TimeZoneCatalog
 from domus.infrastructure.recurrence_time import PinnedRecurrenceTime, TIMEZONE_DATA_IDENTITY
-from domus.infrastructure.sqlite import SCHEMA_VERSION
+from domus.infrastructure.sqlite import SCHEMA_VERSION, SQLiteDatabase
 from domus.infrastructure.sqlite_recurrence_records import (
     schedule_document, read_schedule, progress_document, read_progress, slot_document, read_slot,
 )
@@ -46,8 +56,44 @@ assert read_schedule(schedule_document(rule).encoded) == rule
 assert read_progress(progress_document(progress).encoded) == progress
 assert read_slot(slot_document(slot).encoded) == slot
 assert progress.matches_schedule(rule) and slot.consistent_with(rule)
-print('Current-source recurrence codecs and pinned timezone planning passed.')
+try:
+    ScheduledSlot(installation, replace(rule, pattern=replace(pattern, count=1)),
+        planned.slots[1], 'outside-count', 100)
+except InvalidInput:
+    pass
+else:
+    raise AssertionError('A real second nominal cannot fit COUNT1')
+
+class FictionalHuman:
+    def current(self):
+        return HumanIdentity('fixture_ha_admin', True, True, False)
+
+class UnusedDirectory:
+    def get(self, user_id):
+        raise AssertionError('Default mapping selects no external directory subject')
+
+with TemporaryDirectory(prefix='domus-current-image-') as directory:
+    store = SQLiteDatabase(Path(directory) / 'domus.sqlite3', installation)
+    store.initialize()
+    clock, identifiers, human = SystemClock(), SecureIdentifiers(), FictionalHuman()
+    HouseholdCommands(store, human, UnusedDirectory(), TimeZoneCatalog(), clock, identifiers).setup(
+        'setup', SetupHousehold('Fictional image fixture', 'UTC'))
+    creation = RecurrenceCommands(store, human, clock, identifiers,
+        FixedRecurrencePlanner(CalendarNominalExpansion(), times))
+    request = CreateFixedTask(CreateTask(TaskContent('Scheduled image fixture')), pattern, policy)
+    receipt = creation.create_fixed('create', request)
+    assert creation.create_fixed('create', request) == receipt
+    facts = receipt.result.decode()
+    with store.read() as unit:
+        assert unit.tasks.occurrences('home') == ()
+        assert len(unit.tasks.definitions('home')) == 1
+        assert unit.recurrence.progress('home', facts['schedule_id']).cursor.nominal_count == 0
+        assert unit.receipts.get(receipt.command) == receipt
+print('Current-source recurrence creation, codecs and pinned timezone planning passed.')
 """,
     )
     assert result.returncode == 0, result.stderr
-    assert "Current-source recurrence codecs and pinned timezone planning passed." in result.stdout
+    assert (
+        "Current-source recurrence creation, codecs and pinned timezone planning passed."
+        in result.stdout
+    )

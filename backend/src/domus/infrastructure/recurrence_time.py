@@ -96,6 +96,9 @@ class PinnedRecurrenceTime:
     def data_identity(self) -> str:
         return TIMEZONE_DATA_IDENTITY
 
+    def require_policy(self, policy: TimePolicy) -> None:
+        self._zone(policy)
+
     def _zone(self, policy: TimePolicy) -> tuple[ZoneInfo, str]:
         if policy.data_identity != self.data_identity:
             raise IntegrationUnavailable("timezone_data_mismatch")
