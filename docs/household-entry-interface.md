@@ -6,7 +6,8 @@ lifecycle composition, an owned English/Spanish Lit view, the product module ent
 same-listener built UI delivery. Strict frontend HTTP adapters attach and
 decode the server context contract. Both server compositions
 now expose verified session context and enforce supplied context assertions before protected work.
-These tests do not add a working interface to the owner's installed Edge.3 application.
+Edge.4 packages this interface; its separate owner installation has passed the Ingress identity and
+English/Spanish opening checks described below. The retained Edge.3 application is unchanged.
 
 The [entry specification](../specs/household-entry-interface.md) retains eight requirements and 48
 planned acceptance cases. The first model tests exercise membership decisions, explicit setup
@@ -157,8 +158,8 @@ Recorded nonsecret wire from actual guarded native/standalone ASGI/SQLite provid
 Chromium tests. Two backend cases keep its structure current while allowing bounded guidance copy
 edits. The controller/HTTP/journal composition also checks one simulated effect across a lost response
 and deliberate same-key recovery. Production imports of test/story fixtures are rejected, including
-type-only imports. These are boundary/conformance tests; complete browser-to-backend product journeys,
-rendered UI, HA adoption and package acceptance remain pending.
+type-only imports. These boundary/conformance tests are distinct from the built-product journeys,
+rendered UI, HA observation and package acceptance recorded below.
 
 ## Browser composition and presentation
 
@@ -236,7 +237,7 @@ unavailable browser capabilities and scheduling failures produce bounded guidanc
 reload. Replacing or detaching the owned element releases its resources. The actual module performs
 no setup or enrollment automatically and never inspects HA's parent document or private storage.
 
-Twenty-two Playwright cases exercise the built product against both real Python compositions and
+Forty-two Playwright cases exercise the built product against both real Python compositions and
 SQLite, wrapped by fictional loopback HA/Supervisor providers. They prove explicit keyboard setup,
 inert household text, exact original-key recovery after a committed response is lost, unchanged
 receipt/audit/outbox counts, blocked writes on silent storage failure, logout versus native close,
@@ -244,7 +245,35 @@ pending own enrollment, account-draft retirement, original-deadline read-only gr
 360px operation with actual CSP style fallback. A failed module download leaves visible reload
 guidance without claiming an empty home. The standalone authorization fixture performs the
 real state/browser-binding/PKCE callback flow with fictional one-use grants. Test controls are only
-in tests/browser; they are absent from the application wheel. This is not owner HA or image adoption.
+in tests/browser; they are absent from the application wheel.
+
+The fixture now uses actual private owned installations. Its test-only operator invokes the real
+installation console to create a baseline snapshot, stop the runtime, prepare and activate restoration,
+and reopen the selected generation. Deliberate recovery then displays the historical original receipt
+without recreating a household or changing the original request identity, payload or deadline.
+Fresh Edge/Stable installations retire incompatible local records without replay. These tests exercise
+channel binding, not distribution of a Stable image.
+
+Independent browser contexts race setup only after both fresh preflights. Exactly one household,
+member, receipt, audit record and outbox record is committed. A second binding for the same mapped
+account gets a conflict; a different unlinked HA administrator is denied without implicit membership.
+Failed owned-key removal closes local access while retaining original evidence and unrelated keys;
+standalone still revokes its grant. Actual missing cookies and forged CSRF are rejected before effects.
+Chromium owns Origin, so that attack uses a raw intercepted request to the real server and delivers
+its actual denial. A virtual browser-clock wake proves local expiry and refusal to renew; it does not
+advance the server clock. Independent backend tests cover server lease expiry.
+
+## Owner Ingress observation
+
+With explicit owner approval, Edge.4 was installed as a separate experimental app from this managed
+branch. Only the authorized local public origin was configured; the previous stopped Edge.3 instance
+and its data were retained. The new app started and its interface loaded inside HA's actual iframe.
+The current HA account was verified without a separate login. English/Spanish switching and an
+explicit status refresh both returned the unconfigured-household screen with current verified access.
+No household was created. The initial wrapper remained on its loading screen until an active-tab
+reload; the cause was not established. After reload the document, JavaScript, CSS, session and
+authorization requests succeeded and the interface rendered. Private screenshots are retained locally,
+not uploaded. This observation proves opening and identity, not the remaining owner business journeys.
 
 ## Development checks
 
@@ -282,8 +311,10 @@ same-listener delivery, actual Edge.2/3 data upgrades, restore and downgrade ref
 independent CI gate. The frozen legacy builder is the byte-identical published Edge.3 recipe;
 old-image tests cannot accidentally build new source or depend on the new frontend build stage.
 
-Actual image/upgrade results, complete accessibility/lifecycle acceptance and owner adoption
-remain required. Source/policy tests and collected image cases do not replace that acceptance or a complete
-current-head review. The all-domain first release,
+Both actual CPU images have passed nineteen image/upgrade cases, and the owner opening/identity
+observation is recorded separately. Complete accessibility/lifecycle acceptance and remaining owner
+journeys still require their own evidence. Source/policy tests do not replace that acceptance or a
+current-head review. Reported Copilot infrastructure failures are separate from product findings and
+the required full test coverage. The all-domain first release,
 both targets and isolated channels remain
 required. Follow the existing [identity](identity-household.md) and [setup](household-setup.md) contracts.

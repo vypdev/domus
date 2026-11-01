@@ -9,19 +9,21 @@ import argparse
 import base64
 import hashlib
 import html
+import io
+import json
+import os
 import secrets
 import sqlite3
 import tempfile
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode
-from uuid import uuid4
 
 import pytest
 import uvicorn
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 
-from domus.composition import ingress, server
+from domus.composition import admin, ingress, server
 from domus.domain.errors import IdentityRejected, IdentityUnavailable
 from domus.domain.identity import HumanIdentity
 from domus.infrastructure.ha_config import HAEndpoint
@@ -36,6 +38,7 @@ class HomeAssistant:
         self.people = {
             "a" * 32: HumanIdentity("a" * 32, True, True, False),
             "b" * 32: HumanIdentity("b" * 32, False, True, False),
+            "c" * 32: HumanIdentity("c" * 32, True, True, False),
         }
         self.subject = "a" * 32
         self.outage = False
@@ -100,30 +103,68 @@ class Fixture:
         self.patch.setattr(server, "HomeAssistantOAuth", lambda config: OAuth(config, self.ha))
         self.reset()
 
-    def reset(self) -> None:
+    def reset(self, channel: str = "edge") -> None:
+        assert channel in ("edge", "stable")
         if self.runtime is not None:
             self.runtime.close()
         if self.directory is not None:
             self.directory.cleanup()
         self.directory = tempfile.TemporaryDirectory(prefix=f"domus-entry-browser-{self.mode}-")
-        self.database = Path(self.directory.name) / "household.sqlite3"
+        parent = Path(self.directory.name)
+        # Own fixtures use the actual private directory contract, including BSD group inheritance.
+        os.chown(parent, -1, os.getegid())
+        self.data_directory = parent / "data"
+        self.data_directory.mkdir(mode=0o700)
+        self.channel = channel
         self.ha = HomeAssistant(
             HAEndpoint.supervisor() if self.mode == "native" else HAEndpoint(self.origin)
         )
-        instance = str(uuid4())
+        self.start()
+
+    def start(self) -> None:
         if self.mode == "native":
-            self.runtime = ingress.create_business_runtime(
-                "fixture-supervisor-token", "edge", self.database, instance, (self.origin,)
+            self.runtime = ingress.create_owned_runtime(
+                "fixture-supervisor-token", self.channel, self.data_directory, (self.origin,)
             )
         else:
-            self.runtime = server.create_runtime(
+            self.runtime = server.create_owned_runtime(
                 self.origin,
                 self.origin,
-                instance,
-                "edge",
+                self.channel,
+                self.data_directory,
                 development_http=True,
-                database=self.database,
             )
+        assert self.runtime.storage is not None
+        self.database = self.runtime.storage.database.path
+
+    def console(self, *arguments: str) -> dict:
+        output, errors = io.StringIO(), io.StringIO()
+        result = admin.main(
+            ["--channel", self.channel, "--data-directory", str(self.data_directory), *arguments],
+            output_stream=output,
+            error_stream=errors,
+        )
+        assert result == 0, errors.getvalue()
+        return json.loads(output.getvalue())
+
+    def operator(self, action: str) -> None:
+        # Real installation-console operations on disposable data only; never a product bypass.
+        checkpoint = Path(self.directory.name) / "checkpoint"
+        prepared = Path(self.directory.name) / "prepared"
+        if action == "snapshot":
+            assert self.console("snapshot", "create", str(checkpoint))["state"] == "created"
+        else:
+            assert action == "restore"
+            self.runtime.close()
+            self.runtime = None
+            try:
+                assert (
+                    self.console("restore", "prepare", str(checkpoint), str(prepared))["state"]
+                    == "prepared"
+                )
+                assert self.console("restore", "activate", str(prepared))["state"] == "active"
+            finally:
+                self.start()
 
     def stats(self) -> dict:
         with sqlite3.connect(f"file:{self.database}?mode=ro", uri=True) as connection:
@@ -132,7 +173,8 @@ class Fixture:
                 for (name,) in connection.execute(
                     "SELECT name FROM sqlite_master WHERE type='table'"
                 )
-                if name in {"households", "receipts", "audit", "outbox", "members"}
+                if name
+                in {"households", "receipts", "audit", "outbox", "members", "retained_operations"}
             }
         return {"counts": counts, "revoked": self.ha.revoked, "mode": self.mode}
 
@@ -156,8 +198,19 @@ class Fixture:
         if path == "/__fixture__/ready":
             response = JSONResponse({"state": "ready", "fixture": True})
         elif path == "/__fixture__/reset" and request.method == "POST":
-            self.reset()
+            values = (
+                await request.json()
+                if request.headers.get("content-type") == "application/json"
+                else {}
+            )
+            assert set(values) <= {"channel"}
+            self.reset(values.get("channel", "edge"))
             response = JSONResponse(self.stats())
+        elif path == "/__fixture__/operator" and request.method == "POST":
+            values = await request.json()
+            assert set(values) == {"action"}
+            self.operator(values["action"])
+            response = JSONResponse({"state": "completed", "fixture": True})
         elif path == "/__fixture__/stats":
             response = JSONResponse(self.stats())
         elif path == "/__fixture__/identity" and request.method == "POST":
@@ -204,7 +257,15 @@ class Fixture:
             ]
             headers += [
                 (b"x-ingress-path", PREFIX.encode()),
-                (b"x-remote-user-id", self.ha.subject.encode()),
+                # Fictional Supervisor session lookup, never a browser-supplied actor header.
+                (
+                    b"x-remote-user-id",
+                    (
+                        "c" * 32
+                        if request.cookies.get("ingress_session") == "e" * 128
+                        else self.ha.subject
+                    ).encode(),
+                ),
             ]
             scope = {
                 **scope,

@@ -73,7 +73,7 @@ The eleven additional task cases preserve every existing ID and exercise owner-c
 
 The original 48-case companion inventory is unchanged. Its Domain/Application/Adapters cases have
 bounded real-Chromium proof in 565 unit/component cases across all fifteen runtime modules, with
-100% statements, branches, functions and lines and independent source inventory. The 22 separate
+100% statements, branches, functions and lines and independent source inventory. The 42 separate
 built-product browser cases use both actual Python/SQLite compositions with fictional HA/Supervisor;
 the eighteen catalog cases exercise fourteen fictional states and 56 ordinary matrix renderings.
 Matrix renders and repeated executions are not additional inventory cases. Raw original failures,
@@ -87,9 +87,17 @@ activation and old-image refusal. Its project aggregate correctly failed two obs
 assertions; corrected complete local backend proof passes 2,984 cases at 100%. This is separate
 from new-head CI and from the reported Copilot assessment/context failures.
 
-Full companion acceptance still needs rendered integration evidence for installation/channel
-rebinding, historical same-key recovery after an actual restoration and racing setup in independent
-browser contexts, plus the owner-installed new native interface. Existing semantic fakes, backend
-restoration tests and the old installed Edge.3 connected page do not substitute for those journeys.
+The expanded built-product campaign uses real owned installations and the actual console for
+snapshot/prepare/activation/restart. Historical same-key recovery preserves the original request and
+does not recreate its rolled-away effect. Installation/channel rebinding, independent-context setup
+races, failed owned-storage cleanup, missing cookies, forged CSRF/Origin and local deadline wake are
+also exercised. The raw Origin attack uses the real server's denial; the virtual browser clock does
+not claim server-clock advancement. Edge/Stable fixture binding does not prove Stable distribution.
+
+The owner-approved separate Edge.4 installation starts and renders within the actual HA Ingress
+iframe, verifies the current HA account without another login, switches English/Spanish and refreshes
+access without creating a household. Initial wrapper loading required an active-tab reload; its cause
+remains unknown. The stopped Edge.3 installation and data were retained. Remaining owner business,
+accessibility and lifecycle journeys are independent acceptance work.
 Current UI/entry acceptance does not complete other domain screens, Stable distribution, M1 or the
 first all-domain release.

@@ -9,8 +9,8 @@ const origin = (mode: Mode) => `http://127.0.0.1:${mode === 'native' ? 56174 : 5
 const base = (mode: Mode) => origin(mode) + (mode === 'native' ? prefix : '');
 const stats = async (request: APIRequestContext, mode: Mode) =>
   (await request.get(origin(mode) + '/__fixture__/stats')).json();
-async function open(page: Page, context: BrowserContext, mode: Mode, signIn = true) {
-  if (mode === 'native') await context.addCookies([{name: 'ingress_session', value: 'f'.repeat(128),
+async function open(page: Page, context: BrowserContext, mode: Mode, signIn = true, ingressCookie = 'f'.repeat(128)) {
+  if (mode === 'native') await context.addCookies([{name: 'ingress_session', value: ingressCookie,
     domain: '127.0.0.1', path: '/', httpOnly: true, sameSite: 'Strict'}]);
   const response = await page.goto(base(mode) + '/');
   expect(response?.status()).toBe(200);
@@ -215,6 +215,182 @@ for (const mode of modes) test.describe(mode, () => {
     await expect(page.getByText('Fictional household', {exact: true})).toBeVisible();
     expect(await page.evaluate(() => (document.querySelector('domus-app') as unknown as {
       view: {session: {expiresAt: number}}}).view.session.expiresAt)).toBe(original);
+    expect((await stats(request, mode)).counts.households).toBe(1);
+  });
+
+  test('actual console restoration returns a historical original receipt without recreating its effect', async ({page, context, request}) => {
+    await open(page, context, mode);
+    expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'snapshot'}})).ok()).toBe(true);
+    await create(page);
+    await expect(page.getByRole('heading', {name: 'Request recorded', exact: true})).toBeVisible();
+    const record = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records[0], journalKey);
+    expect((await stats(request, mode)).counts.households).toBe(1);
+    expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'restore'}})).ok()).toBe(true);
+    const restored = await stats(request, mode);
+    expect(restored.counts.households).toBe(0);
+    expect(restored.counts.retained_operations).toBe(1);
+    let posts = 0;
+    page.on('request', item => {if (item.url() === base(mode) + '/api/v1/household' && item.method() === 'POST') posts++;});
+    await page.reload();
+    if (mode === 'standalone') {
+      await page.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
+      await page.getByRole('link', {name: 'Continue as fixture user'}).click();
+    }
+    await expect(page.getByRole('heading', {name: 'Set up your household', exact: true})).toBeVisible();
+    expect(posts).toBe(0);
+    await page.getByRole('button', {name: 'Check previous request', exact: true}).click();
+    await expect(page.getByRole('heading', {name: 'Previously processed request', exact: true})).toBeVisible();
+    await expect(page.getByText('This operation was processed before restoration. Its effect is absent from current state. Review current records before requesting new work.', {exact: true})).toBeVisible();
+    const checked = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records[0], journalKey);
+    expect(checked).toMatchObject({key: record.key, payload: record.payload, operationId: record.operationId,
+      createdAt: record.createdAt, expiresAt: record.expiresAt, stage: 'historical'});
+    expect((await stats(request, mode)).counts).toEqual(restored.counts);
+    expect(posts).toBe(1);
+  });
+
+  for (const channel of ['edge', 'stable'] as const) test(`fresh ${channel} installation retires incompatible requests without replay`, async ({page, context, request}) => {
+    await open(page, context, mode); await create(page, 'Private prior installation');
+    await expect(page.getByRole('heading', {name: 'Request recorded', exact: true})).toBeVisible();
+    const previous = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).context, journalKey);
+    await page.evaluate(() => sessionStorage.setItem('fixture.unrelated', 'retained'));
+    await request.post(origin(mode) + '/__fixture__/reset', {data: {channel}});
+    let posts = 0;
+    page.on('request', item => {if (item.url() === base(mode) + '/api/v1/household' && item.method() === 'POST') posts++;});
+    await page.getByRole('button', {name: 'Refresh status', exact: true}).click();
+    if (mode === 'standalone') {
+      await page.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
+      await page.getByRole('link', {name: 'Continue as fixture user'}).click();
+    }
+    await expect(page.getByRole('heading', {name: 'Set up your household', exact: true})).toBeVisible();
+    await expect(page.getByLabel('Household name', {exact: true})).toHaveValue('');
+    await expect(page.getByText('Private prior installation', {exact: true})).toHaveCount(0);
+    const current = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!), journalKey);
+    expect(current.context.installationId).not.toBe(previous.installationId);
+    expect(current.context.channel).toBe(channel); expect(current.records).toEqual([]);
+    expect(await page.evaluate(() => sessionStorage.getItem('fixture.unrelated'))).toBe('retained');
+    expect((await stats(request, mode)).counts.households).toBe(0); expect(posts).toBe(0);
+  });
+
+  for (const actors of ['same_account', 'different_accounts'] as const) test(`independent ${actors} setup preserves the singleton and current command authority`, async ({page, context, browser, request}) => {
+    await open(page, context, mode);
+    const peer = await browser.newContext(), peerPage = await peer.newPage();
+    let release!: () => void, arrived!: () => void, count = 0;
+    const gate = new Promise<void>(resolve => {release = resolve;});
+    const ready = new Promise<void>(resolve => {arrived = resolve;});
+    const statuses: number[] = [], keys: string[] = [];
+    try {
+      if (mode === 'standalone' && actors === 'different_accounts') await request.post(origin(mode) + '/__fixture__/identity', {data: {subject: 'c'.repeat(32)}});
+      await open(peerPage, peer, mode, true, (actors === 'different_accounts' ? 'e' : 'd').repeat(128));
+      for (const candidate of [page, peerPage]) {
+        candidate.on('response', response => {
+          if (response.url() === base(mode) + '/api/v1/household' && response.request().method() === 'POST') statuses.push(response.status());
+        });
+        await candidate.route(base(mode) + '/api/v1/household', async route => {
+          if (route.request().method() !== 'POST') return route.continue();
+          keys.push(route.request().headers()['idempotency-key']);
+          if (++count === 2) arrived();
+          await gate; await route.continue();
+        });
+      }
+      await Promise.all([create(page, 'Fictional administrator A'), create(peerPage, 'Fictional administrator C')]);
+      await ready; release();
+      // An active mapped member gets a conflict; a new unlinked HA admin gains no implicit membership.
+      await expect.poll(() => statuses.slice().sort()).toEqual([200, actors === 'same_account' ? 409 : 403]);
+      expect(new Set(keys).size).toBe(2);
+      const final = await stats(request, mode);
+      for (const table of ['households', 'members', 'receipts', 'audit', 'outbox']) expect(final.counts[table], table).toBe(1);
+      expect(final.counts.retained_operations).toBe(0); // Current receipts are not rolled-away history.
+      await expect.poll(async () => (await Promise.all([page, peerPage].map(candidate => candidate.locator('domus-app').evaluate(element =>
+        (element as unknown as {view: {outcome: {kind: string} | null}}).view.outcome?.kind)))).sort()).toEqual(['receipt', 'rejected']);
+      const records = await Promise.all([page, peerPage].map(candidate => candidate.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records[0], journalKey)));
+      expect(records.map(record => record.stage).sort()).toEqual(['committed', 'rejected']);
+      expect(new Set(records.map(record => record.key))).toEqual(new Set(keys));
+      await Promise.all([page, peerPage].map(candidate => candidate.getByRole('button', {name: 'Refresh status', exact: true}).click()));
+      expect(count).toBe(2); expect((await stats(request, mode)).counts).toEqual(final.counts);
+    } finally {release(); await peer.close();}
+  });
+
+  test('failed owned-storage clearing closes local access and reports uncertainty without canceling sign-out', async ({page, context, request}) => {
+    await open(page, context, mode); await create(page);
+    await expect(page.getByRole('heading', {name: 'Request recorded', exact: true})).toBeVisible();
+    const record = await page.evaluate(key => sessionStorage.getItem(key), journalKey);
+    await page.evaluate(() => {
+      sessionStorage.setItem('fixture.unrelated', 'retained');
+      const remove = Storage.prototype.removeItem;
+      Storage.prototype.removeItem = function(key) {
+        if (key === 'domus.entry.journal.v1') throw new DOMException('Fictional denied removal', 'SecurityError');
+        remove.call(this, key);
+      };
+    });
+    const before = await stats(request, mode);
+    await page.getByRole('button', {name: mode === 'native' ? 'Close this view' : 'Sign out of Domus', exact: true}).click();
+    await expect(page.getByRole('heading', {name: 'This view is closed', exact: true})).toBeVisible();
+    await expect(page.getByRole('alert')).toHaveText('Owned browser data could not be confirmed as cleared. This view has no active household access.');
+    if (mode === 'standalone') await expect(page.getByText('You are signed out of Domus. Household records and server history are retained.', {exact: true})).toBeVisible();
+    expect(await page.evaluate(key => sessionStorage.getItem(key), journalKey)).toBe(record);
+    expect(await page.evaluate(() => sessionStorage.getItem('fixture.unrelated'))).toBe('retained');
+    expect(await page.locator('domus-app').evaluate(element => {
+      const view = (element as unknown as {view: {session: unknown; household: unknown; journal: unknown}}).view;
+      return [view.session, view.household, view.journal];
+    })).toEqual([null, null, null]);
+    const after = await stats(request, mode);
+    expect(after.counts).toEqual(before.counts); expect(after.revoked).toBe(mode === 'native' ? 0 : 1);
+  });
+
+  for (const field of ['origin', 'x-csrf-token'] as const) test(`a forged ${field} is rejected by the actual server before any household effect`, async ({page, context, request}) => {
+    await open(page, context, mode);
+    let posts = 0;
+    await page.route(base(mode) + '/api/v1/household', async route => {
+      if (route.request().method() !== 'POST') return route.continue();
+      posts++;
+      const headers = {...route.request().headers(),
+        [field]: field === 'origin' ? 'https://attacker.invalid' : '0'.repeat(64)};
+      if (field === 'origin') {
+        // Chromium owns Origin; send this raw attack to the actual server and deliver its real denial.
+        const response = await route.fetch({headers, maxRedirects: 0});
+        expect(response.status()).toBe(403); await route.fulfill({response});
+      } else await route.continue({headers});
+    });
+    await create(page);
+    await expect(page.getByRole('heading', {name: 'Request not accepted', exact: true})).toBeVisible();
+    await expect(page.getByText('Current access was denied. Ask an administrator to review your permissions.', {exact: true})).toBeVisible();
+    const record = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records[0], journalKey);
+    expect(record.stage).toBe('rejected'); expect(record.operationId).toBeNull();
+    expect(record.payload.name).toBe('Fictional household'); expect(posts).toBe(1);
+    for (const count of Object.values((await stats(request, mode)).counts)) expect(count).toBe(0);
+  });
+
+  test('loss of the real browser cookie blocks a cached setup grant before POST', async ({page, context, request}) => {
+    await open(page, context, mode); await context.clearCookies();
+    let posts = 0;
+    page.on('request', item => {if (item.url() === base(mode) + '/api/v1/household' && item.method() === 'POST') posts++;});
+    await create(page);
+    await expect(page.getByRole('heading', {name: 'Verify your access', exact: true})).toBeVisible();
+    expect(posts).toBe(0);
+    expect(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records, journalKey)).toEqual([]);
+    expect((await stats(request, mode)).counts.households).toBe(0);
+  });
+
+  test('browser wake after the original grace deadline hides local facts and refresh cannot renew it', async ({page, context, request}) => {
+    await page.clock.install();
+    await open(page, context, mode); await create(page);
+    await expect(page.getByText('Fictional household', {exact: true})).toBeVisible();
+    await request.post(origin(mode) + '/__fixture__/identity', {data: {outage: true}});
+    await page.getByRole('button', {name: 'Refresh status', exact: true}).click();
+    await expect(page.getByRole('heading', {name: 'Read-only access', exact: true})).toBeVisible();
+    const remaining = await page.locator('domus-app').evaluate(element => {
+      const session = (element as unknown as {view: {session: {expiresAt: number; serverTime: number}}}).view.session;
+      return session.expiresAt - session.serverTime;
+    });
+    expect(remaining).toBeGreaterThan(0);
+    await page.clock.fastForward(remaining + 1001);
+    await expect(page.getByRole('heading', {name: 'Verify your access', exact: true})).toBeVisible();
+    await expect(page.getByText('Fictional household', {exact: true})).toHaveCount(0);
+    await expect(page.getByRole('button', {name: 'Refresh status', exact: true})).toHaveCount(0);
+    await page.locator('domus-app').evaluate(element => element.dispatchEvent(
+      new CustomEvent('domus-intent', {detail: {type: 'refresh'}, bubbles: true, composed: true})));
+    await expect(page.getByRole('heading', {name: 'Verify your access', exact: true})).toBeVisible();
+    await expect(page.getByRole('button', {name: 'Create household', exact: true})).toHaveCount(0);
     expect((await stats(request, mode)).counts.households).toBe(1);
   });
 

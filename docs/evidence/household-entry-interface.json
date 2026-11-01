@@ -1,8 +1,8 @@
 {
-  "verifiedAtUTC": "2026-11-01T16:00:15.103284+00:00",
+  "verifiedAtUTC": "2026-11-01T16:54:49.237303+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "119e5041ff397f565ffb14a4798c0bbb5780f7b8",
-  "sourceIdentity": "Package assertions updated to the actual Edge.4 immutable five-stage build, consolidating the guards in the existing backend package suite and retaining every privilege/pin check. Recipes/runtime/frontend and real image helpers are identical to119e504, whose both actual CPU images pass19cases each. Full corrected backend2984cases and independent inventory pass100% locally; current-head project CI remains separate.",
+  "sourceBase": "6435decd55bfff32675d44e30f1d6a4e5d8eb161",
+  "sourceIdentity": "Test-only expansion to real owned installations and actual console restoration:42 built-product cases pass against both real compositions/SQLite. No runtime, immutable Edge.4 source pin or build recipe changes. Separately the owner-approved Edge.4 installation starts and renders inside actual HA Ingress, verifies the current account, switches EN/ES and refreshes access without creating a household.",
   "sources": {
     ".github/workflows/ci_check.yml": "cd11d915b1ba84625e42454c02fe4f7c2a764d905a8cedf4e623f1ab2681e702",
     ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
@@ -20,12 +20,12 @@
     "backend/src/domus/entrypoints/native_http.py": "f40903f3cc52ba7aaa27075f4c783ce678125632e4fb1e33d4b0b1a0a74888cd",
     "backend/src/domus/entrypoints/ui_bundle.py": "beae3d4a7a57375ee195cca81efccdbc899d9db4286029d53eabaf30de6e14f7",
     "backend/src/domus/entrypoints/ui_http.py": "b6c47baa742f3862173a93e4121dc9914fd972eb6287ffffb9ffccecbf2ebe4a",
-    "docs/acceptance-plan.md": "ed57b2a148af31f3f786dccb961498adc16a1ad30394b523c93e836689e9086e",
+    "docs/acceptance-plan.md": "1b0cc54110c86a586cb1e94d3fadc63f77560994eec3e21369aa6eb461f001ff",
     "docs/contracts/auth-api.openapi.json": "17933ff4fb9c416371ee20453c1d77131fdf24202d372ef72074f80ef263d0a7",
     "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
     "docs/contracts/native-household-api.openapi.json": "ee51af3265d0faabc824e085d2ad2c1335faedfe12c251076a332db1557e776f",
     "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
-    "docs/household-entry-interface.md": "d77d313956ed8e842da6474691ec3f46231f167e5d08d748645fed1300f83dfa",
+    "docs/household-entry-interface.md": "e2382e2ea78a4937325a06b995428ddb814c3f4e14c8515193a46146b39667dc",
     "docs/identity-household.md": "bea265f43775ee0021f5cbe245df9a66b9e926fb1553e36a945cf00a6ad2ac12",
     "docs/native-household-api.md": "9339c60fcd5e774591ab07c0233110475bd7f607d15bc9aeacbea48411b8989a",
     "frontend/.storybook/main.ts": "5956fa6d05a5ab5e8c4d96ee67ff430ba0688c00f242d0346a35ded5db659be2",
@@ -57,7 +57,7 @@
     "frontend/tests/controller.test.ts": "487d92ad57999a05c58594c1a7f765a4d6ade12dc997730c2d1d2e1cb500efc2",
     "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
     "frontend/tests/e2e/catalog.spec.ts": "fadb7cae323a4e78598db28955b991cf42b8fa2fac81f058bab31e21ffb3aa7b",
-    "frontend/tests/e2e/entry.spec.ts": "bc1d0037d869e1935aa808b52e73f6cd1fd90ebea5b3cdbb24e987abe43e4052",
+    "frontend/tests/e2e/entry.spec.ts": "c31ae622bfa18d21e305b5f0594eb1eb3bd98970b41e183a8dee2529af6aa65a",
     "frontend/tests/fixtures/entry-wire.json": "4839ff30b6b6a3be456e95c4a3b270676b34fe923a66e971f91ade39a232780e",
     "frontend/tests/http.test.ts": "267fa6d38d188a85a96dd9d1fb8e8b80937e45ca08e383dfca9237fb8981da79",
     "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
@@ -84,7 +84,7 @@
     "tests/backend/test_ui_bundle.py": "acc3d8ca1f4c1451dfb9df73e0011d95b56d8ab5e24170dac700c2214f39d356",
     "tests/backend/test_ui_http.py": "b89802b78e2a0ef3a76d8209968a8637e6a731840aba32fbdba12a6e132fd821",
     "tests/backend/test_ui_session.py": "2178147c1a64738756270e8d126249089eec717a35ec16b7ddc46f32b6b1c3f7",
-    "tests/browser/entry_server.py": "98fc0aeff59cfc2788404916f366be3df5f133ac4165f18511b3ad16d53033af",
+    "tests/browser/entry_server.py": "88fc6085369e98d82e7805a74e8c8f3521cc0df28f7cbe18979fa32c6c8ab949",
     "tests/containers/restore_fixture.py": "dc980694e27ca2cf5621117fb7be8355d1ea3d6b4345a4109033a926c66c71b8",
     "tests/containers/test_app_compatibility.py": "b0e8bd6d7e0923bf062533ae3ccb525a6af24e1a5935392f936e7be96b4e1f9e",
     "tests/containers/test_app_image.py": "5b09654bc0d680c0809c75dadfdc630646f4588846a9dd5e67e05920a9f44917",
@@ -113,7 +113,7 @@
     "unimportedRuntimeIncluded": true,
     "runtimeSourceFiles": 15,
     "plannedCases": 48,
-    "claim": "Current full backend2984cases/107modules pass100% and independent source audit; tooling148cases/214statements/98branches pass100%. Backend package guards now total5; duplicate tooling copies were removed. Runtime/frontend565Chromium/22product cases and actual19cases per CPU family are independently identified inherited proof. All48original entry case rows remain unchanged; full feature/owner acceptance is incomplete.",
+    "claim": "42 current built-product Playwright cases pass without retries. Unchanged runtime retains separate published6435dec CI proof:2984backend cases/all107modules100%,565Chromium cases/all15runtime modules100%,148tooling cases100%,38Node policy cases100%,18catalog journeys and19actual image cases per CPU family. All48original case rows remain unchanged. These counts do not claim48fully accepted owner journeys or a completed all-domain release.",
     "pythonToolingOrigin": "Current corrected full148case tooling campaign passes at100%; package assertions live in the original backend suite. The full current backend2984campaign, including corrected package guards, passes at100%.",
     "controllerCases": 73,
     "frontendOrigin": "Current15-module Chromium measurement includes synchronous in-flight logout refusal at both orchestration boundaries.",
@@ -124,7 +124,7 @@
     "storyMatrixRenders": 56,
     "backendCases": 2984,
     "backendSourceFiles": 107,
-    "productBrowserCases": 22,
+    "productBrowserCases": 42,
     "wheelAcceptanceCases": 1,
     "containerCasesCollected": 19,
     "containerCasesExecutedPerArchitecture": 19
@@ -610,12 +610,13 @@
     "The119e504whole project gate caught two existing backend package assertions still requiring Edge.3/the old three-stage build. Corrected those existing assertions for the reviewed five-stage build, preserving external digest/source/checksum/privilege checks and adding the frozen legacy guard; removed duplicate new tooling assertions. Corrected whole backend2984cases passes100% and tooling148passes100%."
   ],
   "limitations": [
-    "Both actual CPU images passed19cases at119e504; full corrected current local backend passes2984cases100%. New-head CI and owner-installed native interface acceptance remain pending.",
-    "The owner installed Edge.3 app was observed stopped through Chrome; no start, update, configuration, repository or privilege change was made.",
-    "Actual rendered installation/channel rebinding, restoration-history replay and independent-browser setup races remain feature acceptance work. Existing component/backend proofs do not replace those combined journeys.",
-    "Copilotassessment failure at119is reported in#829; incompleteconversation remains#843. Both product findings are natively resolved. NoCopilot/gateway/credential/branchlifecycle/release changes."
+    "42 actual composed browser cases pass locally; current new-head hosted CI and review must be inspected separately. Unchanged runtime/package proof at6435dec is independent.",
+    "Owner-approved separate Edge.4 starts, renders within the HA iframe, verifies current identity and supports EN/ES switching/status refresh. No owner household was created; remaining business/accessibility/lifecycle owner journeys remain separate.",
+    "Initial owner wrapper loading required an active-tab reload; cause unknown. The successful iframe observation does not explain that earlier symptom.",
+    "Fictional-provider restoration/rebinding/setup races are actual integrated product tests, not live owner database restoration or Stable distribution.",
+    "Copilot scope/assessment/context failures are reported upstream. Both product findings are natively resolved; new-head review remains separate. Copilot/gateway resources and credentials remain unchanged."
   ],
-  "rawEvidence": "/private/tmp/domus-image-ui-checkpoint-retained/measurements.tar.gz",
+  "rawEvidence": "/private/tmp/domus-entry-restoration-checkpoint-retained/measurements.tar.gz",
   "previousModelEvidence": {
     "sourceRevision": "695e5c31a466b8a42c8840c46f708141979b35e4",
     "sourceBase": "82519ee4e547dc347b8d0a18352bd1acc7783d70",
@@ -1506,7 +1507,7 @@
     "schemaVersion": 7,
     "priorInstalledVersion": "0.0.0-edge.3",
     "priorInstalledSchema": 4,
-    "actualImageExecution": "PASS:119e504actualnewimage plus actualEdge.2/3legacyimages;19cases per amd64/aarch64 job. Current recipes/runtime/image helper sources are unchanged. Aggregate at119failedobsoletebackendpackageassertions, now fixed locally. New-head CI remains required.",
+    "actualImageExecution": "PASS:19cases each on actualamd64/aarch64 at119e504 and unchanged recipes/runtime/helpers at6435dec;6435dec CI aggregateSUCCESS after corrected package assertions. Separate owner Edge.4 installation/Ingress observation is recorded independently.",
     "legacyRecipeSHA256": "0b7c878e9af9bfa36e72fd9de3fe97c115e088cbe55a9680106701352d4afac8",
     "architecture": "Build-only Node stage; exact compiled resources enter the noneditable Python wheel. Final image copies Python runtime only. Same private listener, accepted Ingress and unchanged Supervisor privilege scope.",
     "assertions": [
@@ -1546,5 +1547,117 @@
     "documents": 15,
     "distinctCases": 533,
     "claim": "Prospective case inventory, not executed product acceptance"
+  },
+  "previousPackagePolicyEvidence": {
+    "verifiedAtUTC": "2026-11-01T16:00:15.103284+00:00",
+    "sourceBase": "119e5041ff397f565ffb14a4798c0bbb5780f7b8",
+    "sourceIdentity": "Package assertions updated to the actual Edge.4 immutable five-stage build, consolidating the guards in the existing backend package suite and retaining every privilege/pin check. Recipes/runtime/frontend and real image helpers are identical to119e504, whose both actual CPU images pass19cases each. Full corrected backend2984cases and independent inventory pass100% locally; current-head project CI remains separate.",
+    "tests": {
+      "applicationModel": 565,
+      "sourceInventoryAudit": 1,
+      "nodePolicies": 38,
+      "pythonTooling": 148,
+      "unimportedRuntimeIncluded": true,
+      "runtimeSourceFiles": 15,
+      "plannedCases": 48,
+      "claim": "42 current built-product Playwright cases pass without retries. Unchanged runtime retains separate published6435dec CI proof:2984backend cases/all107modules100%,565Chromium cases/all15runtime modules100%,148tooling cases100%,38Node policy cases100%,18catalog journeys and19actual image cases per CPU family. All48original case rows remain unchanged. These counts do not claim48fully accepted owner journeys or a completed all-domain release.",
+      "pythonToolingOrigin": "Current corrected full148case tooling campaign passes at100%; package assertions live in the original backend suite. The full current backend2984campaign, including corrected package guards, passes at100%.",
+      "controllerCases": 73,
+      "frontendOrigin": "Current15-module Chromium measurement includes synchronous in-flight logout refusal at both orchestration boundaries.",
+      "httpCases": 169,
+      "backendWireConformance": 2,
+      "browserCatalogCases": 18,
+      "storybookStates": 14,
+      "storyMatrixRenders": 56,
+      "backendCases": 2984,
+      "backendSourceFiles": 107,
+      "productBrowserCases": 42,
+      "wheelAcceptanceCases": 1,
+      "containerCasesCollected": 19,
+      "containerCasesExecutedPerArchitecture": 19
+    },
+    "rawEvidence": "/private/tmp/domus-image-ui-checkpoint-retained/measurements.tar.gz"
+  },
+  "renderedAcceptance": {
+    "sourceBase": "6435decd55bfff32675d44e30f1d6a4e5d8eb161",
+    "verifiedAtUTC": "2026-11-01T16:54:49.237303+00:00",
+    "sourceSHA256": {
+      "tests/browser/entry_server.py": "88fc6085369e98d82e7805a74e8c8f3521cc0df28f7cbe18979fa32c6c8ab949",
+      "frontend/tests/e2e/entry.spec.ts": "c31ae622bfa18d21e305b5f0594eb1eb3bd98970b41e183a8dee2529af6aa65a"
+    },
+    "browserStats": {
+      "startTime": "2026-11-01T16:21:55.689Z",
+      "duration": 23106.555,
+      "expected": 42,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "rawArchiveSHA256": "4d6858f0d5f0c100006fbf189e21a90200b02457e6aeae88efa86ad8635c3479",
+    "producerFileCount": 59,
+    "limitations": [
+      "Fictional HA/Supervisor providers with actual owned compositions, private storage, SQLite and installation console.",
+      "Raw forged Origin uses route.fetch to the real server; Chromium does not permit that Origin override through ordinary fetch.",
+      "Virtual browser-clock expiry does not advance the server clock.",
+      "Stable fixture binding is not Stable image distribution."
+    ],
+    "archive": "/private/tmp/domus-entry-restoration-checkpoint-retained/measurements.tar.gz",
+    "proof": [
+      "Real console snapshot/create, runtime stop, restore prepare/activate and selected-generation reopen; original historical receipt without recreating effect.",
+      "Fresh Edge/Stable installation binding retires incompatible local requests; unrelated storage retained; no automatic replay.",
+      "Independent same-account and different-account setup barriers preserve one household/member/receipt/audit/outbox. Existing mapped account receives409; unlinked HA admin receives403, without implicit membership.",
+      "Failed owned-key removal clears local memory while preserving original evidence; standalone revocation still occurs.",
+      "Actual missing cookies/CSRF/raw forged Origin cannot use cached authority to create a household.",
+      "Virtual browser wake hides expired personal facts and stale refresh cannot renew access."
+    ]
+  },
+  "publishedPackageVerification": {
+    "sourceRevision": "6435decd55bfff32675d44e30f1d6a4e5d8eb161",
+    "aggregate": {
+      "checkId": 124901532928,
+      "result": "SUCCESS"
+    },
+    "jobs": {
+      "backend": 124900393089,
+      "frontend": 124900393028,
+      "amd64": 124900392954,
+      "aarch64": 124900393066
+    },
+    "review": {
+      "jobId": 124900393218,
+      "completedPartitions": 13,
+      "totalPartitions": 13,
+      "open": 0,
+      "reopened": 0,
+      "fixed": 2,
+      "verificationRequired": 0,
+      "unknown": 0,
+      "conversation": "PARTIAL:9fetched/4retained/5omitted/0truncated/limitReachedtrue"
+    },
+    "copilotFailure": {
+      "reference": "5c8115e7-6940-480a-8928-b5ac9c2bf49c",
+      "phase": "scope",
+      "reason": "scope-clause-limit",
+      "field": "$.lines",
+      "originalIssueLine": "L111",
+      "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6560789725"
+    }
+  },
+  "ownerIngressObservation": {
+    "version": "0.0.0-edge.4",
+    "runtimeSource": "9f5cabe9cb4ffa5156f0fa01d8a3699a04f498af",
+    "target": "Native Home Assistant App / actual Ingress iframe / Google Chrome",
+    "channel": "edge",
+    "authorization": "Owner explicitly approved separate installation, technical Core administrator lookup and start.",
+    "outcomes": [
+      "Separate Edge.4 installed/configured/started; retained stopped Edge.3 and its data.",
+      "English and Spanish setup views rendered inside actual HA wrapper; current account identity/access verified without a separate login.",
+      "Explicit status refresh returned verified unconfigured household; no household creation.",
+      "Initial wrapper loading remained pending until active-tab reload; cause not established.",
+      "Document,JS,CSS,session,authorization requests observed200 in Chrome Network after reload."
+    ],
+    "configuration": "Authorized local public origin only; boot/watchdog/autoupdate/sidebar switches remain off. Existing manifest scope unchanged.",
+    "privateEvidence": "Original EN/ES screenshots retained locally under /private/tmp/domus-image-ui-checkpoint-retained; no owner UI upload.",
+    "limits": "Opening/identity only; no owner household, restoration, membership or other business workflow accepted."
   }
 }
