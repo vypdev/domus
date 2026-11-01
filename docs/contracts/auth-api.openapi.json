@@ -21,6 +21,62 @@
         "title": "EmptyRequest",
         "type": "object"
       },
+      "EntryContextResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "application_base": {
+            "title": "Application Base",
+            "type": "string"
+          },
+          "channel": {
+            "enum": [
+              "stable",
+              "edge"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "deployment": {
+            "enum": [
+              "native",
+              "standalone"
+            ],
+            "title": "Deployment",
+            "type": "string"
+          },
+          "expires_at": {
+            "maximum": 9007199254740991.0,
+            "minimum": 0.0,
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "household_api_available": {
+            "title": "Household Api Available",
+            "type": "boolean"
+          },
+          "installation_id": {
+            "title": "Installation Id",
+            "type": "string"
+          },
+          "server_time": {
+            "maximum": 9007199254740991.0,
+            "minimum": 0.0,
+            "title": "Server Time",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "installation_id",
+          "channel",
+          "deployment",
+          "application_base",
+          "household_api_available",
+          "server_time",
+          "expires_at"
+        ],
+        "title": "EntryContextResponse",
+        "type": "object"
+      },
       "ErrorResponse": {
         "additionalProperties": false,
         "properties": {
@@ -108,6 +164,16 @@
           "action_required": {
             "title": "Action Required",
             "type": "string"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryContextResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "expires_in": {
             "title": "Expires In",
@@ -335,6 +401,24 @@
     "/api/v1/auth/csrf": {
       "get": {
         "operationId": "csrf_api_v1_auth_csrf_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -469,6 +553,22 @@
       "post": {
         "operationId": "logout_api_v1_auth_logout_post",
         "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
           {
             "in": "header",
             "name": "Origin",
@@ -752,6 +852,24 @@
     "/api/v1/session": {
       "get": {
         "operationId": "session_api_v1_session_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {

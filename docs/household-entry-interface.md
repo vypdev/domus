@@ -2,7 +2,8 @@
 
 The development branch implements pure entry/setup decisions, the bounded request journal with
 its owned sessionStorage adapter, and the generation-fenced entry controller. The product entry
-page, HTTP adapters and static delivery remain to be implemented.
+page, frontend HTTP adapters and static delivery remain to be implemented. Both server compositions
+now expose verified session context and enforce supplied context assertions before protected work.
 These tests do not add a working interface to the owner's installed Edge.3 application.
 
 The [entry specification](../specs/household-entry-interface.md) retains eight requirements and 48
@@ -59,8 +60,9 @@ Chromium sessionStorage, without contacting the owner's HA.
 Opening and refreshing read session, current authorization and permitted household facts. They
 create no household or membership. Semantic server ports must bind each read and command to the
 expected installation/channel/subject, reject a mismatch, and return strictly decoded immutable
-facts. Expected context is an assertion, never an actor selector. Concrete HTTP enforcement remains
-required. Domain and Application import no browser, storage, transport or framework API.
+facts. Expected context is an assertion, never an actor selector. Both server compositions now reject
+supplied mismatched assertions; the frontend HTTP adapter must still attach and validate that contract.
+Domain and Application import no browser, storage, transport or framework API.
 
 Setup, enrollment, original-request recovery and resolved-request dismissal obtain fresh session
 and current state. Setup uses the explicit validated default mapping. Recovery is separate from
@@ -88,6 +90,32 @@ The controller tests use real Chromium and semantic server fakes, including one 
 whose first response is lost and then recovered after controller/storage-adapter recreation. These
 are Application tests, not real HTTP/SQLite, rendered journeys, owner HA or package acceptance.
 
+## Server context contract
+
+The actual authenticated session response contains context with installation_id, channel,
+deployment, application_base, household_api_available, server_time and expires_at. Native derives
+the base from the accepted Supervisor prefix; standalone always uses the root. Forwarded prefixes
+cannot replace either. UTC epoch milliseconds are anchored once to the monotonic lease clock;
+later wall-clock changes and fresh/grace reads cannot extend the original session deadline.
+
+Bound UI requests must supply X-Domus-Context as v1:installation:channel:subject, using verified
+metadata and the verified HA user ID. The server compares this assertion with its real composition
+and session before protected reads/CSRF/commands. Wrong or ambiguous assertions receive a safe
+rejection without revealing expected context or creating a household. The assertion grants no role
+and selects no actor. Legacy raw API requests may omit it; the upcoming frontend adapter must always
+send it on bound requests. Existing cookie/Ingress, Origin, CSRF and per-command current authority
+remain mandatory. No CORS permission or public port is added.
+
+Thirty-one additional backend scenarios exercise actual guarded ASGI/SQLite and both compositions,
+including metadata, preview, stale context, role denial, original-key replay and fixed clock anchor.
+These server tests do not wire the frontend adapter or prove rendered/owner acceptance. The checked
+OpenAPI snapshots come from the actual applications. The host launcher test prepares its simulated
+parent group explicitly so BSD group inheritance does not invalidate the fixture; production
+ownership rejection and the original no-change assertions remain intact.
+The lower-level legacy native factory can omit deployment metadata and returns context=null; it
+rejects supplied context assertions. The product compositions always provide metadata. A missing
+context must remain unavailable to the frontend, with no inferred installation or command grant.
+
 ## Development checks
 
 From the root, using the locked Node and pnpm versions:
@@ -113,8 +141,8 @@ Model execution is separate from rendering, accessibility, integration, package 
 
 ## Remaining delivery
 
-Strict HTTP adapters that fulfill the controller's context-binding contract, server-owned
-context and base-relative delivery remain required. The owned Lit UI
+Strict frontend HTTP adapters that fulfill the implemented server/context contract and base-relative
+delivery remain required. The owned Lit UI
 must demonstrate both locales, all primary states, accessibility, responsive layouts, Storybook and
 both browser compositions. The all-domain first release, both targets and isolated channels remain
 required. Follow the existing [identity](identity-household.md) and [setup](household-setup.md) contracts.

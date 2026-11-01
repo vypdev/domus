@@ -29,6 +29,20 @@ uses the fixture namespace and contains schemas only, with no live credentials o
 All routes use the validated server-owned session. Forwarding/Ingress identity headers are rejected
 by the standalone listener. These routes do not accept an actor, installation ID or household selector.
 
+The development source now adds nonsecret context to GET /api/v1/session: installation_id, channel,
+deployment, application_base, household_api_available, server_time and expires_at. Standalone base
+is always /. Time uses a single UTC/monotonic process anchor, preserving the original session
+deadline through fresh/grace reads and wall-clock changes. This is separate from the installed
+Edge.3 pin. Authentication-preview compositions report household_api_available=false.
+
+The forthcoming UI sends one X-Domus-Context assertion on bound personal requests, encoded as
+v1:installation:channel:subject from verified session metadata. Both server compositions compare
+it with the actual installation/channel/human before protected work. Wrong, duplicated, empty,
+non-ASCII or oversized assertions fail with a safe rejection; they never select an actor or grant
+authority. Legacy raw API callers may omit this optional assertion. Current authentication,
+authorization, Origin, CSRF and idempotency rules still apply independently. See
+[entry context](household-entry-interface.md) and the updated OpenAPI snapshots.
+
 | Route | Meaning | Current local authority |
 |---|---|---|
 | GET /api/v1/authorization | Own setup/enrollment/member state and M1 permission view | Verified human or an original unexpired read-grace session |

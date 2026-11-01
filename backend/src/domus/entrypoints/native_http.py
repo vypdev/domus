@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated, Literal, cast
 
-from fastapi import Depends, FastAPI, Query, Request, Security
+from fastapi import Depends, FastAPI, Header, Query, Request, Security
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.security import APIKeyCookie
@@ -15,6 +15,7 @@ from domus.application.identity_ports import LeaseClock
 from domus.application.sessions import SessionStatus
 from domus.domain.errors import DomusError, Forbidden
 from domus.entrypoints.bounded_http import BoundedHTTP
+from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http import CSRFResponse, SessionResponse
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
@@ -98,6 +99,7 @@ def create_native_app(
     clock: LeaseClock,
     *,
     correlation: Callable[[], str],
+    entry: EntryHTTPContext | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="Domus native Home Assistant application",
@@ -139,8 +141,16 @@ def create_native_app(
         name="ingress_session", scheme_name="HomeAssistantIngress", auto_error=False
     )
 
-    def security(request: Request, _cookie: Annotated[str | None, Security(cookie_scheme)]) -> None:
+    def security(
+        request: Request,
+        _cookie: Annotated[str | None, Security(cookie_scheme)],
+        _context: Annotated[str | None, Header(alias=CONTEXT_HEADER)] = None,
+    ) -> None:
         access = context(request)
+        if request.headers.getlist(CONTEXT_HEADER):
+            if entry is None:
+                raise Forbidden("request_forbidden")
+            entry.require(request, access.status().human)
         if request.method in ("POST", "PUT"):
             tokens = request.headers.getlist("x-csrf-token")
             if len(tokens) != 1:
@@ -152,11 +162,15 @@ def create_native_app(
     )
     def session(request: Request, query: Annotated[_Empty, Query()]) -> NativeSessionResponse:
         status = context(request).status()
+        metadata = entry.describe(request, status) if entry is not None else None
         return NativeSessionResponse(
             ha_user_id=status.human.ha_user_id,
             ha_administrator=status.human.is_administrator,
             access="full" if status.fresh else "read_only",
-            expires_in=max(0, (status.expires_at - clock.now()) // 1000),
+            expires_in=max(0, (status.expires_at - clock.now()) // 1000)
+            if metadata is None
+            else max(0, (metadata.expires_at - metadata.server_time) // 1000),
+            context=metadata,
             message="Your existing Home Assistant session is verified."
             if status.fresh
             else "Home Assistant is unavailable. Your existing session has read-only access.",

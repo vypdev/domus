@@ -20,6 +20,7 @@ from domus.application.sessions import SessionGuard
 from domus.domain.errors import IdentityUnavailable
 from domus.domain.identity import HumanIdentity
 from domus.domain.storage import Installation
+from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.http import HTTPSettings, create_app
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
@@ -59,7 +60,13 @@ def fixture(tmp_path: Path) -> tuple:
         )
 
     app = create_app(
-        flow, guard, identity, settings, correlation=lambda: "cor_api", household_context=context
+        flow,
+        guard,
+        identity,
+        settings,
+        correlation=lambda: "cor_api",
+        entry=EntryHTTPContext(store.installation, "standalone", clock, clock, True),
+        household_context=context,
     )
     client = TestClient(
         app, base_url=settings.origin, follow_redirects=False, raise_server_exceptions=False

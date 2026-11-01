@@ -152,6 +152,8 @@ Receipts report committed/historical state, `archived_by`, operation ID, origina
 
 Authenticated session context adds installation ID, stable/edge channel, native/standalone deployment, `application_base`, household API availability and nonsecret server time (UTC epoch milliseconds). Derive from validated server installation/composition and accepted native prefix or fixed standalone root, never request-selected host, command or journal. Existing HA identity/access remains proof/freshness. Server time plus monotonic page elapsed time anchors journal lifetime; regression fails closed.
 
+The session wire context contains installation_id, channel, deployment, application_base, household_api_available, server_time and expires_at. Server time and the absolute session deadline use one process-local UTC/monotonic anchor; fresh reads or later wall-clock adjustments cannot extend the original lease. The frontend HTTP adapter sends exactly one X-Domus-Context assertion on bound personal reads and commands, encoded as v1:installation:channel:subject from verified metadata. Both server compositions compare it to their actual installation/channel/verified human before protected work. A mismatch, duplicate, empty, non-ASCII or oversized assertion fails closed without echoing the expected context. This is an assertion, never authentication, an actor selector or a substitute for CSRF/current authorization. Legacy raw API callers may omit it; the new UI must not. Preview reports unavailable business APIs honestly.
+
 Native retains actual Supervisor peer, accepted bounded prefix, exact-human/binding checks and HA session; no second OAuth/Domus cookie. Technical Core authority never becomes a human role. Nonpersonal shell/assets remain behind source/binding guards; personal APIs require proof. Standalone keeps operator origin, state/S256/single-use callback and private session. Deliberate `GET /api/v1/auth/start` succeeds only to fixed same-origin entry shell, with no caller-chosen redirect. `POST /api/v1/auth/logout` keeps Origin/CSRF and truthful revocation/unconfirmed guidance. Native invokes no standalone logout: clear owned tab data/presentation and explain HA-owned sign-out without claiming Supervisor revocation.
 
 ## 7. User-facing configuration
@@ -394,6 +396,11 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/tests/e2e/entry.spec.ts` | create |
 | `tests/browser/entry_server.py` | create |
 | `backend/src/domus/entrypoints/ui_http.py` | create |
+| `backend/src/domus/entrypoints/entry_context.py` | create |
+| `tests/backend/test_entry_context.py` | create |
+| `tests/backend/test_auth_http.py` | update |
+| `tests/backend/test_household_http.py` | update |
+| `tests/backend/test_ha_app_launcher.py` | update |
 | `tests/backend/test_ui_http.py` | create |
 | `tests/backend/test_ui_session.py` | create |
 | `docs/household-entry-interface.md` | create |

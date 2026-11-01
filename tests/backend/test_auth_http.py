@@ -20,6 +20,8 @@ from domus.domain.errors import (
     StorageFailure,
     Unauthenticated,
 )
+from domus.domain.storage import Installation
+from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.http import HTTPSettings, _HTTPBoundary, create_app
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
 
@@ -44,6 +46,13 @@ def fixture() -> tuple:
         identity,
         settings,
         correlation=lambda: "cor_test",
+        entry=EntryHTTPContext(
+            Installation("047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6", "edge"),
+            "standalone",
+            clock,
+            clock,
+            False,
+        ),
     )
     client = TestClient(
         app, base_url=settings.origin, follow_redirects=False, raise_server_exceptions=False
@@ -289,7 +298,13 @@ def test_published_openapi_schema_and_security_match_actual_routes() -> None:
     assert scheme == {"type": "apiKey", "in": "cookie", "name": settings.session_cookie}
     operation = actual["paths"]["/api/v1/auth/logout"]["post"]
     assert operation["security"] == [{"DomusSession": []}]
-    assert {item["name"] for item in operation["parameters"]} == {"Origin", "X-CSRF-Token"}
+    assert {item["name"] for item in operation["parameters"]} == {
+        "Origin",
+        "X-CSRF-Token",
+        "X-Domus-Context",
+    }
+    context = next(item for item in operation["parameters"] if item["name"] == "X-Domus-Context")
+    assert context["required"] is False
     assert operation["responses"]["422"]["content"]["application/json"]["schema"]["$ref"].endswith(
         "/ErrorResponse"
     )

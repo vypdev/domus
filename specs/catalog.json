@@ -7,7 +7,7 @@
       "status": "proposed",
       "scope": "One local modular application serves the complete household product in both a Supervisor-managed App and standalone Docker from the first release. Home Assistant owns user authentication; Domus owns its business records.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-31",
+      "lastVerified": "2026-11-01",
       "specs": [
         "specs/platform-foundation.md",
         "specs/platform-foundation-identity-sqlite.md",
@@ -93,7 +93,8 @@
         "backend/src/domus/composition/restore.py",
         "backend/src/domus/infrastructure/offline_storage.py",
         "backend/src/domus/infrastructure/restore_source.py",
-        "backend/src/domus/infrastructure/sqlite_activation.py"
+        "backend/src/domus/infrastructure/sqlite_activation.py",
+        "backend/src/domus/entrypoints/entry_context.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -157,7 +158,8 @@
         "tests/containers/test_app_compatibility.py",
         "tests/containers/restore_fixture.py",
         "tests/backend/test_response_readability.py",
-        "tests/backend/test_review_regressions.py"
+        "tests/backend/test_review_regressions.py",
+        "tests/backend/test_entry_context.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -595,7 +597,8 @@
         "frontend/src/domain/journal.ts",
         "frontend/src/application/ports.ts",
         "frontend/src/adapters/session-journal.ts",
-        "frontend/src/application/entry-controller.ts"
+        "frontend/src/application/entry-controller.ts",
+        "backend/src/domus/entrypoints/entry_context.py"
       ],
       "tests": [
         "frontend/tests/domain.test.ts",
@@ -604,7 +607,8 @@
         "tests/python/test_ci_contract.py",
         "frontend/tests/journal.test.ts",
         "frontend/tests/session-journal.test.ts",
-        "frontend/tests/controller.test.ts"
+        "frontend/tests/controller.test.ts",
+        "tests/backend/test_entry_context.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -617,7 +621,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial entry/setup, bounded original-request journal/storage adapter and generation-fenced semantic controller:210 actual Chromium tests; all four metrics100% on all five runtime modules. Strict HTTP/context binding, rendered UI/delivery and integrated acceptance remain incomplete.",
+        "implementationEvidence": "Partial entry/setup, bounded journal/storage and generation-fenced semantic controller:210 Chromium cases/four metrics100% on five frontend modules at59278ff. Actual server context and assertions add31 backend scenarios;1442 current local backend cases cover4771 statements/1324 branches100% across69 files. Frontend HTTP, rendered UI/delivery and integrated acceptance remain incomplete.",
         "blockingDecisions": "Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29.",
         "copilotChangesAllowed": false
       }

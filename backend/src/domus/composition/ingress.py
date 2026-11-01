@@ -17,6 +17,7 @@ from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
+from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.ingress_http import create_ingress_app
 from domus.entrypoints.native_http import NativeHTTPContext, create_native_app
@@ -111,6 +112,7 @@ def _compose_business(
         store.installation.channel,
         clock,
         correlation=lambda: "cor_" + entropy.new(),
+        entry=EntryHTTPContext(store.installation, "native", clock, utc, True),
     )
     return NativeRuntime(app, sessions)
 

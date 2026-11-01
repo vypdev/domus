@@ -129,6 +129,62 @@
         "title": "EnrollmentRequest",
         "type": "object"
       },
+      "EntryContextResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "application_base": {
+            "title": "Application Base",
+            "type": "string"
+          },
+          "channel": {
+            "enum": [
+              "stable",
+              "edge"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "deployment": {
+            "enum": [
+              "native",
+              "standalone"
+            ],
+            "title": "Deployment",
+            "type": "string"
+          },
+          "expires_at": {
+            "maximum": 9007199254740991.0,
+            "minimum": 0.0,
+            "title": "Expires At",
+            "type": "integer"
+          },
+          "household_api_available": {
+            "title": "Household Api Available",
+            "type": "boolean"
+          },
+          "installation_id": {
+            "title": "Installation Id",
+            "type": "string"
+          },
+          "server_time": {
+            "maximum": 9007199254740991.0,
+            "minimum": 0.0,
+            "title": "Server Time",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "installation_id",
+          "channel",
+          "deployment",
+          "application_base",
+          "household_api_available",
+          "server_time",
+          "expires_at"
+        ],
+        "title": "EntryContextResponse",
+        "type": "object"
+      },
       "ErrorResponse": {
         "additionalProperties": false,
         "properties": {
@@ -837,6 +893,16 @@
             "title": "Action Required",
             "type": "string"
           },
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryContextResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "expires_in": {
             "title": "Expires In",
             "type": "integer"
@@ -1109,6 +1175,24 @@
     "/api/v1/auth/csrf": {
       "get": {
         "operationId": "csrf_api_v1_auth_csrf_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -1243,6 +1327,22 @@
       "post": {
         "operationId": "logout_api_v1_auth_logout_post",
         "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
           {
             "in": "header",
             "name": "Origin",
@@ -1526,6 +1626,24 @@
     "/api/v1/authorization": {
       "get": {
         "operationId": "access_api_v1_authorization_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -1659,6 +1777,24 @@
     "/api/v1/household": {
       "get": {
         "operationId": "household_api_v1_household_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -1791,6 +1927,22 @@
       "post": {
         "operationId": "setup_api_v1_household_post",
         "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
           {
             "in": "header",
             "name": "Idempotency-Key",
@@ -1960,6 +2112,22 @@
         "parameters": [
           {
             "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
+          {
+            "in": "header",
             "name": "Idempotency-Key",
             "required": true,
             "schema": {
@@ -2126,6 +2294,24 @@
     "/api/v1/members": {
       "get": {
         "operationId": "members_api_v1_members_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -2260,6 +2446,22 @@
       "post": {
         "operationId": "enroll_api_v1_members_enrollment_post",
         "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
           {
             "in": "header",
             "name": "Idempotency-Key",
@@ -2440,6 +2642,22 @@
           },
           {
             "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
+          {
+            "in": "header",
             "name": "Idempotency-Key",
             "required": true,
             "schema": {
@@ -2615,6 +2833,22 @@
               "title": "Operation Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
           }
         ],
         "responses": {
@@ -2750,6 +2984,24 @@
     "/api/v1/policy": {
       "get": {
         "operationId": "policy_api_v1_policy_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -2882,6 +3134,22 @@
       "put": {
         "operationId": "update_policy_api_v1_policy_put",
         "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
           {
             "in": "header",
             "name": "Idempotency-Key",
@@ -3051,6 +3319,22 @@
       "post": {
         "operationId": "start_recovery_api_v1_recovery_requests_post",
         "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
           {
             "in": "header",
             "name": "Idempotency-Key",
@@ -3228,6 +3512,22 @@
               "title": "Request Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
           }
         ],
         "responses": {
@@ -3371,6 +3671,22 @@
             "schema": {
               "title": "Request Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
             }
           },
           {
@@ -3553,6 +3869,22 @@
           },
           {
             "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          },
+          {
+            "in": "header",
             "name": "Idempotency-Key",
             "required": true,
             "schema": {
@@ -3719,6 +4051,24 @@
     "/api/v1/session": {
       "get": {
         "operationId": "session_api_v1_session_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Domus-Context"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {

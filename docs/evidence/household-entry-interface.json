@@ -1,8 +1,8 @@
 {
-  "verifiedAtUTC": "2026-11-01T11:21:02.846086+00:00",
+  "verifiedAtUTC": "2026-11-01T11:46:41.305339+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "d01a69d5d272546f8008450c4ba9cf9500524fe8",
-  "sourceIdentity": "Working-source generation-fenced semantic controller over published entry/journal/storage; real Chromium Application tests, not concrete HTTP/server/product acceptance.",
+  "sourceBase": "59278ff19cc800bf80a55a91eece9dab52c16799",
+  "sourceIdentity": "Working-source authenticated server context/assertion contract; actual guarded HTTP/SQLite and both production compositions. Existing frontend/controller source and its210-case measurement are unchanged at59278ff.",
   "sources": {
     "frontend/src/domain/entry.ts": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e",
     "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
@@ -21,10 +21,24 @@
     "frontend/src/adapters/session-journal.ts": "e323fb4cee70481b015ce4c0c6fa94c3c909eb03af6a1837254a9196aed0fdc3",
     "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
     "frontend/tests/session-journal.test.ts": "e5fe0d28cb4774543002db0cb628d5cba408d5f99e908d44e31ba943c3d57313",
-    "specs/household-entry-interface.md": "7cb1ca4f93d6aed7f63acdf2c51cb32b6324efea5585611320d5722c6cb06470",
-    "docs/household-entry-interface.md": "da20e9bd9f6115881c01f503df264d53fedad71dc0ca86a67ce72e57074dae9b",
+    "specs/household-entry-interface.md": "68c3f90d903290913ea517886487bbbfa12ca392ff0050a720571b866fcb10d4",
+    "docs/household-entry-interface.md": "fc0aa23994530e6e185e05a0bfe509d0a381a70b25ce3b02b6d176faeded5a5b",
     "frontend/src/application/entry-controller.ts": "1d3749809a505c2eaac11927463a3d92376251a8d235056a4a843202bd55926b",
-    "frontend/tests/controller.test.ts": "0e1f5bb3dd2c61bfd101537e539b00ea09d3b96fd65e1fe0fda8f61761962221"
+    "frontend/tests/controller.test.ts": "0e1f5bb3dd2c61bfd101537e539b00ea09d3b96fd65e1fe0fda8f61761962221",
+    "backend/src/domus/entrypoints/entry_context.py": "c3c8b64c603dd4de8330f9e336754c190f793e245d0a8e0455ac06e110919f78",
+    "backend/src/domus/entrypoints/http.py": "1ce75e97b2111528f44941feeb9402bd589a1d5fa35bbd5162dc791f03bcb82a",
+    "backend/src/domus/entrypoints/native_http.py": "b1edf7494b871e9d8de7d403d57febba50059d7c30838e995a265980413d1205",
+    "backend/src/domus/composition/server.py": "ec2abd426f2bc0ca32b5b5a5020052052a9893e149e67531091a5a0c82406ec2",
+    "backend/src/domus/composition/ingress.py": "e0f4afe9e3fc8f31536d573d8c8e69462c90fa3259429b1c8144923d17194e49",
+    "tests/backend/test_entry_context.py": "43c30eec8fbfd286fc5b746016478909bd8684c7c7227cf475975106c3324ea4",
+    "tests/backend/test_auth_http.py": "9210053066bff8f20e1d14be8c6728ccacdcbd3fdfad7af29c8b6c17e6026e15",
+    "tests/backend/test_household_http.py": "c5b1bb142f7169bd5f430aa709494739b98917e045d3462044ba407e4e85f2af",
+    "tests/backend/test_ha_app_launcher.py": "ed75a97f3566936c3063db080510a09f3e2f5af65f2201aba9c16101f9629332",
+    "docs/contracts/auth-api.openapi.json": "17933ff4fb9c416371ee20453c1d77131fdf24202d372ef72074f80ef263d0a7",
+    "docs/contracts/household-api.openapi.json": "b447734da4d369ee2a7032f59b4d6b172c544a3da8497920356c66f77c500252",
+    "docs/contracts/native-household-api.openapi.json": "3d5d472f0d96e010399ef2dbafff908f794467530212d32c9d04be8bd55db35f",
+    "docs/household-api.md": "00c49ad51b2a283d527aab3c3e0b96140d43fbbc48f0a4b5c025c2a18ef690b5",
+    "docs/native-household-api.md": "8ff7d1b85e9e33d881b64f4203763eecbc22af0ad8220b688706f90e401140bc"
   },
   "runtime": {
     "node": "24.20.0",
@@ -44,7 +58,8 @@
     "plannedCases": 48,
     "claim": "210 executed model/journal/storage/controller cases, including67 Application cases. These are not210 specification acceptance cases; the48 original prospective inventory rows remain, with HTTP/rendering/package/owner acceptance unproven.",
     "pythonToolingOrigin": "Original73-case tooling run at695e5c3; tooling/Python source unchanged and not locally rerun in this frontend increment.",
-    "controllerCases": 67
+    "controllerCases": 67,
+    "frontendOrigin": "Unchanged five-module frontend/controller and210-case actual Chromium measurement at published59278ff; not locally rerun in this backend-only increment."
   },
   "coverage": {
     "frontend": {
@@ -219,7 +234,12 @@
     "pnpm check:frontend",
     "PLAYWRIGHT_BROWSERS_PATH=/private/tmp/domus-ui-playwright-browsers pnpm test:frontend",
     "pnpm check",
-    "pnpm test"
+    "pnpm test",
+    "PYTHONPATH=$PWD/backend/src:$PWD/tooling primary-.venv/bin/pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:owned-report --cov-report=xml:owned-report",
+    "PYTHONPATH=$PWD/backend/src:$PWD/tooling primary-.venv/bin/mypy --cache-dir=owned-private-tmp backend/src",
+    "PYTHONPATH=$PWD/backend/src:$PWD/tooling primary-.venv/bin/lint-imports --config architecture/python-application.ini --no-cache",
+    "primary-.venv/bin/ruff check --no-cache .",
+    "primary-.venv/bin/ruff format --check --no-cache ."
   ],
   "interimFailures": [
     "Initial Chromium TDD could not import the absent controller; existing143 cases passed.",
@@ -229,12 +249,12 @@
     "Original completed-result deadline TDD reproduced2 failures/208 passes while session remained valid; tick and fresh refresh now hide expired recovery records/results. Final210 cases cover all403 statements/297 branches/71 functions/287 lines across five modules."
   ],
   "limitations": [
-    "No concrete HTTP or server context-binding implementation yet; semantic port assertions require strict adapter/server enforcement.",
+    "Concrete frontend HTTP adapter attaching/decoding the server assertions is still required.",
     "No rendered Lit UI, locale/a11y/layout acceptance, package update or owner HA data change.",
-    "Action-owned parent sync failed as reported in#844; no manual parent sync, credential or Copilot change. Current hosted integration is separate from local source.",
-    "Partial conversation coverage is reported in#843. No current full-context clean Bugbot acceptance or feature completion is claimed."
+    "Action-owned parent sync previously failed under#844; no manual parent sync, credential or Copilot change. Current hosted integration must be checked independently.",
+    "Partial Bugbot conversation coverage remains reported#843; no full feature/review acceptance is claimed."
   ],
-  "rawEvidence": "/private/tmp/domus-controller-checkpoint-retained/measurements.tar.gz",
+  "rawEvidence": "/private/tmp/domus-http-context-checkpoint-retained/measurements.tar.gz",
   "previousModelEvidence": {
     "sourceRevision": "695e5c31a466b8a42c8840c46f708141979b35e4",
     "sourceBase": "82519ee4e547dc347b8d0a18352bd1acc7783d70",
@@ -353,5 +373,57 @@
     "Standalone logout proceeds after failed local clear; native never invokes standalone revocation; cleanup/upstream uncertainty separate.",
     "Semantic-server fake counts one effect across lost response, controller recreation and deliberate original-key replay. This is not an actual HTTP/SQLite server test.",
     "Completed in-memory result and visible recovery records cannot outlive the original one-hour request deadline; a fresh verified open prunes expired provider records."
-  ]
+  ],
+  "previousControllerEvidence": {
+    "sourceRevision": "59278ff19cc800bf80a55a91eece9dab52c16799",
+    "applicationCases": 210,
+    "runtimeSourceFiles": 5,
+    "coverage": "100% statements/branches/functions/lines; identical frontend source retained in current root coverage evidence.",
+    "rawEvidence": "/private/tmp/domus-controller-checkpoint-retained/measurements.tar.gz"
+  },
+  "serverContext": {
+    "localBackendCases": 1442,
+    "newContextCases": 31,
+    "sourceFiles": 69,
+    "completeFilesystemInventory": true,
+    "coverage": {
+      "covered_lines": 4771,
+      "num_statements": 4771,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 132,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1324,
+      "num_partial_branches": 0,
+      "covered_branches": 1324,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "capabilities": [
+      "Actual compositions provide installation/channel/deployment/base/API availability and anchored epoch/current original deadline in authenticated session context.",
+      "Native prefix accepted from actual Supervisor boundary; standalone root fixed; forwarding cannot select base.",
+      "UTC/monotonic anchor sampled once; later wall-clock changes/fresh/grace reads cannot extend original session deadline.",
+      "One supplied public X-Domus-Context assertion compared to actual installation/channel/verified human before protected personal work; no actor/authority selection.",
+      "Malformed/duplicate/empty/nonASCII/oversized/mismatched assertions rejected without echo or effect; actual server role/current authorization/Origin/CSRF independent.",
+      "Three real OpenAPI snapshots regenerated and checked against guarded applications.",
+      "Existing lower-level native factory may lack metadata:context=null, assertions rejected; product compositions always provide it; frontend must fail unavailable.",
+      "Portable launcher fixture explicitly prepares simulated parent GID; production guard/no-change assertions unchanged."
+    ],
+    "interimFailures": [
+      "Initial actual HTTP TDD:12 failures/1 pass before context/assertion implementation.",
+      "New preview composition fake originally assumed a fixed verifier while production uses secure entropy; boundary fake corrected to accept real bounded verifier material.",
+      "Initial full campaign:1437 pass/4 fail, including that fake and3 existing launcher fixtures assuming private/tmp GID equals process GID. Raw coverage remained complete; no success inferred from it.",
+      "Fixture preparation explicitly sets the owned parent group, preserving actual launcher refusal/no-change assertions; focused40 launcher tests then pass.",
+      "An initial OpenAPI helper omitted its disposable SQLite parent; corrected only the helper directory preparation, not production path/security.",
+      "Compatibility audit found an existing task-runtime native-factory caller on develop. Native positional clock contract retained, absent metadata stays null/unavailable; no invented identity or blanket skip. Final1442 pass with4771 statements/1324 branches100%."
+    ],
+    "limitations": [
+      "Local feature checkout still has pre-task parent; current develop fetched read-only. Hosted merged-source CI is separate and must be inspected.",
+      "No frontend HTTP adapter, rendered interface or actual browser-to-server/owner adoption claim.",
+      "No business migration, installed Edge.3 change, HA data change, Copilot/gateway modification or manual branch-parent synchronization."
+    ]
+  }
 }
