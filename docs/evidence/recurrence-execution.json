@@ -1,0 +1,127 @@
+{
+  "status": "partial",
+  "recordedAtUTC": "2026-11-01T19:57:38.683616+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/17",
+  "sourceBase": "ef49c3c093e9fce1fdc820dd945ab2c1da94b79e",
+  "backendInventorySHA256": "064bca98412512510c431d9960f489806123989309b3b28d4a9e8932c62eb4f5",
+  "implemented": "Immutable nominal/resolved time and local-day interval values, semantic port and isolated hash-locked tzdata TZif adapter. Exact instants, first-valid gaps, configurable single folds and actual-work local-day successors preserve millisecond precision and explicit original facts. No schedule/runner/storage/API is activated.",
+  "testsFirst": "Original collection failed because domus.domain.recurrence_time did not exist before implementation; original output retained privately.",
+  "focused": {
+    "tests": 94,
+    "statements": 154,
+    "branches": 42,
+    "coveragePercent": 100,
+    "observations": [
+      "Madrid first valid03:00",
+      "Lord Howe first valid02:30",
+      "Apia wholly missing date and distinct nominal collision",
+      "Monrovia historical second-resolution gap",
+      "Single first/second fold",
+      "23/25-hour local-day successors",
+      "Missing/corrupt/incompatible pinned resources, overflow and bounded safe failures",
+      "At most30 actual existence probes for whole-date control; no global TZPATH mutation"
+    ]
+  },
+  "completeBackend": {
+    "tests": 3081,
+    "authoredModules": 110,
+    "coverageTotals": {
+      "covered_lines": 8057,
+      "num_statements": 8057,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 234,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2270,
+      "num_partial_branches": 0,
+      "covered_branches": 2270,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentAudit": "passed"
+  },
+  "architecture": {
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "negativeAndToolingTests": 199,
+    "toolingCoverage": {
+      "covered_lines": 214,
+      "num_statements": 214,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 98,
+      "num_partial_branches": 0,
+      "covered_branches": 98,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "newForbiddenProviders": [
+      "zoneinfo",
+      "tzdata",
+      "dateutil",
+      "importlib"
+    ]
+  },
+  "strictTypes": {
+    "files": 110,
+    "result": "passed"
+  },
+  "dependency": {
+    "package": "tzdata",
+    "version": "2026.6",
+    "iana": "2026f",
+    "wheelSHA256": "0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec",
+    "scope": "Official registry lock and local actual bytes; not new image acceptance."
+  },
+  "companion": {
+    "originalCasesPreserved": 52,
+    "originalRequirementsPreserved": 8,
+    "unchangedOwningCases": 37,
+    "format": "passed",
+    "consistency": "passed",
+    "catalog": "passed",
+    "upstreamRevision": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+    "sourceSHA256": "b12261af3d6dedebba4584d94d3c0ce0079e35ec439d0140f11e9f2022594a3d"
+  },
+  "rawMeasurements": {
+    "archive": "/private/tmp/domus-recurrence-time-ef49c3c-retained/evidence.tar.gz",
+    "sha256": "c57c950c6bd52700ec7558f75e4bda68397b522143b1b4210a50052d200aa2ed",
+    "privateLocalOnly": true,
+    "consumer": "Original missing-module failure, exact source/coverage, final backend/tooling/architecture and pinned SDD measurements retained for current PR review. Regenerable private test fixtures, coverage databases/XML and cache retired."
+  },
+  "pending": "Fixed/relative schedule contracts and expansion, actual task classification, schema8, durable materialization/inbox/cycle closure, preview/apply, bounded calendar queries/HTTP, production runner in both compositions, actual image/browser/HA and complete52-case companion acceptance.",
+  "acceptance": "94 focused executions do not establish52 distinct accepted product journeys. The installed Edge.5 and existing image pins do not ship or invoke these new modules. No owner update, Stable distribution or full all-domain acceptance is claimed.",
+  "checks": {
+    "strictTypes": {
+      "result": "passed",
+      "files": 110
+    },
+    "ruffCheck": "passed",
+    "ruffFormat": {
+      "result": "passed",
+      "files": 285
+    },
+    "documentationLinks": "passed",
+    "architecture": {
+      "result": "passed",
+      "kept": 3,
+      "broken": 0
+    },
+    "backendAudit": "passed",
+    "toolingAndNegativeArchitecture": {
+      "result": "passed",
+      "executions": 199
+    },
+    "originalPinnedSdd": "passed",
+    "gitDiffCheck": "passed",
+    "copilotProtectedPaths": "unchanged"
+  }
+}

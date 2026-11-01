@@ -285,6 +285,17 @@ Minimum: 52 distinct boundary cases below. Preserve all 37 original owner cases.
 | docs/tasks/migration.md | update |
 | docs/contracts/household-api.openapi.json | update |
 | docs/contracts/native-household-api.openapi.json | update |
+| backend/src/domus/domain/recurrence_time.py | create |
+| backend/src/domus/application/recurrence_ports.py | create |
+| backend/src/domus/infrastructure/recurrence_time.py | create |
+| tests/backend/test_recurrence_time_values.py | create |
+| tests/backend/test_recurrence_time_adapter.py | create |
+| docs/architecture-recurrence.md | create |
+| docs/evidence/recurrence-execution.json | create |
+| backend/pyproject.toml | update |
+| uv.lock | update |
+| architecture/python-application.ini | update |
+| tests/architecture/test_python_architecture.py | update |
 
 Implementation will declare actual new source/test paths before committing those files; this prospective document does not claim nonexistent artifacts as current. User/operator guides must explain original-command recovery, nominal/resolved time, backlog, pending downstream consumers, schema compatibility and actual acceptance limits. Preserve dated evidence as history and add exact new revision/commands/results instead of relabeling old evidence.
 

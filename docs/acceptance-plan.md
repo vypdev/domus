@@ -1,8 +1,9 @@
 # Verification and acceptance plan
 
-The catalog-listed SDDs contain 533 distinct inventory case IDs across eleven capabilities and
-fifteen documents: the original 353-case foundation, 79 platform companion cases, eleven task-policy
-cases, 42 task-execution companion cases and the 48 household-entry cases published in PR #15.
+The catalog-listed SDDs contain 585 distinct inventory case IDs across eleven capabilities and
+sixteen documents: the original 353-case foundation, 79 platform companion cases, eleven task-policy
+cases, 42 task-execution companion cases, the 48 household-entry cases published in PR #15, and
+52 recurrence-execution companion cases.
 The counts are derived from concrete observable scenarios and are minimums. The merged identity/storage
 foundation has separate backend evidence in the [M1 audit](m1-acceptance-audit.md); the full product case
 inventory is not complete.
@@ -104,3 +105,17 @@ remains unknown. The stopped Edge.3 installation and data were retained. Remaini
 accessibility and lifecycle journeys are independent acceptance work.
 Current UI/entry acceptance does not complete other domain screens, Stable distribution, M1 or the
 first all-domain release.
+
+## Recurrence temporal source checkpoint
+
+The first recurrence checkpoint passes 94 focused executions for explicit nominal/resolved time,
+first-valid gaps, single fold selection, pinned-zone failures and actual-work local-day successors.
+The complete backend campaign passes 3,081 tests across 110 authored modules with all 8,057 statements
+and 2,270 branches covered, globally and per module. The independent complete-source audit and
+three actual architecture contracts pass; 199 tooling/negative-architecture executions also pass.
+See the [temporal architecture](architecture-recurrence.md) and
+[checkpoint evidence](evidence/recurrence-execution.json).
+
+These counts belong to the admitted recurrence branch and do not include the separate, unmerged
+participant checkpoint. Rules, schema 8, durable runner/source processing, calendar queries, actual
+images and full product acceptance remain outstanding. No new packaged update is established.

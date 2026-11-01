@@ -481,14 +481,23 @@
       ],
       "workflows": [],
       "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "code": [
+        "backend/src/domus/domain/recurrence_time.py",
+        "backend/src/domus/application/recurrence_ports.py",
+        "backend/src/domus/infrastructure/recurrence_time.py"
+      ],
+      "tests": [
+        "tests/backend/test_recurrence_time_values.py",
+        "tests/backend/test_recurrence_time_adapter.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/architecture-recurrence.md",
+        "docs/evidence/recurrence-execution.json"
       ],
       "readiness": {
         "state": "draft",
