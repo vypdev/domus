@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Annotated, Literal, Self, cast
 from urllib.parse import parse_qsl, urlsplit
 
-from fastapi import FastAPI, Query, Request, Security
+from fastapi import Depends, FastAPI, Header, Query, Request, Security
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.security import APIKeyCookie
@@ -27,10 +27,13 @@ from domus.domain.errors import (
     Unauthenticated,
 )
 from domus.entrypoints.bounded_http import BoundedHTTP
+from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryContextResponse, EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 from domus.entrypoints.http_errors import classify
 from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
+from domus.entrypoints.ui_bundle import UIBundle
+from domus.entrypoints.ui_http import attach_ui
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,6 +209,7 @@ class SessionResponse(_Strict):
     ha_administrator: bool
     access: Literal["full", "read_only"]
     expires_in: int
+    context: EntryContextResponse | None = None
     message: str
     action_required: str
 
@@ -228,8 +232,10 @@ def create_app(
     settings: HTTPSettings,
     *,
     correlation: Callable[[], str],
+    entry: EntryHTTPContext,
     household_context: Callable[[str], HouseholdHTTPContext] | None = None,
     task_context: Callable[[str], TaskHTTPContext] | None = None,
+    ui_bundle: UIBundle | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="Domus",
@@ -244,9 +250,21 @@ def create_app(
         },
     )
     app.add_middleware(_HTTPBoundary, settings=settings, correlation=correlation)
-    session_security = Security(
+    cookie_security = Security(
         APIKeyCookie(name=settings.session_cookie, scheme_name="DomusSession", auto_error=False)
     )
+
+    def bound_context(
+        request: Request,
+        _session_cookie: Annotated[str | None, cookie_security],
+        _context: Annotated[str | None, Header(alias=CONTEXT_HEADER)] = None,
+    ) -> None:
+        if entry.asserted(request):
+            entry.require(
+                request, guard.read(cast(str, _cookie(request.scope, settings.session_cookie)))
+            )
+
+    session_security = Depends(bound_context)
 
     async def domain_error(request: Request, error: Exception) -> Response:
         status, code = classify(cast(DomusError, error))
@@ -311,7 +329,7 @@ def create_app(
             lease = authentication.complete(cast(str, parameters.code), parameters.state, browser)
             if previous is not None:
                 provider.sign_out(previous)
-            response = RedirectResponse("/api/v1/session", status_code=303)
+            response = RedirectResponse("/", status_code=303)
             cookie(
                 response,
                 settings.session_cookie,
@@ -326,11 +344,13 @@ def create_app(
     @app.get("/api/v1/session", response_model=SessionResponse, dependencies=[session_security])
     def session(request: Request, parameters: Annotated[EmptyRequest, Query()]) -> SessionResponse:
         status = guard.status(cast(str, _cookie(request.scope, settings.session_cookie)))
+        metadata = entry.describe(request, status)
         return SessionResponse(
             ha_user_id=status.human.ha_user_id,
             ha_administrator=status.human.is_administrator,
             access="full" if status.fresh else "read_only",
-            expires_in=max(0, (status.expires_at - guard.clock.now()) // 1000),
+            expires_in=max(0, (metadata.expires_at - metadata.server_time) // 1000),
+            context=metadata,
             message=(
                 "Your Home Assistant identity is verified."
                 if status.fresh
@@ -397,4 +417,5 @@ def create_app(
             return task_factory(cast(str, _cookie(request.scope, settings.session_cookie)))
 
         app.include_router(create_task_router(tasks, security=session_security))
+    attach_ui(app, ui_bundle, "standalone", lambda request: None)
     return app

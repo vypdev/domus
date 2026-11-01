@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.0.0-edge.5
+
+- Translate the technical membership status in both English and Spanish.
+- Preserve the setup draft while switching languages with technical details expanded.
+- Verify original receipts survive actual browser-tab closure without automatic duplicate work.
+- Keep SQLite schema 7 and the existing identity, private listener and Core API permission scope.
+- Pin the corrected reviewed source and its verified archive checksum as a distinct immutable build.
+
+## 0.0.0-edge.4
+
+- Add the English/Spanish household entry UI through the existing Ingress session and private listener.
+- Require explicit household setup and own membership; retain exact original requests for deliberate recovery.
+- Preserve in-flight command evidence when a stale close intent arrives; normal close resumes after completion.
+- Build the exact reviewed UI with immutable Node/source inputs and include it in the installed Python wheel.
+- Keep Node, browser fixtures and development dependencies out of the runtime image.
+- Upgrade verified older data to SQLite schema 7, retaining identity, household records, history and replay guards.
+- Mark the schema boundary as breaking; require explicit upgrade and reject old-image downgrade without changing data.
+- Keep other domain screens, stable release and complete product acceptance pending.
+
 ## 0.0.0-edge.3
 
 - Preserve complete original operation history separately from restored household state in SQLite schema 4.

@@ -7,10 +7,16 @@ No password, copied token, OAuth callback or host port configuration is needed. 
 builds the reviewed runtime from an immutable source commit and frozen dependencies; allow the build
 to finish before opening the UI.
 
-The preview shows whether the current human can be verified through HA. It creates one private
+The interface shows current verified household access in English or Spanish. It creates one private
 installation identity and SQLite schema, retaining both across restart/update. It never implicitly
 creates a household or member. The household/member/policy APIs and console-approved recovery are
-included; the product UI is still a connection page. Existing sessions have bounded local read access
+included. Household setup and own membership require an explicit reviewed action; opening or
+refreshing the page never creates either. The default setup maps current HA administrators to Domus
+administrators. Pending membership does not grant household access. Original-request recovery reuses
+the exact original key after fresh access checks; it never automatically repeats a command. Close
+is available after the bounded in-flight command settles; it clears owned browser recovery data
+and does not revoke HA sign-in. A stale close intent during a command is refused, not queued.
+Existing sessions have bounded local read access
 during HA outages; writes require fresh proof. Failure never grants default administrator access.
 
 The container requests Core API access to verify individual HA users. HA grants this technical
@@ -29,13 +35,24 @@ it preserves later operation evidence without reapplying rolled-away effects. St
 restore preparation/activation. Inspect and resume the same activation ID after an uncertain result.
 The retained source-checkpoint supports deliberate rollback reconciled against the latest history.
 Do not switch root pointers or run an older image manually. See the
-[restoration guide](https://github.com/vypdev/domus/blob/feature/6-implement-home-assistant-identity-and-sqlite-platform-persistence/docs/restoration.md)
-for the exact console commands. Restore is not available from the connection page.
+[restoration guide](https://github.com/vypdev/domus/blob/271a3a07feb1535f0a5ec8b55abb3de9aac049a9/docs/restoration.md)
+for the exact console commands. Restore is not available from the household entry interface.
 App removal with data
 deletion removes the app's private records; use deliberate operator backup procedures before removal.
-Changing public_origins requires a restart. Edge.2 and Edge.3 are marked as breaking versions so an
-unattended update cannot cross their configuration and schema/history boundaries. Schema 4 refuses
-downgrade by Edge.2; recovery requires a compatible image/data checkpoint pair.
+Changing public_origins requires a restart. Edge.2, Edge.3 and Edge.4 are marked as breaking versions
+so an unattended update cannot cross their configuration and schema/history boundaries. Edge.4
+migrates existing verified schema 3/4 data to schema 7. Old Edge.2/3 images must refuse the new data
+without changing it; they cannot be used directly as a downgrade. Recovery requires a compatible
+image/data checkpoint pair. Preserve the original pre-upgrade data checkpoint for deliberate
+rollback. A passing build is separate from actual upgrade, restore and owner adoption evidence.
+Edge.5 keeps schema 7 and supports the same owned Edge.4 data without a schema transition. It
+localizes the technical state as well as the main heading. Its reviewed immutable source is a new
+build; the previously published Edge.4 source pin is not changed.
+
+The build fetches exact reviewed source, compiles with pinned Node/pnpm and includes the UI in the
+installed Python wheel. Node and browser test controls are absent from the runtime image. The
+interface uses the same private listener and accepted Ingress prefix; no extra port, credential,
+Supervisor API permission or host mount is added. The candidate package is not a stable release.
 
 Stopping does not sign out your HA frontend. There is no Domus OAuth
 grant to revoke for this native mode. Remove the development app/repository after its owned test;

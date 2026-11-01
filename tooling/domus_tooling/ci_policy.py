@@ -7,6 +7,7 @@ REQUIRED_JOBS = (
     "backend",
     "node",
     "frontend_toolchain",
+    "frontend",
     "architecture",
     "documentation",
     "containers",

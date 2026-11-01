@@ -40,7 +40,8 @@ and a private browser binding before its single use. Invalid, expired, duplicate
 attempts cannot exchange a code. A declined authorization consumes the bound attempt without access.
 If the browser binding is missing, invalid or expired, the error explains how to restart at
 `/api/v1/auth/start` and finish within five minutes. It never exchanges an unbound callback code.
-The callback redirects to `/api/v1/session`, removing code/state from the final URL. That response
+The callback redirects to the fixed root `/`, removing code/state from the final URL. The interface
+independently reads `/api/v1/session` before showing personal facts. That response
 contains verified identity and the current access state; it contains no HA token or session cookie.
 
 `ha_administrator` describes HA proof. It is not a Domus household grant. Arriving first or signing in

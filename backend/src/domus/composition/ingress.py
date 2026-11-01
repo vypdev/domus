@@ -19,9 +19,11 @@ from domus.application.task_events import TaskEventSource
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
+from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.ingress_http import create_ingress_app
 from domus.entrypoints.native_http import NativeHTTPContext, create_native_app
+from domus.entrypoints.ui_bundle import load_bundle
 from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock, TimeZoneCatalog
 from domus.infrastructure.auth_runtime import MonotonicClock, SecureEntropy
 from domus.infrastructure.ha_config import HAEndpoint, PublicOrigins
@@ -112,13 +114,19 @@ def _compose_business(
         )
         return NativeHTTPContext(services, actor.status, actor.csrf, actor.verify_csrf)
 
+    def ui_binding(request: Request) -> None:
+        request_actor(request)
+
     app = create_native_app(
         context,
         origins,
         store.installation.channel,
         clock,
         correlation=lambda: "cor_" + entropy.new(),
+        entry=EntryHTTPContext(store.installation, "native", clock, utc, True),
         task_context=lambda request: tasks(request_actor(request)),
+        ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
+        ui_binding=ui_binding,
     )
     return NativeRuntime(app, sessions, task_events=task_event_source(store, store.installation))
 

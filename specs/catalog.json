@@ -7,7 +7,7 @@
       "status": "proposed",
       "scope": "One local modular application serves the complete household product in both a Supervisor-managed App and standalone Docker from the first release. Home Assistant owns user authentication; Domus owns its business records.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-31",
+      "lastVerified": "2026-11-01",
       "specs": [
         "specs/platform-foundation.md",
         "specs/platform-foundation-identity-sqlite.md",
@@ -93,7 +93,8 @@
         "backend/src/domus/composition/restore.py",
         "backend/src/domus/infrastructure/offline_storage.py",
         "backend/src/domus/infrastructure/restore_source.py",
-        "backend/src/domus/infrastructure/sqlite_activation.py"
+        "backend/src/domus/infrastructure/sqlite_activation.py",
+        "backend/src/domus/entrypoints/entry_context.py"
       ],
       "tests": [
         "tests/backend/test_storage_values.py",
@@ -157,7 +158,8 @@
         "tests/containers/test_app_compatibility.py",
         "tests/containers/restore_fixture.py",
         "tests/backend/test_response_readability.py",
-        "tests/backend/test_review_regressions.py"
+        "tests/backend/test_review_regressions.py",
+        "tests/backend/test_entry_context.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -612,24 +614,60 @@
       "status": "proposed",
       "scope": "A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-11-01",
       "specs": [
-        "specs/application-experience.md"
+        "specs/application-experience.md",
+        "specs/household-entry-interface.md"
       ],
-      "workflows": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
       "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "code": [
+        "frontend/src/domain/entry.ts",
+        "frontend/src/domain/journal.ts",
+        "frontend/src/application/ports.ts",
+        "frontend/src/adapters/session-journal.ts",
+        "frontend/src/application/entry-controller.ts",
+        "backend/src/domus/entrypoints/entry_context.py",
+        "frontend/src/adapters/http.ts",
+        "frontend/src/adapters/http-values.ts",
+        "frontend/src/adapters/browser-capabilities.ts",
+        "frontend/src/composition/entry-runtime.ts",
+        "frontend/src/presentation/domus-app.ts",
+        "frontend/src/presentation/messages.ts",
+        "frontend/src/presentation/styles.ts"
+      ],
+      "tests": [
+        "frontend/tests/domain.test.ts",
+        "tests/frontend/coverage-evidence.test.mjs",
+        "tests/node/architecture.test.mjs",
+        "tests/python/test_ci_contract.py",
+        "frontend/tests/journal.test.ts",
+        "frontend/tests/session-journal.test.ts",
+        "frontend/tests/controller.test.ts",
+        "tests/backend/test_entry_context.py",
+        "frontend/tests/http.test.ts",
+        "frontend/tests/fixtures/entry-wire.json",
+        "tests/backend/test_entry_wire.py",
+        "frontend/tests/capabilities.test.ts",
+        "frontend/tests/runtime.test.ts",
+        "frontend/tests/component.test.ts",
+        "frontend/tests/language.test.ts",
+        "frontend/tests/e2e/catalog.spec.ts"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/household-entry-interface.md",
+        "docs/evidence/household-entry-interface.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
+        "implementationEvidence": "Partial entry UI/controller/journal/HTTP and browser lifecycle composition: 490 Chromium cases, all four metrics at 100% on twelve runtime modules. Fourteen fictional Storybook states and eighteen built-catalog browser cases cover both locales/deployments, keyboard, focus and narrow light/dark layouts. Product entrypoint/static delivery, actual backend browser journeys, full acceptance and owner adoption remain incomplete.",
         "blockingDecisions": "Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29.",
         "copilotChangesAllowed": false
       }

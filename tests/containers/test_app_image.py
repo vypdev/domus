@@ -32,9 +32,13 @@ def test_image_pins_the_private_launcher_and_installs_a_nonroot_readable_runtime
     assert config["User"] == "0:0"
     assert config["Entrypoint"] == ["/app/.venv/bin/domus-ha-app", "--channel", "edge"]
     assert config["Labels"]["io.hass.type"] == "app"
-    assert config["Labels"]["org.opencontainers.image.revision"] == (
-        "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5"
-    )
+    expected = json.loads(
+        (
+            Path(__file__).resolve().parents[2] / "docs/evidence/household-entry-interface.json"
+        ).read_text()
+    )["imageCandidate"]
+    assert config["Labels"]["org.opencontainers.image.revision"] == expected["sourceCommit"]
+    assert config["Labels"]["io.hass.version"] == expected["version"]
     assert not any(value.startswith("SUPERVISOR_TOKEN=") for value in config["Env"])
     probe = docker(
         "run",
@@ -254,7 +258,7 @@ def snapshot_roundtrip(name: str, instance_id: str) -> None:
     assert created.returncode == 0, created.stderr
     original = json.loads(created.stdout)
     assert original["state"] == "created"
-    assert original["snapshot"]["schema_version"] == 4
+    assert original["snapshot"]["schema_version"] == 7
     assert original["snapshot"]["last_committed_at"] == 100
     inspected = docker(
         "exec",
@@ -530,7 +534,7 @@ def test_packaged_console_restore_restart_and_latest_history_rollback(
         )
     )
     assert activated["state"] == "active"
-    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 4
+    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 7
     assert docker("start", name).returncode == 0
     ready(name, standalone=mode == "standalone")
     active = successful(packaged_fixture(image, volume, "active", delivery))

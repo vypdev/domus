@@ -64,7 +64,7 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
         and "DOMUS_SOURCE_SHA256=fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c"
         in command
         and "BUILD_VERSION=0.0.0-edge.2" in command
-        and "-t domus-app-previous addon-edge" in command
+        and "-t domus-app-previous tests/fixtures/edge3-app" in command
         for command in commands
     )
     verification = next(
@@ -73,6 +73,8 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
         if step.get("run") == "uv run pytest tests/containers --no-cov"
     )
     assert verification["env"]["DOMUS_PREVIOUS_IMAGE"] == "domus-app-previous"
+    assert verification["env"]["DOMUS_UPGRADE_IMAGE"] == "domus-app-installed"
+    assert any("-t domus-app-installed tests/fixtures/edge3-app" in command for command in commands)
     assert "containers" in jobs["aggregate"]["needs"]
 
 
@@ -106,8 +108,16 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         "vitest.config.mjs",
         "tooling/frontend-coverage.mjs",
     }
+    declared_catalog_configuration = {
+        "frontend/.storybook/main.ts",
+        "frontend/.storybook/preview.ts",
+        "frontend/stories/entry.stories.ts",
+        "frontend/playwright.config.ts",
+        "frontend/playwright.entry.config.ts",
+        "frontend/vite.config.ts",
+    }
     for relative in paths:
-        if not relative or relative.startswith("tests/"):
+        if not relative or relative.startswith(("tests/", "frontend/tests/")):
             continue
         suffix = Path(relative).suffix
         if suffix == ".py":
@@ -115,9 +125,65 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
                 f"Register {relative} in its own tested coverage/architecture gate before adding it"
             )
         elif suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".mts", ".cts", ".tsx"}:
-            assert relative in declared_node_configuration, (
-                f"Register {relative} in its own tested coverage/architecture gate before adding it"
-            )
+            assert (
+                relative in declared_node_configuration
+                or relative in declared_catalog_configuration
+                or relative == "frontend/vitest.config.ts"
+                or relative.startswith("frontend/src/")
+            ), f"Register {relative} in its own tested coverage/architecture gate before adding it"
+
+
+def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
+    jobs = workflow()["jobs"]
+    job = jobs["frontend"]
+    assert "if" not in job
+    assert "continue-on-error" not in job
+    assert all("continue-on-error" not in step for step in job["steps"])
+    commands = [step["run"] for step in job["steps"] if "run" in step]
+    assert commands == [
+        "uv sync --frozen",
+        "pnpm install --frozen-lockfile",
+        "pnpm --filter @domus/frontend exec playwright install --with-deps chromium",
+        "pnpm check:frontend",
+        "pnpm test:frontend",
+        "pnpm build:frontend",
+        "uv build --package domus-server --wheel",
+        "uv run pytest tests/packaging --no-cov",
+        "pnpm test:frontend-entry",
+        "pnpm build:frontend-catalog",
+        "pnpm test:frontend-catalog",
+    ]
+    assert "frontend" in REQUIRED_JOBS
+    assert "frontend" in jobs["aggregate"]["needs"]
+    artifact = next(step for step in job["steps"] if "path" in step.get("with", {}))
+    assert artifact["if"] == "${{ always() }}"
+    assert artifact["with"]["path"].split() == [
+        "frontend/coverage/",
+        "frontend/storybook-static/",
+        "frontend/test-results/",
+        "backend/src/domus/ui/",
+        "dist/*.whl",
+    ]
+    assert artifact["with"]["if-no-files-found"] == "error"
+    assert artifact["with"]["include-hidden-files"] == "true"
+
+
+def test_owned_component_catalog_is_typechecked_built_and_browser_exercised() -> None:
+    package = json.loads((ROOT / "frontend/package.json").read_text())
+    scripts = package["scripts"]
+    assert scripts["check"] == "pnpm run check:runtime && pnpm run check:catalog"
+    assert scripts["check:runtime"] == "tsc --noEmit -p tsconfig.json"
+    assert scripts["check:catalog"] == "tsc --noEmit -p tsconfig.catalog.json"
+    assert scripts["storybook:build"] == "storybook build --disable-telemetry --quiet"
+    assert scripts["browser:catalog"] == "playwright test tests/e2e/catalog.spec.ts"
+    runtime = json.loads((ROOT / "frontend/tsconfig.json").read_text())
+    assert runtime["compilerOptions"]["skipLibCheck"] is False
+    assert runtime["compilerOptions"]["strict"] is True
+    catalog = json.loads((ROOT / "frontend/tsconfig.catalog.json").read_text())
+    assert catalog["extends"] == "./tsconfig.json"
+    assert catalog["include"] == ["src", "stories", ".storybook"]
+    # Same isolated third-party declaration workaround as the existing toolchain fixture.
+    assert catalog["compilerOptions"] == {"skipLibCheck": True}
 
 
 def test_frontend_toolchain_requires_actual_execution_and_separate_artifacts() -> None:

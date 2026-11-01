@@ -1,5 +1,9 @@
 # Development foundation
 
+The product [household entry model](household-entry-interface.md) has its own required Chromium and
+complete-source coverage gate: `pnpm check:frontend` and `pnpm test:frontend`. It is separate from the
+fictional framework fixture below. The rendered product entry UI remains incomplete.
+
 The documentation foundation was merged through [PR #3](https://github.com/vypdev/domus/pull/3).
 [Issue #4](https://github.com/vypdev/domus/issues/4) starts M1 with real development tooling, tests and CI.
 The issue #6 checkpoints introduce storage, pure identity policy, local authorization and session leases.

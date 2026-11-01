@@ -24,7 +24,45 @@ importers:
         specifier: 5.0.5
         version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2))
 
-  frontend: {}
+  frontend:
+    dependencies:
+      lit:
+        specifier: 3.3.3
+        version: 3.3.3
+    devDependencies:
+      '@playwright/test':
+        specifier: 1.64.1
+        version: 1.64.1
+      '@storybook/web-components-vite':
+        specifier: 10.6.5
+        version: 10.6.5(lit@3.3.3)(storybook@10.6.5(@types/react@19.3.0)(react@19.3.1))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2))
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@vitest/browser-playwright':
+        specifier: 5.0.5
+        version: 5.0.5(playwright@1.64.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2))(vitest@5.0.5)
+      '@vitest/coverage-v8':
+        specifier: 5.0.5
+        version: 5.0.5(@vitest/browser@5.0.5)(vitest@5.0.5)
+      playwright:
+        specifier: 1.64.1
+        version: 1.64.1
+      storybook:
+        specifier: 10.6.5
+        version: 10.6.5(@types/react@19.3.0)(react@19.3.1)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vite:
+        specifier: 8.3.5
+        version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)
+      vitest:
+        specifier: 5.0.5
+        version: 5.0.5(@types/node@24.19.2)(@vitest/browser-playwright@5.0.5)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2))
 
   tests/fixtures/frontend-toolchain:
     dependencies:

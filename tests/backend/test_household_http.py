@@ -21,8 +21,10 @@ from domus.composition.tasks import task_contexts
 from domus.domain.errors import IdentityUnavailable
 from domus.domain.identity import HumanIdentity
 from domus.domain.storage import Installation
+from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.http import HTTPSettings, create_app
+from domus.entrypoints.ui_bundle import UIBundle
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
 from domus.infrastructure.session_access import SessionActor
 from domus.infrastructure.sqlite import SQLiteDatabase
@@ -36,7 +38,7 @@ class Entropy:
         return "v" * 43 if self.count % 4 == 2 else f"{self.count:043d}"
 
 
-def fixture(tmp_path: Path) -> tuple:
+def fixture(tmp_path: Path, ui_bundle: UIBundle | None = None) -> tuple:
     identity, oauth, socket, clock = identity_fixture()
     socket.human = replace(socket.human, is_administrator=True)
     flow = Authentication(MemoryLoginAttempts(), identity, clock, Entropy())
@@ -67,8 +69,10 @@ def fixture(tmp_path: Path) -> tuple:
         identity,
         settings,
         correlation=lambda: "cor_api",
+        entry=EntryHTTPContext(store.installation, "standalone", clock, clock, True),
         household_context=context,
         task_context=lambda session_id: task_factory(SessionActor(guard, session_id)),
+        ui_bundle=ui_bundle,
     )
     client = TestClient(
         app, base_url=settings.origin, follow_redirects=False, raise_server_exceptions=False

@@ -1,10 +1,13 @@
 # Household API checkpoint
 
-Status: strict HTTP routes, local queries, standalone SQLite composition, manual snapshots and the
-[native persistent runtime](native-household-api.md) are implemented. The earlier Edge.2 packages
-the persistent runtime. Edge.3 now includes schema 4/history and verified offline restoration, with
-real-image proof on both CPU families and bounded owner update/session/reload/restart acceptance.
-The product UI and complete deployment/live household/recovery/restore acceptance remain pending. [Console-approved recovery](administrator-recovery.md) shares the authenticated boundary.
+Status: strict HTTP routes, local queries, standalone SQLite composition, manual snapshots, the
+[native persistent runtime](native-household-api.md) and the household entry UI are implemented.
+Earlier Edge.2/3 packaging and restoration results are historical checkpoints. Current immutable
+package identities and observed owner installations are recorded in the
+[entry implementation and evidence](household-entry-interface.md); the older retained app is not
+the currently running preview. Full administration screens and complete deployment/live
+household/recovery acceptance remain separate work.
+[Console-approved recovery](administrator-recovery.md) shares the authenticated boundary.
 
 ## Run with persistent standalone data
 
@@ -29,6 +32,21 @@ uses the fixture namespace and contains schemas only, with no live credentials o
 All routes use the validated server-owned session. Forwarding/Ingress identity headers are rejected
 by the standalone listener. These routes do not accept an actor, installation ID or household selector.
 
+Both business compositions include nonsecret context in GET /api/v1/session: installation_id, channel,
+deployment, application_base, household_api_available, server_time and expires_at. Standalone base
+is always /. Time uses a single UTC/monotonic process anchor, preserving the original session
+deadline through fresh/grace reads and wall-clock changes. These are the shared runtime contract;
+current package and owner-adoption evidence is linked above. Authentication-preview compositions
+report household_api_available=false.
+
+The entry UI sends one X-Domus-Context assertion on bound personal requests, encoded as
+v1:installation:channel:subject from verified session metadata. Both server compositions compare
+it with the actual installation/channel/human before protected work. Wrong, duplicated, empty,
+non-ASCII or oversized assertions fail with a safe rejection; they never select an actor or grant
+authority. Legacy raw API callers may omit this optional assertion. Current authentication,
+authorization, Origin, CSRF and idempotency rules still apply independently. See
+[entry context](household-entry-interface.md) and the updated OpenAPI snapshots.
+
 | Route | Meaning | Current local authority |
 |---|---|---|
 | GET /api/v1/authorization | Own setup/enrollment/member state and M1 permission view | Verified human or an original unexpired read-grace session |
@@ -51,15 +69,16 @@ view separately reports effective_role from that person's verified source and th
 The typed policy permission enum also accepts tasks.read, tasks.claim, tasks.manage,
 tasks.record_for_others and tasks.material_use alongside the earlier task permissions. Both published
 OpenAPI references include these exact identifiers. The M1 authorization list remains scoped to
-household administration; application task-authority helpers and permission entries do not expose
-task routes or prove material posting. See the [task companion](../specs/task-execution-foundation.md).
+household administration. The [task API](tasks/execution.md) rechecks its own scoped authority;
+a permission name or generic receipt does not prove material posting. See the
+[task companion](../specs/task-execution-foundation.md).
 
 Source authorization responses also include `message` and `action_required`: pending membership
 states that the verified account was linked, access is not active, and an administrator must review
 it. Enrollment receipts describe what the original operation did; replay after later activation
 does not describe the old pending state as current. Historical receipts retain their absent-current-effect
-warning. These source contract explanations are tested in both HTTP compositions and are not in the
-immutable installed Edge.3 runtime pin. See the [acceptance audit](m1-acceptance-audit.md).
+warning. These contract explanations are tested in both HTTP compositions and the built entry UI.
+The [acceptance audit](m1-acceptance-audit.md) retains the earlier M1 checkpoint separately.
 
 Pending/unlinked people can see their own access state without gaining household reads. Suspended
 or archived members cannot self-reactivate. Active members may see their own linkage/exceptions;
@@ -118,7 +137,7 @@ The standalone directory currently uses the requesting person's delegated HA gra
 directory access to an ordinary HA account even when that person has a deliberate Domus administrator
 profile. Changes requiring other people's source proof then fail closed. Complete first-release
 standalone authority needs the planned companion/installation wiring; this checkpoint does not claim
-that capability complete. Native Ingress will use its existing private Core transport authority while
+that capability complete. Native Ingress uses its existing private Core transport authority while
 preserving the separate exact-human command actor. The existing gateway is unchanged.
 
 See [checkpoint evidence](evidence/m1-household-api.json), [identity](identity-household.md),

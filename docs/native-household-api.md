@@ -50,6 +50,12 @@ No cross-origin CORS permission is emitted. Origin validation alone is not authe
 ## API and data
 
 GET `/api/v1/session` reports the exact human, source, full/read_only access and remaining lifetime.
+In development source it also returns the verified installation/channel/deployment, accepted
+Supervisor application base, API availability, anchored epoch time and original session deadline.
+The base is the accepted public prefix plus its separator; host/forwarding hints cannot replace it.
+The future UI must attach the [shared context assertion](household-api.md) on bound personal
+requests. Supplied assertions are checked against the real session before protected work and never
+replace source proof, current authority or CSRF. This source contract is not in installed Edge.3.
 GET `/api/v1/openapi.json` exposes the [actual native schema](contracts/native-household-api.openapi.json)
 through the same native boundary. The [household routes](household-api.md) share the same DTOs,
 application use cases, privacy filtering, revision checks, last-administrator safeguards and atomic
@@ -77,6 +83,14 @@ must exist and be writable by the runtime. The operator preserves the actual ins
 channel across restarts. Repeat --public-origin for additional configured HA origins. Partial option
 sets are rejected. Omitting all persistence options retains the original connection preview.
 SUPERVISOR_TOKEN is provisioned privately by HA and must never be copied into a command or document.
+
+The business composition serves the nonpersonal built interface at the accepted Ingress base and
+its assets below that base. These resources require the existing trusted source/session binding;
+they grant no human authority and are excluded from the personal OpenAPI snapshot. The legacy
+personal root preview is no longer a business API route. Opening the interface obtains verified
+session facts through the API and never creates a household. A checkout without built resources
+returns explicit unavailable guidance. The installed Edge.3 package retains its reviewed old source
+until a new immutable package is built and adopted.
 
 This listener is exclusively for the Supervisor private container network, binds no public app port
 in the reviewed manifest and disables proxy-header rewriting/access logs. GET /health is nonpersonal

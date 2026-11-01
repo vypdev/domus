@@ -16,8 +16,11 @@ from domus.composition.household import standalone_context
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
+from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.http import HTTPSettings, create_app
 from domus.entrypoints.task_http import TaskHTTPContext
+from domus.entrypoints.ui_bundle import load_bundle
+from domus.infrastructure.application_runtime import SystemClock
 from domus.infrastructure.auth_runtime import MonotonicClock, SecureEntropy
 from domus.infrastructure.ha_config import HAEndpoint, OAuthConfiguration
 from domus.infrastructure.ha_http import HomeAssistantOAuth
@@ -111,8 +114,10 @@ def _compose(
         identity,
         settings,
         correlation=lambda: "cor_" + entropy.new(),
+        entry=EntryHTTPContext(installation, "standalone", clock, SystemClock(), store is not None),
         household_context=context,
         task_context=tasks,
+        ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
     )
     return AuthenticationRuntime(app, identity, task_events=events)
 

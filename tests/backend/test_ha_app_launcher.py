@@ -17,6 +17,8 @@ ORIGIN = "http://homeassistant.local:8123"
 def launch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     root = tmp_path / "data"
     root.mkdir(mode=0o755)
+    # BSD may inherit /private/tmp's group; prepare the simulated runtime's actual owner/group.
+    os.chown(root, -1, os.getgid())
     (root / "options.json").write_text(json.dumps({"public_origins": [ORIGIN]}))
     monkeypatch.setattr(ha_app, "_DATA_ROOT", root)
     monkeypatch.setattr(ha_app, "_ROOT_UID", os.getuid())
