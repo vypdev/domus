@@ -8,7 +8,7 @@
 - Scope: Add an English/Spanish household administration workspace to native Ingress and standalone deployments, extending household identity without changing the first all-domain release scope.
 - Related issues/PRs: [Issue #16](https://github.com/vypdev/domus/issues/16); dependency [PR #15](https://github.com/vypdev/domus/pull/15)
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: None. All eight companion contracts are resolved by owner answers; the capability remains Draft until review and implementation evidence exist.
+- Open decisions blocking readiness: None. All eight companion contracts are resolved by owner and maintainer answers; the capability remains Draft until review and implementation evidence exist.
 
 > Draft for review. This companion does not replace or rewrite `specs/household-identity.md`. No behavior in this proposal is implemented or tested by virtue of being specified.
 
@@ -16,7 +16,7 @@
 
 A household participant can understand their verified identity, access, and private preferences; an authorized administrator can review pending participants and manage household settings, profiles, and permission mappings from the application. The same product behavior is available in native Ingress and standalone deployments. The Home Assistant display name is the default household label, with an optional inert Domus alias. Distinct verified Home Assistant account IDs remain canonical even when names collide.
 
-Every mutation and recovery disclosure uses current human proof, current permission, expected aggregate revision, session CSRF, Origin/context binding, and a persisted original idempotency key and payload. Existing explicit mappings, source checks, inherited-grant provenance, and last-effective-administrator safeguards remain authoritative. No stale dialog, retry, key replacement, rebase, self-activation, or automatic mutation may bypass them.
+Every mutation, including an original POST replay, uses current human proof/permission, expected aggregate revision, session CSRF, Origin/context binding, and its persisted original key/payload. Protected GET recovery lookups recheck current context and original-action disclosure authority; they retain the existing query contract rather than acquiring a new mutation-only CSRF/revision requirement. Existing explicit mappings, source checks, inherited-grant provenance, and last-effective-administrator safeguards remain authoritative. No stale dialog, retry, key replacement, rebase, self-activation, or automatic mutation may bypass them.
 
 ```text
 Verified entry -> current household roster -> inspect access -> authorized, revision-bound change -> audited result
@@ -155,7 +155,7 @@ Duplicate submissions resolve only against the original key/payload. A changed p
 | Verified directory/roster | Bounded result | No synthetic entries | At most 256; only facts actually supplied by verified source | Read-only query, current context |
 | Administration journal | Closed local browser record | Empty | 8 records, 65,536 bytes total, one-hour retention; namespace/version 1 | Separate from entry journal; no credentials or CSRF |
 
-Validation rejects duplicate decisions, unsupported/protected permissions, invalid roles, malformed aliases, unknown timezones, incomplete mapping targets, and invalid cross-field combinations. Authorization and source checks are reread at operation and recovery time; the expected aggregate revision is an integer from 1 through 2^63−1. No arbitrary settings map, delivery channel, recipient, endpoint, credential, or external image URL is configurable. New presentation data is nullable in legacy rows; missing HA metadata is never invented.
+Validation rejects duplicate decisions, unsupported/protected permissions, invalid roles, malformed aliases, unknown timezones, incomplete mapping targets, and invalid cross-field combinations. Authorization and source checks are reread at operation and recovery time; the expected aggregate revision is an integer from 1 through 2^63−1. No arbitrary settings map, delivery channel, recipient, endpoint, credential, or external image URL is configurable. Alias normalization rejects Unicode Cc before trimming permitted whitespace, then counts 1–80 Unicode code points; it preserves literal text without HTML or Unicode normalization. Only null clears an alias. New presentation data is nullable in legacy rows; missing HA metadata is never invented.
 
 Recommended configuration is null alias, browser-following locale, and the specified routine preference default. A meaningful alternative is an explicit `es` locale and a household-visible alias, without altering canonical identity or authority. These defaults are proposal contracts, not evidence of existing stored values.
 
@@ -270,7 +270,7 @@ Errors follow impact -> cause -> action -> retained state and never describe a c
 ## 11. Security, permissions, and privacy
 
 1. Every query and command applies current identity and permission. Private locale and notification preference is readable/writable only by its owner, including through receipts, audit UI, events, and roster paths.
-2. Every write and original-result recovery is bound to session CSRF, Origin/context, current proof, current permission, expected revision, and the persisted original key/payload. Permission loss blocks stale dialogs and disclosure.
+2. Every write and original POST replay retains session CSRF, Origin/context, current proof/permission, expected revision and original key/payload. Protected GET result lookups enforce current context and original-action disclosure authority through their existing read contract. Permission loss blocks stale dialogs and disclosure.
 3. Preserve existing explicit mapping modes, current HA source checks, inherited grant provenance, protected permissions, last-effective-administrator protection, and privileged console recovery.
 4. Alias/name/avatar are inert presentation only. No arbitrary image URL, upload, person-based identity, synthetic directory selector, or name-based identity merge is allowed.
 5. Preference `routine_participation_summaries` is saved as a preference only. The UI explicitly states delivery is unavailable in this increment; future consumers must honor false before delivery is claimed.
@@ -287,7 +287,7 @@ Errors follow impact -> cause -> action -> retained state and never describe a c
 
 ## 13. Compatibility, migration, rollout, and rollback
 
-Schema 7 is the verified base at the cited commit. Recurrence issue #17 owns schema 8 first. This companion owns schema 9 from its verified Action-selected merge; implementation must verify the actual selected base and migration chain before admission. Schema 9 adds nullable presentation data and explicit private preferences. Legacy presentation remains absent/unknown, never an invented HA display name. Defaults for private locale/notification values are explicit and do not disclose another member's values.
+Schema 7 is the verified base at the cited commit. Recurrence issue #17 owns schema 8 first. This companion owns schema 9 from its verified Action-selected merge; the pure value-model checkpoint may proceed on the admitted schema-7 source without persistence or API activation; schema-9 integration waits for the actual recurrence merge and verified migration chain. Schema 9 adds nullable presentation data and explicit private preferences. Legacy presentation remains absent/unknown, never an invented HA display name. Defaults for private locale/notification values are explicit and do not disclose another member's values.
 
 Preserve supported historical inputs, original fixtures, installation channel, and compatible complete image/database/generation rollback. IDs, HA links, roles/status, mappings/setup provenance, revisions, task/material/recurrence state, receipts/audit/source/history remain authoritative. Restore preserves later receipt namespace/fingerprint/operation/result/time; paired audit/outbox identity/position/payload/delivery; archived/current-effect markers; and processed inbox/slot/cycle-closure proof, without replaying absent effects. Current authorization and original-action scope apply before any disclosure/replay, including private preferences.
 
@@ -295,19 +295,19 @@ Administration journal namespace/version 1 is separate from entry setup/enrollme
 
 ## 14. Testing strategy and numeric budget
 
-The following is a minimum of 24 distinct proposed executable cases. Existing owning specification cases and budgets remain unchanged; in particular, this companion does not redefine or consume `household-identity-C01` through `household-identity-C30` or delivery cases. All supported first-party coverage must remain 100% globally and per module from the first change. New pure policy branches require 100% branch coverage. These are acceptance requirements, not executed test results.
+The following is a minimum of 72 distinct proposed executable cases. Existing owning specification cases and budgets remain unchanged; in particular, this companion does not redefine or consume `household-identity-C01` through `household-identity-C30` or delivery cases. All supported first-party coverage must remain 100% globally and per module from the first change. New pure policy branches require 100% branch coverage. These are acceptance requirements, not executed test results.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Domain/configuration/pure planning | 4 | Observable scenarios in the case inventory. |
-| State/application/idempotency/races | 6 | Observable scenarios in the case inventory. |
-| Application use cases | 3 | Observable scenarios in the case inventory. |
-| Adapters/provider contracts | 2 | Observable scenarios in the case inventory. |
-| Workflows/permissions/schemas/setup | 3 | Observable scenarios in the case inventory. |
-| Presentation/localization/accessibility/sanitization | 3 | Observable scenarios in the case inventory. |
-| Integration/end-to-end/compatibility/migration | 2 | Observable scenarios in the case inventory. |
-| Security/abuse | 1 | Observable scenarios in the case inventory. |
-| Total | 24 | Distinct inventory cases; repeated executions do not add cases. |
+| Domain/configuration/pure planning | 10 | Observable scenarios in the case inventory. |
+| State/application/idempotency/races | 14 | Observable scenarios in the case inventory. |
+| Application use cases | 8 | Observable scenarios in the case inventory. |
+| Adapters/provider contracts | 6 | Observable scenarios in the case inventory. |
+| Workflows/permissions/schemas/setup | 9 | Observable scenarios in the case inventory. |
+| Presentation/localization/accessibility/sanitization | 12 | Observable scenarios in the case inventory. |
+| Integration/end-to-end/compatibility/migration | 8 | Observable scenarios in the case inventory. |
+| Security/abuse | 5 | Observable scenarios in the case inventory. |
+| Total | 72 | Distinct inventory cases; repeated executions do not add cases. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -335,6 +335,54 @@ The following is a minimum of 24 distinct proposed executable cases. Existing ow
 | household-admin-C22 | Integration/end-to-end/compatibility/migration | HADM-07,HADM-08 | Actual Python/SQLite browser journey covers pending-to-active and subsequent profile change in native Ingress. |
 | household-admin-C23 | Integration/end-to-end/compatibility/migration | HADM-07,HADM-08 | Actual Python/SQLite browser journey covers pending-to-active and subsequent profile change in standalone deployment. |
 | household-admin-C24 | Security/abuse | HADM-02,HADM-03,HADM-04,HADM-05 | Forged Origin/CSRF, stale session, unauthorized cross-member preference request, and permission-loss recovery disclosure are rejected. |
+| household-admin-C25 | Domain/configuration/pure planning | HADM-01 | Eighty astral Unicode code points remain valid after allowed whitespace trimming; an eighty-first is rejected without a UTF-16 mismatch. |
+| household-admin-C26 | Domain/configuration/pure planning | HADM-04 | Only null or a known locale enum and an exact summary boolean enter private state; truthy integers and unknown future values are rejected. |
+| household-admin-C27 | Domain/configuration/pure planning | HADM-01,HADM-04 | Public alias and private preference records have independent revisions and cannot carry canonical HA identity or permission grants. |
+| household-admin-C28 | Domain/configuration/pure planning | HADM-01 | Only explicit null clears an alias; blank or control-bearing text fails before it can silently clear an existing value. |
+| household-admin-C29 | Domain/configuration/pure planning | HADM-01 | Invalid or unavailable provider presentation data cannot replace valid human proof or produce an arbitrary external-avatar request. |
+| household-admin-C30 | Domain/configuration/pure planning | HADM-01,HADM-06 | Invalid member/household scope and Boolean, zero or overflowing stored revisions fail before a presentation/preference record can be used. |
+| household-admin-C31 | State/application/idempotency/races | HADM-02,HADM-03 | An administrator suspended by another actor after opening a member form is denied at commit without mutation or disclosure. |
+| household-admin-C32 | State/application/idempotency/races | HADM-01,HADM-03 | Loss of an actor's applicable own-alias permission after preflight blocks the stale write and retains the original intent. |
+| household-admin-C33 | State/application/idempotency/races | HADM-01,HADM-03 | An authorized administrator changing a pending member's public alias does not activate membership or alter private preferences. |
+| household-admin-C34 | State/application/idempotency/races | HADM-03,HADM-05 | Concurrent alias edits use the original public-record revision; retry recovers the same result and a changed payload cannot reuse its key. |
+| household-admin-C35 | State/application/idempotency/races | HADM-03 | A member/profile edit cannot silently demote an inherited administrator while its verified mapping source still grants authority. |
+| household-admin-C36 | State/application/idempotency/races | HADM-03 | HA administrator source loss during a selected-target lookup is rechecked before any mapping or member effect commits. |
+| household-admin-C37 | State/application/idempotency/races | HADM-03 | A selected/setup target becoming inactive or mismatching original setup provenance leaves policy and all receipts unchanged. |
+| household-admin-C38 | State/application/idempotency/races | HADM-02,HADM-05 | A late personal response from a retired account/context cannot overwrite the newly verified member view or revive its permissions. |
+| household-admin-C39 | Application use cases | HADM-02,HADM-04 | Reading available preference defaults or unknown presentation metadata does not initialize or mutate household records. |
+| household-admin-C40 | Application use cases | HADM-04 | An own-preference command cannot select a different member through body fields, path substitution or a public alias. |
+| household-admin-C41 | Application use cases | HADM-04,HADM-06 | An explicit false summary preference survives save/reload/restore while delivery remains visibly unavailable. |
+| household-admin-C42 | Application use cases | HADM-01,HADM-02 | Unavailable profile metadata retains the actual canonical roster member and an explicit unavailable fact instead of an empty verified result. |
+| household-admin-C43 | Application use cases | HADM-03 | Authorized reactivation retains the archived member's original ID/authorship; self-enrollment cannot create replacement membership. |
+| household-admin-C44 | Adapters/provider contracts | HADM-01,HADM-02 | Native metadata is resolved for the verified exact subject; a forwarded name or technical transport credential never selects a human role. |
+| household-admin-C45 | Adapters/provider contracts | HADM-01,HADM-02 | A standalone account without directory permission exposes only available verified facts and cannot fabricate selectable target users. |
+| household-admin-C46 | Adapters/provider contracts | HADM-01,HADM-07 | Oversized/malformed provider strings and inert markup remain bounded and cannot inject a link, executable markup or raw provider detail. |
+| household-admin-C47 | Adapters/provider contracts | HADM-02 | The 256-member directory bound rejects overflow/incomplete provider responses rather than certifying a partial list as complete. |
+| household-admin-C48 | Workflows/permissions/schemas/setup | HADM-06 | Schema-9 integration verifies the actual recurrence schema-8 chain and never invents that chain on the initial schema-7 source. |
+| household-admin-C49 | Workflows/permissions/schemas/setup | HADM-06 | Failure while adding presentation/preferences rolls back data/defaults and version advancement in one owned transaction. |
+| household-admin-C50 | Workflows/permissions/schemas/setup | HADM-04,HADM-06 | Corrupt stored preference booleans, unknown locale values and orphaned profile references fail closed instead of silently restoring defaults. |
+| household-admin-C51 | Workflows/permissions/schemas/setup | HADM-03,HADM-04,HADM-05 | Original-action authorization is explicitly mapped for each new profile/preference action; an unknown action cannot use a generic recovery grant. |
+| household-admin-C52 | Workflows/permissions/schemas/setup | HADM-05 | Native and standalone command capability assertions preserve both closed journal schemas without cross-decoding or fabricated API availability. |
+| household-admin-C53 | Workflows/permissions/schemas/setup | HADM-05,HADM-07 | Transport revision and payload limits reject unsupported numeric encodings without rounding the original command or replacing its key. |
+| household-admin-C54 | Presentation/localization/accessibility/sanitization | HADM-04,HADM-07 | An explicitly saved English preference overrides a Spanish browser and is used after an actual page reload. |
+| household-admin-C55 | Presentation/localization/accessibility/sanitization | HADM-04,HADM-07 | A null locale follows the browser base language, selecting Spanish for es-AR and English for unsupported languages. |
+| household-admin-C56 | Presentation/localization/accessibility/sanitization | HADM-01,HADM-07 | Changing view language preserves same-context unsaved member/alias drafts without automatically persisting those drafts. |
+| household-admin-C57 | Presentation/localization/accessibility/sanitization | HADM-01,HADM-07 | A 360-pixel roster with maximum-length Unicode names/aliases retains readable status and actions without hiding the selected member. |
+| household-admin-C58 | Presentation/localization/accessibility/sanitization | HADM-07 | Keyboard submission associates validation errors, restores field focus and keeps entered values without relying on a visually disabled control for authority. |
+| household-admin-C59 | Presentation/localization/accessibility/sanitization | HADM-07 | Light/dark and reduced-motion layouts preserve contrast, visible focus and status text independent of color. |
+| household-admin-C60 | Presentation/localization/accessibility/sanitization | HADM-04,HADM-07 | Preference success says saved with unavailable delivery while another-member administrator view contains no private values. |
+| household-admin-C61 | Presentation/localization/accessibility/sanitization | HADM-02,HADM-03,HADM-07 | Unavailable verified directory facts remove unsupported target selectors while explaining the actual remaining mapping actions. |
+| household-admin-C62 | Presentation/localization/accessibility/sanitization | HADM-02,HADM-07 | Pending/suspended/archived own views cannot open a protected roster or administration route through client navigation. |
+| household-admin-C63 | Integration/end-to-end/compatibility/migration | HADM-05,HADM-07 | Actual browser reload recovers the separate administration journal with the exact original payload/key and no automatic resend. |
+| household-admin-C64 | Integration/end-to-end/compatibility/migration | HADM-05,HADM-07 | Actual tab closure after a committed command but before its response retains original recovery without duplicate household work. |
+| household-admin-C65 | Integration/end-to-end/compatibility/migration | HADM-05,HADM-07 | BFCache hides private facts and disposes retired resources; restored navigation requires current proof before exposing them. |
+| household-admin-C66 | Integration/end-to-end/compatibility/migration | HADM-05,HADM-06 | An actual restored older state retains later administration processing proof and reports absent effects without recreating them. |
+| household-admin-C67 | Integration/end-to-end/compatibility/migration | HADM-06,HADM-08 | Both actual image architectures exercise schema 9 and old-image refusal with the compatible rollback pair and no new public port or fixture artifact. |
+| household-admin-C68 | Integration/end-to-end/compatibility/migration | HADM-03,HADM-06 | After recurrence merges, administration preserves its actual rules/source/cursors and cannot silently reinterpret recorded schedule policy. |
+| household-admin-C69 | Security/abuse | HADM-01,HADM-04,HADM-08 | Public events, audit UI and logs omit private preference contents, provider payloads and credentials while retaining safe mutation facts. |
+| household-admin-C70 | Security/abuse | HADM-02,HADM-04,HADM-05 | Possession of another member's operation ID never grants an administrator access to that member's private preference result. |
+| household-admin-C71 | Security/abuse | HADM-05 | A forged journal installation/channel/subject is rejected before any request or original-result disclosure; storage is not authentication. |
+| household-admin-C72 | Security/abuse | HADM-05,HADM-07 | Logout during administration preflight/send/reconciliation preserves the original journal, stops no active atomic effect and never deletes unrelated host storage. |
 
 The case budget is derived from independent behavior risks; every inventory row is one distinct case and is counted once. CI MUST retain the repository's supported first-party global and per-module 100% coverage from the first change, and new pure policy MUST have 100% branch coverage. Use table-driven boundary tests, deterministic clocks/IDs/fakes, race and replay tests without real waits or live services, adapter contract tests, migration/restore fixtures, and semantic UI assertions alongside golden fixtures. Every PR's required Check MUST run actual Python/SQLite browser journeys in both deployment modes and real EN/ES Storybook coverage. Human UX review must inspect keyboard/focus behavior, narrow layouts, light/dark readability, and truthful unavailable-data language. No cases above are represented as already executed.
 
@@ -358,6 +406,9 @@ The case budget is derived from independent behavior risks; every inventory row 
 | `docs/household-administration-operations.md` | create |
 | `docs/household-administration-migration.md` | create |
 | `docs/architecture-household-administration.md` | create |
+| `backend/src/domus/domain/member_profiles.py` | create |
+| `tests/backend/test_member_profiles.py` | create |
+| `docs/evidence/household-administration.json` | create |
 
 | Audience | Artifact/page | Required content | Validation/navigation |
 |---|---|---|---|
@@ -388,14 +439,14 @@ The paths marked create are proposed new deliverables, not existing files. Docum
 
 | Requirement | Cases |
 |---|---|
-| HADM-01 | household-admin-C01, household-admin-C02, household-admin-C03, household-admin-C14, household-admin-C19, household-admin-C21 |
-| HADM-02 | household-admin-C05, household-admin-C11, household-admin-C14, household-admin-C24 |
-| HADM-03 | household-admin-C04, household-admin-C05, household-admin-C06, household-admin-C07, household-admin-C08, household-admin-C11, household-admin-C15, household-admin-C16, household-admin-C24 |
-| HADM-04 | household-admin-C12, household-admin-C13, household-admin-C20, household-admin-C24 |
-| HADM-05 | household-admin-C09, household-admin-C10, household-admin-C15, household-admin-C24 |
-| HADM-06 | household-admin-C17, household-admin-C18 |
-| HADM-07 | household-admin-C19, household-admin-C20, household-admin-C21, household-admin-C22, household-admin-C23 |
-| HADM-08 | household-admin-C16, household-admin-C22, household-admin-C23 |
+| HADM-01 | household-admin-C01, household-admin-C02, household-admin-C03, household-admin-C14, household-admin-C19, household-admin-C21, household-admin-C25, household-admin-C27, household-admin-C28, household-admin-C29, household-admin-C30, household-admin-C32, household-admin-C33, household-admin-C42, household-admin-C44, household-admin-C45, household-admin-C46, household-admin-C56, household-admin-C57, household-admin-C69 |
+| HADM-02 | household-admin-C05, household-admin-C11, household-admin-C14, household-admin-C24, household-admin-C31, household-admin-C38, household-admin-C39, household-admin-C42, household-admin-C44, household-admin-C45, household-admin-C47, household-admin-C61, household-admin-C62, household-admin-C70 |
+| HADM-03 | household-admin-C04, household-admin-C05, household-admin-C06, household-admin-C07, household-admin-C08, household-admin-C11, household-admin-C15, household-admin-C16, household-admin-C24, household-admin-C31, household-admin-C32, household-admin-C33, household-admin-C34, household-admin-C35, household-admin-C36, household-admin-C37, household-admin-C43, household-admin-C51, household-admin-C61, household-admin-C68 |
+| HADM-04 | household-admin-C12, household-admin-C13, household-admin-C20, household-admin-C24, household-admin-C26, household-admin-C27, household-admin-C39, household-admin-C40, household-admin-C41, household-admin-C50, household-admin-C51, household-admin-C54, household-admin-C55, household-admin-C60, household-admin-C69, household-admin-C70 |
+| HADM-05 | household-admin-C09, household-admin-C10, household-admin-C15, household-admin-C24, household-admin-C34, household-admin-C38, household-admin-C51, household-admin-C52, household-admin-C53, household-admin-C63, household-admin-C64, household-admin-C65, household-admin-C66, household-admin-C70, household-admin-C71, household-admin-C72 |
+| HADM-06 | household-admin-C17, household-admin-C18, household-admin-C30, household-admin-C41, household-admin-C48, household-admin-C49, household-admin-C50, household-admin-C66, household-admin-C67, household-admin-C68 |
+| HADM-07 | household-admin-C19, household-admin-C20, household-admin-C21, household-admin-C22, household-admin-C23, household-admin-C46, household-admin-C53, household-admin-C54, household-admin-C55, household-admin-C56, household-admin-C57, household-admin-C58, household-admin-C59, household-admin-C60, household-admin-C61, household-admin-C62, household-admin-C63, household-admin-C64, household-admin-C65, household-admin-C72 |
+| HADM-08 | household-admin-C16, household-admin-C22, household-admin-C23, household-admin-C67, household-admin-C69 |
 
 Every normative requirement HADM-01 through HADM-08 must map to the exact case IDs in the inventory and vice versa. Existing owner cases retain their original meanings and budgets; this table is derived only from the companion inventory. Documentation and publication consistency checks are delivery gates, not runtime/security cases.
 
@@ -414,14 +465,14 @@ Every normative requirement HADM-01 through HADM-08 must map to the exact case I
 - [ ] Every HADM requirement has executable acceptance and reciprocal traceability.
 - [ ] Existing identity/delivery owning cases and budgets are preserved verbatim.
 - [ ] Clean Architecture boundaries and closed contracts are automatically enforced.
-- [ ] Numeric test budget and supported first-party global/per-module 100% coverage pass; pure policy branch coverage is 100%.
+- [ ] The 72-case inventory and supported first-party global/per-module 100% coverage pass; pure policy branch coverage is 100%.
 - [ ] Configuration limits, defaults, validation, persistence, migration, and restore behavior agree.
 - [ ] Native and standalone EN/ES primary states are implemented and reviewed for accessibility and responsive behavior.
 - [ ] No private preference leaks through roster, receipt, audit, or events; no fabricated verified facts or delivery claims exist.
 - [ ] Failure, partial success, recovery, idempotency, concurrency, source revocation, and cleanup cases pass.
 - [ ] User/setup/operator/contributor/migration documentation is complete and discoverable.
 - [ ] Every PR's required Check runs actual Python/SQLite browser journeys and real EN/ES Storybook; evidence describes what actually ran.
-- [ ] `specs/catalog.json` evidence and `specs/CATALOG.md` are current and `pnpm run validate:specifications` passes.
+- [ ] `specs/catalog.json` evidence and `specs/CATALOG.md` are current and `domus-check docs` plus the original pinned SDD format/consistency/catalog checks pass.
 - [ ] No readiness-blocking decision remains unresolved; status is not advanced solely because this draft is complete.
 
 ## 20. References and decisions

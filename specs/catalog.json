@@ -297,7 +297,8 @@
         "backend/src/domus/composition/restore.py",
         "backend/src/domus/infrastructure/offline_storage.py",
         "backend/src/domus/infrastructure/restore_source.py",
-        "backend/src/domus/infrastructure/sqlite_activation.py"
+        "backend/src/domus/infrastructure/sqlite_activation.py",
+        "backend/src/domus/domain/member_profiles.py"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -354,7 +355,8 @@
         "tests/containers/test_app_compatibility.py",
         "tests/containers/restore_fixture.py",
         "tests/backend/test_response_readability.py",
-        "tests/backend/test_review_regressions.py"
+        "tests/backend/test_review_regressions.py",
+        "tests/backend/test_member_profiles.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -401,7 +403,9 @@
         "docs/m1-acceptance-audit.md",
         "docs/evidence/m1-acceptance-audit.json",
         "docs/evidence/issue6-human-clarifications.json",
-        "docs/evidence/m1-review-fixes.json"
+        "docs/evidence/m1-review-fixes.json",
+        "docs/architecture-household-administration.md",
+        "docs/evidence/household-administration.json"
       ],
       "readiness": {
         "state": "draft",
