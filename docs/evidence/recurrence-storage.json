@@ -1,6 +1,6 @@
 {
   "status": "partial; storage boundary implemented, complete recurrence feature remains in progress",
-  "recordedAtUTC": "2026-11-01T22:47:25.560889+00:00",
+  "recordedAtUTC": "2026-11-01T23:04:54.042145+00:00",
   "issue": "https://github.com/vypdev/domus/issues/20",
   "sourceBase": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
   "developmentBase": "3131810082760a98ee4af66f11bb65eaac49cc3b",
@@ -85,7 +85,7 @@
       "policyModulesByteVerified": 7,
       "immutableBaseOwners": 18,
       "retainedOwnersUnchanged": true,
-      "currentCompanionSHA256": "b56cfc4be7260bfa56cb1f3d392d40b7a814a8d4a488ce5225d9d17d507a96c6",
+      "currentCompanionSHA256": "eeeaa3703ac2dd58fa1428e8ff274e0cc84b089241e3b26637a2b3587ffda34b",
       "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
     },
     "packageAndArchitectureTests": {
@@ -177,7 +177,8 @@
     "https://github.com/vypdev/copilot/issues/763#issuecomment-6563925226",
     "https://github.com/vypdev/copilot/issues/835#issuecomment-6564066025",
     "https://github.com/vypdev/copilot/issues/851",
-    "https://github.com/vypdev/copilot/issues/843#issuecomment-6565011301"
+    "https://github.com/vypdev/copilot/issues/843#issuecomment-6565011301",
+    "https://github.com/vypdev/copilot/issues/851#issuecomment-6565229213"
   ],
   "retainedEvidence": {
     "directory": "/private/tmp/domus-recurrence-storage-64908ee",
@@ -219,5 +220,56 @@
     },
     "issueComments": "Separately complete:6 fetched/6 retained; no overall prompt-text omission is inferred from one dimension.",
     "manualSupplement": "Both maintainer-account proposed-SDD comments were manually inspected. They are consumer-agent review inputs, not fresh owner product answers. Full retained scope/constraints remain explicit."
+  },
+  "browserContentionRepair": {
+    "baselineHead": "71c54ab92cc099d65fa6681c1a09ec61fc5656c1",
+    "failedRun": 41358941452,
+    "failedJob": 125004927727,
+    "observed": "The concurrent native different-account setup received one committed 200 and one bounded storage_busy 503 with no second household. The prior browser assertion required immediate403 and omitted the supported contention outcome.",
+    "change": "Retain the real concurrent writer test and require exact storage_busy/Retry-After plus explicit identical request replay and current403/409. Add four deterministic independent SQLite lock scenarios across native/standalone and same/different HA accounts. Verify unchanged rejected journal/draft, zero partial effects, no automatic resubmission and exactly one complete winner.",
+    "productSourcesChanged": false,
+    "storageTimeoutChanged": false,
+    "copilotChanged": false,
+    "before": "The new deterministic browser case failed on missing test-only fixture control (expected200, actual404); original log retained.",
+    "after": {
+      "entryBrowserTests": 49,
+      "passed": 49,
+      "durationSeconds": 31.9,
+      "typescript": "runtime and catalog passed",
+      "fixtureRuff": "check and format passed",
+      "originalPinnedSdd": "passed"
+    },
+    "coverage": "Backend and frontend implementation bytes are unchanged; the prior full100% supported coverage campaigns remain applicable to those same bytes. A fresh hosted fullCI run is required for the test-only correction.",
+    "retainedEvidence": "/private/tmp/domus-race-71c54ab"
+  },
+  "nativeReview71": {
+    "headRevision": "71c54ab92cc099d65fa6681c1a09ec61fc5656c1",
+    "runId": 41358941454,
+    "jobId": 125004927845,
+    "checkRunId": 125005208606,
+    "codePartitionsCompleted": 4,
+    "codePartitionsAssigned": 4,
+    "filesAssigned": 40,
+    "candidateFindings": 0,
+    "publishedFindings": 0,
+    "overall": "partial; neutral, human-conversation limitation remains reported and manually supplemented",
+    "humanConversation": {
+      "fetched": 2,
+      "retained": 1,
+      "omitted": 1,
+      "truncated": 0,
+      "limitReached": true
+    },
+    "issueComments": "Separately complete:6/6; diff complete40/40."
+  },
+  "hosted71": {
+    "headRevision": "71c54ab92cc099d65fa6681c1a09ec61fc5656c1",
+    "runId": 41358941452,
+    "backend": "passed",
+    "pythonTooling": "passed",
+    "amd64": "passed",
+    "aarch64": "passed",
+    "frontend": "failed on the independently investigated contention expectation; local repair49pass is not yet hostedCI success",
+    "aggregate": "failed"
   }
 }

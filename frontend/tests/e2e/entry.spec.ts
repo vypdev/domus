@@ -1,5 +1,5 @@
 import {expect, test} from '@playwright/test';
-import type {APIRequestContext, BrowserContext, Page} from '@playwright/test';
+import type {APIRequestContext, BrowserContext, Page, Response} from '@playwright/test';
 
 const prefix = '/api/hassio_ingress/fixture_domus_supervisor_1234567890';
 const journalKey = 'domus.entry.journal.v1';
@@ -26,6 +26,14 @@ async function create(page: Page, name = 'Fictional household') {
   await page.getByLabel('Household name', {exact: true}).fill(name);
   await page.getByLabel('Timezone', {exact: true}).fill('Europe/Madrid');
   await page.getByRole('button', {name: 'Create household', exact: true}).click();
+}
+const setupResponse = (page: Page, mode: Mode) => page.waitForResponse(response =>
+  response.url() === base(mode) + '/api/v1/household' && response.request().method() === 'POST');
+async function replaySetup(page: Page, response: Response) {
+  const original = response.request(), headers = await original.allHeaders();
+  // An explicit raw-API replay keeps every command assertion; no UI retry or new key is inferred.
+  return page.request.post(original.url(), {data: original.postData()!, headers: Object.fromEntries(
+    ['content-type', 'origin', 'idempotency-key', 'x-csrf-token', 'x-domus-context'].map(name => [name, headers[name]]))});
 }
 
 for (const mode of modes) test.describe(mode, () => {
@@ -303,14 +311,11 @@ for (const mode of modes) test.describe(mode, () => {
     let release!: () => void, arrived!: () => void, count = 0;
     const gate = new Promise<void>(resolve => {release = resolve;});
     const ready = new Promise<void>(resolve => {arrived = resolve;});
-    const statuses: number[] = [], keys: string[] = [];
+    const keys: string[] = [];
     try {
       if (mode === 'standalone' && actors === 'different_accounts') await request.post(origin(mode) + '/__fixture__/identity', {data: {subject: 'c'.repeat(32)}});
       await open(peerPage, peer, mode, true, (actors === 'different_accounts' ? 'e' : 'd').repeat(128));
       for (const candidate of [page, peerPage]) {
-        candidate.on('response', response => {
-          if (response.url() === base(mode) + '/api/v1/household' && response.request().method() === 'POST') statuses.push(response.status());
-        });
         await candidate.route(base(mode) + '/api/v1/household', async route => {
           if (route.request().method() !== 'POST') return route.continue();
           keys.push(route.request().headers()['idempotency-key']);
@@ -318,10 +323,25 @@ for (const mode of modes) test.describe(mode, () => {
           await gate; await route.continue();
         });
       }
+      const responses = Promise.all([page, peerPage].map(candidate => setupResponse(candidate, mode)));
       await Promise.all([create(page, 'Fictional administrator A'), create(peerPage, 'Fictional administrator C')]);
       await ready; release();
+      const replies = await responses, statuses: number[] = [];
       // An active mapped member gets a conflict; a new unlinked HA admin gains no implicit membership.
-      await expect.poll(() => statuses.slice().sort()).toEqual([200, actors === 'same_account' ? 409 : 403]);
+      for (const [index, reply] of replies.entries()) {
+        if (reply.status() === 503) {
+          expect((await reply.json()).code).toBe('storage_busy');
+          expect(reply.headers()['retry-after']).toBe('1');
+          // The bounded writer may time out under CI load. After the winner completes, the exact
+          // original request still needs current authority and cannot create a second household.
+          await expect([page, peerPage][index].getByRole('heading', {name: 'Request not accepted', exact: true})).toBeVisible();
+          const retried = await replaySetup([page, peerPage][index], reply);
+          expect(retried.status()).toBe(actors === 'same_account' ? 409 : 403);
+          statuses.push(retried.status());
+        } else statuses.push(reply.status());
+      }
+      expect(replies.filter(reply => reply.status() === 200)).toHaveLength(1);
+      expect(statuses.sort()).toEqual([200, actors === 'same_account' ? 409 : 403]);
       expect(new Set(keys).size).toBe(2);
       const final = await stats(request, mode);
       for (const table of ['households', 'members', 'receipts', 'audit', 'outbox']) expect(final.counts[table], table).toBe(1);
@@ -334,6 +354,46 @@ for (const mode of modes) test.describe(mode, () => {
       await Promise.all([page, peerPage].map(candidate => candidate.getByRole('button', {name: 'Refresh status', exact: true}).click()));
       expect(count).toBe(2); expect((await stats(request, mode)).counts).toEqual(final.counts);
     } finally {release(); await peer.close();}
+  });
+
+  for (const actors of ['same_account', 'different_accounts'] as const) test(`bounded writer rejection retains the original ${actors} request and rechecks authority after another setup`, async ({page, context, browser, request}) => {
+    await open(page, context, mode);
+    const peer = await browser.newContext(), peerPage = await peer.newPage();
+    let posts = 0;
+    page.on('request', item => {if (item.url() === base(mode) + '/api/v1/household' && item.method() === 'POST') posts++;});
+    try {
+      if (mode === 'standalone' && actors === 'different_accounts') await request.post(origin(mode) + '/__fixture__/identity', {data: {subject: 'c'.repeat(32)}});
+      await open(peerPage, peer, mode, true, (actors === 'different_accounts' ? 'e' : 'd').repeat(128));
+      expect((await request.post(origin(mode) + '/__fixture__/writer', {data: {action: 'acquire'}})).status()).toBe(200);
+      const pending = setupResponse(page, mode);
+      await create(page, 'Retained fictional draft');
+      const rejected = await pending;
+      expect(rejected.status()).toBe(503); expect((await rejected.json()).code).toBe('storage_busy');
+      expect(rejected.headers()['retry-after']).toBe('1');
+      await expect(page.getByRole('heading', {name: 'Request not accepted', exact: true})).toBeVisible();
+      await expect(page.getByLabel('Household name', {exact: true})).toHaveValue('Retained fictional draft');
+      const original = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records[0], journalKey);
+      expect(original.stage).toBe('rejected'); expect(original.operationId).toBeNull();
+      expect(original.key).toBe(rejected.request().headers()['idempotency-key']);
+      const empty = await stats(request, mode);
+      for (const table of ['households', 'members', 'receipts', 'audit', 'outbox']) expect(empty.counts[table], table).toBe(0);
+      expect((await request.post(origin(mode) + '/__fixture__/writer', {data: {action: 'release'}})).status()).toBe(200);
+      await create(peerPage);
+      await expect(peerPage.getByRole('heading', {name: 'Request recorded', exact: true})).toBeVisible();
+      const before = await stats(request, mode);
+      const retried = await replaySetup(page, rejected);
+      expect(retried.status()).toBe(actors === 'same_account' ? 409 : 403);
+      expect((await retried.json()).code).toBe(actors === 'same_account' ? 'household_exists' : 'permission_denied');
+      expect(await stats(request, mode)).toEqual(before);
+      await page.getByRole('button', {name: 'Refresh status', exact: true}).click();
+      await expect(page.getByRole('heading', {name: actors === 'same_account' ? 'Your household' : 'Join your household', level: 1, exact: true})).toBeVisible();
+      expect(posts).toBe(1); // Neither refresh nor rejection automatically resends the command.
+      expect(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records[0], journalKey)).toEqual(original);
+      for (const table of ['households', 'members', 'receipts', 'audit', 'outbox']) expect(before.counts[table], table).toBe(1);
+    } finally {
+      await request.post(origin(mode) + '/__fixture__/writer', {data: {action: 'release'}});
+      await peer.close();
+    }
   });
 
   test('failed owned-storage clearing closes local access and reports uncertainty without canceling sign-out', async ({page, context, request}) => {
