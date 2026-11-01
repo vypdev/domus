@@ -15,6 +15,8 @@ from domus.application.household_queries import HouseholdQueries
 from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
+from domus.application.task_events import TaskEventSource
+from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.entry_context import EntryHTTPContext
@@ -27,7 +29,7 @@ from domus.infrastructure.ha_config import HAEndpoint, PublicOrigins
 from domus.infrastructure.ha_directory import HomeAssistantDirectory
 from domus.infrastructure.ha_ingress import SupervisorIdentity
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
-from domus.infrastructure.ingress_sessions import IngressSessions
+from domus.infrastructure.ingress_sessions import IngressRequest, IngressSessions
 from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
 from domus.infrastructure.sqlite import SQLiteDatabase
 
@@ -37,6 +39,7 @@ class NativeRuntime:
     app: FastAPI
     sessions: IngressSessions = field(repr=False)
     storage: OwnedStorage | None = field(default=None, repr=False)
+    task_events: TaskEventSource | None = field(default=None, repr=False)
 
     def close(self) -> None:
         try:
@@ -86,16 +89,20 @@ def _compose_business(
     )
     directory = HomeAssistantDirectory(identity.lookup, identity.transport_token)
     utc, identifiers, zones = SystemClock(), SecureIdentifiers(), TimeZoneCatalog()
+    tasks = task_contexts(store, store.installation)
 
-    def context(request: Request) -> NativeHTTPContext:
+    def request_actor(request: Request) -> IngressRequest:
         peer = cast(tuple[str, int], request.scope["client"])
-        actor = sessions.request(
+        return sessions.request(
             peer[0],
             tuple(
                 (key.decode("latin1"), value.decode("latin1"))
                 for key, value in request.scope["headers"]
             ),
         )
+
+    def context(request: Request) -> NativeHTTPContext:
+        actor = request_actor(request)
         services = HouseholdHTTPContext(
             lambda: HouseholdQueries(store, actor.read()),
             HouseholdCommands(store, actor, directory, zones, utc, identifiers),
@@ -113,8 +120,9 @@ def _compose_business(
         clock,
         correlation=lambda: "cor_" + entropy.new(),
         entry=EntryHTTPContext(store.installation, "native", clock, utc, True),
+        task_context=lambda request: tasks(request_actor(request)),
     )
-    return NativeRuntime(app, sessions)
+    return NativeRuntime(app, sessions, task_events=task_event_source(store, store.installation))
 
 
 def create_runtime(token: str, channel: str) -> FastAPI:

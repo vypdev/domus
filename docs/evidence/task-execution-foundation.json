@@ -1,0 +1,2863 @@
+{
+  "verifiedAtUTC": "2026-11-01T10:07:23.912714+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/13",
+  "pullRequest": "https://github.com/vypdev/domus/pull/14",
+  "sourceBase": "2207bca2f13dedee7cf61372eae711765c1bb911",
+  "sourceIdentity": "Working-source documentation closeout over sourceBase; every backend and tooling source byte unchanged. Original execution/coverage measurements retain their explicit origin; fresh hosted CI/review required on the published new head.",
+  "sources": {
+    ".github/workflows/ci_check.yml": "b35aba02bcef4c1d4355a5e2762093309e61dc7f8569e5e5b6739442c1a0b308",
+    "backend/src/domus/application/ports.py": "5f42858e39d4606a93378085fb2ad5469d0db2c69187debdf148dae413ecc8ab",
+    "backend/src/domus/application/task_authorization.py": "4f33621792d2c649f98bd6bada28a79d06a93200aa7da5bc06cd9a1f730e52d6",
+    "backend/src/domus/application/task_commands.py": "e3e98fd8e369a09ce52837ca17015ba9a8331bf312a90090a3bda453997e2640",
+    "backend/src/domus/application/task_events.py": "484dc0d374c69e2ba1d6506866c8656974626339ae7b66606b603cee4000b0e3",
+    "backend/src/domus/application/task_facts.py": "4dd63556176a448b88c1d5e81237aa45f4519bfc06dbbf95edb58c81acb2e8c2",
+    "backend/src/domus/application/task_material_commands.py": "bc0715ce0ed15a4807b773fda634945037bdc877ccc8417df77e6a34f1125ba6",
+    "backend/src/domus/application/task_material_ports.py": "87ba7e535f5a864829fdba3a9cfdea2fb5723908611455cf1dd2db10f9d43952",
+    "backend/src/domus/application/task_material_scope.py": "f1d44c700578da0681872e4fac42d1ebb801e33fa843065b9dabb397f69888d1",
+    "backend/src/domus/application/task_material_views.py": "1f4e1b52c17064b73e3c6502b38fc578a7589d68044279312c783b656e5aa5bf",
+    "backend/src/domus/application/task_materials.py": "caa132a7b16fca293770deba3da149cf9bda2e24d4719abe9de39470d686698e",
+    "backend/src/domus/application/task_ports.py": "67ede6022534205e35878c695c0fee4354ccfa207140e8c4043888fc133c5076",
+    "backend/src/domus/application/task_queries.py": "e4e8256e49acd19af6d850606168e649ea00813712b0f3bae1d8cf57e0a3ba97",
+    "backend/src/domus/application/task_requests.py": "ca196b2fdfecd1110d03caff6121be0ca50c505a4f7713f97a8f62d2449556ec",
+    "backend/src/domus/application/task_reviews.py": "dcc288cda6cdcf5073bad4f24133b9d3496c0b0cf1272e8328e6df38129f3328",
+    "backend/src/domus/composition/ingress.py": "300a4562a2999d25c272cffbe1ff31fb3b76a20ab6911a509c333d3ed94c987f",
+    "backend/src/domus/composition/server.py": "ad872aae9ec4d249c4ebb1281110973b1d20aa7d9e3dff68dcb9bcff5a51dfe8",
+    "backend/src/domus/composition/tasks.py": "4c93810023eda268c2f7c5e5307d5340c3c7e1de8500062b64e9e4d8ee9f2996",
+    "backend/src/domus/domain/errors.py": "0af3fadacc89835a4778b07ec45a1cf45539825c3756f44e8f78cebb37f354b6",
+    "backend/src/domus/domain/task_events.py": "117023a57ad1d56d024b41e8791d219c17c26e68efd287c070749c920a40fbd4",
+    "backend/src/domus/domain/task_material_policy.py": "c04f1a21ed58cfaf530bd0eaca7bd1869becd5d930df990095fb9f13d915c0f2",
+    "backend/src/domus/domain/task_material_values.py": "e3bc290538de9d6ef243cd35624e2fac294f72ade1245621a8ec42cad3991b31",
+    "backend/src/domus/domain/task_materials.py": "b30d1929fdfafdc92a93bedcbcc61e9edc1b04d0ad079e0e8e80bf77fb89430c",
+    "backend/src/domus/domain/task_policy.py": "5a7cb62237a233cbeb958295e35914c01ae73cc2058f146554325fc91ba40a52",
+    "backend/src/domus/domain/task_reviews.py": "67cdb6db84ae39b27bab268df50e5918da1d002f546c7a036536d33a4742bf83",
+    "backend/src/domus/domain/task_values.py": "3439561cd1030dc9e779a9f7430d59a3bbf58b8ffea107fc1df4fe3efe0e345b",
+    "backend/src/domus/domain/tasks.py": "e027ba9c3d010d23f4bf98cf0ede5763012d4d3fdef4950c15880b90eeea0bbb",
+    "backend/src/domus/entrypoints/http.py": "196793cdd470df970d07b0005002dada22187b1e092320098d58e1e0bb4ab682",
+    "backend/src/domus/entrypoints/http_errors.py": "f6ec870df03360b5da8fc7f4fc513b4e0968459ba37ec701b56ba29455dca6f0",
+    "backend/src/domus/entrypoints/native_http.py": "7143688f95524809355dab56b46bd09926fcf32af02372f85df9226173d93381",
+    "backend/src/domus/entrypoints/task_dto.py": "cecf680c22cb2226308e7b8ec6e7f6eb66a59b63b505155607b4c6c394722a24",
+    "backend/src/domus/entrypoints/task_http.py": "bb646552a3a54a538219470c0e160f281b9926c553630036a7a569f87eb3e84a",
+    "backend/src/domus/entrypoints/task_response.py": "33cb58fba8e45dfaf46474905bb8bef0145c392ee4ed3155bff7958677742435",
+    "backend/src/domus/infrastructure/sqlite.py": "dea8d7a6858a60588d421aa4aeb504417db62232dafdaf17e36653277c5157e6",
+    "backend/src/domus/infrastructure/sqlite_snapshots.py": "3c52bb478717e026d4166e84c0f45b65f86becb88c84f6dec6db533b812ecdc8",
+    "backend/src/domus/infrastructure/sqlite_task_history.py": "cd12469036355fce9d2fac8e5313497507a12012457257ecce934f0280c87c31",
+    "backend/src/domus/infrastructure/sqlite_task_integrity.py": "dd100c331e8fd7c4098ad6244f2030e239c92919b78c71171eaf1f599709c6d3",
+    "backend/src/domus/infrastructure/sqlite_task_material_records.py": "f8b539111bf18e9bebbbd26f7a847a6df32f2fcfa04e60d5bfb160a0f1c38552",
+    "backend/src/domus/infrastructure/sqlite_task_material_schema.py": "550499e114cf9423ffeedfdd0673f08f9efec0c57d85875454f40ce27066361a",
+    "backend/src/domus/infrastructure/sqlite_task_materials.py": "83ae10d500cf66e185ffd848957d2a898fc5e8c22da6b3cef4545b03628cc3fa",
+    "backend/src/domus/infrastructure/sqlite_task_records.py": "98287fece267b5770fdb89faa9d6b497a7fcae77ee5861f277893db0124a80b1",
+    "backend/src/domus/infrastructure/sqlite_task_reviews.py": "96984dc6f02f6e7a4cf88a328da94cac20ebc9ce405134859b141290ff1bd7ed",
+    "backend/src/domus/infrastructure/sqlite_task_schema.py": "d220bef0bf8f8c180401367094f00fba8bc7248d2faf54700e09d0f4a6b61922",
+    "backend/src/domus/infrastructure/sqlite_tasks.py": "216437dd093593ffeb54d59472127f49fbb01dd5cdc284f6a7f4a3dc713e28db",
+    "backend/src/domus/infrastructure/task_cursor.py": "b21dbb915ce874b51008689d05abb4480cb7a65aabc5851f9500e51238bb6b5f",
+    "backend/src/domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f",
+    "docs/decisions.md": "8cbc8fb67dcbfe4e75914a5b92850f838b901031d6f1645b04e475f8aeed06a0",
+    "docs/tasks/execution.md": "62c6d8dd837d11d76cc7e3df0114c8a6381e889bf23ad9ab3f3d2d090294bfc6",
+    "tests/backend/test_activation_compatibility.py": "50be6d6986939fb751a7368f873544ada345c58cdd7c3400f9536e3c7913da22",
+    "tests/backend/test_household_http.py": "4230ca4fdacad8e304fddfdf00e575e823d9b74b8c9b4fb38f5ab96f228beaa3",
+    "tests/backend/test_restore_source.py": "41b7ef08c493e72db10f1b81f9b9f8e73bc2fb78769f8b44eb09a50f66543a1f",
+    "tests/backend/test_sqlite_history.py": "919cd3814854df37cb156d9a527d092848560c55464217329a47dd85e872edbb",
+    "tests/backend/test_sqlite_identity.py": "3660832931298120412259c58b43c15c0d835bff212ac2cfc1d38d97eb996bed",
+    "tests/backend/test_sqlite_recovery.py": "37d96cdfc59345a2158141ed3cab68db91188aab847056d2f935f8d61a2fcfbc",
+    "tests/backend/test_sqlite_snapshots.py": "74f2542125c4361a998681d5f1296814dd6910d00065ffb31649d9bb1917b7e1",
+    "tests/backend/test_sqlite_task_events.py": "48fc5d6189976b02e464613c54dfb2ad7fae3fa529892f33a47a4b7a8d85f33c",
+    "tests/backend/test_sqlite_task_history.py": "2cf1bdd8fa2fd3ded5da6f4e508a3437ed6be034c8fbfd6e4e85deb25f561fde",
+    "tests/backend/test_sqlite_task_integrity.py": "86a92e0a1bbc618c1e9712f18463cc9e4a423ebdf79b5ac167721c2d57ceb666",
+    "tests/backend/test_sqlite_task_materials.py": "01c43aef0c9ffeb9c77f8b2928d22bc387c4b131ce300e1fe9dd2357a7eb37f2",
+    "tests/backend/test_sqlite_task_records.py": "101ef86c6e85387200bba075fa142640f9a64538c017925014269033c2d55098",
+    "tests/backend/test_sqlite_task_reviews.py": "fff0c0f4b8c3cbf2bbdc0038cb016d45ecf7c5ece086ea6676c86d50d7d32307",
+    "tests/backend/test_sqlite_tasks.py": "96af3198bac9276e0887fcb116bc77cacedba5ddc2b98164889e0715335e2ec6",
+    "tests/backend/test_task_authorization.py": "9c5398b7f346a88b2907c5774b86bce77f3bd5833c68fe7a4a02307d88a9fbaa",
+    "tests/backend/test_task_commands.py": "e592adf570d36445c84ae0993a762218c98258a532c3213d9196de64139ee798",
+    "tests/backend/test_task_cursor.py": "b49b8e739e4d75a0f750a8cf3e2ff2244afc8411e544dd41987253508fe88a2d",
+    "tests/backend/test_task_edit_commands.py": "36bb999d3d5c65a798016547730c04805a33b778680764ad8646ae9361151a7e",
+    "tests/backend/test_task_events.py": "e974e6fb3597fdb8571e1864178e4e47630523fbca1f42941b4edd4553511048",
+    "tests/backend/test_task_execution_commands.py": "4ae5b591f0c23c94c18fb043251b0960c4df64d61f085aa59895db54b110d7df",
+    "tests/backend/test_task_http.py": "ebadb2c96aec8b9a60204012568867e6947341d61908acce8bd3bfbd8271bc86",
+    "tests/backend/test_task_material_commands.py": "fd50b387fd0fdaa5f93b90ecc77bdfa626e2811cfb320232560263c3326a0ba2",
+    "tests/backend/test_task_material_http.py": "a2d80c094435b145a8f4f85b4336ef07e5a0b8aea12c6132981681ebe645a82a",
+    "tests/backend/test_task_material_queries.py": "ae5bd4024597344c3ece04d3413bb080a47ecae2be82d4e995ffec4266f095b3",
+    "tests/backend/test_task_material_settlement.py": "5414c10ba2cdfe4fae5fc46532bc9a1a98a34ddc3380266457812a41ecc5b084",
+    "tests/backend/test_task_material_values.py": "4fb52cab89fc2d423fafbbbd3a6a8efa8e854a4975a669f63f9fa039fda86b32",
+    "tests/backend/test_task_materials.py": "ce7e88ebcb5a40279c424bdd1cddda130b02e710e5f834dd99bfa22549c96ade",
+    "tests/backend/test_task_policy.py": "dbf6627bbcefe67863b5711f2d37b128d7733ef6166f0a5a93b9fe84b442486d",
+    "tests/backend/test_task_queries.py": "40b9d3544653260f65d4549d69de5dfb13362bcc5c19f340de4e5a8213dfe196",
+    "tests/backend/test_task_restoration.py": "b99f0be73e604d02ac05b17eeea2e5bbd544020c61da28f14ba2c887460a4005",
+    "tests/backend/test_task_reviews.py": "2ac6c1d8c2aa299c48cdaec7fb6cf86073d23821215873686b06bf1fdb4209c4",
+    "tests/backend/test_task_runtime.py": "07314940516c2c73b06d9418e5277e8cdbe15d65c43fe1389ab496b79083c0ce",
+    "tests/backend/test_task_values.py": "f1030681e9a5055a193945cb298172d281348b6eaffab6fdf5ae24d6da858269",
+    "tests/backend/test_tasks.py": "285c0a8225b9fe211a8d7348516d98aa0eb2f6a24403dcb9ef6ec8f10b977628",
+    "tests/fixtures/sqlite/v5.sql": "d93e1cbfb0547b53308ee6ac485ca895c0269dd286c29656618da60d5c20de50",
+    "tests/fixtures/sqlite/v6.sql": "af84ed25f3bf5ffe7da5a8f1b9ff8163bd2aa27641283aa79c0c60edd5927f11",
+    "tests/python/test_backend_coverage.py": "849d8ef67edc576897055bd7da5e78ff11cc3ac6908efff6954d0789e23acdc1",
+    "tests/python/test_ci_contract.py": "4b7579d9b0d1c738b9b19477859725d2e553b3f23a0693679741edfb439cd252",
+    "tooling/domus_tooling/backend_coverage.py": "d0cacb38ff4ddba1b8e57e1789a29300d520bbcbfd0c94588d91e26dce2755f3",
+    "tooling/domus_tooling/cli.py": "dc4ddf26cfd4f0e40de11b96eeced41235a1832eba618b5070248bc808014a4e",
+    "pyproject.toml": "46e9bd656fc33535403195aa6b9743e17847581863add8a73a22381bcb5b9127",
+    "docs/tasks/operator-recovery.md": "44f6946865550b4b219ad4b9f0552bf047df3a483b172862f1b1587d5dee3963",
+    "docs/tasks/migration.md": "480708e3243e3497e988545a3e6ab096eb5dcec82a84834eb81e064a18892dee",
+    "docs/user-guide.md": "a46ff6d4e69cab534c8b54a7ee7916378a6e49d297457726937bd502a723d31f",
+    "docs/snapshots.md": "964e0fc1725afbe410e081d296dfe93d3248d100db5d2a5173a227329fa96c2a",
+    "docs/restoration.md": "9d6c34b8d16ee34ee44479a80c0ed654223ce0dd1679286c456a0536c12c4c58",
+    "docs/migrations-identity-storage.md": "2d19439a508e1f994359599d422d968f680a4af69c3415f844baf84b38fc2ea9",
+    "docs/operations-identity-storage.md": "7d4a1799d303ab59443397b78bb713c5c92b0fb13aeaba0f98097a532c1f9cbb",
+    "specs/task-execution-foundation.md": "d5464f9da30ef5bbc93bc764d5daa27b97ff79bd02b2442642ad3eba116ac7bd"
+  },
+  "wholeBackendSourceInventory": {
+    "backend/src/domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
+    "backend/src/domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
+    "backend/src/domus/application/activation.py": "c0c51350b074424837251068ec416f9be1e23ec1a9a4bfdcd19c3724ae736f08",
+    "backend/src/domus/application/administrator_proof.py": "c4735b83498970eddbde8a69c9e653829545b0589737df25ce76d2b536b0adfc",
+    "backend/src/domus/application/authentication.py": "3ab940f76455365c4d40d40645c5f9ba5a65754e382665a0266057baaae04bf8",
+    "backend/src/domus/application/authentication_values.py": "e83491791e6d323e1fb12aaafb11fc39d2f89a12d10c9ae415c055a1e33aa314",
+    "backend/src/domus/application/authorization.py": "4ccffade393fc2bac2192fee8909f28f290dae0c6fd3913c87433338101bc52a",
+    "backend/src/domus/application/commands.py": "f6c3d600be23aceb0a3e2a1e3dce8f67ed1e3d7ee4010e4868a75098091739d2",
+    "backend/src/domus/application/household_commands.py": "878d5138026593e47f7f444bd4095d0eb7c0edcc43ebedccc18e9ba41ad28673",
+    "backend/src/domus/application/household_queries.py": "20ababafc0b848c179e5334ec8cd2654de5e45e401f9368674cf52fbafe7bd84",
+    "backend/src/domus/application/identity_ports.py": "45d04bd3abe05d81d6e24f55e645e52ff9ddea341bdf0ee648ea59e68d713c0d",
+    "backend/src/domus/application/member_commands.py": "d3e93982d2e42d9a57771269ec0ccd4692fcd196189922bb09e7b0398b924649",
+    "backend/src/domus/application/policy_commands.py": "bc588b5b5feb72fd5cb57d7b4a10ef5a05ae48da5ec042fd569142ce50fedeb6",
+    "backend/src/domus/application/ports.py": "5f42858e39d4606a93378085fb2ad5469d0db2c69187debdf148dae413ecc8ab",
+    "backend/src/domus/application/recovery_commands.py": "2b8c198cde97f0213ec1612ea32bce5e00637aab99862fe08b59418d3c64af49",
+    "backend/src/domus/application/restoration.py": "32a301e9d733f453526dbba70dbe99c036d6485a4c9bc8483d4f52456534a6eb",
+    "backend/src/domus/application/session_values.py": "f124c2405362cbd782394e69759ac2f88041910e771447eaf40c82ad3d993e50",
+    "backend/src/domus/application/sessions.py": "4e21d9b3bd917a18b8b996cc43757cd1a341a0a53d4ed2b3db77688f0fbf5a8c",
+    "backend/src/domus/application/snapshots.py": "c4f0862f590d222711018de3b23a7155f5702375ce6ece7dd0e2170c86a22ca4",
+    "backend/src/domus/application/task_authorization.py": "4f33621792d2c649f98bd6bada28a79d06a93200aa7da5bc06cd9a1f730e52d6",
+    "backend/src/domus/application/task_commands.py": "e3e98fd8e369a09ce52837ca17015ba9a8331bf312a90090a3bda453997e2640",
+    "backend/src/domus/application/task_events.py": "484dc0d374c69e2ba1d6506866c8656974626339ae7b66606b603cee4000b0e3",
+    "backend/src/domus/application/task_facts.py": "4dd63556176a448b88c1d5e81237aa45f4519bfc06dbbf95edb58c81acb2e8c2",
+    "backend/src/domus/application/task_material_commands.py": "bc0715ce0ed15a4807b773fda634945037bdc877ccc8417df77e6a34f1125ba6",
+    "backend/src/domus/application/task_material_ports.py": "87ba7e535f5a864829fdba3a9cfdea2fb5723908611455cf1dd2db10f9d43952",
+    "backend/src/domus/application/task_material_scope.py": "f1d44c700578da0681872e4fac42d1ebb801e33fa843065b9dabb397f69888d1",
+    "backend/src/domus/application/task_material_views.py": "1f4e1b52c17064b73e3c6502b38fc578a7589d68044279312c783b656e5aa5bf",
+    "backend/src/domus/application/task_materials.py": "caa132a7b16fca293770deba3da149cf9bda2e24d4719abe9de39470d686698e",
+    "backend/src/domus/application/task_ports.py": "67ede6022534205e35878c695c0fee4354ccfa207140e8c4043888fc133c5076",
+    "backend/src/domus/application/task_queries.py": "e4e8256e49acd19af6d850606168e649ea00813712b0f3bae1d8cf57e0a3ba97",
+    "backend/src/domus/application/task_requests.py": "ca196b2fdfecd1110d03caff6121be0ca50c505a4f7713f97a8f62d2449556ec",
+    "backend/src/domus/application/task_reviews.py": "dcc288cda6cdcf5073bad4f24133b9d3496c0b0cf1272e8328e6df38129f3328",
+    "backend/src/domus/composition/__init__.py": "a902d8faf7dd19da6829fb730d81e32d34ec38ee6cfafd676966a95d0ad31366",
+    "backend/src/domus/composition/admin.py": "020abd88d8b9f26a429169bd1a51dd7b7ae960f0a96b53e2099bd2321debbff5",
+    "backend/src/domus/composition/ha_app.py": "e0ffe36478881ff11367c7ba5467438ebef54af7d4bfb00bf14350893b15e1b3",
+    "backend/src/domus/composition/household.py": "835e256f8b5b8e60adeef0d5292cb115ce05e085bbd27d0a3a0bdea46fe4ede8",
+    "backend/src/domus/composition/ingress.py": "300a4562a2999d25c272cffbe1ff31fb3b76a20ab6911a509c333d3ed94c987f",
+    "backend/src/domus/composition/restore.py": "fe4f5040a99db1404938e402eefa54fc93139055a5bc92abdfb7bf35d0c87297",
+    "backend/src/domus/composition/server.py": "ad872aae9ec4d249c4ebb1281110973b1d20aa7d9e3dff68dcb9bcff5a51dfe8",
+    "backend/src/domus/composition/tasks.py": "4c93810023eda268c2f7c5e5307d5340c3c7e1de8500062b64e9e4d8ee9f2996",
+    "backend/src/domus/domain/__init__.py": "0aac8a2ba41471d7a174ef7baca6073c95009a9db96df3e032392aa4f80bd079",
+    "backend/src/domus/domain/activation.py": "fcb2e47e939127d5e254e2136fb7f1459b40fa8c8561100579fced49666ad0fe",
+    "backend/src/domus/domain/errors.py": "0af3fadacc89835a4778b07ec45a1cf45539825c3756f44e8f78cebb37f354b6",
+    "backend/src/domus/domain/generations.py": "bd8d665c7b6e832f881784c07475d2b8911c08d0894cf8e125681a9f27e1ba97",
+    "backend/src/domus/domain/identity.py": "a35980712e1717f5f225165080916d8cfefa8c5d1b01f8b08a78089ff2a29b91",
+    "backend/src/domus/domain/recovery.py": "0bbe731961d4481e8002382ab0c9948fd415534b0cbbc03bdf0a0e35676f0cb0",
+    "backend/src/domus/domain/restoration.py": "4bb02d6633a0c81c1ce0cb58ae73dd300813b7ed40f495de521a0290d7b2ce0f",
+    "backend/src/domus/domain/snapshots.py": "81060c12e0ef06c7329bc3be780d321f40426d36e87e42fea5e85ad075bf7f19",
+    "backend/src/domus/domain/storage.py": "9c72aedf54c63d6fa0d85f0e8c044d56c7ceefc23eea123b45d096da96a6c75d",
+    "backend/src/domus/domain/task_events.py": "117023a57ad1d56d024b41e8791d219c17c26e68efd287c070749c920a40fbd4",
+    "backend/src/domus/domain/task_material_policy.py": "c04f1a21ed58cfaf530bd0eaca7bd1869becd5d930df990095fb9f13d915c0f2",
+    "backend/src/domus/domain/task_material_values.py": "e3bc290538de9d6ef243cd35624e2fac294f72ade1245621a8ec42cad3991b31",
+    "backend/src/domus/domain/task_materials.py": "b30d1929fdfafdc92a93bedcbcc61e9edc1b04d0ad079e0e8e80bf77fb89430c",
+    "backend/src/domus/domain/task_policy.py": "5a7cb62237a233cbeb958295e35914c01ae73cc2058f146554325fc91ba40a52",
+    "backend/src/domus/domain/task_reviews.py": "67cdb6db84ae39b27bab268df50e5918da1d002f546c7a036536d33a4742bf83",
+    "backend/src/domus/domain/task_values.py": "3439561cd1030dc9e779a9f7430d59a3bbf58b8ffea107fc1df4fe3efe0e345b",
+    "backend/src/domus/domain/tasks.py": "e027ba9c3d010d23f4bf98cf0ede5763012d4d3fdef4950c15880b90eeea0bbb",
+    "backend/src/domus/entrypoints/__init__.py": "d46875cbfef7220c7244bf1b89112ece8122ecb0d66cd908f08f098f0f3c419f",
+    "backend/src/domus/entrypoints/bounded_http.py": "d8047746eddb7193f1aa9f16007958c79cc6ae7ac1c30ab93909883e3aa97b54",
+    "backend/src/domus/entrypoints/console_recovery.py": "854a3f8d7a2e74f301ac5bd4b54682e409e2669a3bb7e05546e479c113c09026",
+    "backend/src/domus/entrypoints/household_http.py": "f4856a94fa4979b0cc4dd6b5670f6741371efadc794d69e6e186b07493549cab",
+    "backend/src/domus/entrypoints/http.py": "196793cdd470df970d07b0005002dada22187b1e092320098d58e1e0bb4ab682",
+    "backend/src/domus/entrypoints/http_contract.py": "13ef85b4ce8f439f5da5ba88b97651501ac8d6b673b2fa09f24d5772a1f71cba",
+    "backend/src/domus/entrypoints/http_errors.py": "f6ec870df03360b5da8fc7f4fc513b4e0968459ba37ec701b56ba29455dca6f0",
+    "backend/src/domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
+    "backend/src/domus/entrypoints/ingress_http.py": "f6557eb5481d132131f66ad7691e30c223c63a66a6f0ae5754c9fba3bc7f3626",
+    "backend/src/domus/entrypoints/native_http.py": "7143688f95524809355dab56b46bd09926fcf32af02372f85df9226173d93381",
+    "backend/src/domus/entrypoints/task_dto.py": "cecf680c22cb2226308e7b8ec6e7f6eb66a59b63b505155607b4c6c394722a24",
+    "backend/src/domus/entrypoints/task_http.py": "bb646552a3a54a538219470c0e160f281b9926c553630036a7a569f87eb3e84a",
+    "backend/src/domus/entrypoints/task_response.py": "33cb58fba8e45dfaf46474905bb8bef0145c392ee4ed3155bff7958677742435",
+    "backend/src/domus/infrastructure/__init__.py": "ec6cb2d48fb3178de856dcbeefb7b14bc193fe78ac68a53f9afcf2bd9cac0699",
+    "backend/src/domus/infrastructure/application_runtime.py": "30ed2ddfd31dd7dbc6d65f8330555e1b13fa390fb45a9a9027ff732e4113bbe5",
+    "backend/src/domus/infrastructure/auth_runtime.py": "414ac5ab890db991272a2fe9d7817ad1995052d2d09e1e9dd07d2631ef92de65",
+    "backend/src/domus/infrastructure/ha_config.py": "e9a33ffe459b45d9b7efe946e8991c4c7363fb6d4d83b0d8d3923deb214c095f",
+    "backend/src/domus/infrastructure/ha_directory.py": "4e81ad4b5c67b412f83a1436b693918310f6f26a9871b83f225eaeb9d65e1f05",
+    "backend/src/domus/infrastructure/ha_http.py": "638cc3d918689d1392adb57332c2136160e9745a29b7c84d8fe99363fb358673",
+    "backend/src/domus/infrastructure/ha_ingress.py": "e1da730ab4092afbf9630ff3a8d5c31285d7a8b99e1acc7080082ffdf4023dc7",
+    "backend/src/domus/infrastructure/ha_websocket.py": "39bf7cddc367086c7d9ce600858664ffb505d77faa6f7ce623f21a0d0f58eaaf",
+    "backend/src/domus/infrastructure/ingress_sessions.py": "9f95f69f124fca64b9420458580bbad9907f027754c3413284ce7513a3d9907a",
+    "backend/src/domus/infrastructure/memory_attempts.py": "b1f739ddbbdb072a4961410b9775ae191581edf6135d0ae359bf421cc8357dfc",
+    "backend/src/domus/infrastructure/memory_sessions.py": "a1725225ca45e9610cb158b2a628cfd0e368fdfc17791aec18dec2983fb4d063",
+    "backend/src/domus/infrastructure/offline_storage.py": "16795918af0b4b21bc17aa6a52706fb92aa4d40850c489587bcffa7511b0fc30",
+    "backend/src/domus/infrastructure/owned_storage.py": "c994557ba584bc0292c8fef432afe8725b532a5976c91faa39ebdbe70b4c4192",
+    "backend/src/domus/infrastructure/restore_source.py": "71917a2db52f5f6794504fd8caa7fd23b0732e8328760c728ea3f082acd2d203",
+    "backend/src/domus/infrastructure/session_access.py": "4389717f7a2cc9992f9cd24961294c2e2ace9c5950f7cceddc721e592a5c7220",
+    "backend/src/domus/infrastructure/sqlite.py": "dea8d7a6858a60588d421aa4aeb504417db62232dafdaf17e36653277c5157e6",
+    "backend/src/domus/infrastructure/sqlite_activation.py": "6191814bfcb73ac35613f6592fd27f74cbf88baf81394091caecbdae3e29ab8a",
+    "backend/src/domus/infrastructure/sqlite_history.py": "e7f8d4f2b79aed851a4056364f67d1c7806c52d011b46c597968bea86dd1d144",
+    "backend/src/domus/infrastructure/sqlite_identity.py": "091994c671189707e5299ef093887d68307ca4e829e53a629569b593527bc082",
+    "backend/src/domus/infrastructure/sqlite_recovery.py": "01fa6b8896674ce8203073c468eccb7033a9824052d7db3a853c80a2df6e2650",
+    "backend/src/domus/infrastructure/sqlite_restoration.py": "2f28207974082bdee48d72afdca08956e077b957377b1a2894b3eb6f4e6c224a",
+    "backend/src/domus/infrastructure/sqlite_snapshots.py": "3c52bb478717e026d4166e84c0f45b65f86becb88c84f6dec6db533b812ecdc8",
+    "backend/src/domus/infrastructure/sqlite_task_history.py": "cd12469036355fce9d2fac8e5313497507a12012457257ecce934f0280c87c31",
+    "backend/src/domus/infrastructure/sqlite_task_integrity.py": "dd100c331e8fd7c4098ad6244f2030e239c92919b78c71171eaf1f599709c6d3",
+    "backend/src/domus/infrastructure/sqlite_task_material_records.py": "f8b539111bf18e9bebbbd26f7a847a6df32f2fcfa04e60d5bfb160a0f1c38552",
+    "backend/src/domus/infrastructure/sqlite_task_material_schema.py": "550499e114cf9423ffeedfdd0673f08f9efec0c57d85875454f40ce27066361a",
+    "backend/src/domus/infrastructure/sqlite_task_materials.py": "83ae10d500cf66e185ffd848957d2a898fc5e8c22da6b3cef4545b03628cc3fa",
+    "backend/src/domus/infrastructure/sqlite_task_records.py": "98287fece267b5770fdb89faa9d6b497a7fcae77ee5861f277893db0124a80b1",
+    "backend/src/domus/infrastructure/sqlite_task_reviews.py": "96984dc6f02f6e7a4cf88a328da94cac20ebc9ce405134859b141290ff1bd7ed",
+    "backend/src/domus/infrastructure/sqlite_task_schema.py": "d220bef0bf8f8c180401367094f00fba8bc7248d2faf54700e09d0f4a6b61922",
+    "backend/src/domus/infrastructure/sqlite_tasks.py": "216437dd093593ffeb54d59472127f49fbb01dd5cdc284f6a7f4a3dc713e28db",
+    "backend/src/domus/infrastructure/standalone_sessions.py": "144d691be8589c9f9ecd539717e6497cdb718c28033fd39992271ac674b32252",
+    "backend/src/domus/infrastructure/task_cursor.py": "b21dbb915ce874b51008689d05abb4480cb7a65aabc5851f9500e51238bb6b5f",
+    "backend/src/domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "coverage": "7.17.0"
+  },
+  "tests": {
+    "wholeBackend": 2899,
+    "existingTooling": 72,
+    "architectureFixtures": 41,
+    "currentAuthorityAndIdentityProfiles": 151,
+    "taskCreationAssignmentClaim": 45,
+    "commandsAndRestorationFocused": 48,
+    "newTaskExecution": 46,
+    "commandsExecutionAndAuthorityFocused": 114,
+    "newTaskEditors": 41,
+    "editorsLifecycleAuthorityAndDomainFocused": 223,
+    "newTaskQueriesHistoryAndCursors": 126,
+    "newTaskHTTPAndRuntime": 86,
+    "newMaterialCoreAndPorts": 144,
+    "newMaterialStorageAndRead": 59,
+    "newMaterialSelectionAndInitialCompletionCommands": 77,
+    "newMaterialHTTPAndQueries": 105,
+    "newExplicitMaterialSettlement": 102,
+    "newDependencyReviewsAndAcknowledgements": 110,
+    "newTypedLifecycleSource": 46,
+    "wholeTooling": 146,
+    "newBackendCoverageAudit": 74,
+    "backendMeasurementOrigin": {
+      "immutableSourceRevision": "cd0795125274678432464f976c86995925562882",
+      "rerunLocallyInThisToolingIncrement": false,
+      "currentBackendSourceHashesMatchOriginalMeasurement": true,
+      "sourceReportSHA256": "05c916b441abfea9b94274a66a0eb7de1124c0b89f1a9ff3c8ec3d305bf91e39",
+      "newAuditorAcceptedOriginalMeasurement": true
+    },
+    "importClassificationFixTooling": 146
+  },
+  "coverage": {
+    "authoredBackendFiles": 104,
+    "wholeBackend": {
+      "covered_lines": 7605,
+      "num_statements": 7605,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 225,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2146,
+      "num_partial_branches": 0,
+      "covered_branches": 2146,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "taskModules": {
+      "backend/src/domus/application/task_authorization.py": {
+        "covered_lines": 226,
+        "num_statements": 226,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 94,
+        "num_partial_branches": 0,
+        "covered_branches": 94,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_commands.py": {
+        "covered_lines": 236,
+        "num_statements": 236,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 30,
+        "num_partial_branches": 0,
+        "covered_branches": 30,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_events.py": {
+        "covered_lines": 45,
+        "num_statements": 45,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 4,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 16,
+        "num_partial_branches": 0,
+        "covered_branches": 16,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_facts.py": {
+        "covered_lines": 45,
+        "num_statements": 45,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 14,
+        "num_partial_branches": 0,
+        "covered_branches": 14,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_material_commands.py": {
+        "covered_lines": 48,
+        "num_statements": 48,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 10,
+        "num_partial_branches": 0,
+        "covered_branches": 10,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_material_ports.py": {
+        "covered_lines": 31,
+        "num_statements": 31,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 18,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 4,
+        "num_partial_branches": 0,
+        "covered_branches": 4,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_material_scope.py": {
+        "covered_lines": 42,
+        "num_statements": 42,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 16,
+        "num_partial_branches": 0,
+        "covered_branches": 16,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_material_views.py": {
+        "covered_lines": 16,
+        "num_statements": 16,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 2,
+        "num_partial_branches": 0,
+        "covered_branches": 2,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_materials.py": {
+        "covered_lines": 78,
+        "num_statements": 78,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 16,
+        "num_partial_branches": 0,
+        "covered_branches": 16,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_ports.py": {
+        "covered_lines": 12,
+        "num_statements": 12,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 61,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 0,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_queries.py": {
+        "covered_lines": 234,
+        "num_statements": 234,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 68,
+        "num_partial_branches": 0,
+        "covered_branches": 68,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_requests.py": {
+        "covered_lines": 147,
+        "num_statements": 147,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 42,
+        "num_partial_branches": 0,
+        "covered_branches": 42,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/application/task_reviews.py": {
+        "covered_lines": 59,
+        "num_statements": 59,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 20,
+        "num_partial_branches": 0,
+        "covered_branches": 20,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/composition/tasks.py": {
+        "covered_lines": 21,
+        "num_statements": 21,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 4,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 0,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/domain/task_events.py": {
+        "covered_lines": 136,
+        "num_statements": 136,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 44,
+        "num_partial_branches": 0,
+        "covered_branches": 44,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/domain/task_material_policy.py": {
+        "covered_lines": 15,
+        "num_statements": 15,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 8,
+        "num_partial_branches": 0,
+        "covered_branches": 8,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/domain/task_material_values.py": {
+        "covered_lines": 103,
+        "num_statements": 103,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 30,
+        "num_partial_branches": 0,
+        "covered_branches": 30,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/domain/task_materials.py": {
+        "covered_lines": 137,
+        "num_statements": 137,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 86,
+        "num_partial_branches": 0,
+        "covered_branches": 86,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/domain/task_policy.py": {
+        "covered_lines": 76,
+        "num_statements": 76,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/domain/task_reviews.py": {
+        "covered_lines": 80,
+        "num_statements": 80,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 26,
+        "num_partial_branches": 0,
+        "covered_branches": 26,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/domain/task_values.py": {
+        "covered_lines": 120,
+        "num_statements": 120,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 28,
+        "num_partial_branches": 0,
+        "covered_branches": 28,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/domain/tasks.py": {
+        "covered_lines": 184,
+        "num_statements": 184,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 82,
+        "num_partial_branches": 0,
+        "covered_branches": 82,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/entrypoints/task_dto.py": {
+        "covered_lines": 109,
+        "num_statements": 109,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 4,
+        "num_partial_branches": 0,
+        "covered_branches": 4,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/entrypoints/task_http.py": {
+        "covered_lines": 87,
+        "num_statements": 87,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 0,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/entrypoints/task_response.py": {
+        "covered_lines": 41,
+        "num_statements": 41,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 0,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_task_history.py": {
+        "covered_lines": 54,
+        "num_statements": 54,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 22,
+        "num_partial_branches": 0,
+        "covered_branches": 22,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_task_integrity.py": {
+        "covered_lines": 52,
+        "num_statements": 52,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 24,
+        "num_partial_branches": 0,
+        "covered_branches": 24,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_task_material_records.py": {
+        "covered_lines": 41,
+        "num_statements": 41,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 8,
+        "num_partial_branches": 0,
+        "covered_branches": 8,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_task_material_schema.py": {
+        "covered_lines": 11,
+        "num_statements": 11,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 4,
+        "num_partial_branches": 0,
+        "covered_branches": 4,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_task_materials.py": {
+        "covered_lines": 29,
+        "num_statements": 29,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 4,
+        "num_partial_branches": 0,
+        "covered_branches": 4,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_task_records.py": {
+        "covered_lines": 76,
+        "num_statements": 76,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 8,
+        "num_partial_branches": 0,
+        "covered_branches": 8,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_task_reviews.py": {
+        "covered_lines": 62,
+        "num_statements": 62,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 24,
+        "num_partial_branches": 0,
+        "covered_branches": 24,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_task_schema.py": {
+        "covered_lines": 2,
+        "num_statements": 2,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 0,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/sqlite_tasks.py": {
+        "covered_lines": 132,
+        "num_statements": 132,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 38,
+        "num_partial_branches": 0,
+        "covered_branches": 38,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/task_cursor.py": {
+        "covered_lines": 51,
+        "num_statements": 51,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 14,
+        "num_partial_branches": 0,
+        "covered_branches": 14,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/infrastructure/task_materials.py": {
+        "covered_lines": 2,
+        "num_statements": 2,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 0,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      }
+    },
+    "taskStatements": 2840,
+    "taskBranches": 824,
+    "inventory": "Exact authored source/report equality; every file has zero missed statements/branch destinations. Existing Coverage.py configuration/exclusions remain unchanged.",
+    "wholeSourceInventoryExactlyMatchesCoverage": true,
+    "taskModuleTotals": {
+      "count": 36,
+      "statements": 2840,
+      "branches": 824,
+      "missingStatements": 0,
+      "missingBranches": 0
+    },
+    "tooling": {
+      "authoredFiles": 5,
+      "sourceHashes": {
+        "tooling/domus_tooling/__init__.py": "6c2440f4b9799284410ca165b02a1e86f3cf450082159dc15778d89a3a5b5c2f",
+        "tooling/domus_tooling/backend_coverage.py": "d0cacb38ff4ddba1b8e57e1789a29300d520bbcbfd0c94588d91e26dce2755f3",
+        "tooling/domus_tooling/ci_policy.py": "ad62b739c37a988e44d2ed398a03467585711c0d990e5b627858ddb067f74692",
+        "tooling/domus_tooling/cli.py": "dc4ddf26cfd4f0e40de11b96eeced41235a1832eba618b5070248bc808014a4e",
+        "tooling/domus_tooling/docs.py": "105e2fd92220ed44c9be15e8440c08eb9faf8dee66177a8f5155a2f573b4fdde"
+      },
+      "wholeTooling": {
+        "covered_lines": 214,
+        "num_statements": 214,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 98,
+        "num_partial_branches": 0,
+        "covered_branches": 98,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "files": {
+        "tooling/domus_tooling/__init__.py": {
+          "covered_lines": 0,
+          "num_statements": 0,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 0,
+          "num_partial_branches": 0,
+          "covered_branches": 0,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "tooling/domus_tooling/backend_coverage.py": {
+          "covered_lines": 133,
+          "num_statements": 133,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 62,
+          "num_partial_branches": 0,
+          "covered_branches": 62,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "tooling/domus_tooling/ci_policy.py": {
+          "covered_lines": 13,
+          "num_statements": 13,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 8,
+          "num_partial_branches": 0,
+          "covered_branches": 8,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "tooling/domus_tooling/cli.py": {
+          "covered_lines": 37,
+          "num_statements": 37,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 10,
+          "num_partial_branches": 0,
+          "covered_branches": 10,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "tooling/domus_tooling/docs.py": {
+          "covered_lines": 31,
+          "num_statements": 31,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 18,
+          "num_partial_branches": 0,
+          "covered_branches": 18,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        }
+      },
+      "sourceInventoryExactlyMatchesCoverage": true
+    },
+    "enforcement": {
+      "command": "uv run domus-check backend-coverage --report coverage-backend.json",
+      "execution": "Required backend step immediately after successful pytest, no conditional or continue-on-error; original JSON/XML artifacts retained.",
+      "scope": "Exact canonical recursive backend/src/domus inventory, including unimported modules.",
+      "model": "Default-config locked Coverage.py static analysis without application import/execution; expected statements/branches/type-only exclusions independent of reported omissions/exclusions.",
+      "protocol": "Branch-enabled format 3 from the locked installed version; 64 MiB regular-file bound; duplicate/nonfinite/Boolean aliases and inconsistent execution/summary/totals rejected.",
+      "sourceStability": "Inventory and hashes rechecked after static analysis.",
+      "limitations": "This validates inventory/denominator/data. It supplements actual pytest execution, semantic tests and immutable-source provenance; it is not real consumer/UI/owner acceptance."
+    }
+  },
+  "architecture": {
+    "analyzedFiles": 140,
+    "dependencies": 880,
+    "contractsKept": 3,
+    "contractsBroken": 0,
+    "strictBackendTypes": "PASS; 104 backend files, 109 including tooling",
+    "tooling": {
+      "analyzedFiles": 21,
+      "dependencies": 24,
+      "contractsKept": 2,
+      "contractsBroken": 0
+    }
+  },
+  "commands": [
+    "uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml (existing complete 2899-case execution at byte-identical immutable cd07951 is referenced; this tooling increment does not claim a new local backend run)",
+    "COVERAGE_FILE=/private/tmp/domus-backend-coverage-validation-cd07951/tooling.coverage .venv/bin/pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-backend-coverage-validation-cd07951/tooling-coverage.json --cov-report=xml:/private/tmp/domus-backend-coverage-validation-cd07951/tooling-coverage.xml -q --basetemp=$TMPDIR/domus-backend-coverage-tooling5-pytest-cd07951 (146 passed; strict 100% whole and per file)",
+    ".venv/bin/mypy backend/src tooling",
+    ".venv/bin/lint-imports --config architecture/python-application.ini --no-cache",
+    ".venv/bin/lint-imports --config architecture/python-tooling.ini --no-cache",
+    ".venv/bin/pytest tests/architecture --no-cov -q --basetemp=$TMPDIR/domus-backend-coverage-architecture-pytest-cd07951 (41 passed)",
+    ".venv/bin/ruff check .",
+    ".venv/bin/ruff format --check .",
+    ".venv/bin/domus-check docs",
+    "Byte-verify the seven pinned policy modules listed in sddPolicyProvenance, invoke validateSddMarkdown/validateSddDraftConsistency with the declared immutable path baseline and other owners, verify retained original case rows independently, renderCatalog and validateCatalog.",
+    ".venv/bin/domus-check backend-coverage --report /private/tmp/domus-backend-coverage-validation-cd07951/actual-backend-coverage.json (original full measured JSON, every current backend file hash verified identical to cd07951)"
+  ],
+  "sddPolicyProvenance": {
+    "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+    "modules": {
+      "src/infrastructure/specification_catalog_validator.cjs": {
+        "gitBlobSHA": "87dffc092f4f351d33788beab4e024fe0fb9743e",
+        "sha256": "7de4c036e5dee6477581502984d02037e6fd3bd3fa2f2434ef4dc862666365b1"
+      },
+      "src/infrastructure/specification_catalog_publication.cjs": {
+        "gitBlobSHA": "3391c7b331aa108acd21b44ec39ac0c2823946f4",
+        "sha256": "92d31ff9a9ff7a9f8491dc492ccf7e1b039ba5d6ff0da43e7f252111b7e76d5b"
+      },
+      "src/domain/specification_catalog_path_policy.cjs": {
+        "gitBlobSHA": "33c5478cf95323900af5030e4e8ac715e5a9f04b",
+        "sha256": "bb97e2432d97c61b5cc123adcdb43acc49f01d3bb52693d372c37829133ab139"
+      },
+      "src/domain/sdd_draft_consistency.ts": {
+        "gitBlobSHA": "c1487eac45d12911052df9ce72ac1cdcb54e0b96",
+        "sha256": "04b6c1eebee7284270b8ad08107c2b2d01c4b3d059d5603a4eecab92616223fd"
+      },
+      "src/domain/pre_branch_sdd.ts": {
+        "gitBlobSHA": "17d2d99471f7371a393c2976bf9fd30ca63e2c83",
+        "sha256": "636db20b18cd7b694c2d68e2d5fc53f5387daae90bcb231c98c2c2534d6125c3"
+      },
+      "src/domain/sdd_validation_diagnostic.ts": {
+        "gitBlobSHA": "af7888055cc9d13547afd8482045639d78a4552d",
+        "sha256": "1906276928b2fae7d81855da29a67154abad22bd0eaab1c7046fe4b67afb30b8"
+      },
+      "src/domain/sdd_catalog_compatibility.ts": {
+        "gitBlobSHA": "90fc40526fa20b8d8154d04c324be34fdef70742",
+        "sha256": "150d56f78b12133d61c60d3321abbde254b23be8d55144f865bddae2b53b5d11"
+      }
+    }
+  },
+  "sddAndCatalogValidation": {
+    "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+    "base": "a63b2315cd5121dde9585ba8875e286fdef5330e",
+    "source": "cd0795125274678432464f976c86995925562882",
+    "catalogSHA256": "522b4be55ee8abcf295c58d200caf6141efee837988864c4ebf4a0c53d9846bd",
+    "catalog": "PASS",
+    "affectedSdds": "PASS; household-tasks, household-identity, points-rewards, task-execution-foundation",
+    "existingOwnerPathBaseline": "e8fa5bbc9ffa179aa7559831f5f3d067c9c9c65c",
+    "ownerReservation": "Other owners only; own retained case rows verified independently",
+    "originalCaseRowsRetained": true
+  },
+  "ownerDecision": {
+    "id": "A34",
+    "default": "performed",
+    "alternative": "approved",
+    "scope": "Household default and nullable task override; the saved effective rules determine completion gating. Pending points remain unavailable."
+  },
+  "storageAssertions": [
+    "Schema 5 owns task defaults, definitions, immutable occurrence snapshots and cycle facts with typed repositories and canonical version-1 records.",
+    "Strict source-file coverage includes all runtime modules, including unimported files; excluded non-executable/abstract lines retain the unchanged Coverage.py defaults.",
+    "Scoped compare-and-swap, composite deferred current-cycle/revision foreign keys and one-open-cycle uniqueness reject one-sided or stale writes; transaction rollback retains both sides.",
+    "Actual-file tests independently distinguish isolated repository contracts from owned-store initialization, migration, checkpoint inspection and activation.",
+    "Frozen schemas 1 through 4 migrate transactionally. New schema-4 input is derived from immutable pre-task source, retains two current/historical operation records and is not generated from current schema 5. Prior frozen inputs are byte-unchanged.",
+    "Inspection validates all pages of definitions/occurrences/cycles, current pointers, historical snapshot scope, member references and the complete DAG. Completed dependent work survives prerequisite reopening.",
+    "A real older task checkpoint restores available state and retains a later completion receipt as processed before restoration. Current-authorized replay cannot apply that completion again.",
+    "A second supported restoration of the sealed source checkpoint returns to the prior completed state. No invented rollback API or live owner data was used."
+  ],
+  "frozenSchema4": {
+    "path": "tests/fixtures/sqlite/v4.sql",
+    "sha256": "b374421514c6e77133776bc43a40b30316e8c103a6ab5158f355135eca7d3c11",
+    "sourceRevision": "143de3e79bf8aa02171b4123b794d222f4d4f231",
+    "sourceSchema": 4,
+    "retainedOperationRecords": 2,
+    "provenance": "Immutable pre-task v3 fixture plus original schema-4 history DDL/data mapping; current task DDL is not its input."
+  },
+  "limits": [
+    "The full backend run uses temporary loopback WebSocket listeners and was run with local-listener permission. No tests were skipped to obtain coverage.",
+    "Task lifecycle/material/review source and complete backend coverage audit are implemented. Complete feature acceptance, actual Inventory/Points/recurrence and all UI/package/owner/all-domain delivery remain required.",
+    "Restoration tests use an explicit fake HA identity provider with actual local MembershipAuthorization, AtomicCommands, SQLite and restore services. They are not owner HA access/adoption proof.",
+    "No owner Chrome UI, package deployment, Stable/Edge adoption, HA entity/service or complete product acceptance was performed. Hosted current-head CI and complete Bugbot are separate gates.",
+    "Historical checkpoints retain original measurements/interim scopes. Current tooling audit has complete new tooling/source/CI evidence and references the original byte-identical backend measurement once, without claiming a rerun."
+  ],
+  "historicalPolicyCheckpoint": {
+    "sourceRevision": "143de3e79bf8aa02171b4123b794d222f4d4f231",
+    "measuredAtUTC": "2026-10-31T23:06:57.531845+00:00",
+    "tests": {
+      "newPurePolicy": 192,
+      "wholeBackend": 1603,
+      "existingTooling": 72,
+      "architectureFixtures": 41
+    },
+    "purePolicyCoverage": {
+      "covered_lines": 153,
+      "num_statements": 153,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 58,
+      "num_partial_branches": 0,
+      "covered_branches": 58,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 4857,
+      "num_statements": 4857,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 132,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1366,
+      "num_partial_branches": 0,
+      "covered_branches": 1366,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "note": "Measured at the earlier pure-policy checkpoint. Its then-pending prerequisite choice and persistence have since advanced; this does not relabel historical evidence."
+  },
+  "inventory": {
+    "capabilities": 11,
+    "draftSDDs": 14,
+    "requirements": 109,
+    "distinctPlannedCases": 485,
+    "newCompanionCases": 42,
+    "originalHouseholdTaskCasesRetained": 49,
+    "caseCredit": "Planned inventory is distinct from parametrized test executions; no full companion acceptance claimed."
+  },
+  "copilotChanged": false,
+  "historicalStorageCheckpoint": {
+    "sourceRevision": "ee825e6d16dcdca7f8c1ad761d447c419c856f64",
+    "verifiedAtUTC": "2026-11-01T00:22:18.785402+00:00",
+    "tests": {
+      "wholeBackend": 1867,
+      "existingTooling": 72,
+      "architectureFixtures": 41
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 5326,
+      "num_statements": 5326,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 170,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1520,
+      "num_partial_branches": 0,
+      "covered_branches": 1520,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 76,
+    "taskStatements": 613,
+    "taskBranches": 210,
+    "note": "Published schema-5 storage checkpoint; unchanged storage assertions below are also covered by the new full run.",
+    "hostedCI": {
+      "sourceRevision": "ee825e6d16dcdca7f8c1ad761d447c419c856f64",
+      "run": "https://github.com/vypdev/domus/actions/runs/41256525227",
+      "aggregateCheck": 124701522734,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes actual amd64 and aarch64 builds",
+      "currentAuthorityCheckpoint": "Requires its own new-head checks after publication",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "reference": "332dc6b2-c568-49b5-812f-8cc3d270fe20",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/828#issuecomment-6551159222"
+      }
+    }
+  },
+  "authorityAssertions": [
+    "Task read/claim/manage/record-for-others/material-use permissions are additive typed policy identifiers; the independent four-profile matrix checks every permission.",
+    "The same reused TaskAccess rereads current active membership, HA administrator mapping, profile/member exceptions and task defaults within the caller transaction.",
+    "Claim permission and profile eligibility never pretend the available task was assigned; restricted completion still requires stored assignment and its own participation.",
+    "Attributing any other performer requires separate current on-behalf authority and an active household member. An explicit grant does not turn restricted performers into adults.",
+    "Only the actor supplies current HA proof. Other performers use their current local profile rather than a fabricated external administrator grant.",
+    "Approval requires current adult authority and permission plus the original cycle participation rule. Historical roles/rules do not confer a revoked present grant.",
+    "Both actual ASGI OpenAPI schemas match the published references exactly. The only component change is the typed Permission enum; no task routes are introduced.",
+    "A stale assignment cannot authorize completion after release, and a supplied occurrence with a weaker override cannot replace the persisted snapshot. Both negative tests failed before the current-record lookup was implemented."
+  ],
+  "rawMeasurements": {
+    "archive": "/private/tmp/domus-backend-coverage-checkpoint-retained/measurements.tar.gz",
+    "archiveSHA256": "3d3514867da5f3355e38c95182fe991949a7feaf48f79f6db5181029f35063b2",
+    "members": [
+      {
+        "name": "tooling-final2.out",
+        "bytes": 1451,
+        "sha256": "c8609ad9aed0edae34f3706a6ee664a9267b59dc84984bec9879ecac9b7705d4"
+      },
+      {
+        "name": "tooling-coverage.json",
+        "bytes": 23365,
+        "sha256": "8c0c93a081149ae0f9becc3cbc3f5a516c878f2ccb1cbc35ed342599a56520a4"
+      },
+      {
+        "name": "tooling-coverage.xml",
+        "bytes": 11301,
+        "sha256": "97c409574d2c285bcaac5fd58d817cbebecf4019ffa66c83d2d607ca5ce01fa8"
+      },
+      {
+        "name": "tooling.coverage",
+        "bytes": 69632,
+        "sha256": "4a09874b0cc7e63a6277eb97a270a5d9a15fe8a18bf90c1ca38c58c465891c7c"
+      },
+      {
+        "name": "tooling-inventory-audit.json",
+        "bytes": 1305,
+        "sha256": "a1314f7b965716dfa029477fc8676b7142cf7ce866fdc724e24c84ffc065f7ad"
+      },
+      {
+        "name": "backend-source-provenance.json",
+        "bytes": 13350,
+        "sha256": "11a701f8cb452188ef2f7d7ca5c16f30b5b307e589353ebb91358fa435bc54bc"
+      },
+      {
+        "name": "actual-audit.out",
+        "bytes": 45,
+        "sha256": "5a725526020eb88e9be18817df5072b69f8d4a2d171a88bc3e83e022877b5026"
+      },
+      {
+        "name": "architecture-tests.out",
+        "bytes": 99,
+        "sha256": "7459d165d7ee4eab373a3144bb2453f342e91c6aeea6955f4dd33491c3666911"
+      },
+      {
+        "name": "imports-application.out",
+        "bytes": 959,
+        "sha256": "cb9e4fa99b39616038c8b5febb8bc17349500e9381cf676bc3ae29a173ae176b"
+      },
+      {
+        "name": "imports-tooling.out",
+        "bytes": 907,
+        "sha256": "5e7cd27317f52413e4ba494a97b2a3dbb86bd1321e4b995223d14ca805ced067"
+      },
+      {
+        "name": "types-all.out",
+        "bytes": 45,
+        "sha256": "92c3e508c3f44192b3ed08c24db6fda1c9011bc0b04adc58ad6dc43ff2d9fac0"
+      },
+      {
+        "name": "docs-final.out",
+        "bytes": 33,
+        "sha256": "e6d8e0fa6afb34e752a2b8c3187da396dbdc4ba1ec7d49f107753d5e4464e857"
+      },
+      {
+        "name": "sdd-format.json",
+        "bytes": 326,
+        "sha256": "65751d8472e64fafb0beb448aaed8b5f3eeb8b1c6acf22c00e66087970b03ca3"
+      },
+      {
+        "name": "sdd-catalog.json",
+        "bytes": 586,
+        "sha256": "d039f107f0f449f4ebe613ef7163c18bc8fb2a2d03c516d4e28cab72fa523ef7"
+      },
+      {
+        "name": "first-test.out",
+        "bytes": 1066,
+        "sha256": "9ab139992830736a03ab5e8d6669d4ccc9029714764c8c39cc0da510c78aa0d8"
+      },
+      {
+        "name": "tooling-first.out",
+        "bytes": 602,
+        "sha256": "a7ef39bf1d693c9115b40c5fab77c19b691165756d5e265812a13ada1c630d26"
+      },
+      {
+        "name": "tooling-second.out",
+        "bytes": 1662,
+        "sha256": "8cb8e02fab906b19a3a938a2ff4de379d9f88011a2d52702dcbdeb30bba014b7"
+      },
+      {
+        "name": "tooling-third.out",
+        "bytes": 1519,
+        "sha256": "97fdecd05171b949912a6f8de34352fa74eaa1066a2cecfea8e58450a58aa252"
+      }
+    ],
+    "consumer": "Original complete verifier/tooling coverage, real identical-source backend audit/provenance, initial/intermediate failed campaigns, workflow/architecture and unchanged pinned SDD measurements for active PR review. Original backend measurement bytes remain once in the referenced lifecycle archive; no synthetic or repeated backend execution is claimed."
+  },
+  "historicalAuthorityCheckpoint": {
+    "sourceRevision": "e439a70cdde86ff4f1294a466d8ac0cdd46c64f4",
+    "verifiedAtUTC": "2026-11-01T00:31:04.724353+00:00",
+    "tests": {
+      "wholeBackend": 1910,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 5399,
+      "num_statements": 5399,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 170,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1546,
+      "num_partial_branches": 0,
+      "covered_branches": 1546,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 77,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-execution-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "e9c76d3a5b7b214d1e9f5b830eccb5baa301b40903bb386bca40004c04d1df2b",
+      "members": [
+        {
+          "name": "domus-task-records-pure-coverage.json",
+          "sha256": "1ceff0ac2104c2075feb978f0d92b08830eb84c0bd1841c94620849ae3586b3a",
+          "size": 61968
+        },
+        {
+          "name": "domus-task-records-coverage.json",
+          "sha256": "7b67211a6a74f2a29c7a2fd4eb9cbba4cb5ae44c54713a0a320e618690e34498",
+          "size": 88767
+        },
+        {
+          "name": "domus-task-authority-coverage.json",
+          "sha256": "dfcbc6d2e58ee128b74ebd8bd94f726dfe36cc035974480356e246953d83530b",
+          "size": 26683
+        },
+        {
+          "name": "domus-task-storage-full-backend.json",
+          "sha256": "87e19f79be17d05723bce108983f9f38353666130dc53d14dd39352d77866256",
+          "size": 710557
+        },
+        {
+          "name": "domus-task-storage-full-backend.xml",
+          "sha256": "eda56cbe4d41b46f02ec3155735a895fa484bb70649e258613ad3d447aa0e7d2",
+          "size": 239602
+        },
+        {
+          "name": "domus-task-storage-full-backend.log",
+          "sha256": "980e7517a855d84202ac8ae21c00116d5e83892bb14fdc6dc2c991848e2e3d60",
+          "size": 10199
+        },
+        {
+          "name": "domus-task-authority-full-backend.json",
+          "sha256": "ce6968f13f152b30ad5fa87182587247f3fc2fe8b595029260ef88bd3b3962b0",
+          "size": 718672
+        },
+        {
+          "name": "domus-task-authority-full-backend.xml",
+          "sha256": "fd736da97584e9eba6d3d09366d398140dec73cd0f0f0cd090266bc232df2b72",
+          "size": 242988
+        },
+        {
+          "name": "domus-task-authority-full-backend.log",
+          "sha256": "d2c0b3e2da8f87309bb94f98b468e0fff0862825bdf00d608cee3e3b11fd5664",
+          "size": 10379
+        },
+        {
+          "name": ".coverage",
+          "sha256": "5d2ae77f28163c491ed45c040f4e74231e61eff4f2dc9bec3c59933bf758d534",
+          "size": 405504
+        }
+      ],
+      "consumer": "Original measured source coverage and focused/full results for review and reproduction; no tokens, owner household data or raw HA responses."
+    },
+    "hostedCI": {
+      "sourceRevision": "e439a70cdde86ff4f1294a466d8ac0cdd46c64f4",
+      "run": "https://github.com/vypdev/domus/actions/runs/41257207748",
+      "aggregateCheck": 124703461023,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes amd64 and aarch64 builds",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "reference": "e1562172-f325-4adb-b875-0a9455b36cb9",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/828#issuecomment-6551159222"
+      }
+    },
+    "note": "Historical current-authority checkpoint; the later command checkpoint has independent new-head gates."
+  },
+  "commandAssertions": [
+    "Fresh human proof occurs before the writer transaction. Server authority binds household, actor, action and resource; current grants are rechecked before receipt disclosure.",
+    "First creation writes absent defaults, definition, first occurrence, receipt, audit and outbox together. Injected failures after actual definition or occurrence writes leave no task/default residue.",
+    "Title-only creation produces active/available work; explicit draft produces draft work. Original text and exact enum/override values survive bounded canonical request encoding.",
+    "Any non-inherited task-rule override requires current administrator task configuration, even if creation permission remains after role/source revocation and even on original-receipt replay.",
+    "Assignment accepts at most 32 distinct active household members and explicit release. Invalid/inactive members, revoked authority and stale revisions cannot partially change work.",
+    "A real two-thread exclusive claim has one winner; the loser cannot silently reassign. Claim derives only the actor as assignee and retains current policy/exception restrictions.",
+    "Replay precedes state/revision preconditions after authorization. A historical successful claim cannot reassign work released and later claimed by another member.",
+    "Actual offline restoration is tested with the production creation and claim commands, actual SQLite/retained receipts and fake current proof. Restored-away operations return original historical results without allocating IDs or applying work."
+  ],
+  "historicalCreationCheckpoint": {
+    "sourceRevision": "4310d92f0b934a9b0291ee838b93886fd397daff",
+    "verifiedAtUTC": "2026-11-01T00:45:30.625559+00:00",
+    "tests": {
+      "wholeBackend": 1957,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 5508,
+      "num_statements": 5508,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 170,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1570,
+      "num_partial_branches": 0,
+      "covered_branches": 1570,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 78,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-command-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "e40487b261a3e0cd0ae05c0f6c7536d1d5d2a37d504343091ddaddd71bfcd984",
+      "members": [
+        {
+          "name": "domus-task-commands-coverage.json",
+          "sha256": "83158385d6c766224d42cecf9ea4f878aa75fdb6a8670b965bde96d54047d2a9",
+          "size": 17066
+        },
+        {
+          "name": "domus-task-commands-full-backend.json",
+          "sha256": "977ee113ba349b010736aa889966cf2ee5e9fdb2c545987df3b776d1cd29c5ea",
+          "size": 735170
+        },
+        {
+          "name": "domus-task-commands-full-backend.xml",
+          "sha256": "2324491cc89f1d23c6b3bca0c796ef324c24b32428c055fc2b9fec21280a0744",
+          "size": 247601
+        },
+        {
+          "name": "domus-task-commands-full-backend.log",
+          "sha256": "fcf2aadf35882ab7addd37be08b33c65356a62f06f2df82ccd944fd3e42126d4",
+          "size": 10553
+        },
+        {
+          "name": ".coverage",
+          "sha256": "c7cf4cf2a3a7d6a3f00ad9f282fcf6888c92522130267702bcbf654300acaa7c",
+          "size": 417792
+        }
+      ],
+      "consumer": "Original current command/full-backend measurement inputs for in-flight PR review/reproduction. Prior authority evidence remains explicitly historical."
+    },
+    "hostedCI": {
+      "sourceRevision": "4310d92f0b934a9b0291ee838b93886fd397daff",
+      "run": "https://github.com/vypdev/domus/actions/runs/41258350578",
+      "aggregateCheck": 124706965554,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes actual amd64/aarch64 images and frontend browser contracts",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "phase": "assessment",
+        "reason": "assessment-text-limit",
+        "field": "$.requirements",
+        "reference": "49d36815-2b00-4565-b7c6-a0a6bdc4c3c5",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/829#issuecomment-6551433018"
+      }
+    },
+    "note": "Historical creation/assignment/claim checkpoint; current execution commands need independent new-head checks."
+  },
+  "executionAssertions": [
+    "Progress transitions cannot complete work; assigned actors may start/block/unblock while publishing, cancel/skip and reopening require current task management.",
+    "Completion authorization checks assignment, restricted self-attribution and on-behalf grants before receipt disclosure. New performances then resolve active local participants, actual required work and effective rule/policy snapshots inside SQLite.",
+    "Performer eligibility is a new-work precondition. An original authorized receipt remains immutable after another participant is archived, but revoked actor/on-behalf/approval grants still block disclosure.",
+    "The performed default accepts pending prerequisite approval; the approved alternative waits for a current approved/no-verification-needed cycle. Rejected or unfinished prerequisite/subtask work blocks both.",
+    "Approval/rejection persists a decision without closing; reopening closes the current cycle and retains attribution, performed time and original policy. Old cycle selectors cannot change a later genuine cycle.",
+    "Cycle/occurrence/receipt/audit/outbox writes roll back together under failure injection after actual SQLite cycle or occurrence writes for completion, verification and reopening.",
+    "Real competing completions produce one cycle/source event. A real approval/reopen race produces one decision and a consistent scoped revisioned current-cycle pointer.",
+    "Live-reference fences reject missing defaults/prerequisites and deliberately corrupted missing/one-sided cycle records. An explicit broken semantic-port fixture cannot inject a foreign household cycle; it is not evidence for physical FK enforcement.",
+    "Actual offline activation restores the older state; production completion/verification/reopening replay returns historical original receipts without applying effects or allocating IDs.",
+    "Exactly one source event retains full cycle identity, revision, performers, policy/time facts and explicitly unconfirmed consumer delivery. Reopen supplies the compensation/review cause while completed dependent facts remain untouched."
+  ],
+  "historicalExecutionCheckpoint": {
+    "sourceRevision": "4454490d0351b57d9da987dec991ccace6046be7",
+    "verifiedAtUTC": "2026-11-01T01:04:10.336018+00:00",
+    "tests": {
+      "wholeBackend": 2003,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48,
+      "newTaskExecution": 46,
+      "commandsExecutionAndAuthorityFocused": 114
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 5623,
+      "num_statements": 5623,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 170,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1598,
+      "num_partial_branches": 0,
+      "covered_branches": 1598,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 78,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-cycle-command-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "b589748887f30adc65b6225fee0c4ad09f2478ec7a5f08ebe201efa344b3ab62",
+      "members": [
+        {
+          "name": "domus-task-execution-coverage.json",
+          "sha256": "2f8091cccfe75244013170a651bf93fee27cd771d84218112c792323d4c6ef37",
+          "size": 39908
+        },
+        {
+          "name": "domus-task-execution-full-backend.json",
+          "sha256": "2957f3e47731d2021f66cd4e08c9cefa3c5ec62ba9c6c4e760019c34a725f692",
+          "size": 749980
+        },
+        {
+          "name": "domus-task-execution-full-backend.xml",
+          "sha256": "fe26df5c6d351bcf23f9b6f151de872e806aa56dc556490f6c9365bb930e0916",
+          "size": 252391
+        },
+        {
+          "name": "domus-task-execution-full-backend.log",
+          "sha256": "425678cb95e0f1868e5e9de2d4663b5ead188592bf88949030bd527538b0e286",
+          "size": 10555
+        },
+        {
+          "name": ".coverage",
+          "sha256": "c4a795f20c8db4bc01ec43800571f3526e8bc7282e8ead23b60a6516082d17d7",
+          "size": 425984
+        }
+      ],
+      "consumer": "Current original source-identified execution/full-backend measurement reports for in-flight PR review/reproduction; historical scopes are retained separately."
+    },
+    "hostedCI": {
+      "sourceRevision": "4454490d0351b57d9da987dec991ccace6046be7",
+      "run": "https://github.com/vypdev/domus/actions/runs/41259901871",
+      "aggregateCheck": 124711600360,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes actual amd64/aarch64 image jobs and frontend browser contracts",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "phase": "assessment",
+        "reason": "assessment-text-limit",
+        "field": "$.requirements",
+        "reference": "0350fd6f-3224-4525-b833-398d5fcc2615",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/829#issuecomment-6551433018"
+      }
+    },
+    "note": "Historical execution/cycle checkpoint; current editor/refactor source needs independent new-head gates."
+  },
+  "ownerDecisions": [
+    {
+      "id": "A34",
+      "default": "performed",
+      "alternative": "approved",
+      "scope": "Household default and nullable task override; the saved effective rules determine completion gating. Pending points remain unavailable."
+    },
+    {
+      "id": "A35",
+      "default": "rotating conserved remainders among participants of the same task",
+      "scope": "Stable task definition across occurrences/genuine cycles; other previously accepted allocation modes remain available.",
+      "status": "Owner-confirmed specification; Points runtime remains unimplemented.",
+      "recordedAt": "https://github.com/vypdev/domus/issues/13#issuecomment-6551824909"
+    },
+    {
+      "id": "A36",
+      "default": "Any participant currently authorized for the task materials may correct confirmed consumption.",
+      "scope": "Preserve original submitted/confirmed facts and require actual Inventory confirmation of the corrected total.",
+      "status": "Owner-confirmed and executed through shared application/native/standalone settlement. Current grants, original-scope retry/restoration and compound CAS are tested; actual Inventory remains separate.",
+      "recordedAt": "https://github.com/vypdev/domus/issues/13#issuecomment-6554120216"
+    },
+    {
+      "id": "A37",
+      "default": "Current task managers may accept a dependency-review cause with a meaningful reason even while its source remains pending.",
+      "scope": "Original dependent completion cycle and specific source reopening. Keep the current source condition visible; never clear a later cause or change work/cycle/points/material facts.",
+      "status": "Owner-confirmed; current authority, atomic evidence, concurrent acceptance and historical recovery are tested. Product UI and real consumer acceptance remain separate.",
+      "recordedAt": "https://github.com/vypdev/domus/issues/13#issuecomment-6555021666"
+    }
+  ],
+  "editorAssertions": [
+    "Task requests have a separate typed application module; lifecycle/editor commands share current TaskCommandAuthorization without duplicated grants. Established request imports remain re-exported.",
+    "Administrator-only expected revision zero initializes absent defaults; positive revisions replace existing rules. First policy update racing creation preserves the winning defaults or returns revision conflict, never overwriting silently.",
+    "Definition edits preserve existing occurrence/content/override snapshots. Omitting overrides retains them; explicit replacement/reset requires configuration authority even when replaying a prior result.",
+    "New occurrences use the current definition, active assignees, scoped prerequisite/subtask IDs and exact optional UTC due time. Paused/archived parents reject new work while original receipts and existing work retain their facts.",
+    "Dependency replacement requires management, current revision and nonterminal state. Completed/cancelled/skipped edges cannot be silently rewritten; self/foreign/missing/cyclic references fail before writes.",
+    "The complete household graph is read through all pages. A tail back-edge beyond the first 101 records is rejected as a cycle; two real opposite-edge writers cannot commit a cyclic pair.",
+    "Actual-file fault injection after each editor write rolls back state, receipt, audit and outbox together. Maximum permitted UTF-8 definition content remains within atomic document bounds.",
+    "Production policy/definition/occurrence/dependency commands replay historical receipts after real offline activation without reapplying restored-away edits or allocating identities.",
+    "Original task, identity, Points and companion case rows remain unchanged. The companion is within the unchanged 70000-character SDK bound after removing redundant checkpoint prose, without removing requirements/cases."
+  ],
+  "historicalEditorCheckpoint": {
+    "sourceRevision": "3b52e0792bfe27bcdc6289e3c8b28e66020215de",
+    "verifiedAtUTC": "2026-11-01T01:40:39.500340+00:00",
+    "tests": {
+      "wholeBackend": 2044,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48,
+      "newTaskExecution": 46,
+      "commandsExecutionAndAuthorityFocused": 114,
+      "newTaskEditors": 41,
+      "editorsLifecycleAuthorityAndDomainFocused": 223
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 5741,
+      "num_statements": 5741,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 170,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1624,
+      "num_partial_branches": 0,
+      "covered_branches": 1624,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 79,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-editor-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "1e3e5d1e8b4d2d17372405b921d2504fdc0956e46b99908f3502d3c5a31743f5",
+      "members": [
+        {
+          "name": "domus-task-edit-coverage.json",
+          "sha256": "25d8e56b73925131dc341cbdc9d188b1cbf74716500f536883bf97e1f26ae5a5",
+          "size": 74226
+        },
+        {
+          "name": "domus-task-edit-full-backend.json",
+          "sha256": "4ff2b6e79a88ef644193eb2f4fc16bf9f4da2948ec832bda5dc6ed124bb61bbc",
+          "size": 765302
+        },
+        {
+          "name": "domus-task-edit-full-backend.xml",
+          "sha256": "15bffb8ce9b2d3c99be19f32605352b1ec16464730728fab69e1af8d3c4bfbde",
+          "size": 257390
+        },
+        {
+          "name": "domus-task-edit-full-backend.log",
+          "sha256": "da08bce37762bcc1113085cb36623921503314c1431295086d1afef62beeccaf",
+          "size": 10721
+        },
+        {
+          "name": ".coverage",
+          "sha256": "aa0520ac21820916bf5a2977b7ab22de81422c13f2a1623c4c3d4fcfbca1ef48",
+          "size": 434176
+        }
+      ],
+      "consumer": "Current editor/refactor original coverage and full-backend reports for in-flight PR review/reproduction; historical scopes are retained separately."
+    },
+    "hostedCI": {
+      "sourceRevision": "3b52e0792bfe27bcdc6289e3c8b28e66020215de",
+      "run": "https://github.com/vypdev/domus/actions/runs/41262308179",
+      "aggregateCheck": 124718583545,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes actual amd64/aarch64 image jobs and frontend browser contracts",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "phase": "assessment",
+        "reason": "assessment-text-limit",
+        "field": "$.requirements",
+        "reference": "ff0ca457-3ccf-4376-8dfc-964fc46a67ec",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/829#issuecomment-6551433018"
+      }
+    },
+    "note": "Historical editor checkpoint; current queries/cursors/history need their own new-head CI and full review."
+  },
+  "sddFormatValidation": {
+    "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+    "base": "a63b2315cd5121dde9585ba8875e286fdef5330e",
+    "source": "cd0795125274678432464f976c86995925562882",
+    "markdownSHA256": "845a19af896a6f2ee607f95344e258e4ddfd9d9f21399fef4af3aa2e8e278acd",
+    "format": "PASS",
+    "consistency": "PASS",
+    "diagnostic": null
+  },
+  "queryAssertions": {
+    "readAuthority": "Each transaction rereads task permission/current membership. Suspension or revocation blocks later cursor pages, details, history and own operations. Empty policy reads do not create defaults or receipts.",
+    "pagination": "Default 25/max 100 plus one lookahead row. Strict filters and keyset context bind account/installation/channel/household/kind/filters/limit. HMAC-SHA256, canonical base64, bounded positions, short TTL, tamper/foreign/expired/future/version negatives. No cross-page snapshot claim.",
+    "planning": "Shared cycle/requirement/rule readers. Current state/permissions and configured pending prerequisite gate determine hints, without persistence, clock/ID allocation or future write authority. Draft/terminal/revision-exhaustion facts remain explicit.",
+    "history": "At most two bounded SQL pages merge live/retained positions; current retained facts are not duplicated. Safe selected summaries omit raw HA identities/canonical requests. Corrupt facts/projections/positions fail closed. Historical delivery is suppressed; acknowledgement never claims consumer acceptance.",
+    "ownOperations": "Current own-operation and task grants plus original create/configuration, attribution, transition, definition and occurrence scope are required again. Immutable canonical request/result/event shapes and fingerprints must match. Historical requests never execute.",
+    "actualRestore": "Real owned SQLite checkpoint preparation and offline activation preserve historical completion proof while restoring the prior open state. Queries create no effects; a deliberate fresh completion appends after the retained position. Explicit fake HA proof is distinct from live owner adoption.",
+    "testsFirst": "New cursor/query tests initially failed collection for missing modules; history tests initially failed for absent methods. Final meaningful cases include actual SQL pagination beyond one page, corruption, permission loss, cross-context cursors and offline activation."
+  },
+  "historicalQueryCheckpoint": {
+    "sourceRevision": "04d8925c5a62c6e485ec046c213b9f8dd8124b94",
+    "verifiedAtUTC": "2026-11-01T02:10:41.039490+00:00",
+    "tests": {
+      "wholeBackend": 2170,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48,
+      "newTaskExecution": 46,
+      "commandsExecutionAndAuthorityFocused": 114,
+      "newTaskEditors": 41,
+      "editorsLifecycleAuthorityAndDomainFocused": 223,
+      "newTaskQueriesHistoryAndCursors": 126
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 6071,
+      "num_statements": 6071,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 180,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1722,
+      "num_partial_branches": 0,
+      "covered_branches": 1722,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 83,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-query-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "3974c3ccc9446a3c8cf7fea022305bebb2a2f461f40d7105e3d09747f44a4ccd",
+      "members": [
+        {
+          "name": "domus-task-query-coverage.json",
+          "sha256": "ce8864a5ecade88b7aeb2ab20bd39943e4e9182e6385d1165d5ff5d3aeec16dd",
+          "size": 805182
+        },
+        {
+          "name": "domus-task-query-coverage.xml",
+          "sha256": "cf5c761b593db72eea3a038809ec6bb94919eb841fa06818d38dcb2f6f030759",
+          "size": 272140
+        },
+        {
+          "name": "domus-task-query-backend-test-output.txt",
+          "sha256": "85714b1717a8e9d43712d603362836f9f728ee96a2eee5c980dd25e5b28e7e3b",
+          "size": 11259
+        },
+        {
+          "name": "domus-task-query-full.coverage",
+          "sha256": "50e2507e6b787fc40c6469fec1a43eab75c58662ba930ff3b72ff191d9c0a49d",
+          "size": 458752
+        },
+        {
+          "name": "domus-task-query-architecture.txt",
+          "sha256": "61ee0a67cd6de00f7c397af3cd5307fae2bde38babf2c8d7fe1315f6d61ed928",
+          "size": 959
+        },
+        {
+          "name": "domus-task-foundation-published-validation.json",
+          "sha256": "93cd5d220260c2ecdd6b22b52d91b89ab80475c166e3bfb4890fb5e663f5a21a",
+          "size": 326
+        },
+        {
+          "name": "domus-task-storage-sdd-catalog-validation.json",
+          "sha256": "d5c7f4e9aa8232914668cb90a55a092daf39f34f0e7aa24d9a15df1d8be0da57",
+          "size": 586
+        }
+      ],
+      "consumer": "Current task query/cursor/history original whole-backend coverage, test, dependency and pinned SDD measurements for in-flight PR review/reproduction. Historical checkpoint scopes remain separate."
+    },
+    "hostedCI": {
+      "sourceRevision": "04d8925c5a62c6e485ec046c213b9f8dd8124b94",
+      "run": "https://github.com/vypdev/domus/actions/runs/41264216723",
+      "aggregateCheck": 124724230690,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes actual frontend browser checks and both native image architectures, not task package adoption",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "phase": "assessment",
+        "reason": "assessment-text-limit",
+        "field": "$.requirements",
+        "reference": "d11ebd41-0388-453c-9082-401963a3df21",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/829#issuecomment-6551433018"
+      }
+    },
+    "note": "Historical query/cursor/history source; new HTTP source requires independent head CI/review."
+  },
+  "httpAssertions": {
+    "routeOperations": 22,
+    "distinctPaths": 19,
+    "composition": "Actual native/standalone production composition factories and FastAPI ASGI requests, real session/authority services and SQLite. HA/Supervisor/OAuth transports are explicit fakes; this is not TCP task API/owner HA or package adoption proof.",
+    "boundaries": "Existing session/current proof, Origin, CSRF, duplicate-key JSON, method/body size and current grants. Canonical integer pages; strict unknown fields/selectors/IDs/enums/lists. Native task GET query bounds/uniqueness preserve peer/header verification and other routes retain query denial.",
+    "workflows": "Title-only and configured creation; policy/defaults; definition preserve/reset; new occurrence; assignment/dependencies; progress; prerequisite gating; completion/replay; restricted claim and adult verification; reopen, safe history and own receipt.",
+    "uncertainty": "Injected outer response failure occurs after actual commit. Same-key retry recovers one definition/occurrence/audit/outbox without leaking private exception details.",
+    "restore": "Both HTTP compositions are recomposed over actual activated owned storage after checkpoint rollback. An acknowledged historical completion remains absent, is returned as historical/suppressed and cannot execute again through same-key HTTP replay.",
+    "materials": "Selections, initial completion and explicit material post/correct/dismiss use strict typed requests through both HTTP compositions. Queries distinguish live current/original-cycle state from original evidence; no actual Inventory ledger or product form is supplied.",
+    "contracts": {
+      "docs/contracts/household-api.openapi.json": "dd21cce106c9676d4058499d95a3664d3a817b1e0cf73e0ecc596014dd046d12",
+      "docs/contracts/native-household-api.openapi.json": "385c53e4f02c850bfe0aefbcfe0a94364630e021fe44dd7ae0c255078329873a"
+    },
+    "contractGeneration": "Actual business ASGI schemas, deterministically sorted. Relative to 7beb63c, all existing paths are exactly preserved and existing schema/security values are retained; two review paths, typed review schemas and defaulted detail review fields are additive.",
+    "firstCampaign": {
+      "passed": 2249,
+      "failed": 3,
+      "coverage": "All statements/branches complete; not a passing full test campaign.",
+      "cause": "Explicit /private/tmp task fixture root inherited GID 0; process GID was 20. Three unchanged launcher ownership fixtures exposed the mismatch.",
+      "repair": "Use explicit task-owned basetemp under the user private temporary parent, verifying its GID is the process GID. Production ownership guards and their tests are unchanged.",
+      "finalCampaign": "2256 passed, including four subsequently added uncertainty/restoration executions.",
+      "originalFailureLog": "domus-task-http-initial-backend-output.txt in rawMeasurements archive."
+    },
+    "existingContractValuesPreserved": {
+      "docs/contracts/household-api.openapi.json": {
+        "existingPathsRetained": 16,
+        "existingSchemasRetained": 28,
+        "addedTaskPaths": 15,
+        "addedTaskOperations": 18
+      },
+      "docs/contracts/native-household-api.openapi.json": {
+        "existingPathsRetained": 16,
+        "existingSchemasRetained": 26,
+        "addedTaskPaths": 15,
+        "addedTaskOperations": 18
+      }
+    },
+    "dependencyReviews": "Both business compositions expose bounded original-cycle review queries and A37 manager acknowledgement, current source condition, original authority/retry and authenticated write guards.",
+    "additivityFromSettlementCheckpoint": {
+      "docs/contracts/household-api.openapi.json": {
+        "baseline": "7beb63c8eafba51f17a284ee55baee1a70ebff8b",
+        "sha256": "dd21cce106c9676d4058499d95a3664d3a817b1e0cf73e0ecc596014dd046d12",
+        "allExistingPathsExactlyPreserved": true,
+        "allExistingSchemaSecurityValuesPreserved": true,
+        "taskPaths": 19,
+        "taskOperations": 22,
+        "addedPaths": 2,
+        "addedSchemaNames": [
+          "DependencyRelationship",
+          "DependencyReviewAcknowledgement",
+          "DependencyReviewBody",
+          "DependencyReviewCause",
+          "DependencyReviewState",
+          "DependencyReviewView",
+          "TaskPage_DependencyReviewView_"
+        ]
+      },
+      "docs/contracts/native-household-api.openapi.json": {
+        "baseline": "7beb63c8eafba51f17a284ee55baee1a70ebff8b",
+        "sha256": "385c53e4f02c850bfe0aefbcfe0a94364630e021fe44dd7ae0c255078329873a",
+        "allExistingPathsExactlyPreserved": true,
+        "allExistingSchemaSecurityValuesPreserved": true,
+        "taskPaths": 19,
+        "taskOperations": 22,
+        "addedPaths": 2,
+        "addedSchemaNames": [
+          "DependencyRelationship",
+          "DependencyReviewAcknowledgement",
+          "DependencyReviewBody",
+          "DependencyReviewCause",
+          "DependencyReviewState",
+          "DependencyReviewView",
+          "TaskPage_DependencyReviewView_"
+        ]
+      }
+    }
+  },
+  "historicalHTTPCheckpoint": {
+    "sourceRevision": "17ea90771be2b380099e4d96b30072ec7cec18ca",
+    "verifiedAtUTC": "2026-11-01T02:34:56.005276+00:00",
+    "tests": {
+      "wholeBackend": 2256,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48,
+      "newTaskExecution": 46,
+      "commandsExecutionAndAuthorityFocused": 114,
+      "newTaskEditors": 41,
+      "editorsLifecycleAuthorityAndDomainFocused": 223,
+      "newTaskQueriesHistoryAndCursors": 126,
+      "newTaskHTTPAndRuntime": 86
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 6277,
+      "num_statements": 6277,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 184,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1736,
+      "num_partial_branches": 0,
+      "covered_branches": 1736,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 86,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-http-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "2197e01813d1dce415740bbbe64164d43873134c8f9f62570840b2f340980ce2",
+      "members": [
+        {
+          "name": "domus-task-http-coverage.json",
+          "sha256": "c242f728c468b54f7068cf9fc50f3c2c8e8606415bf8f21eb3f606682ca2691b",
+          "size": 841703
+        },
+        {
+          "name": "domus-task-http-coverage.xml",
+          "sha256": "db10a583070305851f2888563efb5852d8e6a78f44b4d964b5bf7fd86412768a",
+          "size": 280312
+        },
+        {
+          "name": "domus-task-http-backend-output.txt",
+          "sha256": "bd529605e993f39661a7cf14f74eb94715dd55fd00c411521e129fe262728685",
+          "size": 11625
+        },
+        {
+          "name": "domus-task-http-initial-backend-output.txt",
+          "sha256": "43a067ce5704d012f6bacdef8a9b6ab2ca55a52f22fb2ddc1eff22f6658aed42",
+          "size": 18295
+        },
+        {
+          "name": "domus-task-http-full.coverage",
+          "sha256": "f5edb2dfe0ba92309f6cedc9c66ba83335f2a083c646bd60ae7d64c0fdc4779a",
+          "size": 475136
+        },
+        {
+          "name": "domus-task-http-architecture.txt",
+          "sha256": "642b45f0cd1638920a12234bd20174e0b9a1103cc413d81741d37371f8f3e806",
+          "size": 959
+        },
+        {
+          "name": "domus-task-foundation-published-validation.json",
+          "sha256": "a53488ff72c36be56680e7cf513e7520faaf3ff027f7105d9d2fec354f312330",
+          "size": 326
+        },
+        {
+          "name": "domus-task-storage-sdd-catalog-validation.json",
+          "sha256": "288c97e336ef23b4c0b87a5b8f271d16d04b22a2032d5f7d25b2d7b4ad758cb7",
+          "size": 586
+        }
+      ],
+      "consumer": "Current original complete backend/HTTP, initial fixture-group diagnostic, dependency and pinned SDD reports for in-flight PR review/reproduction; older scopes stay separately identified."
+    },
+    "hostedCI": {
+      "sourceRevision": "17ea90771be2b380099e4d96b30072ec7cec18ca",
+      "run": "https://github.com/vypdev/domus/actions/runs/41266138149",
+      "aggregateCheck": 124729869188,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes actual frontend checks and both image architectures; not material/consumer/package adoption",
+      "bugbot": "Neutral/skipped for draft; not complete accepted review",
+      "copilotProgressFailure": {
+        "phase": "assessment",
+        "reason": "assessment-text-limit",
+        "field": "$.requirements",
+        "reference": "bbfe99c8-3bcf-428c-bdf5-aafdd2ff2df2",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/829#issuecomment-6551433018"
+      }
+    },
+    "note": "Historical source HTTP checkpoint; current material core/ports need independent head CI and full feature review."
+  },
+  "materialAssertions": {
+    "pureValues": "Canonical ASCII quantity strings: max 12 integer/6 fractional digits; exact zero; no signs/exponents/aliases/floats. Unit precision comes from Inventory binding. Bounded unique same-household lines/selections/usage reject substitutions and duplicates.",
+    "immutableSource": "Cycle/occurrence, line/binding/recorder, original actual quantity, performed/recorded time, recording mode and initial authority fact remain original facts. Unknown actuals are not zero; zero cannot construct a movement request. Separate mode does not auto-post.",
+    "states": "Pending recording/authorization/regularization/processing, not-used, posted, corrected and dismissed are distinct. Actual posting requires scoped confirmed quantity/effect/revision/time and actual operation/movement references. No stock arithmetic exists in Tasks.",
+    "effects": "Resource revision differs from effect revision. Pending metadata/current actor changes preserve effect source key; corrected desired quantity creates a new effect generation. Confirmation replay is inert; foreign/stale/future/conflicting proofs fail. Corrections cannot reuse immutable prior ledger identities or erase submitted quantity/prior confirmed usage.",
+    "authority": "Processor rechecks an injected transaction-bound current authority before each explicit post/correct/dismiss/link. Ordinary denied completion usage remains pending. No prior grant fact or selected actor parameter supplies present authority.",
+    "ports": "Transaction-local semantic Inventory resolves actual selected references and owns consumption/correction. Pending contract certifies no new movement, not completed deduplication; later explicit retries reuse source effect identity. Unexpected malformed proofs fail closed. Default absence adapter never fabricates catalog/stock facts.",
+    "scope": "144 original pure/semantic-fake cases cover their original 346 statements/134 branches. Those tests alone do not establish SQLite/HTTP/real-ledger/concurrency/restore or owner acceptance; later materialPersistenceAssertions identify independent storage and read evidence."
+  },
+  "preparedSchema5MigrationInput": {
+    "sourceRevision": "17ea90771be2b380099e4d96b30072ec7cec18ca",
+    "sourceArchiveSHA256": "22d4f7c6461071983d817df8b7f4e3277cfd344974d0cf5e7af86b8c424f75c7",
+    "schemaVersion": 5,
+    "sqlSHA256": "d93e1cbfb0547b53308ee6ac485ca895c0269dd286c29656618da60d5c20de50",
+    "sqlBytes": 41026,
+    "recordCounts": {
+      "households": 1,
+      "members": 3,
+      "task_policy": 1,
+      "task_definitions": 1,
+      "task_occurrences": 1,
+      "task_cycles": 1,
+      "receipts": 6,
+      "audit": 6,
+      "outbox": 6,
+      "retained_operations": 7
+    },
+    "installation": {
+      "instance_id": "047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6",
+      "channel": "edge"
+    },
+    "occurrenceId": "identity-4",
+    "historicalOperationId": "identity-12",
+    "historicalCommand": {
+      "actor": "ha_child",
+      "action": "task.complete",
+      "key": "second-work"
+    },
+    "assertions": [
+      "Immutable baseline module source and schema version 5 checked before generation.",
+      "Approved/reopened closed cycle remains; later completion is historical without its effect.",
+      "Dumped database reopens with baseline runtime; historical receipt and absent active cycle verified.",
+      "Original create request lacks future material fields; preserve canonical retry compatibility."
+    ],
+    "consumer": "Material HTTP legacy request compatibility and active frozen-input provenance review; original generator/provenance/archive remain retained until those gates finish.",
+    "retainedDirectory": "/private/tmp/domus-schema5-frozen-17ea907",
+    "generatorSHA256": "10bf0ed79d2a3c6666da7ad6edce251dfb2d096e7930d9cd81c520da910cddc0",
+    "status": "Original immutable schema-5 input remains byte-identical and passes current schema-6 migration, strict old checkpoint inspection, offline activation and original TaskCommands completion retry after optional material fields were added without changing legacy canonical fingerprints.",
+    "repositoryPath": "tests/fixtures/sqlite/v5.sql"
+  },
+  "historicalMaterialCoreCheckpoint": {
+    "sourceRevision": "bef50570bf5bb3825df4171e959a5ad18d2c46ae",
+    "verifiedAtUTC": "2026-11-01T03:23:27.347735+00:00",
+    "tests": {
+      "wholeBackend": 2400,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48,
+      "newTaskExecution": 46,
+      "commandsExecutionAndAuthorityFocused": 114,
+      "newTaskEditors": 41,
+      "editorsLifecycleAuthorityAndDomainFocused": 223,
+      "newTaskQueriesHistoryAndCursors": 126,
+      "newTaskHTTPAndRuntime": 86,
+      "newMaterialCoreAndPorts": 144
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 6624,
+      "num_statements": 6624,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 194,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1870,
+      "num_partial_branches": 0,
+      "covered_branches": 1870,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 91,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-material-core-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "17f7ae528ff81fb5f0e9f613e2eb63f947536ecf1e4893ebe0d4aa61fa6f798b",
+      "members": [
+        {
+          "name": "domus-material-focused-coverage.json",
+          "sha256": "dc0c0696c699d9fdfe9b10f9f2a92c370075ee6f77205cd30ce0b58e7ebdabba",
+          "size": 51275
+        },
+        {
+          "name": "domus-material-focused-output.txt",
+          "sha256": "2a3ca53ef4a6ea4927f6411198c9a6a789a0626b1df9c4d6e87886e2452b8472",
+          "size": 1338
+        },
+        {
+          "name": "domus-material-full-coverage.json",
+          "sha256": "27a4f8a5439ae6d528a14e94876c725fda9f3670f6caef92146965b2ae6fc07e",
+          "size": 892995
+        },
+        {
+          "name": "domus-material-full-coverage.xml",
+          "sha256": "90eb196fe1117269076d7144eeb9543d3834f64a07bae9e43ff9e771e5b8bd26",
+          "size": 296688
+        },
+        {
+          "name": "domus-material-full-output.txt",
+          "sha256": "96a9fea08a30a089f319c7c84a9d79a5379b0427bbeaafd4b508fbb38af4faca",
+          "size": 12273
+        },
+        {
+          "name": "domus-material-full.coverage",
+          "sha256": "2aed385355dc84e321092e1064a9ca72902b366f10facebb3beafb1b8e4ee592",
+          "size": 495616
+        },
+        {
+          "name": "domus-material-architecture.txt",
+          "sha256": "55396e30bdec4c9d58ac66b4cde936be18d5c1d805bbaadcecfeada9efbfa555",
+          "size": 959
+        },
+        {
+          "name": "domus-task-foundation-published-validation.json",
+          "sha256": "66a2975f89c7a8c18bd335d7357dc37d2347e0292fde9f6422107ad4da8ef752",
+          "size": 326
+        },
+        {
+          "name": "domus-task-storage-sdd-catalog-validation.json",
+          "sha256": "1b30f9a3ee7753a988ceb5093ef95613f0b4a4e57e23b06886339c0878555674",
+          "size": 586
+        },
+        {
+          "name": "domus-material-focused.coverage",
+          "sha256": "8fd6920b73eb58406a9b890c5937032d056e8fa8c453c47fd3e8294f31eaee78",
+          "size": 77824
+        }
+      ],
+      "consumer": "Current source-identified material pure/port and full-backend measurements for in-flight PR review/reproduction. Persistence, HTTP material and real consumer proof remain separate."
+    },
+    "note": "Original pure material/semantic-port checkpoint; material persistence/read source requires independent head CI/review.",
+    "hostedCI": {
+      "sourceRevision": "bef50570bf5bb3825df4171e959a5ad18d2c46ae",
+      "run": "https://github.com/vypdev/domus/actions/runs/41269488790",
+      "aggregateCheck": 124739759618,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes both image architectures and frontend; not material package/actual-consumer acceptance",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "phase": "assessment",
+        "reason": "assessment-text-limit",
+        "field": "$.requirements",
+        "reference": "077d6ddf-7032-4a4e-8114-0f048e936a02",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/829#issuecomment-6551433018"
+      }
+    }
+  },
+  "materialPersistenceAssertions": {
+    "schemaVersion": 6,
+    "storage": "Scoped FK and cycle/line uniqueness, strict versioned codecs, immutable submission/effect guards and exact single-step CAS; caller owns the transaction. No independent commit.",
+    "snapshots": "Definition and occurrence documents use version 2. Explicit v1-only migration supplies empty materials; normal reads reject missing/future shapes. Checkpoint validation binds each intent to the exact original occurrence line and cycle recorder/time/mode. Reopening retains material facts.",
+    "legacy": "Frozen v1\u20135 migration remains compatible. The original schema-5 input preserves a closed approved cycle and later historical completion. Receipts/audit/outbox/cycles/retained operations stay byte-identical. Actual TaskCommands same-key replay retains original result without re-execution.",
+    "activation": "Real offline source/checkpoint inspection and activation migrate only prepared target. Original source/checkpoint bytes remain intact, with schema-5 rollback checkpoint retained. Old historical work stays absent after current schema opens.",
+    "wire": "Both production ASGI compositions use outer read DTOs and compact definition edit evidence; canonical quantity strings never expose internal value wrappers. All original OpenAPI paths/security/schema values remain; TaskDefinition.materials and two material response schemas are additive.",
+    "budget": "32 maximum-size binding snapshots and exact quantities fit strict record documents; compact result/audit/event output remains within 65,536 bytes.",
+    "tests": "57 material storage/model/codec/migration/rollback/integrity/budget cases plus two native/standalone canonical read/edit executions. Existing full regression suite remains; actual Inventory confirmations in material fixtures are labeled semantic fakes.",
+    "testFirst": "Initial new test failed collection for missing material codec. Later native/standalone tests exposed nested quantity objects before DTO/compact output fixes. Final full source campaign passes; no test was excluded.",
+    "firstCampaign": {
+      "passed": 2454,
+      "failed": 2,
+      "coverageStatements": 6730,
+      "coverageBranches": 1896,
+      "scope": "Interim schema-6 working tree over sourceBase before canonical outer read DTO. Not an accepted or immutable published source checkpoint.",
+      "cause": "Two original OpenAPI snapshots detected implicit Domain material schema leakage. New explicit native/standalone tests also reproduced nested quantity objects in reads and edit receipts.",
+      "repair": "Typed outer response DTOs and compact application evidence project canonical strings; actual schemas regenerated after verifying only intended additive changes. Original snapshot equality assertions remain.",
+      "originalLog": "domus-material-storage-initial-output.txt in rawMeasurements archive."
+    },
+    "scope": "Historical schema-6 persistence/read checkpoint; later task command and HTTP binding is measured separately. SQLite fixtures do not supply a real stock ledger."
+  },
+  "historicalMaterialPersistenceCheckpoint": {
+    "sourceRevision": "daeb398a8b839df2ebb901af09e421303aa4ab3c",
+    "verifiedAtUTC": "2026-11-01T03:47:01.273727+00:00",
+    "tests": {
+      "wholeBackend": 2459,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48,
+      "newTaskExecution": 46,
+      "commandsExecutionAndAuthorityFocused": 114,
+      "newTaskEditors": 41,
+      "editorsLifecycleAuthorityAndDomainFocused": 223,
+      "newTaskQueriesHistoryAndCursors": 126,
+      "newTaskHTTPAndRuntime": 86,
+      "newMaterialCoreAndPorts": 144,
+      "newMaterialStorageAndRead": 59
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 6774,
+      "num_statements": 6774,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 204,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1898,
+      "num_partial_branches": 0,
+      "covered_branches": 1898,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 95,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-material-storage-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "b898f00900777084613bdfed88c91cbd7a3d1cc8a073bed49609313472bfa08a",
+      "members": [
+        {
+          "name": "domus-material-storage-focused-coverage.json",
+          "sha256": "dd993516c497e095da12054eb4b6f8b7cfb53d87123f9b1c49620cace5e44f3e",
+          "size": 14624
+        },
+        {
+          "name": "domus-material-storage-full-coverage.json",
+          "sha256": "ab17f48b585fbb210a42a29a71343aa7af854e353ce414465e76a3047cb41668",
+          "size": 917055
+        },
+        {
+          "name": "domus-material-storage-full-coverage.xml",
+          "sha256": "184c408a0d8f81a27f0858557aac3a29102019f07c895676ff456bb32ed85414",
+          "size": 303468
+        },
+        {
+          "name": "domus-material-storage-full-output.txt",
+          "sha256": "abe2bd3c7eb15db3ac608f501c9ab52da3321680f574014e4dcfc57de39599d8",
+          "size": 19790
+        },
+        {
+          "name": "domus-material-storage-full.coverage",
+          "sha256": "8fcc17ce2e049b4ea9bb7cbbb9c46e984ad82ba1de7661f3f030aef6eade1d3e",
+          "size": 512000
+        },
+        {
+          "name": "domus-material-storage-initial-output.txt",
+          "sha256": "b4780b8b736c85ec4e8540ec4fbe780048c3b1904cf470a1a306812e829bae6c",
+          "size": 23311
+        },
+        {
+          "name": "domus-material-storage-initial-coverage.json",
+          "sha256": "0ddf9e44cfd2df34206d3516b60278a2db7612aad8014bf56ce5f11fffd7da67",
+          "size": 910786
+        },
+        {
+          "name": "domus-material-storage-architecture.txt",
+          "sha256": "d9ad52010bba224444c4d02f95980a50943151ca07cea2a9d4bbdf7714699929",
+          "size": 959
+        },
+        {
+          "name": "domus-task-foundation-published-validation.json",
+          "sha256": "b162622acc4eb83c68a67f0ec710f379b802378530083e1014b93b14f74a5e5c",
+          "size": 326
+        },
+        {
+          "name": "domus-task-storage-sdd-catalog-validation.json",
+          "sha256": "6ecc4e7d26c653e79302dfb4c3e873ed5f6fd1cf3ee23f7808a8383cd1d12503",
+          "size": 586
+        }
+      ],
+      "consumer": "Original final whole-backend/material/storage/read measurements, pinned SDD and import graph for current in-flight PR review. Initial two contract failures retain a separate interim working-tree scope; no package or actual Inventory delivery is implied."
+    },
+    "hostedCI": {
+      "sourceRevision": "daeb398a8b839df2ebb901af09e421303aa4ab3c",
+      "run": "https://github.com/vypdev/domus/actions/runs/41270616677",
+      "aggregateCheck": 124743095893,
+      "conclusion": "success",
+      "allRequiredGroups": "success, including frontend and both existing image architectures; not actual material package/consumer adoption",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "phase": "scope",
+        "reason": "scope-clause-limit",
+        "field": "$.lines",
+        "originalIssueLine": "L111",
+        "reference": "74708ed5-5e48-4956-906c-7ff7203271bd",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/828#issuecomment-6551159222"
+      }
+    },
+    "note": "Historical material durability/read checkpoint; current initial material commands require independent current-head CI and finished-feature full-context review."
+  },
+  "materialInitialCommandAssertions": {
+    "requests": "Typed create/update selections and completion actuals; strict canonical decimal strings. Omitted/null new fields stay absent, preserving original fingerprints; explicit empty arrays remain distinct. Immutable operation decoders accept exact old/new shapes, never arbitrary omissions or null added fields.",
+    "linking": "Current task create/manage and inventory.manage apply to linking/replacement/clear, execution and original receipt replay/lookup. The semantic catalog resolves actual targets/precision. Stable targets retain line ID, changed targets receive a new ID, old work snapshots remain intact.",
+    "authority": "At published ae665a7, current tasks.material_use plus scoped policy/current performance authority or applicable general Inventory authority guarded initial POST. Explicit scoped denials applied and grant snapshots conferred no later authority. Subsequent explicit settlement binding is measured separately.",
+    "completion": "Validate all usage identities/unit precision before new work effects. Retain one intent for each frozen line. Unknown actual, explicit zero, separate, ordinary denial, shortage/binding change and unavailability have distinct states. Approval/grant/stock/reopen/original retry do not settle.",
+    "atomicity": "Cycle/work, initial intent, each confirmed/deferred exact CAS transition, compact outcomes, receipt/audit/outbox share one writer. Fictional Inventory uses real attached SQLite under that same transaction. Injected task audit failure rolls back its child SQL movement and all task facts; concurrent different-key completion has one winner.",
+    "uncertainty": "A wrapper raises after actual SQLite commit. Original-key retry recovers one cycle/child effect without another provider call. This is local application return uncertainty, distinct from previous actual composed HTTP response-failure proof.",
+    "restoration": "Real main-database checkpoint preparation/offline activation removes later task/intent state while retaining historical operation evidence. Same-key completion/history/own receipt works with canonical new fields and calls no Inventory. The attached fictional consumer stays separate; no coupled real-ledger restoration is claimed.",
+    "budget": "Maximum-length IDs, 32 performers/assignees/materials and 64 required-work edges with maximum quantities/times/revisions fit result/audit/event 65,536-byte limits in posted/authorization/regularization/processing states. No fields/lines are truncated.",
+    "absence": "One pure MissingTaskInventory semantic implementation supplies default absence; the outer UnavailableTaskInventory is a compatibility alias. Known provider-binding unavailability retains pending work; unexpected binding failures fail closed. No framework/I/O or second stock ledger enters Application.",
+    "regression": "The configured-provider binding-unavailability test initially raised IntegrationUnavailable rather than retaining valid work. The narrow known-absence fallback now passes; the separate unexpected-failure rollback test prevents broad error masking.",
+    "testFirst": "New request tests first failed because the fields did not exist; integration tests first failed because the inventory factory was absent. Final full regression and current meaningful cases pass.",
+    "scope": "Published 77-case initial application/SQL-fake checkpoint at ae665a7. Later HTTP/query integration is measured below. A36 now settles the owner policy; explicit settlement and real consumer acceptance remain incomplete."
+  },
+  "historicalInitialMaterialCommandCheckpoint": {
+    "sourceRevision": "ae665a7653a7598e89602731e117df4afba33c1d",
+    "verifiedAtUTC": "2026-11-01T04:35:45.441299+00:00",
+    "tests": 2536,
+    "wholeBackendCoverage": {
+      "covered_lines": 6896,
+      "num_statements": 6896,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 205,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1934,
+      "num_partial_branches": 0,
+      "covered_branches": 1934,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 96,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-material-completion-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "da90a8565ed84043fffc3de9bf95d166c3cac501ffcec75f39bc42a264a6189f",
+      "members": [
+        {
+          "name": "domus-task-material-command-focused.json",
+          "sha256": "987174ce2cada4f02aeb971ea31aba3fa9e72c63b4439a501b0f2d33cfcf7b7e",
+          "size": 5757
+        },
+        {
+          "name": "domus-material-completion-full-coverage.json",
+          "sha256": "c7c2f37f7f424a580a5c0c33af69715837ee8620e594a541b79eacb73140878b",
+          "size": 929250
+        },
+        {
+          "name": "domus-material-completion-full-coverage.xml",
+          "sha256": "36108260bc4b594ab233c0dabd72a28297d7c3ca78002c2cb4c51e3727cdae84",
+          "size": 308865
+        },
+        {
+          "name": "domus-material-completion-full-output.txt",
+          "sha256": "598ea70787429a3f2dff387d15aea854c71984a4a068c088a109eab276aa34bd",
+          "size": 20059
+        },
+        {
+          "name": "domus-material-completion-full.coverage",
+          "sha256": "291855b9173c56d2e2ce27d8bc8ec422276ca520db52e9eb681c885b084c5d8f",
+          "size": 520192
+        },
+        {
+          "name": "domus-material-completion-architecture.txt",
+          "sha256": "e486279027e993ab6dd6e17998fabcb4970220acbc2a5aefe69a1f70120b88f1",
+          "size": 959
+        },
+        {
+          "name": "domus-task-foundation-published-validation.json",
+          "sha256": "a3c7fb4f95610ddfd0355eef3d5e0f8b979e5c1b3d83bb3a1578deb11ce6307e",
+          "size": 326
+        },
+        {
+          "name": "domus-task-storage-sdd-catalog-validation.json",
+          "sha256": "ce89d9a80dbf24d811e62a87363a7a86dd02a9931321b25b3fade022a3bc4c2e",
+          "size": 586
+        }
+      ],
+      "consumer": "Original full backend, focused helper, dependency and unchanged pinned SDD measurements for current PR review/reproduction. Fictional attached SQL effects are separate from actual Inventory policy/package/owner acceptance."
+    },
+    "note": "Published initial material selection/completion scope. Material HTTP/query support and explicit settlement were not provided by that checkpoint.",
+    "hostedCI": {
+      "run": 41273939404,
+      "aggregate": 124752749697,
+      "projectGroups": "All eight passed",
+      "separateAssessment": "assessment-text-limit; upstream #829 reference ae5b5ec4-b6a9-470c-a41d-91a9d1ef4df0",
+      "review": "Draft skipped; not complete Bugbot acceptance"
+    }
+  },
+  "materialHTTPAndQueryAssertions": {
+    "wire": "Both actual production HTTP compositions map strict material selection and usage models to shared typed commands; canonical decimal strings, 32-entry bounds and immutable frozen line IDs. Omitted/null legacy compatibility and explicit-empty conflict behavior execute through real ASGI/SQLite.",
+    "availability": "Absent real Inventory rejects nonempty linking with safe 503 before task/default/receipt writes. Valid completion retains pending usage. Malformed semantic confirmations fail safely; actual attached child SQL and task completion roll back together under HTTP.",
+    "queries": "Current detail adds live material outcomes; explicit original-cycle GET remains available after reopening. Closed source cycle is returned with current intent state, in exact frozen line order. Reads use one transaction, current task-read authority and the original valid outage lease, never Inventory I/O or automatic consumption.",
+    "proof": "Desired total is distinct from last confirmed quantity/effect/time and movement ID, including pending corrections. Original compact receipts remain byte-compatible and immutable; a live projection never substitutes an old receipt.",
+    "integrity": "One pure source validator serves live application facts and checkpoint validation: exact bounded line set, intent uniqueness, household/occurrence/cycle/frozen binding/recorder/performed/recorded time/mode. Missing, duplicate, foreign or rewritten facts fail closed.",
+    "authority": "Current Inventory linking grants are rechecked on original-key replay/clear; explicit material denial retains valid completed work with no movement. Read revocation blocks discovery. A36 authorizes future explicit correction by currently authorized material participants; no initial snapshot grants authority.",
+    "testsFirst": "New policy/query tests initially failed collection for the missing pure validator; actual HTTP tests initially rejected unwired fields; pending-correction projection test failed for missing confirmed fields. Final suite passes without coverage/configuration/exclusion changes.",
+    "interimCampaign": {
+      "testsPassed": 2618,
+      "testsFailed": 3,
+      "coverage": "100% in an earlier uncommitted tree; not final-source evidence.",
+      "failure": "Existing launcher ownership tests inherited GID 0 under /private/tmp while the process GID was 20. No code/test weakening; final full run uses a verified private user-owned temporary parent with GID 20.",
+      "originalOutput": "interim-backend.out in rawMeasurements archive"
+    },
+    "scope": "Published 105-case HTTP/query checkpoint at 2a3809d; explicit settlement was not implemented by that source. Its original evidence/measurements remain in historicalMaterialHTTPAndQueryCheckpoint. Later settlement is measured below."
+  },
+  "historicalMaterialHTTPAndQueryCheckpoint": {
+    "sourceRevision": "2a3809d8cbca4c2e062881195fcfda2fd3572741",
+    "verifiedAtUTC": "2026-11-01T05:52:15.517008+00:00",
+    "tests": 2641,
+    "wholeBackendCoverage": {
+      "covered_lines": 6965,
+      "num_statements": 6965,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 205,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1942,
+      "num_partial_branches": 0,
+      "covered_branches": 1942,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 98,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-material-http-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "02adb605e0d896e6b2c2904ced3eeabdf0db2859d386f3aaa6c622d2a4726572",
+      "members": [
+        {
+          "name": "final-backend.out",
+          "bytes": 20533,
+          "sha256": "8bd44bc3e93a8ba0d4dacfce269fd78ca74421636b70dae6d91b9c67c449eaa3"
+        },
+        {
+          "name": "coverage.json",
+          "bytes": 941781,
+          "sha256": "aadbfbfd85d6921715281d9f379080bf0d20450b7c9a263a33fe2d35e1a5ff88"
+        },
+        {
+          "name": "coverage.xml",
+          "bytes": 311888,
+          "sha256": "f66b10f80509a07612fc65122b051ea6cb374c403718797193f6920e0b48d82f"
+        },
+        {
+          "name": "final.coverage",
+          "bytes": 524288,
+          "sha256": "1a8782830e59aff379be81260368a14577d4f30df7df30e906f97c468d40a4c4"
+        },
+        {
+          "name": "interim-backend.out",
+          "bytes": 27286,
+          "sha256": "d031887bd6b68e368a9b2d3d26e274905bb4aef7ed64f56b59b7105ffb31d7e5"
+        },
+        {
+          "name": "interim-coverage.json",
+          "bytes": 941691,
+          "sha256": "55916c7a4d878606b06a7398ebf39dfbfb884cf5920a4b0542e0a338ff390054"
+        },
+        {
+          "name": "imports.out",
+          "bytes": 1866,
+          "sha256": "056661c673a7b356b8f5cffcbd1775f0722a77cb6f5f74184a21f76816b7446d"
+        },
+        {
+          "name": "tooling-architecture.out",
+          "bytes": 180,
+          "sha256": "5b7265495f57b763e5d5cb8fb648c2b11b7f55ea5cde57d5d16740683b3a1304"
+        },
+        {
+          "name": "inventory-audit.json",
+          "bytes": 12785,
+          "sha256": "8c86789d9cb6e6b7c7faed0bf21e0de8f2dd97da366ffc8bd18de4c3e0d0c654"
+        },
+        {
+          "name": "sdd-format.json",
+          "bytes": 326,
+          "sha256": "7e27108cee6bb494619cacd8243bd480374379e46c68f49f36c8209c391d91b1"
+        },
+        {
+          "name": "sdd-catalog.json",
+          "bytes": 586,
+          "sha256": "acd7294dccd6bdb1966e8e4b0fa8ea11312a8e49ef21ec5bddc4b8603be34606"
+        }
+      ],
+      "consumer": "Original complete backend/material HTTP/query coverage, source inventory, dependency, pinned SDD and original interim failure measurements for in-flight PR review. Real Inventory and package/owner acceptance remain separate."
+    },
+    "hostedCI": {
+      "run": 41278713230,
+      "aggregate": 124766626392,
+      "projectGroups": "All eight passed",
+      "separateAssessment": "assessment-text-limit; upstream #829 reference 136b511e-d516-4034-8751-74611459c940",
+      "review": "Draft skipped; not complete Bugbot acceptance"
+    },
+    "note": "Published material HTTP/current and original-cycle query checkpoint. Explicit settlement was not provided by that source."
+  },
+  "materialSettlementAssertions": {
+    "request": "One strict request/route targets original cycle and intent; expected_revision guards the intent. Only correction accepts a nonnull canonical quantity; correction/dismissal require meaningful bounded reasons. Server identity/source selectors cannot be client-supplied.",
+    "authority": "A36 permits confirmed correction by any currently authorized material participant. All actions recheck tasks.material_use and applicable current scoped/performance or Inventory authority. Frozen source/role/rule/initial authorization facts confer no current grants.",
+    "source": "Strict server-recorded MaterialScope binds household/work/cycle/intent/line/definition revision and original performers. Request/result/audit/event must agree. Current work and live source must match; missing current work denies access. Numeric revision selectors reject Boolean aliases, future role values fail closed.",
+    "retry": "Original-scope current authorization precedes receipt disclosure; new intent/state/revision checks follow original receipt lookup. Later corrections/closed cycles cannot invalidate an authorized original result. Changed target/payload cannot disclose or replay another effect.",
+    "atomicity": "TaskMaterials stages corrected desired state through a caller-owned CAS callback before Inventory confirmation. Every exact revision, final intent and one receipt/audit/outbox share one writer. Work/cycle revisions remain unchanged. Staged/confirmed/audit/outbox failure injection rolls back task and fictional attached child SQL.",
+    "outcomes": "Unknown actuals, zero, separate recording, shortage/unavailable pending, confirmed correction and dismissal are distinct. Pending correction exposes desired and last confirmed quantity/effect/time. Normal invalid transitions return safe 409 without another effect.",
+    "concurrency": "Real competing corrections against one intent revision have one winner/one new child SQL effect. A wrapper raises after actual SQLite commit; original-key retry recovers one result/effect without provider replay.",
+    "restoration": "Actual offline restoration before completion or before settlement retains historical settlement proof. Original-key retry/own receipt/history work when intent/cycle effects are absent and never invoke Inventory. The fictional consumer is outside the restored application root: no coupled real-ledger restoration is claimed.",
+    "http": "Both actual native/standalone compositions execute post/correct/dismiss, canonical input negatives, safe normal conflicts, current permission denial and existing Origin/CSRF/current-HA guards. History exposes original material action/intent/reason separately from live outcomes.",
+    "testsFirst": "New tests first failed import for missing SettleTaskMaterial; actual HTTP initially returned 404. A consistent-evidence negative exposed True comparing as revision 1; strict selector types now reject it. Final 102 new cases execute in the full 2743-case campaign.",
+    "initialCampaign": {
+      "testsPassed": 2739,
+      "sourceFiles": 99,
+      "statements": 7117,
+      "branches": 1994,
+      "coverage": "100%; final campaign adds four actual HTTP dismissal/conflict cases and preserves every runtime per-file summary. Original intermediate duplicate raw reports retire only after final superset/inventory verification."
+    },
+    "scope": "Current application and actual ASGI/SQLite evidence with explicit fake HA/catalog/Inventory confirmations. No actual Inventory stock policy/ledger, product UI, owner HA adoption or packaged full-product acceptance."
+  },
+  "historicalMaterialSettlementCheckpoint": {
+    "sourceRevision": "7beb63c8eafba51f17a284ee55baee1a70ebff8b",
+    "verifiedAtUTC": "2026-11-01T06:34:15.178078+00:00",
+    "tests": 2743,
+    "wholeBackendCoverage": {
+      "covered_lines": 7117,
+      "num_statements": 7117,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 205,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1994,
+      "num_partial_branches": 0,
+      "covered_branches": 1994,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 99,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-material-settlement-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "41a052e2ffd2f79433017d3dd363c98432ac29584bc997f0be5d83f93681349e",
+      "members": [
+        {
+          "name": "backend.out",
+          "bytes": 20876,
+          "sha256": "c813e105e1b847641773798fc9af0ab5a488ffd6244e9c0bd995a86e4b02b3f2"
+        },
+        {
+          "name": "coverage.json",
+          "bytes": 957857,
+          "sha256": "d6a40a8821771c62a878e4a0a2a1460b6f16c9675f0cf7ed48880ba58e97e765"
+        },
+        {
+          "name": "coverage.xml",
+          "bytes": 318717,
+          "sha256": "a1ce617793bc584b8201382edee818b4132250febdc00b2fa6a593c0d1c0e65d"
+        },
+        {
+          "name": "full.coverage",
+          "bytes": 536576,
+          "sha256": "6a788716eaad7002aeec79c6b974d03e8d956d8902b229ebb2cfc011ef033534"
+        },
+        {
+          "name": "imports.out",
+          "bytes": 1866,
+          "sha256": "c711a68cf3f032ed1e1d3842ec106f857ea2a47f943ff08fe9a7918e61a3a209"
+        },
+        {
+          "name": "tooling-architecture.out",
+          "bytes": 180,
+          "sha256": "b1d2b34c2739d8f9a136fa79f45fb910216e94e7e14311c6f643c5fadb008b81"
+        },
+        {
+          "name": "inventory-audit.json",
+          "bytes": 12913,
+          "sha256": "38c153777aa2fa1e4447130eb5d8e6c151b3c240cf57507395ed9b753b6a83cc"
+        },
+        {
+          "name": "first-test.out",
+          "bytes": 1222,
+          "sha256": "3b791bf3a6902d79f1fe5e4332666dd341af0456ebca89a666f71ff65936dcda"
+        },
+        {
+          "name": "sdd-format.json",
+          "bytes": 326,
+          "sha256": "2ebc39d16a0575feed29d2fb9be56ff9a3f3a9bf58f695302eb4b97ec19b4652"
+        },
+        {
+          "name": "sdd-catalog.json",
+          "bytes": 586,
+          "sha256": "7d6c4dbfd8db748fae96c2d0fc2a059aa9b1928c02421c17b7ec914f5c52f801"
+        }
+      ],
+      "consumer": "Original complete explicit settlement/backend coverage, source inventory, first failing test, dependency and unchanged pinned SDD measurements for current in-flight PR review. Semantic fake stock/HA are distinct from actual consumer/package/owner acceptance."
+    },
+    "note": "Original explicit material settlement checkpoint; unchanged assertions also execute in the new full campaign. Hosted project CI passed; separate assessment failed as recorded upstream in Copilot #829."
+  },
+  "frozenSchema6": {
+    "path": "tests/fixtures/sqlite/v6.sql",
+    "bytes": 89811,
+    "sha256": "af84ed25f3bf5ffe7da5a8f1b9ff8163bd2aa27641283aa79c0c60edd5927f11",
+    "sourceRevision": "7beb63c8eafba51f17a284ee55baee1a70ebff8b",
+    "generatorSHA256": "d1c2c7ef77013ec7b5e7354135e50d552cbb3c0d0e53f3b20759ef2978872c7d",
+    "sourceArchiveSHA256": "55d46e17aa27809aff9847384c407a248c950fbb2218790b70106ab9e53a9519",
+    "provenance": "Generated and independently reopened with byte-verified immutable source runtime before schema 7; one approved closed corrected-material cycle, a completed dependent after source reopening and historical second settlement. Not generated by the new runtime. Migration, failed-index rollback and actual old-checkpoint activation pass without altering original table rows/source/checkpoint bytes.",
+    "historicalOperationId": "identity-24",
+    "sourceReopeningOperationId": "identity-20"
+  },
+  "dependencyReviewAssertions": {
+    "causality": "Live original complete/reopen evidence and typed cycles define causes by durable positions in each dependent completion-to-closure interval. Equal timestamps are ordered correctly; overlapping link kinds share one cause.",
+    "state": "Current source state/verification and satisfaction of the original gate remain separate from pending/reviewed state. No automatic acceptance on source completion or transport acknowledgement.",
+    "acceptance": "Current tasks.manage may accept with a bounded meaningful reason while the source is pending. One cause revision 1 becomes 2; local reviewer/time/reason commit with original receipt/audit/outbox. Work/cycle/material facts stay unchanged. Later reopens retain independent causes.",
+    "authority": "Current read grants protect discovery/cursors; current management protects new acceptance and original receipt disclosure. Revocation blocks new/recovered operations but does not erase valid earlier review facts. Signed cursors bind query kind, original cycle, filter and limit as well as existing actor/installation/channel/household context.",
+    "atomicity": "Two simultaneous identical keys recover one decision. Different keys yield one winner. Injected audit/outbox failures roll back the entire evidence set. Historical closed-cycle acceptance leaves current work unchanged.",
+    "restoration": "Actual offline restoration before reopening and before acceptance retains suppressed original acknowledgement. Original-key retry and own-operation/history recover it without applying it to restored review state. No source cause is inferred from retained-away effects.",
+    "legacy": "Original v6 data migrates with all table rows intact; invalid index DDL preserves exact old bytes. Old checkpoint/source inspection and actual activation upgrade only the prepared target, preserving schema-6 rollback and source/checkpoint bytes. Frozen v1\u20135 remain unchanged.",
+    "http": "Both real native and standalone business compositions expose 22 task operations/19 paths. New routes retain current proof/session/Origin/CSRF, strict canonical query/body values and safe scoped failures. Both OpenAPI artifacts are additive.",
+    "testsFirst": "Initial query tests failed with missing dependency_reviews and acknowledgement tests failed importing ReviewTaskDependency. Initial broad run had 21 old-schema-constant/OpenAPI failures; final complete campaign passes after additive contracts and explicit current-version expectations. 110 new cases all execute in the 2853-case final campaign.",
+    "scope": "Actual application/ASGI/SQLite evidence with labeled fake HA; no new owner HA deployment, real Points/Inventory, product UI or full first-release acceptance."
+  },
+  "historicalDependencyReviewCheckpoint": {
+    "sourceRevision": "487506f0fb5add530aeb90ea6c4c82ab3e3fd0b0",
+    "verifiedAtUTC": "2026-11-01T07:47:00.082905+00:00",
+    "tests": 2853,
+    "wholeBackendCoverage": {
+      "covered_lines": 7456,
+      "num_statements": 7456,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 217,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2098,
+      "num_partial_branches": 0,
+      "covered_branches": 2098,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 102,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-review-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "2027dd5788ae43c533b9c608307d1d808e2f337527fc11156b2440249d7e1195",
+      "members": [
+        {
+          "name": "backend-final.out",
+          "bytes": 14623,
+          "sha256": "f06cf4f4b2150fe4c7927fb401a59c59c2480ee13c7abf043ec2f7c162f7288a"
+        },
+        {
+          "name": "backend-final-coverage.json",
+          "bytes": 993655,
+          "sha256": "5501af068503ad2d7651fcdcc8dd2f139b0e4cecb9207065afa34ffda2c4b70f"
+        },
+        {
+          "name": "backend-final-coverage.xml",
+          "bytes": 333729,
+          "sha256": "71220465b2ef3d46a9cf2e6ec92b1ff78215cf03c0910a37503a09c9fcf69bcf"
+        },
+        {
+          "name": "backend-final.coverage",
+          "bytes": 557056,
+          "sha256": "8395e6fa2b777a10511a90cf55e2b89094a6cabf65ae8c2a1c27e5baabf89a6c"
+        },
+        {
+          "name": "imports.out",
+          "bytes": 959,
+          "sha256": "abf2726774dbec8c167fb760949a289e2317f23c0747284561871e0ef72c403d"
+        },
+        {
+          "name": "tooling-architecture.out",
+          "bytes": 180,
+          "sha256": "f402db17f5b0b4359332d592ebbc0daeacc4a2c5a7187bbbbed873dbe64ad36f"
+        },
+        {
+          "name": "inventory-audit.json",
+          "bytes": 13227,
+          "sha256": "94bde7b68e35263df1aee9ec52db40d7766326821b6f02c393eedf441e3ed24f"
+        },
+        {
+          "name": "ack-tdd.out",
+          "bytes": 1177,
+          "sha256": "d526cda0374e6ca57e65875ef045b3fbf511901cec98a2d426f8370826ce2fdd"
+        },
+        {
+          "name": "first-test.out",
+          "bytes": 3305,
+          "sha256": "6c075ba9c51b397845f553497e6a3367b667c11b4ea2dd4c84fc4b2032873afc"
+        },
+        {
+          "name": "backend-first.out",
+          "bytes": 45779,
+          "sha256": "9711a6aa1702110956d6c0ae8b2a5350c80a849822ca811a2eabf194127478c7"
+        },
+        {
+          "name": "focused-final.out",
+          "bytes": 180,
+          "sha256": "37392af0598e9083895b312c6f2227c8768d33f57df8b4e1fc0909d35874d8c2"
+        },
+        {
+          "name": "sdd-format.json",
+          "bytes": 326,
+          "sha256": "791509f626f0187e5c31480385a19048e4baf11218f8a2a33c46be83fad348e0"
+        },
+        {
+          "name": "sdd-catalog.json",
+          "bytes": 586,
+          "sha256": "7b7584398cb154c8b913370ecab420a1b1137c00ca58ee02d23c9e0f0fd212c3"
+        },
+        {
+          "name": "docs-final.out",
+          "bytes": 33,
+          "sha256": "e6d8e0fa6afb34e752a2b8c3187da396dbdc4ba1ec7d49f107753d5e4464e857"
+        },
+        {
+          "name": "contract-additivity.json",
+          "bytes": 1270,
+          "sha256": "2710e534f3984bf9f170b5999793a76bb767e17f98544160da8c03707c0c35aa"
+        }
+      ],
+      "consumer": "Original complete dependency-review/backend coverage, source inventory, failing TDD and broad campaign, unchanged pinned SDD and architecture measurements for active PR review. No real consumers, package or owner HA adoption is implied."
+    },
+    "hostedCI": "All eight project groups and aggregate 124788646175 passed in run 41286242861. Separate Copilot scope rejection 54757356-6e14-4879-9400-5d04d415ff92 is reported in #828; draft Bugbot was skipped.",
+    "note": "Original A37/dependency-review checkpoint. Unchanged assertions execute again in the new full campaign."
+  },
+  "lifecycleSourceAssertions": {
+    "contract": "Internal read-only semantic source, default 25/max100 by durable live position. No new HTTP/auth surface or consumer side-effect worker. Existing unconfirmed delivery remains truthful.",
+    "identity": "Versioned typed source binds installation/channel/household/event. A separate stable cycle key excludes source event/policy revision, preventing those values from creating a second cycle namespace. Owning consumers still enforce their durable inbox and unique per-cycle allocation.",
+    "snapshots": "Pure reconstruction preserves each original complete/verify/reopen state, revision, performers, policy and performed/recorded/verified/closed timestamps. Current approval/closure never rewrites earlier pending source events. Unknown versions/stages or inconsistent scope/evidence fail closed.",
+    "eligibility": "Pending/rejected work cannot signal award eligibility. Rejection/reopening signals award closure. These are facts, never an actual award/reversal/recurrence/stock claim.",
+    "persistence": "Only current live paired original evidence is read, including transport-acknowledged rows; restored-away operations are excluded. No schema/table/index change or new inbox/ledger is introduced. Shared strict raw header validation also protects task history/review.",
+    "composition": "Actual native/standalone business runtime objects supply the same source. Authentication-only standalone runtime without business storage has no source. Source wiring is trusted server configuration, not caller-selected authority.",
+    "recovery": "Actual restore before adult approval retains the historical approval/reopen operations but source reads emit only the current original pending completion. Independent immutable v6 fixture produces four original current lifecycle events, with absent historical second work excluded.",
+    "tests": "46 new cases plus existing review regressions: final full backend 2899 passed, 7605 statements/2146 branches, 104 files, all100%. 36 task modules:2840 statements/824 branches. More-than-100 event pagination, namespace isolation, corruption/missing facts, original snapshots and temporal/state negatives are executed.",
+    "testsFirst": "Missing application source first failed import. An omitted generic recorded_dependencies import broke 49 existing review regressions during the refactor; corrected before publication. Missing new test imports were also corrected. Original intermediate failure outputs are retained separately; the final strict full campaign passes.",
+    "publicContracts": "Both actual OpenAPI artifacts remain byte-identical to immutable parent 487506f. Internal source wiring adds no human HTTP routes or response fields.",
+    "scope": "Source contract only. No actual owning ledger/recurrence implementation, product UI, owner HA update or first usable all-domain/both-target/Stable-Edge acceptance."
+  },
+  "historicalLifecycleSourceCheckpoint": {
+    "sourceRevision": "cd0795125274678432464f976c86995925562882",
+    "verifiedAtUTC": "2026-11-01T08:17:14.838194+00:00",
+    "tests": 2899,
+    "wholeBackendCoverage": {
+      "covered_lines": 7605,
+      "num_statements": 7605,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 225,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2146,
+      "num_partial_branches": 0,
+      "covered_branches": 2146,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 104,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-lifecycle-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "a57a4ae900b936834f258397cb16b13386d8e02e7615c6e4bebe5f7536f625ee",
+      "members": [
+        {
+          "name": "backend.out",
+          "bytes": 14887,
+          "sha256": "fff4f7b2018fc598cdfe169f7b0f8553a40463f7d6b15b4b263086c95ef61211"
+        },
+        {
+          "name": "coverage.json",
+          "bytes": 1012207,
+          "sha256": "05c916b441abfea9b94274a66a0eb7de1124c0b89f1a9ff3c8ec3d305bf91e39"
+        },
+        {
+          "name": "coverage.xml",
+          "bytes": 340478,
+          "sha256": "390dfa0fc2776f8be76a2f16280f40220fa173b13abaa870242069b4b6a3825a"
+        },
+        {
+          "name": "backend.coverage",
+          "bytes": 569344,
+          "sha256": "83bc1ef90de94f13ad14a96775f0e9c85c69b260d6dc3164431fc1f739ca5a38"
+        },
+        {
+          "name": "inventory-audit.json",
+          "bytes": 13690,
+          "sha256": "445eea88eaf75143c60b48daa2196476e0e47470bf13c3e1270bb6d483613f6f"
+        },
+        {
+          "name": "first-test.out",
+          "bytes": 1932,
+          "sha256": "d91dab79f9f95808efed1d7b704516cb0fc529ec3aa15baa6a14f8dd6b3d1fdf"
+        },
+        {
+          "name": "focused-first.out",
+          "bytes": 150281,
+          "sha256": "4e03819733d4058fd2856704963e4962a7da6a98566634922b30fea793de8ec3"
+        },
+        {
+          "name": "focused-third.out",
+          "bytes": 1264,
+          "sha256": "874823efea6d48d68ad2054e66564fdd0ccfb7ba1eaca9f9d518fed268772257"
+        },
+        {
+          "name": "focused-fourth.out",
+          "bytes": 528,
+          "sha256": "aa9068a8e3c88fad1827ef355fc8c95527671891fe889c54737be77314480762"
+        },
+        {
+          "name": "types-final.out",
+          "bytes": 45,
+          "sha256": "06ad9491f22f2b933115a2edf580ad42e4e206075e3323e32f6e9d3a750916c2"
+        },
+        {
+          "name": "imports.out",
+          "bytes": 959,
+          "sha256": "cb9e4fa99b39616038c8b5febb8bc17349500e9381cf676bc3ae29a173ae176b"
+        },
+        {
+          "name": "tooling-architecture.out",
+          "bytes": 180,
+          "sha256": "5c88c37d5ecfc73482475a275a3a88ec366b30bafb8790e7ae97b6061ed7dbe8"
+        },
+        {
+          "name": "docs.out",
+          "bytes": 33,
+          "sha256": "e6d8e0fa6afb34e752a2b8c3187da396dbdc4ba1ec7d49f107753d5e4464e857"
+        },
+        {
+          "name": "sdd-format.json",
+          "bytes": 326,
+          "sha256": "a07c67a13e733cbba4eb8bfc4bb8763d5c55378de11d5bc816cde6e0bc4252eb"
+        },
+        {
+          "name": "sdd-catalog.json",
+          "bytes": 586,
+          "sha256": "9da989616e0eac4100bc821f2a5feb3e76186b30270a84a9e8eb1164d9dd304b"
+        }
+      ],
+      "consumer": "Original complete lifecycle source/backend coverage, exact inventory, initial and intermediate failed campaigns, original pinned SDD and architecture observations for active PR review. Actual consumer/owner/package effects remain separate."
+    },
+    "hostedCI": "All eight project groups and aggregate 124794683042 passed in run 41288277594. Separate assessment-text-limit a188cf1d-f00f-4217-9bc3-7880ad1e6edb is reported in #829; draft Bugbot was skipped.",
+    "note": "Original complete backend execution measurement remains authoritative for identical unchanged backend files in the new tooling increment."
+  },
+  "backendCoverageAssertions": {
+    "input": "Regular UTF-8 JSON up to 64 MiB, unique object keys and finite numbers; branch-enabled format 3 at the installed locked Coverage.py version. Canonical exact recursive source inventory; no source/report symlink, skipped unreadable source or zero-count masking.",
+    "model": "Separate no-disk default-configuration Coverage engine with empty execution builds expected executable statements, all branch destinations and default type-only exclusions. It never starts tracing or imports app modules; a sentinel assertion proves no reexecution. Explicit coverage pragmas are rejected.",
+    "validation": "Strict typed counts, exact numeric/display 100%, per-file execution/exclusion/missing vectors and global totals must match current complete source. Source hashes/inventory are rechecked before returning. Diagnostics are bounded.",
+    "execution": "New default/relative/absolute CLI flows and no-dev dependency handling tested. The consumer-owned backend CI job now unconditionally configures this step immediately after successful pytest and cannot continue-on-error. Original project groups/aggregate/protected Copilot resources remain unchanged.",
+    "tests": "146 tooling tests (74 new) cover every one of 214 statements/98 branches in all 5 authored tooling files. The new module alone is 133 statements/62 branches, all covered, no exclusions. Real independently traced specimen reports include missing branch and custom-exclusion negatives.",
+    "measurementIsolation": "Nested specimen collection initially disturbed the parent coverage observation. Specimen execution now uses subprocesses; a dependency-error branch also has a direct parent behavior assertion. Initial 77.88% and 99.04% campaigns are retained as failures, not acceptance. Final strict-100% measurement passes without scope/configuration/pragmas/threshold weakening.",
+    "realBackend": "Original complete cd07951 JSON passed the new verifier after all 104 current backend source hashes matched its immutable measurement. 2899 tests,7605 statements,2146 branches. No backend runtime source changed and no new local backend rerun is claimed; current-head CI still runs the full backend and auditor.",
+    "scope": "Development verification only. Does not prove real consumers, UI, packaged installation/owner HA adoption, full feature completion or no-findings Bugbot acceptance."
+  },
+  "hostedCoverageAuditCheckpoint": {
+    "headRevision": "ca78c0e65625cc64b91b62e0cd55cb8b41d91fd3",
+    "runId": 41292017933,
+    "backendJobId": 124805016633,
+    "backendConclusion": "success",
+    "backendTests": 2899,
+    "independentAuditStep": "success",
+    "artifactId": 13077588552,
+    "mergeRevision": "318353103c3a45ce1e0439d66a0303ec89018911",
+    "pythonToolingConclusion": "failure before tests, Ruff I001",
+    "aggregateConclusion": "failure",
+    "cause": "Ignored generated coverage directory changed local import inference. Explicit project-owned third-party classification and normal import ordering make clean and artifact-bearing checkouts consistent.",
+    "fixValidation": "146 tooling tests, 214 statements/98 branches, every file 100%; Ruff check/format and strict typing 109 files pass. Backend runtime source unchanged.",
+    "artifactSHA256": "0abc813716c4915573c76459a9b74d1c0b6dee762432ee7b70ead0067ae72a70",
+    "sourceFiles": 104
+  },
+  "importClassificationCorrection": {
+    "sourceBase": "ca78c0e65625cc64b91b62e0cd55cb8b41d91fd3",
+    "semanticChanges": false,
+    "coverageConfigurationChanged": false,
+    "newTests": 0,
+    "rawEvidence": "/private/tmp/domus-coverage-import-fix-checkpoint-retained/measurements.tar.gz",
+    "commands": [
+      ".venv/bin/ruff check .",
+      ".venv/bin/ruff format --check .",
+      ".venv/bin/mypy tooling backend/src",
+      "COVERAGE_FILE=/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling.coverage .venv/bin/pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling-coverage.json --cov-report=xml:/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling-coverage.xml -q --basetemp=$TMPDIR/domus-coverage-import-fix-pytest-ca78c0e"
+    ]
+  },
+  "previousEvidenceOrigin": {
+    "verifiedAtUTC": "2026-11-01T09:20:29.160215+00:00",
+    "sourceBase": "cd0795125274678432464f976c86995925562882",
+    "sourceIdentity": "Working-source independent backend coverage auditor/CI enforcement over sourceBase. Backend runtime source and original complete 2899-case measurement are byte-identical; new complete tooling execution/audit evidence follows. Full product/feature acceptance remains unproven."
+  },
+  "documentationCloseout": {
+    "sourceBase": "2207bca2f13dedee7cf61372eae711765c1bb911",
+    "newGuides": [
+      "docs/tasks/operator-recovery.md",
+      "docs/tasks/migration.md"
+    ],
+    "migrationScope": "Task source schema7; installed Edge.3 remains separate M1/schema4. No released upgrade, live owner restore or actual consumer delivery claimed.",
+    "runtimeChanged": false,
+    "localBackendRerun": false,
+    "validation": "Documentation links and original pinned SDD format/consistency/catalog pass; original case rows unchanged. Runtime/coverage source hashes verified unchanged.",
+    "reviewAtSourceBase": {
+      "runId": 41295181268,
+      "jobId": 124814425025,
+      "checkId": 124815488764,
+      "outcome": "no-findings",
+      "coverage": "complete",
+      "dismissedFalsePositive": 1,
+      "nativeThread": "PRRT_kwDOVa5AKs6yY-1j",
+      "upstream": "https://github.com/vypdev/copilot/issues/831#issuecomment-6556304600",
+      "limitation": "This complete review belongs to sourceBase, not the upcoming documentation commit."
+    }
+  }
+}

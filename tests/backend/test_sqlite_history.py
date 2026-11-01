@@ -64,7 +64,7 @@ def test_import_requires_a_transaction_and_preserves_earlier_history_on_failure(
         assert tuple(iter_operations(connection)) == (a,)
 
 
-@pytest.mark.parametrize("version", [1, 2, 3])
+@pytest.mark.parametrize("version", [1, 2, 3, 4])
 def test_frozen_old_schema_migrates_without_losing_existing_evidence(tmp_path, version):
     path = tmp_path / "old.sqlite3"
     source = Path(__file__).resolve().parents[1] / f"fixtures/sqlite/v{version}.sql"
@@ -74,11 +74,17 @@ def test_frozen_old_schema_migrates_without_losing_existing_evidence(tmp_path, v
             table: connection.execute(f"SELECT * FROM {table}").fetchall()
             for table in ("receipts", "audit", "outbox")
         }
+        if version == 4:
+            before["retained_operations"] = connection.execute(
+                "SELECT * FROM retained_operations"
+            ).fetchall()
     store = SQLiteDatabase(path, Installation("047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6", "edge"))
     store.initialize()
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 4
-        assert connection.execute("SELECT count(*) FROM retained_operations").fetchone()[0] == 0
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 7
+        assert connection.execute("SELECT count(*) FROM retained_operations").fetchone()[0] == len(
+            before.get("retained_operations", [])
+        )
         for table, expected in before.items():
             assert [tuple(row) for row in connection.execute(f"SELECT * FROM {table}")] == expected
 

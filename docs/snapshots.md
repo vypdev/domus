@@ -9,6 +9,10 @@ persistent Edge.3 now has bounded update/session/restart acceptance; no owner Do
 was executed. See [live scope](evidence/m1-edge3-ha-acceptance.json).
 No automatic backup frequency, rotation or retention is introduced.
 
+The development [task source](tasks/migration.md) now captures schema 7 and independently inspects
+supported schemas 1–7. Installed Edge.3 and its image observations above remain the separate M1
+schema-4 checkpoint. A source-compatible snapshot is not proof of adopting that source in HA.
+
 ## Create a snapshot
 
 Run the console as the runtime UID that owns the data. For a ready managed data directory in either mode:
@@ -62,7 +66,7 @@ hashes/size, compatible schema definition, physical integrity, foreign keys, bus
 and atomic receipt/audit/outbox linkage. Wrong installation/channel, changed bytes, incomplete files,
 special files and corrupt records are rejected. Inspection never migrates the archive. Compatible
 historical schema 1/2/3 fixtures are inspected in place; capture currently requires the initialized
-current schema 4. Credentials and session leases are not stored in those business schemas or collected
+current schema 7 in the task source. Credentials and session leases are not stored in business schemas or collected
 from environment, browser, app configuration or other directories.
 
 The capture timestamp is the local UTC reading at the selected database view. last_committed_at is

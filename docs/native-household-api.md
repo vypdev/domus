@@ -61,6 +61,8 @@ through the same native boundary. The [household routes](household-api.md) share
 application use cases, privacy filtering, revision checks, last-administrator safeguards and atomic
 receipt/audit/outbox semantics as standalone. Unknown input and ambiguous JSON remain rejected.
 Unexpected response failure after commit preserves uncertainty and same-key recovery.
+The native policy schema includes the same additive task permission identifiers as standalone;
+the [household API checkpoint](household-api.md) explains their current implementation limits.
 
 A selected ordinary HA human can manage Domus through the configured mapping. The native directory
 uses private Core transport to verify other people without granting the actor HA administrator

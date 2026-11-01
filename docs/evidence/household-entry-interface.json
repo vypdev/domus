@@ -1,8 +1,8 @@
 {
-  "verifiedAtUTC": "2026-11-01T11:46:41.305339+00:00",
+  "verifiedAtUTC": "2026-11-01T11:55:14.270486+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "59278ff19cc800bf80a55a91eece9dab52c16799",
-  "sourceIdentity": "Working-source authenticated server context/assertion contract; actual guarded HTTP/SQLite and both production compositions. Existing frontend/controller source and its210-case measurement are unchanged at59278ff.",
+  "sourceBase": "f05fc2d827d90344b468f48ae5e0f1015f0ea97e",
+  "sourceIdentity": "Locally reconciled task/entry source, additive four-conflict resolution and regenerated actual schemas/catalog; current whole-source backend/tooling/Node and actual Chromium measurement. Publication/current-head hosted review must be verified separately.",
   "sources": {
     "frontend/src/domain/entry.ts": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e",
     "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
@@ -11,9 +11,9 @@
     "frontend/vitest.config.ts": "ab00647231ef1eef26b50b61937adda4b101caa0bb1822db99f6edd6171247bd",
     "tests/frontend/coverage-evidence.test.mjs": "0800f9fc96533cd4a60aaf9c36efbcfbd4ee8d58ad21b500e1a4bf7e54018239",
     "tests/node/architecture.test.mjs": "b5a373bb3662db103b963fa37843f389e867069edac8ed6fec8cb0375b858ba9",
-    "tests/python/test_ci_contract.py": "1e37337ceec9b438c695ae1ee4ba05b9acc2724a5692d35da2aaea0d58d02bfd",
+    "tests/python/test_ci_contract.py": "57d43038e050b21c362cda9ef607258df3810ae45a73af42ad2d74e576550f58",
     "tooling/domus_tooling/ci_policy.py": "50cb5904499d61bab1e8ba8d385be4338a970056b255e97fe2234fda5503ae26",
-    ".github/workflows/ci_check.yml": "99b9aa43d4386de9a461126fea0f60f3e553ba8c0b59fc8d776881be4a020d75",
+    ".github/workflows/ci_check.yml": "cf0c30fb7e465ca844998e6e3538f18013d7977a9a4054ae1ac43e6d754eb2f1",
     "package.json": "bc6cf936bb06ce7cd3d8950e64df1445df0c83a079c83b4aa6abb012c09bdfd8",
     "pnpm-lock.yaml": "618ccc6ac527c9fe1cd1ef4bca703535ccd2d8560fd9c2d25f5aba83cbd236e5",
     "frontend/src/domain/journal.ts": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354",
@@ -22,23 +22,23 @@
     "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
     "frontend/tests/session-journal.test.ts": "e5fe0d28cb4774543002db0cb628d5cba408d5f99e908d44e31ba943c3d57313",
     "specs/household-entry-interface.md": "68c3f90d903290913ea517886487bbbfa12ca392ff0050a720571b866fcb10d4",
-    "docs/household-entry-interface.md": "fc0aa23994530e6e185e05a0bfe509d0a381a70b25ce3b02b6d176faeded5a5b",
+    "docs/household-entry-interface.md": "2db41e720ce69c8283b75a6dd24b42dc740d86bfd292b4cb940c718816b96bee",
     "frontend/src/application/entry-controller.ts": "1d3749809a505c2eaac11927463a3d92376251a8d235056a4a843202bd55926b",
     "frontend/tests/controller.test.ts": "0e1f5bb3dd2c61bfd101537e539b00ea09d3b96fd65e1fe0fda8f61761962221",
     "backend/src/domus/entrypoints/entry_context.py": "c3c8b64c603dd4de8330f9e336754c190f793e245d0a8e0455ac06e110919f78",
-    "backend/src/domus/entrypoints/http.py": "1ce75e97b2111528f44941feeb9402bd589a1d5fa35bbd5162dc791f03bcb82a",
-    "backend/src/domus/entrypoints/native_http.py": "b1edf7494b871e9d8de7d403d57febba50059d7c30838e995a265980413d1205",
-    "backend/src/domus/composition/server.py": "ec2abd426f2bc0ca32b5b5a5020052052a9893e149e67531091a5a0c82406ec2",
-    "backend/src/domus/composition/ingress.py": "e0f4afe9e3fc8f31536d573d8c8e69462c90fa3259429b1c8144923d17194e49",
-    "tests/backend/test_entry_context.py": "43c30eec8fbfd286fc5b746016478909bd8684c7c7227cf475975106c3324ea4",
+    "backend/src/domus/entrypoints/http.py": "f17742c2259caa441b64032607cd6fbe564a0d1d858f3added45c6b46d8f5900",
+    "backend/src/domus/entrypoints/native_http.py": "a92c0e10887892e53aad84cf62208c79ad66ce642d4b86d52b2d284785f854da",
+    "backend/src/domus/composition/server.py": "447ce32b77b19c1e911556103661721ed4e44114579c3340eb07a700976913b0",
+    "backend/src/domus/composition/ingress.py": "4edf774fdb8921d04e94b80563006bdfa5a1fb7489f020cf8e5b65a255e55e5b",
+    "tests/backend/test_entry_context.py": "fcbb14ebd36b566ec96c5c52ffafe1b49d5e6bd5fc7873a2b6547074381cd55a",
     "tests/backend/test_auth_http.py": "9210053066bff8f20e1d14be8c6728ccacdcbd3fdfad7af29c8b6c17e6026e15",
-    "tests/backend/test_household_http.py": "c5b1bb142f7169bd5f430aa709494739b98917e045d3462044ba407e4e85f2af",
+    "tests/backend/test_household_http.py": "1dee86554eed12c3587d93aaddc568d9c031eda71171346d6428a00574d6b26c",
     "tests/backend/test_ha_app_launcher.py": "ed75a97f3566936c3063db080510a09f3e2f5af65f2201aba9c16101f9629332",
     "docs/contracts/auth-api.openapi.json": "17933ff4fb9c416371ee20453c1d77131fdf24202d372ef72074f80ef263d0a7",
-    "docs/contracts/household-api.openapi.json": "b447734da4d369ee2a7032f59b4d6b172c544a3da8497920356c66f77c500252",
-    "docs/contracts/native-household-api.openapi.json": "3d5d472f0d96e010399ef2dbafff908f794467530212d32c9d04be8bd55db35f",
-    "docs/household-api.md": "00c49ad51b2a283d527aab3c3e0b96140d43fbbc48f0a4b5c025c2a18ef690b5",
-    "docs/native-household-api.md": "8ff7d1b85e9e33d881b64f4203763eecbc22af0ad8220b688706f90e401140bc"
+    "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
+    "docs/contracts/native-household-api.openapi.json": "1606e2c41386d95651c1548db09fac180f8226e827082dc48648721601b8b1a2",
+    "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
+    "docs/native-household-api.md": "54cc9cafedb8599861c661154241c47370a9c57e50abed743d074af41a473a4c"
   },
   "runtime": {
     "node": "24.20.0",
@@ -52,14 +52,14 @@
     "applicationModel": 210,
     "sourceInventoryAudit": 1,
     "nodePolicies": 35,
-    "pythonTooling": 73,
+    "pythonTooling": 147,
     "unimportedRuntimeIncluded": true,
     "runtimeSourceFiles": 5,
     "plannedCases": 48,
     "claim": "210 executed model/journal/storage/controller cases, including67 Application cases. These are not210 specification acceptance cases; the48 original prospective inventory rows remain, with HTTP/rendering/package/owner acceptance unproven.",
-    "pythonToolingOrigin": "Original73-case tooling run at695e5c3; tooling/Python source unchanged and not locally rerun in this frontend increment.",
+    "pythonToolingOrigin": "Current combined source147 tests/214 statements/98 branches100%; prior73-case local tooling evidence remains historical in source history.",
     "controllerCases": 67,
-    "frontendOrigin": "Unchanged five-module frontend/controller and210-case actual Chromium measurement at published59278ff; not locally rerun in this backend-only increment."
+    "frontendOrigin": "Actual210-case Chromium revalidation on this combined source; all5 runtime modules/four metrics100%."
   },
   "coverage": {
     "frontend": {
@@ -249,9 +249,9 @@
     "Original completed-result deadline TDD reproduced2 failures/208 passes while session remained valid; tick and fresh refresh now hide expired recovery records/results. Final210 cases cover all403 statements/297 branches/71 functions/287 lines across five modules."
   ],
   "limitations": [
-    "Concrete frontend HTTP adapter attaching/decoding the server assertions is still required.",
+    "Concrete frontend HTTP adapter attaching/decoding the implemented server assertions is still required.",
     "No rendered Lit UI, locale/a11y/layout acceptance, package update or owner HA data change.",
-    "Action-owned parent sync previously failed under#844; no manual parent sync, credential or Copilot change. Current hosted integration must be checked independently.",
+    "Action sync failure remains reported#844; exceptional locally tested reconciliation uses standing maintainer authorization, same ref and normal fast-forward publication only.",
     "Partial Bugbot conversation coverage remains reported#843; no full feature/review acceptance is claimed."
   ],
   "rawEvidence": "/private/tmp/domus-http-context-checkpoint-retained/measurements.tar.gz",
@@ -382,22 +382,22 @@
     "rawEvidence": "/private/tmp/domus-controller-checkpoint-retained/measurements.tar.gz"
   },
   "serverContext": {
-    "localBackendCases": 1442,
-    "newContextCases": 31,
-    "sourceFiles": 69,
+    "localBackendCases": 2932,
+    "newContextCases": 33,
+    "sourceFiles": 105,
     "completeFilesystemInventory": true,
     "coverage": {
-      "covered_lines": 4771,
-      "num_statements": 4771,
+      "covered_lines": 7672,
+      "num_statements": 7672,
       "percent_covered": 100.0,
       "percent_covered_display": "100.00",
       "missing_lines": 0,
-      "excluded_lines": 132,
+      "excluded_lines": 225,
       "percent_statements_covered": 100.0,
       "percent_statements_covered_display": "100.00",
-      "num_branches": 1324,
+      "num_branches": 2162,
       "num_partial_branches": 0,
-      "covered_branches": 1324,
+      "covered_branches": 2162,
       "missing_branches": 0,
       "percent_branches_covered": 100.0,
       "percent_branches_covered_display": "100.00"
@@ -421,9 +421,34 @@
       "Compatibility audit found an existing task-runtime native-factory caller on develop. Native positional clock contract retained, absent metadata stays null/unavailable; no invented identity or blanket skip. Final1442 pass with4771 statements/1324 branches100%."
     ],
     "limitations": [
-      "Local feature checkout still has pre-task parent; current develop fetched read-only. Hosted merged-source CI is separate and must be inspected.",
-      "No frontend HTTP adapter, rendered interface or actual browser-to-server/owner adoption claim.",
-      "No business migration, installed Edge.3 change, HA data change, Copilot/gateway modification or manual branch-parent synchronization."
-    ]
+      "Frontend HTTP adapter, rendered interface and browser-to-server/owner adoption remain incomplete.",
+      "Exceptional reconciliation of existing managed ref uses explicit standing owner merge authorization and documented Action failure#844; no Copilot resource/credential change or force push.",
+      "Current committed-source publication/hosted CI/review must be inspected separately; tests here prove locally integrated source, not owner adoption."
+    ],
+    "preReconciliationEvidence": {
+      "sourceRevision": "f05fc2d827d90344b468f48ae5e0f1015f0ea97e",
+      "localBackendCases": 1442,
+      "contextCases": 31,
+      "sourceFiles": 69,
+      "statements": 4771,
+      "branches": 1324,
+      "coverage": "100% per file; raw backend-compatible report retained."
+    }
+  },
+  "reconciliationBase": "a97294385798b31e98c200e7ed93e355ffc7c9a7",
+  "synchronizationRecovery": {
+    "failureReport": "https://github.com/vypdev/copilot/issues/844",
+    "plan": "/private/tmp/domus-http-context-checkpoint-retained/reconciliation-plan.json",
+    "sourceHead": "f05fc2d827d90344b468f48ae5e0f1015f0ea97e",
+    "developBase": "a97294385798b31e98c200e7ed93e355ffc7c9a7",
+    "authorization": "Standing explicit maintainer authorization for all necessary pushes/merges in active goal; exceptional recovery prerequisites recorded before local merge.",
+    "conflicts": [
+      "backend/src/domus/composition/ingress.py",
+      "backend/src/domus/composition/server.py",
+      "backend/src/domus/entrypoints/native_http.py",
+      "tests/backend/test_household_http.py"
+    ],
+    "resolution": "Additive task/entry constructor, imports and fixture wiring; actual combined OpenAPI/catalog regenerated; all protected Copilot trees identical in both parents and worktree.",
+    "validation": "2932 backend cases on105 modules,7672 statements/2162 branches100%;210 Chromium/four metrics,147 tooling,35 Node, strict types/architecture/docs/SDK48 rows. Publication is separate."
   }
 }

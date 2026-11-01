@@ -247,3 +247,38 @@ def test_legacy_native_factory_without_installation_metadata_never_invents_conte
     response = client.get("/api/v1/authorization", headers={"X-Domus-Context": "invented"})
     assert response.status_code == 403
     runtime.close()
+
+
+@pytest.mark.parametrize("deployment", ["native", "standalone"])
+def test_integrated_task_routes_share_the_verified_context_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, deployment: str
+) -> None:
+    runtime = None
+    if deployment == "native":
+        runtime, client, _, _ = native_fixture(tmp_path, monkeypatch)
+        subject = USER
+    else:
+        client, _, _, _, _, _ = standalone_fixture(tmp_path)
+        login(client)
+        subject = "a" * 32
+    origin = str(client.base_url).rstrip("/")
+    csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
+    created = client.post(
+        "/api/v1/household",
+        json={"name": "Home", "time_zone": "UTC", "expected_revision": 0},
+        headers={"Origin": origin, "X-CSRF-Token": csrf, "Idempotency-Key": "task-context-home"},
+    )
+    assert created.status_code == 200
+    actual = f"v1:{INSTANCE}:edge:{subject}"
+    assert (
+        client.get("/api/v1/tasks/policy", headers={"X-Domus-Context": actual}).status_code == 200
+    )
+    rejected = client.get(
+        "/api/v1/tasks/policy", headers={"X-Domus-Context": actual.replace(":edge:", ":stable:")}
+    )
+    assert rejected.status_code == 403 and "default_rules" not in rejected.text
+    assert (
+        client.get("/api/v1/tasks/policy", headers={"X-Domus-Context": actual}).status_code == 200
+    )
+    if runtime:
+        runtime.close()

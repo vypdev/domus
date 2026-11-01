@@ -174,6 +174,16 @@ def test_backend_cannot_inherit_the_tooling_coverage_result() -> None:
     )
     assert "backend" in REQUIRED_JOBS
     assert "backend" in jobs["aggregate"]["needs"]
+    steps = jobs["backend"]["steps"]
+    audit = next(
+        i
+        for i, step in enumerate(steps)
+        if step.get("run") == "uv run domus-check backend-coverage --report coverage-backend.json"
+    )
+    assert "pytest tests/backend" in steps[audit - 1]["run"]
+    assert "if" not in steps[audit] and "continue-on-error" not in steps[audit]
+    assert "continue-on-error" not in jobs["backend"]
+    assert all("continue-on-error" not in step for step in steps)
     architecture_commands = [step["run"] for step in jobs["architecture"]["steps"] if "run" in step]
     assert "uv run lint-imports --config architecture/python-application.ini --no-cache" in (
         architecture_commands

@@ -106,7 +106,7 @@ and selects no actor. Legacy raw API requests may omit it; the upcoming frontend
 send it on bound requests. Existing cookie/Ingress, Origin, CSRF and per-command current authority
 remain mandatory. No CORS permission or public port is added.
 
-Thirty-one additional backend scenarios exercise actual guarded ASGI/SQLite and both compositions,
+Thirty-three additional backend scenarios exercise actual guarded ASGI/SQLite and both compositions,
 including metadata, preview, stale context, role denial, original-key replay and fixed clock anchor.
 These server tests do not wire the frontend adapter or prove rendered/owner acceptance. The checked
 OpenAPI snapshots come from the actual applications. The host launcher test prepares its simulated

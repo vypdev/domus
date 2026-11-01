@@ -1,7 +1,8 @@
 # Identity and storage migrations
 
-Status: schema 1/2/3 to schema 4 is an implemented additive upgrade within the M1 development branch.
-This does not establish a released package upgrade, restore command or HA authentication journey.
+The M1 checkpoint below introduced schema 4. The development task source now uses schema 7;
+see [task migration](tasks/migration.md) for versions 5–7, frozen inputs and rollback. Installed
+Edge.3 remains pinned to the separate M1 source. Source tests do not establish a released upgrade.
 
 | Version | Introduced state | Upgrade behavior |
 |---|---|---|
@@ -43,7 +44,7 @@ APIs and actual offline activations. The local Edge.3 image also upgrades actual
 restores its schema-3 snapshot; complete deployment acceptance remains pending. The frozen schema-3 fixture was captured from
 002a982ee60b8aa22a707de402ab1e8fc0306be5 before changing the schema, independently of new constants.
 
-Rollback needs a compatible application/database pair. Never run an older application on schema 4
+Rollback needs a compatible application/database pair. Never run an older application on a newer schema
 or decrement `user_version` manually. [Snapshot creation/inspection](snapshots.md) is implemented;
 offline restoration to a verified same-installation/channel generation is implemented locally.
 Cross-architecture/live restore, destructive-upgrade backups, package hooks and operational

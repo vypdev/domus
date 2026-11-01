@@ -11,6 +11,10 @@ During explicit setup, choose how administration maps from HA: all HA administra
 
 ## Daily work
 
+The development task API is documented in [task execution](tasks/execution.md), with
+[operation/recovery guidance](tasks/operator-recovery.md) and [migration limits](tasks/migration.md).
+Those backend contracts do not yet supply the complete task UI or real Points/Inventory effects.
+
 Create a task with only a title, then optionally set category, priority, duration, assignment, materials,
 schedule, recurrence and verification. Claim available work or inspect assignments.
 When completing, name the actual performers. A task awaiting verification does not award points yet.

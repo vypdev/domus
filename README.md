@@ -10,12 +10,20 @@ into one responsive interface. Normal operation does not require AI or cloud ser
 
 Domus has tested backend storage, identity policy and a standalone authentication API/CLI in development.
 The Edge HA app preview uses native Ingress authentication and owned storage without another sign-in.
-The household product, product UI, production packages and release artifacts remain incomplete.
+The task-domain foundation now has immutable lifecycle/participation rules, SQLite persistence,
+tested checkpoint/restore support and current-authority checks. Transactional task commands and
+task APIs remain in development. Creation, assignment, self-claim, progress, completion, verification
+and reopening now commit atomically with replay evidence and source events. Versioned policy,
+definition, occurrence and dependency editors are also implemented. Authorized bounded queries, signed
+pagination and restoration-aware history/own-operation reads are tested at the application boundary.
+Task HTTP commands/queries now run in both business compositions behind existing session protections.
+Materials/consumer integration, product UI, packages and releases remain incomplete.
 The [documentation foundation](https://github.com/vypdev/domus/issues/2) initially covered eleven SDDs,
-82 requirements and 353 cases. The current catalog contains thirteen Draft SDDs across eleven
-capabilities, 95 requirements and 443 inventory cases, including both platform companions and the
+82 requirements and 353 cases. The current catalog contains fourteen Draft SDDs across eleven
+capabilities, 109 requirements and 485 inventory cases, including both platform companions, the
+[task execution companion](specs/task-execution-foundation.md) and the
 [confirmed task-policy refinement](docs/decisions.md). These are verification plans, not a claim that
-443 product journeys have executed or passed. The unpublished UI proposal in issue #8 is excluded.
+485 product journeys have executed or passed. The unpublished UI proposal in issue #8 is excluded.
 [Current acceptance boundaries](docs/acceptance-plan.md) distinguish implementation and remaining work.
 
 The first usable release covers all six domains, Supervisor App/Ingress and
