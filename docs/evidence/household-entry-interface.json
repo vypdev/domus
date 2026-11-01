@@ -1,8 +1,8 @@
 {
-  "verifiedAtUTC": "2026-11-01T17:05:59.453782+00:00",
+  "verifiedAtUTC": "2026-11-01T17:11:53.790913+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "54159084e3fe8b9e3541830d05e1b24f07f14dac",
-  "sourceIdentity": "Unchanged production UI boundary; added3real composed identity-denial regressions plus1built-product denied-identity journey. Focused6backend cases and all43product browser cases pass. Nonpersonal source-bound shell grants no access; all personal APIs still reject unknown/revoked/mismatched proof. Semantic Bugbot false positive reportedupstream847; native resolution remains pending.",
+  "sourceBase": "7e80b1aa7ccc42a233f69c010d9dfa29323bfd4e",
+  "sourceIdentity": "Close the read-only SQLite connection owned by the new denial-regression fixture. Published7e80b1a full backend2987/565Chromium/43product/18catalog campaigns pass; unchanged production coverage is100%. Its3ResourceWarnings came from this test connection, now explicitly closed. Focused6cases pass with ResourceWarning treated as error. Runtime/image source unchanged; next-head hosted CI/review remain separate.",
   "sources": {
     ".github/workflows/ci_check.yml": "cd11d915b1ba84625e42454c02fe4f7c2a764d905a8cedf4e623f1ab2681e702",
     ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
@@ -83,7 +83,7 @@
     "tests/backend/test_native_http.py": "2833101dc2e4207b34265ee968bfdfacda5747c5ef86e49292d4caf4107eba08",
     "tests/backend/test_ui_bundle.py": "acc3d8ca1f4c1451dfb9df73e0011d95b56d8ab5e24170dac700c2214f39d356",
     "tests/backend/test_ui_http.py": "b89802b78e2a0ef3a76d8209968a8637e6a731840aba32fbdba12a6e132fd821",
-    "tests/backend/test_ui_session.py": "5792ed289d4d05dce61a11f42171d6d62ff51893af3ee2b60e1ba27c62550cb9",
+    "tests/backend/test_ui_session.py": "d3325b441aa5f4353cf8979e10d50f79058b6cf85160aedd4eb4eb3e616d0c9d",
     "tests/browser/entry_server.py": "9c05735f3fc8dd9f3665f152f25a1c9c68505243dd620bc721777bc8429e7e4f",
     "tests/containers/restore_fixture.py": "dc980694e27ca2cf5621117fb7be8355d1ea3d6b4345a4109033a926c66c71b8",
     "tests/containers/test_app_compatibility.py": "b0e8bd6d7e0923bf062533ae3ccb525a6af24e1a5935392f936e7be96b4e1f9e",
@@ -113,7 +113,7 @@
     "unimportedRuntimeIncluded": true,
     "runtimeSourceFiles": 15,
     "plannedCases": 48,
-    "claim": "43current composed Playwright cases pass without retries;6focused UI/session backend cases pass, including3new denial scenarios. Full published5415908 backend2984cases and frontend565cases retain100% across unchanged production code, alongside42published browser cases. Full new-head CI/review is independent; no48fully accepted owner journeys/all-domain-release claim.",
+    "claim": "Published7e80b1a backend2987cases/all107modules pass100%; frontend565Chromium cases/all15runtime modules pass all four metrics100%,43product cases and18catalog cases pass. Only fixture connection cleanup changes after that proof; focused6cases pass with ResourceWarning as error. Current next-head hosted gates are independent.",
     "pythonToolingOrigin": "Current corrected full148case tooling campaign passes at100%; package assertions live in the original backend suite. The full current backend2984campaign, including corrected package guards, passes at100%.",
     "controllerCases": 73,
     "frontendOrigin": "Current15-module Chromium measurement includes synchronous in-flight logout refusal at both orchestration boundaries.",
@@ -122,7 +122,7 @@
     "browserCatalogCases": 18,
     "storybookStates": 14,
     "storyMatrixRenders": 56,
-    "backendCases": 2984,
+    "backendCases": 2987,
     "backendSourceFiles": 107,
     "productBrowserCases": 43,
     "wheelAcceptanceCases": 1,
@@ -1722,5 +1722,15 @@
     "rawEvidence": "/private/tmp/domus-entry-restoration-checkpoint-retained/native-ui-proof.tar.gz",
     "rawSHA256": "9a3960b59eb99e7635b9739fabd719da4d6d931822491bcdc56a0e663668864b",
     "runtimeUnchanged": true
+  },
+  "fixtureResourceCleanup": {
+    "sourceBase": "7e80b1aa7ccc42a233f69c010d9dfa29323bfd4e",
+    "observed": "Hosted backend passes2987cases/100% with3ResourceWarnings from the newly added test-only read-only SQLite connections.",
+    "change": "contextlib.closing now closes each connection explicitly; a SQLite transaction context alone does not close it. Production code unchanged.",
+    "focusedCommand": "pytest tests/backend/test_ui_session.py --no-cov -q -W error::ResourceWarning",
+    "focusedResult": "6passed in1.23s",
+    "rawEvidence": "/private/tmp/domus-entry-restoration-checkpoint-retained/native-ui-proof-closed-sqlite.out",
+    "hostedBackend": "/private/tmp/domus-entry-restoration-checkpoint-retained/hosted-backend-7e80b1a.out",
+    "hostedFrontend": "/private/tmp/domus-entry-restoration-checkpoint-retained/hosted-frontend-7e80b1a.out"
   }
 }

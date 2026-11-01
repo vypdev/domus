@@ -3,6 +3,7 @@
 import json
 import re
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -102,7 +103,9 @@ def test_native_nonpersonal_delivery_cannot_reestablish_rejected_human_access(
         assert response.status_code == 401
         assert "Home" not in response.json().values()
     assert prove.call_count == 4
-    with sqlite3.connect(f"file:{tmp_path / 'domus.sqlite3'}?mode=ro", uri=True) as database:
+    with closing(
+        sqlite3.connect(f"file:{tmp_path / 'domus.sqlite3'}?mode=ro", uri=True)
+    ) as database:
         for table in ("households", "members", "receipts", "audit", "outbox"):
             assert database.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 1
     runtime.close()
