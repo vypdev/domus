@@ -454,7 +454,10 @@
         "docs/operations.md",
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
-        "docs/evidence/task-execution-foundation.json"
+        "docs/evidence/task-execution-foundation.json",
+        "docs/tasks/operator-recovery.md",
+        "docs/tasks/migration.md",
+        "docs/tasks/execution.md"
       ],
       "readiness": {
         "state": "draft",

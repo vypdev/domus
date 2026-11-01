@@ -1,9 +1,9 @@
 {
-  "verifiedAtUTC": "2026-11-01T09:20:29.160215+00:00",
+  "verifiedAtUTC": "2026-11-01T10:07:23.912714+00:00",
   "issue": "https://github.com/vypdev/domus/issues/13",
   "pullRequest": "https://github.com/vypdev/domus/pull/14",
-  "sourceBase": "cd0795125274678432464f976c86995925562882",
-  "sourceIdentity": "Working-source independent backend coverage auditor/CI enforcement over sourceBase. Backend runtime source and original complete 2899-case measurement are byte-identical; new complete tooling execution/audit evidence follows. Full product/feature acceptance remains unproven.",
+  "sourceBase": "2207bca2f13dedee7cf61372eae711765c1bb911",
+  "sourceIdentity": "Working-source documentation closeout over sourceBase; every backend and tooling source byte unchanged. Original execution/coverage measurements retain their explicit origin; fresh hosted CI/review required on the published new head.",
   "sources": {
     ".github/workflows/ci_check.yml": "b35aba02bcef4c1d4355a5e2762093309e61dc7f8569e5e5b6739442c1a0b308",
     "backend/src/domus/application/ports.py": "5f42858e39d4606a93378085fb2ad5469d0db2c69187debdf148dae413ecc8ab",
@@ -93,7 +93,15 @@
     "tests/python/test_ci_contract.py": "4b7579d9b0d1c738b9b19477859725d2e553b3f23a0693679741edfb439cd252",
     "tooling/domus_tooling/backend_coverage.py": "d0cacb38ff4ddba1b8e57e1789a29300d520bbcbfd0c94588d91e26dce2755f3",
     "tooling/domus_tooling/cli.py": "dc4ddf26cfd4f0e40de11b96eeced41235a1832eba618b5070248bc808014a4e",
-    "pyproject.toml": "46e9bd656fc33535403195aa6b9743e17847581863add8a73a22381bcb5b9127"
+    "pyproject.toml": "46e9bd656fc33535403195aa6b9743e17847581863add8a73a22381bcb5b9127",
+    "docs/tasks/operator-recovery.md": "44f6946865550b4b219ad4b9f0552bf047df3a483b172862f1b1587d5dee3963",
+    "docs/tasks/migration.md": "480708e3243e3497e988545a3e6ab096eb5dcec82a84834eb81e064a18892dee",
+    "docs/user-guide.md": "a46ff6d4e69cab534c8b54a7ee7916378a6e49d297457726937bd502a723d31f",
+    "docs/snapshots.md": "964e0fc1725afbe410e081d296dfe93d3248d100db5d2a5173a227329fa96c2a",
+    "docs/restoration.md": "9d6c34b8d16ee34ee44479a80c0ed654223ce0dd1679286c456a0536c12c4c58",
+    "docs/migrations-identity-storage.md": "2d19439a508e1f994359599d422d968f680a4af69c3415f844baf84b38fc2ea9",
+    "docs/operations-identity-storage.md": "7d4a1799d303ab59443397b78bb713c5c92b0fb13aeaba0f98097a532c1f9cbb",
+    "specs/task-execution-foundation.md": "d5464f9da30ef5bbc93bc764d5daa27b97ff79bd02b2442642ad3eba116ac7bd"
   },
   "wholeBackendSourceInventory": {
     "backend/src/domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
@@ -2824,5 +2832,32 @@
       ".venv/bin/mypy tooling backend/src",
       "COVERAGE_FILE=/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling.coverage .venv/bin/pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling-coverage.json --cov-report=xml:/private/tmp/domus-coverage-import-fix-validation-ca78c0e/tooling-coverage.xml -q --basetemp=$TMPDIR/domus-coverage-import-fix-pytest-ca78c0e"
     ]
+  },
+  "previousEvidenceOrigin": {
+    "verifiedAtUTC": "2026-11-01T09:20:29.160215+00:00",
+    "sourceBase": "cd0795125274678432464f976c86995925562882",
+    "sourceIdentity": "Working-source independent backend coverage auditor/CI enforcement over sourceBase. Backend runtime source and original complete 2899-case measurement are byte-identical; new complete tooling execution/audit evidence follows. Full product/feature acceptance remains unproven."
+  },
+  "documentationCloseout": {
+    "sourceBase": "2207bca2f13dedee7cf61372eae711765c1bb911",
+    "newGuides": [
+      "docs/tasks/operator-recovery.md",
+      "docs/tasks/migration.md"
+    ],
+    "migrationScope": "Task source schema7; installed Edge.3 remains separate M1/schema4. No released upgrade, live owner restore or actual consumer delivery claimed.",
+    "runtimeChanged": false,
+    "localBackendRerun": false,
+    "validation": "Documentation links and original pinned SDD format/consistency/catalog pass; original case rows unchanged. Runtime/coverage source hashes verified unchanged.",
+    "reviewAtSourceBase": {
+      "runId": 41295181268,
+      "jobId": 124814425025,
+      "checkId": 124815488764,
+      "outcome": "no-findings",
+      "coverage": "complete",
+      "dismissedFalsePositive": 1,
+      "nativeThread": "PRRT_kwDOVa5AKs6yY-1j",
+      "upstream": "https://github.com/vypdev/copilot/issues/831#issuecomment-6556304600",
+      "limitation": "This complete review belongs to sourceBase, not the upcoming documentation commit."
+    }
   }
 }

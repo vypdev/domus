@@ -9,6 +9,10 @@ pending.** Installed Edge.3 passes bounded connection/reload/restart acceptance.
 a restoration on the owner's Home Assistant. Restore authority belongs to the installation console;
 there is no restore HTTP endpoint.
 
+The development [task source](tasks/migration.md) extends this protocol through schema 7. Its
+historical-input and prepared-target migration proof is separate from the unchanged Edge.3 image
+observations above; no owner restoration or new installed package is implied.
+
 The owner accepted [A30](decisions.md): select the checkpoint's business state while preserving
 readable later receipts and history as already processed. Retaining history must prevent duplicate
 effects without silently restoring newer business changes.
@@ -73,7 +77,7 @@ Conflicts or copy/validation failures leave source data intact and retain privat
 An error or deadline after manifest publication reports uncertainty; inspect that same target rather
 than retrying into it. Never claim that an output error proves no artifact was written.
 
-Preparation keeps checkpoint schema 1, 2, 3 or 4 unchanged. Later acknowledgements and rolled-away
+Preparation keeps supported checkpoint schemas 1–7 unchanged in the task source. Later acknowledgements and rolled-away
 facts remain sealed in the journal until activation imports them. Preparation alone does not migrate
 or activate the candidate.
 

@@ -5,7 +5,7 @@
 - Catalog capability ID: household-tasks
 - Last verified: not applicable (prospective companion; catalog evidence verified at `a63b2315cd5121dde9585ba8875e286fdef5330e`)
 - Owners: Domus maintainers (review assignment pending)
-- Scope: Durable task definitions, occurrences, completion cycles, authorization, and consumer integration seams.
+- Scope: Durable task execution and consumer integration seams.
 - Related issues/PRs: [Issue #13](https://github.com/vypdev/domus/issues/13); merged PR #12 is historical context.
 - Required review gates: product UX, architecture, testing, documentation, security/operations
 - Open decisions blocking readiness: A37 confirms manual manager acceptance; full contract/runtime/composition review remains required. Draft is not acceptance.
@@ -14,13 +14,13 @@
 
 A title such as “Wipe table” atomically creates a definition/occurrence. Eligible members claim/perform it; cycles retain performers/time, required adult approval and unique consumer events. Restricted self-claim never waives verification. Inventory/Points own ledgers.
 
-All 49 baseline household-tasks cases remain unchanged; new cases use task-execution-foundation-CNN. The Action registered both documents in d4f3f911dd145d77255f47a882542f08e5c98055. Empty catalog implementation arrays at publication prove no runtime.
+All 49 owning cases remain unchanged. New namespace: task-execution-foundation-CNN. Publication: d4f3f911dd145d77255f47a882542f08e5c98055. Empty implementation arrays prove no runtime.
 
 ## 2. Problem, current behavior, and evidence
 
 ### 2.1 Problem
 
-Work must survive edits, retries, races, restart and restore. A completed flag loses definitions, occurrences, performers, approval and reopening. Restricted self-claim retains approval; absent consumers prove no effects.
+Preserve definitions, cycles, attribution and approval across edits, retries, races, restart and restore; absent consumers prove no effects.
 
 ### 2.2 Current behavior
 
@@ -564,6 +564,10 @@ After pytest, backend CI runs `domus-check backend-coverage --report coverage-ba
 | `docs/native-household-api.md` | update |
 | `docs/sdd-validation.md` | update |
 | `docs/development.md` | update |
+| `docs/snapshots.md` | update |
+| `docs/restoration.md` | update |
+| `docs/operations-identity-storage.md` | update |
+| `docs/migrations-identity-storage.md` | update |
 | `specs/README.md` | reference |
 | `specs/household-identity.md` | update |
 | `specs/points-rewards.md` | update |
