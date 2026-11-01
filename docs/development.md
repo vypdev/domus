@@ -359,3 +359,47 @@ their existing query rules. The authentication-only preview does not acquire bus
 See the [task execution guide](tasks/execution.md) for payloads, defaults, original-key recovery,
 restoration and the explicitly unsupported material fields. The task-specific own-operation route
 rechecks original authority and prioritizes historical suppression over old outbox acknowledgement.
+
+
+## Task material model and semantic processor
+
+The material model now keeps canonical amounts, Inventory-owned binding snapshots and cycle-bound
+intent state. Quantities are nonnegative canonical strings with at most 12 integer/six fractional
+digits and no sign/exponent/zero aliases. Bindings additionally constrain unit precision. No Tasks
+code calculates stock deltas. Missing actual quantity remains pending_recording; explicit zero is
+not_used and cannot construct a movement request. Separate recording never auto-posts at completion.
+
+The processor delegates reference resolution and effects to transaction-local Inventory semantics.
+Its authority port must reread current grants and return a local member ID; prior authorization is
+only an immutable source fact. Ordinary missing authority may retain valid completion usage; explicit
+post/correct/dismiss requires current authority. Pending Inventory results certify no new movement.
+UnavailableTaskInventory cannot resolve a catalog reference or confirm any stock effect.
+
+Resource revision guards optimistic concurrency; effect revision changes only with desired quantity.
+The source key excludes current actor/pending metadata and binds the full target/source effect.
+Corrections preserve original submitted quantity and the last confirmed total until actual Inventory
+confirmation. A correction needs new movement/operation identities; returning to the already
+confirmed amount needs no new movement. Dismissal cannot erase confirmed consumption. Exact proof
+replay is inert, and foreign/stale/conflicting proof cannot overwrite a later intent.
+
+These are pure-model and semantic-port tests. The services are not yet wired to task persistence or
+HTTP; existing task routes still reject material fields. No material stock, ledger or real-consumer
+acceptance is claimed. Required next work:
+
+- Declare/migrate a material schema using the frozen pre-material schema-5 input from immutable
+  17ea907, preserving earlier frozen fixtures and processed historical operations.
+- Extend definition/occurrence snapshots and original canonical requests compatibly. Omitted new
+  material fields must retain old request fingerprints; explicit replacement/clear stays distinct.
+- Persist intent source facts and each compound state transition under the one writer/receipt/audit
+  boundary, with CAS, immutable-source guards, cycle/line uniqueness and restore inspection. Recording
+  plus confirmation and correction plus confirmation can each advance resource revision twice; store
+  those transitions atomically rather than assuming every final projection advances exactly once.
+- Bind actual current task/material authority and transaction-local Inventory semantics. Providers
+  must not perform network I/O or independent commits under that writer.
+- Wire adjustable completion usage and explicit settlement in both HTTP compositions, truthful
+  current/historical outcomes, concurrency/replay/rollback and actual migration/restoration tests.
+  Map quantity values to canonical wire strings; keep bounded compact outcomes in receipt/event
+  documents and full intent/binding records separate. Resolve admission unavailability explicitly;
+  ordinary consumer unavailability after valid performance remains a pending outcome.
+- Keep real Inventory/Points/recurrence/review projections and full product UI/deployment acceptance
+  separate until their owning implementations supply evidence.

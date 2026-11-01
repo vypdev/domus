@@ -284,3 +284,31 @@ inventory remain intact. Materials/settlement, review projection and real consum
 HA and full first-release acceptance remain incomplete. Prior query-head CI is fully green; its
 separate assessment failure is reported in Copilot #829. Finished-feature current-head CI and complete
 full-context Bugbot without unresolved findings remain mandatory before merge.
+
+
+## Material model and transaction-local semantic ports — 2026-11-01
+
+Five new runtime leaves define canonical amounts, bounded Inventory-owned bindings, intent/effect
+revisions, immutable submission facts, pending outcomes, scoped confirmations and explicit
+correction/dismissal. The application processor uses current-authority and Inventory ports, never
+stock arithmetic or a synthetic ledger. Missing actual quantity differs from explicit zero; separate
+recording requires an explicit later action. Corrected totals need actual matching confirmation,
+and cannot reuse an immutable prior movement/operation identity.
+
+All 144 new pure/port cases pass with all 346 statements and 134 branches covered across the five
+material modules. The final complete backend passes 2,400 tests, with all 6,624 statements and 1,870
+branches covered across all 91 authored files; coverage/source inventories match exactly. Twenty-three
+task modules contribute 1,875 statements and 550 branches, all covered. The 127-file/729-dependency
+inward/acyclic graph, strict types/formatting, links, all 113 tooling/architecture fixtures and original
+pinned SDD/catalog checks pass. Original case rows and fourteen/109/485 planned inventory remain.
+
+The inner model/processor and explicit absence adapter are tested with labeled semantic port fakes.
+No material persistence, HTTP support, stock ledger or real-consumer delivery is implied. Those are
+required next integrations. An independent schema-5 SQL input was prepared from immutable 17ea907
+and checked by that same runtime after real checkpoint/activation: one closed cycle remains, with a
+later completion retained as historical and absent from current state. It is preserved for the next
+migration, not generated from a later schema or counted as a new migration passing.
+
+The previous HTTP head has complete project CI; its separate Copilot assessment rejection is
+reported upstream without modifying Copilot or weakening acceptance. Finished-feature current-head
+CI and complete full-context Bugbot with no unresolved findings remain mandatory before merge.

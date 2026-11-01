@@ -37,6 +37,10 @@ class IdentityUnavailable(DomusError):
     """A bounded provider availability failure; never a mutation grant."""
 
 
+class IntegrationUnavailable(DomusError):
+    """A required domain integration cannot currently establish its own facts."""
+
+
 class StorageBusy(DomusError):
     """A bounded writer slot was not obtained; identical retry is possible."""
 
