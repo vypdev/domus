@@ -476,7 +476,8 @@
       "owner": "Domus maintainers (review assignment pending)",
       "lastVerified": "2026-10-29",
       "specs": [
-        "specs/recurrence-calendar.md"
+        "specs/recurrence-calendar.md",
+        "specs/recurrence-execution-foundation.md"
       ],
       "workflows": [],
       "entrypoints": [],
