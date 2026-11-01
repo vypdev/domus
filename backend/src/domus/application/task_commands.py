@@ -21,6 +21,8 @@ from domus.application.task_facts import (
 )
 from domus.application.task_material_commands import TaskMaterialCommands, material_result
 from domus.application.task_material_ports import MissingTaskInventory, TaskInventory
+from domus.application.task_material_scope import MaterialScope
+from domus.application.task_material_views import material_outcome
 from domus.application.task_requests import (
     AssignTask as AssignTask,
 )
@@ -44,6 +46,9 @@ from domus.application.task_requests import (
     ReopenTask as ReopenTask,
 )
 from domus.application.task_requests import (
+    SettleTaskMaterial as SettleTaskMaterial,
+)
+from domus.application.task_requests import (
     TransitionTask as TransitionTask,
 )
 from domus.application.task_requests import (
@@ -62,6 +67,7 @@ from domus.domain.errors import Conflict, Forbidden, IntegrationUnavailable
 from domus.domain.identity import MemberStatus
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
 from domus.domain.task_material_values import validate_material_usages
+from domus.domain.task_materials import MaterialIntent
 from domus.domain.task_policy import validate_dependency_graph
 from domus.domain.task_values import (
     OccurrenceState,
@@ -183,6 +189,8 @@ class TaskCommands:
         transition_target: OccurrenceState | None = None,
         definition_id: str | None = None,
         needs_material_link: bool = False,
+        material_cycle_id: str | None = None,
+        material_intent_id: str | None = None,
     ) -> Receipt:
         human = self.actor.current()
         access = TaskAccess(human)
@@ -197,9 +205,42 @@ class TaskCommands:
             transition_target=transition_target,
             definition_id=definition_id,
             needs_material_link=needs_material_link,
+            material_cycle_id=material_cycle_id,
+            material_intent_id=material_intent_id,
         )
         return AtomicCommands(self.transactions, authority, self.clock, self.identifiers).execute(
             command, request.document(), lambda unit: apply(unit, access)
+        )
+
+    def settle_material(self, key: str, request: SettleTaskMaterial) -> Receipt:
+        def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
+            # Current source authority was checked before original receipt lookup.
+            work = cast(
+                TaskOccurrence, unit.tasks.occurrence(self.household_id, request.occurrence_id)
+            )
+            cycle = cast(TaskCycle, unit.tasks.cycle(self.household_id, request.cycle_id))
+            original = cast(
+                MaterialIntent, unit.task_materials.get(self.household_id, request.intent_id)
+            )
+            if original.revision != request.expected_revision:
+                raise Conflict("revision_conflict")
+            updated = self._materials(unit, access).settle(original, request)
+            result = _cycle_result(work, cycle).decode()
+            result["material"] = JsonDocument(
+                json.dumps(asdict(material_outcome(updated)))
+            ).decode()
+            result["material_source"] = MaterialScope.source(work, cycle, original).document()
+            result["material_action"] = request.action.value
+            return _change("task.material.settled", request, JsonDocument.from_value(result))
+
+        return self._execute(
+            key,
+            "task.material.settle",
+            request,
+            apply,
+            occurrence_id=request.occurrence_id,
+            material_cycle_id=request.cycle_id,
+            material_intent_id=request.intent_id,
         )
 
     def create(self, key: str, request: CreateTask) -> Receipt:

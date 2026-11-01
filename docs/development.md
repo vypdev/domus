@@ -272,7 +272,7 @@ repositories, schema-6 migration/checkpoint integration, current authority and d
 assignment, claim, progress, completion, verification and reopening commands, plus policy, definition,
 occurrence and dependency editors. Application queries now expose bounded definitions/occurrences,
 current detail/action hints, restoration-aware history and own-operation lookup. Both business compositions now expose task HTTP behind their existing session, Origin and CSRF
-boundaries. Material settlement, dependency-review projections and actual consumers remain
+boundaries. Dependency-review projections and actual consumers remain
 incomplete.
 
 Domain never authenticates or authorizes requests. TaskAccess rereads current active membership,
@@ -341,6 +341,7 @@ uv run pytest tests/backend/test_task_edit_commands.py
 uv run pytest tests/backend/test_sqlite_tasks.py tests/backend/test_sqlite_task_integrity.py
 uv run pytest tests/backend/test_task_material_commands.py
 uv run pytest tests/backend/test_task_material_queries.py tests/backend/test_task_material_http.py
+uv run pytest tests/backend/test_task_material_settlement.py
 ```
 
 Tests use real SQLite files and controlled concurrent writers. Isolated repository checks, owned-store
@@ -387,20 +388,20 @@ replay is inert, and foreign/stale/conflicting proof cannot overwrite a later in
 TaskCommands now connects material selection and initial completion to these semantics. The typed
 application requests preserve legacy fingerprints when new fields are omitted/null; explicit empty
 lists remain distinct. Both HTTP compositions accept bounded selections/usages and query current or
-explicit original-cycle outcomes. Explicit post/correct/dismiss remains incomplete. A36 permits
-confirmed-consumption corrections by any currently authorized material participant; original facts
-and Inventory confirmation remain mandatory.
+explicit original-cycle outcomes. Explicit post/correct/dismiss now runs through the same atomic
+boundary. A36 permits confirmed-consumption corrections by any currently authorized material
+participant; original facts and Inventory confirmation remain mandatory.
 
-Required next work:
+Each settlement reauthorizes current grants and original scope before receipt disclosure, preserving
+safe retry after later corrections/restoration. A strict server-recorded MaterialScope carries only
+source selectors and original performer IDs; it grants nothing. Current live records must agree.
+Historical proof may recover absent intent/cycle facts while current work still exists, without
+recreating an effect. The processor stages the corrected desired quantity through the caller's CAS
+callback before asking Inventory for confirmation. Every single-step revision, final result and
+receipt/audit/event share one writer. Work/cycle revisions stay unchanged.
 
-- Wire explicit material settlement in both HTTP compositions.
-- Reauthorize each settlement using current grants and the original command's scope before receipt
-  disclosure, preserving safe retry after later corrections and restoration. Initial grant facts
-  never authorize a new movement.
-- Store each correction/confirmation CAS step atomically with its receipt/audit/source event. A
-  compound correction may advance resource revision twice; do not skip the intermediate revision.
-- Keep actual Inventory/Points/recurrence/review implementations and UI/package/owner acceptance
-  separate until their owning services supply evidence.
+Required next work: dependency-review projection, actual Inventory/Points/recurrence services and
+their integration, and UI/package/owner acceptance. Semantic fixtures do not establish those results.
 
 
 ## Material persistence and read projection
@@ -423,8 +424,8 @@ Read responses use outer DTOs so planned quantities appear as canonical strings 
 Both composed OpenAPI snapshots preserve existing paths, security and schema values while adding
 bounded material inputs and live outcome schemas. The domain has no Pydantic/FastAPI dependency.
 Material write DTOs and live current/original-cycle projections now share application semantics.
-Explicit settlement commands and real Inventory acceptance still require the next integration;
-SQLite and labeled confirmation fixtures do not establish actual stock movements.
+Explicit settlement commands now share the same boundary. Real Inventory acceptance still requires
+its owning integration; SQLite and labeled confirmation fixtures do not establish actual stock movements.
 
 
 ## Material selection and initial completion commands

@@ -39,7 +39,7 @@ Confirmed owner requirements are recorded in [product vision](product-vision.md)
 | A33 | Accepted: restricted members may self-claim available work offered to their profile by default; configurable household/task | Check current eligibility, capacity and explicit denials without silent reassignment; required adult approval remains | Owner confirmed 2026-10-31; task-execution-foundation cases and actual runtime proof remain required |
 | A34 | Accepted: completed prerequisite work may satisfy dependent completion while approval is pending by default; configurable household/task approval gate | Separate physical progress from point availability; an approved-work alternative remains selectable and completed cycles retain their policy snapshot | Owner confirmed 2026-11-01; task policy, command, snapshot and stale-cycle tests remain required |
 | A35 | Accepted: conserved-split remainders rotate among participants of the same task by default | Fairness follows the stable task definition across occurrences and genuine completion cycles; other accepted allocation modes remain available | Owner confirmed 2026-11-01; deterministic tie-break, changing participant sets and durable replay/rollback behavior remain engineering evidence gates |
-| A36 | Accepted: any participant currently authorized for the task's materials may correct confirmed consumption | Preserve original submitted/confirmed facts; Inventory must confirm the new total under current authority | Owner confirmed 2026-11-01; explicit settlement, retry/restoration authorization and compound CAS remain implementation gates |
+| A36 | Accepted: any participant currently authorized for the task's materials may correct confirmed consumption | Preserve original submitted/confirmed facts; Inventory must confirm the new total under current authority | Owner confirmed 2026-11-01; API settlement, original-scope retry/restoration and compound CAS are tested; actual Inventory acceptance remains |
 
 All current owning SDDs and companions remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
 The Copilot limitation is an observed constraint, not permission to change its implementation,
@@ -99,7 +99,8 @@ The owner also confirmed A32: a restricted member authorized for the task may re
 
 A36 also permits corrections to confirmed task-linked consumption by any currently authorized
 material participant. It does not grant general stock correction or policy configuration. Preserve
-the original movement and require Inventory to confirm the new total. Explicit settlement remains
-an implementation gate; live query tests can inspect such facts without claiming that command exists.
+the original movement and require Inventory to confirm the new total. Explicit settlement now runs
+through both APIs with current scoped/performance or general Inventory authority and original-scope
+receipt checks. Real Inventory ledger acceptance remains separate from semantic confirmation fixtures.
 
 The [task contract](../specs/household-tasks.md) owns the eleven additional acceptance scenarios. Inventory, identity and points link their related rules without counting duplicate cases. These remain prospective domain additions, not implemented task services in the M1 identity foundation. Engineering state labels and bounds remain review items; the defaults above are already owner-confirmed.

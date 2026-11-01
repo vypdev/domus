@@ -865,9 +865,7 @@ def test_general_inventory_authority_can_use_linked_materials_with_scoped_mode_d
     "change",
     ["household", "work", "cycle", "line", "recorder", "performed", "created", "mode", "action"],
 )
-def test_completion_material_authority_rejects_detached_source_and_unimplemented_actions(
-    tmp_path, change
-):
+def test_material_authority_rejects_detached_source_and_untyped_actions(tmp_path, change):
     from domus.application.task_authorization import TaskAccess, TaskMaterialAccess
     from domus.domain.errors import Forbidden, StorageFailure
     from domus.domain.task_material_values import MaterialAction
@@ -914,9 +912,7 @@ def test_completion_material_authority_rejects_detached_source_and_unimplemented
             value = replace(value, recording_mode=MaterialRecording.SEPARATE)
         authority = TaskMaterialAccess(TaskAccess(child.actor.current()), unit, "home")
         with pytest.raises((Forbidden, StorageFailure)):
-            authority.require(
-                value, MaterialAction.CORRECT if change == "action" else MaterialAction.POST
-            )
+            authority.require(value, None if change == "action" else MaterialAction.POST)
         with pytest.raises(Forbidden):
             authority.link_actor("other")
 

@@ -6,7 +6,12 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field
 
 from domus.domain.identity import Role
-from domus.domain.task_material_values import MaterialQuantity, MaterialSelection, MaterialUsage
+from domus.domain.task_material_values import (
+    MaterialAction,
+    MaterialQuantity,
+    MaterialSelection,
+    MaterialUsage,
+)
 from domus.domain.task_values import (
     DefinitionState,
     DependencyGate,
@@ -205,3 +210,10 @@ class VerifyBody(OccurrenceBody):
 class ReopenBody(OccurrenceBody):
     cycle_id: Identifier
     reason: str = Field(min_length=1, max_length=1000)
+
+
+class MaterialSettlementBody(OccurrenceBody):
+    cycle_id: Identifier
+    action: MaterialAction = Field(strict=False)
+    quantity: Quantity | None = None
+    reason: str = Field(default="", max_length=1000)

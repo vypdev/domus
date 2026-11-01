@@ -39,11 +39,11 @@ Verified facts at the immutable base:
 - Immutable base: commit `a63b2315cd5121dde9585ba8875e286fdef5330e`, tree `60842b62c64c28fe337891344a0eadea1ca8aac5`. Blob identities locate source, not execution support.
 - Related issue: https://github.com/vypdev/domus/issues/13. Owner answers on 2026-10-31 authorize checkout/API/lifecycle/material/coverage choices.
 - External primary sources: not applicable; product and repository contract evidence is local.
-- Unknowns: maintainers’ final review assignment; implementation feasibility findings that require code; actual Home Assistant adoption and consumer delivery, which require later integration evidence.
+- Unknowns: review assignment, implementation feasibility, actual HA adoption and consumer delivery.
 
 ### 2.4 Retrospective classification (as-built baselines only)
 
-Not applicable: this prospective companion does not reconstruct an implemented task-execution baseline. Empty implementation arrays and absent task source are preserved as blockers to implementation claims.
+Not applicable: this prospective companion claims no implemented task baseline or catalog evidence.
 
 ## 3. Actors, surfaces, and terminology
 
@@ -56,7 +56,7 @@ Not applicable: this prospective companion does not reconstruct an implemented t
 | Inventory consumer | Validate and settle task-linked usage in its own domain | Semantic port/event consumer | Actual movement or explicit pending status |
 | Points consumer | Consume eligible verified completion facts in its own domain | Durable uniquely identified event | Actual ledger result or no claim of delivery |
 
-A **definition** is the durable reusable task and lifecycle policy. An **occurrence** is one work instance and immutable definition snapshot. A **completion cycle** is one genuine performance attempt with its performers, policy snapshot, verification, and actual time. **Assigned members**, **actual performers**, and the **recording actor** are distinct facts. **Claim** assigns the current human actor to eligible available work. **Performed time** is when work happened; recorded, approved, and posted times are separate. **Task intent** retains material use associated with a cycle; Inventory alone owns stock and movement facts.
+**Definition**: reusable task/lifecycle policy. **Occurrence**: work instance/frozen definition. **Completion cycle**: genuine performance with performers, policy, verification and actual time. Assignment, actual performers and recorder differ. **Claim** assigns the current human eligible available work. Performed, recorded, approved and posted times differ. **Task intent** retains cycle-linked usage; Inventory owns stock/movements.
 
 ## 4. Goals
 
@@ -186,11 +186,11 @@ Publish Draft/planned leaves before code; declarations confer no execution credi
 
 Additional semantic permissions are tasks.read, tasks.claim, tasks.manage, tasks.record_for_others and tasks.material_use; retain tasks.create/complete/approve/configure. All profiles read tasks by default. Administrator/adult/restricted profiles may claim eligible work and use linked materials; administrator/adult profiles manage and record for others. Viewer mutations default to denied. Accepted household/profile/member precedence applies. Claim is independent of completion: restricted completion still requires actual assignment and self-participation. Task configuration stays administrator-only; approval requires a current adult and grant. Technical credentials never confer human authority.
 
-Commands reread active membership, mapping and current profile/member grants transactionally. Only the actor supplies current HA proof; other performers retain local profiles. Role/rule snapshots confer no current grants. Shared typed lifecycle/editor/query/HTTP services execute; materials/consumers remain incomplete.
+Recheck active membership, mapping and grants transactionally. HA proof is actor-only; other performers retain local profiles. Snapshots grant nothing.
 
-Creation/assignment/claim obtain fresh human proof before the writer. First create initializes absent task defaults atomically with an active/available pair (or explicit draft pair), receipt, audit and outbox. Non-inherited overrides require configuration plus creation authority on execution/replay. Assignment needs management and at most 32 distinct active members; empty assignment releases eligible work. Self-claim derives the sole assignee, requires available/unassigned work and current eligibility, and has one concurrent winner. Authority precedes original receipt disclosure; state/revision preconditions follow it. No source event confirms consumer delivery.
+Creation/assignment/claim verify human proof before the writer. First create atomically saves absent defaults, active/available or explicit draft pair, receipt/audit/outbox. Real overrides need create/configuration grants on execution/replay. Management assigns at most 32 distinct active members; empty assignment releases eligible work. Self-claim derives the sole assignee, requires available/unassigned work/current eligibility and has one concurrent winner. Authority precedes receipt disclosure; state/revision checks follow. Events do not confirm consumers.
 
-Completion checks current assignment, restricted self-attribution and on-behalf grants before receipt disclosure. New work resolves active performer profiles, current defaults/frozen overrides, exact required-work facts and policy revisions transactionally. Approval needs current adult authority; cycle/pointer/revision/participation preconditions follow receipt lookup. Assigned performers may start/block/unblock their work; publishing, cancellation, skip and reopen require management. Completion is never a state setter. Cycle/occurrence updates and one full source event commit together. Reopen closes the cycle and emits its compensation/review cause; actual ledger compensation, stock return and review projection remain separate consumers.
+Completion checks current assignment, restricted self-attribution and on-behalf grants before receipt disclosure, then resolves active performers, defaults/frozen overrides, required work and policy revisions. Approval needs a current adult grant before cycle/pointer/revision/participation checks. Assigned performers may start/block/unblock; publishing/cancel/skip/reopen require management. Dedicated completion commits cycle/occurrence/event atomically. Reopen closes the cycle and emits compensation/review causes; actual ledger compensation, returns and review remain consumer work.
 
 Policy replacement is administrator-only: zero creates absent defaults, positive revision updates. Definition management preserves omitted overrides; explicit replacement/reset additionally requires configuration on execution/replay. Edits affect future snapshots only. New occurrences use the current definition under the writer, accept 32 active assignees and 32 IDs per prerequisite/subtask list, and reject paused/archived parents. Dependency replacement requires management/nonterminal work; terminal edges remain frozen until explicit reopening. Both graph editors validate every household page and retain dependency IDs in results/events. Stale, foreign or cyclic input cannot partly rewrite state.
 
@@ -215,6 +215,8 @@ Resource revision guards edits; an independent effect revision changes only with
 The processor uses transaction-local Inventory/current-authority ports and reauthorizes explicit post/correct/dismiss. Owner decision: any currently authorized material participant may correct confirmed consumption; preserve the original movement and require Inventory confirmation of the new total. Completion retains ordinary denied usage. Pending certifies no new movement; absence never confirms stock. Fixtures alone establish no consumer acceptance.
 
 Material requests use `materials` selections on create/update and `material_usages` on completion. Omitted/null new fields stay absent from canonical payloads, preserving old fingerprints; explicit empty lists remain distinct. References/actuals use canonical strings. Linking requires current task create/manage plus inventory.manage, including explicit replacement/clear. Scoped use requires tasks.material_use plus current performance authority and effective scoped policy, or applicable general Inventory authority. No initial grant snapshot authorizes a later step. Validate all usage identities/precision before work effects. Record one intent per frozen line; missing actuals stay unknown. One writer saves initial intent and each subsequent CAS transition with work/receipt/audit/outbox. A missing optional Inventory provider retains valid usage as pending processing; approval/replay/reopen never invokes it again. Actual ledger acceptance remains separate.
+
+Settlement targets the original cycle/intent, including closed cycles; expected_revision guards the intent. Only correct accepts quantity; correct/dismiss require a reason (max 1000). All actions use current A36 material grants. Before receipt disclosure validate server-recorded source selectors/performers against immutable evidence and current work; snapshots grant nothing. Historical retry may recover absent intent/cycle facts without recreating effects; missing current work denies access. New actions require valid live sources. Correction stages each single-step CAS before Inventory confirmation; final intent/receipt/audit/event commit together. Work/cycle revisions stay unchanged. History labels original settlement action/reason separately from current material state.
 
 ### HTTP contract
 
@@ -489,6 +491,8 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `tests/backend/test_task_material_values.py` | create |
 | `backend/src/domus/application/task_materials.py` | create |
 | `backend/src/domus/application/task_material_commands.py` | create |
+| `backend/src/domus/application/task_material_scope.py` | create |
+| `tests/backend/test_task_material_settlement.py` | create |
 | `tests/backend/test_task_material_commands.py` | create |
 | `backend/src/domus/infrastructure/sqlite_tasks.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_records.py` | create |

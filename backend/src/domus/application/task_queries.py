@@ -33,6 +33,7 @@ from domus.domain.storage import (
     RestorationProvenance,
     validate_identifier,
 )
+from domus.domain.task_material_values import MaterialAction
 from domus.domain.task_policy import require_completion_state, requirements_satisfied
 from domus.domain.task_values import (
     DefinitionState,
@@ -118,6 +119,8 @@ class TaskHistoryItem:
     archived_by: str | None
     outbox_delivery: str
     consumer_delivery: str = "unconfirmed"
+    material_action: MaterialAction | None = None
+    material_intent_id: str | None = None
 
 
 def _possible(check: Callable[[], object]) -> bool:
@@ -350,7 +353,7 @@ class TaskQueries:
         self, unit: UnitOfWork, occurrence_id: str, row: RetainedOperation
     ) -> TaskHistoryItem:
         evidence = row.evidence
-        recorded_request(evidence)
+        request = recorded_request(evidence)
         value = evidence.receipt.result.decode()
         try:
             if value.get("occurrence_id") != occurrence_id:
@@ -359,6 +362,12 @@ class TaskQueries:
             validate_revision(revision)
             state = OccurrenceState(cast(str, value.get("state")))
             reason = cast(str, value.get("state_reason", ""))
+            material_action = None
+            material_intent_id = None
+            if evidence.receipt.command.action == "task.material.settle":
+                reason = cast(str, request["reason"])
+                material_action = MaterialAction(cast(str, request["action"]))
+                material_intent_id = cast(str, request["intent_id"])
             validate_task_text(reason, 1000, required=False, multiline=True)
             cycle = value.get("cycle")
             cycle_id = verification = performed_at = None
@@ -398,6 +407,8 @@ class TaskQueries:
             else "acknowledged"
             if evidence.delivered
             else "pending",
+            material_action=material_action,
+            material_intent_id=material_intent_id,
         )
 
     def operation(self, operation_id: str) -> OperationView:

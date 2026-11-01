@@ -414,3 +414,42 @@ final measurements are retained separately in the source-identified evidence arc
 No real Inventory ledger, product UI/package/owner HA acceptance or completed first release is
 implied. Explicit post/correct/dismiss, dependency review and real consumers remain required.
 Current-head hosted CI and complete full-context Bugbot without unresolved findings still gate merge.
+
+## Explicit material settlement checkpoint
+
+The increment over 2a3809d implements post/correct/dismiss through both business HTTP compositions.
+Revision guards belong to the original intent; a closed cycle remains a legitimate source without
+changing current work/cycle revisions. A36 permits confirmed correction under the same current
+material grants, including an authorized restricted participant. Quantity is correction-only;
+correction/dismissal require bounded meaningful reasons. Normal missing-actual, already-settled and
+unchanged-total transitions return safe conflicts without a new movement.
+
+Strict server-recorded MaterialScope selects the original work/cycle/line/intent and performers.
+It is evidence, not authority. Before receipt disclosure, matching request/result/audit/event facts,
+current work and live source (when current) are checked again, followed by current grants. Historical
+proof can recover an original receipt when restoration removed its intent/cycle, without reapplying
+the effect. Missing current work or revoked authority denies disclosure. Resource-state/expected
+revision checks follow original receipt lookup, preserving retries after later corrections.
+
+The processor stages each correction CAS before Inventory confirmation; final intent, original
+receipt, audit and source event share one writer. Tests inject failures after staged/confirmed saves,
+audit and outbox, verifying both task facts and attached fictional SQL roll back. Real competing
+corrections yield one winner, and a lost return after actual commit recovers one original effect.
+Pending corrections retain desired versus confirmed totals; history labels original action/intent
+and reason. Restoring before completion and before settlement both preserve suppressed original
+receipts without another provider call. Fictional Inventory remains outside the restored root;
+this does not establish coupled real-ledger restoration.
+
+All 102 new cases and the complete backend pass: 2,743 tests, every one of 7,117 statements/1,994
+branches in all 99 authored files. Exact source and coverage inventories match; no exclusions,
+configuration or scope weakening was added. Strict typing covers 103 files including tooling; the
+135-file/812-dependency graph remains inward and acyclic. The 113 tooling/architecture fixtures,
+formatting, links and original pinned SDD/catalog checks pass. Existing planned case rows remain
+unchanged. A regression case exposed Python's true-equals-one comparison in recorded revision
+selectors; strict type checking now rejects that malformed evidence.
+
+Both actual ASGI OpenAPI references were regenerated. Existing path/security/schema values are
+unchanged; the settlement path, two request/enum schemas and two safe history properties are additive.
+No owner HA/UI/package or actual Inventory acceptance is claimed. Dependency-review projection,
+actual consumers and the complete first release remain required. Current-head CI and complete
+full-context Bugbot without unresolved findings still gate merge.

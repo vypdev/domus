@@ -1,5 +1,6 @@
 """Material orchestration preserves work and delegates every real stock effect to Inventory."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
@@ -105,10 +106,17 @@ class TaskMaterials:
         return self._post(intent, actor)
 
     def correct(
-        self, intent: MaterialIntent, quantity: MaterialQuantity, reason: str
+        self,
+        intent: MaterialIntent,
+        quantity: MaterialQuantity,
+        reason: str,
+        *,
+        stage: Callable[[MaterialIntent], None] | None = None,
     ) -> MaterialIntent:
         actor = _actor(self.authority.require(intent, MaterialAction.CORRECT))
         updated = intent.correct(quantity, reason, self.clock.now())
+        if stage is not None:
+            stage(updated)
         return self._post(updated, actor) if updated.needs_posting else updated
 
     def dismiss(self, intent: MaterialIntent, reason: str) -> MaterialIntent:

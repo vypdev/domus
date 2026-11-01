@@ -24,12 +24,14 @@ from domus.application.task_requests import (
     CreateTask,
     CreateTaskOccurrence,
     ReopenTask,
+    SettleTaskMaterial,
     TransitionTask,
     UpdateTaskDefinition,
     UpdateTaskDependencies,
     UpdateTaskPolicy,
     VerifyTask,
 )
+from domus.domain.task_material_values import MaterialQuantity
 from domus.domain.task_values import DefinitionState
 from domus.entrypoints.household_http import (
     OperationResponse,
@@ -47,6 +49,7 @@ from domus.entrypoints.task_dto import (
     DefinitionsQuery,
     DependenciesBody,
     Identifier,
+    MaterialSettlementBody,
     MaterialsQuery,
     OccurrenceBody,
     OccurrencesQuery,
@@ -334,6 +337,33 @@ def create_task_router(
             context(request).commands.reopen(
                 _key(request),
                 ReopenTask(occurrence_id, body.expected_revision, body.cycle_id, body.reason),
+            )
+        )
+
+    @router.post(
+        "/occurrences/{occurrence_id}/materials/{intent_id}/settlement",
+        response_model=ReceiptResponse,
+        openapi_extra=write_contract,
+    )
+    def settle_material(
+        occurrence_id: Identifier,
+        intent_id: Identifier,
+        request: Request,
+        body: MaterialSettlementBody,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> ReceiptResponse:
+        return _receipt(
+            context(request).commands.settle_material(
+                _key(request),
+                SettleTaskMaterial(
+                    occurrence_id,
+                    body.expected_revision,
+                    body.cycle_id,
+                    intent_id,
+                    body.action,
+                    None if body.quantity is None else MaterialQuantity(body.quantity),
+                    body.reason,
+                ),
             )
         )
 

@@ -1,12 +1,13 @@
 """Current task authority reads local facts; performer snapshots never confer grants."""
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 from typing import cast
 
 from domus.application.authorization import HouseholdAccess
 from domus.application.ports import UnitOfWork
-from domus.application.task_facts import resolved_rules
+from domus.application.task_facts import cycle_materials, resolved_rules
 from domus.application.task_material_ports import TaskMaterialAuthority
+from domus.application.task_material_scope import MaterialScope, material_scope
 from domus.application.task_requests import (
     AssignTask,
     ClaimTask,
@@ -14,12 +15,14 @@ from domus.application.task_requests import (
     CreateTask,
     CreateTaskOccurrence,
     ReopenTask,
+    SettleTaskMaterial,
     TaskRequest,
     TransitionTask,
     UpdateTaskDefinition,
     UpdateTaskDependencies,
     UpdateTaskPolicy,
     VerifyTask,
+    read_material_settlement,
     validate_recorded_material_request,
 )
 from domus.domain.errors import Forbidden, InvalidInput, StorageFailure
@@ -203,6 +206,8 @@ class TaskCommandAuthorization:
     transition_target: OccurrenceState | None = None
     definition_id: str | None = None
     needs_material_link: bool = False
+    material_cycle_id: str | None = None
+    material_intent_id: str | None = None
 
     def require(self, command: CommandKey, unit: UnitOfWork) -> None:
         if (
@@ -225,6 +230,16 @@ class TaskCommandAuthorization:
             self.access.require(unit, self.household_id, Permission.TASKS_MANAGE)
             if unit.tasks.definition(self.household_id, self.definition_id) is None:
                 raise Forbidden("permission_denied")
+        elif (
+            self.action == "task.material.settle"
+            and self.occurrence_id is not None
+            and self.definition_id is None
+            and isinstance(self.material_cycle_id, str)
+            and isinstance(self.material_intent_id, str)
+        ):
+            TaskMaterialAccess(self.access, unit, self.household_id).settlement(
+                command, self.occurrence_id, self.material_cycle_id, self.material_intent_id
+            )
         elif (
             self.action in _SCOPED_PERMISSIONS
             and self.occurrence_id is not None
@@ -271,6 +286,7 @@ _RECORDED: dict[str, tuple[type[TaskRequest], str]] = {
     "task.definition.update": (UpdateTaskDefinition, "task.definition.updated"),
     "task.occurrence.create": (CreateTaskOccurrence, "task.occurrence.created"),
     "task.dependencies.update": (UpdateTaskDependencies, "task.dependencies.updated"),
+    "task.material.settle": (SettleTaskMaterial, "task.material.settled"),
 }
 
 
@@ -306,6 +322,16 @@ def recorded_request(evidence: OperationEvidence) -> JsonObject:
         raise StorageFailure("invalid_task_operation")
     try:
         validate_recorded_material_request(request)
+        if contract[0] is SettleTaskMaterial:
+            selected = read_material_settlement(request)
+            scope = material_scope(receipt.result.decode())
+            if (
+                scope.household_id != receipt.command.household_id
+                or (scope.occurrence_id, scope.cycle_id, scope.intent_id)
+                != (selected.occurrence_id, selected.cycle_id, selected.intent_id)
+                or receipt.result.decode().get("material_action") != selected.action.value
+            ):
+                raise InvalidInput("invalid_material_scope")
     except InvalidInput, TypeError, ValueError:
         raise StorageFailure("invalid_task_operation") from None
     return request
@@ -350,6 +376,12 @@ def recorded_authorization(
         performer_ids=performer_ids,
         transition_target=target,
         needs_material_link="materials" in request,
+        material_cycle_id=cast(str, request["cycle_id"])
+        if action == "task.material.settle"
+        else None,
+        material_intent_id=cast(str, request["intent_id"])
+        if action == "task.material.settle"
+        else None,
         needs_configuration=(action == "task.definition.update" and overrides is not None)
         or (
             action == "task.create"
@@ -361,7 +393,7 @@ def recorded_authorization(
 
 @dataclass(frozen=True, slots=True)
 class TaskMaterialAccess(TaskMaterialAuthority):
-    """Current transaction authority for catalog linking and initial task-linked consumption."""
+    """Current authority for task-linked material actions; A36 includes confirmed correction."""
 
     access: TaskAccess
     unit: UnitOfWork
@@ -377,7 +409,7 @@ class TaskMaterialAccess(TaskMaterialAuthority):
         )
 
     def require(self, intent: MaterialIntent, action: MaterialAction) -> str:
-        if intent.household_id != self.household_id or action is not MaterialAction.POST:
+        if intent.household_id != self.household_id or not isinstance(action, MaterialAction):
             raise Forbidden("permission_denied")
         work = self.unit.tasks.occurrence(self.household_id, intent.occurrence_id)
         cycle = self.unit.tasks.cycle(self.household_id, intent.cycle_id)
@@ -392,6 +424,9 @@ class TaskMaterialAccess(TaskMaterialAuthority):
             or intent.recording_mode is not cycle.rules.material_recording
         ):
             raise StorageFailure("invalid_material_references")
+        return self._authorize(work, tuple(value.member_id for value in cycle.performers))
+
+    def _authorize(self, work: TaskOccurrence, performer_ids: tuple[str, ...]) -> str:
         actor = self.access.require(
             self.unit, self.household_id, Permission.TASKS_MATERIAL_USE, work
         )
@@ -403,7 +438,45 @@ class TaskMaterialAccess(TaskMaterialAuthority):
             rules, _ = resolved_rules(self.unit, work)
             if not rules.task_scoped_material_consumption:
                 raise Forbidden("permission_denied") from None
-            self.access.performance_actor(
-                self.unit, work, tuple(value.member_id for value in cycle.performers)
-            )
+            self.access.performance_actor(self.unit, work, performer_ids)
         return actor.member.member_id
+
+    def source(self, work: TaskOccurrence, cycle_id: str, intent_id: str) -> MaterialScope:
+        cycle = self.unit.tasks.cycle(self.household_id, cycle_id)
+        if cycle is None or cycle.occurrence_id != work.occurrence_id:
+            raise Forbidden("permission_denied")
+        values = cycle_materials(self.unit, work, cycle)
+        intent = next((value for value in values if value.intent_id == intent_id), None)
+        if intent is None:
+            raise Forbidden("permission_denied")
+        return MaterialScope.source(work, cycle, intent)
+
+    def settlement(
+        self, command: CommandKey, occurrence_id: str, cycle_id: str, intent_id: str
+    ) -> str:
+        work = self.unit.tasks.occurrence(self.household_id, occurrence_id)
+        if work is None:
+            raise Forbidden("permission_denied")
+        previous = self.unit.receipts.get(command)
+        if previous is not None:
+            row = self.unit.tasks.operation(
+                self.household_id, command.actor_id, previous.operation_id
+            )
+            if row is None or replace(previous, restoration=None) != row.evidence.receipt:
+                raise StorageFailure("invalid_task_operation")
+            recorded_request(row.evidence)
+            scope = material_scope(previous.result.decode())
+            if (scope.occurrence_id, scope.cycle_id, scope.intent_id) == (
+                occurrence_id,
+                cycle_id,
+                intent_id,
+            ):
+                try:
+                    scope.require_work(work)
+                    if row.current and self.source(work, cycle_id, intent_id) != scope:
+                        raise InvalidInput("invalid_material_scope")
+                except Forbidden, InvalidInput:
+                    raise StorageFailure("invalid_material_references") from None
+                return self._authorize(work, scope.performer_ids)
+        scope = self.source(work, cycle_id, intent_id)
+        return self._authorize(work, scope.performer_ids)

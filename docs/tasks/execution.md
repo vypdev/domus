@@ -1,7 +1,7 @@
 # Task execution API
 
 The development backend exposes the same task application services in the native HA app and
-standalone Container composition. The product task interface, material settlement and real domain
+standalone Container composition. The product task interface and real domain
 consumers remain incomplete. This API is not first-release acceptance or evidence of owner adoption.
 
 Native access uses the existing trusted HA Ingress session. Standalone access uses its existing
@@ -120,9 +120,41 @@ Each outcome distinguishes submitted quantity, desired `quantity`, state/pending
 last `confirmed_quantity`, `confirmed_effect_revision`, `posted_at` and movement reference. A pending
 correction cannot claim its desired total has already been consumed. Reopening removes the current
 cycle projection but leaves its explicit original-cycle query available. Original receipt outcomes
-stay unchanged. Explicit post/correct/dismiss commands still require implementation. Decision A36
-allows any currently authorized material participant to correct confirmed consumption while
-preserving original facts and requiring Inventory confirmation.
+stay unchanged. Decision A36 allows any currently authorized material participant to correct
+confirmed consumption while preserving original facts and requiring Inventory confirmation.
+
+## Explicit material settlement
+
+POST `/occurrences/{id}/materials/{intent_id}/settlement` accepts `cycle_id`, `expected_revision`,
+`action` and optional `quantity`/`reason`. The revision belongs to the intent, not the work or cycle.
+Use the original cycle even after reopening or a later performance. Actions are:
+
+- `post`: explicitly retry known pending consumption, including separate recording.
+- `correct`: supply a canonical new total and a nonblank reason of at most 1000 characters.
+- `dismiss`: retain an unposted intent as dismissed, with a nonblank reason. Confirmed consumption
+  cannot be erased by dismissal; use an authorized correction and actual Inventory confirmation.
+
+Only correction accepts a nonnull quantity. Missing actual quantity must first be recorded with a
+correction, including explicit zero when unused. A zero with no prior consumption requests no
+movement. Returning a pending correction to the already confirmed total needs no new movement.
+Ordinary invalid transitions return 409 (`material_actual_quantity_required`,
+`material_already_settled`, `material_unchanged`); stale intent revisions also conflict. Work/cycle
+revisions and verification are unchanged by settlement.
+
+Every action obtains fresh human proof and checks current material authority. Server-recorded
+original source selectors and performers are evidence, not grants. Original receipt disclosure
+rechecks that scope against current work and current permissions. Correcting a desired total and
+confirming it can advance the intent revision twice; both CAS steps, receipt, audit and source event
+share one transaction. An unexpected consumer failure rolls back every step, including attached
+fixture SQL. Actual Inventory remains responsible for ledger policy and effects.
+
+During provider absence or shortage, a valid requested correction remains pending and retains the
+last confirmed total/movement. Retry deliberately with the new current intent revision. Retrying
+an original key recovers its original outcome after later corrections or restoration, without
+calling Inventory again. A historical receipt can be recovered when its intent/cycle is absent,
+provided current work and original-scope authority remain available; it cannot recreate the effect.
+If current work is absent or access is revoked, disclosure is denied. History exposes the original
+`material_action`, intent ID and reason independently from live material state.
 
 ## Recover a result and inspect history
 

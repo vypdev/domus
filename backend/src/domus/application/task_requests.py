@@ -8,6 +8,7 @@ from domus.domain.errors import InvalidInput
 from domus.domain.identity import validate_revision
 from domus.domain.storage import JsonDocument, JsonObject, JsonValue, validate_identifier
 from domus.domain.task_material_values import (
+    MaterialAction,
     MaterialQuantity,
     MaterialSelection,
     MaterialUsage,
@@ -32,6 +33,8 @@ class TaskRequest:
     def document(self) -> JsonDocument:
         # Tuples and string enums become JSON arrays and exact enum values.
         value = asdict(self)
+        if value.get("quantity") is not None:
+            value["quantity"] = value["quantity"]["value"]
         for field, quantity in (("materials", "planned_quantity"), ("material_usages", "quantity")):
             if field in value:
                 if value[field] is None:
@@ -153,6 +156,46 @@ class ReopenTask(OccurrenceRequest):
         OccurrenceRequest.__post_init__(self)
         validate_identifier(self.cycle_id)
         validate_task_text(self.reason, 1000, required=True, multiline=True)
+
+
+@dataclass(frozen=True, slots=True)
+class SettleTaskMaterial(OccurrenceRequest):
+    """The expected revision belongs to the intent, never the occurrence or cycle."""
+
+    cycle_id: str
+    intent_id: str
+    action: MaterialAction
+    quantity: MaterialQuantity | None = None
+    reason: str = ""
+
+    def __post_init__(self) -> None:
+        OccurrenceRequest.__post_init__(self)
+        validate_identifier(self.cycle_id)
+        validate_identifier(self.intent_id)
+        if (
+            not isinstance(self.action, MaterialAction)
+            or (
+                self.action is MaterialAction.CORRECT
+                and not isinstance(self.quantity, MaterialQuantity)
+            )
+            or (self.action is not MaterialAction.CORRECT and self.quantity is not None)
+        ):
+            raise InvalidInput("invalid_material_settlement")
+        validate_task_text(
+            self.reason, 1000, required=self.action is not MaterialAction.POST, multiline=True
+        )
+
+
+def read_material_settlement(request: JsonObject) -> SettleTaskMaterial:
+    return SettleTaskMaterial(
+        cast(str, request["occurrence_id"]),
+        cast(int, request["expected_revision"]),
+        cast(str, request["cycle_id"]),
+        cast(str, request["intent_id"]),
+        MaterialAction(cast(str, request["action"])),
+        None if request["quantity"] is None else MaterialQuantity(cast(str, request["quantity"])),
+        cast(str, request["reason"]),
+    )
 
 
 @dataclass(frozen=True, slots=True)

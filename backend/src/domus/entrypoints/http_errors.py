@@ -124,6 +124,10 @@ PUBLIC_CODES = frozenset(
         "invalid_material_list",
         "invalid_material_reference",
         "invalid_material_scope",
+        "invalid_material_settlement",
+        "material_actual_quantity_required",
+        "material_already_settled",
+        "material_unchanged",
         "inventory_unavailable",
     }
 )
