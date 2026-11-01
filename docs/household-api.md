@@ -48,6 +48,12 @@ must derive assignment/ownership facts on the server. A member's roster profile 
 profile, not a claim of another person's currently inherited HA administrator source. The own access
 view separately reports effective_role from that person's verified source and the current mapping.
 
+The typed policy permission enum also accepts tasks.read, tasks.claim, tasks.manage,
+tasks.record_for_others and tasks.material_use alongside the earlier task permissions. Both published
+OpenAPI references include these exact identifiers. The M1 authorization list remains scoped to
+household administration; application task-authority helpers and permission entries do not expose
+task routes or prove material posting. See the [task companion](../specs/task-execution-foundation.md).
+
 Source authorization responses also include `message` and `action_required`: pending membership
 states that the verified account was linked, access is not active, and an administrator must review
 it. Enrollment receipts describe what the original operation did; replay after later activation

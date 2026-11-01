@@ -88,6 +88,10 @@ If task-scoped consumption is disabled and the actor lacks the applicable invent
 
 Verification controls point eligibility independently of physical usage. An eligible material movement may post while work awaits adult approval; rejection or reopening never fabricates a physical return. Replaying the original completion, approving it or changing either policy cannot consume again. Retained receipts/history explain the original effective policy but never authorize a newly revoked movement.
 
+The owner confirmed on 2026-10-31 that a restricted member may claim an available task for themselves when it is offered to their profile. This is enabled by default and configurable per household/task. Current eligibility, capacity, profile/member exceptions and explicit applicable denials are checked at commit; competing claims cannot silently reassign work. Claiming does not waive adult verification or authorize another person as claimant. The backend companion specifies and tests this contract independently of the existing 49-case inventory.
+
+The owner confirmed on 2026-11-01 that prerequisite approval timing is configurable per household/task. By default, performed prerequisite work may allow completing its dependent while adult approval is pending; an approved-work alternative waits for approval. This does not make pending points spendable, grant approval authority or waive current permissions. Completion retains the effective gate with its cycle; later settings cannot rewrite it. Rejected verification requests review and does not satisfy either gate.
+
 ### 6.2 States and alternatives
 
 Definition: draft -> active <-> paused -> archived. Occurrence: draft -> available <-> assigned -> in_progress; available/assigned/in_progress -> blocked or completed; blocked -> available or assigned; active states -> cancelled or skipped. Reopen completed -> assigned if assignees exist, otherwise available. Verification is a separate pending/approved/rejected decision; pending completion is displayed as awaiting verification and awards no points.
@@ -107,6 +111,7 @@ The owner confirmed that reopening a prerequisite does not reopen its completed 
 | Input | Type | Recommended default | Allowed values/range | Scope/persistence |
 |---|---|---|---|---|
 | `default_priority` | enum | normal | low, normal, high, urgent | household; occurrence snapshots |
+| `dependency_gate` | enum | performed | performed or approved; rejected verification satisfies neither | household/task override; effective completion snapshot |
 | `completion_verification` | enum | role_default | role_default: adults none, restricted performers authorized_adult; explicit none/authorized_adult overrides require administrator permission | definition; effective role policy and revision snapshotted at completion |
 | `adult_performer_may_approve` | boolean | true | household default; administrator-authorized task override; false requires an adult outside the actual performer set | effective value and policy revisions snapshotted at completion; current authority always rechecked |
 | `task_scoped_material_consumption` | boolean | true | household default; administrator-authorized task override; only validated task-linked material usage, never general stock authority | policy and material snapshot retained with completion; revoked authority cannot post a new movement |

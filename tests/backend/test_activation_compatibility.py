@@ -37,7 +37,7 @@ def identity_at(root, installation):
     return path
 
 
-@pytest.mark.parametrize("version", [1, 2, 3])
+@pytest.mark.parametrize("version", [1, 2, 3, 4])
 def test_real_activation_upgrades_only_target_from_frozen_source_and_checkpoint(tmp_path, version):
     archive, root = tmp_path / "snapshot", tmp_path / "root"
     archive.mkdir(mode=0o700)
@@ -47,7 +47,8 @@ def test_real_activation_upgrades_only_target_from_frozen_source_and_checkpoint(
     with closing(sqlite3.connect(database, autocommit=True)) as connection:
         connection.executescript(frozen.read_text())
         # Frozen v1/v2 contain a dummy fingerprint; use a canonical digest for replay evidence.
-        connection.execute("UPDATE receipts SET payload_fingerprint=?", ("a" * 64,))
+        if version < 3:
+            connection.execute("UPDATE receipts SET payload_fingerprint=?", ("a" * 64,))
     database.chmod(0o600)
     identity = identity_at(archive, INSTALLATION)
     checkpoint = Snapshot(
@@ -78,10 +79,12 @@ def test_real_activation_upgrades_only_target_from_frozen_source_and_checkpoint(
     selected = open_storage(root, "edge")
     try:
         with selected.database._connection() as connection:
-            assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
-            assert connection.execute("SELECT COUNT(*) FROM retained_operations").fetchone()[0] == 1
+            assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
+            assert connection.execute("SELECT COUNT(*) FROM retained_operations").fetchone()[0] == (
+                2 if version == 4 else 1
+            )
         with selected.database.read() as unit:
-            assert unit.households.current().revision == (1 if version == 3 else 3)
+            assert unit.households.current().revision == (1 if version >= 3 else 3)
             assert len(unit.audit.entries("home")) == len(unit.outbox.pending()) == 1
     finally:
         selected.close()

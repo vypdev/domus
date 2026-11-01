@@ -160,7 +160,7 @@ def test_compatible_migration_preserves_identity_history_and_adds_empty_recovery
         assert unit.outbox.pending()[0].event_id == "old-operation"
         assert unit.recoveries.pending("home", 3000) == ()
     with closing(sqlite3.connect(path)) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 7
 
 
 def test_failed_v2_upgrade_rolls_back_all_new_schema_and_replay_data(

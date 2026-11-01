@@ -35,7 +35,8 @@ uv run ruff format --check .
 uv run mypy tooling
 uv run mypy backend/src
 uv run pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing
-uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing
+uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml
+uv run domus-check backend-coverage --report coverage-backend.json
 pnpm check
 pnpm test
 uv run lint-imports --config architecture/python-tooling.ini --no-cache
@@ -51,6 +52,25 @@ reported metrics are enforced at 100% globally and per file. This is tooling cov
 the fictional framework fixture and future application UI coverage. Tests, generated dependencies and framework configuration
 are distinct from runtime source. A source-inventory test rejects a new backend, UI or HA runtime
 file until its own applicable coverage/architecture gate is registered.
+
+The backend job additionally audits its produced JSON against every `.py` file under
+`backend/src/domus`. The verifier independently reconstructs the default-policy executable lines,
+excluded type-only declarations and branch destinations with the locked Coverage.py version,
+without importing or executing application modules. Each file's execution sets, exact integer
+counts, 100% numeric metrics and overall totals must agree with that complete source model.
+Empty module files remain valid; an entirely empty executable backend cannot pass.
+
+This rejects omitted/unimported files, invented zero-statement modules, report-controlled exclusions,
+explicit coverage pragmas, malformed/duplicate/nonfinite JSON, Boolean count/line aliases, rounded
+percentages, missing branch evidence, noncanonical/foreign paths, symlinks and source changes during
+verification. Reports must be regular files, branch-enabled format 3 from the installed locked
+Coverage.py version, at most 64 MiB. Diagnostics are bounded. The audit follows successful pytest
+in the same required backend job; it does not replace execution, semantic assertions or provenance.
+
+Run from the repository root; `--root` selects another complete checkout and a relative `--report`
+resolves there. Recreate a missing/stale/malformed report by running the exact backend command above.
+Do not remove files, branches or exclusions from the evidence to make it pass. The verifier needs
+development dependencies; lazy command loading preserves `domus-check docs` in `--no-dev` jobs.
 
 ## Architecture contracts
 
@@ -263,3 +283,245 @@ builds and browser assertions. Current-head hosted CI/Bugbot are separate PR gat
 is not a Domus installation, product UI, native Ingress/standalone OAuth proof, owner Chrome
 dogfooding or evidence for the 48 proposed household-interface cases. Stable/Edge and both deployment
 targets retain their own pending acceptance obligations.
+
+## Task execution backend
+
+Issue #13 has an Action-published [backend companion](../specs/task-execution-foundation.md).
+The current source implements immutable task rules, typed policy/definition/occurrence/cycle
+repositories, schema-6 migration/checkpoint integration, current authority and durable creation,
+assignment, claim, progress, completion, verification and reopening commands, plus policy, definition,
+occurrence and dependency editors. Application queries now expose bounded definitions/occurrences,
+current detail/action hints, restoration-aware history and own-operation lookup. Both business compositions now expose task HTTP behind their existing session, Origin and CSRF
+boundaries. Dependency-review projections and actual consumers remain
+incomplete.
+
+Domain never authenticates or authorizes requests. TaskAccess rereads current active membership,
+identity mapping, profile/member rules and stored assignment inside the caller transaction. Claim
+permission is separate from assigned completion. On-behalf attribution requires its own grant;
+a restricted actor cannot omit its own participation. Only the submitting actor supplies current
+HA proof; another performer retains its local profile instead of an assumed external administrator
+source. Approval uses current adult permission and the original cycle's participation rule.
+
+TaskCommands obtains fresh proof before SQLite and uses AtomicCommands to commit state, original
+receipt, audit and one source event together. Current grants precede receipt disclosure; new-work
+preconditions follow it. First creation initializes absent defaults in that same write transaction.
+Assignments accept at most 32 distinct active household members; self-claim is exclusive for
+available work. Completion snapshots actual performers, policy revisions and performed/recorded
+UTC times. Pending/rejected verification cannot satisfy approved-work gating; the performed default
+also accepts pending approval. Required subtasks use the same explicit gate. Approval does not close
+a cycle. Reopen closes it without erasing facts or automatically reopening completed dependents.
+Source events identify the full cycle and causal revision, while consumer delivery remains explicitly
+unconfirmed. They do not prove ledger compensation, stock movement or a finished review projection.
+
+TaskQueries receives a server-proven human or valid outage read lease. Every page rereads local
+membership and task-read authority in one read transaction. Policy reads return revision zero and
+documented defaults when absent, without creating records. Lists return summaries with 25 items by
+default and at most 100, using one lookahead row. Detail resolves current rules, immutable work and
+actual dependency/cycle facts through the shared task_facts readers. Allowed actions describe current
+self-performance/state/permission possibilities; every write still obtains fresh proof and rechecks.
+
+The outer TaskCursor signs bounded keyset positions with HMAC-SHA256 and an injected process key.
+Tokens expire after five minutes by default and bind account, installation, channel, household, query,
+filters and page size through a context digest. A restart/key change may require refreshing a list.
+Pagination is not a cross-page snapshot: concurrent edits may change later pages. No tokens contain
+raw HA identifiers or grant write authority.
+
+Task history merges at most two bounded SQL pages of current and retained evidence by durable outbox
+position. Current retained projections appear once; historical effects remain explicitly absent and
+their delivery suppressed. Shared history reveals local member IDs and selected facts, without raw
+HA identities or canonical requests. Own-operation reads require current read/own-operation grants
+and reconstruct original command authority from matching immutable request/result/event evidence,
+including configuration and on-behalf scope. They never execute retained requests. Outbox
+acknowledgement remains separate from unimplemented consumer acceptance.
+
+Typed requests live in task_requests and command authorization is shared in task_authorization;
+task_commands re-exports its established request names. Policy revision zero initializes absent
+defaults, and positive revisions update existing configuration under administrator authority.
+Definition edits preserve existing occurrence snapshots. Omitted overrides preserve their values;
+explicit replacement/reset needs configuration authority even on replay. New occurrences snapshot
+the current definition and reject paused/archived parents. Dependency edits require management and
+nonterminal work, and validate every household graph page before writing. Real opposite-edge races
+cannot commit a cycle. Source results retain dependency IDs without rewriting completed history.
+
+SQLite owns transaction/foreign-key/CAS enforcement and strict versioned record decoding. It rejects
+unknown/missing/future data without invented defaults. Scoped deferred foreign keys bind both sides
+of the active cycle and revision. Initialization migrates frozen schemas 1–4 atomically; the independent
+schema-4 input retains current/historical operation evidence, and earlier fixtures remain byte-unchanged.
+Snapshot inspection checks all pages, references, DAG and cycle facts. Offline activation restores
+older business state while retaining later receipts as processed; production command replay cannot
+reapply restored-away lifecycle or editor changes.
+
+Run the focused source contracts, then the complete backend coverage command:
+
+```sh
+uv run pytest tests/backend/test_task_values.py tests/backend/test_task_policy.py tests/backend/test_tasks.py
+uv run pytest tests/backend/test_task_authorization.py tests/backend/test_identity_policy.py
+uv run pytest tests/backend/test_task_commands.py tests/backend/test_task_execution_commands.py tests/backend/test_task_restoration.py
+uv run pytest tests/backend/test_task_edit_commands.py
+uv run pytest tests/backend/test_sqlite_tasks.py tests/backend/test_sqlite_task_integrity.py
+uv run pytest tests/backend/test_task_material_commands.py
+uv run pytest tests/backend/test_task_material_queries.py tests/backend/test_task_material_http.py
+uv run pytest tests/backend/test_task_material_settlement.py
+```
+
+Tests use real SQLite files and controlled concurrent writers. Isolated repository checks, owned-store
+migration/activation and explicit broken-port fixtures have distinct scopes. HA proof is labeled fake;
+no owner HA, product browser UI, packaged adoption or real consumer acceptance is implied. Full-suite
+WebSocket fixtures need disposable loopback listeners; sandbox restrictions require permission for
+those adapters rather than skipping them. The whole authored backend source enters line/branch
+coverage immediately, including unimported files. The complete dependency graph remains mandatory.
+[Source-identified evidence](evidence/task-execution-foundation.json) records current measurements,
+original pinned SDD/catalog provenance, historical checkpoints and incomplete acceptance.
+
+
+Task HTTP requests use strict bounded wire models in task_dto, mapped to typed application requests.
+The shared task router serializes transport-independent output records at the outer boundary, with
+actual composed OpenAPI snapshots for both deployments. Native task GET queries accept bounded,
+nonduplicate parameters while retaining the original peer/header policy; other native routes retain
+their existing query rules. The authentication-only preview does not acquire business task routes.
+See the [task execution guide](tasks/execution.md) for payloads, defaults, original-key recovery,
+restoration and bounded material inputs/current-cycle queries. The task-specific own-operation route
+rechecks original authority and prioritizes historical suppression over old outbox acknowledgement.
+
+
+## Task material model and semantic processor
+
+The material model now keeps canonical amounts, Inventory-owned binding snapshots and cycle-bound
+intent state. Quantities are nonnegative canonical strings with at most 12 integer/six fractional
+digits and no sign/exponent/zero aliases. Bindings additionally constrain unit precision. No Tasks
+code calculates stock deltas. Missing actual quantity remains pending_recording; explicit zero is
+not_used and cannot construct a movement request. Separate recording never auto-posts at completion.
+
+The processor delegates reference resolution and effects to transaction-local Inventory semantics.
+Its authority port must reread current grants and return a local member ID; prior authorization is
+only an immutable source fact. Ordinary missing authority may retain valid completion usage; explicit
+post/correct/dismiss requires current authority. Pending Inventory results certify no new movement.
+UnavailableTaskInventory cannot resolve a catalog reference or confirm any stock effect.
+
+Resource revision guards optimistic concurrency; effect revision changes only with desired quantity.
+The source key excludes current actor/pending metadata and binds the full target/source effect.
+Corrections preserve original submitted quantity and the last confirmed total until actual Inventory
+confirmation. A correction needs new movement/operation identities; returning to the already
+confirmed amount needs no new movement. Dismissal cannot erase confirmed consumption. Exact proof
+replay is inert, and foreign/stale/conflicting proof cannot overwrite a later intent.
+
+TaskCommands now connects material selection and initial completion to these semantics. The typed
+application requests preserve legacy fingerprints when new fields are omitted/null; explicit empty
+lists remain distinct. Both HTTP compositions accept bounded selections/usages and query current or
+explicit original-cycle outcomes. Explicit post/correct/dismiss now runs through the same atomic
+boundary. A36 permits confirmed-consumption corrections by any currently authorized material
+participant; original facts and Inventory confirmation remain mandatory.
+
+Each settlement reauthorizes current grants and original scope before receipt disclosure, preserving
+safe retry after later corrections/restoration. A strict server-recorded MaterialScope carries only
+source selectors and original performer IDs; it grants nothing. Current live records must agree.
+Historical proof may recover absent intent/cycle facts while current work still exists, without
+recreating an effect. The processor stages the corrected desired quantity through the caller's CAS
+callback before asking Inventory for confirmation. Every single-step revision, final result and
+receipt/audit/event share one writer. Work/cycle revisions stay unchanged.
+
+Required next work: actual Inventory/Points/recurrence services and
+their integration, and UI/package/owner acceptance. Semantic fixtures do not establish those results.
+
+## Typed lifecycle event source
+
+Both business runtimes expose the same internal `task_events` read port. An authentication-only
+standalone runtime without business storage has no source. This is trusted composition wiring,
+not a new HTTP route, login, human grant or worker that performs side effects.
+
+The feed pages current completion, verification and reopening operations by durable position
+(25 by default, at most 100). It validates paired original receipts/audit/events and typed
+work/cycles, then reconstructs each event's original temporal snapshot. An approved or closed
+current cycle cannot turn its earlier pending completion event into an approved one. Unknown
+versions, incoherent scope/stage, missing sources and altered evidence fail closed.
+
+Event keys bind installation, channel, household and original operation; stable cycle keys omit
+event/policy revision so another event cannot permit a second allocation for one cycle. The source
+retains definition, occurrence, cycle, effective policy, performers and original timestamps. Its
+`points_eligible` and `closes_awards` values are source facts only: owning consumers must enforce
+their durable inbox, closed-cycle protection, per-cycle allocation uniqueness and actual effects.
+
+Transport-acknowledged events remain readable for independent consumers. Restored-away operations
+are excluded from current delivery even while retained history preserves them. Source reads never
+acknowledge outbox delivery, settle materials or confirm a ledger effect. Consumers persist their
+own last processed item position; `next_position` continues the current page sequence. The existing
+missing Inventory behavior and unconfirmed consumer status remain truthful until real wiring exists.
+
+## Dependency-review projection and manager acceptance
+
+Schema 7 adds only three causal-evidence indexes. It creates no second task, points, stock or review
+ledger. The projection validates original live completion/reopening evidence against typed cycles,
+uses durable positions to delimit each dependent completion cycle, and deduplicates overlapping
+prerequisite/required-subtask links. Restored-away effects remain historical; transport delivery
+does not remove business causes. Bounded reads recheck current task-read authority and use signed
+cursors bound to installation, channel, household, actor, cycle, filter and page size.
+
+A37 allows current task managers to accept one cause with a meaningful reason even while its source
+is unsatisfied. One receipt/audit/outbox transaction records that decision; there is no automatic
+closure, work/cycle mutation or cascade. Query responses retain current source state/verification
+and original gate satisfaction separately. Repeated keys recover original evidence after current
+authorization. Restoration can retain a historical acceptance without accepting the restored alert.
+
+The frozen schema-6 SQL is an independent input generated and reopened by immutable 7beb63c. Its
+89,811 bytes have SHA256 `af84ed25f3bf5ffe7da5a8f1b9ff8163bd2aa27641283aa79c0c60edd5927f11`.
+It includes a completed dependent after source reopening, an approved closed cycle, confirmed
+material correction and restored-away settlement. Migration preserves every original table row;
+failed index creation rolls back the exact original database bytes. Original source/checkpoint
+inspection and offline activation migrate only the prepared target and retain a schema-6 rollback.
+Existing schema 1–5 inputs and original receipt fingerprints remain supported.
+
+
+## Material persistence and read projection
+
+Schema 6 adds cycle/line-unique material intents, scoped foreign keys, immutable submission guards,
+strict versioned codecs and exact revision CAS. The unit owns the transaction; material repositories
+never commit separately. Reopening a cycle retains its physical consumption facts. Checkpoint
+inspection verifies each intent against the original occurrence line, cycle, recorder, performed and
+recorded times and recording policy. Altered/missing source lines or facts fail closed.
+
+Definition/occurrence storage documents use explicit version 2. Migration translates exact version-1
+records to empty material lists; normal current reads do not guess missing fields. Schema 1–5 inputs
+remain supported. The frozen v5 SQL comes from immutable 17ea907, not the new implementation, and
+preserves an approved closed cycle plus restored-away completion. Migration retains receipts, audit,
+source events, cycles and retained-operation records byte-for-byte. The original completion can be
+retried through TaskCommands without allocation or re-execution. DDL and document failures roll back.
+Actual offline activation migrates only its prepared target; source/checkpoint bytes remain intact.
+
+Read responses use outer DTOs so planned quantities appear as canonical strings such as "0.25".
+Both composed OpenAPI snapshots preserve existing paths, security and schema values while adding
+bounded material inputs and live outcome schemas. The domain has no Pydantic/FastAPI dependency.
+Material write DTOs and live current/original-cycle projections now share application semantics.
+Explicit settlement commands now share the same boundary. Real Inventory acceptance still requires
+its owning integration; SQLite and labeled confirmation fixtures do not establish actual stock movements.
+
+
+## Material selection and initial completion commands
+
+Create/update requests select only reference IDs and canonical planned quantities. Task authority
+and current inventory.manage are required for explicit linking/replacement/clear, including receipt
+replay/lookup. Inventory resolves household/target/unit/precision; callers cannot substitute them.
+Unchanged targets preserve line identity, changed targets get a new line, and old occurrences retain
+their frozen snapshots. Omitted updates preserve materials.
+
+CompleteTask accepts optional actual usages keyed by frozen line ID. It validates all identities and
+precision before work effects. Every planned line gets one intent: missing actuals remain unknown;
+zero never asks for a movement; separate recording waits for deliberate settlement. Current scoped
+use needs tasks.material_use and current performance authority plus the effective task-scoped policy,
+or applicable general inventory authority. A member's explicit scoped denial still applies. Normal
+denial retains valid work and pending authorization; shortage/binding changes require regularization;
+known provider absence retains pending processing. Approval, grant/stock changes, reopen and original
+retry never trigger consumption.
+
+The one writer saves the cycle/work, initial intent, any confirmed/deferred single-step CAS, compact
+per-line outcomes, original receipt, audit and outbox. A provider factory only binds local semantic
+services; it may perform no remote I/O or independent commit. Known binding unavailability uses the
+pure MissingTaskInventory default. The outer UnavailableTaskInventory remains an alias to that
+single semantic implementation, with no transport/ledger implementation hidden in Application.
+Unexpected binding failures fail closed and roll back.
+
+Tests use a fictional Inventory provider attached to the caller's real SQLite transaction. They prove
+child SQL effect rollback with failed task audit, one completion under contention, recovery after real
+commit/lost return, mixed confirmed/pending lines, current profile/member precedence, maximum
+32-line document budgets and actual offline restoration with historical same-key retry. This is not
+real Inventory policy, coupled ledger restoration or owner HA/package acceptance. Canonical new audit
+fields are checked strictly while original schema-5 completion fingerprints and receipts remain valid.

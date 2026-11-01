@@ -38,6 +38,10 @@ from domus.infrastructure.sqlite_history import (
     verify_history,
 )
 from domus.infrastructure.sqlite_recovery import _record as _recovery
+from domus.infrastructure.sqlite_task_integrity import verify_task_records
+from domus.infrastructure.sqlite_task_material_schema import MATERIAL_STATEMENTS
+from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
+from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS
 
 _DATABASE = "domus.sqlite3"
 _IDENTITY = "installation.json"
@@ -114,6 +118,9 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(IDENTITY_STATEMENTS if version >= 2 else ()),
             *(RECOVERY_STATEMENTS if version >= 3 else ()),
             *(HISTORY_STATEMENTS if version >= 4 else ()),
+            *(TASK_STATEMENTS if version >= 5 else ()),
+            *(MATERIAL_STATEMENTS if version >= 6 else ()),
+            *(REVIEW_STATEMENTS if version >= 7 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -170,8 +177,12 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
         for row in households:
             unit.households.get(row[0])
             if version >= 2:
-                unit.members.list(row[0])
-                unit.policies.get(row[0])
+                members = unit.members.list(row[0])
+                policy = unit.policies.get(row[0])
+                if version >= 5:
+                    verify_task_records(
+                        connection, row[0], members, policy, record_version=1 if version == 5 else 2
+                    )
         if version >= 3:
             for row in connection.execute("SELECT * FROM recovery_requests"):
                 value = cast(RecoveryRequest, _recovery(row))

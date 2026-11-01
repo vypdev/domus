@@ -7,6 +7,10 @@ also available. Edge.3 passes bounded owner update, existing-session access, rel
 Product UI, live household/recovery/restore and complete deployment acceptance remain pending. Do not use SQL
 edits to bypass setup.
 
+That schema-4 statement describes the M1/installed Edge.3 checkpoint. Development task source uses
+[schema 7](tasks/migration.md); its [operator guide](tasks/operator-recovery.md) distinguishes current
+work, historical results and unconfirmed consumers. The authentication boundaries below are unchanged.
+
 ## Authentication API
 
 | Route | Purpose | Required boundary |

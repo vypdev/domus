@@ -413,25 +413,56 @@
       "status": "proposed",
       "scope": "Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-31",
+      "lastVerified": "2026-11-01",
       "specs": [
-        "specs/household-tasks.md"
+        "specs/household-tasks.md",
+        "specs/task-execution-foundation.md"
       ],
-      "workflows": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
       "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "code": [
+        "backend/src/domus/domain/task_values.py",
+        "backend/src/domus/domain/task_policy.py",
+        "backend/src/domus/domain/tasks.py",
+        "backend/src/domus/application/task_ports.py",
+        "backend/src/domus/infrastructure/sqlite_task_records.py",
+        "backend/src/domus/infrastructure/sqlite_task_schema.py",
+        "backend/src/domus/infrastructure/sqlite_tasks.py",
+        "backend/src/domus/infrastructure/sqlite_task_integrity.py",
+        "backend/src/domus/application/task_authorization.py",
+        "backend/src/domus/application/task_commands.py",
+        "backend/src/domus/application/task_requests.py"
+      ],
+      "tests": [
+        "tests/backend/test_task_values.py",
+        "tests/backend/test_task_policy.py",
+        "tests/backend/test_tasks.py",
+        "tests/backend/test_sqlite_task_records.py",
+        "tests/backend/test_sqlite_tasks.py",
+        "tests/backend/test_sqlite_task_integrity.py",
+        "tests/backend/test_task_restoration.py",
+        "tests/backend/test_task_authorization.py",
+        "tests/backend/test_task_commands.py",
+        "tests/backend/test_task_execution_commands.py",
+        "tests/backend/test_task_edit_commands.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/evidence/task-execution-foundation.json",
+        "docs/tasks/operator-recovery.md",
+        "docs/tasks/migration.md",
+        "docs/tasks/execution.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
-        "blockingDecisions": "Executable current-authority/override contracts; first-release advanced task-type matrix. The owner confirmed role-default verification, material-completion handling and preservation of completed downstream work/points when its prerequisite is reopened on 2026-10-29. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
+        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete",
+        "blockingDecisions": "A34 prerequisite gating and A35 same-task points remainder rotation are owner-confirmed. Bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }
     },
@@ -469,7 +500,7 @@
       "status": "proposed",
       "scope": "Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-31",
+      "lastVerified": "2026-11-01",
       "specs": [
         "specs/points-rewards.md"
       ],
@@ -487,7 +518,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed remainder/override review; child-facing review. The owner confirmed configurable allocation, role-default verification, actual-work reporting, factual negative balances and a funding hold on approved/unfulfilled redemptions without sufficient backing after reversal. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
+        "blockingDecisions": "A35 confirms same-task conserved-remainder rotation by default. Exact tie-break/participant-set behavior, durable ledger/reversal/reward contracts, child-facing UX, real consumers and deployment evidence remain required.",
         "copilotChangesAllowed": false
       }
     },

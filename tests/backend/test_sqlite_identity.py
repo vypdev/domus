@@ -177,7 +177,7 @@ def test_v1_upgrade_preserves_household_receipts_audit_and_pending_outbox(tmp_pa
         unit.members.save(member(), 0)
         unit.policies.save(policy(), 0)
     with closing(sqlite3.connect(path)) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 

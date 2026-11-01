@@ -17,12 +17,14 @@ from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.sessions import SessionGuard
+from domus.composition.tasks import task_contexts
 from domus.domain.errors import IdentityUnavailable
 from domus.domain.identity import HumanIdentity
 from domus.domain.storage import Installation
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.http import HTTPSettings, create_app
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
+from domus.infrastructure.session_access import SessionActor
 from domus.infrastructure.sqlite import SQLiteDatabase
 
 
@@ -58,8 +60,15 @@ def fixture(tmp_path: Path) -> tuple:
             lambda: RecoveryQueries(store, guard.read(session_id), store.installation, clock),
         )
 
+    task_factory = task_contexts(store, store.installation)
     app = create_app(
-        flow, guard, identity, settings, correlation=lambda: "cor_api", household_context=context
+        flow,
+        guard,
+        identity,
+        settings,
+        correlation=lambda: "cor_api",
+        household_context=context,
+        task_context=lambda session_id: task_factory(SessionActor(guard, session_id)),
     )
     client = TestClient(
         app, base_url=settings.origin, follow_redirects=False, raise_server_exceptions=False

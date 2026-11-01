@@ -13,11 +13,20 @@ from domus_tooling.docs import validate_links
 def main(argv: Sequence[str] | None = None) -> int:
     """Return a process status without executing publication or remote mutations."""
     parser = argparse.ArgumentParser(prog="domus-check")
-    parser.add_argument("command", choices=("aggregate", "docs"))
+    parser.add_argument("command", choices=("aggregate", "docs", "backend-coverage"))
     parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--report", type=Path, default=Path("coverage-backend.json"))
     args = parser.parse_args(argv)
+    problems: Sequence[str]
     if args.command == "docs":
         problems = validate_links(args.root)
+    elif args.command == "backend-coverage":
+        try:
+            from domus_tooling.backend_coverage import validate_backend_coverage
+        except ImportError:
+            print("backend-coverage requires locked development dependencies: uv sync --frozen")
+            return 1
+        problems = validate_backend_coverage(args.root, args.report)
     else:
         try:
             results = json.loads(os.environ.get("DOMUS_CI_RESULTS", ""))
