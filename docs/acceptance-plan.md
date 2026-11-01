@@ -1,9 +1,9 @@
 # Verification and acceptance plan
 
-The catalog-listed SDDs contain 585 distinct inventory case IDs across eleven capabilities and
-sixteen documents: the original 353-case foundation, 79 platform companion cases, eleven task-policy
-cases, 42 task-execution companion cases, the 48 household-entry cases published in PR #15, and
-52 recurrence-execution companion cases.
+The catalog-listed SDDs contain 657 distinct inventory case IDs across eleven capabilities and
+seventeen documents: the original 353-case foundation, 79 platform companion cases, eleven task-policy
+cases, 42 task-execution companion cases, the 48 household-entry cases published in PR #15, 52
+recurrence-execution companion cases, and 72 household-administration companion cases.
 The counts are derived from concrete observable scenarios and are minimums. The merged identity/storage
 foundation has separate backend evidence in the [M1 audit](m1-acceptance-audit.md); the full product case
 inventory is not complete.
@@ -127,4 +127,14 @@ The next checkpoint passes 179 focused rule/nominal/planner executions and the c
 independent complete-source audit. The actual architecture graph retains all three contracts.
 The [rule/planning evidence](evidence/recurrence-rules.json) records the bounded empty-period library
 control, the finite evaluation decision, exact source identity and incomplete acceptance. These
-planning results do not create durable task work or complete the 52 companion product journeys.
+planning results do not create durable task work or complete the 52 recurrence companion product journeys.
+
+## Household administration source checkpoint
+
+The Action-published companion retains its original 24 case rows and adds the remaining independent
+risks to a 72-case floor. The first pure model checkpoint passes 138 unit executions and the complete
+3,125-case backend suite: 108 authored modules, 7,942 statements and 2,238 branches at 100%, with the
+independent complete-source audit and actual inward-dependency contracts. These observations are
+linked from [administration evidence](evidence/household-administration.json). Application/API privacy,
+schema 9 after recurrence schema 8, the separate journal and actual administration interface remain
+unimplemented; the unit count does not establish the 72 product journeys or packaged acceptance.
