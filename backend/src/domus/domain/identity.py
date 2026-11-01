@@ -36,6 +36,11 @@ class Permission(StrEnum):
     PREFERENCES_READ = "preferences.read"
     PREFERENCES_WRITE = "preferences.write"
     OPERATIONS_READ = "operations.read"
+    TASKS_READ = "tasks.read"
+    TASKS_CLAIM = "tasks.claim"
+    TASKS_MANAGE = "tasks.manage"
+    TASKS_RECORD_FOR_OTHERS = "tasks.record_for_others"
+    TASKS_MATERIAL_USE = "tasks.material_use"
     TASKS_CREATE = "tasks.create"
     TASKS_COMPLETE = "tasks.complete"
     TASKS_APPROVE = "tasks.approve"
@@ -60,10 +65,20 @@ ADMINISTRATOR_ONLY = frozenset(
 OWN_SCOPED = frozenset(
     {Permission.PREFERENCES_READ, Permission.PREFERENCES_WRITE, Permission.OPERATIONS_READ}
 )
-COMMON = frozenset({Permission.HOUSEHOLD_READ, Permission.MEMBERS_READ}) | OWN_SCOPED
-RESTRICTED = COMMON | {Permission.TASKS_COMPLETE, Permission.SHOPPING_REQUEST}
+COMMON = (
+    frozenset({Permission.HOUSEHOLD_READ, Permission.MEMBERS_READ, Permission.TASKS_READ})
+    | OWN_SCOPED
+)
+RESTRICTED = COMMON | {
+    Permission.TASKS_CLAIM,
+    Permission.TASKS_MATERIAL_USE,
+    Permission.TASKS_COMPLETE,
+    Permission.SHOPPING_REQUEST,
+}
 ADULT = RESTRICTED | {
     Permission.TASKS_CREATE,
+    Permission.TASKS_MANAGE,
+    Permission.TASKS_RECORD_FOR_OTHERS,
     Permission.TASKS_APPROVE,
     Permission.SHOPPING_MANAGE,
     Permission.INVENTORY_MANAGE,

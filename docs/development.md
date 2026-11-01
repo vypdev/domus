@@ -298,3 +298,18 @@ uv run pytest tests/backend/test_sqlite_tasks.py tests/backend/test_sqlite_task_
 
 The isolated repository fixture is distinct from owned-store migration,
 checkpoint and activation tests. None of them is live owner HA or a task HTTP/consumer acceptance.
+
+### Current task authority
+
+TaskAccess rereads current active membership, effective actor role and identity policy in the caller's
+transaction. Claim permission is separate from assigned completion. On-behalf performer attribution
+requires its own permission; a restricted actor cannot omit its own participation. Only the submitting
+actor supplies current HA proof, so another performer's local role is never silently elevated from
+an assumed HA administrator source. Approval also checks the cycle's original participation rule.
+
+Run `uv run pytest tests/backend/test_task_authorization.py tests/backend/test_identity_policy.py`
+for real-file current-authority and the independent profile matrix assertions. Current mapping,
+member status, exceptions and household task-default changes are exercised with the same reused
+access instance. These helpers are not yet transactional task commands or public task routes; state,
+capacity, revision and replay integration remain required. The policy enum in both published OpenAPI
+references is synchronized with the actual composed schemas, without adding routes.

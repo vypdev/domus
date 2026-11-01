@@ -145,3 +145,20 @@ The task modules contribute 613 statements and 210 branches; these are separate 
 task HTTP, live HA, UI, packaged adoption or real Inventory/Points consumers, which remain pending.
 Strict types, the complete inward dependency graph, original pinned SDD/catalog validation and
 local links remain required. Hosted current-head CI and a complete Bugbot review are independent gates.
+
+
+## Current task authority checkpoint — 2026-11-01
+
+Additive typed task permissions and application helpers now reread current membership, identity
+mapping, profile/member rules and stored assignment/task defaults. Separate on-behalf authority
+cannot remove a restricted actor's participation or invent another person's HA administrator proof.
+Two negative tests demonstrate that stale assignment and weakened supplied snapshots cannot grant
+access. Both actual composed OpenAPI contracts match the updated published permission enum.
+
+The complete backend passes 1,910 tests with all 5,399 statements and 1,546 branches covered across
+77 authored files. Nine task modules account for 681 statements and 236 branches; the focused identity
+and task-authority suite passes 151 tests. The complete dependency graph keeps all three contracts;
+strict types, formatting, 113 tooling/architecture fixtures and local links pass. Original pinned
+format/consistency checks preserve the 49 task, 30 identity and 42 companion case rows, with the
+same fourteen/109/485 planned inventory. These helpers still need transactional command/replay,
+capacity/race and public task HTTP integration; no downstream or installed acceptance is implied.
