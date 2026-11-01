@@ -72,8 +72,8 @@ The eleven additional task cases preserve every existing ID and exercise owner-c
 ## Household entry evidence boundary
 
 The original 48-case companion inventory is unchanged. Its Domain/Application/Adapters cases have
-bounded real-Chromium proof in 565 unit/component cases across all fifteen runtime modules, with
-100% statements, branches, functions and lines and independent source inventory. The 43 separate
+bounded real-Chromium proof in 577 unit/component cases across all fifteen runtime modules, with
+100% statements, branches, functions and lines and independent source inventory. The 45 separate
 built-product browser cases use both actual Python/SQLite compositions with fictional HA/Supervisor;
 the eighteen catalog cases exercise fourteen fictional states and 56 ordinary matrix renderings.
 Matrix renders and repeated executions are not additional inventory cases. Raw original failures,

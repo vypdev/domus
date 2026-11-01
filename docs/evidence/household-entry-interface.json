@@ -1,8 +1,8 @@
 {
-  "verifiedAtUTC": "2026-11-01T17:11:53.790913+00:00",
+  "verifiedAtUTC": "2026-11-01T17:30:12.542410+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "7e80b1aa7ccc42a233f69c010d9dfa29323bfd4e",
-  "sourceIdentity": "Close the read-only SQLite connection owned by the new denial-regression fixture. Published7e80b1a full backend2987/565Chromium/43product/18catalog campaigns pass; unchanged production coverage is100%. Its3ResourceWarnings came from this test connection, now explicitly closed. Focused6cases pass with ResourceWarning treated as error. Runtime/image source unchanged; next-head hosted CI/review remain separate.",
+  "sourceBase": "ecdd85b4b08479eede41a517f9acdfdde9393b17",
+  "sourceIdentity": "Correct technical state localization and first-error provider assertions.12new locale/state regressions fail before the text fix; full577Chromium cases/15modules pass all4metrics100%. A typed detail-leak control passes2old assertions but fails2corrected assertions; adapter restored byte-for-byte. Original allegedly missing-await test passes unchanged. Product45cases and catalog18cases pass. Current corrected UI is not yet in the installed Edge.4 immutable9f5cabe image; next step is a distinct immutable Edge.5 package.",
   "sources": {
     ".github/workflows/ci_check.yml": "cd11d915b1ba84625e42454c02fe4f7c2a764d905a8cedf4e623f1ab2681e702",
     ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
@@ -20,12 +20,12 @@
     "backend/src/domus/entrypoints/native_http.py": "f40903f3cc52ba7aaa27075f4c783ce678125632e4fb1e33d4b0b1a0a74888cd",
     "backend/src/domus/entrypoints/ui_bundle.py": "beae3d4a7a57375ee195cca81efccdbc899d9db4286029d53eabaf30de6e14f7",
     "backend/src/domus/entrypoints/ui_http.py": "b6c47baa742f3862173a93e4121dc9914fd972eb6287ffffb9ffccecbf2ebe4a",
-    "docs/acceptance-plan.md": "39249e0e8852b1e46e75fb370ebba22c4a60a3b32dffcdeaa456b5002c671fb8",
+    "docs/acceptance-plan.md": "965c8315eee62b16b37590434ce050613616336660f66e252aac3cb8a567587c",
     "docs/contracts/auth-api.openapi.json": "17933ff4fb9c416371ee20453c1d77131fdf24202d372ef72074f80ef263d0a7",
     "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
     "docs/contracts/native-household-api.openapi.json": "ee51af3265d0faabc824e085d2ad2c1335faedfe12c251076a332db1557e776f",
     "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
-    "docs/household-entry-interface.md": "baa753aa668533a4ac3695089784f6aa8233446cfd06fe1a487d36f17f2e4359",
+    "docs/household-entry-interface.md": "b6aef5f23c7a2c8c72b15f5dd07afbc7624a77fc777657e50881f0096765fc63",
     "docs/identity-household.md": "bea265f43775ee0021f5cbe245df9a66b9e926fb1553e36a945cf00a6ad2ac12",
     "docs/native-household-api.md": "9339c60fcd5e774591ab07c0233110475bd7f607d15bc9aeacbea48411b8989a",
     "frontend/.storybook/main.ts": "5956fa6d05a5ab5e8c4d96ee67ff430ba0688c00f242d0346a35ded5db659be2",
@@ -46,25 +46,25 @@
     "frontend/src/composition/main.ts": "f92ce862e1acefb95896217588a0dea0f48625fed1f16c285dadbd9c015ae086",
     "frontend/src/domain/entry.ts": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e",
     "frontend/src/domain/journal.ts": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354",
-    "frontend/src/presentation/domus-app.ts": "222e77d94d5c9ec3c15eea158f287d88b95807841ee4f8fa73e20bc704b69cac",
+    "frontend/src/presentation/domus-app.ts": "b4fcf53e40ef31dba8a4f4602fd19768479ee5aac1c3e695d89b542c2cbc58b3",
     "frontend/src/presentation/global.css": "3cde546e42eeb8f386985b39cf7f9b5cadd7695899051e9d59db40032c85b031",
     "frontend/src/presentation/messages.ts": "9edc5291d709b7821f55177fc251c9175e500f7d6d268b9e58e0b69e9f2a5fe7",
     "frontend/src/presentation/styles.ts": "c999c47bd665b2bc5ce5aa0e248f24cf6f320ee95626ca1fa627812ff401c051",
     "frontend/stories/entry.stories.ts": "422ac6851e90396c02b8f4dc4777fe04ed6241c8543188d112a39d8cc32091b1",
     "frontend/tests/bootstrap.test.ts": "4bf5d79e4fd3eae48ca16e3ef3ba23a1da1b518d2faf7e95a3ce8279fb4f82fa",
     "frontend/tests/capabilities.test.ts": "17c3f72b66016500f2b338910c122087e681ce568c2419b6e7e6fbed3e159f89",
-    "frontend/tests/component.test.ts": "6ec16b82e03a7f8783ebb4e89c50da82f016bf9840663d0e7feea831bae3918a",
+    "frontend/tests/component.test.ts": "c6fc385a10f05e297b0ec36078d712215b00bde5b63e1d0614f71e7a6e5d4393",
     "frontend/tests/controller.test.ts": "487d92ad57999a05c58594c1a7f765a4d6ade12dc997730c2d1d2e1cb500efc2",
     "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
     "frontend/tests/e2e/catalog.spec.ts": "fadb7cae323a4e78598db28955b991cf42b8fa2fac81f058bab31e21ffb3aa7b",
-    "frontend/tests/e2e/entry.spec.ts": "f5fd0fb3c5d54d58788669b35e8a158ae0aeab5d3ba1c459274d06933ca2f83f",
+    "frontend/tests/e2e/entry.spec.ts": "3f5d601c528b8ae7886e880bd0dc942489bd5a48e7539a891c8c7ce65a835339",
     "frontend/tests/fixtures/entry-wire.json": "4839ff30b6b6a3be456e95c4a3b270676b34fe923a66e971f91ade39a232780e",
     "frontend/tests/http.test.ts": "267fa6d38d188a85a96dd9d1fb8e8b80937e45ca08e383dfca9237fb8981da79",
     "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
     "frontend/tests/language.test.ts": "05df3a28d908261b996b0e808b07489c35db17ac417e66a1f9d0576597da7675",
     "frontend/tests/page.test.ts": "731518b957aea32ae6cd16d68a97a9cef0565cde652a66e08664ce587a959cff",
     "frontend/tests/runtime.test.ts": "63e8865a5a2dd4726fe0a1ed18d9cd92cb5733c8596c8c03052798c4acef5f73",
-    "frontend/tests/session-journal.test.ts": "e5fe0d28cb4774543002db0cb628d5cba408d5f99e908d44e31ba943c3d57313",
+    "frontend/tests/session-journal.test.ts": "5ec2c6e0d3d8f0d98d41044e1bf2f5e55c3806b5b22e23a104b2c0f9a06459dc",
     "frontend/tsconfig.catalog.json": "8160d9a0a1a997e48de932acb61818908b23a3c68c0bf28edc931275bc6cfa1c",
     "frontend/tsconfig.json": "4461feb9e2170d22c3bb02cd4f0e1073b8b1aa4d54af97987836db1a35b201b7",
     "frontend/vite.config.ts": "f40f84b5ec937bd44b75d422d3d1f8a983294969d25b9707f7e535a73affef85",
@@ -106,14 +106,14 @@
     "browserCache": "Existing shared project-owned /private/tmp/domus-ui-playwright-browsers, reused without copying or new browser download."
   },
   "tests": {
-    "applicationModel": 565,
+    "applicationModel": 577,
     "sourceInventoryAudit": 1,
     "nodePolicies": 38,
     "pythonTooling": 148,
     "unimportedRuntimeIncluded": true,
     "runtimeSourceFiles": 15,
     "plannedCases": 48,
-    "claim": "Published7e80b1a backend2987cases/all107modules pass100%; frontend565Chromium cases/all15runtime modules pass all four metrics100%,43product cases and18catalog cases pass. Only fixture connection cleanup changes after that proof; focused6cases pass with ResourceWarning as error. Current next-head hosted gates are independent.",
+    "claim": "Current577Chromium cases/15runtime modules pass all4metrics100%,45real composed product journeys and18catalog journeys pass without retries. Actual wheel matches the current generated UI. Backend2987/107modules is unchanged publishedecdd85b proof. All48original SDD rows remain unchanged and now have a concrete cross-layer audit. Corrected UI package pin/current-head review are independent pending steps; this does not complete the all-domain release.",
     "pythonToolingOrigin": "Current corrected full148case tooling campaign passes at100%; package assertions live in the original backend suite. The full current backend2984campaign, including corrected package guards, passes at100%.",
     "controllerCases": 73,
     "frontendOrigin": "Current15-module Chromium measurement includes synchronous in-flight logout refusal at both orchestration boundaries.",
@@ -124,7 +124,7 @@
     "storyMatrixRenders": 56,
     "backendCases": 2987,
     "backendSourceFiles": 107,
-    "productBrowserCases": 43,
+    "productBrowserCases": 45,
     "wheelAcceptanceCases": 1,
     "containerCasesCollected": 19,
     "containerCasesExecutedPerArchitecture": 19
@@ -610,14 +610,13 @@
     "The119e504whole project gate caught two existing backend package assertions still requiring Edge.3/the old three-stage build. Corrected those existing assertions for the reviewed five-stage build, preserving external digest/source/checksum/privilege checks and adding the frozen legacy guard; removed duplicate new tooling assertions. Corrected whole backend2984cases passes100% and tooling148passes100%."
   ],
   "limitations": [
-    "43actual composed browser cases pass locally; full new-head hosted CI/review is independent. Unchanged runtime/package has separate complete published5415908 proof.",
-    "Owner-approved separate Edge.4 starts, renders within the HA iframe, verifies current identity and supports EN/ES switching/status refresh. No owner household was created; remaining business/accessibility/lifecycle owner journeys remain separate.",
-    "Initial owner wrapper loading required an active-tab reload; cause unknown. The successful iframe observation does not explain that earlier symptom.",
-    "Fictional-provider restoration/rebinding/setup races are actual integrated product tests, not live owner database restoration or Stable distribution.",
-    "Copilot scope/assessment/context failures are reported upstream. Both product findings are natively resolved; new-head review remains separate. Copilot/gateway resources and credentials remain unchanged.",
-    "Current native-ui-skips-ha-proof finding is open pending evidence-based Bugbot verification. Report847 records counterevidence; no gate has been bypassed."
+    "Current577/45/18local campaigns pass; full new-head hosted gates and native finding verification are independent.",
+    "Installed owner Edge.4 still uses immutable9f5cabe; corrected technical-state UI needs a distinct Edge.5 package.",
+    "Two valid new findings are corrected; the missing-await finding is countered with immutable source and unchanged execution, reportedupstream848. No manual finding resolution.",
+    "Original48case audit is cross-layer execution, not48new browser cases or completion of other domains/Stable distribution.",
+    "Reported Copilot scope/assessment/context failures remain separate; no Copilot/gateway/resource/credential change."
   ],
-  "rawEvidence": "/private/tmp/domus-entry-restoration-checkpoint-retained/measurements.tar.gz",
+  "rawEvidence": "/private/tmp/domus-review-corrections-retained/measurements.tar.gz",
   "previousModelEvidence": {
     "sourceRevision": "695e5c31a466b8a42c8840c46f708141979b35e4",
     "sourceBase": "82519ee4e547dc347b8d0a18352bd1acc7783d70",
@@ -1732,5 +1731,120 @@
     "rawEvidence": "/private/tmp/domus-entry-restoration-checkpoint-retained/native-ui-proof-closed-sqlite.out",
     "hostedBackend": "/private/tmp/domus-entry-restoration-checkpoint-retained/hosted-backend-7e80b1a.out",
     "hostedFrontend": "/private/tmp/domus-entry-restoration-checkpoint-retained/hosted-frontend-7e80b1a.out"
+  },
+  "previousUIProofCheckpoint": {
+    "verifiedAtUTC": "2026-11-01T17:11:53.790913+00:00",
+    "sourceBase": "7e80b1aa7ccc42a233f69c010d9dfa29323bfd4e",
+    "sourceIdentity": "Close the read-only SQLite connection owned by the new denial-regression fixture. Published7e80b1a full backend2987/565Chromium/43product/18catalog campaigns pass; unchanged production coverage is100%. Its3ResourceWarnings came from this test connection, now explicitly closed. Focused6cases pass with ResourceWarning treated as error. Runtime/image source unchanged; next-head hosted CI/review remain separate.",
+    "tests": {
+      "applicationModel": 577,
+      "sourceInventoryAudit": 1,
+      "nodePolicies": 38,
+      "pythonTooling": 148,
+      "unimportedRuntimeIncluded": true,
+      "runtimeSourceFiles": 15,
+      "plannedCases": 48,
+      "claim": "Current577Chromium cases/15runtime modules pass all4metrics100%,45real composed product journeys and18catalog journeys pass without retries. Actual wheel matches the current generated UI. Backend2987/107modules is unchanged publishedecdd85b proof. All48original SDD rows remain unchanged and now have a concrete cross-layer audit. Corrected UI package pin/current-head review are independent pending steps; this does not complete the all-domain release.",
+      "pythonToolingOrigin": "Current corrected full148case tooling campaign passes at100%; package assertions live in the original backend suite. The full current backend2984campaign, including corrected package guards, passes at100%.",
+      "controllerCases": 73,
+      "frontendOrigin": "Current15-module Chromium measurement includes synchronous in-flight logout refusal at both orchestration boundaries.",
+      "httpCases": 169,
+      "backendWireConformance": 2,
+      "browserCatalogCases": 18,
+      "storybookStates": 14,
+      "storyMatrixRenders": 56,
+      "backendCases": 2987,
+      "backendSourceFiles": 107,
+      "productBrowserCases": 45,
+      "wheelAcceptanceCases": 1,
+      "containerCasesCollected": 19,
+      "containerCasesExecutedPerArchitecture": 19
+    },
+    "rawEvidence": "/private/tmp/domus-entry-restoration-checkpoint-retained/measurements.tar.gz"
+  },
+  "reviewCorrections": {
+    "base": "ecdd85b4b08479eede41a517f9acdfdde9393b17",
+    "firstErrorFinding": "https://github.com/vypdev/domus/pull/15#discussion_r4436595754",
+    "localizationFinding": "https://github.com/vypdev/domus/pull/15#discussion_r4436595761",
+    "awaitFalsePositive": "https://github.com/vypdev/domus/pull/15#discussion_r4436595753",
+    "report": "https://github.com/vypdev/copilot/issues/848",
+    "originalAwaitCase": "Unchanged original1case passes; both assignments already await updateComplete.54not-selected cases are not complete-suite proof. Readability-only formatting plus actual closed-DOM assertions do not claim a prior production defect.",
+    "leakControl": {
+      "oldAssertions": "Typed secret-provider-detail leak passes2get/set cases.",
+      "correctedAssertions": "The same leak fails both corrected first-error assertions.",
+      "adapterRestoredSHA256": "e323fb4cee70481b015ce4c0c6fa94c3c909eb03af6a1837254a9196aed0fdc3"
+    },
+    "localization": "12locale/membership combinations fail before the UI change and pass afterward; both real product deployments expand details and switchEN/ES while preserving drafts.",
+    "tabClosure": "Two actual composed browser journeys close the tab, open an independent same-context tab with an empty journal, read the same stored household/original receipt and assert no POST or count change.",
+    "frontendCoverage": {
+      "lines": {
+        "total": 737,
+        "covered": 737,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 1093,
+        "covered": 1093,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 212,
+        "covered": 212,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 791,
+        "covered": 791,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "productStats": {
+      "startTime": "2026-11-01T17:24:10.524Z",
+      "duration": 25129.96,
+      "expected": 45,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "catalogStats": {
+      "startTime": "2026-11-01T17:24:13.260Z",
+      "duration": 8768.354000000001,
+      "expected": 18,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "rawEvidence": "/private/tmp/domus-review-corrections-retained/measurements.tar.gz",
+    "rawSHA256": "77fc8eae12cea74121e642634697dabd395d8e79b082c2b4c1b97bc19ee1f5da",
+    "currentProduct": "/private/tmp/domus-review-corrections-retained/product.tar.gz",
+    "currentProductSHA256": "c76151124d3fc49e1e73fd4a1ec37466a91eb66312dcbea520e53a8a3fe808ba",
+    "actualProductFiles": {
+      ".vite/manifest.json": "afef466068e828bcace738f006ba2ac686cf98d2e7c49a491063cb541f6e6fbc",
+      "assets/index-B3OD6Vk8.js": "1a581437439073008f292ddaf9e7184d61680c3f126b3e8820d728de32b8b91a",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "869951816a93d66729f398965152ad6cc68865f815430a71e808f528af8484b9"
+    },
+    "manualInspection": "Both original Spanish360px product screenshots inspected: expanded technical status is localized, associated fields/actions wrap, drafts survive locale changes, native close and standalone sign-out remain distinct. Catalog originals retained. Agent visual QA of fictional data, not owner approval of a new installed version."
+  },
+  "sourceProductCandidate": {
+    "sourceBase": "ecdd85b4b08479eede41a517f9acdfdde9393b17",
+    "actualProductFiles": {
+      ".vite/manifest.json": "afef466068e828bcace738f006ba2ac686cf98d2e7c49a491063cb541f6e6fbc",
+      "assets/index-B3OD6Vk8.js": "1a581437439073008f292ddaf9e7184d61680c3f126b3e8820d728de32b8b91a",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "869951816a93d66729f398965152ad6cc68865f815430a71e808f528af8484b9"
+    },
+    "packageState": "Built/tested source candidate only. productDelivery still identifies the existing immutable Edge.4 image; Edge.5 must pin the published corrected source before adoption.",
+    "schemaVersion": 7
   }
 }

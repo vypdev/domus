@@ -159,6 +159,14 @@ test('locale choice updates accessible language and labels without changing the 
   expect(f.root.querySelector('#name')!.getAttribute('aria-describedby')).toBe('name-help');
   expect(f.intents).toEqual([{type: 'language', language: 'es'}]); expect(f.element.view).toBe(actual);
 });
+test.each((['en', 'es'] as const).flatMap(locale =>
+  (['unconfigured', 'not_enrolled', 'pending', 'active', 'suspended', 'archived'] as const)
+    .map(state => [locale, state] as const)))('%s technical status localizes %s without changing permissions', async (locale, state) => {
+  const actual = view(state), f = await mount(actual, locale);
+  expect(f.root.querySelector('details dt')!.textContent).toBe(message('status', locale));
+  expect(f.root.querySelector('details dd')!.textContent).toBe(message(`state_${state}`, locale));
+  expect(f.element.view).toBe(actual); expect(f.intents).toEqual([]);
+});
 test.each(['subject', 'installationId', 'channel'] as const)('a verified %s change clears both private drafts before rendering the next context', async field => {
   const f = await mount(view());
   const name = f.root.querySelector<HTMLInputElement>('#name')!, zone = f.root.querySelector<HTMLInputElement>('#time_zone')!;
@@ -173,8 +181,12 @@ test.each(['subject', 'installationId', 'channel'] as const)('a verified %s chan
 test('closed presentation retires private drafts even if the same account later reopens this component', async () => {
   const f = await mount(view()); const input = f.root.querySelector<HTMLInputElement>('#name')!;
   input.value = 'Private draft'; input.dispatchEvent(new InputEvent('input', {bubbles: true}));
-  f.element.view = view('unconfigured', {phase: 'closed', session: null, decision: null, journal: null}); await f.element.updateComplete;
-  f.element.view = view(); await f.element.updateComplete;
+  f.element.view = view('unconfigured', {phase: 'closed', session: null, decision: null, journal: null});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('h1')!.textContent).toBe('This view is closed');
+  expect(f.root.querySelector('input')).toBeNull();
+  f.element.view = view();
+  await f.element.updateComplete;
   expect(f.root.querySelector<HTMLInputElement>('#name')!.value).toBe('');
 });
 test.each(['committed', 'historical', 'uncertain'] as const)('%s outcome explains retained effects without claiming current access', async stage => {

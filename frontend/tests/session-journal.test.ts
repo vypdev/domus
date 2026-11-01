@@ -40,10 +40,15 @@ test('C07/C24: prepare, reopen, uncertain and historical outcomes retain the exa
 
 test.each(['getItem', 'setItem', 'removeItem'] as const)('C24/C42: provider %s error is safe and drops memory', method => {
   const f = fixture(); f.journal.open(context, 1000);
-  f.storage[method].mockImplementation(() => {throw new Error('secret-provider-detail');});
+  f.storage[method].mockClear().mockImplementation(() => {throw new Error('secret-provider-detail');});
   const run = method === 'removeItem' ? () => f.journal.clear() : () => f.journal.prepare('key', command, 1100);
-  expect(run).toThrow(JournalStorageError); expect(run).not.toThrow('secret-provider-detail');
+  let failure: unknown;
+  try {run();} catch (error) {failure = error;}
+  expect(failure).toBeInstanceOf(JournalStorageError);
+  expect((failure as Error).message).toBe('storage_unavailable');
+  expect(f.storage[method]).toHaveBeenCalledTimes(1);
   expect(() => f.journal.prepare('again', command, 1100)).toThrow('journal_not_open');
+  expect(f.storage[method]).toHaveBeenCalledTimes(1);
 });
 
 test('missing storage capability cannot open, clear or grant a usable handle', () => {

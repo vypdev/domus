@@ -119,7 +119,7 @@ export class DomusApp extends LitElement {
       </section>
       ${view?.journal?.records.length ? html`<section class="card" aria-labelledby="requests-title"><h2 id="requests-title">${this.text('journalTitle')}</h2>
         <p class="help">${this.text('journalBody')}</p><ul class="requests">${view.journal.records.map(record => this.request(record))}</ul></section>` : nothing}
-      ${view?.session ? html`<details><summary>${this.text('details')}</summary><dl><dt>${this.text('status')}</dt><dd>${state}</dd>
+      ${view?.session ? html`<details><summary>${this.text('details')}</summary><dl><dt>${this.text('status')}</dt><dd>${this.text(`state_${state}`)}</dd>
         <dt>${this.text('access')}</dt><dd>${this.text(view.session.access === 'read_only' ? 'readOnly' : 'full')}</dd></dl>
         <h2>${this.text('permissions')}</h2>${view.authorization?.permissions.length ? html`<ul>${view.authorization.permissions.map(permission => html`<li><code>${permission}</code></li>`)}</ul>`
           : html`<p>${this.text('noPermissions')}</p>`}</details>` : nothing}

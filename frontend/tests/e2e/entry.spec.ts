@@ -123,6 +123,25 @@ for (const mode of modes) test.describe(mode, () => {
     expect(posts).toBe(0); expect((await stats(request, mode)).counts.households).toBe(0);
   });
 
+  test('closing the browser tab preserves server receipts and a new tab creates no duplicate work', async ({page, context, request}) => {
+    await open(page, context, mode); await create(page);
+    await expect(page.getByRole('heading', {name: 'Request recorded', exact: true})).toBeVisible();
+    const original = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records[0], journalKey);
+    const before = await stats(request, mode);
+    await page.close();
+    const reopened = await context.newPage(), posts: string[] = [];
+    try {
+      reopened.on('request', item => {if (item.method() === 'POST') posts.push(item.url());});
+      expect((await reopened.goto(base(mode) + '/'))?.status()).toBe(200);
+      await expect(reopened.getByText('Fictional household', {exact: true})).toBeVisible();
+      expect(await reopened.evaluate(key => JSON.parse(sessionStorage.getItem(key)!).records, journalKey)).toEqual([]);
+      const receipt = await reopened.request.get(base(mode) + '/api/v1/operations/' + original.operationId);
+      expect(receipt.status()).toBe(200);
+      expect((await receipt.json()).operation_id).toBe(original.operationId);
+      expect((await stats(request, mode)).counts).toEqual(before.counts); expect(posts).toEqual([]);
+    } finally {await reopened.close();}
+  });
+
   test('a stale logout intent cannot erase an in-flight committed request or stop recovery', async ({page, context, request}) => {
     await open(page, context, mode);
     let release!: () => void, committed!: () => void;
@@ -189,6 +208,13 @@ for (const mode of modes) test.describe(mode, () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
     await page.getByLabel('Nombre del hogar', {exact: true}).fill('Hogar de prueba');
     await page.getByLabel('Zona horaria', {exact: true}).fill('Europe/Madrid');
+    await page.locator('details summary').click();
+    await expect(page.locator('details dl dd').first()).toHaveText('Configura tu hogar');
+    await page.getByLabel('Idioma', {exact: true}).selectOption('en');
+    await expect(page.locator('details dl dd').first()).toHaveText('Set up your household');
+    await page.getByLabel('Language', {exact: true}).selectOption('es');
+    await expect(page.getByLabel('Nombre del hogar', {exact: true})).toHaveValue('Hogar de prueba');
+    await expect(page.getByLabel('Zona horaria', {exact: true})).toHaveValue('Europe/Madrid');
     const layout = await page.locator('domus-app').evaluate(element => {
       const styles = [...element.shadowRoot!.querySelectorAll('style')];
       const button = element.shadowRoot!.querySelector('button.primary')!;

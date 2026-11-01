@@ -243,7 +243,7 @@ unavailable browser capabilities and scheduling failures produce bounded guidanc
 reload. Replacing or detaching the owned element releases its resources. The actual module performs
 no setup or enrollment automatically and never inspects HA's parent document or private storage.
 
-Forty-three Playwright cases exercise the built product against both real Python compositions and
+Forty-five Playwright cases exercise the built product against both real Python compositions and
 SQLite, wrapped by fictional loopback HA/Supervisor providers. They prove explicit keyboard setup,
 inert household text, exact original-key recovery after a committed response is lost, unchanged
 receipt/audit/outbox counts, blocked writes on silent storage failure, logout versus native close,
@@ -268,6 +268,16 @@ standalone still revokes its grant. Actual missing cookies and forged CSRF are r
 Chromium owns Origin, so that attack uses a raw intercepted request to the real server and delivers
 its actual denial. A virtual browser-clock wake proves local expiry and refusal to renew; it does not
 advance the server clock. Independent backend tests cover server lease expiry.
+Closing the actual browser tab preserves server receipts; a new tab has an empty local journal,
+reads the same persisted household and original operation, and sends no automatic command.
+Technical status values use the same English/Spanish catalog as the state heading. Both deployments
+exercise the expanded details in each locale without losing the setup draft or changing permissions.
+
+The provider-error regression captures the first exception once. A controlled typed provider-detail
+leak passed the old get/set assertions but fails both corrected assertions; the production adapter
+was restored byte-for-byte after each control. The alleged missing Lit await was already present and
+the unchanged original test passed. Its awaits are now on separate lines with explicit closed-DOM
+assertions. That false positive is reported in [Copilot #848](https://github.com/vypdev/copilot/issues/848).
 
 ## Owner Ingress observation
 
@@ -307,6 +317,69 @@ The actual application import graph is checked alongside existing negative archi
 Domain/Application remain independent of concrete adapters and frameworks. This initial model has
 no DOM, storage, HTTP or framework dependency. See [development](development.md) for the other gates.
 Model execution is separate from rendering, accessibility, integration, package and owner HA acceptance.
+
+## Entry acceptance inventory
+
+This maps each original household-entry-interface case to concrete executed proof. The 577 Chromium
+unit/component executions, 45 product journeys and 18 catalog journeys are separate counts, not
+replacement case IDs. Backend and image proof retain their own source identities. The corrected UI
+still needs its new immutable package pin and final current-head gates before this increment merges.
+
+| Original case | Executed proof |
+|---|---|
+| C01 | Domain membership matrix, strict HTTP DTOs and rendered component/catalog membership states; profile labels never grant access. |
+| C02 | Bootstrap/context negatives, actual native/standalone session metadata and context assertions. |
+| C03 | Pure setup validation, explicit controller submission and actual product setup with the default mapping only. |
+| C04 | Invalid input/draft/focus tests, Unicode regressions and actual backend timezone validation. |
+| C05 | Strict journal shape/version/action/original-field and canonical decoding negatives. |
+| C06 | Original deadline/backward-clock tests, expired command refusal and virtual browser wake. |
+| C07 | Immutable key/payload/revision/time/operation tests and actual same-key product recovery. |
+| C08 | Missing facts/preview/grace decisions and distinct unavailable rendered states. |
+| C09 | Both actual product openings/refreshes are read-only; standalone sign-in and explicit setup/enrollment journeys. |
+| C10 | Pending controller recovery and actual pending enrollment with no replacement linkage. |
+| C11 | Controller preflight/send/reconciliation races, synchronous logout guard and one original request. |
+| C12 | Actual committed-response loss/reload/recovery in both compositions; unchanged SQLite effect counts. |
+| C13 | Controller current-denial/suspension tests, real server authority guards and composed rejected-human product journey. |
+| C14 | Typed conflict/denial handling retains original request and draft without automatic rebase. |
+| C15 | Real composed HA outage, backend expiry and browser local-deadline wake; no automatic lease renewal. |
+| C16 | Late read/command/logout and context-replacement generation fences in real Chromium. |
+| C17 | Actual standalone reauthentication after restoration retains deliberate original-key recovery. |
+| C18 | Actual standalone state/binding/PKCE callback and revocation; native existing-session/close behavior. |
+| C19 | Built native document/assets/API under the accepted prefix; wrong binding and prefix negatives. |
+| C20 | Built standalone root/reload and fixed-root OAuth return, wheel and actual same-listener image probe. |
+| C21 | Strict streamed UTF-8/JSON/MIME/status/size/deadline decoding and missing module/API guidance. |
+| C22 | Actual cookie loss, forged CSRF and raw forged Origin reject before effects in both compositions. |
+| C23 | Foreign endpoint/redirect/host-hint negatives and fixed navigation destinations. |
+| C24 | Silent/throwing storage/readback/entropy failures prevent sending and preserve draft or original evidence. |
+| C25 | Exact eight-record and 64-KiB journal boundaries, no unresolved eviction and UTF-8 size negatives. |
+| C26 | Real Vite build, exact wheel resources and actual CPU image same-listener probes; inner-layer graph checks. |
+| C27 | All 15 runtime modules, including unimported files, pass all four coverage metrics at 100%; independent filesystem audit. |
+| C28 | Existing coverage negatives reject unimported/uncovered runtime and incomplete supported metrics. |
+| C29 | Actual import/cycle/private-host graph checks and negative fixtures; production test/story imports rejected. |
+| C30 | Every-PR CI contract tests and observed required jobs; no draft or documentation path bypass. |
+| C31 | Fresh built Storybook: 14 states across both locales/deployments, 18 separate journeys. |
+| C32 | Built product with both actual owned Python/SQLite compositions in Chromium; original build/browser/coverage outputs retained. |
+| C33 | 360-pixel real product/catalog layouts and both-locale component bounds without horizontal overflow. |
+| C34 | Actual keyboard setup/submission, associated accessible errors, focused invalid fields and named controls. |
+| C35 | Distinct loading, denied, unavailable, grace and current states in component/catalog/product proof. |
+| C36 | Complete locale/fallback keys, measured light/dark primary contrast, reduced-motion preferences and textual status. |
+| C37 | Actual hostile household text remains inert; no script/image execution, unsafe endpoint or command interpretation. |
+| C38 | Rendered default-mapping explanation, explicit setup consequence and no alternate-selector facade. |
+| C39 | Suspended/archived model/component/catalog guidance and backend unique linkage/current-authority guards. |
+| C40 | Actual decoded permissions, denied-read controller behavior and inert explicit technical permission identifiers. |
+| C41 | Actual fresh Edge/Stable installation binding and account replacement retire incompatible journal/drafts without replay. |
+| C42 | Actual owned-only close/revocation and failed-clear journeys, preserving server records and unrelated keys. |
+| C43 | Real backend wrong-source/Origin/context and malformed header boundaries; no header-selected actor or role. |
+| C44 | Real console snapshot/restore/restart returns a historical original receipt without recreating its absent effect. |
+| C45 | Bundle/bootstrap/DOM/journal negatives exclude credentials/private facts; first-error leak control verifies bounded adapter errors. |
+| C46 | Actual reload, cookie loss, local expiry and tab closure retain original server receipts and uniqueness guards. |
+| C47 | Independent contexts race after fresh preflight: one home; mapped same-account conflict or unlinked-account denial. |
+| C48 | Runtime/page teardown releases reads/timers/events, explicit browser-context cleanup and actual owned fixture lifecycle. |
+
+The native owner observation above is additional bounded evidence. It does not replace this matrix
+or claim completion of the other domain screens, Stable distribution or the all-domain release.
+The owner's explicit exception permits reported Copilot infrastructure/context failures alongside
+progress and merge; product findings still require resolution and full product coverage remains mandatory.
 
 ## Remaining delivery
 
