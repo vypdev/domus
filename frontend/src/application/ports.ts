@@ -43,6 +43,9 @@ export interface EntryReceipt {
   readonly createdAt: number;
   readonly result: Readonly<{[key: string]: JsonValue}>;
 }
+export interface EntryOperation extends EntryReceipt {
+  readonly delivery: 'pending' | 'delivered' | 'suppressed';
+}
 export type CommandResult = EntryReceipt
   | Readonly<{kind: 'rejected'; reason: ReadFault | 'conflict' | 'invalid_input'; correlationId: string | null}>
   | Readonly<{kind: 'uncertain'}>;
@@ -51,6 +54,7 @@ export interface EntryServer {
   session(): EntryRead<VerifiedEntrySession | null>;
   authorization(expected: JournalContext): EntryRead<Authorization>;
   household(expected: JournalContext): EntryRead<HouseholdFacts>;
+  operation(action: JournalCommand['action'], operationId: string, expected: JournalContext): EntryRead<EntryOperation>;
   send(request: JournalCommand & Readonly<{key: string}>, expected: JournalContext): Promise<CommandResult>;
   logout(): Promise<Readonly<{upstreamRevoked: boolean | null}>>;
 }

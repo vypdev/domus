@@ -1,6 +1,8 @@
 /** @type {import('dependency-cruiser').IConfiguration} */
 const configuration = {
   forbidden: [
+    {name: "production-no-test-imports", severity: "error", from: {path: "^frontend/src/"},
+      to: {path: "^(frontend/(tests|stories)|tests)/|\\.(test|spec)\\.[cm]?[jt]sx?$"}},
     {name: "no-cycles", severity: "error", from: {}, to: {circular: true}},
     {name: "no-unresolved", severity: "error", from: {}, to: {couldNotResolve: true}},
     {

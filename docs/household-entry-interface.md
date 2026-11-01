@@ -2,7 +2,8 @@
 
 The development branch implements pure entry/setup decisions, the bounded request journal with
 its owned sessionStorage adapter, and the generation-fenced entry controller. The product entry
-page, frontend HTTP adapters and static delivery remain to be implemented. Both server compositions
+page and static delivery remain to be implemented. Strict frontend HTTP adapters now attach and
+decode the server context contract. Both server compositions
 now expose verified session context and enforce supplied context assertions before protected work.
 These tests do not add a working interface to the owner's installed Edge.3 application.
 
@@ -61,7 +62,7 @@ Opening and refreshing read session, current authorization and permitted househo
 create no household or membership. Semantic server ports must bind each read and command to the
 expected installation/channel/subject, reject a mismatch, and return strictly decoded immutable
 facts. Expected context is an assertion, never an actor selector. Both server compositions now reject
-supplied mismatched assertions; the frontend HTTP adapter must still attach and validate that contract.
+supplied mismatched assertions; the frontend HTTP adapter attaches and validates that contract.
 Domain and Application import no browser, storage, transport or framework API.
 
 Setup, enrollment, original-request recovery and resolved-request dismissal obtain fresh session
@@ -116,6 +117,43 @@ The lower-level legacy native factory can omit deployment metadata and returns c
 rejects supplied context assertions. The product compositions always provide metadata. A missing
 context must remain unavailable to the frontend, with no inferred installation or command grant.
 
+## Frontend HTTP boundary
+
+Composition supplies the current page's canonical origin and accepted deployment/base. The adapter
+uses fixed relative paths, same-origin mode/credentials, no-store and no-referrer requests. It
+rejects redirects, foreign response URLs, opaque responses and unsupported personal-response MIME
+or caching. Bound reads, operation queries and commands carry exactly one verified context assertion.
+No host message, query hint or API body selects an endpoint or actor.
+
+Each logical operation has one 15-second deadline across its requests and streamed decoding. Abort
+both cancels owned I/O and settles the caller independently of provider cooperation; late preflight
+continuations cannot send another request. Body readers/listeners/timers are released. Native fetch
+is invoked as a function, avoiding Chromium's observed Illegal invocation under a foreign receiver.
+The native-fetch regression contacts only the isolated Vitest server; its missing product API is
+correctly unavailable.
+
+Responses are bounded to 64 KiB of streamed UTF-8, with fatal decoding, a sixteen-container limit,
+duplicate decoded-key rejection and safe integer numeric lexemes. Fractional/exponent/negative-zero
+wire encodings are unsupported by this integer-only entry contract. The key scanner uses one forward
+pass, including malformed strings. Strict DTOs validate flags, scoped permissions, own linkage,
+original receipts and actual delivery; no profile label invents a grant. Provider guidance is bounded
+and discarded. Existing household DEL/C1 values remain readable as data; new setup keeps its stronger
+validation and the exact original submitted payload remains unchanged.
+
+Setup/enrollment get actual CSRF per call and preserve the original key/payload. Browser fetch supplies
+Origin; the adapter never sets it manually. A valid bounded 401/403/409/422/503 error after POST is a
+known rejection. Lost, malformed or unexpected POST results stay uncertain. Preflight failure sends
+no mutation. No retry, key replacement or lease renewal is automatic. Standalone logout verifies the
+current session/context, gets CSRF and attempts real logout; native refuses standalone revocation.
+Operation reads retain the original ID/result and actual pending/delivered/suppressed state.
+
+Recorded nonsecret wire from actual guarded native/standalone ASGI/SQLite providers is consumed by
+Chromium tests. Two backend cases keep its structure current while allowing bounded guidance copy
+edits. The controller/HTTP/journal composition also checks one simulated effect across a lost response
+and deliberate same-key recovery. Production imports of test/story fixtures are rejected, including
+type-only imports. These are boundary/conformance tests; complete browser-to-backend product journeys,
+rendered UI, HA adoption and package acceptance remain pending.
+
 ## Development checks
 
 From the root, using the locked Node and pnpm versions:
@@ -141,8 +179,8 @@ Model execution is separate from rendering, accessibility, integration, package 
 
 ## Remaining delivery
 
-Strict frontend HTTP adapters that fulfill the implemented server/context contract and base-relative
-delivery remain required. The owned Lit UI
+Clock/entropy/navigation composition, base-relative built delivery and actual browser-to-backend
+journeys remain required. The owned Lit UI
 must demonstrate both locales, all primary states, accessibility, responsive layouts, Storybook and
 both browser compositions. The all-domain first release, both targets and isolated channels remain
 required. Follow the existing [identity](identity-household.md) and [setup](household-setup.md) contracts.

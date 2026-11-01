@@ -1,30 +1,30 @@
 {
-  "verifiedAtUTC": "2026-11-01T11:55:14.270486+00:00",
+  "verifiedAtUTC": "2026-11-01T12:46:05.753994+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "f05fc2d827d90344b468f48ae5e0f1015f0ea97e",
-  "sourceIdentity": "Locally reconciled task/entry source, additive four-conflict resolution and regenerated actual schemas/catalog; current whole-source backend/tooling/Node and actual Chromium measurement. Publication/current-head hosted review must be verified separately.",
+  "sourceBase": "ca55cdb56779573a0dd45b47b9546b74b4ffcc74",
+  "sourceIdentity": "Strict HTTP adapter and seven-module frontend boundary, real Chromium/native-fetch and both actual-provider wire corpus conformance. Backend runtime source is unchanged from ca55cdb. Current-head hosted integration/review is separate.",
   "sources": {
     "frontend/src/domain/entry.ts": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e",
     "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
     "frontend/package.json": "802b13b7fb97accd6e371ee06acb50769a3d14f71da6cd4890d3a5347223d12c",
-    "frontend/tsconfig.json": "74d4fe48de0e170ba293ae227bc75df0cff9b4520f1ceb416059db3915124ed8",
+    "frontend/tsconfig.json": "56e690bc6a80087a632ee034e6378fcb2097454b39f8652afd447f9194a7fcf2",
     "frontend/vitest.config.ts": "ab00647231ef1eef26b50b61937adda4b101caa0bb1822db99f6edd6171247bd",
     "tests/frontend/coverage-evidence.test.mjs": "0800f9fc96533cd4a60aaf9c36efbcfbd4ee8d58ad21b500e1a4bf7e54018239",
-    "tests/node/architecture.test.mjs": "b5a373bb3662db103b963fa37843f389e867069edac8ed6fec8cb0375b858ba9",
+    "tests/node/architecture.test.mjs": "5f0765efbd8c2625e54d22e944f8ba0c7972738cd3c269694f668c44b952c8af",
     "tests/python/test_ci_contract.py": "57d43038e050b21c362cda9ef607258df3810ae45a73af42ad2d74e576550f58",
     "tooling/domus_tooling/ci_policy.py": "50cb5904499d61bab1e8ba8d385be4338a970056b255e97fe2234fda5503ae26",
     ".github/workflows/ci_check.yml": "cf0c30fb7e465ca844998e6e3538f18013d7977a9a4054ae1ac43e6d754eb2f1",
     "package.json": "bc6cf936bb06ce7cd3d8950e64df1445df0c83a079c83b4aa6abb012c09bdfd8",
     "pnpm-lock.yaml": "618ccc6ac527c9fe1cd1ef4bca703535ccd2d8560fd9c2d25f5aba83cbd236e5",
     "frontend/src/domain/journal.ts": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354",
-    "frontend/src/application/ports.ts": "2e81b9a9bf62985136e2eefd562cb8ee126337e9d3e65ba246ceddf44bb71ed4",
+    "frontend/src/application/ports.ts": "3cd26e6c250baf8e9fe014d729c111116644e67084871388d9b84f06c2119da4",
     "frontend/src/adapters/session-journal.ts": "e323fb4cee70481b015ce4c0c6fa94c3c909eb03af6a1837254a9196aed0fdc3",
     "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
     "frontend/tests/session-journal.test.ts": "e5fe0d28cb4774543002db0cb628d5cba408d5f99e908d44e31ba943c3d57313",
-    "specs/household-entry-interface.md": "68c3f90d903290913ea517886487bbbfa12ca392ff0050a720571b866fcb10d4",
-    "docs/household-entry-interface.md": "2db41e720ce69c8283b75a6dd24b42dc740d86bfd292b4cb940c718816b96bee",
+    "specs/household-entry-interface.md": "fd19d9a13f85987c4462346b06b302a48499c874bf49075b623d1faeac44f3ec",
+    "docs/household-entry-interface.md": "d4324588be967413f33da7e9d25cf86336c07920732bb2ab75cb98e7fe754927",
     "frontend/src/application/entry-controller.ts": "1d3749809a505c2eaac11927463a3d92376251a8d235056a4a843202bd55926b",
-    "frontend/tests/controller.test.ts": "0e1f5bb3dd2c61bfd101537e539b00ea09d3b96fd65e1fe0fda8f61761962221",
+    "frontend/tests/controller.test.ts": "e1f1a0096a34b4c916d4169a1aca851fad5e712dcf45e0132c3115d3b879058b",
     "backend/src/domus/entrypoints/entry_context.py": "c3c8b64c603dd4de8330f9e336754c190f793e245d0a8e0455ac06e110919f78",
     "backend/src/domus/entrypoints/http.py": "f17742c2259caa441b64032607cd6fbe564a0d1d858f3added45c6b46d8f5900",
     "backend/src/domus/entrypoints/native_http.py": "a92c0e10887892e53aad84cf62208c79ad66ce642d4b86d52b2d284785f854da",
@@ -38,7 +38,13 @@
     "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
     "docs/contracts/native-household-api.openapi.json": "1606e2c41386d95651c1548db09fac180f8226e827082dc48648721601b8b1a2",
     "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
-    "docs/native-household-api.md": "54cc9cafedb8599861c661154241c47370a9c57e50abed743d074af41a473a4c"
+    "docs/native-household-api.md": "54cc9cafedb8599861c661154241c47370a9c57e50abed743d074af41a473a4c",
+    "frontend/src/adapters/http.ts": "b51cec2796097ee764204bad9f26615e4664b9275bf24be0539ab420a80bd19c",
+    "frontend/src/adapters/http-values.ts": "7d88ecc1ab2c3f361fb361b294dd7af8442b6329cdfe202e404e6e1338d2f003",
+    "frontend/tests/http.test.ts": "267fa6d38d188a85a96dd9d1fb8e8b80937e45ca08e383dfca9237fb8981da79",
+    "frontend/tests/fixtures/entry-wire.json": "4839ff30b6b6a3be456e95c4a3b270676b34fe923a66e971f91ade39a232780e",
+    "tests/backend/test_entry_wire.py": "f52c0f2dd911017287197e7f7ba27934f2a9cf8ac89e9adae90595d36a4f3173",
+    "architecture/frontend.mjs": "c7c2754e0f59857a1a971e60bd90a1b252cf2896face5929005b1c9943a6b7cb"
   },
   "runtime": {
     "node": "24.20.0",
@@ -49,41 +55,43 @@
     "browserCache": "Existing shared project-owned /private/tmp/domus-ui-playwright-browsers, reused without copying or new browser download."
   },
   "tests": {
-    "applicationModel": 210,
+    "applicationModel": 379,
     "sourceInventoryAudit": 1,
-    "nodePolicies": 35,
+    "nodePolicies": 37,
     "pythonTooling": 147,
     "unimportedRuntimeIncluded": true,
-    "runtimeSourceFiles": 5,
+    "runtimeSourceFiles": 7,
     "plannedCases": 48,
-    "claim": "210 executed model/journal/storage/controller cases, including67 Application cases. These are not210 specification acceptance cases; the48 original prospective inventory rows remain, with HTTP/rendering/package/owner acceptance unproven.",
-    "pythonToolingOrigin": "Current combined source147 tests/214 statements/98 branches100%; prior73-case local tooling evidence remains historical in source history.",
+    "claim": "379 executed model/journal/storage/controller/HTTP cases, not 379 specification acceptance cases. The 48 prospective case rows remain; rendered/built/owner acceptance is incomplete.",
+    "pythonToolingOrigin": "Historical ca55cdb combined-source proof: 147 tests, 214 statements and 98 branches at 100%. The unchanged tooling was not locally rerun in this increment.",
     "controllerCases": 67,
-    "frontendOrigin": "Actual210-case Chromium revalidation on this combined source; all5 runtime modules/four metrics100%."
+    "frontendOrigin": "Current 379-case Chromium measurement, including 169 HTTP cases, actual isolated native-fetch interop, recorded native/standalone provider wire and one composed simulated effect recovery.",
+    "httpCases": 169,
+    "backendWireConformance": 2
   },
   "coverage": {
     "frontend": {
       "lines": {
-        "total": 287,
-        "covered": 287,
+        "total": 497,
+        "covered": 497,
         "skipped": 0,
         "pct": 100
       },
       "statements": {
-        "total": 403,
-        "covered": 403,
+        "total": 696,
+        "covered": 696,
         "skipped": 0,
         "pct": 100
       },
       "functions": {
-        "total": 71,
-        "covered": 71,
+        "total": 120,
+        "covered": 120,
         "skipped": 0,
         "pct": 100
       },
       "branches": {
-        "total": 297,
-        "covered": 297,
+        "total": 482,
+        "covered": 482,
         "skipped": 0,
         "pct": 100
       },
@@ -95,6 +103,58 @@
       }
     },
     "files": {
+      "frontend/src/adapters/http-values.ts": {
+        "lines": {
+          "total": 122,
+          "covered": 122,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 24,
+          "covered": 24,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 171,
+          "covered": 171,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 122,
+          "covered": 122,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "frontend/src/adapters/http.ts": {
+        "lines": {
+          "total": 88,
+          "covered": 88,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 25,
+          "covered": 25,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 122,
+          "covered": 122,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 63,
+          "covered": 63,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
       "frontend/src/adapters/session-journal.ts": {
         "lines": {
           "total": 41,
@@ -228,33 +288,34 @@
     },
     "policy": "Required separate frontend job: strict types, real Chromium with completeCoverage, exact filesystem runtime inventory/four-metric summary audit and retained artifacts; required by aggregate."
   },
-  "architecture": "Actual five-module graph and existing negative fixtures pass. Domain/Application remain framework/browser/I/O-free; semantic server context assertions, cancellation, clock and entropy ports are explicit. Concrete adapters remain required.",
+  "architecture": "Actual seven-module graph plus inward/framework/cycle/unresolved negatives pass. New production-no-test-imports guard rejects fixture/story imports, including erased type edges. Domain/Application remain browser/framework/I/O-free; concrete browser primitives stay in adapters.",
   "commands": [
-    "pnpm install --frozen-lockfile",
     "pnpm check:frontend",
     "PLAYWRIGHT_BROWSERS_PATH=/private/tmp/domus-ui-playwright-browsers pnpm test:frontend",
     "pnpm check",
     "pnpm test",
-    "PYTHONPATH=$PWD/backend/src:$PWD/tooling primary-.venv/bin/pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:owned-report --cov-report=xml:owned-report",
-    "PYTHONPATH=$PWD/backend/src:$PWD/tooling primary-.venv/bin/mypy --cache-dir=owned-private-tmp backend/src",
-    "PYTHONPATH=$PWD/backend/src:$PWD/tooling primary-.venv/bin/lint-imports --config architecture/python-application.ini --no-cache",
+    "PYTHONPATH=$PWD/backend/src:$PWD/tooling primary-.venv/bin/pytest tests/backend/test_entry_wire.py",
     "primary-.venv/bin/ruff check --no-cache .",
-    "primary-.venv/bin/ruff format --check --no-cache ."
+    "primary-.venv/bin/ruff format --check --no-cache .",
+    "Original byte-verified pinned SDK specification/catalog validation and domus-check docs."
   ],
   "interimFailures": [
-    "Initial Chromium TDD could not import the absent controller; existing143 cases passed.",
-    "First160-case implementation passed behavior but missed coverage paths;205 passed at99.74% statements/99.65% branches; a real changed-context/completed-result scenario completed coverage.",
-    "Late receipt/session-expiry regression reproduced with1 failure/207 passes; after the guard all208 cases and397 statements/290 branches/70 functions/283 lines pass at100%.",
-    "No thresholds, runtime inventory or coverage exclusions were relaxed.",
-    "Original completed-result deadline TDD reproduced2 failures/208 passes while session remained valid; tick and fresh refresh now hide expired recovery records/results. Final210 cases cover all403 statements/297 branches/71 functions/287 lines across five modules."
+    "Initial Chromium TDD could not import absent HTTP adapter;210 existing cases passed.",
+    "First 224-case campaign had 5 bad error-fixture correlation prefixes; fixtures corrected to actualcor_ contract without relaxing decoding.",
+    "Noncooperative-provider deadline reproduced 1 failure/361 passes; Promise.race now settles independently of provider and late continuations cannot send.",
+    "362/371 campaigns passed behavior but incomplete coverage identified missing real cancellation/deadline/header states; public boundary cases cover those paths.",
+    "Real native-fetch 373-case regression failed; transparent observation captured asynchronous TypeError: Failed to execute fetch on Window: Illegal invocation. Calling the injected transport as a function corrects it; the real isolated Vitest HTTP response is rejected as unavailable product data.",
+    "Original regex scanner measured 1.67 ms/24.10 ms/89.11 ms on 2049/8193/16385-byte unterminated escaped strings in Node 24, indicating rescanning. Single-forward-pass tokenizer replaces it; no new performance number is inferred.",
+    "After linear scan,378 pass but one valid key/colon-whitespace statement was untested; adding that supported JSON case yields 379 and all 696 statements/482 branches/120 functions/497 lines 100%.",
+    "The unchanged pinned SDD consistency validator treated the natural-language Unicode C1 designation as a shorthand test ID. The document now spells the same range as U+0080\u2013U+009F; original 48 case rows are unchanged. Raw failing input and diagnostics are retained."
   ],
   "limitations": [
-    "Concrete frontend HTTP adapter attaching/decoding the implemented server assertions is still required.",
-    "No rendered Lit UI, locale/a11y/layout acceptance, package update or owner HA data change.",
-    "Action sync failure remains reported#844; exceptional locally tested reconciliation uses standing maintainer authorization, same ref and normal fast-forward publication only.",
-    "Partial Bugbot conversation coverage remains reported#843; no full feature/review acceptance is claimed."
+    "Clock/entropy/navigation composition, built base-relative static delivery, actual browser-to-backend product journeys and Lit UI/locale/a 11 y/Storybook acceptance remain incomplete.",
+    "Backend runtime source is unchanged; prior 2932-case 105-module complete proof is historicalca 55 cdb, and onlytwo new provider-corpus cases were locally executed this increment. Current-head hosted whole-project CI is separate.",
+    "Native-fetch probe contacts only isolated Vitest origin; provider corpus uses real guarded ASGI/SQLite with fictional HA adapters, not owner HA.",
+    "No installed package, owner HA data, private HA storage, gateway or Copilot resource/credential change. Partial Bugbot conversation coverage remains reported#843."
   ],
-  "rawEvidence": "/private/tmp/domus-http-context-checkpoint-retained/measurements.tar.gz",
+  "rawEvidence": "/private/tmp/domus-http-adapter-checkpoint-retained/measurements.tar.gz",
   "previousModelEvidence": {
     "sourceRevision": "695e5c31a466b8a42c8840c46f708141979b35e4",
     "sourceBase": "82519ee4e547dc347b8d0a18352bd1acc7783d70",
@@ -421,7 +482,7 @@
       "Compatibility audit found an existing task-runtime native-factory caller on develop. Native positional clock contract retained, absent metadata stays null/unavailable; no invented identity or blanket skip. Final1442 pass with4771 statements/1324 branches100%."
     ],
     "limitations": [
-      "Frontend HTTP adapter, rendered interface and browser-to-server/owner adoption remain incomplete.",
+      "At the recorded ca55cdb checkpoint the frontend HTTP adapter, rendered interface and browser-to-server/owner adoption remained incomplete. The current increment implements the HTTP adapter; the remaining acceptance is still outstanding.",
       "Exceptional reconciliation of existing managed ref uses explicit standing owner merge authorization and documented Action failure#844; no Copilot resource/credential change or force push.",
       "Current committed-source publication/hosted CI/review must be inspected separately; tests here prove locally integrated source, not owner adoption."
     ],
@@ -450,5 +511,35 @@
     ],
     "resolution": "Additive task/entry constructor, imports and fixture wiring; actual combined OpenAPI/catalog regenerated; all protected Copilot trees identical in both parents and worktree.",
     "validation": "2932 backend cases on105 modules,7672 statements/2162 branches100%;210 Chromium/four metrics,147 tooling,35 Node, strict types/architecture/docs/SDK48 rows. Publication is separate."
+  },
+  "previousServerContextEvidence": {
+    "sourceRevision": "ca55cdb56779573a0dd45b47b9546b74b4ffcc74",
+    "backendCases": 2932,
+    "backendSourceFiles": 105,
+    "statements": 7672,
+    "branches": 2162,
+    "coverage": "100% globally/per file",
+    "rawEvidence": "/private/tmp/domus-http-context-checkpoint-retained/measurements.tar.gz"
+  },
+  "httpAssertions": [
+    "Canonical accepted same-origin target, fixed relative routes, credential/mode restrictions, redirect/foreign/opaque response rejection, no-store JSON and no-referrer.",
+    "64 KiB decoded streamed UTF 8, fatal decoding,16 container depth, duplicate decoded keys and unsupported fractional/exponent/negative-zero/unsafe numeric lexemes rejected. Linear scan of malformed strings.",
+    "Closed session/context/member/permission/household/receipt/delivery/logout DTOs; no label-derived grants or provider-text rendering. Existing DEL/C 1 household reads preserved.",
+    "Context assertions and ephemeral per-command actual CSRF; raw original payload/key not normalized; browser sets Origin.",
+    "Known bounded rejected statuses distinguished from malformed/lost/unexpected POST uncertainty; no automatic retry/new key.",
+    "Single 15 second logical deadline, independent abort settlement and guarded late continuation; readers/listeners/timers released.",
+    "Standalone logout verifies current session/context and CSRF; native never invokes standalone revoke. Operation queries preserve exact identity and actual delivery.",
+    "Both real ASGI/SQLite providers supply nonsecret recorded wire;two backend structural checks permit bounded guidance copy edits. Chromium decodes it.",
+    "Composed controller/HTTP/journal fake server demonstrates one effect after response loss/same-key recovery. This remains simulated server behavior."
+  ],
+  "sddValidation": {
+    "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+    "format": "PASS",
+    "consistency": "PASS",
+    "catalog": "PASS",
+    "originalCaseRowsPreserved": 48,
+    "falsePositiveReport": "https://github.com/vypdev/copilot/issues/845",
+    "sourceValidatorBlob": "c1487eac45d12911052df9ce72ac1cdcb54e0b96",
+    "workaround": "Spell Unicode control range U+0080\u2013U+009F in prose; no Copilot or case-inventory change."
   }
 }

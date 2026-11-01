@@ -629,7 +629,9 @@
         "frontend/src/application/ports.ts",
         "frontend/src/adapters/session-journal.ts",
         "frontend/src/application/entry-controller.ts",
-        "backend/src/domus/entrypoints/entry_context.py"
+        "backend/src/domus/entrypoints/entry_context.py",
+        "frontend/src/adapters/http.ts",
+        "frontend/src/adapters/http-values.ts"
       ],
       "tests": [
         "frontend/tests/domain.test.ts",
@@ -639,7 +641,10 @@
         "frontend/tests/journal.test.ts",
         "frontend/tests/session-journal.test.ts",
         "frontend/tests/controller.test.ts",
-        "tests/backend/test_entry_context.py"
+        "tests/backend/test_entry_context.py",
+        "frontend/tests/http.test.ts",
+        "frontend/tests/fixtures/entry-wire.json",
+        "tests/backend/test_entry_wire.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -652,7 +657,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial entry/controller/journal:210 Chromium cases/four metrics100% on five frontend modules. Actual server context and assertions add33 scenarios; reconciled task/entry source passes2932 backend cases/7672 statements/2162 branches100% on105 files,147 tooling cases and35 Node cases. Frontend HTTP, rendered UI/delivery and integrated acceptance remain incomplete.",
+        "implementationEvidence": "Partial entry/controller/journal and strict HTTP/context/receipt/logout adapter: 379 real Chromium cases; all four metrics at 100% on seven frontend runtime modules. The 37 Node graph/policy cases include production/test type/value negatives; two actual backend cases check wire conformance. Complete backend proof at ca55cdb covers 105 modules and 2,932 cases. Built UI, composition, rendered browser journeys and adoption remain incomplete.",
         "blockingDecisions": "Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29.",
         "copilotChangesAllowed": false
       }

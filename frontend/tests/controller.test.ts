@@ -31,6 +31,7 @@ function fixture(authorization = setup) {
   const journal = new SessionJournal(storage);
   const server = {session: vi.fn(() => read<VerifiedEntrySession | null>(session)),
     authorization: vi.fn(() => read(authorization)), household: vi.fn(() => read(household)),
+    operation: vi.fn(() => read({...receipt, delivery: 'pending' as const})),
     send: vi.fn((_request: Parameters<EntryServer['send']>[0]) => Promise.resolve<CommandResult>(receipt)),
     logout: vi.fn(() => Promise.resolve({upstreamRevoked: true as boolean | null}))};
   const clock = {anchor: vi.fn((_time: number) => {}), now: vi.fn(() => now)};

@@ -154,6 +154,8 @@ Authenticated session context adds installation ID, stable/edge channel, native/
 
 The session wire context contains installation_id, channel, deployment, application_base, household_api_available, server_time and expires_at. Server time and the absolute session deadline use one process-local UTC/monotonic anchor; fresh reads or later wall-clock adjustments cannot extend the original lease. The frontend HTTP adapter sends exactly one X-Domus-Context assertion on bound personal reads and commands, encoded as v1:installation:channel:subject from verified metadata. Both server compositions compare it to their actual installation/channel/verified human before protected work. A mismatch, duplicate, empty, non-ASCII or oversized assertion fails closed without echoing the expected context. This is an assertion, never authentication, an actor selector or a substitute for CSRF/current authorization. Legacy raw API callers may omit it; the new UI must not. Preview reports unavailable business APIs honestly.
 
+The frontend transport accepts a canonical current-page origin and accepted deployment/base from composition, uses only relative fixed API paths with same-origin credentials/mode, rejects redirects/foreign response URLs and requires no-store JSON. Decode at most 65,536 streamed UTF-8 bytes with fatal encoding, at most sixteen containers, no duplicate decoded keys, and safe integer wire lexemes; fractional, exponent and negative-zero numeric encodings are unsupported by this integer-only entry contract. The key scanner advances once over malformed strings. Each logical operation has one 15,000-millisecond deadline across its requests and decoding. Cancellation/deadline aborts owned I/O and settles even if a provider ignores abort; a late preflight cannot start another request. CSRF is obtained per command, kept only in its ephemeral call and never journaled. Known rejected POST statuses require a valid bounded error envelope; malformed/unexpected/lost POST outcomes remain uncertain. Standalone logout verifies current context, then obtains CSRF and logs out; native never uses that route. Operation queries preserve original receipt identity and actual pending/delivered/suppressed delivery. Provider messages are bounded/validated but never become presentation text. Existing household DEL and U+0080–U+009F read compatibility remains separate from stronger new-setup input validation.
+
 Native retains actual Supervisor peer, accepted bounded prefix, exact-human/binding checks and HA session; no second OAuth/Domus cookie. Technical Core authority never becomes a human role. Nonpersonal shell/assets remain behind source/binding guards; personal APIs require proof. Standalone keeps operator origin, state/S256/single-use callback and private session. Deliberate `GET /api/v1/auth/start` succeeds only to fixed same-origin entry shell, with no caller-chosen redirect. `POST /api/v1/auth/logout` keeps Origin/CSRF and truthful revocation/unconfirmed guidance. Native invokes no standalone logout: clear owned tab data/presentation and explain HA-owned sign-out without claiming Supervisor revocation.
 
 ## 7. User-facing configuration
@@ -372,6 +374,9 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/src/application/ports.ts` | create |
 | `frontend/src/application/entry-controller.ts` | create |
 | `frontend/src/adapters/http.ts` | create |
+| `frontend/src/adapters/http-values.ts` | create |
+| `frontend/tests/fixtures/entry-wire.json` | create |
+| `tests/backend/test_entry_wire.py` | create |
 | `frontend/src/adapters/session-journal.ts` | create |
 | `frontend/src/presentation/domus-app.ts` | create |
 | `frontend/src/presentation/styles.ts` | create |
