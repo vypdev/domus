@@ -1,11 +1,11 @@
 {
-  "verifiedAtUTC": "2026-11-01T10:46:19.515993+00:00",
+  "verifiedAtUTC": "2026-11-01T10:54:20.076541+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "695e5c31a466b8a42c8840c46f708141979b35e4",
-  "sourceIdentity": "Working-source journal/domain/semantic port/owned storage adapter over sourceBase; no controller, HTTP orchestration, rendered UI or owner adoption is claimed.",
+  "sourceBase": "12d0e2a375af0232a597f4d2c4ef11718bd3e4cc",
+  "sourceIdentity": "Working-source Unicode-control regression correction over the published entry journal; original135-case journal measurement and source provenance retained separately.",
   "sources": {
-    "frontend/src/domain/entry.ts": "e9df616f52757ae3bafc3a0242908659e635fbdd4676fdc75a59d0f63ecc004e",
-    "frontend/tests/domain.test.ts": "bbee73af0e7be15ba36a0b503281ae1a17b8f2fa9164a6559e6d4e23dd863c94",
+    "frontend/src/domain/entry.ts": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e",
+    "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
     "frontend/package.json": "802b13b7fb97accd6e371ee06acb50769a3d14f71da6cd4890d3a5347223d12c",
     "frontend/tsconfig.json": "74d4fe48de0e170ba293ae227bc75df0cff9b4520f1ceb416059db3915124ed8",
     "frontend/vitest.config.ts": "ab00647231ef1eef26b50b61937adda4b101caa0bb1822db99f6edd6171247bd",
@@ -19,10 +19,10 @@
     "frontend/src/domain/journal.ts": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354",
     "frontend/src/application/ports.ts": "4140ed51a07a64718e499d07236f6680eaee2fd55b83dcc63f725499f363fcb8",
     "frontend/src/adapters/session-journal.ts": "e323fb4cee70481b015ce4c0c6fa94c3c909eb03af6a1837254a9196aed0fdc3",
-    "frontend/tests/journal.test.ts": "3b072c692fc029ed21c7fdf1f7ac0e209be822ec7ed537eda82593b8e1e77f5a",
+    "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
     "frontend/tests/session-journal.test.ts": "e5fe0d28cb4774543002db0cb628d5cba408d5f99e908d44e31ba943c3d57313",
     "specs/household-entry-interface.md": "261b3242dd09778c525f8687752dfe2832c958ab400a2d1f89898f6813826812",
-    "docs/household-entry-interface.md": "0774936c6db48e2abf4ff54a050aac549c6a60b5f6e0bf4f211af7301d1b4478"
+    "docs/household-entry-interface.md": "2358815aa04c349bf28967d427269fe9adc74653a6ea2fa6444ea18808d52643"
   },
   "runtime": {
     "node": "24.20.0",
@@ -33,14 +33,15 @@
     "browserCache": "Existing shared project-owned /private/tmp/domus-ui-playwright-browsers, reused without copying or new browser download."
   },
   "tests": {
-    "applicationModel": 135,
+    "applicationModel": 143,
     "sourceInventoryAudit": 1,
     "nodePolicies": 35,
     "pythonTooling": 73,
     "unimportedRuntimeIncluded": true,
     "runtimeSourceFiles": 4,
     "plannedCases": 48,
-    "claim": "135 executed unit/storage cases exercise entry decisions and journal/adapter policy. They are not 135 specification acceptance cases, full controller recovery or real server/owner acceptance."
+    "claim": "135 executed unit/storage cases exercise entry decisions and journal/adapter policy. They are not 135 specification acceptance cases, full controller recovery or real server/owner acceptance.",
+    "pythonToolingOrigin": "Original73-case tooling run at695e5c3; tooling/Python source unchanged and not locally rerun in this frontend increment."
   },
   "coverage": {
     "frontend": {
@@ -196,7 +197,8 @@
     "Real Chromium TDD failed resolving the absent journal and then the absent storage adapter.",
     "The first implemented domain campaign passed102 tests but failed branch coverage at98.73% in journal.ts; a meaningful neighbouring-record update/dismissal case covered the missed path.",
     "Final135 tests pass with all181 statements,143 branches,44 functions and139 lines covered across four runtime modules.",
-    "Owned SDK harness output initially targeted a retired producer directory; an explicit new receipt path fixed that diagnostic-output failure, and unchanged SDK checks pass."
+    "Owned SDK harness output initially targeted a retired producer directory; an explicit new receipt path fixed that diagnostic-output failure, and unchanged SDK checks pass.",
+    "The valid Bugbot Unicode finding was reproduced with8 failing tests/135 passing on12d0e2a; the corrected complete143-case campaign passes."
   ],
   "limitations": [
     "Controller/fresh proof/current-state coordination, actual HTTP recovery, server metadata and delivery remain incomplete.",
@@ -268,5 +270,12 @@
     "upstream": "https://github.com/vypdev/copilot/issues/844",
     "remoteHeadRetained": "695e5c31a466b8a42c8840c46f708141979b35e4",
     "cause": "Action PAT lacks workflow scope for CI workflow changes; local merged candidate39f69a7 was not published. No force push, manual synchronization or Copilot/PAT change."
+  },
+  "unicodeRegression": {
+    "finding": "https://github.com/vypdev/domus/pull/15#discussion_r4435303629",
+    "preFix": "Eight new actual Chromium regressions fail: C0-only filter admitted DEL and C1 in name/timezone and persisted setup payload.",
+    "fix": "UnicodeCc plus unpaired-surrogate rejection in pure entry model, reused by the journal; existing backend read compatibility is unchanged.",
+    "final": "143 tests pass; all181 statements/143 branches/44 functions/139 lines on all four runtime modules covered.",
+    "rawEvidence": "/private/tmp/domus-journal-checkpoint-retained/measurements.tar.gz"
   }
 }

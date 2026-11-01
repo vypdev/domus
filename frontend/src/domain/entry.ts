@@ -76,7 +76,7 @@ export type SetupValidation = Readonly<{ok: true; payload: SetupPayload}>
 
 function validText(value: unknown, maximum: number): value is string {
   return typeof value === 'string' && value.trim().length > 0
-    && Array.from(value).length <= maximum && !/[\u0000-\u001F\uD800-\uDFFF]/u.test(value);
+    && Array.from(value).length <= maximum && !/[\p{Cc}\uD800-\uDFFF]/u.test(value);
 }
 
 /** Validate bounded input only; the server owns the timezone catalog and final authorization. */

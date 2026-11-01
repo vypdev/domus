@@ -53,7 +53,8 @@ test.each([null, 4, [], {}, {key: ''}, {key: '-bad'}, {key: 'x'.repeat(129)},
 );
 
 test.each([{name: ''}, {time_zone: ''}, {expected_revision: 1}, {mapping_mode: 'selected_ha_user'},
-  {selected_ha_user_id: 'other'}, {name: '\uD800'}])('rejects unsupported setup payload %j', change => {
+  {selected_ha_user_id: 'other'}, {name: '\uD800'}, {name: 'Home\u007F'},
+  {time_zone: 'UTC\u0085'}])('rejects unsupported setup payload %j', change => {
   const value = raw(); value.records[0] = {...value.records[0], ...setup,
     payload: {...setup.payload, ...change}};
   fault(() => inspectJournal(value, context, 1000), 'invalid_journal');

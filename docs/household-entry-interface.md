@@ -24,7 +24,7 @@ data and preview without household APIs remain unavailable.
 
 Setup takes only name and timezone. It selects all_ha_administrators, expected revision zero, and
 no actor or selected account. Names are bounded to 160 Unicode code points before trimming; timezones
-to 128. Blank, control-character and unpaired-surrogate input receives a field error without changing
+to 128. Blank, Unicode-control (C0, DEL and C1) and unpaired-surrogate input receives a field error without changing
 the caller's draft. The server owns final authorization, uniqueness and timezone-catalog validation.
 These checks do not authenticate or send a command.
 

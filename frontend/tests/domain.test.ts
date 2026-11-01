@@ -79,13 +79,15 @@ describe('household-entry-interface-C03/C04: default setup payload and validatio
     if (result.ok) expect(Object.isFrozen(result.payload)).toBe(true);
   });
 
-  test.each([undefined, null, 12, '', '   ', 'x'.repeat(161), '\u0000bad', '\uD800', '\uDC00'])(
+  test.each([undefined, null, 12, '', '   ', 'x'.repeat(161), '\u0000bad', '\uD800', '\uDC00',
+    'Home\u007F', 'Home\u0085', 'Home\u009F'])(
     'invalid name %j is associated with its field', name => {
       expect(setupPayload(name, 'UTC')).toEqual({ok: false, fields: ['name']});
     },
   );
 
-  test.each([undefined, null, 12, '', '   ', 'x'.repeat(129), 'Bad\nZone', '\uD800'])(
+  test.each([undefined, null, 12, '', '   ', 'x'.repeat(129), 'Bad\nZone', '\uD800',
+    'UTC\u007F', 'UTC\u0085', 'UTC\u009F'])(
     'invalid timezone %j is associated with its field', zone => {
       expect(setupPayload('Home', zone)).toEqual({ok: false, fields: ['time_zone']});
     },
