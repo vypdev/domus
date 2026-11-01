@@ -35,7 +35,8 @@ uv run ruff format --check .
 uv run mypy tooling
 uv run mypy backend/src
 uv run pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing
-uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing
+uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml
+uv run domus-check backend-coverage --report coverage-backend.json
 pnpm check
 pnpm test
 uv run lint-imports --config architecture/python-tooling.ini --no-cache
@@ -51,6 +52,25 @@ reported metrics are enforced at 100% globally and per file. This is tooling cov
 the fictional framework fixture and future application UI coverage. Tests, generated dependencies and framework configuration
 are distinct from runtime source. A source-inventory test rejects a new backend, UI or HA runtime
 file until its own applicable coverage/architecture gate is registered.
+
+The backend job additionally audits its produced JSON against every `.py` file under
+`backend/src/domus`. The verifier independently reconstructs the default-policy executable lines,
+excluded type-only declarations and branch destinations with the locked Coverage.py version,
+without importing or executing application modules. Each file's execution sets, exact integer
+counts, 100% numeric metrics and overall totals must agree with that complete source model.
+Empty module files remain valid; an entirely empty executable backend cannot pass.
+
+This rejects omitted/unimported files, invented zero-statement modules, report-controlled exclusions,
+explicit coverage pragmas, malformed/duplicate/nonfinite JSON, Boolean count/line aliases, rounded
+percentages, missing branch evidence, noncanonical/foreign paths, symlinks and source changes during
+verification. Reports must be regular files, branch-enabled format 3 from the installed locked
+Coverage.py version, at most 64 MiB. Diagnostics are bounded. The audit follows successful pytest
+in the same required backend job; it does not replace execution, semantic assertions or provenance.
+
+Run from the repository root; `--root` selects another complete checkout and a relative `--report`
+resolves there. Recreate a missing/stale/malformed report by running the exact backend command above.
+Do not remove files, branches or exclusions from the evidence to make it pass. The verifier needs
+development dependencies; lazy command loading preserves `domus-check docs` in `--no-dev` jobs.
 
 ## Architecture contracts
 

@@ -1,10 +1,11 @@
 {
-  "verifiedAtUTC": "2026-11-01T08:17:14.838194+00:00",
+  "verifiedAtUTC": "2026-11-01T09:09:54.699380+00:00",
   "issue": "https://github.com/vypdev/domus/issues/13",
   "pullRequest": "https://github.com/vypdev/domus/pull/14",
-  "sourceBase": "487506f0fb5add530aeb90ea6c4c82ab3e3fd0b0",
-  "sourceIdentity": "Working-source typed lifecycle event feed over sourceBase; exact runtime/test hashes follow. Real domain consumers, product UI, deployment and full first-release acceptance remain incomplete.",
+  "sourceBase": "cd0795125274678432464f976c86995925562882",
+  "sourceIdentity": "Working-source independent backend coverage auditor/CI enforcement over sourceBase. Backend runtime source and original complete 2899-case measurement are byte-identical; new complete tooling execution/audit evidence follows. Full product/feature acceptance remains unproven.",
   "sources": {
+    ".github/workflows/ci_check.yml": "b35aba02bcef4c1d4355a5e2762093309e61dc7f8569e5e5b6739442c1a0b308",
     "backend/src/domus/application/ports.py": "5f42858e39d4606a93378085fb2ad5469d0db2c69187debdf148dae413ecc8ab",
     "backend/src/domus/application/task_authorization.py": "4f33621792d2c649f98bd6bada28a79d06a93200aa7da5bc06cd9a1f730e52d6",
     "backend/src/domus/application/task_commands.py": "e3e98fd8e369a09ce52837ca17015ba9a8331bf312a90090a3bda453997e2640",
@@ -87,7 +88,11 @@
     "tests/backend/test_task_values.py": "f1030681e9a5055a193945cb298172d281348b6eaffab6fdf5ae24d6da858269",
     "tests/backend/test_tasks.py": "285c0a8225b9fe211a8d7348516d98aa0eb2f6a24403dcb9ef6ec8f10b977628",
     "tests/fixtures/sqlite/v5.sql": "d93e1cbfb0547b53308ee6ac485ca895c0269dd286c29656618da60d5c20de50",
-    "tests/fixtures/sqlite/v6.sql": "af84ed25f3bf5ffe7da5a8f1b9ff8163bd2aa27641283aa79c0c60edd5927f11"
+    "tests/fixtures/sqlite/v6.sql": "af84ed25f3bf5ffe7da5a8f1b9ff8163bd2aa27641283aa79c0c60edd5927f11",
+    "tests/python/test_backend_coverage.py": "849d8ef67edc576897055bd7da5e78ff11cc3ac6908efff6954d0789e23acdc1",
+    "tests/python/test_ci_contract.py": "4b7579d9b0d1c738b9b19477859725d2e553b3f23a0693679741edfb439cd252",
+    "tooling/domus_tooling/backend_coverage.py": "0c99dd6d0401c1e25ae6ab3b8ed9c92e2b472771cb78bcce33b82dae151ce476",
+    "tooling/domus_tooling/cli.py": "dc4ddf26cfd4f0e40de11b96eeced41235a1832eba618b5070248bc808014a4e"
   },
   "wholeBackendSourceInventory": {
     "backend/src/domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
@@ -218,7 +223,16 @@
     "newMaterialHTTPAndQueries": 105,
     "newExplicitMaterialSettlement": 102,
     "newDependencyReviewsAndAcknowledgements": 110,
-    "newTypedLifecycleSource": 46
+    "newTypedLifecycleSource": 46,
+    "wholeTooling": 146,
+    "newBackendCoverageAudit": 74,
+    "backendMeasurementOrigin": {
+      "immutableSourceRevision": "cd0795125274678432464f976c86995925562882",
+      "rerunLocallyInThisToolingIncrement": false,
+      "currentBackendSourceHashesMatchOriginalMeasurement": true,
+      "sourceReportSHA256": "05c916b441abfea9b94274a66a0eb7de1124c0b89f1a9ff3c8ec3d305bf91e39",
+      "newAuditorAcceptedOriginalMeasurement": true
+    }
   },
   "coverage": {
     "authoredBackendFiles": 104,
@@ -826,6 +840,124 @@
       "branches": 824,
       "missingStatements": 0,
       "missingBranches": 0
+    },
+    "tooling": {
+      "authoredFiles": 5,
+      "sourceHashes": {
+        "tooling/domus_tooling/__init__.py": "6c2440f4b9799284410ca165b02a1e86f3cf450082159dc15778d89a3a5b5c2f",
+        "tooling/domus_tooling/backend_coverage.py": "0c99dd6d0401c1e25ae6ab3b8ed9c92e2b472771cb78bcce33b82dae151ce476",
+        "tooling/domus_tooling/ci_policy.py": "ad62b739c37a988e44d2ed398a03467585711c0d990e5b627858ddb067f74692",
+        "tooling/domus_tooling/cli.py": "dc4ddf26cfd4f0e40de11b96eeced41235a1832eba618b5070248bc808014a4e",
+        "tooling/domus_tooling/docs.py": "105e2fd92220ed44c9be15e8440c08eb9faf8dee66177a8f5155a2f573b4fdde"
+      },
+      "wholeTooling": {
+        "covered_lines": 214,
+        "num_statements": 214,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 98,
+        "num_partial_branches": 0,
+        "covered_branches": 98,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "files": {
+        "tooling/domus_tooling/__init__.py": {
+          "covered_lines": 0,
+          "num_statements": 0,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 0,
+          "num_partial_branches": 0,
+          "covered_branches": 0,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "tooling/domus_tooling/backend_coverage.py": {
+          "covered_lines": 133,
+          "num_statements": 133,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 62,
+          "num_partial_branches": 0,
+          "covered_branches": 62,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "tooling/domus_tooling/ci_policy.py": {
+          "covered_lines": 13,
+          "num_statements": 13,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 8,
+          "num_partial_branches": 0,
+          "covered_branches": 8,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "tooling/domus_tooling/cli.py": {
+          "covered_lines": 37,
+          "num_statements": 37,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 10,
+          "num_partial_branches": 0,
+          "covered_branches": 10,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "tooling/domus_tooling/docs.py": {
+          "covered_lines": 31,
+          "num_statements": 31,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 0,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 18,
+          "num_partial_branches": 0,
+          "covered_branches": 18,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        }
+      },
+      "sourceInventoryExactlyMatchesCoverage": true
+    },
+    "enforcement": {
+      "command": "uv run domus-check backend-coverage --report coverage-backend.json",
+      "execution": "Required backend step immediately after successful pytest, no conditional or continue-on-error; original JSON/XML artifacts retained.",
+      "scope": "Exact canonical recursive backend/src/domus inventory, including unimported modules.",
+      "model": "Default-config locked Coverage.py static analysis without application import/execution; expected statements/branches/type-only exclusions independent of reported omissions/exclusions.",
+      "protocol": "Branch-enabled format 3 from the locked installed version; 64 MiB regular-file bound; duplicate/nonfinite/Boolean aliases and inconsistent execution/summary/totals rejected.",
+      "sourceStability": "Inventory and hashes rechecked after static analysis.",
+      "limitations": "This validates inventory/denominator/data. It supplements actual pytest execution, semantic tests and immutable-source provenance; it is not real consumer/UI/owner acceptance."
     }
   },
   "architecture": {
@@ -833,19 +965,26 @@
     "dependencies": 880,
     "contractsKept": 3,
     "contractsBroken": 0,
-    "strictBackendTypes": "PASS; 104 backend files, 108 including tooling"
+    "strictBackendTypes": "PASS; 104 backend files, 109 including tooling",
+    "tooling": {
+      "analyzedFiles": 21,
+      "dependencies": 24,
+      "contractsKept": 2,
+      "contractsBroken": 0
+    }
   },
   "commands": [
-    "COVERAGE_FILE=/private/tmp/domus-task-lifecycle-validation-487506f/backend.coverage .venv/bin/pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-task-lifecycle-validation-487506f/coverage.json --cov-report=xml:/private/tmp/domus-task-lifecycle-validation-487506f/coverage.xml -q --basetemp=$TMPDIR/domus-task-lifecycle-full-pytest-487506f (private temporary root, loopback enabled, no skips)",
-    ".venv/bin/pytest tests/backend/test_task_events.py tests/backend/test_sqlite_task_events.py tests/backend/test_task_reviews.py tests/backend/test_sqlite_task_reviews.py --cov=domus --cov-branch --cov-report=json:/private/tmp/domus-task-lifecycle-validation-487506f/focused-coverage.json --cov-fail-under=0 -q --basetemp=$TMPDIR/domus-task-lifecycle-focused4-pytest-487506f (diagnostic focused run: 156 passed, 46 new; all also execute in full strict-100% campaign)",
+    "uv run pytest tests/backend --cov=domus --cov-branch --cov-report=term-missing --cov-report=json:coverage-backend.json --cov-report=xml:coverage-backend.xml (existing complete 2899-case execution at byte-identical immutable cd07951 is referenced; this tooling increment does not claim a new local backend run)",
+    "COVERAGE_FILE=/private/tmp/domus-backend-coverage-validation-cd07951/tooling.coverage .venv/bin/pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing --cov-report=json:/private/tmp/domus-backend-coverage-validation-cd07951/tooling-coverage.json --cov-report=xml:/private/tmp/domus-backend-coverage-validation-cd07951/tooling-coverage.xml -q --basetemp=$TMPDIR/domus-backend-coverage-tooling5-pytest-cd07951 (146 passed; strict 100% whole and per file)",
     ".venv/bin/mypy backend/src tooling",
     ".venv/bin/lint-imports --config architecture/python-application.ini --no-cache",
     ".venv/bin/lint-imports --config architecture/python-tooling.ini --no-cache",
-    ".venv/bin/pytest tests/python tests/architecture --no-cov -q --basetemp=$TMPDIR/domus-task-lifecycle-architecture-pytest-487506f (113 passed)",
+    ".venv/bin/pytest tests/architecture --no-cov -q --basetemp=$TMPDIR/domus-backend-coverage-architecture-pytest-cd07951 (41 passed)",
     ".venv/bin/ruff check .",
     ".venv/bin/ruff format --check .",
     ".venv/bin/domus-check docs",
-    "Byte-verify the seven pinned policy modules listed in sddPolicyProvenance, invoke validateSddMarkdown/validateSddDraftConsistency with the declared immutable path baseline and other owners, verify retained original case rows independently, renderCatalog and validateCatalog."
+    "Byte-verify the seven pinned policy modules listed in sddPolicyProvenance, invoke validateSddMarkdown/validateSddDraftConsistency with the declared immutable path baseline and other owners, verify retained original case rows independently, renderCatalog and validateCatalog.",
+    ".venv/bin/domus-check backend-coverage --report /private/tmp/domus-backend-coverage-validation-cd07951/actual-backend-coverage.json (original full measured JSON, every current backend file hash verified identical to cd07951)"
   ],
   "sddPolicyProvenance": {
     "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
@@ -883,7 +1022,7 @@
   "sddAndCatalogValidation": {
     "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
     "base": "a63b2315cd5121dde9585ba8875e286fdef5330e",
-    "source": "487506f0fb5add530aeb90ea6c4c82ab3e3fd0b0",
+    "source": "cd0795125274678432464f976c86995925562882",
     "catalogSHA256": "522b4be55ee8abcf295c58d200caf6141efee837988864c4ebf4a0c53d9846bd",
     "catalog": "PASS",
     "affectedSdds": "PASS; household-tasks, household-identity, points-rewards, task-execution-foundation",
@@ -917,10 +1056,10 @@
   },
   "limits": [
     "The full backend run uses temporary loopback WebSocket listeners and was run with local-listener permission. No tests were skipped to obtain coverage.",
-    "Typed lifecycle source and A37 review now execute through the actual application/SQLite and both business compositions. Real Inventory/Points/recurrence consumers, full authored coverage policy audit, remaining acceptance and UI/package/owner/all-domain delivery are still required.",
+    "Task lifecycle/material/review source and complete backend coverage audit are implemented. Complete feature acceptance, actual Inventory/Points/recurrence and all UI/package/owner/all-domain delivery remain required.",
     "Restoration tests use an explicit fake HA identity provider with actual local MembershipAuthorization, AtomicCommands, SQLite and restore services. They are not owner HA access/adoption proof.",
     "No owner Chrome UI, package deployment, Stable/Edge adoption, HA entity/service or complete product acceptance was performed. Hosted current-head CI and complete Bugbot are separate gates.",
-    "Historical checkpoints retain original measurements/interim scopes independently. This lifecycle source checkpoint has its own exact source inventory and original full validation."
+    "Historical checkpoints retain original measurements/interim scopes. Current tooling audit has complete new tooling/source/CI evidence and references the original byte-identical backend measurement once, without claiming a rerun."
   ],
   "historicalPolicyCheckpoint": {
     "sourceRevision": "143de3e79bf8aa02171b4123b794d222f4d4f231",
@@ -1028,86 +1167,101 @@
     "A stale assignment cannot authorize completion after release, and a supplied occurrence with a weaker override cannot replace the persisted snapshot. Both negative tests failed before the current-record lookup was implemented."
   ],
   "rawMeasurements": {
-    "archive": "/private/tmp/domus-task-lifecycle-checkpoint-retained/measurements.tar.gz",
-    "archiveSHA256": "a57a4ae900b936834f258397cb16b13386d8e02e7615c6e4bebe5f7536f625ee",
+    "archive": "/private/tmp/domus-backend-coverage-checkpoint-retained/measurements.tar.gz",
+    "archiveSHA256": "3d3514867da5f3355e38c95182fe991949a7feaf48f79f6db5181029f35063b2",
     "members": [
       {
-        "name": "backend.out",
-        "bytes": 14887,
-        "sha256": "fff4f7b2018fc598cdfe169f7b0f8553a40463f7d6b15b4b263086c95ef61211"
+        "name": "tooling-final2.out",
+        "bytes": 1451,
+        "sha256": "c8609ad9aed0edae34f3706a6ee664a9267b59dc84984bec9879ecac9b7705d4"
       },
       {
-        "name": "coverage.json",
-        "bytes": 1012207,
-        "sha256": "05c916b441abfea9b94274a66a0eb7de1124c0b89f1a9ff3c8ec3d305bf91e39"
+        "name": "tooling-coverage.json",
+        "bytes": 23365,
+        "sha256": "8c0c93a081149ae0f9becc3cbc3f5a516c878f2ccb1cbc35ed342599a56520a4"
       },
       {
-        "name": "coverage.xml",
-        "bytes": 340478,
-        "sha256": "390dfa0fc2776f8be76a2f16280f40220fa173b13abaa870242069b4b6a3825a"
+        "name": "tooling-coverage.xml",
+        "bytes": 11301,
+        "sha256": "97c409574d2c285bcaac5fd58d817cbebecf4019ffa66c83d2d607ca5ce01fa8"
       },
       {
-        "name": "backend.coverage",
-        "bytes": 569344,
-        "sha256": "83bc1ef90de94f13ad14a96775f0e9c85c69b260d6dc3164431fc1f739ca5a38"
+        "name": "tooling.coverage",
+        "bytes": 69632,
+        "sha256": "4a09874b0cc7e63a6277eb97a270a5d9a15fe8a18bf90c1ca38c58c465891c7c"
       },
       {
-        "name": "inventory-audit.json",
-        "bytes": 13690,
-        "sha256": "445eea88eaf75143c60b48daa2196476e0e47470bf13c3e1270bb6d483613f6f"
+        "name": "tooling-inventory-audit.json",
+        "bytes": 1305,
+        "sha256": "a1314f7b965716dfa029477fc8676b7142cf7ce866fdc724e24c84ffc065f7ad"
       },
       {
-        "name": "first-test.out",
-        "bytes": 1932,
-        "sha256": "d91dab79f9f95808efed1d7b704516cb0fc529ec3aa15baa6a14f8dd6b3d1fdf"
+        "name": "backend-source-provenance.json",
+        "bytes": 13350,
+        "sha256": "11a701f8cb452188ef2f7d7ca5c16f30b5b307e589353ebb91358fa435bc54bc"
       },
       {
-        "name": "focused-first.out",
-        "bytes": 150281,
-        "sha256": "4e03819733d4058fd2856704963e4962a7da6a98566634922b30fea793de8ec3"
-      },
-      {
-        "name": "focused-third.out",
-        "bytes": 1264,
-        "sha256": "874823efea6d48d68ad2054e66564fdd0ccfb7ba1eaca9f9d518fed268772257"
-      },
-      {
-        "name": "focused-fourth.out",
-        "bytes": 528,
-        "sha256": "aa9068a8e3c88fad1827ef355fc8c95527671891fe889c54737be77314480762"
-      },
-      {
-        "name": "types-final.out",
+        "name": "actual-audit.out",
         "bytes": 45,
-        "sha256": "06ad9491f22f2b933115a2edf580ad42e4e206075e3323e32f6e9d3a750916c2"
+        "sha256": "5a725526020eb88e9be18817df5072b69f8d4a2d171a88bc3e83e022877b5026"
       },
       {
-        "name": "imports.out",
+        "name": "architecture-tests.out",
+        "bytes": 99,
+        "sha256": "7459d165d7ee4eab373a3144bb2453f342e91c6aeea6955f4dd33491c3666911"
+      },
+      {
+        "name": "imports-application.out",
         "bytes": 959,
         "sha256": "cb9e4fa99b39616038c8b5febb8bc17349500e9381cf676bc3ae29a173ae176b"
       },
       {
-        "name": "tooling-architecture.out",
-        "bytes": 180,
-        "sha256": "5c88c37d5ecfc73482475a275a3a88ec366b30bafb8790e7ae97b6061ed7dbe8"
+        "name": "imports-tooling.out",
+        "bytes": 907,
+        "sha256": "5e7cd27317f52413e4ba494a97b2a3dbb86bd1321e4b995223d14ca805ced067"
       },
       {
-        "name": "docs.out",
+        "name": "types-all.out",
+        "bytes": 45,
+        "sha256": "92c3e508c3f44192b3ed08c24db6fda1c9011bc0b04adc58ad6dc43ff2d9fac0"
+      },
+      {
+        "name": "docs-final.out",
         "bytes": 33,
         "sha256": "e6d8e0fa6afb34e752a2b8c3187da396dbdc4ba1ec7d49f107753d5e4464e857"
       },
       {
         "name": "sdd-format.json",
         "bytes": 326,
-        "sha256": "a07c67a13e733cbba4eb8bfc4bb8763d5c55378de11d5bc816cde6e0bc4252eb"
+        "sha256": "65751d8472e64fafb0beb448aaed8b5f3eeb8b1c6acf22c00e66087970b03ca3"
       },
       {
         "name": "sdd-catalog.json",
         "bytes": 586,
-        "sha256": "9da989616e0eac4100bc821f2a5feb3e76186b30270a84a9e8eb1164d9dd304b"
+        "sha256": "d039f107f0f449f4ebe613ef7163c18bc8fb2a2d03c516d4e28cab72fa523ef7"
+      },
+      {
+        "name": "first-test.out",
+        "bytes": 1066,
+        "sha256": "9ab139992830736a03ab5e8d6669d4ccc9029714764c8c39cc0da510c78aa0d8"
+      },
+      {
+        "name": "tooling-first.out",
+        "bytes": 602,
+        "sha256": "a7ef39bf1d693c9115b40c5fab77c19b691165756d5e265812a13ada1c630d26"
+      },
+      {
+        "name": "tooling-second.out",
+        "bytes": 1662,
+        "sha256": "8cb8e02fab906b19a3a938a2ff4de379d9f88011a2d52702dcbdeb30bba014b7"
+      },
+      {
+        "name": "tooling-third.out",
+        "bytes": 1519,
+        "sha256": "97fdecd05171b949912a6f8de34352fa74eaa1066a2cecfea8e58450a58aa252"
       }
     ],
-    "consumer": "Original complete lifecycle source/backend coverage, exact inventory, initial and intermediate failed campaigns, original pinned SDD and architecture observations for active PR review. Actual consumer/owner/package effects remain separate."
+    "consumer": "Original complete verifier/tooling coverage, real identical-source backend audit/provenance, initial/intermediate failed campaigns, workflow/architecture and unchanged pinned SDD measurements for active PR review. Original backend measurement bytes remain once in the referenced lifecycle archive; no synthetic or repeated backend execution is claimed."
   },
   "historicalAuthorityCheckpoint": {
     "sourceRevision": "e439a70cdde86ff4f1294a466d8ac0cdd46c64f4",
@@ -1508,8 +1662,8 @@
   "sddFormatValidation": {
     "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
     "base": "a63b2315cd5121dde9585ba8875e286fdef5330e",
-    "source": "487506f0fb5add530aeb90ea6c4c82ab3e3fd0b0",
-    "markdownSHA256": "d889abdcdfd53d5cf381060fa0c00ace1c4c44dc2eec1772b1af11fb7ee1bb0b",
+    "source": "cd0795125274678432464f976c86995925562882",
+    "markdownSHA256": "845a19af896a6f2ee607f95344e258e4ddfd9d9f21399fef4af3aa2e8e278acd",
     "format": "PASS",
     "consistency": "PASS",
     "diagnostic": null
@@ -2523,5 +2677,121 @@
     "testsFirst": "Missing application source first failed import. An omitted generic recorded_dependencies import broke 49 existing review regressions during the refactor; corrected before publication. Missing new test imports were also corrected. Original intermediate failure outputs are retained separately; the final strict full campaign passes.",
     "publicContracts": "Both actual OpenAPI artifacts remain byte-identical to immutable parent 487506f. Internal source wiring adds no human HTTP routes or response fields.",
     "scope": "Source contract only. No actual owning ledger/recurrence implementation, product UI, owner HA update or first usable all-domain/both-target/Stable-Edge acceptance."
+  },
+  "historicalLifecycleSourceCheckpoint": {
+    "sourceRevision": "cd0795125274678432464f976c86995925562882",
+    "verifiedAtUTC": "2026-11-01T08:17:14.838194+00:00",
+    "tests": 2899,
+    "wholeBackendCoverage": {
+      "covered_lines": 7605,
+      "num_statements": 7605,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 225,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2146,
+      "num_partial_branches": 0,
+      "covered_branches": 2146,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 104,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-lifecycle-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "a57a4ae900b936834f258397cb16b13386d8e02e7615c6e4bebe5f7536f625ee",
+      "members": [
+        {
+          "name": "backend.out",
+          "bytes": 14887,
+          "sha256": "fff4f7b2018fc598cdfe169f7b0f8553a40463f7d6b15b4b263086c95ef61211"
+        },
+        {
+          "name": "coverage.json",
+          "bytes": 1012207,
+          "sha256": "05c916b441abfea9b94274a66a0eb7de1124c0b89f1a9ff3c8ec3d305bf91e39"
+        },
+        {
+          "name": "coverage.xml",
+          "bytes": 340478,
+          "sha256": "390dfa0fc2776f8be76a2f16280f40220fa173b13abaa870242069b4b6a3825a"
+        },
+        {
+          "name": "backend.coverage",
+          "bytes": 569344,
+          "sha256": "83bc1ef90de94f13ad14a96775f0e9c85c69b260d6dc3164431fc1f739ca5a38"
+        },
+        {
+          "name": "inventory-audit.json",
+          "bytes": 13690,
+          "sha256": "445eea88eaf75143c60b48daa2196476e0e47470bf13c3e1270bb6d483613f6f"
+        },
+        {
+          "name": "first-test.out",
+          "bytes": 1932,
+          "sha256": "d91dab79f9f95808efed1d7b704516cb0fc529ec3aa15baa6a14f8dd6b3d1fdf"
+        },
+        {
+          "name": "focused-first.out",
+          "bytes": 150281,
+          "sha256": "4e03819733d4058fd2856704963e4962a7da6a98566634922b30fea793de8ec3"
+        },
+        {
+          "name": "focused-third.out",
+          "bytes": 1264,
+          "sha256": "874823efea6d48d68ad2054e66564fdd0ccfb7ba1eaca9f9d518fed268772257"
+        },
+        {
+          "name": "focused-fourth.out",
+          "bytes": 528,
+          "sha256": "aa9068a8e3c88fad1827ef355fc8c95527671891fe889c54737be77314480762"
+        },
+        {
+          "name": "types-final.out",
+          "bytes": 45,
+          "sha256": "06ad9491f22f2b933115a2edf580ad42e4e206075e3323e32f6e9d3a750916c2"
+        },
+        {
+          "name": "imports.out",
+          "bytes": 959,
+          "sha256": "cb9e4fa99b39616038c8b5febb8bc17349500e9381cf676bc3ae29a173ae176b"
+        },
+        {
+          "name": "tooling-architecture.out",
+          "bytes": 180,
+          "sha256": "5c88c37d5ecfc73482475a275a3a88ec366b30bafb8790e7ae97b6061ed7dbe8"
+        },
+        {
+          "name": "docs.out",
+          "bytes": 33,
+          "sha256": "e6d8e0fa6afb34e752a2b8c3187da396dbdc4ba1ec7d49f107753d5e4464e857"
+        },
+        {
+          "name": "sdd-format.json",
+          "bytes": 326,
+          "sha256": "a07c67a13e733cbba4eb8bfc4bb8763d5c55378de11d5bc816cde6e0bc4252eb"
+        },
+        {
+          "name": "sdd-catalog.json",
+          "bytes": 586,
+          "sha256": "9da989616e0eac4100bc821f2a5feb3e76186b30270a84a9e8eb1164d9dd304b"
+        }
+      ],
+      "consumer": "Original complete lifecycle source/backend coverage, exact inventory, initial and intermediate failed campaigns, original pinned SDD and architecture observations for active PR review. Actual consumer/owner/package effects remain separate."
+    },
+    "hostedCI": "All eight project groups and aggregate 124794683042 passed in run 41288277594. Separate assessment-text-limit a188cf1d-f00f-4217-9bc3-7880ad1e6edb is reported in #829; draft Bugbot was skipped.",
+    "note": "Original complete backend execution measurement remains authoritative for identical unchanged backend files in the new tooling increment."
+  },
+  "backendCoverageAssertions": {
+    "input": "Regular UTF-8 JSON up to 64 MiB, unique object keys and finite numbers; branch-enabled format 3 at the installed locked Coverage.py version. Canonical exact recursive source inventory; no source/report symlink, skipped unreadable source or zero-count masking.",
+    "model": "Separate no-disk default-configuration Coverage engine with empty execution builds expected executable statements, all branch destinations and default type-only exclusions. It never starts tracing or imports app modules; a sentinel assertion proves no reexecution. Explicit coverage pragmas are rejected.",
+    "validation": "Strict typed counts, exact numeric/display 100%, per-file execution/exclusion/missing vectors and global totals must match current complete source. Source hashes/inventory are rechecked before returning. Diagnostics are bounded.",
+    "execution": "New default/relative/absolute CLI flows and no-dev dependency handling tested. The consumer-owned backend CI job now unconditionally configures this step immediately after successful pytest and cannot continue-on-error. Original project groups/aggregate/protected Copilot resources remain unchanged.",
+    "tests": "146 tooling tests (74 new) cover every one of 214 statements/98 branches in all 5 authored tooling files. The new module alone is 133 statements/62 branches, all covered, no exclusions. Real independently traced specimen reports include missing branch and custom-exclusion negatives.",
+    "measurementIsolation": "Nested specimen collection initially disturbed the parent coverage observation. Specimen execution now uses subprocesses; a dependency-error branch also has a direct parent behavior assertion. Initial 77.88% and 99.04% campaigns are retained as failures, not acceptance. Final strict-100% measurement passes without scope/configuration/pragmas/threshold weakening.",
+    "realBackend": "Original complete cd07951 JSON passed the new verifier after all 104 current backend source hashes matched its immutable measurement. 2899 tests,7605 statements,2146 branches. No backend runtime source changed and no new local backend rerun is claimed; current-head CI still runs the full backend and auditor.",
+    "scope": "Development verification only. Does not prove real consumers, UI, packaged installation/owner HA adoption, full feature completion or no-findings Bugbot acceptance."
   }
 }

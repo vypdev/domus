@@ -534,3 +534,46 @@ These are real application/ASGI/SQLite source assertions with labeled fake HA tr
 Points/Inventory/recurrence consumers, product UI, packaging/owner HA adoption and full first-release
 acceptance remain unproven. Complete feature acceptance, current-head hosted CI and full-context
 Bugbot without unresolved findings remain required before merge.
+
+
+## Enforced complete-backend coverage audit
+
+The increment over immutable cd07951 adds the planned backend-coverage verifier and makes it the
+next required step after successful pytest in the existing backend CI job. It accepts only the
+exact recursive canonical backend source inventory and a branch-enabled format-3 report from the
+locked Coverage.py version. A separate in-memory, default-configuration engine reconstructs all
+possible executable lines and branch destinations without executing or importing the application.
+Reported execution vectors, exclusion sets, exact typed counts, numeric 100% metrics and totals
+must match that independent model. No custom report exclusion can reduce its denominator.
+
+The input policy rejects omissions/unimported files, invented zero-statement records, explicit
+coverage pragmas, duplicate JSON keys, Boolean aliases, nonfinite/rounded metrics, malformed
+sections, symlink/nonregular/unreadable sources or reports, source changes during analysis and
+reports above 64 MiB. Empty individual modules are allowed; a backend with no executable statements
+is rejected. Source stability is checked again after analysis. The checker never rewrites source
+or original measurement, starts application tracing, acknowledges events or asserts domain delivery.
+
+The new module has 133 statements and 62 branches, all covered. The final complete tooling campaign
+passes 146 tests with every one of 214 statements and 98 branches covered across all five authored
+modules, without exclusions. Seventy-four new cases use actually measured miniature backends in
+separate subprocesses, including genuine partial coverage and a self-consistent report narrowed by
+custom exclusions. A sentinel verifies that independent analysis does not reexecute the module.
+Additional tests cover the CLI's default/relative/absolute report paths and missing development
+dependencies; subprocess execution proves non-dev documentation remains available without Coverage.
+The workflow contract requires the unconditionally configured audit immediately after pytest and
+forbids continue-on-error in backend steps. Original protected Copilot-resource checks still pass.
+
+The first tests failed importing the absent verifier. The first broad tooling campaign passed its
+behavior tests but failed coverage because nested fixture collection interfered with measurement
+of the verifier; moving real specimen execution to subprocesses fixed that interference. A further
+campaign exposed the dependency-error branch covered only in the child process; a direct behavior
+case now measures it in the parent too. The final strict-100% campaign passes; no coverage threshold,
+configuration, pragma or source scope was weakened to fix those interim failures.
+
+No backend runtime source changes in this increment. Every current backend file hash matches the
+original immutable cd07951 measurement: 2,899 executed tests, 7,605 statements and 2,146 branches in
+104 authored files. The new command independently passes against those preserved original JSON
+bytes. This is validation of the new auditor against identical-source full execution, not a new
+local backend rerun. Current-head hosted CI still executes the entire backend and auditor together.
+Architecture/type/format/docs and original pinned SDD checks remain separate gates. Actual consumers,
+product UI, owner/package adoption and complete first-release acceptance are still unproven.

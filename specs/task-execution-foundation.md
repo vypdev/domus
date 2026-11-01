@@ -12,26 +12,25 @@
 
 ## 1. Executive summary
 
-This companion to `specs/household-tasks.md` defines atomic title-only creation, eligible assignment/self-claim, actual performers and durable completion/verification/reopening history. Restricted members may claim eligible available work by default; adult approval remains required. Tasks owns task facts; Inventory and Points own their ledgers.
+A title such as “Wipe table” atomically creates a definition/occurrence. Eligible members claim/perform it; cycles retain performers/time, required adult approval and unique consumer events. Restricted self-claim never waives verification. Inventory/Points own ledgers.
 
-Example: “Wipe table” creates a definition/occurrence atomically; eligible members claim/perform it; a cycle records performers/time, required approval and uniquely identified consumer events.
-
-The companion preserves all 49 existing cases in `specs/household-tasks.md`; its added cases use the `task-execution-foundation-CNN` namespace. The Action registered both documents under household-tasks in commit d4f3f911dd145d77255f47a882542f08e5c98055. Catalog implementation arrays remain empty at publication: a registered contract is not implementation evidence.
+All 49 baseline household-tasks cases remain unchanged; new cases use task-execution-foundation-CNN. The Action registered both documents in d4f3f911dd145d77255f47a882542f08e5c98055. Empty catalog implementation arrays at publication prove no runtime.
 
 ## 2. Problem, current behavior, and evidence
 
 ### 2.1 Problem
 
-Task work must survive edits, retries, concurrency, restart and restore. A mutable “completed” flag loses definition/occurrence identity, performers, approval and reopening facts. Restricted members need eligible self-claim with approval intact. Absent Inventory or Points consumers cannot imply accepted effects.
+Work must survive edits, retries, races, restart and restore. A completed flag loses definitions, occurrences, performers, approval and reopening. Restricted self-claim retains approval; absent consumers prove no effects.
 
 ### 2.2 Current behavior
 
 Verified facts at the immutable base:
 
-1. The household-tasks capability is proposed and its existing specification is `specs/household-tasks.md`, with 49 reserved cases `household-tasks-C01` through `household-tasks-C49`.
-2. The M1 source includes identity, household, transaction, receipt, outbox, recovery, and offline restoration foundations. It declares task-related permission enums, but no task entities, repositories, commands, or task API.
-3. The base catalog lists no task workflows, entrypoints, code or tests; Draft cases confer no implementation evidence.
-4. At the pinned base no task routes exist. Later sections define the required two-composition contract.
+1. The proposed household-tasks capability reserves 49 cases in specs/household-tasks.md.
+2. M1 supplies identity/household/transaction/receipt/outbox/recovery/restore foundations and task permission enums, but no task entities/repositories/commands/API.
+3. The base catalog has no task workflow/entrypoint/code/test evidence; Draft cases prove no implementation.
+4. No task route exists at that base; this contract requires both compositions.
+
 
 ### 2.3 Evidence
 
@@ -402,6 +401,8 @@ Errors follow impact -> cause -> action -> retained state. A committed task comp
 The 42 planned cases belong only to this companion; the 49 baseline task cases stay unchanged/uncredited. IDs are not execution evidence. Pin pytest 9.2.0, pytest-cov 7.1.0 and Coverage.py from uv.lock. Require 100% statements/lines and branches, zero misses, globally/per authored file, including new/unimported runtime, composition, HTTP, migration and restore. No unsupported function metric, exclusions, pragmas or denominator narrowing. Audit JSON against exact source inventory. All existing CI groups/aggregate and complete current-head full-context Bugbot without findings gate each commit.
 
 Use exhaustive pure tables, deterministic clocks/IDs, real SQLite temp files and controlled races, without live waits/services. Label fakes; separate loopback/SQLite from consumer/owner adoption. Goldens assert action, retained facts, links, escaping and state. Human review covers mobile/narrow readability, light/dark contrast and Spanish owner communication. Rows below are the full new inventory.
+
+After pytest, backend CI runs `domus-check backend-coverage --report coverage-backend.json`. Accept only branch-enabled format 3 from the locked Coverage.py version, canonical exact recursive backend/src/domus file inventory, independently rebuilt default-policy statement/branch sets, consistent per-file/totals and exact 100% metrics. Analyze source without executing it; reject report-controlled exclusions, explicit pragmas, omitted/unimported/zero-count masking, duplicate keys, Boolean/nonfinite counts, symlinks, unreadable/changed source and reports over 64 MiB. Retain measurement JSON/XML. This audit supplements executed tests, not proof of domain delivery.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
