@@ -262,6 +262,12 @@ Stable translation keys. Explicit supported UI choice wins; otherwise normalize 
 
 Journal is versioned, eight records/64 KiB, per-tab, scoped to server-returned installation/channel/verified subject. Validate bounds and persistence before send. Missing/unavailable/corrupt/future-version/overflow/pre-send failure blocks mutation. Involuntary session loss retains but hides records until full fresh identical context. Another context clears incompatible owned records without revealing/replaying them. Use fresh server time plus monotonic page elapsed time; retries cannot extend the original one-hour deadline. Regression/future inconsistency fails closed. Reload requires fresh context. Expiry/tab closure ends browser retention; server history remains durable. Deliberate logout clears owned journal/presentation; failed clearing is reported, memory discarded, and applicable sign-out completed without claiming persistent cleanup or restoring authority. Never touch HA private storage/cookies. Fixture cleanup removes identified data while retaining compact evidence/current rollback; browser proof needs no owner household mutation.
 
+The first owned journal format is canonical JSON with exactly version=1, context, observedAt and records. Context contains installationId (canonical UUID), channel (stable/edge) and subject (the server's bounded identifier). Records contain only key, action, payload, createdAt, expiresAt, stage and operationId. Actions are setup (the four existing default-mapping fields) or enroll (expected_revision zero). Persist original payload values without normalization. Stages are prepared, uncertain, committed, historical or rejected; committed/historical require the original operation ID, others null. A known operation cannot be replaced or downgraded. No credentials, raw error or arbitrary transport fields are admitted.
+
+All times are safe nonnegative epoch-millisecond integers. expiresAt equals createdAt plus 3,600,000; creation cannot be future-dated and observedAt cannot regress. Refreshing the observation never changes an original deadline. Expired records may be pruned; unresolved unexpired records are never silently evicted. A resolved record may be explicitly dismissed. Eight records remain valid; the ninth is rejected. Canonical JSON decoding rejects duplicate keys and alternate encodings before interpretation, with a 65,536-byte UTF-8 bound.
+
+After fresh server context and current-state reads, opening may establish and verify an empty owned local journal; this creates no household or membership. Missing/unavailable storage capability blocks mutation. Later external change/loss invalidates the opened handle until fresh context/state is obtained again. The adapter compares the exact previously observed serialized value, writes only its owned key and confirms readback before exposing success. Known different context clears incompatible local records before use; unsupported versions/corruption fail closed. Detach hides memory without deleting involuntarily lost-session evidence. Explicit clear drops memory first, removes/verifies only the owned key and reports uncertainty on failure. A post-commit persistence failure never negates a server receipt or authorizes a new key.
+
 Errors follow impact → cause → action → retained state. They never imply an already successful irreversible action failed.
 
 ## 11. Security, permissions, and privacy
@@ -378,6 +384,7 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/tests/domain.test.ts` | create |
 | `tests/frontend/coverage-evidence.test.mjs` | create |
 | `frontend/tests/journal.test.ts` | create |
+| `frontend/tests/session-journal.test.ts` | create |
 | `frontend/tests/controller.test.ts` | create |
 | `frontend/tests/http.test.ts` | create |
 | `frontend/tests/component.test.ts` | create |

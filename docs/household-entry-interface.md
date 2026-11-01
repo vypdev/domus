@@ -1,7 +1,8 @@
 # Household entry interface foundation
 
-The development branch implements the pure entry decisions and setup-input model. The product
-entry page, journal, controller, transport adapters and static delivery remain to be implemented.
+The development branch implements pure entry/setup decisions and the bounded request journal with
+its owned sessionStorage adapter. The product entry page, controller, HTTP adapters and static
+delivery remain to be implemented.
 These tests do not add a working interface to the owner's installed Edge.3 application.
 
 The [entry specification](../specs/household-entry-interface.md) retains eight requirements and 48
@@ -26,6 +27,33 @@ no actor or selected account. Names are bounded to 160 Unicode code points befor
 to 128. Blank, control-character and unpaired-surrogate input receives a field error without changing
 the caller's draft. The server owns final authorization, uniqueness and timezone-catalog validation.
 These checks do not authenticate or send a command.
+
+## Original requests and local recovery
+
+The version-1 journal holds up to eight requests in at most 64 KiB of canonical UTF-8 JSON. Setup
+and own enrollment have exact allowed fields; transport credentials, raw errors and arbitrary actions
+are rejected. The original key, payload, creation time and one-hour deadline remain immutable across
+reload, uncertain outcomes and committed/historical results. Validation never normalizes a stored
+payload. Known operation IDs cannot change or be replaced with an uncertain/rejected outcome.
+
+Fresh server context binds one installation, Stable/Edge channel and verified subject. Opening may
+establish an empty owned local journal after current-state reads; this writes no household/member
+record. A known different context removes incompatible local requests before use. Invalid/future
+versions, malformed or noncanonical JSON, duplicate keys, future timestamps and clock regression
+block use. Updating the observation time never extends an original deadline. Expired records may
+be pruned; unresolved unexpired work is never silently evicted. Resolved requests can be dismissed.
+
+The adapter touches only domus.entry.journal.v1. Every update compares the prior serialized value,
+writes and confirms readback. Failure, external change or disappearance invalidates the opened
+handle. A controller must obtain fresh server context/state before reopening and must persist a
+prepared request before any send. The journal cannot grant access or prove current membership.
+
+Involuntary session loss detaches memory and retains local recovery evidence. Explicit logout clears
+memory first and removes/verifies only the owned key. Failed cleanup is reported as uncertain; it
+never restores authority. A storage failure after receiving a server receipt does not negate that
+receipt or justify a new request key. The controller and real lost-response/server-commit journeys
+remain to be wired and tested; current adapter tests use simulated receipts plus actual isolated
+Chromium sessionStorage, without contacting the owner's HA.
 
 ## Development checks
 
@@ -52,8 +80,8 @@ Model execution is separate from rendering, accessibility, integration, package 
 
 ## Remaining delivery
 
-The one-hour/eight-record/64-KiB journal, deliberate command recovery, generation-fenced controller,
-strict adapters, server-owned context and base-relative delivery remain required. The owned Lit UI
+Deliberate command recovery in the generation-fenced controller, strict HTTP adapters, server-owned
+context and base-relative delivery remain required. The owned Lit UI
 must demonstrate both locales, all primary states, accessibility, responsive layouts, Storybook and
 both browser compositions. The all-domain first release, both targets and isolated channels remain
 required. Follow the existing [identity](identity-household.md) and [setup](household-setup.md) contracts.

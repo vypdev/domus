@@ -591,13 +591,18 @@
       ],
       "entrypoints": [],
       "code": [
-        "frontend/src/domain/entry.ts"
+        "frontend/src/domain/entry.ts",
+        "frontend/src/domain/journal.ts",
+        "frontend/src/application/ports.ts",
+        "frontend/src/adapters/session-journal.ts"
       ],
       "tests": [
         "frontend/tests/domain.test.ts",
         "tests/frontend/coverage-evidence.test.mjs",
         "tests/node/architecture.test.mjs",
-        "tests/python/test_ci_contract.py"
+        "tests/python/test_ci_contract.py",
+        "frontend/tests/journal.test.ts",
+        "frontend/tests/session-journal.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -610,7 +615,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial pure entry/setup model:40 actual Chromium tests, strict complete-source four-metric coverage,73 tooling and35 Node policy tests. Product UI, orchestration, delivery and integrated acceptance remain absent.",
+        "implementationEvidence": "Partial entry/setup plus immutable bounded journal and owned browser-storage adapter:135 actual Chromium tests; all four metrics100% on all four runtime modules. Controller, HTTP/UI/delivery and integrated acceptance remain incomplete.",
         "blockingDecisions": "Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29.",
         "copilotChangesAllowed": false
       }
