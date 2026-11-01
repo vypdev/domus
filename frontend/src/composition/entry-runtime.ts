@@ -116,7 +116,7 @@ export class EntryRuntime {
   signIn(): void {if (!this.disposed && !this.paused) this.navigation.signIn();}
   reopen(): void {if (!this.disposed && !this.paused) this.navigation.reopen();}
   async logout(): Promise<void> {
-    if (this.disposed || !this.active) return;
+    if (this.disposed || !this.active || this.view.busy) return;
     const owned = this.current; this.active = false; this.stopTimer();
     const pending = owned.controller.logout(); this.publish();
     try {await pending;} finally {if (!this.disposed && this.current === owned) this.publish();}

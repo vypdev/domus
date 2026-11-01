@@ -175,6 +175,31 @@ test('standalone logout hides access before revocation settles and cannot auto-r
   await signingOut; expect(f.runtime.view.notice).toBe('signed_out');
   f.runtime.signIn(); expect(f.paths).toEqual(['/api/v1/auth/start']);
 });
+
+test.each(['native', 'standalone'] as const)('logout during a command preserves the %s runtime and original recovery record', async deployment => {
+  const f = fixture(deployment); await f.runtime.start();
+  const original = f.transport.getMockImplementation()!, waiting = deferred<Response>();
+  let intercepted = false;
+  f.transport.mockImplementation(async (path, init) => {
+    if (!intercepted && path.endsWith('/household') && init.method === 'POST') {
+      intercepted = true; await original(path, init); return waiting.promise;
+    }
+    return original(path, init);
+  });
+  const command = f.runtime.submitSetup('Home', 'UTC'); await settle();
+  expect(f.effects()).toBe(1); expect(f.runtime.view.phase).toBe('sending');
+  const record = f.values.get(ENTRY_JOURNAL_KEY), timer = f.pending.at(-1)!;
+  const cancellations = timer.cancel.mock.calls.length;
+  await f.runtime.logout();
+  expect(f.runtime.view.phase).toBe('sending'); expect(timer.cancel).toHaveBeenCalledTimes(cancellations);
+  expect(f.values.get(ENTRY_JOURNAL_KEY)).toBe(record);
+  waiting.resolve(new Response('Lost fictional reply', {status: 502})); await command;
+  expect(f.runtime.view.outcome?.kind).toBe('uncertain');
+  const key = f.runtime.view.journal!.records[0].key;
+  await f.runtime.recover(key);
+  expect(f.runtime.view.outcome?.kind).toBe('receipt'); expect(f.effects()).toBe(1);
+  await f.runtime.logout(); expect(f.runtime.view.phase).toBe('closed');
+});
 test('a denied browser storage getter leaves reads usable and blocks all business mutations', async () => {
   const f = fixture(); f.browser.storage = () => {throw new Error('private provider failure');};
   await f.runtime.start(); expect(f.runtime.view.notice).toBe('journal_unavailable');

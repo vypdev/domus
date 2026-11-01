@@ -78,6 +78,11 @@ not generated while unexpired prepared/uncertain work exists. Prepare must persi
 before send. No opening, refresh, receipt, timeout or transport failure automatically resubmits.
 Deliberate recovery reuses the exact original key/payload, creation/deadline and known operation
 identity; changes observed during fresh reads fail closed. Dismissal cannot evict unresolved work.
+Logout is also blocked by the command's synchronous in-flight guard, including preflight, sending
+and reconciliation. A stale enabled DOM control cannot erase the prepared record or stop runtime
+timers while the result is pending. Once the bounded command settles, deliberate logout resumes
+its normal cleanup/revocation behavior. Closing or unloading the page still hides memory and
+preserves the original recovery evidence.
 
 Every replacement view cancels owned reads and fences all late results, including rejected reads,
 sent responses and logout callbacks. Cancellation never claims to undo a command. Involuntary loss
@@ -231,7 +236,7 @@ unavailable browser capabilities and scheduling failures produce bounded guidanc
 reload. Replacing or detaching the owned element releases its resources. The actual module performs
 no setup or enrollment automatically and never inspects HA's parent document or private storage.
 
-Twenty Playwright cases exercise the built product against both real Python compositions and
+Twenty-two Playwright cases exercise the built product against both real Python compositions and
 SQLite, wrapped by fictional loopback HA/Supervisor providers. They prove explicit keyboard setup,
 inert household text, exact original-key recovery after a committed response is lost, unchanged
 receipt/audit/outbox counts, blocked writes on silent storage failure, logout versus native close,

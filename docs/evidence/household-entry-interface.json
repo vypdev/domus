@@ -1,8 +1,8 @@
 {
-  "verifiedAtUTC": "2026-11-01T15:10:06.252856+00:00",
+  "verifiedAtUTC": "2026-11-01T15:23:11.707223+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "709994192eef0a3b2eaf0a8ac638cc8d9cc28ec6",
-  "sourceIdentity": "Built product module/document, bounded immutable UI bundle delivery in both Python compositions, real browser-to-SQLite acceptance with fictional HA/Supervisor and exact Python wheel resource acceptance. Immutable Supervisor image and owner adoption remain pending.",
+  "sourceBase": "04fc72da07d5510c269179538f0b7a3ac4b983c2",
+  "sourceIdentity": "Current fix for valid Bugbot in-flight logout finding. Controller and runtime both refuse logout while a command owns preflight/send/reconciliation, preserving journal, runtime and exact recovery. Backend107 modules are unchanged from fully verified04fc72d.",
   "sources": {
     ".github/workflows/ci_check.yml": "6380afbca2e5b64b9939c0e085a50120a9cb072ae2f93baa32b9fb7d55db37bd",
     ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
@@ -19,7 +19,7 @@
     "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
     "docs/contracts/native-household-api.openapi.json": "ee51af3265d0faabc824e085d2ad2c1335faedfe12c251076a332db1557e776f",
     "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
-    "docs/household-entry-interface.md": "467ad5b8c683d518a9d0e828f1623eea759a00d2ffde8f50d11f99e62c108a5c",
+    "docs/household-entry-interface.md": "4a4045118d3bffbb80f46e139e165a8713d0ce68afdf2d9aa3823f19545577f5",
     "docs/identity-household.md": "bea265f43775ee0021f5cbe245df9a66b9e926fb1553e36a945cf00a6ad2ac12",
     "docs/native-household-api.md": "9339c60fcd5e774591ab07c0233110475bd7f607d15bc9aeacbea48411b8989a",
     "frontend/.storybook/main.ts": "5956fa6d05a5ab5e8c4d96ee67ff430ba0688c00f242d0346a35ded5db659be2",
@@ -33,10 +33,10 @@
     "frontend/src/adapters/http-values.ts": "7d88ecc1ab2c3f361fb361b294dd7af8442b6329cdfe202e404e6e1338d2f003",
     "frontend/src/adapters/http.ts": "b51cec2796097ee764204bad9f26615e4664b9275bf24be0539ab420a80bd19c",
     "frontend/src/adapters/session-journal.ts": "e323fb4cee70481b015ce4c0c6fa94c3c909eb03af6a1837254a9196aed0fdc3",
-    "frontend/src/application/entry-controller.ts": "1d3749809a505c2eaac11927463a3d92376251a8d235056a4a843202bd55926b",
+    "frontend/src/application/entry-controller.ts": "b542baea5b3ade409341b5ef098352e670540daeb934806952d80227c284b8bc",
     "frontend/src/application/ports.ts": "3cd26e6c250baf8e9fe014d729c111116644e67084871388d9b84f06c2119da4",
     "frontend/src/composition/entry-page.ts": "2d9a8caa0fdb1dc6df90ba5693105fe1c74f0a864f7df0b3cf1efec756e5e435",
-    "frontend/src/composition/entry-runtime.ts": "6c096d3db634fbc0c6a2a3954c1330a95c83117c1bbdf232e399619a1ebaa72b",
+    "frontend/src/composition/entry-runtime.ts": "0973d07c151e9b47ed87c0ce40efdc10858c8cf17a7e1c4c0271951f6c5165f2",
     "frontend/src/composition/main.ts": "f92ce862e1acefb95896217588a0dea0f48625fed1f16c285dadbd9c015ae086",
     "frontend/src/domain/entry.ts": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e",
     "frontend/src/domain/journal.ts": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354",
@@ -48,16 +48,16 @@
     "frontend/tests/bootstrap.test.ts": "4bf5d79e4fd3eae48ca16e3ef3ba23a1da1b518d2faf7e95a3ce8279fb4f82fa",
     "frontend/tests/capabilities.test.ts": "17c3f72b66016500f2b338910c122087e681ce568c2419b6e7e6fbed3e159f89",
     "frontend/tests/component.test.ts": "6ec16b82e03a7f8783ebb4e89c50da82f016bf9840663d0e7feea831bae3918a",
-    "frontend/tests/controller.test.ts": "e1f1a0096a34b4c916d4169a1aca851fad5e712dcf45e0132c3115d3b879058b",
+    "frontend/tests/controller.test.ts": "487d92ad57999a05c58594c1a7f765a4d6ade12dc997730c2d1d2e1cb500efc2",
     "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
     "frontend/tests/e2e/catalog.spec.ts": "fadb7cae323a4e78598db28955b991cf42b8fa2fac81f058bab31e21ffb3aa7b",
-    "frontend/tests/e2e/entry.spec.ts": "f505c75da21a35a7e329297e06c741d073b9698077f0f96e864451384e65d9af",
+    "frontend/tests/e2e/entry.spec.ts": "bc1d0037d869e1935aa808b52e73f6cd1fd90ebea5b3cdbb24e987abe43e4052",
     "frontend/tests/fixtures/entry-wire.json": "4839ff30b6b6a3be456e95c4a3b270676b34fe923a66e971f91ade39a232780e",
     "frontend/tests/http.test.ts": "267fa6d38d188a85a96dd9d1fb8e8b80937e45ca08e383dfca9237fb8981da79",
     "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
     "frontend/tests/language.test.ts": "05df3a28d908261b996b0e808b07489c35db17ac417e66a1f9d0576597da7675",
     "frontend/tests/page.test.ts": "731518b957aea32ae6cd16d68a97a9cef0565cde652a66e08664ce587a959cff",
-    "frontend/tests/runtime.test.ts": "a51d6ac418c9d7b979063ddf2cb32133cadad99564cc920f5be426f2190e627e",
+    "frontend/tests/runtime.test.ts": "63e8865a5a2dd4726fe0a1ed18d9cd92cb5733c8596c8c03052798c4acef5f73",
     "frontend/tests/session-journal.test.ts": "e5fe0d28cb4774543002db0cb628d5cba408d5f99e908d44e31ba943c3d57313",
     "frontend/tsconfig.catalog.json": "8160d9a0a1a997e48de932acb61818908b23a3c68c0bf28edc931275bc6cfa1c",
     "frontend/tsconfig.json": "4461feb9e2170d22c3bb02cd4f0e1073b8b1aa4d54af97987836db1a35b201b7",
@@ -67,7 +67,7 @@
     "pnpm-lock.yaml": "6cdeedbfcb2d9412cd0ad131daef6a559cd8a67de925806022eee4ae90506218",
     "specs/CATALOG.md": "190504c90f98f7bf949ec0a84ecb5e926cf49bbbe9490205787fea4c4a817427",
     "specs/catalog.json": "33914aaebb6354bcd89831abe74409c3be66e69614862398ee3e394211e42f8d",
-    "specs/household-entry-interface.md": "63be4ba44c7486cab7b2f441c9efa25d41dd3f7b0fd189c924bcab24dcaca08e",
+    "specs/household-entry-interface.md": "11717e1142a00e4a235a852ffbe8688f4f0f1d2d9108eb0286b949bf4dc7da49",
     "tests/backend/test_auth_http.py": "bd492bc9b7af7d4984645755e4b598d905b5e43a180540b3d2afabb5b07e4a10",
     "tests/backend/test_entry_context.py": "fcbb14ebd36b566ec96c5c52ffafe1b49d5e6bd5fc7873a2b6547074381cd55a",
     "tests/backend/test_entry_wire.py": "f52c0f2dd911017287197e7f7ba27934f2a9cf8ac89e9adae90595d36a4f3173",
@@ -93,17 +93,17 @@
     "browserCache": "Existing shared project-owned /private/tmp/domus-ui-playwright-browsers, reused without copying or new browser download."
   },
   "tests": {
-    "applicationModel": 557,
+    "applicationModel": 565,
     "sourceInventoryAudit": 1,
     "nodePolicies": 38,
     "pythonTooling": 148,
     "unimportedRuntimeIncluded": true,
     "runtimeSourceFiles": 15,
     "plannedCases": 48,
-    "claim": "557 executed Chromium unit/component cases,20 built-product Playwright cases and18 separate built-catalog cases pass. Matrix repetitions are executions, not additional SDD acceptance cases. All48 original SDD rows remain; full owner/image/lifecycle acceptance is incomplete.",
-    "pythonToolingOrigin": "148 actual tooling tests pass with214 statements/98 branches100%; subsequent current CI/artifact/wheel assertions pass39 cases. Backend2983 cases and independent107-file source inventory pass at100%.",
-    "controllerCases": 67,
-    "frontendOrigin": "Actual15-module Chromium measurement, including DOM bootstrap/composition and delayed scheduling failure paths.",
+    "claim": "565 actual Chromium unit/component cases and22 actual product browser cases pass, including8 controller/runtime and2 real ASGI/SQLite regressions for in-flight logout. All15 runtime modules and four coverage metrics100%. Backend2983-case/107-module proof and18 catalog cases are inherited unchanged from04fc72d; no needless backend rerun is claimed. All48 original SDD cases remain prospective until full feature acceptance.",
+    "pythonToolingOrigin": "Backend and Python tooling sources are unchanged from04fc72d; its complete hosted aggregate/backend/frontend/tooling/architecture and both container jobs passed. Current frontend fix has its own proof and will receive new-head CI.",
+    "controllerCases": 73,
+    "frontendOrigin": "Current15-module Chromium measurement includes synchronous in-flight logout refusal at both orchestration boundaries.",
     "httpCases": 169,
     "backendWireConformance": 2,
     "browserCatalogCases": 18,
@@ -111,7 +111,7 @@
     "storyMatrixRenders": 56,
     "backendCases": 2983,
     "backendSourceFiles": 107,
-    "productBrowserCases": 20,
+    "productBrowserCases": 22,
     "wheelAcceptanceCases": 1
   },
   "coverage": {
@@ -135,8 +135,8 @@
         "pct": 100
       },
       "branches": {
-        "total": 788,
-        "covered": 788,
+        "total": 791,
+        "covered": 791,
         "skipped": 0,
         "pct": 100
       },
@@ -298,8 +298,8 @@
           "pct": 100
         },
         "branches": {
-          "total": 154,
-          "covered": 154,
+          "total": 156,
+          "covered": 156,
           "skipped": 0,
           "pct": 100
         }
@@ -376,8 +376,8 @@
           "pct": 100
         },
         "branches": {
-          "total": 57,
-          "covered": 57,
+          "total": 58,
+          "covered": 58,
           "skipped": 0,
           "pct": 100
         }
@@ -580,22 +580,22 @@
     "uv run pytest tests/packaging --no-cov",
     "PLAYWRIGHT_BROWSERS_PATH=/private/tmp/domus-ui-playwright-browsers pnpm test:frontend-entry",
     "uv run pytest tests/backend --cov=domus --cov-branch (real loopback network allowed)",
-    "uv run domus-check backend-coverage --report coverage-backend-final.json"
+    "uv run domus-check backend-coverage --report coverage-backend-final.json",
+    "pnpm --filter @domus/frontend exec vitest run tests/controller.test.ts tests/runtime.test.ts --no-coverage -t 'logout cannot retire|logout during a command'",
+    "pnpm --filter @domus/frontend exec playwright test -c playwright.entry.config.ts --grep 'stale logout'"
   ],
   "interimFailures": [
-    "New bootstrap/page and UI bundle/delivery tests initially failed on absent modules; original raw TDD outputs retained.",
-    "A real later timer callback exposed uncaught scheduler refusal. Runtime now disposes, notifies its bounded outer fallback and contains later callback failure. later-scheduler-before.out preserves the failure.",
-    "First whole backend campaign lacked sandbox loopback permission:50 WebSocket PermissionErrors,2932passes. It is not product failure or complete coverage proof. Escalated campaign isolated one misplaced test block; no production change was needed to correct that block.",
-    "The corrected whole backend campaign passes2983 cases with107 modules,7900 statements and2228 branches100%.",
-    "Initial real browser campaign15passed/1failed because a test observed local closed presentation before asynchronous upstream revocation completed. Test now waits for actual confirmed sign-out. Raw trace, screenshot and results are retained. Final20 cases pass without retries."
+    "Bugbot finding4436188164 reproduced:8 controller/runtime tests failed because logout closed the controller and erased in-flight recovery evidence. Two built-product real ASGI/SQLite cases reproduced the same committed-response race in native and standalone. Raw original failures/traces/screenshots retained.",
+    "After the production guard, a timer assertion incorrectly required zero prior cancellations; it now compares before/after call counts to prove logout adds none. The published renderer can show loading during a pending command, so the integration test asserts preserved busy/nonclosed state instead of inventing a sending render. Original intermediate failure is retained.",
+    "Final full frontend565 cases pass with all1093 statements/791 branches/212 functions/737 lines100%; product22 cases and actual wheel acceptance pass without retries."
   ],
   "limitations": [
     "Native Supervisor immutable image, source/package pin and owner installation remain Edge.3/faa1654; no owner HA state or installed package changed.",
     "Twenty product cases use actual Domus ASGI/SQLite and fictional loopback HA/Supervisor. They do not establish real owner HA or complete accessibility/lifecycle acceptance.",
-    "The preceding7099941 hosted CI passed. Its review was neutral/partial because conversation context was truncated and is reported in vypdev/copilot#843; current new-head hosted CI/review remains separate.",
+    "Inherited04fc72d hosted CI passed, but review was partial and retained one valid open finding. This source fixes that finding; native resolution and complete current-head review/CI remain pending. Current context evidence reported in vypdev/copilot#843,comment6559903211.",
     "No Copilot resources/configuration/credentials, gateway, remote branch lifecycle, release or authentication bypass was changed."
   ],
-  "rawEvidence": "/private/tmp/domus-entry-delivery-checkpoint-retained/measurements.tar.gz",
+  "rawEvidence": "/private/tmp/domus-logout-race-checkpoint-retained/measurements.tar.gz",
   "previousModelEvidence": {
     "sourceRevision": "695e5c31a466b8a42c8840c46f708141979b35e4",
     "sourceBase": "82519ee4e547dc347b8d0a18352bd1acc7783d70",
@@ -1421,26 +1421,45 @@
     "bootstrap": "Closed version1 deployment/application_base/style_nonce; canonical actual location comparison; no identity/installation/authority. Style nonce is public CSP capability only.",
     "resources": "Bounded closed Vite manifest/resource snapshot; symlink/undeclared/inline rejection. Same-listener source binding; strict CSP except successful shell self resources and nonce styles. No personal root OpenAPI route.",
     "actualProductFiles": {
-      ".vite/manifest.json": "3ed09f06906626ab92bc79be95307ce3004c23238ad69d8906e222efe960eabc",
-      "assets/index-BNMcBHEU.js": "31ec0c73341c83b27a24bc04c0e81317f4458b8d128cb60c7fc12baf2b80c7fc",
+      ".vite/manifest.json": "9be52b2642b4be124614567da171315fc21877d057e7d2eedb6f15785655b337",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "index.html": "83ebfa5c87fb3f5937ed9667cfc95a691e7108c087255a803904a3114ddb3f3e"
+      "assets/index-DVL9AS32.js": "de4d772ac440f13544d0c6435b096091603636b27245fdecbcbf388121213505",
+      "index.html": "15de670c1043b2e8df3eb76f9cb3cfedd440681987bfde7ca7a129752af5763d"
     },
     "wheel": {
       "file": "domus_server-0.0.0-py3-none-any.whl",
-      "sha256": "e2304c6d31a51b59da93539549582d84678933000dc42bbe8137891019a01735",
+      "sha256": "8c044f11adbac4c3907c3be986dcb0260092d8c23d75afbeb83cf7aa1a7ba99e",
       "exactResourcesAndFixtureExclusion": "PASS; package-final.out and ci-package-final.out"
     },
     "browserResults": {
-      "startTime": "2026-11-01T15:05:23.141Z",
-      "duration": 11403.363,
-      "expected": 20,
+      "startTime": "2026-11-01T15:19:33.918Z",
+      "duration": 11394.226,
+      "expected": 22,
       "skipped": 0,
       "unexpected": 0,
       "flaky": 0
     },
     "proof": "Both actual server compositions, real SQLite single-effect exact-key recovery and immutable audit/outbox/receipt counts, source-relative requests, explicit enrollment, current proofs, cookie/Origin/CSRF, native close versus standalone revoke, failed storage/module, original grace deadline, account draft retirement, Spanish360px/CSP fallback.",
     "manualInspection": "Actual prefixed product Spanish360px original screenshot inspected: readable/wrapped mapping, associated labels, visible keyboard focus, no horizontal overflow and distinct setup/refresh/close actions. Agent visual QA, not owner approval.",
-    "testOnlyBoundary": "Loopback fixture monkeypatches only provider constructors in a disposable test process; real state/browser nonce/S256 callback and source/cookie policies stay active. No release bypass and no browser control fixture in the actual wheel."
+    "testOnlyBoundary": "Loopback fixture monkeypatches only provider constructors in a disposable test process; real state/browser nonce/S256 callback and source/cookie policies stay active. No release bypass and no browser control fixture in the actual wheel.",
+    "logoutRaceFix": {
+      "finding": "https://github.com/vypdev/domus/pull/15#discussion_r4436188164",
+      "rule": "Refuse deliberate logout at Application and composition boundaries during the entire in-flight command. Do not stop lifecycle before refusing. No erase/revoke while running; normal logout resumes after bounded completion. Unload/teardown still hides presentation and preserves stored recovery.",
+      "preFix": {
+        "chromiumFailures": 8,
+        "realBackendBrowserFailures": 2
+      },
+      "currentRegressionProof": "Both actual backends commit once, a stale DOM logout intent preserves the journal and busy state, response is then lost, exact original recovery succeeds and SQLite receipt/audit/outbox/member counts are unchanged."
+    }
+  },
+  "previousDeliveryEvidence": {
+    "sourceRevision": "04fc72da07d5510c269179538f0b7a3ac4b983c2",
+    "frontendCases": 557,
+    "runtimeFiles": 15,
+    "productBrowserCases": 20,
+    "backendCases": 2983,
+    "rawEvidence": "/private/tmp/domus-entry-delivery-checkpoint-retained/measurements.tar.gz",
+    "hostedAggregate": "CI Check124888676428 success; https://github.com/vypdev/domus/actions/runs/41319945761",
+    "review": "12/12 code partitions,81 files/109fragments; partial conversation9fetched/4retained/5omitted/0truncated,limitReachedtrue. One valid finding published; https://github.com/vypdev/copilot/issues/843#issuecomment-6559903211"
   }
 }

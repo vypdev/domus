@@ -123,6 +123,38 @@ for (const mode of modes) test.describe(mode, () => {
     expect(posts).toBe(0); expect((await stats(request, mode)).counts.households).toBe(0);
   });
 
+  test('a stale logout intent cannot erase an in-flight committed request or stop recovery', async ({page, context, request}) => {
+    await open(page, context, mode);
+    let release!: () => void, committed!: () => void;
+    const held = new Promise<void>(resolve => {release = resolve;});
+    const wrote = new Promise<void>(resolve => {committed = resolve;});
+    let intercepted = false;
+    await page.route(base(mode) + '/api/v1/household', async route => {
+      if (route.request().method() !== 'POST' || intercepted) return route.continue();
+      intercepted = true;
+      const reply = await route.fetch(); expect(reply.status()).toBe(200);
+      committed(); await held; await route.abort('connectionreset');
+    });
+    try {
+      await create(page); await wrote;
+      const before = await page.evaluate(key => sessionStorage.getItem(key), journalKey);
+      const counts = await stats(request, mode);
+      const pending = await page.locator('domus-app').evaluate(element => {
+        element.dispatchEvent(new CustomEvent('domus-intent', {detail: {type: 'logout'}, bubbles: true, composed: true}));
+        const view = (element as unknown as {view: {phase: string; busy: boolean}}).view;
+        return {phase: view.phase, busy: view.busy};
+      });
+      expect(pending.phase).not.toBe('closed'); expect(pending.busy).toBe(true);
+      expect(await page.evaluate(key => sessionStorage.getItem(key), journalKey)).toBe(before);
+      expect(await stats(request, mode)).toEqual(counts);
+      release();
+      await expect(page.getByRole('heading', {name: 'Result not confirmed', exact: true})).toBeVisible();
+      await page.getByRole('button', {name: 'Check previous request', exact: true}).click();
+      await expect(page.getByRole('heading', {name: 'Request recorded', exact: true})).toBeVisible();
+      expect(await stats(request, mode)).toEqual(counts);
+    } finally {release();}
+  });
+
   test('close or sign-out retires only owned tab data and preserves server records', async ({page, context, request}) => {
     await open(page, context, mode); await create(page);
     await expect(page.getByRole('heading', {name: 'Request recorded', exact: true})).toBeVisible();

@@ -175,6 +175,38 @@ test('C42: native logout clears owned data, never invokes standalone logout and 
   expect(controller.view.phase).toBe('closed'); expect(controller.view.cleanup).toBe('confirmed');
 });
 
+test.each((['native', 'standalone'] as const).flatMap(deployment =>
+  (['preflight', 'send', 'reconcile'] as const).map(stage => ({deployment, stage}))))(
+  'logout cannot retire an in-flight $deployment command during $stage', async ({deployment, stage}) => {
+    const f = fixture(), proof = {...session, deployment};
+    f.server.session.mockImplementation(() => read(proof));
+    const controller = new EntryController(deployment, f.server, f.journal, f.clock, f.entropy);
+    await controller.refresh();
+    const waiting = deferred<VerifiedEntrySession | null>(), sending = deferred<CommandResult>();
+    if (stage === 'preflight') f.server.session.mockReturnValueOnce(waiting);
+    else if (stage === 'send') f.server.send.mockReturnValueOnce(sending.result);
+    else f.server.send.mockImplementationOnce(async () => {
+      f.server.session.mockReturnValueOnce(waiting); return receipt;
+    });
+    const command = controller.submitSetup('Home', 'UTC'); await settle();
+    expect(controller.view.busy).toBe(true);
+    const original = f.values.get(ENTRY_JOURNAL_KEY);
+    await controller.logout();
+    expect(controller.view.phase).not.toBe('closed');
+    expect(controller.view.busy).toBe(true);
+    expect(f.values.get(ENTRY_JOURNAL_KEY)).toBe(original);
+    expect(f.storage.removeItem).not.toHaveBeenCalled();
+    expect(f.server.logout).not.toHaveBeenCalled();
+    if (stage === 'send') sending.resolve(receipt); else waiting.resolve(proof);
+    await command;
+    expect(controller.view.journal?.records[0]).toMatchObject({key: 'key-original', stage: 'committed', operationId: 'op-original'});
+    expect(controller.view.busy).toBe(false);
+    await controller.logout();
+    expect(controller.view.phase).toBe('closed'); expect(f.values.get(ENTRY_JOURNAL_KEY)).toBeUndefined();
+    expect(f.server.logout).toHaveBeenCalledTimes(deployment === 'native' ? 0 : 1);
+  },
+);
+
 test('C42: failed clear still logs out standalone and never restores local authority', async () => {
   const f = fixture(); await f.controller.refresh();
   f.storage.removeItem.mockImplementation(() => {throw new JournalStorageError('storage_unavailable');});

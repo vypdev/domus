@@ -233,7 +233,7 @@ export class EntryController {
   }
   close(): void {this.invalidate(); this.retained = null; this.state = blank('closed');}
   async logout(): Promise<void> {
-    if (this.state.phase === 'closed') return;
+    if (this.running || this.state.phase === 'closed') return;
     this.close();
     const generation = this.generation;
     let cleanup: 'confirmed' | 'unconfirmed' = 'confirmed';
