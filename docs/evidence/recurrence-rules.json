@@ -1,0 +1,125 @@
+{
+  "status": "partial",
+  "recordedAtUTC": "2026-11-01T20:20:24.690442+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/17",
+  "pullRequest": "https://github.com/vypdev/domus/pull/19",
+  "sourceBase": "930c2fc1f68e715f2c4ed39a2511fab1ae7fb235",
+  "backendInventorySHA256": "f749eca92fa8850dc6dfcd3f00ccc21321cf8c45d35cc6c1e5367fa0d877747a",
+  "implemented": "Strict supported RRULE text and immutable patterns, tagged dates, direct original frequency periods, finite first-party nominal expansion and side-effect-free batch/start planning with bound continuation. COUNT/UNTIL, local horizons, start mismatch and incomplete scans retain explicit meaning. No stored rule, task generation, migration or runtime runner is activated.",
+  "testsFirst": [
+    "Rule/nominal test collection failed because domus.domain.recurrence_rule_text did not exist.",
+    "Planner test collection failed because domus.application.fixed_recurrence did not exist."
+  ],
+  "focused": {
+    "ruleAndNominalTests": 136,
+    "plannerTests": 43,
+    "scope": "179 focused executions are not 52 completed companion product journeys.",
+    "completeNewModuleCoverageTotals": {
+      "covered_lines": 309,
+      "num_statements": 309,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 126,
+      "num_partial_branches": 0,
+      "covered_branches": 126,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    }
+  },
+  "completeBackend": {
+    "tests": 3260,
+    "authoredModules": 116,
+    "coverageTotals": {
+      "covered_lines": 8368,
+      "num_statements": 8368,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 237,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2396,
+      "num_partial_branches": 0,
+      "covered_branches": 2396,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentCompleteSourceAudit": "passed"
+  },
+  "strictTypes": {
+    "result": "passed",
+    "sourceFiles": 116
+  },
+  "architecture": {
+    "actualFiles": 159,
+    "actualDependencies": 976,
+    "kept": 3,
+    "broken": 0
+  },
+  "providerControl": {
+    "package": "python-dateutil",
+    "version": "4.0.0",
+    "command": "One MONTHLY nominal period, February2026, BYMONTH=2/BYMONTHDAY=30, explicit February UNTIL. In-memory observer caps provider rebuild calls at65.",
+    "periodRebuilds": 65,
+    "firstPeriod": [
+      2026,
+      2
+    ],
+    "lastObservedPeriod": [
+      2031,
+      6
+    ],
+    "outcome": "explicit probe cap reached without one candidate",
+    "inference": "An UNTIL bound does not bound internal empty-period traversal. A public iterator cannot establish the required per-period work bound.",
+    "scope": "Third-party bounded interoperability control, not Domus runtime acceptance or a Copilot defect."
+  },
+  "engineeringDecision": "Use finite first-party evaluation of the complete agreed subset; do not depend on a yielded-value bound to prove bounded provider work. Retain the separately pinned actual timezone adapter. No dateutil runtime/stub dependency is retained in Domus.",
+  "companion": {
+    "minimumCases": 52,
+    "unchangedOriginalOwnerCases": 37,
+    "originalPublishedRowsPreserved": 52,
+    "format": "passed",
+    "consistency": "passed",
+    "catalog": "passed",
+    "upstreamRevision": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+    "sourceSHA256": "e0575cf09f6bd2b805956c9a17d16ebe1bd4808b3062b2d0588513d2991d8c4d"
+  },
+  "hostedPreviousHead": {
+    "source": "930c2fc1f68e715f2c4ed39a2511fab1ae7fb235",
+    "ciCheck": "passed",
+    "bugbot": "partial conversation coverage; two code partitions complete, no candidate/published findings. Not complete review.",
+    "copilotProgress": "scope-clause-limit, unpublished progress, existing progress retained.",
+    "reports": [
+      "https://github.com/vypdev/copilot/issues/828#issuecomment-6563330638",
+      "https://github.com/vypdev/copilot/issues/843#issuecomment-6563331173"
+    ],
+    "scope": "Previous head only; not hosted verification of this uncommitted rule/planner source."
+  },
+  "rawMeasurements": {
+    "archive": "/private/tmp/domus-recurrence-rules-930c2fc-retained/evidence.tar.gz",
+    "sha256": "e2011dfe09f1a146d5084ec8431c869c943e82d0382ba7131e101a80ded3658e",
+    "privateLocalOnly": true,
+    "consumer": "Original first-test failures, reproducible bounded provider control, source inventory, final focused/backend/architecture and unchanged SDK evidence for current PR review. Regenerable explicitly bound test fixtures and coverage databases/XML retired."
+  },
+  "pending": "Current-authorized persisted schedule creation/attachment with start gate, explicit exception/addition provenance and filtering, actual task classification, schema8/atomic materialization/receipts/inbox/closure, preview/apply, bounded calendar query/HTTP, both composed runners, restore non-recreation, actual images/browser/HA and full companion/owner acceptance.",
+  "acceptance": "The continuation is a planning value, not a public authorization token or proof of durable execution. No scheduled task, ledger or inventory effect is created. Existing owner Edge.5 and image pins do not ship or invoke these modules. The full all-domain product objective remains incomplete.",
+  "checks": {
+    "ruff": "passed",
+    "format": {
+      "result": "passed",
+      "files": 294
+    },
+    "documentation": "passed",
+    "strictTypes": "passed",
+    "actualArchitecture": "passed",
+    "originalSddCatalog": "passed",
+    "gitDiffCheck": "passed",
+    "copilotProtectedPaths": "unchanged"
+  }
+}

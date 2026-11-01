@@ -1,9 +1,9 @@
 # Verification and acceptance plan
 
-The catalog-listed SDDs contain 605 distinct inventory case IDs across eleven capabilities and
-sixteen documents: the original 353-case foundation, 79 platform companion cases, eleven task-policy
-cases, 42 task-execution companion cases, the 48 household-entry cases published in PR #15, and
-the 72 household-administration companion cases.
+The catalog-listed SDDs contain 657 distinct inventory case IDs across eleven capabilities and
+seventeen documents: the original 353-case foundation, 79 platform companion cases, eleven task-policy
+cases, 42 task-execution companion cases, the 48 household-entry cases published in PR #15, 52
+recurrence-execution companion cases, and 72 household-administration companion cases.
 The counts are derived from concrete observable scenarios and are minimums. The merged identity/storage
 foundation has separate backend evidence in the [M1 audit](m1-acceptance-audit.md); the full product case
 inventory is not complete.
@@ -105,6 +105,29 @@ remains unknown. The stopped Edge.3 installation and data were retained. Remaini
 accessibility and lifecycle journeys are independent acceptance work.
 Current UI/entry acceptance does not complete other domain screens, Stable distribution, M1 or the
 first all-domain release.
+
+## Recurrence temporal source checkpoint
+
+The first recurrence checkpoint passes 94 focused executions for explicit nominal/resolved time,
+first-valid gaps, single fold selection, pinned-zone failures and actual-work local-day successors.
+The complete backend campaign passes 3,081 tests across 110 authored modules with all 8,057 statements
+and 2,270 branches covered, globally and per module. The independent complete-source audit and
+three actual architecture contracts pass; 199 tooling/negative-architecture executions also pass.
+See the [temporal architecture](architecture-recurrence.md) and
+[checkpoint evidence](evidence/recurrence-execution.json).
+
+These counts belong to the admitted recurrence branch and do not include the separate, unmerged
+participant checkpoint. Rules, schema 8, durable runner/source processing, calendar queries, actual
+images and full product acceptance remain outstanding. No new packaged update is established.
+
+## Recurrence rule and planning source checkpoint
+
+The next checkpoint passes 179 focused rule/nominal/planner executions and the complete backend:
+3,260 tests across 116 authored modules, with all 8,368 statements and 2,396 branches covered and an
+independent complete-source audit. The actual architecture graph retains all three contracts.
+The [rule/planning evidence](evidence/recurrence-rules.json) records the bounded empty-period library
+control, the finite evaluation decision, exact source identity and incomplete acceptance. These
+planning results do not create durable task work or complete the 52 recurrence companion product journeys.
 
 ## Household administration source checkpoint
 
