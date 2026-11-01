@@ -7,8 +7,10 @@
     "check:runtime": "tsc --noEmit -p tsconfig.json",
     "check:catalog": "tsc --noEmit -p tsconfig.catalog.json",
     "test": "vitest run --coverage",
+    "build": "vite build",
     "storybook:build": "storybook build --disable-telemetry --quiet",
-    "browser:catalog": "playwright test tests/e2e/catalog.spec.ts"
+    "browser:catalog": "playwright test tests/e2e/catalog.spec.ts",
+    "browser:entry": "playwright test -c playwright.entry.config.ts"
   },
   "dependencies": {
     "lit": "3.3.3"

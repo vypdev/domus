@@ -66,7 +66,7 @@ def login(client: TestClient) -> None:
     state = parse_qs(urlsplit(start.headers["location"]).query)["state"][0]
     callback = client.get("/api/v1/auth/callback", params={"state": state, "code": "code"})
     assert callback.status_code == 303
-    assert callback.headers["location"] == "/api/v1/session"
+    assert callback.headers["location"] == "/"
 
 
 def test_happy_path_sets_secure_host_only_cookies_and_identity_view_has_no_credentials() -> None:

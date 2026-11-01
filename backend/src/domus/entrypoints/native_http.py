@@ -7,7 +7,7 @@ from urllib.parse import parse_qsl
 
 from fastapi import Depends, FastAPI, Header, Query, Request, Security
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.security import APIKeyCookie
 from starlette.exceptions import HTTPException
 from starlette.types import ASGIApp, Scope
@@ -23,6 +23,8 @@ from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 from domus.entrypoints.http_errors import classify
 from domus.entrypoints.ingress_boundary import require_ingress_source
 from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
+from domus.entrypoints.ui_bundle import UIBundle
+from domus.entrypoints.ui_http import attach_ui
 
 _HEADERS = {
     "Cache-Control": "no-store",
@@ -112,6 +114,8 @@ def create_native_app(
     correlation: Callable[[], str],
     entry: EntryHTTPContext | None = None,
     task_context: Callable[[Request], TaskHTTPContext] | None = None,
+    ui_bundle: UIBundle | None = None,
+    ui_binding: Callable[[Request], None] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="Domus native Home Assistant application",
@@ -200,20 +204,6 @@ def create_native_app(
         context(request).status()
         return app.openapi()
 
-    @app.get("/", response_class=HTMLResponse, dependencies=[Depends(security)])
-    def home(request: Request) -> Response:
-        context(request).status()
-        return HTMLResponse(
-            '<!doctype html><html lang="en"><head><meta charset="utf-8">'
-            '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            f"<title>Domus {channel.title()}</title></head><body><main>"
-            f"<h1>Domus {channel.title()}</h1><p>Development preview</p>"
-            "<h2>Connected to Home Assistant</h2>"
-            "<p>Your existing Home Assistant sign-in is being used. "
-            "No additional login is required.</p><p>The household interface is being prepared.</p>"
-            '<p><a href="./">Refresh connection</a></p></main></body></html>'
-        )
-
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ready", "scope": "process"}
@@ -225,4 +215,12 @@ def create_native_app(
     )
     if task_context is not None:
         app.include_router(create_task_router(task_context, security=Depends(security)))
+
+    def bind_ui(request: Request) -> None:
+        if ui_binding is not None:
+            ui_binding(request)
+        else:
+            context(request).status()
+
+    attach_ui(app, ui_bundle, "native", bind_ui)
     return app

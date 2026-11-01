@@ -111,6 +111,8 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         "frontend/.storybook/preview.ts",
         "frontend/stories/entry.stories.ts",
         "frontend/playwright.config.ts",
+        "frontend/playwright.entry.config.ts",
+        "frontend/vite.config.ts",
     }
     for relative in paths:
         if not relative or relative.startswith(("tests/", "frontend/tests/")):
@@ -137,10 +139,15 @@ def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
     assert all("continue-on-error" not in step for step in job["steps"])
     commands = [step["run"] for step in job["steps"] if "run" in step]
     assert commands == [
+        "uv sync --frozen",
         "pnpm install --frozen-lockfile",
         "pnpm --filter @domus/frontend exec playwright install --with-deps chromium",
         "pnpm check:frontend",
         "pnpm test:frontend",
+        "pnpm build:frontend",
+        "uv build --package domus-server --wheel",
+        "uv run pytest tests/packaging --no-cov",
+        "pnpm test:frontend-entry",
         "pnpm build:frontend-catalog",
         "pnpm test:frontend-catalog",
     ]
@@ -152,8 +159,11 @@ def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
         "frontend/coverage/",
         "frontend/storybook-static/",
         "frontend/test-results/",
+        "backend/src/domus/ui/",
+        "dist/*.whl",
     ]
     assert artifact["with"]["if-no-files-found"] == "error"
+    assert artifact["with"]["include-hidden-files"] == "true"
 
 
 def test_owned_component_catalog_is_typechecked_built_and_browser_exercised() -> None:

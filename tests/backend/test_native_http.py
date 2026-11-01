@@ -9,6 +9,7 @@ from test_ingress_sessions import HEADERS, USER, Clock
 from domus.composition import ingress
 from domus.domain.errors import IdentityRejected, IdentityUnavailable, InvalidInput
 from domus.domain.identity import HumanIdentity
+from domus.entrypoints.ui_bundle import UIBundle
 from domus.infrastructure.ha_config import HAEndpoint
 
 INSTANCE = "047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6"
@@ -36,10 +37,13 @@ class Lookup:
         )
 
 
-def fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple:
+def fixture(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ui_bundle: UIBundle | None = None
+) -> tuple:
     lookup, clock = Lookup(), Clock()
     monkeypatch.setattr(ingress, "HomeAssistantWebSocket", lambda _: lookup)
     monkeypatch.setattr(ingress, "MonotonicClock", lambda: clock)
+    monkeypatch.setattr(ingress, "load_bundle", lambda _: ui_bundle)
     runtime = ingress.create_business_runtime(
         "private-supervisor-token", "edge", tmp_path / "domus.sqlite3", INSTANCE, (ORIGIN,)
     )
@@ -199,7 +203,7 @@ def test_native_root_schema_and_method_bounds_are_verified_without_leaking_cooki
 ) -> None:
     runtime, client, _, _ = fixture(tmp_path, monkeypatch)
     root = client.get("/")
-    assert root.status_code == 200 and "No additional login is required" in root.text
+    assert root.status_code == 503 and "UI assets are unavailable" in root.text
     assert "set-cookie" not in root.headers and "private-supervisor-token" not in root.text
     schema = client.get("/api/v1/openapi.json")
     assert schema.status_code == 200

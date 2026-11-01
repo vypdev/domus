@@ -294,6 +294,7 @@ Show safe status, channel, freshness and validated operation/correlation referen
 - Existing in-flight operations and server receipts remain authoritative; no business migration is implied.
 - Unknown journal versions are rejected safely; journal loss never prunes server receipts.
 - Native public base is accepted Supervisor prefix plus separator; standalone supports root only. Escaped bootstrap conveys deployment/base, no grant or credential. Preserve fixed standalone callback, native trust, base-relative assets, allowlisted MIME, traversal protection, actual CSP and no-store personal responses. Missing assets/API errors never become shell success.
+- The inert version-1 document bootstrap has exactly version, deployment, application_base and style_nonce. Validate its bounded JSON against the actual canonical page location. The public per-document style nonce permits Lit's style-element fallback and conveys no authority. Only successful documents permit same-origin scripts/connections/assets and nonce-bound styles; API/error policies stay restrictive. Snapshot the closed packaged manifest/resource graph, reject symlinks and undeclared files, and include the exact generated resources in the tested Python wheel. Missing module downloads retain visible reload guidance without inferring an empty household.
 - Use locked compatible Lit/TypeScript/Vite, Storybook and Playwright. Existing policy-tool versions do not prove framework execution support. Fix unsupported runner/measurement scope; never omit runtime or metrics.
 - Edge.3 remains immutable. Any new package/adoption needs exact pin, artifact and rollback, isolated channels and separate live/companion acceptance. Roll back UI delivery without claiming reversal of an already committed household operation.
 
@@ -378,7 +379,12 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/src/adapters/http.ts` | create |
 | `frontend/src/adapters/http-values.ts` | create |
 | `frontend/src/adapters/browser-capabilities.ts` | create |
+| `frontend/src/adapters/bootstrap.ts` | create |
 | `frontend/src/composition/entry-runtime.ts` | create |
+| `frontend/src/composition/entry-page.ts` | create |
+| `frontend/src/presentation/global.css` | create |
+| `frontend/tests/bootstrap.test.ts` | create |
+| `frontend/tests/page.test.ts` | create |
 | `frontend/tests/capabilities.test.ts` | create |
 | `frontend/tests/runtime.test.ts` | create |
 | `frontend/tests/fixtures/entry-wire.json` | create |
@@ -390,8 +396,10 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/src/composition/main.ts` | create |
 | `frontend/index.html` | create |
 | `frontend/vite.config.ts` | create |
+| `.gitignore` | update |
 | `frontend/vitest.config.ts` | create |
 | `frontend/playwright.config.ts` | create |
+| `frontend/playwright.entry.config.ts` | create |
 | `frontend/tsconfig.json` | create |
 | `frontend/tsconfig.catalog.json` | create |
 | `frontend/.storybook/main.ts` | create |
@@ -408,11 +416,15 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/tests/e2e/entry.spec.ts` | create |
 | `frontend/tests/e2e/catalog.spec.ts` | create |
 | `tests/browser/entry_server.py` | create |
+| `tests/packaging/test_ui_wheel.py` | create |
 | `backend/src/domus/entrypoints/ui_http.py` | create |
+| `backend/src/domus/entrypoints/ui_bundle.py` | create |
+| `tests/backend/test_ui_bundle.py` | create |
 | `backend/src/domus/entrypoints/entry_context.py` | create |
 | `tests/backend/test_entry_context.py` | create |
 | `tests/backend/test_auth_http.py` | update |
 | `tests/backend/test_household_http.py` | update |
+| `tests/backend/test_native_http.py` | update |
 | `tests/backend/test_ha_app_launcher.py` | update |
 | `tests/backend/test_ui_http.py` | create |
 | `tests/backend/test_ui_session.py` | create |
@@ -437,6 +449,7 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `docs/contracts/native-household-api.openapi.json` | update |
 | `docs/household-api.md` | update |
 | `docs/native-household-api.md` | update |
+| `docs/identity-household.md` | update |
 | `docs/development.md` | update |
 | `docs/roadmap.md` | update |
 | `specs/catalog.json` | update |

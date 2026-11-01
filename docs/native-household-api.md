@@ -84,6 +84,14 @@ channel across restarts. Repeat --public-origin for additional configured HA ori
 sets are rejected. Omitting all persistence options retains the original connection preview.
 SUPERVISOR_TOKEN is provisioned privately by HA and must never be copied into a command or document.
 
+The business composition serves the nonpersonal built interface at the accepted Ingress base and
+its assets below that base. These resources require the existing trusted source/session binding;
+they grant no human authority and are excluded from the personal OpenAPI snapshot. The legacy
+personal root preview is no longer a business API route. Opening the interface obtains verified
+session facts through the API and never creates a household. A checkout without built resources
+returns explicit unavailable guidance. The installed Edge.3 package retains its reviewed old source
+until a new immutable package is built and adopted.
+
 This listener is exclusively for the Supervisor private container network, binds no public app port
 in the reviewed manifest and disables proxy-header rewriting/access logs. GET /health is nonpersonal
 process readiness for Supervisor/loopback, not an HA availability or authenticated-user claim.

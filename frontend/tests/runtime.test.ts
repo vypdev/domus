@@ -206,6 +206,16 @@ test('initial scheduler refusal closes the runtime with a bounded failure and re
   f.browser.events.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}));
   expect(f.views).toHaveLength(count);
 });
+test('a scheduler failure after opening is contained inside the owned timer callback', async () => {
+  const f = fixture(); await f.runtime.start(); const timer = f.pending.at(-1)!;
+  f.browser.schedule = () => {throw new Error('later scheduler unavailable');};
+  expect(() => timer.tick()).not.toThrow(); expect(f.runtime.view.phase).toBe('closed');
+});
+test('a failing outer failure observer cannot restore access or expose provider details', async () => {
+  const f = fixture(); const runtime = new EntryRuntime(f.target, f.browser, () => {}, () => {throw new Error('private observer error');});
+  owned.push(runtime); f.browser.schedule = () => {throw new Error('private scheduler error');};
+  await expect(runtime.start()).rejects.toThrow('unavailable'); expect(runtime.view.phase).toBe('closed');
+});
 test('scheduler refusal during bfcache restoration is handled without an unobserved rejected promise', async () => {
   const f = fixture(); await f.runtime.start();
   f.browser.events.dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}));

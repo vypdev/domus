@@ -34,7 +34,7 @@ export class EntryRuntime {
   private timerEpoch = 0;
   private cancelTimer: (() => void) | null = null;
   constructor(target: EntryEndpoint, private readonly browser: EntryBrowser,
-    private readonly changed: (view: EntryView) => void) {
+    private readonly changed: (view: EntryView) => void, private readonly failed: () => void = () => {}) {
     this.target = endpoint(target); this.navigation = new BrowserNavigation(this.target, path => browser.navigate(path));
     this.current = this.compose();
   }
@@ -68,10 +68,15 @@ export class EntryRuntime {
     try {
       this.cancelTimer = this.browser.schedule(() => {
         if (epoch !== this.timerEpoch || !this.active || this.current !== owned) return;
-        this.cancelTimer = null; owned.controller.tick(); this.publish(); this.arm();
+        this.cancelTimer = null; owned.controller.tick(); this.publish(); this.later();
       }, delay);
-    } catch {this.dispose(); throw new EntryReadError('unavailable');}
+    } catch {
+      this.dispose();
+      try {this.failed();} catch {/* The runtime is already closed even if its outer failure view fails. */}
+      throw new EntryReadError('unavailable');
+    }
   }
+  private later(): void {try {this.arm();} catch {/* Disposal and bounded failure notification already completed. */}}
   private async perform(work: (controller: EntryController) => Promise<void>): Promise<void> {
     if (this.disposed || !this.active) return;
     const owned = this.current, pending = work(owned.controller);
@@ -99,7 +104,7 @@ export class EntryRuntime {
   };
   private readonly visible = (): void => {
     if (!this.active) return;
-    this.current.controller.tick(); this.publish(); this.arm();
+    this.current.controller.tick(); this.publish(); this.later();
   };
   refresh(): Promise<void> {return this.perform(controller => controller.refresh());}
   submitSetup(name: unknown, timeZone: unknown): Promise<void> {

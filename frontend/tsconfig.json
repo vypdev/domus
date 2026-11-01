@@ -8,10 +8,10 @@
     "noEmit": true,
     "skipLibCheck": false,
     "lib": ["ES2024", "DOM"],
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "allowJs": true,
     "checkJs": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "tests/*.test.ts", "tests/e2e", "vitest.config.ts", "playwright.config.ts"]
+  "include": ["src", "tests/*.test.ts", "tests/e2e", "vite.config.ts", "vitest.config.ts", "playwright.config.ts", "playwright.entry.config.ts"]
 }

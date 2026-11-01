@@ -1,67 +1,88 @@
 {
-  "verifiedAtUTC": "2026-11-01T13:40:43.530671+00:00",
+  "verifiedAtUTC": "2026-11-01T15:10:06.252856+00:00",
   "issue": "https://github.com/vypdev/domus/issues/8",
-  "sourceBase": "e51556f1ec571b1d25111051a0bb22aa0947995e",
-  "sourceIdentity": "Current browser capabilities/lifecycle composition and owned Lit EN/ES view. Twelve frontend runtime files, real Chromium component tests and actual built Storybook catalog journeys. Product shell/static delivery, browser-to-backend and owner adoption remain incomplete.",
+  "sourceBase": "709994192eef0a3b2eaf0a8ac638cc8d9cc28ec6",
+  "sourceIdentity": "Built product module/document, bounded immutable UI bundle delivery in both Python compositions, real browser-to-SQLite acceptance with fictional HA/Supervisor and exact Python wheel resource acceptance. Immutable Supervisor image and owner adoption remain pending.",
   "sources": {
-    "frontend/src/domain/entry.ts": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e",
-    "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
-    "frontend/package.json": "41b34b9b204358e8fd212943f0dd39243e865ea2990bec296e5820c0d0399beb",
-    "frontend/tsconfig.json": "df11a4803fdbc0cc02e49e01e606d2fdfb70b6db1ead6f53e09b04451d0e262f",
-    "frontend/vitest.config.ts": "6cb6426c93374151c02c566ea85a1b39fd5c866aa1aadaee3c8135e4b45f6c16",
-    "tests/frontend/coverage-evidence.test.mjs": "0800f9fc96533cd4a60aaf9c36efbcfbd4ee8d58ad21b500e1a4bf7e54018239",
-    "tests/node/architecture.test.mjs": "9006d683d320a18564ff73ef76da8006941ba49a72ac5fe15b4feab78c0dc8b6",
-    "tests/python/test_ci_contract.py": "838e7a7713a15773facd2f618642d6721162b1b83cd13f948eb86c9848dd12d2",
-    "tooling/domus_tooling/ci_policy.py": "50cb5904499d61bab1e8ba8d385be4338a970056b255e97fe2234fda5503ae26",
-    ".github/workflows/ci_check.yml": "496170aeaa5ed733ca4b6850bfa814760852bee0b9e0bf36a01f673d1c9d046e",
-    "package.json": "b0a68c59e50f2323a9c513e961041662729ca6f6d4da6206c2490b5788e2eb46",
-    "pnpm-lock.yaml": "6cdeedbfcb2d9412cd0ad131daef6a559cd8a67de925806022eee4ae90506218",
-    "frontend/src/domain/journal.ts": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354",
-    "frontend/src/application/ports.ts": "3cd26e6c250baf8e9fe014d729c111116644e67084871388d9b84f06c2119da4",
-    "frontend/src/adapters/session-journal.ts": "e323fb4cee70481b015ce4c0c6fa94c3c909eb03af6a1837254a9196aed0fdc3",
-    "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
-    "frontend/tests/session-journal.test.ts": "e5fe0d28cb4774543002db0cb628d5cba408d5f99e908d44e31ba943c3d57313",
-    "specs/household-entry-interface.md": "320e2d9f421fe6f341d794a42c53f6431eba0f0c7761259abb45ae6bac7153c7",
-    "docs/household-entry-interface.md": "346c78f61fdf39e637d98c2ed0796173daab20092c172287605344899a09e379",
-    "frontend/src/application/entry-controller.ts": "1d3749809a505c2eaac11927463a3d92376251a8d235056a4a843202bd55926b",
-    "frontend/tests/controller.test.ts": "e1f1a0096a34b4c916d4169a1aca851fad5e712dcf45e0132c3115d3b879058b",
+    ".github/workflows/ci_check.yml": "6380afbca2e5b64b9939c0e085a50120a9cb072ae2f93baa32b9fb7d55db37bd",
+    ".gitignore": "9eb48d1d98481daa565dee7de21f7bf06d7463b42e1027b9f341411b82ca3999",
+    "architecture/frontend.mjs": "a86a96f92fb770a8f9f848f9c4d3246fbdd1f41d57c06c913331d7b7a29a5888",
+    "backend/pyproject.toml": "0413c7626999c1667d78de5a06cdf41abc46ab86d6dcddf0c492830979090d95",
+    "backend/src/domus/composition/ingress.py": "a7fb583db905a349875ba271ace55216d83d22c70788e5b7f36fb948a9d38951",
+    "backend/src/domus/composition/server.py": "f852f47c90872e04e3fb70edfbfa9e2b25996a51af0206e2a76c1a6c8b2c403c",
     "backend/src/domus/entrypoints/entry_context.py": "c3c8b64c603dd4de8330f9e336754c190f793e245d0a8e0455ac06e110919f78",
-    "backend/src/domus/entrypoints/http.py": "f17742c2259caa441b64032607cd6fbe564a0d1d858f3added45c6b46d8f5900",
-    "backend/src/domus/entrypoints/native_http.py": "a92c0e10887892e53aad84cf62208c79ad66ce642d4b86d52b2d284785f854da",
-    "backend/src/domus/composition/server.py": "447ce32b77b19c1e911556103661721ed4e44114579c3340eb07a700976913b0",
-    "backend/src/domus/composition/ingress.py": "4edf774fdb8921d04e94b80563006bdfa5a1fb7489f020cf8e5b65a255e55e5b",
-    "tests/backend/test_entry_context.py": "fcbb14ebd36b566ec96c5c52ffafe1b49d5e6bd5fc7873a2b6547074381cd55a",
-    "tests/backend/test_auth_http.py": "9210053066bff8f20e1d14be8c6728ccacdcbd3fdfad7af29c8b6c17e6026e15",
-    "tests/backend/test_household_http.py": "1dee86554eed12c3587d93aaddc568d9c031eda71171346d6428a00574d6b26c",
-    "tests/backend/test_ha_app_launcher.py": "ed75a97f3566936c3063db080510a09f3e2f5af65f2201aba9c16101f9629332",
+    "backend/src/domus/entrypoints/http.py": "56b9c85853c25f90fdc1eca316608ba6cc9343e864b09dfdac72ade83d21f9e2",
+    "backend/src/domus/entrypoints/native_http.py": "f40903f3cc52ba7aaa27075f4c783ce678125632e4fb1e33d4b0b1a0a74888cd",
+    "backend/src/domus/entrypoints/ui_bundle.py": "beae3d4a7a57375ee195cca81efccdbc899d9db4286029d53eabaf30de6e14f7",
+    "backend/src/domus/entrypoints/ui_http.py": "b6c47baa742f3862173a93e4121dc9914fd972eb6287ffffb9ffccecbf2ebe4a",
     "docs/contracts/auth-api.openapi.json": "17933ff4fb9c416371ee20453c1d77131fdf24202d372ef72074f80ef263d0a7",
     "docs/contracts/household-api.openapi.json": "d373e6726102bc9e2ca32ff22a2666c7329865ac333bf43e7890198ce9f50e62",
-    "docs/contracts/native-household-api.openapi.json": "1606e2c41386d95651c1548db09fac180f8226e827082dc48648721601b8b1a2",
+    "docs/contracts/native-household-api.openapi.json": "ee51af3265d0faabc824e085d2ad2c1335faedfe12c251076a332db1557e776f",
     "docs/household-api.md": "e87522a589000a28a32fa55d30b4a90755ee9d8824ecc11e5561aee4270f4d4d",
-    "docs/native-household-api.md": "54cc9cafedb8599861c661154241c47370a9c57e50abed743d074af41a473a4c",
-    "frontend/src/adapters/http.ts": "b51cec2796097ee764204bad9f26615e4664b9275bf24be0539ab420a80bd19c",
-    "frontend/src/adapters/http-values.ts": "7d88ecc1ab2c3f361fb361b294dd7af8442b6329cdfe202e404e6e1338d2f003",
-    "frontend/tests/http.test.ts": "267fa6d38d188a85a96dd9d1fb8e8b80937e45ca08e383dfca9237fb8981da79",
-    "frontend/tests/fixtures/entry-wire.json": "4839ff30b6b6a3be456e95c4a3b270676b34fe923a66e971f91ade39a232780e",
-    "tests/backend/test_entry_wire.py": "f52c0f2dd911017287197e7f7ba27934f2a9cf8ac89e9adae90595d36a4f3173",
-    "architecture/frontend.mjs": "a86a96f92fb770a8f9f848f9c4d3246fbdd1f41d57c06c913331d7b7a29a5888",
-    "frontend/tests/component.test.ts": "6ec16b82e03a7f8783ebb4e89c50da82f016bf9840663d0e7feea831bae3918a",
-    "frontend/src/presentation/messages.ts": "222b95c72887d08e58c4e162bc4129558a8b8e8cff96b7f931627a2b0130300d",
-    "frontend/src/adapters/browser-capabilities.ts": "afeeab1f86293581f79eeb55ca76aa59f959653c83ea3ee352d02b73c048e38b",
+    "docs/household-entry-interface.md": "467ad5b8c683d518a9d0e828f1623eea759a00d2ffde8f50d11f99e62c108a5c",
+    "docs/identity-household.md": "bea265f43775ee0021f5cbe245df9a66b9e926fb1553e36a945cf00a6ad2ac12",
+    "docs/native-household-api.md": "9339c60fcd5e774591ab07c0233110475bd7f607d15bc9aeacbea48411b8989a",
     "frontend/.storybook/main.ts": "5956fa6d05a5ab5e8c4d96ee67ff430ba0688c00f242d0346a35ded5db659be2",
-    "frontend/tests/e2e/catalog.spec.ts": "fadb7cae323a4e78598db28955b991cf42b8fa2fac81f058bab31e21ffb3aa7b",
-    "frontend/src/presentation/domus-app.ts": "d30a65fd861409bc186cdbef29997a548e5745287f9e947df0a25f42dad1c39d",
-    "specs/CATALOG.md": "190504c90f98f7bf949ec0a84ecb5e926cf49bbbe9490205787fea4c4a817427",
-    "frontend/src/composition/entry-runtime.ts": "f715e3732044bb8e94f6e716bb26d9220a5fda83860732124e0cc61e4bf09001",
     "frontend/.storybook/preview.ts": "a27c447aa28e30a92324163d149b9be837678cde965e4bfc2ddca07824a53aca",
-    "frontend/tests/capabilities.test.ts": "17c3f72b66016500f2b338910c122087e681ce568c2419b6e7e6fbed3e159f89",
-    "frontend/tests/language.test.ts": "05df3a28d908261b996b0e808b07489c35db17ac417e66a1f9d0576597da7675",
+    "frontend/index.html": "3f61558747ab699761e8f7b98fb77ecf6842858f8ed54fff1e896e6b7a615ddb",
+    "frontend/package.json": "5a5676a791804f2c3672cd3d544437dcf20f690c590f9e789b489fae46dd7a32",
     "frontend/playwright.config.ts": "8ba9c51386a06c95e4c2fb388f936c913220beb6f9410947ad56925479c3805b",
-    "frontend/tests/runtime.test.ts": "239d64464d87911fe9419317810cbb46f01a9048cb041b0dbb4a5609b8503a03",
-    "specs/catalog.json": "33914aaebb6354bcd89831abe74409c3be66e69614862398ee3e394211e42f8d",
+    "frontend/playwright.entry.config.ts": "3014b92f87a1c8c60f8ef54e7c496e5ba9365e6359c61eaeec6647abe88c20a0",
+    "frontend/src/adapters/bootstrap.ts": "21d929dd9b20a23a0b236cd30cc400b9ba1ae241ab2c50e297a21ff6c5be029a",
+    "frontend/src/adapters/browser-capabilities.ts": "afeeab1f86293581f79eeb55ca76aa59f959653c83ea3ee352d02b73c048e38b",
+    "frontend/src/adapters/http-values.ts": "7d88ecc1ab2c3f361fb361b294dd7af8442b6329cdfe202e404e6e1338d2f003",
+    "frontend/src/adapters/http.ts": "b51cec2796097ee764204bad9f26615e4664b9275bf24be0539ab420a80bd19c",
+    "frontend/src/adapters/session-journal.ts": "e323fb4cee70481b015ce4c0c6fa94c3c909eb03af6a1837254a9196aed0fdc3",
+    "frontend/src/application/entry-controller.ts": "1d3749809a505c2eaac11927463a3d92376251a8d235056a4a843202bd55926b",
+    "frontend/src/application/ports.ts": "3cd26e6c250baf8e9fe014d729c111116644e67084871388d9b84f06c2119da4",
+    "frontend/src/composition/entry-page.ts": "2d9a8caa0fdb1dc6df90ba5693105fe1c74f0a864f7df0b3cf1efec756e5e435",
+    "frontend/src/composition/entry-runtime.ts": "6c096d3db634fbc0c6a2a3954c1330a95c83117c1bbdf232e399619a1ebaa72b",
+    "frontend/src/composition/main.ts": "f92ce862e1acefb95896217588a0dea0f48625fed1f16c285dadbd9c015ae086",
+    "frontend/src/domain/entry.ts": "2745f7908238c9ff63582f419c069e933a83bf0d33db12ab851a12915b7ef71e",
+    "frontend/src/domain/journal.ts": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354",
+    "frontend/src/presentation/domus-app.ts": "222e77d94d5c9ec3c15eea158f287d88b95807841ee4f8fa73e20bc704b69cac",
+    "frontend/src/presentation/global.css": "3cde546e42eeb8f386985b39cf7f9b5cadd7695899051e9d59db40032c85b031",
+    "frontend/src/presentation/messages.ts": "9edc5291d709b7821f55177fc251c9175e500f7d6d268b9e58e0b69e9f2a5fe7",
     "frontend/src/presentation/styles.ts": "c999c47bd665b2bc5ce5aa0e248f24cf6f320ee95626ca1fa627812ff401c051",
+    "frontend/stories/entry.stories.ts": "422ac6851e90396c02b8f4dc4777fe04ed6241c8543188d112a39d8cc32091b1",
+    "frontend/tests/bootstrap.test.ts": "4bf5d79e4fd3eae48ca16e3ef3ba23a1da1b518d2faf7e95a3ce8279fb4f82fa",
+    "frontend/tests/capabilities.test.ts": "17c3f72b66016500f2b338910c122087e681ce568c2419b6e7e6fbed3e159f89",
+    "frontend/tests/component.test.ts": "6ec16b82e03a7f8783ebb4e89c50da82f016bf9840663d0e7feea831bae3918a",
+    "frontend/tests/controller.test.ts": "e1f1a0096a34b4c916d4169a1aca851fad5e712dcf45e0132c3115d3b879058b",
+    "frontend/tests/domain.test.ts": "b5646019b5b199d06d304e2fba7e6222fd893b7306efb52dd1af032e1ffb3893",
+    "frontend/tests/e2e/catalog.spec.ts": "fadb7cae323a4e78598db28955b991cf42b8fa2fac81f058bab31e21ffb3aa7b",
+    "frontend/tests/e2e/entry.spec.ts": "f505c75da21a35a7e329297e06c741d073b9698077f0f96e864451384e65d9af",
+    "frontend/tests/fixtures/entry-wire.json": "4839ff30b6b6a3be456e95c4a3b270676b34fe923a66e971f91ade39a232780e",
+    "frontend/tests/http.test.ts": "267fa6d38d188a85a96dd9d1fb8e8b80937e45ca08e383dfca9237fb8981da79",
+    "frontend/tests/journal.test.ts": "d2ac18c26429d363a99486313848ec65e44834837143ec7056a98ad0a176f059",
+    "frontend/tests/language.test.ts": "05df3a28d908261b996b0e808b07489c35db17ac417e66a1f9d0576597da7675",
+    "frontend/tests/page.test.ts": "731518b957aea32ae6cd16d68a97a9cef0565cde652a66e08664ce587a959cff",
+    "frontend/tests/runtime.test.ts": "a51d6ac418c9d7b979063ddf2cb32133cadad99564cc920f5be426f2190e627e",
+    "frontend/tests/session-journal.test.ts": "e5fe0d28cb4774543002db0cb628d5cba408d5f99e908d44e31ba943c3d57313",
     "frontend/tsconfig.catalog.json": "8160d9a0a1a997e48de932acb61818908b23a3c68c0bf28edc931275bc6cfa1c",
-    "frontend/stories/entry.stories.ts": "422ac6851e90396c02b8f4dc4777fe04ed6241c8543188d112a39d8cc32091b1"
+    "frontend/tsconfig.json": "4461feb9e2170d22c3bb02cd4f0e1073b8b1aa4d54af97987836db1a35b201b7",
+    "frontend/vite.config.ts": "f40f84b5ec937bd44b75d422d3d1f8a983294969d25b9707f7e535a73affef85",
+    "frontend/vitest.config.ts": "6cb6426c93374151c02c566ea85a1b39fd5c866aa1aadaee3c8135e4b45f6c16",
+    "package.json": "49fa7ee92846ea9f3d6159ef503f445dd85642c36e8f7c7ce4e1998879d9e208",
+    "pnpm-lock.yaml": "6cdeedbfcb2d9412cd0ad131daef6a559cd8a67de925806022eee4ae90506218",
+    "specs/CATALOG.md": "190504c90f98f7bf949ec0a84ecb5e926cf49bbbe9490205787fea4c4a817427",
+    "specs/catalog.json": "33914aaebb6354bcd89831abe74409c3be66e69614862398ee3e394211e42f8d",
+    "specs/household-entry-interface.md": "63be4ba44c7486cab7b2f441c9efa25d41dd3f7b0fd189c924bcab24dcaca08e",
+    "tests/backend/test_auth_http.py": "bd492bc9b7af7d4984645755e4b598d905b5e43a180540b3d2afabb5b07e4a10",
+    "tests/backend/test_entry_context.py": "fcbb14ebd36b566ec96c5c52ffafe1b49d5e6bd5fc7873a2b6547074381cd55a",
+    "tests/backend/test_entry_wire.py": "f52c0f2dd911017287197e7f7ba27934f2a9cf8ac89e9adae90595d36a4f3173",
+    "tests/backend/test_ha_app_launcher.py": "ed75a97f3566936c3063db080510a09f3e2f5af65f2201aba9c16101f9629332",
+    "tests/backend/test_household_http.py": "38b3a4e2ca732c38d462177f31f84fd341ae15eee195ec39608f934ac98540e2",
+    "tests/backend/test_native_http.py": "2833101dc2e4207b34265ee968bfdfacda5747c5ef86e49292d4caf4107eba08",
+    "tests/backend/test_ui_bundle.py": "acc3d8ca1f4c1451dfb9df73e0011d95b56d8ab5e24170dac700c2214f39d356",
+    "tests/backend/test_ui_http.py": "b89802b78e2a0ef3a76d8209968a8637e6a731840aba32fbdba12a6e132fd821",
+    "tests/backend/test_ui_session.py": "2178147c1a64738756270e8d126249089eec717a35ec16b7ddc46f32b6b1c3f7",
+    "tests/browser/entry_server.py": "98fc0aeff59cfc2788404916f366be3df5f133ac4165f18511b3ad16d53033af",
+    "tests/frontend/coverage-evidence.test.mjs": "0800f9fc96533cd4a60aaf9c36efbcfbd4ee8d58ad21b500e1a4bf7e54018239",
+    "tests/node/architecture.test.mjs": "9006d683d320a18564ff73ef76da8006941ba49a72ac5fe15b4feab78c0dc8b6",
+    "tests/packaging/test_ui_wheel.py": "13bb2321b8712fcd907a67a824f9c0106168e616e1bcf80900c50bc306152555",
+    "tests/python/test_ci_contract.py": "2e0d59b5ace7b53455296b49da3a7b98c3aa11606f6545216b2deeacba9b483e",
+    "tooling/domus_tooling/ci_policy.py": "50cb5904499d61bab1e8ba8d385be4338a970056b255e97fe2234fda5503ae26"
   },
   "runtime": {
     "node": "24.20.0",
@@ -72,46 +93,50 @@
     "browserCache": "Existing shared project-owned /private/tmp/domus-ui-playwright-browsers, reused without copying or new browser download."
   },
   "tests": {
-    "applicationModel": 490,
+    "applicationModel": 557,
     "sourceInventoryAudit": 1,
     "nodePolicies": 38,
     "pythonTooling": 148,
     "unimportedRuntimeIncluded": true,
-    "runtimeSourceFiles": 12,
+    "runtimeSourceFiles": 15,
     "plannedCases": 48,
-    "claim": "490 executed Chromium cases and 18 distinct built-catalog Playwright cases. The 56 normal state/locale/deployment renderings are matrix executions, not new acceptance cases. The 48 original SDD rows remain; full product acceptance is incomplete.",
-    "pythonToolingOrigin": "Current full148-case tooling run:214 statements/98 branches100%. Backend runtime/tests are unchanged from published e51556f and were not locally rerun this increment.",
+    "claim": "557 executed Chromium unit/component cases,20 built-product Playwright cases and18 separate built-catalog cases pass. Matrix repetitions are executions, not additional SDD acceptance cases. All48 original SDD rows remain; full owner/image/lifecycle acceptance is incomplete.",
+    "pythonToolingOrigin": "148 actual tooling tests pass with214 statements/98 branches100%; subsequent current CI/artifact/wheel assertions pass39 cases. Backend2983 cases and independent107-file source inventory pass at100%.",
     "controllerCases": 67,
-    "frontendOrigin": "Current twelve-module Chromium measurement, including capability/lifecycle/real Lit rendering/localization and prior HTTP/journal/controller cases.",
+    "frontendOrigin": "Actual15-module Chromium measurement, including DOM bootstrap/composition and delayed scheduling failure paths.",
     "httpCases": 169,
     "backendWireConformance": 2,
     "browserCatalogCases": 18,
     "storybookStates": 14,
-    "storyMatrixRenders": 56
+    "storyMatrixRenders": 56,
+    "backendCases": 2983,
+    "backendSourceFiles": 107,
+    "productBrowserCases": 20,
+    "wheelAcceptanceCases": 1
   },
   "coverage": {
     "frontend": {
       "lines": {
-        "total": 653,
-        "covered": 653,
+        "total": 737,
+        "covered": 737,
         "skipped": 0,
         "pct": 100
       },
       "statements": {
-        "total": 947,
-        "covered": 947,
+        "total": 1093,
+        "covered": 1093,
         "skipped": 0,
         "pct": 100
       },
       "functions": {
-        "total": 192,
-        "covered": 192,
+        "total": 212,
+        "covered": 212,
         "skipped": 0,
         "pct": 100
       },
       "branches": {
-        "total": 725,
-        "covered": 725,
+        "total": 788,
+        "covered": 788,
         "skipped": 0,
         "pct": 100
       },
@@ -123,6 +148,32 @@
       }
     },
     "files": {
+      "frontend/src/adapters/bootstrap.ts": {
+        "lines": {
+          "total": 9,
+          "covered": 9,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 1,
+          "covered": 1,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 11,
+          "covered": 11,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 15,
+          "covered": 15,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
       "frontend/src/adapters/browser-capabilities.ts": {
         "lines": {
           "total": 32,
@@ -279,28 +330,80 @@
           "pct": 100
         }
       },
-      "frontend/src/composition/entry-runtime.ts": {
+      "frontend/src/composition/entry-page.ts": {
         "lines": {
-          "total": 73,
-          "covered": 73,
+          "total": 70,
+          "covered": 70,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 35,
-          "covered": 35,
+          "total": 16,
+          "covered": 16,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 132,
-          "covered": 132,
+          "total": 127,
+          "covered": 127,
           "skipped": 0,
           "pct": 100
         },
         "branches": {
-          "total": 56,
-          "covered": 56,
+          "total": 47,
+          "covered": 47,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "frontend/src/composition/entry-runtime.ts": {
+        "lines": {
+          "total": 76,
+          "covered": 76,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 37,
+          "covered": 37,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 137,
+          "covered": 137,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 57,
+          "covered": 57,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "frontend/src/composition/main.ts": {
+        "lines": {
+          "total": 1,
+          "covered": 1,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1,
+          "covered": 1,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 0,
+          "covered": 0,
           "skipped": 0,
           "pct": 100
         }
@@ -359,20 +462,20 @@
       },
       "frontend/src/presentation/domus-app.ts": {
         "lines": {
-          "total": 39,
-          "covered": 39,
+          "total": 40,
+          "covered": 40,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 19,
-          "covered": 19,
+          "total": 20,
+          "covered": 20,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 55,
-          "covered": 55,
+          "total": 57,
+          "covered": 57,
           "skipped": 0,
           "pct": 100
         },
@@ -436,9 +539,29 @@
         }
       }
     },
-    "policy": "Required separate frontend job: strict types, real Chromium with completeCoverage, exact filesystem runtime inventory/four-metric summary audit and retained artifacts; required by aggregate."
+    "policy": "Required separate frontend job: strict types, real Chromium with completeCoverage, exact filesystem runtime inventory/four-metric summary audit and retained artifacts; required by aggregate.",
+    "backend": {
+      "files": 107,
+      "summary": {
+        "covered_lines": 7900,
+        "num_statements": 7900,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 225,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 2228,
+        "num_partial_branches": 0,
+        "covered_branches": 2228,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "independentInventoryAudit": "PASS; backend-audit-final.out"
+    }
   },
-  "architecture": "Current twelve-module inward/framework/cycle/unresolved graph and production/test/story/configuration type/value negatives pass.38 Node cases and all policy statements/branches/functions/lines pass at100%.",
+  "architecture": "Current15-module inward/framework/cycle/unresolved graph and production/test/story/configuration type/value negatives pass.38 Node cases and all policy metrics pass100%. Python application import contracts and41 architecture cases pass.",
   "commands": [
     "pnpm install --offline --lockfile-only",
     "pnpm install --offline --frozen-lockfile",
@@ -451,26 +574,28 @@
     "PYTHONPATH=$PWD/backend/src:$PWD/tooling primary-.venv/bin/pytest tests/python --cov=domus_tooling --cov-branch",
     "primary-.venv/bin/ruff check --no-cache .",
     "primary-.venv/bin/ruff format --check --no-cache .",
-    "Original byte-verified pinned SDK format/consistency/catalog and domus-check docs."
+    "Original byte-verified pinned SDK format/consistency/catalog and domus-check docs.",
+    "pnpm build:frontend",
+    "uv build --package domus-server --wheel",
+    "uv run pytest tests/packaging --no-cov",
+    "PLAYWRIGHT_BROWSERS_PATH=/private/tmp/domus-ui-playwright-browsers pnpm test:frontend-entry",
+    "uv run pytest tests/backend --cov=domus --cov-branch (real loopback network allowed)",
+    "uv run domus-check backend-coverage --report coverage-backend-final.json"
   ],
   "interimFailures": [
-    "Absent browser-capability module made the new test file fail collection;379 existing cases passed.",
-    "Absent runtime module made the new runtime test file fail collection;403 existing/capability cases passed.",
-    "Initial418-case composition campaign passed behavior, but fault paths left incomplete coverage. Real provider failure/renderer/cancellation/logout-race scenarios raise this to423/all four metrics100%.",
-    "Initial Lit campaign passed484 cases but missed the Stable badge branch. Explicit Stable/unavailable and denied-storage joining cases produce486 and complete coverage.",
-    "The catalog strict declaration check reproduced the locked Storybook web-components unused expected-error/incompatible generic declaration. Existing fixture workaround is isolated to catalog skipLibCheck; runtime/application and its dependency declarations remain strictly checked. No dependency source patch.",
-    "Initial CI source-inventory test rejected undeclared Storybook configuration (36passed/1failed). Catalog configuration is now explicitly declared, typechecked, built, browser-exercised and retained by the required frontend job; full148 tooling cases pass.",
-    "Four privacy regressions fail before draft isolation (486pass/4fail). First pre-render reset fixes closing, but three rapid-edit account/channel/installation cases still fail because Lit cached the prior bound value. Live input value binding fixes the actual DOM; final490/all four metrics100%. Reconstructed pre-fix source matches its independently recorded SHA.",
-    "Adding the Lit live directive caused a real cold optimizer reload and 60-second iframe initialization failure, with no tests executed. Explicit optimizeDeps includes for lit/live prevent mid-campaign reload; the corrected suite passes490 from an emptied owned dependency cache. Original optimizer metadata and full failure are retained."
+    "New bootstrap/page and UI bundle/delivery tests initially failed on absent modules; original raw TDD outputs retained.",
+    "A real later timer callback exposed uncaught scheduler refusal. Runtime now disposes, notifies its bounded outer fallback and contains later callback failure. later-scheduler-before.out preserves the failure.",
+    "First whole backend campaign lacked sandbox loopback permission:50 WebSocket PermissionErrors,2932passes. It is not product failure or complete coverage proof. Escalated campaign isolated one misplaced test block; no production change was needed to correct that block.",
+    "The corrected whole backend campaign passes2983 cases with107 modules,7900 statements and2228 branches100%.",
+    "Initial real browser campaign15passed/1failed because a test observed local closed presentation before asynchronous upstream revocation completed. Test now waits for actual confirmed sign-out. Raw trace, screenshot and results are retained. Final20 cases pass without retries."
   ],
   "limitations": [
-    "Product bootstrap/entrypoint wiring, same-listener base-relative built delivery, real CSP/assets and actual browser-to-Python-backend journeys remain incomplete.",
-    "Current catalog tests cover fictional display states and semantic intents, not actual server commands or installed owner HA. Current complete backend proof is historical e51556f; new-head hosted proof/review is separate.",
-    "Separate Storybook catalog skips third-party declaration checking for the observed locked upstream generic error; authored catalog code remains strict. Runtime skipLibCheck remains false.",
-    "Two pre-privacy catalog builds have 26 identical files and differing project.json; metadata contains generatedAt, but initial metadata body is unavailable, so exact differing fields are unproven. Current final catalog hashes are separately recorded after the privacy fix. No reproducible product-bundle/package claim.",
-    "No owner HA data/package/private storage, gateway, Copilot resource/configuration/credential or protected workflow change. Existing partial Bugbot conversation coverage remains reported#843."
+    "Native Supervisor immutable image, source/package pin and owner installation remain Edge.3/faa1654; no owner HA state or installed package changed.",
+    "Twenty product cases use actual Domus ASGI/SQLite and fictional loopback HA/Supervisor. They do not establish real owner HA or complete accessibility/lifecycle acceptance.",
+    "The preceding7099941 hosted CI passed. Its review was neutral/partial because conversation context was truncated and is reported in vypdev/copilot#843; current new-head hosted CI/review remains separate.",
+    "No Copilot resources/configuration/credentials, gateway, remote branch lifecycle, release or authentication bypass was changed."
   ],
-  "rawEvidence": "/private/tmp/domus-entry-runtime-checkpoint-retained/measurements.tar.gz",
+  "rawEvidence": "/private/tmp/domus-entry-delivery-checkpoint-retained/measurements.tar.gz",
   "previousModelEvidence": {
     "sourceRevision": "695e5c31a466b8a42c8840c46f708141979b35e4",
     "sourceBase": "82519ee4e547dc347b8d0a18352bd1acc7783d70",
@@ -695,7 +820,7 @@
     "originalCaseRowsPreserved": 48,
     "falsePositiveReport": "https://github.com/vypdev/copilot/issues/845",
     "sourceValidatorBlob": "c1487eac45d12911052df9ce72ac1cdcb54e0b96",
-    "workaround": "Spell Unicode control range U+0080–U+009F in prose; no Copilot or case-inventory change."
+    "workaround": "Spell Unicode control range U+0080\u2013U+009F in prose; no Copilot or case-inventory change."
   },
   "previousHttpEvidence": {
     "sourceRevision": "e51556f1ec571b1d25111051a0bb22aa0947995e",
@@ -770,22 +895,22 @@
       "claim": "Repeated actual Storybook builds; not the product UI bundle or installed HA package."
     },
     "catalogFiles": {
-      "assets/entry.stories-DkVgQf95.js": "97d72691c63649a9b2ae37f1ec083a95aed6e029b2c6c5ca90a4e3f6a251f697",
-      "assets/iframe-DYdSMYYS.js": "ec034def2223b35bc9df0098056dc3d0a9c034fd3e8e49f7d5fe34e4c8fd9f18",
-      "assets/iframe-zDDqbCW1.js": "10b7ac36d3c32b138fe75e6515a45bdda90b778f7833b0fbea584b960bb5507f",
+      "assets/entry.stories-Dul9IKBr.js": "be188da5fceaeb2b33c99099bd5b901ed7e05cc6d6ff804508f7a88518fa6e09",
+      "assets/iframe-B5-cuh44.js": "57fa7c346e75b5cbac1c25b37181638fb9bf238c6ee981bf458f67f5d0f045fc",
+      "assets/iframe-QdY2kD4J.js": "c1b2f3675d5143bf1c71ba261ba4f72476964b9d2ff8a621afa7194d2a5916fc",
       "assets/preload-helper-_1ZBrL1G.js": "b2f81fa033f2a27625b6c22599ac2a4c32794663d58d1fa3cb64d0fad94bb26c",
       "assets/rolldown-runtime-Dh6celcD.js": "4cf74e844dce3bc61a15b3687b05aceff75f4da99181156d04f8ef181283f429",
       "favicon-wrapper.svg": "5311f921255509431fc978cd04fd497ae54c46cfd97b3578dc53d7f652667a71",
       "favicon.svg": "3a13ac7344753df5a7cd5b41a67e33966c1ae723f1e5e5128a6ed1bca1adc85a",
-      "iframe.html": "a9f39e13e824c274743079f19468a9d94682600f49d39f73c22e457c6f676bd4",
+      "iframe.html": "b22e51232443afc24942084da8ea1b73091d61f70ca35103a55e9f9a826e9b84",
       "index.html": "17f530dc608f4c28a68359b5a690191f9c7fb3e1b23b410260517c057078dbc6",
       "index.json": "375f9477d9cacc0b136001edde6b64f9683319c612274adaf05e518e7d3f4db9",
       "nunito-sans-bold-italic.woff2": "36aadf15d24dfa97c0446c9ca713b9d004f0f5674d1043b2b51c75105962cab9",
       "nunito-sans-bold.woff2": "6bccbfaa70688e0348109160e90c771587866c21717bfd3adec38ea606362cf8",
       "nunito-sans-italic.woff2": "992f331636deda09193ac0453c274ac3fb7e66f70af98e1cbff119a7384f09ae",
       "nunito-sans-regular.woff2": "49fe05ec477bb0f2f815a7494c933070606b5c68e84f96e11374e07c59a64d61",
-      "project.json": "5ef122bdde9d5cc0ade0202dd6ea0b61edb970187a1b0063e5a9b2ade08a45e4",
-      "sb-addons/common-manager-bundle.js": "d9fa83350294bf03d87156d06caedb506424ba5b8f73b5575b38346fac49ab52",
+      "project.json": "c2912ed6e48e08b022775bc53b87b5726ee7cad3d1744b2e85dc4cf709879d7a",
+      "sb-addons/common-manager-bundle.js": "6d0ca5a86fc7c9f28b2ac80373cf582bd78dc50d0eb7072a5501a61d19e69d43",
       "sb-common-assets/favicon-wrapper.svg": "5311f921255509431fc978cd04fd497ae54c46cfd97b3578dc53d7f652667a71",
       "sb-common-assets/favicon.svg": "3a13ac7344753df5a7cd5b41a67e33966c1ae723f1e5e5128a6ed1bca1adc85a",
       "sb-common-assets/nunito-sans-bold-italic.woff2": "36aadf15d24dfa97c0446c9ca713b9d004f0f5674d1043b2b51c75105962cab9",
@@ -798,6 +923,524 @@
       "sb-manager/runtime.js": "8d484f54377ba49292387546a32873ac524e2e2b1a7367e9933d7c4cf5a56748",
       "vite-inject-mocker-entry.js": "bf0f655d82a1710c2d944e2e1bdace6916a233fffffe4a3f9ba7785dfa318ac2"
     },
-    "browserResults": "catalog-browser-live-final.out:18passed; browser156.0.8078.4; all56 normal matrix renders plus keyboard/focus/rapid-edit/privacy/narrow-contrast cases."
+    "browserResults": "Current catalog-final.out:18passed; original14 fictional states/56 ordinary matrix renders retained separately from product20 journeys."
+  },
+  "previousBrowserRuntimeEvidence": {
+    "sourceBase": "e51556f1ec571b1d25111051a0bb22aa0947995e",
+    "sourceIdentity": "Current browser capabilities/lifecycle composition and owned Lit EN/ES view. Twelve frontend runtime files, real Chromium component tests and actual built Storybook catalog journeys. Product shell/static delivery, browser-to-backend and owner adoption remain incomplete.",
+    "tests": {
+      "applicationModel": 557,
+      "sourceInventoryAudit": 1,
+      "nodePolicies": 38,
+      "pythonTooling": 148,
+      "unimportedRuntimeIncluded": true,
+      "runtimeSourceFiles": 15,
+      "plannedCases": 48,
+      "claim": "557 executed Chromium unit/component cases,20 built-product Playwright cases and18 separate built-catalog cases pass. Matrix repetitions are executions, not additional SDD acceptance cases. All48 original SDD rows remain; full owner/image/lifecycle acceptance is incomplete.",
+      "pythonToolingOrigin": "148 actual tooling tests pass with214 statements/98 branches100%; subsequent current CI/artifact/wheel assertions pass39 cases. Backend2983 cases and independent107-file source inventory pass at100%.",
+      "controllerCases": 67,
+      "frontendOrigin": "Actual15-module Chromium measurement, including DOM bootstrap/composition and delayed scheduling failure paths.",
+      "httpCases": 169,
+      "backendWireConformance": 2,
+      "browserCatalogCases": 18,
+      "storybookStates": 14,
+      "storyMatrixRenders": 56,
+      "backendCases": 2983,
+      "backendSourceFiles": 107,
+      "productBrowserCases": 20,
+      "wheelAcceptanceCases": 1
+    },
+    "coverage": {
+      "frontend": {
+        "lines": {
+          "total": 737,
+          "covered": 737,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1093,
+          "covered": 1093,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 212,
+          "covered": 212,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 788,
+          "covered": 788,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "files": {
+        "frontend/src/adapters/bootstrap.ts": {
+          "lines": {
+            "total": 9,
+            "covered": 9,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 1,
+            "covered": 1,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 11,
+            "covered": 11,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 15,
+            "covered": 15,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/adapters/browser-capabilities.ts": {
+          "lines": {
+            "total": 32,
+            "covered": 32,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 15,
+            "covered": 15,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 50,
+            "covered": 50,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 27,
+            "covered": 27,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/adapters/http-values.ts": {
+          "lines": {
+            "total": 122,
+            "covered": 122,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 24,
+            "covered": 24,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 171,
+            "covered": 171,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 122,
+            "covered": 122,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/adapters/http.ts": {
+          "lines": {
+            "total": 88,
+            "covered": 88,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 25,
+            "covered": 25,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 122,
+            "covered": 122,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 63,
+            "covered": 63,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/adapters/session-journal.ts": {
+          "lines": {
+            "total": 41,
+            "covered": 41,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 15,
+            "covered": 15,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 54,
+            "covered": 54,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 22,
+            "covered": 22,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/application/entry-controller.ts": {
+          "lines": {
+            "total": 147,
+            "covered": 147,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 26,
+            "covered": 26,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 219,
+            "covered": 219,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 154,
+            "covered": 154,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/application/ports.ts": {
+          "lines": {
+            "total": 2,
+            "covered": 2,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 2,
+            "covered": 2,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 6,
+            "covered": 6,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 0,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/composition/entry-page.ts": {
+          "lines": {
+            "total": 70,
+            "covered": 70,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 16,
+            "covered": 16,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 127,
+            "covered": 127,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 47,
+            "covered": 47,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/composition/entry-runtime.ts": {
+          "lines": {
+            "total": 76,
+            "covered": 76,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 37,
+            "covered": 37,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 137,
+            "covered": 137,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 57,
+            "covered": 57,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/composition/main.ts": {
+          "lines": {
+            "total": 1,
+            "covered": 1,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 0,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 1,
+            "covered": 1,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 0,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/domain/entry.ts": {
+          "lines": {
+            "total": 25,
+            "covered": 25,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 4,
+            "covered": 4,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 30,
+            "covered": 30,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 42,
+            "covered": 42,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/domain/journal.ts": {
+          "lines": {
+            "total": 72,
+            "covered": 72,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 24,
+            "covered": 24,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 94,
+            "covered": 94,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 79,
+            "covered": 79,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/presentation/domus-app.ts": {
+          "lines": {
+            "total": 40,
+            "covered": 40,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 20,
+            "covered": 20,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 57,
+            "covered": 57,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 147,
+            "covered": 147,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/presentation/messages.ts": {
+          "lines": {
+            "total": 11,
+            "covered": 11,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 3,
+            "covered": 3,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 13,
+            "covered": 13,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 13,
+            "covered": 13,
+            "skipped": 0,
+            "pct": 100
+          }
+        },
+        "frontend/src/presentation/styles.ts": {
+          "lines": {
+            "total": 1,
+            "covered": 1,
+            "skipped": 0,
+            "pct": 100
+          },
+          "functions": {
+            "total": 0,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 100
+          },
+          "statements": {
+            "total": 1,
+            "covered": 1,
+            "skipped": 0,
+            "pct": 100
+          },
+          "branches": {
+            "total": 0,
+            "covered": 0,
+            "skipped": 0,
+            "pct": 100
+          }
+        }
+      },
+      "policy": "Required separate frontend job: strict types, real Chromium with completeCoverage, exact filesystem runtime inventory/four-metric summary audit and retained artifacts; required by aggregate.",
+      "backend": {
+        "files": 107,
+        "summary": {
+          "covered_lines": 7900,
+          "num_statements": 7900,
+          "percent_covered": 100.0,
+          "percent_covered_display": "100.00",
+          "missing_lines": 0,
+          "excluded_lines": 225,
+          "percent_statements_covered": 100.0,
+          "percent_statements_covered_display": "100.00",
+          "num_branches": 2228,
+          "num_partial_branches": 0,
+          "covered_branches": 2228,
+          "missing_branches": 0,
+          "percent_branches_covered": 100.0,
+          "percent_branches_covered_display": "100.00"
+        },
+        "independentInventoryAudit": "PASS; backend-audit-final.out"
+      }
+    },
+    "rawEvidence": "/private/tmp/domus-entry-runtime-checkpoint-retained/measurements.tar.gz",
+    "interimFailures": [
+      "Absent browser-capability module made the new test file fail collection;379 existing cases passed.",
+      "Absent runtime module made the new runtime test file fail collection;403 existing/capability cases passed.",
+      "Initial418-case composition campaign passed behavior, but fault paths left incomplete coverage. Real provider failure/renderer/cancellation/logout-race scenarios raise this to423/all four metrics100%.",
+      "Initial Lit campaign passed484 cases but missed the Stable badge branch. Explicit Stable/unavailable and denied-storage joining cases produce486 and complete coverage.",
+      "The catalog strict declaration check reproduced the locked Storybook web-components unused expected-error/incompatible generic declaration. Existing fixture workaround is isolated to catalog skipLibCheck; runtime/application and its dependency declarations remain strictly checked. No dependency source patch.",
+      "Initial CI source-inventory test rejected undeclared Storybook configuration (36passed/1failed). Catalog configuration is now explicitly declared, typechecked, built, browser-exercised and retained by the required frontend job; full148 tooling cases pass.",
+      "Four privacy regressions fail before draft isolation (486pass/4fail). First pre-render reset fixes closing, but three rapid-edit account/channel/installation cases still fail because Lit cached the prior bound value. Live input value binding fixes the actual DOM; final490/all four metrics100%. Reconstructed pre-fix source matches its independently recorded SHA.",
+      "Adding the Lit live directive caused a real cold optimizer reload and 60-second iframe initialization failure, with no tests executed. Explicit optimizeDeps includes for lit/live prevent mid-campaign reload; the corrected suite passes490 from an emptied owned dependency cache. Original optimizer metadata and full failure are retained."
+    ],
+    "limitations": [
+      "Product bootstrap/entrypoint wiring, same-listener base-relative built delivery, real CSP/assets and actual browser-to-Python-backend journeys remain incomplete.",
+      "Current catalog tests cover fictional display states and semantic intents, not actual server commands or installed owner HA. Current complete backend proof is historical e51556f; new-head hosted proof/review is separate.",
+      "Separate Storybook catalog skips third-party declaration checking for the observed locked upstream generic error; authored catalog code remains strict. Runtime skipLibCheck remains false.",
+      "Two pre-privacy catalog builds have 26 identical files and differing project.json; metadata contains generatedAt, but initial metadata body is unavailable, so exact differing fields are unproven. Current final catalog hashes are separately recorded after the privacy fix. No reproducible product-bundle/package claim.",
+      "No owner HA data/package/private storage, gateway, Copilot resource/configuration/credential or protected workflow change. Existing partial Bugbot conversation coverage remains reported#843."
+    ],
+    "sourceRevision": "709994192eef0a3b2eaf0a8ac638cc8d9cc28ec6"
+  },
+  "productDelivery": {
+    "bootstrap": "Closed version1 deployment/application_base/style_nonce; canonical actual location comparison; no identity/installation/authority. Style nonce is public CSP capability only.",
+    "resources": "Bounded closed Vite manifest/resource snapshot; symlink/undeclared/inline rejection. Same-listener source binding; strict CSP except successful shell self resources and nonce styles. No personal root OpenAPI route.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "3ed09f06906626ab92bc79be95307ce3004c23238ad69d8906e222efe960eabc",
+      "assets/index-BNMcBHEU.js": "31ec0c73341c83b27a24bc04c0e81317f4458b8d128cb60c7fc12baf2b80c7fc",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "83ebfa5c87fb3f5937ed9667cfc95a691e7108c087255a803904a3114ddb3f3e"
+    },
+    "wheel": {
+      "file": "domus_server-0.0.0-py3-none-any.whl",
+      "sha256": "e2304c6d31a51b59da93539549582d84678933000dc42bbe8137891019a01735",
+      "exactResourcesAndFixtureExclusion": "PASS; package-final.out and ci-package-final.out"
+    },
+    "browserResults": {
+      "startTime": "2026-11-01T15:05:23.141Z",
+      "duration": 11403.363,
+      "expected": 20,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "proof": "Both actual server compositions, real SQLite single-effect exact-key recovery and immutable audit/outbox/receipt counts, source-relative requests, explicit enrollment, current proofs, cookie/Origin/CSRF, native close versus standalone revoke, failed storage/module, original grace deadline, account draft retirement, Spanish360px/CSP fallback.",
+    "manualInspection": "Actual prefixed product Spanish360px original screenshot inspected: readable/wrapped mapping, associated labels, visible keyboard focus, no horizontal overflow and distinct setup/refresh/close actions. Agent visual QA, not owner approval.",
+    "testOnlyBoundary": "Loopback fixture monkeypatches only provider constructors in a disposable test process; real state/browser nonce/S256 callback and source/cookie policies stay active. No release bypass and no browser control fixture in the actual wheel."
   }
 }

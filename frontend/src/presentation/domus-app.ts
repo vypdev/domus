@@ -25,6 +25,7 @@ export class DomusApp extends LitElement {
   private declare zoneDraft: string;
   private draftScope: string | null = null;
   constructor() {super(); this.view = null; this.deployment = 'standalone'; this.language = 'en'; this.nameDraft = ''; this.zoneDraft = '';}
+  disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
   private text(key: MessageKey): string {return message(key, this.language);}
   private intent(detail: EntryIntent): void {
     this.dispatchEvent(new CustomEvent<EntryIntent>('domus-intent', {detail: Object.freeze(detail), bubbles: true, composed: true}));

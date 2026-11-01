@@ -51,6 +51,7 @@ const english = Object.freeze({
   check: 'Check previous request', dismiss: 'Remove resolved entry', requestDeadline: 'Original request deadline',
   operation: 'Operation reference', correlation: 'Support reference', details: 'Technical details', permissions: 'Your current permissions',
   noPermissions: 'No household administration permissions are currently granted.', status: 'Status', access: 'Access', full: 'Current verified access',
+  reload: 'Reload interface', pageErrorAction: 'Reopen this page from your Domus installation. Existing server records and original requests are retained. Verify current state before requesting replacement work.',
 });
 export type MessageKey = keyof typeof english;
 export type Language = 'en' | 'es';
@@ -107,6 +108,7 @@ const spanish: Readonly<Record<MessageKey, string>> = Object.freeze({
   check: 'Comprobar solicitud anterior', dismiss: 'Eliminar entrada resuelta', requestDeadline: 'Vencimiento original de la solicitud',
   operation: 'Referencia de la operación', correlation: 'Referencia de soporte', details: 'Detalles técnicos', permissions: 'Tus permisos actuales',
   noPermissions: 'No tienes permisos de administración del hogar concedidos actualmente.', status: 'Estado', access: 'Acceso', full: 'Acceso actual verificado',
+  reload: 'Recargar interfaz', pageErrorAction: 'Vuelve a abrir esta página desde tu instalación de Domus. Los registros del servidor y las solicitudes originales se conservan. Verifica el estado actual antes de solicitar trabajo de sustitución.',
 });
 export function language(explicit: unknown, browser: unknown): Language {
   for (const value of [explicit, browser]) {

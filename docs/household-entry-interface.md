@@ -2,8 +2,8 @@
 
 The development branch implements pure entry/setup decisions, the bounded request journal with
 its owned sessionStorage adapter, the generation-fenced entry controller, browser capability and
-lifecycle composition, and an owned English/Spanish Lit view. The product entrypoint and backend
-static delivery remain to be implemented. Strict frontend HTTP adapters attach and
+lifecycle composition, an owned English/Spanish Lit view, the product module entrypoint and
+same-listener built UI delivery. Strict frontend HTTP adapters attach and
 decode the server context contract. Both server compositions
 now expose verified session context and enforce supplied context assertions before protected work.
 These tests do not add a working interface to the owner's installed Edge.3 application.
@@ -104,7 +104,7 @@ Bound UI requests must supply X-Domus-Context as v1:installation:channel:subject
 metadata and the verified HA user ID. The server compares this assertion with its real composition
 and session before protected reads/CSRF/commands. Wrong or ambiguous assertions receive a safe
 rejection without revealing expected context or creating a household. The assertion grants no role
-and selects no actor. Legacy raw API requests may omit it; the upcoming frontend adapter must always
+and selects no actor. Legacy raw API requests may omit it; the frontend adapter always
 send it on bound requests. Existing cookie/Ingress, Origin, CSRF and per-command current authority
 remain mandatory. No CORS permission or public port is added.
 
@@ -199,6 +199,48 @@ the locked Storybook web-components package has an unused expected-error directi
 generic declaration under TypeScript 6. The original failure is retained. Authored story/configuration
 code remains strict, real build/browser checks run, and no dependency source was patched.
 
+## Product document and packaged resources
+
+The Vite product build writes four generated resources under the backend package's ui directory:
+the fixed document, its manifest and external JavaScript/CSS. Hatch includes those exact resources
+in the Python wheel. They are generated artifacts, excluded from source control. A source checkout
+without a product build returns an explicit unavailable page; it does not present an empty home.
+An existing corrupt bundle fails startup. The loader snapshots a bounded, closed manifest/resource
+graph and rejects symlinks, unknown files, inline executables and undeclared resources. Requests
+read immutable bytes instead of resolving user-controlled filesystem paths.
+The required CI job builds the wheel, compares every packaged UI resource with the actual build,
+loads the extracted snapshot and rejects inclusion of browser test controls.
+
+The nonpersonal root document and assets require the existing native source/session binding; they
+do not convert that binding into verified human access. A temporary HA outage can still load the
+interface. Standalone serves the nonpersonal document before sign-in. Personal API calls separately
+require current proof, context assertions and their existing command authorization. These document
+routes are excluded from personal API schemas. Standalone OAuth now returns to the fixed root,
+removing callback parameters before the interface independently reads current session facts.
+
+The inert version-1 JSON bootstrap contains exactly version, deployment, application_base and
+style_nonce. The browser verifies it against its actual canonical location and derives origin only
+from that location. It carries no identity, installation, role, token or command grant. The public
+per-document style nonce permits Lit's style-element fallback under CSP; it is not authentication.
+Successful documents allow only same-origin scripts, connections and assets and nonce-bound styles.
+Neither unsafe-inline nor unsafe-eval is enabled. Native framing is same-origin; standalone framing
+is denied. API, asset and error responses keep the default restrictive policy and no-store headers.
+
+The DOM composition owns one mount, its semantic events, timers and reads. Malformed bootstrap,
+unavailable browser capabilities and scheduling failures produce bounded guidance and explicit
+reload. Replacing or detaching the owned element releases its resources. The actual module performs
+no setup or enrollment automatically and never inspects HA's parent document or private storage.
+
+Twenty Playwright cases exercise the built product against both real Python compositions and
+SQLite, wrapped by fictional loopback HA/Supervisor providers. They prove explicit keyboard setup,
+inert household text, exact original-key recovery after a committed response is lost, unchanged
+receipt/audit/outbox counts, blocked writes on silent storage failure, logout versus native close,
+pending own enrollment, account-draft retirement, original-deadline read-only grace and Spanish
+360px operation with actual CSP style fallback. A failed module download leaves visible reload
+guidance without claiming an empty home. The standalone authorization fixture performs the
+real state/browser-binding/PKCE callback flow with fictional one-use grants. Test controls are only
+in tests/browser; they are absent from the application wheel. This is not owner HA or image adoption.
+
 ## Development checks
 
 From the root, using the locked Node and pnpm versions:
@@ -208,6 +250,8 @@ pnpm install --frozen-lockfile
 pnpm --filter @domus/frontend exec playwright install chromium
 pnpm check:frontend
 pnpm test:frontend
+pnpm build:frontend
+pnpm test:frontend-entry
 pnpm build:frontend-catalog
 pnpm test:frontend-catalog
 pnpm test
@@ -226,8 +270,8 @@ Model execution is separate from rendering, accessibility, integration, package 
 
 ## Remaining delivery
 
-Product entrypoint wiring, base-relative built delivery, actual browser-to-backend journeys,
-real product CSP/asset delivery, complete accessibility/teardown and owner adoption remain required.
-The implemented view/catalog proof does not replace that acceptance. The all-domain first release,
+Exact immutable image packaging, complete accessibility/lifecycle acceptance and owner adoption
+remain required. The built-product fixture proof does not replace that acceptance or a complete
+current-head review. The all-domain first release,
 both targets and isolated channels remain
 required. Follow the existing [identity](identity-household.md) and [setup](household-setup.md) contracts.

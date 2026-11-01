@@ -156,10 +156,19 @@ jobs:
         with:
           run_install: false
           cache: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.29"
+          enable-cache: false
+      - run: uv sync --frozen
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @domus/frontend exec playwright install --with-deps chromium
       - run: pnpm check:frontend
       - run: pnpm test:frontend
+      - run: pnpm build:frontend
+      - run: uv build --package domus-server --wheel
+      - run: uv run pytest tests/packaging --no-cov
+      - run: pnpm test:frontend-entry
       - run: pnpm build:frontend-catalog
       - run: pnpm test:frontend-catalog
       - name: Retain distinct application coverage
@@ -167,10 +176,13 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: frontend-application-${{ github.sha }}
+          include-hidden-files: true
           path: |
             frontend/coverage/
             frontend/storybook-static/
             frontend/test-results/
+            backend/src/domus/ui/
+            dist/*.whl
           if-no-files-found: error
           retention-days: 7
 

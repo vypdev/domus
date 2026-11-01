@@ -32,6 +32,8 @@ from domus.entrypoints.household_http import HouseholdHTTPContext, create_househ
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 from domus.entrypoints.http_errors import classify
 from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
+from domus.entrypoints.ui_bundle import UIBundle
+from domus.entrypoints.ui_http import attach_ui
 
 
 @dataclass(frozen=True, slots=True)
@@ -233,6 +235,7 @@ def create_app(
     entry: EntryHTTPContext,
     household_context: Callable[[str], HouseholdHTTPContext] | None = None,
     task_context: Callable[[str], TaskHTTPContext] | None = None,
+    ui_bundle: UIBundle | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="Domus",
@@ -326,7 +329,7 @@ def create_app(
             lease = authentication.complete(cast(str, parameters.code), parameters.state, browser)
             if previous is not None:
                 provider.sign_out(previous)
-            response = RedirectResponse("/api/v1/session", status_code=303)
+            response = RedirectResponse("/", status_code=303)
             cookie(
                 response,
                 settings.session_cookie,
@@ -414,4 +417,5 @@ def create_app(
             return task_factory(cast(str, _cookie(request.scope, settings.session_cookie)))
 
         app.include_router(create_task_router(tasks, security=session_security))
+    attach_ui(app, ui_bundle, "standalone", lambda request: None)
     return app
