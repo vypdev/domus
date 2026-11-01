@@ -2,6 +2,7 @@
 
 from typing import Protocol
 
+from domus.domain.recurrence_rules import FixedPattern, PeriodCandidates
 from domus.domain.recurrence_time import NominalTime, RelativeInterval, ResolvedTime, TimePolicy
 
 
@@ -14,3 +15,7 @@ class RecurrenceTimes(Protocol):
     def after_local_days(
         self, performed_at: int, interval: RelativeInterval, policy: TimePolicy
     ) -> ResolvedTime: ...
+
+
+class NominalExpansion(Protocol):
+    def period(self, pattern: FixedPattern, index: int) -> PeriodCandidates: ...

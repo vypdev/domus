@@ -484,11 +484,20 @@
       "code": [
         "backend/src/domus/domain/recurrence_time.py",
         "backend/src/domus/application/recurrence_ports.py",
-        "backend/src/domus/infrastructure/recurrence_time.py"
+        "backend/src/domus/infrastructure/recurrence_time.py",
+        "backend/src/domus/domain/recurrence_rules.py",
+        "backend/src/domus/domain/recurrence_rule_text.py",
+        "backend/src/domus/domain/recurrence_periods.py",
+        "backend/src/domus/domain/nominal_recurrence.py",
+        "backend/src/domus/domain/recurrence_planning.py",
+        "backend/src/domus/application/fixed_recurrence.py"
       ],
       "tests": [
         "tests/backend/test_recurrence_time_values.py",
-        "tests/backend/test_recurrence_time_adapter.py"
+        "tests/backend/test_recurrence_time_adapter.py",
+        "tests/backend/test_recurrence_rules.py",
+        "tests/backend/test_nominal_recurrence.py",
+        "tests/backend/test_fixed_recurrence_planning.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -497,7 +506,8 @@
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
         "docs/architecture-recurrence.md",
-        "docs/evidence/recurrence-execution.json"
+        "docs/evidence/recurrence-execution.json",
+        "docs/evidence/recurrence-rules.json"
       ],
       "readiness": {
         "state": "draft",

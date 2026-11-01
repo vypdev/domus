@@ -119,3 +119,12 @@ See the [temporal architecture](architecture-recurrence.md) and
 These counts belong to the admitted recurrence branch and do not include the separate, unmerged
 participant checkpoint. Rules, schema 8, durable runner/source processing, calendar queries, actual
 images and full product acceptance remain outstanding. No new packaged update is established.
+
+## Recurrence rule and planning source checkpoint
+
+The next checkpoint passes 179 focused rule/nominal/planner executions and the complete backend:
+3,260 tests across 116 authored modules, with all 8,368 statements and 2,396 branches covered and an
+independent complete-source audit. The actual architecture graph retains all three contracts.
+The [rule/planning evidence](evidence/recurrence-rules.json) records the bounded empty-period library
+control, the finite evaluation decision, exact source identity and incomplete acceptance. These
+planning results do not create durable task work or complete the 52 companion product journeys.

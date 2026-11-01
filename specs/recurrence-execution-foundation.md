@@ -37,7 +37,7 @@ Tasks have a durable lifecycle but no recurrence service. A family cannot yet ob
 
 Existing code: `backend/src/domus/domain/tasks.py`, `backend/src/domus/domain/task_values.py`, `backend/src/domus/application/task_events.py`, `backend/src/domus/application/task_commands.py`, `backend/src/domus/application/task_queries.py`, `backend/src/domus/infrastructure/sqlite.py`, `backend/src/domus/composition/tasks.py` and `backend/src/domus/entrypoints/task_http.py`.
 
-The public immutable archive was checked against all 430 tracked Git blobs. Exploratory Python 3.14.6, dateutil 4.0.0 and pinned tzdata 2026.6/IANA 2026f controls show full-gap shifting, nonexistent aware candidates and permissive raw-rule parsing. These are adapter observations, not product acceptance. Exact production dependency hashes must be locked and verified before use.
+The public immutable archive was checked against all 430 tracked Git blobs. Exploratory Python 3.14.6, dateutil 4.0.0 and pinned tzdata 2026.6/IANA 2026f controls show full-gap shifting, nonexistent aware candidates and permissive raw-rule parsing. These are adapter observations, not product acceptance. Exact production dependency hashes must be locked and verified before use. A subsequent bounded control of dateutil4.0.0 observed 65 internal monthly period rebuilds through June2031 for a February2026-only UNTIL with an impossible February30 selector, without yielding a candidate. This is a library observation, not a Copilot defect. Domus therefore evaluates the closed supported subset over one finite calendar period rather than relying on that iterator for its work bound; timezone resolution retains its separately pinned adapter.
 
 ### 2.4 Retrospective classification
 
@@ -154,7 +154,7 @@ Category is not a tag alias. Add a genuine task-owned category/classification co
 
 ## 8. Clean Architecture
 
-Domain owns immutable validated schedule/time/plan values and transition rules. Application owns current-authorized configuration, materialization, source consumption, preview/apply and bounded queries through semantic ports. Infrastructure adapts pinned nominal expansion/time resolution, SQLite and transport errors. Composition alone binds installation/channel, production runner and existing native/standalone session adapters. Presentation later consumes the same facts and emits deliberate intents.
+Domain owns immutable validated schedule/time/plan values and transition rules. Application owns current-authorized configuration, materialization, source consumption, preview/apply and bounded queries through semantic ports. Domain implements the supported subset with at most 366 examined dates per original frequency period. Infrastructure adapts pinned timezone resolution, SQLite and transport errors. A third-party iterator is not used as evidence of bounded empty-period traversal. Composition alone binds installation/channel, production runner and existing native/standalone session adapters. Presentation later consumes the same facts and emits deliberate intents.
 
 Reuse the existing task, identity, atomic-command, owned-storage and lifecycle-source guarantees. Extract shared application creation/transition behavior where necessary rather than bypassing its validation or copying an alternative permission system. Inner layers import no FastAPI, SQLite, provider/library DTO, browser framework or concrete adapter. Port contracts cover missing, denied, unavailable, stale and corrupt results without fake empty success.
 
@@ -296,6 +296,16 @@ Minimum: 52 distinct boundary cases below. Preserve all 37 original owner cases.
 | uv.lock | update |
 | architecture/python-application.ini | update |
 | tests/architecture/test_python_architecture.py | update |
+| backend/src/domus/domain/recurrence_rules.py | create |
+| backend/src/domus/domain/recurrence_rule_text.py | create |
+| backend/src/domus/domain/recurrence_periods.py | create |
+| backend/src/domus/domain/nominal_recurrence.py | create |
+| backend/src/domus/domain/recurrence_planning.py | create |
+| backend/src/domus/application/fixed_recurrence.py | create |
+| tests/backend/test_recurrence_rules.py | create |
+| tests/backend/test_nominal_recurrence.py | create |
+| tests/backend/test_fixed_recurrence_planning.py | create |
+| docs/evidence/recurrence-rules.json | create |
 
 Implementation will declare actual new source/test paths before committing those files; this prospective document does not claim nonexistent artifacts as current. User/operator guides must explain original-command recovery, nominal/resolved time, backlog, pending downstream consumers, schema compatibility and actual acceptance limits. Preserve dated evidence as history and add exact new revision/commands/results instead of relabeling old evidence.
 

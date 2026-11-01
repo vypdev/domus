@@ -47,3 +47,41 @@ preview/apply, calendar queries, the composed runner and actual image/browser/HA
 outstanding. All 52 companion cases and 37 original owning cases remain requirements. This
 checkpoint does not establish those journeys, a shipped package, Stable distribution or the first
 all-domain release.
+
+## Bounded rule and planning checkpoint
+
+[Closed patterns](../backend/src/domus/domain/recurrence_rules.py) and their
+[strict text parser](../backend/src/domus/domain/recurrence_rule_text.py) validate the declared
+DAILY/WEEKLY/MONTHLY/YEARLY subset before expansion. Duplicate parts/selectors, COUNT plus UNTIL,
+unsupported frequencies/parts, malformed Gregorian values and incompatible selector combinations
+fail explicitly. Date-only and minute-precision starts are tagged separately; all defaults are
+explicit and unordered selectors normalize to the same pattern fingerprint.
+
+The [period policy](../backend/src/domus/domain/recurrence_periods.py) computes an indexed original
+frequency period directly, preserving interval phase and week start.
+[Nominal expansion](../backend/src/domus/domain/nominal_recurrence.py) examines at most 366 dates,
+including a period with an impossible selector. Invalid month days are omitted. Ordinal weekdays
+use their month/year scope, a mixed BYDAY list is a union, and BYSETPOS selects from the whole
+frequency period before DTSTART trimming. Fixed dates keep their original anchor across empty
+months, leap years and restart.
+
+This explicit bound is deliberate. A retained dateutil4.0.0 control requested only February2026
+with a February30 selector, but reached 65 internal monthly rebuilds through June2031 without one
+candidate before the observer stopped it. UNTIL and a limit on yielded values do not prove bounded
+internal traversal. Domus does not install that unused library or its stubs. This measured adapter
+decision does not change the supported product subset or the separate pinned timezone contract.
+
+The [application planner](../backend/src/domus/application/fixed_recurrence.py) composes the nominal
+and temporal ports. It preserves period index, offset and nominal count in a validated
+[continuation](../backend/src/domus/domain/recurrence_planning.py) bound to the canonical pattern
+and complete time-policy snapshot. It rejects a changed binding, inconsistent source result or
+out-of-range progress. Slot and period budgets are independently bounded. A half-open nominal
+horizon leaves its next slot unconsumed; an incomplete scan remains visibly incomplete. COUNT and
+inclusive UNTIL retain their original meaning across batches. A start preflight reports its first
+permitted candidate or explicitly incomplete search without rewriting DTSTART.
+
+These are planning facts, not durable execution proof or permission. Nominal counts are computed
+before future exception filtering; explicit exception/addition provenance, receipt/slot uniqueness,
+historical restore non-recreation and atomic persistence remain required. The current cursor is
+not exposed as a public authorization token. No scheduled task is created by this checkpoint.
+See [rule/planning evidence](evidence/recurrence-rules.json) for measured results and remaining scope.
