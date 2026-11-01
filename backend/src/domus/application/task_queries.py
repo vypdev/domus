@@ -23,6 +23,7 @@ from domus.application.task_facts import (
 )
 from domus.application.task_material_views import MaterialOutcome, material_outcome
 from domus.application.task_ports import TaskCursors
+from domus.application.task_reviews import DependencyReviewView, review_cycle, review_items
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
 from domus.domain.restoration import RetainedOperation
@@ -35,6 +36,7 @@ from domus.domain.storage import (
 )
 from domus.domain.task_material_values import MaterialAction
 from domus.domain.task_policy import require_completion_state, requirements_satisfied
+from domus.domain.task_reviews import DependencyReviewState
 from domus.domain.task_values import (
     DefinitionState,
     OccurrenceState,
@@ -94,6 +96,8 @@ class TaskDetail:
     allowed_actions: tuple[str, ...]
     consumer_delivery: str = "unconfirmed"
     materials: tuple[MaterialOutcome, ...] = ()
+    dependency_reviews: TaskPage[DependencyReviewView] = TaskPage((), None)
+    dependency_review_required: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,6 +125,19 @@ class TaskHistoryItem:
     consumer_delivery: str = "unconfirmed"
     material_action: MaterialAction | None = None
     material_intent_id: str | None = None
+
+
+def _position(marker: str | None) -> int:
+    if marker is None:
+        return 0
+    if (
+        not marker.isascii()
+        or not marker.isdecimal()
+        or not 1 <= int(marker) <= 2**63 - 1
+        or str(int(marker)) != marker
+    ):
+        raise InvalidInput("invalid_task_cursor")
+    return int(marker)
 
 
 def _possible(check: Callable[[], object]) -> bool:
@@ -290,6 +307,11 @@ class TaskQueries:
                 if work.current_cycle_id is None
                 else current_cycle(unit, work, work.current_cycle_id)
             )
+            reviews = (
+                TaskPage[DependencyReviewView]((), None)
+                if cycle is None
+                else self._reviews(unit, work, cycle, state=DependencyReviewState.PENDING)
+            )
             return TaskDetail(
                 work,
                 rules,
@@ -300,7 +322,70 @@ class TaskQueries:
                 materials=()
                 if cycle is None
                 else tuple(material_outcome(value) for value in cycle_materials(unit, work, cycle)),
+                dependency_reviews=reviews,
+                dependency_review_required=bool(reviews.items),
             )
+
+    def dependency_reviews(
+        self,
+        occurrence_id: str,
+        cycle_id: str,
+        *,
+        limit: int = 25,
+        cursor: str | None = None,
+        state: DependencyReviewState | None = None,
+    ) -> TaskPage[DependencyReviewView]:
+        with self.transactions.read() as unit:
+            self._read(unit)
+            validate_identifier(occurrence_id)
+            validate_identifier(cycle_id)
+            work = unit.tasks.occurrence(self.household_id, occurrence_id)
+            if work is None:
+                raise NotFound("task_occurrence_missing")
+            return self._reviews(
+                unit,
+                work,
+                review_cycle(unit, work, cycle_id),
+                limit=limit,
+                cursor=cursor,
+                state=state,
+            )
+
+    def _reviews(
+        self,
+        unit: UnitOfWork,
+        work: TaskOccurrence,
+        cycle: TaskCycle,
+        *,
+        limit: int = 25,
+        cursor: str | None = None,
+        state: DependencyReviewState | None = None,
+    ) -> TaskPage[DependencyReviewView]:
+        if state is not None and not isinstance(state, DependencyReviewState):
+            raise InvalidInput("invalid_task_query")
+        binding, marker = self._context(
+            "dependency_reviews",
+            limit,
+            JsonDocument.from_value(
+                {
+                    "occurrence_id": work.occurrence_id,
+                    "cycle_id": cycle.cycle_id,
+                    "state": None if state is None else state.value,
+                }
+            ),
+            cursor,
+        )
+        after = _position(marker)
+        evidence = unit.tasks.review_evidence(
+            self.household_id,
+            work.occurrence_id,
+            cycle.cycle_id,
+            limit=limit + 1,
+            after=after,
+            state=state,
+        )
+        rows = review_items(unit, work, cycle, evidence)
+        return self._page(rows, limit, binding, lambda value: str(value.cause.source_position))
 
     def materials(self, occurrence_id: str, cycle_id: str) -> TaskMaterialsView:
         with self.transactions.read() as unit:
@@ -328,16 +413,7 @@ class TaskQueries:
             binding, marker = self._context(
                 "history", limit, JsonDocument.from_value({"occurrence_id": occurrence_id}), cursor
             )
-            after = 0
-            if marker is not None:
-                if (
-                    not marker.isascii()
-                    or not marker.isdecimal()
-                    or not 1 <= int(marker) <= 2**63 - 1
-                    or str(int(marker)) != marker
-                ):
-                    raise InvalidInput("invalid_task_cursor")
-                after = int(marker)
+            after = _position(marker)
             if unit.tasks.occurrence(self.household_id, occurrence_id) is None:
                 raise NotFound("task_occurrence_missing")
             rows = unit.tasks.history(
@@ -368,6 +444,8 @@ class TaskQueries:
                 reason = cast(str, request["reason"])
                 material_action = MaterialAction(cast(str, request["action"]))
                 material_intent_id = cast(str, request["intent_id"])
+            if evidence.receipt.command.action == "task.dependency.review":
+                reason = cast(str, request["reason"])
             validate_task_text(reason, 1000, required=False, multiline=True)
             cycle = value.get("cycle")
             cycle_id = verification = performed_at = None

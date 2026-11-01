@@ -453,3 +453,47 @@ unchanged; the settlement path, two request/enum schemas and two safe history pr
 No owner HA/UI/package or actual Inventory acceptance is claimed. Dependency-review projection,
 actual consumers and the complete first release remain required. Current-head CI and complete
 full-context Bugbot without unresolved findings still gate merge.
+
+
+## Causal dependency review and A37 acceptance checkpoint
+
+The increment over immutable 7beb63c projects review causes from original live complete/reopen
+operations. Durable positions, rather than timestamps, delimit each dependent completion cycle.
+Overlapping prerequisite/subtask links share one cause. Current source state, verification and
+satisfaction of the original gate remain separate from pending/reviewed state. Acknowledged outbox
+delivery does not remove causes, and restored-away effects do not create current alerts.
+
+The owner accepted A37: a current manager may explicitly accept completed dependent work with a
+meaningful reason while its prerequisite remains pending. Acceptance binds the original dependent
+cycle and source reopening, records local reviewer/time/reason, and atomically commits one original
+receipt/audit/outbox. Work/cycle/material facts remain unchanged, and older acceptance cannot clear
+a later cause. Current grants precede original receipt disclosure. Concurrent same-key requests
+recover one result; competing keys yield one winner. Audit/outbox failures roll back all evidence.
+
+Schema 7 adds only three indexes. The original schema-6 SQL was generated and independently reopened
+with immutable 7beb63c, not the new implementation: 89,811 bytes, SHA256
+`af84ed25f3bf5ffe7da5a8f1b9ff8163bd2aa27641283aa79c0c60edd5927f11`. Migration leaves every
+original table row intact, including confirmed material correction, source reopening and historical
+settlement. Failed index DDL preserves exact old database bytes. Actual old-checkpoint inspection
+and offline activation change only the prepared target and retain the schema-6 rollback. Actual
+restoration before reopening and before acceptance recovers suppressed original acceptance without
+changing restored review state. Original schemas 1–5 remain compatible.
+
+Both actual business compositions expose the bounded query and explicit acknowledgement under
+their existing identity/session/Origin/CSRF guards. OpenAPI changes are additive: 22 task operations
+across 19 paths. The 110 new cases include strict HTTP negatives, current permission revocation,
+cursor scope, corrupt original evidence, concurrency, rollback and old-schema activation. The final
+complete backend has 2,853 passing tests and covers every one of 7,456 statements and 2,098 branches
+in all 102 authored files; 34 task modules contribute 2,697 statements and 776 branches. Source and
+coverage inventories match exactly, with no configuration/exclusion weakening. Strict types cover
+106 files including tooling; the 138-file/857-dependency graph retains all three inward/acyclic
+contracts. All 113 tooling/architecture fixtures, formatting, links and the unchanged pinned
+SDD format/consistency/catalog checks pass. Original planned cases remain unchanged.
+
+The first tests failed for missing review query/request behavior. The first broad campaign's 21
+failures identified old current-schema constants and the two unpublished additive OpenAPI artifacts;
+those expectations were updated without altering frozen old SQL. Full validation then passed and
+the final campaign added 24 strict-wire/cursor/old-checkpoint cases. No owner HA, UI, package,
+Points/Inventory or full-product acceptance is claimed. Actual consumers, remaining task integration
+and the complete first release are still required. Current-head CI and complete full-context Bugbot
+without unresolved findings remain separate merge gates.

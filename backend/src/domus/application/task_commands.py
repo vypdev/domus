@@ -40,6 +40,7 @@ from domus.application.task_requests import (
 )
 from domus.application.task_requests import (
     OccurrenceRequest,
+    ReviewTaskDependency,
     TaskRequest,
 )
 from domus.application.task_requests import (
@@ -63,12 +64,14 @@ from domus.application.task_requests import (
 from domus.application.task_requests import (
     VerifyTask as VerifyTask,
 )
-from domus.domain.errors import Conflict, Forbidden, IntegrationUnavailable
-from domus.domain.identity import MemberStatus
+from domus.application.task_reviews import review_cycle, review_items
+from domus.domain.errors import Conflict, Forbidden, IntegrationUnavailable, NotFound
+from domus.domain.identity import MemberStatus, Permission
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
 from domus.domain.task_material_values import validate_material_usages
 from domus.domain.task_materials import MaterialIntent
 from domus.domain.task_policy import validate_dependency_graph
+from domus.domain.task_reviews import DependencyReviewDecision, DependencyReviewState
 from domus.domain.task_values import (
     OccurrenceState,
     TaskOverrides,
@@ -241,6 +244,39 @@ class TaskCommands:
             occurrence_id=request.occurrence_id,
             material_cycle_id=request.cycle_id,
             material_intent_id=request.intent_id,
+        )
+
+    def review_dependency(self, key: str, request: ReviewTaskDependency) -> Receipt:
+        def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
+            work = cast(
+                TaskOccurrence, unit.tasks.occurrence(self.household_id, request.occurrence_id)
+            )
+            cycle = review_cycle(unit, work, request.cycle_id)
+            evidence = unit.tasks.review_evidence(
+                self.household_id,
+                work.occurrence_id,
+                cycle.cycle_id,
+                limit=2,
+                source_operation_id=request.source_operation_id,
+            )
+            items = review_items(unit, work, cycle, evidence)
+            if not items:
+                raise NotFound("task_dependency_review_missing")
+            item = items[0]
+            if request.expected_revision != item.revision:
+                raise Conflict("revision_conflict")
+            if item.state is DependencyReviewState.REVIEWED:
+                raise Conflict("task_dependency_already_reviewed")
+            actor = access.require(unit, self.household_id, Permission.TASKS_MANAGE, work)
+            decision = DependencyReviewDecision(
+                item.cause, actor.member.member_id, self.clock.now(), request.reason
+            )
+            result = _cycle_result(work, cycle).decode()
+            result["review"] = decision.document().decode()
+            return _change("task.dependency.reviewed", request, JsonDocument.from_value(result))
+
+        return self._execute(
+            key, "task.dependency.review", request, apply, occurrence_id=request.occurrence_id
         )
 
     def create(self, key: str, request: CreateTask) -> Receipt:

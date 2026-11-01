@@ -159,6 +159,21 @@ class ReopenTask(OccurrenceRequest):
 
 
 @dataclass(frozen=True, slots=True)
+class ReviewTaskDependency(OccurrenceRequest):
+    """The expected revision belongs to the cause: pending 1 becomes reviewed 2."""
+
+    cycle_id: str
+    source_operation_id: str
+    reason: str
+
+    def __post_init__(self) -> None:
+        OccurrenceRequest.__post_init__(self)
+        validate_identifier(self.cycle_id)
+        validate_identifier(self.source_operation_id)
+        validate_task_text(self.reason, 1000, required=True, multiline=True)
+
+
+@dataclass(frozen=True, slots=True)
 class SettleTaskMaterial(OccurrenceRequest):
     """The expected revision belongs to the intent, never the occurrence or cycle."""
 

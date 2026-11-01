@@ -1,9 +1,11 @@
 """Task persistence and opaque pagination contracts expose domain facts and bounded reads."""
 
+from dataclasses import dataclass
 from typing import Protocol
 
-from domus.domain.restoration import RetainedOperation
+from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import JsonDocument
+from domus.domain.task_reviews import DependencyReviewState
 from domus.domain.task_values import DefinitionState, OccurrenceState
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
 
@@ -13,7 +15,27 @@ class TaskCursors(Protocol):
     def decode(self, binding: JsonDocument, token: str) -> str: ...
 
 
+@dataclass(frozen=True, slots=True)
+class TaskReviewEvidence:
+    completion: OperationEvidence
+    closure: OperationEvidence | None
+    reopenings: tuple[OperationEvidence, ...]
+    acknowledgements: tuple[OperationEvidence, ...] = ()
+
+
 class TaskRepository(Protocol):
+    def review_evidence(
+        self,
+        household_id: str,
+        occurrence_id: str,
+        cycle_id: str,
+        *,
+        limit: int = 25,
+        after: int = 0,
+        state: DependencyReviewState | None = None,
+        source_operation_id: str | None = None,
+    ) -> TaskReviewEvidence: ...
+
     def history(
         self, household_id: str, occurrence_id: str, *, limit: int = 25, after: int = 0
     ) -> tuple[RetainedOperation, ...]: ...

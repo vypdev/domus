@@ -24,6 +24,7 @@ from domus.application.task_requests import (
     CreateTask,
     CreateTaskOccurrence,
     ReopenTask,
+    ReviewTaskDependency,
     SettleTaskMaterial,
     TransitionTask,
     UpdateTaskDefinition,
@@ -31,6 +32,7 @@ from domus.application.task_requests import (
     UpdateTaskPolicy,
     VerifyTask,
 )
+from domus.application.task_reviews import DependencyReviewView
 from domus.domain.task_material_values import MaterialQuantity
 from domus.domain.task_values import DefinitionState
 from domus.entrypoints.household_http import (
@@ -48,6 +50,8 @@ from domus.entrypoints.task_dto import (
     CreateOccurrenceBody,
     DefinitionsQuery,
     DependenciesBody,
+    DependencyReviewBody,
+    DependencyReviewsQuery,
     Identifier,
     MaterialSettlementBody,
     MaterialsQuery,
@@ -372,6 +376,52 @@ def create_task_router(
         occurrence_id: Identifier, request: Request, query: Annotated[MaterialsQuery, Query()]
     ) -> TaskMaterialsView:
         return context(request).queries().materials(occurrence_id, query.cycle_id)
+
+    @router.get(
+        "/occurrences/{occurrence_id}/dependency-reviews",
+        response_model=TaskPage[DependencyReviewView],
+    )
+    def dependency_reviews(
+        occurrence_id: Identifier,
+        request: Request,
+        query: Annotated[DependencyReviewsQuery, Query()],
+    ) -> TaskPage[DependencyReviewView]:
+        return (
+            context(request)
+            .queries()
+            .dependency_reviews(
+                occurrence_id,
+                query.cycle_id,
+                limit=query.limit,
+                cursor=query.cursor,
+                state=query.state,
+            )
+        )
+
+    @router.post(
+        "/occurrences/{occurrence_id}/dependency-reviews/{source_operation_id}/acknowledgement",
+        response_model=ReceiptResponse,
+        openapi_extra=write_contract,
+    )
+    def review_dependency(
+        occurrence_id: Identifier,
+        source_operation_id: Identifier,
+        request: Request,
+        body: DependencyReviewBody,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> ReceiptResponse:
+        return _receipt(
+            context(request).commands.review_dependency(
+                _key(request),
+                ReviewTaskDependency(
+                    occurrence_id,
+                    body.expected_revision,
+                    body.cycle_id,
+                    source_operation_id,
+                    body.reason,
+                ),
+            )
+        )
 
     @router.get("/occurrences/{occurrence_id}/history", response_model=TaskPage[TaskHistoryItem])
     def history(

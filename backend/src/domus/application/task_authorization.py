@@ -15,6 +15,7 @@ from domus.application.task_requests import (
     CreateTask,
     CreateTaskOccurrence,
     ReopenTask,
+    ReviewTaskDependency,
     SettleTaskMaterial,
     TaskRequest,
     TransitionTask,
@@ -40,6 +41,7 @@ from domus.domain.storage import CommandKey, JsonDocument, JsonObject, validate_
 from domus.domain.task_material_values import MaterialAction
 from domus.domain.task_materials import MaterialIntent
 from domus.domain.task_policy import can_approve, claim_matches_task
+from domus.domain.task_reviews import recorded_review
 from domus.domain.task_values import (
     OccurrenceState,
     TaskOverrides,
@@ -186,6 +188,7 @@ _SCOPED_PERMISSIONS = {
     "task.complete": Permission.TASKS_COMPLETE,
     "task.verify": Permission.TASKS_APPROVE,
     "task.reopen": Permission.TASKS_MANAGE,
+    "task.dependency.review": Permission.TASKS_MANAGE,
     "task.dependencies.update": Permission.TASKS_MANAGE,
 }
 _GLOBAL_PERMISSIONS = {
@@ -282,6 +285,7 @@ _RECORDED: dict[str, tuple[type[TaskRequest], str]] = {
     "task.complete": (CompleteTask, "task.completed"),
     "task.verify": (VerifyTask, "task.verified"),
     "task.reopen": (ReopenTask, "task.reopened"),
+    "task.dependency.review": (ReviewTaskDependency, "task.dependency.reviewed"),
     "task.policy.update": (UpdateTaskPolicy, "task.policy.updated"),
     "task.definition.update": (UpdateTaskDefinition, "task.definition.updated"),
     "task.occurrence.create": (CreateTaskOccurrence, "task.occurrence.created"),
@@ -322,6 +326,8 @@ def recorded_request(evidence: OperationEvidence) -> JsonObject:
         raise StorageFailure("invalid_task_operation")
     try:
         validate_recorded_material_request(request)
+        if contract[0] is ReviewTaskDependency:
+            recorded_review(evidence)
         if contract[0] is SettleTaskMaterial:
             selected = read_material_settlement(request)
             scope = material_scope(receipt.result.decode())

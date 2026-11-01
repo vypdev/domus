@@ -400,8 +400,31 @@ recreating an effect. The processor stages the corrected desired quantity throug
 callback before asking Inventory for confirmation. Every single-step revision, final result and
 receipt/audit/event share one writer. Work/cycle revisions stay unchanged.
 
-Required next work: dependency-review projection, actual Inventory/Points/recurrence services and
+Required next work: actual Inventory/Points/recurrence services and
 their integration, and UI/package/owner acceptance. Semantic fixtures do not establish those results.
+
+## Dependency-review projection and manager acceptance
+
+Schema 7 adds only three causal-evidence indexes. It creates no second task, points, stock or review
+ledger. The projection validates original live completion/reopening evidence against typed cycles,
+uses durable positions to delimit each dependent completion cycle, and deduplicates overlapping
+prerequisite/required-subtask links. Restored-away effects remain historical; transport delivery
+does not remove business causes. Bounded reads recheck current task-read authority and use signed
+cursors bound to installation, channel, household, actor, cycle, filter and page size.
+
+A37 allows current task managers to accept one cause with a meaningful reason even while its source
+is unsatisfied. One receipt/audit/outbox transaction records that decision; there is no automatic
+closure, work/cycle mutation or cascade. Query responses retain current source state/verification
+and original gate satisfaction separately. Repeated keys recover original evidence after current
+authorization. Restoration can retain a historical acceptance without accepting the restored alert.
+
+The frozen schema-6 SQL is an independent input generated and reopened by immutable 7beb63c. Its
+89,811 bytes have SHA256 `af84ed25f3bf5ffe7da5a8f1b9ff8163bd2aa27641283aa79c0c60edd5927f11`.
+It includes a completed dependent after source reopening, an approved closed cycle, confirmed
+material correction and restored-away settlement. Migration preserves every original table row;
+failed index creation rolls back the exact original database bytes. Original source/checkpoint
+inspection and offline activation migrate only the prepared target and retain a schema-6 rollback.
+Existing schema 1–5 inputs and original receipt fingerprints remain supported.
 
 
 ## Material persistence and read projection

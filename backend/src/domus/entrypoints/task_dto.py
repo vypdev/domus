@@ -12,6 +12,7 @@ from domus.domain.task_material_values import (
     MaterialSelection,
     MaterialUsage,
 )
+from domus.domain.task_reviews import DependencyReviewState
 from domus.domain.task_values import (
     DefinitionState,
     DependencyGate,
@@ -61,6 +62,11 @@ class OccurrencesQuery(PageQuery):
 
 class MaterialsQuery(StrictModel):
     cycle_id: Identifier
+
+
+class DependencyReviewsQuery(PageQuery):
+    cycle_id: Identifier
+    state: DependencyReviewState | None = Field(default=None, strict=False)
 
 
 class MaterialSelectionBody(StrictModel):
@@ -208,6 +214,11 @@ class VerifyBody(OccurrenceBody):
 
 
 class ReopenBody(OccurrenceBody):
+    cycle_id: Identifier
+    reason: str = Field(min_length=1, max_length=1000)
+
+
+class DependencyReviewBody(OccurrenceBody):
     cycle_id: Identifier
     reason: str = Field(min_length=1, max_length=1000)
 

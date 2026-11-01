@@ -36,10 +36,11 @@ from domus.infrastructure.sqlite_task_material_schema import (
     migrate_task_documents,
 )
 from domus.infrastructure.sqlite_task_materials import SQLiteTaskMaterials
+from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS, TASK_TABLES
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -92,6 +93,7 @@ SCHEMA_STATEMENTS = (
     *HISTORY_STATEMENTS,
     *TASK_STATEMENTS,
     *MATERIAL_STATEMENTS,
+    *REVIEW_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -377,7 +379,7 @@ class SQLiteDatabase:
             }
             if version == 0 and application_id == 0 and not objects and allow_empty:
                 return 0
-            if version != SCHEMA_VERSION and not (allow_previous and version in (1, 2, 3, 4, 5)):
+            if version != SCHEMA_VERSION and not (allow_previous and version in (1, 2, 3, 4, 5, 6)):
                 raise DatabaseRejected("unsupported_schema")
             expected_tables = {
                 1: BASE_TABLES,
@@ -425,17 +427,19 @@ class SQLiteDatabase:
                     )
                     connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
-                elif version in (1, 2, 3, 4, 5):
+                elif version in (1, 2, 3, 4, 5, 6):
                     migration = (
                         *(IDENTITY_STATEMENTS if version == 1 else ()),
                         *(RECOVERY_STATEMENTS if version < 3 else ()),
                         *(HISTORY_STATEMENTS if version < 4 else ()),
                         *(TASK_STATEMENTS if version < 5 else ()),
-                        *MATERIAL_STATEMENTS,
+                        *(MATERIAL_STATEMENTS if version < 6 else ()),
+                        *REVIEW_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)
-                    migrate_task_documents(connection)
+                    if version < 6:
+                        migrate_task_documents(connection)
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
                 connection.execute("COMMIT")
             except BaseException as error:

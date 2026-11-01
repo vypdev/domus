@@ -40,6 +40,7 @@ Confirmed owner requirements are recorded in [product vision](product-vision.md)
 | A34 | Accepted: completed prerequisite work may satisfy dependent completion while approval is pending by default; configurable household/task approval gate | Separate physical progress from point availability; an approved-work alternative remains selectable and completed cycles retain their policy snapshot | Owner confirmed 2026-11-01; task policy, command, snapshot and stale-cycle tests remain required |
 | A35 | Accepted: conserved-split remainders rotate among participants of the same task by default | Fairness follows the stable task definition across occurrences and genuine completion cycles; other accepted allocation modes remain available | Owner confirmed 2026-11-01; deterministic tie-break, changing participant sets and durable replay/rollback behavior remain engineering evidence gates |
 | A36 | Accepted: any participant currently authorized for the task's materials may correct confirmed consumption | Preserve original submitted/confirmed facts; Inventory must confirm the new total under current authority | Owner confirmed 2026-11-01; API settlement, original-scope retry/restoration and compound CAS are tested; actual Inventory acceptance remains |
+| A37 | Accepted: a manager may accept a dependency-review alert with a meaningful reason while its prerequisite remains pending | Keep the source condition visible; acceptance belongs to the original dependent cycle and specific reopening, never a later cause | Owner confirmed 2026-11-01; current tasks.manage authority, atomic original evidence and restoration are required |
 
 All current owning SDDs and companions remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
 The Copilot limitation is an observed constraint, not permission to change its implementation,
@@ -47,7 +48,7 @@ installed files, statuses, or checks. Documentation can be reviewed through its 
 
 ## Review status
 
-Owner-confirmed choices are recorded in A6 and A22–A36; A35 settles remainder rotation and A36 confirmed-consumption correction authority. Administrator mapping supports all three requested modes; the default is all_ha_administrators, superseding the installer's-only recommendation from the question.
+Owner-confirmed choices are recorded in A6 and A22–A37; A35 settles remainder rotation, A36 confirmed-consumption correction authority and A37 manager acceptance of dependency alerts. Administrator mapping supports all three requested modes; the default is all_ha_administrators, superseding the installer's-only recommendation from the question.
 
 All SDDs remain Draft. Authentication/administrator proof and recovery, the detailed permission matrix, time-zone/library interoperability, adapter feasibility and numeric resource bounds still need explicit engineering/security review and executable evidence. These gates do not reopen the accepted architecture, product policies or launch scope.
 

@@ -40,6 +40,7 @@ from domus.infrastructure.sqlite_history import (
 from domus.infrastructure.sqlite_recovery import _record as _recovery
 from domus.infrastructure.sqlite_task_integrity import verify_task_records
 from domus.infrastructure.sqlite_task_material_schema import MATERIAL_STATEMENTS
+from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS
 
 _DATABASE = "domus.sqlite3"
@@ -119,6 +120,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(HISTORY_STATEMENTS if version >= 4 else ()),
             *(TASK_STATEMENTS if version >= 5 else ()),
             *(MATERIAL_STATEMENTS if version >= 6 else ()),
+            *(REVIEW_STATEMENTS if version >= 7 else ()),
         )
         for statement in statements:
             connection.execute(statement)

@@ -8,7 +8,7 @@
 - Scope: Specify a durable first backend increment for task definitions, occurrences, completion cycles, authorization, and honest consumer integration seams.
 - Related issues/PRs: [Issue #13](https://github.com/vypdev/domus/issues/13); merged PR #12 is historical context.
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Companion/branch were published before code. Complete contract/runtime/composition review remains required; Draft is not acceptance.
+- Open decisions blocking readiness: A37 confirms manual manager acceptance; full contract/runtime/composition review remains required. Draft is not acceptance.
 
 ## 1. Executive summary
 
@@ -184,15 +184,15 @@ Policy PUT is administrator-controlled. Cross-field validation rejects unknown r
 
 Publish Draft/planned leaves before code; declarations confer no execution credit. Use exact enums/booleans, valid UTF-8, bounded unique tuples, positive signed-64-bit revisions/nonnegative UTC milliseconds. Reject U+0000..001F/U+007F except tab/LF/CR in multiline text. Initial definitions are draft/active; pause/archive stops new work and retains history.
 
-Additional semantic permissions are tasks.read, tasks.claim, tasks.manage, tasks.record_for_others and tasks.material_use; retain tasks.create/complete/approve/configure. All profiles read tasks by default. Administrator/adult/restricted profiles may claim eligible work and use linked materials; administrator/adult profiles manage and record for others. Viewer mutations default to denied. Accepted household/profile/member precedence applies. Claim is independent of completion: restricted completion still requires actual assignment and self-participation. Task configuration stays administrator-only; approval requires a current adult and grant. Technical credentials never confer human authority.
+Add tasks.read/claim/manage/record_for_others/material_use; retain create/complete/approve/configure. All profiles read. Administrator/adult/restricted profiles claim eligible work/use linked materials; administrator/adult profiles manage/record for others. Viewer mutations default denied. Household/profile/member precedence applies. Claim never waives restricted assignment/self-participation. Configuration is administrator-only; approval needs a current adult/grant. Technical credentials never grant human authority.
 
 Recheck active membership, mapping and grants transactionally. HA proof is actor-only; other performers retain local profiles. Snapshots grant nothing.
 
-Creation/assignment/claim verify human proof before the writer. First create atomically saves absent defaults, active/available or explicit draft pair, receipt/audit/outbox. Real overrides need create/configuration grants on execution/replay. Management assigns at most 32 distinct active members; empty assignment releases eligible work. Self-claim derives the sole assignee, requires available/unassigned work/current eligibility and has one concurrent winner. Authority precedes receipt disclosure; state/revision checks follow. Events do not confirm consumers.
+Verify human proof before writing. Create atomically saves absent defaults, active/available or explicit draft pair, receipt/audit/outbox. Overrides need create/configuration grants on execution/replay. Management assigns up to 32 distinct active members; empty releases work. Self-claim derives one eligible actor on available/unassigned work, with one concurrent winner. Authority precedes receipt disclosure, then state/revision checks. Events do not confirm consumers.
 
-Completion checks current assignment, restricted self-attribution and on-behalf grants before receipt disclosure, then resolves active performers, defaults/frozen overrides, required work and policy revisions. Approval needs a current adult grant before cycle/pointer/revision/participation checks. Assigned performers may start/block/unblock; publishing/cancel/skip/reopen require management. Dedicated completion commits cycle/occurrence/event atomically. Reopen closes the cycle and emits compensation/review causes; actual ledger compensation, returns and review remain consumer work.
+Completion checks assignment/self-attribution/on-behalf grants before disclosure, then active performers, defaults/frozen overrides, required work and policy revisions. Approval needs current adult authority before cycle/pointer/revision/participation checks. Assignees start/block/unblock; management publishes/cancels/skips/reopens. Completion commits cycle/work/event atomically. Reopen closes the cycle/emits causes; ledgers and review remain separate.
 
-Policy replacement is administrator-only: zero creates absent defaults, positive revision updates. Definition management preserves omitted overrides; explicit replacement/reset additionally requires configuration on execution/replay. Edits affect future snapshots only. New occurrences use the current definition under the writer, accept 32 active assignees and 32 IDs per prerequisite/subtask list, and reject paused/archived parents. Dependency replacement requires management/nonterminal work; terminal edges remain frozen until explicit reopening. Both graph editors validate every household page and retain dependency IDs in results/events. Stale, foreign or cyclic input cannot partly rewrite state.
+Administrator policy replacement uses zero for absent defaults, positive revision for updates. Definition edits preserve omitted overrides; replacement/reset needs configuration on execution/replay. Future snapshots alone change. New work uses current active definition, up to 32 active assignees/32 IDs per dependency list; paused/archived parents reject. Management edits nonterminal dependencies, validating all graph pages and retaining IDs in results/events. Stale/foreign/cyclic changes roll back.
 
 Owner A34 (2026-11-01) confirms the performed prerequisite default and configurable approved alternative below; point availability remains approval-gated.
 
@@ -214,9 +214,13 @@ Resource revision guards edits; an independent effect revision changes only with
 
 The processor uses transaction-local Inventory/current-authority ports and reauthorizes explicit post/correct/dismiss. Owner decision: any currently authorized material participant may correct confirmed consumption; preserve the original movement and require Inventory confirmation of the new total. Completion retains ordinary denied usage. Pending certifies no new movement; absence never confirms stock. Fixtures alone establish no consumer acceptance.
 
-Material requests use `materials` selections on create/update and `material_usages` on completion. Omitted/null new fields stay absent from canonical payloads, preserving old fingerprints; explicit empty lists remain distinct. References/actuals use canonical strings. Linking requires current task create/manage plus inventory.manage, including explicit replacement/clear. Scoped use requires tasks.material_use plus current performance authority and effective scoped policy, or applicable general Inventory authority. No initial grant snapshot authorizes a later step. Validate all usage identities/precision before work effects. Record one intent per frozen line; missing actuals stay unknown. One writer saves initial intent and each subsequent CAS transition with work/receipt/audit/outbox. A missing optional Inventory provider retains valid usage as pending processing; approval/replay/reopen never invokes it again. Actual ledger acceptance remains separate.
+Create/update uses `materials`; completion uses `material_usages`. Omitted/null new fields remain absent canonically, preserving old fingerprints; explicit [] differs. Use canonical strings. Linking/replacement/clear needs task create/manage and inventory.manage. Scoped use needs tasks.material_use, current performance authority and scoped policy, or general Inventory authority; prior grants authorize nothing. Validate usage IDs/precision before work effects. Save one intent per frozen line (missing actual remains unknown) and every CAS with work/receipt/audit/outbox. Provider absence retains pending processing; approval/replay/reopen never retries it. Ledger acceptance is separate.
 
 Settlement targets the original cycle/intent, including closed cycles; expected_revision guards the intent. Only correct accepts quantity; correct/dismiss require a reason (max 1000). All actions use current A36 material grants. Before receipt disclosure validate server-recorded source selectors/performers against immutable evidence and current work; snapshots grant nothing. Historical retry may recover absent intent/cycle facts without recreating effects; missing current work denies access. New actions require valid live sources. Correction stages each single-step CAS before Inventory confirmation; final intent/receipt/audit/event commit together. Work/cycle revisions stay unchanged. History labels original settlement action/reason separately from current material state.
+
+### Dependency review projection
+
+Derive causes from live complete/reopen evidence, never a second ledger. Reopen follows dependent completion and precedes its closure by outbox position; timestamps may tie. Freeze dependency lists/gate, deduplicate overlapping links, bind cause to dependent cycle/source event/revisions and exclude restored-away effects. Validate coherent evidence/current typed cycles. Reads show current source state/verification/satisfaction separately. Use one authorized transaction, pages 25/max100 and signed context cursors. A37: current tasks.manage may accept a cause with a meaningful reason even while source is pending; preserve its visible condition. Acknowledgement is atomic original evidence, cause revision 1 to 2; retries reauthorize before disclosure, and old acceptance never clears a later cause. No work/cycle/points/material mutation or automatic closure.
 
 ### HTTP contract
 
@@ -231,6 +235,8 @@ Both business compositions expose shared services under `/api/v1/tasks`. Mutatio
 | GET `/api/v1/tasks/occurrences` | Filter only by state, assignee_id, definition_id; bounded pagination |
 | GET `/api/v1/tasks/occurrences/{id}` | Current occurrence, snapshots, allowed actions, current cycle and outcomes |
 | GET `/api/v1/tasks/occurrences/{id}/materials` | Required original cycle_id; current outcomes for that scoped open/closed cycle, at most 32 in frozen line order; never replay a receipt as current state |
+| GET `/api/v1/tasks/occurrences/{id}/dependency-reviews` | Required original cycle_id, limit/cursor, optional pending/reviewed filter (default all); detail previews pending current-cycle causes |
+| POST `/api/v1/tasks/occurrences/{id}/dependency-reviews/{source_operation_id}/acknowledgement` | Original cycle_id, cause expected_revision, nonblank reason <=1000; current task management required |
 | PUT `/api/v1/tasks/occurrences/{id}/assignment` | Replace assignee IDs; explicit authority and revision |
 | PUT `/api/v1/tasks/occurrences/{id}/dependencies` | Replace prerequisite and required-subtask IDs; validate scope, acyclicity, and revision |
 | POST `/api/v1/tasks/occurrences/{id}/claim` | Revision only; claimant derived from authenticated actor |
@@ -284,7 +290,7 @@ Text equivalent: both HTTP compositions call shared Application services; Applic
 
 ### 8.3 Executable architecture constraints
 
-Declare each runtime leaf before code and include every authored file in coverage and dependency/cycle checks, including compositions, HTTP, migrations/restores and unimported modules. Enforce pure Domain, semantic Application, outer provider/SQLite mapping and shared services in both compositions. Parse generated schema/OpenAPI and reject undeclared routes/fields. All CI Check groups run per PR commit; Copilot checks remain immutable.
+Declare runtime leaves before code. Cover every authored file, including composition/HTTP/migration/restore/unimported modules, and check dependencies/cycles. Domain stays pure, Application semantic, providers/SQLite outer, services shared. Validate generated schema/OpenAPI routes/fields. All CI Check groups run per PR commit; Copilot stays immutable.
 
 ## 9. UI/UX and content contract
 
@@ -323,15 +329,15 @@ Cycle cyc_456; revision 4; material usage pending authorization; no inventory mo
 
 Concrete state variants:
 
-**Pending/no action:** “Wipe table — Waiting for scheduled review. Work and cycle are saved. No action is required from you; the authorized adult will review it.”
+**Pending/no action:** “Wipe table — Saved, awaiting scheduled adult review. No action required from you.”
 
-**Action required:** “Wipe table — Adult approval needed. Mina’s completion is saved, but points are not eligible yet. Review cycle cyc_456 in task history.”
+**Action required:** “Wipe table — Adult approval needed. Mina's work is saved; points are not eligible. Review cycle cyc_456 in history.”
 
-**Blocked before effect:** “Claim not made — This task changed before your claim committed. No assignment was changed. Refresh the task and try again if it is still available.”
+**Blocked before effect:** “Claim not made — Task changed. Assignment is unchanged. Refresh and retry if still available.”
 
-**Partial success:** “Work saved; material usage not posted — The completion is retained, but the Inventory consumer is unavailable. No stock movement was created. An authorized operator can inspect the pending intent and retry settlement after service returns.”
+**Partial success:** “Work saved; materials pending — Inventory is unavailable; no movement exists. An authorized operator can inspect and explicitly retry when available.”
 
-**Completed:** “Wipe table — Approved. The work and approval are recorded. Points delivery is shown separately and only after the real Points consumer confirms it.” Approval does not close the cycle; reopening does.
+**Completed:** “Wipe table — Work/approval recorded. Points delivery is separate and requires real consumer confirmation.” Approval leaves the cycle open; reopening closes it.
 
 ### 9.3 Issue, PR, and comment behavior
 
@@ -342,7 +348,7 @@ Concrete state variants:
 
 ### 9.4 Accessibility, localization, and responsive behavior
 
-Repository issue/docs/code language is English; owner communication is Spanish. Product strings follow repository locale conventions with English fallback; supported locale set must match existing application localization support, not be invented in this backend companion. Every status, icon, and Mermaid flow has a text equivalent. Tables remain readable on narrow screens; headings are sequential, links descriptive, and light/dark contrast follows existing UI tokens. Sanitize task titles, descriptions, tags, reasons, imported text, and URLs as untrusted Markdown; escape HTML and mentions, prohibit executable commands/embedded HTML, and never render arbitrary provider URLs as trusted links.
+Issues/docs/code are English; owner communication is Spanish. Owner-confirmed UI locales are EN/ES with English fallback. Status/icons/diagrams have text equivalents. Keep narrow tables, sequential headings, descriptive links and token-based light/dark contrast. Treat titles/descriptions/tags/reasons/imports/URLs as untrusted Markdown; escape HTML/mentions, forbid executable commands/embedded HTML and never trust arbitrary provider links.
 
 ## 10. Failure, recovery, and cleanup
 
@@ -381,7 +387,7 @@ Errors follow impact -> cause -> action -> retained state. A committed task comp
 ## 13. Compatibility, migration, rollout, and rollback
 
 - Preserve M1 household, identity, recovery, generation, inbox/outbox, and operation history. Frozen old-schema fixtures and historical evidence identities remain unchanged.
-- Schema 5 introduces typed task policy/definition/occurrence/cycle storage and scoped deferred current-cycle foreign keys; initialization migrates frozen schemas 1 through 4 transactionally. Assignment/dependency references are canonical bounded record data, with complete semantic reference/graph validation during checkpoint inspection. Event/receipt/history and material integration remain part of the full application increment. Use foreign keys, uniqueness and revision guards; migration is transactional and rollback leaves old schema/data usable.
+- Schema 5 adds typed tasks/scoped cycle keys; 6 adds materials and explicit task-document migration. Schema 7 adds cycle-event/source-reopen indexes, without rewriting business/history rows. Preserve frozen 1–6 inputs; migration/rollback is atomic and old snapshots remain inspectable. Validate canonical bounded references, graphs, foreign keys and revisions. Original v6 comes from immutable 7beb63c, with a completed dependent after reopening and restored-away material settlement; readers derive its causes without fabricated backfill events.
 - Snapshot inspection, restore, resume, and rollback validate new task records and duplicate-suppression facts, including operations processed before restoration. Invalid snapshots fail closed; do not weaken existing semantic checks.
 - No old task rows are assumed. Unknown future enum/schema versions are retained and reported, not coerced into permissive values. Backfill only when evidence establishes a safe mapping.
 - Rollout follows companion publication, then implementation behind existing composition/wiring controls, then real consumer and HA acceptance. No release or production install is part of this specification.
@@ -480,6 +486,12 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `backend/src/domus/application/task_requests.py` | create |
 | `backend/src/domus/application/task_queries.py` | create |
 | `backend/src/domus/application/task_facts.py` | create |
+| `backend/src/domus/domain/task_reviews.py` | create |
+| `backend/src/domus/application/task_reviews.py` | create |
+| `backend/src/domus/infrastructure/sqlite_task_reviews.py` | create |
+| `tests/backend/test_task_reviews.py` | create |
+| `tests/backend/test_sqlite_task_reviews.py` | create |
+| `tests/fixtures/sqlite/v6.sql` | create |
 | `backend/src/domus/domain/task_material_values.py` | create |
 | `backend/src/domus/domain/task_materials.py` | create |
 | `backend/src/domus/domain/task_material_policy.py` | create |

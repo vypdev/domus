@@ -397,6 +397,207 @@
         "title": "DependencyGate",
         "type": "string"
       },
+      "DependencyRelationship": {
+        "enum": [
+          "prerequisite",
+          "required_subtask"
+        ],
+        "title": "DependencyRelationship",
+        "type": "string"
+      },
+      "DependencyReviewAcknowledgement": {
+        "properties": {
+          "operation_id": {
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "recorded_at": {
+            "title": "Recorded At",
+            "type": "integer"
+          },
+          "recorded_by": {
+            "title": "Recorded By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "operation_id",
+          "recorded_by",
+          "recorded_at",
+          "reason"
+        ],
+        "title": "DependencyReviewAcknowledgement",
+        "type": "object"
+      },
+      "DependencyReviewBody": {
+        "additionalProperties": false,
+        "properties": {
+          "cycle_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Cycle Id",
+            "type": "string"
+          },
+          "expected_revision": {
+            "maximum": 9.223372036854776e+18,
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "cycle_id",
+          "reason"
+        ],
+        "title": "DependencyReviewBody",
+        "type": "object"
+      },
+      "DependencyReviewCause": {
+        "properties": {
+          "completion_position": {
+            "title": "Completion Position",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "dependent_cycle_id": {
+            "title": "Dependent Cycle Id",
+            "type": "string"
+          },
+          "dependent_occurrence_id": {
+            "title": "Dependent Occurrence Id",
+            "type": "string"
+          },
+          "household_id": {
+            "title": "Household Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "relationships": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyRelationship"
+            },
+            "title": "Relationships",
+            "type": "array"
+          },
+          "source_cycle_id": {
+            "title": "Source Cycle Id",
+            "type": "string"
+          },
+          "source_cycle_revision": {
+            "title": "Source Cycle Revision",
+            "type": "integer"
+          },
+          "source_occurrence_id": {
+            "title": "Source Occurrence Id",
+            "type": "string"
+          },
+          "source_occurrence_revision": {
+            "title": "Source Occurrence Revision",
+            "type": "integer"
+          },
+          "source_operation_id": {
+            "title": "Source Operation Id",
+            "type": "string"
+          },
+          "source_position": {
+            "title": "Source Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "household_id",
+          "dependent_occurrence_id",
+          "dependent_cycle_id",
+          "source_occurrence_id",
+          "source_cycle_id",
+          "source_cycle_revision",
+          "source_occurrence_revision",
+          "source_operation_id",
+          "source_position",
+          "completion_position",
+          "created_at",
+          "relationships",
+          "reason"
+        ],
+        "title": "DependencyReviewCause",
+        "type": "object"
+      },
+      "DependencyReviewState": {
+        "enum": [
+          "pending",
+          "reviewed"
+        ],
+        "title": "DependencyReviewState",
+        "type": "string"
+      },
+      "DependencyReviewView": {
+        "properties": {
+          "acknowledgement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DependencyReviewAcknowledgement"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cause": {
+            "$ref": "#/components/schemas/DependencyReviewCause"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "source_satisfies_gate": {
+            "title": "Source Satisfies Gate",
+            "type": "boolean"
+          },
+          "source_state": {
+            "$ref": "#/components/schemas/OccurrenceState"
+          },
+          "source_verification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerificationState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/DependencyReviewState"
+          }
+        },
+        "required": [
+          "cause",
+          "revision",
+          "state",
+          "source_state",
+          "source_verification",
+          "source_satisfies_gate",
+          "acknowledgement"
+        ],
+        "title": "DependencyReviewView",
+        "type": "object"
+      },
       "EmptyRequest": {
         "additionalProperties": false,
         "properties": {},
@@ -2075,6 +2276,17 @@
               }
             ]
           },
+          "dependency_review_required": {
+            "default": false,
+            "title": "Dependency Review Required",
+            "type": "boolean"
+          },
+          "dependency_reviews": {
+            "$ref": "#/components/schemas/TaskPage_DependencyReviewView_",
+            "default": {
+              "items": []
+            }
+          },
           "materials": {
             "default": [],
             "items": {
@@ -2467,6 +2679,34 @@
           "items": {
             "items": {
               "$ref": "#/components/schemas/DefinitionSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "TaskPage",
+        "type": "object"
+      },
+      "TaskPage_DependencyReviewView_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyReviewView"
             },
             "title": "Items",
             "type": "array"
@@ -7668,6 +7908,396 @@
           }
         ],
         "summary": "Dependencies"
+      }
+    },
+    "/api/v1/tasks/occurrences/{occurrence_id}/dependency-reviews": {
+      "get": {
+        "operationId": "dependency_reviews_api_v1_tasks_occurrences__occurrence_id__dependency_reviews_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "occurrence_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Occurrence Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cycle_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Cycle Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DependencyReviewState"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskPage_DependencyReviewView_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Dependency Reviews"
+      }
+    },
+    "/api/v1/tasks/occurrences/{occurrence_id}/dependency-reviews/{source_operation_id}/acknowledgement": {
+      "post": {
+        "operationId": "review_dependency_api_v1_tasks_occurrences__occurrence_id__dependency_reviews__source_operation_id__acknowledgement_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "occurrence_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Occurrence Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "source_operation_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Source Operation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DependencyReviewBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Review Dependency"
       }
     },
     "/api/v1/tasks/occurrences/{occurrence_id}/history": {

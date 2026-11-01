@@ -5,10 +5,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
-from domus.application.task_ports import TaskRepository
+from domus.application.task_ports import TaskRepository, TaskReviewEvidence
 from domus.domain.errors import Conflict, InvalidInput, StorageFailure
 from domus.domain.restoration import RetainedOperation
 from domus.domain.storage import validate_identifier
+from domus.domain.task_reviews import DependencyReviewState
 from domus.domain.task_values import DefinitionState, OccurrenceState, VerificationState
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
 from domus.infrastructure.sqlite_task_history import SQLiteTaskHistory
@@ -22,6 +23,7 @@ from domus.infrastructure.sqlite_task_records import (
     read_occurrence,
     read_policy,
 )
+from domus.infrastructure.sqlite_task_reviews import SQLiteTaskReviews
 
 
 def _policy_headers(value: HouseholdTaskPolicy) -> dict[str, object]:
@@ -103,6 +105,27 @@ class SQLiteTasks(TaskRepository):
 
     connection: sqlite3.Connection
     record_version: int = 2
+
+    def review_evidence(
+        self,
+        household_id: str,
+        occurrence_id: str,
+        cycle_id: str,
+        *,
+        limit: int = 25,
+        after: int = 0,
+        state: DependencyReviewState | None = None,
+        source_operation_id: str | None = None,
+    ) -> TaskReviewEvidence:
+        return SQLiteTaskReviews(self.connection).read(
+            household_id,
+            occurrence_id,
+            cycle_id,
+            limit=limit,
+            after=after,
+            state=state,
+            source_operation_id=source_operation_id,
+        )
 
     def history(
         self, household_id: str, occurrence_id: str, *, limit: int = 25, after: int = 0

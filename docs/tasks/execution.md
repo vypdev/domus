@@ -100,7 +100,7 @@ default; an independent-adult policy remains available. Approval does not close 
 POST `/occurrences/{id}/reopen` requires revision, original current `cycle_id` and a meaningful reason.
 It closes that cycle, preserves performed/verification facts and opens the occurrence without
 automatically reopening completed dependents. Its source event is not proof of points compensation,
-stock return or a completed review projection.
+stock return or completed downstream processing.
 
 Completion additionally accepts up to 32 unique `material_usages`, for example
 `[{"line_id": "server-created-line", "quantity": "0.5"}]`. Use only frozen line IDs from the
@@ -122,6 +122,35 @@ correction cannot claim its desired total has already been consumed. Reopening r
 cycle projection but leaves its explicit original-cycle query available. Original receipt outcomes
 stay unchanged. Decision A36 allows any currently authorized material participant to correct
 confirmed consumption while preserving original facts and requiring Inventory confirmation.
+
+## Dependency review
+
+Reopening a prerequisite or required subtask preserves already-completed dependent work. Each
+original dependent cycle exposes a distinct cause for each later source reopening in that cycle's
+completion-to-reopening interval. Durable outbox positions determine order even when timestamps tie.
+Overlapping prerequisite/subtask links share one cause with both relationships. Delivery
+acknowledgement never hides a cause, and restored-away effects do not create current alerts.
+
+GET `/occurrences/{id}/dependency-reviews` requires the original `cycle_id`, supports the same
+bounded pagination, and optionally filters `state=pending|reviewed` (all by default). Use the same
+cycle, state and page size with its next cursor. GET `/occurrences/{id}` previews pending causes
+for its current completion cycle and exposes `dependency_review_required`. Explicit older-cycle
+queries retain historical review facts. Current source state, verification and satisfaction of the
+original cycle's dependency gate appear separately from review state. Completing a prerequisite
+again never silently accepts the review.
+
+Under A37, POST `/occurrences/{id}/dependency-reviews/{source_operation_id}/acknowledgement`
+accepts the original `cycle_id`, cause `expected_revision` (1 while pending) and a meaningful `reason`
+of at most 1000 characters. Current `tasks.manage` authority is required, including original receipt
+recovery. The resulting review has revision 2 and records the manager's local member ID, time and
+reason, even if the prerequisite is still pending. Its condition stays visible. Work/cycle revisions,
+points and material facts remain unchanged; an older acceptance never clears a later reopening.
+
+One writer commits the receipt, audit and outbox event together. The original key returns its
+original outcome; a second acceptance under a new key conflicts. After restoration, a retained
+historical acknowledgement can be inspected or recovered without changing restored review state.
+New acceptance still requires a live cause. Missing work or revoked current authority cannot expose
+an original operation. These are task review facts, not proof of real Points/Inventory delivery.
 
 ## Explicit material settlement
 

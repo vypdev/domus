@@ -7,6 +7,8 @@ from pydantic import Field
 
 from domus.application.task_material_views import MaterialOutcome
 from domus.application.task_queries import TaskDetail as Detail
+from domus.application.task_queries import TaskPage
+from domus.application.task_reviews import DependencyReviewView
 from domus.domain.task_material_values import MaterialBinding
 from domus.domain.task_values import (
     DefinitionState,
@@ -68,6 +70,8 @@ class TaskDetail:
     allowed_actions: tuple[str, ...]
     consumer_delivery: str = "unconfirmed"
     materials: tuple[MaterialOutcome, ...] = ()
+    dependency_reviews: TaskPage[DependencyReviewView] = TaskPage((), None)
+    dependency_review_required: bool = False
 
 
 def definition_response(value: Definition) -> TaskDefinition:
@@ -111,4 +115,6 @@ def detail_response(value: Detail) -> TaskDetail:
         value.allowed_actions,
         value.consumer_delivery,
         value.materials,
+        value.dependency_reviews,
+        value.dependency_review_required,
     )
