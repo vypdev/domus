@@ -7,10 +7,13 @@ from domus.domain.identity import Role
 from domus.domain.storage import validate_identifier
 from domus.domain.task_values import (
     DefinitionState,
+    DependencyGate,
     OccurrenceState,
     TaskPerformer,
+    TaskRequirement,
     TaskRules,
     VerificationMode,
+    VerificationState,
     validate_performers,
     validate_task_ids,
     validate_task_text,
@@ -119,6 +122,26 @@ def can_approve(
     )
 
 
+def requirements_satisfied(requirements: tuple[TaskRequirement, ...], gate: DependencyGate) -> bool:
+    """Evaluate an explicit mode without selecting a household or task default."""
+    if (
+        not isinstance(gate, DependencyGate)
+        or type(requirements) is not tuple
+        or any(not isinstance(item, TaskRequirement) for item in requirements)
+    ):
+        raise InvalidInput("invalid_task_requirement")
+    validate_task_ids(tuple(item.occurrence_id for item in requirements), maximum=64)
+    return all(
+        item.state is OccurrenceState.COMPLETED
+        and item.verification is not VerificationState.REJECTED
+        and (
+            gate is DependencyGate.PERFORMED
+            or item.verification in (VerificationState.NONE, VerificationState.APPROVED)
+        )
+        for item in requirements
+    )
+
+
 def validate_dependency_graph(graph: Mapping[str, tuple[str, ...]]) -> None:
     """Validate the combined prerequisite/subtask graph without recursive stack growth.
 
@@ -129,7 +152,7 @@ def validate_dependency_graph(graph: Mapping[str, tuple[str, ...]]) -> None:
     dependents: dict[str, list[str]] = {node: [] for node in graph}
     for node, requirements in graph.items():
         validate_identifier(node)
-        validate_task_ids(requirements)
+        validate_task_ids(requirements, maximum=64)
         for required in requirements:
             if required == node or required not in remaining:
                 raise InvalidInput("invalid_task_dependency")

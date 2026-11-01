@@ -122,5 +122,26 @@ The household-interface proposal remains unpublished and excluded from these tot
 The first executable task checkpoint is pure policy: 192 new tests, with all 153 statements and
 58 branches covered. The whole backend passes 1,603 tests with all 4,857 statements and 1,366
 branches covered. These are measured assertions and coverage, not 485 completed product journeys.
-Task command authorization, SQLite records, HTTP and real consumer delivery remain unimplemented;
-prerequisite approval timing awaits the owner. See [checkpoint evidence](evidence/task-execution-foundation.json).
+At that first checkpoint, task command authorization, SQLite records, HTTP and real consumer delivery
+were unimplemented and prerequisite approval timing awaited the owner. A34 and the storage checkpoint
+below supersede those two pending items. See [checkpoint evidence](evidence/task-execution-foundation.json).
+
+
+## Task storage and confirmed prerequisite gate — 2026-11-01
+
+The owner confirmed performed prerequisites as the household/task default, with an approved-work
+alternative. The completion uses its saved rule snapshot; a caller cannot select a weaker gate.
+This does not release points awaiting approval. The unchanged case inventory remains fourteen Draft
+SDDs, 109 requirements and 485 planned IDs; all original 49 task and 42 companion rows are retained.
+
+Schema 5 exposes typed task repositories through the existing unit of work. Actual file tests cover
+compare-and-swap writes, immutable definition/cycle facts, scoped deferred cycle pointers, complete
+checkpoint validation and migration/rollback from frozen schemas 1 through 4. Offline activation
+restores old task state while retaining later completion receipts as processed; replay never
+re-completes the task. Returning through the supported restore pipeline restores the sealed prior state.
+
+The complete backend passes 1,867 tests, with all 5,326 statements and 1,520 branches covered.
+The task modules contribute 613 statements and 210 branches; these are separate from claims about
+task HTTP, live HA, UI, packaged adoption or real Inventory/Points consumers, which remain pending.
+Strict types, the complete inward dependency graph, original pinned SDD/catalog validation and
+local links remain required. Hosted current-head CI and a complete Bugbot review are independent gates.

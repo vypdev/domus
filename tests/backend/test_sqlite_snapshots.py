@@ -37,7 +37,7 @@ def test_snapshot_contains_verified_private_identity_checkpoint_and_all_atomic_r
     before = store.path.read_bytes()
     result = snapshots.create("snapshot-1")
     assert (
-        result.schema_version == 4
+        result.schema_version == 5
         and result.captured_at == 2000
         and result.last_committed_at == 100
     )

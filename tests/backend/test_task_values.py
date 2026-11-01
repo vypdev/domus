@@ -4,18 +4,25 @@ from dataclasses import FrozenInstanceError, replace
 
 import pytest
 
-from domus.domain.errors import InvalidInput
+from domus.domain.errors import Conflict, InvalidInput
 from domus.domain.identity import Role
 from domus.domain.task_values import (
+    DependencyGate,
     MaterialRecording,
     Priority,
     TaskContent,
+    TaskOverrides,
     TaskPerformer,
+    TaskRequirement,
     TaskRules,
     VerificationMode,
+    VerificationState,
+    next_task_revision,
     validate_performers,
     validate_task_ids,
+    validate_task_time,
 )
+from domus.domain.task_values import OccurrenceState as O
 
 
 def test_title_only_has_usable_defaults_without_normalizing_original_text() -> None:
@@ -162,3 +169,112 @@ def test_performers_are_nonempty_unique_bounded_immutable_snapshots(performers: 
 def test_performer_snapshot_boundaries() -> None:
     validate_performers((TaskPerformer("m", Role.RESTRICTED),))
     validate_performers(tuple(TaskPerformer(str(i), Role.ADULT) for i in range(32)))
+
+
+def test_overrides_inherit_new_defaults_and_retain_explicit_false_or_empty_values() -> None:
+    inherited = TaskOverrides()
+    assert inherited.resolve(TaskRules()) == TaskRules()
+    changed = replace(TaskRules(), point_value_minor=333, claim_allowed=False)
+    assert inherited.resolve(changed) == changed
+    explicit = TaskOverrides(
+        claim_allowed=False,
+        eligible_roles=(),
+        verification=VerificationMode.ADULT,
+        adult_performer_may_approve=False,
+        task_scoped_material_consumption=False,
+        material_recording=MaterialRecording.SEPARATE,
+        point_value_minor=0,
+    )
+    resolved = explicit.resolve(changed)
+    assert resolved == TaskRules(
+        False, (), VerificationMode.ADULT, False, False, MaterialRecording.SEPARATE, 0
+    )
+    assert replace(explicit, point_value_minor=None).resolve(changed).point_value_minor == 333
+    with pytest.raises(FrozenInstanceError):
+        explicit.claim_allowed = True
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"claim_allowed": 1},
+        {"eligible_roles": ("restricted",)},
+        {"verification": "authorized_adult"},
+        {"adult_performer_may_approve": "false"},
+        {"task_scoped_material_consumption": 0},
+        {"material_recording": "separate_recording"},
+        {"point_value_minor": 3.33},
+    ],
+)
+def test_invalid_override_fails_before_it_can_replace_a_valid_household_default(
+    changes: dict[str, object],
+) -> None:
+    with pytest.raises(InvalidInput):
+        TaskOverrides(**changes)
+
+
+@pytest.mark.parametrize("value", [0, 1, 2**63 - 1])
+def test_task_timestamp_integer_boundaries(value: int) -> None:
+    validate_task_time(value)
+
+
+@pytest.mark.parametrize("value", [True, -1, 2**63, 1.0, "1", None])
+def test_task_time_never_coerces_or_wraps_invalid_values(value: object) -> None:
+    with pytest.raises(InvalidInput):
+        validate_task_time(value)
+
+
+def test_task_revision_increment_never_wraps_or_accepts_invalid_start() -> None:
+    assert next_task_revision(1) == 2
+    assert next_task_revision(2**63 - 2) == 2**63 - 1
+    with pytest.raises(Conflict, match="task_revision_exhausted"):
+        next_task_revision(2**63 - 1)
+    for invalid in [0, -1, True, 2**63]:
+        with pytest.raises(InvalidInput):
+            next_task_revision(invalid)
+
+
+def test_combined_dependency_ids_have_a_separate_explicit_64_edge_bound() -> None:
+    validate_task_ids(tuple(str(i) for i in range(64)), maximum=64)
+    with pytest.raises(InvalidInput):
+        validate_task_ids(tuple(str(i) for i in range(65)), maximum=64)
+    for invalid_limit in [True, 1, 33, 128]:
+        with pytest.raises(InvalidInput):
+            validate_task_ids((), maximum=invalid_limit)
+
+
+@pytest.mark.parametrize("state", list(O))
+@pytest.mark.parametrize("verification", [None, *VerificationState])
+def test_required_work_cannot_keep_a_stale_verification_after_reopening(
+    state: O, verification: VerificationState | None
+) -> None:
+    if (state is O.COMPLETED) == (verification is not None):
+        assert TaskRequirement("required", state, verification).verification is verification
+    else:
+        with pytest.raises(InvalidInput):
+            TaskRequirement("required", state, verification)
+    with pytest.raises(InvalidInput):
+        TaskRequirement("required", "completed", verification)
+
+
+def test_requirement_does_not_accept_a_string_as_a_verified_decision() -> None:
+    for state in O:
+        with pytest.raises(InvalidInput):
+            TaskRequirement("required", state, "approved")
+
+
+def test_owner_dependency_default_and_household_task_override_precedence() -> None:
+    assert TaskRules().dependency_gate is DependencyGate.PERFORMED
+    household = replace(TaskRules(), dependency_gate=DependencyGate.APPROVED)
+    assert TaskOverrides().resolve(household).dependency_gate is DependencyGate.APPROVED
+    override = TaskOverrides(dependency_gate=DependencyGate.PERFORMED)
+    assert override.resolve(household).dependency_gate is DependencyGate.PERFORMED
+    assert (
+        replace(override, dependency_gate=None).resolve(household).dependency_gate
+        is DependencyGate.APPROVED
+    )
+    for invalid in ["performed", "approved", None, True]:
+        with pytest.raises(InvalidInput):
+            replace(TaskRules(), dependency_gate=invalid)
+    with pytest.raises(InvalidInput):
+        TaskOverrides(dependency_gate="approved")

@@ -8,7 +8,7 @@
 - Scope: Specify a durable first backend increment for task definitions, occurrences, completion cycles, authorization, and honest consumer integration seams.
 - Related issues/PRs: [Issue #13](https://github.com/vypdev/domus/issues/13); merged PR #12 is historical context.
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Whether pending prerequisite approval permits dependent completion is awaiting the owner; unrelated rules can proceed. Readiness remains Draft until the companion is validated and published on its exact managed branch, reviewers validate contracts and evidence, and implementation/composition constraints are made executable. This specification does not establish implementation or runtime acceptance.
+- Open decisions blocking readiness: None among the supplied product choices; prerequisite approval timing was confirmed on 2026-11-01. The companion was published on its exact managed branch before implementation; readiness remains Draft until reviewers validate complete contracts/evidence and the application/composition requirements execute. This specification does not establish implementation or runtime acceptance.
 
 ## 1. Executive summary
 
@@ -168,6 +168,7 @@ Every mutation requires expected revision. Existing receipt replay occurs after 
 | Input | Type | Recommended default | Allowed values/range | Scope/persistence |
 |---|---|---|---|---|
 | claim_allowed | boolean | true for eligible available work | true/false | Household default, task override; reread at claim commit |
+| dependency_gate | enum | performed | performed or approved | Household default and authorized task override; snapshotted per cycle |
 | eligible_roles | unique Role list | administrator, adult, restricted | bounded known roles | Household/task; reread at commit with member exceptions |
 | verification | enum | role_default | `role_default`, `authorized_adult` | Definition snapshot per completion cycle |
 | adult_performer_may_approve | boolean | true | true/false | Household/task; effective value snapshotted; current approval authority rechecked |
@@ -185,7 +186,13 @@ The Action published this Draft before source changes. The declared paths below 
 
 New proposed semantic permission IDs are tasks.read, tasks.claim, tasks.manage, tasks.record_for_others and tasks.material_use. These are additive to the existing tasks.create/complete/approve/configure. Defaults: all profiles can read household tasks; administrator/adult/restricted can claim eligible work and use scoped linked materials; administrator/adult can manage work and record on behalf of others. Viewer mutations remain denied by default. Household/profile/member adjustments apply under the accepted precedence. Claim is a real independent action; it must not pretend an available task was already assigned to evade the existing restricted-completion scope. Restricted completion still requires actual assignment and its own participation. Policy configuration stays administrator-controlled; approval still requires a current adult and approval permission. A new permission never turns a technical identity into a person.
 
-This first pure-policy checkpoint does not yet decide whether a pending prerequisite approval satisfies completion eligibility: the owner has been asked. No completion-gate implementation or acceptance claim may assume that answer. Graph shape/acyclicity and all unrelated lifecycle/claim/verification rules can be implemented independently. Subsequent contract refinements must be recorded before their source changes.
+The owner confirmed on 2026-11-01 that dependency_gate is configurable per household/task, with performed as default and approved as the alternative. Pending approval may therefore satisfy the default prerequisite gate, while points remain unavailable until required approval. Rejected verification satisfies neither mode. The effective gate belongs to the completion cycle snapshot, independently of current authority and later configuration changes.
+
+The next domain checkpoint separates resolved household defaults from nullable per-definition overrides: omitted/cleared overrides inherit current defaults; explicit false and an empty eligible-profile set are retained. Occurrences keep their immutable definition/content/override snapshot. Editing or archiving a definition does not rewrite that snapshot; current household defaults are resolved when planning a new completion, and the resulting rules and all source policy revisions are retained by its cycle. Pending cycles keep their original snapshot. Initial draft work has no assignees until published; active definitions create available or explicitly assigned occurrences. Paused/archived definitions cannot generate new occurrences.
+
+Definitions, occurrences and completion cycles have explicit stable IDs, household scope, positive signed-64-bit revisions and supplied timestamps. Cycle performed time cannot exceed recorded time; verification cannot predate recording; closing cannot predate either fact. Approval records a decision without closing the cycle. Only reopening closes it. Completed state requires a current cycle; other states cannot retain an active cycle pointer. Scope, current cycle and definition-snapshot revisions must agree before completion, verification or reopening. Closing preserves the original cycle record, material intent identity and attribution.
+
+Pure requirement evaluation supports the confirmed performed default and configurable approved alternative. A completion uses the gate in its own resolved rule snapshot; a caller cannot select a conflicting weaker gate. Both require completed work; rejected verification never satisfies a requirement. Approved mode accepts no-verification-needed or approved work; performed mode additionally accepts pending approval. Both use the exact server-resolved required occurrence set. Prerequisites and required subtasks each allow 32 IDs; their combined deduplicated graph therefore allows 64 edges per node. Iterative cycle detection remains independent of Python recursion depth.
 
 ### Proposed HTTP contract
 
@@ -193,8 +200,8 @@ Both existing Python compositions expose shared application services under `/api
 
 | Method and route | Request contract |
 |---|---|
-| GET, PUT `/api/v1/tasks/policy` | GET policy; PUT bounded booleans/roles/default verification/material recording, administrator only |
-| GET, POST `/api/v1/tasks/definitions` | Filter state; create title (1..160), optional description, priority, tags, state, point value, verification, approval/material/claim settings, roles, material recording, and up to 32 server-validated material lines. Title-only create creates one available occurrence atomically. |
+| GET, PUT `/api/v1/tasks/policy` | GET policy; PUT bounded booleans/roles/default verification/material recording/dependency_gate, administrator only |
+| GET, POST `/api/v1/tasks/definitions` | Filter state; create title (1..160), optional description, priority, tags, state, point value, verification, approval/material/claim settings, roles, material recording, dependency_gate, and up to 32 server-validated material lines. Title-only create creates one available occurrence atomically. |
 | GET, PUT `/api/v1/tasks/definitions/{id}` | GET definition; revisioned PUT editable definition fields; lifecycle rules enforced |
 | POST `/api/v1/tasks/definitions/{id}/occurrences` | Create occurrence with expected revision 0, assignee/prerequisite/required-subtask ID lists (each unique, max 32), optional UTC millisecond due time |
 | GET `/api/v1/tasks/occurrences` | Filter only by state, assignee_id, definition_id; bounded pagination |
@@ -346,7 +353,7 @@ Errors follow impact -> cause -> action -> retained state. A committed task comp
 ## 13. Compatibility, migration, rollout, and rollback
 
 - Preserve M1 household, identity, recovery, generation, inbox/outbox, and operation history. Frozen old-schema fixtures and historical evidence identities remain unchanged.
-- Add versioned SQLite migration for definitions, occurrences, cycles, assignment/dependency links, event/receipt dedupe, history, and material intents. Use foreign keys, uniqueness and revision guards; migration is transactional and rollback leaves old schema/data usable.
+- Schema 5 introduces typed task policy/definition/occurrence/cycle storage and scoped deferred current-cycle foreign keys; initialization migrates frozen schemas 1 through 4 transactionally. Assignment/dependency references are canonical bounded record data, with complete semantic reference/graph validation during checkpoint inspection. Event/receipt/history and material integration remain part of the full application increment. Use foreign keys, uniqueness and revision guards; migration is transactional and rollback leaves old schema/data usable.
 - Snapshot inspection, restore, resume, and rollback validate new task records and duplicate-suppression facts, including operations processed before restoration. Invalid snapshots fail closed; do not weaken existing semantic checks.
 - No old task rows are assumed. Unknown future enum/schema versions are retained and reported, not coerced into permissive values. Backfill only when evidence establishes a safe mapping.
 - Rollout follows companion publication, then implementation behind existing composition/wiring controls, then real consumer and HA acceptance. No release or production install is part of this specification.
@@ -445,6 +452,7 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `backend/src/domus/application/task_queries.py` | create |
 | `backend/src/domus/application/task_materials.py` | create |
 | `backend/src/domus/infrastructure/sqlite_tasks.py` | create |
+| `backend/src/domus/infrastructure/sqlite_task_records.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_schema.py` | create |
 | `backend/src/domus/infrastructure/sqlite_task_integrity.py` | create |
 | `backend/src/domus/infrastructure/task_materials.py` | create |
@@ -460,6 +468,13 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `tests/backend/test_task_queries.py` | create |
 | `tests/backend/test_task_materials.py` | create |
 | `tests/backend/test_sqlite_tasks.py` | create |
+| `tests/backend/test_sqlite_task_records.py` | create |
+| `tests/fixtures/sqlite/v4.sql` | create |
+| `tests/backend/test_restore_source.py` | update |
+| `tests/backend/test_activation_compatibility.py` | update |
+| `tests/backend/test_sqlite_identity.py` | update |
+| `tests/backend/test_sqlite_recovery.py` | update |
+| `tests/backend/test_sqlite_history.py` | update |
 | `tests/backend/test_sqlite_task_integrity.py` | create |
 | `tests/backend/test_task_http.py` | create |
 | `tests/backend/test_task_runtime.py` | create |
@@ -550,7 +565,7 @@ These are executable acceptance scenarios for future implementation; none is rep
 ## 19. Definition of Done
 
 - [ ] Every normative requirement has acceptance and reciprocal case traceability.
-- [ ] This new companion is validated/published before implementation on its exact managed branch; `specs/household-tasks.md` remains intact with its 49 cases.
+- [x] This new companion was validated/published before implementation on its exact managed branch; `specs/household-tasks.md` remains intact with its 49 cases.
 - [ ] Architecture boundaries, dependency graph, cycles, OpenAPI, schema, and module inventory are executable checks.
 - [ ] Numeric budget and per-module plus whole-backend 100% statement/branch coverage pass without exclusions or denominator reduction.
 - [ ] Configuration limits, defaults, authority, snapshots, and migration agree with code and fixtures.

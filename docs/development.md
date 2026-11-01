@@ -269,7 +269,8 @@ targets retain their own pending acceptance obligations.
 Issue #13 has an Action-published [backend companion](../specs/task-execution-foundation.md).
 Its first source checkpoint contains immutable task values and pure lifecycle, profile eligibility,
 performer verification and acyclic graph rules. These helpers never authenticate or authorize a
-request. Actual task commands, repositories, APIs and consumers are subsequent work.
+request. The storage checkpoint below adds repositories; task commands, APIs and consumers remain
+subsequent work.
 
 Run `uv run pytest tests/backend/test_task_values.py tests/backend/test_task_policy.py` for the
 new policy assertions, and the existing complete backend coverage command for the complete source
@@ -277,3 +278,23 @@ scope. The whole-source check includes both new runtime modules immediately. Loc
 fixtures bind disposable loopback ports; a sandbox that denies listeners must permit that test
 operation rather than skipping the adapter cases. No owner HA is needed for this checkpoint.
 [Evidence](evidence/task-execution-foundation.json) records measured scopes and remaining work.
+### Schema 5 task storage
+
+Task policy, definitions, immutable occurrence snapshots and revisioned completion cycles now have
+typed repositories on UnitOfWork. SQLite owns transaction/foreign-key/CAS enforcement; pure rules
+still own lifecycle, performer verification and the configured prerequisite gate. Strict versioned
+record decoding rejects unknown/missing fields and unsupported values without inventing defaults.
+
+Initialization migrates schemas 1 through 4 atomically; the new frozen schema-4 input is derived
+from immutable pre-task source and retains both current and historical operations. Earlier frozen
+inputs are unchanged. Snapshot inspection validates every task page, references, DAG and cycle;
+it preserves completed dependents when a prerequisite has reopened and retains historical policies.
+
+Run the storage/recovery contracts, then the complete backend coverage command:
+
+```sh
+uv run pytest tests/backend/test_sqlite_tasks.py tests/backend/test_sqlite_task_integrity.py tests/backend/test_task_restoration.py
+```
+
+The isolated repository fixture is distinct from owned-store migration,
+checkpoint and activation tests. None of them is live owner HA or a task HTTP/consumer acceptance.

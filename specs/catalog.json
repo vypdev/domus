@@ -424,11 +424,22 @@
       "entrypoints": [],
       "code": [
         "backend/src/domus/domain/task_values.py",
-        "backend/src/domus/domain/task_policy.py"
+        "backend/src/domus/domain/task_policy.py",
+        "backend/src/domus/domain/tasks.py",
+        "backend/src/domus/application/task_ports.py",
+        "backend/src/domus/infrastructure/sqlite_task_records.py",
+        "backend/src/domus/infrastructure/sqlite_task_schema.py",
+        "backend/src/domus/infrastructure/sqlite_tasks.py",
+        "backend/src/domus/infrastructure/sqlite_task_integrity.py"
       ],
       "tests": [
         "tests/backend/test_task_values.py",
-        "tests/backend/test_task_policy.py"
+        "tests/backend/test_task_policy.py",
+        "tests/backend/test_tasks.py",
+        "tests/backend/test_sqlite_task_records.py",
+        "tests/backend/test_sqlite_tasks.py",
+        "tests/backend/test_sqlite_task_integrity.py",
+        "tests/backend/test_task_restoration.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -440,8 +451,8 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: immutable task values and pure lifecycle/profile/performer/graph rules; 192 policy tests, 153 statements and 58 branches at 100%; no task commands, durable task records or HTTP routes yet",
-        "blockingDecisions": "Prerequisite approval timing awaits the owner. Eligible restricted self-claim is confirmed and its pure profile/policy predicate is tested; current authority, assignment/capacity, transactional execution, actual Inventory/Points consumers, task UI and deployment acceptance remain unimplemented.",
+        "implementationEvidence": "partial: immutable task lifecycle/rules, schema-5 repositories and complete snapshot/restore integration; 1867 whole-backend tests, 5326 statements and 1520 branches at 100%; task commands, public HTTP and real consumers remain unimplemented",
+        "blockingDecisions": "A34 confirms configurable prerequisite approval timing, performed by default. Current-authority/claim/override commands, task APIs, actual Inventory/Points consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }
     },

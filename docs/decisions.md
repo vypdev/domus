@@ -39,6 +39,8 @@ Confirmed owner requirements are recorded in [product vision](product-vision.md)
 
 | A33 | Accepted: restricted members may self-claim available work offered to their profile by default; configurable household/task | Check current eligibility, capacity and explicit denials without silent reassignment; required adult approval remains | Owner confirmed 2026-10-31; task-execution-foundation cases and actual runtime proof remain required |
 
+| A34 | Accepted: completed prerequisite work may satisfy dependent completion while approval is pending by default; configurable household/task approval gate | Separate physical progress from point availability; an approved-work alternative remains selectable and completed cycles retain their policy snapshot | Owner confirmed 2026-11-01; task policy, command, snapshot and stale-cycle tests remain required |
+
 All current owning SDDs and companions remain Draft. Review resolves choices; it does not claim implementation or live acceptance.
 The Copilot limitation is an observed constraint, not permission to change its implementation,
 installed files, statuses, or checks. Documentation can be reviewed through its existing documentation workflow.

@@ -13,12 +13,20 @@ from domus.domain.task_policy import (
     next_occurrence_state,
     reopened_state,
     require_completion_state,
+    requirements_satisfied,
     validate_dependency_graph,
     verification_required,
 )
 from domus.domain.task_values import DefinitionState as D
+from domus.domain.task_values import (
+    DependencyGate,
+    TaskPerformer,
+    TaskRequirement,
+    TaskRules,
+    VerificationMode,
+    VerificationState,
+)
 from domus.domain.task_values import OccurrenceState as O
-from domus.domain.task_values import TaskPerformer, TaskRules, VerificationMode
 
 
 @pytest.mark.parametrize("current", list(D))
@@ -199,3 +207,48 @@ def test_deep_graph_avoids_python_recursion_limit() -> None:
     graph["0"] = ("2999",)
     with pytest.raises(InvalidInput, match="task_dependency_cycle"):
         validate_dependency_graph(graph)
+
+
+def test_combined_prerequisite_and_subtask_graph_accepts_64_distinct_edges() -> None:
+    graph = {str(i): () for i in range(64)}
+    graph["root"] = tuple(graph)
+    validate_dependency_graph(graph)
+    graph["extra"] = ()
+    graph["root"] += ("extra",)
+    with pytest.raises(InvalidInput):
+        validate_dependency_graph(graph)
+
+
+@pytest.mark.parametrize("gate", list(DependencyGate))
+@pytest.mark.parametrize("verification", list(VerificationState))
+def test_requirement_modes_are_explicit_and_rejection_satisfies_neither(
+    gate: DependencyGate, verification: VerificationState
+) -> None:
+    required = TaskRequirement("required", O.COMPLETED, verification)
+    expected = verification in (VerificationState.NONE, VerificationState.APPROVED) or (
+        verification is VerificationState.PENDING and gate is DependencyGate.PERFORMED
+    )
+    assert requirements_satisfied((required,), gate) is expected
+
+
+@pytest.mark.parametrize("state", [s for s in O if s is not O.COMPLETED])
+def test_unfinished_cancelled_or_skipped_work_does_not_satisfy_a_dependency(state: O) -> None:
+    for gate in DependencyGate:
+        assert not requirements_satisfied((TaskRequirement("required", state),), gate)
+        assert requirements_satisfied((), gate)
+
+
+@pytest.mark.parametrize(
+    "requirements,gate",
+    [
+        ([], DependencyGate.PERFORMED),
+        (("required",), DependencyGate.PERFORMED),
+        ((), "performed"),
+        ((TaskRequirement("a", O.AVAILABLE),) * 2, DependencyGate.PERFORMED),
+    ],
+)
+def test_requirement_parser_rejects_wrong_types_and_duplicate_evidence(
+    requirements: object, gate: object
+) -> None:
+    with pytest.raises(InvalidInput):
+        requirements_satisfied(requirements, gate)

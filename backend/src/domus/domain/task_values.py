@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from domus.domain.errors import InvalidInput
-from domus.domain.identity import Role
+from domus.domain.errors import Conflict, InvalidInput
+from domus.domain.identity import Role, validate_revision
 from domus.domain.storage import validate_identifier
 
 
@@ -43,6 +43,18 @@ class MaterialRecording(StrEnum):
     SEPARATE = "separate_recording"
 
 
+class VerificationState(StrEnum):
+    NONE = "none"
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class DependencyGate(StrEnum):
+    PERFORMED = "performed"
+    APPROVED = "approved"
+
+
 def validate_task_text(
     value: str, maximum: int, *, required: bool, multiline: bool = False
 ) -> None:
@@ -62,13 +74,30 @@ def validate_task_text(
         raise InvalidInput("invalid_task_text") from None
 
 
-def validate_task_ids(values: tuple[str, ...]) -> None:
-    if type(values) is not tuple or len(values) > 32:
+def validate_task_ids(values: tuple[str, ...], *, maximum: int = 32) -> None:
+    if (
+        type(maximum) is not int
+        or maximum not in (32, 64)
+        or type(values) is not tuple
+        or len(values) > maximum
+    ):
         raise InvalidInput("invalid_task_ids")
     for value in values:
         validate_identifier(value)
     if len(set(values)) != len(values):
         raise InvalidInput("invalid_task_ids")
+
+
+def validate_task_time(value: int) -> None:
+    if type(value) is not int or not 0 <= value <= 2**63 - 1:
+        raise InvalidInput("invalid_task_time")
+
+
+def next_task_revision(value: int) -> int:
+    validate_revision(value)
+    if value == 2**63 - 1:
+        raise Conflict("task_revision_exhausted")
+    return value + 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +131,7 @@ class TaskRules:
     task_scoped_material_consumption: bool = True
     material_recording: MaterialRecording = MaterialRecording.REVIEW_ON_COMPLETION
     point_value_minor: int = 0
+    dependency_gate: DependencyGate = DependencyGate.PERFORMED
 
     def __post_init__(self) -> None:
         if (
@@ -116,8 +146,46 @@ class TaskRules:
             or not isinstance(self.material_recording, MaterialRecording)
             or type(self.point_value_minor) is not int
             or not 0 <= self.point_value_minor <= 1_000_000
+            or not isinstance(self.dependency_gate, DependencyGate)
         ):
             raise InvalidInput("invalid_task_rules")
+
+
+@dataclass(frozen=True, slots=True)
+class TaskOverrides:
+    """None inherits; explicit false, zero and an empty tuple remain real overrides."""
+
+    claim_allowed: bool | None = None
+    eligible_roles: tuple[Role, ...] | None = None
+    verification: VerificationMode | None = None
+    adult_performer_may_approve: bool | None = None
+    task_scoped_material_consumption: bool | None = None
+    material_recording: MaterialRecording | None = None
+    point_value_minor: int | None = None
+    dependency_gate: DependencyGate | None = None
+
+    def __post_init__(self) -> None:
+        self.resolve(TaskRules())
+
+    def resolve(self, defaults: TaskRules) -> TaskRules:
+        return TaskRules(
+            defaults.claim_allowed if self.claim_allowed is None else self.claim_allowed,
+            defaults.eligible_roles if self.eligible_roles is None else self.eligible_roles,
+            defaults.verification if self.verification is None else self.verification,
+            defaults.adult_performer_may_approve
+            if self.adult_performer_may_approve is None
+            else self.adult_performer_may_approve,
+            defaults.task_scoped_material_consumption
+            if self.task_scoped_material_consumption is None
+            else self.task_scoped_material_consumption,
+            defaults.material_recording
+            if self.material_recording is None
+            else self.material_recording,
+            defaults.point_value_minor
+            if self.point_value_minor is None
+            else self.point_value_minor,
+            defaults.dependency_gate if self.dependency_gate is None else self.dependency_gate,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,3 +209,24 @@ def validate_performers(performers: tuple[TaskPerformer, ...]) -> None:
     ):
         raise InvalidInput("invalid_task_performers")
     validate_task_ids(tuple(performer.member_id for performer in performers))
+
+
+@dataclass(frozen=True, slots=True)
+class TaskRequirement:
+    """A current required occurrence resolved by the household-scoped application query."""
+
+    occurrence_id: str
+    state: OccurrenceState
+    verification: VerificationState | None = None
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.occurrence_id)
+        if (
+            not isinstance(self.state, OccurrenceState)
+            or (
+                self.state is OccurrenceState.COMPLETED
+                and not isinstance(self.verification, VerificationState)
+            )
+            or (self.state is not OccurrenceState.COMPLETED and self.verification is not None)
+        ):
+            raise InvalidInput("invalid_task_requirement")

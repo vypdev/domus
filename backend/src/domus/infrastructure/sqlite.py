@@ -30,8 +30,10 @@ from domus.domain.storage import (
 from domus.infrastructure.sqlite_history import HISTORY_STATEMENTS, SQLiteHistory
 from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
 from domus.infrastructure.sqlite_recovery import SQLiteRecoveries
+from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS, TASK_TABLES
+from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -82,11 +84,13 @@ SCHEMA_STATEMENTS = (
     *IDENTITY_STATEMENTS,
     *RECOVERY_STATEMENTS,
     *HISTORY_STATEMENTS,
+    *TASK_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
 RECOVERY_TABLES = IDENTITY_TABLES | {"recovery_requests"}
-TABLES = RECOVERY_TABLES | {"retained_operations"}
+HISTORY_TABLES = RECOVERY_TABLES | {"retained_operations"}
+TABLES = HISTORY_TABLES | TASK_TABLES
 
 
 def _scope(command: CommandKey) -> tuple[str, str, str, str]:
@@ -315,6 +319,7 @@ class SQLiteUnit:
         self.members = SQLiteMembers(connection)
         self.policies = SQLitePolicies(connection)
         self.recoveries = SQLiteRecoveries(connection)
+        self.tasks = SQLiteTasks(connection)
 
 
 class SQLiteDatabase:
@@ -363,11 +368,14 @@ class SQLiteDatabase:
             }
             if version == 0 and application_id == 0 and not objects and allow_empty:
                 return 0
-            if version != SCHEMA_VERSION and not (allow_previous and version in (1, 2, 3)):
+            if version != SCHEMA_VERSION and not (allow_previous and version in (1, 2, 3, 4)):
                 raise DatabaseRejected("unsupported_schema")
-            expected_tables = {1: BASE_TABLES, 2: IDENTITY_TABLES, 3: RECOVERY_TABLES}.get(
-                version, TABLES
-            )
+            expected_tables = {
+                1: BASE_TABLES,
+                2: IDENTITY_TABLES,
+                3: RECOVERY_TABLES,
+                4: HISTORY_TABLES,
+            }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
             identity = connection.execute("SELECT instance_id,channel FROM installation").fetchone()
@@ -407,11 +415,12 @@ class SQLiteDatabase:
                     )
                     connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
-                elif version in (1, 2, 3):
+                elif version in (1, 2, 3, 4):
                     migration = (
                         *(IDENTITY_STATEMENTS if version == 1 else ()),
                         *(RECOVERY_STATEMENTS if version < 3 else ()),
-                        *HISTORY_STATEMENTS,
+                        *(HISTORY_STATEMENTS if version < 4 else ()),
+                        *TASK_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)
