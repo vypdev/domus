@@ -431,7 +431,8 @@
         "backend/src/domus/infrastructure/sqlite_task_schema.py",
         "backend/src/domus/infrastructure/sqlite_tasks.py",
         "backend/src/domus/infrastructure/sqlite_task_integrity.py",
-        "backend/src/domus/application/task_authorization.py"
+        "backend/src/domus/application/task_authorization.py",
+        "backend/src/domus/application/task_commands.py"
       ],
       "tests": [
         "tests/backend/test_task_values.py",
@@ -441,7 +442,8 @@
         "tests/backend/test_sqlite_tasks.py",
         "tests/backend/test_sqlite_task_integrity.py",
         "tests/backend/test_task_restoration.py",
-        "tests/backend/test_task_authorization.py"
+        "tests/backend/test_task_authorization.py",
+        "tests/backend/test_task_commands.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -453,8 +455,8 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: immutable task lifecycle/rules, schema-5 repositories, complete snapshot/restore integration and current-authority helpers; 1910 whole-backend tests, 5399 statements and 1546 branches at 100%; transactional task commands, public task HTTP and real consumers remain unimplemented",
-        "blockingDecisions": "A34 confirms configurable prerequisite approval timing, performed by default. Claim capacity/races, authorized transaction/replay integration, task APIs, actual Inventory/Points consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
+        "implementationEvidence": "partial: lifecycle/rules, schema-5 storage/restore, current authority and durable creation/assignment/claim commands; 1957 whole-backend tests, 5508 statements and 1570 branches at 100%; full task execution, public task HTTP and real consumers remain unimplemented",
+        "blockingDecisions": "A34 confirms configurable prerequisite gating, performed by default. Execution/verification/reopening commands, policy/definition/dependency editing, task APIs, actual Inventory/Points consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }
     },

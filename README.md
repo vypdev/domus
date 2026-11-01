@@ -12,8 +12,9 @@ Domus has tested backend storage, identity policy and a standalone authenticatio
 The Edge HA app preview uses native Ingress authentication and owned storage without another sign-in.
 The task-domain foundation now has immutable lifecycle/participation rules, SQLite persistence,
 tested checkpoint/restore support and current-authority checks. Transactional task commands and
-task APIs remain in development. The household product, product UI, production packages and
-release artifacts remain incomplete.
+task APIs remain in development: creation, assignment and self-claim now commit atomically with
+their replay evidence; execution, approval and reopening are pending. The household product,
+product UI, production packages and release artifacts remain incomplete.
 The [documentation foundation](https://github.com/vypdev/domus/issues/2) initially covered eleven SDDs,
 82 requirements and 353 cases. The current catalog contains fourteen Draft SDDs across eleven
 capabilities, 109 requirements and 485 inventory cases, including both platform companions, the

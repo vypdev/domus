@@ -162,3 +162,22 @@ strict types, formatting, 113 tooling/architecture fixtures and local links pass
 format/consistency checks preserve the 49 task, 30 identity and 42 companion case rows, with the
 same fourteen/109/485 planned inventory. These helpers still need transactional command/replay,
 capacity/race and public task HTTP integration; no downstream or installed acceptance is implied.
+
+
+## Durable task command checkpoint — 2026-11-01
+
+The next source checkpoint adds real creation, assignment and exclusive self-claim commands through
+fresh human proof, current transaction-time authority and AtomicCommands. Real-file tests cover
+initial-default/definition/occurrence rollback, current override authority, restart, bounded active
+assignees, concurrent claims and immutable receipt replay after another person has since claimed work.
+Actual offline activation also proves that production commands return historical receipts without
+reapplying restored-away creation or claim.
+
+The complete backend passes 1,957 tests, with all 5,508 statements and 1,570 branches covered across
+78 authored files. The new command module has 109 statements and 24 branches, all covered; ten task
+modules together have 790 statements and 260 branches. The command suite has 45 tests; with the three
+restoration tests the focused run has 48. Existing 113 tooling/architecture fixtures, strict types,
+formatting, the complete inward graph and local links pass. Pinned original SDD/catalog validation
+retains the fourteen/109/485 planned inventory and every original task/identity/companion case row.
+Execution/approval/reopening, remaining task editors, HTTP and real consumer/target acceptance are
+still incomplete. Hosted current-head CI and complete Bugbot remain independent merge gates.

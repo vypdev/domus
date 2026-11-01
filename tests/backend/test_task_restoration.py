@@ -89,3 +89,55 @@ def test_restore_keeps_original_task_state_and_retains_later_completion_as_proce
             assert unit.tasks.occurrence("home", "occurrence").state is OccurrenceState.COMPLETED
     finally:
         again.close()
+
+
+@pytest.mark.parametrize("action", ["create", "claim"])
+def test_real_task_commands_return_historical_receipts_without_reapplying_restored_away_work(
+    tmp_path: Path, action: str
+) -> None:
+    from test_task_commands import child_commands, resource
+    from test_task_commands import fixture as task_fixture
+
+    from domus.application.task_commands import ClaimTask, CreateTask, TaskCommands
+    from domus.domain.task_values import TaskContent
+
+    root, archive, target = tmp_path / "source", tmp_path / "checkpoint", tmp_path / "prepared"
+    root.mkdir(mode=0o700)
+    commands, store, actor, identifiers = task_fixture(root)
+    identity_at(root, store.installation)
+    create = CreateTask(TaskContent("Work"))
+    work_id = None
+    if action == "claim":
+        work_id = resource(commands.create("create", create))[1]
+    checkpoint = SQLiteSnapshots(store, archive, store.installation, Clock()).create(
+        "before-command"
+    )
+    if action == "create":
+        request = create
+        original = commands.create("create", request)
+        proof = actor
+    else:
+        service, proof = child_commands(store, identifiers=identifiers)
+        request = ClaimTask(work_id, 1)
+        original = service.claim("claim", request)
+    count = identifiers.count
+    SQLiteRestorations(store, archive, target, store.installation, Clock(), checkpoint).prepare(
+        "restore-command"
+    )
+    assert SQLiteActivation(root, store.installation, Clock(), target).activate().state == "active"
+    restored = open_storage(root, "edge")
+    try:
+        service = TaskCommands(restored.database, proof, Clock(), identifiers)
+        result = getattr(service, action)(action, request)
+        assert result.historical and result.operation_id == original.operation_id
+        assert result.result == original.result and identifiers.count == count
+        with restored.database.read() as unit:
+            if action == "create":
+                assert unit.tasks.definitions("home") == unit.tasks.occurrences("home") == ()
+                assert unit.tasks.policy("home") is None
+            else:
+                work = unit.tasks.occurrence("home", work_id)
+                assert work.assignee_ids == () and work.state is OccurrenceState.AVAILABLE
+                assert work.revision == 1
+    finally:
+        restored.close()

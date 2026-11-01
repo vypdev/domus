@@ -313,3 +313,22 @@ member status, exceptions and household task-default changes are exercised with 
 access instance. These helpers are not yet transactional task commands or public task routes; state,
 capacity, revision and replay integration remain required. The policy enum in both published OpenAPI
 references is synchronized with the actual composed schemas, without adding routes.
+
+### Durable creation, assignment and self-claim
+
+TaskCommands now obtains fresh human proof before the writer transaction and uses the shared
+AtomicCommands boundary. Creation commits initial task defaults when absent, a definition, its first
+occurrence, receipt, audit and outbox together. Title-only creation yields available work; explicitly
+draft creation retains draft work. Non-inherited rule overrides require current administrator task
+configuration authority, including on replay. Assignment validates at most 32 distinct active local
+members; explicit empty assignment releases eligible work. A self-claim derives its one assignee
+from the actor and requires available unassigned work. It cannot append a claimant to assigned work.
+
+Run `uv run pytest tests/backend/test_task_commands.py tests/backend/test_task_restoration.py`.
+The focused tests cover real-file transaction rollback, restart/replay, revocation, assignment
+bounds, a real two-thread claim race and production-command replay after offline restore activation.
+Restored-away creation or claim returns its historical receipt without recreating work. Current
+authority precedes receipt disclosure; revision/lifecycle checks follow it. HA proof remains a labeled
+fake in these tests; no owner data or live HA was involved. Source events do not establish downstream
+consumer delivery. Full task execution, verification/reopening, history/material integration and
+public task HTTP remain required before the draft feature is complete.
