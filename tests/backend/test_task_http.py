@@ -363,7 +363,7 @@ def test_query_model_accepts_real_integers_but_rejects_coerced_internal_values()
             DefinitionsQuery.model_validate({"limit": value})
 
 
-def test_unsupported_material_submission_cannot_silently_complete_work(api):
+def test_unknown_material_line_cannot_silently_complete_work(api):
     receipt = create(api)
     oid = receipt["result"]["occurrence_id"]
     member = api.client.get("/api/v1/members").json()["members"][0]["member_id"]
@@ -377,7 +377,7 @@ def test_unsupported_material_submission_cannot_silently_complete_work(api):
         },
         headers=api.headers("materials"),
     )
-    assert result.status_code == 422
+    assert result.status_code == 422 and result.json()["code"] == "invalid_material_reference"
     detail = api.client.get(PREFIX + "/occurrences/" + oid).json()
     assert detail["work"]["state"] == "available" and detail["cycle"] is None
 

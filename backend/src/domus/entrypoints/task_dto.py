@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field
 
 from domus.domain.identity import Role
+from domus.domain.task_material_values import MaterialQuantity, MaterialSelection, MaterialUsage
 from domus.domain.task_values import (
     DefinitionState,
     DependencyGate,
@@ -24,6 +25,10 @@ Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
 Revision = Annotated[int, Field(ge=1, le=2**63 - 1)]
 TaskTime = Annotated[int, Field(ge=0, le=2**63 - 1)]
 WireRole = Annotated[Role, Field(strict=False)]
+Quantity = Annotated[
+    str,
+    Field(min_length=1, max_length=19, pattern=r"^(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{0,5}[1-9])?$"),
+]
 
 
 def _query_integer(value: object) -> object:
@@ -49,6 +54,26 @@ class OccurrencesQuery(PageQuery):
     definition_id: Identifier | None = None
 
 
+class MaterialsQuery(StrictModel):
+    cycle_id: Identifier
+
+
+class MaterialSelectionBody(StrictModel):
+    reference_id: Identifier
+    planned_quantity: Quantity
+
+    def domain(self) -> MaterialSelection:
+        return MaterialSelection(self.reference_id, MaterialQuantity(self.planned_quantity))
+
+
+class MaterialUsageBody(StrictModel):
+    line_id: Identifier
+    quantity: Quantity
+
+    def domain(self) -> MaterialUsage:
+        return MaterialUsage(self.line_id, MaterialQuantity(self.quantity))
+
+
 class ContentBody(StrictModel):
     title: str = Field(min_length=1, max_length=160)
     description: str = Field(default="", max_length=4000)
@@ -56,9 +81,13 @@ class ContentBody(StrictModel):
     tags: list[Annotated[str, Field(min_length=1, max_length=64)]] = Field(
         default_factory=list, max_length=16
     )
+    materials: list[MaterialSelectionBody] | None = Field(default=None, max_length=32)
 
     def content(self) -> TaskContent:
         return TaskContent(self.title, self.description, self.priority, tuple(self.tags))
+
+    def selections(self) -> tuple[MaterialSelection, ...] | None:
+        return None if self.materials is None else tuple(value.domain() for value in self.materials)
 
 
 class OverridesBody(StrictModel):
@@ -157,6 +186,14 @@ class TransitionBody(OccurrenceBody):
 class CompleteBody(OccurrenceBody):
     performer_ids: list[Identifier] = Field(min_length=1, max_length=32)
     performed_at: TaskTime
+    material_usages: list[MaterialUsageBody] | None = Field(default=None, max_length=32)
+
+    def usages(self) -> tuple[MaterialUsage, ...] | None:
+        return (
+            None
+            if self.material_usages is None
+            else tuple(value.domain() for value in self.material_usages)
+        )
 
 
 class VerifyBody(OccurrenceBody):

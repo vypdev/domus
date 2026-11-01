@@ -5,6 +5,7 @@ from typing import Annotated
 
 from pydantic import Field
 
+from domus.application.task_material_views import MaterialOutcome
 from domus.application.task_queries import TaskDetail as Detail
 from domus.domain.task_material_values import MaterialBinding
 from domus.domain.task_values import (
@@ -66,6 +67,7 @@ class TaskDetail:
     cycle: TaskCycle | None
     allowed_actions: tuple[str, ...]
     consumer_delivery: str = "unconfirmed"
+    materials: tuple[MaterialOutcome, ...] = ()
 
 
 def definition_response(value: Definition) -> TaskDefinition:
@@ -108,4 +110,5 @@ def detail_response(value: Detail) -> TaskDetail:
         value.cycle,
         value.allowed_actions,
         value.consumer_delivery,
+        value.materials,
     )

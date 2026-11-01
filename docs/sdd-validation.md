@@ -351,7 +351,6 @@ material-core head has fully green project CI; its recurring Copilot assessment 
 upstream unchanged. Finished-feature current-head CI and complete Bugbot without unresolved findings
 remain mandatory before merge.
 
-
 ## Material request and initial completion checkpoint
 
 Typed application requests now select Inventory references/quantities and report actual usages of
@@ -383,3 +382,35 @@ pinned SDD/catalog checks pass. All case rows and fourteen/109/485 planned inven
 The previous persistence head has complete project CI; original upstream Copilot failures remain
 separate and unchanged. Current-head project CI and complete Bugbot without unresolved findings
 remain mandatory before merge.
+
+## Material HTTP and original-cycle query checkpoint
+
+The next increment over ae665a7 maps strict selections/usages through both actual business HTTP
+compositions. Unknown fields, numeric/aliased quantities, duplicate/foreign lines, overlong lists
+and unit-precision violations fail before work effects. Linking, original-key replay and clearing
+recheck current Inventory authority. Provider absence fails nonempty linking atomically with 503;
+valid performed work retains pending usage. Malformed confirmations roll back even attached child
+SQL effects and return a safe 500 without provider details.
+
+Current detail and the explicit original-cycle material GET share one pure source-integrity rule
+with checkpoint inspection. Reads validate the full bounded frozen line set and its original
+scope/recorder/time/mode, return frozen line order, recheck task-read grants and never call Inventory.
+Closed-cycle outcomes stay inspectable after reopen. Pending corrections distinguish the desired
+quantity from the last confirmed quantity/effect/time. Original compact receipt results remain
+unchanged. Actual ASGI OpenAPI was regenerated deterministically; all original paths/security/schema
+values remain, with three optional input fields, TaskDetail.materials, one GET path and six schemas
+added. A36 now permits confirmed-consumption correction by any currently authorized material
+participant; explicit settlement commands remain the next required implementation.
+
+All 105 new cases and the complete backend pass: 2,641 tests, all 6,965 statements/1,942 branches
+across all 98 authored files; exact source/coverage inventories match. Thirty task modules cover all
+2,209 statements/622 branches. Strict typing, formatting, the 134-file/795-dependency inward/acyclic
+graph and 113 tooling/architecture fixtures pass. Original pinned SDD/catalog checks retain all
+planned case rows. An earlier run had three launcher ownership failures because /private/tmp
+inherited GID 0 while the process used GID 20; no test or ownership guard changed. The final complete
+run uses a verified private temporary parent with the process's actual group. Original interim and
+final measurements are retained separately in the source-identified evidence archive.
+
+No real Inventory ledger, product UI/package/owner HA acceptance or completed first release is
+implied. Explicit post/correct/dismiss, dependency review and real consumers remain required.
+Current-head hosted CI and complete full-context Bugbot without unresolved findings still gate merge.

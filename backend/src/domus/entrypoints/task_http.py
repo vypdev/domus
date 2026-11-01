@@ -12,6 +12,7 @@ from domus.application.task_queries import (
     DefinitionSummary,
     OccurrenceSummary,
     TaskHistoryItem,
+    TaskMaterialsView,
     TaskPage,
     TaskPolicyView,
     TaskQueries,
@@ -46,6 +47,7 @@ from domus.entrypoints.task_dto import (
     DefinitionsQuery,
     DependenciesBody,
     Identifier,
+    MaterialsQuery,
     OccurrenceBody,
     OccurrencesQuery,
     PageQuery,
@@ -116,6 +118,7 @@ def create_task_router(
                     body.overrides.domain(),
                     DefinitionState(body.state),
                     body.expected_revision,
+                    body.selections(),
                 ),
             )
         )
@@ -144,6 +147,7 @@ def create_task_router(
                     body.content(),
                     body.state,
                     None if body.overrides is None else body.overrides.domain(),
+                    body.selections(),
                 ),
             )
         )
@@ -290,6 +294,7 @@ def create_task_router(
                     body.expected_revision,
                     tuple(body.performer_ids),
                     body.performed_at,
+                    body.usages(),
                 ),
             )
         )
@@ -331,6 +336,12 @@ def create_task_router(
                 ReopenTask(occurrence_id, body.expected_revision, body.cycle_id, body.reason),
             )
         )
+
+    @router.get("/occurrences/{occurrence_id}/materials", response_model=TaskMaterialsView)
+    def materials(
+        occurrence_id: Identifier, request: Request, query: Annotated[MaterialsQuery, Query()]
+    ) -> TaskMaterialsView:
+        return context(request).queries().materials(occurrence_id, query.cycle_id)
 
     @router.get("/occurrences/{occurrence_id}/history", response_model=TaskPage[TaskHistoryItem])
     def history(

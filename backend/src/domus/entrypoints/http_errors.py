@@ -5,6 +5,7 @@ from domus.domain.errors import (
     DomusError,
     Forbidden,
     IdentityUnavailable,
+    IntegrationUnavailable,
     InvalidInput,
     NotFound,
     StorageBusy,
@@ -117,6 +118,13 @@ PUBLIC_CODES = frozenset(
         "task_not_available",
         "task_definition_missing",
         "task_occurrence_missing",
+        "task_cycle_missing",
+        "invalid_material_quantity",
+        "invalid_material_precision",
+        "invalid_material_list",
+        "invalid_material_reference",
+        "invalid_material_scope",
+        "inventory_unavailable",
     }
 )
 
@@ -130,6 +138,7 @@ def classify(error: DomusError) -> tuple[int, str]:
         (InvalidInput, 422),
         (Conflict, 409),
         (IdentityUnavailable, 503),
+        (IntegrationUnavailable, 503),
         (StorageBusy, 503),
         (NotFound, 404),
     ):

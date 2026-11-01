@@ -142,6 +142,21 @@
             "title": "Expected Revision",
             "type": "integer"
           },
+          "material_usages": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MaterialUsageBody"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Usages"
+          },
           "performed_at": {
             "maximum": 9.223372036854776e+18,
             "minimum": 0.0,
@@ -182,6 +197,21 @@
             "minimum": 0.0,
             "title": "Expected Revision",
             "type": "integer"
+          },
+          "materials": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MaterialSelectionBody"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Materials"
           },
           "overrides": {
             "$ref": "#/components/schemas/OverridesBody"
@@ -614,6 +644,156 @@
         "title": "MaterialLine",
         "type": "object"
       },
+      "MaterialOutcome": {
+        "properties": {
+          "action_required": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Required"
+          },
+          "confirmed_effect_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed Effect Revision"
+          },
+          "confirmed_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed Quantity"
+          },
+          "cycle_id": {
+            "title": "Cycle Id",
+            "type": "string"
+          },
+          "effect_revision": {
+            "title": "Effect Revision",
+            "type": "integer"
+          },
+          "intent_id": {
+            "title": "Intent Id",
+            "type": "string"
+          },
+          "line_id": {
+            "title": "Line Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "movement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Movement Id"
+          },
+          "pending_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaterialPendingReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "posted_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Posted At"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "state": {
+            "$ref": "#/components/schemas/MaterialState"
+          },
+          "submitted_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted Quantity"
+          }
+        },
+        "required": [
+          "intent_id",
+          "cycle_id",
+          "line_id",
+          "submitted_quantity",
+          "quantity",
+          "state",
+          "pending_reason",
+          "movement_id",
+          "effect_revision",
+          "revision",
+          "message",
+          "action_required",
+          "confirmed_quantity",
+          "confirmed_effect_revision",
+          "posted_at"
+        ],
+        "title": "MaterialOutcome",
+        "type": "object"
+      },
+      "MaterialPendingReason": {
+        "enum": [
+          "actual_quantity_required",
+          "material_permission_required",
+          "explicit_settlement_required",
+          "awaiting_inventory_confirmation",
+          "inventory_unavailable",
+          "insufficient_stock",
+          "inventory_binding_changed"
+        ],
+        "title": "MaterialPendingReason",
+        "type": "string"
+      },
       "MaterialRecording": {
         "enum": [
           "review_on_completion",
@@ -621,6 +801,66 @@
         ],
         "title": "MaterialRecording",
         "type": "string"
+      },
+      "MaterialSelectionBody": {
+        "additionalProperties": false,
+        "properties": {
+          "planned_quantity": {
+            "maxLength": 19,
+            "minLength": 1,
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Planned Quantity",
+            "type": "string"
+          },
+          "reference_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Reference Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reference_id",
+          "planned_quantity"
+        ],
+        "title": "MaterialSelectionBody",
+        "type": "object"
+      },
+      "MaterialState": {
+        "enum": [
+          "pending_recording",
+          "pending_authorization",
+          "pending_regularization",
+          "pending_processing",
+          "not_used",
+          "posted",
+          "corrected",
+          "dismissed"
+        ],
+        "title": "MaterialState",
+        "type": "string"
+      },
+      "MaterialUsageBody": {
+        "additionalProperties": false,
+        "properties": {
+          "line_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Line Id",
+            "type": "string"
+          },
+          "quantity": {
+            "maxLength": 19,
+            "minLength": 1,
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Quantity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "line_id",
+          "quantity"
+        ],
+        "title": "MaterialUsageBody",
+        "type": "object"
       },
       "MemberResponse": {
         "additionalProperties": false,
@@ -1742,6 +1982,14 @@
               }
             ]
           },
+          "materials": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/MaterialOutcome"
+            },
+            "title": "Materials",
+            "type": "array"
+          },
           "requirements": {
             "items": {
               "$ref": "#/components/schemas/TaskRequirement"
@@ -1880,6 +2128,31 @@
           "outbox_delivery"
         ],
         "title": "TaskHistoryItem",
+        "type": "object"
+      },
+      "TaskMaterialsView": {
+        "properties": {
+          "cycle": {
+            "$ref": "#/components/schemas/TaskCycle"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialOutcome"
+            },
+            "title": "Materials",
+            "type": "array"
+          },
+          "occurrence_id": {
+            "title": "Occurrence Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "occurrence_id",
+          "cycle",
+          "materials"
+        ],
+        "title": "TaskMaterialsView",
         "type": "object"
       },
       "TaskOccurrence": {
@@ -2318,6 +2591,21 @@
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
+          },
+          "materials": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MaterialSelectionBody"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Materials"
           },
           "overrides": {
             "anyOf": [
@@ -7251,6 +7539,161 @@
           }
         ],
         "summary": "History"
+      }
+    },
+    "/api/v1/tasks/occurrences/{occurrence_id}/materials": {
+      "get": {
+        "operationId": "materials_api_v1_tasks_occurrences__occurrence_id__materials_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "occurrence_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Occurrence Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cycle_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Cycle Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskMaterialsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Materials"
       }
     },
     "/api/v1/tasks/occurrences/{occurrence_id}/reopen": {

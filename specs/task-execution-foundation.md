@@ -8,13 +8,13 @@
 - Scope: Specify a durable first backend increment for task definitions, occurrences, completion cycles, authorization, and honest consumer integration seams.
 - Related issues/PRs: [Issue #13](https://github.com/vypdev/domus/issues/13); merged PR #12 is historical context.
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: Confirmed-consumption correction default awaits owner review. Companion/branch were published before code. Complete contract/runtime/composition review remains required; Draft is not acceptance.
+- Open decisions blocking readiness: Companion/branch were published before code. Complete contract/runtime/composition review remains required; Draft is not acceptance.
 
 ## 1. Executive summary
 
 This companion to `specs/household-tasks.md` defines atomic title-only creation, eligible assignment/self-claim, actual performers and durable completion/verification/reopening history. Restricted members may claim eligible available work by default; adult approval remains required. Tasks owns task facts; Inventory and Points own their ledgers.
 
-An adult creates “Wipe table” -> the definition and available occurrence are committed together -> an eligible member claims it -> assigned members perform it -> a completion cycle records performers and actual time -> required adult approval is recorded -> uniquely identified events are available to real consumers.
+Example: “Wipe table” creates a definition/occurrence atomically; eligible members claim/perform it; a cycle records performers/time, required approval and uniquely identified consumer events.
 
 The companion preserves all 49 existing cases in `specs/household-tasks.md`; its added cases use the `task-execution-foundation-CNN` namespace. The Action registered both documents under household-tasks in commit d4f3f911dd145d77255f47a882542f08e5c98055. Catalog implementation arrays remain empty at publication: a registered contract is not implementation evidence.
 
@@ -66,7 +66,7 @@ A **definition** is the durable reusable task and lifecycle policy. An **occurre
 | TEF-02 | Definitions, occurrences, and completion cycles have stable separate identities, revisioned lifecycle, snapshots, and retained history. |
 | TEF-03 | Enforce the owning task state machine, expected revisions, scoped acyclic prerequisites, all-required subtasks, and no silent reassignment. |
 | TEF-04 | Permit configurable self-claim of eligible available work, including restricted members, with current eligibility, capacity, exceptions, denials, and transaction-time rechecks. |
-| TEF-05 | Reuse verified HA human proof, active membership, installation/household/channel binding, semantic authorization, and transactional rechecks; keep administrator policy and material authority privileged. |
+| TEF-05 | Reuse verified HA human proof, active membership, installation/household/channel binding, semantic authorization and transactional rechecks; policy configuration stays administrator-only and material actions require current grants. |
 | TEF-06 | Snapshot actual performers and completion policy; require current authorized-adult approval for any restricted performer, and preserve configured adult-performer approval and independent-adult alternatives. |
 | TEF-07 | Preserve actual, recorded, approved, and posted timestamps; make reopening cycle-bound, compensating, revision-aware, and non-cascading. |
 | TEF-08 | Retain task-linked material intents and honest outcomes; validate server-owned identities via Inventory ports, never create a second inventory ledger, and settle only through explicit duplicate-safe commands. |
@@ -127,12 +127,12 @@ Text equivalent: verified session -> atomic task creation -> claim/assignment ->
 
 ### 6.1 Happy path
 
-1. An authorized adult submits title-only creation. Application validates title and policy, creates stable definition and occurrence IDs, and commits both with receipt/outbox atomically. Default definition state is active and occurrence state available.
-2. A member queries available work. The query returns only household-scoped records and current allowed actions; cursors bind query and context.
-3. An eligible member claims using the current revision. The server derives the actor as assignee; it never accepts a client-selected claimant. Transaction-time checks include current profile availability, capacity, role/profile/member exceptions, explicit applicable denials, and policy.
-4. Assigned work progresses through the state machine. Completion records nonempty actual performer IDs, performed time, effective verification policy, immutable cycle ID, and validated material intent outcomes.
-5. If any actual performer is restricted, authorized adult approval is required. Pending or rejected cycles produce no Points award. Approval rechecks current adult and approval authority, cycle identity, and revision.
-6. Durable events identify occurrence, cycle, source, and policy. Real consumers acknowledge through their own deduplication boundary; unavailable consumers leave truthful retained pending state.
+1. Authorized title-only creation validates title/policy and atomically saves stable definition/occurrence IDs, receipt and outbox. Defaults: active definition, available occurrence.
+2. Available-work queries return household records/current actions; cursors bind query/context.
+3. Revisioned claim derives the assignee from the actor. Recheck profile availability, capacity, role/profile/member exceptions, explicit denials and policy transactionally.
+4. Completion records nonempty actual performers, performed time, effective verification policy, immutable cycle ID and validated material outcomes.
+5. Restricted participation requires authorized adult approval. Pending/rejected cycles earn no Points. Approval rechecks current adult/grant, cycle and revision.
+6. Events identify occurrence/cycle/source/policy. Real consumers deduplicate their acknowledgements; absent consumers retain truthful pending status.
 
 ### 6.2 Alternative paths
 
@@ -202,7 +202,7 @@ Scoped definition/occurrence/cycle IDs, signed-64-bit positive revisions and sup
 
 Completion owns its resolved dependency gate; callers cannot weaken it. Both modes require completed work and reject rejected verification. Approved accepts none/approved; performed also accepts pending. Use the exact required set. Each prerequisite/subtask list permits 32 IDs, 64 deduplicated combined edges. Iterative DAG checking avoids Python recursion limits.
 
-Reads recheck grants in one transaction without creating defaults. Pages default to 25/max 100. Five-minute signed cursors bind actor/installation/channel/household/query/filters/limit, grant no snapshot/write authority and may expire on restart. Hints use current grants/state. Bounded current/retained history marks restoration, hides HA identities/requests and separates outbox acknowledgement from consumers. Own receipt reads recheck original authority from the canonical request. Shared readers unify facts.
+Reads recheck grants transactionally without creating defaults. Pages default to 25/max 100. Five-minute signed cursors bind actor/installation/channel/household/query/filters/limit, grant no snapshot/write authority and may expire on restart. Hints use current grants/state. History marks restoration, hides HA identities/requests and separates outbox acknowledgement from consumers. Own receipt reads recheck original authority. Shared readers unify facts.
 
 ### Material value and processor contract
 
@@ -212,13 +212,13 @@ Intent source quantity, cycle/time, recorder, binding/line snapshot, mode and in
 
 Resource revision guards edits; an independent effect revision changes only with corrected desired quantity. Its source key stays stable through pending retries and current actor changes. Posted/corrected state needs matching actual Inventory confirmation, including source scope, quantity, effect revision, movement/operation IDs and time. Correction preserves submitted quantity and the last confirmed effect until Inventory confirms the requested total; Tasks never compute stock deltas. Returning a pending correction to the already confirmed quantity needs no new movement. Dismiss cannot erase a confirmed effect. Exact confirmation replay is inert; stale/foreign confirmations cannot overwrite later intent state. All transitions validate supplied monotone time and revision exhaustion.
 
-The processor uses transaction-local Inventory/current-authority ports and reauthorizes explicit post/correct/dismiss. Completion retains ordinary denied usage. Pending certifies no new movement, not delivery; absence never confirms stock. Pure/port fixtures alone establish no integrated consumer acceptance.
+The processor uses transaction-local Inventory/current-authority ports and reauthorizes explicit post/correct/dismiss. Owner decision: any currently authorized material participant may correct confirmed consumption; preserve the original movement and require Inventory confirmation of the new total. Completion retains ordinary denied usage. Pending certifies no new movement; absence never confirms stock. Fixtures alone establish no consumer acceptance.
 
 Material requests use `materials` selections on create/update and `material_usages` on completion. Omitted/null new fields stay absent from canonical payloads, preserving old fingerprints; explicit empty lists remain distinct. References/actuals use canonical strings. Linking requires current task create/manage plus inventory.manage, including explicit replacement/clear. Scoped use requires tasks.material_use plus current performance authority and effective scoped policy, or applicable general Inventory authority. No initial grant snapshot authorizes a later step. Validate all usage identities/precision before work effects. Record one intent per frozen line; missing actuals stay unknown. One writer saves initial intent and each subsequent CAS transition with work/receipt/audit/outbox. A missing optional Inventory provider retains valid usage as pending processing; approval/replay/reopen never invokes it again. Actual ledger acceptance remains separate.
 
 ### HTTP contract
 
-Both business compositions expose shared services under `/api/v1/tasks`. Lifecycle/query routes now execute; material fields/routes remain prospective. Mutations require current session/proof, Origin, CSRF, `Idempotency-Key`, and `expected_revision` (`0` create, positive update). Household, actor, installation, and channel derive server-side. Reject unknown fields. Lists use limit default 25, max 100, cursor max 512; keyset cursors bind query/context and make no cross-page snapshot claim.
+Both business compositions expose shared services under `/api/v1/tasks`. Mutations require current session/proof, Origin, CSRF, `Idempotency-Key`, and `expected_revision` (`0` create, positive update). Household, actor, installation, and channel derive server-side. Reject unknown fields. Lists use limit default 25, max 100, cursor max 512; keyset cursors bind query/context without cross-page snapshot guarantees.
 
 | Method and route | Request contract |
 |---|---|
@@ -228,6 +228,7 @@ Both business compositions expose shared services under `/api/v1/tasks`. Lifecyc
 | POST `/api/v1/tasks/definitions/{id}/occurrences` | Create occurrence with expected revision 0, assignee/prerequisite/required-subtask ID lists (each unique, max 32), optional UTC millisecond due time |
 | GET `/api/v1/tasks/occurrences` | Filter only by state, assignee_id, definition_id; bounded pagination |
 | GET `/api/v1/tasks/occurrences/{id}` | Current occurrence, snapshots, allowed actions, current cycle and outcomes |
+| GET `/api/v1/tasks/occurrences/{id}/materials` | Required original cycle_id; current outcomes for that scoped open/closed cycle, at most 32 in frozen line order; never replay a receipt as current state |
 | PUT `/api/v1/tasks/occurrences/{id}/assignment` | Replace assignee IDs; explicit authority and revision |
 | PUT `/api/v1/tasks/occurrences/{id}/dependencies` | Replace prerequisite and required-subtask IDs; validate scope, acyclicity, and revision |
 | POST `/api/v1/tasks/occurrences/{id}/claim` | Revision only; claimant derived from authenticated actor |
@@ -239,7 +240,7 @@ Both business compositions expose shared services under `/api/v1/tasks`. Lifecyc
 | GET `/api/v1/tasks/occurrences/{id}/history` | Chronological safe history with event ID, revision, actor, time, action, safe detail |
 | POST `/api/v1/tasks/occurrences/{id}/materials/{intent_id}/settlement` | Revision, original cycle_id, action post/correct/dismiss, quantity only for correction, required reason for correction/dismissal |
 
-Wire bodies use top-level content, nested overrides/rules and strict ID arrays. Omitted/null update overrides preserve; an empty object resets inheritance. Create defaults expected_revision to zero. Reject unsupported material fields before writes until their semantic services are wired. Only business compositions expose task routes. Native GET task queries use the existing header/peer policy with bounded, nonduplicate query pairs.
+Wire bodies use top-level content, nested overrides/rules and strict IDs. Omitted/null update overrides preserve; an empty object resets inheritance. Create defaults revision to zero. Unavailable Inventory linking fails before writes; completion retains pending usage. Only business compositions expose tasks. Native GET queries retain bounded, nonduplicate pairs and header/peer policy. Material reads recheck tasks.read and frozen lines/cycle/recorder/time/mode; corrupted references fail closed. Live views distinguish desired quantity from confirmed_quantity, confirmed_effect_revision and posted_at; receipt outcomes remain immutable.
 
 Responses use existing `ReceiptResponse`, `OperationResponse`, and `ErrorResponse` contracts. Receipt result retains immutable resource/cycle/revision/material facts, never current grants. Resources expose IDs, revisions, states, snapshots, and allowed actions; occurrence includes assignees, dependencies, performers, times, verification, and material outcomes. Material outcome includes intent/cycle/line IDs, submitted canonical quantity, status, reason code, safe message/action, nullable actual movement ID, and revision. `posted` requires actual Inventory confirmation; invalid forged/foreign material rejects before effects. Other valid work may save with visibly unposted outcomes. Current reads show present settlement state separately from original receipt.
 
@@ -479,6 +480,10 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `backend/src/domus/application/task_facts.py` | create |
 | `backend/src/domus/domain/task_material_values.py` | create |
 | `backend/src/domus/domain/task_materials.py` | create |
+| `backend/src/domus/domain/task_material_policy.py` | create |
+| `backend/src/domus/application/task_material_views.py` | create |
+| `tests/backend/test_task_material_queries.py` | create |
+| `tests/backend/test_task_material_http.py` | create |
 | `backend/src/domus/domain/errors.py` | update |
 | `backend/src/domus/application/task_material_ports.py` | create |
 | `tests/backend/test_task_material_values.py` | create |

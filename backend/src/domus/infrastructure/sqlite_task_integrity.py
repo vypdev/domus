@@ -3,8 +3,9 @@
 import sqlite3
 from collections.abc import Callable
 
-from domus.domain.errors import StorageFailure
+from domus.domain.errors import InvalidInput, StorageFailure
 from domus.domain.identity import HouseholdPolicy, Member
+from domus.domain.task_material_policy import cycle_materials
 from domus.domain.task_policy import validate_dependency_graph
 from domus.infrastructure.sqlite_task_materials import SQLiteTaskMaterials
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
@@ -93,18 +94,8 @@ def verify_task_records(
     if record_version == 2:
         material_repository = SQLiteTaskMaterials(connection)
         for cycle in cycles.values():
-            original = occurrences[cycle.occurrence_id].definition_snapshot
             intents = material_repository.list(household_id, cycle.cycle_id, limit=101)
-            lines = {line.line_id: line for line in original.materials}
-            if {value.line.line_id for value in intents} != set(lines):
-                raise StorageFailure("invalid_material_references")
-            for value in intents:
-                if (
-                    value.occurrence_id != cycle.occurrence_id
-                    or value.line != lines[value.line.line_id]
-                    or value.recorded_by != cycle.recorded_by
-                    or value.performed_at != cycle.performed_at
-                    or value.created_at != cycle.recorded_at
-                    or value.recording_mode is not cycle.rules.material_recording
-                ):
-                    raise StorageFailure("invalid_material_references")
+            try:
+                cycle_materials(occurrences[cycle.occurrence_id], cycle, intents)
+            except InvalidInput:
+                raise StorageFailure("invalid_material_references") from None

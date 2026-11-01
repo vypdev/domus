@@ -5,10 +5,22 @@ from dataclasses import asdict
 from typing import cast
 
 from domus.application.ports import UnitOfWork
-from domus.domain.errors import Conflict, StorageFailure
+from domus.domain.errors import Conflict, InvalidInput, StorageFailure
 from domus.domain.storage import JsonDocument
+from domus.domain.task_material_policy import cycle_materials as validate_cycle_materials
+from domus.domain.task_materials import MaterialIntent
 from domus.domain.task_values import OccurrenceState, TaskRequirement, TaskRules
 from domus.domain.tasks import TaskCycle, TaskDefinition, TaskOccurrence
+
+
+def cycle_materials(
+    unit: UnitOfWork, work: TaskOccurrence, cycle: TaskCycle
+) -> tuple[MaterialIntent, ...]:
+    values = unit.task_materials.list(work.household_id, cycle.cycle_id, limit=33)
+    try:
+        return validate_cycle_materials(work, cycle, values)
+    except InvalidInput:
+        raise StorageFailure("invalid_material_references") from None
 
 
 def current_cycle(unit: UnitOfWork, work: TaskOccurrence, cycle_id: str) -> TaskCycle:

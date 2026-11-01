@@ -15,7 +15,13 @@ from domus.application.task_authorization import (
     recorded_authorization,
     recorded_request,
 )
-from domus.application.task_facts import current_cycle, required_work, resolved_rules
+from domus.application.task_facts import (
+    current_cycle,
+    cycle_materials,
+    required_work,
+    resolved_rules,
+)
+from domus.application.task_material_views import MaterialOutcome, material_outcome
 from domus.application.task_ports import TaskCursors
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
@@ -86,6 +92,14 @@ class TaskDetail:
     cycle: TaskCycle | None
     allowed_actions: tuple[str, ...]
     consumer_delivery: str = "unconfirmed"
+    materials: tuple[MaterialOutcome, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class TaskMaterialsView:
+    occurrence_id: str
+    cycle: TaskCycle
+    materials: tuple[MaterialOutcome, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -280,6 +294,26 @@ class TaskQueries:
                 requirements,
                 cycle,
                 self._actions(unit, actor, work, rules, requirements, cycle),
+                materials=()
+                if cycle is None
+                else tuple(material_outcome(value) for value in cycle_materials(unit, work, cycle)),
+            )
+
+    def materials(self, occurrence_id: str, cycle_id: str) -> TaskMaterialsView:
+        with self.transactions.read() as unit:
+            self._read(unit)
+            validate_identifier(occurrence_id)
+            validate_identifier(cycle_id)
+            work = unit.tasks.occurrence(self.household_id, occurrence_id)
+            if work is None:
+                raise NotFound("task_occurrence_missing")
+            cycle = unit.tasks.cycle(self.household_id, cycle_id)
+            if cycle is None or cycle.occurrence_id != work.occurrence_id:
+                raise NotFound("task_cycle_missing")
+            return TaskMaterialsView(
+                occurrence_id,
+                cycle,
+                tuple(material_outcome(value) for value in cycle_materials(unit, work, cycle)),
             )
 
     def history(

@@ -40,16 +40,20 @@ zero when absent and never initializes them.
 
 Definition reads include frozen material binding/planned-quantity facts. A quantity is a canonical
 decimal string such as `"0.25"`, never a floating-point number or an internal `{value: ...}` object.
-Task HTTP write requests still reject material selections/usage until their boundary integration
-is complete. The shared application commands already support these typed values; no real Inventory
-provider or product material form is supplied by that internal checkpoint. A planned material line does not mean that stock was consumed.
+Create/update now accept `materials`, a list of at most 32 unique selections such as
+`{"reference_id": "inventory-reference", "planned_quantity": "0.25"}`. Only Inventory resolves
+product, unit, location and current precision; clients cannot substitute those fields. Explicit
+link/replacement/clear requires current task authority and inventory.manage, including receipt
+replay. Omitted/null preserves the original canonical request; explicit `[]` remains distinct.
+The default composition has no real Inventory provider yet: nonempty linking returns a safe 503
+before any task/default/receipt is written. Fixtures do not supply a product catalog or stock ledger.
 
 ## Edit and assign
 
 PUT `/policy` requires an expected revision and nested `rules`. Revision zero initializes absent
 defaults. It is administrator-only. Rule defaults include eligible self-claim, role-default
 verification, participant-adult approval, task-scoped materials and the performed prerequisite gate.
-Material settings are policy facts; this increment cannot consume stock.
+Material settings are policy facts; only an actual Inventory provider can confirm stock consumption.
 
 PUT `/definitions/{id}` replaces content/lifecycle fields at the expected positive revision.
 Omitted or null `overrides` preserves existing values; an empty object resets inheritance and also
@@ -98,8 +102,27 @@ It closes that cycle, preserves performed/verification facts and opens the occur
 automatically reopening completed dependents. Its source event is not proof of points compensation,
 stock return or a completed review projection.
 
-Material definition/usage/settlement fields remain unsupported in this increment and are rejected
-before task effects. Do not silently discard them or infer stock movement from task completion.
+Completion additionally accepts up to 32 unique `material_usages`, for example
+`[{"line_id": "server-created-line", "quantity": "0.5"}]`. Use only frozen line IDs from the
+occurrence. Identity, canonical quantity and unit precision are validated before work effects.
+Missing actuals remain unknown; explicit zero requests no movement. Valid work survives ordinary
+material denial, shortage or provider absence with a visible pending outcome. Separate recording
+also waits for deliberate settlement. Approval, reopening, stock/grant changes and receipt replay
+never retry consumption automatically.
+
+GET `/occurrences/{id}` includes current-cycle `materials`. GET `/occurrences/{id}/materials`
+requires the original `cycle_id` and returns current outcomes for that scoped open or closed cycle,
+in frozen line order with at most 32 entries. Both reads recheck current task-read permission, use
+one local read transaction and never contact Inventory. A cycle absent after restoration returns
+404; its retained original operation remains historical evidence rather than current state.
+
+Each outcome distinguishes submitted quantity, desired `quantity`, state/pending reason and the
+last `confirmed_quantity`, `confirmed_effect_revision`, `posted_at` and movement reference. A pending
+correction cannot claim its desired total has already been consumed. Reopening removes the current
+cycle projection but leaves its explicit original-cycle query available. Original receipt outcomes
+stay unchanged. Explicit post/correct/dismiss commands still require implementation. Decision A36
+allows any currently authorized material participant to correct confirmed consumption while
+preserving original facts and requiring Inventory confirmation.
 
 ## Recover a result and inspect history
 

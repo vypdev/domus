@@ -272,7 +272,7 @@ repositories, schema-6 migration/checkpoint integration, current authority and d
 assignment, claim, progress, completion, verification and reopening commands, plus policy, definition,
 occurrence and dependency editors. Application queries now expose bounded definitions/occurrences,
 current detail/action hints, restoration-aware history and own-operation lookup. Both business compositions now expose task HTTP behind their existing session, Origin and CSRF
-boundaries. Material intents/settlement, dependency-review projections and actual consumers remain
+boundaries. Material settlement, dependency-review projections and actual consumers remain
 incomplete.
 
 Domain never authenticates or authorizes requests. TaskAccess rereads current active membership,
@@ -339,6 +339,8 @@ uv run pytest tests/backend/test_task_authorization.py tests/backend/test_identi
 uv run pytest tests/backend/test_task_commands.py tests/backend/test_task_execution_commands.py tests/backend/test_task_restoration.py
 uv run pytest tests/backend/test_task_edit_commands.py
 uv run pytest tests/backend/test_sqlite_tasks.py tests/backend/test_sqlite_task_integrity.py
+uv run pytest tests/backend/test_task_material_commands.py
+uv run pytest tests/backend/test_task_material_queries.py tests/backend/test_task_material_http.py
 ```
 
 Tests use real SQLite files and controlled concurrent writers. Isolated repository checks, owned-store
@@ -357,7 +359,7 @@ actual composed OpenAPI snapshots for both deployments. Native task GET queries 
 nonduplicate parameters while retaining the original peer/header policy; other native routes retain
 their existing query rules. The authentication-only preview does not acquire business task routes.
 See the [task execution guide](tasks/execution.md) for payloads, defaults, original-key recovery,
-restoration and the explicitly unsupported material fields. The task-specific own-operation route
+restoration and bounded material inputs/current-cycle queries. The task-specific own-operation route
 rechecks original authority and prioritizes historical suppression over old outbox acknowledgement.
 
 
@@ -384,14 +386,14 @@ replay is inert, and foreign/stale/conflicting proof cannot overwrite a later in
 
 TaskCommands now connects material selection and initial completion to these semantics. The typed
 application requests preserve legacy fingerprints when new fields are omitted/null; explicit empty
-lists remain distinct. The HTTP write models still reject material inputs pending the next boundary
-integration. Explicit post/correct/dismiss and current/historical material query projections remain
-incomplete. The confirmed-consumption correction default is awaiting owner review.
+lists remain distinct. Both HTTP compositions accept bounded selections/usages and query current or
+explicit original-cycle outcomes. Explicit post/correct/dismiss remains incomplete. A36 permits
+confirmed-consumption corrections by any currently authorized material participant; original facts
+and Inventory confirmation remain mandatory.
 
 Required next work:
 
-- Wire material request/response models and explicit settlement in both HTTP compositions.
-- Add current and historical-cycle material projections; original receipts must retain original facts.
+- Wire explicit material settlement in both HTTP compositions.
 - Reauthorize each settlement using current grants and the original command's scope before receipt
   disclosure, preserving safe retry after later corrections and restoration. Initial grant facts
   never authorize a new movement.
@@ -419,9 +421,10 @@ Actual offline activation migrates only its prepared target; source/checkpoint b
 
 Read responses use outer DTOs so planned quantities appear as canonical strings such as "0.25".
 Both composed OpenAPI snapshots preserve existing paths, security and schema values while adding
-TaskDefinition.materials and two response schemas. The domain has no Pydantic/FastAPI dependency.
-Material write DTOs, explicit settlement commands and real Inventory acceptance still require the
-next integration; SQLite and labeled confirmation fixtures do not establish actual stock movements.
+bounded material inputs and live outcome schemas. The domain has no Pydantic/FastAPI dependency.
+Material write DTOs and live current/original-cycle projections now share application semantics.
+Explicit settlement commands and real Inventory acceptance still require the next integration;
+SQLite and labeled confirmation fixtures do not establish actual stock movements.
 
 
 ## Material selection and initial completion commands
