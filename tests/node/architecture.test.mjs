@@ -27,6 +27,15 @@ async function check(files) {
 }
 
 describe("executable frontend architecture policy", () => {
+  it("checks the actual authored application graph as well as negative fixtures", async () => {
+    const result = await cruise(["frontend/src"], {
+      ...configuration.options, ruleSet: configuration, validate: true, outputType: "json",
+    });
+    const output = typeof result.output === "string" ? JSON.parse(result.output) : result.output;
+    expect(output.summary.violations).toEqual([]);
+    expect(output.modules.some(module => module.source === "frontend/src/domain/entry.ts")).toBe(true);
+  });
+
   it("uses a supported TypeScript parser", () => {
     const parser = getAvailableTranspilers().find(item => item.name === "typescript");
     expect(parser?.available).toBe(true);

@@ -376,6 +376,7 @@ Build/exercise Storybook and real Chromium prefixed-native/root-standalone journ
 | `frontend/.storybook/preview.ts` | create |
 | `frontend/stories/entry.stories.ts` | create |
 | `frontend/tests/domain.test.ts` | create |
+| `tests/frontend/coverage-evidence.test.mjs` | create |
 | `frontend/tests/journal.test.ts` | create |
 | `frontend/tests/controller.test.ts` | create |
 | `frontend/tests/http.test.ts` | create |

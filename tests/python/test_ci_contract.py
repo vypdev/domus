@@ -107,7 +107,7 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         "tooling/frontend-coverage.mjs",
     }
     for relative in paths:
-        if not relative or relative.startswith("tests/"):
+        if not relative or relative.startswith(("tests/", "frontend/tests/")):
             continue
         suffix = Path(relative).suffix
         if suffix == ".py":
@@ -115,9 +115,32 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
                 f"Register {relative} in its own tested coverage/architecture gate before adding it"
             )
         elif suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".mts", ".cts", ".tsx"}:
-            assert relative in declared_node_configuration, (
-                f"Register {relative} in its own tested coverage/architecture gate before adding it"
-            )
+            assert (
+                relative in declared_node_configuration
+                or relative == "frontend/vitest.config.ts"
+                or relative.startswith("frontend/src/")
+            ), f"Register {relative} in its own tested coverage/architecture gate before adding it"
+
+
+def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
+    jobs = workflow()["jobs"]
+    job = jobs["frontend"]
+    assert "if" not in job
+    assert "continue-on-error" not in job
+    assert all("continue-on-error" not in step for step in job["steps"])
+    commands = [step["run"] for step in job["steps"] if "run" in step]
+    assert commands == [
+        "pnpm install --frozen-lockfile",
+        "pnpm --filter @domus/frontend exec playwright install --with-deps chromium",
+        "pnpm check:frontend",
+        "pnpm test:frontend",
+    ]
+    assert "frontend" in REQUIRED_JOBS
+    assert "frontend" in jobs["aggregate"]["needs"]
+    artifact = next(step for step in job["steps"] if "path" in step.get("with", {}))
+    assert artifact["if"] == "${{ always() }}"
+    assert artifact["with"]["path"] == "frontend/coverage/"
+    assert artifact["with"]["if-no-files-found"] == "error"
 
 
 def test_frontend_toolchain_requires_actual_execution_and_separate_artifacts() -> None:

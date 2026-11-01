@@ -581,25 +581,36 @@
       "status": "proposed",
       "scope": "A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-11-01",
       "specs": [
         "specs/application-experience.md",
         "specs/household-entry-interface.md"
       ],
-      "workflows": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
       "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "code": [
+        "frontend/src/domain/entry.ts"
+      ],
+      "tests": [
+        "frontend/tests/domain.test.ts",
+        "tests/frontend/coverage-evidence.test.mjs",
+        "tests/node/architecture.test.mjs",
+        "tests/python/test_ci_contract.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/household-entry-interface.md",
+        "docs/evidence/household-entry-interface.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
+        "implementationEvidence": "Partial pure entry/setup model:40 actual Chromium tests, strict complete-source four-metric coverage,73 tooling and35 Node policy tests. Product UI, orchestration, delivery and integrated acceptance remain absent.",
         "blockingDecisions": "Detailed design system review; real mobile/companion and public host-context evidence; accessibility acceptance. The owner selected Lit/TypeScript/Vite, HA-coherent owned components, Storybook and Playwright on 2026-10-29.",
         "copilotChangesAllowed": false
       }

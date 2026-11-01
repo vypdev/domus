@@ -1,5 +1,17 @@
 {
   "name": "@domus/frontend",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@vitest/browser-playwright": "5.0.5",
+    "@vitest/coverage-v8": "5.0.5",
+    "playwright": "1.64.1",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
 }
