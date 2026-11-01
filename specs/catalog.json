@@ -443,7 +443,8 @@
         "tests/backend/test_sqlite_task_integrity.py",
         "tests/backend/test_task_restoration.py",
         "tests/backend/test_task_authorization.py",
-        "tests/backend/test_task_commands.py"
+        "tests/backend/test_task_commands.py",
+        "tests/backend/test_task_execution_commands.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -455,8 +456,8 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: lifecycle/rules, schema-5 storage/restore, current authority and durable creation/assignment/claim commands; 1957 whole-backend tests, 5508 statements and 1570 branches at 100%; full task execution, public task HTTP and real consumers remain unimplemented",
-        "blockingDecisions": "A34 confirms configurable prerequisite gating, performed by default. Execution/verification/reopening commands, policy/definition/dependency editing, task APIs, actual Inventory/Points consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
+        "implementationEvidence": "partial: lifecycle/rules, schema-5 storage/restore, current authority and durable creation/assignment/claim/progress/completion/verification/reopening; 2003 whole-backend tests, 5623 statements and 1598 branches at 100%; task queries/editors/HTTP and actual material/consumer/review projections remain incomplete",
+        "blockingDecisions": "A34 confirms configurable prerequisite gating, performed by default. Policy/definition/dependency editors, bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }
     },

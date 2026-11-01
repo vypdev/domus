@@ -181,3 +181,22 @@ formatting, the complete inward graph and local links pass. Pinned original SDD/
 retains the fourteen/109/485 planned inventory and every original task/identity/companion case row.
 Execution/approval/reopening, remaining task editors, HTTP and real consumer/target acceptance are
 still incomplete. Hosted current-head CI and complete Bugbot remain independent merge gates.
+
+
+## Task execution and cycle command checkpoint — 2026-11-01
+
+Progress, completion, verification and reopening now use the shared durable boundary. Current
+attribution grants precede receipt lookup, while new-performance participant/dependency checks and
+cycle preconditions follow it. Real SQLite tests retain pending/rejected/approved facts, configured
+prerequisite gating, source causes and immutable original receipts. Fault injection rolls back both
+cycle and occurrence; completion and approval/reopen races have one winner. Actual offline activation
+also proves historical replay of all three cycle actions without reapplying effects.
+
+The complete backend passes 2,003 tests with all 5,623 statements and 1,598 branches covered across
+78 authored files. Ten task modules contribute 905 statements and 288 branches, all covered. The 46
+new execution cases combine with creation/current-authority tests in a 114-test focused run. All 113
+tooling/architecture fixtures, strict types, formatting, the complete graph and local links pass.
+Pinned original SDD/catalog checks preserve the same fourteen/109/485 planned inventory and all
+original case rows. Source events explicitly leave consumer delivery unconfirmed; material settlement,
+review/ledger/recurrence projections, public task queries/editors/API and deployment acceptance remain
+separate required work. No partial feature merge or neutral draft review is counted as acceptance.

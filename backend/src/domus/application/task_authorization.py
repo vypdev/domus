@@ -102,9 +102,10 @@ class TaskAccess:
             raise Forbidden("task_claim_denied")
         return actor
 
-    def performers(
+    def performance_actor(
         self, unit: UnitOfWork, occurrence: TaskOccurrence, member_ids: tuple[str, ...]
-    ) -> tuple[TaskPerformer, ...]:
+    ) -> TaskActor:
+        """Current attribution grants only; participant eligibility follows receipt lookup."""
         actor = self.require(unit, occurrence.household_id, Permission.TASKS_COMPLETE, occurrence)
         validate_task_ids(member_ids)
         if not member_ids:
@@ -113,6 +114,12 @@ class TaskAccess:
             raise Forbidden("task_performer_denied")
         if any(member_id != actor.member.member_id for member_id in member_ids):
             self.require(unit, occurrence.household_id, Permission.TASKS_RECORD_FOR_OTHERS)
+        return actor
+
+    def performers(
+        self, unit: UnitOfWork, occurrence: TaskOccurrence, member_ids: tuple[str, ...]
+    ) -> tuple[TaskPerformer, ...]:
+        actor = self.performance_actor(unit, occurrence, member_ids)
         performers = []
         for member_id in member_ids:
             person = unit.members.get(occurrence.household_id, member_id)

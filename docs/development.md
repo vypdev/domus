@@ -264,71 +264,55 @@ is not a Domus installation, product UI, native Ingress/standalone OAuth proof, 
 dogfooding or evidence for the 48 proposed household-interface cases. Stable/Edge and both deployment
 targets retain their own pending acceptance obligations.
 
-## Task execution policy checkpoint
+## Task execution backend
 
 Issue #13 has an Action-published [backend companion](../specs/task-execution-foundation.md).
-Its first source checkpoint contains immutable task values and pure lifecycle, profile eligibility,
-performer verification and acyclic graph rules. These helpers never authenticate or authorize a
-request. The storage checkpoint below adds repositories; task commands, APIs and consumers remain
-subsequent work.
+The current source implements immutable task rules, typed policy/definition/occurrence/cycle
+repositories, schema-5 migration/checkpoint integration, current authority and durable creation,
+assignment, claim, progress, completion, verification and reopening commands. Public task queries,
+editors and HTTP, material intents/settlement, dependency-review projections and actual downstream
+consumer delivery remain required before the draft feature is complete.
 
-Run `uv run pytest tests/backend/test_task_values.py tests/backend/test_task_policy.py` for the
-new policy assertions, and the existing complete backend coverage command for the complete source
-scope. The whole-source check includes both new runtime modules immediately. Local WebSocket
-fixtures bind disposable loopback ports; a sandbox that denies listeners must permit that test
-operation rather than skipping the adapter cases. No owner HA is needed for this checkpoint.
-[Evidence](evidence/task-execution-foundation.json) records measured scopes and remaining work.
-### Schema 5 task storage
+Domain never authenticates or authorizes requests. TaskAccess rereads current active membership,
+identity mapping, profile/member rules and stored assignment inside the caller transaction. Claim
+permission is separate from assigned completion. On-behalf attribution requires its own grant;
+a restricted actor cannot omit its own participation. Only the submitting actor supplies current
+HA proof; another performer retains its local profile instead of an assumed external administrator
+source. Approval uses current adult permission and the original cycle's participation rule.
 
-Task policy, definitions, immutable occurrence snapshots and revisioned completion cycles now have
-typed repositories on UnitOfWork. SQLite owns transaction/foreign-key/CAS enforcement; pure rules
-still own lifecycle, performer verification and the configured prerequisite gate. Strict versioned
-record decoding rejects unknown/missing fields and unsupported values without inventing defaults.
+TaskCommands obtains fresh proof before SQLite and uses AtomicCommands to commit state, original
+receipt, audit and one source event together. Current grants precede receipt disclosure; new-work
+preconditions follow it. First creation initializes absent defaults in that same write transaction.
+Assignments accept at most 32 distinct active household members; self-claim is exclusive for
+available work. Completion snapshots actual performers, policy revisions and performed/recorded
+UTC times. Pending/rejected verification cannot satisfy approved-work gating; the performed default
+also accepts pending approval. Required subtasks use the same explicit gate. Approval does not close
+a cycle. Reopen closes it without erasing facts or automatically reopening completed dependents.
+Source events identify the full cycle and causal revision, while consumer delivery remains explicitly
+unconfirmed. They do not prove ledger compensation, stock movement or a finished review projection.
 
-Initialization migrates schemas 1 through 4 atomically; the new frozen schema-4 input is derived
-from immutable pre-task source and retains both current and historical operations. Earlier frozen
-inputs are unchanged. Snapshot inspection validates every task page, references, DAG and cycle;
-it preserves completed dependents when a prerequisite has reopened and retains historical policies.
+SQLite owns transaction/foreign-key/CAS enforcement and strict versioned record decoding. It rejects
+unknown/missing/future data without invented defaults. Scoped deferred foreign keys bind both sides
+of the active cycle and revision. Initialization migrates frozen schemas 1–4 atomically; the independent
+schema-4 input retains current/historical operation evidence, and earlier fixtures remain byte-unchanged.
+Snapshot inspection checks all pages, references, DAG and cycle facts. Offline activation restores
+older business state while retaining later receipts as processed; production command replay cannot
+reapply restored-away creation, claim, completion, verification or reopening.
 
-Run the storage/recovery contracts, then the complete backend coverage command:
+Run the focused source contracts, then the complete backend coverage command:
 
 ```sh
-uv run pytest tests/backend/test_sqlite_tasks.py tests/backend/test_sqlite_task_integrity.py tests/backend/test_task_restoration.py
+uv run pytest tests/backend/test_task_values.py tests/backend/test_task_policy.py tests/backend/test_tasks.py
+uv run pytest tests/backend/test_task_authorization.py tests/backend/test_identity_policy.py
+uv run pytest tests/backend/test_task_commands.py tests/backend/test_task_execution_commands.py tests/backend/test_task_restoration.py
+uv run pytest tests/backend/test_sqlite_tasks.py tests/backend/test_sqlite_task_integrity.py
 ```
 
-The isolated repository fixture is distinct from owned-store migration,
-checkpoint and activation tests. None of them is live owner HA or a task HTTP/consumer acceptance.
-
-### Current task authority
-
-TaskAccess rereads current active membership, effective actor role and identity policy in the caller's
-transaction. Claim permission is separate from assigned completion. On-behalf performer attribution
-requires its own permission; a restricted actor cannot omit its own participation. Only the submitting
-actor supplies current HA proof, so another performer's local role is never silently elevated from
-an assumed HA administrator source. Approval also checks the cycle's original participation rule.
-
-Run `uv run pytest tests/backend/test_task_authorization.py tests/backend/test_identity_policy.py`
-for real-file current-authority and the independent profile matrix assertions. Current mapping,
-member status, exceptions and household task-default changes are exercised with the same reused
-access instance. These helpers are not yet transactional task commands or public task routes; state,
-capacity, revision and replay integration remain required. The policy enum in both published OpenAPI
-references is synchronized with the actual composed schemas, without adding routes.
-
-### Durable creation, assignment and self-claim
-
-TaskCommands now obtains fresh human proof before the writer transaction and uses the shared
-AtomicCommands boundary. Creation commits initial task defaults when absent, a definition, its first
-occurrence, receipt, audit and outbox together. Title-only creation yields available work; explicitly
-draft creation retains draft work. Non-inherited rule overrides require current administrator task
-configuration authority, including on replay. Assignment validates at most 32 distinct active local
-members; explicit empty assignment releases eligible work. A self-claim derives its one assignee
-from the actor and requires available unassigned work. It cannot append a claimant to assigned work.
-
-Run `uv run pytest tests/backend/test_task_commands.py tests/backend/test_task_restoration.py`.
-The focused tests cover real-file transaction rollback, restart/replay, revocation, assignment
-bounds, a real two-thread claim race and production-command replay after offline restore activation.
-Restored-away creation or claim returns its historical receipt without recreating work. Current
-authority precedes receipt disclosure; revision/lifecycle checks follow it. HA proof remains a labeled
-fake in these tests; no owner data or live HA was involved. Source events do not establish downstream
-consumer delivery. Full task execution, verification/reopening, history/material integration and
-public task HTTP remain required before the draft feature is complete.
+Tests use real SQLite files and controlled concurrent writers. Isolated repository checks, owned-store
+migration/activation and explicit broken-port fixtures have distinct scopes. HA proof is labeled fake;
+no owner HA, product browser UI, packaged adoption or real consumer acceptance is implied. Full-suite
+WebSocket fixtures need disposable loopback listeners; sandbox restrictions require permission for
+those adapters rather than skipping them. The whole authored backend source enters line/branch
+coverage immediately, including unimported files. The complete dependency graph remains mandatory.
+[Source-identified evidence](evidence/task-execution-foundation.json) records current measurements,
+original pinned SDD/catalog provenance, historical checkpoints and incomplete acceptance.
