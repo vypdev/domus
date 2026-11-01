@@ -154,3 +154,28 @@ not imply runner execution, task performance, points, inventory consumption or d
 This is an application use case, with no new public route or deployed interface yet. Draft/relative
 configuration, reviewed attachment, protected operation recovery queries and full runtime/HA
 acceptance remain required. See [creation evidence](evidence/recurrence-creation.json).
+
+## One fixed-materialization step
+
+The application [maintenance step](../backend/src/domus/application/fixed_materialization.py) receives
+an explicit local installation/channel/household scope from trusted composition. It accepts no
+human actor or authority from a rule or HTTP body. An active source can create at most one real
+occurrence, or advance through at most 64 empty original periods. Inactive rules/definitions retain
+their current work. Policy lookup and planning occur outside the writer transaction; source revisions
+and the narrow technical command namespace are checked again before reading original receipts.
+
+The shared [command boundary](../backend/src/domus/application/commands.py) can join that same
+caller-owned transaction without committing independently. New task/slot/progress and original
+receipt/audit/outbox commit or roll back together. A current original receipt advances a replayed
+cursor without another effect. An actual restored-away slot returns its original historical receipt
+and advances only the reconciled cursor; it creates no replacement task, identities or duplicate
+event. Contradictory current effects, corrupted original results and changed payloads fail safely.
+
+An empty bounded scan records its continuation without claiming a complete calendar. One step's
+range-complete result describes the requested horizon at that observation; the persisted Boolean
+alone is not proof of arbitrary calendar-range completeness. Date-only obligations retain dates and
+no invented UTC midnight. Technical attribution cannot act as a performer, approval or point award.
+
+This is not yet a running scheduler. Fair multi-rule continuation, global budgets and shutdown,
+durable review/calendar attention, relative sources and native/standalone background composition
+remain required. See [step evidence](evidence/recurrence-materialization.json).

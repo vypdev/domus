@@ -22,6 +22,7 @@ from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
+from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
 from domus.application.household_commands import HouseholdCommands, SetupHousehold
 from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
 from domus.application.task_requests import CreateTask
@@ -89,11 +90,24 @@ with TemporaryDirectory(prefix='domus-current-image-') as directory:
         assert len(unit.tasks.definitions('home')) == 1
         assert unit.recurrence.progress('home', facts['schedule_id']).cursor.nominal_count == 0
         assert unit.receipts.get(receipt.command) == receipt
-print('Current-source recurrence creation, codecs and pinned timezone planning passed.')
+    maintenance = FixedMaintenance(store, MaintenanceScope(installation, 'home'),
+        creation.planner, clock, identifiers)
+    horizon = NominalTime(datetime(2026, 3, 31, 2, 30))
+    first_step = maintenance.step(facts['schedule_id'], horizon)
+    assert first_step.status == 'created' and not first_step.cursor.closed
+    with store.read() as unit:
+        work = unit.tasks.occurrence('home', first_step.occurrence_id)
+        assert work.due_at == first.resolved.instant_ms
+    assert maintenance.step(facts['schedule_id'], horizon).cursor.closed
+    assert maintenance.step(facts['schedule_id'], horizon).status == 'current'
+    with store.read() as unit:
+        assert len(unit.tasks.occurrences('home')) == 2
+        assert len(unit.recurrence.slots('home', facts['schedule_id'])) == 2
+print('Current-source recurrence creation, materialization and pinned-time codecs passed.')
 """,
     )
     assert result.returncode == 0, result.stderr
     assert (
-        "Current-source recurrence creation, codecs and pinned timezone planning passed."
+        "Current-source recurrence creation, materialization and pinned-time codecs passed."
         in result.stdout
     )

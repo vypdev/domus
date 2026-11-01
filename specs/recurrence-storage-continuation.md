@@ -139,6 +139,8 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/application/ports.py | update |
 | backend/src/domus/application/recurrence_ports.py | update |
 | backend/src/domus/application/recurrence_commands.py | create |
+| backend/src/domus/application/fixed_materialization.py | create |
+| backend/src/domus/application/commands.py | update |
 | backend/src/domus/application/task_creation.py | create |
 | backend/src/domus/application/task_commands.py | update |
 | backend/src/domus/application/task_authorization.py | update |
@@ -155,6 +157,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_sqlite_recurrence.py | create |
 | tests/backend/test_recurrence_records.py | create |
 | tests/backend/test_recurrence_creation.py | create |
+| tests/backend/test_fixed_materialization.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
@@ -173,6 +176,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_task_restoration.py | update |
 | docs/architecture-recurrence.md | update |
 | docs/evidence/recurrence-creation.json | create |
+| docs/evidence/recurrence-materialization.json | create |
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
 
@@ -205,6 +209,8 @@ After normal branch admission: restore the privately preserved test-first draft;
 The next application increment implements new active fixed-task creation through existing task-create, configuration-override and inventory-link authority. It saves the shared task definition, rule, unconsumed cursor and original command evidence together. It deliberately creates no manual initial occurrence; actual materialization remains required. Date-only configuration still validates its actual pinned zone/data policy without storing a fabricated instant. Preflight provider work holds no writer lock, and current local authority is checked again in the commit. Authorized original receipts precede provider work; changed keys/payloads and revoked authority retain existing semantics. Draft configuration, relative creation, reviewed attachment, public HTTP/operation queries and composed runners remain unfinished.
 
 Bugbot identified a storage boundary missing from the first kernel: a correctly scoped slot could name a nominal outside its pattern or COUNT/UNTIL end. Validate actual finite-period candidate membership and nominal rank in the pure record constructor, so closed decoding and checkpoint inspection enforce the same invariant. COUNT rank preserves interval phase, initial-period truncation, omitted invalid dates and Gregorian repetition; bounded pure memoization is an optimization, never evidence or authority. Do not weaken the existing slot/receipt/source relationships or alter the schema to mask corrupt records. A codec fixture must itself describe a real candidate. These are refinements of retained RCE/storage integrity obligations, not additional counted product journeys.
+
+The next application step materializes at most one actual fixed obligation or scans at most 64 original periods. Trusted composition supplies its explicit installation/channel/household maintenance scope; no request or stored record grants that capability. External policy/planning work holds no writer lock. Current rule/progress/definition facts and the fixed technical command namespace are checked before original receipt lookup in the writer transaction. A new task, slot, receipt/audit/outbox and progress advance commit together through the shared command boundary. A matching current receipt does not create another task. An actual restored absent-effect receipt advances the reconciled cursor without recreating the task, allocating replacement identities or re-emitting its event; the returned historical status remains explicit. Empty bounded scans retain their own proof and incomplete continuation. Date-only values retain no fabricated deadline instant, and technical maintenance never performs or approves human work. The fair multi-rule production loop, durable attention/calendar projections, relative lifecycle and full runtime surfaces remain unfinished.
 
 ## 19. Definition of Done
 

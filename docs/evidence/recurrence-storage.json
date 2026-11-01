@@ -85,7 +85,7 @@
       "policyModulesByteVerified": 7,
       "immutableBaseOwners": 18,
       "retainedOwnersUnchanged": true,
-      "currentCompanionSHA256": "890d10fb2c9abd3717f984853f178e15976423bdc2e49371eb7ad0ac4b0ab341",
+      "currentCompanionSHA256": "70dc7362f47a59b6f6d9d81c13f9ba7a4e8d720243f58a33ccc4b6c33f448f5c",
       "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
     },
     "packageAndArchitectureTests": {
@@ -281,5 +281,6 @@
     "amd64Job": 125009131683,
     "aarch64Job": 125009131691,
     "result": "All applicable CI Check suites passed; Copilot separately found one real nominal-membership issue, now corrected locally and awaiting publication/review. Full recurrence remains incomplete."
-  }
+  },
+  "laterMaterializationIncrement": "docs/evidence/recurrence-materialization.json; original storage-kernel results remain historical and scope-specific."
 }
