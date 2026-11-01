@@ -12,15 +12,18 @@ from fastapi import FastAPI
 from domus.application.authentication import Authentication
 from domus.application.sessions import SessionGuard
 from domus.composition.household import standalone_context
+from domus.composition.tasks import task_contexts
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.http import HTTPSettings, create_app
+from domus.entrypoints.task_http import TaskHTTPContext
 from domus.infrastructure.auth_runtime import MonotonicClock, SecureEntropy
 from domus.infrastructure.ha_config import HAEndpoint, OAuthConfiguration
 from domus.infrastructure.ha_http import HomeAssistantOAuth
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
 from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
+from domus.infrastructure.session_access import SessionActor
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.standalone_sessions import StandaloneIdentity
 
@@ -89,8 +92,15 @@ def _compose(
     settings = HTTPSettings(config.public_origin, tag, entropy.new().encode("ascii"))
     guard = SessionGuard(identity, identity, clock)
     context = None
+    tasks = None
     if store is not None:
         context = standalone_context(store, guard, identity, installation)
+        factory = task_contexts(store, installation)
+
+        def session_tasks(session_id: str) -> TaskHTTPContext:
+            return factory(SessionActor(guard, session_id))
+
+        tasks = session_tasks
     app = create_app(
         authentication,
         guard,
@@ -98,6 +108,7 @@ def _compose(
         settings,
         correlation=lambda: "cor_" + entropy.new(),
         household_context=context,
+        task_context=tasks,
     )
     return AuthenticationRuntime(app, identity)
 

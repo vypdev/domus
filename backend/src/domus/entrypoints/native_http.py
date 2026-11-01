@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated, Literal, cast
+from urllib.parse import parse_qsl
 
 from fastapi import Depends, FastAPI, Query, Request, Security
 from fastapi.exceptions import RequestValidationError
@@ -13,13 +14,14 @@ from starlette.types import ASGIApp, Scope
 
 from domus.application.identity_ports import LeaseClock
 from domus.application.sessions import SessionStatus
-from domus.domain.errors import DomusError, Forbidden
+from domus.domain.errors import DomusError, Forbidden, InvalidInput
 from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http import CSRFResponse, SessionResponse
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 from domus.entrypoints.http_errors import classify
 from domus.entrypoints.ingress_boundary import require_ingress_source
+from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
 
 _HEADERS = {
     "Cache-Control": "no-store",
@@ -80,7 +82,16 @@ class _NativeBoundary(BoundedHTTP):
         super().__init__(app, self._allowed, correlation, _error, _HEADERS)
 
     def _allowed(self, scope: Scope) -> None:
-        require_ingress_source(scope)
+        query = scope.get("query_string", b"")
+        if query and scope["method"] == "GET" and scope["path"].startswith("/api/v1/tasks/"):
+            if len(query) > 8192:
+                raise InvalidInput("invalid_request")
+            pairs = parse_qsl(query.decode("latin1"), keep_blank_values=True)
+            if len(pairs) != len({key for key, _ in pairs}):
+                raise InvalidInput("invalid_request")
+            require_ingress_source({**scope, "query_string": b""})
+        else:
+            require_ingress_source(scope)
         if scope["method"] not in ("GET", "HEAD", "POST", "PUT"):
             raise Forbidden("request_forbidden")
         if scope["method"] in ("POST", "PUT"):
@@ -98,6 +109,7 @@ def create_native_app(
     clock: LeaseClock,
     *,
     correlation: Callable[[], str],
+    task_context: Callable[[Request], TaskHTTPContext] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="Domus native Home Assistant application",
@@ -197,4 +209,6 @@ def create_native_app(
             lambda request: context(request).household, security=Depends(security)
         )
     )
+    if task_context is not None:
+        app.include_router(create_task_router(task_context, security=Depends(security)))
     return app

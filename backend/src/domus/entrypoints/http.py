@@ -30,6 +30,7 @@ from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 from domus.entrypoints.http_errors import classify
+from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
 
 
 @dataclass(frozen=True, slots=True)
@@ -228,6 +229,7 @@ def create_app(
     *,
     correlation: Callable[[], str],
     household_context: Callable[[str], HouseholdHTTPContext] | None = None,
+    task_context: Callable[[str], TaskHTTPContext] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title="Domus",
@@ -388,4 +390,11 @@ def create_app(
             return factory(cast(str, _cookie(request.scope, settings.session_cookie)))
 
         app.include_router(create_household_router(context, security=session_security))
+    if task_context is not None:
+        task_factory = task_context
+
+        def tasks(request: Request) -> TaskHTTPContext:
+            return task_factory(cast(str, _cookie(request.scope, settings.session_cookie)))
+
+        app.include_router(create_task_router(tasks, security=session_security))
     return app

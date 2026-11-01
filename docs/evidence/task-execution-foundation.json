@@ -1,9 +1,9 @@
 {
-  "verifiedAtUTC": "2026-11-01T02:10:41.039490+00:00",
+  "verifiedAtUTC": "2026-11-01T02:34:56.005276+00:00",
   "issue": "https://github.com/vypdev/domus/issues/13",
   "pullRequest": "https://github.com/vypdev/domus/pull/14",
-  "sourceBase": "3b52e0792bfe27bcdc6289e3c8b28e66020215de",
-  "sourceIdentity": "Working-source task query/cursor/history checkpoint over sourceBase; exact runtime/test and complete backend hashes below. Task HTTP/material/consumer/review projections and product release acceptance remain incomplete.",
+  "sourceBase": "04d8925c5a62c6e485ec046c213b9f8dd8124b94",
+  "sourceIdentity": "Working-source shared task HTTP/production-composition checkpoint over sourceBase; exact current source/test/contract hashes below. Materials, consumer/review projections, product UI and release acceptance remain incomplete.",
   "sources": {
     "backend/src/domus/application/task_authorization.py": "bf4498c309e8e66d3ebbe54160c7df8794060b3436a207d7ed3a895e500fbd18",
     "backend/src/domus/application/task_commands.py": "9627a92d5a9f6e1408db6bdb9910adb08c12baa7b0a743613dc0c0812560712f",
@@ -11,15 +11,24 @@
     "backend/src/domus/application/task_ports.py": "a99fb7c07699463e7e5f7cd1d422aeb16c3af417a1f8ca3dad98f9c442abae46",
     "backend/src/domus/application/task_queries.py": "19d5e27cb3b9730622e8adc099d95307ab021e2694a03975e0a950f769d2cf8a",
     "backend/src/domus/application/task_requests.py": "db11d0d452a83d084e17b871f6bd6c219fd8f1203cba94eb9e1c87825dc99994",
+    "backend/src/domus/composition/ingress.py": "34aaf82a652c26790daa3129e6f85ab3b37202dfda7401e230bf7fbe669e8182",
+    "backend/src/domus/composition/server.py": "c97c61485c957f575069751bab714d9b23c0115d1ec39757b7147a50dacb14e0",
+    "backend/src/domus/composition/tasks.py": "955f4b50e54caa6b413479552d9e3b020a83318998108c71b77796793ed91834",
     "backend/src/domus/domain/task_policy.py": "5a7cb62237a233cbeb958295e35914c01ae73cc2058f146554325fc91ba40a52",
     "backend/src/domus/domain/task_values.py": "3439561cd1030dc9e779a9f7430d59a3bbf58b8ffea107fc1df4fe3efe0e345b",
     "backend/src/domus/domain/tasks.py": "454d7f3c0c2f771f2e86c119ad1ed2f3f5e9652f41268bdf5056f8de29afe735",
+    "backend/src/domus/entrypoints/http.py": "196793cdd470df970d07b0005002dada22187b1e092320098d58e1e0bb4ab682",
+    "backend/src/domus/entrypoints/http_errors.py": "2419b9de5dd61fb719706365d600755fe770e83ae7aeaecd41e0afccee756dec",
+    "backend/src/domus/entrypoints/native_http.py": "7143688f95524809355dab56b46bd09926fcf32af02372f85df9226173d93381",
+    "backend/src/domus/entrypoints/task_dto.py": "b43379e6c691a33281fac1f1f142b37eec978d2d862f86e1a80deafdeab971b6",
+    "backend/src/domus/entrypoints/task_http.py": "dfb600dd36313eacf96aeec2296dc089981ed60e023f43b2ce35ac27400c2cce",
     "backend/src/domus/infrastructure/sqlite_task_history.py": "3ada1745f823d74ffe57e72d2463713e7d7709cceb37523f31ac2d54c24c40a9",
     "backend/src/domus/infrastructure/sqlite_task_integrity.py": "5d939ee208be13a309d7a907ae9e7f490829095bfd609d73b6358282223b0bec",
     "backend/src/domus/infrastructure/sqlite_task_records.py": "11980ca99e4d1a9aa633a024186c4e710c0f43f9bd9aedfffb54bf297e68fedb",
     "backend/src/domus/infrastructure/sqlite_task_schema.py": "d220bef0bf8f8c180401367094f00fba8bc7248d2faf54700e09d0f4a6b61922",
     "backend/src/domus/infrastructure/sqlite_tasks.py": "f8ab3fc1f16eff693e48f523bc9a0ab2059db2ba90df78ff30a1c2a302562e12",
     "backend/src/domus/infrastructure/task_cursor.py": "b21dbb915ce874b51008689d05abb4480cb7a65aabc5851f9500e51238bb6b5f",
+    "tests/backend/test_household_http.py": "4230ca4fdacad8e304fddfdf00e575e823d9b74b8c9b4fb38f5ab96f228beaa3",
     "tests/backend/test_sqlite_task_history.py": "2cf1bdd8fa2fd3ded5da6f4e508a3437ed6be034c8fbfd6e4e85deb25f561fde",
     "tests/backend/test_sqlite_task_integrity.py": "2f2cabf9e5137db9ce3406ec60da9c393a8e8ddbb14881cb30abcf1205dec93e",
     "tests/backend/test_sqlite_task_records.py": "c608953ca17775c2c3ffbab8d443ae45bf976db39fbbb67c6092b051f42f3b0a",
@@ -29,9 +38,11 @@
     "tests/backend/test_task_cursor.py": "b49b8e739e4d75a0f750a8cf3e2ff2244afc8411e544dd41987253508fe88a2d",
     "tests/backend/test_task_edit_commands.py": "36bb999d3d5c65a798016547730c04805a33b778680764ad8646ae9361151a7e",
     "tests/backend/test_task_execution_commands.py": "4ae5b591f0c23c94c18fb043251b0960c4df64d61f085aa59895db54b110d7df",
+    "tests/backend/test_task_http.py": "bbfae83c8646f1b0c030386d166e8143c16fa471047058a16e96833f049c73ab",
     "tests/backend/test_task_policy.py": "dbf6627bbcefe67863b5711f2d37b128d7733ef6166f0a5a93b9fe84b442486d",
     "tests/backend/test_task_queries.py": "40b9d3544653260f65d4549d69de5dfb13362bcc5c19f340de4e5a8213dfe196",
     "tests/backend/test_task_restoration.py": "50946c167c468674f4514b649f7df836d49fc3f393e085336e94ace5741116a5",
+    "tests/backend/test_task_runtime.py": "6530da5010f45d0782e5fc9e8897daf91c4ad20619aa5dbcafff973f4c4c9ae5",
     "tests/backend/test_task_values.py": "f1030681e9a5055a193945cb298172d281348b6eaffab6fdf5ae24d6da858269",
     "tests/backend/test_tasks.py": "285c0a8225b9fe211a8d7348516d98aa0eb2f6a24403dcb9ef6ec8f10b977628"
   },
@@ -65,9 +76,10 @@
     "backend/src/domus/composition/admin.py": "020abd88d8b9f26a429169bd1a51dd7b7ae960f0a96b53e2099bd2321debbff5",
     "backend/src/domus/composition/ha_app.py": "e0ffe36478881ff11367c7ba5467438ebef54af7d4bfb00bf14350893b15e1b3",
     "backend/src/domus/composition/household.py": "835e256f8b5b8e60adeef0d5292cb115ce05e085bbd27d0a3a0bdea46fe4ede8",
-    "backend/src/domus/composition/ingress.py": "7447608e616cd5a70652b1c02c5ddab81ea42fc8c6228cb1a0eecd60e2d029a9",
+    "backend/src/domus/composition/ingress.py": "34aaf82a652c26790daa3129e6f85ab3b37202dfda7401e230bf7fbe669e8182",
     "backend/src/domus/composition/restore.py": "fe4f5040a99db1404938e402eefa54fc93139055a5bc92abdfb7bf35d0c87297",
-    "backend/src/domus/composition/server.py": "676e4f0cd295229c587bf35de2f1ef6023e101913b3407476f4c495817855cb4",
+    "backend/src/domus/composition/server.py": "c97c61485c957f575069751bab714d9b23c0115d1ec39757b7147a50dacb14e0",
+    "backend/src/domus/composition/tasks.py": "955f4b50e54caa6b413479552d9e3b020a83318998108c71b77796793ed91834",
     "backend/src/domus/domain/__init__.py": "0aac8a2ba41471d7a174ef7baca6073c95009a9db96df3e032392aa4f80bd079",
     "backend/src/domus/domain/activation.py": "fcb2e47e939127d5e254e2136fb7f1459b40fa8c8561100579fced49666ad0fe",
     "backend/src/domus/domain/errors.py": "cb225b0e35434526fbad3603843a061fe6894001fc13e019eab7e44642196cd4",
@@ -84,12 +96,14 @@
     "backend/src/domus/entrypoints/bounded_http.py": "d8047746eddb7193f1aa9f16007958c79cc6ae7ac1c30ab93909883e3aa97b54",
     "backend/src/domus/entrypoints/console_recovery.py": "854a3f8d7a2e74f301ac5bd4b54682e409e2669a3bb7e05546e479c113c09026",
     "backend/src/domus/entrypoints/household_http.py": "f4856a94fa4979b0cc4dd6b5670f6741371efadc794d69e6e186b07493549cab",
-    "backend/src/domus/entrypoints/http.py": "5d194cef73aa9fa7edea2a1e292c09e6345ecc9f7002540bce4c8b85c4158cf7",
+    "backend/src/domus/entrypoints/http.py": "196793cdd470df970d07b0005002dada22187b1e092320098d58e1e0bb4ab682",
     "backend/src/domus/entrypoints/http_contract.py": "13ef85b4ce8f439f5da5ba88b97651501ac8d6b673b2fa09f24d5772a1f71cba",
-    "backend/src/domus/entrypoints/http_errors.py": "10e85816bdf1256abd9408ea7fb3488555906b93fa1449e037ab50b6d81339df",
+    "backend/src/domus/entrypoints/http_errors.py": "2419b9de5dd61fb719706365d600755fe770e83ae7aeaecd41e0afccee756dec",
     "backend/src/domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
     "backend/src/domus/entrypoints/ingress_http.py": "f6557eb5481d132131f66ad7691e30c223c63a66a6f0ae5754c9fba3bc7f3626",
-    "backend/src/domus/entrypoints/native_http.py": "59dce651bbab80a36a0bec435c581b247ad9b8aac6b53406bd577cbd0a7b15c7",
+    "backend/src/domus/entrypoints/native_http.py": "7143688f95524809355dab56b46bd09926fcf32af02372f85df9226173d93381",
+    "backend/src/domus/entrypoints/task_dto.py": "b43379e6c691a33281fac1f1f142b37eec978d2d862f86e1a80deafdeab971b6",
+    "backend/src/domus/entrypoints/task_http.py": "dfb600dd36313eacf96aeec2296dc089981ed60e023f43b2ce35ac27400c2cce",
     "backend/src/domus/infrastructure/__init__.py": "ec6cb2d48fb3178de856dcbeefb7b14bc193fe78ac68a53f9afcf2bd9cac0699",
     "backend/src/domus/infrastructure/application_runtime.py": "30ed2ddfd31dd7dbc6d65f8330555e1b13fa390fb45a9a9027ff732e4113bbe5",
     "backend/src/domus/infrastructure/auth_runtime.py": "414ac5ab890db991272a2fe9d7817ad1995052d2d09e1e9dd07d2631ef92de65",
@@ -125,7 +139,7 @@
     "coverage": "7.17.0"
   },
   "tests": {
-    "wholeBackend": 2170,
+    "wholeBackend": 2256,
     "existingTooling": 72,
     "architectureFixtures": 41,
     "currentAuthorityAndIdentityProfiles": 151,
@@ -135,22 +149,23 @@
     "commandsExecutionAndAuthorityFocused": 114,
     "newTaskEditors": 41,
     "editorsLifecycleAuthorityAndDomainFocused": 223,
-    "newTaskQueriesHistoryAndCursors": 126
+    "newTaskQueriesHistoryAndCursors": 126,
+    "newTaskHTTPAndRuntime": 86
   },
   "coverage": {
-    "authoredBackendFiles": 83,
+    "authoredBackendFiles": 86,
     "wholeBackend": {
-      "covered_lines": 6071,
-      "num_statements": 6071,
+      "covered_lines": 6277,
+      "num_statements": 6277,
       "percent_covered": 100.0,
       "percent_covered_display": "100.00",
       "missing_lines": 0,
-      "excluded_lines": 180,
+      "excluded_lines": 184,
       "percent_statements_covered": 100.0,
       "percent_statements_covered_display": "100.00",
-      "num_branches": 1722,
+      "num_branches": 1736,
       "num_partial_branches": 0,
-      "covered_branches": 1722,
+      "covered_branches": 1736,
       "missing_branches": 0,
       "percent_branches_covered": 100.0,
       "percent_branches_covered_display": "100.00"
@@ -252,6 +267,22 @@
         "percent_branches_covered": 100.0,
         "percent_branches_covered_display": "100.00"
       },
+      "backend/src/domus/composition/tasks.py": {
+        "covered_lines": 18,
+        "num_statements": 18,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 4,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 0,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
       "backend/src/domus/domain/task_policy.py": {
         "covered_lines": 76,
         "num_statements": 76,
@@ -296,6 +327,38 @@
         "num_branches": 82,
         "num_partial_branches": 0,
         "covered_branches": 82,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/entrypoints/task_dto.py": {
+        "covered_lines": 85,
+        "num_statements": 85,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 4,
+        "num_partial_branches": 0,
+        "covered_branches": 4,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "backend/src/domus/entrypoints/task_http.py": {
+        "covered_lines": 73,
+        "num_statements": 73,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 0,
+        "num_partial_branches": 0,
+        "covered_branches": 0,
         "missing_branches": 0,
         "percent_branches_covered": 100.0,
         "percent_branches_covered_display": "100.00"
@@ -403,15 +466,16 @@
     "wholeSourceInventoryExactlyMatchesCoverage": true
   },
   "architecture": {
-    "analyzedFiles": 119,
-    "dependencies": 662,
+    "analyzedFiles": 122,
+    "dependencies": 697,
     "contractsKept": 3,
     "contractsBroken": 0,
-    "strictBackendTypes": "PASS; 83 backend source files (87 including tooling)"
+    "strictBackendTypes": "PASS; 86 backend source files (90 including tooling)"
   },
   "commands": [
-    "COVERAGE_FILE=/private/tmp/domus-task-query-full.coverage .venv/bin/pytest -q tests/backend --cov=domus --cov-branch --cov-report=json:/private/tmp/domus-task-query-coverage.json --cov-report=xml:/private/tmp/domus-task-query-coverage.xml --cov-report=term-missing",
-    ".venv/bin/pytest --collect-only -q tests/backend/test_task_queries.py tests/backend/test_task_cursor.py tests/backend/test_sqlite_task_history.py (126 new cases; execution is included in the full backend run)",
+    "COVERAGE_FILE=/private/tmp/domus-task-http-full.coverage .venv/bin/pytest -q tests/backend --basetemp=$TMPDIR/domus-task-http-final-pytest-04d8925 --cov=domus --cov-branch --cov-report=json:/private/tmp/domus-task-http-coverage.json --cov-report=xml:/private/tmp/domus-task-http-coverage.xml --cov-report=term-missing (private temporary parent GID verified against process before execution)",
+    ".venv/bin/pytest --collect-only -q tests/backend/test_task_http.py tests/backend/test_task_runtime.py (86 new cases; all execute in the final full backend run)",
+    ".venv/bin/pytest -q tests/backend/test_task_http.py -k offline_activation --no-cov (both cases rechecked after shortening only their test function name for formatting)",
     ".venv/bin/mypy backend/src tooling",
     ".venv/bin/lint-imports --config architecture/python-application.ini --no-cache",
     ".venv/bin/lint-imports --config architecture/python-tooling.ini --no-cache",
@@ -457,7 +521,7 @@
   "sddAndCatalogValidation": {
     "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
     "base": "a63b2315cd5121dde9585ba8875e286fdef5330e",
-    "source": "3b52e0792bfe27bcdc6289e3c8b28e66020215de",
+    "source": "04d8925c5a62c6e485ec046c213b9f8dd8124b94",
     "catalogSHA256": "522b4be55ee8abcf295c58d200caf6141efee837988864c4ebf4a0c53d9846bd",
     "catalog": "PASS",
     "affectedSdds": "PASS; household-tasks, household-identity, points-rewards, task-execution-foundation",
@@ -491,10 +555,10 @@
   },
   "limits": [
     "The full backend run uses temporary loopback WebSocket listeners and was run with local-listener permission. No tests were skipped to obtain coverage.",
-    "Lifecycle/editors and bounded application queries/history share current authority and durable retry evidence. Public task HTTP, material intents/settlement, actual dependency-review and Inventory/Points/recurrence consumers still require implementation/acceptance. Source events and generic outbox acknowledgement do not confirm consumer delivery.",
+    "Lifecycle/editors/queries/history now run through task HTTP in both business compositions. Material intents/settlement, dependency-review and actual Inventory/Points/recurrence consumers still require implementation/acceptance. Source events and outbox acknowledgement do not confirm consumer acceptance.",
     "Restoration tests use an explicit fake HA identity provider with actual local MembershipAuthorization, AtomicCommands, SQLite and restore services. They are not owner HA access/adoption proof.",
     "No owner Chrome UI, package deployment, Stable/Edge adoption, HA entity/service or complete product acceptance was performed. Hosted current-head CI and complete Bugbot are separate gates.",
-    "Historical authority checkpoint: its first full run found two stale OpenAPI Permission enums (1906 passed, 2 failed). Only those enum references were synchronized; its final run including stale-record negatives passed 1910 tests. The current query checkpoint is independently measured above."
+    "Historical authority checkpoint: its first full run found two stale OpenAPI Permission enums (1906 passed, 2 failed). Only those enum references were synchronized; its final run including stale-record negatives passed 1910 tests. The current HTTP checkpoint is independently measured above."
   ],
   "historicalPolicyCheckpoint": {
     "sourceRevision": "143de3e79bf8aa02171b4123b794d222f4d4f231",
@@ -602,46 +666,51 @@
     "A stale assignment cannot authorize completion after release, and a supplied occurrence with a weaker override cannot replace the persisted snapshot. Both negative tests failed before the current-record lookup was implemented."
   ],
   "rawMeasurements": {
-    "archive": "/private/tmp/domus-task-query-checkpoint-retained/measurements.tar.gz",
-    "archiveSHA256": "3974c3ccc9446a3c8cf7fea022305bebb2a2f461f40d7105e3d09747f44a4ccd",
+    "archive": "/private/tmp/domus-task-http-checkpoint-retained/measurements.tar.gz",
+    "archiveSHA256": "2197e01813d1dce415740bbbe64164d43873134c8f9f62570840b2f340980ce2",
     "members": [
       {
-        "name": "domus-task-query-coverage.json",
-        "sha256": "ce8864a5ecade88b7aeb2ab20bd39943e4e9182e6385d1165d5ff5d3aeec16dd",
-        "size": 805182
+        "name": "domus-task-http-coverage.json",
+        "sha256": "c242f728c468b54f7068cf9fc50f3c2c8e8606415bf8f21eb3f606682ca2691b",
+        "size": 841703
       },
       {
-        "name": "domus-task-query-coverage.xml",
-        "sha256": "cf5c761b593db72eea3a038809ec6bb94919eb841fa06818d38dcb2f6f030759",
-        "size": 272140
+        "name": "domus-task-http-coverage.xml",
+        "sha256": "db10a583070305851f2888563efb5852d8e6a78f44b4d964b5bf7fd86412768a",
+        "size": 280312
       },
       {
-        "name": "domus-task-query-backend-test-output.txt",
-        "sha256": "85714b1717a8e9d43712d603362836f9f728ee96a2eee5c980dd25e5b28e7e3b",
-        "size": 11259
+        "name": "domus-task-http-backend-output.txt",
+        "sha256": "bd529605e993f39661a7cf14f74eb94715dd55fd00c411521e129fe262728685",
+        "size": 11625
       },
       {
-        "name": "domus-task-query-full.coverage",
-        "sha256": "50e2507e6b787fc40c6469fec1a43eab75c58662ba930ff3b72ff191d9c0a49d",
-        "size": 458752
+        "name": "domus-task-http-initial-backend-output.txt",
+        "sha256": "43a067ce5704d012f6bacdef8a9b6ab2ca55a52f22fb2ddc1eff22f6658aed42",
+        "size": 18295
       },
       {
-        "name": "domus-task-query-architecture.txt",
-        "sha256": "61ee0a67cd6de00f7c397af3cd5307fae2bde38babf2c8d7fe1315f6d61ed928",
+        "name": "domus-task-http-full.coverage",
+        "sha256": "f5edb2dfe0ba92309f6cedc9c66ba83335f2a083c646bd60ae7d64c0fdc4779a",
+        "size": 475136
+      },
+      {
+        "name": "domus-task-http-architecture.txt",
+        "sha256": "642b45f0cd1638920a12234bd20174e0b9a1103cc413d81741d37371f8f3e806",
         "size": 959
       },
       {
         "name": "domus-task-foundation-published-validation.json",
-        "sha256": "93cd5d220260c2ecdd6b22b52d91b89ab80475c166e3bfb4890fb5e663f5a21a",
+        "sha256": "a53488ff72c36be56680e7cf513e7520faaf3ff027f7105d9d2fec354f312330",
         "size": 326
       },
       {
         "name": "domus-task-storage-sdd-catalog-validation.json",
-        "sha256": "d5c7f4e9aa8232914668cb90a55a092daf39f34f0e7aa24d9a15df1d8be0da57",
+        "sha256": "288c97e336ef23b4c0b87a5b8f271d16d04b22a2032d5f7d25b2d7b4ad758cb7",
         "size": 586
       }
     ],
-    "consumer": "Current task query/cursor/history original whole-backend coverage, test, dependency and pinned SDD measurements for in-flight PR review/reproduction. Historical checkpoint scopes remain separate."
+    "consumer": "Current original complete backend/HTTP, initial fixture-group diagnostic, dependency and pinned SDD reports for in-flight PR review/reproduction; older scopes stay separately identified."
   },
   "historicalAuthorityCheckpoint": {
     "sourceRevision": "e439a70cdde86ff4f1294a466d8ac0cdd46c64f4",
@@ -1028,8 +1097,8 @@
   "sddFormatValidation": {
     "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
     "base": "a63b2315cd5121dde9585ba8875e286fdef5330e",
-    "source": "3b52e0792bfe27bcdc6289e3c8b28e66020215de",
-    "markdownSHA256": "170f46eb5f545eff5ac14c841746544c3fdcd3e7b6bcae092021cd30f27dbcae",
+    "source": "04d8925c5a62c6e485ec046c213b9f8dd8124b94",
+    "markdownSHA256": "83e08a7650de9793e0fff116b430f28258792242d9145fa642bcfb37e9f11716",
     "format": "PASS",
     "consistency": "PASS",
     "diagnostic": null
@@ -1042,5 +1111,135 @@
     "ownOperations": "Current own-operation and task grants plus original create/configuration, attribution, transition, definition and occurrence scope are required again. Immutable canonical request/result/event shapes and fingerprints must match. Historical requests never execute.",
     "actualRestore": "Real owned SQLite checkpoint preparation and offline activation preserve historical completion proof while restoring the prior open state. Queries create no effects; a deliberate fresh completion appends after the retained position. Explicit fake HA proof is distinct from live owner adoption.",
     "testsFirst": "New cursor/query tests initially failed collection for missing modules; history tests initially failed for absent methods. Final meaningful cases include actual SQL pagination beyond one page, corruption, permission loss, cross-context cursors and offline activation."
+  },
+  "historicalQueryCheckpoint": {
+    "sourceRevision": "04d8925c5a62c6e485ec046c213b9f8dd8124b94",
+    "verifiedAtUTC": "2026-11-01T02:10:41.039490+00:00",
+    "tests": {
+      "wholeBackend": 2170,
+      "existingTooling": 72,
+      "architectureFixtures": 41,
+      "currentAuthorityAndIdentityProfiles": 151,
+      "taskCreationAssignmentClaim": 45,
+      "commandsAndRestorationFocused": 48,
+      "newTaskExecution": 46,
+      "commandsExecutionAndAuthorityFocused": 114,
+      "newTaskEditors": 41,
+      "editorsLifecycleAuthorityAndDomainFocused": 223,
+      "newTaskQueriesHistoryAndCursors": 126
+    },
+    "wholeBackendCoverage": {
+      "covered_lines": 6071,
+      "num_statements": 6071,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 180,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 1722,
+      "num_partial_branches": 0,
+      "covered_branches": 1722,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "authoredBackendFiles": 83,
+    "rawMeasurements": {
+      "archive": "/private/tmp/domus-task-query-checkpoint-retained/measurements.tar.gz",
+      "archiveSHA256": "3974c3ccc9446a3c8cf7fea022305bebb2a2f461f40d7105e3d09747f44a4ccd",
+      "members": [
+        {
+          "name": "domus-task-query-coverage.json",
+          "sha256": "ce8864a5ecade88b7aeb2ab20bd39943e4e9182e6385d1165d5ff5d3aeec16dd",
+          "size": 805182
+        },
+        {
+          "name": "domus-task-query-coverage.xml",
+          "sha256": "cf5c761b593db72eea3a038809ec6bb94919eb841fa06818d38dcb2f6f030759",
+          "size": 272140
+        },
+        {
+          "name": "domus-task-query-backend-test-output.txt",
+          "sha256": "85714b1717a8e9d43712d603362836f9f728ee96a2eee5c980dd25e5b28e7e3b",
+          "size": 11259
+        },
+        {
+          "name": "domus-task-query-full.coverage",
+          "sha256": "50e2507e6b787fc40c6469fec1a43eab75c58662ba930ff3b72ff191d9c0a49d",
+          "size": 458752
+        },
+        {
+          "name": "domus-task-query-architecture.txt",
+          "sha256": "61ee0a67cd6de00f7c397af3cd5307fae2bde38babf2c8d7fe1315f6d61ed928",
+          "size": 959
+        },
+        {
+          "name": "domus-task-foundation-published-validation.json",
+          "sha256": "93cd5d220260c2ecdd6b22b52d91b89ab80475c166e3bfb4890fb5e663f5a21a",
+          "size": 326
+        },
+        {
+          "name": "domus-task-storage-sdd-catalog-validation.json",
+          "sha256": "d5c7f4e9aa8232914668cb90a55a092daf39f34f0e7aa24d9a15df1d8be0da57",
+          "size": 586
+        }
+      ],
+      "consumer": "Current task query/cursor/history original whole-backend coverage, test, dependency and pinned SDD measurements for in-flight PR review/reproduction. Historical checkpoint scopes remain separate."
+    },
+    "hostedCI": {
+      "sourceRevision": "04d8925c5a62c6e485ec046c213b9f8dd8124b94",
+      "run": "https://github.com/vypdev/domus/actions/runs/41264216723",
+      "aggregateCheck": 124724230690,
+      "conclusion": "success",
+      "allRequiredGroups": "success; includes actual frontend browser checks and both native image architectures, not task package adoption",
+      "bugbot": "Neutral/skipped for draft; not merge acceptance",
+      "copilotProgressFailure": {
+        "phase": "assessment",
+        "reason": "assessment-text-limit",
+        "field": "$.requirements",
+        "reference": "d11ebd41-0388-453c-9082-401963a3df21",
+        "reportedAt": "https://github.com/vypdev/copilot/issues/829#issuecomment-6551433018"
+      }
+    },
+    "note": "Historical query/cursor/history source; new HTTP source requires independent head CI/review."
+  },
+  "httpAssertions": {
+    "routeOperations": 18,
+    "distinctPaths": 15,
+    "composition": "Actual native/standalone production composition factories and FastAPI ASGI requests, real session/authority services and SQLite. HA/Supervisor/OAuth transports are explicit fakes; this is not TCP task API/owner HA or package adoption proof.",
+    "boundaries": "Existing session/current proof, Origin, CSRF, duplicate-key JSON, method/body size and current grants. Canonical integer pages; strict unknown fields/selectors/IDs/enums/lists. Native task GET query bounds/uniqueness preserve peer/header verification and other routes retain query denial.",
+    "workflows": "Title-only and configured creation; policy/defaults; definition preserve/reset; new occurrence; assignment/dependencies; progress; prerequisite gating; completion/replay; restricted claim and adult verification; reopen, safe history and own receipt.",
+    "uncertainty": "Injected outer response failure occurs after actual commit. Same-key retry recovers one definition/occurrence/audit/outbox without leaking private exception details.",
+    "restore": "Both HTTP compositions are recomposed over actual activated owned storage after checkpoint rollback. An acknowledged historical completion remains absent, is returned as historical/suppressed and cannot execute again through same-key HTTP replay.",
+    "materials": "Unsupported definition/usage inputs fail before task effects. No pretend material movement, ledger/recurrence consumer or review projection.",
+    "contracts": {
+      "docs/contracts/household-api.openapi.json": "56b606f850ea55bc19f34acb27b260b5b92971fe33b01a0a832701952894042f",
+      "docs/contracts/native-household-api.openapi.json": "7477a4ffd90fb96409f7f9baf292055b886b024068d71c82c61ec67416d5ab6f"
+    },
+    "contractGeneration": "Generated from actual new standalone/native fixture composition schemas; existing snapshot equality checks remain and pass. Existing sorted-key JSON format is preserved without changing parsed schema values.",
+    "firstCampaign": {
+      "passed": 2249,
+      "failed": 3,
+      "coverage": "All statements/branches complete; not a passing full test campaign.",
+      "cause": "Explicit /private/tmp task fixture root inherited GID 0; process GID was 20. Three unchanged launcher ownership fixtures exposed the mismatch.",
+      "repair": "Use explicit task-owned basetemp under the user private temporary parent, verifying its GID is the process GID. Production ownership guards and their tests are unchanged.",
+      "finalCampaign": "2256 passed, including four subsequently added uncertainty/restoration executions.",
+      "originalFailureLog": "domus-task-http-initial-backend-output.txt in rawMeasurements archive."
+    },
+    "existingContractValuesPreserved": {
+      "docs/contracts/household-api.openapi.json": {
+        "existingPathsRetained": 16,
+        "existingSchemasRetained": 28,
+        "addedTaskPaths": 15,
+        "addedTaskOperations": 18
+      },
+      "docs/contracts/native-household-api.openapi.json": {
+        "existingPathsRetained": 16,
+        "existingSchemasRetained": 26,
+        "addedTaskPaths": 15,
+        "addedTaskOperations": 18
+      }
+    }
   }
 }

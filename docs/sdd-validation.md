@@ -252,3 +252,35 @@ materials/settlement, real consumers, dependency-review projection, UI/package/l
 isolated Stable/Edge delivery remain required. The prior editor head has fully green project CI; its
 separate Copilot assessment failure is reported upstream. Current-head CI and complete full-context
 Bugbot remain required before merging the finished feature. Copilot and the gateway are unchanged.
+
+## Task HTTP in both business compositions — 2026-11-01
+
+The shared task router now exposes 18 operations across 15 paths in native and standalone business
+compositions. Strict bounded input DTOs map to the same commands/queries; response serialization and
+actual composed OpenAPI remain at the outer boundary. Existing proof/session, Origin, CSRF, JSON
+duplicate-key/body bounds and current authority apply. Native task GET parameters are bounded and
+nonduplicate while preserving the original peer/header policy. Authentication-only preview remains
+without task capability. Unsupported materials are rejected before writes.
+
+The final full backend campaign passes 2,256 tests, covering all 6,277 statements and 1,736 branches
+across every one of the 86 authored files. Source and coverage inventories match exactly. Eighteen
+task modules contribute 1,529 statements and 416 branches, all covered. The 86 new HTTP/runtime cases
+include both actual ASGI compositions, restricted claim/verification, editor/dependency cycles,
+current revocation, outage expiry, bounded/forged input and committed-response uncertainty. Actual
+offline activation followed by owned-runtime recomposition exposes historical receipts and suppresses
+their absent effects even when their old outbox event was acknowledged. Explicit fake HA transports
+are not owner HA adoption.
+
+The first campaign used a task-owned directory under `/private/tmp`, whose inherited group differed
+from the process group on this host. Three unchanged launcher ownership tests failed; 2,249 passed
+and all runtime coverage metrics were complete. The final campaign used an isolated directory under
+the user's private temporary root with the verified process group. All original ownership checks
+remain unchanged and pass; no tests or runtime scope were excluded. The original failure log and
+final source-identified measurements remain in the [task evidence](evidence/task-execution-foundation.json).
+
+Strict types, formatting, local links, all 113 tooling/architecture fixtures, the full import graph
+and unchanged pinned SDD/catalog checks pass. The original case rows and fourteen/109/485 planned
+inventory remain intact. Materials/settlement, review projection and real consumers, UI/packages/live
+HA and full first-release acceptance remain incomplete. Prior query-head CI is fully green; its
+separate assessment failure is reported in Copilot #829. Finished-feature current-head CI and complete
+full-context Bugbot without unresolved findings remain mandatory before merge.

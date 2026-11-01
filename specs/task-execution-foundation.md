@@ -8,7 +8,7 @@
 - Scope: Specify a durable first backend increment for task definitions, occurrences, completion cycles, authorization, and honest consumer integration seams.
 - Related issues/PRs: [Issue #13](https://github.com/vypdev/domus/issues/13); merged PR #12 is historical context.
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: None among the supplied product choices; prerequisite approval timing was confirmed on 2026-11-01. The companion was published on its exact managed branch before implementation; readiness remains Draft until reviewers validate complete contracts/evidence and the application/composition requirements execute. This specification does not establish implementation or runtime acceptance.
+- Open decisions blocking readiness: None among supplied product choices. Action published the companion and managed branch before code. Complete contract/runtime/composition review remains required; Draft is not acceptance.
 
 ## 1. Executive summary
 
@@ -31,7 +31,7 @@ Verified facts at the immutable base:
 1. The household-tasks capability is proposed and its existing specification is `specs/household-tasks.md`, with 49 reserved cases `household-tasks-C01` through `household-tasks-C49`.
 2. The M1 source includes identity, household, transaction, receipt, outbox, recovery, and offline restoration foundations. It declares task-related permission enums, but no task entities, repositories, commands, or task API.
 3. The supplied capability catalog lists no task workflows, entrypoints, code, or tests. The existing broad Draft specification’s cases are not evidence of implementation.
-4. Both Python compositions and task route DTOs are prospective contracts in this document. No task routes exist today.
+4. At the pinned base no task routes exist. Later sections define the required two-composition contract.
 
 ### 2.3 Evidence
 
@@ -194,7 +194,7 @@ Completion authorization checks current assignment, restricted self-attribution 
 
 Policy replacement is administrator-only: revision zero creates an absent policy and positive revisions update existing defaults. Definition edits require management; omitted overrides preserve current values, while explicit replacement/reset also requires configuration authority on execution and replay. Edits affect future occurrence snapshots without rewriting existing work/cycles. New occurrences use the current definition inside the writer transaction, accept up to 32 active assignees and 32 IDs per prerequisite/subtask list, and reject paused/archived definitions. Dependency replacement requires management and nonterminal work; completed/cancelled/skipped edges stay frozen until an applicable explicit reopening. New occurrences and dependency edits validate every page of the complete household graph before writes. Results/source events retain dependency IDs; stale, foreign or cyclic requests cannot partially rewrite state.
 
-The owner confirmed on 2026-11-01 that dependency_gate is configurable per household/task, with performed as default and approved as the alternative. Pending approval may therefore satisfy the default prerequisite gate, while points remain unavailable until required approval. Rejected verification satisfies neither mode. The effective gate belongs to the completion cycle snapshot, independently of current authority and later configuration changes.
+Owner A34 (2026-11-01) confirms the performed prerequisite default and configurable approved alternative below; point availability remains approval-gated.
 
 Definition overrides are nullable: omitted/cleared values inherit current household defaults; explicit false, zero and empty role sets remain real overrides. Each occurrence freezes its definition/content/override snapshot. Completion resolves current defaults and retains the effective rules and all source policy revisions; pending cycles keep their original snapshot. Initial draft work has no assignees until published. Active definitions create available or assigned work; paused/archived definitions stop new occurrences while retaining history.
 
@@ -202,11 +202,11 @@ Definitions, occurrences and completion cycles have explicit stable IDs, househo
 
 Pure requirement evaluation supports the confirmed performed default and configurable approved alternative. A completion uses the gate in its own resolved rule snapshot; a caller cannot select a conflicting weaker gate. Both require completed work; rejected verification never satisfies a requirement. Approved mode accepts no-verification-needed or approved work; performed mode additionally accepts pending approval. Both use the exact server-resolved required occurrence set. Prerequisites and required subtasks each allow 32 IDs; their combined deduplicated graph therefore allows 64 edges per node. Iterative cycle detection remains independent of Python recursion depth.
 
-Queries recheck current read grants in one transaction without creating defaults. Keyset pages default to 25, max 100; signed cursors expire after five minutes, bind actor/installation/channel/household/query/filters/limit and confer no snapshot or write authority. Restart can invalidate cursors. Action hints use current grants/state. Bounded history merges current/retained operation positions, marks restoration, hides HA identities/requests and distinguishes outbox acknowledgement from consumer delivery. Own operation lookup rechecks original command authority from the canonical retained request. Shared readers unify facts.
+Queries recheck current read grants in one transaction without creating defaults. Pages default to 25/max 100. Signed cursors expire after five minutes, bind actor/installation/channel/household/query/filters/limit, confer no snapshot/write authority and may expire on restart. Hints use current grants/state. Bounded history merges current/retained operation positions, marks restoration, hides HA identities/requests and distinguishes outbox acknowledgement from consumer delivery. Own operation lookup rechecks original command authority from the canonical retained request. Shared readers unify facts.
 
-### Proposed HTTP contract
+### HTTP contract
 
-Both existing Python compositions expose shared application services under `/api/v1/tasks`; these routes are proposals, not current capabilities. Mutations require current session/proof, Origin, CSRF, `Idempotency-Key`, and `expected_revision` (`0` create, positive update). Household, actor, installation, and channel derive server-side. Reject unknown fields. Lists use limit default 25, max 100, cursor max 512; keyset cursors bind query/context and make no cross-page snapshot claim.
+Both business compositions expose shared services under `/api/v1/tasks`. Lifecycle/query routes now execute; material fields/routes remain prospective. Mutations require current session/proof, Origin, CSRF, `Idempotency-Key`, and `expected_revision` (`0` create, positive update). Household, actor, installation, and channel derive server-side. Reject unknown fields. Lists use limit default 25, max 100, cursor max 512; keyset cursors bind query/context and make no cross-page snapshot claim.
 
 | Method and route | Request contract |
 |---|---|
@@ -223,8 +223,11 @@ Both existing Python compositions expose shared application services under `/api
 | POST `/api/v1/tasks/occurrences/{id}/complete` | Revision, nonempty unique performer IDs (max 32), UTC ms performed_at, up to 32 material usages `{line_id, quantity}`; quantity canonical nonnegative decimal string, never float |
 | POST `/api/v1/tasks/occurrences/{id}/verify` | Revision, cycle_id, approve/reject, reason; reject requires nonblank reason |
 | POST `/api/v1/tasks/occurrences/{id}/reopen` | Revision, cycle_id, nonblank reason |
+| GET `/api/v1/tasks/operations/{id}` | Own receipt with original authority rechecked; delivery names refer only to outbox acknowledgement |
 | GET `/api/v1/tasks/occurrences/{id}/history` | Chronological safe history with event ID, revision, actor, time, action, safe detail |
 | POST `/api/v1/tasks/occurrences/{id}/materials/{intent_id}/settlement` | Revision, original cycle_id, action post/correct/dismiss, quantity only for correction, required reason for correction/dismissal |
+
+Wire bodies use top-level content, nested overrides/rules and strict ID arrays. Omitted/null update overrides preserve; an empty object resets inheritance. Create defaults expected_revision to zero. Reject unsupported material fields before writes until their semantic services are wired. Only business compositions expose task routes. Native GET task queries use the existing header/peer policy with bounded, nonduplicate query pairs.
 
 Responses use existing `ReceiptResponse`, `OperationResponse`, and `ErrorResponse` contracts. Receipt result retains immutable resource/cycle/revision/material facts, never current grants. Resources expose IDs, revisions, states, snapshots, and allowed actions; occurrence includes assignees, dependencies, performers, times, verification, and material outcomes. Material outcome includes intent/cycle/line IDs, submitted canonical quantity, status, reason code, safe message/action, nullable actual movement ID, and revision. `posted` requires actual Inventory confirmation; invalid forged/foreign material rejects before effects. Other valid work may save with visibly unposted outcomes. Current reads show present settlement state separately from original receipt.
 
@@ -472,6 +475,7 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `backend/src/domus/infrastructure/task_cursor.py` | create |
 | `backend/src/domus/entrypoints/task_http.py` | create |
 | `backend/src/domus/entrypoints/task_dto.py` | create |
+| `backend/src/domus/entrypoints/http_errors.py` | update |
 | `backend/src/domus/composition/tasks.py` | create |
 | `tests/backend/test_task_values.py` | create |
 | `tests/backend/test_task_policy.py` | create |
@@ -495,6 +499,7 @@ Pure policy uses exhaustive decision tables and 100% branches. Use deterministic
 | `tests/backend/test_sqlite_task_integrity.py` | create |
 | `tests/backend/test_task_http.py` | create |
 | `tests/backend/test_task_runtime.py` | create |
+| `tests/backend/test_household_http.py` | update |
 | `tests/backend/test_task_restoration.py` | create |
 | `docs/evidence/task-execution-foundation.json` | create |
 | `tooling/domus_tooling/backend_coverage.py` | create |

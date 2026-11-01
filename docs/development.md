@@ -271,8 +271,9 @@ The current source implements immutable task rules, typed policy/definition/occu
 repositories, schema-5 migration/checkpoint integration, current authority and durable creation,
 assignment, claim, progress, completion, verification and reopening commands, plus policy, definition,
 occurrence and dependency editors. Application queries now expose bounded definitions/occurrences,
-current detail/action hints, restoration-aware history and own-operation lookup. Public task HTTP,
-material intents/settlement, dependency-review projections and actual consumers remain incomplete.
+current detail/action hints, restoration-aware history and own-operation lookup. Both business compositions now expose task HTTP behind their existing session, Origin and CSRF
+boundaries. Material intents/settlement, dependency-review projections and actual consumers remain
+incomplete.
 
 Domain never authenticates or authorizes requests. TaskAccess rereads current active membership,
 identity mapping, profile/member rules and stored assignment inside the caller transaction. Claim
@@ -348,3 +349,13 @@ those adapters rather than skipping them. The whole authored backend source ente
 coverage immediately, including unimported files. The complete dependency graph remains mandatory.
 [Source-identified evidence](evidence/task-execution-foundation.json) records current measurements,
 original pinned SDD/catalog provenance, historical checkpoints and incomplete acceptance.
+
+
+Task HTTP requests use strict bounded wire models in task_dto, mapped to typed application requests.
+The shared task router serializes transport-independent output records at the outer boundary, with
+actual composed OpenAPI snapshots for both deployments. Native task GET queries accept bounded,
+nonduplicate parameters while retaining the original peer/header policy; other native routes retain
+their existing query rules. The authentication-only preview does not acquire business task routes.
+See the [task execution guide](tasks/execution.md) for payloads, defaults, original-key recovery,
+restoration and the explicitly unsupported material fields. The task-specific own-operation route
+rechecks original authority and prioritizes historical suppression over old outbox acknowledgement.
