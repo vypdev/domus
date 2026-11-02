@@ -27,6 +27,8 @@ from domus.domain.storage import (
 )
 from domus.infrastructure.sqlite_history import HISTORY_STATEMENTS, SQLiteHistory
 from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
+from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS, PROFILE_TABLES
+from domus.infrastructure.sqlite_member_profiles import SQLitePreferences, SQLitePresentations
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts, _command, _scope
 from domus.infrastructure.sqlite_recovery import SQLiteRecoveries
 from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
@@ -41,7 +43,7 @@ from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS, TASK_TABLES
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -96,6 +98,7 @@ SCHEMA_STATEMENTS = (
     *MATERIAL_STATEMENTS,
     *REVIEW_STATEMENTS,
     *RECURRENCE_STATEMENTS,
+    *PROFILE_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -103,7 +106,8 @@ RECOVERY_TABLES = IDENTITY_TABLES | {"recovery_requests"}
 HISTORY_TABLES = RECOVERY_TABLES | {"retained_operations"}
 TASK_SCHEMA_TABLES = HISTORY_TABLES | TASK_TABLES
 MATERIAL_SCHEMA_TABLES = TASK_SCHEMA_TABLES | MATERIAL_TABLES
-TABLES = MATERIAL_SCHEMA_TABLES | RECURRENCE_TABLES
+RECURRENCE_SCHEMA_TABLES = MATERIAL_SCHEMA_TABLES | RECURRENCE_TABLES
+TABLES = RECURRENCE_SCHEMA_TABLES | PROFILE_TABLES
 
 
 def _storage_error(error: sqlite3.Error) -> DomusError:
@@ -261,6 +265,8 @@ class SQLiteUnit:
         self.audit = SQLiteAudit(connection)
         self.outbox = SQLiteOutbox(connection)
         self.members = SQLiteMembers(connection)
+        self.presentations = SQLitePresentations(connection)
+        self.preferences = SQLitePreferences(connection)
         self.policies = SQLitePolicies(connection)
         self.recoveries = SQLiteRecoveries(connection)
         self.tasks = SQLiteTasks(connection)
@@ -314,7 +320,7 @@ class SQLiteDatabase:
             if version == 0 and application_id == 0 and not objects and allow_empty:
                 return 0
             if version != SCHEMA_VERSION and not (
-                allow_previous and version in (1, 2, 3, 4, 5, 6, 7)
+                allow_previous and version in (1, 2, 3, 4, 5, 6, 7, 8)
             ):
                 raise DatabaseRejected("unsupported_schema")
             expected_tables = {
@@ -325,6 +331,7 @@ class SQLiteDatabase:
                 5: TASK_SCHEMA_TABLES,
                 6: MATERIAL_SCHEMA_TABLES,
                 7: MATERIAL_SCHEMA_TABLES,
+                8: RECURRENCE_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -368,7 +375,7 @@ class SQLiteDatabase:
                     )
                     connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
-                elif version in (1, 2, 3, 4, 5, 6, 7):
+                elif version in (1, 2, 3, 4, 5, 6, 7, 8):
                     migration = (
                         *(IDENTITY_STATEMENTS if version == 1 else ()),
                         *(RECOVERY_STATEMENTS if version < 3 else ()),
@@ -376,7 +383,8 @@ class SQLiteDatabase:
                         *(TASK_STATEMENTS if version < 5 else ()),
                         *(MATERIAL_STATEMENTS if version < 6 else ()),
                         *(REVIEW_STATEMENTS if version < 7 else ()),
-                        *RECURRENCE_STATEMENTS,
+                        *(RECURRENCE_STATEMENTS if version < 8 else ()),
+                        *PROFILE_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)

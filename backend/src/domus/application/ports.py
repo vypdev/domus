@@ -3,6 +3,7 @@
 from contextlib import AbstractContextManager
 from typing import Protocol
 
+from domus.application.member_profile_ports import MemberPreferencesRepository, MemberPresentations
 from domus.application.recurrence_ports import RecurrenceRepository
 from domus.application.task_material_ports import TaskMaterialRepository
 from domus.application.task_ports import TaskRepository
@@ -62,6 +63,12 @@ class Outbox(Protocol):
 
 
 class UnitOfWork(Protocol):
+    @property
+    def presentations(self) -> MemberPresentations: ...
+
+    @property
+    def preferences(self) -> MemberPreferencesRepository: ...
+
     @property
     def recurrence(self) -> RecurrenceRepository: ...
 

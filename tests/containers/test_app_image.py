@@ -255,7 +255,7 @@ def snapshot_roundtrip(name: str, instance_id: str) -> None:
     assert created.returncode == 0, created.stderr
     original = json.loads(created.stdout)
     assert original["state"] == "created"
-    assert original["snapshot"]["schema_version"] == 8
+    assert original["snapshot"]["schema_version"] == 9
     assert original["snapshot"]["last_committed_at"] == 100
     inspected = docker(
         "exec",
@@ -531,7 +531,7 @@ def test_packaged_console_restore_restart_and_latest_history_rollback(
         )
     )
     assert activated["state"] == "active"
-    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 8
+    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 9
     assert docker("start", name).returncode == 0
     ready(name, standalone=mode == "standalone")
     active = successful(packaged_fixture(image, volume, "active", delivery))

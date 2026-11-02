@@ -241,6 +241,10 @@ jobs:
       - run: uv sync --frozen
       - name: Build the installed immutable Edge.5 image for schema-7 compatibility
         run: docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-edge5 addon-edge
+      - name: Build the immutable published schema-8 image for profile migration compatibility
+        run: >-
+          docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
+          -t domus-app-schema8 tests/fixtures/schema8-app
       - name: Build the exact checked-out source and frontend
         run: >-
           docker build --file tests/fixtures/current-app/Dockerfile
@@ -266,6 +270,7 @@ jobs:
           DOMUS_PREVIOUS_IMAGE: domus-app-previous
           DOMUS_UPGRADE_IMAGE: domus-app-installed
           DOMUS_SCHEMA7_IMAGE: domus-app-edge5
+          DOMUS_SCHEMA8_IMAGE: domus-app-schema8
         run: uv run pytest tests/containers --no-cov
 
   aggregate:

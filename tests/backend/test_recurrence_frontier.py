@@ -61,7 +61,7 @@ def test_frontier_commits_reopens_and_never_creates_task_or_business_evidence(tm
         SQLiteSnapshots(store, tmp_path / "checkpoint", store.installation, Clock())
         .create("frontier")
         .schema_version
-        == 8
+        == 9
     )
 
 
@@ -172,7 +172,7 @@ def test_genuine_prior_unreleased_schema8_layout_is_refused_without_mutating_its
     before = path.read_bytes()
     store = SQLiteDatabase(path, IDENTITY)
     for method in (store.read, store.write):
-        with pytest.raises(DatabaseRejected, match="unrelated_database"):
+        with pytest.raises(DatabaseRejected, match="unsupported_schema"):
             with method():
                 pytest.fail("An unknown prior development layout was accepted")
         assert path.read_bytes() == before
