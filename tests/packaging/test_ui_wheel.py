@@ -1,6 +1,7 @@
 """Verify the actual built wheel, including ignored UI resources and fixture exclusion."""
 
 import hashlib
+import json
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -20,6 +21,13 @@ def test_built_wheel_contains_exact_product_bundle_and_no_browser_fixture(tmp_pa
         if path.is_file()
     }
     assert len(expected) >= 4
+    candidate = json.loads((ROOT / "docs/evidence/household-administration.json").read_text())[
+        "currentSourcePackage"
+    ]["actualProductFiles"]
+    assert candidate == {
+        name.removeprefix("domus/ui/"): hashlib.sha256(data).hexdigest()
+        for name, data in expected.items()
+    }
     with ZipFile(wheels[0]) as wheel:
         names = wheel.namelist()
         assert len(names) == len(set(names))

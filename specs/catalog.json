@@ -396,7 +396,9 @@
         "frontend/tests/entry-int64.test.ts",
         "frontend/tests/administration-http.test.ts",
         "frontend/tests/e2e/entry.spec.ts",
-        "tests/browser/entry_server.py"
+        "tests/browser/entry_server.py",
+        "tests/containers/test_app_ui.py",
+        "tests/packaging/test_ui_wheel.py"
       ],
       "documentation": [
         "docs/product-vision.md",

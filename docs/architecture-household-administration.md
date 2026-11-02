@@ -197,3 +197,10 @@ Controller/lifecycle consumption, own-member binding before private presentation
 forms and full administration browser acceptance remain required. Entry browser compatibility uses
 actual Python/SQLite in both deployment fixtures; fixture identities and directly seeded high
 revisions do not claim owner HA adoption or a generated history of that many mutations.
+
+Current wheel and source-image acceptance compare every packaged UI resource with the explicit
+`currentSourcePackage` inventory in the administration evidence. The wheel gate first compares
+that declaration with the actual local build; the image gate independently compares it with the
+installed image and served bytes. Historical entry delivery and installed Edge.5 evidence retain
+their original source, resource hashes and adoption claims. A new source build does not inherit
+those historical package identities.

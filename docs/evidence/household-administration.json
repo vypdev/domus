@@ -585,8 +585,50 @@
     "localEvidence": {
       "root": "/private/tmp/domus-admin-http-c357ce4",
       "privateLocalOnly": true,
-      "scope": "Original failures, exact earlier UI input, both real negative-control captures, complete backend/frontend measurements, final browser results, source/wheel and unchanged SDK proofs. Disposable terminal DB/build outputs retire after compact byte-verified evidence is retained."
+      "scope": "Original failures, exact earlier UI input, both real negative-control captures, complete backend/frontend measurements, final browser results, source/wheel and unchanged SDK proofs. Disposable terminal DB/build outputs retire after compact byte-verified evidence is retained.",
+      "archive": {
+        "path": "/private/tmp/domus-admin-http-c357ce4/verification-evidence.tar.gz",
+        "sha256": "1c6262f84aaeddb2065273dae42f8e9a056cd9935c683ef2222eab0448fe9533",
+        "members": 62,
+        "allMembersByteVerified": true
+      }
     },
-    "pending": "AdministrationController/lifecycle integration, own-member private projection binding, full EN/ES roster/settings/member/mapping/alias/preferences forms, Storybook and actual administration Python/SQLite journeys, avatar-source feasibility and full retained owner/workspace acceptance. Recurrence23, Stable/all-domain release and full goal remain incomplete."
+    "pending": "AdministrationController/lifecycle integration, own-member private projection binding, full EN/ES roster/settings/member/mapping/alias/preferences forms, Storybook and actual administration Python/SQLite journeys, avatar-source feasibility and full retained owner/workspace acceptance. Recurrence23, Stable/all-domain release and full goal remain incomplete.",
+    "hostedNative": {
+      "head": "7be2810092021aa044f0c476d429f689b9113d61",
+      "run": 41505801599,
+      "job": 125484708663,
+      "partitions": "11/11",
+      "context": "complete",
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "open": 0,
+      "reopened": 0,
+      "verificationRequired": 0,
+      "fixed": 2,
+      "dismissed": 1,
+      "outcome": "no-findings",
+      "scope": "Complete native analysis of7be2810 only; the test/evidence correction needs fresh review. All non-image product jobs passed; images are not claimed accepted."
+    }
+  },
+  "currentSourcePackage": {
+    "sourceBase": "7be2810092021aa044f0c476d429f689b9113d61",
+    "sourceIdentity": "Same byte-verified151-module backend and26-file frontend runtime as the published HTTP increment; this correction changes test/evidence binding only.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "bb13d320cf8968302162520e722f61f9290f9ca926c863b985288cb4fba2ffc3",
+      "assets/index-CQE4qeI0.js": "810376c1a54cbe125a3334afcc6ff1b81d14c27c089005d23f70a4da4c0dbcf4",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "53eb4a7d9debd6dd01e421a564df3432c8d3c523a74acbf1f962c9714cb56911"
+    },
+    "wheelSHA256": "cbf076c8963b412ae211d00db5451f12305ce6fb8aa06b0d975e72f1f55561ec",
+    "originalFailure": {
+      "run": 41505801643,
+      "aarch64Job": 125484707823,
+      "result": "31passed1failed",
+      "cause": "Current image correctly contains the newly compiled exact-revision UI, but the image test selected historical Edge.5 source271a3a0 resource hashes from the entry delivery evidence. No UI corruption or Copilot defect is inferred."
+    },
+    "testsFirst": "The actual aarch64 image exposes the stale historical expectation. A new early wheel/build/declaration assertion first fails with missing currentSourcePackage before this explicit candidate inventory is added.",
+    "correction": "Current packaging and image tests use this declaration. The packaging gate compares it against the independently built source bundle and exact wheel bytes; the image fixture compares all installed and HTTP-served resources. Historical entry/Edge.5 evidence remains byte-identical.",
+    "acceptance": "Local current-wheel comparison passes after correction; fresh actual amd64/aarch64 acceptance is required after push. This is a current source candidate, not an installed Edge.5 update, full administration acceptance or release."
   }
 }

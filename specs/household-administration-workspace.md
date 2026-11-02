@@ -460,6 +460,8 @@ Tests precede behavior. Require 100% supported statement and branch coverage glo
 | `tests/backend/test_openapi.py` | create |
 | `tests/backend/test_household_http.py` | update |
 | `tests/containers/test_administration_image.py` | update |
+| `tests/containers/test_app_ui.py` | update |
+| `tests/packaging/test_ui_wheel.py` | update |
 | `.github/workflows/ci_check.yml` | update |
 | `docs/household-administration.md` | create |
 | `docs/household-administration-operations.md` | create |
