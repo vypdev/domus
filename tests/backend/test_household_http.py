@@ -17,6 +17,7 @@ from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.sessions import SessionGuard
+from domus.composition.household_administration import administration_services
 from domus.composition.tasks import task_contexts
 from domus.domain.errors import IdentityUnavailable
 from domus.domain.identity import HumanIdentity
@@ -38,7 +39,9 @@ class Entropy:
         return "v" * 43 if self.count % 4 == 2 else f"{self.count:043d}"
 
 
-def fixture(tmp_path: Path, ui_bundle: UIBundle | None = None) -> tuple:
+def fixture(
+    tmp_path: Path, ui_bundle: UIBundle | None = None, *, administration: bool = True
+) -> tuple:
     identity, oauth, socket, clock = identity_fixture()
     socket.human = replace(socket.human, is_administrator=True)
     flow = Authentication(MemoryLoginAttempts(), identity, clock, Entropy())
@@ -71,6 +74,9 @@ def fixture(tmp_path: Path, ui_bundle: UIBundle | None = None) -> tuple:
         correlation=lambda: "cor_api",
         entry=EntryHTTPContext(store.installation, "standalone", clock, clock, True),
         household_context=context,
+        administration_context=(lambda session_id: administration_services(context(session_id)))
+        if administration
+        else None,
         task_context=lambda session_id: task_factory(SessionActor(guard, session_id)),
         ui_bundle=ui_bundle,
     )

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from domus.application.sessions import SessionGuard
 from domus.domain.errors import IdentityRejected
 from domus.domain.identity import HumanIdentity
+from domus.domain.member_sources import MemberSourceSnapshot
 from domus.infrastructure.standalone_sessions import StandaloneIdentity
 
 
@@ -33,3 +34,12 @@ class SessionDirectory:
 
     def eligible(self, ha_user_ids: tuple[str, ...]) -> tuple[HumanIdentity, ...]:
         return self.identity.directory(self.session_id, ha_user_ids)
+
+
+@dataclass(frozen=True, slots=True)
+class SessionMemberProfiles:
+    identity: StandaloneIdentity = field(repr=False)
+    session_id: str = field(repr=False)
+
+    def read(self) -> MemberSourceSnapshot:
+        return self.identity.member_sources(self.session_id)

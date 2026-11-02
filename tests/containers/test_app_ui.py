@@ -28,9 +28,9 @@ def test_packaged_ui_bytes_and_same_listener_standalone_delivery(image, data_vol
     source = Path(__file__).with_name("ui_fixture.py").read_text()
     expected = json.loads(
         (
-            Path(__file__).resolve().parents[2] / "docs/evidence/household-entry-interface.json"
+            Path(__file__).resolve().parents[2] / "docs/evidence/household-administration.json"
         ).read_text()
-    )["productDelivery"]["actualProductFiles"]
+    )["currentSourcePackage"]["actualProductFiles"]
     try:
         started = docker(
             "run",

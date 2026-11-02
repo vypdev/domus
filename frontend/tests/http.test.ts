@@ -225,7 +225,7 @@ test('C21: household read preserves inert historical DEL/C1 text without applyin
   expect((await f.server.household(context).result).name).toBe('Home\u007f\u0085');
 });
 test.each([{name:' '},{name:'a'.repeat(161)},{name:'bad\n'},{time_zone:''},{time_zone:'bad\t'},
-  {revision:0},{revision:2**53},{household_id:'../home'}])('C21: invalid household %j is unavailable', async patch => {
+  {revision:0},{revision:2**63},{household_id:'../home'}])('C21: invalid household %j is unavailable', async patch => {
   const f=fixture(); f.transport.mockResolvedValueOnce(response({household_id:'home',name:'Home',time_zone:'UTC',revision:1,...patch}));
   await expect(f.server.household(context).result).rejects.toThrow('invalid_response');
 });

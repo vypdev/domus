@@ -27,7 +27,7 @@ from domus.domain.identity import (
     Role,
 )
 from domus.domain.storage import JsonDocument, JsonValue, Receipt
-from domus.entrypoints.http_contract import StrictModel
+from domus.entrypoints.http_contract import PositiveRevision, StrictModel
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,7 +82,7 @@ class SetupRequest(StrictModel):
 
 
 class HouseholdUpdateRequest(StrictModel):
-    expected_revision: int = Field(ge=1, le=2**63 - 1)
+    expected_revision: PositiveRevision
     name: str = Field(min_length=1, max_length=160)
     time_zone: str = Field(min_length=1, max_length=128)
 
@@ -92,7 +92,7 @@ class EnrollmentRequest(StrictModel):
 
 
 class RecoveryTransitionRequest(StrictModel):
-    expected_revision: int = Field(ge=1, le=2**63 - 1)
+    expected_revision: PositiveRevision
 
 
 class RecoveryResponse(StrictModel):
@@ -111,14 +111,14 @@ class RecoveryResponse(StrictModel):
 
 
 class MemberUpdateRequest(StrictModel):
-    expected_revision: int = Field(ge=1, le=2**63 - 1)
+    expected_revision: PositiveRevision
     role: Role = Field(strict=False)
     status: MemberStatus = Field(strict=False)
     exceptions: list[PermissionDecision] = Field(default_factory=list, max_length=256)
 
 
 class PolicyUpdateRequest(StrictModel):
-    expected_revision: int = Field(ge=1, le=2**63 - 1)
+    expected_revision: PositiveRevision
     mapping_mode: MappingMode = Field(strict=False)
     target_ha_user_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
     adjustments: list[ProfileDecision] = Field(default_factory=list, max_length=256)

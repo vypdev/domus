@@ -26,11 +26,16 @@ from domus.domain.errors import (
     InvalidInput,
     Unauthenticated,
 )
+from domus.entrypoints.administration_http import (
+    AdministrationHTTPContext,
+    create_administration_router,
+)
 from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryContextResponse, EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 from domus.entrypoints.http_errors import classify
+from domus.entrypoints.openapi import DomusAPI
 from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
 from domus.entrypoints.ui_bundle import UIBundle
 from domus.entrypoints.ui_http import attach_ui
@@ -234,10 +239,11 @@ def create_app(
     correlation: Callable[[], str],
     entry: EntryHTTPContext,
     household_context: Callable[[str], HouseholdHTTPContext] | None = None,
+    administration_context: Callable[[str], AdministrationHTTPContext] | None = None,
     task_context: Callable[[str], TaskHTTPContext] | None = None,
     ui_bundle: UIBundle | None = None,
 ) -> FastAPI:
-    app = FastAPI(
+    app = DomusAPI(
         title="Domus",
         version="0.0.0",
         docs_url=None,
@@ -410,6 +416,15 @@ def create_app(
             return factory(cast(str, _cookie(request.scope, settings.session_cookie)))
 
         app.include_router(create_household_router(context, security=session_security))
+    if administration_context is not None:
+        administration_factory = administration_context
+
+        def administration(request: Request) -> AdministrationHTTPContext:
+            return administration_factory(
+                cast(str, _cookie(request.scope, settings.session_cookie))
+            )
+
+        app.include_router(create_administration_router(administration, security=session_security))
     if task_context is not None:
         task_factory = task_context
 

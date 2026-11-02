@@ -70,7 +70,7 @@
     "consumer": "Original failing and passing model/backend measurements, source inventory and pinned SDD reproduction retained for current PR review; disposable coverage databases, XML and pytest cache removed.",
     "privateLocalOnly": true
   },
-  "pending": "Owner-private application/HTTP original results and audit privacy, verified HA metadata, separate journal, full EN/ES administration workspace, complete72-case product acceptance and fresh-head image/native checks after documentation correction. Recurrence continuation remains issue23; installed Edge.5 unchanged.",
+  "pending": "Browser runtime/lifecycle consumption, all EN/ES administration forms and Storybook/real Python-SQLite administration journeys, safe avatar-source feasibility/owner evidence when available, and complete retained HADM72/HADI8/HADW82 acceptance. Original80workspace rows remain unchanged with2 additional verification cases. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete.",
   "acceptance": "138 parameterized unit executions and a complete backend campaign are not 72 completed administration journeys. No notification delivery, HA metadata availability, schema migration, package/adoption, all-domain release or Stable distribution acceptance is claimed.",
   "storageIncrement": {
     "issue": "https://github.com/vypdev/domus/issues/21",
@@ -173,5 +173,683 @@
       "report": "https://github.com/vypdev/copilot/issues/859",
       "pending": "Fresh native reconciliation after documentation correction; no clean-review claim inferred from an empty or manually resolved thread."
     }
+  },
+  "applicationIncrement": {
+    "issue": "https://github.com/vypdev/domus/issues/25",
+    "sourceBase": "171244421fcc6289180bdb94bf4e7bb52a990a1b",
+    "baselineMerge": "6d84d4815a8bbfe071979df6650d01e433dcc2db",
+    "implemented": "Currently authorized independent alias/private-preference commands and queries, owner-only original-result lookup/replay, safe shared audit/events, atomic CAS and both-deployment protected profile HTTP. Read-only request-key recovery is closed to five administration actions and does not resend mutations.",
+    "sourceIdentity": {
+      "authoredModules": 146,
+      "backendInventorySHA256": "bd91747546304d1e8502abe9111c3432c3e0bf7566c3c3ef76b20b716c34f5a3",
+      "wheelSHA256": "c0a4658b7001e3438407e3a108bc09f93b178cd96dc8d572f0d6afd71c950ade",
+      "everyModuleByteVerified": true
+    },
+    "testsFirst": [
+      "Initial authored application test could not import the absent queries module.",
+      "Original-key recovery test first raised AttributeError before the application method existed.",
+      "First profile HTTP test returned404 before the route was wired.",
+      "Expanded invalid-alias tests found ten500 responses in both modes before safe public error classification was added. No state was committed."
+    ],
+    "completeBackend": {
+      "executions": 4238,
+      "authoredModules": 146,
+      "statements": 10174,
+      "branches": 2864,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "focused": {
+      "executions": 162,
+      "newModules": 6,
+      "statements": 222,
+      "branches": 34,
+      "coveragePercent": 100,
+      "scope": "Application/HTTP, legacy original queries and transport factory controls. The two additional actual production composition executions are included in the4238 full campaign; no product-journey count is inferred."
+    },
+    "checks": {
+      "strictTypes": "passed146modules",
+      "ruff": "passed364files",
+      "architecture": "3kept0broken;190files1252dependencies",
+      "documentationLinks": "passed",
+      "sdd": {
+        "originalPolicyModulesByteVerified": 7,
+        "format": "PASS",
+        "consistency": "PASS",
+        "owningDocuments": 19,
+        "retainedAdministrationCases": 72,
+        "retainedIntegrationRefinements": 8
+      }
+    },
+    "runtimeControls": {
+      "source": "tests/containers/test_administration_image.py",
+      "scope": "Both exact fresh/schema8 owned-runtime storage scripts and both protected ASGI profile API scripts execute on host with fake HA transports. Actual current-source CPU images remain hosted CI work. No owner HA acceptance is claimed.",
+      "notificationDelivery": "unavailable regardless of technical event acknowledgement"
+    },
+    "copilotReports": {
+      "unsupportedCommand": "https://github.com/vypdev/copilot/issues/858#issuecomment-6581571932",
+      "selectedSource": "https://github.com/vypdev/copilot/issues/836#issuecomment-6581572306",
+      "circularRecovery": "https://github.com/vypdev/copilot/issues/860#issuecomment-6581572803",
+      "terminalMapping": "https://github.com/vypdev/copilot/issues/833#issuecomment-6581573338",
+      "recovery": "One terminal-job retry41466725960/job125382987505 succeeded, restored branched/state:working and retained exact1712444 publication. This is recovery, not proof of an upstream fix."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-api-schema9",
+      "privateLocalOnly": true,
+      "scope": "Original failures, full/focused coverage, source/wheel proof and exact container host controls retained for review. Disposable terminal test DBs are retired after necessary evidence is archived."
+    },
+    "pending": "Verified HA metadata/directory, separate exact-revision administration browser journal, complete EN/ES roster/settings/profile/mapping workspace, Storybook and real Python/SQLite browser journeys, complete72-case product acceptance and current-head hosted image/native review. Recurrence remains issue23; installed Edge.5 unchanged.",
+    "acceptance": "The six-module application/API increment does not complete the retained72 administration journeys, UI/journal/provider metadata, HA adoption, Stable release or complete product."
+  },
+  "precisionIncrement": {
+    "sourceBase": "b14c308a28ecad52945a8edac6dce25ba9dfd655",
+    "implemented": "Exact explicitly declared int64 OpenAPI bounds in both deployments; pure browser administration values and source-preserving bounded JSON codec. HTTP/controller/journal/workspace consumption remains outstanding.",
+    "validFinding": {
+      "comment": "https://github.com/vypdev/domus/pull/26#discussion_r4444683269",
+      "originalControl": "The unchanged byte-verified b14c308 wheel fails both new maximum-schema regressions. The plain FastAPI negative control converts exact Pydantic bounds to float; the DomusAPI subclass restores only declared full int64 bounds and preserves smaller/unmarked/approximate bounds.",
+      "initialHarnessError": "An earlier scratch invocation used a missing basetemp parent and did not execute the property. This is not described as a product failure.",
+      "status": "Corrected in working source; fresh native reconciliation and hosted checks remain required."
+    },
+    "falsePositive": {
+      "comment": "https://github.com/vypdev/domus/pull/26#discussion_r4444683256",
+      "report": "https://github.com/vypdev/copilot/issues/861",
+      "target": "docs/household-administration-migration.md",
+      "originalBlob": "814ef09ab5cdc453d66763a6ffe9adcb3082e645",
+      "sha256": "4bb1ebf920bd133c7fe8d89f897e3a037cf83d6dc37cedf07bd66e9508ec020d",
+      "proof": "Exact reviewed-head Git and connected GitHub file reads return the unchanged tracked guide; actual local/hosted documentation checks pass. Correct link/guide retained; evidence reply4444764034 and thread resolution recorded. Distinct from the valid OpenAPI correction."
+    },
+    "backend": {
+      "executions": 4242,
+      "authoredModules": 147,
+      "statements": 10186,
+      "branches": 2874,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "frontend": {
+      "executions": 661,
+      "newValueAndCodecExecutions": 84,
+      "authoredRuntimeFiles": 17,
+      "statements": 1161,
+      "branches": 841,
+      "functions": 225,
+      "lines": 792,
+      "allFourMetricsPercent": 100,
+      "independentFilesystemInventoryAudit": "passed",
+      "scope": "Actual Chromium unit/browser execution, including all existing application tests. New helpers are not yet wired to the full administration UI."
+    },
+    "sourceIdentity": {
+      "authoredModules": 147,
+      "backendInventorySHA256": "41f71b09c5699246ba25d39a1791bd8981d6c99d406ccbcd10525068f9cd4fa6",
+      "wheelSHA256": "2f50c10b5359200eb2d818ace3e6f676cd24bc302bd0ae7ce73323e930d875d1",
+      "everyModuleByteVerified": true
+    },
+    "checks": {
+      "strictBackendTypes": "passed147modules",
+      "strictFrontendTypes": "passed",
+      "ruff": "passed366files",
+      "architecture": "3kept0broken;191files1256dependencies",
+      "originalSddPolicyModulesByteVerified": 7,
+      "originalSddFormatConsistencyAndCatalog": "passed"
+    },
+    "previousHostedHead": {
+      "head": "b14c308a28ecad52945a8edac6dce25ba9dfd655",
+      "ci": 41477642024,
+      "aggregate": 125391344047,
+      "amd64": 125387329340,
+      "aarch64": 125387329273,
+      "productResult": "success",
+      "native": 41477642019,
+      "nativeJob": 125387329358,
+      "partitions": "6/6",
+      "context": "complete",
+      "publishedFindings": 2,
+      "disposition": "One valid maximum correction and one proved missing-guide false positive. This is not a zero-finding current-head claim."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-int64-b14",
+      "privateLocalOnly": true,
+      "scope": "Exact original-wheel failure, original framework control, complete backend/frontend coverage, source/wheel and original SDK proof; scratch DBs retired after producers end."
+    },
+    "pending": "Wire exact administration/entry revision decoding, HA metadata and directory facts, separate bounded administration journal, full EN/ES workspace, Storybook and real Python/SQLite browser journeys, all72 owner journeys and fresh hosted image/native acceptance. No owner HA update, Stable release, recurrence23 or full product completion."
+  },
+  "sourceIncrement": {
+    "sourceBase": "2b6e7e18ac246b62aa70cfcee69d0c8aaed34231",
+    "implemented": "Bounded literal HA name/eligibility source facts, distinct available/absent/denied/unavailable states, exact own OAuth fallback, native verified-subject binding, private credential/lease fences and currently authorized masked roster/directory HTTP in both deployments. No source role becomes a household grant.",
+    "sourceIdentity": {
+      "authoredModules": 151,
+      "backendInventorySHA256": "51290ec09e62eeb5a2d1f963554bd913bc798447860b44357cf98715b1e7f30a",
+      "wheelSHA256": "2e02ac4f0c35613e618c089c51accef159661f2e058a5a6eb301721c18bb27e0",
+      "everyModuleByteVerified": true
+    },
+    "backend": {
+      "executions": 4354,
+      "authoredModules": 151,
+      "statements": 10432,
+      "branches": 2928,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "testsFirst": [
+      "Domain/query/HA adapter imports failed before the new modules existed.",
+      "Nine original session cases failed on absent metadata access before session integration.",
+      "Both actual composition roster tests initially returned404 before the routes were wired.",
+      "A prototype application projection retained provider linkage inside nested metadata; the new declassification test failed before state/name-only projection was implemented and before HTTP publication.",
+      "A known account with no name initially claimed available metadata; the new test required an unavailable label while retaining a complete directory."
+    ],
+    "controls": [
+      "Both actual deployments retain current proof, unchanged lease deadlines, fresh-grant rotation and logout/expiry/subject-change fences.",
+      "Provider reads occur outside SQLite; actual concurrent alias changes are visible, while changed membership/policy or lost authority blocks disclosure.",
+      "Both-mode wire tests preserve existing linkage/exception masking and omit source IDs/eligibility/private preferences from ordinary metadata.",
+      "Real loopback HA fixtures cover complete/empty/omitted/denied/unavailable/malformed/overflow data and literal text; technical native tokens never supply the own-user OAuth fallback.",
+      "Current Domus administration selected for a non-HA-administrator does not claim HA directory permission: standalone returns denied facts; native uses its separate authorized technical data lookup.",
+      "All six exact source image scripts pass on the host, including the new roster/directory controls; current-head actual CPU acceptance remains hosted CI work."
+    ],
+    "checks": {
+      "strictBackendTypes": "passed151modules",
+      "ruff": "passed374files",
+      "architecture": "3kept0broken;195files1299dependencies",
+      "documentationLinks": "passed",
+      "originalSdkPolicyModulesByteVerified": 7,
+      "originalSddFormatConsistencyAndCatalog": "passed"
+    },
+    "primaryProviderContracts": [
+      "https://github.com/home-assistant/core/blob/2026.10.4/homeassistant/components/auth/__init__.py#L513",
+      "https://github.com/home-assistant/core/blob/2026.10.4/homeassistant/components/config/auth.py#L19"
+    ],
+    "previousHostedHead": {
+      "head": "2b6e7e18ac246b62aa70cfcee69d0c8aaed34231",
+      "ci": 41481867481,
+      "aggregate": 125405907460,
+      "backend": 125402001334,
+      "amd64": 125402002305,
+      "aarch64": 125402001582,
+      "productResult": "success",
+      "native": 41481867204,
+      "nativeJob": 125401999096,
+      "partitions": "6/6",
+      "context": "complete",
+      "open": 0,
+      "fixed": 1,
+      "dismissed": 1,
+      "scope": "One valid maximum correction and one proved missing-guide false positive; source work requires fresh hosted review."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-member-source-2b6e7e1",
+      "privateLocalOnly": true,
+      "scope": "Original failures, full/focused backend coverage, source/wheel, source/provider/session/projection and exact image-script controls; disposable DBs retired after producers end."
+    },
+    "pending": "Complete frontend HTTP/controller consumption, exact entry/admin revision integration, all EN/ES forms and Storybook/real Python-SQLite journeys, safe avatar-source feasibility and owner evidence when available, and all 72 retained owner-case acceptance. The separate journal policy/storage is now tested; workspace integration remains. Recurrence23, installed Edge.5, Stable/all-domain release and the full goal remain incomplete."
+  },
+  "browserJournalIncrement": {
+    "sourceBase": "db26dde72985b57ad1377be83c554e449a5c4f8e",
+    "goalComplete": false,
+    "sourceInventorySHA256": "8468b1738ec5d49c7d4391b5953d41e8222222e20aebf239f8ca92696102fcc6",
+    "authoredFrontendFiles": 21,
+    "frontend": {
+      "executions": 765,
+      "newJournalExecutions": 104,
+      "runtimeFiles": 21,
+      "coverage": {
+        "lines": {
+          "total": 931,
+          "covered": 931,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1345,
+          "covered": 1345,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 274,
+          "covered": 274,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 969,
+          "covered": 969,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentFilesystemAudit": "passed"
+    },
+    "architecture": {
+      "nodePolicyExecutions": 38,
+      "sourceGraphAndNegativeFixtures": "passed"
+    },
+    "types": "runtime and Storybook/catalog pass",
+    "sdk": "7 original policy module blobs unchanged; format/consistency/catalog pass; 19 owner documents and 72 original administration cases retained",
+    "testsFirst": [
+      "Initial import failed before the command/journal modules existed.",
+      "The adapter suite failed before the administration storage adapter existed.",
+      "Unicode NEL-only household name was accepted by the prototype JS trim policy; the new backend-policy regression failed before White_Space validation.",
+      "The exact original-intent encoder test failed before the export existed."
+    ],
+    "scope": "Pure closed commands, separate context-filtered globally bounded administration journal, session-storage CAS/readback and exact original-intent encoder. Existing entry journal schema/behavior and source backend are unchanged. No full HTTP/controller/workspace integration, real owner HA acceptance or all72 journey acceptance.",
+    "commands": [
+      "pnpm test:frontend",
+      "pnpm check:frontend",
+      "pnpm test",
+      "domus-check docs",
+      "node /private/tmp/domus-admin-api-schema9/validate-native.cjs"
+    ],
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-journal-db26dde",
+      "privateLocalOnly": true
+    },
+    "currentPublishedSourceProof": "/private/tmp/domus-member-source-2b6e7e1/hosted-current.json"
+  },
+  "acceptanceBudgetReview": {
+    "previousSource": "59c134a6585a3866f9d61143fb2d2b3abda12fb6",
+    "finding": "specs/household-administration-workspace.md:test-budget-understates-new-scope",
+    "disposition": "Valid; corrected in c357ce4920ee54ca01a14b3a11774587fe885159. Native run41496499460/job125452728775 confirms fixed with complete9/9partitions and zero open/reopened/verification-required findings. Later source needs fresh review.",
+    "workspaceCaseCount": 80,
+    "requirementsUnchanged": 8,
+    "retainedOriginalAdministrationCases": 72,
+    "retainedHadiRefinements": 8,
+    "counts": {
+      "Domain/configuration/pure planning": 9,
+      "State/application/idempotency/races": 14,
+      "Adapters/provider contracts": 11,
+      "Application use cases": 9,
+      "Security/abuse": 13,
+      "Presentation/localization/accessibility/sanitization": 10,
+      "Integration/end-to-end/compatibility/migration": 9,
+      "Workflows/permissions/schemas/setup": 5
+    },
+    "scope": "Prospective acceptance inventory only; no new product policy, reduced owner scope, executed-case or complete-workspace claim.",
+    "sdk": "Original pinned SDK format/consistency validator passes all80 inventory rows, per-area allocations and reciprocal requirement links. Seven original policy modules remain byte-verified.",
+    "productAndOwnerScope": "The same eight HADW requirements are decomposed; original HADM72, HADI8 and all other owners remain unchanged. Counts are proposed scenarios, not executed journeys; runtime source and its complete coverage are unchanged by this document correction."
+  },
+  "httpClientIncrement": {
+    "sourceBase": "c357ce4920ee54ca01a14b3a11774587fe885159",
+    "recordedAtUTC": "2026-11-02T18:59:02.507140+00:00",
+    "goalComplete": false,
+    "implemented": "Shared bounded protected transport and original-source integer decoding; exact revisions throughout existing entry reads and receipts; fixed administration reads, five PUT actions and explicit original-key/captured-operation-ID GET recovery. Closed server-fact projections retain masked fields, private preferences and honest HA source states. Household recovery keeps its domain label.",
+    "sourceIdentity": {
+      "algorithm": "SHA256 of canonical sorted JSON mapping of repository-relative frontend runtime paths to SHA256 bytes; includes type-only files",
+      "frontendInventorySHA256": "ccf7c7c89181d0a2cf638a4c92f142f81c41055f79a45e4be68976636828f990",
+      "backendInventorySHA256": "8497016eba6245453ac21f34a5e0bd7865a4afd6c0645be99889446ef53687b1",
+      "wheelSHA256": "cbf076c8963b412ae211d00db5451f12305ce6fb8aa06b0d975e72f1f55561ec",
+      "everyBackendModuleAndUiByteVerifiedAgainstWheel": true
+    },
+    "testsFirst": [
+      "Original entry client failed18 new exact-int64 executions before integration; ordinary controls passed.",
+      "Administration suite failed on the absent client module; the existing operation-ID recovery contract separately failed five executions before its method was implemented.",
+      "Household-key recovery message regression first failed2of4 both-deployment cases; profile controls passed. The message is now action-specific.",
+      "The earlier retained generated UI failed both actual Python/SQLite high-revision journeys after successful max-int64 fixture setup. Its exact bytes are archived; its source commit is not inferred.",
+      "An earlier browser attempt failed at an ambiguous heading selector before the property ran. A later prototype import error blocked backend collection/server startup. These harness/wiring failures are retained separately and do not establish precision regressions.",
+      "A prototype maximal-roster fixture reused HA IDs; corrected to unique IDs while preserving the production duplicate guard. The complete large-reply control then passed.",
+      "Backend-valid FEFF household text initially failed the browser projection; the compatibility regression now passes."
+    ],
+    "backend": {
+      "executions": 4358,
+      "authoredModules": 151,
+      "statements": 10433,
+      "branches": 2928,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "frontend": {
+      "executions": 897,
+      "authoredRuntimeFiles": 26,
+      "nonemptyRuntimeFiles": 24,
+      "typeOnlyFiles": 2,
+      "coverage": {
+        "lines": {
+          "total": 1067,
+          "covered": 1067,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1531,
+          "covered": 1531,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 319,
+          "covered": 319,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1084,
+          "covered": 1084,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentFilesystemInventoryAudit": "passed"
+    },
+    "browser": {
+      "actualEntryJourneys": {
+        "startTime": "2026-11-02T18:46:00.410Z",
+        "duration": 30494.852000000003,
+        "expected": 51,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "actualCatalogJourneys": {
+        "startTime": "2026-11-02T18:50:36.761Z",
+        "duration": 9008.242999999999,
+        "expected": 18,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "scope": "Compiled packaged UI with real Python/SQLite in native and standalone fixtures; two new max-int64 journeys directly seed disposable existing records. Not billions of actual mutations, migration lineage or owner HA adoption."
+    },
+    "controls": [
+      "Complete256-member roster with maximal UTF-8 names/aliases and all16 ordinary decisions exceeds the standard65,536-byte bound and remains below the fixed1,048,576-byte roster/directory bound; no truncation.",
+      "Fresh CSRF before PUT, same-origin/no-store/fatal UTF-8/timeout/cancel and context guards retained; read-only recovery adds no mutation precondition. Deadline continuation cannot dispatch a PUT after abort.",
+      "Original payload/key/revision and known operation ID remain bound. Lost/malformed/unbound PUT stays uncertain; no automatic mutation retry or rebase.",
+      "Action-specific receipts retain exact successor revisions; technical event processing does not claim notification delivery. Controller must still bind own preferences to current member before private presentation."
+    ],
+    "checks": {
+      "frontendRuntimeAndCatalogTypes": "passed",
+      "nodeArchitectureExecutions": 38,
+      "nodePolicyCoverage": "100%",
+      "backendTypes": "passed151modules",
+      "ruff": "passed374files",
+      "pythonArchitecture": "3kept0broken;195files1300dependencies",
+      "documentationLinks": "passed",
+      "packagingExecutions": 1,
+      "packagingScope": "Actual wheel matches all source/UI bytes and excludes browser-only fixture controls.",
+      "sdk": "All7 original modules byte-verified; format/consistency/catalog pass;19owners,HADM72,HADI8,HADW80 retained."
+    },
+    "previousPublishedHead": {
+      "head": "c357ce4920ee54ca01a14b3a11774587fe885159",
+      "ci": 41496499475,
+      "aggregate": 125456640681,
+      "amd64": 125452728042,
+      "aarch64": 125452727844,
+      "productResult": "success",
+      "native": 41496499460,
+      "nativeJob": 125452728775,
+      "partitions": "9/9",
+      "context": "complete",
+      "open": 0,
+      "fixed": 2,
+      "dismissed": 1,
+      "scope": "Current published checkpoint only. The local HTTP increment requires fresh hosted images and native review after push.",
+      "progressFailure": "https://github.com/vypdev/copilot/issues/828#issuecomment-6583615211"
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-http-c357ce4",
+      "privateLocalOnly": true,
+      "scope": "Original failures, exact earlier UI input, both real negative-control captures, complete backend/frontend measurements, final browser results, source/wheel and unchanged SDK proofs. Disposable terminal DB/build outputs retire after compact byte-verified evidence is retained.",
+      "archive": {
+        "path": "/private/tmp/domus-admin-http-c357ce4/verification-evidence.tar.gz",
+        "sha256": "1c6262f84aaeddb2065273dae42f8e9a056cd9935c683ef2222eab0448fe9533",
+        "members": 62,
+        "allMembersByteVerified": true
+      }
+    },
+    "pending": "AdministrationController/lifecycle integration, own-member private projection binding, full EN/ES roster/settings/member/mapping/alias/preferences forms, Storybook and actual administration Python/SQLite journeys, avatar-source feasibility and full retained owner/workspace acceptance. Recurrence23, Stable/all-domain release and full goal remain incomplete.",
+    "hostedNative": {
+      "head": "7be2810092021aa044f0c476d429f689b9113d61",
+      "run": 41505801599,
+      "job": 125484708663,
+      "partitions": "11/11",
+      "context": "complete",
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "open": 0,
+      "reopened": 0,
+      "verificationRequired": 0,
+      "fixed": 2,
+      "dismissed": 1,
+      "outcome": "no-findings",
+      "scope": "Complete native analysis of7be2810 only; the test/evidence correction needs fresh review. All non-image product jobs passed; images are not claimed accepted."
+    }
+  },
+  "currentSourcePackage": {
+    "sourceBase": "f491b572cea14e21a0fbfc8c664b110335a54f0e",
+    "sourceIdentity": "Current151-module backend adds capability-v2 verified household scope. Compiled entry UI resource bytes are unchanged;28-file administration source is covered but not yet wired to page composition. No owner Edge.5 update or full workspace acceptance.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "bb13d320cf8968302162520e722f61f9290f9ca926c863b985288cb4fba2ffc3",
+      "assets/index-CQE4qeI0.js": "810376c1a54cbe125a3334afcc6ff1b81d14c27c089005d23f70a4da4c0dbcf4",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "53eb4a7d9debd6dd01e421a564df3432c8d3c523a74acbf1f962c9714cb56911"
+    },
+    "wheelSHA256": "11453b1ca6d98b08bbe718cb0b8d9fba2109bdb116cf375f66319e33fc615cd3",
+    "originalFailure": {
+      "run": 41505801643,
+      "aarch64Job": 125484707823,
+      "result": "31passed1failed",
+      "cause": "Current image correctly contains the newly compiled exact-revision UI, but the image test selected historical Edge.5 source271a3a0 resource hashes from the entry delivery evidence. No UI corruption or Copilot defect is inferred."
+    },
+    "testsFirst": "The actual aarch64 image exposes the stale historical expectation. A new early wheel/build/declaration assertion first fails with missing currentSourcePackage before this explicit candidate inventory is added.",
+    "correction": "Current packaging and image tests use this declaration. The packaging gate compares it against the independently built source bundle and exact wheel bytes; the image fixture compares all installed and HTTP-served resources. Historical entry/Edge.5 evidence remains byte-identical.",
+    "acceptance": "The source-image binding correction53570f2 passed actual amd64/aarch64 jobs125489680572/125489680631 and CI aggregate125492943440 in41507276305. Current controller source still requires fresh hosted review/CI after push; compiled entry/UI and backend bytes are unchanged."
+  },
+  "controllerIncrement": {
+    "sourceBase": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",
+    "goalComplete": false,
+    "implemented": "Application controller with verified session/capability/current-authority preflight and final access fence; independent permitted fact failures; own-member private presentation and receipt binding; exact original commands, bounded journal and five explicit mutations; read-only key/ID recovery, rejection/uncertainty/history and expiry/context/generation fencing. Pure active-membership/current-grant action availability remains separate from backend authorization.",
+    "frontend": {
+      "executions": 1009,
+      "newControllerAndAuthorizationExecutions": 112,
+      "authoredRuntimeFiles": 28,
+      "nonemptyRuntimeFiles": 26,
+      "typeOnlyFiles": 2,
+      "coverage": {
+        "lines": {
+          "total": 1241,
+          "covered": 1241,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1818,
+          "covered": 1818,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1314,
+          "covered": 1314,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 361,
+          "covered": 361,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentFilesystemInventoryAudit": "passed"
+    },
+    "sourceIdentity": {
+      "frontendInventorySHA256": "324066842b335df26e9624be88fb4081784ed390d9529e816191c79525e6ec52",
+      "backendInventorySHA256": "8497016eba6245453ac21f34a5e0bd7865a4afd6c0645be99889446ef53687b1",
+      "backendModules": 151,
+      "backendBytesUnchanged": true,
+      "wheelSHA256": "cbf076c8963b412ae211d00db5451f12305ce6fb8aa06b0d975e72f1f55561ec",
+      "currentCompiledEntryUi": {
+        ".vite/manifest.json": "bb13d320cf8968302162520e722f61f9290f9ca926c863b985288cb4fba2ffc3",
+        "assets/index-CQE4qeI0.js": "810376c1a54cbe125a3334afcc6ff1b81d14c27c089005d23f70a4da4c0dbcf4",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "53eb4a7d9debd6dd01e421a564df3432c8d3c523a74acbf1f962c9714cb56911"
+      },
+      "everyModuleAndCompiledUiByteVerifiedAgainstWheel": true
+    },
+    "backend": "All151module bytes match the prior4358-test/10433-statement/2928-branch100%global/per-module evidence and verified wheel. No backend/DDL/runtime fixture or Copilot changes.",
+    "testsFirst": [
+      "Controller suite first failed on the missing controller module; the shared pure-policy test separately failed on its missing module before extraction.",
+      "Two prototype controls failed before correction: a same-account replacement membership retained an old private receipt, and a protected original GET incorrectly required current aggregate-read facts. Both now pass.",
+      "Prototype test harness typed a fake receipt delivery too narrowly and an indexed rejected promise ambiguously. Type declarations were corrected to the actual semantic port contract; no production relaxation."
+    ],
+    "controls": [
+      "Verified active membership and explicit decoded grants govern availability; labels, source data and roles do not grant an action.",
+      "Read permitted facts, bind private member IDs, and compare final current authorization before publication. Unavailable facts stay scoped errors; stale collected views are discarded.",
+      "Revalidate before human submission, preserve exact captured revision/key/payload, reject exhaustion and conflicting unresolved same-aggregate originals. Different explicit aggregates remain possible under global bounds.",
+      "Explicit recovery uses only GET by original action/key or known operation ID, with current original-action/operations authority and immutable original comparison. No automatic lookup on reload, mutation replay, key replacement, rebasing or lookup-only revision/CSRF preconditions.",
+      "Saved processing is independent of current aggregate facts and notification delivery. Post-effect journal failure retains the in-memory original receipt on its current verified context.",
+      "Read-only local access expires without renewal; close/context change/authority drift hide private views and journal payloads. Canceled and late reads/POST/GET responses cannot repopulate retired views.",
+      "Dismiss only resolved current-context requests, preserving unrelated storage, pending/uncertain originals and other contexts."
+    ],
+    "checks": {
+      "frontendRuntimeAndCatalogTypes": "passed",
+      "canonicalFrontendAndIndependentInventory": "passed",
+      "nodeArchitectureExecutions": 38,
+      "nodeArchitectureCoverage": "100%",
+      "originalSDK": "7originalpolicyblobsunchanged;format/consistency/catalogpass;19owners;HADM72/HADI8/HADW80 retained",
+      "compiledEntryBundle": "Rebuilt; all4resource hashes unchanged and byte-verified against current wheel. New controller is not yet imported by composition."
+    },
+    "publishedCheckpoint": {
+      "head": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",
+      "ci": 41507276305,
+      "aggregate": 125492943440,
+      "amd64": 125489680572,
+      "aarch64": 125489680631,
+      "productResult": "success",
+      "native": 41507276321,
+      "nativeJob": 125489680430,
+      "partitions": "11/11",
+      "context": "complete",
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "open": 0,
+      "fixed": 2,
+      "dismissed": 1,
+      "outcome": "no-findings",
+      "progressFailure": {
+        "verification": 125491236020,
+        "commitJob": 125489636778,
+        "reference": "b9e518a3-5fe9-481a-89fb-58b2c3f0b99b",
+        "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6583615211"
+      },
+      "scope": "Published test/evidence checkpoint only. New controller source needs fresh hosted acceptance; merge is held for the latest all-green condition."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-controller-53570f2",
+      "privateLocalOnly": true,
+      "scope": "Original absent-module and ownership/lookup failures, final1009-test/28-file full coverage and independent audit, types/architecture/SDK, source/UI/wheel identity and native/progress observations. Terminal generated outputs retired after compact proof."
+    },
+    "pending": "Browser runtime/lifecycle consumption, all EN/ES administration forms and Storybook/real Python-SQLite administration journeys, safe avatar-source feasibility/owner evidence when available, and complete retained HADM72/HADI8/HADW80 acceptance. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete.",
+    "acceptance": "These112new parameterized/controller executions are not112product journeys or complete HADM72/HADI8/HADW80 acceptance. Full administration composition/forms/Storybook/real Python-SQLite browser paths, owner HA and Stable/all-domain product remain outstanding."
+  },
+  "scopeBindingIncrement": {
+    "sourceBase": "f491b572cea14e21a0fbfc8c664b110335a54f0e",
+    "goalComplete": false,
+    "validFinding": {
+      "id": "administration-controller:bound-household-result-requires-verified-household",
+      "thread": "PRRT_kwDOVa5AKs6y1OFc",
+      "comment": "https://github.com/vypdev/domus/pull/26#discussion_r4446869261",
+      "disposition": "Accepted. Working correction binds receipts to independently verified server routing scope, preserving legal original GET recovery when aggregate reads are unavailable. Fresh native confirmation is required; no manual resolution."
+    },
+    "implemented": "Capability contract2 exposes the server-owned household routing identifier. Strict HTTP decoding rejects unbound legacy1/unknown versions and malformed scopes. Application household/policy facts, mutation replies, recovered and retained receipts must match that independent scope. No current aggregate-read precondition is added to original GET. Journal1, five command payloads and schema9 remain unchanged.",
+    "readOnlyCompatibility": "Both actual native/standalone APIs already allow original key/ID GET reads on valid bounded outage leases. The controller now preserves that query behavior and owned journal recovery until unchanged expiry, while every new mutation remains blocked.",
+    "testsFirst": [
+      "Both new foreign-household recovery controls fail against f491 before the fix, with aggregate reads unavailable.",
+      "Both capability-v2/scope checks and both no-household-read metadata checks fail against the preceding version1 implementation after correcting a fixture method typo.",
+      "The initial metadata fixture called nonexistent SQLiteMembers.replace; it was corrected to the existing save API before the meaningful contract failures. No production change or defect is inferred from that harness error.",
+      "Two read-only frontend controls initially fail even though actual both-mode APIs return the owned receipt without database changes; controller gating is corrected to preserve that existing contract.",
+      "One full backend attempt lacked loopback socket permission and ended74failed/4286passed. The unchanged code then passes the complete suite with required local-network permission; the environmental failure is retained separately."
+    ],
+    "backend": {
+      "completeCampaignExecutions": 4360,
+      "additionalFocusedOutageExecutions": 4,
+      "focusScope": "Four new native/standalone x key/ID read-only GET cases, added after the complete campaign; production module bytes remain identical. These are separate executions, not a claimed4364-test single full run.",
+      "authoredModules": 151,
+      "coverageTotals": {
+        "covered_lines": 10434,
+        "num_statements": 10434,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 311,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 2928,
+        "num_partial_branches": 0,
+        "covered_branches": 2928,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "frontend": {
+      "executions": 1020,
+      "newScopeAndGraceExecutions": 11,
+      "authoredRuntimeFiles": 28,
+      "coverage": {
+        "lines": {
+          "total": 1242,
+          "covered": 1242,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1820,
+          "covered": 1820,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1313,
+          "covered": 1313,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 361,
+          "covered": 361,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentFilesystemInventoryAudit": "passed"
+    },
+    "sourceIdentity": {
+      "frontendInventorySHA256": "83d8e9fa997fbb4cacede287843b1e77f8593bc11f727a8f1d4dd69a1feab44f",
+      "backendInventorySHA256": "fb46cd890daa577fd0149587ae39310af1df91769bb5856bfd2ec709ca402101",
+      "backendInventoryAlgorithm": "SHA256 of canonical sorted JSON path-to-SHA256 inventory",
+      "wheelSHA256": "11453b1ca6d98b08bbe718cb0b8d9fba2109bdb116cf375f66319e33fc615cd3",
+      "everyBackendModuleAndUiByteVerifiedAgainstWheel": true,
+      "compiledUI": {
+        ".vite/manifest.json": "bb13d320cf8968302162520e722f61f9290f9ca926c863b985288cb4fba2ffc3",
+        "assets/index-CQE4qeI0.js": "810376c1a54cbe125a3334afcc6ff1b81d14c27c089005d23f70a4da4c0dbcf4",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "53eb4a7d9debd6dd01e421a564df3432c8d3c523a74acbf1f962c9714cb56911"
+      }
+    },
+    "compatibility": [
+      "Scope metadata derives from the same server-owned HouseholdQueries.household_id that governs original lookup; it does not claim existence, accept a client selector or grant authority.",
+      "Capabilities remain available without household.read; unknown household_id query selectors are rejected. Real database bytes remain unchanged.",
+      "Legacy unbound capability1 and unknown versions fail closed. The capability2 version change is explicit; journal1 and current command/GET shapes remain unchanged.",
+      "Original80workspace rows and HADM72/HADI8owner documents remain byte-identical; two independent scope/lookup scenarios raise the workspace floor to82 without inventing completed journeys.",
+      "Owner Edge.5/source271a3a0 and schema7 rollback remain unchanged. No DDL, gateway or Copilot resource/configuration/credential/bound changes."
+    ],
+    "checks": {
+      "frontendRuntimeAndCatalogTypes": "passed",
+      "backendTypes": "passed151modules",
+      "ruff": "passed374files",
+      "pythonArchitecture": "3kept0broken",
+      "nodeArchitectureExecutions": 38,
+      "nodeCoverage": "100%",
+      "packagingExecutions": 1,
+      "packagingScope": "Actual new wheel matches151source modules and all4compiled entry resources; test-only controls excluded. Build uses the exact locked installed hatchling1.33 backend.",
+      "openAPI": "Both actual composed schemas regenerated, exact int64 bounds retained; schema/body tests pass in the full backend campaign.",
+      "sdk": "7originalpolicyblobsunchanged;format/consistency/catalogpass;19owners;HADM72/HADI8/HADW82retained."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-scope-f491b57",
+      "privateLocalOnly": true,
+      "scope": "Original valid scope failure, metadata failures, distinct fixture/sandbox errors, actual outage GET observation, complete current coverage/source/wheel/SDK evidence and focused new API cases. Disposable terminal outputs retire after byte-verified compact evidence."
+    },
+    "pending": "Browser runtime/lifecycle consumption, all EN/ES administration forms and Storybook/real Python-SQLite administration journeys, safe avatar-source feasibility/owner evidence when available, and complete retained HADM72/HADI8/HADW82 acceptance. Original80workspace rows remain unchanged with2 additional verification cases. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete.",
+    "acceptance": "The controller and adapters remain outside page composition. Unit/ASGI/packaging counts are not full administration browser, owner HA, retained-case or all-domain/Stable acceptance. Fresh actual CPU images and native finding confirmation remain required after publication."
   }
 }

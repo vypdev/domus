@@ -126,3 +126,155 @@ with TemporaryDirectory(prefix='domus-profile-image-') as directory:
         historical,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("mode", ["native", "standalone"])
+def test_current_image_composes_private_profile_http_without_a_second_login(image, mode):
+    result = docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--user",
+        "65532:65532",
+        "--entrypoint",
+        "/app/.venv/bin/python",
+        image,
+        "-c",
+        """
+import asyncio, sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import httpx
+from domus.composition import ingress, server
+from domus.domain.identity import HumanIdentity
+from domus.domain.member_profiles import MemberLocale
+from domus.infrastructure.ha_http import OAuthTokens
+
+USER, OTHER = 'a' * 32, 'b' * 32
+ORIGIN = 'https://fictional-domus.example'
+class Source:
+    actor = USER
+    def __init__(self, endpoint):
+        self.endpoint = endpoint
+    def current_user(self, tokens):
+        return self.directory_user('', self.actor)
+    def directory_user(self, token, user_id):
+        assert user_id in (USER, OTHER)
+        return HumanIdentity(user_id, True, True, False)
+    def directory_users(self, token, user_ids):
+        return tuple(self.directory_user(token, user_id) for user_id in user_ids)
+    def _request(self, token, operation):
+        assert operation == 'config/auth/list'
+        return [{'id': user, 'name': '<b>Same name</b>', 'is_active': True,
+            'system_generated': False} for user in (USER, OTHER)]
+
+class OAuth:
+    def __init__(self, configuration):
+        self.configuration = configuration
+    def exchange(self, code, verifier):
+        return OAuthTokens('fictional-access', 'fictional-refresh', 3600, 'homeassistant')
+    def revoke(self, token):
+        pass
+
+mode = sys.argv[1]
+assert mode in ('native', 'standalone')
+ingress.HomeAssistantWebSocket = Source
+server.HomeAssistantWebSocket = Source
+server.HomeAssistantOAuth = OAuth
+
+async def exercise(root):
+    if mode == 'native':
+        runtime = ingress.create_owned_runtime('fictional-supervisor', 'edge', root, (ORIGIN,))
+        client_headers = {'X-Remote-User-Id': USER,
+            'X-Ingress-Path': '/api/hassio_ingress/' + 'b' * 43,
+            'Cookie': 'ingress_session=' + 'c' * 128}
+    else:
+        runtime = server.create_owned_runtime('http://fictional-ha.local', ORIGIN, 'edge', root)
+        client_headers = {}
+    try:
+        transport = httpx.ASGITransport(app=runtime.app, client=('172.30.32.2', 12345))
+        async with httpx.AsyncClient(transport=transport, base_url=ORIGIN,
+                headers=client_headers) as client:
+            def sign_in(user):
+                Source.actor = user
+                now = runtime.identity.clock.now()
+                session = 'session-' + user
+                runtime.identity.sign_in('fixture-code', 'v' * 43, session, now, now + 3600000)
+                schemes = runtime.app.openapi()['components']['securitySchemes']
+                cookie = schemes['DomusSession']['name']
+                client.cookies.set(cookie, session)
+            if mode == 'standalone':
+                sign_in(USER)
+            async def headers(key):
+                response = await client.get('/api/v1/auth/csrf')
+                assert response.status_code == 200, response.text
+                return {'Origin': ORIGIN, 'X-CSRF-Token': response.json()['csrf_token'],
+                    'Idempotency-Key': key}
+            response = await client.post('/api/v1/household', json={
+                'expected_revision': 0, 'name': 'API fixture', 'time_zone': 'UTC'},
+                headers=await headers('setup'))
+            assert response.status_code == 200, response.text
+            base = '/api/v1/administration'
+            capabilities = (await client.get(base + '/capabilities')).json()
+            assert capabilities['contract_version'] == 2
+            assert capabilities['household_id'] == 'home'
+            assert capabilities['journal']['namespace'] == 'administration'
+            original = (await client.get(base + '/preferences')).json()
+            member = original['member_id']
+            roster = await client.get(base + '/roster')
+            assert roster.status_code == 200, roster.text
+            assert roster.json()['directory_state'] == 'available'
+            assert roster.json()['members'][0]['metadata'] == {
+                'state': 'available', 'name': '<b>Same name</b>', 'avatar_state': 'unavailable'}
+            directory = await client.get(base + '/directory')
+            assert directory.status_code == 200, directory.text
+            assert {row['ha_user_id'] for row in directory.json()['profiles']} == {USER, OTHER}
+            saved = await client.put(base + '/preferences', json={
+                'expected_revision': 1, 'locale': 'es', 'routine_participation_summaries': False},
+                headers=await headers('private'))
+            assert saved.status_code == 200, saved.text
+            operation = saved.json()['operation_id']
+            public = await client.put(base + '/members/' + member + '/presentation', json={
+                'expected_revision': 1, 'alias': '<b>Literal</b>'}, headers=await headers('public'))
+            assert public.status_code == 200, public.text
+            before = runtime.storage.database.path.read_bytes()
+            recovered = await client.get(base + '/requests/member.preferences.update/private')
+            assert recovered.status_code == 200 and recovered.json()['operation_id'] == operation
+            assert recovered.json()['notification_delivery'] == 'unavailable'
+            assert runtime.storage.database.path.read_bytes() == before
+            if mode == 'native':
+                client.headers['X-Remote-User-Id'] = OTHER
+                client.headers['Cookie'] = 'ingress_session=' + 'd' * 128
+            else:
+                sign_in(OTHER)
+            joined = await client.post('/api/v1/members/enrollment', json={'expected_revision': 0},
+                headers=await headers('join'))
+            assert joined.status_code == 200 and joined.json()['result']['status'] == 'active'
+            private_path = base + '/requests/member.preferences.update/private'
+            assert (await client.get(private_path)).status_code == 404
+            assert (await client.get('/api/v1/operations/' + operation)).status_code == 404
+            own = (await client.get(base + '/preferences')).json()
+            assert own['member_id'] != member and own['locale'] is None
+            assert own['routine_participation_summaries'] is True
+            roster = await client.get(base + '/roster')
+            assert roster.status_code == 200 and len(roster.json()['members']) == 2
+            assert all(set(row['metadata']) == {'state', 'name', 'avatar_state'}
+                for row in roster.json()['members'])
+            presentation = await client.get(base + '/members/' + member + '/presentation')
+            assert presentation.json()['alias'] == '<b>Literal</b>'
+            with runtime.storage.database.read() as unit:
+                assert unit.preferences.get('home', member).locale is MemberLocale.SPANISH
+                assert unit.preferences.get('home', member).revision == 2
+                assert unit.presentations.get('home', member).revision == 2
+    finally:
+        runtime.close()
+
+with TemporaryDirectory(prefix='domus-administration-api-image-') as directory:
+    root = Path(directory) / 'owned'
+    root.mkdir(mode=0o700)
+    asyncio.run(exercise(root))
+""",
+        mode,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

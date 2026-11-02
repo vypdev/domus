@@ -50,6 +50,8 @@ PUBLIC_CODES = frozenset(
         "protected_permission",
         "invalid_profile_rule",
         "invalid_member",
+        "invalid_member_alias",
+        "invalid_member_preferences",
         "invalid_permission_rules",
         "invalid_profile_rules",
         "invalid_idempotency_key",

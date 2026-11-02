@@ -4,6 +4,11 @@ from dataclasses import dataclass
 from typing import Literal, cast
 
 from domus.application.authorization import HouseholdAccess
+from domus.application.member_profile_access import (
+    ALIAS_ACTION,
+    PREFERENCES_ACTION,
+    require_profile_original,
+)
 from domus.application.ports import Transactions, UnitOfWork
 from domus.domain.errors import Conflict, Forbidden, NotFound, StorageFailure
 from domus.domain.identity import (
@@ -17,7 +22,7 @@ from domus.domain.identity import (
     allows,
     effective_role,
 )
-from domus.domain.storage import Household, Receipt, validate_identifier
+from domus.domain.storage import CommandKey, Household, Receipt, validate_identifier
 
 _ADMINISTRATION_SCOPE = (
     Permission.HOUSEHOLD_READ,
@@ -36,6 +41,9 @@ _ORIGINAL_PERMISSION = {
     "policy.update": Permission.POLICY_MANAGE,
     "recovery.complete": Permission.POLICY_MANAGE,
 }
+ADMINISTRATION_ACTIONS = frozenset(
+    {"household.update", "member.update", "policy.update", ALIAS_ACTION, PREFERENCES_ACTION}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -157,31 +165,51 @@ class HouseholdQueries:
             self._require(unit, Permission.POLICY_MANAGE)
             return cast(HouseholdPolicy, unit.policies.get(self.household_id))
 
+    def _operation_access(self, unit: UnitOfWork) -> None:
+        member = unit.members.by_user(self.household_id, self.human.ha_user_id)
+        HouseholdAccess(self.human).require(
+            unit,
+            self.household_id,
+            Permission.OPERATIONS_READ,
+            subject_member_id=member.member_id if member is not None else None,
+        )
+
+    def _operation_view(self, unit: UnitOfWork, receipt: Receipt) -> OperationView:
+        if not require_profile_original(
+            unit, self.human, self.household_id, receipt
+        ) and receipt.command.action not in (
+            "member.enroll",
+            "recovery.request",
+            "recovery.cancel",
+        ):
+            original = _ORIGINAL_PERMISSION.get(receipt.command.action)
+            if original is None:
+                raise Forbidden("permission_denied")
+            self._require(unit, original)
+        delivered = unit.outbox.delivered(receipt.operation_id)
+        if delivered is None:
+            raise StorageFailure("invalid_operation_record")
+        return OperationView(receipt, delivered)
+
     def operation(self, operation_id: str) -> OperationView:
         validate_identifier(operation_id)
         with self.transactions.read() as unit:
-            member = unit.members.by_user(self.household_id, self.human.ha_user_id)
-            HouseholdAccess(self.human).require(
-                unit,
-                self.household_id,
-                Permission.OPERATIONS_READ,
-                subject_member_id=member.member_id if member is not None else None,
-            )
+            self._operation_access(unit)
             receipt = unit.receipts.get_operation(
                 self.household_id, self.human.ha_user_id, operation_id
             )
             if receipt is None:
                 raise NotFound("operation_missing")
-            if receipt.command.action not in (
-                "member.enroll",
-                "recovery.request",
-                "recovery.cancel",
-            ):
-                original = _ORIGINAL_PERMISSION.get(receipt.command.action)
-                if original is None:
-                    raise Forbidden("permission_denied")
-                self._require(unit, original)
-            delivered = unit.outbox.delivered(receipt.operation_id)
-            if delivered is None:
-                raise StorageFailure("invalid_operation_record")
-            return OperationView(receipt, delivered)
+            return self._operation_view(unit, receipt)
+
+    def administration_request(self, action: str, key: str) -> OperationView:
+        """Read an owned original even if its response/operation ID was lost; never execute it."""
+        if action not in ADMINISTRATION_ACTIONS:
+            raise Forbidden("permission_denied")
+        command = CommandKey(self.household_id, self.human.ha_user_id, action, key)
+        with self.transactions.read() as unit:
+            self._operation_access(unit)
+            receipt = unit.receipts.get(command)
+            if receipt is None:
+                raise NotFound("operation_missing")
+            return self._operation_view(unit, receipt)

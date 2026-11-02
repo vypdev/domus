@@ -225,11 +225,12 @@
       "status": "proposed",
       "scope": "Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-31",
+      "lastVerified": "2026-11-02",
       "specs": [
         "specs/household-identity.md",
         "specs/household-administration.md",
-        "specs/household-administration-integration.md"
+        "specs/household-administration-integration.md",
+        "specs/household-administration-workspace.md"
       ],
       "workflows": [],
       "entrypoints": [
@@ -242,7 +243,8 @@
         "backend/src/domus/entrypoints/native_http.py",
         "backend/src/domus/composition/admin.py",
         "backend/src/domus/entrypoints/console_recovery.py",
-        "backend/src/domus/composition/ha_app.py"
+        "backend/src/domus/composition/ha_app.py",
+        "backend/src/domus/entrypoints/administration_http.py"
       ],
       "code": [
         "backend/src/domus/domain/identity.py",
@@ -299,7 +301,31 @@
         "backend/src/domus/infrastructure/offline_storage.py",
         "backend/src/domus/infrastructure/restore_source.py",
         "backend/src/domus/infrastructure/sqlite_activation.py",
-        "backend/src/domus/domain/member_profiles.py"
+        "backend/src/domus/domain/member_profiles.py",
+        "backend/src/domus/application/member_profile_access.py",
+        "backend/src/domus/application/member_profile_commands.py",
+        "backend/src/domus/application/household_administration_queries.py",
+        "backend/src/domus/composition/household_administration.py",
+        "backend/src/domus/entrypoints/administration_dto.py",
+        "backend/src/domus/entrypoints/administration_http.py",
+        "backend/src/domus/entrypoints/openapi.py",
+        "frontend/src/domain/administration.ts",
+        "frontend/src/adapters/administration-json.ts",
+        "backend/src/domus/domain/member_sources.py",
+        "backend/src/domus/application/member_source_ports.py",
+        "backend/src/domus/application/household_roster.py",
+        "backend/src/domus/infrastructure/ha_member_profiles.py",
+        "frontend/src/domain/administration-commands.ts",
+        "frontend/src/domain/administration-journal.ts",
+        "frontend/src/application/administration-ports.ts",
+        "frontend/src/adapters/administration-journal.ts",
+        "frontend/src/domain/administration-views.ts",
+        "frontend/src/adapters/json-values.ts",
+        "frontend/src/adapters/http-transport.ts",
+        "frontend/src/adapters/administration-values.ts",
+        "frontend/src/adapters/administration-http.ts",
+        "frontend/src/application/administration-controller.ts",
+        "frontend/src/domain/administration-authorization.ts"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -357,7 +383,26 @@
         "tests/containers/restore_fixture.py",
         "tests/backend/test_response_readability.py",
         "tests/backend/test_review_regressions.py",
-        "tests/backend/test_member_profiles.py"
+        "tests/backend/test_member_profiles.py",
+        "tests/backend/test_member_profile_commands.py",
+        "tests/backend/test_administration_http.py",
+        "tests/containers/test_administration_image.py",
+        "tests/backend/test_openapi.py",
+        "frontend/tests/administration.test.ts",
+        "tests/backend/test_member_sources.py",
+        "tests/backend/test_household_roster.py",
+        "tests/backend/test_ha_member_profiles.py",
+        "tests/backend/test_standalone_member_sources.py",
+        "frontend/tests/administration-journal.test.ts",
+        "frontend/tests/administration-session-journal.test.ts",
+        "frontend/tests/entry-int64.test.ts",
+        "frontend/tests/administration-http.test.ts",
+        "frontend/tests/e2e/entry.spec.ts",
+        "tests/browser/entry_server.py",
+        "tests/containers/test_app_ui.py",
+        "tests/packaging/test_ui_wheel.py",
+        "frontend/tests/administration-controller.test.ts",
+        "frontend/tests/administration-authorization.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -406,12 +451,13 @@
         "docs/evidence/issue6-human-clarifications.json",
         "docs/evidence/m1-review-fixes.json",
         "docs/architecture-household-administration.md",
-        "docs/evidence/household-administration.json"
+        "docs/evidence/household-administration.json",
+        "docs/household-administration.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending; 79 normative cases traced in acceptance audit; source membership explanations tested in both compositions",
-        "blockingDecisions": "Complete deployment/live household/recovery/restore, product UI, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice. Complete current-head Bugbot review remains required. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
+        "implementationEvidence": "Partial: protected schema9 APIs, verified HA facts, closed exact-revision HTTP/journal and current-authority controller now bind household/policy facts and receipts to server-owned capability-v2 scope independently of aggregate reads. Valid read-only leases preserve original GET recovery; mutations remain blocked. Browser composition/lifetime, complete EN/ES forms and real administration journeys/acceptance remain outstanding; owner Edge.5 unchanged.",
+        "blockingDecisions": "No unanswered product decision for issue #25. Complete retained HADM 72/HADI 8 and all 82 HADW scenarios (all original 80 rows unchanged), full browser lifetime/controller composition and EN/ES workspace, fresh review/CI/images, owner adoption and the wider all-domain/Stable release. Checkpoints do not complete them.",
         "copilotChangesAllowed": false
       }
     },

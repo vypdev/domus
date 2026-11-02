@@ -71,6 +71,18 @@ for (const mode of modes) test.describe(mode, () => {
     expect(bootstrap).not.toMatch(/fixture-access|fixture-supervisor|subject|csrf|installation_id/);
   });
 
+  test('exact int64 revisions remain readable through the actual Python SQLite and packaged UI path', async ({page, context, request}) => {
+    await open(page, context, mode); await create(page);
+    await expect(page.getByRole('heading', {name: 'Your household', level: 1, exact: true})).toBeVisible();
+    const before = await stats(request, mode);
+    // This controls disposable persisted fixtures, not a fabricated sequence of 2^63 mutations.
+    expect((await request.post(origin(mode) + '/__fixture__/revision', {data: {revision: '9223372036854775807'}})).ok()).toBe(true);
+    await page.reload();
+    await expect(page.getByRole('heading', {name: 'Your household', level: 1, exact: true})).toBeVisible();
+    await expect(page.getByText('9223372036854775807', {exact: true})).toBeVisible();
+    expect(await stats(request, mode)).toEqual(before);
+  });
+
   test('an unavailable module leaves visible reload guidance and never claims an empty home', async ({page, context, request}) => {
     if (mode === 'native') await context.addCookies([{name: 'ingress_session', value: 'f'.repeat(128),
       domain: '127.0.0.1', path: '/', httpOnly: true, sameSite: 'Strict'}]);

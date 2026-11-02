@@ -60,6 +60,58 @@ authorization, Origin, CSRF and idempotency rules still apply independently. See
 | PUT /api/v1/members/{member_id} | Profile/status/ordinary exception replacement | Fresh human and current member management; last-administrator safeguard |
 | PUT /api/v1/policy | Mapping/profile-adjustment replacement | Fresh human and current policy management; provenance and last-administrator safeguards |
 
+The persistent native and standalone compositions additionally expose these administration routes.
+The full administration UI and its separate browser journal remain under development.
+
+| Route | Meaning | Current local authority |
+|---|---|---|
+| GET /api/v1/administration/capabilities | Wired action/revision/journal contract | Verified context; availability is not a caller permission |
+| GET /api/v1/administration/roster | Current masked membership, public alias/revision and verified name/source state | Member read before and after bounded source I/O |
+| GET /api/v1/administration/directory | Complete bounded source state and eligible account choices | Current policy management before and after source I/O |
+| GET /api/v1/administration/members/{member_id}/presentation | Public alias and its independent revision | Member read |
+| PUT /api/v1/administration/members/{member_id}/presentation | Set literal alias, or explicitly clear with null | Fresh human and current member management or applicable own preference write |
+| GET /api/v1/administration/preferences | Own locale, summary choice and independent revision | Current owner-scoped preference read |
+| PUT /api/v1/administration/preferences | Replace own locale and summary choice | Fresh human and current owner-scoped preference write |
+| GET /api/v1/administration/requests/{action}/{key} | Recover own original result when the operation ID was lost | Own operation read and current original-action authority |
+
+Preference bodies require `expected_revision`, `locale` (null, `en` or `es`) and the strict boolean
+`routine_participation_summaries`. They accept no member/actor selector. Alias bodies require
+`expected_revision` and `alias`; null alone clears, text trims to 1–80 Unicode code points, and
+controls/invalid UTF-8 are rejected. Revision values are exact JSON integers from 1 through
+9,223,372,036,854,775,807. A browser must preserve them exactly; unsafe numeric rounding is not a
+supported representation. Each aggregate has its own revision.
+
+The original-request route admits only `household.update`, `member.update`, `policy.update`,
+`member.presentation.update` and `member.preferences.update`. A missing request returns 404 with
+no effect; the caller must not automatically resend or replace its key. Another administrator
+cannot read an owner's original private preferences. Current original-action permission is checked
+before replay or disclosure; changing a revision or payload under the same key remains a conflict.
+Both lookup routes are protected reads without a mutation-only CSRF/revision requirement.
+
+Roster metadata has only `state`, nullable `name` and `avatar_state: "unavailable"`. States distinguish
+available, confirmed absence, denied and unavailable source facts. A verified account without a name
+has an unavailable label. Actual membership survives source failure. Other people's HA linkage and
+ordinary exceptions retain the existing roster masking; source metadata cannot reveal those fields.
+The directory contains at most 256 complete source facts before eligible-account filtering, with
+nullable bounded literal names. A denied/unavailable directory returns no choices and an explicit
+state, and does not certify an empty verified directory. Neither read initializes or changes records.
+Both reject actor/subject query selectors. A changed membership/policy snapshot returns a conflict
+requiring a fresh view; lost authority is checked before disclosure.
+
+Profile results explicitly report `notification_delivery: "unavailable"`. Administration lookups
+separately report `event_delivery` as pending, delivered or suppressed. A delivered technical event
+does not prove a notification was sent. Historical results retain their absent-current-effect
+warning. The capability response specifies the separate version-1 administration journal limit
+(eight records, 65,536 bytes, one hour); this advertises a contract rather than a completed UI.
+
+Capability contract version 2 adds the server-owned `household_id` routing scope. It binds
+household/policy facts and original receipts even when current aggregate reads are unavailable or
+not permitted. The identifier is neither a household-existence assertion nor a client selector or
+authority grant. The current administration client rejects legacy unbound capability version 1 and
+unknown versions. Original GET recovery still requires current original-action/operation authority,
+without an aggregate-read permission, expected revision or mutation CSRF precondition. Journal
+version 1 and all five command payload shapes remain unchanged.
+
 The authorization permission list is explicitly scoped to `household_administration`. It is not a
 global authorization answer for tasks, inventory or another member's preferences. Later domain APIs
 must derive assignment/ownership facts on the server. A member's roster profile is the explicit base

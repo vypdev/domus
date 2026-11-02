@@ -1,3 +1,4 @@
+import {revisionValue} from '../src/domain/administration';
 import {html} from 'lit';
 import type {Meta, StoryObj} from '@storybook/web-components-vite';
 import type {EntryView} from '../src/application/entry-controller';
@@ -27,7 +28,7 @@ function fixture(example: Example, deployment: Arguments['deployment']): EntryVi
     operationId: example === 'historical' ? 'op_fictional' : null};
   return {phase: 'ready', busy: false, session, authorization,
     decision: entryDecision(deployment, session, authorization, time),
-    household: state === 'active' ? {householdId: 'fictional-home', name: 'Maple House', timeZone: 'Europe/Madrid', revision: 1} : null,
+    household: state === 'active' ? {householdId: 'fictional-home', name: 'Maple House', timeZone: 'Europe/Madrid', revision: revisionValue('1')} : null,
     journal: example === 'grace' ? null : {version: 1, context, observedAt: time,
       records: example === 'uncertain' || example === 'historical' ? [record] : []},
     outcome: example === 'uncertain' ? {kind: 'uncertain'} : example === 'historical'

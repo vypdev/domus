@@ -48,6 +48,27 @@ async def _message(connection: ClientConnection) -> JsonObject:
     return JsonDocument(message).decode()
 
 
+def _current_human(result: JsonValue, provider: str) -> HumanIdentity:
+    """Decode the existing client-grant proof independently of optional presentation fields."""
+    try:
+        if not isinstance(result, dict):
+            raise InvalidInput("invalid_ha_identity")
+        user_id = _user_id(result["id"])
+        credentials = result["credentials"]
+        if (
+            not isinstance(credentials, list)
+            or not 1 <= len(credentials) <= 32
+            or any(not isinstance(item, dict) for item in credentials)
+            or not any(
+                cast(JsonObject, item).get("auth_provider_type") == provider for item in credentials
+            )
+        ):
+            raise InvalidInput("invalid_ha_identity")
+        return HumanIdentity(user_id, cast(bool, result["is_admin"]), True, False)
+    except DomusError, KeyError:
+        raise IdentityRejected("invalid_ha_protocol") from None
+
+
 @dataclass(frozen=True, slots=True)
 class HomeAssistantWebSocket:
     endpoint: HAEndpoint
@@ -118,25 +139,9 @@ class HomeAssistantWebSocket:
         token and enforces active users during authentication. current_user alone
         lacks system/active flags; that OAuth provenance is required here.
         """
-        result = self._request(grant.access_token, "auth/current_user")
-        try:
-            if not isinstance(result, dict):
-                raise InvalidInput("invalid_ha_identity")
-            user_id = _user_id(result["id"])
-            credentials = result["credentials"]
-            if (
-                not isinstance(credentials, list)
-                or not 1 <= len(credentials) <= 32
-                or any(not isinstance(item, dict) for item in credentials)
-                or not any(
-                    cast(JsonObject, item).get("auth_provider_type") == grant.provider
-                    for item in credentials
-                )
-            ):
-                raise InvalidInput("invalid_ha_identity")
-            return HumanIdentity(user_id, cast(bool, result["is_admin"]), True, False)
-        except DomusError, KeyError:
-            raise IdentityRejected("invalid_ha_protocol") from None
+        return _current_human(
+            self._request(grant.access_token, "auth/current_user"), grant.provider
+        )
 
     def directory_user(self, transport_token: str, ha_user_id: str) -> HumanIdentity:
         """Supervisor's credential only transports the exact subject lookup."""

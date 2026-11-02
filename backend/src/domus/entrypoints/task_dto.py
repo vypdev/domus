@@ -25,11 +25,11 @@ from domus.domain.task_values import (
     VerificationMode,
     VerificationState,
 )
-from domus.entrypoints.http_contract import StrictModel
+from domus.entrypoints.http_contract import NonnegativeRevision, PositiveRevision, StrictModel
 
 Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")]
-Revision = Annotated[int, Field(ge=1, le=2**63 - 1)]
-TaskTime = Annotated[int, Field(ge=0, le=2**63 - 1)]
+Revision = PositiveRevision
+TaskTime = NonnegativeRevision
 WireRole = Annotated[Role, Field(strict=False)]
 Quantity = Annotated[
     str,
@@ -164,7 +164,7 @@ class UpdateDefinitionBody(ContentBody):
 
 
 class PolicyBody(StrictModel):
-    expected_revision: int = Field(ge=0, le=2**63 - 1)
+    expected_revision: NonnegativeRevision
     rules: RulesBody
 
 
