@@ -1,0 +1,174 @@
+{
+  "status": "partial; UTC UNTIL and original progress evidence corrected, complete recurrence execution remains in progress",
+  "recordedAtUTC": "2026-11-02T10:51:15.348591+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "b2bcc693d6be5065b1be8dc378334199c927735a",
+  "backendSourceInventorySHA256": "379103605c1e68b4ce45bb5f82a4ef4edbf6d7bc757261b4326706659daa2f11",
+  "sourceManifestMethod": "SHA256 of compact sorted JSON mapping every authored Python module path, including initializers, to its byte SHA256.",
+  "findings": {
+    "urls": [
+      "https://github.com/vypdev/domus/pull/22#discussion_r4441091431",
+      "https://github.com/vypdev/domus/pull/22#discussion_r4441091443"
+    ],
+    "assessment": "Both are valid consumer boundary defects. Source corrected; fresh native verification required. Neither is dismissed or reported as a Copilot defect."
+  },
+  "implemented": [
+    "UTC UNTIL requires last-included resolved proof at the exact consumed nominal rank and at/before the inclusive cutoff. Closed progress additionally requires the first excluded resolved candidate, a conservative exhausted-period lower bound or natural calendar exhaustion.",
+    "A legitimate unclosed cursor after the final included slot remains valid pending its next bounded end check. Unproved bootstrap progress cannot claim a prior run or completed range.",
+    "Every actual fixed progress advance, including date/count work and empty scans, stores its time core in the original slot/scan receipt. Progress binds that core to the exact scoped command and operation.",
+    "Strict canonical progress encoding, deferred revision-bound evidence header and current/retained original receipt must agree on independent read and write. Checkpoint verification shares the same checks.",
+    "Timezone resolution remains outside SQLite writers and domain values. Receipt access is extracted into an acyclic infrastructure module with the original public compatibility import retained.",
+    "Actual restored absent-effect reconciliation does not generate a replacement task, operation, identity or delivery. Safe explicit zero-work test rewinds clear stale evidence.",
+    "The unreleased schema8 layout gains its evidence table; genuine prior b2 development layout is refused unchanged. Supported released1..7 source inputs and owner Edge.5/schema7 remain untouched.",
+    "The late b2 container smoke E501 line is wrapped and the exact final script gains actual UTC boundary/evidence/header/checkpoint controls."
+  ],
+  "testsFirst": {
+    "originalSource": {
+      "source": "b2bcc693d6be5065b1be8dc378334199c927735a",
+      "wheelSHA256": "521fdba08df26faac001fe17ef030c1106e2bc87aa4e4b670f0bfe84b994c5ec",
+      "inventorySHA256": "ba4c64c5914ad967e5c254fa448830a2df54fd605230b55bf39f9522f6d2d8cc",
+      "all132ModulesByteVerifiedAgainstGit": true
+    },
+    "finalOriginalReplay": "All17 tests fail against the exact byte-verified original b2 wheel:15 actual value/read/write/snapshot/step negatives, absent original temporal evidence, and acceptance of the genuine previous development layout. Full original output retained.",
+    "fixtureCorrection": {
+      "reason": "SQLite iterdump omits application_id and user_version. The first replay was a version0 control, not an intact source8 layout. The logical fixture now restores the actual original header values read from the immutable captured database. The original database was neither relabeled nor modified.",
+      "originalDatabaseSHA256": "23f3d880296942c1c732e840e03f95b236d14c275613d1b6d031b9bb314675c8",
+      "originalLogicalDumpSHA256": "9e1f38f0fe8a52e11cc2ba391f0b32b65831485266d9aecc7d08a2e48562403d",
+      "completeLogicalFixtureSHA256": "6c33c79693647e6fed34e693c943012e28ef05a4b153b8901b7e35014105cd63",
+      "applicationId": 1146047829,
+      "schema": 8,
+      "previousTestAssertion": "unsupported_schema because replay had version0",
+      "correctControl": "unrelated_database because actual prior schema8 lacks the new evidence table"
+    },
+    "newRegressionExecutions": 71,
+    "actualBoundaryControls": "Actual inclusive end, separate terminal step, empty UTC periods, final calendar exhaustion, provider work without writer lock, original/header tampering, invalid replay, actual restore and atomic rollback."
+  },
+  "completeBackend": {
+    "executions": 3881,
+    "durationSeconds": 100.5,
+    "authoredModules": 133,
+    "coverageTotals": {
+      "covered_lines": 9537,
+      "num_statements": 9537,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 274,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2736,
+      "num_partial_branches": 0,
+      "covered_branches": 2736,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed"
+  },
+  "focused": "312 relevant boundary/planning/storage/restore executions passed before the final two bootstrap-claim regressions; the final full3881 campaign includes both new tests and all current source bytes.",
+  "checks": {
+    "strictTypes": "passed;133 modules",
+    "ruff": "check/format passed after the final image edit;337 files",
+    "architecture": "3 contracts kept,0 broken;177 files/1144 dependencies",
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 36802,
+      "renderedCharacters": 36802,
+      "composedCharacters": 36802,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "138f2b96f989fed4ac0d7eafb896895449304c698f74a0693dd8dc01abd9597a",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "freshPackageAndArchitecture": {
+      "result": "passed",
+      "executions": 52,
+      "durationSeconds": 6.82
+    },
+    "tooling": {
+      "result": "passed",
+      "executions": 148,
+      "durationSeconds": 9.54,
+      "coverageTotals": {
+        "covered_lines": 214,
+        "num_statements": 214,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 98,
+        "num_partial_branches": 0,
+        "covered_branches": 98,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      }
+    }
+  },
+  "images": {
+    "exactCurrentScriptOnHost": "passed; fixed/fair materialization, both owned runtimes, relative read-only planning, UTC inclusive/terminal evidence and missing-header/checkpoint refusal",
+    "freshHosted": "Required for this correction after publication; local host script is not actual CPU-image proof.",
+    "previousB2": {
+      "runId": 41425773817,
+      "amd64": 125211894187,
+      "aarch64": 125211894296,
+      "result": "Both real images passed. Aggregate failed on the owned smoke E501 line; that source line is now corrected."
+    }
+  },
+  "schema": {
+    "current": 8,
+    "recurrenceTables": 5,
+    "supportedHistoricalSchemas": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "priorDevelopmentControl": {
+      "source": "b2bcc693d6be5065b1be8dc378334199c927735a",
+      "completeLogicalFixtureSHA256": "6c33c79693647e6fed34e693c943012e28ef05a4b153b8901b7e35014105cd63",
+      "originalDatabaseSHA256": "23f3d880296942c1c732e840e03f95b236d14c275613d1b6d031b9bb314675c8",
+      "behavior": "read/write/initialize refuse the unknown development layout without changing its bytes; no released8 upgrade or version relabeling"
+    },
+    "owner": "No owner HA access, migration, update, release or deployment in this correction."
+  },
+  "copilot": {
+    "nativeB2": {
+      "partitions": "10/10",
+      "files": 86,
+      "fragments": 97,
+      "validOpenFindings": 2,
+      "fixedPriorFindings": 3,
+      "overall": "partial/neutral because human-conversation4 fetched/3 retained/1 omitted/0 truncated/limitReached; other issue/PR/thread/diff dimensions complete"
+    },
+    "progressReference": "3307c393-b9fc-48af-86ab-be9ff0ff49e0",
+    "reports": [
+      "https://github.com/vypdev/copilot/issues/851#issuecomment-6565229213",
+      "https://github.com/vypdev/copilot/issues/843#issuecomment-6565011301"
+    ],
+    "manualSupplement": "Two proposed-SDD inputs and three finding-fix replies manually inspected; all agent-authored maintainer-account material, not new owner policy answers. Omitted item and whole-prompt absence are not inferred.",
+    "unchanged": "No Copilot resource, configuration, credential, bound, review scope or SDK bytes changed."
+  },
+  "rawEvidence": {
+    "privateCampaign": "/private/tmp/domus-time-until-b2bcc69",
+    "consumers": "CurrentPR22 UTC boundary review and rollback: exact original b2 wheel, immutable original schema8 database/provenance, corrected logical fixture/erratum, original and current tests, coverage/source/SDK proofs and image-host/package checks. Compact completed producers after publication; keep authored original input and necessary evidence."
+  },
+  "pending": "Fresh CI/native verification; relative rule/slot/progress persistence, atomic initial creation, durable source inbox/closure/invalidation, historical source reconciliation and mixed-rule global fairness/runtime composition; protected calendar/operations, reviewed schedule changes, household timing defaults, full retained52+37 cases and all-domain UI/HA/Stable-Edge acceptance."
+}

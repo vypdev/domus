@@ -6,7 +6,12 @@ from enum import StrEnum
 from domus.domain.errors import InvalidInput
 from domus.domain.identity import validate_revision
 from domus.domain.recurrence_membership import accepts_fixed_cursor, accepts_fixed_slot
-from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot, cursor_binding
+from domus.domain.recurrence_planning import (
+    CursorEvidence,
+    FixedCursor,
+    PlannedFixedSlot,
+    cursor_binding,
+)
 from domus.domain.recurrence_rules import FixedPattern, NominalDate
 from domus.domain.recurrence_time import TimePolicy
 from domus.domain.storage import CommandKey, Installation, JsonDocument, validate_identifier
@@ -57,6 +62,7 @@ class FixedProgress:
     revision: int = 1
     last_run_at: int | None = None
     range_complete: bool = False
+    evidence: CursorEvidence | None = None
 
     def __post_init__(self) -> None:
         validate_identifier(self.schedule_id)
@@ -69,6 +75,7 @@ class FixedProgress:
             not isinstance(self.cursor, FixedCursor)
             or type(self.range_complete) is not bool
             or (self.cursor.closed and not self.range_complete)
+            or (self.evidence is not None and not isinstance(self.evidence, CursorEvidence))
         ):
             raise InvalidInput("invalid_recurrence_progress")
 
@@ -80,10 +87,39 @@ class FixedProgress:
             and self.pattern_revision == schedule.pattern_revision
             and self.cursor.binding == cursor_binding(schedule.pattern, schedule.policy)
             and (
+                type(schedule.pattern.until) is not int
+                or self.evidence is not None
+                or self.pristine
+            )
+            and (
                 schedule.pattern.count is None
                 or self.cursor.nominal_count <= schedule.pattern.count
             )
-            and accepts_fixed_cursor(schedule.pattern, self.cursor)
+            and (
+                self.evidence is None
+                or (
+                    self.evidence.time.cursor == self.cursor
+                    and self.evidence.time.policy == schedule.policy
+                    and self.evidence.time.range_complete == self.range_complete
+                    and self.evidence.command.household_id == self.household_id
+                    and self.evidence.command.actor_id == MAINTENANCE_ACTOR
+                    and self.evidence.command.action
+                    in ("recurrence.materialize", "recurrence.scan")
+                )
+            )
+            and accepts_fixed_cursor(
+                schedule.pattern, self.cursor, None if self.evidence is None else self.evidence.time
+            )
+        )
+
+    @property
+    def pristine(self) -> bool:
+        return (
+            self.cursor.period_index == self.cursor.offset == self.cursor.nominal_count == 0
+            and not self.cursor.closed
+            and not self.range_complete
+            and self.last_run_at is None
+            and self.evidence is None
         )
 
 

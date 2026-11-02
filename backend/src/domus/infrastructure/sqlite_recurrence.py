@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
-from domus.domain.errors import Conflict, InvalidInput, StorageFailure
+from domus.domain.errors import Conflict, DomusError, InvalidInput, StorageFailure
 from domus.domain.recurrence_frontier import RecurrenceFrontier
 from domus.domain.recurrence_records import (
     FixedProgress,
@@ -15,6 +15,7 @@ from domus.domain.recurrence_records import (
 )
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.storage import Installation, validate_identifier
+from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 from domus.infrastructure.sqlite_recurrence_records import (
     frontier_document,
     progress_document,
@@ -54,6 +55,34 @@ def progress_headers(value: FixedProgress) -> dict[str, object]:
         "pattern_revision": value.pattern_revision,
         "revision": value.revision,
     }
+
+
+def _evidence_headers(value: FixedProgress) -> dict[str, object]:
+    evidence = value.evidence
+    assert evidence is not None
+    return {
+        "household_id": value.household_id,
+        "schedule_id": value.schedule_id,
+        "progress_revision": value.revision,
+        "operation_id": evidence.operation_id,
+        "evidence_fingerprint": evidence.document().fingerprint,
+    }
+
+
+def _original(connection: sqlite3.Connection, value: FixedProgress) -> bool:
+    evidence = value.evidence
+    if evidence is None:
+        return value.pristine
+    try:
+        receipt = SQLiteReceipts(connection).get(evidence.command)
+        return (
+            receipt is not None
+            and receipt.operation_id == evidence.operation_id
+            and receipt.result.decode().get("schedule_id") == value.schedule_id
+            and receipt.result.decode().get("cursor_evidence") == evidence.time.document().decode()
+        )
+    except DomusError:
+        return False
 
 
 def slot_headers(value: ScheduledSlot) -> dict[str, object]:
@@ -160,7 +189,27 @@ class SQLiteRecurrences:
         )
         if value is not None:
             rule = self.schedule(household_id, schedule_id)
-            if rule is None or not value.matches_schedule(rule):
+            row = self.connection.execute(
+                "SELECT * FROM recurrence_progress_evidence WHERE household_id=? AND schedule_id=?",
+                (household_id, schedule_id),
+            ).fetchone()
+            headers_match = (
+                row is None
+                if value.evidence is None
+                else (
+                    row is not None
+                    and all(
+                        type(row[key]) is type(expected) and row[key] == expected
+                        for key, expected in _evidence_headers(value).items()
+                    )
+                )
+            )
+            if (
+                rule is None
+                or not value.matches_schedule(rule)
+                or not headers_match
+                or not _original(self.connection, value)
+            ):
                 raise StorageFailure("invalid_recurrence_record")
         return value
 
@@ -235,7 +284,11 @@ class SQLiteRecurrences:
         if value.revision != expected_revision + 1:
             raise Conflict("revision_conflict")
         rule = self.schedule(value.household_id, value.schedule_id)
-        if rule is None or not value.matches_schedule(rule):
+        if (
+            rule is None
+            or not value.matches_schedule(rule)
+            or not _original(self.connection, value)
+        ):
             raise Conflict("recurrence_cursor_mismatch")
         self._write(
             "recurrence_progress",
@@ -243,6 +296,21 @@ class SQLiteRecurrences:
             progress_document(value).encoded,
             expected_revision,
         )
+        if value.evidence is None:
+            self.connection.execute(
+                "DELETE FROM recurrence_progress_evidence WHERE household_id=? AND schedule_id=?",
+                (value.household_id, value.schedule_id),
+            )
+        else:
+            headers = _evidence_headers(value)
+            self.connection.execute(
+                f"INSERT INTO recurrence_progress_evidence({','.join(headers)}) "
+                f"VALUES ({','.join('?' for _ in headers)}) "
+                "ON CONFLICT(household_id,schedule_id) DO UPDATE SET "
+                "progress_revision=excluded.progress_revision, operation_id=excluded.operation_id, "
+                "evidence_fingerprint=excluded.evidence_fingerprint",
+                tuple(headers.values()),
+            )
 
     def add_slot(self, value: ScheduledSlot) -> None:
         if value.installation != self.installation:

@@ -94,7 +94,7 @@ def test_rule_progress_slot_and_task_work_roll_back_as_one_transaction(tmp_path)
             )
             unit.tasks.save_occurrence(generated, 0)
             unit.recurrence.save_schedule(replace(rule, state=ScheduleState.PAUSED, revision=2), 1)
-            unit.recurrence.save_progress(replace(progress, revision=2, last_run_at=110), 1)
+            unit.recurrence.save_progress(replace(progress, revision=2), 1)
             save_slot(unit, original)
             raise RuntimeError("injected")
     with store.read() as unit:
@@ -111,7 +111,7 @@ def test_rule_and_progress_compare_and_swap_preserve_immutable_scope_and_creatio
     with store.write() as unit:
         changed = replace(rule, state=ScheduleState.PAUSED, revision=2)
         unit.recurrence.save_schedule(changed, 1)
-        unit.recurrence.save_progress(replace(progress, revision=2, last_run_at=110), 1)
+        unit.recurrence.save_progress(replace(progress, revision=2), 1)
         for value, expected in [
             (rule, 0),
             (changed, 1),

@@ -50,6 +50,7 @@ def test_original_schema6_migration_preserves_rows_and_projects_existing_cause(t
             "recurrence_progress",
             "recurrence_slots",
             "recurrence_frontiers",
+            "recurrence_progress_evidence",
         }
         assert set(upgraded) == set(original) | added
         assert all(upgraded[table] == values for table, values in original.items())

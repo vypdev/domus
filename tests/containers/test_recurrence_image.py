@@ -190,7 +190,8 @@ with TemporaryDirectory(prefix='domus-current-image-') as directory:
     with store.read() as unit:
         original_progress = unit.recurrence.progress('home', facts['schedule_id'])
     altered = replace(original_progress,
-        cursor=replace(original_progress.cursor, period_index=original_progress.cursor.period_index+100))
+        cursor=replace(original_progress.cursor,
+            period_index=original_progress.cursor.period_index+100))
     with store._connection() as connection:
         connection.execute('UPDATE recurrence_progress SET document=? WHERE schedule_id=?',
             (progress_document(altered).encoded, facts['schedule_id']))
@@ -208,6 +209,53 @@ with TemporaryDirectory(prefix='domus-current-image-') as directory:
         assert error.code == 'invalid_snapshot_records'
     else:
         raise AssertionError('Checkpoint accepted inconsistent progress')
+    assert store.path.read_bytes() == source_bytes
+with TemporaryDirectory(prefix='domus-current-until-') as directory:
+    store = SQLiteDatabase(Path(directory)/'domus.sqlite3', installation)
+    store.initialize()
+    HouseholdCommands(store, human, UnusedDirectory(), TimeZoneCatalog(), clock, identifiers).setup(
+        'setup', SetupHousehold('Fictional UTC boundary fixture', 'UTC'))
+    creation = RecurrenceCommands(store, human, clock, identifiers,
+        FixedRecurrencePlanner(CalendarNominalExpansion(), times))
+    utc_policy = TimePolicy('UTC', TIMEZONE_DATA_IDENTITY)
+    utc_pattern = parse_fixed_pattern('FREQ=DAILY;UNTIL=20260102T120000Z',
+        NominalTime(datetime(2026, 1, 1, 12)))
+    request = CreateFixedTask(CreateTask(TaskContent('UTC inclusive boundary')),
+        utc_pattern, utc_policy)
+    rid = creation.create_fixed('utc-create', request).result.decode()['schedule_id']
+    maintenance = FixedMaintenance(store, MaintenanceScope(installation, 'home'),
+        creation.planner, clock, identifiers)
+    horizon = NominalTime(datetime(2026, 1, 5, 12))
+    assert maintenance.step(rid, horizon).status == 'created'
+    included = maintenance.step(rid, horizon)
+    assert not included.cursor.closed and included.cursor.nominal_count == 2
+    terminal = maintenance.step(rid, horizon)
+    assert terminal.cursor.closed and terminal.status == 'scan'
+    with store.read() as unit:
+        progress = unit.recurrence.progress('home', rid)
+        evidence = progress.evidence
+        assert evidence.time.last.resolved.instant_ms == utc_pattern.until
+        assert evidence.time.terminal.resolved.instant_ms > utc_pattern.until
+        assert unit.receipts.get(evidence.command).operation_id == evidence.operation_id
+        assert len(unit.tasks.occurrences('home')) == 2
+    assert maintenance.step(rid, horizon).status == 'current'
+    assert SQLiteSnapshots(store, Path(directory)/'good', installation, clock).create('good')
+    with store._connection() as connection:
+        connection.execute('DELETE FROM recurrence_progress_evidence')
+    source_bytes = store.path.read_bytes()
+    try:
+        with store.read() as unit:
+            unit.recurrence.progress('home', rid)
+    except StorageFailure:
+        pass
+    else:
+        raise AssertionError('UTC progress lost its original evidence header')
+    try:
+        SQLiteSnapshots(store, Path(directory)/'bad', installation, clock).create('bad')
+    except DatabaseRejected as error:
+        assert error.code == 'invalid_snapshot_records'
+    else:
+        raise AssertionError('Checkpoint accepted unproved UTC continuation')
     assert store.path.read_bytes() == source_bytes
 print('Current-source recurrence, both owned runtimes and pinned-time codecs passed.')
 """,

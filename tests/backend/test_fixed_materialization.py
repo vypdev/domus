@@ -176,6 +176,8 @@ def test_replaying_a_proved_current_slot_advances_progress_without_duplicate_wor
                 revision=3,
                 cursor=FixedCursor(progress.cursor.binding),
                 range_complete=False,
+                last_run_at=None,
+                evidence=None,
             ),
             2,
         )
@@ -259,6 +261,8 @@ def rewind(store, rule_id):
                 revision=progress.revision + 1,
                 cursor=FixedCursor(progress.cursor.binding),
                 range_complete=False,
+                last_run_at=None,
+                evidence=None,
             ),
             progress.revision,
         )

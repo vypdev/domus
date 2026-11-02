@@ -70,6 +70,7 @@ class FixedRecurrencePlanner:
         if pattern.count is not None and current.nominal_count > pattern.count:
             raise InvalidInput("invalid_recurrence_cursor")
         slots: list[PlannedFixedSlot] = []
+        terminal: PlannedFixedSlot | None = None
         scanned = 0
 
         def result(complete: bool = False, *, closed: bool = False) -> FixedBatch:
@@ -78,6 +79,7 @@ class FixedRecurrencePlanner:
                 replace(current, closed=True) if closed else current,
                 scanned,
                 complete,
+                terminal,
             )
 
         if current.closed or (pattern.count is not None and current.nominal_count == pattern.count):
@@ -119,6 +121,7 @@ class FixedRecurrencePlanner:
                         and resolved.instant_ms > pattern.until
                     )
                 if beyond:
+                    terminal = PlannedFixedSlot(candidate, resolved)
                     return result(True, closed=True)
                 if current.nominal_count == 2**63 - 1:
                     raise InvalidInput("invalid_recurrence_cursor")

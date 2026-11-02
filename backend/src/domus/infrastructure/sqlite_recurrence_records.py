@@ -6,7 +6,12 @@ from typing import cast
 
 from domus.domain.errors import DomusError, InvalidInput, StorageFailure
 from domus.domain.recurrence_frontier import RecurrenceFrontier
-from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot
+from domus.domain.recurrence_planning import (
+    CursorEvidence,
+    CursorTimeEvidence,
+    FixedCursor,
+    PlannedFixedSlot,
+)
 from domus.domain.recurrence_records import (
     FixedProgress,
     FixedSchedule,
@@ -28,7 +33,7 @@ from domus.domain.recurrence_time import (
     TimePolicy,
     TimeResolution,
 )
-from domus.domain.storage import Installation, JsonDocument, JsonObject, JsonValue
+from domus.domain.storage import CommandKey, Installation, JsonDocument, JsonObject, JsonValue
 
 
 def _object(value: JsonValue, keys: tuple[str, ...]) -> JsonObject:
@@ -197,24 +202,24 @@ def schedule_document(value: FixedSchedule) -> JsonDocument:
 
 
 def progress_document(value: FixedProgress) -> JsonDocument:
-    return JsonDocument.from_value(
-        {
-            "version": 1,
-            "schedule_id": value.schedule_id,
-            "household_id": value.household_id,
-            "pattern_revision": value.pattern_revision,
-            "revision": value.revision,
-            "last_run_at": value.last_run_at,
-            "range_complete": value.range_complete,
-            "cursor": {
-                "binding": value.cursor.binding,
-                "period_index": value.cursor.period_index,
-                "offset": value.cursor.offset,
-                "nominal_count": value.cursor.nominal_count,
-                "closed": value.cursor.closed,
-            },
-        }
-    )
+    data: JsonObject = {
+        "version": 1,
+        "schedule_id": value.schedule_id,
+        "household_id": value.household_id,
+        "pattern_revision": value.pattern_revision,
+        "revision": value.revision,
+        "last_run_at": value.last_run_at,
+        "range_complete": value.range_complete,
+        "cursor": {
+            "binding": value.cursor.binding,
+            "period_index": value.cursor.period_index,
+            "offset": value.cursor.offset,
+            "nominal_count": value.cursor.nominal_count,
+            "closed": value.cursor.closed,
+        },
+        "evidence": None if value.evidence is None else value.evidence.document().decode(),
+    }
+    return JsonDocument.from_value(data)
 
 
 def _progress(value: JsonValue) -> FixedProgress:
@@ -228,6 +233,7 @@ def _progress(value: JsonValue) -> FixedProgress:
             "last_run_at",
             "range_complete",
             "cursor",
+            "evidence",
         ),
     )
     cursor = _object(
@@ -247,6 +253,47 @@ def _progress(value: JsonValue) -> FixedProgress:
         cast(int, row["revision"]),
         cast(int | None, row["last_run_at"]),
         cast(bool, row["range_complete"]),
+        None if row["evidence"] is None else _evidence(row["evidence"]),
+    )
+
+
+def _cursor(value: JsonValue) -> FixedCursor:
+    row = _object(value, ("binding", "period_index", "offset", "nominal_count", "closed"))
+    return FixedCursor(
+        cast(str, row["binding"]),
+        cast(int, row["period_index"]),
+        cast(int, row["offset"]),
+        cast(int, row["nominal_count"]),
+        cast(bool, row["closed"]),
+    )
+
+
+def _planned(value: JsonValue) -> PlannedFixedSlot:
+    row = _object(value, ("nominal", "resolved"))
+    return PlannedFixedSlot(
+        _nominal(row["nominal"]), None if row["resolved"] is None else _resolved(row["resolved"])
+    )
+
+
+def _evidence(value: JsonValue) -> CursorEvidence:
+    row = _record(value, ("time", "command", "operation_id"))
+    core = _record(row["time"], ("cursor", "policy", "range_complete", "last", "terminal"))
+    command = _object(row["command"], ("household_id", "actor_id", "action", "key"))
+    return CursorEvidence(
+        CursorTimeEvidence(
+            _cursor(core["cursor"]),
+            _policy(core["policy"]),
+            cast(bool, core["range_complete"]),
+            None if core["last"] is None else _planned(core["last"]),
+            None if core["terminal"] is None else _planned(core["terminal"]),
+        ),
+        CommandKey(
+            cast(str, command["household_id"]),
+            cast(str, command["actor_id"]),
+            cast(str, command["action"]),
+            cast(str, command["key"]),
+        ),
+        cast(str, row["operation_id"]),
     )
 
 

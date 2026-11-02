@@ -86,6 +86,18 @@ writes and initialization refuse that unknown development layout and preserve it
 control does not extend the supported historical migration set or authorize version-number edits.
 Keep its matching application for an intentional development rollback.
 
+The later unreleased schema8 refinement adds recurrence_progress_evidence and strict inline original
+time evidence. The genuine [b2bcc69 input](../../tests/fixtures/sqlite/unreleased-b2bcc69-schema8.sql)
+comes from its actual timed-UNTIL creation, two committed slots and terminal scan under byte-verified
+source b2bcc693d6be5065b1be8dc378334199c927735a. Its complete logical fixture SHA-256 is
+6c33c79693647e6fed34e693c943012e28ef05a4b153b8901b7e35014105cd63. SQLite iterdump omits
+application/schema pragmas; the fixture explicitly restores those actual captured header values.
+The first incomplete dump replay exercised version0 and was corrected before the final control.
+The original database remains byte-identical, with SHA-256
+23f3d880296942c1c732e840e03f95b236d14c275613d1b6d031b9bb314675c8. Current reads, writes and
+initialization refuse its previous development layout unchanged. There is no released8 upgrade
+claim, version-number downgrade or alteration to any released1..7 input.
+
 Those observations are retained in [task evidence](../evidence/task-execution-foundation.json).
 They are distinct from image/cross-architecture adoption, real consumer ledgers and a restoration on
 the owner's HA, which remain required before integrated release claims. No automatic backup schedule

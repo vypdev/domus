@@ -301,3 +301,24 @@ The [cursor evidence](evidence/recurrence-cursor-integrity.json) includes a repl
 negative tests against every byte-verified original059 module, real canonical-row corruption and
 genuine sparse/end continuations. The original test fixture binding mismatch was corrected
 explicitly. No historical source or fixture bytes, SQLite layout or owner installation changed.
+
+## Original proof for UTC UNTIL continuation
+
+UTC UNTIL requires resolved boundary facts beyond nominal rank. Progress retains the last included
+slot at its exact consumed rank, with an instant at or before the inclusive cutoff. Closing a cursor
+requires the first excluded resolved candidate at that cursor, a conservative exhausted-period bound
+or natural calendar exhaustion. A bounded unclosed cursor after the last included slot remains valid
+until the following step checks the end. No provider is called by domain records or inside a writer.
+
+Each real fixed progress advance now retains a typed time-evidence core in its original slot or scan
+receipt. The progress document references that exact scoped command and operation; a separate
+revision-bound evidence header agrees with both. The repository checks current or retained historical
+receipts before writes and on independent reads. Checkpoint validation uses the same checks. A safe
+zero-work rewind clears its old evidence explicitly; a fabricated run cannot borrow that exemption.
+Actual restore reconciliation preserves absent work without new task IDs, receipts or events.
+
+This changes the unreleased schema8 layout and closed progress encoding. Released historical1..7
+inputs remain supported. The genuine prior b2bcc69 schema8 layout is a strict refusal control;
+keeping its matching application/database pair permits development rollback without relabeling it.
+See [UTC boundary evidence](evidence/recurrence-until-integrity.json) for original-source replay,
+logical-dump correction, current verification and remaining full-feature acceptance.

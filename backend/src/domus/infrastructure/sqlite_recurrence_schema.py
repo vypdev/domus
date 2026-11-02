@@ -5,6 +5,7 @@ RECURRENCE_TABLES = {
     "recurrence_progress",
     "recurrence_slots",
     "recurrence_frontiers",
+    "recurrence_progress_evidence",
 }
 RECURRENCE_STATEMENTS = (
     "CREATE TABLE recurrence_frontiers(household_id TEXT PRIMARY KEY NOT NULL "
@@ -34,6 +35,16 @@ RECURRENCE_STATEMENTS = (
     "document TEXT NOT NULL, UNIQUE(household_id,schedule_id,pattern_revision), "
     "FOREIGN KEY(household_id,schedule_id,pattern_revision) "
     "REFERENCES recurrence_rules(household_id,schedule_id,pattern_revision) "
+    "DEFERRABLE INITIALLY DEFERRED)",
+    "CREATE UNIQUE INDEX recurrence_progress_revision "
+    "ON recurrence_progress(household_id,schedule_id,revision)",
+    "CREATE TABLE recurrence_progress_evidence(household_id TEXT NOT NULL, "
+    "schedule_id TEXT NOT NULL, progress_revision INTEGER NOT NULL "
+    "CHECK(typeof(progress_revision)='integer' AND progress_revision>=1), "
+    "operation_id TEXT NOT NULL, evidence_fingerprint TEXT NOT NULL, "
+    "PRIMARY KEY(household_id,schedule_id), "
+    "FOREIGN KEY(household_id,schedule_id,progress_revision) "
+    "REFERENCES recurrence_progress(household_id,schedule_id,revision) "
     "DEFERRABLE INITIALLY DEFERRED)",
     "CREATE TABLE recurrence_slots(household_id TEXT NOT NULL, slot_key TEXT NOT NULL, "
     "schedule_id TEXT NOT NULL, definition_id TEXT NOT NULL, "

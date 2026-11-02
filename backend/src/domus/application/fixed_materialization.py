@@ -8,7 +8,12 @@ from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
-from domus.domain.recurrence_planning import FixedBatch, FixedCursor
+from domus.domain.recurrence_planning import (
+    CursorEvidence,
+    CursorTimeEvidence,
+    FixedBatch,
+    FixedCursor,
+)
 from domus.domain.recurrence_records import (
     MAINTENANCE_ACTOR,
     FixedProgress,
@@ -181,6 +186,15 @@ class FixedMaintenance:
                 "stopped", rule.schedule_id, progress.cursor, False, batch.periods_scanned
             )
         planned = batch.slots[0] if batch.slots else None
+        time_evidence = CursorTimeEvidence(
+            batch.cursor,
+            rule.policy,
+            batch.range_complete,
+            planned
+            if planned is not None
+            else (None if progress.evidence is None else progress.evidence.time.last),
+            batch.terminal,
+        )
         probe = (
             None
             if planned is None
@@ -229,6 +243,7 @@ class FixedMaintenance:
                         "processed_slots": 0,
                         "cursor": asdict(batch.cursor),
                         "range_complete": batch.range_complete,
+                        "cursor_evidence": time_evidence.document().decode(),
                     }
                 )
             else:
@@ -250,6 +265,7 @@ class FixedMaintenance:
                         "definition_id": rule.definition_id,
                         "nominal": _nominal(planned.nominal),
                         "resolved_at": work.due_at,
+                        "cursor_evidence": time_evidence.document().decode(),
                     }
                 )
             return Change(
@@ -264,6 +280,8 @@ class FixedMaintenance:
                     "stopped", rule.schedule_id, progress.cursor, False, batch.periods_scanned
                 )
             receipt = commands.in_unit(unit, command, payload, apply)
+            if receipt.result.decode().get("cursor_evidence") != time_evidence.document().decode():
+                raise StorageFailure("invalid_recurrence_effect")
             occurrence_id = None
             status = "scan"
             if probe is not None:
@@ -296,6 +314,7 @@ class FixedMaintenance:
                     revision=progress.revision + 1,
                     last_run_at=self.clock.now(),
                     range_complete=batch.range_complete,
+                    evidence=CursorEvidence(time_evidence, receipt.command, receipt.operation_id),
                 ),
                 progress.revision,
             )

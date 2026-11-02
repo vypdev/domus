@@ -161,6 +161,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/composition/server.py | update |
 | backend/src/domus/composition/ingress.py | update |
 | backend/src/domus/infrastructure/sqlite.py | update |
+| backend/src/domus/infrastructure/sqlite_receipts.py | create |
 | backend/src/domus/infrastructure/sqlite_snapshots.py | update |
 | backend/src/domus/infrastructure/sqlite_recurrence.py | create |
 | backend/src/domus/infrastructure/sqlite_recurrence_schema.py | create |
@@ -181,12 +182,15 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_relative_recurrence_planning.py | create |
 | tests/backend/test_recurrence_local_instant.py | create |
 | tests/backend/test_recurrence_cursor_integrity.py | create |
+| tests/backend/test_recurrence_cursor_evidence.py | create |
+| tests/backend/test_recurrence_until_proof.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
 | backend/src/domus/infrastructure/sqlite_recurrence_integrity.py | create |
 | tests/fixtures/sqlite/v7.sql | create |
 | tests/fixtures/sqlite/unreleased-c581-schema8.sql | create |
+| tests/fixtures/sqlite/unreleased-b2bcc69-schema8.sql | create |
 | tests/backend/test_sqlite_transactions.py | update |
 | tests/backend/test_sqlite_snapshots.py | update |
 | tests/backend/test_activation_compatibility.py | update |
@@ -208,6 +212,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/evidence/recurrence-cursor-integrity.json | create |
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
+| docs/evidence/recurrence-until-integrity.json | create |
 
 Existing retained path declarations describe their original publication baseline; the table above identifies this continuation's actual new and existing storage paths at the immutable base. Declare any additional real implementation/test path before committing it. Update exact evidence and current acceptance limits without relabeling historical results.
 
@@ -266,6 +271,12 @@ Preserve a real source059 wheel identity when replaying the original negative re
 The worker carries cancellation into every run and joins before runtime identity/storage disposal and installation-lease release. The lifespan preserves the existing application's state and exits its prior context after stopping the worker, including on startup/application failure. Ordinary failures expose only bounded categories and permit a later attempt; a denied technical scope terminates that worker. Last-run observations remain process-local diagnostics, not durable calendar freshness or delivery proof. Identity-only preview has no worker. Actual current-source image controls exercise both ASGI lifetimes, scoped SQLite work and shutdown. Relative lifecycle, current-authorized calendar/command surfaces, durable attention, configurable household timing defaults and complete product/UI/HA acceptance remain required.
 
 ## 19. Definition of Done
+
+UTC UNTIL continuation additionally retains the actual last included resolved slot and, when discovered, the first excluded candidate at the cursor. The last included instant must not exceed the inclusive cutoff and its nominal rank must equal the consumed count. Closed progress requires the actual excluded boundary, a conservative exhausted-period lower bound or natural calendar exhaustion. A legitimate unclosed cursor after the final included slot remains valid until a later bounded step checks the end. Unproved bootstrap values cannot claim a run or a completed range.
+
+Every actual fixed progress advance, including empty scans and date/count rules, binds its time evidence to the exact original scoped command and operation. Slot and scan receipts retain the evidence core; a current or restored historical original must match before progress is saved. A separate deferred revision-bound evidence header and strict canonical inline document must agree on reads and checkpoint validation. Providers resolve outside the writer; domain records perform no timezone I/O. Restored absent effects remain absent without new identities or delivery.
+
+The evidence table is an unreleased schema-8 layout refinement, not a new released migration or schema9. Preserve the real b2bcc69 source/database pair and reject its previous four-table development layout without changing it. SQLite logical dumps omit header pragmas: a replay fixture must restore the actual original captured application ID and schema value, rather than silently exercising version0. Keep the raw source database unchanged and disclose the first incomplete-dump observation. Existing released1..7 inputs and their migrations remain supported. These integrity refinements add no counted product cases and do not complete retained execution/calendar acceptance.
 
 - [ ] The four additional cases and every retained requirement/case have truthful current-source evidence; no checkpoint is described as full feature acceptance.
 - [ ] Supported first-party coverage is 100% globally/per module; strict types, real architecture contracts and all applicable current-head CI Check suites pass.

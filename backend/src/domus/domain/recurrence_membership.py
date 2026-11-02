@@ -1,12 +1,12 @@
 """Pattern membership and nominal COUNT rank are independent of stored headers or receipts."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import lru_cache
 from math import gcd
 
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_periods import period_bounds
-from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot
+from domus.domain.recurrence_planning import CursorTimeEvidence, FixedCursor, PlannedFixedSlot
 from domus.domain.recurrence_rules import FixedPattern, Frequency, NominalDate, slot_datetime
 
 
@@ -93,7 +93,9 @@ def accepts_fixed_slot(pattern: FixedPattern, planned: PlannedFixedSlot) -> bool
     )
 
 
-def accepts_fixed_cursor(pattern: FixedPattern, cursor: FixedCursor) -> bool:
+def accepts_fixed_cursor(
+    pattern: FixedPattern, cursor: FixedCursor, evidence: CursorTimeEvidence | None = None
+) -> bool:
     """Consumed nominal rank includes truncated DTSTART and empty original periods."""
     bounds = period_bounds(pattern, cursor.period_index)
     if bounds is None and period_bounds(pattern, max(0, cursor.period_index - 1)) is None:
@@ -116,6 +118,38 @@ def accepts_fixed_cursor(pattern: FixedPattern, cursor: FixedCursor) -> bool:
     consumed = _rank(pattern, cursor.period_index, 0) - 1 + cursor.offset
     if consumed != cursor.nominal_count:
         return False
+    if type(pattern.until) is int:
+        if evidence is None:
+            return (
+                cursor.period_index == cursor.offset == cursor.nominal_count == 0
+                and not cursor.closed
+            )
+        if evidence.cursor != cursor:
+            return False
+        last = evidence.last
+        if consumed:
+            if last is None or last.resolved is None or not accepts_fixed_slot(pattern, last):
+                return False
+            index = _period_index(pattern, last)
+            assert index is not None  # Actual membership was checked above.
+            slots = CalendarNominalExpansion().period(pattern, index).slots
+            if _rank(pattern, index, slots.index(last.nominal)) != consumed:
+                return False
+        elif last is not None:
+            return False
+        if not cursor.closed or bounds is None:
+            return evidence.terminal is None
+        if evidence.terminal is not None:
+            terminal = evidence.terminal
+            return (
+                cursor.offset < len(candidates)
+                and terminal.nominal == candidates[cursor.offset]
+                and terminal.resolved is not None
+                and terminal.resolved.instant_ms > pattern.until
+            )
+        delta = bounds[0] - datetime(1970, 1, 1)
+        lower_ms = delta.days * 86_400_000 + delta.seconds * 1000
+        return cursor.offset == 0 and lower_ms - 86_400_000 > pattern.until
     if not cursor.closed or bounds is None:
         return True
     if pattern.count is not None:
@@ -125,4 +159,4 @@ def accepts_fixed_cursor(pattern: FixedPattern, cursor: FixedCursor) -> bool:
             cursor.offset < len(candidates)
             and slot_datetime(candidates[cursor.offset]).date() > pattern.until.local
         )
-    return pattern.until is not None
+    return False
