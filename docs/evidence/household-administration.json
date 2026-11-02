@@ -70,7 +70,7 @@
     "consumer": "Original failing and passing model/backend measurements, source inventory and pinned SDD reproduction retained for current PR review; disposable coverage databases, XML and pytest cache removed.",
     "privateLocalOnly": true
   },
-  "pending": "Complete frontend consumption, separate bounded journal, exact entry/admin revision integration, all EN/ES forms and Storybook/real Python-SQLite journeys, safe avatar source feasibility/owner evidence when available, all72 retained owner-case acceptance and fresh hosted source images/review. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete.",
+  "pending": "Browser runtime/lifecycle consumption, all EN/ES administration forms and Storybook/real Python-SQLite administration journeys, safe avatar-source feasibility/owner evidence when available, and complete retained HADM72/HADI8/HADW80 acceptance. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete.",
   "acceptance": "138 parameterized unit executions and a complete backend campaign are not 72 completed administration journeys. No notification delivery, HA metadata availability, schema migration, package/adoption, all-domain release or Stable distribution acceptance is claimed.",
   "storageIncrement": {
     "issue": "https://github.com/vypdev/domus/issues/21",
@@ -613,7 +613,7 @@
   },
   "currentSourcePackage": {
     "sourceBase": "7be2810092021aa044f0c476d429f689b9113d61",
-    "sourceIdentity": "Same byte-verified151-module backend and26-file frontend runtime as the published HTTP increment; this correction changes test/evidence binding only.",
+    "sourceIdentity": "The current compiled entry bundle retains the same four verified UI resource bytes and151backend modules. The new controller/authorization source is covered but not yet wired to browser composition. No installed Edge.5 update or complete administration browser acceptance.",
     "actualProductFiles": {
       ".vite/manifest.json": "bb13d320cf8968302162520e722f61f9290f9ca926c863b985288cb4fba2ffc3",
       "assets/index-CQE4qeI0.js": "810376c1a54cbe125a3334afcc6ff1b81d14c27c089005d23f70a4da4c0dbcf4",
@@ -629,6 +629,114 @@
     },
     "testsFirst": "The actual aarch64 image exposes the stale historical expectation. A new early wheel/build/declaration assertion first fails with missing currentSourcePackage before this explicit candidate inventory is added.",
     "correction": "Current packaging and image tests use this declaration. The packaging gate compares it against the independently built source bundle and exact wheel bytes; the image fixture compares all installed and HTTP-served resources. Historical entry/Edge.5 evidence remains byte-identical.",
-    "acceptance": "Local current-wheel comparison passes after correction; fresh actual amd64/aarch64 acceptance is required after push. This is a current source candidate, not an installed Edge.5 update, full administration acceptance or release."
+    "acceptance": "The source-image binding correction53570f2 passed actual amd64/aarch64 jobs125489680572/125489680631 and CI aggregate125492943440 in41507276305. Current controller source still requires fresh hosted review/CI after push; compiled entry/UI and backend bytes are unchanged."
+  },
+  "controllerIncrement": {
+    "sourceBase": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",
+    "goalComplete": false,
+    "implemented": "Application controller with verified session/capability/current-authority preflight and final access fence; independent permitted fact failures; own-member private presentation and receipt binding; exact original commands, bounded journal and five explicit mutations; read-only key/ID recovery, rejection/uncertainty/history and expiry/context/generation fencing. Pure active-membership/current-grant action availability remains separate from backend authorization.",
+    "frontend": {
+      "executions": 1009,
+      "newControllerAndAuthorizationExecutions": 112,
+      "authoredRuntimeFiles": 28,
+      "nonemptyRuntimeFiles": 26,
+      "typeOnlyFiles": 2,
+      "coverage": {
+        "lines": {
+          "total": 1241,
+          "covered": 1241,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1818,
+          "covered": 1818,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1314,
+          "covered": 1314,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 361,
+          "covered": 361,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentFilesystemInventoryAudit": "passed"
+    },
+    "sourceIdentity": {
+      "frontendInventorySHA256": "324066842b335df26e9624be88fb4081784ed390d9529e816191c79525e6ec52",
+      "backendInventorySHA256": "8497016eba6245453ac21f34a5e0bd7865a4afd6c0645be99889446ef53687b1",
+      "backendModules": 151,
+      "backendBytesUnchanged": true,
+      "wheelSHA256": "cbf076c8963b412ae211d00db5451f12305ce6fb8aa06b0d975e72f1f55561ec",
+      "currentCompiledEntryUi": {
+        ".vite/manifest.json": "bb13d320cf8968302162520e722f61f9290f9ca926c863b985288cb4fba2ffc3",
+        "assets/index-CQE4qeI0.js": "810376c1a54cbe125a3334afcc6ff1b81d14c27c089005d23f70a4da4c0dbcf4",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "53eb4a7d9debd6dd01e421a564df3432c8d3c523a74acbf1f962c9714cb56911"
+      },
+      "everyModuleAndCompiledUiByteVerifiedAgainstWheel": true
+    },
+    "backend": "All151module bytes match the prior4358-test/10433-statement/2928-branch100%global/per-module evidence and verified wheel. No backend/DDL/runtime fixture or Copilot changes.",
+    "testsFirst": [
+      "Controller suite first failed on the missing controller module; the shared pure-policy test separately failed on its missing module before extraction.",
+      "Two prototype controls failed before correction: a same-account replacement membership retained an old private receipt, and a protected original GET incorrectly required current aggregate-read facts. Both now pass.",
+      "Prototype test harness typed a fake receipt delivery too narrowly and an indexed rejected promise ambiguously. Type declarations were corrected to the actual semantic port contract; no production relaxation."
+    ],
+    "controls": [
+      "Verified active membership and explicit decoded grants govern availability; labels, source data and roles do not grant an action.",
+      "Read permitted facts, bind private member IDs, and compare final current authorization before publication. Unavailable facts stay scoped errors; stale collected views are discarded.",
+      "Revalidate before human submission, preserve exact captured revision/key/payload, reject exhaustion and conflicting unresolved same-aggregate originals. Different explicit aggregates remain possible under global bounds.",
+      "Explicit recovery uses only GET by original action/key or known operation ID, with current original-action/operations authority and immutable original comparison. No automatic lookup on reload, mutation replay, key replacement, rebasing or lookup-only revision/CSRF preconditions.",
+      "Saved processing is independent of current aggregate facts and notification delivery. Post-effect journal failure retains the in-memory original receipt on its current verified context.",
+      "Read-only local access expires without renewal; close/context change/authority drift hide private views and journal payloads. Canceled and late reads/POST/GET responses cannot repopulate retired views.",
+      "Dismiss only resolved current-context requests, preserving unrelated storage, pending/uncertain originals and other contexts."
+    ],
+    "checks": {
+      "frontendRuntimeAndCatalogTypes": "passed",
+      "canonicalFrontendAndIndependentInventory": "passed",
+      "nodeArchitectureExecutions": 38,
+      "nodeArchitectureCoverage": "100%",
+      "originalSDK": "7originalpolicyblobsunchanged;format/consistency/catalogpass;19owners;HADM72/HADI8/HADW80 retained",
+      "compiledEntryBundle": "Rebuilt; all4resource hashes unchanged and byte-verified against current wheel. New controller is not yet imported by composition."
+    },
+    "publishedCheckpoint": {
+      "head": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",
+      "ci": 41507276305,
+      "aggregate": 125492943440,
+      "amd64": 125489680572,
+      "aarch64": 125489680631,
+      "productResult": "success",
+      "native": 41507276321,
+      "nativeJob": 125489680430,
+      "partitions": "11/11",
+      "context": "complete",
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "open": 0,
+      "fixed": 2,
+      "dismissed": 1,
+      "outcome": "no-findings",
+      "progressFailure": {
+        "verification": 125491236020,
+        "commitJob": 125489636778,
+        "reference": "b9e518a3-5fe9-481a-89fb-58b2c3f0b99b",
+        "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6583615211"
+      },
+      "scope": "Published test/evidence checkpoint only. New controller source needs fresh hosted acceptance; merge is held for the latest all-green condition."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-controller-53570f2",
+      "privateLocalOnly": true,
+      "scope": "Original absent-module and ownership/lookup failures, final1009-test/28-file full coverage and independent audit, types/architecture/SDK, source/UI/wheel identity and native/progress observations. Terminal generated outputs retired after compact proof."
+    },
+    "pending": "Browser runtime/lifecycle consumption, all EN/ES administration forms and Storybook/real Python-SQLite administration journeys, safe avatar-source feasibility/owner evidence when available, and complete retained HADM72/HADI8/HADW80 acceptance. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete.",
+    "acceptance": "These112new parameterized/controller executions are not112product journeys or complete HADM72/HADI8/HADW80 acceptance. Full administration composition/forms/Storybook/real Python-SQLite browser paths, owner HA and Stable/all-domain product remain outstanding."
   }
 }

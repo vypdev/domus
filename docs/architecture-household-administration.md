@@ -15,7 +15,7 @@ unavailable result, independently of human proof. Avatar delivery is unavailable
 Private preference values are browser-following/null, English or Spanish locale, plus a strict
 routine-summary boolean with true as the engineering default. Persisting a preference does not
 establish notification delivery. The current application, metadata and HTTP behavior is described
-below; browser journal consumption, controller/lifecycle integration and the full EN/ES workspace remain required.
+below; browser lifecycle integration and the full EN/ES workspace remain required.
 
 The [companion](../specs/household-administration.md) retains all 24 Action-published case rows and
 adds the omitted independent risks to a 72-case floor. Its original identity and delivery owners
@@ -72,7 +72,7 @@ validates duplicate decoded keys, depth, bytes and integer lexemes, then obtains
 value's original source. A numeric string or lookalike object cannot become a wire integer, and an
 engine without original-source support fails closed. Fixed profile encoders publish an exact
 integer lexeme with only the supported payload fields. These pure values/transport helpers have
-browser tests; the administration controller and workspace integration remain outstanding.
+browser tests and application-controller consumption; browser workspace integration remains outstanding.
 
 [Composition](../backend/src/domus/composition/household_administration.py) binds the same
 transactions and trusted human adapters as the existing household services. Preview factories
@@ -150,9 +150,9 @@ does not erase pending requests; forgetting a resolved request leaves other cont
 unrelated storage intact. Credentials, CSRF, cookies, raw HA facts and response bodies are absent.
 
 Chromium tests exercise these policies, real isolated browser session storage and provider failure
-controls. The controller lifecycle and complete browser workspace do not yet consume this
-adapter. These tests establish no automatic operation lookup, mutation replay, HA adoption or full
-retained-case acceptance.
+controls. The application controller consumes the journal through its semantic port. The browser
+composition and complete workspace do not yet connect that controller. These tests establish no
+automatic operation lookup, mutation replay, HA adoption or full retained-case acceptance.
 
 The workspace companion now decomposes its eight requirements into 80 prospective acceptance
 scenarios with explicit per-area risk budgets and reciprocal requirement links. Its former eight
@@ -193,8 +193,8 @@ and successor revision before returning it. These are processing receipts, not c
 facts; technical event delivery never establishes notification delivery. Non-profile lookup text
 retains its original domain label rather than being renamed as a profile change.
 
-Controller/lifecycle consumption, own-member binding before private presentation, complete EN/ES
-forms and full administration browser acceptance remain required. Entry browser compatibility uses
+Browser lifecycle consumption, complete EN/ES forms and full administration browser acceptance
+remain required. Entry browser compatibility uses
 actual Python/SQLite in both deployment fixtures; fixture identities and directly seeded high
 revisions do not claim owner HA adoption or a generated history of that many mutations.
 
@@ -204,3 +204,37 @@ that declaration with the actual local build; the image gate independently compa
 installed image and served bytes. Historical entry delivery and installed Edge.5 evidence retain
 their original source, resource hashes and adoption claims. A new source build does not inherit
 those historical package identities.
+
+## Administration application controller
+
+The [controller](../frontend/src/application/administration-controller.ts) uses semantic session,
+server, journal, clock and entropy ports. It has no concrete HTTP/storage, framework or DOM import.
+The [pure availability policy](../frontend/src/domain/administration-authorization.ts) consumes
+current active membership and decoded grants. Stored/effective role labels and provider facts do
+not grant an action; the backend independently reauthorizes every operation.
+
+Refresh reads a verified session, current access and capabilities, then collects only permitted
+facts. Failed reads stay unavailable with a scoped safe reason. Owner preferences must name the
+current authorization member. Access is read again after collection; changed grants or membership
+discard the collected private view. Replacing the same account's membership also retires any old
+private receipt. Read-only outage leases allow permitted local facts until expiry, without opening
+the administration journal or enabling a mutation.
+
+An explicit submission refreshes proof and facts, checks the captured exact aggregate revision,
+rejects exhaustion, and persists the original command before one send. An unresolved request blocks
+replacement work on the same aggregate while different explicit aggregates remain possible within
+the global journal bounds. A known rejection stays rejected; an unbound or lost mutation reply
+stays uncertain. No submission is rebased or retried automatically.
+
+Explicit recovery refreshes proof and original-action authority, checks the unchanged stored
+original, and performs only the protected key GET or captured-ID GET. It never calls the mutation
+port or adds a current aggregate-read/revision precondition to that existing lookup contract.
+Processing receipts and current facts remain separate, including historical results after restore.
+A journal failure after a valid result preserves that result in memory on its verified context;
+it does not turn a saved effect into a failed mutation or erase the stored original.
+
+Generations fence canceled reads, preflight, commands and lookup responses. Closing or expiring the
+controller hides private facts immediately; late results cannot repopulate them. Journal views hide
+currently unauthorized action payloads while retaining underlying unexpired originals. Explicit
+dismissal removes only a resolved owned request. Composition still needs to wire the controller to
+page lifetime and the complete localized forms; controller/port tests are not those product journeys.

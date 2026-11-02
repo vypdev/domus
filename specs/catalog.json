@@ -323,7 +323,9 @@
         "frontend/src/adapters/json-values.ts",
         "frontend/src/adapters/http-transport.ts",
         "frontend/src/adapters/administration-values.ts",
-        "frontend/src/adapters/administration-http.ts"
+        "frontend/src/adapters/administration-http.ts",
+        "frontend/src/application/administration-controller.ts",
+        "frontend/src/domain/administration-authorization.ts"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -398,7 +400,9 @@
         "frontend/tests/e2e/entry.spec.ts",
         "tests/browser/entry_server.py",
         "tests/containers/test_app_ui.py",
-        "tests/packaging/test_ui_wheel.py"
+        "tests/packaging/test_ui_wheel.py",
+        "frontend/tests/administration-controller.test.ts",
+        "frontend/tests/administration-authorization.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -452,8 +456,8 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial: schema9 storage and protected APIs, verified HA name/directory facts, a masked current-authorized roster, separate closed administration recovery, a shared bounded exact-integer HTTP transport and five-action administration client with both protected lookup routes. Entry authorization/household/original-policy revisions now preserve exact int64 values. Complete application-controller/lifecycle integration, EN/ES administration forms, all retained owner/workspace case acceptance and live owner adoption remain outstanding. Installed Edge.5 is unchanged.",
-        "blockingDecisions": "No unanswered product decision for issue25. Complete all 72 retained administration cases, all eight HADI refinements and the 80 decomposed workspace acceptance scenarios, full HTTP/controller/workspace integration, current-head review/CI and the wider all-domain/Stable release and owner adoption requirements. A merged checkpoint does not complete them.",
+        "implementationEvidence": "Partial: schema9 protected APIs, verified HA source/masked roster, exact-revision HTTP clients and separate bounded original journal now have application-controller orchestration, pure current-grant availability, own-member binding, explicit GET recovery and context/lifecycle generation fences. Browser composition/lifetime and complete EN/ES forms, actual administration journeys and all retained acceptance remain outstanding. Owner Edge.5 is unchanged.",
+        "blockingDecisions": "No unanswered product decision for issue25. Complete all72HADM/eightHADI/80HADW retained cases, browser lifecycle/controller composition and full EN/ES workspace, fresh review/CI/images, owner adoption and wider all-domain/Stable release. Checkpoints do not complete them.",
         "copilotChangesAllowed": false
       }
     },

@@ -436,6 +436,7 @@ Tests precede behavior. Require 100% supported statement and branch coverage glo
 | `frontend/tests/e2e/entry.spec.ts` | update |
 | `tests/browser/entry_server.py` | update |
 | `frontend/src/domain/administration-commands.ts` | create |
+| `frontend/src/domain/administration-authorization.ts` | create |
 | `frontend/src/domain/administration-journal.ts` | create |
 | `frontend/src/application/administration-ports.ts` | create |
 | `frontend/src/application/administration-controller.ts` | create |
@@ -447,6 +448,8 @@ Tests precede behavior. Require 100% supported statement and branch coverage glo
 | `frontend/src/composition/entry-runtime.ts` | update |
 | `frontend/stories/administration.stories.ts` | create |
 | `frontend/tests/administration.test.ts` | create |
+| `frontend/tests/administration-controller.test.ts` | create |
+| `frontend/tests/administration-authorization.test.ts` | create |
 | `frontend/tests/administration-journal.test.ts` | create |
 | `frontend/tests/administration-session-journal.test.ts` | create |
 | `frontend/tests/e2e/administration.spec.ts` | create |
