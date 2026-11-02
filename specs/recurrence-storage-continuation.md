@@ -166,6 +166,9 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/infrastructure/sqlite_recurrence.py | create |
 | backend/src/domus/infrastructure/sqlite_recurrence_schema.py | create |
 | backend/src/domus/infrastructure/sqlite_recurrence_records.py | create |
+| backend/src/domus/infrastructure/sqlite_recurrence_rows.py | create |
+| backend/src/domus/infrastructure/sqlite_relative_recurrence.py | create |
+| backend/src/domus/infrastructure/sqlite_relative_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence.py | create |
 | tests/backend/test_recurrence_records.py | create |
 | tests/backend/test_recurrence_creation.py | create |
@@ -185,6 +188,10 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_recurrence_cursor_evidence.py | create |
 | tests/backend/test_recurrence_until_proof.py | create |
 | tests/backend/test_recurrence_slot_original.py | create |
+| tests/backend/test_relative_recurrence_evidence.py | create |
+| tests/backend/test_sqlite_relative_recurrence.py | create |
+| tests/backend/test_sqlite_relative_recurrence_records.py | create |
+| tests/backend/test_sqlite_relative_integrity.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
@@ -192,6 +199,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/fixtures/sqlite/v7.sql | create |
 | tests/fixtures/sqlite/unreleased-c581-schema8.sql | create |
 | tests/fixtures/sqlite/unreleased-b2bcc69-schema8.sql | create |
+| tests/fixtures/sqlite/unreleased-06b3b9f-schema8.sql | create |
 | tests/backend/test_sqlite_transactions.py | update |
 | tests/backend/test_sqlite_snapshots.py | update |
 | tests/backend/test_activation_compatibility.py | update |
@@ -215,6 +223,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/evidence/recurrence-execution.json | update |
 | docs/evidence/recurrence-until-integrity.json | create |
 | docs/evidence/recurrence-slot-original.json | create |
+| docs/evidence/recurrence-relative-storage.json | create |
 
 Existing retained path declarations describe their original publication baseline; the table above identifies this continuation's actual new and existing storage paths at the immutable base. Declare any additional real implementation/test path before committing it. Update exact evidence and current acceptance limits without relabeling historical results.
 
@@ -273,6 +282,14 @@ Preserve a real source059 wheel identity when replaying the original negative re
 The worker carries cancellation into every run and joins before runtime identity/storage disposal and installation-lease release. The lifespan preserves the existing application's state and exits its prior context after stopping the worker, including on startup/application failure. Ordinary failures expose only bounded categories and permit a later attempt; a denied technical scope terminates that worker. Last-run observations remain process-local diagnostics, not durable calendar freshness or delivery proof. Identity-only preview has no worker. Actual current-source image controls exercise both ASGI lifetimes, scoped SQLite work and shutdown. Relative lifecycle, current-authorized calendar/command surfaces, durable attention, configurable household timing defaults and complete product/UI/HA acceptance remain required.
 
 ## 19. Definition of Done
+
+Relative persistence uses the same globally unique rule/progress identity with an explicit closed timing discriminator. Deferred generation relationships include that kind, and CAS predicates cannot overwrite the other kind. One nonretired rule owns each definition's current timing; retired history remains. This also preserves the runner's definition-based selection budget. Independent legacy pagination fixtures must represent different definitions rather than multiple current owners of one definition. This does not apply a timing-mode replacement or provide a new public configuration command.
+
+Every relative continuation, including its unconsumed bootstrap, binds the full immutable generation: initial due fact, interval, visibility, policy, scope and pattern revision. A nonbootstrap advance also references an exact original command/operation whose canonical result matches its business state. CAS revision and observed last-run time are not business cursor identity. A revision-bound proof header, canonical record and current or retained original must agree. A present slot additionally verifies its complete original generation/local/source fingerprint and actual task/source-cycle relationship. Current approval or closure cannot rewrite the normalized original completion facts; storage validation grants no source eligibility or execution authority.
+
+Actual restore controls distinguish a generated task removed by restoration from an adopted manual task that still exists while its later recurrence mapping is absent. Neither permits automatic recreation of the processed mapping, new task identities, original receipts or event delivery. Historical pointers retain explicit original proof; existing manual work survives. Source-cycle closure dominance, durable consumer inbox/closure, source eligibility, authorized creation, actual relative materialization, invalidation, mixed-rule budgets and runtime wiring still require their own implementation and acceptance. Synthetic repository receipts and packaged codec controls are not evidence of those missing consumer journeys.
+
+This adds relative slots and typed ownership to the unreleased schema8 layout. Keep released1..7 inputs unchanged. Preserve the genuine06 source/data pair and complete captured header pragmas; refuse its prior five-table development layout without relabeling or claiming a released8 migration. The current owner still runs Edge.5/schema7. These are retained storage/execution refinements, not additional counted product cases.
 
 Older slot snapshots remain permitted after a current rule edit, but that relationship alone cannot prove original generation facts. Compare each persisted slot with its exact current materialization receipt: scoped identity, slot/occurrence/rule/definition identifiers, original cursor pattern-and-policy binding, explicit policy snapshot and complete nominal/resolved last-slot facts. Compare canonical JSON documents so bool/integer aliases do not pass. Reuse this pure relation in independent repository point/page reads and checkpoint validation; malformed, foreign, historical-absent or missing originals fail safely. Keep real valid older-generation controls. Existing synthetic repository fixtures must carry explicit complete synthetic proof rather than bare identifiers, without claiming actual materializer acceptance. No extra case count, provider I/O, schema relabeling or alteration of retained original receipts is introduced.
 

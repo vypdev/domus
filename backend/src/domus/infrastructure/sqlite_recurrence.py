@@ -1,7 +1,6 @@
 """Scoped recurrence repositories never commit independently or infer caller authority."""
 
 import sqlite3
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
@@ -26,6 +25,12 @@ from domus.infrastructure.sqlite_recurrence_records import (
     schedule_document,
     slot_document,
 )
+from domus.infrastructure.sqlite_recurrence_rows import (
+    _expected,
+    _model,
+    _page,
+)
+from domus.infrastructure.sqlite_relative_recurrence import SQLiteRelativeRecurrences
 
 
 def frontier_headers(value: RecurrenceFrontier) -> dict[str, object]:
@@ -45,6 +50,7 @@ def schedule_headers(value: FixedSchedule) -> dict[str, object]:
         "revision": value.revision,
         "pattern_revision": value.pattern_revision,
         "state": value.state.value,
+        "timing_kind": "fixed_calendar",
     }
 
 
@@ -54,6 +60,7 @@ def progress_headers(value: FixedProgress) -> dict[str, object]:
         "household_id": value.household_id,
         "pattern_revision": value.pattern_revision,
         "revision": value.revision,
+        "timing_kind": "fixed_calendar",
     }
 
 
@@ -101,44 +108,12 @@ def slot_headers(value: ScheduledSlot) -> dict[str, object]:
         "created_at": value.created_at,
         "receipt_actor": value.command.actor_id,
         "receipt_action": value.command.action,
+        "timing_kind": "fixed_calendar",
     }
 
 
-def _model[T](
-    row: sqlite3.Row | None, decode: Callable[[str], T], headers: Callable[[T], dict[str, object]]
-) -> T | None:
-    if row is None:
-        return None
-    value = decode(row["document"])
-    if any(
-        type(row[key]) is not type(expected) or row[key] != expected
-        for key, expected in headers(value).items()
-    ):
-        raise StorageFailure("invalid_recurrence_record")
-    return value
-
-
-def _expected(value: int) -> None:
-    if type(value) is not int or not 0 <= value <= 2**63 - 1:
-        raise InvalidInput("invalid_revision")
-
-
-def _page(
-    household_id: str, limit: int, after: str | None, key: str
-) -> tuple[list[str], list[object]]:
-    validate_identifier(household_id)
-    if type(limit) is not int or not 1 <= limit <= 101:
-        raise InvalidInput("invalid_page_size")
-    where, parameters = ["household_id=?"], [household_id]
-    if after is not None:
-        validate_identifier(after)
-        where.append(key + ">?")
-        parameters.append(after)
-    return where, list(parameters)
-
-
 @dataclass
-class SQLiteRecurrences:
+class SQLiteRecurrences(SQLiteRelativeRecurrences):
     connection: sqlite3.Connection
     installation: Installation
 
@@ -169,7 +144,8 @@ class SQLiteRecurrences:
         validate_identifier(schedule_id)
         return _model(
             self.connection.execute(
-                "SELECT * FROM recurrence_rules WHERE household_id=? AND schedule_id=?",
+                "SELECT * FROM recurrence_rules WHERE household_id=? AND schedule_id=? "
+                "AND timing_kind='fixed_calendar'",
                 (household_id, schedule_id),
             ).fetchone(),
             read_schedule,
@@ -181,7 +157,8 @@ class SQLiteRecurrences:
         validate_identifier(schedule_id)
         value = _model(
             self.connection.execute(
-                "SELECT * FROM recurrence_progress WHERE household_id=? AND schedule_id=?",
+                "SELECT * FROM recurrence_progress WHERE household_id=? AND schedule_id=? "
+                "AND timing_kind='fixed_calendar'",
                 (household_id, schedule_id),
             ).fetchone(),
             read_progress,
@@ -235,36 +212,6 @@ class SQLiteRecurrences:
             if not valid:
                 raise StorageFailure("invalid_recurrence_record")
         return value
-
-    def _write(
-        self,
-        table: str,
-        headers: dict[str, object],
-        document: str,
-        expected: int,
-        *,
-        identity: str = "schedule_id",
-    ) -> None:
-        values = {**headers, "document": document}
-        keys = ("household_id",) if identity == "household_id" else ("household_id", identity)
-        if expected == 0:
-            try:
-                self.connection.execute(
-                    f"INSERT INTO {table}({','.join(values)}) "
-                    f"VALUES ({','.join('?' for _ in values)})",
-                    tuple(values.values()),
-                )
-            except sqlite3.IntegrityError:
-                raise Conflict("recurrence_record_conflict") from None
-        elif (
-            self.connection.execute(
-                f"UPDATE {table} SET {','.join(key + '=?' for key in values)} "
-                f"WHERE {' AND '.join(key + '=?' for key in keys)} AND revision=?",
-                (*values.values(), *(headers[key] for key in keys), expected),
-            ).rowcount
-            != 1
-        ):
-            raise Conflict("revision_conflict")
 
     def save_schedule(self, value: FixedSchedule, expected_revision: int) -> None:
         _expected(expected_revision)
@@ -348,6 +295,7 @@ class SQLiteRecurrences:
         state: ScheduleState | None = None,
     ) -> tuple[FixedSchedule, ...]:
         where, parameters = _page(household_id, limit, after, "schedule_id")
+        where.append("timing_kind='fixed_calendar'")
         if state is not None:
             if not isinstance(state, ScheduleState):
                 raise InvalidInput("invalid_recurrence_state")

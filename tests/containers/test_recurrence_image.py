@@ -34,14 +34,16 @@ from domus.application.relative_recurrence import RelativeRecurrencePlanner
 from domus.composition import ingress, server
 from domus.domain.errors import DatabaseRejected, InvalidInput, StorageBusy, StorageFailure
 from domus.domain.recurrence_frontier import RecurrenceFrontier
-from domus.domain.relative_recurrence import RelativeSchedule
+from domus.domain.relative_recurrence import (
+    RelativeSchedule, RelativeProgress, RelativeSlot, RelativeOperation,
+)
 from domus.domain.identity import HumanIdentity
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_planning import FixedCursor, cursor_binding
 from domus.domain.recurrence_records import FixedProgress, FixedSchedule, ScheduledSlot
 from domus.domain.recurrence_rule_text import parse_fixed_pattern
 from domus.domain.recurrence_time import NominalTime, TimePolicy, TimeResolution, RelativeInterval
-from domus.domain.storage import Installation
+from domus.domain.storage import Installation, Receipt, AuditEntry, OutboxEvent, JsonDocument
 from domus.domain.task_values import TaskContent
 from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock, TimeZoneCatalog
 from domus.infrastructure.recurrence_time import PinnedRecurrenceTime, TIMEZONE_DATA_IDENTITY
@@ -302,6 +304,43 @@ with TemporaryDirectory(prefix='domus-current-history-') as directory:
     else:
         raise AssertionError('Checkpoint accepted altered original generation facts')
     assert store.path.read_bytes() == source_bytes
+with TemporaryDirectory(prefix='domus-current-relative-store-') as directory:
+    store = SQLiteDatabase(Path(directory)/'domus.sqlite3', installation)
+    store.initialize()
+    HouseholdCommands(store, human, UnusedDirectory(), TimeZoneCatalog(), clock, identifiers).setup(
+        'setup', SetupHousehold('Fictional relative persistence', 'UTC'))
+    # Explicit synthetic repository proof exercises packaging/storage, not a relative consumer.
+    manual = TaskCommands(store, human, clock, identifiers).create('relative-base',
+        CreateTask(TaskContent('Relative storage boundary'))).result.decode()
+    with store.read() as unit:
+        work = unit.tasks.occurrence('home', manual['occurrence_id'])
+    rule = RelativeSchedule('relative-store', 'home', manual['definition_id'], first,
+        RelativeInterval(30), policy, work.definition_snapshot.created_at)
+    progress = RelativeProgress(rule.schedule_id, 'home', 1, rule.binding)
+    slot = RelativeSlot(installation, rule, first, work.occurrence_id, work.created_at)
+    opid = identifiers.new()
+    advanced = replace(progress, current_occurrence_id=work.occurrence_id,
+        current_slot_key=slot.key, revision=2, last_run_at=clock.now(),
+        evidence=RelativeOperation(slot.command, opid))
+    result = JsonDocument.from_value({'slot_key': slot.key, 'occurrence_id': work.occurrence_id,
+        'schedule_id': rule.schedule_id, 'definition_id': rule.definition_id,
+        'relative_slot_fingerprint': slot.evidence_fingerprint,
+        'relative_progress': advanced.state_document().decode()})
+    timestamp = clock.now()
+    with store.write() as unit:
+        unit.recurrence.save_relative_schedule(rule, 0)
+        unit.recurrence.save_relative_progress(progress, 0)
+        unit.recurrence.add_relative_slot(slot)
+        unit.receipts.add(Receipt(slot.command, JsonDocument.from_value({}).fingerprint,
+            opid, result, timestamp))
+        unit.audit.append(AuditEntry(opid, slot.command, JsonDocument.from_value({}), timestamp))
+        unit.outbox.append(OutboxEvent(opid, 'home', slot.command.action, result, timestamp))
+        unit.recurrence.save_relative_progress(advanced, 1)
+    with store.read() as unit:
+        assert unit.recurrence.relative_progress('home', rule.schedule_id) == advanced
+        assert unit.recurrence.relative_slots('home', rule.schedule_id) == (slot,)
+        assert unit.recurrence.schedules('home') == ()
+    assert SQLiteSnapshots(store, Path(directory)/'good', installation, clock).create('good')
 print('Current-source recurrence, both owned runtimes and pinned-time codecs passed.')
 """,
     )

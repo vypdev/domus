@@ -271,8 +271,13 @@ def test_pattern_edit_requires_matching_progress_and_preserves_existing_slot_sna
 def test_rule_list_limit_and_keyset_return_only_the_requested_owned_rows(tmp_path):
     store, rule, progress, _ = prepared(tmp_path)
     with store.write() as unit:
+        definition = unit.tasks.definition("home", rule.definition_id)
         for key in ["a", "z"]:
-            unit.recurrence.save_schedule(replace(rule, schedule_id=key), 0)
+            new_definition = replace(definition, definition_id="definition-" + key)
+            unit.tasks.save_definition(new_definition, 0)
+            unit.recurrence.save_schedule(
+                replace(rule, schedule_id=key, definition_id=new_definition.definition_id), 0
+            )
             unit.recurrence.save_progress(replace(progress, schedule_id=key), 0)
     with store.read() as unit:
         first = unit.recurrence.schedules("home", limit=1)

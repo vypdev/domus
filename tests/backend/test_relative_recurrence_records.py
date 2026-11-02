@@ -52,7 +52,7 @@ def values(timed=True, *, restricted=False):
         local.instant_ms + 100,
         source,
     )
-    return schedule, RelativeProgress("relative", "home", 1), slot, completed
+    return schedule, RelativeProgress("relative", "home", 1, schedule.binding), slot, completed
 
 
 @pytest.mark.parametrize("timed", [False, True])

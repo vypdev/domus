@@ -98,6 +98,21 @@ The original database remains byte-identical, with SHA-256
 initialization refuse its previous development layout unchanged. There is no released8 upgrade
 claim, version-number downgrade or alteration to any released1..7 input.
 
+Relative storage subsequently refines the unreleased schema8 layout with a closed timing kind on
+the shared rule/progress rows, generation relationships that include it, one nonretired timing owner
+per definition, and recurrence_relative_slots. Fixed and relative typed writers cannot overwrite
+each other's identities. Source-cycle references and original proof retain scoped facts at commit.
+
+The genuine [06b3b9f input](../../tests/fixtures/sqlite/unreleased-06b3b9f-schema8.sql) was captured
+before this change with two actual UTC-UNTIL slots and revision-bound original time evidence. All133
+original backend module bytes were checked against source06b3b9f38955a25be2511b68b2ea667a84a42d8f.
+The complete logical input SHA-256 is aed613d7a6c2718827c05d44cd3fbbdb9d996fce44097f893b5c9bfd4dc28565;
+its unchanged raw database SHA-256 is 5d4c4e26e273e7f26e579e728db243c39e29b21dbef53378cdd2368643debe09.
+It restores the exact captured application/schema header pragmas omitted by SQLite iterdump. Current
+normal reads/writes and initialization refuse its five-table development layout without changing it.
+Keep the matching original application/data pair for intentional development rollback; the supported
+released source set remains1..7. This adds no released8 migration or automatic retention policy.
+
 Those observations are retained in [task evidence](../evidence/task-execution-foundation.json).
 They are distinct from image/cross-architecture adoption, real consumer ledgers and a restoration on
 the owner's HA, which remain required before integrated release claims. No automatic backup schedule

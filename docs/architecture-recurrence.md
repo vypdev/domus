@@ -340,3 +340,39 @@ complete synthetic source proof; they do not establish actual materializer accep
 
 See [original slot evidence](evidence/recurrence-slot-original.json). This refinement changes no
 layout, dependency, timezone I/O, timeout, owner installation or retained original operation.
+
+## Shared rule identity and relative persistence
+
+Fixed and completion-relative rules now share globally unique rule/progress rows with an explicit
+timing kind. Deferred generation relationships and compare-and-swap predicates include that kind.
+One nonretired rule owns a definition's current timing; retired history remains. This preserves
+the definition-based selection budget and prevents a typed writer from overwriting the other kind.
+Shared row mechanics stay in infrastructure, behind the existing semantic recurrence port.
+
+Relative progress binds the complete immutable generation, including initial due fact, interval,
+visibility and policy. Even an unconsumed cursor cannot silently accept different valid timing.
+Every actual progress claim also requires an original scoped command/operation whose canonical
+result matches the business continuation. Its revision-bound proof header covers the stored record.
+CAS revision and observed last-run time are separate from business cursor identity. Unknown versions,
+fields, alternate canonical text and boolean/integer aliases are refused.
+
+A relative slot preserves complete original generation, planned/resolved and normalized source facts
+in its evidence fingerprint. Reads verify its actual task and source-cycle relationship, including
+the original completion after later approval or closure. That is retained factual history; it does
+not establish source eligibility or perform successor invalidation. Constructors and saved records
+grant no maintenance capability. Corrupt originals on reads or writes are storage failures.
+
+Actual offline restore tests keep a generated successor absent when its original task and mapping
+were rolled away. They separately preserve an adopted manual task that still exists while its later
+mapping is absent. Both keep original proof without new task IDs, receipts or event delivery. A
+historical pointer cannot authorize automatic recreation of that processed mapping.
+
+The schema8 layout is unreleased. Supported released1..7 fixtures remain unchanged; the genuine
+[prior06 layout](../tests/fixtures/sqlite/unreleased-06b3b9f-schema8.sql) is refused unchanged rather
+than relabeled or silently upgraded. No owner HA installation changes. See
+[relative storage evidence](evidence/recurrence-relative-storage.json) for exact measured scope.
+
+Authorized relative creation, actual initial/successor materialization, source inbox/closure and
+eligibility, restore-source reconciliation, successor invalidation, mixed-rule execution and runtime
+wiring remain required. Synthetic repository receipts and image codec/storage controls do not
+establish those consumer journeys or the remaining calendar/UI/HA/all-domain release acceptance.
