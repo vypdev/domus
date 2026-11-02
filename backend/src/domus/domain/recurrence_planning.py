@@ -41,7 +41,9 @@ class FixedCursor:
 
 
 @dataclass(frozen=True, slots=True)
-class PlannedFixedSlot:
+class PlannedSlot:
+    """Nominal/resolved facts shared by timing modes; rule membership is checked separately."""
+
     nominal: NominalSlot
     resolved: ResolvedTime | None
 
@@ -58,6 +60,9 @@ class PlannedFixedSlot:
             )
         ):
             raise InvalidInput("invalid_recurrence_slot")
+
+
+PlannedFixedSlot = PlannedSlot
 
 
 @dataclass(frozen=True, slots=True)

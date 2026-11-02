@@ -10,7 +10,13 @@ from domus.domain.recurrence_records import (
     ScheduleState,
 )
 from domus.domain.recurrence_rules import FixedPattern, PeriodCandidates
-from domus.domain.recurrence_time import NominalTime, RelativeInterval, ResolvedTime, TimePolicy
+from domus.domain.recurrence_time import (
+    LocalInstant,
+    NominalTime,
+    RelativeInterval,
+    ResolvedTime,
+    TimePolicy,
+)
 from domus.domain.storage import Installation
 
 
@@ -21,6 +27,8 @@ class RecurrenceTimes(Protocol):
     def require_policy(self, policy: TimePolicy) -> None: ...
 
     def resolve(self, nominal: NominalTime, policy: TimePolicy) -> ResolvedTime: ...
+
+    def local_at(self, instant_ms: int, policy: TimePolicy) -> LocalInstant: ...
 
     def after_local_days(
         self, performed_at: int, interval: RelativeInterval, policy: TimePolicy

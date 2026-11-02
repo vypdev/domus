@@ -28,14 +28,18 @@ from domus.application.fair_recurrence import FairFixedRunner, RunLimits
 from domus.application.household_commands import HouseholdCommands, SetupHousehold
 from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
 from domus.application.task_requests import CreateTask
+from domus.application.task_commands import TaskCommands, CompleteTask
+from domus.application.task_events import TaskEventFeed
+from domus.application.relative_recurrence import RelativeRecurrencePlanner
 from domus.composition import ingress, server
 from domus.domain.errors import InvalidInput, StorageBusy, StorageFailure
 from domus.domain.recurrence_frontier import RecurrenceFrontier
+from domus.domain.relative_recurrence import RelativeSchedule
 from domus.domain.identity import HumanIdentity
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_records import FixedProgress, FixedSchedule, ScheduledSlot
 from domus.domain.recurrence_rule_text import parse_fixed_pattern
-from domus.domain.recurrence_time import NominalTime, TimePolicy, TimeResolution
+from domus.domain.recurrence_time import NominalTime, TimePolicy, TimeResolution, RelativeInterval
 from domus.domain.storage import Installation
 from domus.domain.task_values import TaskContent
 from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock, TimeZoneCatalog
@@ -125,6 +129,20 @@ with TemporaryDirectory(prefix='domus-current-image-') as directory:
         RunLimits(max_slots=1))
     assert fair.tick().created == 1
     assert fair.tick().created == 1
+    with store.read() as unit:
+        member = unit.members.by_user('home', human.current().ha_user_id)
+        work = unit.tasks.occurrence('home', first_step.occurrence_id)
+    performed = clock.now()
+    TaskCommands(store, human, clock, identifiers).complete('perform-planning-control',
+        CompleteTask(work.occurrence_id, work.revision, (member.member_id,), performed))
+    source = TaskEventFeed(store, installation).read().items[0]
+    relative = RelativeSchedule('relative-plan-control', 'home', source.definition_id,
+        planned.slots[0], RelativeInterval(30), policy, 100)
+    relative_plan = RelativeRecurrencePlanner(times).plan(relative, source.cycle)
+    assert relative_plan.status == 'ready'
+    assert relative_plan.source.cycle == source.cycle
+    assert relative_plan.source.performed_local.instant_ms == performed
+    # This is a packaged read-only plan, not relative persistence or materialization.
     with store.read() as unit:
         assert len(unit.tasks.occurrences('home')) == 4
         assert unit.recurrence.frontier('home') is not None

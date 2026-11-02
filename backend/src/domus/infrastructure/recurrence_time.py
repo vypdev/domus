@@ -13,6 +13,7 @@ from domus.domain.errors import IntegrationUnavailable, InvalidInput
 from domus.domain.recurrence_time import (
     MAX_INSTANT_MS,
     FoldPolicy,
+    LocalInstant,
     NominalTime,
     RelativeInterval,
     ResolvedTime,
@@ -113,6 +114,21 @@ class PinnedRecurrenceTime:
     def resolve(self, nominal: NominalTime, policy: TimePolicy) -> ResolvedTime:
         zone, digest = self._zone(policy)
         return self._resolve(nominal, policy, zone, digest)
+
+    def local_at(self, instant_ms: int, policy: TimePolicy) -> LocalInstant:
+        if type(instant_ms) is not int or not 0 <= instant_ms <= MAX_INSTANT_MS:
+            raise InvalidInput("recurrence_time_out_of_range")
+        zone, digest = self._zone(policy)
+        try:
+            actual = (_EPOCH + timedelta(milliseconds=instant_ms)).astimezone(zone)
+            offset = actual.utcoffset()
+            assert offset is not None  # ZoneInfo always supplies an actual offset.
+            seconds = offset.days * 86400 + offset.seconds
+            return LocalInstant(
+                instant_ms, actual.replace(tzinfo=None, fold=0), seconds, policy, digest
+            )
+        except OverflowError:
+            raise InvalidInput("recurrence_time_out_of_range") from None
 
     def _resolve(
         self, nominal: NominalTime, policy: TimePolicy, zone: ZoneInfo, digest: str

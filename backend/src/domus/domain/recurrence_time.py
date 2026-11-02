@@ -117,3 +117,39 @@ class ResolvedTime:
             + delta.microseconds // 1000
             - self.offset_seconds * 1000
         )
+
+
+@dataclass(frozen=True, slots=True)
+class LocalInstant:
+    """An actual UTC instant's local fact; future fold preference cannot reinterpret it."""
+
+    instant_ms: int
+    local: datetime
+    offset_seconds: int
+    policy: TimePolicy
+    zone_digest: str
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.instant_ms) is not int
+            or not 0 <= self.instant_ms <= MAX_INSTANT_MS
+            or type(self.local) is not datetime
+            or self.local.tzinfo is not None
+            or self.local.fold != 0
+            or self.local.microsecond % 1000 != 0
+            or type(self.offset_seconds) is not int
+            or not -86400 < self.offset_seconds < 86400
+            or not isinstance(self.policy, TimePolicy)
+            or not isinstance(self.zone_digest, str)
+            or re.fullmatch(r"[a-f0-9]{64}", self.zone_digest) is None
+        ):
+            raise InvalidInput("invalid_recurrence_local_instant")
+        delta = self.local - _EPOCH
+        actual = (
+            delta.days * 86_400_000
+            + delta.seconds * 1000
+            + delta.microseconds // 1000
+            - self.offset_seconds * 1000
+        )
+        if actual != self.instant_ms:
+            raise InvalidInput("invalid_recurrence_local_instant")

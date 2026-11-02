@@ -251,3 +251,33 @@ after both original POST responses, then checks the retained rejection and delib
 the exact original request under current authority. Refresh never resubmits a POST. See the
 [review corrections evidence](evidence/recurrence-review-corrections.json) for original failures,
 complete-source validation, current images and remaining acceptance limits.
+
+## Completion-relative source and planning values
+
+[Relative records](../backend/src/domus/domain/relative_recurrence.py) now distinguish an initial
+obligation from a successor derived from an original task cycle. Their generation/cycle keys
+exclude approval time, mutable record revision and generated task IDs. Record construction
+validates facts; it cannot authorize maintenance or prove current source state. Historical source
+values survive later closure. The future durable consumer must verify live references, original
+receipts and its retained inbox/closure before committing an effect.
+
+LocalInstant retains the actual UTC performed instant, realized wall time/offset and pinned source
+identity independently of a future fold preference. Actual work in the second autumn appearance
+remains there under a first-appearance household policy. The internal epoch-local basis can lie
+in late1969 under a negative offset; user NominalTime continues to require1970 or later. One pure
+TaskCycle completion snapshot helper now supplies existing lifecycle checks and relative sources
+without rewriting performers, actual work time or original rules after verification/reopening.
+
+The [read-only planner](../backend/src/domus/application/relative_recurrence.py) receives the
+current cycle and produces ready, waiting-verification, closed-source or inactive-rule facts.
+It derives local calendar days from performed_at and retains milliseconds for timed deadlines.
+Date-only work stays a date, including a wholly missing local date, without fabricating an instant.
+Invalid provider facts and range overflow remain explicit failures. Paused/retired rules and
+ineligible source states require no provider I/O.
+
+The shared PlannedSlot retains the existing PlannedFixedSlot source name and encoding; existing
+fixed rule membership and materialization remain unchanged. The
+[planning evidence](evidence/recurrence-relative-planning.json) includes real SQLite lifecycle
+facts and preserved task/evidence counts, not a persisted successor. Relative storage, original
+proof/recovery, durable cycle closure and invalidation, global mixed-rule fairness and production
+integration remain required. This increment changes no SQLite layout or owner HA installation.

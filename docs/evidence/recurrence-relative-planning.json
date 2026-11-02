@@ -1,0 +1,110 @@
+{
+  "status": "partial; relative records and read-only planning implemented, durable relative execution remains required",
+  "recordedAtUTC": "2026-11-02T09:30:54.573700+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "abf6403b569c39101df2001eb90ad013c40972c1",
+  "backendSourceInventorySHA256": "0b1ae506eb98d959de6776d7ffea8f1324c381701ab9e86ed5078d85617ff76c",
+  "sourceManifestMethod": "SHA256 of compact sorted JSON mapping every authored Python module path, including package initializers, to its byte SHA256 value.",
+  "implemented": [
+    "Immutable typed relative rule, progress, original completion source and initial/successor slot facts; scoped generation/cycle identity with no authority or persistence grant.",
+    "LocalInstant preserves an actual UTC instant and realized local offset independently of the future fold preference, with strict integer arithmetic, policy and actual pinned zone-byte identity.",
+    "One shared pure TaskCycle.completion_snapshot preserves actual original work through later approval/reopening and is reused by current lifecycle validation.",
+    "A pure application planner returns ready, waiting_verification, source_closed, paused or retired facts and performs no provider I/O for ineligible current sources.",
+    "Successor calendar-day arithmetic starts at performed_at, preserves time milliseconds and original overdue dates; date-only remains a date even when that date is absent in a timezone.",
+    "Current source/policy/zone-digest/provider mismatches and out-of-range future dates fail explicitly. The UTC epoch may have a valid internal local source in late1969 without widening user-nominal dates.",
+    "PlannedSlot is the shared nominal/resolved value; PlannedFixedSlot remains a source-compatible name with unchanged encoding and existing fixed membership enforcement."
+  ],
+  "testsFirst": {
+    "records": "Initial collection failed because LocalInstant did not exist; original output retained.",
+    "planner": "Separate initial collection failed because domus.application.relative_recurrence did not exist; original output retained."
+  },
+  "completeBackend": {
+    "executions": 3783,
+    "durationSeconds": 96.8,
+    "authoredModules": 132,
+    "coverageTotals": {
+      "covered_lines": 9406,
+      "num_statements": 9406,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 274,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2676,
+      "num_partial_branches": 0,
+      "covered_branches": 2676,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed"
+  },
+  "focusedTemporalAndSource": {
+    "executions": 229,
+    "durationSeconds": 2.09,
+    "authoredModules": 4,
+    "statements": 311,
+    "branches": 84,
+    "coveragePercent": 100,
+    "scope": "Includes prior timezone, creation and lifecycle regressions, not229 distinct relative product journeys."
+  },
+  "actualObservations": [
+    "Both actual autumn fold instants remain distinct and keep their original offsets under either future fold preference.",
+    "A spring-DST successor one local day later is23 UTC hours later; approval five days later retains that original derived date and milliseconds.",
+    "The existing real SQLite task flow supplies pending completion, accepted approval and reopening facts. A current cycle read after reopening keeps old delivered events source_closed.",
+    "Repeated read-only plans preserve the original normalized source and leave current task/audit/outbox counts unchanged. No relative task or consumer receipt is created.",
+    "The initial obligation, each actual source cycle and each installation/channel/generation have separate stable keys, independent of later generated task IDs or approval time.",
+    "A wholly missing date-only local deadline remains its nominal date with no fabricated UTC midnight; local-date overflow is refused."
+  ],
+  "checks": {
+    "strictTypes": "passed;132 modules",
+    "ruff": "check and format passed;333 files",
+    "architecture": {
+      "contractsKept": 3,
+      "contractsBroken": 0,
+      "filesAnalyzed": 176,
+      "dependencies": 1135
+    },
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 32945,
+      "renderedCharacters": 32945,
+      "composedCharacters": 32945,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "fed3d9b88e9d4b1aea507e80a8da61f41e30ce64b5a3f934989644b76a1646be",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "packageAndArchitecture": {
+      "executions": 52,
+      "durationSeconds": 6.82,
+      "freshCurrentWheel": "passed; actual duration retained in original output"
+    }
+  },
+  "imageControls": {
+    "hostExecution": "Current-source recurrence, both owned runtimes and pinned-time codecs passed.",
+    "scope": "Exact current-image script executes actual SQLite task completion and original lifecycle export, then packaged read-only relative planning, alongside prior fixed/fair runtime controls. It does not claim relative persistence or materialization.",
+    "freshHostedCpuImages": "Required after this source is published; a host execution is not CPU-image proof.",
+    "priorCheckpoint": "abf6403 passed every applicable hosted product CI suite and both actual CPU images. Native review completed8/8 partitions,86 fragments and75 assigned files with0 open/candidate/published findings and both valid findings fixed. Overall review remained partial/neutral because of the reported human-conversation limit; technical inputs were manually inspected."
+  },
+  "compatibility": "No SQLite schema/layout, current stored encoding, public HTTP surface, app version or owner installation changed by this planning phase. Current runtimes still execute only the fixed runner.",
+  "copilot": "Known progress-capacity and human-conversation limits remain reported upstream851/843. No Copilot source/configuration/credential/bound changed; fresh review is required for this source.",
+  "rawEvidence": {
+    "privateCampaign": "/private/tmp/domus-relative-abf6403",
+    "consumer": "Current PR22 review: original two missing-symbol failures, exact complete/focused coverage and source inventory, source/SDK/package proofs and current image-host control. Necessary evidence is retained compactly at cleanup."
+  },
+  "pending": "Actual relative rule/progress/slot persistence, atomic initial creation, original-receipt/restore reconciliation, durable inbox and per-cycle closure, successor invalidation/review, a shared global mixed-rule budget and actual runtime integration; all retained52+37 recurrence cases, protected calendar/operation APIs, reviewed schedule changes and full UI/HA/all-domain Stable/Edge release remain required."
+}

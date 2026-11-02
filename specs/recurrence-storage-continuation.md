@@ -141,6 +141,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/application/recurrence_commands.py | create |
 | backend/src/domus/application/fixed_materialization.py | create |
 | backend/src/domus/application/fair_recurrence.py | create |
+| backend/src/domus/application/relative_recurrence.py | create |
 | backend/src/domus/application/commands.py | update |
 | backend/src/domus/application/task_creation.py | create |
 | backend/src/domus/application/task_commands.py | update |
@@ -149,6 +150,10 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/domain/recurrence_records.py | create |
 | backend/src/domus/domain/recurrence_membership.py | create |
 | backend/src/domus/domain/recurrence_frontier.py | create |
+| backend/src/domus/domain/relative_recurrence.py | create |
+| backend/src/domus/domain/tasks.py | update |
+| backend/src/domus/domain/task_events.py | update |
+| backend/src/domus/domain/recurrence_time.py | update |
 | backend/src/domus/domain/recurrence_rules.py | update |
 | backend/src/domus/infrastructure/recurrence_time.py | update |
 | backend/src/domus/infrastructure/recurrence_worker.py | create |
@@ -172,6 +177,9 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_recurrence_runtime.py | create |
 | tests/backend/test_recurrence_canonical_storage.py | create |
 | tests/backend/test_storage_contention_http.py | create |
+| tests/backend/test_relative_recurrence_records.py | create |
+| tests/backend/test_relative_recurrence_planning.py | create |
+| tests/backend/test_recurrence_local_instant.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
@@ -195,6 +203,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/evidence/recurrence-fairness.json | create |
 | docs/evidence/recurrence-lifecycle.json | create |
 | docs/evidence/recurrence-review-corrections.json | create |
+| docs/evidence/recurrence-relative-planning.json | create |
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
 
@@ -241,6 +250,12 @@ The next production increment composes that fixed runner into both persistent na
 Review identified a strict-storage gap: parsing JSON could normalize altered source bytes before the closed typed codec checked them. Compare the original stored text with the exact canonical representation before constructing any recurrence record. Whitespace, key order and equivalent escaped keys must fail safely in direct rule/progress/slot/frontier reads and full checkpoint validation, without repairing source bytes. Keep existing semantic-negative tests canonically serialized so they continue to exercise typed integrity independently of syntax rejection. This refines recurrence-storage-R2 and retained record integrity, without inventing another product case count.
 
 Concurrent browser evidence also exposes unavailable follow-up reads during a setup winner's commit. An exclusive SQLite writer must yield bounded storage_busy during initial database inspection, not a corruption classification or internal_error. Preserve corrupt-file refusal for other inspection failures. An explicit user status refresh after the two concurrent POST responses can restore verified current facts before inspecting the retained rejection and deliberately replaying the exact original request; it never retries a POST automatically. Verify both read/write repository entry points, actual native/standalone authorization HTTP responses and the real browser flows. The original CI trace has no internal exception stack; the exclusive-lock reproduction establishes the concrete inspection defect rather than proving an unlogged historical stack.
+
+The next relative increment establishes typed rule/progress/source/slot values and read-only successor planning under the complete retained execution contract. LocalInstant retains an actual UTC instant's realized wall time and offset independently of the household's preference for resolving a future repeated time. In particular, actual work in the second autumn fold remains in that fold even when future work uses the first. Integer UTC/local arithmetic, millisecond precision, policy and pinned zone-byte identity are explicit. The UTC epoch can have an actual local basis in late 1969 under a negative offset; that internal fact does not broaden the existing 1970..9999 user-nominal contract.
+
+TaskCycle supplies its original completion snapshot through one shared pure helper used by existing lifecycle validation and the relative source value. Approval and reopening never rewrite actual performed time, performers or snapshotted rules. Planning receives the current cycle: paused/retired rules, closed/rejected cycles and pending at_verification work produce explicit nonready states without provider work. Ready plans use local calendar days from performed_at, preserve milliseconds for time deadlines, keep date-only deadlines as dates even for a wholly missing local date, and reject inconsistent provider facts or overflow. Original cycle identity, not approval time or a generated task ID, determines the successor slot key within its generation. Historical slot values preserve original source facts after later closure; constructing one confers no execution authority.
+
+The shared nominal/resolved PlannedSlot value retains PlannedFixedSlot as a source-compatible name; its encoding and existing fixed rule membership checks remain unchanged. Actual SQLite task lifecycle reads exercise pending, approved and reopened source facts without persisting a relative plan or generating an event. The future durable consumer must revalidate the live cycle and its own retained inbox/closure before command receipt lookup and commit; feeding an old event snapshot alone is insufficient. Relative rule/progress/slot storage, atomic initial creation, original-proof reconciliation, durable source/inbox closure, successor invalidation, global mixed-rule fairness and runtime wiring remain required. No SQLite layout or owner installation is changed by this planning increment.
 
 The worker carries cancellation into every run and joins before runtime identity/storage disposal and installation-lease release. The lifespan preserves the existing application's state and exits its prior context after stopping the worker, including on startup/application failure. Ordinary failures expose only bounded categories and permit a later attempt; a denied technical scope terminates that worker. Last-run observations remain process-local diagnostics, not durable calendar freshness or delivery proof. Identity-only preview has no worker. Actual current-source image controls exercise both ASGI lifetimes, scoped SQLite work and shutdown. Relative lifecycle, current-authorized calendar/command surfaces, durable attention, configurable household timing defaults and complete product/UI/HA acceptance remain required.
 

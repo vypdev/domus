@@ -85,7 +85,7 @@
       "policyModulesByteVerified": 7,
       "immutableBaseOwners": 18,
       "retainedOwnersUnchanged": true,
-      "currentCompanionSHA256": "9395e06f14fd8939950816c707ff3d764bf5489fb7c0cfff8591cf2beae87303",
+      "currentCompanionSHA256": "fed3d9b88e9d4b1aea507e80a8da61f41e30ce64b5a3f934989644b76a1646be",
       "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
     },
     "packageAndArchitectureTests": {
