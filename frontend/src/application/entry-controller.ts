@@ -30,6 +30,9 @@ const retired = Symbol('retired entry read');
 function sameContext(a: JournalContext, b: JournalContext): boolean {
   return a.installationId === b.installationId && a.channel === b.channel && a.subject === b.subject;
 }
+function authorizationSnapshot(value: Authorization): Authorization {
+  return Object.freeze({...value, permissions: Object.freeze([...value.permissions])});
+}
 function sameOriginal(a: JournalRecord, b: JournalRecord): boolean {
   return a.key === b.key && a.action === b.action && a.createdAt === b.createdAt
     && a.expiresAt === b.expiresAt && a.operationId === b.operationId
@@ -91,19 +94,27 @@ export class EntryController {
       let decision = entryDecision(this.deployment, session, null, this.clock.now());
       if (decision.state === 'authentication_required') {this.authenticationRequired(); return true;}
       let authorization: Authorization | null = null, household: HouseholdFacts | null = null;
+      let notice: EntryNotice | null = null;
       if (session.householdApiAvailable) {
-        const access = await this.read(this.server.authorization(session.context), generation);
-        authorization = Object.freeze({...access, permissions: Object.freeze([...access.permissions])});
+        authorization = authorizationSnapshot(await this.read(this.server.authorization(session.context), generation));
         decision = entryDecision(this.deployment, session, authorization, this.clock.now());
-        if (decision.householdReadable)
-          household = Object.freeze({...await this.read(this.server.household(session.context), generation)});
+        if (decision.householdReadable) {
+          try {household = Object.freeze({...await this.read(this.server.household(session.context), generation)});}
+          catch (error) {
+            if (generation !== this.generation) throw retired;
+            if (error instanceof EntryReadError && error.code === 'authentication_required') throw error;
+            notice = error instanceof EntryReadError ? error.code : 'unavailable';
+            // An optional fact is unknown. Fresh grants, rather than its failure or earlier access, govern the partial view.
+            authorization = authorizationSnapshot(await this.read(this.server.authorization(session.context), generation));
+          }
+        }
       }
       decision = entryDecision(this.deployment, session, authorization, this.clock.now());
       if (decision.state === 'authentication_required') {this.authenticationRequired(); return true;}
       if (this.retained !== null && (!sameContext(this.retained.context, session.context)
           || this.clock.now() >= this.retained.expiresAt)) this.retained = null;
       const permitted = authorization !== null && !['suspended', 'archived'].includes(authorization.state);
-      let journal: Journal | null = null, notice: EntryNotice | null = null;
+      let journal: Journal | null = null;
       if (permitted && !decision.readOnly) {
         try {journal = this.journal.open(session.context, this.clock.now());}
         catch {notice = 'journal_unavailable';}
@@ -230,6 +241,11 @@ export class EntryController {
         this.journal.detach(); this.update({phase: 'ready', journal: null, notice: 'journal_unavailable'});
       }
     } finally {this.running = false;}
+  }
+  /** A joint application lifetime may reach its earlier verified lease deadline. This never revokes or renews HA. */
+  expire(): void {
+    if (this.state.phase === 'closed') return;
+    this.invalidate(); this.retained = null; this.authenticationRequired();
   }
   close(): void {this.invalidate(); this.retained = null; this.state = blank('closed');}
   async logout(): Promise<void> {

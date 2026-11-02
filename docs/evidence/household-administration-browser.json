@@ -1,0 +1,144 @@
+{
+  "status": "partial",
+  "issue": "https://github.com/vypdev/domus/issues/27",
+  "sourceBase": "ad45272a180f4e36d2dd124f950826e41311017d",
+  "baselineMerge": "8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9",
+  "nativePublication": {
+    "run": 41525972873,
+    "job": 125553749391,
+    "commit": "ad45272a180f4e36d2dd124f950826e41311017d",
+    "branch": "feature/27-complete-the-household-administration-workspace-after-the-verified-api-and-controller-checkpoint",
+    "result": "success; branched/state:working verified; exact parent is the actual PR26 merge",
+    "originalPolicyModulesByteVerified": 7,
+    "formatConsistencyAndCatalog": "passed",
+    "retainedOwnerDocuments": 20,
+    "retainedOwnerCases": {
+      "HADM": 72,
+      "HADI": 8,
+      "HADW": 82
+    },
+    "prospectiveBrowserRefinements": 24
+  },
+  "implemented": [
+    "Optional household-read failures retain current entry authority only after rechecking grants; authentication failure and stale generations still retire access.",
+    "Application-only joint coordinator matches context/access/grants and independent household scope, bounds reconciliation, serializes explicit work and preserves original commands/results.",
+    "Earlier joint lease expiry retires both views without renewal; disposal fences reads, late command replies and pending logout revocation.",
+    "Same-context results/drafts remain owned by their existing use cases; conflicts, invalid input and failed original-query notices are not erased by a second administration refresh."
+  ],
+  "testsFirst": [
+    "Real Chromium entry controls first failed16/passed76 against original code; all93 entry cases now pass.",
+    "Coordinator test first failed import on the missing module, then29 initial semantic cases passed.",
+    "After correcting an initial C13 test expectation to the existing original-GET contract, three explicit notice-loss controls failed before removal of the extra refresh.",
+    "Three lifecycle controls failed before stale-notice replacement and disposal-during-logout fencing were corrected."
+  ],
+  "frontend": {
+    "executions": 1090,
+    "coordinatorExecutions": 50,
+    "entryControllerExecutions": 93,
+    "authoredRuntimeFiles": 29,
+    "nonemptyRuntimeFiles": 27,
+    "typeOnlyFiles": 2,
+    "coverage": {
+      "lines": {
+        "total": 1323,
+        "covered": 1323,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 1972,
+        "covered": 1972,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 397,
+        "covered": 397,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 1416,
+        "covered": 1416,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "independentFilesystemInventoryAudit": "passed"
+  },
+  "checks": {
+    "runtimeAndCatalogTypes": "passed",
+    "nodePolicy": "38passed; all supported metrics100%",
+    "entryBrowser": "51passed; compiled UI against actual native/standalone Python/SQLite with test-only HA providers",
+    "packaging": "1passed; actual new wheel matches every151module and4compiledUI resource bytes",
+    "catalogBrowser": "18passed; existing entry state catalog, not new administration forms",
+    "nodeInvocationLimitation": "The earlier architecture-only command passed its selected rules but failed global tooling coverage because it omitted the unchanged tooling suite; complete pnpm test then passes38/100%. No product/Copilot failure is inferred.",
+    "strictBackendTypes": "passed151modules",
+    "ruff": "check and375-file format pass",
+    "pythonArchitecture": "3kept0broken",
+    "documentationAndOriginalSDK": "passed;7originalpolicyblobsunchanged;original20owner documents/cases retained"
+  },
+  "sourceIdentity": {
+    "backendInventorySHA256": "fb46cd890daa577fd0149587ae39310af1df91769bb5856bfd2ec709ca402101",
+    "backendUnchangedFromReviewedB60": true,
+    "frontendInventorySHA256": "1e1cca12e4d3629fec81351c6cce45b4caf2b099dd0f29dbaf507a3055b75645",
+    "wheelSHA256": "e68810fe0754e0b250d0dda4027d10d87b5ac5d4285cde4ad567b57e1afef5f4",
+    "compiledUI": {
+      ".vite/manifest.json": "214eed761283d87d64123887c8e3c742d247b59ee0066739c32f21a7c8fac0d6",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-Dr0RuR81.js": "2c2347a61ddb173a5ed744f50fdaf8d2d3c54d66be936e59df9b7f9b69349ede",
+      "index.html": "dc3151dffd389e338a3f1d7a5a32dfa9aa94e6518f5e5376b9e235b83e1c6931"
+    },
+    "everyModuleAndUIByteVerified": true
+  },
+  "backendScope": "Fresh complete local4364-test campaign passes with151module supported statements/branches100%, independent audit and exact unchanged backend module bytes. The new compiled entry UI is included; this is not actual hosted CPU-image or owner HA acceptance.",
+  "providerFeasibility": {
+    "source": "home-assistant/core@12695a258d937f7943237d6e2cb66eed9d6d2216",
+    "result": "The fixed account response builders expose names and no supported avatar field; explicit unavailable remains appropriate.",
+    "scope": "Pinned upstream source inspection, not installed owner HA/runtime acceptance."
+  },
+  "copilotRecovery": {
+    "report": "https://github.com/vypdev/copilot/issues/763#issuecomment-6588275756",
+    "result": "Three response-size failures are retained separately; explicit same-capability companion recovery then published natively. This does not establish an upstream fix."
+  },
+  "localEvidence": {
+    "root": "/private/tmp/domus-admin-page-8b1cbc1",
+    "privateLocalOnly": true,
+    "scope": "Original/control failures, current coverage/source/wheel proof and native recovery. Generated terminal fixtures retire only after unique evidence is retained."
+  },
+  "pending": "Document runtime/lifecycle wiring and complete accessible EN/ES administration forms, Storybook/actual administration Python-SQLite journeys, all retained owner/browser cases, human UX review, owner HA adoption and both current CPU images. Recurrence23, Stable/Edge and all-domain product acceptance remain required.",
+  "goalComplete": false,
+  "acceptance": "Unit/controller and51entry journeys are not complete administration browser or owner HA acceptance.",
+  "recordedAtUTC": "2026-11-02T21:50:53.481264+00:00",
+  "backend": {
+    "executions": 4364,
+    "authoredModules": 151,
+    "coverage": {
+      "covered_lines": 10434,
+      "num_statements": 10434,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 311,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2928,
+      "num_partial_branches": 0,
+      "covered_branches": 2928,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed"
+  },
+  "testPreparationNotes": [
+    "The initial C13 expected an uncertain outcome from a rejected original GET; the existing controller contract returns no receipt and an invalid-response notice. Corrected tests then reproduced the genuine notice-loss bug.",
+    "A private evidence writer initially used a nonexistent catalog docs key. It was corrected to the actual documentation key before publication; no production or SDK relaxation."
+  ]
+}

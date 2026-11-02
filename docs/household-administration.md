@@ -43,8 +43,17 @@ one hour, with at most eight requests and 65,536 bytes shared across account/ins
 contexts. A current view hides other contexts' pending work without deleting it. This source
 foundation does not yet provide a browser recovery action or automatically resend a mutation.
 
+The browser application layer now coordinates entry and administration proof, earlier lease expiry,
+current grants, original results and disposal. An unavailable household read preserves independently
+verified access only after a current authorization check. The coordinator retains actionable conflict
+and recovery notices and fences late logout responses. It is not yet wired into the document runtime;
+the complete forms and actual administration browser journeys remain under development in
+[issue #27](https://github.com/vypdev/domus/issues/27). Current scoped verification is recorded in the
+[browser coordination evidence](evidence/household-administration-browser.json).
+
 See the [API contract](household-api.md), [architecture](architecture-household-administration.md)
 and [migration/rollback limits](household-administration-migration.md). The original
 [72-case administration contract](../specs/household-administration.md),
 [integration refinements](../specs/household-administration-integration.md) and
-[workspace continuation](../specs/household-administration-workspace.md) remain required.
+[workspace continuation](../specs/household-administration-workspace.md) and
+[browser completion](../specs/household-administration-browser.md) remain required.

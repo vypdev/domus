@@ -118,7 +118,7 @@ Text equivalent: verified entry → current matched authority → permitted form
 ### 6.2 Alternative paths
 
 - Optional aggregate unavailability does not erase independently verified authority. Recheck current grants; keep independently permitted facts and original GET available where authorized.
-- Authentication failure retires access. A read-only outage lease permits only the protected original GET until its existing expiry.
+- Authentication failure retires access. A read-only outage lease retains permitted local reads, including protected original GET, until its existing expiry; new mutations remain blocked.
 - A stale revision or storage failure preserves a safe same-context draft and original revision. The user may explicitly reset to adopt a new revision.
 - HA directory/avatar unavailability is not empty success. If no supported avatar source is feasible, show unavailable without inventing one.
 - Language change translates the current view and errors without sending a mutation. Saved locale takes precedence over browser locale; otherwise use browser locale with English fallback.
@@ -362,6 +362,7 @@ Tests first. Preserve repository-wide supported coverage, complete global and pe
 | `docs/household-administration.md` | update |
 | `docs/household-administration-operations.md` | create |
 | `docs/evidence/household-administration.json` | update |
+| `docs/evidence/household-administration-browser.json` | create |
 
 Document the normal user journey, locale/configuration precedence, current permission and provenance, provider availability, explicit original recovery, operator setup/rollback and lifecycle/architecture constraints. Update navigation, catalog and artifact evidence together. Preserve historical evidence identities; do not rebind them to new UI bytes. User documentation covers the recommended default and alternative; setup documentation covers permissions and deployment; operator documentation covers states, troubleshooting, recovery, cleanup and rollback; contributor documentation covers contracts and dependency checks. Validate links, examples and catalog with repository specification validation and contract fixtures.
 

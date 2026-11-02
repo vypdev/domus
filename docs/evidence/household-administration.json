@@ -612,15 +612,15 @@
     }
   },
   "currentSourcePackage": {
-    "sourceBase": "f491b572cea14e21a0fbfc8c664b110335a54f0e",
-    "sourceIdentity": "Current151-module backend adds capability-v2 verified household scope. Compiled entry UI resource bytes are unchanged;28-file administration source is covered but not yet wired to page composition. No owner Edge.5 update or full workspace acceptance.",
+    "sourceBase": "ad45272a180f4e36d2dd124f950826e41311017d",
+    "sourceIdentity": "Current151-module backend is byte-identical to reviewed b60. The rebuilt entry UI contains the partial-read fix;29-file frontend source also contains an application coordinator which is not yet imported by document composition. Owner Edge.5 and full workspace acceptance are unchanged.",
     "actualProductFiles": {
-      ".vite/manifest.json": "bb13d320cf8968302162520e722f61f9290f9ca926c863b985288cb4fba2ffc3",
-      "assets/index-CQE4qeI0.js": "810376c1a54cbe125a3334afcc6ff1b81d14c27c089005d23f70a4da4c0dbcf4",
+      ".vite/manifest.json": "214eed761283d87d64123887c8e3c742d247b59ee0066739c32f21a7c8fac0d6",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "index.html": "53eb4a7d9debd6dd01e421a564df3432c8d3c523a74acbf1f962c9714cb56911"
+      "assets/index-Dr0RuR81.js": "2c2347a61ddb173a5ed744f50fdaf8d2d3c54d66be936e59df9b7f9b69349ede",
+      "index.html": "dc3151dffd389e338a3f1d7a5a32dfa9aa94e6518f5e5376b9e235b83e1c6931"
     },
-    "wheelSHA256": "11453b1ca6d98b08bbe718cb0b8d9fba2109bdb116cf375f66319e33fc615cd3",
+    "wheelSHA256": "e68810fe0754e0b250d0dda4027d10d87b5ac5d4285cde4ad567b57e1afef5f4",
     "originalFailure": {
       "run": 41505801643,
       "aarch64Job": 125484707823,
@@ -629,7 +629,7 @@
     },
     "testsFirst": "The actual aarch64 image exposes the stale historical expectation. A new early wheel/build/declaration assertion first fails with missing currentSourcePackage before this explicit candidate inventory is added.",
     "correction": "Current packaging and image tests use this declaration. The packaging gate compares it against the independently built source bundle and exact wheel bytes; the image fixture compares all installed and HTTP-served resources. Historical entry/Edge.5 evidence remains byte-identical.",
-    "acceptance": "The source-image binding correction53570f2 passed actual amd64/aarch64 jobs125489680572/125489680631 and CI aggregate125492943440 in41507276305. Current controller source still requires fresh hosted review/CI after push; compiled entry/UI and backend bytes are unchanged."
+    "acceptance": "Local current source:1090frontend executions/all29runtime files100%,4364backend tests/all151modules100%,51actual entry/PythonSQLite journeys,18entry-catalog states and actual wheel acceptance pass. Current CPU images and hosted review remain pending. The joint coordinator is not yet wired to the document; complete administration UI/retained acceptance and owner HA remain outstanding."
   },
   "controllerIncrement": {
     "sourceBase": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",
