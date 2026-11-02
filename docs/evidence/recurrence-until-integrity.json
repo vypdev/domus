@@ -11,7 +11,7 @@
       "https://github.com/vypdev/domus/pull/22#discussion_r4441091431",
       "https://github.com/vypdev/domus/pull/22#discussion_r4441091443"
     ],
-    "assessment": "Both are valid consumer boundary defects. Source corrected; fresh native verification required. Neither is dismissed or reported as a Copilot defect."
+    "assessment": "Both valid UTC findings confirmed fixed by native review at a6ba026; all5 product finding threads resolved,0 open. Overall native review remains partial due to the separately recorded human-context bound."
   },
   "implemented": [
     "UTC UNTIL requires last-included resolved proof at the exact consumed nominal rank and at/before the inclusive cutoff. Closed progress additionally requires the first excluded resolved candidate, a conservative exhausted-period lower bound or natural calendar exhaustion.",
@@ -121,7 +121,13 @@
   },
   "images": {
     "exactCurrentScriptOnHost": "passed; fixed/fair materialization, both owned runtimes, relative read-only planning, UTC inclusive/terminal evidence and missing-header/checkpoint refusal",
-    "freshHosted": "Required for this correction after publication; local host script is not actual CPU-image proof.",
+    "freshHosted": {
+      "head": "a6ba0263551e2d19ba07574f46bdbd7c6b9b1532",
+      "runId": 41432261783,
+      "amd64Job": 125233464313,
+      "aarch64Job": 125233464190,
+      "result": "Both passed actual current-source CPU-image controls. Aggregate failed only on the independent browser CDP observation; its test-only correction requires fresh CI."
+    },
     "previousB2": {
       "runId": 41425773817,
       "amd64": 125211894187,
@@ -170,5 +176,181 @@
     "privateCampaign": "/private/tmp/domus-time-until-b2bcc69",
     "consumers": "CurrentPR22 UTC boundary review and rollback: exact original b2 wheel, immutable original schema8 database/provenance, corrected logical fixture/erratum, original and current tests, coverage/source/SDK proofs and image-host/package checks. Compact completed producers after publication; keep authored original input and necessary evidence."
   },
-  "pending": "Fresh CI/native verification; relative rule/slot/progress persistence, atomic initial creation, durable source inbox/closure/invalidation, historical source reconciliation and mixed-rule global fairness/runtime composition; protected calendar/operations, reviewed schedule changes, household timing defaults, full retained52+37 cases and all-domain UI/HA/Stable-Edge acceptance."
+  "pending": "Fresh CI/native verification; relative rule/slot/progress persistence, atomic initial creation, durable source inbox/closure/invalidation, historical source reconciliation and mixed-rule global fairness/runtime composition; protected calendar/operations, reviewed schedule changes, household timing defaults, full retained52+37 cases and all-domain UI/HA/Stable-Edge acceptance.",
+  "nativeReviewA6": {
+    "schemaVersion": 1,
+    "reviewId": "vypdev:domus:pr-22:a6ba0263551e",
+    "repository": "vypdev/domus",
+    "repositoryId": 1437483050,
+    "triggerKind": "pull_request",
+    "pullRequestNumber": 22,
+    "headSha": "a6ba0263551e2d19ba07574f46bdbd7c6b9b1532",
+    "publicationMode": "publish",
+    "configuredEffort": "smart",
+    "agentProvider": "codex",
+    "agentModel": "gpt-6-luna",
+    "startedAt": "2026-11-02T10:52:51.489Z",
+    "elapsedMs": 192051,
+    "stagesMs": {
+      "context-preflight": 421,
+      "context": 1068,
+      "analysis": 178134,
+      "normalization": 1,
+      "freshness": 575,
+      "publication": 7349,
+      "post-publication-freshness": 402,
+      "projection": 4092
+    },
+    "promptCharacters": 869837,
+    "responseCharacters": 2605,
+    "estimatedInputTokens": 217460,
+    "estimatedOutputTokens": 652,
+    "changedFiles": 91,
+    "changedLines": 10161,
+    "rulesLoaded": 0,
+    "contextSelectionReason": "event",
+    "contextCandidateBucket": "1",
+    "contextCoverageStatus": "partial",
+    "contextCoverage": {
+      "selection": {
+        "status": "complete",
+        "pagesFetched": 1,
+        "itemsFetched": 1,
+        "itemsRetained": 1,
+        "omittedItems": 0,
+        "truncatedItems": 0,
+        "limitReached": false
+      },
+      "issue-comments": {
+        "status": "complete",
+        "pagesFetched": 1,
+        "itemsFetched": 6,
+        "itemsRetained": 6,
+        "omittedItems": 0,
+        "truncatedItems": 0,
+        "limitReached": false
+      },
+      "pull-request-comments": {
+        "status": "complete",
+        "pagesFetched": 1,
+        "itemsFetched": 8,
+        "itemsRetained": 8,
+        "omittedItems": 0,
+        "truncatedItems": 0,
+        "limitReached": false
+      },
+      "review-threads": {
+        "status": "complete",
+        "pagesFetched": 1,
+        "itemsFetched": 5,
+        "itemsRetained": 5,
+        "omittedItems": 0,
+        "truncatedItems": 0,
+        "limitReached": false
+      },
+      "diff": {
+        "status": "complete",
+        "pagesFetched": 1,
+        "itemsFetched": 91,
+        "itemsRetained": 91,
+        "omittedItems": 0,
+        "truncatedItems": 0,
+        "limitReached": false
+      },
+      "previous-findings": {
+        "status": "complete",
+        "pagesFetched": 1,
+        "itemsFetched": 2,
+        "itemsRetained": 2,
+        "omittedItems": 0,
+        "truncatedItems": 0,
+        "limitReached": false
+      },
+      "human-conversation": {
+        "status": "partial",
+        "pagesFetched": 1,
+        "itemsFetched": 5,
+        "itemsRetained": 3,
+        "omittedItems": 2,
+        "truncatedItems": 0,
+        "limitReached": true
+      },
+      "rules": {
+        "status": "complete",
+        "pagesFetched": 0,
+        "itemsFetched": 0,
+        "itemsRetained": 0,
+        "omittedItems": 0,
+        "truncatedItems": 0,
+        "limitReached": false
+      }
+    },
+    "contextLogicalProviderReads": 5,
+    "contextRawProviderRequests": 5,
+    "contextConcurrencyLimit": 2,
+    "analysisPartitions": 11,
+    "completedAnalysisPartitions": 11,
+    "analysisDiffFragments": 109,
+    "analysisAssignedFiles": 91,
+    "maximumAnalysisConcurrency": 2,
+    "candidateFindings": 0,
+    "publishedFindings": 0,
+    "overflowFindings": 0,
+    "resolvedFindings": 2,
+    "findingStates": {
+      "open": 0,
+      "reopened": 0,
+      "fixed": 5,
+      "obsolete": 0,
+      "dismissed": 0,
+      "verification-required": 0,
+      "unknown": 0
+    },
+    "outcome": "partial"
+  },
+  "browserObservationRepair": {
+    "base": "a6ba0263551e2d19ba07574f46bdbd7c6b9b1532",
+    "failedRun": 41432261783,
+    "failedJob": 125233464397,
+    "originalArtifact": 13135045868,
+    "originalArtifactSHA256": "37b7e5ce505c92a0b66e2059197bd270e0d07e6d20fdc60635ac003dde4f806d",
+    "observation": "48 browser journeys passed; the standalone same-account writer case received503, then Playwright Network.getResponseBody could not retrieve its body. The retained UI shows Request not accepted, preserved draft and rejected journal entry. Trace body content is unavailable; generic navigation guidance is not proof of actual unexpected navigation or an unlogged product stack.",
+    "change": "Contention tests buffer the actual upstream response before forwarding its exact status, headers and body to the browser. Route fetch permits0 retries and0 redirects. Browser status/Retry-After, actual storage_busy body, real independent SQLite contention, journal/draft identity, exact original replay/current authority, singleton and no-automatic-POST assertions remain.",
+    "sourceProof": {
+      "backend133ModulesUnchanged": true,
+      "inventorySHA256": "379103605c1e68b4ce45bb5f82a4ef4edbf6d7bc757261b4326706659daa2f11",
+      "frontendImplementationChanged": false,
+      "scope": "Only browser test observations, companion text and evidence change. Product-source coverage3881/100% and actual a6 images remain tied to the same application bytes; fresh current-head CI remains required."
+    },
+    "validation": {
+      "browserExecutions": 49,
+      "passed": 49,
+      "durationSeconds": 29.3,
+      "strictTypes": "runtime/catalog passed",
+      "ruff": "final check/format passed",
+      "originalPinnedSdd": {
+        "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+        "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+        "selected": "specs/recurrence-storage-continuation.md",
+        "originalPolicyModulesVerified": 7,
+        "format": "PASS",
+        "consistency": "PASS",
+        "composition": "explicit contributor integration; original publication retained in Git",
+        "unchangedCatalog": "PASS",
+        "immutableOwnerDocumentsUsed": 18,
+        "retainedCompanionCases": 52,
+        "newCases": 4,
+        "rawCharacters": 37552,
+        "renderedCharacters": 37552,
+        "composedCharacters": 37552,
+        "applicableDraftMaximumCharacters": 70000,
+        "sha256": "233ad9bfca0af9975174dc4b058a6261a2c951aff9c516c570abe5fb21e2ec13",
+        "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+        "retainedOwningFilesUnchanged": true,
+        "workingDocumentValidated": true
+      }
+    },
+    "privateEvidence": "/private/tmp/domus-response-body-a6ba026",
+    "scope": "Test observation repair; no production source, timeout, Copilot resource, dependency, browser version or retry policy changed."
+  }
 }

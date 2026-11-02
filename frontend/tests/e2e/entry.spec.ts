@@ -1,5 +1,5 @@
 import {expect, test} from '@playwright/test';
-import type {APIRequestContext, BrowserContext, Page, Response} from '@playwright/test';
+import type {APIRequestContext, APIResponse, BrowserContext, Page, Response, Route} from '@playwright/test';
 
 const prefix = '/api/hassio_ingress/fixture_domus_supervisor_1234567890';
 const journalKey = 'domus.entry.journal.v1';
@@ -29,6 +29,14 @@ async function create(page: Page, name = 'Fictional household') {
 }
 const setupResponse = (page: Page, mode: Mode) => page.waitForResponse(response =>
   response.url() === base(mode) + '/api/v1/household' && response.request().method() === 'POST');
+async function forwardSetup(route: Route, observed: Map<string, APIResponse>) {
+  // Buffer the actual upstream response before forwarding it unchanged. CI could not read
+  // the Chromium CDP body even though the application displayed and retained the rejection.
+  const response = await route.fetch({maxRetries: 0, maxRedirects: 0});
+  const body = await response.body();
+  observed.set(route.request().headers()['idempotency-key'], response);
+  await route.fulfill({response, body});
+}
 async function replaySetup(page: Page, response: Response) {
   const original = response.request(), headers = await original.allHeaders();
   // An explicit raw-API replay keeps every command assertion; no UI retry or new key is inferred.
@@ -312,6 +320,7 @@ for (const mode of modes) test.describe(mode, () => {
     const gate = new Promise<void>(resolve => {release = resolve;});
     const ready = new Promise<void>(resolve => {arrived = resolve;});
     const keys: string[] = [];
+    const observed = new Map<string, APIResponse>();
     try {
       if (mode === 'standalone' && actors === 'different_accounts') await request.post(origin(mode) + '/__fixture__/identity', {data: {subject: 'c'.repeat(32)}});
       await open(peerPage, peer, mode, true, (actors === 'different_accounts' ? 'e' : 'd').repeat(128));
@@ -320,7 +329,7 @@ for (const mode of modes) test.describe(mode, () => {
           if (route.request().method() !== 'POST') return route.continue();
           keys.push(route.request().headers()['idempotency-key']);
           if (++count === 2) arrived();
-          await gate; await route.continue();
+          await gate; await forwardSetup(route, observed);
         });
       }
       const responses = Promise.all([page, peerPage].map(candidate => setupResponse(candidate, mode)));
@@ -329,8 +338,10 @@ for (const mode of modes) test.describe(mode, () => {
       const replies = await responses, statuses: number[] = [];
       // An active mapped member gets a conflict; a new unlinked HA admin gains no implicit membership.
       for (const [index, reply] of replies.entries()) {
+        const upstream = observed.get(reply.request().headers()['idempotency-key'])!;
+        expect(upstream.status()).toBe(reply.status());
         if (reply.status() === 503) {
-          expect((await reply.json()).code).toBe('storage_busy');
+          expect((await upstream.json()).code).toBe('storage_busy');
           expect(reply.headers()['retry-after']).toBe('1');
           // The bounded writer may time out under CI load. After the winner completes, the exact
           // original request still needs current authority and cannot create a second household.
@@ -362,16 +373,21 @@ for (const mode of modes) test.describe(mode, () => {
   for (const actors of ['same_account', 'different_accounts'] as const) test(`bounded writer rejection retains the original ${actors} request and rechecks authority after another setup`, async ({page, context, browser, request}) => {
     await open(page, context, mode);
     const peer = await browser.newContext(), peerPage = await peer.newPage();
+    const observed = new Map<string, APIResponse>();
     let posts = 0;
     page.on('request', item => {if (item.url() === base(mode) + '/api/v1/household' && item.method() === 'POST') posts++;});
     try {
       if (mode === 'standalone' && actors === 'different_accounts') await request.post(origin(mode) + '/__fixture__/identity', {data: {subject: 'c'.repeat(32)}});
       await open(peerPage, peer, mode, true, (actors === 'different_accounts' ? 'e' : 'd').repeat(128));
+      await page.route(base(mode) + '/api/v1/household', route =>
+        route.request().method() === 'POST' ? forwardSetup(route, observed) : route.continue());
       expect((await request.post(origin(mode) + '/__fixture__/writer', {data: {action: 'acquire'}})).status()).toBe(200);
       const pending = setupResponse(page, mode);
       await create(page, 'Retained fictional draft');
       const rejected = await pending;
-      expect(rejected.status()).toBe(503); expect((await rejected.json()).code).toBe('storage_busy');
+      const upstream = observed.get(rejected.request().headers()['idempotency-key'])!;
+      expect(upstream.status()).toBe(rejected.status());
+      expect(rejected.status()).toBe(503); expect((await upstream.json()).code).toBe('storage_busy');
       expect(rejected.headers()['retry-after']).toBe('1');
       await expect(page.getByRole('heading', {name: 'Request not accepted', exact: true})).toBeVisible();
       await expect(page.getByLabel('Household name', {exact: true})).toHaveValue('Retained fictional draft');
