@@ -11,6 +11,8 @@ from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
 
 def verify_recurrence_records(connection: sqlite3.Connection, installation: Installation) -> None:
     repository = SQLiteRecurrences(connection, installation)
+    for row in connection.execute("SELECT household_id FROM recurrence_frontiers"):
+        repository.frontier(row[0])
     for row in connection.execute("SELECT household_id,schedule_id FROM recurrence_rules"):
         # These keys came from the same read cursor; record decoding still checks every header.
         rule = cast(FixedSchedule, repository.schedule(row[0], row[1]))

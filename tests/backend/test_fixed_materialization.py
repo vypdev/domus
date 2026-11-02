@@ -543,3 +543,37 @@ def test_date_only_maintenance_still_requires_the_actual_pinned_policy_without_w
     with pytest.raises(IntegrationUnavailable, match="timezone_source_unavailable"):
         service.step(rule_id, before)
     assert counts(store) == initial
+
+
+def test_rule_snapshot_used_for_a_horizon_cannot_change_before_the_step(tmp_path):
+    service, store, _, _, rule_id, before = configured(tmp_path)
+    with store.write() as unit:
+        expected = unit.recurrence.schedule("home", rule_id)
+        unit.recurrence.save_schedule(replace(expected, state=ScheduleState.PAUSED, revision=2), 1)
+    initial = counts(store)
+    with pytest.raises(Conflict, match="recurrence_source_changed"):
+        service.step(rule_id, before, expected_schedule=expected)
+    assert counts(store) == initial
+
+
+def test_shutdown_during_external_planning_does_not_start_the_atomic_write(tmp_path, monkeypatch):
+    from threading import Event
+
+    from domus.application.fixed_recurrence import FixedRecurrencePlanner
+
+    service, store, _, _, rule_id, before = configured(tmp_path)
+    stopped = Event()
+    expand = FixedRecurrencePlanner.expand
+
+    def cancel(self, *args, **kwargs):
+        result = expand(self, *args, **kwargs)
+        stopped.set()
+        return result
+
+    monkeypatch.setattr(FixedRecurrencePlanner, "expand", cancel)
+    initial = counts(store)
+    result = service.step(rule_id, before, should_continue=lambda: not stopped.is_set())
+    assert (
+        result.status == "stopped" and result.receipt is None and result.cursor.nominal_count == 0
+    )
+    assert counts(store) == initial

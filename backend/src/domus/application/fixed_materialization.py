@@ -1,5 +1,6 @@
 """One bounded local maintenance step commits actual fixed work or reconciles original proof."""
 
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, replace
 from typing import cast
 
@@ -18,6 +19,7 @@ from domus.domain.recurrence_records import (
 from domus.domain.recurrence_rules import NominalDate, NominalSlot
 from domus.domain.storage import (
     CommandKey,
+    Household,
     Installation,
     JsonDocument,
     Receipt,
@@ -39,13 +41,16 @@ class MaintenanceScope:
         if not isinstance(self.installation, Installation):
             raise InvalidInput("invalid_maintenance_scope")
 
-    def require(self, unit: UnitOfWork) -> None:
+    def household(self, unit: UnitOfWork) -> Household | None:
         household = unit.households.current()
-        if (
-            unit.recurrence.installation != self.installation
-            or household is None
-            or household.household_id != self.household_id
+        if unit.recurrence.installation != self.installation or (
+            household is not None and household.household_id != self.household_id
         ):
+            raise Forbidden("maintenance_scope_denied")
+        return household
+
+    def require(self, unit: UnitOfWork) -> None:
+        if self.household(unit) is None:
             raise Forbidden("maintenance_scope_denied")
 
 
@@ -120,17 +125,29 @@ class FixedMaintenance:
             raise StorageFailure("invalid_recurrence_source")
         return _Source(rule, progress, definition)
 
-    def step(self, schedule_id: str, before: NominalSlot, *, period_limit: int = 64) -> FixedStep:
+    def step(
+        self,
+        schedule_id: str,
+        before: NominalSlot,
+        *,
+        period_limit: int = 64,
+        expected_schedule: FixedSchedule | None = None,
+        should_continue: Callable[[], bool] = lambda: True,
+    ) -> FixedStep:
         validate_identifier(schedule_id)
         if type(period_limit) is not int or not 1 <= period_limit <= 64:
             raise InvalidInput("invalid_recurrence_limits")
         with self.transactions.read() as unit:
             source = self._source(unit, schedule_id)
         rule, progress = source.schedule, source.progress
+        if expected_schedule is not None and rule != expected_schedule:
+            raise Conflict("recurrence_source_changed")
         if rule.state is not ScheduleState.ACTIVE:
             return FixedStep(rule.state.value, schedule_id, progress.cursor, False)
         if source.definition.state is not DefinitionState.ACTIVE:
             return FixedStep("definition_inactive", schedule_id, progress.cursor, False)
+        if not should_continue():
+            return FixedStep("stopped", schedule_id, progress.cursor, False)
         self.planner.times.require_policy(rule.policy)
         batch = self.planner.expand(
             rule.pattern,
@@ -149,10 +166,20 @@ class FixedMaintenance:
             return FixedStep(
                 "current", schedule_id, batch.cursor, batch.range_complete, batch.periods_scanned
             )
-        return self._commit(source, batch, before)
+        return self._commit(source, batch, before, should_continue)
 
-    def _commit(self, source: _Source, batch: FixedBatch, before: NominalSlot) -> FixedStep:
+    def _commit(
+        self,
+        source: _Source,
+        batch: FixedBatch,
+        before: NominalSlot,
+        should_continue: Callable[[], bool],
+    ) -> FixedStep:
         rule, progress = source.schedule, source.progress
+        if not should_continue():
+            return FixedStep(
+                "stopped", rule.schedule_id, progress.cursor, False, batch.periods_scanned
+            )
         planned = batch.slots[0] if batch.slots else None
         probe = (
             None
@@ -232,6 +259,10 @@ class FixedMaintenance:
             )
 
         with self.transactions.write() as unit:
+            if not should_continue():
+                return FixedStep(
+                    "stopped", rule.schedule_id, progress.cursor, False, batch.periods_scanned
+                )
             receipt = commands.in_unit(unit, command, payload, apply)
             occurrence_id = None
             status = "scan"

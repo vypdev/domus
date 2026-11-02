@@ -1,7 +1,17 @@
 """Scoped recurrence rows and deferred original evidence share the enclosing atomic commit."""
 
-RECURRENCE_TABLES = {"recurrence_rules", "recurrence_progress", "recurrence_slots"}
+RECURRENCE_TABLES = {
+    "recurrence_rules",
+    "recurrence_progress",
+    "recurrence_slots",
+    "recurrence_frontiers",
+}
 RECURRENCE_STATEMENTS = (
+    "CREATE TABLE recurrence_frontiers(household_id TEXT PRIMARY KEY NOT NULL "
+    "REFERENCES households(household_id), after_schedule_id TEXT, "
+    "revision INTEGER NOT NULL CHECK(typeof(revision)='integer' AND revision>=1), "
+    "selected_at INTEGER NOT NULL CHECK(typeof(selected_at)='integer' AND selected_at>=0), "
+    "document TEXT NOT NULL)",
     "CREATE UNIQUE INDEX recurrence_occurrence_scope "
     "ON task_occurrences(household_id,definition_id,occurrence_id)",
     "CREATE TABLE recurrence_rules(schedule_id TEXT PRIMARY KEY NOT NULL, "

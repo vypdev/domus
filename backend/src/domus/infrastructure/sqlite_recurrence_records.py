@@ -5,6 +5,7 @@ from datetime import date, datetime
 from typing import cast
 
 from domus.domain.errors import DomusError, InvalidInput, StorageFailure
+from domus.domain.recurrence_frontier import RecurrenceFrontier
 from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot
 from domus.domain.recurrence_records import (
     FixedProgress,
@@ -332,3 +333,29 @@ def read_progress(document: str) -> FixedProgress:
 
 def read_slot(document: str) -> ScheduledSlot:
     return _read(document, _slot)
+
+
+def frontier_document(value: RecurrenceFrontier) -> JsonDocument:
+    return JsonDocument.from_value(
+        {
+            "version": 1,
+            "household_id": value.household_id,
+            "after_schedule_id": value.after_schedule_id,
+            "selected_at": value.selected_at,
+            "revision": value.revision,
+        }
+    )
+
+
+def _frontier(value: JsonValue) -> RecurrenceFrontier:
+    row = _record(value, ("household_id", "after_schedule_id", "selected_at", "revision"))
+    return RecurrenceFrontier(
+        cast(str, row["household_id"]),
+        cast(str | None, row["after_schedule_id"]),
+        cast(int, row["selected_at"]),
+        cast(int, row["revision"]),
+    )
+
+
+def read_frontier(document: str) -> RecurrenceFrontier:
+    return _read(document, _frontier)

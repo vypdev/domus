@@ -11,7 +11,7 @@ Keep the exact application/data pair and installation/channel identity.
 | 5 | Task policy, definitions, occurrences and completion cycles with scoped constraints | Existing household/member/history rows are retained |
 | 6 | Frozen material bindings, usage intents, strict codecs and compare-and-set guards | Legacy task/request evidence remains readable; original hashes/receipts stay unchanged |
 | 7 | Three causal-evidence indexes on the existing outbox | No business table, task row, receipt or event is rewritten |
-| 8 | Scoped recurrence rules, matching durable progress and immutable nominal slots | Original task, receipt, audit, outbox and historical records remain authoritative |
+| 8 | Scoped recurrence rules, matching durable progress, immutable nominal slots and a fair-selection frontier | Original task, receipt, audit, outbox and historical records remain authoritative |
 
 Initialization accepts an empty owned destination or supported versions 1–7, verifies the application
 marker and installation/channel, then repeats inspection inside the bounded writer transaction.
@@ -75,6 +75,16 @@ The current-source CI image builds the checked-out backend and frontend for both
 The immutable Edge.5 image supplies real schema-7 upgrade and refusal controls; CI does not move
 its source pin or publish an owner package. Actual hosted image results remain a separate required
 gate. See [storage evidence](../evidence/recurrence-storage.json) for the current measured scope.
+
+Schema 8 is still under development in the unmerged recurrence feature. Its selection frontier is
+added before the first schema-8 release; the owner still runs schema 7. Intermediate CI artifacts
+remain tied to their exact source/data pair. The genuine
+[c5819b8 development input](../../tests/fixtures/sqlite/unreleased-c581-schema8.sql) was generated
+before the selection-table addition, with real synthetic rule/materialization receipts. Its SHA-256
+is 2f884cd00b735ddf60c567a908bf05e709f887f699953bce7808326e017647b4. Current normal reads,
+writes and initialization refuse that unknown development layout and preserve its bytes. This
+control does not extend the supported historical migration set or authorize version-number edits.
+Keep its matching application for an intentional development rollback.
 
 Those observations are retained in [task evidence](../evidence/task-execution-foundation.json).
 They are distinct from image/cross-architecture adoption, real consumer ledgers and a restoration on

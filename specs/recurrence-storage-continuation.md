@@ -140,6 +140,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/application/recurrence_ports.py | update |
 | backend/src/domus/application/recurrence_commands.py | create |
 | backend/src/domus/application/fixed_materialization.py | create |
+| backend/src/domus/application/fair_recurrence.py | create |
 | backend/src/domus/application/commands.py | update |
 | backend/src/domus/application/task_creation.py | create |
 | backend/src/domus/application/task_commands.py | update |
@@ -147,6 +148,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/domain/recurrence_planning.py | update |
 | backend/src/domus/domain/recurrence_records.py | create |
 | backend/src/domus/domain/recurrence_membership.py | create |
+| backend/src/domus/domain/recurrence_frontier.py | create |
 | backend/src/domus/domain/recurrence_rules.py | update |
 | backend/src/domus/infrastructure/recurrence_time.py | update |
 | backend/src/domus/infrastructure/sqlite.py | update |
@@ -158,11 +160,16 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_recurrence_records.py | create |
 | tests/backend/test_recurrence_creation.py | create |
 | tests/backend/test_fixed_materialization.py | create |
+| tests/backend/test_fixed_materialization_shutdown.py | create |
+| tests/backend/test_fair_recurrence.py | create |
+| tests/backend/test_fair_recurrence_boundaries.py | create |
+| tests/backend/test_recurrence_frontier.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
 | backend/src/domus/infrastructure/sqlite_recurrence_integrity.py | create |
 | tests/fixtures/sqlite/v7.sql | create |
+| tests/fixtures/sqlite/unreleased-c581-schema8.sql | create |
 | tests/backend/test_sqlite_transactions.py | update |
 | tests/backend/test_sqlite_snapshots.py | update |
 | tests/backend/test_activation_compatibility.py | update |
@@ -177,6 +184,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/architecture-recurrence.md | update |
 | docs/evidence/recurrence-creation.json | create |
 | docs/evidence/recurrence-materialization.json | create |
+| docs/evidence/recurrence-fairness.json | create |
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
 
@@ -211,6 +219,12 @@ The next application increment implements new active fixed-task creation through
 Bugbot identified a storage boundary missing from the first kernel: a correctly scoped slot could name a nominal outside its pattern or COUNT/UNTIL end. Validate actual finite-period candidate membership and nominal rank in the pure record constructor, so closed decoding and checkpoint inspection enforce the same invariant. COUNT rank preserves interval phase, initial-period truncation, omitted invalid dates and Gregorian repetition; bounded pure memoization is an optimization, never evidence or authority. Do not weaken the existing slot/receipt/source relationships or alter the schema to mask corrupt records. A codec fixture must itself describe a real candidate. These are refinements of retained RCE/storage integrity obligations, not additional counted product journeys.
 
 The next application step materializes at most one actual fixed obligation or scans at most 64 original periods. Trusted composition supplies its explicit installation/channel/household maintenance scope; no request or stored record grants that capability. External policy/planning work holds no writer lock. Current rule/progress/definition facts and the fixed technical command namespace are checked before original receipt lookup in the writer transaction. A new task, slot, receipt/audit/outbox and progress advance commit together through the shared command boundary. A matching current receipt does not create another task. An actual restored absent-effect receipt advances the reconciled cursor without recreating the task, allocating replacement identities or re-emitting its event; the returned historical status remains explicit. Empty bounded scans retain their own proof and incomplete continuation. Date-only values retain no fabricated deadline instant, and technical maintenance never performs or approves human work. The fair multi-rule production loop, durable attention/calendar projections, relative lifecycle and full runtime surfaces remain unfinished.
+
+The bounded fair application run selects at most 50 active rules and processes at most 1,000 nominal slots globally, including original-proof replay and historical reconciliation. A separate technical period budget defaults to 4,096 and cannot exceed 64,000; empty scans consume it. Horizon defaults to 60 local days within the retained 7..366 bound. Round-robin service shares each selected window. A scoped revisioned frontier records each actually admitted rule before provider work, once per rule in that window; reserving an entire unvisited window is insufficient under repeated interruption. The frontier is selection metadata, not completion or calendar-freshness proof, and has no foreign key to a potentially removed last rule.
+
+Rule snapshots used to compute horizons are rechecked by the step. Cancellation is observed before provider work and again before atomic write admission, including after waiting for a writer; an already admitted atomic effect completes or rolls back. Results report bounded confirmed observations and safe rule-specific attention categories without echoing raw diagnostics. Source failure does not starve peers; scope failure remains fatal. An actual offline restore keeps absent-effect semantics through the global run. No thread, production polling lifecycle or public route is added by this application-run checkpoint.
+
+Selection metadata is added to schema 8 before its first release. Supported historical schemas 1..7 and original fixture bytes remain unchanged. The genuine intermediate c5819b8 schema-8 SQL input was generated under that exact source before this DDL change; normal operations and initialization reject its unknown development layout without modifying it. It is a refusal/rollback control, not a promise to migrate an unreleased layout or permission to edit user_version. The owner remains on the unchanged released schema-7 Edge.5 pair. Complete production scheduling, relative sources, durable calendar/review attention and the remaining retained requirements remain pending.
 
 ## 19. Definition of Done
 

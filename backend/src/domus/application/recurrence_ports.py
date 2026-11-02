@@ -2,6 +2,7 @@
 
 from typing import Protocol
 
+from domus.domain.recurrence_frontier import RecurrenceFrontier
 from domus.domain.recurrence_records import (
     FixedProgress,
     FixedSchedule,
@@ -33,6 +34,9 @@ class NominalExpansion(Protocol):
 class RecurrenceRepository(Protocol):
     @property
     def installation(self) -> Installation: ...
+
+    def frontier(self, household_id: str) -> RecurrenceFrontier | None: ...
+    def save_frontier(self, value: RecurrenceFrontier, expected_revision: int) -> None: ...
 
     def schedule(self, household_id: str, schedule_id: str) -> FixedSchedule | None: ...
     def progress(self, household_id: str, schedule_id: str) -> FixedProgress | None: ...

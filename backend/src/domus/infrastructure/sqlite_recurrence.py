@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from domus.domain.errors import Conflict, InvalidInput, StorageFailure
+from domus.domain.recurrence_frontier import RecurrenceFrontier
 from domus.domain.recurrence_records import (
     FixedProgress,
     FixedSchedule,
@@ -15,13 +16,24 @@ from domus.domain.recurrence_records import (
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.storage import Installation, validate_identifier
 from domus.infrastructure.sqlite_recurrence_records import (
+    frontier_document,
     progress_document,
+    read_frontier,
     read_progress,
     read_schedule,
     read_slot,
     schedule_document,
     slot_document,
 )
+
+
+def frontier_headers(value: RecurrenceFrontier) -> dict[str, object]:
+    return {
+        "household_id": value.household_id,
+        "after_schedule_id": value.after_schedule_id,
+        "selected_at": value.selected_at,
+        "revision": value.revision,
+    }
 
 
 def schedule_headers(value: FixedSchedule) -> dict[str, object]:
@@ -101,6 +113,28 @@ class SQLiteRecurrences:
     connection: sqlite3.Connection
     installation: Installation
 
+    def frontier(self, household_id: str) -> RecurrenceFrontier | None:
+        validate_identifier(household_id)
+        return _model(
+            self.connection.execute(
+                "SELECT * FROM recurrence_frontiers WHERE household_id=?", (household_id,)
+            ).fetchone(),
+            read_frontier,
+            frontier_headers,
+        )
+
+    def save_frontier(self, value: RecurrenceFrontier, expected_revision: int) -> None:
+        _expected(expected_revision)
+        if value.revision != expected_revision + 1:
+            raise Conflict("revision_conflict")
+        self._write(
+            "recurrence_frontiers",
+            frontier_headers(value),
+            frontier_document(value).encoded,
+            expected_revision,
+            identity="household_id",
+        )
+
     def schedule(self, household_id: str, schedule_id: str) -> FixedSchedule | None:
         validate_identifier(household_id)
         validate_identifier(schedule_id)
@@ -141,8 +175,17 @@ class SQLiteRecurrences:
             raise StorageFailure("invalid_recurrence_record")
         return value
 
-    def _write(self, table: str, headers: dict[str, object], document: str, expected: int) -> None:
+    def _write(
+        self,
+        table: str,
+        headers: dict[str, object],
+        document: str,
+        expected: int,
+        *,
+        identity: str = "schedule_id",
+    ) -> None:
         values = {**headers, "document": document}
+        keys = ("household_id",) if identity == "household_id" else ("household_id", identity)
         if expected == 0:
             try:
                 self.connection.execute(
@@ -155,8 +198,8 @@ class SQLiteRecurrences:
         elif (
             self.connection.execute(
                 f"UPDATE {table} SET {','.join(key + '=?' for key in values)} "
-                "WHERE household_id=? AND schedule_id=? AND revision=?",
-                (*values.values(), headers["household_id"], headers["schedule_id"], expected),
+                f"WHERE {' AND '.join(key + '=?' for key in keys)} AND revision=?",
+                (*values.values(), *(headers[key] for key in keys), expected),
             ).rowcount
             != 1
         ):

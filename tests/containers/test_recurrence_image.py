@@ -23,6 +23,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
+from domus.application.fair_recurrence import FairFixedRunner, RunLimits
 from domus.application.household_commands import HouseholdCommands, SetupHousehold
 from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
 from domus.application.task_requests import CreateTask
@@ -103,11 +104,20 @@ with TemporaryDirectory(prefix='domus-current-image-') as directory:
     with store.read() as unit:
         assert len(unit.tasks.occurrences('home')) == 2
         assert len(unit.recurrence.slots('home', facts['schedule_id'])) == 2
-print('Current-source recurrence creation, materialization and pinned-time codecs passed.')
+    other = creation.create_fixed('fair-create', request).result.decode()
+    fair = FairFixedRunner(store, maintenance.scope, maintenance, times, clock,
+        RunLimits(max_slots=1))
+    assert fair.tick().created == 1
+    assert fair.tick().created == 1
+    with store.read() as unit:
+        assert len(unit.tasks.occurrences('home')) == 4
+        assert unit.recurrence.frontier('home') is not None
+        assert unit.recurrence.progress('home', other['schedule_id']).cursor.closed
+print('Current-source bounded recurrence, materialization and pinned-time codecs passed.')
 """,
     )
     assert result.returncode == 0, result.stderr
     assert (
-        "Current-source recurrence creation, materialization and pinned-time codecs passed."
+        "Current-source bounded recurrence, materialization and pinned-time codecs passed."
         in result.stdout
     )

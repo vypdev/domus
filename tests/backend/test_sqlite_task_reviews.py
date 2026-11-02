@@ -45,7 +45,12 @@ def test_original_schema6_migration_preserves_rows_and_projects_existing_cause(t
     store.initialize(require_existing=True)
     with store._connection() as connection:
         upgraded = rows(connection)
-        added = {"recurrence_rules", "recurrence_progress", "recurrence_slots"}
+        added = {
+            "recurrence_rules",
+            "recurrence_progress",
+            "recurrence_slots",
+            "recurrence_frontiers",
+        }
         assert set(upgraded) == set(original) | added
         assert all(upgraded[table] == values for table, values in original.items())
         assert all(upgraded[table] == [] for table in added)

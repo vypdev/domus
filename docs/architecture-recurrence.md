@@ -179,3 +179,28 @@ no invented UTC midnight. Technical attribution cannot act as a performer, appro
 This is not yet a running scheduler. Fair multi-rule continuation, global budgets and shutdown,
 durable review/calendar attention, relative sources and native/standalone background composition
 remain required. See [step evidence](evidence/recurrence-materialization.json).
+
+## Bounded fair application runs
+
+The [fair run](../backend/src/domus/application/fair_recurrence.py) selects at most 50 active rules
+and shares their turns within a global limit of 1,000 processed nominal slots. Replayed and historical
+slots consume that work budget. Empty-period scans consume a separate bounded period budget.
+The default horizon is 60 local days; it never deletes past backlog. Rule snapshots used for that
+horizon are rechecked before the step can write.
+
+A small [frontier](../backend/src/domus/domain/recurrence_frontier.py) persists the last actually
+admitted rule. Reserving all 50 unread rules at once can starve later ones if every run stops after
+its first step. Admission therefore advances before provider work for each visited rule, while
+unvisited rules retain their turn across restart. The removed-rule key remains a lexical continuation;
+it grants no authority and proves neither task completion nor arbitrary calendar completeness.
+
+Current task/progress/proof facts remain authoritative. Results distinguish created, replayed,
+historically absent and unconfirmed work, with bounded safe rule-specific attention. A malformed
+post-commit acknowledgement cannot turn existing tasks into an empty-state claim. Cancellation is
+checked before atomic admission, including after a writer wait; an admitted effect completes or
+rolls back. No subsequent step begins after the cancellation is observed.
+
+These are application runs, without a production thread or new HTTP surface. Owned polling,
+startup/shutdown wiring, relative lifecycle and durable calendar/review attention remain required.
+See [fairness evidence](evidence/recurrence-fairness.json) and the
+[migration boundary](tasks/migration.md).
