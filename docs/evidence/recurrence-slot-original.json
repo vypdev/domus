@@ -1,0 +1,130 @@
+{
+  "status": "partial; original historical-slot generation integrity corrected; full retained recurrence execution remains in progress",
+  "recordedAtUTC": "2026-11-02T11:17:51.246515+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "06b3b9f38955a25be2511b68b2ea667a84a42d8f",
+  "backendSourceInventorySHA256": "27030e1068bd2d2b9901a6f5d25e240a8313e44d4e8cc8b7ef7dc63d3bfa8c6c",
+  "finding": {
+    "url": "https://github.com/vypdev/domus/pull/22#discussion_r4441611132",
+    "id": "sqlite_recurrence_integrity.py:24:historical-slot-source-unverified",
+    "assessment": "Valid consumer defect; source corrected, fresh native confirmation required. Not dismissed or reported as a Copilot defect."
+  },
+  "implemented": [
+    "A valid older slot snapshot must match its exact current original materialization receipt, beyond matching slot/occurrence IDs or permissive historical generation relationships.",
+    "The pure relation checks original pattern-and-policy cursor binding, explicit policy, complete nominal/resolved last-slot facts, scoped command and schedule/definition/occurrence/slot identity. Canonical JSON equality rejects boolean/integer aliases.",
+    "Independent point/page repository reads and checkpoint inspection share the stronger original proof. Malformed, foreign, missing or historical-absent originals cannot claim a present slot; source bytes are not repaired.",
+    "The snapshot verifier no longer duplicates the weaker identifier-only receipt check. Actual original slot receipts retain their existing contents.",
+    "The existing repository fixture now carries explicitly complete synthetic time evidence instead of bare resource IDs. Actual materializer and older-generation controls independently prove real behavior.",
+    "A semantic application port that returns a contradictory present slot alongside an absent-effect receipt remains rejected, separately from the concrete adapter rejection."
+  ],
+  "testsFirst": {
+    "before": "18 original negative failures and2 actual older-generation positive controls against unchanged original06 implementation; captured before the source correction.",
+    "originalBackendManifest": "379103605c1e68b4ce45bb5f82a4ef4edbf6d7bc757261b4326706659daa2f11",
+    "sourceIdentity": "The genuine pre-change06 capture verified every133 backend module against published Git before this correction. Current negative cases use actual command/materializer receipts, not synthetic repository evidence.",
+    "after": "All28 new regressions pass. Additional meaningful malformed/scope/JSON-alias/concrete-adapter and semantic-port defenses are included in the full campaign.",
+    "firstFull": "3908 tests passed at99.98% coverage; the stronger concrete adapter made one existing application-port defense branch unreachable through that adapter. The final semantic-port contradiction fixture preserves that independent defense instead of removing it."
+  },
+  "completeBackend": {
+    "executions": 3909,
+    "durationSeconds": 117.81,
+    "authoredModules": 133,
+    "coverageTotals": {
+      "covered_lines": 9551,
+      "num_statements": 9551,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 274,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2742,
+      "num_partial_branches": 0,
+      "covered_branches": 2742,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed"
+  },
+  "checks": {
+    "strictTypes": "passed;133 modules",
+    "ruff": "check/format passed after the current image edit;338 files",
+    "architecture": "3 contracts kept,0 broken;177 files/1144 dependencies",
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 38612,
+      "renderedCharacters": 38612,
+      "composedCharacters": 38612,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "f85a33a474e3db73932506dde262ea5c34ba67f631e859aa55f2d4ce8e02293b",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "freshPackageAndArchitecture": {
+      "executions": 52,
+      "durationSeconds": 6.9,
+      "result": "passed"
+    },
+    "exactCurrentImageScriptOnHost": "passed; adds a real valid older slot after an edit, then rejects a canonical changed historical pattern on direct read and checkpoint, with unchanged source bytes",
+    "freshHosted": "Required after publication for this new correction; host controls are not actual CPU-image proof."
+  },
+  "compatibility": {
+    "layoutChanged": false,
+    "recordEncodingChanged": false,
+    "providerIoAdded": false,
+    "dependenciesChanged": false,
+    "timeoutsChanged": false,
+    "copilotChanged": false,
+    "genuine06Control": {
+      "original06SourceInputUnchanged": true,
+      "slotsVerifiedAgainstOriginals": 2,
+      "databaseSHA256": "5d4c4e26e273e7f26e579e728db243c39e29b21dbef53378cdd2368643debe09",
+      "layoutChanged": false,
+      "source": "06b3b9f38955a25be2511b68b2ea667a84a42d8f"
+    },
+    "ownerHa": "No owner HA request, update, migration, release or deployment. Edge.5/schema7 remains unchanged."
+  },
+  "prior06Hosted": {
+    "runId": 41433389677,
+    "aggregateJob": 125239685933,
+    "backendJob": 125237234578,
+    "frontendJob": 125237235059,
+    "amd64Job": 125237235352,
+    "aarch64Job": 125237235192,
+    "result": "Every applicable productCI Check suite passed, including the repaired49 browser journeys and both real images. Native review separately published this valid historical-slot finding."
+  },
+  "native06": {
+    "runId": 41433389688,
+    "jobId": 125237236014,
+    "partitions": "11/11",
+    "files": 91,
+    "fragments": 110,
+    "candidateFindings": 1,
+    "openFindings": 1,
+    "fixedPriorFindings": 5,
+    "overall": "partial; human-conversation7 fetched/5 retained/2 omitted/0 truncated/limitReached. Issue6/6,PR10/10,threads5/5 and diff91/91 separately complete.",
+    "manualSupplement": "Two proposed-SDD inputs and five prior fix replies were manually inspected; all are agent-authored maintainer-account technical material, not new owner policy answers. No omitted-item identity or whole-prompt absence is inferred."
+  },
+  "copilotReports": [
+    "https://github.com/vypdev/copilot/issues/851#issuecomment-6565229213",
+    "https://github.com/vypdev/copilot/issues/843#issuecomment-6565011301"
+  ],
+  "progress06Reference": "14d74cb5-f4d2-4736-9b92-a2f870fcb033",
+  "rawEvidence": {
+    "privateCampaign": "/private/tmp/domus-slot-proof-06b3b9f",
+    "consumer": "CurrentPR22 original-slot review: original negative/positive output, exact source/full coverage, SDK/package/host image controls and immutable genuine06 input. Compact completed producers after publication while preserving authored source input and current rollback."
+  },
+  "pending": "Fresh native/CI verification and full relative persistence/creation/source inbox/closure/invalidation/restore/mixed fairness; protected calendar/operations, reviewed schedule changes, household defaults and full52+37 retained cases and all-domain UI/HA/Stable-Edge acceptance."
+}

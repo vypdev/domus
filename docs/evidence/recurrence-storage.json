@@ -85,7 +85,7 @@
       "policyModulesByteVerified": 7,
       "immutableBaseOwners": 18,
       "retainedOwnersUnchanged": true,
-      "currentCompanionSHA256": "233ad9bfca0af9975174dc4b058a6261a2c951aff9c516c570abe5fb21e2ec13",
+      "currentCompanionSHA256": "f85a33a474e3db73932506dde262ea5c34ba67f631e859aa55f2d4ce8e02293b",
       "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
     },
     "packageAndArchitectureTests": {
@@ -284,5 +284,6 @@
   },
   "laterMaterializationIncrement": "docs/evidence/recurrence-materialization.json; original storage-kernel results remain historical and scope-specific.",
   "laterFairnessIncrement": "docs/evidence/recurrence-fairness.json; original storage-kernel acceptance scope remains unchanged.",
-  "laterUntilIntegrityIncrement": "docs/evidence/recurrence-until-integrity.json; original storage-kernel results retain their historical source and scope."
+  "laterUntilIntegrityIncrement": "docs/evidence/recurrence-until-integrity.json; original storage-kernel results retain their historical source and scope.",
+  "laterSlotOriginalIncrement": "docs/evidence/recurrence-slot-original.json; prior kernel/source results remain historical."
 }

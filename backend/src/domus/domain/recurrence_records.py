@@ -14,7 +14,13 @@ from domus.domain.recurrence_planning import (
 )
 from domus.domain.recurrence_rules import FixedPattern, NominalDate
 from domus.domain.recurrence_time import TimePolicy
-from domus.domain.storage import CommandKey, Installation, JsonDocument, validate_identifier
+from domus.domain.storage import (
+    CommandKey,
+    Installation,
+    JsonDocument,
+    Receipt,
+    validate_identifier,
+)
 from domus.domain.task_values import validate_task_time
 
 MAINTENANCE_ACTOR = "system:recurrence"
@@ -163,6 +169,46 @@ class ScheduledSlot:
                 or (source.pattern == schedule.pattern and source.policy == schedule.policy)
             )
         )
+
+    def matches_receipt(self, receipt: Receipt | None) -> bool:
+        """Original generation and realized facts must survive later rule edits unchanged."""
+        if receipt is None or receipt.command != self.command or receipt.historical:
+            return False
+        result = receipt.result.decode()
+        core = result.get("cursor_evidence")
+        if not isinstance(core, dict):
+            return False
+        cursor = core.get("cursor")
+        if not isinstance(cursor, dict):
+            return False
+        actual = JsonDocument.from_value(
+            {
+                "slot_key": result.get("slot_key"),
+                "occurrence_id": result.get("occurrence_id"),
+                "schedule_id": result.get("schedule_id"),
+                "definition_id": result.get("definition_id"),
+                "binding": cursor.get("binding"),
+                "policy": core.get("policy"),
+                "planned": core.get("last"),
+            }
+        )
+        expected = JsonDocument.from_value(
+            {
+                "slot_key": self.key,
+                "occurrence_id": self.occurrence_id,
+                "schedule_id": self.schedule.schedule_id,
+                "definition_id": self.schedule.definition_id,
+                "binding": cursor_binding(self.schedule.pattern, self.schedule.policy),
+                "policy": {
+                    "zone": self.schedule.policy.zone,
+                    "data_identity": self.schedule.policy.data_identity,
+                    "repeated_time": self.schedule.policy.repeated_time.value,
+                    "revision": self.schedule.policy.revision,
+                },
+                "planned": self.planned.value(),
+            }
+        )
+        return actual == expected
 
     @property
     def key(self) -> str:

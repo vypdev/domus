@@ -396,6 +396,8 @@ def test_contradictory_historical_receipt_projection_cannot_hide_a_current_effec
 
     service, store, _, _, rule_id, before = configured(tmp_path)
     first = service.step(rule_id, before)
+    with store.read() as unit:
+        saved = unit.recurrence.slot("home", first.receipt.command.key)
     rewind(store, rule_id)
     original = SQLiteReceipts.get
 
@@ -408,6 +410,9 @@ def test_contradictory_historical_receipt_projection_cannot_hide_a_current_effec
         )
 
     monkeypatch.setattr(SQLiteReceipts, "get", inconsistent)
+    # Also defend against an inconsistent semantic port, after the concrete adapter's
+    # stricter original-proof check would normally have rejected this projection.
+    monkeypatch.setattr(SQLiteRecurrences, "slot", lambda *_: saved)
     with pytest.raises(StorageFailure, match="invalid_recurrence_effect"):
         service.step(rule_id, before)
 

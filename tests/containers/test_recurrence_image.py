@@ -37,6 +37,7 @@ from domus.domain.recurrence_frontier import RecurrenceFrontier
 from domus.domain.relative_recurrence import RelativeSchedule
 from domus.domain.identity import HumanIdentity
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
+from domus.domain.recurrence_planning import FixedCursor, cursor_binding
 from domus.domain.recurrence_records import FixedProgress, FixedSchedule, ScheduledSlot
 from domus.domain.recurrence_rule_text import parse_fixed_pattern
 from domus.domain.recurrence_time import NominalTime, TimePolicy, TimeResolution, RelativeInterval
@@ -256,6 +257,50 @@ with TemporaryDirectory(prefix='domus-current-until-') as directory:
         assert error.code == 'invalid_snapshot_records'
     else:
         raise AssertionError('Checkpoint accepted unproved UTC continuation')
+    assert store.path.read_bytes() == source_bytes
+with TemporaryDirectory(prefix='domus-current-history-') as directory:
+    store = SQLiteDatabase(Path(directory)/'domus.sqlite3', installation)
+    store.initialize()
+    HouseholdCommands(store, human, UnusedDirectory(), TimeZoneCatalog(), clock, identifiers).setup(
+        'setup', SetupHousehold('Fictional original generation', 'UTC'))
+    creation = RecurrenceCommands(store, human, clock, identifiers,
+        FixedRecurrencePlanner(CalendarNominalExpansion(), times))
+    rid = creation.create_fixed('history-create', request).result.decode()['schedule_id']
+    maintenance = FixedMaintenance(store, MaintenanceScope(installation, 'home'),
+        creation.planner, clock, identifiers)
+    result = maintenance.step(rid, horizon)
+    with store.write() as unit:
+        original = unit.recurrence.slot('home', result.receipt.command.key)
+        progress = unit.recurrence.progress('home', rid)
+        current = replace(original.schedule, revision=2, pattern_revision=2,
+            pattern=replace(original.schedule.pattern, interval=2))
+        unit.recurrence.save_schedule(current, 1)
+        unit.recurrence.save_progress(replace(progress, revision=3, pattern_revision=2,
+            cursor=FixedCursor(cursor_binding(current.pattern, current.policy)),
+            evidence=None, last_run_at=None, range_complete=False), 2)
+    with store.read() as unit:
+        assert unit.recurrence.slot('home', original.key) == original
+    assert SQLiteSnapshots(store, Path(directory)/'good', installation, clock).create('good')
+    altered = replace(original, schedule=replace(original.schedule,
+        pattern=replace(original.schedule.pattern, interval=3)))
+    assert altered.key == original.key
+    with store._connection() as connection:
+        connection.execute('UPDATE recurrence_slots SET document=?',
+            (slot_document(altered).encoded,))
+    source_bytes = store.path.read_bytes()
+    try:
+        with store.read() as unit:
+            unit.recurrence.slot('home', original.key)
+    except StorageFailure:
+        pass
+    else:
+        raise AssertionError('Historical pattern contradicted its original generation binding')
+    try:
+        SQLiteSnapshots(store, Path(directory)/'bad', installation, clock).create('bad')
+    except DatabaseRejected as error:
+        assert error.code == 'invalid_snapshot_records'
+    else:
+        raise AssertionError('Checkpoint accepted altered original generation facts')
     assert store.path.read_bytes() == source_bytes
 print('Current-source recurrence, both owned runtimes and pinned-time codecs passed.')
 """,

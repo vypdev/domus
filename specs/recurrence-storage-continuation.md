@@ -184,6 +184,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_recurrence_cursor_integrity.py | create |
 | tests/backend/test_recurrence_cursor_evidence.py | create |
 | tests/backend/test_recurrence_until_proof.py | create |
+| tests/backend/test_recurrence_slot_original.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
@@ -213,6 +214,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
 | docs/evidence/recurrence-until-integrity.json | create |
+| docs/evidence/recurrence-slot-original.json | create |
 
 Existing retained path declarations describe their original publication baseline; the table above identifies this continuation's actual new and existing storage paths at the immutable base. Declare any additional real implementation/test path before committing it. Update exact evidence and current acceptance limits without relabeling historical results.
 
@@ -271,6 +273,8 @@ Preserve a real source059 wheel identity when replaying the original negative re
 The worker carries cancellation into every run and joins before runtime identity/storage disposal and installation-lease release. The lifespan preserves the existing application's state and exits its prior context after stopping the worker, including on startup/application failure. Ordinary failures expose only bounded categories and permit a later attempt; a denied technical scope terminates that worker. Last-run observations remain process-local diagnostics, not durable calendar freshness or delivery proof. Identity-only preview has no worker. Actual current-source image controls exercise both ASGI lifetimes, scoped SQLite work and shutdown. Relative lifecycle, current-authorized calendar/command surfaces, durable attention, configurable household timing defaults and complete product/UI/HA acceptance remain required.
 
 ## 19. Definition of Done
+
+Older slot snapshots remain permitted after a current rule edit, but that relationship alone cannot prove original generation facts. Compare each persisted slot with its exact current materialization receipt: scoped identity, slot/occurrence/rule/definition identifiers, original cursor pattern-and-policy binding, explicit policy snapshot and complete nominal/resolved last-slot facts. Compare canonical JSON documents so bool/integer aliases do not pass. Reuse this pure relation in independent repository point/page reads and checkpoint validation; malformed, foreign, historical-absent or missing originals fail safely. Keep real valid older-generation controls. Existing synthetic repository fixtures must carry explicit complete synthetic proof rather than bare identifiers, without claiming actual materializer acceptance. No extra case count, provider I/O, schema relabeling or alteration of retained original receipts is introduced.
 
 Browser CI later recorded a503 rejection whose body was unavailable through Chromium CDP, while the actual application showed the rejected outcome and preserved its draft. Retain that trace; its generic navigation guidance does not establish an actual unexpected navigation. Contention tests may buffer the actual upstream HTTP response before forwarding the same bytes, status and headers to the browser, with redirects and network retries disabled. Preserve real independent SQLite writer contention, browser response checks, exact request metadata, current-authorized replay, draft/journal identity and no-duplicate assertions. A test observation repair changes neither product behavior nor storage timeouts, and adds no counted product journey.
 

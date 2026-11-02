@@ -10,7 +10,12 @@ from test_task_commands import fixture, resource
 
 from domus.application.task_commands import CreateTask
 from domus.domain.errors import Conflict, InvalidInput, StorageFailure
-from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot, cursor_binding
+from domus.domain.recurrence_planning import (
+    CursorTimeEvidence,
+    FixedCursor,
+    PlannedFixedSlot,
+    cursor_binding,
+)
 from domus.domain.recurrence_records import (
     FixedProgress,
     FixedSchedule,
@@ -57,7 +62,23 @@ def save_slot(unit, value):
     """Repository fixture records full synthetic technical evidence, not human authorization."""
     unit.recurrence.add_slot(value)
     command = value.command
-    result = JsonDocument.from_value({"slot_key": value.key, "occurrence_id": value.occurrence_id})
+    core = CursorTimeEvidence(
+        FixedCursor(
+            cursor_binding(value.schedule.pattern, value.schedule.policy), offset=1, nominal_count=1
+        ),
+        value.schedule.policy,
+        False,
+        value.planned,
+    )
+    result = JsonDocument.from_value(
+        {
+            "slot_key": value.key,
+            "occurrence_id": value.occurrence_id,
+            "schedule_id": value.schedule.schedule_id,
+            "definition_id": value.schedule.definition_id,
+            "cursor_evidence": core.document().decode(),
+        }
+    )
     unit.receipts.add(
         Receipt(command, JsonDocument.from_value({}).fingerprint, "slot-operation", result, 100)
     )

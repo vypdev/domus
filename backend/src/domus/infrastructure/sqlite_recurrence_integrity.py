@@ -5,7 +5,7 @@ from typing import cast
 
 from domus.domain.errors import StorageFailure
 from domus.domain.recurrence_records import FixedSchedule, ScheduledSlot
-from domus.domain.storage import Installation, JsonDocument
+from domus.domain.storage import Installation
 from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
 
 
@@ -23,17 +23,4 @@ def verify_recurrence_records(connection: sqlite3.Connection, installation: Inst
         value = cast(ScheduledSlot, repository.slot(row[0], row[1]))
         source = repository.schedule(value.schedule.household_id, value.schedule.schedule_id)
         if source is None or not value.consistent_with(source):
-            raise StorageFailure("invalid_recurrence_record")
-        receipt = connection.execute(
-            "SELECT result FROM receipts WHERE household_id=? "
-            "AND actor_id=? AND action=? AND command_key=?",
-            (value.command.household_id, value.command.actor_id, value.command.action, value.key),
-        ).fetchone()
-        if receipt is None:
-            raise StorageFailure("invalid_recurrence_record")
-        result = JsonDocument(receipt[0]).decode()
-        if (
-            result.get("slot_key") != value.key
-            or result.get("occurrence_id") != value.occurrence_id
-        ):
             raise StorageFailure("invalid_recurrence_record")

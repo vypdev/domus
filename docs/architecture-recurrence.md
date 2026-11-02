@@ -322,3 +322,21 @@ inputs remain supported. The genuine prior b2bcc69 schema8 layout is a strict re
 keeping its matching application/database pair permits development rollback without relabeling it.
 See [UTC boundary evidence](evidence/recurrence-until-integrity.json) for original-source replay,
 logical-dump correction, current verification and remaining full-feature acceptance.
+
+## Original generation facts in historical slots
+
+An older slot may remain valid after the current rule changes. That relationship cannot prove
+which pattern produced it: another pattern can admit the same nominal date and leave its key
+unchanged. The slot now checks its original receipt's pattern-and-policy cursor binding, explicit
+policy, complete planned/resolved facts and scoped resource identifiers. Canonical JSON comparison
+keeps boolean/integer aliases distinct. Current and retained-current originals remain valid;
+historical absent-effect proofs cannot claim a present slot.
+
+Point/page repository reads and checkpoint inspection share this pure check. Malformed originals
+receive a safe record failure without changing source bytes. Snapshot validation no longer uses a
+weaker duplicate identifier-only check. Actual earlier-generation positive controls and an unchanged
+genuine06 source database verify compatibility. Synthetic repository fixtures now carry explicitly
+complete synthetic source proof; they do not establish actual materializer acceptance.
+
+See [original slot evidence](evidence/recurrence-slot-original.json). This refinement changes no
+layout, dependency, timezone I/O, timeout, owner installation or retained original operation.

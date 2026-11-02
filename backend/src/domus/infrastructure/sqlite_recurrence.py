@@ -227,6 +227,13 @@ class SQLiteRecurrences:
         value = _model(row, read_slot, slot_headers)
         if value is not None and value.installation != self.installation:
             raise StorageFailure("invalid_recurrence_record")
+        if value is not None:
+            try:
+                valid = value.matches_receipt(SQLiteReceipts(self.connection).get(value.command))
+            except DomusError:
+                valid = False
+            if not valid:
+                raise StorageFailure("invalid_recurrence_record")
         return value
 
     def _write(
