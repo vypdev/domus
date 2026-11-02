@@ -33,6 +33,11 @@ def previous_image(request):
             "faa1654a5c9cddb562bfcd4c02d4cebfeb78e9f5",
             "0.0.0-edge.3",
         ),
+        "edge5": (
+            "DOMUS_SCHEMA7_IMAGE",
+            "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+            "0.0.0-edge.5",
+        ),
     }[version]
     value = os.environ.get(variable)
     assert value, "Set " + variable + " to the reviewed immutable " + label + " image"
@@ -85,7 +90,7 @@ def refuse_old_image(image, previous, volume):
 
 
 @pytest.mark.parametrize("restore_runtime", ["native", "standalone"], indirect=True)
-@pytest.mark.parametrize("previous_image", ["edge2", "edge3"], indirect=True)
+@pytest.mark.parametrize("previous_image", ["edge2", "edge3", "edge5"], indirect=True)
 def test_actual_older_image_refuses_selected_generation_without_changing_any_file(
     image, previous_image, restore_runtime
 ):
@@ -112,7 +117,9 @@ def test_actual_older_image_refuses_selected_generation_without_changing_any_fil
 
 
 @pytest.mark.parametrize(
-    "previous_image,old_schema", [("edge2", 3), ("edge3", 4)], indirect=["previous_image"]
+    "previous_image,old_schema",
+    [("edge2", 3), ("edge3", 4), ("edge5", 7)],
+    indirect=["previous_image"],
 )
 def test_real_older_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot(
     image, previous_image, data_volume, old_schema
@@ -207,7 +214,7 @@ def test_real_older_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot
                 "/data/snapshots/current",
             )
         )
-        assert current["snapshot"]["schema_version"] == 7
+        assert current["snapshot"]["schema_version"] == 8
         assert current["snapshot"]["instance_id"] == instance_id
         inspected = successful(
             console(

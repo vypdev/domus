@@ -11,8 +11,8 @@ from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.task_authorization import (
     TaskAccess,
     TaskCommandAuthorization,
-    TaskMaterialAccess,
 )
+from domus.application.task_creation import TaskCreation
 from domus.application.task_facts import (
     current_cycle,
     definition_result,
@@ -20,7 +20,7 @@ from domus.application.task_facts import (
     resolved_rules,
 )
 from domus.application.task_material_commands import TaskMaterialCommands, material_result
-from domus.application.task_material_ports import MissingTaskInventory, TaskInventory
+from domus.application.task_material_ports import TaskInventory
 from domus.application.task_material_scope import MaterialScope
 from domus.application.task_material_views import material_outcome
 from domus.application.task_requests import (
@@ -65,7 +65,7 @@ from domus.application.task_requests import (
     VerifyTask as VerifyTask,
 )
 from domus.application.task_reviews import review_cycle, review_items
-from domus.domain.errors import Conflict, Forbidden, IntegrationUnavailable, NotFound
+from domus.domain.errors import Conflict, Forbidden, NotFound
 from domus.domain.identity import MemberStatus, Permission
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
 from domus.domain.task_material_values import validate_material_usages
@@ -75,7 +75,6 @@ from domus.domain.task_reviews import DependencyReviewDecision, DependencyReview
 from domus.domain.task_values import (
     OccurrenceState,
     TaskOverrides,
-    TaskRules,
 )
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
 
@@ -163,20 +162,8 @@ class TaskCommands:
         validate_identifier(self.household_id)
 
     def _materials(self, unit: UnitOfWork, access: TaskAccess) -> TaskMaterialCommands:
-        try:
-            inventory = (
-                MissingTaskInventory()
-                if self.inventory_factory is None
-                else self.inventory_factory(unit)
-            )
-        except IntegrationUnavailable:
-            inventory = MissingTaskInventory()
-        return TaskMaterialCommands(
-            unit,
-            TaskMaterialAccess(access, unit, self.household_id),
-            inventory,
-            self.clock,
-            self.identifiers,
+        return TaskCreation(self.clock, self.identifiers, self.inventory_factory).materials(
+            unit, access, self.household_id
         )
 
     def _execute(
@@ -281,25 +268,10 @@ class TaskCommands:
 
     def create(self, key: str, request: CreateTask) -> Receipt:
         def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
-            if unit.tasks.policy(self.household_id) is None:
-                unit.tasks.save_policy(HouseholdTaskPolicy(self.household_id, TaskRules()), 0)
-            materials = (
-                ()
-                if request.materials is None
-                else self._materials(unit, access).link(request.materials)
+            item = TaskCreation(self.clock, self.identifiers, self.inventory_factory).definition(
+                unit, access, self.household_id, request
             )
-            now = self.clock.now()
-            item = TaskDefinition(
-                self.identifiers.new(),
-                self.household_id,
-                request.content,
-                now,
-                request.overrides,
-                request.state,
-                materials=materials,
-            )
-            work = item.new_occurrence(self.identifiers.new(), now)
-            unit.tasks.save_definition(item, 0)
+            work = item.new_occurrence(self.identifiers.new(), item.created_at)
             unit.tasks.save_occurrence(work, 0)
             return _change("task.created", request, _result(work))
 

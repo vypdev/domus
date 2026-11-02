@@ -239,8 +239,15 @@ jobs:
           version: "0.11.29"
           enable-cache: false
       - run: uv sync --frozen
-      - name: Build the exact Supervisor app folder
-        run: docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-ci addon-edge
+      - name: Build the installed immutable Edge.5 image for schema-7 compatibility
+        run: docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-edge5 addon-edge
+      - name: Build the exact checked-out source and frontend
+        run: >-
+          docker build --file tests/fixtures/current-app/Dockerfile
+          --build-arg BUILD_ARCH=${{ matrix.arch }}
+          --build-arg DOMUS_SOURCE_COMMIT=${{ github.sha }}
+          --build-arg BUILD_VERSION=ci-current
+          -t domus-app-ci .
       - name: Build the immutable previous image for upgrade and downgrade checks
         run: >-
           docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
@@ -255,8 +262,10 @@ jobs:
       - name: Verify the real image, listener and cleanup
         env:
           DOMUS_TEST_IMAGE: domus-app-ci
+          DOMUS_TEST_SOURCE_COMMIT: ${{ github.sha }}
           DOMUS_PREVIOUS_IMAGE: domus-app-previous
           DOMUS_UPGRADE_IMAGE: domus-app-installed
+          DOMUS_SCHEMA7_IMAGE: domus-app-edge5
         run: uv run pytest tests/containers --no-cov
 
   aggregate:

@@ -1,0 +1,26 @@
+# The current-source CI build receives only its explicit workspace inputs.
+**
+!pyproject.toml
+!uv.lock
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!backend/
+!backend/**
+!tooling/
+!tooling/**
+!frontend/
+!frontend/**
+!tests/
+!tests/fixtures/
+!tests/fixtures/frontend-toolchain/
+!tests/fixtures/frontend-toolchain/package.json
+!tests/fixtures/current-app/
+!tests/fixtures/current-app/Dockerfile
+**/node_modules/
+**/__pycache__/
+**/.venv/
+**/.pytest_cache/
+**/.env
+**/.env.*
+backend/src/domus/ui/

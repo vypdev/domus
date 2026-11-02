@@ -1,0 +1,287 @@
+{
+  "status": "partial; storage boundary implemented, complete recurrence feature remains in progress",
+  "recordedAtUTC": "2026-11-01T23:04:54.042145+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "sourceBase": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+  "developmentBase": "3131810082760a98ee4af66f11bb65eaac49cc3b",
+  "backendSourceInventorySHA256": "37ab8446a4584c54f2a3a2fd7af2fb5e2b7ec6371cbc4f5b3e27b7146aee1700",
+  "implemented": [
+    "Pure scoped fixed-rule/progress/slot records and stable nominal command identity",
+    "Strict bounded versioned codecs and typed semantic unit-of-work repository",
+    "SQLite schema8 with scoped task/rule relationships, deferred matching progress and exact original receipt namespace",
+    "Compare-and-swap persistence, immutable original slot snapshots and atomic partial-edit refusal",
+    "Explicit supported-source migration, genuine schema7 fixture and injected DDL rollback",
+    "Snapshot physical/semantic recurrence verification with source/cursor/result binding"
+  ],
+  "testsFirst": {
+    "repository": "Initial 8 executions failed because SQLiteUnit had no recurrence repository, before its implementation. Original earlier missing-symbol output remains retained.",
+    "codec": "Original collection failed with missing domus.infrastructure.sqlite_recurrence_records before its implementation; original output retained."
+  },
+  "focused": {
+    "executions": 102,
+    "authoredBehaviorModules": 4,
+    "coverageTotals": {
+      "covered_lines": 282,
+      "num_statements": 282,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 74,
+      "num_partial_branches": 0,
+      "covered_branches": 74,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "scope": "Storage/domain/codec boundaries; not94 independent accepted product journeys."
+  },
+  "completeBackend": {
+    "executions": 3500,
+    "authoredModules": 122,
+    "coverageTotals": {
+      "covered_lines": 8706,
+      "num_statements": 8706,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 267,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2482,
+      "num_partial_branches": 0,
+      "covered_branches": 2482,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentPerModuleAudit": "passed",
+    "durationSeconds": 103.73,
+    "loopback": "Final campaign permits disposable local fake-HA servers. Earlier sandbox-denied sockets are not product failures or successful evidence.",
+    "testRefinement": "Final full campaign includes both independent-writer cases, actual TaskOccurrence rollback and the six source/count integrity regressions."
+  },
+  "checks": {
+    "strictTypes": {
+      "result": "passed",
+      "files": 122
+    },
+    "ruffCheck": "passed",
+    "ruffFormat": {
+      "result": "passed",
+      "files": 235
+    },
+    "architecture": {
+      "result": "passed",
+      "contractsKept": 3,
+      "contractsBroken": 0,
+      "filesAnalyzed": 166,
+      "dependencies": 1022
+    },
+    "originalPinnedSdd": {
+      "result": "passed",
+      "upstreamRevision": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "policyModulesByteVerified": 7,
+      "immutableBaseOwners": 18,
+      "retainedOwnersUnchanged": true,
+      "currentCompanionSHA256": "a129daa6c324ada4072850e952826992d19054c233110d0b342240de9aa624bf",
+      "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
+    },
+    "packageAndArchitectureTests": {
+      "result": "passed",
+      "executions": 52,
+      "requires": "Fresh frontend build and current backend wheel; both completed before acceptance."
+    },
+    "pythonTooling": {
+      "result": "passed locally after updating the old-image CI contract assertion",
+      "executions": 148,
+      "coverageTotals": {
+        "covered_lines": 214,
+        "num_statements": 214,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100.00",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100.00",
+        "num_branches": 98,
+        "num_partial_branches": 0,
+        "covered_branches": 98,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100.00"
+      },
+      "sourceChanged": "Only test_ci_contract assertions; no tooling implementation or coverage threshold changed."
+    }
+  },
+  "migration": {
+    "currentSourceSchema": 8,
+    "supportedHistoricalSchemas": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "schema7FixtureSHA256": "c5ca7b2383e9f75561a59b9ea0bbbd98736ae400b19e735b5a6fdf90ca139ea5",
+    "originalSchema7Source": "64908ee59705e6e9dc6e4a06a8d828bf5eea6d4f",
+    "originalFixtureBytesUnchanged": true,
+    "rollback": "Compatible complete application/database/generation pair; no version-number downgrade."
+  },
+  "additionalStorageCaseObservations": {
+    "recurrence-storage-C01": "Partial: strict codec input byte bound tested; actual per-slot/batch execution and receipt sizing remain to implement.",
+    "recurrence-storage-C02": "Repository/codec canonical tags, closed versions/fields and header/body corruption are tested.",
+    "recurrence-storage-C03": "Ordinary schema7 reads/writes refuse before explicit initialization; successful source migration and failure rollback are tested.",
+    "recurrence-storage-C04": "A current slot without the exact scoped actor/action/key receipt cannot commit; rollback and valid evidence are tested."
+  },
+  "images": {
+    "currentSource": "Actual hosted amd64/aarch64 current-source image tests passed on f835775; a fresh run is required for subsequent commits.",
+    "schema7Control": {
+      "version": "0.0.0-edge.5",
+      "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+      "scope": "Immutable owner-package fixture used for actual schema7 upgrade/refusal checks, without changing its pin."
+    },
+    "smoke": "Pinned recurrence planning, closed record codecs and source relationships execute successfully in both actual CPU images; host control is separate.",
+    "localDocker": "Not run; no local Docker engine was started.",
+    "hosted": {
+      "headRevision": "f835775b2f230db956750a224f8ebd6cc8bbbb5f",
+      "checkoutRevision": "11170de5541bc045f2ec16fd76a08100576c8b0b",
+      "checkoutTree": "81c7125fddf509c319889cfe76381e95b20e32ba",
+      "checkoutTreeEqualsReviewedHeadTree": true,
+      "runId": 41357396927,
+      "amd64": {
+        "jobId": 125000308389,
+        "executions": 23,
+        "result": "passed"
+      },
+      "aarch64": {
+        "jobId": 125000308453,
+        "executions": 23,
+        "result": "passed"
+      },
+      "aggregate": "Failed only on the old-image tooling contract assertion at this head; that test is corrected locally. No aggregate success is claimed until the fresh current-head run passes."
+    }
+  },
+  "specification": {
+    "publishedActionRun": 41351649126,
+    "publishedCommit": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+    "retainedExecutionCases": 52,
+    "retainedOriginalOwnerCases": 37,
+    "newIndependentStorageCases": 4,
+    "reviewCorrection": "The first publication four broad integration cases overlap retained owners. Their historical IDs and owner mapping remain explicit; they are not counted as additional independent journeys."
+  },
+  "copilotReports": [
+    "https://github.com/vypdev/copilot/issues/763#issuecomment-6563925226",
+    "https://github.com/vypdev/copilot/issues/835#issuecomment-6564066025",
+    "https://github.com/vypdev/copilot/issues/851",
+    "https://github.com/vypdev/copilot/issues/843#issuecomment-6565011301",
+    "https://github.com/vypdev/copilot/issues/851#issuecomment-6565229213"
+  ],
+  "retainedEvidence": {
+    "directory": "/private/tmp/domus-recurrence-storage-64908ee",
+    "scope": "Necessary original failures, exact source manifest, final full coverage/output, focused boundary coverage, original SDK proofs and genuine schema7 input. Compact and relocate after this local verification iteration; keep pending authored integration/stash until verified publication."
+  },
+  "pending": [
+    "Current-authorized scheduled creation and reviewed attachment",
+    "Actual fixed and completion-relative materialization and cycle/source handling",
+    "Historical restore non-recreation by the actual recurrence consumer",
+    "Pause/resume/skip/reschedule and reviewed preview/apply use cases",
+    "Task classification, protected calendar query/HTTP and native/standalone runner composition",
+    "Actual hosted images, runtime/browser/HA and complete52-case/first all-domain release acceptance"
+  ],
+  "ownerHa": "Installed Edge.5 and retained Edge.3 are unchanged. No new owner update, release, registry publication or deployment is performed.",
+  "integrityRegressions": {
+    "before": "Six targeted tests failed before the additional source/count checks; original output is retained.",
+    "after": "Progress above COUNT, future/missing sources and same-generation pattern contradictions are refused. Legitimate older slot snapshots remain valid.",
+    "domainPolicy": "Pure matches_schedule/consistent_with relationships are shared by persistence and snapshot inspection; they grant no authority."
+  },
+  "nativeReview": {
+    "headRevision": "f835775b2f230db956750a224f8ebd6cc8bbbb5f",
+    "runId": 41357396827,
+    "jobId": 125000308666,
+    "checkRunId": 125001100160,
+    "codePartitionsCompleted": 4,
+    "codePartitionsAssigned": 4,
+    "filesAssigned": 39,
+    "diffFragments": 42,
+    "candidateFindings": 0,
+    "publishedFindings": 0,
+    "reviewThreads": 0,
+    "overall": "partial; neutral, not a complete review",
+    "humanConversation": {
+      "fetched": 2,
+      "retained": 1,
+      "omitted": 1,
+      "truncated": 0,
+      "limitReached": true
+    },
+    "issueComments": "Separately complete:6 fetched/6 retained; no overall prompt-text omission is inferred from one dimension.",
+    "manualSupplement": "Both maintainer-account proposed-SDD comments were manually inspected. They are consumer-agent review inputs, not fresh owner product answers. Full retained scope/constraints remain explicit."
+  },
+  "browserContentionRepair": {
+    "baselineHead": "71c54ab92cc099d65fa6681c1a09ec61fc5656c1",
+    "failedRun": 41358941452,
+    "failedJob": 125004927727,
+    "observed": "The concurrent native different-account setup received one committed 200 and one bounded storage_busy 503 with no second household. The prior browser assertion required immediate403 and omitted the supported contention outcome.",
+    "change": "Retain the real concurrent writer test and require exact storage_busy/Retry-After plus explicit identical request replay and current403/409. Add four deterministic independent SQLite lock scenarios across native/standalone and same/different HA accounts. Verify unchanged rejected journal/draft, zero partial effects, no automatic resubmission and exactly one complete winner.",
+    "productSourcesChanged": false,
+    "storageTimeoutChanged": false,
+    "copilotChanged": false,
+    "before": "The new deterministic browser case failed on missing test-only fixture control (expected200, actual404); original log retained.",
+    "after": {
+      "entryBrowserTests": 49,
+      "passed": 49,
+      "durationSeconds": 31.9,
+      "typescript": "runtime and catalog passed",
+      "fixtureRuff": "check and format passed",
+      "originalPinnedSdd": "passed"
+    },
+    "coverage": "Backend and frontend implementation bytes are unchanged; the prior full100% supported coverage campaigns remain applicable to those same bytes. A fresh hosted fullCI run is required for the test-only correction.",
+    "retainedEvidence": "/private/tmp/domus-race-71c54ab"
+  },
+  "nativeReview71": {
+    "headRevision": "71c54ab92cc099d65fa6681c1a09ec61fc5656c1",
+    "runId": 41358941454,
+    "jobId": 125004927845,
+    "checkRunId": 125005208606,
+    "codePartitionsCompleted": 4,
+    "codePartitionsAssigned": 4,
+    "filesAssigned": 40,
+    "candidateFindings": 0,
+    "publishedFindings": 0,
+    "overall": "partial; neutral, human-conversation limitation remains reported and manually supplemented",
+    "humanConversation": {
+      "fetched": 2,
+      "retained": 1,
+      "omitted": 1,
+      "truncated": 0,
+      "limitReached": true
+    },
+    "issueComments": "Separately complete:6/6; diff complete40/40."
+  },
+  "hosted71": {
+    "headRevision": "71c54ab92cc099d65fa6681c1a09ec61fc5656c1",
+    "runId": 41358941452,
+    "backend": "passed",
+    "pythonTooling": "passed",
+    "amd64": "passed",
+    "aarch64": "passed",
+    "frontend": "failed on the independently investigated contention expectation; local repair49pass is not yet hostedCI success",
+    "aggregate": "failed"
+  },
+  "laterApplicationIncrement": "docs/evidence/recurrence-creation.json; this kernel report retains its original3500-test source and acceptance scope.",
+  "hostedBrowserRepair": {
+    "headRevision": "ec6a7198baf867b4b4392b5202d8345e90fcf2fd",
+    "runId": 41360326797,
+    "frontendJob": 125009131653,
+    "aggregateJob": 125010374783,
+    "amd64Job": 125009131683,
+    "aarch64Job": 125009131691,
+    "result": "All applicable CI Check suites passed; Copilot separately found one real nominal-membership issue, now corrected locally and awaiting publication/review. Full recurrence remains incomplete."
+  },
+  "laterMaterializationIncrement": "docs/evidence/recurrence-materialization.json; original storage-kernel results remain historical and scope-specific.",
+  "laterFairnessIncrement": "docs/evidence/recurrence-fairness.json; original storage-kernel acceptance scope remains unchanged."
+}

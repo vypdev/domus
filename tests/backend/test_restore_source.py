@@ -19,7 +19,7 @@ def test_bare_source_and_managed_generation_source_are_explicit_and_roundtrip(tm
     bare_root.mkdir(mode=0o700)
     adapter, store, _, _ = restoration_fixture(bare_root)
     result = adapter.prepare("restore-bare")
-    assert result.source == RestoreSource(store.installation, 7, None, None)
+    assert result.source == RestoreSource(store.installation, 8, None, None)
     assert result.document().decode()["format_version"] == 2
     assert PreparedRestoration.from_value(result.document().decode()) == result
     root, slot, selection = generation_fixture(tmp_path)
@@ -39,7 +39,7 @@ def test_bare_source_and_managed_generation_source_are_explicit_and_roundtrip(tm
         ).prepare("restore-generation")
         assert prepared.source.generation_id == selection.generation_id
         assert prepared.source.identity_sha256 == selection.document().fingerprint
-        assert prepared.source.schema_version == 7
+        assert prepared.source.schema_version == 8
         assert PreparedRestoration.from_value(prepared.document().decode()) == prepared
     finally:
         storage.close()

@@ -1,11 +1,20 @@
 """Immutable bounded planning progress; these records are not persisted execution proof."""
 
+import hashlib
+import json
 import re
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 from domus.domain.errors import InvalidInput
-from domus.domain.recurrence_rules import NominalDate, NominalSlot
-from domus.domain.recurrence_time import NominalTime, ResolvedTime
+from domus.domain.recurrence_rules import FixedPattern, NominalDate, NominalSlot
+from domus.domain.recurrence_time import NominalTime, ResolvedTime, TimePolicy
+
+
+def cursor_binding(pattern: FixedPattern, policy: TimePolicy) -> str:
+    value = {"version": 1, "pattern": pattern.fingerprint, "policy": asdict(policy)}
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)

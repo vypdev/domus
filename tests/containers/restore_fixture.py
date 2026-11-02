@@ -109,7 +109,7 @@ def main():
         else:
             raise AssertionError("Unknown fixture operation")
         with storage.database._connection() as connection:
-            assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
+            assert connection.execute("PRAGMA user_version").fetchone()[0] == 8
         private_layout()
         print(
             json.dumps(
