@@ -25,6 +25,13 @@ export class HouseholdController {
       notice: this.notice ?? view.notice});
   }
   get administration(): AdministrationView | null {return this.visible ? this.current!.view : null;}
+  /** Scheduling needs only absolute deadlines, never a command payload or a renewed proof. */
+  get deadlines(): readonly number[] {
+    return Object.freeze([this.entry.view, this.current?.view].flatMap(view => view === undefined ? [] : [
+      ...view.session === null ? [] : [view.session.expiresAt],
+      ...view.journal?.records.map(record => record.expiresAt) ?? [],
+    ]));
+  }
   private live(generation: number): boolean {return !this.closed && generation === this.generation;}
   private retire(): void {
     this.visible = false; this.current?.close(); this.current = null; this.currentContext = null;

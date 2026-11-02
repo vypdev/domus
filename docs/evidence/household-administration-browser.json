@@ -23,7 +23,8 @@
     "Optional household-read failures retain current entry authority only after rechecking grants; authentication failure and stale generations still retire access.",
     "Application-only joint coordinator matches context/access/grants and independent household scope, bounds reconciliation, serializes explicit work and preserves original commands/results.",
     "Earlier joint lease expiry retires both views without renewal; disposal fences reads, late command replies and pending logout revocation.",
-    "A fresh administration reconciliation replaces private facts even after invalid input, missing original or read-only early exits, while preserving same-authority actionable notices. Empty errors retain their verified account context and cannot be joined to a different installation/channel/subject."
+    "A fresh administration reconciliation replaces private facts even after invalid input, missing original or read-only early exits, while preserving same-authority actionable notices. Empty errors retain their verified account context and cannot be joined to a different installation/channel/subject.",
+    "The actual document runtime now constructs the application coordinator, both concrete protected HTTP adapters and separate storage journals with one monotonic clock/cryptographic entropy. Its callback exposes only reconciled administration facts. Both proof/journal deadlines are scheduled without payload disclosure; stale busy events, BFcache, teardown and late effects remain fenced. The page still renders entry only; full administration forms remain pending."
   ],
   "testsFirst": [
     "Real Chromium entry controls first failed16/passed76 against original code; all93 entry cases now pass.",
@@ -31,37 +32,39 @@
     "After correcting an initial C13 test expectation to the existing original-GET contract, three explicit notice-loss controls failed before removal of the extra refresh.",
     "Three lifecycle controls failed before stale-notice replacement and disposal-during-logout fencing were corrected.",
     "Four semantic controls failed against published a721039: three early exits reused a former member private preference and one empty forbidden result crossed a changed installation context.",
-    "Fourteen new reconciliation controls first failed on the missing use case, after a distinct sandbox-only socket denial. The corrected full Chromium suite passes1108; fixture locale typing was widened to the actual own-preference contract before strict types passed."
+    "Fourteen new reconciliation controls first failed on the missing use case, after a distinct sandbox-only socket denial. The corrected full Chromium suite passes1108; fixture locale typing was widened to the actual own-preference contract before strict types passed.",
+    "Ten runtime integration controls first failed before the existing runtime exposed or composed administration. The actual protected HTTP/journal composition then passes all39runtime cases; six additional current-permission/storage/cancellation/scheduler/expiry/deadline checks pass within1124frontend executions. These HTTP-provider controls are not actual full administration UI journeys.",
+    "Two new actual compiled-browser/Python cases first failed because the test-only HA simulator lacked the fixed account-source request method. Both then pass after completing only that fictional provider; all53entry-plus-read journeys pass without the earlier AttributeError. Original traces/screenshots and the earlier51passing-with-provider-errors log are retained separately."
   ],
   "frontend": {
-    "executions": 1108,
-    "coordinatorExecutions": 54,
+    "executions": 1124,
+    "coordinatorExecutions": 55,
     "entryControllerExecutions": 93,
     "authoredRuntimeFiles": 29,
     "nonemptyRuntimeFiles": 27,
     "typeOnlyFiles": 2,
     "coverage": {
       "lines": {
-        "total": 1331,
-        "covered": 1331,
+        "total": 1338,
+        "covered": 1338,
         "skipped": 0,
         "pct": 100
       },
       "statements": {
-        "total": 1986,
-        "covered": 1986,
+        "total": 1997,
+        "covered": 1997,
         "skipped": 0,
         "pct": 100
       },
       "functions": {
-        "total": 398,
-        "covered": 398,
+        "total": 408,
+        "covered": 408,
         "skipped": 0,
         "pct": 100
       },
       "branches": {
-        "total": 1434,
-        "covered": 1434,
+        "total": 1439,
+        "covered": 1439,
         "skipped": 0,
         "pct": 100
       },
@@ -73,14 +76,15 @@
       }
     },
     "independentFilesystemInventoryAudit": "passed",
-    "administrationControllerExecutions": 125
+    "administrationControllerExecutions": 125,
+    "runtimeExecutions": 39
   },
   "checks": {
     "runtimeAndCatalogTypes": "passed",
     "nodePolicy": "38passed; all supported metrics100%",
-    "entryBrowser": "51passed; compiled UI against actual native/standalone Python/SQLite with test-only HA providers",
-    "packaging": "1passed; actual new wheel matches every151module and4compiledUI resource bytes",
-    "catalogBrowser": "18passed; existing entry state catalog, not new administration forms",
+    "entryBrowser": "53passed; new compiled runtime against actual native/standalone Python/SQLite; two new cases verify real administration roster/directory/private-preference reads after explicit setup. Complete administration forms remain pending.",
+    "packaging": "1passed; actual new wheel matches every151module and4compiledUIresource bytes",
+    "catalogBrowser": "18passed; rebuilt existing entry-state catalog, not full administration forms",
     "nodeInvocationLimitation": "The earlier architecture-only command passed its selected rules but failed global tooling coverage because it omitted the unchanged tooling suite; complete pnpm test then passes38/100%. No product/Copilot failure is inferred.",
     "strictBackendTypes": "passed151modules",
     "ruff": "check and375-file format pass",
@@ -90,13 +94,13 @@
   "sourceIdentity": {
     "backendInventorySHA256": "fb46cd890daa577fd0149587ae39310af1df91769bb5856bfd2ec709ca402101",
     "backendUnchangedFromReviewedB60": true,
-    "frontendInventorySHA256": "3eaedc962f04aac9a5c1292c8d5121d6221ea9583b6e1810fabacfcd19bfe35e",
-    "wheelSHA256": "e68810fe0754e0b250d0dda4027d10d87b5ac5d4285cde4ad567b57e1afef5f4",
+    "frontendInventorySHA256": "85b846de8b041d0c5af13f18b0f71d5c715cf4e1ed1010cf314b7bc094d401aa",
+    "wheelSHA256": "b18f39b7b1c94d3ccd34b5aa849caabb0dc58faf1312e14f064e2280cfe30fee",
     "compiledUI": {
-      ".vite/manifest.json": "214eed761283d87d64123887c8e3c742d247b59ee0066739c32f21a7c8fac0d6",
+      ".vite/manifest.json": "7e7e447d17e1e8a0a7702629876b9b0e28bedfa34c3e150d137cb258125e301b",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-Dr0RuR81.js": "2c2347a61ddb173a5ed744f50fdaf8d2d3c54d66be936e59df9b7f9b69349ede",
-      "index.html": "dc3151dffd389e338a3f1d7a5a32dfa9aa94e6518f5e5376b9e235b83e1c6931"
+      "assets/index-CrXaCVKh.js": "6e4f8bb88867989dfdc947fbc8835785a52966b5a32faed7fb6ad7363f40c371",
+      "index.html": "5f14a1bd5a89c41a4fb123f71d3c42fd7ba1e1df93deeeeed442b1d893e2bc19"
     },
     "everyModuleAndUIByteVerified": true
   },
@@ -111,14 +115,18 @@
     "result": "Three response-size failures are retained separately; explicit same-capability companion recovery then published natively. This does not establish an upstream fix."
   },
   "localEvidence": {
-    "root": "/private/tmp/domus-admin-page-8b1cbc1",
+    "root": "/private/tmp/domus-admin-runtime-185caef",
     "privateLocalOnly": true,
-    "scope": "Original/control failures, current coverage/source/wheel proof and native recovery. Generated terminal fixtures retire only after unique evidence is retained."
+    "previousCompactEvidence": {
+      "path": "/private/tmp/domus-admin-page-8b1cbc1/verification-evidence.tar.gz",
+      "sha256": "e0a7b4be32999613f84ed2f23c52247f66660a1a66e6ed135fa9ca3402e69508"
+    },
+    "scope": "Original runtime failures, current coverage/source/wheel proof and current published-head review/progress evidence. The two original fixture-provider failures retain actual traces/screenshots under provider-original-artifacts and their original results. No owner HA was used."
   },
-  "pending": "Document runtime/lifecycle wiring and complete accessible EN/ES administration forms, Storybook/actual administration Python-SQLite journeys, all retained owner/browser cases, human UX review, owner HA adoption and fresh current-commit CI/native review. Recurrence23, Stable/Edge and all-domain product acceptance remain required.",
+  "pending": "Complete accessible EN/ES administration forms and page intents, Storybook/actual administration Python-SQLite journeys, independent own-alias read/revision feasibility, all retained owner/browser cases, human UX review, owner HA adoption and fresh current-commit CI/native review. Recurrence23, Stable/Edge and all-domain product acceptance remain required.",
   "goalComplete": false,
   "acceptance": "Unit/controller and51entry journeys are not complete administration browser or owner HA acceptance.",
-  "recordedAtUTC": "2026-11-02T22:28:15.666501+00:00",
+  "recordedAtUTC": "2026-11-02T22:38:53.838542+00:00",
   "backend": {
     "executions": 4364,
     "authoredModules": 151,
@@ -146,26 +154,42 @@
   ],
   "scopedCorrection": {
     "baseline": "a72103968dd785252ea5f9cf19e81463c0f44085",
-    "source": "Current working controller correction; document composition is still pending",
+    "source": "Published185caef correction before runtime composition; its scoped proof is retained as historical evidence.",
     "types": "runtime and catalog passed",
     "coverageAudit": "all29authoredruntimefiles and all4metrics100%",
-    "artifact": "Rebuilt compiled entry bundle has exactly the same four resource hashes; this still-unused controller correction does not change the existing verified wheel or Python modules."
+    "artifact": "At the prior correction the still-unused controllers did not change the compiled entry bundle. The current runtime composition now has its independently verified new wheel/UI identity below."
   },
   "publishedBaselineReview": {
-    "head": "a72103968dd785252ea5f9cf19e81463c0f44085",
-    "run": 41532971541,
-    "job": 125577616679,
+    "head": "185caef9cba900c86fa402f60c4c5e235208ab64",
+    "run": 41537674919,
+    "job": 125593575019,
     "context": "complete",
     "partitions": "3/3",
     "candidateFindings": 0,
     "publishedFindings": 0,
     "outcome": "no-findings",
-    "currentCorrectionReview": "pending normal commit/push"
+    "currentRuntimeReview": "pending normal commit/push"
   },
   "publishedBaselineCI": {
-    "head": "a72103968dd785252ea5f9cf19e81463c0f44085",
-    "run": 41532971690,
-    "result": "success; all applicable suites and both actual CPU images passed",
-    "currentCorrectionCI": "pending normal commit/push"
+    "head": "185caef9cba900c86fa402f60c4c5e235208ab64",
+    "run": 41537674620,
+    "result": "success; all applicable suites, actual amd64 job125593572845 and actual aarch64 job125593572785 passed; aggregate125597006263",
+    "currentRuntimeCI": "pending normal commit/push"
+  },
+  "currentRuntimeScope": {
+    "sourceBase": "185caef9cba900c86fa402f60c4c5e235208ab64",
+    "state": "working runtime composition; not yet committed",
+    "authoredRuntimeFiles": 29,
+    "administrationViews": "Current callback/property is composed; complete administration document presentation remains pending.",
+    "localBackend": "All151Pythonmodulebytes unchanged from complete local4364/100% baseline; no new backend execution is claimed for this controller/runtime-only change."
+  },
+  "copilotProgressRepeat": {
+    "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6590265451",
+    "run": 41537666041,
+    "job": 125593544133,
+    "head": "185caef9cba900c86fa402f60c4c5e235208ab64",
+    "reason": "scope-clause-limit; field $.lines; requirement none; source L150",
+    "reference": "ed1c6c8a-4244-4752-8eef-19c5d0947f01",
+    "scope": "Separate commit progress rejection; same-head complete PR-native review has no findings. No Copilot change or inferred root cause."
   }
 }

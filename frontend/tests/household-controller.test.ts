@@ -448,3 +448,12 @@ test('household-browser-C02: an empty administration error from the earlier cont
   expect(f.controller.administration).toBeNull(); expect(f.controller.view.notice).toBe('context_changed');
   expect(JSON.stringify(f.controller.view)).not.toContain('old-context-correlation');
 });
+test('household-browser-C04: the scheduling projection contains only immutable absolute lease and original-retention deadlines', async () => {
+  const f = fixture(); expect(f.controller.deadlines).toEqual([]); await f.controller.refresh();
+  expect(f.controller.deadlines).toEqual([f.proof.expiresAt, f.proof.expiresAt]);
+  await f.controller.submitAdministration(command);
+  const deadlines = f.controller.deadlines;
+  expect(deadlines).toEqual([f.proof.expiresAt, f.proof.expiresAt, 3_601_000]);
+  expect(Object.isFrozen(deadlines)).toBe(true); expect(JSON.stringify(deadlines)).not.toContain('locale');
+  f.controller.close(); expect(f.controller.deadlines).toEqual([]); expect(deadlines).toHaveLength(3);
+});

@@ -24,7 +24,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 
 from domus.composition import admin, ingress, server
-from domus.domain.errors import IdentityRejected, IdentityUnavailable
+from domus.domain.errors import Forbidden, IdentityRejected, IdentityUnavailable
 from domus.domain.identity import HumanIdentity
 from domus.infrastructure.ha_config import HAEndpoint
 from domus.infrastructure.ha_http import OAuthTokens
@@ -65,6 +65,32 @@ class HomeAssistant:
 
     def directory_users(self, token: str, user_ids: tuple[str, ...]) -> tuple:
         return tuple(self.directory_user(token, user_id) for user_id in user_ids)
+
+    def _request(self, token: str, operation: str):
+        """Fixed fictional account responses for the real bounded presentation adapter."""
+        assert token == "fixture-supervisor-token" or token in self.token_subjects
+        actor = self.person(
+            self.subject if token == "fixture-supervisor-token" else self.token_subjects[token]
+        )
+        if operation == "config/auth/list":
+            if token != "fixture-supervisor-token" and not actor.is_administrator:
+                raise Forbidden("ha_directory_forbidden")
+            return [
+                {
+                    "id": person.ha_user_id,
+                    "name": "Fictional account " + person.ha_user_id[0],
+                    "is_active": True,
+                    "system_generated": False,
+                }
+                for person in self.people.values()
+            ]
+        assert operation == "auth/current_user" and token != "fixture-supervisor-token"
+        return {
+            "id": actor.ha_user_id,
+            "name": "Fictional account " + actor.ha_user_id[0],
+            "is_admin": actor.is_administrator,
+            "credentials": [{"auth_provider_type": "homeassistant"}],
+        }
 
 
 class OAuth:

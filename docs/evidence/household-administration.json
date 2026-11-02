@@ -612,15 +612,15 @@
     }
   },
   "currentSourcePackage": {
-    "sourceBase": "ad45272a180f4e36d2dd124f950826e41311017d",
-    "sourceIdentity": "Current151-module backend is byte-identical to reviewed b60. The rebuilt entry UI contains the partial-read fix;29-file frontend source also contains an application coordinator which is not yet imported by document composition. Owner Edge.5 and full workspace acceptance are unchanged.",
+    "sourceBase": "185caef9cba900c86fa402f60c4c5e235208ab64",
+    "sourceIdentity": "Current151-module backend remains byte-identical to reviewed b60. The new29-file frontend now composes administration HTTP/controllers/journal into the document lifecycle; entry presentation remains. Complete administration forms and owner HA Edge.5 adoption remain pending.",
     "actualProductFiles": {
-      ".vite/manifest.json": "214eed761283d87d64123887c8e3c742d247b59ee0066739c32f21a7c8fac0d6",
+      ".vite/manifest.json": "7e7e447d17e1e8a0a7702629876b9b0e28bedfa34c3e150d137cb258125e301b",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-Dr0RuR81.js": "2c2347a61ddb173a5ed744f50fdaf8d2d3c54d66be936e59df9b7f9b69349ede",
-      "index.html": "dc3151dffd389e338a3f1d7a5a32dfa9aa94e6518f5e5376b9e235b83e1c6931"
+      "assets/index-CrXaCVKh.js": "6e4f8bb88867989dfdc947fbc8835785a52966b5a32faed7fb6ad7363f40c371",
+      "index.html": "5f14a1bd5a89c41a4fb123f71d3c42fd7ba1e1df93deeeeed442b1d893e2bc19"
     },
-    "wheelSHA256": "e68810fe0754e0b250d0dda4027d10d87b5ac5d4285cde4ad567b57e1afef5f4",
+    "wheelSHA256": "b18f39b7b1c94d3ccd34b5aa849caabb0dc58faf1312e14f064e2280cfe30fee",
     "originalFailure": {
       "run": 41505801643,
       "aarch64Job": 125484707823,
@@ -629,7 +629,7 @@
     },
     "testsFirst": "The actual aarch64 image exposes the stale historical expectation. A new early wheel/build/declaration assertion first fails with missing currentSourcePackage before this explicit candidate inventory is added.",
     "correction": "Current packaging and image tests use this declaration. The packaging gate compares it against the independently built source bundle and exact wheel bytes; the image fixture compares all installed and HTTP-served resources. Historical entry/Edge.5 evidence remains byte-identical.",
-    "acceptance": "Local current source:1090frontend executions/all29runtime files100%,4364backend tests/all151modules100%,51actual entry/PythonSQLite journeys,18entry-catalog states and actual wheel acceptance pass. Current CPU images and hosted review remain pending. The joint coordinator is not yet wired to the document; complete administration UI/retained acceptance and owner HA remain outstanding."
+    "acceptance": "Actual new wheel matches every151module and4compiledUIresource bytes; packaging1,53actual entry-plus-administration-read/PythonSQLite and18existing-entry catalog cases pass. Fresh current-commit CPU/native review and complete administration UI acceptance remain pending; see household-administration-browser.json."
   },
   "controllerIncrement": {
     "sourceBase": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",

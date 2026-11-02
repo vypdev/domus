@@ -83,6 +83,22 @@ for (const mode of modes) test.describe(mode, () => {
     expect(await stats(request, mode)).toEqual(before);
   });
 
+  test('household-browser-C01: the compiled runtime obtains actual administration facts after explicit setup', async ({page, context, request}) => {
+    await open(page, context, mode);
+    const rosterReply = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/administration/roster');
+    const preferencesReply = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/administration/preferences');
+    const directoryReply = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/administration/directory');
+    await create(page);
+    const [roster, preferences, directory] = await Promise.all([rosterReply, preferencesReply, directoryReply]);
+    expect([roster.status(), preferences.status(), directory.status()]).toEqual([200, 200, 200]);
+    expect((await roster.json()).members[0].metadata).toMatchObject({state: 'available', name: 'Fictional account a', avatar_state: 'unavailable'});
+    expect(await preferences.json()).toMatchObject({locale: null, routine_participation_summaries: true, notification_delivery: 'unavailable'});
+    expect((await directory.json()).profiles.map((row: {ha_user_id: string}) => row.ha_user_id)).toEqual(['a'.repeat(32), 'b'.repeat(32), 'c'.repeat(32)]);
+    const current = await stats(request, mode);
+    expect(current.counts.households).toBe(1); expect(current.counts.receipts).toBe(1);
+    await expect(page.getByRole('heading', {name: 'Your household', level: 1, exact: true})).toBeVisible();
+  });
+
   test('an unavailable module leaves visible reload guidance and never claims an empty home', async ({page, context, request}) => {
     if (mode === 'native') await context.addCookies([{name: 'ingress_session', value: 'f'.repeat(128),
       domain: '127.0.0.1', path: '/', httpOnly: true, sameSite: 'Strict'}]);

@@ -37,20 +37,22 @@ temporary HA outage does not authorize a retry or rebase. Review current state b
 new work. An unexpired existing session may retain local reads during a temporary HA outage, while
 changes remain blocked.
 
-The separate browser administration recovery policy and storage adapter are implemented and tested,
-but are not yet connected to the workspace. Their requests retain exact original intent for up to
+The browser runtime composes the separate administration recovery policy and storage adapter.
+Their requests retain exact original intent for up to
 one hour, with at most eight requests and 65,536 bytes shared across account/installation/channel
 contexts. A current view hides other contexts' pending work without deleting it. This source
-foundation does not yet provide a browser recovery action or automatically resend a mutation.
+foundation does not yet render an administration recovery action. Recovery remains explicit;
+the runtime does not automatically resend a mutation or query an original result.
 
-The browser application layer now coordinates entry and administration proof, earlier lease expiry,
+The document runtime now coordinates entry and administration proof, earlier lease expiry,
 current grants, original results and disposal. An unavailable household read preserves independently
 verified access only after a current authorization check. The coordinator retains actionable conflict
 and recovery notices and fences late logout responses. After every explicit administration action,
 fresh proof replaces private facts even when an invalid draft, missing original or read-only lease
 prevented sending. A replacement membership cannot inherit the prior member's displayed preferences,
-and an empty action error remains bound to its verified account context. It is not yet wired into the document runtime;
-the complete forms and actual administration browser journeys remain under development in
+and an empty action error remains bound to its verified account context. The runtime schedules both
+proof and journal deadlines, closes both controllers on exit and rechecks proof after BFcache
+restoration. The complete visible forms and administration browser journeys remain under development in
 [issue #27](https://github.com/vypdev/domus/issues/27). Current scoped verification is recorded in the
 [browser coordination evidence](evidence/household-administration-browser.json).
 
