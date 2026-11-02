@@ -230,7 +230,8 @@
         "specs/household-identity.md",
         "specs/household-administration.md",
         "specs/household-administration-integration.md",
-        "specs/household-administration-workspace.md"
+        "specs/household-administration-workspace.md",
+        "specs/household-administration-browser.md"
       ],
       "workflows": [],
       "entrypoints": [
