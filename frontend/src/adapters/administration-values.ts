@@ -43,14 +43,15 @@ export function authorization(value: unknown, expected: JournalContext): Adminis
     policyRevision: basic.state === 'active' ? responseRevision(item.policy_revision) : null});
 }
 export function capabilities(value: unknown): AdministrationCapabilities {
-  const item = fields(value, ['state', 'contract_version', 'exact_revisions', 'actions', 'journal'], []);
-  check(item.state === 'available' && integer(item.contract_version, 1) === 1 && item.exact_revisions === 'json-integer-int64');
+  const item = fields(value, ['state', 'contract_version', 'household_id', 'exact_revisions', 'actions', 'journal'], []);
+  check(item.state === 'available' && integer(item.contract_version, 1) === 2 && item.exact_revisions === 'json-integer-int64');
+  const householdId = identifier(item.household_id);
   check(Array.isArray(item.actions) && item.actions.length === actions.length);
   const actual = item.actions.map(value => choice(value, actions)); check(new Set(actual).size === actions.length);
   const journal = fields(item.journal, ['namespace', 'version', 'maximum_records', 'maximum_bytes', 'lifetime_ms'], []);
   check(journal.namespace === 'administration' && integer(journal.version, 1) === 1
     && integer(journal.maximum_records, 1) === 8 && integer(journal.maximum_bytes, 1) === 65536 && integer(journal.lifetime_ms, 1) === 3600000);
-  return Object.freeze({contractVersion: 1, actions: Object.freeze(actual)});
+  return Object.freeze({contractVersion: 2, householdId, actions: Object.freeze(actual)});
 }
 export function presentation(value: unknown): PublicPresentation {
   const item = fields(value, ['member_id', 'alias', 'revision'], []);

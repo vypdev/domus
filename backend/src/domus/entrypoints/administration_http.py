@@ -68,9 +68,11 @@ def create_administration_router(
         request: Request, query: Annotated[_EmptyQuery, Query()]
     ) -> AdministrationCapabilities:
         # Available routes are not a caller grant or acceptance of the complete workspace.
-        context(request).operations().access()
+        operations = context(request).operations()
+        operations.access()
         return AdministrationCapabilities(
-            actions=cast(tuple[AdministrationAction, ...], tuple(sorted(ADMINISTRATION_ACTIONS)))
+            household_id=operations.household_id,
+            actions=cast(tuple[AdministrationAction, ...], tuple(sorted(ADMINISTRATION_ACTIONS))),
         )
 
     @router.get("/preferences", response_model=PreferencesResponse)

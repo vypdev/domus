@@ -361,7 +361,8 @@ def test_capabilities_describe_only_wired_contract_and_closed_journal_without_ch
         assert result.status_code == 200
         assert result.json() == {
             "state": "available",
-            "contract_version": 1,
+            "contract_version": 2,
+            "household_id": "home",
             "exact_revisions": "json-integer-int64",
             "actions": [
                 "household.update",
@@ -625,3 +626,59 @@ def test_selected_domus_administration_does_not_claim_ha_directory_permission(ap
     if api.mode == "standalone":
         assert directory.json()["profiles"] == []
     assert api.store.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("mode", ["native", "standalone"])
+def test_capabilities_bind_server_household_scope_without_household_read_permission(
+    tmp_path, monkeypatch, mode
+):
+    with configured(tmp_path, monkeypatch, mode) as (client, store, _, _, _):
+        with store.read() as unit:
+            member = next(
+                member
+                for member in unit.members.list("home")
+                if member.status is MemberStatus.ACTIVE
+            )
+        with store.write() as unit:
+            unit.members.save(
+                replace(
+                    member,
+                    revision=member.revision + 1,
+                    exceptions=(PermissionRule(Permission.HOUSEHOLD_READ, False),),
+                ),
+                member.revision,
+            )
+        assert client.get("/api/v1/household").status_code == 403
+        before = store.path.read_bytes()
+        response = client.get(BASE + "/capabilities")
+        assert response.status_code == 200, response.text
+        assert response.json()["contract_version"] == 2
+        assert response.json()["household_id"] == "home"
+        assert store.path.read_bytes() == before
+        assert client.get(BASE + "/capabilities?household_id=foreign").status_code == 422
+
+
+@pytest.mark.parametrize("mode", ["native", "standalone"])
+@pytest.mark.parametrize("lookup", ["key", "id"])
+def test_original_profile_reads_keep_existing_outage_lease_without_replaying_effect(
+    tmp_path, monkeypatch, mode, lookup
+):
+    with configured(tmp_path, monkeypatch, mode) as (client, store, source, _, headers):
+        saved = client.put(
+            BASE + "/preferences",
+            json={"expected_revision": 1, "locale": "es", "routine_participation_summaries": False},
+            headers=headers("outage-original"),
+        )
+        assert saved.status_code == 200, saved.text
+        source.error = IdentityUnavailable("ha_unavailable")
+        assert client.get("/api/v1/session").json()["access"] == "read_only"
+        path = (
+            BASE + "/requests/member.preferences.update/outage-original"
+            if lookup == "key"
+            else "/api/v1/operations/" + saved.json()["operation_id"]
+        )
+        before = store.path.read_bytes()
+        recovered = client.get(path)
+        assert recovered.status_code == 200, recovered.text
+        assert recovered.json()["operation_id"] == saved.json()["operation_id"]
+        assert store.path.read_bytes() == before

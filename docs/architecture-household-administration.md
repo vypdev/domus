@@ -154,9 +154,10 @@ controls. The application controller consumes the journal through its semantic p
 composition and complete workspace do not yet connect that controller. These tests establish no
 automatic operation lookup, mutation replay, HA adoption or full retained-case acceptance.
 
-The workspace companion now decomposes its eight requirements into 80 prospective acceptance
+The workspace companion now decomposes its eight requirements into 82 prospective acceptance
 scenarios with explicit per-area risk budgets and reciprocal requirement links. Its former eight
 compound scenario IDs remain as concrete behaviors; the remaining assertions have their own IDs.
+The original 80 workspace rows remain, with two independent scope-binding/recovery cases added.
 The original 72 administration cases and eight HADI refinements remain unchanged and required.
 These inventories are not added together as completed journeys, and 104 journal-related test
 executions do not establish the full browser, runtime, migration or manual-review acceptance.
@@ -213,12 +214,16 @@ The [pure availability policy](../frontend/src/domain/administration-authorizati
 current active membership and decoded grants. Stored/effective role labels and provider facts do
 not grant an action; the backend independently reauthorizes every operation.
 
-Refresh reads a verified session, current access and capabilities, then collects only permitted
+Refresh reads a verified session, current access and version-2 capabilities, then collects only permitted
 facts. Failed reads stay unavailable with a scoped safe reason. Owner preferences must name the
-current authorization member. Access is read again after collection; changed grants or membership
+current authorization member. The server-owned household routing identifier in capabilities binds
+household/policy facts and receipts independently of current aggregate-read permission. The
+identifier does not claim household existence, select a caller or grant access. Legacy unbound
+version-1 capabilities and unknown versions fail closed; journal version 1 remains unchanged.
+Access is read again after collection; changed grants or membership
 discard the collected private view. Replacing the same account's membership also retires any old
-private receipt. Read-only outage leases allow permitted local facts until expiry, without opening
-the administration journal or enabling a mutation.
+private receipt. Read-only outage leases allow permitted local facts until expiry, without enabling
+a mutation. Existing owned-journal GET recovery remains available under the same read lease.
 
 An explicit submission refreshes proof and facts, checks the captured exact aggregate revision,
 rejects exhaustion, and persists the original command before one send. An unresolved request blocks
@@ -238,3 +243,9 @@ controller hides private facts immediately; late results cannot repopulate them.
 currently unauthorized action payloads while retaining underlying unexpired originals. Explicit
 dismissal removes only a resolved owned request. Composition still needs to wire the controller to
 page lifetime and the complete localized forms; controller/port tests are not those product journeys.
+
+Valid read-only outage leases also retain the existing local original-result GET contract, including
+explicit journal recovery. Both actual deployments return the owned original without changing
+database bytes. The controller permits that lookup and local resolved-record dismissal until the
+unchanged session deadline, while new submissions remain blocked. Recovering a receipt neither
+renews the lease nor replays the mutation.

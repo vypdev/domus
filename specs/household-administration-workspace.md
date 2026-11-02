@@ -144,6 +144,8 @@ Validation rejects unknown fields, invalid UTF-8, control characters before trim
 
 Recommended example: alias null, locale null, summaries true, empty journal. Meaningful alternative: owner selects Spanish, saves a literal alias, and disables summaries; identity and permissions remain unchanged. Correctness, privacy, authority, exact revisions, and immutable original-operation semantics are not configurable.
 
+Administration capability contract version 2 supplies the server-owned household routing identifier independently of aggregate-read permission. The browser binds household/policy facts and receipts to that verified scope. The identifier is not a household-existence claim, caller selector or authority grant. Legacy unbound capability version 1 and unknown versions fail closed; the journal remains its unchanged version 1 because command and stored-intent shapes do not change. Protected original GET contracts gain no aggregate-read, mutation-CSRF or revision precondition.
+
 ## 8. Clean Architecture
 
 ### 8.1 Responsibilities and dependency direction
@@ -252,7 +254,7 @@ User-facing errors follow impact -> cause -> action -> retained state and never 
 
 ## 11. Security, permissions, and privacy
 
-1. Current HA proof and current local grants govern writes and original-result disclosure; current verified context governs reads.
+1. Current HA proof and current local grants govern writes and original-result disclosure; current verified context governs reads. Existing bounded read-only outage leases preserve local original-result GET reads until their unchanged expiry; mutations still require full proof.
 2. Owner-only preference checks precede administrator/profile grants, including receipts, logs, and projections. Public alias edits require the owner's applicable current permission or current administrator authority.
 3. Last-effective-administrator and source checks remain those of existing owners. Session CSRF/Origin/context checks apply to every write and original POST replay. The protected existing GET result lookup gains no mutation-only CSRF or revision requirement.
 4. Closed DTOs, exact numeric parsing, operation whitelists, and context-bound journal parsing reject unknown fields/actions, forged or expired records, unsafe numbers, and unsupported encodings before coercion.
@@ -275,19 +277,19 @@ Use actual merged schema9. Preserve supported immutable schema1..8 inputs and ex
 
 Retain the full original inventory: `household-admin-C01` through `household-admin-C72`, all `household-admin-integration-C01` through `household-admin-integration-C08`, and the household-identity and delivery-quality owner contracts and cases. None is removed or redefined by this companion.
 
-The former eight compound workspace scenarios understated independently observable risks. Their IDs remain; each now names one concrete behavior, and the remaining assertions are explicitly decomposed below. The minimum is 80 distinct workspace acceptance scenarios across the same eight unchanged requirements. This is risk decomposition, not 80 completed product journeys or an executed-case claim. Repeated inputs, themes, deployment parameters, storage executions or coverage lines do not increase the inventory count. Each row needs its own evidence; passing a related unit test does not establish a complete browser, image or owner-review case. No full acceptance is claimed by an implementation checkpoint.
+The former eight compound workspace scenarios understated independently observable risks. Their IDs remain; each now names one concrete behavior, and the remaining assertions are explicitly decomposed below. The minimum is 82 distinct workspace acceptance scenarios across the same eight unchanged requirements. The original 80 rows remain verbatim; two additional cases separately verify receipt-household scope binding and usable recovery without current aggregate-read permission. This is risk decomposition, not 82 completed product journeys or an executed-case claim. Repeated inputs, themes, deployment parameters, storage executions or coverage lines do not increase the inventory count. Each row needs its own evidence; passing a related unit test does not establish a complete browser, image or owner-review case. No full acceptance is claimed by an implementation checkpoint.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
 | Domain/configuration/pure planning | 9 | Nine independent value/encoding invariants: clear, alias bounds/literal text, exact revision/exhaustion, household text, preferences, unique decisions and coherent mapping. |
 | State/application/idempotency/races | 14 | Fourteen independent effect/privacy/recovery invariants: competing writers, original key/payload/operation identity, authority races, private surfaces, independent revisions, expiry, context retention, storage fences, unresolved work and lost responses. |
 | Adapters/provider contracts | 11 | Eleven independently observable provider outcomes: verified values, empty/omitted/denied/unavailable/malformed/oversized batches, own OAuth fallback, native subject separation, credential races and trusted avatar availability. |
-| Application use cases | 9 | Nine independently authorized transitions: pending activation, settings catalog, target eligibility, explicit mapping, ordinary profile save, last-admin safeguard, public alias scope, read grace and permission provenance. |
-| Security/abuse | 13 | Thirteen independent trust-boundary risks: GET contract, unknown DTO/action, CSRF, Origin/context, original authority, protected grants, forbidden stored data, record/byte bounds, namespace, numeric evidence, retired responses and session expiry. |
+| Application use cases | 10 | Ten independently authorized transitions: pending activation, settings catalog, target eligibility, explicit mapping, ordinary profile save, last-admin safeguard, public alias scope, read grace, permission provenance and original lookup without aggregate-read permission. |
+| Security/abuse | 14 | Fourteen independent trust-boundary risks: GET contract, unknown DTO/action, CSRF, Origin/context, original authority, protected grants, forbidden stored data, record/byte bounds, namespace, numeric evidence, retired responses, session expiry and receipt-household scope binding. |
 | Presentation/localization/accessibility/sanitization | 10 | Ten independently inspectable UX outcomes: saved/browser locale, draft retention, inert text, keyboard focus, announced status, narrow layout, themes, reduced motion and honest notification status. |
 | Integration/end-to-end/compatibility/migration | 9 | Nine distinct runtime/compatibility paths: historical effect, native/standalone journeys, each CPU image, restore fence, compatible rollback, high-revision entry and incompatible old-image refusal. |
 | Workflows/permissions/schemas/setup | 5 | Five independent delivery gates: retained traceability, architecture, source-complete coverage, applicable current-head CI and accurate discoverable guidance. |
-| Total | 80 | One independently observable behavior per row; all original owning inventories remain required separately. |
+| Total | 82 | One independently observable behavior per row; all original owning inventories remain required separately. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -371,6 +373,8 @@ The former eight compound workspace scenarios understated independently observab
 | household-workspace-C78 | Integration/end-to-end/compatibility/migration | HADW-05, HADW-07 | Given legitimate high revisions in both deployments, when entry authorization and household reads precede administration, then exact values remain usable without unsafe-number coercion. |
 | household-workspace-C79 | Adapters/provider contracts | HADW-03 | Given available verified avatar facts or no supported avatar source, when metadata is presented, then only bounded trusted facts are used and no arbitrary external image is fetched. |
 | household-workspace-C80 | Integration/end-to-end/compatibility/migration | HADW-07 | Given migrated schema9 data and an incompatible old image, when that image attempts to open it, then it refuses safely rather than relabeling or corrupting data. |
+| household-workspace-C81 | Security/abuse | HADW-05 | Given independently verified household routing scope, when a recovered receipt names a different household and aggregate facts are unavailable, then the receipt is rejected without a mutation. |
+| household-workspace-C82 | Application use cases | HADW-05 | Given current original-action and operation-read authority without aggregate-read permission, when an original receipt matches verified household routing scope, then protected GET recovery remains usable after reload. |
 
 Tests precede behavior. Require 100% supported statement and branch coverage globally and per authored module, including complete new pure-policy branch coverage. Use deterministic clocks/IDs/fakes, actual SQLite, current permission/replay/race/privacy controls, semantic HTTP/journal/capability checks, and browser assertions. Each PR CI Check runs all applicable suites and actual amd64/aarch64 images. Include Storybook and real Python/SQLite Playwright journeys, adversarial inputs, current authority-loss/race controls, and the retained manual UX review contract. Distinguish agent dogfooding, provider fixtures, owner evidence, and actual acceptance. Report genuine Copilot failures upstream without changing Copilot or waiting for its fix.
 
@@ -495,7 +499,7 @@ Acceptance scenarios are prospective requirements, not executed tests. Readiness
 | HADW-02 | household-workspace-C02, household-workspace-C13, household-workspace-C18, household-workspace-C19, household-workspace-C20, household-workspace-C23, household-workspace-C24, household-workspace-C42, household-workspace-C72, household-workspace-C76 |
 | HADW-03 | household-workspace-C03, household-workspace-C21, household-workspace-C25, household-workspace-C26, household-workspace-C27, household-workspace-C28, household-workspace-C29, household-workspace-C30, household-workspace-C31, household-workspace-C32, household-workspace-C49, household-workspace-C75, household-workspace-C77, household-workspace-C79 |
 | HADW-04 | household-workspace-C04, household-workspace-C12, household-workspace-C15, household-workspace-C16, household-workspace-C33, household-workspace-C34, household-workspace-C35, household-workspace-C36, household-workspace-C37, household-workspace-C43, household-workspace-C74, household-workspace-C75 |
-| HADW-05 | household-workspace-C05, household-workspace-C10, household-workspace-C11, household-workspace-C21, household-workspace-C22, household-workspace-C39, household-workspace-C40, household-workspace-C41, household-workspace-C42, household-workspace-C43, household-workspace-C44, household-workspace-C45, household-workspace-C46, household-workspace-C65, household-workspace-C66, household-workspace-C67, household-workspace-C68, household-workspace-C69, household-workspace-C70, household-workspace-C71, household-workspace-C72, household-workspace-C73, household-workspace-C74, household-workspace-C78 |
+| HADW-05 | household-workspace-C05, household-workspace-C10, household-workspace-C11, household-workspace-C21, household-workspace-C22, household-workspace-C39, household-workspace-C40, household-workspace-C41, household-workspace-C42, household-workspace-C43, household-workspace-C44, household-workspace-C45, household-workspace-C46, household-workspace-C65, household-workspace-C66, household-workspace-C67, household-workspace-C68, household-workspace-C69, household-workspace-C70, household-workspace-C71, household-workspace-C72, household-workspace-C73, household-workspace-C74, household-workspace-C78, household-workspace-C81, household-workspace-C82 |
 | HADW-06 | household-workspace-C06, household-workspace-C47, household-workspace-C48, household-workspace-C49, household-workspace-C50, household-workspace-C51, household-workspace-C52, household-workspace-C53, household-workspace-C54, household-workspace-C55, household-workspace-C56, household-workspace-C76 |
 | HADW-07 | household-workspace-C07, household-workspace-C55, household-workspace-C56, household-workspace-C57, household-workspace-C58, household-workspace-C59, household-workspace-C60, household-workspace-C78, household-workspace-C80 |
 | HADW-08 | household-workspace-C08, household-workspace-C61, household-workspace-C62, household-workspace-C63, household-workspace-C64 |
@@ -513,7 +517,7 @@ Acceptance scenarios are prospective requirements, not executed tests. Readiness
 ## 19. Definition of Done
 
 - [ ] Every normative requirement has acceptance and reciprocal traceability.
-- [ ] All 80 workspace acceptance scenarios have actual evidence matching their own scope; related unit counts cannot substitute for browser, image or owner-review acceptance.
+- [ ] All 82 workspace acceptance scenarios have actual evidence matching their own scope; related unit counts cannot substitute for browser, image or owner-review acceptance.
 - [ ] All original HADM-01..HADM-08 requirements, 72 household-admin cases, eight HADI refinements, and household-identity/delivery-quality contracts remain unchanged and required.
 - [ ] Architecture boundaries are implemented and automatically enforced; current authority, original-result disclosure, exact revisions, and private-data isolation pass concurrency and security evidence.
 - [ ] Numeric test budget, inventory, distribution, global coverage, and per-authored-module coverage pass; no planned case is represented as executed without evidence.

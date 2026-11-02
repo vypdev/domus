@@ -114,8 +114,8 @@
             "type": "array"
           },
           "contract_version": {
-            "const": 1,
-            "default": 1,
+            "const": 2,
+            "default": 2,
             "title": "Contract Version",
             "type": "integer"
           },
@@ -123,6 +123,10 @@
             "const": "json-integer-int64",
             "default": "json-integer-int64",
             "title": "Exact Revisions",
+            "type": "string"
+          },
+          "household_id": {
+            "title": "Household Id",
             "type": "string"
           },
           "journal": {
@@ -136,6 +140,7 @@
           }
         },
         "required": [
+          "household_id",
           "actions"
         ],
         "title": "AdministrationCapabilities",

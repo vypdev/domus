@@ -113,7 +113,10 @@ export class AdministrationController {
       if (facts.preferences !== null && facts.preferences.memberId !== access.member.memberId) {
         facts.preferences = null; errors.preferences = 'invalid_response';
       }
-      if (facts.policy !== null && facts.household !== null && facts.policy.householdId !== facts.household.householdId) {
+      if (facts.household !== null && facts.household.householdId !== capabilities.householdId) {
+        facts.household = null; errors.household = 'invalid_response';
+      }
+      if (facts.policy !== null && facts.policy.householdId !== capabilities.householdId) {
         facts.policy = null; errors.policy = 'invalid_response';
       }
       const current = await this.read(this.server.authorization(session.context), generation);
@@ -122,16 +125,14 @@ export class AdministrationController {
         this.retained = null; this.update({...blank('ready'), session, access: current, notice: 'access_changed'}); return true;
       }
       let notice: AdministrationNotice | null = session.access === 'read_only' ? 'read_only' : null;
-      if (session.access === 'full') {
-        try {
-          const opened = this.journal.open(session.context, now);
-          if (!sameContext(opened.context, session.context)) throw new Error();
-          this.opened = opened;
-        } catch {this.journal.detach(); this.opened = null; notice = 'journal_unavailable';}
-      }
+      try {
+        const opened = this.journal.open(session.context, now);
+        if (!sameContext(opened.context, session.context)) throw new Error();
+        this.opened = opened;
+      } catch {this.journal.detach(); this.opened = null; notice = 'journal_unavailable';}
       if (this.retained !== null && (!sameContext(this.retained.context, session.context)
-          || now >= this.retained.request.expiresAt || session.access !== 'full' || !allowed(access, this.retained.request)
-          || (this.retained.outcome.kind === 'receipt' && !this.bound(this.retained.outcome, this.retained.request, access, facts))))
+          || now >= this.retained.request.expiresAt || !allowed(access, this.retained.request)
+          || (this.retained.outcome.kind === 'receipt' && !this.bound(this.retained.outcome, this.retained.request, access, capabilities))))
         this.retained = null;
       const retained = this.retained;
       this.update({phase: 'ready', session, access, capabilities, ...facts, errors: Object.freeze(errors),
@@ -156,10 +157,10 @@ export class AdministrationController {
       this.retained = null; this.update({outcome: null});
     }
   }
-  private context(): JournalContext | null {
+  private context(write: boolean): JournalContext | null {
     this.tick();
     return this.running || this.state.phase !== 'ready' || this.state.session === null
-      || this.state.session.access !== 'full' || this.state.access?.state !== 'active' || this.opened === null
+      || (write && this.state.session.access !== 'full') || this.state.access?.state !== 'active' || this.opened === null
       ? null : this.state.session.context;
   }
   private revision(command: AdministrationCommand): Revision | null {
@@ -171,13 +172,12 @@ export class AdministrationController {
       case 'member.preferences.update': return this.state.preferences?.revision ?? null;
     }
   }
-  private bound(receipt: AdministrationReceipt, request: AdministrationRecord, access: AdministrationAccess, facts: Facts): boolean {
+  private bound(receipt: AdministrationReceipt, request: AdministrationRecord, access: AdministrationAccess, scope: AdministrationCapabilities): boolean {
     if (receipt.action !== request.action || (request.operationId !== null && receipt.operationId !== request.operationId)) return false;
     if (request.action === 'member.preferences.update')
       return 'memberId' in receipt.result && receipt.result.memberId === access.member!.memberId;
     if (request.action === 'household.update' || request.action === 'policy.update') {
-      const home = request.action === 'household.update' ? facts.household : facts.policy;
-      return 'householdId' in receipt.result && (home === null || receipt.result.householdId === home.householdId);
+      return 'householdId' in receipt.result && receipt.result.householdId === scope.householdId;
     }
     return true;
   }
@@ -190,7 +190,7 @@ export class AdministrationController {
   recover(key: string): Promise<void> {return this.run({kind: 'recover', key});}
   dismiss(key: string): Promise<void> {return this.run({kind: 'dismiss', key});}
   private async run(intent: Intent): Promise<void> {
-    const context = this.context(); if (context === null) return;
+    const context = this.context(intent.kind === 'new'); if (context === null) return;
     const original = intent.kind === 'new' ? null : this.opened!.records.find(record => record.key === intent.key);
     if (original === undefined) {this.update({notice: 'request_unavailable'}); return;}
     this.running = true;
@@ -199,7 +199,7 @@ export class AdministrationController {
       if (!await this.load(generation) || generation !== this.generation) return;
       if (this.state.session === null || !sameContext(context, this.state.session.context)) {this.update({notice: 'context_changed'}); return;}
       const access = this.state.access;
-      if (this.state.session.access !== 'full' || access?.state !== 'active' || this.opened === null) return;
+      if ((intent.kind === 'new' && this.state.session.access !== 'full') || access?.state !== 'active' || this.opened === null) return;
       let request: AdministrationRecord;
       if (intent.kind === 'new') {
         if (!allowed(access, intent.command)) {this.update({notice: 'action_not_allowed'}); return;}
@@ -247,7 +247,7 @@ export class AdministrationController {
       if (generation !== this.generation) return;
       this.tick(); if (generation !== this.generation) return;
       let notice: AdministrationNotice | null = null;
-      if (outcome.kind === 'receipt' && !this.bound(outcome, request, access, this.state)) {
+      if (outcome.kind === 'receipt' && !this.bound(outcome, request, access, this.state.capabilities!)) {
         if (intent.kind !== 'new') {this.update({phase: 'ready', notice: 'invalid_response'}); return;}
         outcome = Object.freeze({kind: 'uncertain'}); notice = 'invalid_response';
       }

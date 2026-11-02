@@ -104,6 +104,14 @@ does not prove a notification was sent. Historical results retain their absent-c
 warning. The capability response specifies the separate version-1 administration journal limit
 (eight records, 65,536 bytes, one hour); this advertises a contract rather than a completed UI.
 
+Capability contract version 2 adds the server-owned `household_id` routing scope. It binds
+household/policy facts and original receipts even when current aggregate reads are unavailable or
+not permitted. The identifier is neither a household-existence assertion nor a client selector or
+authority grant. The current administration client rejects legacy unbound capability version 1 and
+unknown versions. Original GET recovery still requires current original-action/operation authority,
+without an aggregate-read permission, expected revision or mutation CSRF precondition. Journal
+version 1 and all five command payload shapes remain unchanged.
+
 The authorization permission list is explicitly scoped to `household_administration`. It is not a
 global authorization answer for tasks, inventory or another member's preferences. Later domain APIs
 must derive assignment/ownership facts on the server. A member's roster profile is the explicit base

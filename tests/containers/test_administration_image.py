@@ -217,6 +217,8 @@ async def exercise(root):
             assert response.status_code == 200, response.text
             base = '/api/v1/administration'
             capabilities = (await client.get(base + '/capabilities')).json()
+            assert capabilities['contract_version'] == 2
+            assert capabilities['household_id'] == 'home'
             assert capabilities['journal']['namespace'] == 'administration'
             original = (await client.get(base + '/preferences')).json()
             member = original['member_id']

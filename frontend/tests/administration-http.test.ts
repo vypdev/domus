@@ -20,7 +20,7 @@ const member = () => ({member_id: 'member-1', role: 'viewer', status: 'active', 
 const presentation = () => ({member_id: 'member-1', alias: null as string | null, revision: '$revision'});
 const preferences = () => ({member_id: 'member-1', locale: 'es', routine_participation_summaries: false, revision: '$revision', notification_delivery: 'unavailable'});
 const policy = () => ({household_id: 'home', mapping: {mode: 'all_ha_administrators', target_ha_user_id: null}, revision: '$revision', adjustments: []});
-const capabilities = () => ({state: 'available', contract_version: 1, exact_revisions: 'json-integer-int64', actions: commands.map(c => c.action),
+const capabilities = () => ({state: 'available', contract_version: 2, household_id: 'home', exact_revisions: 'json-integer-int64', actions: commands.map(c => c.action),
   journal: {namespace: 'administration', version: 1, maximum_records: 8, maximum_bytes: 65536, lifetime_ms: 3600000}});
 const access = () => ({state: 'active', setup_allowed: false, enrollment_allowed: false, member: member(), policy_revision: '$revision', effective_role: 'administrator',
   permission_scope: 'household_administration', permissions: ['household.read', 'members.read', 'policy.manage'], message: 'Current access.', action_required: 'Review.'});
@@ -55,7 +55,7 @@ for (const mode of ['native', 'standalone'] as const) {
     const wires = [capabilities(), access(), {household_id: 'home', name: 'Home', time_zone: 'UTC', revision: '$revision'}, policy(), roster(),
       {state: 'available', profiles: [{ha_user_id: context.subject, name: null}]}, presentation(), preferences()];
     for (const data of wires) f.transport.mockResolvedValueOnce(reply(data));
-    expect((await f.server.capabilities(context).result).actions).toHaveLength(5);
+    expect(await f.server.capabilities(context).result).toMatchObject({contractVersion: 2, householdId: 'home', actions: commands.map(c => c.action)});
     const authority = await f.server.authorization(context).result;
     expect(authority).toMatchObject({member: {memberId: 'member-1', role: 'viewer', revision: REV}, effectiveRole: 'administrator', policyRevision: REV});
     expect((await f.server.household(context).result).revision).toBe(REV);
@@ -159,7 +159,9 @@ test('targeted policy, ordinary profile decisions and browser-following preferen
 
 type Projection = 'capabilities' | 'authorization' | 'policy' | 'roster' | 'directory' | 'preferences';
 const malformed: readonly [Projection, unknown][] = [
-  ['capabilities', {...capabilities(), state: 'unsupported'}], ['capabilities', {...capabilities(), contract_version: 2}],
+  ['capabilities', {...capabilities(), state: 'unsupported'}], ['capabilities', {...capabilities(), contract_version: 3}],
+  ['capabilities', {...capabilities(), contract_version: 1}],
+  ...[null, 7, '../foreign', ''].map(household_id => ['capabilities', {...capabilities(), household_id}] as [Projection, unknown]),
   ['capabilities', {...capabilities(), exact_revisions: 'float'}], ['capabilities', {...capabilities(), actions: ['household.update']}],
   ['capabilities', {...capabilities(), actions: Array(5).fill('household.update')}], ['capabilities', {...capabilities(), actions: [...commands.slice(0,4).map(c => c.action),'unknown.action']}],
   ...[{namespace: 'entry'}, {version: 2}, {maximum_records: 9}, {maximum_bytes: 65537}, {lifetime_ms: 7200000}].map(change =>

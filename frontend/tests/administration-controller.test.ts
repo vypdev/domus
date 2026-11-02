@@ -55,7 +55,7 @@ function fixture(initial = access, mode: 'native' | 'standalone' = 'standalone')
   const journal = new AdministrationSessionJournal(storage);
   const identity = {session: vi.fn(() => read<VerifiedEntrySession | null>({...session, deployment: mode}))};
   const server = {
-    capabilities: vi.fn(() => read({contractVersion: 1 as const, actions: commands.map(c => c.action)})),
+    capabilities: vi.fn(() => read({contractVersion: 2 as const, householdId: 'home', actions: commands.map(c => c.action)})),
     authorization: vi.fn(() => read(initial)), household: vi.fn(() => read(home)), policy: vi.fn(() => read(policy)),
     roster: vi.fn(() => read({directoryState: 'available' as const, members: [{member, presentation: own,
       metadata: {state: 'available' as const, name: 'Verified owner', avatarState: 'unavailable' as const}}]})),
@@ -127,9 +127,9 @@ test('C10/C11: stale or exhausted original revision is not rebased and has no pr
   await f.controller.submit({...commands[0], payload: {...commands[0].payload, expected_revision: '9223372036854775807'}});
   expect(f.controller.view.notice).toBe('revision_exhausted'); expect(f.server.send).not.toHaveBeenCalled();
 });
-test('HADW-05: read-only outage permits local facts until expiry, with no journal or mutation', async () => {
+test('HADW-05: read-only outage permits local facts and an owned journal until expiry, with no mutation', async () => {
   const f = fixture(); f.identity.session.mockReturnValue(read({...session, access: 'read_only'}));
-  await f.controller.refresh(); expect(f.controller.view.preferences).toEqual(preferences); expect(f.controller.view.journal).toBeNull();
+  await f.controller.refresh(); expect(f.controller.view.preferences).toEqual(preferences); expect(f.controller.view.journal?.records).toEqual([]);
   await f.controller.submit(commands[4]); expect(f.server.send).not.toHaveBeenCalled();
   f.setNow(session.expiresAt); f.controller.tick(); expect(f.controller.view.preferences).toBeNull();
   expect(f.controller.view.notice).toBe('authentication_required');
@@ -470,4 +470,35 @@ test('HADW-05: idle commands cannot select an identity or open storage', async (
 test('C72: a lifecycle retirement during failed preparation cannot reopen the controller', async () => {
   const f = fixture(); await f.controller.refresh(); f.entropy.requestKey.mockImplementation(() => {f.controller.close(); throw new Error('retired');});
   await f.controller.submit(commands[4]); expect(f.controller.view.phase).toBe('closed'); expect(f.controller.view.notice).toBeNull(); expect(f.server.send).not.toHaveBeenCalled();
+});
+
+test.each([0,2])('HADW-05: a foreign household receipt %s is rejected when aggregate facts are unavailable', async index => {
+  const f = fixture(); await f.controller.refresh(); f.server.send.mockResolvedValueOnce({kind: 'uncertain'}); await f.controller.submit(commands[index]);
+  f.server.household.mockImplementation(() => {throw new Error('current-household-unavailable');});
+  f.server.policy.mockImplementation(() => {throw new Error('current-policy-unavailable');});
+  f.server.original.mockReturnValueOnce(read({...receipt(commands[index]), result: {householdId: 'foreign', revision: revisionValue('8')}, eventDelivery: 'delivered'}));
+  await f.controller.recover('request-original'); expect(f.controller.view.notice).toBe('invalid_response');
+  expect(f.controller.view.journal?.records[0].stage).toBe('uncertain'); expect(f.server.send).toHaveBeenCalledTimes(1);
+});
+
+test('HADW-05: current household facts must match independently verified routing scope', async () => {
+  const f = fixture(); f.server.household.mockReturnValue(read({...home, householdId: 'foreign'}));
+  await f.controller.refresh(); expect(f.controller.view.household).toBeNull(); expect(f.controller.view.errors.household).toBe('invalid_response');
+});
+test('HADW-05: original household recovery survives reload without any aggregate-read permission', async () => {
+  const f = fixture({...access, permissions: ['household.manage','operations.read']});
+  f.journal.open(context,1000);f.journal.prepare('prior-original',commands[0],1000);
+  f.journal.record('prior-original',{stage:'committed',operationId:'op-original'},1000);f.journal.detach();
+  await f.controller.refresh();await f.controller.recover('prior-original');
+  expect(f.server.household).not.toHaveBeenCalled();expect(f.server.operation).toHaveBeenCalledTimes(1);
+  expect(f.controller.view.outcome).toEqual({...receipt(commands[0]),eventDelivery:'pending'});expect(f.server.send).not.toHaveBeenCalled();
+});
+
+test.each([false,true])('C74/C82: verified read-only grace supports explicit original GET recovery with known ID %s', async known => {
+  const f = fixture(); await f.controller.refresh(); if (!known) f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.submit(commands[4]);f.identity.session.mockReturnValue(read({...session,access:'read_only'}));
+  await f.controller.refresh();await f.controller.recover('request-original');
+  expect(known?f.server.operation:f.server.original).toHaveBeenCalledTimes(1);expect(f.controller.view.outcome?.kind).toBe('receipt');
+  await f.controller.submit(commands[0]);expect(f.server.send).toHaveBeenCalledTimes(1);expect(f.entropy.requestKey).toHaveBeenCalledTimes(1);
+  f.setNow(session.expiresAt);f.controller.tick();expect(f.controller.view.outcome).toBeNull();expect(f.controller.view.preferences).toBeNull();
 });

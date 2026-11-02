@@ -30,7 +30,9 @@ export interface AdministrationPolicy {
   readonly householdId: string; readonly revision: Revision; readonly mappingMode: MappingMode;
   readonly targetHAUserId: string | null; readonly adjustments: readonly ProfileDecision[];
 }
-export interface AdministrationCapabilities {readonly contractVersion: 1; readonly actions: readonly AdministrationAction[];}
+export interface AdministrationCapabilities {
+  readonly contractVersion: 2; readonly householdId: string; readonly actions: readonly AdministrationAction[];
+}
 export type AdministrationResult = Readonly<{revision: Revision}> & (
   Readonly<{householdId: string; mappingMode?: MappingMode}>
   | Readonly<{memberId: string; role: MemberRole; status: MemberStatus}>

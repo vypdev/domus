@@ -90,7 +90,8 @@ class AdministrationJournal(StrictModel):
 
 class AdministrationCapabilities(StrictModel):
     state: Literal["available"] = "available"
-    contract_version: Literal[1] = 1
+    contract_version: Literal[2] = 2
+    household_id: str
     exact_revisions: Literal["json-integer-int64"] = "json-integer-int64"
     actions: tuple[AdministrationAction, ...]
     journal: AdministrationJournal = Field(default_factory=AdministrationJournal)
