@@ -31,6 +31,7 @@ from domus.infrastructure.auth_runtime import MonotonicClock, SecureEntropy
 from domus.infrastructure.ha_config import HAEndpoint, PublicOrigins
 from domus.infrastructure.ha_directory import HomeAssistantDirectory
 from domus.infrastructure.ha_ingress import SupervisorIdentity
+from domus.infrastructure.ha_member_profiles import NativeMemberProfiles
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.ingress_sessions import IngressRequest, IngressSessions
 from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
@@ -130,7 +131,10 @@ def _compose_business(
         correlation=lambda: "cor_" + entropy.new(),
         entry=EntryHTTPContext(store.installation, "native", clock, utc, True),
         task_context=lambda request: tasks(request_actor(request)),
-        administration_context=lambda request: administration_services(context(request).household),
+        administration_context=lambda request: administration_services(
+            context(request).household,
+            NativeMemberProfiles(identity.lookup, identity.transport_token, request_actor(request)),
+        ),
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
         ui_binding=ui_binding,
     )

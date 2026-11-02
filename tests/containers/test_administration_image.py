@@ -164,6 +164,10 @@ class Source:
         return HumanIdentity(user_id, True, True, False)
     def directory_users(self, token, user_ids):
         return tuple(self.directory_user(token, user_id) for user_id in user_ids)
+    def _request(self, token, operation):
+        assert operation == 'config/auth/list'
+        return [{'id': user, 'name': '<b>Same name</b>', 'is_active': True,
+            'system_generated': False} for user in (USER, OTHER)]
 
 class OAuth:
     def __init__(self, configuration):
@@ -216,6 +220,14 @@ async def exercise(root):
             assert capabilities['journal']['namespace'] == 'administration'
             original = (await client.get(base + '/preferences')).json()
             member = original['member_id']
+            roster = await client.get(base + '/roster')
+            assert roster.status_code == 200, roster.text
+            assert roster.json()['directory_state'] == 'available'
+            assert roster.json()['members'][0]['metadata'] == {
+                'state': 'available', 'name': '<b>Same name</b>', 'avatar_state': 'unavailable'}
+            directory = await client.get(base + '/directory')
+            assert directory.status_code == 200, directory.text
+            assert {row['ha_user_id'] for row in directory.json()['profiles']} == {USER, OTHER}
             saved = await client.put(base + '/preferences', json={
                 'expected_revision': 1, 'locale': 'es', 'routine_participation_summaries': False},
                 headers=await headers('private'))
@@ -243,6 +255,10 @@ async def exercise(root):
             own = (await client.get(base + '/preferences')).json()
             assert own['member_id'] != member and own['locale'] is None
             assert own['routine_participation_summaries'] is True
+            roster = await client.get(base + '/roster')
+            assert roster.status_code == 200 and len(roster.json()['members']) == 2
+            assert all(set(row['metadata']) == {'state', 'name', 'avatar_state'}
+                for row in roster.json()['members'])
             presentation = await client.get(base + '/members/' + member + '/presentation')
             assert presentation.json()['alias'] == '<b>Literal</b>'
             with runtime.storage.database.read() as unit:

@@ -66,6 +66,8 @@ The full administration UI and its separate browser journal remain under develop
 | Route | Meaning | Current local authority |
 |---|---|---|
 | GET /api/v1/administration/capabilities | Wired action/revision/journal contract | Verified context; availability is not a caller permission |
+| GET /api/v1/administration/roster | Current masked membership, public alias/revision and verified name/source state | Member read before and after bounded source I/O |
+| GET /api/v1/administration/directory | Complete bounded source state and eligible account choices | Current policy management before and after source I/O |
 | GET /api/v1/administration/members/{member_id}/presentation | Public alias and its independent revision | Member read |
 | PUT /api/v1/administration/members/{member_id}/presentation | Set literal alias, or explicitly clear with null | Fresh human and current member management or applicable own preference write |
 | GET /api/v1/administration/preferences | Own locale, summary choice and independent revision | Current owner-scoped preference read |
@@ -85,6 +87,16 @@ no effect; the caller must not automatically resend or replace its key. Another 
 cannot read an owner's original private preferences. Current original-action permission is checked
 before replay or disclosure; changing a revision or payload under the same key remains a conflict.
 Both lookup routes are protected reads without a mutation-only CSRF/revision requirement.
+
+Roster metadata has only `state`, nullable `name` and `avatar_state: "unavailable"`. States distinguish
+available, confirmed absence, denied and unavailable source facts. A verified account without a name
+has an unavailable label. Actual membership survives source failure. Other people's HA linkage and
+ordinary exceptions retain the existing roster masking; source metadata cannot reveal those fields.
+The directory contains at most 256 complete source facts before eligible-account filtering, with
+nullable bounded literal names. A denied/unavailable directory returns no choices and an explicit
+state, and does not certify an empty verified directory. Neither read initializes or changes records.
+Both reject actor/subject query selectors. A changed membership/policy snapshot returns a conflict
+requiring a fresh view; lost authority is checked before disclosure.
 
 Profile results explicitly report `notification_delivery: "unavailable"`. Administration lookups
 separately report `event_delivery` as pending, delivered or suppressed. A delivered technical event

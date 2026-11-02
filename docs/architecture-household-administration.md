@@ -9,13 +9,13 @@ have separate state and revisions; a public presentation record never includes p
 An alias is null or trimmed text of 1–80 Unicode code points. UTF-8 and every Unicode Cc control
 are checked before whitespace normalization. Literal markup stays literal data; the eventual
 renderer must display it inertly. Null explicitly clears the alias. A missing alias does not invent
-an HA display name or avatar. The future profile adapter must supply actual verified presentation
-facts or an explicit unavailable result, independently of human proof.
+an HA display name or avatar. The source adapter supplies actual verified name facts or an explicit
+unavailable result, independently of human proof. Avatar delivery is unavailable.
 
 Private preference values are browser-following/null, English or Spanish locale, plus a strict
 routine-summary boolean with true as the engineering default. Persisting a preference does not
-establish notification delivery. The current application and HTTP behavior is described below;
-provider metadata, the separate administration journal and the full EN/ES workspace remain required.
+establish notification delivery. The current application, metadata and HTTP behavior is described
+below; the separate administration journal and the full EN/ES workspace remain required.
 
 The [companion](../specs/household-administration.md) retains all 24 Action-published case rows and
 adds the omitted independent risks to a 72-case floor. Its original identity and delivery owners
@@ -87,3 +87,36 @@ rollback. This storage increment does not reduce or complete the retained 72-cas
 The [checkpoint evidence](evidence/household-administration.json) distinguishes the initial failing
 test, complete backend execution, per-module/global coverage, independent audit and architecture
 contracts. No packaged update or owner-HA administration journey is claimed by this checkpoint.
+
+## Bounded source facts and current roster
+
+[Source values](../backend/src/domus/domain/member_sources.py) distinguish a complete directory,
+confirmed omission, denied access and unavailability. Names are nullable, literal valid UTF-8 of at
+most 256 code points, with no Cc controls or whitespace-only labels. An eligibility fact is a strict
+boolean and never supplies a household role or grant. The complete source bound is 256 unique
+accounts, including ineligible records; overflow/malformed data is not truncated into success.
+
+The [HA adapter](../backend/src/domus/infrastructure/ha_member_profiles.py) uses the existing fixed,
+bounded WebSocket transport. HA2026.10.4 exposes account names through
+[own-user source](https://github.com/home-assistant/core/blob/2026.10.4/homeassistant/components/auth/__init__.py#L513)
+and the administrator-only
+[directory source](https://github.com/home-assistant/core/blob/2026.10.4/homeassistant/components/config/auth.py#L19).
+Neither response supplies an account avatar. The adapter makes at most two metadata requests: a
+complete directory read and, if it fails, an optional exact-own OAuth read. Native technical grants
+never use that fallback as the human. Protocol facts, fake-provider execution and owner HA evidence
+remain separate; no live owner directory acceptance is claimed here.
+
+The standalone identity adapter reuses one private credential gate for directory and metadata
+operations. Current read proof permits only the original bounded outage lease; authorizing directory
+proofs for mutations still require fresh write proof. Refreshed tokens retain the original deadline.
+Logout, expiry or credential replacement before/during a lookup discards its result. No token enters
+the application port or HTTP response.
+
+[Roster queries](../backend/src/domus/application/household_roster.py) require current authority
+before source access, release SQLite before provider I/O, then recheck human identity and local
+authority before disclosure. A changed membership/policy snapshot requires a fresh view. Alias
+updates use their independent current revision. Existing linkage/exception masking is reused;
+metadata is declassified to state and name before leaving the application, without HA IDs or
+eligibility. Unknown names stay unavailable while canonical local membership remains. Directory
+choices require policy management and contain only complete, source-eligible facts. No query
+initializes household, membership, profile or preference records.

@@ -1,6 +1,7 @@
 """Private in-memory OAuth credentials bind to server-owned, nonextendable leases."""
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from threading import Lock, RLock
 from urllib.parse import urlencode
@@ -11,7 +12,9 @@ from domus.application.session_values import SessionLease
 from domus.application.sessions import SessionGuard
 from domus.domain.errors import Conflict, DomusError, IdentityRejected, InvalidInput
 from domus.domain.identity import HumanIdentity
+from domus.domain.member_sources import MemberSourceSnapshot
 from domus.infrastructure.ha_http import HomeAssistantOAuth, OAuthTokens
+from domus.infrastructure.ha_member_profiles import HomeAssistantMemberProfiles
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.memory_sessions import MemorySessions
 
@@ -145,6 +148,20 @@ class StandaloneIdentity:
         if not ha_user_ids:
             return ()
         SessionGuard(self, self, self.clock).write(session_id)
+        return self._with_credentials(
+            session_id, lambda tokens: self.socket.directory_users(tokens.access_token, ha_user_ids)
+        )
+
+    def member_sources(self, session_id: str) -> MemberSourceSnapshot:
+        human = SessionGuard(self, self, self.clock).read(session_id)
+        return self._with_credentials(
+            session_id,
+            lambda tokens: HomeAssistantMemberProfiles(
+                self.socket, tokens.access_token, human.ha_user_id, tokens
+            ).read(),
+        )
+
+    def _with_credentials[T](self, session_id: str, read: Callable[[OAuthTokens], T]) -> T:
         with self._lock:
             selected = self._credentials.get(session_id)
             if selected is None:
@@ -153,7 +170,7 @@ class StandaloneIdentity:
             with self._lock:
                 if self._credentials.get(session_id) is not selected:
                     raise IdentityRejected("session_changed")
-            humans = self.socket.directory_users(selected.tokens.access_token, ha_user_ids)
+            result = read(selected.tokens)
             with self._lock:
                 lease = self.leases.get(session_id)
                 if self._credentials.get(session_id) is not selected or lease is None:
@@ -161,7 +178,7 @@ class StandaloneIdentity:
                 if not lease.valid_at(self.clock.now()):
                     self.remove(session_id)
                     raise IdentityRejected("session_expired")
-            return humans
+            return result
 
     def shutdown(self) -> tuple[int, int]:
         """Erase every local credential; at most two bounded remote revoke calls."""

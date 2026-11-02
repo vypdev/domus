@@ -5,7 +5,8 @@ from typing import Literal
 from pydantic import Field
 
 from domus.domain.member_profiles import MemberLocale
-from domus.entrypoints.household_http import ReceiptResponse
+from domus.domain.member_sources import SourceState
+from domus.entrypoints.household_http import MemberResponse, ReceiptResponse
 from domus.entrypoints.http_contract import PositiveRevision, StrictModel
 
 type AdministrationAction = Literal[
@@ -40,6 +41,33 @@ class PreferencesResponse(StrictModel):
     routine_participation_summaries: bool
     revision: PositiveRevision
     notification_delivery: Literal["unavailable"] = "unavailable"
+
+
+class RosterMetadataResponse(StrictModel):
+    state: SourceState = Field(strict=False)
+    name: str | None
+    avatar_state: Literal["unavailable"] = "unavailable"
+
+
+class RosterMemberResponse(StrictModel):
+    member: MemberResponse
+    presentation: PresentationResponse
+    metadata: RosterMetadataResponse
+
+
+class RosterResponse(StrictModel):
+    members: tuple[RosterMemberResponse, ...]
+    directory_state: Literal["available", "denied", "unavailable"]
+
+
+class DirectoryChoiceResponse(StrictModel):
+    ha_user_id: str
+    name: str | None
+
+
+class DirectoryResponse(StrictModel):
+    state: Literal["available", "denied", "unavailable"]
+    profiles: tuple[DirectoryChoiceResponse, ...]
 
 
 class AdministrationReceipt(ReceiptResponse):

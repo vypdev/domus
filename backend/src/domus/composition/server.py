@@ -31,7 +31,7 @@ from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
 from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
 from domus.infrastructure.recurrence_worker import RecurrenceWorker
-from domus.infrastructure.session_access import SessionActor
+from domus.infrastructure.session_access import SessionActor, SessionMemberProfiles
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.standalone_sessions import StandaloneIdentity
 
@@ -112,7 +112,9 @@ def _compose(
         context = household_factory
 
         def session_administration(session_id: str) -> AdministrationHTTPContext:
-            return administration_services(household_factory(session_id))
+            return administration_services(
+                household_factory(session_id), SessionMemberProfiles(identity, session_id)
+            )
 
         administration = session_administration
         factory = task_contexts(store, installation)

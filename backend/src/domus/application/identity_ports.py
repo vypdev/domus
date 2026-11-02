@@ -13,6 +13,12 @@ class CurrentHuman(Protocol):
     def current(self) -> HumanIdentity: ...
 
 
+class ReadHuman(Protocol):
+    """Current verified read proof, including only the existing bounded outage lease."""
+
+    def read(self) -> HumanIdentity: ...
+
+
 class HumanDirectory(Protocol):
     """Resolve one exact, currently eligible human through a configured authority."""
 

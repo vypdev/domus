@@ -448,3 +448,161 @@ def test_alias_json_boundary_rejects_ambiguous_or_unsupported_encoding(
             headers={**headers("invalid"), "Content-Type": "application/json"},
         )
         assert response.status_code == 422 and store.path.read_bytes() == before
+
+
+def profile_provider(api, *, denied=False, malformed=False):
+    from domus.domain.errors import Forbidden
+
+    calls = []
+
+    def request(token, operation):
+        calls.append(operation)
+        if operation == "config/auth/list":
+            if denied:
+                raise Forbidden("ha_directory_forbidden")
+            if malformed:
+                return [{"id": "forged"}]
+            return [
+                {"id": user, "name": "<b>Same</b>", "is_active": True, "system_generated": False}
+                for user in ("a" * 32, "b" * 32)
+            ] + [
+                {"id": "c" * 32, "name": "Inactive", "is_active": False, "system_generated": False}
+            ]
+        assert operation == "auth/current_user"
+        return {
+            "id": api.source.human.ha_user_id,
+            "is_admin": api.source.human.is_administrator,
+            "name": "Own name",
+            "credentials": [{"auth_provider_type": "homeassistant"}],
+        }
+
+    api.source._request = request
+    return calls
+
+
+def test_both_compositions_publish_real_source_states_and_only_permitted_directory_facts(api):
+    calls = profile_provider(api)
+    before = api.store.path.read_bytes()
+    roster = api.client.get(BASE + "/roster")
+    assert roster.status_code == 200, roster.text
+    assert roster.json()["directory_state"] == "available"
+    metadata = roster.json()["members"][0]["metadata"]
+    assert metadata == {"state": "available", "name": "<b>Same</b>", "avatar_state": "unavailable"}
+    directory = api.client.get(BASE + "/directory")
+    assert directory.status_code == 200, directory.text
+    assert {row["ha_user_id"] for row in directory.json()["profiles"]} == {"a" * 32, "b" * 32}
+    assert calls == ["config/auth/list", "config/auth/list"]
+    assert api.store.path.read_bytes() == before
+
+
+def test_ordinary_wire_roster_omits_other_linkage_from_every_nested_metadata_surface(api):
+    from dataclasses import replace
+
+    from domus.domain.identity import MemberStatus, Role
+
+    profile_provider(api)
+    api.user("b" * 32)
+    enrolled = api.client.post(
+        "/api/v1/members/enrollment", json={"expected_revision": 0}, headers=api.headers("join")
+    )
+    assert enrolled.status_code == 200
+    target = enrolled.json()["result"]["member_id"]
+    # Existing command acceptance owns activation; this establishes the read-permission fixture.
+    with api.store.write() as unit:
+        member = unit.members.get("home", target)
+        unit.members.save(
+            replace(
+                member,
+                role=Role.RESTRICTED,
+                status=MemberStatus.ACTIVE,
+                revision=member.revision + 1,
+            ),
+            member.revision,
+        )
+    before = api.store.path.read_bytes()
+    response = api.client.get(BASE + "/roster")
+    assert response.status_code == 200, response.text
+    assert len(response.json()["members"]) == 2
+    other = next(row for row in response.json()["members"] if row["member"]["member_id"] != target)
+    assert other["member"]["ha_user_id"] is None and other["member"]["exceptions"] is None
+    assert set(other["metadata"]) == {"state", "name", "avatar_state"}
+    assert "a" * 32 not in response.text
+    assert api.client.get(BASE + "/directory").status_code == 403
+    assert api.store.path.read_bytes() == before
+
+
+def test_provider_denial_keeps_roster_and_only_standalone_own_oauth_metadata(api):
+    profile_provider(api, denied=True)
+    response = api.client.get(BASE + "/roster")
+    assert response.status_code == 200, response.text
+    value = response.json()
+    assert value["directory_state"] == "denied" and len(value["members"]) == 1
+    metadata = value["members"][0]["metadata"]
+    assert metadata["state"] == ("available" if api.mode == "standalone" else "denied")
+    assert metadata["name"] == ("Own name" if api.mode == "standalone" else None)
+    directory = api.client.get(BASE + "/directory").json()
+    assert directory == {"state": "denied", "profiles": []}
+
+
+def test_read_scope_is_closed_and_invalid_provider_data_cannot_fabricate_an_empty_directory(api):
+    profile_provider(api, malformed=True)
+    before = api.store.path.read_bytes()
+    result = api.client.get(BASE + "/roster")
+    assert result.status_code == 200 and len(result.json()["members"]) == 1
+    assert result.json()["directory_state"] == "unavailable"
+    assert api.client.get(BASE + "/directory").json() == {"state": "unavailable", "profiles": []}
+    assert api.client.get(BASE + "/roster?actor_id=forged").status_code == 422
+    assert api.client.get(BASE + "/directory?subject=forged").status_code == 422
+    assert api.store.path.read_bytes() == before
+
+
+def test_unconfigured_source_has_explicit_unavailable_facts_without_invented_profiles(tmp_path):
+    client, _, _, _, _, _ = standalone_fixture(tmp_path)
+    try:
+        login(client)
+        standalone_setup(client)
+        result = client.get(BASE + "/roster")
+        assert result.status_code == 200, result.text
+        assert result.json()["directory_state"] == "unavailable"
+        assert result.json()["members"][0]["metadata"]["state"] == "unavailable"
+    finally:
+        client.close()
+
+
+def test_selected_domus_administration_does_not_claim_ha_directory_permission(api):
+    from domus.domain.identity import AdministratorMapping, MappingMode, MemberStatus, Role
+
+    profile_provider(api, denied=api.mode == "standalone")
+    api.user("b" * 32)
+    joined = api.client.post(
+        "/api/v1/members/enrollment",
+        json={"expected_revision": 0},
+        headers=api.headers("join-selected"),
+    )
+    assert joined.status_code == 200
+    with api.store.write() as unit:
+        member = unit.members.get("home", joined.json()["result"]["member_id"])
+        unit.members.save(
+            replace(
+                member, role=Role.VIEWER, status=MemberStatus.ACTIVE, revision=member.revision + 1
+            ),
+            member.revision,
+        )
+        policy = unit.policies.get("home")
+        unit.policies.save(
+            replace(
+                policy,
+                mapping=AdministratorMapping(MappingMode.SELECTED, "b" * 32),
+                revision=policy.revision + 1,
+            ),
+            policy.revision,
+        )
+    assert api.client.get("/api/v1/session").json()["ha_administrator"] is False
+    assert api.client.get("/api/v1/authorization").json()["effective_role"] == "administrator"
+    before = api.store.path.read_bytes()
+    directory = api.client.get(BASE + "/directory")
+    assert directory.status_code == 200, directory.text
+    assert directory.json()["state"] == ("denied" if api.mode == "standalone" else "available")
+    if api.mode == "standalone":
+        assert directory.json()["profiles"] == []
+    assert api.store.path.read_bytes() == before

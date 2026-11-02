@@ -70,7 +70,7 @@
     "consumer": "Original failing and passing model/backend measurements, source inventory and pinned SDD reproduction retained for current PR review; disposable coverage databases, XML and pytest cache removed.",
     "privateLocalOnly": true
   },
-  "pending": "Verified HA metadata/directory, separate exact-revision administration browser journal, complete EN/ES roster/settings/profile/mapping workspace, Storybook and real Python/SQLite browser journeys, complete72-case product acceptance and current-head hosted image/native review. Recurrence remains issue23; installed Edge.5 unchanged.",
+  "pending": "Complete frontend consumption, separate bounded journal, exact entry/admin revision integration, all EN/ES forms and Storybook/real Python-SQLite journeys, safe avatar source feasibility/owner evidence when available, all72 retained owner-case acceptance and fresh hosted source images/review. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete.",
   "acceptance": "138 parameterized unit executions and a complete backend campaign are not 72 completed administration journeys. No notification delivery, HA metadata availability, schema migration, package/adoption, all-domain release or Stable distribution acceptance is claimed.",
   "storageIncrement": {
     "issue": "https://github.com/vypdev/domus/issues/21",
@@ -312,5 +312,73 @@
       "scope": "Exact original-wheel failure, original framework control, complete backend/frontend coverage, source/wheel and original SDK proof; scratch DBs retired after producers end."
     },
     "pending": "Wire exact administration/entry revision decoding, HA metadata and directory facts, separate bounded administration journal, full EN/ES workspace, Storybook and real Python/SQLite browser journeys, all72 owner journeys and fresh hosted image/native acceptance. No owner HA update, Stable release, recurrence23 or full product completion."
+  },
+  "sourceIncrement": {
+    "sourceBase": "2b6e7e18ac246b62aa70cfcee69d0c8aaed34231",
+    "implemented": "Bounded literal HA name/eligibility source facts, distinct available/absent/denied/unavailable states, exact own OAuth fallback, native verified-subject binding, private credential/lease fences and currently authorized masked roster/directory HTTP in both deployments. No source role becomes a household grant.",
+    "sourceIdentity": {
+      "authoredModules": 151,
+      "backendInventorySHA256": "51290ec09e62eeb5a2d1f963554bd913bc798447860b44357cf98715b1e7f30a",
+      "wheelSHA256": "2e02ac4f0c35613e618c089c51accef159661f2e058a5a6eb301721c18bb27e0",
+      "everyModuleByteVerified": true
+    },
+    "backend": {
+      "executions": 4354,
+      "authoredModules": 151,
+      "statements": 10432,
+      "branches": 2928,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "testsFirst": [
+      "Domain/query/HA adapter imports failed before the new modules existed.",
+      "Nine original session cases failed on absent metadata access before session integration.",
+      "Both actual composition roster tests initially returned404 before the routes were wired.",
+      "A prototype application projection retained provider linkage inside nested metadata; the new declassification test failed before state/name-only projection was implemented and before HTTP publication.",
+      "A known account with no name initially claimed available metadata; the new test required an unavailable label while retaining a complete directory."
+    ],
+    "controls": [
+      "Both actual deployments retain current proof, unchanged lease deadlines, fresh-grant rotation and logout/expiry/subject-change fences.",
+      "Provider reads occur outside SQLite; actual concurrent alias changes are visible, while changed membership/policy or lost authority blocks disclosure.",
+      "Both-mode wire tests preserve existing linkage/exception masking and omit source IDs/eligibility/private preferences from ordinary metadata.",
+      "Real loopback HA fixtures cover complete/empty/omitted/denied/unavailable/malformed/overflow data and literal text; technical native tokens never supply the own-user OAuth fallback.",
+      "Current Domus administration selected for a non-HA-administrator does not claim HA directory permission: standalone returns denied facts; native uses its separate authorized technical data lookup.",
+      "All six exact source image scripts pass on the host, including the new roster/directory controls; current-head actual CPU acceptance remains hosted CI work."
+    ],
+    "checks": {
+      "strictBackendTypes": "passed151modules",
+      "ruff": "passed374files",
+      "architecture": "3kept0broken;195files1299dependencies",
+      "documentationLinks": "passed",
+      "originalSdkPolicyModulesByteVerified": 7,
+      "originalSddFormatConsistencyAndCatalog": "passed"
+    },
+    "primaryProviderContracts": [
+      "https://github.com/home-assistant/core/blob/2026.10.4/homeassistant/components/auth/__init__.py#L513",
+      "https://github.com/home-assistant/core/blob/2026.10.4/homeassistant/components/config/auth.py#L19"
+    ],
+    "previousHostedHead": {
+      "head": "2b6e7e18ac246b62aa70cfcee69d0c8aaed34231",
+      "ci": 41481867481,
+      "aggregate": 125405907460,
+      "backend": 125402001334,
+      "amd64": 125402002305,
+      "aarch64": 125402001582,
+      "productResult": "success",
+      "native": 41481867204,
+      "nativeJob": 125401999096,
+      "partitions": "6/6",
+      "context": "complete",
+      "open": 0,
+      "fixed": 1,
+      "dismissed": 1,
+      "scope": "One valid maximum correction and one proved missing-guide false positive; source work requires fresh hosted review."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-member-source-2b6e7e1",
+      "privateLocalOnly": true,
+      "scope": "Original failures, full/focused backend coverage, source/wheel, source/provider/session/projection and exact image-script controls; disposable DBs retired after producers end."
+    },
+    "pending": "Complete frontend consumption, separate bounded journal, exact entry/admin revision integration, all EN/ES forms and Storybook/real Python-SQLite journeys, safe avatar source feasibility/owner evidence when available, all72 retained owner-case acceptance and fresh hosted source images/review. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete."
   }
 }

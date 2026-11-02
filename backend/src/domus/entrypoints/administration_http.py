@@ -9,6 +9,7 @@ from fastapi.params import Depends
 
 from domus.application.household_administration_queries import HouseholdAdministrationQueries
 from domus.application.household_queries import ADMINISTRATION_ACTIONS, HouseholdQueries
+from domus.application.household_roster import HouseholdRosterQueries
 from domus.application.member_profile_commands import (
     AliasUpdate,
     MemberProfileCommands,
@@ -21,9 +22,11 @@ from domus.entrypoints.administration_dto import (
     AdministrationOperation,
     AdministrationReceipt,
     AliasRequest,
+    DirectoryResponse,
     PreferencesRequest,
     PreferencesResponse,
     PresentationResponse,
+    RosterResponse,
 )
 from domus.entrypoints.household_http import _EmptyQuery, _JSONRoute, _key, _receipt
 
@@ -33,6 +36,7 @@ class AdministrationHTTPContext:
     queries: Callable[[], HouseholdAdministrationQueries]
     commands: MemberProfileCommands
     operations: Callable[[], HouseholdQueries]
+    roster: HouseholdRosterQueries
 
 
 def _profile_receipt(receipt: Receipt) -> AdministrationReceipt:
@@ -73,6 +77,14 @@ def create_administration_router(
         request: Request, query: Annotated[_EmptyQuery, Query()]
     ) -> PreferencesResponse:
         return PreferencesResponse.model_validate(context(request).queries().preferences())
+
+    @router.get("/roster", response_model=RosterResponse)
+    def roster(request: Request, query: Annotated[_EmptyQuery, Query()]) -> RosterResponse:
+        return RosterResponse.model_validate(context(request).roster.roster())
+
+    @router.get("/directory", response_model=DirectoryResponse)
+    def directory(request: Request, query: Annotated[_EmptyQuery, Query()]) -> DirectoryResponse:
+        return DirectoryResponse.model_validate(context(request).roster.directory())
 
     @router.get("/members/{member_id}/presentation", response_model=PresentationResponse)
     def presentation(
