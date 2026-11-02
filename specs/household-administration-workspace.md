@@ -10,7 +10,7 @@
 - Required review gates: product UX, architecture, testing, documentation, security/operations
 - Open decisions blocking readiness: None identified. Implementation and acceptance remain outstanding; Draft status and the Action-owned managed-branch readiness gate remain in force.
 
-This companion adds implementation scope under the existing household-identity capability. It does not replace or reduce `specs/household-identity.md`, `specs/household-administration.md`, or `specs/household-administration-integration.md`. Preserve all HADM-01..HADM-08 requirements and all 72 existing `household-admin-C01` through `household-admin-C72` cases, as well as all eight `household-admin-integration-C01` through `household-admin-integration-C08` refinements and the household-identity and delivery-quality contracts. Those retained cases and refinements are existing owner inventory, not cases in this companion's budget. The eight integration refinements and parameterized storage executions are not 80 independent product journeys. A merged checkpoint, this draft, or publication does not establish workspace acceptance.
+This companion adds implementation scope under the existing household-identity capability. It does not replace or reduce `specs/household-identity.md`, `specs/household-administration.md`, or `specs/household-administration-integration.md`. Preserve all HADM-01..HADM-08 requirements and all 72 existing `household-admin-C01` through `household-admin-C72` cases, as well as all eight `household-admin-integration-C01` through `household-admin-integration-C08` refinements and the household-identity and delivery-quality contracts. Those retained cases and refinements are existing owner inventory, not cases in this companion's budget. Owning inventory, workspace refinement rows and parameterized executions must not be added together as independently completed product journeys. A merged checkpoint, this draft, or publication does not establish workspace acceptance.
 
 ## 1. Executive summary
 
@@ -273,30 +273,104 @@ Use actual merged schema9. Preserve supported immutable schema1..8 inputs and ex
 
 ## 14. Testing strategy
 
-Retain the full original inventory: `household-admin-C01` through `household-admin-C72`, all `household-admin-integration-C01` through `household-admin-integration-C08`, and the household-identity and delivery-quality owner contracts and cases. The new companion inventory below is additive. No acceptance case is claimed executed by this draft or by the storage checkpoint.
+Retain the full original inventory: `household-admin-C01` through `household-admin-C72`, all `household-admin-integration-C01` through `household-admin-integration-C08`, and the household-identity and delivery-quality owner contracts and cases. None is removed or redefined by this companion.
+
+The former eight compound workspace scenarios understated independently observable risks. Their IDs remain; each now names one concrete behavior, and the remaining assertions are explicitly decomposed below. The minimum is 80 distinct workspace acceptance scenarios across the same eight unchanged requirements. This is risk decomposition, not 80 completed product journeys or an executed-case claim. Repeated inputs, themes, deployment parameters, storage executions or coverage lines do not increase the inventory count. Each row needs its own evidence; passing a related unit test does not establish a complete browser, image or owner-review case. No full acceptance is claimed by an implementation checkpoint.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Domain/configuration/pure planning | 1 | Observable scenarios in the case inventory. |
-| State/application/idempotency/races | 1 | Observable scenarios in the case inventory. |
-| Adapters/provider contracts | 1 | Observable scenarios in the case inventory. |
-| Application use cases | 1 | Observable scenarios in the case inventory. |
-| Security/abuse | 1 | Observable scenarios in the case inventory. |
-| Presentation/localization/accessibility/sanitization | 1 | Observable scenarios in the case inventory. |
-| Integration/end-to-end/compatibility/migration | 1 | Observable scenarios in the case inventory. |
-| Workflows/permissions/schemas/setup | 1 | Observable scenarios in the case inventory. |
-| Total | 8 | Distinct inventory cases; repeated executions do not add cases. |
+| Domain/configuration/pure planning | 9 | Nine independent value/encoding invariants: clear, alias bounds/literal text, exact revision/exhaustion, household text, preferences, unique decisions and coherent mapping. |
+| State/application/idempotency/races | 14 | Fourteen independent effect/privacy/recovery invariants: competing writers, original key/payload/operation identity, authority races, private surfaces, independent revisions, expiry, context retention, storage fences, unresolved work and lost responses. |
+| Adapters/provider contracts | 11 | Eleven independently observable provider outcomes: verified values, empty/omitted/denied/unavailable/malformed/oversized batches, own OAuth fallback, native subject separation, credential races and trusted avatar availability. |
+| Application use cases | 9 | Nine independently authorized transitions: pending activation, settings catalog, target eligibility, explicit mapping, ordinary profile save, last-admin safeguard, public alias scope, read grace and permission provenance. |
+| Security/abuse | 13 | Thirteen independent trust-boundary risks: GET contract, unknown DTO/action, CSRF, Origin/context, original authority, protected grants, forbidden stored data, record/byte bounds, namespace, numeric evidence, retired responses and session expiry. |
+| Presentation/localization/accessibility/sanitization | 10 | Ten independently inspectable UX outcomes: saved/browser locale, draft retention, inert text, keyboard focus, announced status, narrow layout, themes, reduced motion and honest notification status. |
+| Integration/end-to-end/compatibility/migration | 9 | Nine distinct runtime/compatibility paths: historical effect, native/standalone journeys, each CPU image, restore fence, compatible rollback, high-revision entry and incompatible old-image refusal. |
+| Workflows/permissions/schemas/setup | 5 | Five independent delivery gates: retained traceability, architecture, source-complete coverage, applicable current-head CI and accurate discoverable guidance. |
+| Total | 80 | One independently observable behavior per row; all original owning inventories remain required separately. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
-| household-workspace-C01 | Domain/configuration/pure planning | HADW-01, HADW-05 | Given an alias and supported revision boundary, when the closed policy validates input, then null alone clears, invalid/control text is rejected, and exact revisions are preserved without changing identity or private state. |
-| household-workspace-C02 | State/application/idempotency/races | HADW-01, HADW-02, HADW-05 | Given concurrent writes and a lost response, when the same immutable original request is looked up, then at most one expected-revision effect exists and only its currently authorized owner can learn a private result. |
-| household-workspace-C03 | Adapters/provider contracts | HADW-03 | Given verified, absent, denied, unavailable, malformed, and oversized provider results, when the bounded adapter maps them, then each state remains distinct and no identity, roster entry, or selector is fabricated. |
-| household-workspace-C04 | Application use cases | HADW-04 | Given pending membership and existing household/profile/mapping state, when an administrator submits an explicit change, then current proof and last-effective-administrator safeguards apply and activation begins restricted. |
-| household-workspace-C05 | Security/abuse | HADW-02, HADW-05 | Given unknown DTO fields/actions, forged or expired journal data, cross-context requests, or lost authority, when a write or replay is attempted, then it is denied before effect or original-result disclosure; GET lookup retains its existing protected contract. |
-| household-workspace-C06 | Presentation/localization/accessibility/sanitization | HADW-02, HADW-03, HADW-06 | Given provider text containing markup and an owner changing locale with an unsaved draft, when native and standalone views render at narrow and dark settings, then text stays inert, the draft is preserved, and keyboard/focus/status and EN/ES behavior remain usable. |
-| household-workspace-C07 | Integration/end-to-end/compatibility/migration | HADW-07 | Given actual schema9 data and supported restoration/rollback inputs, when both real CPU package/runtime paths are exercised, then history, recurrence state, operation fences, and compatible rollback are preserved without relabeling schema. |
-| household-workspace-C08 | Workflows/permissions/schemas/setup | HADW-08 | Given the retained owner requirements and cases, when traceability, architecture, coverage, CI, and documentation checks run, then every retained contract remains linked to evidence and both real CPU images are required without claiming unexecuted workspace acceptance. |
+| household-workspace-C01 | Domain/configuration/pure planning | HADW-01 | Given an existing alias, when the permitted owner explicitly saves null, then only the public alias is cleared. |
+| household-workspace-C02 | State/application/idempotency/races | HADW-02 | Given an owner preference receipt, when another household administrator requests it, then no private original result is disclosed. |
+| household-workspace-C03 | Adapters/provider contracts | HADW-03 | Given a directory permission denial, when source facts are projected, then the directory is denied rather than a verified empty success. |
+| household-workspace-C04 | Application use cases | HADW-04 | Given a pending ordinary membership, when an administrator explicitly activates it with the default form, then its starting profile is restricted. |
+| household-workspace-C05 | Security/abuse | HADW-05 | Given current original-action authority, when a protected GET lookup omits mutation CSRF and expected revision, then its existing read contract remains usable. |
+| household-workspace-C06 | Presentation/localization/accessibility/sanitization | HADW-06 | Given an explicit saved English or Spanish preference, when the workspace renders, then it overrides the browser language. |
+| household-workspace-C07 | Integration/end-to-end/compatibility/migration | HADW-07 | Given a processed operation absent from restored state, when its receipt is recovered, then it is marked historical with absent current effect. |
+| household-workspace-C08 | Workflows/permissions/schemas/setup | HADW-08 | Given the original owning contracts, when traceability is audited, then every retained owner case remains required and only inspected evidence supports acceptance. |
+| household-workspace-C09 | Domain/configuration/pure planning | HADW-01 | Given boundary or malformed alias text, when pure validation runs, then Unicode codepoint limits and Cc rejection before trimming match the backend. |
+| household-workspace-C10 | Domain/configuration/pure planning | HADW-05 | Given revisions around 2^53 and the int64 maximum, when browser values are decoded and encoded, then their exact original integer value is retained. |
+| household-workspace-C11 | Domain/configuration/pure planning | HADW-05 | Given an aggregate at the maximum supported revision, when a successor is required, then exhaustion is rejected without wraparound. |
+| household-workspace-C12 | Domain/configuration/pure planning | HADW-04 | Given a household name containing Unicode whitespace, when the proposed command is validated, then backend-compatible blank and length rules apply without replacing original text. |
+| household-workspace-C13 | Domain/configuration/pure planning | HADW-02 | Given an own preference command, when its values are validated, then only null/en/es and a strict summary boolean are accepted. |
+| household-workspace-C14 | Domain/configuration/pure planning | HADW-01 | Given literal alias text with combining characters or markup, when an original intent is captured, then no HTML interpretation or Unicode normalization changes its text. |
+| household-workspace-C15 | Domain/configuration/pure planning | HADW-04 | Given repeated ordinary permission decisions, when member or profile input is validated, then duplicate identities are rejected rather than silently consolidated. |
+| household-workspace-C16 | Domain/configuration/pure planning | HADW-04 | Given a mapping mode and target, when the closed value is built, then the all-admin mode has no target and targeted modes require a valid exact target. |
+| household-workspace-C17 | State/application/idempotency/races | HADW-01 | Given two independent writers using the same alias revision, when they race, then at most one conflicting alias effect commits. |
+| household-workspace-C18 | State/application/idempotency/races | HADW-02 | Given two independent writers using the same preference revision, when they race, then at most one conflicting private effect commits. |
+| household-workspace-C19 | State/application/idempotency/races | HADW-01, HADW-02 | Given an original key and identical command payload, when the same request is explicitly replayed, then the original operation is returned without a second effect. |
+| household-workspace-C20 | State/application/idempotency/races | HADW-01, HADW-02 | Given an existing request key, when its payload changes, then replay is rejected and the original request remains immutable. |
+| household-workspace-C21 | State/application/idempotency/races | HADW-03, HADW-05 | Given source I/O outside SQLite, when membership or policy authority changes during the read, then stale source results are not disclosed. |
+| household-workspace-C22 | State/application/idempotency/races | HADW-05 | Given a journal record with a known operation ID, when an outcome is updated, then that ID cannot be replaced or reset to unknown. |
+| household-workspace-C23 | State/application/idempotency/races | HADW-02 | Given a private preference write or recovery, when shared audit/events/logs are inspected, then private values and inferable private fingerprints are absent. |
+| household-workspace-C24 | State/application/idempotency/races | HADW-01, HADW-02 | Given independent public and private profile revisions, when one aggregate changes, then the other aggregate and its revision remain unchanged. |
+| household-workspace-C25 | Adapters/provider contracts | HADW-03 | Given a complete bounded HA directory, when names are projected, then only source-supplied literal names and eligible choices are produced. |
+| household-workspace-C26 | Adapters/provider contracts | HADW-03 | Given a verified complete directory containing zero accounts, when it is translated, then available-empty remains distinguishable from source failure. |
+| household-workspace-C27 | Adapters/provider contracts | HADW-03 | Given a complete directory omitting one known member, when that member is projected, then confirmed absence is distinct from denied or unavailable facts. |
+| household-workspace-C28 | Adapters/provider contracts | HADW-03 | Given provider timeout or outage, when the roster loads, then canonical local membership remains and metadata is honestly unavailable. |
+| household-workspace-C29 | Adapters/provider contracts | HADW-03 | Given one malformed source record, when the directory batch is decoded, then the incomplete batch cannot be published as verified partial success. |
+| household-workspace-C30 | Adapters/provider contracts | HADW-03 | Given more than 256 source records, when the adapter reads them, then overflow is rejected without truncation into success. |
+| household-workspace-C31 | Adapters/provider contracts | HADW-03 | Given denied standalone directory access and a valid OAuth grant, when own-name fallback is read, then the supplied subject must match the verified owner exactly. |
+| household-workspace-C32 | Adapters/provider contracts | HADW-03 | Given a native technical credential, when member metadata is read, then the credential account never becomes the participating human. |
+| household-workspace-C33 | Application use cases | HADW-04 | Given an authorized settings draft and current revision, when it is explicitly saved, then the actual backend timezone catalog governs acceptance. |
+| household-workspace-C34 | Application use cases | HADW-04 | Given a selected administrator target, when current source eligibility cannot be established, then the mapping change has no effect. |
+| household-workspace-C35 | Application use cases | HADW-04 | Given a mapping draft, when the administrator selects a mode and target, then no mapping transition occurs before explicit submission. |
+| household-workspace-C36 | Application use cases | HADW-04 | Given an ordinary profile-adjustment draft, when it is saved, then the selected adjustment changes while the unedited administrator mapping is preserved. |
+| household-workspace-C37 | Application use cases | HADW-04 | Given the last effective administrator, when a member or policy transition would remove that administrator, then the existing safeguard rejects it. |
+| household-workspace-C38 | Application use cases | HADW-01 | Given current owner or household-administrator alias authority, when a public alias is edited, then it does not change canonical account linkage or membership. |
+| household-workspace-C39 | Security/abuse | HADW-05 | Given unknown request fields or an unsupported action, when the HTTP command boundary parses it, then it is rejected before any effect. |
+| household-workspace-C40 | Security/abuse | HADW-05 | Given a missing or forged CSRF proof, when an administration mutation or original POST replay is attempted, then it is blocked. |
+| household-workspace-C41 | Security/abuse | HADW-05 | Given a foreign Origin or mismatched context assertion, when an administration write is attempted, then the established session boundary rejects it. |
+| household-workspace-C42 | Security/abuse | HADW-02, HADW-05 | Given revoked original-action permission but retained ordinary reads, when an original result is requested, then current original-action authority blocks disclosure. |
+| household-workspace-C43 | Security/abuse | HADW-04, HADW-05 | Given a protected permission in a member or profile adjustment, when it is submitted, then ordinary configuration cannot grant or revoke it. |
+| household-workspace-C44 | Security/abuse | HADW-05 | Given journal fields containing credentials, CSRF, cookies, provider state or response bodies, when storage is decoded, then the closed schema rejects them. |
+| household-workspace-C45 | Security/abuse | HADW-05 | Given eight unexpired journal requests across contexts, when another request is prepared, then the global capacity rejects it without evicting original work. |
+| household-workspace-C46 | Security/abuse | HADW-05 | Given encoded journal input at or above its byte boundary, when persistence is attempted, then the 65,536-byte UTF-8 bound is enforced before alteration. |
+| household-workspace-C47 | Presentation/localization/accessibility/sanitization | HADW-06 | Given a null locale preference and unsupported browser language, when the initial workspace language is chosen, then English is the fallback. |
+| household-workspace-C48 | Presentation/localization/accessibility/sanitization | HADW-06 | Given an unsaved draft, when the owner changes language, then the localized view retains the same unsaved values without submitting them. |
+| household-workspace-C49 | Presentation/localization/accessibility/sanitization | HADW-03, HADW-06 | Given HA labels and aliases containing markup, when the roster renders, then they remain inert text without active HTML or navigation. |
+| household-workspace-C50 | Presentation/localization/accessibility/sanitization | HADW-06 | Given keyboard-only operation, when the user enters, submits, cancels and returns from a form, then focus remains visible and follows the explicit transition. |
+| household-workspace-C51 | Presentation/localization/accessibility/sanitization | HADW-06 | Given loading, uncertain, saved or historical status, when the state changes, then assistive status announcements expose the actual outcome and next action. |
+| household-workspace-C52 | Presentation/localization/accessibility/sanitization | HADW-06 | Given a 360px viewport, when every administration form and roster state renders, then primary content and controls reflow without inaccessible horizontal overflow. |
+| household-workspace-C53 | Presentation/localization/accessibility/sanitization | HADW-06 | Given light and dark themes, when the same workspace state renders, then meaningful labels, controls and focus indicators retain usable contrast. |
+| household-workspace-C54 | Presentation/localization/accessibility/sanitization | HADW-06 | Given reduced-motion preference, when status or form transitions occur, then motion is reduced without hiding the transition or required action. |
+| household-workspace-C55 | Integration/end-to-end/compatibility/migration | HADW-06, HADW-07 | Given the native composition with real Python/SQLite, when the administration browser journey runs, then it uses the verified existing HA session without a second login. |
+| household-workspace-C56 | Integration/end-to-end/compatibility/migration | HADW-06, HADW-07 | Given the standalone composition with real Python/SQLite, when the administration browser journey runs, then current OAuth-bound identity and private original-result scope remain intact. |
+| household-workspace-C57 | Integration/end-to-end/compatibility/migration | HADW-07 | Given the exact current amd64 source image, when it starts with supported owned data, then its actual administration API and frontend runtime execute successfully. |
+| household-workspace-C58 | Integration/end-to-end/compatibility/migration | HADW-07 | Given the exact current aarch64 source image, when it starts with supported owned data, then its actual administration API and frontend runtime execute successfully. |
+| household-workspace-C59 | Integration/end-to-end/compatibility/migration | HADW-07 | Given a supported restore and later processed-operation proofs, when the original request is encountered, then the retained fence prevents duplicate recreation. |
+| household-workspace-C60 | Integration/end-to-end/compatibility/migration | HADW-07 | Given a compatible full application/data/generation rollback bundle, when it is restored, then owned data and original operation history reopen consistently. |
+| household-workspace-C61 | Workflows/permissions/schemas/setup | HADW-08 | Given the authored application graph, when architecture checks inspect runtime and type-only imports, then inward boundaries and acyclicity are enforced. |
+| household-workspace-C62 | Workflows/permissions/schemas/setup | HADW-08 | Given every authored runtime module, when independent coverage inventories are compared with reports, then supported global and per-module coverage is complete without omitted files. |
+| household-workspace-C63 | Workflows/permissions/schemas/setup | HADW-08 | Given the current PR head, when CI Check evaluates its applicable jobs, then all required suites and both real CPU images must pass rather than being skipped. |
+| household-workspace-C64 | Workflows/permissions/schemas/setup | HADW-08 | Given the implemented workspace, when user/setup/operator/contributor/migration guidance is checked, then links and examples describe actual behavior and evidence scope. |
+| household-workspace-C65 | State/application/idempotency/races | HADW-05 | Given an original journal request, when one hour elapses or the clock moves backward, then retention is never extended and only eligible originals remain visible. |
+| household-workspace-C66 | State/application/idempotency/races | HADW-05 | Given pending requests in different installation/channel/subject contexts, when views switch, then foreign private payloads stay hidden while eligible originals are retained. |
+| household-workspace-C67 | State/application/idempotency/races | HADW-05 | Given a competing or unconfirmed storage write, when the journal persists, then the stale handle is retired and no original request is silently overwritten. |
+| household-workspace-C68 | State/application/idempotency/races | HADW-05 | Given a prepared or uncertain original request, when dismissal is attempted, then it cannot be silently treated as resolved or replaced. |
+| household-workspace-C69 | State/application/idempotency/races | HADW-05 | Given a lost mutation response followed by reload, when recovery starts, then no automatic resend, key replacement or revision rebase occurs. |
+| household-workspace-C70 | Security/abuse | HADW-05 | Given entry, unknown-version or wrong-namespace journal data, when administration recovery opens it, then it cannot widen the unchanged entry recovery schema. |
+| household-workspace-C71 | Security/abuse | HADW-05 | Given numeric strings, rounded Numbers or unsupported integer lexemes in wire responses, when revisions are decoded, then only exact supported integer sources are accepted. |
+| household-workspace-C72 | Security/abuse | HADW-02, HADW-05 | Given logout or context replacement during an in-flight response, when it arrives late, then it cannot repopulate the retired private view. |
+| household-workspace-C73 | Security/abuse | HADW-05 | Given an expired verified session, when a browser action is attempted, then neither the journal nor a timer renews authority or permits a mutation. |
+| household-workspace-C74 | Application use cases | HADW-04, HADW-05 | Given temporary HA outage and an unexpired existing session, when the workspace is used, then only the established bounded local-read grace remains and changes are blocked. |
+| household-workspace-C75 | Application use cases | HADW-03, HADW-04 | Given stored roles and HA-derived administrator mapping, when permission provenance is shown, then source grants remain distinguishable from configurable ordinary profiles. |
+| household-workspace-C76 | Presentation/localization/accessibility/sanitization | HADW-02, HADW-06 | Given a saved routine-summary preference and a technical event acknowledgement, when success is shown, then notification delivery remains explicitly unavailable. |
+| household-workspace-C77 | Adapters/provider contracts | HADW-03 | Given credential refresh, logout, expiry or subject replacement during provider I/O, when the result returns, then private lease/subject fences discard an invalidated result. |
+| household-workspace-C78 | Integration/end-to-end/compatibility/migration | HADW-05, HADW-07 | Given legitimate high revisions in both deployments, when entry authorization and household reads precede administration, then exact values remain usable without unsafe-number coercion. |
+| household-workspace-C79 | Adapters/provider contracts | HADW-03 | Given available verified avatar facts or no supported avatar source, when metadata is presented, then only bounded trusted facts are used and no arbitrary external image is fetched. |
+| household-workspace-C80 | Integration/end-to-end/compatibility/migration | HADW-07 | Given migrated schema9 data and an incompatible old image, when that image attempts to open it, then it refuses safely rather than relabeling or corrupting data. |
 
 Tests precede behavior. Require 100% supported statement and branch coverage globally and per authored module, including complete new pure-policy branch coverage. Use deterministic clocks/IDs/fakes, actual SQLite, current permission/replay/race/privacy controls, semantic HTTP/journal/capability checks, and browser assertions. Each PR CI Check runs all applicable suites and actual amd64/aarch64 images. Include Storybook and real Python/SQLite Playwright journeys, adversarial inputs, current authority-loss/race controls, and the retained manual UX review contract. Distinguish agent dogfooding, provider fixtures, owner evidence, and actual acceptance. Report genuine Copilot failures upstream without changing Copilot or waiting for its fix.
 
@@ -397,14 +471,14 @@ Acceptance scenarios are prospective requirements, not executed tests. Readiness
 
 | Requirement | Cases |
 |---|---|
-| HADW-01 | household-workspace-C01, household-workspace-C02 |
-| HADW-02 | household-workspace-C02, household-workspace-C05, household-workspace-C06 |
-| HADW-03 | household-workspace-C03, household-workspace-C06 |
-| HADW-04 | household-workspace-C04 |
-| HADW-05 | household-workspace-C01, household-workspace-C02, household-workspace-C05 |
-| HADW-06 | household-workspace-C06 |
-| HADW-07 | household-workspace-C07 |
-| HADW-08 | household-workspace-C08 |
+| HADW-01 | household-workspace-C01, household-workspace-C09, household-workspace-C14, household-workspace-C17, household-workspace-C19, household-workspace-C20, household-workspace-C24, household-workspace-C38 |
+| HADW-02 | household-workspace-C02, household-workspace-C13, household-workspace-C18, household-workspace-C19, household-workspace-C20, household-workspace-C23, household-workspace-C24, household-workspace-C42, household-workspace-C72, household-workspace-C76 |
+| HADW-03 | household-workspace-C03, household-workspace-C21, household-workspace-C25, household-workspace-C26, household-workspace-C27, household-workspace-C28, household-workspace-C29, household-workspace-C30, household-workspace-C31, household-workspace-C32, household-workspace-C49, household-workspace-C75, household-workspace-C77, household-workspace-C79 |
+| HADW-04 | household-workspace-C04, household-workspace-C12, household-workspace-C15, household-workspace-C16, household-workspace-C33, household-workspace-C34, household-workspace-C35, household-workspace-C36, household-workspace-C37, household-workspace-C43, household-workspace-C74, household-workspace-C75 |
+| HADW-05 | household-workspace-C05, household-workspace-C10, household-workspace-C11, household-workspace-C21, household-workspace-C22, household-workspace-C39, household-workspace-C40, household-workspace-C41, household-workspace-C42, household-workspace-C43, household-workspace-C44, household-workspace-C45, household-workspace-C46, household-workspace-C65, household-workspace-C66, household-workspace-C67, household-workspace-C68, household-workspace-C69, household-workspace-C70, household-workspace-C71, household-workspace-C72, household-workspace-C73, household-workspace-C74, household-workspace-C78 |
+| HADW-06 | household-workspace-C06, household-workspace-C47, household-workspace-C48, household-workspace-C49, household-workspace-C50, household-workspace-C51, household-workspace-C52, household-workspace-C53, household-workspace-C54, household-workspace-C55, household-workspace-C56, household-workspace-C76 |
+| HADW-07 | household-workspace-C07, household-workspace-C55, household-workspace-C56, household-workspace-C57, household-workspace-C58, household-workspace-C59, household-workspace-C60, household-workspace-C78, household-workspace-C80 |
+| HADW-08 | household-workspace-C08, household-workspace-C61, household-workspace-C62, household-workspace-C63, household-workspace-C64 |
 
 ## 18. Implementation sequence
 
@@ -419,6 +493,7 @@ Acceptance scenarios are prospective requirements, not executed tests. Readiness
 ## 19. Definition of Done
 
 - [ ] Every normative requirement has acceptance and reciprocal traceability.
+- [ ] All 80 workspace acceptance scenarios have actual evidence matching their own scope; related unit counts cannot substitute for browser, image or owner-review acceptance.
 - [ ] All original HADM-01..HADM-08 requirements, 72 household-admin cases, eight HADI refinements, and household-identity/delivery-quality contracts remain unchanged and required.
 - [ ] Architecture boundaries are implemented and automatically enforced; current authority, original-result disclosure, exact revisions, and private-data isolation pass concurrency and security evidence.
 - [ ] Numeric test budget, inventory, distribution, global coverage, and per-authored-module coverage pass; no planned case is represented as executed without evidence.

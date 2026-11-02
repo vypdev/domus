@@ -153,3 +153,10 @@ Chromium tests exercise these policies, real isolated browser session storage an
 controls. The HTTP/controller lifecycle and complete browser workspace do not yet consume this
 adapter. These tests establish no automatic operation lookup, mutation replay, HA adoption or full
 retained-case acceptance.
+
+The workspace companion now decomposes its eight requirements into 80 prospective acceptance
+scenarios with explicit per-area risk budgets and reciprocal requirement links. Its former eight
+compound scenario IDs remain as concrete behaviors; the remaining assertions have their own IDs.
+The original 72 administration cases and eight HADI refinements remain unchanged and required.
+These inventories are not added together as completed journeys, and 104 journal-related test
+executions do not establish the full browser, runtime, migration or manual-review acceptance.

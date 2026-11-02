@@ -443,5 +443,27 @@
       "privateLocalOnly": true
     },
     "currentPublishedSourceProof": "/private/tmp/domus-member-source-2b6e7e1/hosted-current.json"
+  },
+  "acceptanceBudgetReview": {
+    "previousSource": "59c134a6585a3866f9d61143fb2d2b3abda12fb6",
+    "finding": "specs/household-administration-workspace.md:test-budget-understates-new-scope",
+    "disposition": "Valid; accepted and addressed through independent behavior/risk decomposition. Await fresh native confirmation.",
+    "workspaceCaseCount": 80,
+    "requirementsUnchanged": 8,
+    "retainedOriginalAdministrationCases": 72,
+    "retainedHadiRefinements": 8,
+    "counts": {
+      "Domain/configuration/pure planning": 9,
+      "State/application/idempotency/races": 14,
+      "Adapters/provider contracts": 11,
+      "Application use cases": 9,
+      "Security/abuse": 13,
+      "Presentation/localization/accessibility/sanitization": 10,
+      "Integration/end-to-end/compatibility/migration": 9,
+      "Workflows/permissions/schemas/setup": 5
+    },
+    "scope": "Prospective acceptance inventory only; no new product policy, reduced owner scope, executed-case or complete-workspace claim.",
+    "sdk": "Original pinned SDK format/consistency validator passes all80 inventory rows, per-area allocations and reciprocal requirement links. Seven original policy modules remain byte-verified.",
+    "productAndOwnerScope": "The same eight HADW requirements are decomposed; original HADM72, HADI8 and all other owners remain unchanged. Counts are proposed scenarios, not executed journeys; runtime source and its complete coverage are unchanged by this document correction."
   }
 }

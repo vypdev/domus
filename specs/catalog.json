@@ -442,7 +442,7 @@
       "readiness": {
         "state": "draft",
         "implementationEvidence": "Partial: verified HA identity/sessions, schema9 storage, protected profile APIs and original-result privacy, bounded HA name/directory facts and current-authorized masked roster in both deployments. Exact browser values/JSON and the separate closed administration command/journal policy and session-storage adapter have Chromium coverage. HTTP/controller/entry revision integration, the complete EN/ES workspace and all 72 retained owner-case acceptance remain outstanding. Installed Edge.5 is unchanged.",
-        "blockingDecisions": "No unanswered product decision for issue25. Complete the retained72 administration journeys, source/journal/workspace integration, current-head review/CI and the wider all-domain/Stable release and owner adoption requirements; a merged checkpoint does not complete them.",
+        "blockingDecisions": "No unanswered product decision for issue25. Complete all 72 retained administration cases, all eight HADI refinements and the 80 decomposed workspace acceptance scenarios, full HTTP/controller/workspace integration, current-head review/CI and the wider all-domain/Stable release and owner adoption requirements. A merged checkpoint does not complete them.",
         "copilotChangesAllowed": false
       }
     },
