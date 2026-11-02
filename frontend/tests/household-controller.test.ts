@@ -417,3 +417,34 @@ test('HADB-01/C07: disposal during logout fences the late revocation response as
   expect(f.controller.view).toEqual(before); expect(f.controller.administration).toBeNull();
   expect(f.controller.view.notice).toBeNull(); expect(f.controller.view.cleanup).toBeNull();
 });
+test.each(['invalid_input', 'missing_request', 'read_only'] as const)(
+  'household-browser-C13: %s cannot reuse private facts after the same HA account changes member', async kind => {
+    const f = fixture();
+    if (kind === 'read_only') {
+      f.entryServer.session.mockReturnValue(read({...f.proof, access: 'read_only'}));
+      f.identity.session.mockReturnValue(read({...f.proof, access: 'read_only'}));
+    }
+    await f.controller.refresh(); expect(f.controller.administration?.preferences?.memberId).toBe(member.memberId);
+    const next = {...member, memberId: 'member-relinked'};
+    f.server.authorization.mockReturnValue(read({...access, member: next}));
+    f.server.preferences.mockReturnValue(read({...own, memberId: next.memberId}));
+    f.server.roster.mockReturnValue(read({directoryState: 'available', members: [{member: next,
+      presentation: {memberId: next.memberId, alias: null, revision: revisionValue('11')},
+      metadata: {state: 'available', name: 'Current member', avatarState: 'unavailable'}}]}));
+    if (kind === 'missing_request') await f.controller.recoverAdministration('missing-original');
+    else await f.controller.submitAdministration(kind === 'invalid_input' ? null : command);
+    expect(f.controller.administration?.preferences?.memberId).toBe(next.memberId);
+    expect(JSON.stringify(f.controller.administration)).not.toContain('"memberId":"member-own"');
+    expect(f.server.send).not.toHaveBeenCalled(); expect(f.server.original).not.toHaveBeenCalled();
+    expect(f.server.operation).not.toHaveBeenCalled();
+  },
+);
+test('household-browser-C02: an empty administration error from the earlier context cannot be joined to a new account context', async () => {
+  const f = fixture(); await f.controller.refresh();
+  f.server.send.mockResolvedValueOnce({kind: 'rejected', reason: 'forbidden', correlationId: 'old-context-correlation'});
+  const next = {...f.proof, context: {...context, installationId: '11234567-89ab-cdef-0123-456789abcdef'}};
+  f.entryServer.session.mockReturnValue(read(next));
+  await f.controller.submitAdministration(command);
+  expect(f.controller.administration).toBeNull(); expect(f.controller.view.notice).toBe('context_changed');
+  expect(JSON.stringify(f.controller.view)).not.toContain('old-context-correlation');
+});

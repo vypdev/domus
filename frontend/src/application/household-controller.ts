@@ -12,6 +12,7 @@ function sameGrants(left: readonly string[], right: readonly string[]): boolean 
 
 export class HouseholdController {
   private current: AdministrationController | null = null;
+  private currentContext: JournalContext | null = null;
   private visible = false;
   private running = false;
   private closed = false;
@@ -26,7 +27,7 @@ export class HouseholdController {
   get administration(): AdministrationView | null {return this.visible ? this.current!.view : null;}
   private live(generation: number): boolean {return !this.closed && generation === this.generation;}
   private retire(): void {
-    this.visible = false; this.current?.close(); this.current = null;
+    this.visible = false; this.current?.close(); this.current = null; this.currentContext = null;
   }
   private eligible(): boolean {
     const view = this.entry.view;
@@ -34,8 +35,8 @@ export class HouseholdController {
   }
   private matched(): boolean {
     const entry = this.entry.view, administration = this.current!.view;
-    // Failed administration reads expose only their controller's empty error state, never cached private facts.
-    if (administration.session === null) return true;
+    // Even an empty rejection can contain an action correlation from its last verified account context.
+    if (administration.session === null) return entry.session !== null && sameContext(entry.session.context, this.currentContext!);
     if (entry.session === null || administration.access?.state !== 'active' || entry.authorization === null) return false;
     if (!sameContext(entry.session.context, administration.session.context)
         || entry.session.access !== administration.session.access
@@ -61,10 +62,13 @@ export class HouseholdController {
   private async synchronize(generation: number, loaded: boolean): Promise<void> {
     if (!this.live(generation)) return;
     if (!this.eligible()) {this.retire(); return;}
-    if (this.current === null) {this.current = this.administrationFactory(); loaded = false;}
+    if (this.current === null) {
+      this.current = this.administrationFactory(); this.currentContext = this.entry.view.session!.context; loaded = false;
+    }
     const current = this.current;
     if (!loaded) await current.refresh();
     if (!this.live(generation)) return;
+    this.currentContext = current.view.session?.context ?? this.currentContext;
     this.tick(); if (!this.live(generation)) return;
     if (!this.eligible()) {this.retire(); return;}
     if (this.matched()) {this.visible = true; return;}
@@ -107,9 +111,8 @@ export class HouseholdController {
       if (!this.live(generation)) return;
       this.tick(); if (!this.live(generation)) return;
       if (!this.eligible()) {this.retire(); return;}
-      // The administration use case already refreshed its own proof/facts and owns its actionable result.
-      // Refreshing it again would erase preflight conflicts and failed original-query notices.
-      await this.entry.refresh();
+      // An action can reject before proof is read. Reconcile both owners, preserving same-authority action notices.
+      await Promise.all([this.entry.refresh(), current.reconcile()]);
       await this.synchronize(generation, true);
     });
   }

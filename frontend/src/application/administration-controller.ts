@@ -145,6 +145,15 @@ export class AdministrationController {
     }
   }
   async refresh(): Promise<void> {if (this.state.phase !== 'closed') await this.load(this.begin());}
+  /** Replace private facts with fresh proof while retaining an actionable same-authority notice. No command or original lookup runs. */
+  async reconcile(): Promise<void> {
+    if (this.state.phase === 'closed' || this.running || this.state.session === null) return;
+    const context = this.state.session.context, access = this.state.access, notice = this.state.notice;
+    const generation = this.begin(); await this.load(generation);
+    if (generation !== this.generation || this.state.session === null || this.state.notice !== null) return;
+    this.update({notice: !sameContext(context, this.state.session.context) ? 'context_changed'
+      : JSON.stringify(access) !== JSON.stringify(this.state.access) ? 'access_changed' : notice});
+  }
   /** Composition supplies monotonic ticks; this never refreshes or extends a session. */
   tick(): void {
     const session = this.state.session; if (session === null) return;

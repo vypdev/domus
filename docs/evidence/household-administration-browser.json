@@ -23,43 +23,45 @@
     "Optional household-read failures retain current entry authority only after rechecking grants; authentication failure and stale generations still retire access.",
     "Application-only joint coordinator matches context/access/grants and independent household scope, bounds reconciliation, serializes explicit work and preserves original commands/results.",
     "Earlier joint lease expiry retires both views without renewal; disposal fences reads, late command replies and pending logout revocation.",
-    "Same-context results/drafts remain owned by their existing use cases; conflicts, invalid input and failed original-query notices are not erased by a second administration refresh."
+    "A fresh administration reconciliation replaces private facts even after invalid input, missing original or read-only early exits, while preserving same-authority actionable notices. Empty errors retain their verified account context and cannot be joined to a different installation/channel/subject."
   ],
   "testsFirst": [
     "Real Chromium entry controls first failed16/passed76 against original code; all93 entry cases now pass.",
     "Coordinator test first failed import on the missing module, then29 initial semantic cases passed.",
     "After correcting an initial C13 test expectation to the existing original-GET contract, three explicit notice-loss controls failed before removal of the extra refresh.",
-    "Three lifecycle controls failed before stale-notice replacement and disposal-during-logout fencing were corrected."
+    "Three lifecycle controls failed before stale-notice replacement and disposal-during-logout fencing were corrected.",
+    "Four semantic controls failed against published a721039: three early exits reused a former member private preference and one empty forbidden result crossed a changed installation context.",
+    "Fourteen new reconciliation controls first failed on the missing use case, after a distinct sandbox-only socket denial. The corrected full Chromium suite passes1108; fixture locale typing was widened to the actual own-preference contract before strict types passed."
   ],
   "frontend": {
-    "executions": 1090,
-    "coordinatorExecutions": 50,
+    "executions": 1108,
+    "coordinatorExecutions": 54,
     "entryControllerExecutions": 93,
     "authoredRuntimeFiles": 29,
     "nonemptyRuntimeFiles": 27,
     "typeOnlyFiles": 2,
     "coverage": {
       "lines": {
-        "total": 1323,
-        "covered": 1323,
+        "total": 1331,
+        "covered": 1331,
         "skipped": 0,
         "pct": 100
       },
       "statements": {
-        "total": 1972,
-        "covered": 1972,
+        "total": 1986,
+        "covered": 1986,
         "skipped": 0,
         "pct": 100
       },
       "functions": {
-        "total": 397,
-        "covered": 397,
+        "total": 398,
+        "covered": 398,
         "skipped": 0,
         "pct": 100
       },
       "branches": {
-        "total": 1416,
-        "covered": 1416,
+        "total": 1434,
+        "covered": 1434,
         "skipped": 0,
         "pct": 100
       },
@@ -70,7 +72,8 @@
         "pct": 100
       }
     },
-    "independentFilesystemInventoryAudit": "passed"
+    "independentFilesystemInventoryAudit": "passed",
+    "administrationControllerExecutions": 125
   },
   "checks": {
     "runtimeAndCatalogTypes": "passed",
@@ -87,7 +90,7 @@
   "sourceIdentity": {
     "backendInventorySHA256": "fb46cd890daa577fd0149587ae39310af1df91769bb5856bfd2ec709ca402101",
     "backendUnchangedFromReviewedB60": true,
-    "frontendInventorySHA256": "1e1cca12e4d3629fec81351c6cce45b4caf2b099dd0f29dbaf507a3055b75645",
+    "frontendInventorySHA256": "3eaedc962f04aac9a5c1292c8d5121d6221ea9583b6e1810fabacfcd19bfe35e",
     "wheelSHA256": "e68810fe0754e0b250d0dda4027d10d87b5ac5d4285cde4ad567b57e1afef5f4",
     "compiledUI": {
       ".vite/manifest.json": "214eed761283d87d64123887c8e3c742d247b59ee0066739c32f21a7c8fac0d6",
@@ -112,10 +115,10 @@
     "privateLocalOnly": true,
     "scope": "Original/control failures, current coverage/source/wheel proof and native recovery. Generated terminal fixtures retire only after unique evidence is retained."
   },
-  "pending": "Document runtime/lifecycle wiring and complete accessible EN/ES administration forms, Storybook/actual administration Python-SQLite journeys, all retained owner/browser cases, human UX review, owner HA adoption and both current CPU images. Recurrence23, Stable/Edge and all-domain product acceptance remain required.",
+  "pending": "Document runtime/lifecycle wiring and complete accessible EN/ES administration forms, Storybook/actual administration Python-SQLite journeys, all retained owner/browser cases, human UX review, owner HA adoption and fresh current-commit CI/native review. Recurrence23, Stable/Edge and all-domain product acceptance remain required.",
   "goalComplete": false,
   "acceptance": "Unit/controller and51entry journeys are not complete administration browser or owner HA acceptance.",
-  "recordedAtUTC": "2026-11-02T21:50:53.481264+00:00",
+  "recordedAtUTC": "2026-11-02T22:28:15.666501+00:00",
   "backend": {
     "executions": 4364,
     "authoredModules": 151,
@@ -140,5 +143,29 @@
   "testPreparationNotes": [
     "The initial C13 expected an uncertain outcome from a rejected original GET; the existing controller contract returns no receipt and an invalid-response notice. Corrected tests then reproduced the genuine notice-loss bug.",
     "A private evidence writer initially used a nonexistent catalog docs key. It was corrected to the actual documentation key before publication; no production or SDK relaxation."
-  ]
+  ],
+  "scopedCorrection": {
+    "baseline": "a72103968dd785252ea5f9cf19e81463c0f44085",
+    "source": "Current working controller correction; document composition is still pending",
+    "types": "runtime and catalog passed",
+    "coverageAudit": "all29authoredruntimefiles and all4metrics100%",
+    "artifact": "Rebuilt compiled entry bundle has exactly the same four resource hashes; this still-unused controller correction does not change the existing verified wheel or Python modules."
+  },
+  "publishedBaselineReview": {
+    "head": "a72103968dd785252ea5f9cf19e81463c0f44085",
+    "run": 41532971541,
+    "job": 125577616679,
+    "context": "complete",
+    "partitions": "3/3",
+    "candidateFindings": 0,
+    "publishedFindings": 0,
+    "outcome": "no-findings",
+    "currentCorrectionReview": "pending normal commit/push"
+  },
+  "publishedBaselineCI": {
+    "head": "a72103968dd785252ea5f9cf19e81463c0f44085",
+    "run": 41532971690,
+    "result": "success; all applicable suites and both actual CPU images passed",
+    "currentCorrectionCI": "pending normal commit/push"
+  }
 }

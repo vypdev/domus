@@ -7,7 +7,7 @@ import {AdministrationSessionJournal, ADMINISTRATION_JOURNAL_KEY} from '../src/a
 import {administrationCommand} from '../src/domain/administration-commands';
 import type {AdministrationCommand} from '../src/domain/administration-commands';
 import {revisionValue} from '../src/domain/administration';
-import type {AdministrationAccess, AdministrationReceipt} from '../src/domain/administration-views';
+import type {AdministrationAccess, AdministrationReceipt, OwnPreferences} from '../src/domain/administration-views';
 
 function read<T>(value: T): EntryRead<T> {return {result: Promise.resolve(value), cancel: vi.fn()};}
 function deferred<T>() {
@@ -28,7 +28,7 @@ const home = {householdId: 'home', name: 'Home', timeZone: 'UTC', revision: revi
 const policy = {householdId: 'home', revision: revisionValue('5'), mappingMode: 'all_ha_administrators' as const,
   targetHAUserId: null, adjustments: []};
 const own = {memberId: member.memberId, alias: null, revision: revisionValue('11')};
-const preferences = {memberId: member.memberId, revision: revisionValue('13'), locale: 'es' as const,
+const preferences: OwnPreferences = {memberId: member.memberId, revision: revisionValue('13'), locale: 'es',
   routine_participation_summaries: true, notificationDelivery: 'unavailable' as const};
 const commands: readonly AdministrationCommand[] = [
   administrationCommand({action: 'household.update', payload: {expected_revision: '7', name: 'New home', time_zone: 'Europe/Madrid'}}),
@@ -501,4 +501,80 @@ test.each([false,true])('C74/C82: verified read-only grace supports explicit ori
   expect(known?f.server.operation:f.server.original).toHaveBeenCalledTimes(1);expect(f.controller.view.outcome?.kind).toBe('receipt');
   await f.controller.submit(commands[0]);expect(f.server.send).toHaveBeenCalledTimes(1);expect(f.entropy.requestKey).toHaveBeenCalledTimes(1);
   f.setNow(session.expiresAt);f.controller.tick();expect(f.controller.view.outcome).toBeNull();expect(f.controller.view.preferences).toBeNull();
+});
+
+test('HADB-01/C13: reconciliation preserves an invalid draft notice while replacing all current private facts', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  f.server.preferences.mockReturnValue(read({...preferences, locale: 'en', revision: revisionValue('14')}));
+  await f.controller.reconcile();
+  expect(f.controller.view.notice).toBe('invalid_input');
+  expect(f.controller.view.preferences).toMatchObject({locale: 'en', revision: '14'});
+  expect(f.server.send).not.toHaveBeenCalled(); expect(f.server.original).not.toHaveBeenCalled();
+  expect(f.server.operation).not.toHaveBeenCalled(); expect(f.entropy.requestKey).not.toHaveBeenCalled();
+});
+test('HADB-01/C13: reconciliation replaces a prior notice with the current membership transition', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  f.server.authorization.mockReturnValue(read({...access, member: {...member, memberId: 'relinked'}}));
+  f.server.preferences.mockReturnValue(read({...preferences, memberId: 'relinked'}));
+  await f.controller.reconcile();
+  expect(f.controller.view.notice).toBe('access_changed'); expect(f.controller.view.preferences?.memberId).toBe('relinked');
+  expect(f.server.send).not.toHaveBeenCalled();
+});
+test('HADB-01/C02: reconciliation reports a new verified context rather than an earlier invalid draft', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  f.identity.session.mockReturnValue(read({...session, context: {...context, channel: 'stable'}}));
+  await f.controller.reconcile();
+  expect(f.controller.view.notice).toBe('context_changed'); expect(f.controller.view.session?.context.channel).toBe('stable');
+  expect(f.server.send).not.toHaveBeenCalled();
+});
+test.each(['read_only', 'journal_unavailable', 'inactive', 'api_unavailable', 'access_changed'] as const)(
+  'HADB-01/C03: fresh %s proof takes precedence over the earlier action notice', async kind => {
+    const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+    if (kind === 'read_only') f.identity.session.mockReturnValue(read({...session, access: 'read_only'}));
+    if (kind === 'journal_unavailable') f.storage.getItem.mockImplementation(() => {throw new Error('private-storage');});
+    if (kind === 'inactive') f.server.authorization.mockReturnValue(read({...access, state: 'suspended'}));
+    if (kind === 'api_unavailable') f.identity.session.mockReturnValue(read({...session, householdApiAvailable: false}));
+    if (kind === 'access_changed') f.server.authorization.mockReturnValueOnce(read(access))
+      .mockReturnValueOnce(read({...access, policyRevision: revisionValue('6')}));
+    await f.controller.reconcile(); expect(f.controller.view.notice).toBe(kind); expect(f.server.send).not.toHaveBeenCalled();
+  },
+);
+test('HADB-01/C04: failed fresh proof retires earlier private facts and action notices', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  f.identity.session.mockReturnValue(read(null)); await f.controller.reconcile();
+  expect(f.controller.view.notice).toBe('authentication_required'); expect(f.controller.view.preferences).toBeNull();
+});
+test('HADB-01/C07: reconciliation cannot republish facts after disposal while its read is pending', async () => {
+  const f = fixture(); await f.controller.refresh(); const pending = deferred<VerifiedEntrySession | null>();
+  f.identity.session.mockReturnValueOnce(pending); const work = f.controller.reconcile();
+  f.controller.close(); pending.resolve(session); await work;
+  expect(pending.cancel).toHaveBeenCalledOnce(); expect(f.controller.view.phase).toBe('closed');
+  expect(f.controller.view.preferences).toBeNull();
+});
+test('HADB-01/C04: expiry during reconciliation cannot restore the previous notice or private facts', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  const pending = deferred<typeof preferences>(); f.server.preferences.mockReturnValueOnce(pending);
+  const work = f.controller.reconcile(); await settle(); f.setNow(session.expiresAt); f.controller.tick();
+  pending.resolve(preferences); await work;
+  expect(f.controller.view.notice).toBe('authentication_required'); expect(f.controller.view.preferences).toBeNull();
+});
+test('HADB-01/C05: reconciliation is passive while idle, closed or a command is pending', async () => {
+  const f = fixture(); await f.controller.reconcile(); expect(f.identity.session).not.toHaveBeenCalled();
+  await f.controller.refresh(); const pending = deferred<AdministrationCommandResult>(); f.server.send.mockReturnValueOnce(pending.result);
+  const work = f.controller.submit(commands[4]); await settle(); const calls = f.identity.session.mock.calls.length;
+  await f.controller.reconcile(); expect(f.identity.session).toHaveBeenCalledTimes(calls);
+  pending.resolve(receipt(commands[4])); await work; f.controller.close();
+  await f.controller.reconcile(); expect(f.controller.view.phase).toBe('closed');
+});
+test('HADB-01/C02: same-context empty rejection survives reconciliation without another read or original lookup', async () => {
+  const f = fixture(); await f.controller.refresh();
+  f.server.send.mockResolvedValueOnce({kind: 'rejected', reason: 'forbidden', correlationId: 'current-correlation'});
+  await f.controller.submit(commands[4]); const calls = f.identity.session.mock.calls.length;
+  await f.controller.reconcile(); expect(f.identity.session).toHaveBeenCalledTimes(calls);
+  expect(f.controller.view.outcome).toEqual({kind: 'rejected', reason: 'forbidden', correlationId: 'current-correlation'});
+  expect(f.server.original).not.toHaveBeenCalled(); expect(f.server.operation).not.toHaveBeenCalled();
+});
+test('HADB-01: reconciliation without an action notice remains a current neutral read', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.reconcile();
+  expect(f.controller.view.notice).toBeNull(); expect(f.controller.view.preferences).toEqual(preferences);
 });

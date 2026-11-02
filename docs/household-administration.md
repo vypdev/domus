@@ -46,7 +46,10 @@ foundation does not yet provide a browser recovery action or automatically resen
 The browser application layer now coordinates entry and administration proof, earlier lease expiry,
 current grants, original results and disposal. An unavailable household read preserves independently
 verified access only after a current authorization check. The coordinator retains actionable conflict
-and recovery notices and fences late logout responses. It is not yet wired into the document runtime;
+and recovery notices and fences late logout responses. After every explicit administration action,
+fresh proof replaces private facts even when an invalid draft, missing original or read-only lease
+prevented sending. A replacement membership cannot inherit the prior member's displayed preferences,
+and an empty action error remains bound to its verified account context. It is not yet wired into the document runtime;
 the complete forms and actual administration browser journeys remain under development in
 [issue #27](https://github.com/vypdev/domus/issues/27). Current scoped verification is recorded in the
 [browser coordination evidence](evidence/household-administration-browser.json).
