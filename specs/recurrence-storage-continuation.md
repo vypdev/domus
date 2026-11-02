@@ -151,6 +151,10 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/domain/recurrence_frontier.py | create |
 | backend/src/domus/domain/recurrence_rules.py | update |
 | backend/src/domus/infrastructure/recurrence_time.py | update |
+| backend/src/domus/infrastructure/recurrence_worker.py | create |
+| backend/src/domus/composition/recurrence.py | create |
+| backend/src/domus/composition/server.py | update |
+| backend/src/domus/composition/ingress.py | update |
 | backend/src/domus/infrastructure/sqlite.py | update |
 | backend/src/domus/infrastructure/sqlite_snapshots.py | update |
 | backend/src/domus/infrastructure/sqlite_recurrence.py | create |
@@ -164,6 +168,8 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_fair_recurrence.py | create |
 | tests/backend/test_fair_recurrence_boundaries.py | create |
 | tests/backend/test_recurrence_frontier.py | create |
+| tests/backend/test_recurrence_worker.py | create |
+| tests/backend/test_recurrence_runtime.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
@@ -185,6 +191,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/evidence/recurrence-creation.json | create |
 | docs/evidence/recurrence-materialization.json | create |
 | docs/evidence/recurrence-fairness.json | create |
+| docs/evidence/recurrence-lifecycle.json | create |
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
 
@@ -225,6 +232,10 @@ The bounded fair application run selects at most 50 active rules and processes a
 Rule snapshots used to compute horizons are rechecked by the step. Cancellation is observed before provider work and again before atomic write admission, including after waiting for a writer; an already admitted atomic effect completes or rolls back. Results report bounded confirmed observations and safe rule-specific attention categories without echoing raw diagnostics. Source failure does not starve peers; scope failure remains fatal. An actual offline restore keeps absent-effect semantics through the global run. No thread, production polling lifecycle or public route is added by this application-run checkpoint.
 
 Selection metadata is added to schema 8 before its first release. Supported historical schemas 1..7 and original fixture bytes remain unchanged. The genuine intermediate c5819b8 schema-8 SQL input was generated under that exact source before this DDL change; normal operations and initialization reject its unknown development layout without modifying it. It is a refusal/rollback control, not a promise to migrate an unreleased layout or permission to edit user_version. The owner remains on the unchanged released schema-7 Edge.5 pair. Complete production scheduling, relative sources, durable calendar/review attention and the remaining retained requirements remain pending.
+
+The next production increment composes that fixed runner into both persistent native and standalone applications. Construction remains inert. The actual ASGI lifespan starts one owned thread; it attempts a bounded run immediately and waits five seconds after each attempt, including unavailable or unconfirmed attempts. This engineering polling interval does not change the rule's business time policy or human permissions. Composition selects only the current household in its trusted installation; unconfigured installations remain unconfigured, and homes with no active rule create no frontier or business effects. No human proof or submitted scope is used for technical execution.
+
+The worker carries cancellation into every run and joins before runtime identity/storage disposal and installation-lease release. The lifespan preserves the existing application's state and exits its prior context after stopping the worker, including on startup/application failure. Ordinary failures expose only bounded categories and permit a later attempt; a denied technical scope terminates that worker. Last-run observations remain process-local diagnostics, not durable calendar freshness or delivery proof. Identity-only preview has no worker. Actual current-source image controls exercise both ASGI lifetimes, scoped SQLite work and shutdown. Relative lifecycle, current-authorized calendar/command surfaces, durable attention, configurable household timing defaults and complete product/UI/HA acceptance remain required.
 
 ## 19. Definition of Done
 

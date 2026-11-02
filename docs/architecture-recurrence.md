@@ -204,3 +204,27 @@ These are application runs, without a production thread or new HTTP surface. Own
 startup/shutdown wiring, relative lifecycle and durable calendar/review attention remain required.
 See [fairness evidence](evidence/recurrence-fairness.json) and the
 [migration boundary](tasks/migration.md).
+## Owned fixed-run polling lifecycle
+
+Both persistent compositions now bind the real fixed runner through
+[recurrence composition](../backend/src/domus/composition/recurrence.py). Merely constructing an
+application does not start it. ASGI lifespan starts one
+[owned worker](../backend/src/domus/infrastructure/recurrence_worker.py), which attempts an immediate
+bounded run and waits five seconds after each attempt. The thread and waiting primitives remain
+in infrastructure; application/domain planning and command code remain independent of them.
+
+Composition validates its installation/channel against the repository and selects its actual current
+household. It never accepts a maintenance actor or scope from a request or a stored rule. An
+unconfigured installation stays unconfigured; no-active-rule polls do not churn frontier/business
+records. Technical materialization needs no human HA request and cannot perform or approve work.
+
+Shutdown sets cancellation, waits for the admitted step to finish or roll back, and joins before
+identity/storage disposal releases the actual installation lease. The ASGI wrapper preserves prior
+lifespan state and closes the worker on startup/application failure. Ordinary failures retain a safe
+process-local category and wait before retrying; scope denial stops the worker. These observations
+do not establish durable attention or full calendar completeness. Preview without SQLite has no
+worker. The [lifecycle evidence](evidence/recurrence-lifecycle.json) separates real composed tests,
+host smoke execution and fresh hosted CPU image results from owner-HA deployment.
+
+Relative execution, durable attention/calendar predicates, protected public interfaces, reviewed
+schedule changes and the complete retained recurrence contract remain unfinished.

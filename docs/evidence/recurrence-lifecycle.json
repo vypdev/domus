@@ -1,0 +1,112 @@
+{
+  "status": "partial; owned fixed-rule production polling implemented; complete retained recurrence contract remains in progress",
+  "recordedAtUTC": "2026-11-02T08:41:10.835735+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "ae73710972c386b18406921316d6311ced0d76e6",
+  "backendSourceInventorySHA256": "a2e20456183762b241c54479bb1b89b3cee7ebc17b3e9085d0586a0600c6f700",
+  "sourceManifestMethod": "SHA256 of compact sorted JSON mapping every authored Python module path, including package initializers, to its byte SHA256 value.",
+  "implemented": [
+    "Both persistent native/standalone compositions bind the actual bounded fixed runner and pinned providers to their owned installation and actual current household.",
+    "Application construction is inert; ASGI lifespan starts one owned non-daemon thread, preserves prior lifespan state and closes the worker on startup/application failure.",
+    "Immediate first attempt, then a five-second interruptible wait after every attempt; ordinary failures use safe categories and retry on that interval, while scope denial stops the worker.",
+    "Stop reaches the actual application cancellation boundary; worker joins before runtime identity/storage disposal releases the installation lease.",
+    "Unconfigured installations remain unconfigured; no-active-rule polls do not create a frontier or business effects; identity-only previews have no worker.",
+    "Process-local last-run/failure observations are synchronized and do not certify durable attention, complete calendar coverage or downstream delivery."
+  ],
+  "testsFirst": {
+    "worker": "Original test collection failed with missing domus.infrastructure.recurrence_worker before implementation.",
+    "productionComposition": "Original test collection failed with missing domus.composition.recurrence before implementation.",
+    "firstFullCampaign": "All3667 tests passed; coverage initially99.99% because NativeRuntime admitted an optional absent worker that real native composition never constructs. Its type now requires the worker; no synthetic coverage-only branch test or coverage exclusion was added."
+  },
+  "completeBackend": {
+    "executions": 3667,
+    "durationSeconds": 96.73,
+    "authoredModules": 130,
+    "coverageTotals": {
+      "covered_lines": 9242,
+      "num_statements": 9242,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 272,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2630,
+      "num_partial_branches": 0,
+      "covered_branches": 2630,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed"
+  },
+  "focusedLifecycle": {
+    "executions": 69,
+    "durationSeconds": 5.75,
+    "newModuleStatements": 102,
+    "newModuleBranches": 20,
+    "coveragePercent": 100,
+    "scope": "Worker/composition plus existing runtime regression cases. The final complete campaign covers the final required native-worker invariant."
+  },
+  "actualBoundaryTests": [
+    "Repeated start is idempotent, close without start prevents late work, and cancellation before actual scheduled thread entry prevents its first tick.",
+    "An in-flight step blocks disposal; stop is visible to it and no subsequent tick starts. Thread-start failure leaves no running-worker claim.",
+    "Real transient/fatal injected failures retain only safe diagnostics; a later poll recovers ordinary failure and scope denial terminates polling.",
+    "Both actual native/standalone ASGI lifetimes materialize real scoped SQLite occurrences, stop, reopen composition and do not duplicate terminal work; paused rules stay paused.",
+    "Both actual owned-directory runtimes retain their real fcntl installation lease while close waits for a worker, and release it only after join.",
+    "Existing lifespan state and failure disposal are preserved; unconfigured/no-active-rule/current-installation negatives run against real SQLite."
+  ],
+  "checks": {
+    "strictTypes": {
+      "passed": true,
+      "files": 130
+    },
+    "ruff": "check and format pass;326 files",
+    "architecture": {
+      "contractsKept": 3,
+      "contractsBroken": 0,
+      "filesAnalyzed": 174,
+      "dependencies": 1112
+    },
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 28304,
+      "renderedCharacters": 28304,
+      "composedCharacters": 28304,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "753accab3ba73c603a57692abe21477ae92710b4ed5d4e9f70a639383ad5b6de",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "packageAndArchitecture": {
+      "executions": 52,
+      "durationSeconds": 6.99,
+      "freshWheel": "passed"
+    }
+  },
+  "imageControls": {
+    "hostExecution": "Exact current container smoke script passes on host: real SQLite fixed creation, fair run, then actual ASGI startup/work/shutdown in both production compositions without HA network access.",
+    "hostOutput": "Current-source recurrence, both owned runtimes and pinned-time codecs passed.",
+    "currentCpuImages": "Fresh hosted aarch64 and amd64 execution required after this source is pushed. Host execution is not CPU-image evidence.",
+    "priorPublishedCheckpoint": "ae73710972c386b18406921316d6311ced0d76e6 passed all applicable product CI and both real CPU images; native code review completed7/7 partitions,74 fragments and64 assigned files with0 open/candidate/published findings. Overall review remained partial/neutral because human-conversation was3 fetched/2 retained/1 omitted; the technical inputs were manually inspected."
+  },
+  "copilot": "Progress validation.evidence-too-large and partial human-conversation remain reported in upstream851/843, updated for ae73710. No Copilot source/configuration/credential/bound changed. Fresh review is required for this increment.",
+  "ownerInstallation": "No owner HA request, app update, release or migration performed. Edge.5/schema7 and the retained stopped Edge.3 remain unchanged.",
+  "rawEvidence": {
+    "privateCampaign": "/private/tmp/domus-recurrence-lifecycle-ae73710",
+    "consumer": "Current PR22 review: original failing tests, full/initial/focused coverage, exact source manifest, SDD, current package, image-host smoke and upstream reports. Cleanup retains necessary compact proof and current rollback."
+  },
+  "pending": "Completion-relative lifecycle, durable attention and truthful calendar predicates, current-authorized public HTTP/operation recovery, reviewed attachment/schedule edits/exceptions/classification, household timing-policy defaults, full UI/HA and complete retained52+37 cases and first all-domain Stable/Edge release. No whole-product acceptance is claimed."
+}

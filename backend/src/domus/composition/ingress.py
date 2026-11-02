@@ -16,6 +16,7 @@ from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.task_events import TaskEventSource
+from domus.composition.recurrence import bind_lifespan, recurrence_worker
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
@@ -32,6 +33,7 @@ from domus.infrastructure.ha_ingress import SupervisorIdentity
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.ingress_sessions import IngressRequest, IngressSessions
 from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
+from domus.infrastructure.recurrence_worker import RecurrenceWorker
 from domus.infrastructure.sqlite import SQLiteDatabase
 
 
@@ -39,10 +41,12 @@ from domus.infrastructure.sqlite import SQLiteDatabase
 class NativeRuntime:
     app: FastAPI
     sessions: IngressSessions = field(repr=False)
+    recurrence: RecurrenceWorker = field(repr=False)
     storage: OwnedStorage | None = field(default=None, repr=False)
     task_events: TaskEventSource | None = field(default=None, repr=False)
 
     def close(self) -> None:
+        self.recurrence.close()
         try:
             self.sessions.close()
         finally:
@@ -128,7 +132,11 @@ def _compose_business(
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
         ui_binding=ui_binding,
     )
-    return NativeRuntime(app, sessions, task_events=task_event_source(store, store.installation))
+    worker = recurrence_worker(store, store.installation)
+    bind_lifespan(app, worker)
+    return NativeRuntime(
+        app, sessions, worker, task_events=task_event_source(store, store.installation)
+    )
 
 
 def create_runtime(token: str, channel: str) -> FastAPI:

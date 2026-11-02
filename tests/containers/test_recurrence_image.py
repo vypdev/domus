@@ -17,6 +17,7 @@ def test_current_image_executes_recurrence_creation_planning_and_closed_record_c
         image,
         "-c",
         """
+import asyncio
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
@@ -27,6 +28,7 @@ from domus.application.fair_recurrence import FairFixedRunner, RunLimits
 from domus.application.household_commands import HouseholdCommands, SetupHousehold
 from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
 from domus.application.task_requests import CreateTask
+from domus.composition import ingress, server
 from domus.domain.errors import InvalidInput
 from domus.domain.identity import HumanIdentity
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
@@ -113,11 +115,41 @@ with TemporaryDirectory(prefix='domus-current-image-') as directory:
         assert len(unit.tasks.occurrences('home')) == 4
         assert unit.recurrence.frontier('home') is not None
         assert unit.recurrence.progress('home', other['schedule_id']).cursor.closed
-print('Current-source bounded recurrence, materialization and pinned-time codecs passed.')
+
+    async def serve_once(runtime):
+        async with runtime.app.router.lifespan_context(runtime.app):
+            deadline = asyncio.get_running_loop().time() + 10
+            while runtime.recurrence.last_run is None:
+                assert asyncio.get_running_loop().time() < deadline, 'Owned worker did not run'
+                await asyncio.sleep(0.01)
+            assert runtime.recurrence.is_running
+            assert runtime.recurrence.last_run.created == 2
+        assert not runtime.recurrence.is_running
+
+    for mode in ('standalone', 'native'):
+        scheduled = creation.create_fixed(mode + '-create', request).result.decode()
+        runtime = (
+            server.create_runtime('http://ha.local', 'https://domus.example',
+                installation.instance_id, installation.channel, database=store.path)
+            if mode == 'standalone' else
+            ingress.create_business_runtime('fictional-supervisor-token', installation.channel,
+                store.path, installation.instance_id, ('http://ha.local',))
+        )
+        try:
+            assert not runtime.recurrence.is_running
+            asyncio.run(serve_once(runtime))
+        finally:
+            runtime.close()
+        with store.read() as unit:
+            assert len(unit.recurrence.slots('home', scheduled['schedule_id'])) == 2
+            assert unit.recurrence.progress('home', scheduled['schedule_id']).cursor.closed
+    with store.read() as unit:
+        assert len(unit.tasks.occurrences('home')) == 8
+print('Current-source recurrence, both owned runtimes and pinned-time codecs passed.')
 """,
     )
     assert result.returncode == 0, result.stderr
     assert (
-        "Current-source bounded recurrence, materialization and pinned-time codecs passed."
+        "Current-source recurrence, both owned runtimes and pinned-time codecs passed."
         in result.stdout
     )
