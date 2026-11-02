@@ -6,7 +6,7 @@ from pydantic import Field
 
 from domus.domain.member_profiles import MemberLocale
 from domus.entrypoints.household_http import ReceiptResponse
-from domus.entrypoints.http_contract import StrictModel
+from domus.entrypoints.http_contract import PositiveRevision, StrictModel
 
 type AdministrationAction = Literal[
     "household.update",
@@ -18,12 +18,12 @@ type AdministrationAction = Literal[
 
 
 class AliasRequest(StrictModel):
-    expected_revision: int = Field(ge=1, le=2**63 - 1)
+    expected_revision: PositiveRevision
     alias: str | None
 
 
 class PreferencesRequest(StrictModel):
-    expected_revision: int = Field(ge=1, le=2**63 - 1)
+    expected_revision: PositiveRevision
     locale: MemberLocale | None = Field(strict=False)
     routine_participation_summaries: bool
 
@@ -31,14 +31,14 @@ class PreferencesRequest(StrictModel):
 class PresentationResponse(StrictModel):
     member_id: str
     alias: str | None
-    revision: int = Field(ge=1, le=2**63 - 1)
+    revision: PositiveRevision
 
 
 class PreferencesResponse(StrictModel):
     member_id: str
     locale: MemberLocale | None = Field(strict=False)
     routine_participation_summaries: bool
-    revision: int = Field(ge=1, le=2**63 - 1)
+    revision: PositiveRevision
     notification_delivery: Literal["unavailable"] = "unavailable"
 
 

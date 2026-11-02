@@ -307,7 +307,10 @@
         "backend/src/domus/application/household_administration_queries.py",
         "backend/src/domus/composition/household_administration.py",
         "backend/src/domus/entrypoints/administration_dto.py",
-        "backend/src/domus/entrypoints/administration_http.py"
+        "backend/src/domus/entrypoints/administration_http.py",
+        "backend/src/domus/entrypoints/openapi.py",
+        "frontend/src/domain/administration.ts",
+        "frontend/src/adapters/administration-json.ts"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -368,7 +371,9 @@
         "tests/backend/test_member_profiles.py",
         "tests/backend/test_member_profile_commands.py",
         "tests/backend/test_administration_http.py",
-        "tests/containers/test_administration_image.py"
+        "tests/containers/test_administration_image.py",
+        "tests/backend/test_openapi.py",
+        "frontend/tests/administration.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -422,8 +427,8 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: identity/storage, both APIs, snapshots and verified offline restoration; Edge.3 image suites pass on native amd64/aarch64 with actual previous-image upgrade/refusal; owner Edge.3 update/session/reload/restart accepted; complete M1 pending; 79 normative cases traced in acceptance audit; source membership explanations tested in both compositions; schema9 profile storage is merged; source application/profile HTTP, current original-result privacy and both-mode composition controls are under verification in issue25; full workspace and72-case acceptance remain outstanding",
-        "blockingDecisions": "Complete deployment/live household/recovery/restore, product UI, standalone companion/browser and full channel/release acceptance. No unanswered A30 product choice. Complete current-head Bugbot review remains required. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
+        "implementationEvidence": "Partial: HA identity/sessions, schema9 profile storage, both protected profile APIs and original-result privacy, owned snapshots/restoration and task/recurrence backend foundations; previously verified Edge.5 entry interface. Exact browser administration values/JSON codec now have pure Chromium coverage. HA metadata/directory, separate administration journal and complete workspace remain outstanding.",
+        "blockingDecisions": "No unanswered product decision for issue25. Complete the retained72 administration journeys, source/journal/workspace integration, current-head review/CI and the wider all-domain/Stable release and owner adoption requirements; a merged checkpoint does not complete them.",
         "copilotChangesAllowed": false
       }
     },

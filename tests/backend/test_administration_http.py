@@ -37,6 +37,32 @@ def test_actual_compositions_bind_profile_authority_without_a_second_login(api):
         )
 
 
+@pytest.mark.parametrize("mode", ["native", "standalone"])
+def test_published_int64_revision_schema_never_rounds_its_maximum(tmp_path, monkeypatch, mode):
+    with configured(tmp_path, monkeypatch, mode) as (client, _, _, _, _):
+        schemas = client.get("/api/v1/openapi.json").json()["components"]["schemas"]
+        checked = []
+
+        def visit(value, location):
+            if isinstance(value, dict):
+                if value.get("type") == "integer" and value.get("maximum", 0) > 2**53:
+                    maximum = value["maximum"]
+                    assert type(maximum) is int, location
+                    assert maximum in (2**53 - 1, 2**63 - 1), location
+                    checked.append(location)
+                for key, nested in value.items():
+                    visit(nested, location + "." + key)
+            elif isinstance(value, list):
+                for index, nested in enumerate(value):
+                    visit(nested, location + f"[{index}]")
+
+        visit(schemas, "schemas")
+        assert any("PreferencesRequest" in name for name in checked)
+        assert any("AliasRequest" in name for name in checked)
+        assert any("HouseholdUpdateRequest" in name for name in checked)
+        assert any("PolicyBody" in name for name in checked)
+
+
 @contextmanager
 def configured(tmp_path, monkeypatch, mode):
     if mode == "native":

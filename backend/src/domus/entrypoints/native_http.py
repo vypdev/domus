@@ -26,6 +26,7 @@ from domus.entrypoints.http import CSRFResponse, SessionResponse
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 from domus.entrypoints.http_errors import classify
 from domus.entrypoints.ingress_boundary import require_ingress_source
+from domus.entrypoints.openapi import DomusAPI
 from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
 from domus.entrypoints.ui_bundle import UIBundle
 from domus.entrypoints.ui_http import attach_ui
@@ -122,7 +123,7 @@ def create_native_app(
     ui_bundle: UIBundle | None = None,
     ui_binding: Callable[[Request], None] | None = None,
 ) -> FastAPI:
-    app = FastAPI(
+    app = DomusAPI(
         title="Domus native Home Assistant application",
         version="0.0.0",
         docs_url=None,

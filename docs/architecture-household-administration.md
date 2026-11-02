@@ -61,6 +61,19 @@ mutation. Existing operation-ID lookup uses the same original-result guard. Neit
 mutation CSRF token or expected revision. Revisions remain exact JSON integers through int64;
 browser consumption must preserve their lexical value rather than rounding through Number.
 
+The [shared OpenAPI projection](../backend/src/domus/entrypoints/openapi.py) restores the exact
+maximum of explicitly declared int64 fields after FastAPI projects numeric bounds through float.
+Smaller bounds, unmarked integers and approximate number fields remain untouched. The original
+framework and actual composed API controls distinguish that schema issue from request validation.
+
+Browser [administration values](../frontend/src/domain/administration.ts) use canonical decimal
+revision text and bounded BigInt arithmetic. The [JSON codec](../frontend/src/adapters/administration-json.ts)
+validates duplicate decoded keys, depth, bytes and integer lexemes, then obtains each numeric
+value's original source. A numeric string or lookalike object cannot become a wire integer, and an
+engine without original-source support fails closed. Fixed profile encoders publish an exact
+integer lexeme with only the supported payload fields. These pure values/transport helpers have
+browser tests; the administration controller, journal and workspace integration remain outstanding.
+
 [Composition](../backend/src/domus/composition/household_administration.py) binds the same
 transactions and trusted human adapters as the existing household services. Preview factories
 without the administration callback do not register or advertise those routes. Capability metadata

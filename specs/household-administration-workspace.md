@@ -332,12 +332,17 @@ Tests precede behavior. Require 100% supported statement and branch coverage glo
 | `backend/src/domus/entrypoints/administration_http.py` | create |
 | `backend/src/domus/entrypoints/administration_dto.py` | create |
 | `backend/src/domus/entrypoints/http_errors.py` | update |
+| `backend/src/domus/entrypoints/http_contract.py` | update |
+| `backend/src/domus/entrypoints/household_http.py` | update |
+| `backend/src/domus/entrypoints/task_dto.py` | update |
+| `backend/src/domus/entrypoints/openapi.py` | create |
 | `backend/src/domus/composition/household_administration.py` | create |
 | `backend/src/domus/composition/ingress.py` | update |
 | `backend/src/domus/composition/server.py` | update |
 | `frontend/src/domain/administration.ts` | create |
 | `frontend/src/application/administration-controller.ts` | create |
 | `frontend/src/adapters/administration-http.ts` | create |
+| `frontend/src/adapters/administration-json.ts` | create |
 | `frontend/src/adapters/administration-journal.ts` | create |
 | `frontend/src/presentation/domus-administration.ts` | create |
 | `frontend/src/presentation/messages.ts` | update |
@@ -349,6 +354,7 @@ Tests precede behavior. Require 100% supported statement and branch coverage glo
 | `tests/backend/test_household_administration_queries.py` | create |
 | `tests/backend/test_ha_member_profiles.py` | create |
 | `tests/backend/test_administration_http.py` | create |
+| `tests/backend/test_openapi.py` | create |
 | `tests/backend/test_household_http.py` | update |
 | `tests/containers/test_administration_image.py` | update |
 | `.github/workflows/ci_check.yml` | update |

@@ -338,7 +338,8 @@
             "title": "Alias"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -364,7 +365,8 @@
             "type": "array"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -395,7 +397,8 @@
         "additionalProperties": false,
         "properties": {
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -416,7 +419,8 @@
             "title": "Material Usages"
           },
           "performed_at": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 0.0,
             "title": "Performed At",
             "type": "integer"
@@ -525,7 +529,8 @@
           "due_at": {
             "anyOf": [
               {
-                "maximum": 9.223372036854776e+18,
+                "format": "int64",
+                "maximum": 9223372036854775807,
                 "minimum": 0.0,
                 "type": "integer"
               },
@@ -617,7 +622,8 @@
         "additionalProperties": false,
         "properties": {
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -700,7 +706,8 @@
             "type": "string"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -996,7 +1003,8 @@
         "additionalProperties": false,
         "properties": {
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -1361,7 +1369,8 @@
             "type": "string"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -1514,7 +1523,8 @@
             "type": "array"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -1620,7 +1630,8 @@
         "additionalProperties": false,
         "properties": {
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -1930,7 +1941,8 @@
         "additionalProperties": false,
         "properties": {
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 0.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -1989,7 +2001,8 @@
             "type": "array"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -2021,7 +2034,8 @@
         "additionalProperties": false,
         "properties": {
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -2073,7 +2087,8 @@
             "type": "string"
           },
           "revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Revision",
             "type": "integer"
@@ -2111,7 +2126,8 @@
             "type": "string"
           },
           "revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Revision",
             "type": "integer"
@@ -2319,7 +2335,8 @@
         "additionalProperties": false,
         "properties": {
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -2340,7 +2357,8 @@
             "type": "string"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -3311,7 +3329,8 @@
         "additionalProperties": false,
         "properties": {
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -3343,7 +3362,8 @@
             "type": "string"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
@@ -3435,7 +3455,8 @@
             "$ref": "#/components/schemas/VerificationState"
           },
           "expected_revision": {
-            "maximum": 9.223372036854776e+18,
+            "format": "int64",
+            "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"

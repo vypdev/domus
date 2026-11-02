@@ -240,5 +240,77 @@
     },
     "pending": "Verified HA metadata/directory, separate exact-revision administration browser journal, complete EN/ES roster/settings/profile/mapping workspace, Storybook and real Python/SQLite browser journeys, complete72-case product acceptance and current-head hosted image/native review. Recurrence remains issue23; installed Edge.5 unchanged.",
     "acceptance": "The six-module application/API increment does not complete the retained72 administration journeys, UI/journal/provider metadata, HA adoption, Stable release or complete product."
+  },
+  "precisionIncrement": {
+    "sourceBase": "b14c308a28ecad52945a8edac6dce25ba9dfd655",
+    "implemented": "Exact explicitly declared int64 OpenAPI bounds in both deployments; pure browser administration values and source-preserving bounded JSON codec. HTTP/controller/journal/workspace consumption remains outstanding.",
+    "validFinding": {
+      "comment": "https://github.com/vypdev/domus/pull/26#discussion_r4444683269",
+      "originalControl": "The unchanged byte-verified b14c308 wheel fails both new maximum-schema regressions. The plain FastAPI negative control converts exact Pydantic bounds to float; the DomusAPI subclass restores only declared full int64 bounds and preserves smaller/unmarked/approximate bounds.",
+      "initialHarnessError": "An earlier scratch invocation used a missing basetemp parent and did not execute the property. This is not described as a product failure.",
+      "status": "Corrected in working source; fresh native reconciliation and hosted checks remain required."
+    },
+    "falsePositive": {
+      "comment": "https://github.com/vypdev/domus/pull/26#discussion_r4444683256",
+      "report": "https://github.com/vypdev/copilot/issues/861",
+      "target": "docs/household-administration-migration.md",
+      "originalBlob": "814ef09ab5cdc453d66763a6ffe9adcb3082e645",
+      "sha256": "4bb1ebf920bd133c7fe8d89f897e3a037cf83d6dc37cedf07bd66e9508ec020d",
+      "proof": "Exact reviewed-head Git and connected GitHub file reads return the unchanged tracked guide; actual local/hosted documentation checks pass. Correct link/guide retained; evidence reply4444764034 and thread resolution recorded. Distinct from the valid OpenAPI correction."
+    },
+    "backend": {
+      "executions": 4242,
+      "authoredModules": 147,
+      "statements": 10186,
+      "branches": 2874,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "frontend": {
+      "executions": 661,
+      "newValueAndCodecExecutions": 84,
+      "authoredRuntimeFiles": 17,
+      "statements": 1161,
+      "branches": 841,
+      "functions": 225,
+      "lines": 792,
+      "allFourMetricsPercent": 100,
+      "independentFilesystemInventoryAudit": "passed",
+      "scope": "Actual Chromium unit/browser execution, including all existing application tests. New helpers are not yet wired to the full administration UI."
+    },
+    "sourceIdentity": {
+      "authoredModules": 147,
+      "backendInventorySHA256": "41f71b09c5699246ba25d39a1791bd8981d6c99d406ccbcd10525068f9cd4fa6",
+      "wheelSHA256": "2f50c10b5359200eb2d818ace3e6f676cd24bc302bd0ae7ce73323e930d875d1",
+      "everyModuleByteVerified": true
+    },
+    "checks": {
+      "strictBackendTypes": "passed147modules",
+      "strictFrontendTypes": "passed",
+      "ruff": "passed366files",
+      "architecture": "3kept0broken;191files1256dependencies",
+      "originalSddPolicyModulesByteVerified": 7,
+      "originalSddFormatConsistencyAndCatalog": "passed"
+    },
+    "previousHostedHead": {
+      "head": "b14c308a28ecad52945a8edac6dce25ba9dfd655",
+      "ci": 41477642024,
+      "aggregate": 125391344047,
+      "amd64": 125387329340,
+      "aarch64": 125387329273,
+      "productResult": "success",
+      "native": 41477642019,
+      "nativeJob": 125387329358,
+      "partitions": "6/6",
+      "context": "complete",
+      "publishedFindings": 2,
+      "disposition": "One valid maximum correction and one proved missing-guide false positive. This is not a zero-finding current-head claim."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-int64-b14",
+      "privateLocalOnly": true,
+      "scope": "Exact original-wheel failure, original framework control, complete backend/frontend coverage, source/wheel and original SDK proof; scratch DBs retired after producers end."
+    },
+    "pending": "Wire exact administration/entry revision decoding, HA metadata and directory facts, separate bounded administration journal, full EN/ES workspace, Storybook and real Python/SQLite browser journeys, all72 owner journeys and fresh hosted image/native acceptance. No owner HA update, Stable release, recurrence23 or full product completion."
   }
 }
