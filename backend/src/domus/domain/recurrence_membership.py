@@ -5,7 +5,8 @@ from functools import lru_cache
 from math import gcd
 
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
-from domus.domain.recurrence_planning import PlannedFixedSlot
+from domus.domain.recurrence_periods import period_bounds
+from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot
 from domus.domain.recurrence_rules import FixedPattern, Frequency, NominalDate, slot_datetime
 
 
@@ -90,3 +91,38 @@ def accepts_fixed_slot(pattern: FixedPattern, planned: PlannedFixedSlot) -> bool
     return (
         pattern.count is None or _rank(pattern, index, candidates.index(nominal)) <= pattern.count
     )
+
+
+def accepts_fixed_cursor(pattern: FixedPattern, cursor: FixedCursor) -> bool:
+    """Consumed nominal rank includes truncated DTSTART and empty original periods."""
+    bounds = period_bounds(pattern, cursor.period_index)
+    if bounds is None and period_bounds(pattern, max(0, cursor.period_index - 1)) is None:
+        return False
+    candidates = CalendarNominalExpansion().period(pattern, cursor.period_index).slots
+    if cursor.offset > len(candidates):
+        return False
+    if isinstance(pattern.until, NominalDate):
+        if cursor.offset:
+            if slot_datetime(candidates[cursor.offset - 1]).date() > pattern.until.local:
+                return False
+        elif cursor.period_index:
+            previous_bounds = period_bounds(pattern, cursor.period_index - 1)
+            assert previous_bounds is not None  # Valid periods form one contiguous prefix.
+            previous = CalendarNominalExpansion().period(pattern, cursor.period_index - 1).slots
+            if previous_bounds[0].date() > pattern.until.local or (
+                previous and slot_datetime(previous[-1]).date() > pattern.until.local
+            ):
+                return False
+    consumed = _rank(pattern, cursor.period_index, 0) - 1 + cursor.offset
+    if consumed != cursor.nominal_count:
+        return False
+    if not cursor.closed or bounds is None:
+        return True
+    if pattern.count is not None:
+        return consumed == pattern.count
+    if isinstance(pattern.until, NominalDate):
+        return bounds[0].date() > pattern.until.local or (
+            cursor.offset < len(candidates)
+            and slot_datetime(candidates[cursor.offset]).date() > pattern.until.local
+        )
+    return pattern.until is not None

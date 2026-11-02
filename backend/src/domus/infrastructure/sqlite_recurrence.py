@@ -150,7 +150,7 @@ class SQLiteRecurrences:
     def progress(self, household_id: str, schedule_id: str) -> FixedProgress | None:
         validate_identifier(household_id)
         validate_identifier(schedule_id)
-        return _model(
+        value = _model(
             self.connection.execute(
                 "SELECT * FROM recurrence_progress WHERE household_id=? AND schedule_id=?",
                 (household_id, schedule_id),
@@ -158,6 +158,11 @@ class SQLiteRecurrences:
             read_progress,
             progress_headers,
         )
+        if value is not None:
+            rule = self.schedule(household_id, schedule_id)
+            if rule is None or not value.matches_schedule(rule):
+                raise StorageFailure("invalid_recurrence_record")
+        return value
 
     def slot(self, household_id: str, slot_key: str) -> ScheduledSlot | None:
         validate_identifier(household_id)

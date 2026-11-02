@@ -153,6 +153,7 @@ def test_record_relationships_bind_scope_count_and_current_or_historical_generat
             progress.cursor,
             binding=cursor_binding(limited.pattern, limited.policy),
             nominal_count=1,
+            offset=1,
         ),
     )
     assert end.matches_schedule(limited)

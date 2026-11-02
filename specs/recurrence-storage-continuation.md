@@ -180,6 +180,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_relative_recurrence_records.py | create |
 | tests/backend/test_relative_recurrence_planning.py | create |
 | tests/backend/test_recurrence_local_instant.py | create |
+| tests/backend/test_recurrence_cursor_integrity.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
@@ -204,6 +205,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/evidence/recurrence-lifecycle.json | create |
 | docs/evidence/recurrence-review-corrections.json | create |
 | docs/evidence/recurrence-relative-planning.json | create |
+| docs/evidence/recurrence-cursor-integrity.json | create |
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
 
@@ -256,6 +258,10 @@ The next relative increment establishes typed rule/progress/source/slot values a
 TaskCycle supplies its original completion snapshot through one shared pure helper used by existing lifecycle validation and the relative source value. Approval and reopening never rewrite actual performed time, performers or snapshotted rules. Planning receives the current cycle: paused/retired rules, closed/rejected cycles and pending at_verification work produce explicit nonready states without provider work. Ready plans use local calendar days from performed_at, preserve milliseconds for time deadlines, keep date-only deadlines as dates even for a wholly missing local date, and reject inconsistent provider facts or overflow. Original cycle identity, not approval time or a generated task ID, determines the successor slot key within its generation. Historical slot values preserve original source facts after later closure; constructing one confers no execution authority.
 
 The shared nominal/resolved PlannedSlot value retains PlannedFixedSlot as a source-compatible name; its encoding and existing fixed rule membership checks remain unchanged. Actual SQLite task lifecycle reads exercise pending, approved and reopened source facts without persisting a relative plan or generating an event. The future durable consumer must revalidate the live cycle and its own retained inbox/closure before command receipt lookup and commit; feeding an old event snapshot alone is insufficient. Relative rule/progress/slot storage, atomic initial creation, original-proof reconciliation, durable source/inbox closure, successor invalidation, global mixed-rule fairness and runtime wiring remain required. No SQLite layout or owner installation is changed by this planning increment.
+
+Further native review identified that a correctly bound fixed cursor could disagree with its consumed nominal rank. Validate the exact original candidate prefix represented by period_index and offset before accepting fixed progress. Reuse the finite Gregorian-cycle/interval-phase rank logic, preserving truncated DTSTART, omitted invalid dates and genuinely empty periods. Reject offsets beyond a period and positions beyond the first exhausted calendar period; do not traverse arbitrary prior history. Count-ended and date-ended cursors must not claim early exhaustion or consume dates beyond their end. An unlimited rule cannot be marked closed inside its representable calendar. Repository progress reads recheck the rule relationship as well as canonical headers, and snapshot validation shares it. These relations establish cursor consistency, not caller authority, original effect proof or complete calendar freshness.
+
+Preserve a real source059 wheel identity when replaying the original negative regression against the prior implementation. An initial test fixture accidentally mixed a real pinned policy with a fixture policy; correct that binding and verify the meaningful original failures against every byte-verified published module. Keep genuine sparse/terminal continuations as positive controls. The new strict read exposes an invalid stored binding as invalid_recurrence_record before the higher-level source check; keep a precise failure assertion for that earlier boundary. These are refinements of retained progress/record integrity, not extra counted product journeys.
 
 The worker carries cancellation into every run and joins before runtime identity/storage disposal and installation-lease release. The lifespan preserves the existing application's state and exits its prior context after stopping the worker, including on startup/application failure. Ordinary failures expose only bounded categories and permit a later attempt; a denied technical scope terminates that worker. Last-run observations remain process-local diagnostics, not durable calendar freshness or delivery proof. Identity-only preview has no worker. Actual current-source image controls exercise both ASGI lifetimes, scoped SQLite work and shutdown. Relative lifecycle, current-authorized calendar/command surfaces, durable attention, configurable household timing defaults and complete product/UI/HA acceptance remain required.
 

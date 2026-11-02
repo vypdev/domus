@@ -32,7 +32,7 @@ from domus.application.task_commands import TaskCommands, CompleteTask
 from domus.application.task_events import TaskEventFeed
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
 from domus.composition import ingress, server
-from domus.domain.errors import InvalidInput, StorageBusy, StorageFailure
+from domus.domain.errors import DatabaseRejected, InvalidInput, StorageBusy, StorageFailure
 from domus.domain.recurrence_frontier import RecurrenceFrontier
 from domus.domain.relative_recurrence import RelativeSchedule
 from domus.domain.identity import HumanIdentity
@@ -45,6 +45,7 @@ from domus.domain.task_values import TaskContent
 from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock, TimeZoneCatalog
 from domus.infrastructure.recurrence_time import PinnedRecurrenceTime, TIMEZONE_DATA_IDENTITY
 from domus.infrastructure.sqlite import SCHEMA_VERSION, SQLiteDatabase
+from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
 from domus.infrastructure.sqlite_recurrence_records import (
     schedule_document, read_schedule, progress_document, read_progress, slot_document, read_slot,
     frontier_document, read_frontier,
@@ -186,6 +187,28 @@ with TemporaryDirectory(prefix='domus-current-image-') as directory:
         except StorageBusy:
             pass
         holder.execute('ROLLBACK')
+    with store.read() as unit:
+        original_progress = unit.recurrence.progress('home', facts['schedule_id'])
+    altered = replace(original_progress,
+        cursor=replace(original_progress.cursor, period_index=original_progress.cursor.period_index+100))
+    with store._connection() as connection:
+        connection.execute('UPDATE recurrence_progress SET document=? WHERE schedule_id=?',
+            (progress_document(altered).encoded, facts['schedule_id']))
+    source_bytes = store.path.read_bytes()
+    try:
+        with store.read() as unit:
+            unit.recurrence.progress('home', facts['schedule_id'])
+    except StorageFailure:
+        pass
+    else:
+        raise AssertionError('A bound cursor skipped its actual nominal rank')
+    try:
+        SQLiteSnapshots(store, Path(directory)/'bad-checkpoint', installation, clock).create('bad')
+    except DatabaseRejected as error:
+        assert error.code == 'invalid_snapshot_records'
+    else:
+        raise AssertionError('Checkpoint accepted inconsistent progress')
+    assert store.path.read_bytes() == source_bytes
 print('Current-source recurrence, both owned runtimes and pinned-time codecs passed.')
 """,
     )

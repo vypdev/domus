@@ -1,0 +1,113 @@
+{
+  "status": "partial; fixed cursor position/rank integrity corrected; full retained recurrence execution remains in progress",
+  "recordedAtUTC": "2026-11-02T10:03:05.140880+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "05951170603132fa17db92b49b1174d4fefa2708",
+  "backendSourceInventorySHA256": "ba4c64c5914ad967e5c254fa448830a2df54fd605230b55bf39f9522f6d2d8cc",
+  "sourceManifestMethod": "SHA256 of compact sorted JSON mapping every authored Python module path, including package initializers, to its byte SHA256 value.",
+  "finding": {
+    "url": "https://github.com/vypdev/domus/pull/22#discussion_r4440784569",
+    "id": "recurrence_records:progress-cursor-position-not-bound-to-count",
+    "assessment": "Valid; corrected in source, fresh native confirmation required. Not dismissed or reported as a Copilot finding defect."
+  },
+  "implemented": [
+    "FixedProgress binds its period_index/offset to the exact consumed original nominal prefix, beyond matching binding and COUNT upper bound.",
+    "The pure bounded Gregorian-cycle/interval-phase rank handles truncated DTSTART, omitted invalid dates and genuinely empty original periods; arbitrary far-out calendar positions are refused before rank work.",
+    "Offsets beyond the actual period, invalid count/date exhaustion and consumed dates beyond date-only UNTIL are refused; an unlimited rule cannot close inside its representable calendar.",
+    "Repository progress reads now validate the current rule relationship. Writes, materialization source reads and snapshot inspection share it and do not normalize/repair bad stored bytes.",
+    "The existing nominal-count fixture now identifies one actually consumed candidate with offset1; a wrong stored binding fails precisely at the earlier strict record boundary."
+  ],
+  "testsFirst": {
+    "initialFixtureCorrection": "An initial four-frequency fixture mixed a pinned policy with a fixture policy. The corrected binding was replayed against the exact published059 wheel; all132 module bytes were independently matched to its original source inventory. No patched original code or weakened assertion was used.",
+    "originalSourceEvidence": {
+      "source": "05951170603132fa17db92b49b1174d4fefa2708",
+      "backendManifest": "0b1ae506eb98d959de6776d7ffea8f1324c381701ab9e86ed5078d85617ff76c",
+      "originalWheelSHA256": "a42cfd338ab44d06ef1ca7e1a0d1dbce5b2cb6cc84e73976b834fd59133aa1ce",
+      "all132ModulesByteVerified": true
+    },
+    "originalFinalNegativeReplay": "20 failures and7 positive controls against the exact published original runtime; complete original output retained.",
+    "currentFocused": "All27 new cursor tests pass, including real canonical storage corruption at direct-read/write/checkpoint/materialization boundaries."
+  },
+  "completeBackend": {
+    "executions": 3810,
+    "durationSeconds": 97.26,
+    "authoredModules": 132,
+    "coverageTotals": {
+      "covered_lines": 9439,
+      "num_statements": 9439,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 274,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2702,
+      "num_partial_branches": 0,
+      "covered_branches": 2702,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed"
+  },
+  "focusedRegression": {
+    "executions": 282,
+    "durationSeconds": 8.8,
+    "authoredModules": 3,
+    "statements": 265,
+    "branches": 96,
+    "coveragePercent": 100
+  },
+  "checks": {
+    "strictTypes": "passed;132 modules",
+    "ruff": "check/format passed;334 files",
+    "architecture": "3 contracts kept,0 broken;176 files/1136 dependencies",
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 34660,
+      "renderedCharacters": 34660,
+      "composedCharacters": 34660,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "650da5217fcacea8cce54f144365bc1fc4d61bfac6337864018e05bfc7a943b0",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "freshPackageAndArchitecture": {
+      "executions": 52,
+      "durationSeconds": 6.85,
+      "result": "passed"
+    }
+  },
+  "actualBoundaryObservations": [
+    "A canonical header-consistent progress record with the original binding and count0 cannot point100 daily periods ahead; read, write, step and snapshot all refuse it without task creation or byte repair.",
+    "Actual bounded progress remains valid across sparse monthly31, weekly interval/week-start truncation, leap-day yearly, impossible empty periods, COUNT, date UNTIL and the final calendar day.",
+    "Date-ended multi-slot periods cannot consume excluded later dates or falsely advance past their original end; the first genuine exhausted calendar period stays valid."
+  ],
+  "imageControls": {
+    "exactCurrentScriptOnHost": "Current-source recurrence, both owned runtimes and pinned-time codecs passed.",
+    "scope": "Actual SQLite fixed/fair and native/standalone lifetime controls, relative read-only planning, then a canonical altered real progress row rejected by direct read and actual checkpoint without source-byte repair.",
+    "freshHosted": "Required after publication; host execution is not CPU-image proof.",
+    "prior059": "All applicable product CI and both real CPU images passed at059. Its native review completed9/9 partitions,95 fragments and84 files with this one valid open cursor finding and2 previously fixed findings."
+  },
+  "limits": "Cursor consistency does not authenticate a caller, prove original processed effects or establish complete calendar freshness. Closed instant-UNTIL resolution retains the existing pinned provider contract; no new timezone-provider I/O is added to domain records.",
+  "copilot": "Progress error18107c69-3e73-42dd-9d71-09238a19dbff and partial human context4 fetched/3 retained/1 omitted remain reported in upstream851/843. No Copilot source/configuration/credential/bound changed.",
+  "compatibility": "No SQLite layout/encoding, public HTTP contract, timeout, app version or owner HA installation changed. Genuine historical fixtures and Edge.5/schema7 remain untouched.",
+  "rawEvidence": {
+    "privateCampaign": "/private/tmp/domus-cursor-0595117",
+    "originalWheelConsumer": "Original059 wheel remains in the prior relative-phase compact archive for byte-identical replay; the duplicate extracted runtime can be retired after retaining these original measurements.",
+    "consumer": "Current PR22 cursor review: original implementation and final negative/positive outputs, full/focused coverage, exact source inventory, SDK/package and current image-host controls."
+  },
+  "pending": "Fresh CI/native review and complete relative persistence/initial creation/source inbox/closure/invalidation/restore/global fairness/runtime wiring; protected calendar/operation APIs, reviewed schedule changes and the full retained52+37 cases and first all-domain Stable/Edge release remain required."
+}

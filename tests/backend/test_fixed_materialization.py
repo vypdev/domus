@@ -303,7 +303,12 @@ def test_inconsistent_durable_source_is_not_an_empty_or_successful_step(tmp_path
                 "UPDATE recurrence_progress SET document=?",
                 (progress_document(replace(progress, cursor=FixedCursor("a" * 64))).encoded,),
             )
-    with pytest.raises(StorageFailure, match="invalid_recurrence_source"):
+    with pytest.raises(
+        StorageFailure,
+        match="invalid_recurrence_record"
+        if change == "wrong-binding"
+        else "invalid_recurrence_source",
+    ):
         service.step(rule_id, before)
 
 

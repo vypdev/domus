@@ -281,3 +281,23 @@ fixed rule membership and materialization remain unchanged. The
 facts and preserved task/evidence counts, not a persisted successor. Relative storage, original
 proof/recovery, durable cycle closure and invalidation, global mixed-rule fairness and production
 integration remain required. This increment changes no SQLite layout or owner HA installation.
+
+## Fixed cursor rank integrity
+
+A correct binding and a plausible count are insufficient for a durable continuation. The
+[shared pure membership logic](../backend/src/domus/domain/recurrence_membership.py) now checks
+that period_index/offset describe the exact consumed nominal prefix. The bounded Gregorian-cycle
+calculation retains interval phase, DTSTART truncation, omitted dates and genuinely empty periods.
+A position beyond the first exhausted calendar period or an offset beyond its actual candidates
+is invalid. Count/date exhaustion and date-only UNTIL consumption also retain their original bounds.
+
+[Repository progress reads](../backend/src/domus/infrastructure/sqlite_recurrence.py) verify the
+rule relationship as well as canonical row headers. Writes, materialization and checkpoint
+inspection share it; malformed progress is refused without repairing bytes or generating work.
+These relations prove cursor consistency, not original effect processing, caller authority or
+calendar completeness. Instant-UNTIL resolution retains the existing pinned provider boundary.
+
+The [cursor evidence](evidence/recurrence-cursor-integrity.json) includes a replay of the meaningful
+negative tests against every byte-verified original059 module, real canonical-row corruption and
+genuine sparse/end continuations. The original test fixture binding mismatch was corrected
+explicitly. No historical source or fixture bytes, SQLite layout or owner installation changed.

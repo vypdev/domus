@@ -5,7 +5,7 @@ from enum import StrEnum
 
 from domus.domain.errors import InvalidInput
 from domus.domain.identity import validate_revision
-from domus.domain.recurrence_membership import accepts_fixed_slot
+from domus.domain.recurrence_membership import accepts_fixed_cursor, accepts_fixed_slot
 from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot, cursor_binding
 from domus.domain.recurrence_rules import FixedPattern, NominalDate
 from domus.domain.recurrence_time import TimePolicy
@@ -83,6 +83,7 @@ class FixedProgress:
                 schedule.pattern.count is None
                 or self.cursor.nominal_count <= schedule.pattern.count
             )
+            and accepts_fixed_cursor(schedule.pattern, self.cursor)
         )
 
 
