@@ -70,7 +70,7 @@
     "consumer": "Original failing and passing model/backend measurements, source inventory and pinned SDD reproduction retained for current PR review; disposable coverage databases, XML and pytest cache removed.",
     "privateLocalOnly": true
   },
-  "pending": "Owner-private application/HTTP original results and audit privacy, verified HA metadata, separate journal, full EN/ES administration workspace, complete72-case product acceptance and actual image CI. Recurrence continuation remains issue23; installed Edge.5 unchanged.",
+  "pending": "Owner-private application/HTTP original results and audit privacy, verified HA metadata, separate journal, full EN/ES administration workspace, complete72-case product acceptance and fresh-head image/native checks after documentation correction. Recurrence continuation remains issue23; installed Edge.5 unchanged.",
   "acceptance": "138 parameterized unit executions and a complete backend campaign are not 72 completed administration journeys. No notification delivery, HA metadata availability, schema migration, package/adoption, all-domain release or Stable distribution acceptance is claimed.",
   "storageIncrement": {
     "issue": "https://github.com/vypdev/domus/issues/21",
@@ -139,17 +139,39 @@
         }
       }
     },
-    "hostedImages": "Pending actual CI for both CPU architectures, including new immutable schema8 build, upgrade/refusal/restoration and both current owned runtimes. No result inferred from host controls.",
+    "hostedImages": {
+      "head": "e129e76e25deff7314efe3b72996d295cf73f7f3",
+      "run": 41459181271,
+      "allProductChecks": "success",
+      "amd64Job": 125323532976,
+      "aarch64Job": 125323533003,
+      "backendJob": 125323533010,
+      "aggregateJob": 125327226440,
+      "scope": "Actual both-CPU image upgrade/refusal/restoration and current native/standalone controls passed. A subsequent documentation-only correction requires fresh-head CI; all production module bytes are unchanged."
+    },
     "copilotReports": {
       "assembly": "https://github.com/vypdev/copilot/issues/833#issuecomment-6578894964",
       "unsupportedPublishedCommand": "https://github.com/vypdev/copilot/issues/858",
-      "publicationRecovery": "https://github.com/vypdev/copilot/issues/856#issuecomment-6578910284"
+      "publicationRecovery": "https://github.com/vypdev/copilot/issues/856#issuecomment-6578910284",
+      "foreignKeyFalsePositive": "https://github.com/vypdev/copilot/issues/859"
     },
-    "pending": "Owner-private application/HTTP original results and audit privacy, verified HA metadata, separate journal, full EN/ES administration workspace, complete72-case product acceptance and actual image CI. Recurrence continuation remains issue23; installed Edge.5 unchanged.",
+    "pending": "Owner-private application/HTTP original results and audit privacy, verified HA metadata, separate journal, full EN/ES administration workspace, complete72-case product acceptance and fresh-head image/native checks after documentation correction. Recurrence continuation remains issue23; installed Edge.5 unchanged.",
     "localEvidence": {
       "root": "/private/tmp/domus-member-storage-a9c4b97",
       "privateLocalOnly": true,
       "scope": "Original failing and final passing logs, full coverage JSON, source/wheel/SDK proofs and genuine input provenance retained for current PR review; disposable test DBs retired after producers finish."
+    },
+    "initialNativeReview": {
+      "run": 41459181117,
+      "job": 125323533768,
+      "partitionsCompleted": 4,
+      "partitionsTotal": 4,
+      "contextCoverage": "complete",
+      "published": 2,
+      "validCorrection": "Generated owner Git blob citation corrected against immutable base; owner bytes/cases unchanged.",
+      "falsePositive": "Composite FK claim disproved by9 exact-source controls and2 private counterfactuals; existing task_member_scope unique index is unchanged. No production workaround.",
+      "report": "https://github.com/vypdev/copilot/issues/859",
+      "pending": "Fresh native reconciliation after documentation correction; no clean-review claim inferred from an empty or manually resolved thread."
     }
   }
 }
