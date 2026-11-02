@@ -220,6 +220,7 @@ test.each(commands)('HADW-04: $action needs the target revision facts, without g
   const field = command.action === 'household.update' ? 'household' : command.action === 'policy.update' ? 'policy'
     : command.action === 'member.preferences.update' ? 'preferences' : 'roster';
   f.server[field].mockImplementation(() => {throw new Error('unavailable');});
+  if (command.action === 'member.presentation.update') f.server.presentation.mockImplementation(() => {throw new Error('unavailable');});
   await f.controller.submit(command); expect(f.controller.view.notice).toBe('action_not_allowed'); expect(f.server.send).not.toHaveBeenCalled();
 });
 test.each([1,3])('HADW-04: member target %s must be present in the current roster', async index => {
@@ -577,4 +578,33 @@ test('HADB-01/C02: same-context empty rejection survives reconciliation without 
 test('HADB-01: reconciliation without an action notice remains a current neutral read', async () => {
   const f = fixture(); await f.controller.refresh(); await f.controller.reconcile();
   expect(f.controller.view.notice).toBeNull(); expect(f.controller.view.preferences).toEqual(preferences);
+});
+
+test.each(['without_roster_grant', 'unavailable_roster'] as const)(
+  'HADW-01: independent own alias %s keeps its exact revision and permits one explicit edit', async kind => {
+    const f = fixture(kind === 'without_roster_grant' ? {...access, permissions: ['preferences.read', 'preferences.write']} : access);
+    if (kind === 'unavailable_roster') f.server.roster.mockImplementation(() => {throw new EntryReadError('unavailable');});
+    await f.controller.refresh(); expect(f.controller.view.roster).toBeNull(); expect(f.controller.view.presentation).toEqual(own);
+    expect(f.server.presentation).toHaveBeenCalledExactlyOnceWith(member.memberId, context);
+    await f.controller.submit(commands[3]); expect(f.server.send).toHaveBeenCalledExactlyOnceWith({key: 'request-original', command: commands[3]}, context);
+    expect(f.controller.view.outcome?.kind).toBe('receipt'); expect(f.server.original).not.toHaveBeenCalled();
+  },
+);
+test('HADW-01: an independently returned alias for a former member is never published or used for an own edit', async () => {
+  const f = fixture({...access, permissions: ['preferences.read','preferences.write']});
+  f.server.presentation.mockReturnValue(read({...own, memberId: 'former-member'}));
+  await f.controller.refresh(); expect(f.controller.view.presentation).toBeNull();
+  expect(f.controller.view.errors.presentation).toBe('invalid_response');
+  await f.controller.submit(commands[3]); expect(f.server.send).not.toHaveBeenCalled();
+  expect(JSON.stringify(f.controller.view)).not.toContain('former-member');
+});
+test('HADW-01: lack of either public or own read authority never queries or invents an alias revision', async () => {
+  const f = fixture({...access, permissions: ['preferences.write']}); await f.controller.refresh();
+  expect(f.controller.view.presentation).toBeNull(); expect(f.server.presentation).not.toHaveBeenCalled();
+  await f.controller.submit(commands[3]); expect(f.controller.view.notice).toBe('action_not_allowed'); expect(f.server.send).not.toHaveBeenCalled();
+});
+test('HADW-01: a permitted current roster remains an honest alias source when the independent own read is unavailable', async () => {
+  const f = fixture(); f.server.presentation.mockImplementation(() => {throw new EntryReadError('unavailable');});
+  await f.controller.refresh(); expect(f.controller.view.presentation).toBeNull(); expect(f.controller.view.errors.presentation).toBe('unavailable');
+  await f.controller.submit(commands[3]); expect(f.server.send).toHaveBeenCalledOnce(); expect(f.controller.view.outcome?.kind).toBe('receipt');
 });

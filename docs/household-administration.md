@@ -11,6 +11,11 @@ the public presentation, then submit its revision and an explicit alias. Null re
 literal text remains presentation only and never changes identity or permissions. The absence of a
 saved alias does not fabricate a verified HA name or avatar.
 
+Reading your own alias and its revision requires either member read or your own preference read.
+It does not require permission to view the roster. Reading another participant's public alias
+still requires member read. The browser controller reads your public presentation independently
+of roster availability, so a missing roster does not silently disable a permitted own-alias edit.
+
 Own preferences start with locale null (follow the browser, then English) and routine summaries
 enabled. Save an explicit English/Spanish choice or null, the summary boolean and the independent
 preference revision. Another household administrator cannot edit or recover your private

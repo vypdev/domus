@@ -59,6 +59,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone') {
     else if (route === 'policy') raw = JSON.stringify({household_id: 'home', revision: 1,
       mapping: {mode: 'all_ha_administrators', target_ha_user_id: null}, adjustments: []});
     else if (route === 'administration/preferences') raw = JSON.stringify(preferences);
+    else if (route === 'administration/members/' + member.member_id + '/presentation')
+      raw = JSON.stringify({member_id: member.member_id, alias: null, revision: 1});
     else if (route.startsWith('administration/requests/member.preferences.update/')) {
       const key = route.split('/').at(-1)!, record = records.get(key);
       if (record === undefined) throw new Error('Unknown original administration fixture request.');

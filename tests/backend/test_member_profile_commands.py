@@ -74,6 +74,59 @@ def test_every_active_profile_can_change_its_own_alias_and_preferences_by_defaul
     assert private.result.decode()["notification_delivery"] == "unavailable"
 
 
+@pytest.mark.parametrize("role", list(Role))
+def test_own_alias_read_uses_current_owner_permission_without_roster_access(tmp_path, role):
+    service, store, actor, target = fixture(tmp_path, role=role)
+    human = owner(actor)
+    with store.write() as unit:
+        member = unit.members.get("home", target)
+        unit.members.save(
+            replace(
+                member,
+                revision=member.revision + 1,
+                exceptions=(PermissionRule(Permission.MEMBERS_READ, False),),
+            ),
+            member.revision,
+        )
+        administrator = unit.members.by_user("home", "ha_admin").member_id
+    queries = HouseholdAdministrationQueries(store, human)
+    before = evidence(store)
+    assert queries.presentation(target) == MemberPresentation(target, "home")
+    assert evidence(store) == before
+    with pytest.raises(Forbidden, match="permission_denied"):
+        queries.presentation(administrator)
+    saved = service.update_alias("own-alias", AliasUpdate(target, 1, "Own alias"))
+    assert queries.presentation(target).revision == saved.result.decode()["revision"] == 2
+    assert queries.preferences() == MemberPreferences(target, "home")
+
+
+@pytest.mark.parametrize("public_read", [False, True])
+def test_own_alias_read_preserves_public_grants_and_requires_one_applicable_permission(
+    tmp_path, public_read
+):
+    _, store, actor, target = fixture(tmp_path)
+    human = owner(actor)
+    with store.write() as unit:
+        member = unit.members.get("home", target)
+        unit.members.save(
+            replace(
+                member,
+                revision=member.revision + 1,
+                exceptions=(
+                    PermissionRule(Permission.MEMBERS_READ, public_read),
+                    PermissionRule(Permission.PREFERENCES_READ, False),
+                ),
+            ),
+            member.revision,
+        )
+    query = HouseholdAdministrationQueries(store, human)
+    if public_read:
+        assert query.presentation(target) == MemberPresentation(target, "home")
+    else:
+        with pytest.raises(Forbidden, match="permission_denied"):
+            query.presentation(target)
+
+
 def test_administrator_alias_edit_of_pending_member_preserves_membership_and_private_state(
     tmp_path,
 ):

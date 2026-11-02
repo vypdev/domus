@@ -6,7 +6,7 @@ import {nextRevision} from '../domain/administration';
 import type {Revision} from '../domain/administration';
 import type {AdministrationJournalView, AdministrationRecord} from '../domain/administration-journal';
 import type {AdministrationAccess, AdministrationCapabilities, AdministrationPolicy, AdministrationReceipt,
-  Directory, OwnPreferences, Roster} from '../domain/administration-views';
+  Directory, OwnPreferences, PublicPresentation, Roster} from '../domain/administration-views';
 import {entryDecision} from '../domain/entry';
 import type {Deployment} from '../domain/entry';
 import type {JournalContext} from '../domain/journal';
@@ -15,7 +15,7 @@ import type {EntryClock, EntryEntropy, EntryRead, EntryServer, HouseholdFacts, R
 import type {AdministrationCommandResult, AdministrationJournalPort, AdministrationOriginal, AdministrationServer} from './administration-ports';
 
 type Facts = {household: HouseholdFacts | null; roster: Roster | null; policy: AdministrationPolicy | null;
-  directory: Directory | null; preferences: OwnPreferences | null};
+  directory: Directory | null; preferences: OwnPreferences | null; presentation: PublicPresentation | null};
 export type AdministrationNotice = ReadFault | 'api_unavailable' | 'inactive' | 'read_only' | 'access_changed'
   | 'journal_unavailable' | 'invalid_input' | 'action_not_allowed' | 'request_unavailable' | 'request_changed'
   | 'context_changed' | 'conflict' | 'revision_exhausted' | 'previous_request_unresolved' | 'check_unconfirmed';
@@ -30,7 +30,7 @@ type Retained = Readonly<{context: JournalContext; request: AdministrationRecord
 const retired = Symbol('retired administration read');
 function blank(phase: State['phase']): State {
   return Object.freeze({phase, session: null, access: null, capabilities: null, journal: null, outcome: null,
-    household: null, roster: null, policy: null, directory: null, preferences: null,
+    household: null, roster: null, policy: null, directory: null, preferences: null, presentation: null,
     errors: Object.freeze({}), notice: null});
 }
 function sameContext(a: JournalContext, b: JournalContext): boolean {
@@ -96,7 +96,7 @@ export class AdministrationController {
       if (access.state !== 'active') {this.update({...blank('ready'), session, access, notice: 'inactive'}); return true;}
       if (access.member === null) throw new EntryReadError('invalid_response');
       const capabilities = await this.read(this.server.capabilities(session.context), generation);
-      const facts: Facts = {household: null, roster: null, policy: null, directory: null, preferences: null};
+      const facts: Facts = {household: null, roster: null, policy: null, directory: null, preferences: null, presentation: null};
       const errors: Partial<Record<keyof Facts, ReadFault>> = {};
       const collect = async <K extends keyof Facts>(key: K, factory: () => EntryRead<Facts[K]>): Promise<void> => {
         try {facts[key] = await this.read(factory(), generation);}
@@ -109,9 +109,13 @@ export class AdministrationController {
         has('policy.manage') ? collect('policy', () => this.server.policy(session.context)) : undefined,
         has('policy.manage') ? collect('directory', () => this.server.directory(session.context)) : undefined,
         has('preferences.read') ? collect('preferences', () => this.server.preferences(session.context)) : undefined,
+        has('members.read') || has('preferences.read')
+          ? collect('presentation', () => this.server.presentation(access.member!.memberId, session.context)) : undefined,
       ]);
-      if (facts.preferences !== null && facts.preferences.memberId !== access.member.memberId) {
-        facts.preferences = null; errors.preferences = 'invalid_response';
+      for (const key of ['preferences', 'presentation'] as const) {
+        if (facts[key] !== null && facts[key].memberId !== access.member.memberId) {
+          facts[key] = null; errors[key] = 'invalid_response';
+        }
       }
       if (facts.household !== null && facts.household.householdId !== capabilities.householdId) {
         facts.household = null; errors.household = 'invalid_response';
@@ -177,7 +181,9 @@ export class AdministrationController {
       case 'household.update': return this.state.household?.revision ?? null;
       case 'member.update': return this.state.roster?.members.find(row => row.member.memberId === command.memberId)?.member.revision ?? null;
       case 'policy.update': return this.state.policy?.revision ?? null;
-      case 'member.presentation.update': return this.state.roster?.members.find(row => row.member.memberId === command.memberId)?.presentation.revision ?? null;
+      case 'member.presentation.update': return (this.state.presentation?.memberId === command.memberId
+        ? this.state.presentation.revision : null)
+        ?? this.state.roster?.members.find(row => row.member.memberId === command.memberId)?.presentation.revision ?? null;
       case 'member.preferences.update': return this.state.preferences?.revision ?? null;
     }
   }

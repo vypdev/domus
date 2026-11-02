@@ -118,6 +118,7 @@ Text equivalent: verified entry → current matched authority → permitted form
 ### 6.2 Alternative paths
 
 - Optional aggregate unavailability does not erase independently verified authority. Recheck current grants; keep independently permitted facts and original GET available where authorized.
+- Own alias editing uses an independently authorized own-presentation read and exact revision. A current owner with `preferences.read` can read their public alias without `members.read`; public reads of other members still require `members.read`. A failed or unavailable roster is not an implicit own-alias prerequisite. This does not grant private preference access to another member or infer a missing HA name.
 - Authentication failure retires access. A read-only outage lease retains permitted local reads, including protected original GET, until its existing expiry; new mutations remain blocked.
 - A stale revision or storage failure preserves a safe same-context draft and original revision. The user may explicitly reset to adopt a new revision.
 - HA directory/avatar unavailability is not empty success. If no supported avatar source is feasible, show unavailable without inventing one.
@@ -339,6 +340,9 @@ Tests first. Preserve repository-wide supported coverage, complete global and pe
 | `frontend/src/application/household-controller.ts` | create |
 | `frontend/src/application/entry-controller.ts` | update |
 | `frontend/src/application/administration-controller.ts` | update |
+| `backend/src/domus/application/household_administration_queries.py` | update |
+| `tests/backend/test_member_profile_commands.py` | update |
+| `tests/backend/test_administration_http.py` | update |
 | `frontend/src/composition/entry-runtime.ts` | update |
 | `frontend/src/composition/entry-page.ts` | update |
 | `frontend/src/presentation/domus-app.ts` | update |
@@ -360,6 +364,7 @@ Tests first. Preserve repository-wide supported coverage, complete global and pe
 | `tests/packaging/test_ui_wheel.py` | update |
 | `tests/containers/test_administration_image.py` | update |
 | `docs/household-administration.md` | update |
+| `docs/household-api.md` | update |
 | `docs/household-administration-operations.md` | create |
 | `docs/evidence/household-administration.json` | update |
 | `docs/evidence/household-administration-browser.json` | create |
