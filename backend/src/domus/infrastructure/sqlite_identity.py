@@ -17,6 +17,7 @@ from domus.domain.identity import (
     Role,
 )
 from domus.domain.storage import JsonDocument, JsonObject
+from domus.infrastructure.sqlite_member_profiles import initialize_member_profiles
 
 
 def _rules(encoded: str) -> list[JsonObject]:
@@ -95,6 +96,7 @@ class SQLiteMembers:
                 )
             except sqlite3.IntegrityError:
                 raise Conflict("member_exists") from None
+            initialize_member_profiles(self.connection, member)
         elif (
             self.connection.execute(
                 "UPDATE members SET role=?,status=?,revision=?,exceptions=? "

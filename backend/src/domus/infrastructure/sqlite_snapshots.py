@@ -37,6 +37,7 @@ from domus.infrastructure.sqlite_history import (
     last_committed_at,
     verify_history,
 )
+from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS
 from domus.infrastructure.sqlite_recovery import _record as _recovery
 from domus.infrastructure.sqlite_recurrence_integrity import verify_recurrence_records
 from domus.infrastructure.sqlite_recurrence_schema import RECURRENCE_STATEMENTS
@@ -124,6 +125,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(MATERIAL_STATEMENTS if version >= 6 else ()),
             *(REVIEW_STATEMENTS if version >= 7 else ()),
             *(RECURRENCE_STATEMENTS if version >= 8 else ()),
+            *(PROFILE_STATEMENTS if version >= 9 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -182,6 +184,10 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
             if version >= 2:
                 members = unit.members.list(row[0])
                 policy = unit.policies.get(row[0])
+                if version >= 9:
+                    for member in members:
+                        unit.presentations.get(row[0], member.member_id)
+                        unit.preferences.get(row[0], member.member_id)
                 if version >= 5:
                     verify_task_records(
                         connection, row[0], members, policy, record_version=1 if version == 5 else 2

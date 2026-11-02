@@ -22,6 +22,7 @@ from domus.domain.task_values import (
 from domus.domain.tasks import HouseholdTaskPolicy
 from domus.infrastructure.sqlite import BASE_STATEMENTS, IDENTITY_STATEMENTS
 from domus.infrastructure.sqlite_identity import SQLiteMembers
+from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
@@ -46,7 +47,12 @@ def store(tmp_path: Path) -> Iterator[Store]:
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys=ON")
     connection.execute("PRAGMA trusted_schema=OFF")
-    for statement in (*BASE_STATEMENTS, *IDENTITY_STATEMENTS, *TASK_STATEMENTS):
+    for statement in (
+        *BASE_STATEMENTS,
+        *IDENTITY_STATEMENTS,
+        *TASK_STATEMENTS,
+        *PROFILE_STATEMENTS,
+    ):
         connection.execute(statement)
     connection.execute(
         "INSERT INTO households(household_id,name,time_zone,revision) "

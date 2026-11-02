@@ -41,7 +41,7 @@ Participants can use existing identity and entry capabilities, but cannot yet ma
 - Baseline measurements supplied for that source: 4,031 backend executions, 137 authored modules, and 100% supported statement/branch coverage globally and per module; applicable product CI and both actual image architectures pass. These establish baseline evidence only, not acceptance of this proposal or all 72 journeys.
 - Existing administration owner evidence: `specs/household-administration.md`, 57,838 UTF-8 bytes, Git blob `f315a00d9efbb7da8a9ea44ab0da8a9df2d088e100a`, SHA256 `333791e5664212473dd8874be9751c00c8ee7644cf9f861f11a3876dd97321f3`, 72 case rows, HADM-01 through HADM-08.
 - The selected development source contains 22 specification files. Bootstrap master `8ee7e1a15e91c91b6204ca97e8808c3207dee008` has no specs directory and is not the selected source.
-- Genuine schema8 input evidence captured before schema9: all 137 source modules were byte-checked against Git; raw database SHA256 `badd63184fa403804ab3fe54cd957b63a967d1beafb4b73fc6c2475df8340b`; complete logical dump with captured header pragmas SHA256 `041615f0253c0537ac6c713e10a8984fb5043b1f6df29a6a2c7193824ebc6ed5`. This is fictional local HA proof and real application/SQLite execution, not owner data or proof of relative materialization.
+- Genuine schema8 input evidence captured before schema9: all 137 source modules were byte-checked against Git; raw database SHA256 `badd63184fa40380462ab3fe54cd957b63a967d1beafb4b73fc6c2475df8340b`; complete logical dump with captured header pragmas SHA256 `041615f0253c0537ac6c713e10a8984fb5043b1f6df29a6a2c7193824ebc6ed5`. This is fictional local HA proof and real application/SQLite execution, not owner data or proof of relative materialization.
 - Incidents or concrete examples: issue #21 identifies the unfinished portion of closed issue #16; PR #18 merged only the pure-model checkpoint, not the full 72-case contract.
 - External primary sources: not applicable; no external provider behavior is inferred.
 - Unknowns: implementation details and runtime acceptance remain to be established. Provider/library feasibility is not inferred from current specification paths.
@@ -350,6 +350,28 @@ The budget is a floor for distinct executable checks; each inventory row counts 
 | `docs/architecture-household-administration.md` | update |
 | `docs/evidence/household-administration.json` | update |
 
+| `tests/backend/test_sqlite_identity.py` | update |
+| `tests/backend/test_sqlite_recovery.py` | update |
+| `tests/backend/test_sqlite_history.py` | update |
+| `tests/backend/test_sqlite_task_integrity.py` | update |
+| `tests/backend/test_sqlite_recurrence.py` | update |
+| `tests/backend/test_sqlite_recurrence_integrity.py` | update |
+| `tests/backend/test_sqlite_relative_recurrence.py` | update |
+| `tests/backend/test_sqlite_task_reviews.py` | update |
+| `tests/backend/test_sqlite_task_materials.py` | update |
+| `tests/backend/test_sqlite_snapshots.py` | update |
+| `tests/backend/test_restore_source.py` | update |
+| `tests/backend/test_task_restoration.py` | update |
+| `tests/backend/test_recurrence_frontier.py` | update |
+| `tests/backend/test_activation_compatibility.py` | update |
+| `tests/containers/restore_fixture.py` | update |
+| `tests/containers/test_app_compatibility.py` | update |
+| `tests/containers/test_app_image.py` | update |
+| `tests/containers/test_recurrence_image.py` | update |
+
+| `tests/backend/test_sqlite_tasks.py` | update |
+| `tests/backend/test_recurrence_until_proof.py` | update |
+
 These are proposed implementation paths, not evidence that files exist or framework execution is supported. Existing catalog paths are evidence of current source locations only. Declare any additional actual paths before implementation. User documentation covers normal journey/defaults; setup documentation covers permissions and deployment context; operator documentation covers states, recovery and cleanup; migration documentation covers schema inputs, verification and rollback; contributor documentation covers ports, trust boundaries and architecture checks. Validate links and examples against implementation fixtures. Preserve repository layout and language conventions.
 
 ## 16. Acceptance scenarios
@@ -400,7 +422,7 @@ The derived traceability table must map every HADI requirement to its exact inte
 - [ ] User, setup, operator, contributor and migration documentation is complete, discoverable and validated.
 - [ ] Failure, partial success, retry, idempotency, concurrency, security, restoration and cleanup behavior pass.
 - [ ] Every PR CI Check runs applicable suites and both image architectures; evidence names actual source/runtime and limits.
-- [ ] `specs/catalog.json` and `specs/CATALOG.md` are updated consistently and `pnpm run validate:specifications` passes.
+- [ ] `specs/catalog.json` and `specs/CATALOG.md` are updated consistently and the original pinned SDD format/consistency validation passes.
 - [ ] No readiness-blocking decision remains unresolved; Draft status remains until actual implementation evidence and review support readiness.
 
 ## 20. References and decisions

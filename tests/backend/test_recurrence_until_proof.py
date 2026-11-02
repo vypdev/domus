@@ -140,7 +140,7 @@ def test_exact_prior_unreleased_layout_is_refused_unchanged_before_temporal_evid
     before = path.read_bytes()
     store = SQLiteDatabase(path, identity)
     for method in (store.read, store.write):
-        with pytest.raises(DatabaseRejected, match="unrelated_database"):
+        with pytest.raises(DatabaseRejected, match="unsupported_schema"):
             with method():
                 pytest.fail("Unknown unreleased layout was admitted")
         assert path.read_bytes() == before

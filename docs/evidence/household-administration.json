@@ -70,6 +70,86 @@
     "consumer": "Original failing and passing model/backend measurements, source inventory and pinned SDD reproduction retained for current PR review; disposable coverage databases, XML and pytest cache removed.",
     "privateLocalOnly": true
   },
-  "pending": "Current-authorized application/HTTP/profile-source behavior, private preference disclosure guards, schema9 after actual recurrence schema8, separate administration journal, real EN/ES workspace, product browser/image/owner acceptance and complete issue16 acceptance. Existing runtime APIs and packaged Edge.5 do not expose these new models.",
-  "acceptance": "138 parameterized unit executions and a complete backend campaign are not 72 completed administration journeys. No notification delivery, HA metadata availability, schema migration, package/adoption, all-domain release or Stable distribution acceptance is claimed."
+  "pending": "Owner-private application/HTTP original results and audit privacy, verified HA metadata, separate journal, full EN/ES administration workspace, complete72-case product acceptance and actual image CI. Recurrence continuation remains issue23; installed Edge.5 unchanged.",
+  "acceptance": "138 parameterized unit executions and a complete backend campaign are not 72 completed administration journeys. No notification delivery, HA metadata availability, schema migration, package/adoption, all-domain release or Stable distribution acceptance is claimed.",
+  "storageIncrement": {
+    "issue": "https://github.com/vypdev/domus/issues/21",
+    "sourceBase": "a9c4b9723c66868884476743940102ada65d2db0",
+    "baselineMerge": "4b71969d3b3f6df5f28d617ab0da4e86c9be5884",
+    "sourceIdentity": "Exact140-module backend inventory and wheel; working schema9 storage increment. This is not complete administration acceptance.",
+    "backendInventorySHA256": "902c56bf1045ebb3eac632881ee41794db48b6651f2d678ad0fd8bc904bd81c9",
+    "wheelSHA256": "9598d11e44083e7e7aac42fbb061d360bbe1593e7bf7498ce782ef188300ac62",
+    "implemented": "Independent scoped alias/private preference repositories, atomic member defaults, strict persisted decoding/CAS, schema1..8 to9 initialization and independent profile checkpoint inspection.",
+    "testsFirst": {
+      "original": "SQLiteUnit lacked presentations in the first authored storage test.",
+      "nullPrimaryKey": "Two direct SQL controls reproduced nullable TEXT primary keys; both profile primary keys now explicitly require NOT NULL.",
+      "historicalInput": "Schema5 retains the existing schema6 material-document conversion; all other original facts are compared unchanged."
+    },
+    "focused": {
+      "executions": 74,
+      "scope": "Storage/adapters, all historical inputs, real simultaneous independent writers, late SQL/command/migration rollback, corruption and actual generation restoration. Repeated executions are not independent product journeys."
+    },
+    "completeBackend": {
+      "executions": 4105,
+      "authoredModules": 140,
+      "statements": 9919,
+      "branches": 2822,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "checks": {
+      "strictTypes": "passed140modules",
+      "ruff": "passed354files",
+      "architecture": "3kept0broken;184files1204dependencies",
+      "packageAndArchitectureTests": "56passed",
+      "nodePolicy": "38passed;100%coverage",
+      "localDocumentationLinks": "passed",
+      "originalPinnedSddFormatAndConsistency": "passed;7originalpolicybytesverified;18retainedowners"
+    },
+    "originalInput": {
+      "source": "ed7cd14190d750846833cf1bb822988b628560da",
+      "rawDatabaseSHA256": "badd63184fa40380462ab3fe54cd957b63a967d1beafb4b73fc6c2475df8340b",
+      "logicalFixtureSHA256": "041615f0253c0537ac6c713e10a8984fb5043b1f6df29a6a2c7193824ebc6ed5",
+      "sourceArchiveSHA256": "1d5c69cd2a61f2e8b2c7702ea112a2034c7849f4f59d3a479e41be001b8f2454",
+      "archiveAllTrackedFilesByteVerified": 520,
+      "originalBackendModules": 137
+    },
+    "runtimeScripts": {
+      "scope": "Exact current container script executed on host only; actual CPU images and Docker isolation remain pending.",
+      "outcomes": {
+        "native-0": {
+          "returnCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "native-8": {
+          "returnCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "standalone-0": {
+          "returnCode": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "standalone-8": {
+          "returnCode": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    "hostedImages": "Pending actual CI for both CPU architectures, including new immutable schema8 build, upgrade/refusal/restoration and both current owned runtimes. No result inferred from host controls.",
+    "copilotReports": {
+      "assembly": "https://github.com/vypdev/copilot/issues/833#issuecomment-6578894964",
+      "unsupportedPublishedCommand": "https://github.com/vypdev/copilot/issues/858",
+      "publicationRecovery": "https://github.com/vypdev/copilot/issues/856#issuecomment-6578910284"
+    },
+    "pending": "Owner-private application/HTTP original results and audit privacy, verified HA metadata, separate journal, full EN/ES administration workspace, complete72-case product acceptance and actual image CI. Recurrence continuation remains issue23; installed Edge.5 unchanged.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-member-storage-a9c4b97",
+      "privateLocalOnly": true,
+      "scope": "Original failing and final passing logs, full coverage JSON, source/wheel/SDK proofs and genuine input provenance retained for current PR review; disposable test DBs retired after producers finish."
+    }
+  }
 }
