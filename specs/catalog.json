@@ -228,7 +228,8 @@
       "lastVerified": "2026-10-31",
       "specs": [
         "specs/household-identity.md",
-        "specs/household-administration.md"
+        "specs/household-administration.md",
+        "specs/household-administration-integration.md"
       ],
       "workflows": [],
       "entrypoints": [
