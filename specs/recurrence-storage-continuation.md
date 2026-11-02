@@ -142,6 +142,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | backend/src/domus/application/fixed_materialization.py | create |
 | backend/src/domus/application/fair_recurrence.py | create |
 | backend/src/domus/application/relative_recurrence.py | create |
+| backend/src/domus/application/relative_recurrence_commands.py | create |
 | backend/src/domus/application/commands.py | update |
 | backend/src/domus/application/task_creation.py | create |
 | backend/src/domus/application/task_commands.py | update |
@@ -172,6 +173,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_sqlite_recurrence.py | create |
 | tests/backend/test_recurrence_records.py | create |
 | tests/backend/test_recurrence_creation.py | create |
+| tests/backend/test_relative_recurrence_creation.py | create |
 | tests/backend/test_fixed_materialization.py | create |
 | tests/backend/test_fixed_materialization_shutdown.py | create |
 | tests/backend/test_fair_recurrence.py | create |
@@ -224,6 +226,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/evidence/recurrence-until-integrity.json | create |
 | docs/evidence/recurrence-slot-original.json | create |
 | docs/evidence/recurrence-relative-storage.json | create |
+| docs/evidence/recurrence-relative-creation.json | create |
 
 Existing retained path declarations describe their original publication baseline; the table above identifies this continuation's actual new and existing storage paths at the immutable base. Declare any additional real implementation/test path before committing it. Update exact evidence and current acceptance limits without relabeling historical results.
 
@@ -283,11 +286,13 @@ The worker carries cancellation into every run and joins before runtime identity
 
 ## 19. Definition of Done
 
+Relative scheduled creation requires an explicit typed initial local date/time, interval, policy and successor visibility. Resolve the initial time through the pinned semantic port outside the writer; reject contradictory facts. Reuse current task creation, override/material permissions and the original atomic command boundary. Save one definition, one relative rule and pristine generation-bound progress with receipt/audit/outbox; do not create ordinary manual work or consume the first obligation. Current authorization precedes original replay and is checked again in the writer. Restart replay and historical absent-effect replay preserve original identity without provider work, new IDs or effects. Independent writers and failure after every write preserve a single complete original. This verifies creation only; actual relative materialization, reviewed attachment, source/closure/invalidation, mixed budgets and complete retained acceptance remain required.
+
 Relative persistence uses the same globally unique rule/progress identity with an explicit closed timing discriminator. Deferred generation relationships include that kind, and CAS predicates cannot overwrite the other kind. One nonretired rule owns each definition's current timing; retired history remains. This also preserves the runner's definition-based selection budget. Independent legacy pagination fixtures must represent different definitions rather than multiple current owners of one definition. This does not apply a timing-mode replacement or provide a new public configuration command.
 
 Every relative continuation, including its unconsumed bootstrap, binds the full immutable generation: initial due fact, interval, visibility, policy, scope and pattern revision. A nonbootstrap advance also references an exact original command/operation whose canonical result matches its business state. CAS revision and observed last-run time are not business cursor identity. A revision-bound proof header, canonical record and current or retained original must agree. A present slot additionally verifies its complete original generation/local/source fingerprint and actual task/source-cycle relationship. Current approval or closure cannot rewrite the normalized original completion facts; storage validation grants no source eligibility or execution authority.
 
-Actual restore controls distinguish a generated task removed by restoration from an adopted manual task that still exists while its later recurrence mapping is absent. Neither permits automatic recreation of the processed mapping, new task identities, original receipts or event delivery. Historical pointers retain explicit original proof; existing manual work survives. Source-cycle closure dominance, durable consumer inbox/closure, source eligibility, authorized creation, actual relative materialization, invalidation, mixed-rule budgets and runtime wiring still require their own implementation and acceptance. Synthetic repository receipts and packaged codec controls are not evidence of those missing consumer journeys.
+Actual restore controls distinguish a generated task removed by restoration from an adopted manual task that still exists while its later recurrence mapping is absent. Neither permits automatic recreation of the processed mapping, new task identities, original receipts or event delivery. Historical pointers retain explicit original proof; existing manual work survives. Source-cycle closure dominance, durable consumer inbox/closure, source eligibility, actual relative materialization, invalidation, mixed-rule budgets and runtime wiring still require their own implementation and acceptance. Synthetic repository receipts and packaged codec controls are not evidence of those missing consumer journeys.
 
 This adds relative slots and typed ownership to the unreleased schema8 layout. Keep released1..7 inputs unchanged. Preserve the genuine06 source/data pair and complete captured header pragmas; refuse its prior five-table development layout without relabeling or claiming a released8 migration. The current owner still runs Edge.5/schema7. These are retained storage/execution refinements, not additional counted product cases.
 

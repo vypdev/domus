@@ -372,7 +372,29 @@ The schema8 layout is unreleased. Supported released1..7 fixtures remain unchang
 than relabeled or silently upgraded. No owner HA installation changes. See
 [relative storage evidence](evidence/recurrence-relative-storage.json) for exact measured scope.
 
-Authorized relative creation, actual initial/successor materialization, source inbox/closure and
+Actual relative initial/successor materialization, reviewed attachment, source inbox/closure and
 eligibility, restore-source reconciliation, successor invalidation, mixed-rule execution and runtime
 wiring remain required. Synthetic repository receipts and image codec/storage controls do not
 establish those consumer journeys or the remaining calendar/UI/HA/all-domain release acceptance.
+
+## Authorized relative creation
+
+RelativeRecurrenceCommands now accepts a typed explicit initial local date or time, interval,
+time policy and successor visibility. Its immutable request fingerprints those facts with the
+validated task content, overrides and material selections. Existing creation/configuration/material
+grants apply. Current HA proof and local authority precede original lookup; local grants are checked
+again inside the writer after external timezone preparation. A caller cannot supply a resolved
+initial deadline in place of the pinned semantic time port.
+
+The atomic operation saves one task definition, one active relative rule and pristine generation-bound
+progress together with the original receipt, audit and outbox. It leaves the first obligation
+unconsumed for actual materialization; ordinary title-only manual creation keeps its existing behavior.
+The initial gap moves to the first valid local instant and folds retain one configured appearance.
+Date-only obligations retain their local date without becoming midnight instants.
+
+Tests include independent simultaneous SQLite writers, failure after every write, restart replay,
+provider/grant races, material ownership and real offline restoration of the whole creation. A
+historically processed creation returns original evidence without recreating its restored-away
+definition/rule or event delivery. This is distinct from the still-required relative materializer,
+source inbox/closure/eligibility/invalidation, reviewed attachment and mixed-rule runtime. See
+[relative creation evidence](evidence/recurrence-relative-creation.json) for measured scope and limits.

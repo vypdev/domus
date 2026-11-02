@@ -31,6 +31,9 @@ from domus.application.task_requests import CreateTask
 from domus.application.task_commands import TaskCommands, CompleteTask
 from domus.application.task_events import TaskEventFeed
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
+from domus.application.relative_recurrence_commands import (
+    CreateRelativeTask, RelativeRecurrenceCommands,
+)
 from domus.composition import ingress, server
 from domus.domain.errors import DatabaseRejected, InvalidInput, StorageBusy, StorageFailure
 from domus.domain.recurrence_frontier import RecurrenceFrontier
@@ -341,6 +344,27 @@ with TemporaryDirectory(prefix='domus-current-relative-store-') as directory:
         assert unit.recurrence.relative_slots('home', rule.schedule_id) == (slot,)
         assert unit.recurrence.schedules('home') == ()
     assert SQLiteSnapshots(store, Path(directory)/'good', installation, clock).create('good')
+with TemporaryDirectory(prefix='domus-current-relative-creation-') as directory:
+    store = SQLiteDatabase(Path(directory)/'domus.sqlite3', installation)
+    store.initialize()
+    HouseholdCommands(store, human, UnusedDirectory(), TimeZoneCatalog(), clock, identifiers).setup(
+        'setup', SetupHousehold('Fictional relative creation', 'UTC'))
+    creation = RelativeRecurrenceCommands(store, human, clock, identifiers, times)
+    request = CreateRelativeTask(CreateTask(TaskContent('Relative initial intention')),
+        NominalTime(datetime(2026, 3, 29, 2, 30, 0, 123000)), RelativeInterval(30), policy)
+    receipt = creation.create('relative-create', request)
+    assert creation.create('relative-create', request) == receipt
+    with store.read() as unit:
+        facts = receipt.result.decode()
+        rule = unit.recurrence.relative_schedule('home', facts['schedule_id'])
+        assert rule.initial.nominal == request.initial
+        assert rule.initial.resolved.resolved_local == datetime(2026, 3, 29, 3)
+        assert unit.recurrence.relative_progress('home', rule.schedule_id).pristine
+        assert len(unit.tasks.definitions('home')) == 1 and unit.tasks.occurrences('home') == ()
+        assert unit.recurrence.relative_slots('home', rule.schedule_id) == ()
+        assert unit.receipts.get(receipt.command) == receipt
+    # Actual creation is verified; the relative materializer/source consumer is still required.
+    assert SQLiteSnapshots(store, Path(directory)/'created', installation, clock).create('created')
 print('Current-source recurrence, both owned runtimes and pinned-time codecs passed.')
 """,
     )

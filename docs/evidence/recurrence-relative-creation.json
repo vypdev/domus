@@ -1,0 +1,161 @@
+{
+  "status": "partial; current-authorized relative creation implemented, full retained issue20 execution remains in progress",
+  "recordedAtUTC": "2026-11-02T12:34:25.758374+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "19ff35cb2cb2ceb4a0397901341f1089001cc619",
+  "backendSourceInventorySHA256": "bc605845ba2175a01eff18642fbf1bd277b990ff77c86e4f7df1a62f29de0b1a",
+  "sourceManifestMethod": "SHA256 of compact sorted JSON mapping every authored backend Python module path to its byte SHA256.",
+  "implemented": [
+    "Typed active-task creation with an explicit initial nominal local date/time, relative interval, snapshotted time policy and per-task successor visibility. The request fingerprints all timing and existing task content/override/material facts.",
+    "Current HA proof and existing task-create/configuration/inventory-link grants precede original lookup. External time preparation stays outside writers; local grants are checked again inside the atomic write.",
+    "Pinned initial date/instant resolution retains date-only facts, first-valid gap and one configured fold appearance with actual millisecond precision. Contradictory semantic time-port responses are refused.",
+    "One atomic task definition, relative rule and pristine generation-bound continuation commits with original receipt/audit/outbox. No accidental manual work, slot, consumed source or initial materialization is created.",
+    "Restart and historically absent-effect replay return the same original identity without timezone work, new identifiers, work/rule recreation or outbox delivery. Changed requests retain idempotency conflict.",
+    "Real independent SQLite writers keep one complete original. Failure injected after policy, definition, rule, progress, receipt, audit and outbox preserves atomic rollback."
+  ],
+  "testsFirst": {
+    "original": "Collection failed on missing domus.application.relative_recurrence_commands before implementation; the exact original output is retained. This is a missing implementation, not passing runtime behavior.",
+    "firstImplementation": "39 creation/permission/timing/rollback executions passed before adding the actual independent-writer and whole-creation restore controls.",
+    "focusedFinal": {
+      "executions": 44,
+      "durationSeconds": 0.87,
+      "result": "passed"
+    },
+    "fixtureCorrection": "The first additional concurrency/restore run failed test collection on an unparenthesized multiple-exception as-clause. Its syntax was corrected before final acceptance; it is not claimed as a production defect or meaningful behavior regression.",
+    "scope": "44 new backend executions relative to3987 baseline; parameterizations and a creation-only image control are not independent completed recurrence/product journeys."
+  },
+  "completeBackend": {
+    "executions": 4031,
+    "durationSeconds": 104.86,
+    "authoredModules": 137,
+    "coverageTotals": {
+      "covered_lines": 9849,
+      "num_statements": 9849,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 292,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2804,
+      "num_partial_branches": 0,
+      "covered_branches": 2804,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed against the final report and current137-module inventory"
+  },
+  "checks": {
+    "strictTypes": "passed;137 source files",
+    "ruff": "check and final format passed;347 files",
+    "architecture": {
+      "contractsKept": 3,
+      "contractsBroken": 0,
+      "filesAnalyzed": 181,
+      "dependencies": 1191
+    },
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 42903,
+      "renderedCharacters": 42903,
+      "composedCharacters": 42903,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "c79c018e359e26e6f6ab0d774c55c7bd39d39452dc06dee81f0d138eb469b43b",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "freshPackageAndArchitecture": {
+      "result": "passed",
+      "executions": 52,
+      "durationSeconds": 6.96
+    },
+    "exactWheel": {
+      "modules": 137,
+      "backendSourceInventorySHA256": "bc605845ba2175a01eff18642fbf1bd277b990ff77c86e4f7df1a62f29de0b1a",
+      "wheelSHA256": "c1220e0358f6c61135f4253063ae985ac512a73051fdb5f611b0b2e1b5a9fed6",
+      "scope": "Every current backend module byte matches the fresh wheel; no CPU or owner HA claim."
+    },
+    "exactCurrentImageScriptHost": "passed; includes actual relative creation with first-valid initial time, original replay, pristine progress and checkpoint. Earlier fixed/runtime/time/synthetic-relative storage controls remain. Actual relative consumer is not implemented.",
+    "freshHosted": "Required after normal publication for current source; host control does not prove real CPU images or native review."
+  },
+  "actualRestore": {
+    "input": "Real schema8 household checkpoint taken before relative creation, then a later real authorized creation with original receipt/audit/outbox.",
+    "operation": "SQLiteRestorations.prepare, SQLiteActivation.activate and open_storage select the historical state and retain later processed original proof.",
+    "observations": "Original current-authorized retry is historical with the same operation/result. Definition/rule/work and task policy remain absent, no new IDs are allocated and only original checkpoint delivery remains. A changed retry conflicts. A subsequent full checkpoint passes.",
+    "limits": "Not the still-required relative lifecycle-source restoration/closure/materialization acceptance and not an owner HA restoration."
+  },
+  "priorPublishedReview": {
+    "head": "19ff35cb2cb2ceb4a0397901341f1089001cc619",
+    "productRun": 41442811569,
+    "aggregateJob": 125271140255,
+    "productResult": "all applicable productCI suites passed, including both actual CPU images",
+    "nativeRun": 41442811542,
+    "nativeJob": 125268584741,
+    "reviewCheck": 125270397194,
+    "partitions": "14/14",
+    "fragments": 128,
+    "files": 102,
+    "validPriorFindingsFixed": 6,
+    "newFinding": "One reproduced false double-encoding assertion; initial native open=1 is not relabeled as native-confirmed fixed.",
+    "falsePositiveReport": "https://github.com/vypdev/copilot/issues/855",
+    "evidenceReply": "https://github.com/vypdev/domus/pull/22#discussion_r4442303467",
+    "manualDisposition": "Thread resolved after exact unchanged-source4 positive and4 harmful-suggestion negative controls plus6 existing codec/storage/restore tests. Correct production code was unchanged.",
+    "context": "Partial/neutral; human8 fetched/6 retained/2 omitted/0 truncated/limitReached. Separate issue6/6,PR12/12,threads6/6,diff102/102 complete. No omitted-item identity, new owner answers or whole-prompt absence inferred.",
+    "progressReference": "e818e4f7-749a-4646-9148-c8f52e646bd1;102 required paths,4 source parts,recovery usage null; no concrete capacity/continuation facts."
+  },
+  "compatibility": {
+    "schema": 8,
+    "layoutChanged": false,
+    "supportedReleasedSources": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "copilotChanged": false,
+    "dependenciesChanged": false,
+    "timeoutsChanged": false,
+    "providerIoInsideWriterAdded": false,
+    "ownerHa": "No HA request, update, migration, release or deployment. Edge.5/schema7 and retained rollback remain unchanged."
+  },
+  "retainedScope": {
+    "companionCases": 52,
+    "originalOwnerCases": 37,
+    "additionalStorageCases": 4,
+    "newCountedProductJourneys": 0,
+    "owningSddsUnchanged": true
+  },
+  "copilotReports": [
+    "https://github.com/vypdev/copilot/issues/855",
+    "https://github.com/vypdev/copilot/issues/851#issuecomment-6565229213",
+    "https://github.com/vypdev/copilot/issues/843#issuecomment-6565011301"
+  ],
+  "rawEvidence": {
+    "privateCampaign": "/private/tmp/domus-relative-create-19ff35c",
+    "consumer": "CurrentPR22 relative creation review: original missing-module failure, final44/4031 tests and100% coverage, exact137-module wheel, original SDK/package/host controls. Compact terminal producer trees after publication while preserving original06 input, current rollback and next source/closure plan."
+  },
+  "pending": [
+    "Fresh current-source product CI, actual amd64/aarch64 images and native review after publication.",
+    "Actual relative initial/successor materialization, reviewed attachment and compatible adoption.",
+    "Bounded current/historical source observations, durable inbox, cycle closure dominance, eligibility, invalidation and restore-source reconciliation.",
+    "One shared mixed-rule definition/slot budget and frontier, with both owned runtime compositions.",
+    "Protected calendar/operation APIs, reviewed schedules/exceptions/classification and configurable household timing defaults.",
+    "Complete retained52+37 cases and full UI/HA/Stable-Edge/all-domain release acceptance. KeepPR22 open until complete issue20 scope."
+  ]
+}

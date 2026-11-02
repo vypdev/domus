@@ -85,7 +85,7 @@
       "policyModulesByteVerified": 7,
       "immutableBaseOwners": 18,
       "retainedOwnersUnchanged": true,
-      "currentCompanionSHA256": "a317ee4f8b3cc4517098f244966bd04a127f91bc7a70ca6c67dc5723cef57c04",
+      "currentCompanionSHA256": "c79c018e359e26e6f6ab0d774c55c7bd39d39452dc06dee81f0d138eb469b43b",
       "scope": "Explicit contributor integration; original first publication remains in Git. Format, reciprocal inventory/path consistency and current catalog pass."
     },
     "packageAndArchitectureTests": {
@@ -290,5 +290,10 @@
     "evidence": "recurrence-relative-storage.json",
     "backendSourceInventorySHA256": "43e40358642c0f0f48282eb4a38d9b65f666ef95e29cd85794b750f231784921",
     "scope": "Historical initial storage measurements above remain unchanged. See this later increment for typed shared identity and relative persistence; full consumer and product acceptance remain pending."
+  },
+  "relativeCreationContinuation": {
+    "evidence": "recurrence-relative-creation.json",
+    "backendSourceInventorySHA256": "bc605845ba2175a01eff18642fbf1bd277b990ff77c86e4f7df1a62f29de0b1a",
+    "scope": "Historical measurements above remain unchanged. This later creation increment preserves explicit pending actual materialization/source/calendar/product scope."
   }
 }

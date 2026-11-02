@@ -142,5 +142,10 @@
   "images": "Image control now exercises actual SQLite fixed creation/replay and COUNT rejection. Local execution of that script is not actual CPU-image evidence; fresh hosted both-architecture jobs remain required.",
   "ownerHa": "Installed Edge.5 and retained Edge.3 unchanged. No deployment, release or registry publication.",
   "copilot": "No Copilot resource/configuration/bound/credential changed. Known progress evidence capacity and partial conversation reports remain upstream851/843.",
-  "retainedEvidenceDirectory": "/private/tmp/domus-race-71c54ab"
+  "retainedEvidenceDirectory": "/private/tmp/domus-race-71c54ab",
+  "relativeCreationContinuation": {
+    "evidence": "recurrence-relative-creation.json",
+    "backendSourceInventorySHA256": "bc605845ba2175a01eff18642fbf1bd277b990ff77c86e4f7df1a62f29de0b1a",
+    "scope": "Historical measurements above remain unchanged. This later creation increment preserves explicit pending actual materialization/source/calendar/product scope."
+  }
 }
