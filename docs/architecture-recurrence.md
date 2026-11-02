@@ -228,3 +228,26 @@ host smoke execution and fresh hosted CPU image results from owner-HA deployment
 
 Relative execution, durable attention/calendar predicates, protected public interfaces, reviewed
 schedule changes and the complete retained recurrence contract remain unfinished.
+
+## Strict stored text and initial inspection contention
+
+Stored recurrence text now has to equal its exact canonical JSON representation before typed
+construction. Semantically equivalent whitespace, key reordering and escaped keys are rejected
+for rules, progress, slots and selection frontiers. Independent reads and snapshot validation
+share this boundary and retain the altered database bytes rather than repairing them. Existing
+semantic corruption fixtures use canonical serialization so they continue to exercise their
+original source/effect invariants independently of syntax rejection.
+
+A real exclusive SQLite writer can also block initial database inspection. That condition now
+remains bounded `storage_busy` and a 503 response; other inspection failures still refuse invalid
+databases. Native and standalone HTTP tests use actual independent exclusive writers and verify
+explicit read recovery without another business effect.
+
+The observed hosted browser trace had a rejected busy POST, one successful setup and a subsequent
+authorization read returning `500 internal_error`. It did not retain the internal exception stack.
+The exclusive-lock tests independently reproduce the inspection misclassification; the historical
+stack is not inferred as proven. The concurrency browser assertion explicitly refreshes status
+after both original POST responses, then checks the retained rejection and deliberately replays
+the exact original request under current authority. Refresh never resubmits a POST. See the
+[review corrections evidence](evidence/recurrence-review-corrections.json) for original failures,
+complete-source validation, current images and remaining acceptance limits.

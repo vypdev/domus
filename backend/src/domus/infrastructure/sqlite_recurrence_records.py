@@ -318,7 +318,10 @@ def _slot(value: JsonValue) -> ScheduledSlot:
 
 def _read[T](document: str, build: Callable[[JsonValue], T]) -> T:
     try:
-        return build(JsonDocument(document).decode())
+        canonical = JsonDocument(document)
+        if canonical.encoded != document:
+            raise InvalidInput("noncanonical_recurrence_record")
+        return build(canonical.decode())
     except DomusError, KeyError, TypeError, ValueError, OverflowError:
         raise StorageFailure("invalid_recurrence_record") from None
 

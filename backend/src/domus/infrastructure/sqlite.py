@@ -405,7 +405,10 @@ class SQLiteDatabase:
                 self.installation.channel,
             ):
                 raise DatabaseRejected("installation_mismatch")
-        except sqlite3.Error:
+        except sqlite3.Error as error:
+            mapped = _storage_error(error)
+            if isinstance(mapped, StorageBusy):
+                raise mapped from None
             raise DatabaseRejected("invalid_database") from None
         return int(version)
 

@@ -152,6 +152,21 @@ def test_reader_cannot_write_and_an_external_writer_returns_bounded_busy(tmp_pat
         assert unit.households.current() is None
 
 
+@pytest.mark.parametrize("operation", ["read", "write"])
+def test_exclusive_writer_does_not_misclassify_inspection_contention_as_corrupt_database(
+    tmp_path: Path, operation: str
+) -> None:
+    store = database(tmp_path / "domus.sqlite3")
+    with store._connection() as holder:
+        holder.execute("BEGIN EXCLUSIVE")
+        with pytest.raises(StorageBusy, match="storage_busy"):
+            with getattr(store, operation)():
+                pytest.fail("An exclusive external writer still owns this database")
+        holder.execute("ROLLBACK")
+    with store.read() as unit:
+        assert unit.households.current() is None
+
+
 @pytest.mark.parametrize(
     "change", ["future", "unrelated", "missing_metadata", "wrong_channel", "wrong_instance"]
 )

@@ -13,6 +13,7 @@ from domus.domain.recurrence_planning import FixedCursor
 from domus.domain.recurrence_records import ScheduleState
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.recurrence_time import NominalTime
+from domus.domain.storage import JsonDocument
 from domus.infrastructure.sqlite import SQLiteAudit, SQLiteDatabase
 from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
@@ -367,7 +368,9 @@ def test_corrupt_current_original_effect_is_not_recreated_or_consumed_as_valid_p
             row = connection.execute("SELECT document FROM recurrence_slots").fetchone()
             data = json.loads(row[0])
             data["schedule"]["revision"] = 2
-            connection.execute("UPDATE recurrence_slots SET document=?", (json.dumps(data),))
+            connection.execute(
+                "UPDATE recurrence_slots SET document=?", (JsonDocument.from_value(data).encoded,)
+            )
     initial = counts(store)
     with pytest.raises(StorageFailure, match="invalid_recurrence_effect"):
         service.step(rule_id, before)

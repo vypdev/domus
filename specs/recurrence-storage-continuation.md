@@ -170,6 +170,8 @@ Use real independent SQLite connections and exact before/after version/row check
 | tests/backend/test_recurrence_frontier.py | create |
 | tests/backend/test_recurrence_worker.py | create |
 | tests/backend/test_recurrence_runtime.py | create |
+| tests/backend/test_recurrence_canonical_storage.py | create |
+| tests/backend/test_storage_contention_http.py | create |
 | tests/backend/test_recurrence_slot_membership.py | create |
 | tests/backend/test_sqlite_recurrence_records.py | create |
 | tests/backend/test_sqlite_recurrence_integrity.py | create |
@@ -192,6 +194,7 @@ Use real independent SQLite connections and exact before/after version/row check
 | docs/evidence/recurrence-materialization.json | create |
 | docs/evidence/recurrence-fairness.json | create |
 | docs/evidence/recurrence-lifecycle.json | create |
+| docs/evidence/recurrence-review-corrections.json | create |
 | docs/tasks/migration.md | update |
 | docs/evidence/recurrence-execution.json | update |
 
@@ -234,6 +237,10 @@ Rule snapshots used to compute horizons are rechecked by the step. Cancellation 
 Selection metadata is added to schema 8 before its first release. Supported historical schemas 1..7 and original fixture bytes remain unchanged. The genuine intermediate c5819b8 schema-8 SQL input was generated under that exact source before this DDL change; normal operations and initialization reject its unknown development layout without modifying it. It is a refusal/rollback control, not a promise to migrate an unreleased layout or permission to edit user_version. The owner remains on the unchanged released schema-7 Edge.5 pair. Complete production scheduling, relative sources, durable calendar/review attention and the remaining retained requirements remain pending.
 
 The next production increment composes that fixed runner into both persistent native and standalone applications. Construction remains inert. The actual ASGI lifespan starts one owned thread; it attempts a bounded run immediately and waits five seconds after each attempt, including unavailable or unconfirmed attempts. This engineering polling interval does not change the rule's business time policy or human permissions. Composition selects only the current household in its trusted installation; unconfigured installations remain unconfigured, and homes with no active rule create no frontier or business effects. No human proof or submitted scope is used for technical execution.
+
+Review identified a strict-storage gap: parsing JSON could normalize altered source bytes before the closed typed codec checked them. Compare the original stored text with the exact canonical representation before constructing any recurrence record. Whitespace, key order and equivalent escaped keys must fail safely in direct rule/progress/slot/frontier reads and full checkpoint validation, without repairing source bytes. Keep existing semantic-negative tests canonically serialized so they continue to exercise typed integrity independently of syntax rejection. This refines recurrence-storage-R2 and retained record integrity, without inventing another product case count.
+
+Concurrent browser evidence also exposes unavailable follow-up reads during a setup winner's commit. An exclusive SQLite writer must yield bounded storage_busy during initial database inspection, not a corruption classification or internal_error. Preserve corrupt-file refusal for other inspection failures. An explicit user status refresh after the two concurrent POST responses can restore verified current facts before inspecting the retained rejection and deliberately replaying the exact original request; it never retries a POST automatically. Verify both read/write repository entry points, actual native/standalone authorization HTTP responses and the real browser flows. The original CI trace has no internal exception stack; the exclusive-lock reproduction establishes the concrete inspection defect rather than proving an unlogged historical stack.
 
 The worker carries cancellation into every run and joins before runtime identity/storage disposal and installation-lease release. The lifespan preserves the existing application's state and exits its prior context after stopping the worker, including on startup/application failure. Ordinary failures expose only bounded categories and permit a later attempt; a denied technical scope terminates that worker. Last-run observations remain process-local diagnostics, not durable calendar freshness or delivery proof. Identity-only preview has no worker. Actual current-source image controls exercise both ASGI lifetimes, scoped SQLite work and shutdown. Relative lifecycle, current-authorized calendar/command surfaces, durable attention, configurable household timing defaults and complete product/UI/HA acceptance remain required.
 

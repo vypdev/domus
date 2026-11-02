@@ -1,6 +1,5 @@
 """Closed persistence codecs preserve every nominal/time-policy fact and reject corrupt bytes."""
 
-import json
 from dataclasses import replace
 from datetime import date
 
@@ -11,6 +10,7 @@ from domus.domain.errors import StorageFailure
 from domus.domain.recurrence_planning import cursor_binding
 from domus.domain.recurrence_rules import ByDay, FixedPattern, Frequency, NominalDate, Weekday
 from domus.domain.recurrence_time import MAX_INSTANT_MS
+from domus.domain.storage import JsonDocument
 from domus.infrastructure.sqlite_recurrence_records import (
     progress_document,
     read_progress,
@@ -66,7 +66,7 @@ def test_unknown_or_extra_record_fields_never_receive_defaults(index, encode, de
     row = encode(values()[index]).decode()
     row[field] = value
     with pytest.raises(StorageFailure, match="invalid_recurrence_record"):
-        decode(json.dumps(row))
+        decode(JsonDocument.from_value(row).encoded)
 
 
 @pytest.mark.parametrize("index,encode,decode", CODECS)
@@ -95,7 +95,7 @@ def test_stored_nominal_values_require_canonical_tagged_date_or_naive_time(timed
     row = schedule_document(values(timed)[0]).decode()
     row["pattern"]["start"]["local"] = local
     with pytest.raises(StorageFailure, match="invalid_recurrence_record"):
-        read_schedule(json.dumps(row))
+        read_schedule(JsonDocument.from_value(row).encoded)
 
 
 @pytest.mark.parametrize(
@@ -113,11 +113,11 @@ def test_corrupt_nested_pattern_values_are_not_coerced(field, value):
     row = schedule_document(values()[0]).decode()
     row["pattern"][field] = value
     with pytest.raises(StorageFailure, match="invalid_recurrence_record"):
-        read_schedule(json.dumps(row))
+        read_schedule(JsonDocument.from_value(row).encoded)
 
 
 def test_a_resolved_time_cannot_be_retagged_as_a_date():
     row = slot_document(values(True)[2]).decode()
     row["planned"]["resolved"]["nominal"] = {"kind": "date", "local": "2026-01-01"}
     with pytest.raises(StorageFailure, match="invalid_recurrence_record"):
-        read_slot(json.dumps(row))
+        read_slot(JsonDocument.from_value(row).encoded)

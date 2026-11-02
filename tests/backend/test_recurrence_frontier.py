@@ -1,6 +1,5 @@
 """Fair rule selection has a small scoped durable cursor, separate from task/work progress."""
 
-import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import FrozenInstanceError, replace
 from threading import Barrier
@@ -11,6 +10,7 @@ from test_task_commands import counts, fixture
 
 from domus.domain.errors import Conflict, DatabaseRejected, InvalidInput, StorageFailure
 from domus.domain.recurrence_frontier import RecurrenceFrontier
+from domus.domain.storage import JsonDocument
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_recurrence_records import frontier_document, read_frontier
 from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
@@ -106,7 +106,11 @@ def test_closed_frontier_codec_never_guesses_or_coerces_stored_data(change):
         document["unexpected"] = None
     elif change == "bool-revision":
         document["revision"] = True
-    raw = json.dumps(document) if change != "duplicate-key" else '{"version":1,"version":1}'
+    raw = (
+        JsonDocument.from_value(document).encoded
+        if change != "duplicate-key"
+        else '{"version":1,"version":1}'
+    )
     with pytest.raises(StorageFailure, match="invalid_recurrence_record"):
         read_frontier(raw)
 

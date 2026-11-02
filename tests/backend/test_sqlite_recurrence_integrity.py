@@ -13,6 +13,7 @@ from test_sqlite_snapshots import Clock
 from domus.domain.errors import Conflict, DatabaseRejected, StorageFailure
 from domus.domain.recurrence_planning import FixedCursor, PlannedFixedSlot, cursor_binding
 from domus.domain.recurrence_rules import NominalDate
+from domus.domain.storage import JsonDocument
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_recurrence_integrity import verify_recurrence_records
 from domus.infrastructure.sqlite_recurrence_records import (
@@ -72,7 +73,7 @@ def test_self_consistent_slot_headers_and_exact_receipt_cannot_bypass_nominal_co
         )
         connection.execute(
             "UPDATE recurrence_slots SET slot_key=?,nominal_value=?,document=?",
-            (later.key, "2026-01-02", json.dumps(document)),
+            (later.key, "2026-01-02", JsonDocument.from_value(document).encoded),
         )
         connection.execute(
             "UPDATE receipts SET command_key=?,result=? WHERE command_key=?",

@@ -29,7 +29,8 @@ from domus.application.household_commands import HouseholdCommands, SetupHouseho
 from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
 from domus.application.task_requests import CreateTask
 from domus.composition import ingress, server
-from domus.domain.errors import InvalidInput
+from domus.domain.errors import InvalidInput, StorageBusy, StorageFailure
+from domus.domain.recurrence_frontier import RecurrenceFrontier
 from domus.domain.identity import HumanIdentity
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_records import FixedProgress, FixedSchedule, ScheduledSlot
@@ -42,6 +43,7 @@ from domus.infrastructure.recurrence_time import PinnedRecurrenceTime, TIMEZONE_
 from domus.infrastructure.sqlite import SCHEMA_VERSION, SQLiteDatabase
 from domus.infrastructure.sqlite_recurrence_records import (
     schedule_document, read_schedule, progress_document, read_progress, slot_document, read_slot,
+    frontier_document, read_frontier,
 )
 assert SCHEMA_VERSION == 8
 policy = TimePolicy('Europe/Madrid', TIMEZONE_DATA_IDENTITY)
@@ -59,6 +61,18 @@ slot = ScheduledSlot(installation, rule, first, 'work', 100)
 assert read_schedule(schedule_document(rule).encoded) == rule
 assert read_progress(progress_document(progress).encoded) == progress
 assert read_slot(slot_document(slot).encoded) == slot
+for value, encode, decode in (
+    (rule, schedule_document, read_schedule),
+    (progress, progress_document, read_progress),
+    (slot, slot_document, read_slot),
+    (RecurrenceFrontier('home', None, 100), frontier_document, read_frontier),
+):
+    try:
+        decode(' ' + encode(value).encoded)
+    except StorageFailure:
+        pass
+    else:
+        raise AssertionError('Noncanonical stored text was accepted')
 assert progress.matches_schedule(rule) and slot.consistent_with(rule)
 try:
     ScheduledSlot(installation, replace(rule, pattern=replace(pattern, count=1)),
@@ -145,6 +159,15 @@ with TemporaryDirectory(prefix='domus-current-image-') as directory:
             assert unit.recurrence.progress('home', scheduled['schedule_id']).cursor.closed
     with store.read() as unit:
         assert len(unit.tasks.occurrences('home')) == 8
+    contended = SQLiteDatabase(store.path, installation, busy_timeout=0.01)
+    with store._connection() as holder:
+        holder.execute('BEGIN EXCLUSIVE')
+        try:
+            with contended.read():
+                raise AssertionError('An exclusive writer was bypassed')
+        except StorageBusy:
+            pass
+        holder.execute('ROLLBACK')
 print('Current-source recurrence, both owned runtimes and pinned-time codecs passed.')
 """,
     )

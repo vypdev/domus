@@ -334,6 +334,9 @@ for (const mode of modes) test.describe(mode, () => {
           expect(reply.headers()['retry-after']).toBe('1');
           // The bounded writer may time out under CI load. After the winner completes, the exact
           // original request still needs current authority and cannot create a second household.
+          // Its immediate status read can also contend with that commit. An explicit read refresh
+          // after both responses restores verified facts and never resubmits the rejected command.
+          await [page, peerPage][index].getByRole('button', {name: 'Refresh status', exact: true}).click();
           await expect([page, peerPage][index].getByRole('heading', {name: 'Request not accepted', exact: true})).toBeVisible();
           const retried = await replaySetup([page, peerPage][index], reply);
           expect(retried.status()).toBe(actors === 'same_account' ? 409 : 403);
