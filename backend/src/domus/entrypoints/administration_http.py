@@ -10,6 +10,7 @@ from fastapi.params import Depends
 from domus.application.household_administration_queries import HouseholdAdministrationQueries
 from domus.application.household_queries import ADMINISTRATION_ACTIONS, HouseholdQueries
 from domus.application.household_roster import HouseholdRosterQueries
+from domus.application.member_profile_access import ALIAS_ACTION, PREFERENCES_ACTION
 from domus.application.member_profile_commands import (
     AliasUpdate,
     MemberProfileCommands,
@@ -39,9 +40,9 @@ class AdministrationHTTPContext:
     roster: HouseholdRosterQueries
 
 
-def _profile_receipt(receipt: Receipt) -> AdministrationReceipt:
+def _profile_receipt(receipt: Receipt, *, profile: bool = True) -> AdministrationReceipt:
     result = _receipt(receipt)
-    if not receipt.historical:
+    if not receipt.historical and profile:
         result.message = "The profile change was saved. Notification delivery is unavailable."
         result.action_required = (
             "Review current state. Keep the original request key and operation ID."
@@ -129,7 +130,9 @@ def create_administration_router(
     ) -> AdministrationOperation:
         result = context(request).operations().administration_request(action, key)
         return AdministrationOperation(
-            **_profile_receipt(result.receipt).model_dump(),
+            **_profile_receipt(
+                result.receipt, profile=action in (ALIAS_ACTION, PREFERENCES_ACTION)
+            ).model_dump(),
             action=action,
             command_key=key,
             event_delivery=(

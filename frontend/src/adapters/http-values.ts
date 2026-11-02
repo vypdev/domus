@@ -1,33 +1,12 @@
-import {EntryReadError} from '../application/ports';
 import type {EntryOperation, EntryReceipt, HouseholdFacts, VerifiedEntrySession} from '../application/ports';
 import {setupPayload} from '../domain/entry';
 import type {Authorization, Deployment} from '../domain/entry';
 import type {JournalCommand, JournalContext} from '../domain/journal';
+import {check, invalid, fields, identifier, text, integer, boolean, choice, responseRevision} from './json-values';
+import type {Fields} from './json-values';
+export {check, invalid, fields, identifier, wireJSON} from './json-values';
 
 export interface EntryEndpoint {readonly origin: string; readonly deployment: Deployment; readonly applicationBase: string;}
-type Fields = Record<string, unknown>;
-export function invalid(): never {throw new EntryReadError('invalid_response');}
-export function check(condition: unknown): asserts condition {if (!condition) invalid();}
-export function fields(value: unknown, required: readonly string[], optional: readonly string[]): Fields {
-  check(typeof value === 'object' && value !== null && !Array.isArray(value));
-  check(required.every(key => Object.hasOwn(value, key))
-    && Object.keys(value).every(key => required.includes(key) || optional.includes(key)));
-  return value as Fields;
-}
-function text(value: unknown, maximum: number): string {
-  check(typeof value === 'string' && value.length > 0 && Array.from(value).length <= maximum
-    && !/[\uD800-\uDFFF]/u.test(value)); return value;
-}
-function integer(value: unknown, minimum: number): number {
-  check(typeof value === 'number' && Number.isSafeInteger(value) && value >= minimum); return value;
-}
-function boolean(value: unknown): boolean {check(typeof value === 'boolean'); return value;}
-function choice<T extends string>(value: unknown, options: readonly T[]): T {
-  check(typeof value === 'string' && options.includes(value as T)); return value as T;
-}
-export function identifier(value: unknown): string {
-  check(typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/u.test(value)); return value;
-}
 export function endpoint(value: EntryEndpoint): EntryEndpoint {
   const item = fields(value, ['origin', 'deployment', 'applicationBase'], []);
   const origin = text(item.origin, 2048); let url: URL;
@@ -47,39 +26,6 @@ export function assertion(value: JournalContext): string {
   return `v1:${item.installationId}:${item.channel}:${item.subject}`;
 }
 
-/** Bounded wire JSON: duplicate decoded keys/deep containers/unsafe numeric lexemes fail before coercion. */
-export function wireJSON(raw: string): unknown {
-  const stack: (Set<string> | null)[] = [];
-  try {
-    let index = 0;
-    while (index < raw.length) {
-      const character = raw[index++];
-      if (character === '{' || character === '[') {
-        stack.push(character === '{' ? new Set<string>() : null); check(stack.length <= 16);
-      } else if (character === '}' || character === ']') stack.pop();
-      else if (character === '"') {
-        const start = index - 1;
-        while (index < raw.length) {
-          const next = raw[index++];
-          if (next === '\\') index++;
-          else if (next === '"') break;
-        }
-        let following = index;
-        while (/\s/u.test(raw[following] ?? '')) following++;
-        if (raw[following] === ':') {
-          const keys = stack[stack.length - 1], key: unknown = JSON.parse(raw.slice(start, index));
-          check(keys instanceof Set && typeof key === 'string' && !keys.has(key)); keys.add(key);
-        }
-      } else if (character === '-' || (character >= '0' && character <= '9')) {
-        const start = index - 1;
-        while (index < raw.length && /[^\s{}\[\],:"]/u.test(raw[index])) index++;
-        const token = raw.slice(start, index);
-        check(/^-?(?:0|[1-9]\d*)$/u.test(token) && token !== '-0' && Number.isSafeInteger(Number(token)));
-      }
-    }
-    return JSON.parse(raw);
-  } catch {return invalid();}
-}
 function guidance(item: Fields): void {text(item.message, 2048); text(item.action_required, 4096);}
 export function session(value: unknown, target: EntryEndpoint): VerifiedEntrySession {
   const item = fields(value, ['state', 'ha_user_id', 'ha_administrator', 'access', 'expires_in',
@@ -103,7 +49,7 @@ const administration = ['household.read', 'household.manage', 'members.read', 'm
   'policy.manage', 'preferences.read', 'preferences.write', 'operations.read'] as const;
 function member(value: unknown, state: string, expected: JournalContext): void {
   const item = fields(value, ['member_id', 'role', 'status', 'revision'], ['ha_user_id', 'exceptions']);
-  identifier(item.member_id); choice(item.role, roles); integer(item.revision, 1); check(item.status === state);
+  identifier(item.member_id); choice(item.role, roles); responseRevision(item.revision); check(item.status === state);
   if (item.ha_user_id != null) check(item.ha_user_id === expected.subject);
   if (item.exceptions != null) {
     check(Array.isArray(item.exceptions) && item.exceptions.length <= 256);
@@ -127,7 +73,7 @@ export function authorization(value: unknown, expected: JournalContext): Authori
   check(new Set(permissions).size === permissions.length);
   if (state === 'unconfigured' || state === 'not_enrolled') check(item.member == null);
   else member(item.member, state, expected);
-  if (state === 'active') {integer(item.policy_revision, 1); choice(item.effective_role, roles);}
+  if (state === 'active') {responseRevision(item.policy_revision); choice(item.effective_role, roles);}
   else check(permissions.length === 0 && item.policy_revision == null && item.effective_role == null);
   return Object.freeze({state, setupAllowed, enrollmentAllowed, permissions: Object.freeze(permissions)});
 }
@@ -135,8 +81,8 @@ export function household(value: unknown): HouseholdFacts {
   const item = fields(value, ['household_id', 'name', 'time_zone', 'revision'], []);
   const name = text(item.name, 160), timeZone = text(item.time_zone, 128);
   // Read compatibility preserves existing DEL/C1 values; new setup uses its stronger input policy.
-  check(name.trim().length > 0 && !/[\u0000-\u001F]/u.test(name + timeZone));
-  return Object.freeze({householdId: identifier(item.household_id), name, timeZone, revision: integer(item.revision, 1)});
+  check(name.replace(/^\p{White_Space}+|\p{White_Space}+$/gu, '').length > 0 && !/[\u0000-\u001F]/u.test(name + timeZone));
+  return Object.freeze({householdId: identifier(item.household_id), name, timeZone, revision: responseRevision(item.revision)});
 }
 export function command(value: JournalCommand & Readonly<{key: string}>): JournalCommand & Readonly<{key: string}> {
   const item = fields(value, ['action', 'payload', 'key'], []), key = identifier(item.key);
@@ -166,10 +112,11 @@ export function receipt(value: unknown, action: JournalCommand['action'], operat
     check(action === 'enroll'); result = fields(item.result, ['member_id', 'status', 'role', 'revision', 'policy_revision'], []);
     choice(result.status, ['pending', 'active']); check(result.role === 'viewer');
   }
-  identifier(result.member_id); check(result.revision === 1); integer(result.policy_revision, 1);
+  identifier(result.member_id); check(responseRevision(result.revision) === '1');
+  const policyRevision = responseRevision(result.policy_revision);
   const decoded: EntryReceipt = Object.freeze({kind: 'receipt', stage, archivedBy,
     operationId: identifier(item.operation_id), createdAt: integer(item.created_at, 0),
-    result: Object.freeze({...result}) as EntryReceipt['result']});
+    result: Object.freeze({...result, revision: '1', policy_revision: policyRevision}) as EntryReceipt['result']});
   if (!operation) return decoded;
   const delivery = choice(item.delivery, ['pending', 'delivered', 'suppressed']);
   check(stage === 'historical' ? delivery !== 'pending' : delivery !== 'suppressed');

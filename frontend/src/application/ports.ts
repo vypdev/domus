@@ -1,3 +1,4 @@
+import type {Revision} from '../domain/administration';
 import type {Journal, JournalCommand, JournalContext, RequestStage} from '../domain/journal';
 import type {Authorization, Deployment, EntrySession} from '../domain/entry';
 
@@ -27,7 +28,7 @@ export interface HouseholdFacts {
   readonly householdId: string;
   readonly name: string;
   readonly timeZone: string;
-  readonly revision: number;
+  readonly revision: Revision;
 }
 export type ReadFault = 'authentication_required' | 'forbidden' | 'unavailable' | 'invalid_response';
 export class EntryReadError extends Error {

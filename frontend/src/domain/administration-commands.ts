@@ -2,7 +2,10 @@
 import {AdministrationError, aliasValue, preferenceValues, revisionValue} from './administration';
 import type {OwnPreferenceValues, Revision} from './administration';
 
-const roles = ['administrator', 'adult', 'restricted', 'viewer'] as const;
+export const MEMBER_ROLES = ['administrator', 'adult', 'restricted', 'viewer'] as const;
+export const MEMBER_STATUSES = ['pending', 'active', 'suspended', 'archived'] as const;
+export const MAPPING_MODES = ['all_ha_administrators', 'setup_administrator', 'selected_ha_user'] as const;
+const roles = MEMBER_ROLES;
 export type MemberRole = typeof roles[number];
 export type MemberStatus = 'pending' | 'active' | 'suspended' | 'archived';
 export interface PermissionDecision {readonly permission: string; readonly allow: boolean;}
@@ -17,10 +20,10 @@ export type AdministrationCommand =
   | Readonly<{action: 'member.presentation.update'; memberId: string; payload: Readonly<{expected_revision: Revision; alias: string | null}>}>
   | Readonly<{action: 'member.preferences.update'; payload: Readonly<{expected_revision: Revision} & OwnPreferenceValues>}>;
 
-const ordinary = ['household.read', 'members.read', 'preferences.read', 'preferences.write',
+export const ORDINARY_PERMISSIONS = ['household.read', 'members.read', 'preferences.read', 'preferences.write',
   'operations.read', 'tasks.read', 'tasks.claim', 'tasks.manage', 'tasks.record_for_others',
   'tasks.material_use', 'tasks.create', 'tasks.complete', 'tasks.approve', 'shopping.request',
-  'shopping.manage', 'inventory.manage'];
+  'shopping.manage', 'inventory.manage'] as const;
 type Fields = Record<string, unknown>;
 function requireValue(condition: unknown): asserts condition {
   if (!condition) throw new AdministrationError('invalid_command');
@@ -45,7 +48,7 @@ function decisions(value: unknown, profile: boolean): readonly (PermissionDecisi
   const seen = new Set<string>();
   return Object.freeze(value.map(raw => {
     const item = fields(raw, profile ? ['role', 'permission', 'allow'] : ['permission', 'allow']);
-    const permission = choice(item.permission, ordinary);
+    const permission = choice(item.permission, ORDINARY_PERMISSIONS);
     requireValue(typeof item.allow === 'boolean');
     const role = profile ? choice(item.role, roles) : null;
     const key = JSON.stringify([role, permission]);

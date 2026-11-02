@@ -20,6 +20,25 @@ from domus.domain.member_profiles import MemberLocale, MemberPreferences, Member
 BASE = "/api/v1/administration"
 
 
+@pytest.mark.parametrize("profile", [False, True])
+def test_original_lookup_preserves_the_saved_domain_message(api, profile):
+    if profile:
+        member_id = api.client.get(BASE + "/preferences").json()["member_id"]
+        route = BASE + f"/members/{member_id}/presentation"
+        body = {"expected_revision": 1, "alias": "Public alias"}
+        action = "member.presentation.update"
+    else:
+        route = "/api/v1/household"
+        body = {"expected_revision": 1, "name": "Updated home", "time_zone": "UTC"}
+        action = "household.update"
+    saved = api.client.put(route, json=body, headers=api.headers("domain-message"))
+    assert saved.status_code == 200, saved.text
+    recovered = api.client.get(BASE + f"/requests/{action}/domain-message")
+    assert recovered.status_code == 200, recovered.text
+    assert recovered.json()["message"] == saved.json()["message"]
+    assert recovered.json()["notification_delivery"] == "unavailable"
+
+
 def test_actual_compositions_bind_profile_authority_without_a_second_login(api):
     before = api.client.get(BASE + "/preferences")
     assert before.status_code == 200, before.text

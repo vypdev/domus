@@ -447,7 +447,7 @@
   "acceptanceBudgetReview": {
     "previousSource": "59c134a6585a3866f9d61143fb2d2b3abda12fb6",
     "finding": "specs/household-administration-workspace.md:test-budget-understates-new-scope",
-    "disposition": "Valid; accepted and addressed through independent behavior/risk decomposition. Await fresh native confirmation.",
+    "disposition": "Valid; corrected in c357ce4920ee54ca01a14b3a11774587fe885159. Native run41496499460/job125452728775 confirms fixed with complete9/9partitions and zero open/reopened/verification-required findings. Later source needs fresh review.",
     "workspaceCaseCount": 80,
     "requirementsUnchanged": 8,
     "retainedOriginalAdministrationCases": 72,
@@ -465,5 +465,128 @@
     "scope": "Prospective acceptance inventory only; no new product policy, reduced owner scope, executed-case or complete-workspace claim.",
     "sdk": "Original pinned SDK format/consistency validator passes all80 inventory rows, per-area allocations and reciprocal requirement links. Seven original policy modules remain byte-verified.",
     "productAndOwnerScope": "The same eight HADW requirements are decomposed; original HADM72, HADI8 and all other owners remain unchanged. Counts are proposed scenarios, not executed journeys; runtime source and its complete coverage are unchanged by this document correction."
+  },
+  "httpClientIncrement": {
+    "sourceBase": "c357ce4920ee54ca01a14b3a11774587fe885159",
+    "recordedAtUTC": "2026-11-02T18:59:02.507140+00:00",
+    "goalComplete": false,
+    "implemented": "Shared bounded protected transport and original-source integer decoding; exact revisions throughout existing entry reads and receipts; fixed administration reads, five PUT actions and explicit original-key/captured-operation-ID GET recovery. Closed server-fact projections retain masked fields, private preferences and honest HA source states. Household recovery keeps its domain label.",
+    "sourceIdentity": {
+      "algorithm": "SHA256 of canonical sorted JSON mapping of repository-relative frontend runtime paths to SHA256 bytes; includes type-only files",
+      "frontendInventorySHA256": "ccf7c7c89181d0a2cf638a4c92f142f81c41055f79a45e4be68976636828f990",
+      "backendInventorySHA256": "8497016eba6245453ac21f34a5e0bd7865a4afd6c0645be99889446ef53687b1",
+      "wheelSHA256": "cbf076c8963b412ae211d00db5451f12305ce6fb8aa06b0d975e72f1f55561ec",
+      "everyBackendModuleAndUiByteVerifiedAgainstWheel": true
+    },
+    "testsFirst": [
+      "Original entry client failed18 new exact-int64 executions before integration; ordinary controls passed.",
+      "Administration suite failed on the absent client module; the existing operation-ID recovery contract separately failed five executions before its method was implemented.",
+      "Household-key recovery message regression first failed2of4 both-deployment cases; profile controls passed. The message is now action-specific.",
+      "The earlier retained generated UI failed both actual Python/SQLite high-revision journeys after successful max-int64 fixture setup. Its exact bytes are archived; its source commit is not inferred.",
+      "An earlier browser attempt failed at an ambiguous heading selector before the property ran. A later prototype import error blocked backend collection/server startup. These harness/wiring failures are retained separately and do not establish precision regressions.",
+      "A prototype maximal-roster fixture reused HA IDs; corrected to unique IDs while preserving the production duplicate guard. The complete large-reply control then passed.",
+      "Backend-valid FEFF household text initially failed the browser projection; the compatibility regression now passes."
+    ],
+    "backend": {
+      "executions": 4358,
+      "authoredModules": 151,
+      "statements": 10433,
+      "branches": 2928,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "frontend": {
+      "executions": 897,
+      "authoredRuntimeFiles": 26,
+      "nonemptyRuntimeFiles": 24,
+      "typeOnlyFiles": 2,
+      "coverage": {
+        "lines": {
+          "total": 1067,
+          "covered": 1067,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1531,
+          "covered": 1531,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 319,
+          "covered": 319,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1084,
+          "covered": 1084,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentFilesystemInventoryAudit": "passed"
+    },
+    "browser": {
+      "actualEntryJourneys": {
+        "startTime": "2026-11-02T18:46:00.410Z",
+        "duration": 30494.852000000003,
+        "expected": 51,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "actualCatalogJourneys": {
+        "startTime": "2026-11-02T18:50:36.761Z",
+        "duration": 9008.242999999999,
+        "expected": 18,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "scope": "Compiled packaged UI with real Python/SQLite in native and standalone fixtures; two new max-int64 journeys directly seed disposable existing records. Not billions of actual mutations, migration lineage or owner HA adoption."
+    },
+    "controls": [
+      "Complete256-member roster with maximal UTF-8 names/aliases and all16 ordinary decisions exceeds the standard65,536-byte bound and remains below the fixed1,048,576-byte roster/directory bound; no truncation.",
+      "Fresh CSRF before PUT, same-origin/no-store/fatal UTF-8/timeout/cancel and context guards retained; read-only recovery adds no mutation precondition. Deadline continuation cannot dispatch a PUT after abort.",
+      "Original payload/key/revision and known operation ID remain bound. Lost/malformed/unbound PUT stays uncertain; no automatic mutation retry or rebase.",
+      "Action-specific receipts retain exact successor revisions; technical event processing does not claim notification delivery. Controller must still bind own preferences to current member before private presentation."
+    ],
+    "checks": {
+      "frontendRuntimeAndCatalogTypes": "passed",
+      "nodeArchitectureExecutions": 38,
+      "nodePolicyCoverage": "100%",
+      "backendTypes": "passed151modules",
+      "ruff": "passed374files",
+      "pythonArchitecture": "3kept0broken;195files1300dependencies",
+      "documentationLinks": "passed",
+      "packagingExecutions": 1,
+      "packagingScope": "Actual wheel matches all source/UI bytes and excludes browser-only fixture controls.",
+      "sdk": "All7 original modules byte-verified; format/consistency/catalog pass;19owners,HADM72,HADI8,HADW80 retained."
+    },
+    "previousPublishedHead": {
+      "head": "c357ce4920ee54ca01a14b3a11774587fe885159",
+      "ci": 41496499475,
+      "aggregate": 125456640681,
+      "amd64": 125452728042,
+      "aarch64": 125452727844,
+      "productResult": "success",
+      "native": 41496499460,
+      "nativeJob": 125452728775,
+      "partitions": "9/9",
+      "context": "complete",
+      "open": 0,
+      "fixed": 2,
+      "dismissed": 1,
+      "scope": "Current published checkpoint only. The local HTTP increment requires fresh hosted images and native review after push.",
+      "progressFailure": "https://github.com/vypdev/copilot/issues/828#issuecomment-6583615211"
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-http-c357ce4",
+      "privateLocalOnly": true,
+      "scope": "Original failures, exact earlier UI input, both real negative-control captures, complete backend/frontend measurements, final browser results, source/wheel and unchanged SDK proofs. Disposable terminal DB/build outputs retire after compact byte-verified evidence is retained."
+    },
+    "pending": "AdministrationController/lifecycle integration, own-member private projection binding, full EN/ES roster/settings/member/mapping/alias/preferences forms, Storybook and actual administration Python/SQLite journeys, avatar-source feasibility and full retained owner/workspace acceptance. Recurrence23, Stable/all-domain release and full goal remain incomplete."
   }
 }

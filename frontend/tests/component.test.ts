@@ -1,3 +1,4 @@
+import {revisionValue} from '../src/domain/administration';
 import {afterEach, expect, test} from 'vitest';
 import {DomusApp} from '../src/presentation/domus-app';
 import type {EntryIntent} from '../src/presentation/domus-app';
@@ -122,7 +123,7 @@ test('closed views expose deployment-specific reentry even while a retired comma
 });
 test('actual permitted household text is inert and technical details omit private context and journal', async () => {
   const f = await mount(view('active', {household: {householdId: 'private-id', name: '<img src=x onerror=alert(1)>',
-    timeZone: 'UTC<script>bad()</script>', revision: 3}}));
+    timeZone: 'UTC<script>bad()</script>', revision: revisionValue('3')}}));
   expect(f.root.querySelector('img,script')).toBeNull(); expect(f.text()).toContain('<img src=x onerror=alert(1)>');
   expect(f.text()).toContain('household.read'); expect(f.text()).not.toContain(context.installationId);
   expect(f.text()).not.toContain(context.subject); expect(f.text()).not.toContain('private-id');
@@ -227,7 +228,7 @@ test('native closing and standalone sign-out produce only the semantic logout in
 });
 test('a narrow real layout wraps long inert facts without horizontal main overflow in either locale', async () => {
   for (const locale of ['en', 'es'] as const) {
-    const f = await mount(view('active', {household: {householdId: 'home', name: 'X'.repeat(160), timeZone: 'Europe/Madrid', revision: 1}}), locale);
+    const f = await mount(view('active', {household: {householdId: 'home', name: 'X'.repeat(160), timeZone: 'Europe/Madrid', revision: revisionValue('1')}}), locale);
     f.element.style.width = '360px'; await f.element.updateComplete;
     const main = f.root.querySelector('main')!;
     expect(main.getBoundingClientRect().width).toBe(360); expect(main.scrollWidth).toBeLessThanOrEqual(360);

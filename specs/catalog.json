@@ -318,7 +318,12 @@
         "frontend/src/domain/administration-commands.ts",
         "frontend/src/domain/administration-journal.ts",
         "frontend/src/application/administration-ports.ts",
-        "frontend/src/adapters/administration-journal.ts"
+        "frontend/src/adapters/administration-journal.ts",
+        "frontend/src/domain/administration-views.ts",
+        "frontend/src/adapters/json-values.ts",
+        "frontend/src/adapters/http-transport.ts",
+        "frontend/src/adapters/administration-values.ts",
+        "frontend/src/adapters/administration-http.ts"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -387,7 +392,11 @@
         "tests/backend/test_ha_member_profiles.py",
         "tests/backend/test_standalone_member_sources.py",
         "frontend/tests/administration-journal.test.ts",
-        "frontend/tests/administration-session-journal.test.ts"
+        "frontend/tests/administration-session-journal.test.ts",
+        "frontend/tests/entry-int64.test.ts",
+        "frontend/tests/administration-http.test.ts",
+        "frontend/tests/e2e/entry.spec.ts",
+        "tests/browser/entry_server.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -441,7 +450,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial: verified HA identity/sessions, schema9 storage, protected profile APIs and original-result privacy, bounded HA name/directory facts and current-authorized masked roster in both deployments. Exact browser values/JSON and the separate closed administration command/journal policy and session-storage adapter have Chromium coverage. HTTP/controller/entry revision integration, the complete EN/ES workspace and all 72 retained owner-case acceptance remain outstanding. Installed Edge.5 is unchanged.",
+        "implementationEvidence": "Partial: schema9 storage and protected APIs, verified HA name/directory facts, a masked current-authorized roster, separate closed administration recovery, a shared bounded exact-integer HTTP transport and five-action administration client with both protected lookup routes. Entry authorization/household/original-policy revisions now preserve exact int64 values. Complete application-controller/lifecycle integration, EN/ES administration forms, all retained owner/workspace case acceptance and live owner adoption remain outstanding. Installed Edge.5 is unchanged.",
         "blockingDecisions": "No unanswered product decision for issue25. Complete all 72 retained administration cases, all eight HADI refinements and the 80 decomposed workspace acceptance scenarios, full HTTP/controller/workspace integration, current-head review/CI and the wider all-domain/Stable release and owner adoption requirements. A merged checkpoint does not complete them.",
         "copilotChangesAllowed": false
       }

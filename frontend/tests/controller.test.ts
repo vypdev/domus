@@ -1,3 +1,4 @@
+import {revisionValue} from '../src/domain/administration';
 import {expect, test, vi} from 'vitest';
 import {EntryController} from '../src/application/entry-controller';
 import {EntryReadError, JournalStorageError} from '../src/application/ports';
@@ -19,7 +20,7 @@ const setup: Authorization = {state: 'unconfigured', setupAllowed: true, enrollm
 const eligible: Authorization = {...setup, state: 'not_enrolled', setupAllowed: false, enrollmentAllowed: true};
 const pending: Authorization = {...eligible, state: 'pending', enrollmentAllowed: false};
 const active: Authorization = {...pending, state: 'active', permissions: ['household.read', 'household.manage']};
-const household = {householdId: 'home', name: 'Home', timeZone: 'Europe/Madrid', revision: 1};
+const household = {householdId: 'home', name: 'Home', timeZone: 'Europe/Madrid', revision: revisionValue('1')};
 const receipt: EntryReceipt = {kind: 'receipt', stage: 'committed', operationId: 'op-original', archivedBy: null,
   createdAt: 1000, result: {household_id: 'home', revision: 1}};
 function fixture(authorization = setup) {

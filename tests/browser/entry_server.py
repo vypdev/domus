@@ -224,6 +224,17 @@ class Fixture:
             response = JSONResponse({"state": "completed", "fixture": True})
         elif path == "/__fixture__/stats":
             response = JSONResponse(self.stats())
+        elif path == "/__fixture__/revision" and request.method == "POST":
+            # Direct disposable fixture setup, not a product command or migration/history claim.
+            values = await request.json()
+            assert set(values) == {"revision"} and type(values["revision"]) is str
+            revision = int(values["revision"])
+            assert str(revision) == values["revision"] and 1 <= revision <= 2**63 - 1
+            with sqlite3.connect(self.database) as connection:
+                for table in ("households", "members", "household_policy"):
+                    cursor = connection.execute(f'UPDATE "{table}" SET revision=?', (revision,))
+                    assert cursor.rowcount > 0
+            response = JSONResponse({"state": "changed", "fixture": True})
         elif path == "/__fixture__/writer" and request.method == "POST":
             values = await request.json()
             assert set(values) == {"action"}

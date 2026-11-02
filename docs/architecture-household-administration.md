@@ -15,7 +15,7 @@ unavailable result, independently of human proof. Avatar delivery is unavailable
 Private preference values are browser-following/null, English or Spanish locale, plus a strict
 routine-summary boolean with true as the engineering default. Persisting a preference does not
 establish notification delivery. The current application, metadata and HTTP behavior is described
-below; browser journal consumption, HTTP/controller integration and the full EN/ES workspace remain required.
+below; browser journal consumption, controller/lifecycle integration and the full EN/ES workspace remain required.
 
 The [companion](../specs/household-administration.md) retains all 24 Action-published case rows and
 adds the omitted independent risks to a 72-case floor. Its original identity and delivery owners
@@ -72,7 +72,7 @@ validates duplicate decoded keys, depth, bytes and integer lexemes, then obtains
 value's original source. A numeric string or lookalike object cannot become a wire integer, and an
 engine without original-source support fails closed. Fixed profile encoders publish an exact
 integer lexeme with only the supported payload fields. These pure values/transport helpers have
-browser tests; the administration controller, HTTP client and workspace integration remain outstanding.
+browser tests; the administration controller and workspace integration remain outstanding.
 
 [Composition](../backend/src/domus/composition/household_administration.py) binds the same
 transactions and trusted human adapters as the existing household services. Preview factories
@@ -150,7 +150,7 @@ does not erase pending requests; forgetting a resolved request leaves other cont
 unrelated storage intact. Credentials, CSRF, cookies, raw HA facts and response bodies are absent.
 
 Chromium tests exercise these policies, real isolated browser session storage and provider failure
-controls. The HTTP/controller lifecycle and complete browser workspace do not yet consume this
+controls. The controller lifecycle and complete browser workspace do not yet consume this
 adapter. These tests establish no automatic operation lookup, mutation replay, HA adoption or full
 retained-case acceptance.
 
@@ -160,3 +160,40 @@ compound scenario IDs remain as concrete behaviors; the remaining assertions hav
 The original 72 administration cases and eight HADI refinements remain unchanged and required.
 These inventories are not added together as completed journeys, and 104 journal-related test
 executions do not establish the full browser, runtime, migration or manual-review acceptance.
+
+## Exact HTTP clients and entry compatibility
+
+The [shared JSON/scalar boundary](../frontend/src/adapters/json-values.ts) validates syntax,
+decoded-key uniqueness, depth, original integer lexemes and UTF-8 byte bounds before projecting
+facts. Positive aggregate revisions use canonical decimal text throughout browser models; the
+unchanged entry setup/enrollment payload keeps its initial literal zero. Timestamps and small
+protocol counters require exact safe integers. Entry membership/policy checks, household reads
+and original enrollment policy revisions use the same exact representation. Valid backend Unicode
+household text is not reinterpreted through JavaScript's different trimming policy.
+
+The [bounded HTTP transport](../frontend/src/adapters/http-transport.ts) keeps the verified
+same-origin application base, context assertions, no-store/content-type checks, redirect refusal,
+fatal streaming UTF-8 decoding, cancellation and the existing deadline. Standard responses retain
+the 65,536-byte bound. Complete roster/directory reads have a separate 1,048,576-byte bound; tests
+exercise 256 members with maximal UTF-8 names/aliases and every supported ordinary permission.
+Oversized replies fail without publishing partial rosters. The browser journal limit remains
+65,536 bytes in total and is not used as a limit for a complete server roster.
+
+The [administration client](../frontend/src/adapters/administration-http.ts) exposes only fixed
+supported reads and five explicit mutations. Strict projections preserve masked linkage and source
+states, separate stored/effective roles, validate response targets and retain exact revisions.
+Fresh CSRF precedes each PUT. The original key, payload and expected revision are never rebased or
+replaced. Known rejection envelopes expose safe reason/correlation only; lost, malformed or unbound
+mutation responses remain uncertain without an automatic resend.
+
+Protected GET recovery by action/key and by an already captured operation ID keeps its existing
+contract, without mutation CSRF or revision parameters. The key route binds returned action/key;
+the ID route binds its captured operation ID. Both validate the original action-specific result
+and successor revision before returning it. These are processing receipts, not current aggregate
+facts; technical event delivery never establishes notification delivery. Non-profile lookup text
+retains its original domain label rather than being renamed as a profile change.
+
+Controller/lifecycle consumption, own-member binding before private presentation, complete EN/ES
+forms and full administration browser acceptance remain required. Entry browser compatibility uses
+actual Python/SQLite in both deployment fixtures; fixture identities and directly seeded high
+revisions do not claim owner HA adoption or a generated history of that many mutations.
