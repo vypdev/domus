@@ -379,6 +379,69 @@
       "privateLocalOnly": true,
       "scope": "Original failures, full/focused backend coverage, source/wheel, source/provider/session/projection and exact image-script controls; disposable DBs retired after producers end."
     },
-    "pending": "Complete frontend consumption, separate bounded journal, exact entry/admin revision integration, all EN/ES forms and Storybook/real Python-SQLite journeys, safe avatar source feasibility/owner evidence when available, all72 retained owner-case acceptance and fresh hosted source images/review. Recurrence23, installed Edge.5, Stable/all-domain release and full goal remain incomplete."
+    "pending": "Complete frontend HTTP/controller consumption, exact entry/admin revision integration, all EN/ES forms and Storybook/real Python-SQLite journeys, safe avatar-source feasibility and owner evidence when available, and all 72 retained owner-case acceptance. The separate journal policy/storage is now tested; workspace integration remains. Recurrence23, installed Edge.5, Stable/all-domain release and the full goal remain incomplete."
+  },
+  "browserJournalIncrement": {
+    "sourceBase": "db26dde72985b57ad1377be83c554e449a5c4f8e",
+    "goalComplete": false,
+    "sourceInventorySHA256": "8468b1738ec5d49c7d4391b5953d41e8222222e20aebf239f8ca92696102fcc6",
+    "authoredFrontendFiles": 21,
+    "frontend": {
+      "executions": 765,
+      "newJournalExecutions": 104,
+      "runtimeFiles": 21,
+      "coverage": {
+        "lines": {
+          "total": 931,
+          "covered": 931,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 1345,
+          "covered": 1345,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 274,
+          "covered": 274,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 969,
+          "covered": 969,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentFilesystemAudit": "passed"
+    },
+    "architecture": {
+      "nodePolicyExecutions": 38,
+      "sourceGraphAndNegativeFixtures": "passed"
+    },
+    "types": "runtime and Storybook/catalog pass",
+    "sdk": "7 original policy module blobs unchanged; format/consistency/catalog pass; 19 owner documents and 72 original administration cases retained",
+    "testsFirst": [
+      "Initial import failed before the command/journal modules existed.",
+      "The adapter suite failed before the administration storage adapter existed.",
+      "Unicode NEL-only household name was accepted by the prototype JS trim policy; the new backend-policy regression failed before White_Space validation.",
+      "The exact original-intent encoder test failed before the export existed."
+    ],
+    "scope": "Pure closed commands, separate context-filtered globally bounded administration journal, session-storage CAS/readback and exact original-intent encoder. Existing entry journal schema/behavior and source backend are unchanged. No full HTTP/controller/workspace integration, real owner HA acceptance or all72 journey acceptance.",
+    "commands": [
+      "pnpm test:frontend",
+      "pnpm check:frontend",
+      "pnpm test",
+      "domus-check docs",
+      "node /private/tmp/domus-admin-api-schema9/validate-native.cjs"
+    ],
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-journal-db26dde",
+      "privateLocalOnly": true
+    },
+    "currentPublishedSourceProof": "/private/tmp/domus-member-source-2b6e7e1/hosted-current.json"
   }
 }

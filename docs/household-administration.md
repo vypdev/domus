@@ -37,6 +37,12 @@ temporary HA outage does not authorize a retry or rebase. Review current state b
 new work. An unexpired existing session may retain local reads during a temporary HA outage, while
 changes remain blocked.
 
+The separate browser administration recovery policy and storage adapter are implemented and tested,
+but are not yet connected to the workspace. Their requests retain exact original intent for up to
+one hour, with at most eight requests and 65,536 bytes shared across account/installation/channel
+contexts. A current view hides other contexts' pending work without deleting it. This source
+foundation does not yet provide a browser recovery action or automatically resend a mutation.
+
 See the [API contract](household-api.md), [architecture](architecture-household-administration.md)
 and [migration/rollback limits](household-administration-migration.md). The original
 [72-case administration contract](../specs/household-administration.md),

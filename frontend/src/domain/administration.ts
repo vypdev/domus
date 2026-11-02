@@ -7,7 +7,7 @@ export interface OwnPreferenceValues {
   readonly routine_participation_summaries: boolean;
 }
 export type AdministrationFault = 'invalid_revision' | 'revision_exhausted'
-  | 'invalid_alias' | 'invalid_preferences';
+  | 'invalid_alias' | 'invalid_preferences' | 'invalid_command';
 export class AdministrationError extends Error {
   constructor(readonly code: AdministrationFault) {
     super(code); this.name = 'AdministrationError';

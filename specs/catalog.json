@@ -314,7 +314,11 @@
         "backend/src/domus/domain/member_sources.py",
         "backend/src/domus/application/member_source_ports.py",
         "backend/src/domus/application/household_roster.py",
-        "backend/src/domus/infrastructure/ha_member_profiles.py"
+        "backend/src/domus/infrastructure/ha_member_profiles.py",
+        "frontend/src/domain/administration-commands.ts",
+        "frontend/src/domain/administration-journal.ts",
+        "frontend/src/application/administration-ports.ts",
+        "frontend/src/adapters/administration-journal.ts"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -381,7 +385,9 @@
         "tests/backend/test_member_sources.py",
         "tests/backend/test_household_roster.py",
         "tests/backend/test_ha_member_profiles.py",
-        "tests/backend/test_standalone_member_sources.py"
+        "tests/backend/test_standalone_member_sources.py",
+        "frontend/tests/administration-journal.test.ts",
+        "frontend/tests/administration-session-journal.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -435,7 +441,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial: HA identity/sessions, schema9 profile storage, both protected profile APIs and original-result privacy, owned snapshots/restoration and task/recurrence backend foundations; previously verified Edge.5 entry interface. Exact browser administration values/JSON codec now have pure Chromium coverage. HA metadata/directory, separate administration journal and complete workspace remain outstanding. Source151 adds bounded verified HA name/directory facts and currently authorized masked roster/directory APIs in both deployments; full workspace/journal and all72journey acceptance remain outstanding.",
+        "implementationEvidence": "Partial: verified HA identity/sessions, schema9 storage, protected profile APIs and original-result privacy, bounded HA name/directory facts and current-authorized masked roster in both deployments. Exact browser values/JSON and the separate closed administration command/journal policy and session-storage adapter have Chromium coverage. HTTP/controller/entry revision integration, the complete EN/ES workspace and all 72 retained owner-case acceptance remain outstanding. Installed Edge.5 is unchanged.",
         "blockingDecisions": "No unanswered product decision for issue25. Complete the retained72 administration journeys, source/journal/workspace integration, current-head review/CI and the wider all-domain/Stable release and owner adoption requirements; a merged checkpoint does not complete them.",
         "copilotChangesAllowed": false
       }

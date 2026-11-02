@@ -346,6 +346,9 @@ Tests precede behavior. Require 100% supported statement and branch coverage glo
 | `backend/src/domus/composition/ingress.py` | update |
 | `backend/src/domus/composition/server.py` | update |
 | `frontend/src/domain/administration.ts` | create |
+| `frontend/src/domain/administration-commands.ts` | create |
+| `frontend/src/domain/administration-journal.ts` | create |
+| `frontend/src/application/administration-ports.ts` | create |
 | `frontend/src/application/administration-controller.ts` | create |
 | `frontend/src/adapters/administration-http.ts` | create |
 | `frontend/src/adapters/administration-json.ts` | create |
@@ -355,6 +358,8 @@ Tests precede behavior. Require 100% supported statement and branch coverage glo
 | `frontend/src/composition/entry-runtime.ts` | update |
 | `frontend/stories/administration.stories.ts` | create |
 | `frontend/tests/administration.test.ts` | create |
+| `frontend/tests/administration-journal.test.ts` | create |
+| `frontend/tests/administration-session-journal.test.ts` | create |
 | `frontend/tests/e2e/administration.spec.ts` | create |
 | `tests/backend/test_member_profile_commands.py` | create |
 | `tests/backend/test_member_sources.py` | create |

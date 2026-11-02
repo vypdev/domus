@@ -15,7 +15,7 @@ unavailable result, independently of human proof. Avatar delivery is unavailable
 Private preference values are browser-following/null, English or Spanish locale, plus a strict
 routine-summary boolean with true as the engineering default. Persisting a preference does not
 establish notification delivery. The current application, metadata and HTTP behavior is described
-below; the separate administration journal and the full EN/ES workspace remain required.
+below; browser journal consumption, HTTP/controller integration and the full EN/ES workspace remain required.
 
 The [companion](../specs/household-administration.md) retains all 24 Action-published case rows and
 adds the omitted independent risks to a 72-case floor. Its original identity and delivery owners
@@ -72,13 +72,13 @@ validates duplicate decoded keys, depth, bytes and integer lexemes, then obtains
 value's original source. A numeric string or lookalike object cannot become a wire integer, and an
 engine without original-source support fails closed. Fixed profile encoders publish an exact
 integer lexeme with only the supported payload fields. These pure values/transport helpers have
-browser tests; the administration controller, journal and workspace integration remain outstanding.
+browser tests; the administration controller, HTTP client and workspace integration remain outstanding.
 
 [Composition](../backend/src/domus/composition/household_administration.py) binds the same
 transactions and trusted human adapters as the existing household services. Preview factories
 without the administration callback do not register or advertise those routes. Capability metadata
 describes wired routes and the closed journal contract; it grants no permission and does not
-establish that the future browser workspace/journal is implemented.
+establish that the browser workspace or journal integration is implemented.
 
 The [migration guide](household-administration-migration.md) identifies genuine immutable source8
 input, historical migration behavior, independent checkpoint validation, image checks and compatible
@@ -120,3 +120,36 @@ metadata is declassified to state and name before leaving the application, witho
 eligibility. Unknown names stay unavailable while canonical local membership remains. Directory
 choices require policy management and contain only complete, source-eligible facts. No query
 initializes household, membership, profile or preference records.
+
+## Separate bounded browser recovery
+
+The [closed command policy](../frontend/src/domain/administration-commands.ts) admits only
+`household.update`, `member.update`, `policy.update`, `member.presentation.update` and
+`member.preferences.update`. Each payload contains a canonical decimal-text revision. Member
+targets occur only on the two member-targeted actions; private preferences have no owner selector.
+Ordinary permission decisions are bounded, unique and exclude protected grants. Mapping mode and
+target agree. Validation copies and freezes nested values without replacing original text, ordering
+or revision intent. Timezone catalog and current authorization remain server responsibilities.
+
+The pure [administration journal](../frontend/src/domain/administration-journal.ts) owns namespace
+`administration`, version 1, at most eight requests in total and a one-hour immutable lifetime.
+Each record retains its original installation, release channel, verified subject, action, target,
+key, payload, creation/expiry and outcome. Switching contexts hides other contexts' requests while
+retaining their unexpired originals. All contexts share the eight-record and total byte budgets;
+switching accounts cannot evade the bound. A known operation ID cannot change or become unknown.
+Prepared/uncertain records cannot be dismissed as resolved, and expiry never extends their deadline.
+The journal neither authenticates a context nor grants backend original-result disclosure.
+
+An [application port](../frontend/src/application/administration-ports.ts) exposes only the current
+context view. Its [session-storage adapter](../frontend/src/adapters/administration-journal.ts) uses
+only `domus.administration.journal.v1`, separate from the unchanged entry journal. Canonical JSON
+and the 65,536-byte UTF-8 limit are checked before decoding and persistence. Duplicate/noncanonical
+encodings, unknown fields, wrong namespaces and numeric revisions fail closed. Compare/readback
+fences reject competing or unconfirmed storage writes and retire the in-memory handle. Detach
+does not erase pending requests; forgetting a resolved request leaves other contexts and all
+unrelated storage intact. Credentials, CSRF, cookies, raw HA facts and response bodies are absent.
+
+Chromium tests exercise these policies, real isolated browser session storage and provider failure
+controls. The HTTP/controller lifecycle and complete browser workspace do not yet consume this
+adapter. These tests establish no automatic operation lookup, mutation replay, HA adoption or full
+retained-case acceptance.
