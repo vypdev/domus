@@ -15,6 +15,10 @@ from starlette.types import ASGIApp, Scope
 from domus.application.identity_ports import LeaseClock
 from domus.application.sessions import SessionStatus
 from domus.domain.errors import DomusError, Forbidden, InvalidInput
+from domus.entrypoints.administration_http import (
+    AdministrationHTTPContext,
+    create_administration_router,
+)
 from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
@@ -114,6 +118,7 @@ def create_native_app(
     correlation: Callable[[], str],
     entry: EntryHTTPContext | None = None,
     task_context: Callable[[Request], TaskHTTPContext] | None = None,
+    administration_context: Callable[[Request], AdministrationHTTPContext] | None = None,
     ui_bundle: UIBundle | None = None,
     ui_binding: Callable[[Request], None] | None = None,
 ) -> FastAPI:
@@ -215,6 +220,10 @@ def create_native_app(
     )
     if task_context is not None:
         app.include_router(create_task_router(task_context, security=Depends(security)))
+    if administration_context is not None:
+        app.include_router(
+            create_administration_router(administration_context, security=Depends(security))
+        )
 
     def bind_ui(request: Request) -> None:
         if ui_binding is not None:

@@ -13,10 +13,12 @@ from domus.application.authentication import Authentication
 from domus.application.sessions import SessionGuard
 from domus.application.task_events import TaskEventSource
 from domus.composition.household import standalone_context
+from domus.composition.household_administration import administration_services
 from domus.composition.recurrence import bind_lifespan, recurrence_worker
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
+from domus.entrypoints.administration_http import AdministrationHTTPContext
 from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.http import HTTPSettings, create_app
 from domus.entrypoints.task_http import TaskHTTPContext
@@ -102,10 +104,17 @@ def _compose(
     settings = HTTPSettings(config.public_origin, tag, entropy.new().encode("ascii"))
     guard = SessionGuard(identity, identity, clock)
     context = None
+    administration = None
     tasks = None
     events = None
     if store is not None:
-        context = standalone_context(store, guard, identity, installation)
+        household_factory = standalone_context(store, guard, identity, installation)
+        context = household_factory
+
+        def session_administration(session_id: str) -> AdministrationHTTPContext:
+            return administration_services(household_factory(session_id))
+
+        administration = session_administration
         factory = task_contexts(store, installation)
         events = task_event_source(store, installation)
 
@@ -121,6 +130,7 @@ def _compose(
         correlation=lambda: "cor_" + entropy.new(),
         entry=EntryHTTPContext(installation, "standalone", clock, SystemClock(), store is not None),
         household_context=context,
+        administration_context=administration,
         task_context=tasks,
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
     )

@@ -315,8 +315,48 @@ Tests precede behavior. Require 100% supported statement and branch coverage glo
 | `docs/household-setup.md` | update |
 | `docs/operations.md` | update |
 | `docs/household-api.md` | update |
+| `docs/contracts/household-api.openapi.json` | update |
+| `docs/contracts/native-household-api.openapi.json` | update |
 | `docs/architecture-household-administration.md` | update |
 | `docs/household-administration-migration.md` | reference |
+| `backend/src/domus/domain/member_profiles.py` | update |
+| `backend/src/domus/application/member_profile_ports.py` | update |
+| `backend/src/domus/application/member_profile_access.py` | create |
+| `backend/src/domus/application/member_profile_commands.py` | create |
+| `backend/src/domus/application/household_administration_queries.py` | create |
+| `backend/src/domus/application/household_queries.py` | update |
+| `backend/src/domus/infrastructure/ha_member_profiles.py` | create |
+| `backend/src/domus/infrastructure/ha_websocket.py` | update |
+| `backend/src/domus/entrypoints/http.py` | update |
+| `backend/src/domus/entrypoints/native_http.py` | update |
+| `backend/src/domus/entrypoints/administration_http.py` | create |
+| `backend/src/domus/entrypoints/administration_dto.py` | create |
+| `backend/src/domus/entrypoints/http_errors.py` | update |
+| `backend/src/domus/composition/household_administration.py` | create |
+| `backend/src/domus/composition/ingress.py` | update |
+| `backend/src/domus/composition/server.py` | update |
+| `frontend/src/domain/administration.ts` | create |
+| `frontend/src/application/administration-controller.ts` | create |
+| `frontend/src/adapters/administration-http.ts` | create |
+| `frontend/src/adapters/administration-journal.ts` | create |
+| `frontend/src/presentation/domus-administration.ts` | create |
+| `frontend/src/presentation/messages.ts` | update |
+| `frontend/src/composition/entry-runtime.ts` | update |
+| `frontend/stories/administration.stories.ts` | create |
+| `frontend/tests/administration.test.ts` | create |
+| `frontend/tests/e2e/administration.spec.ts` | create |
+| `tests/backend/test_member_profile_commands.py` | create |
+| `tests/backend/test_household_administration_queries.py` | create |
+| `tests/backend/test_ha_member_profiles.py` | create |
+| `tests/backend/test_administration_http.py` | create |
+| `tests/backend/test_household_http.py` | update |
+| `tests/containers/test_administration_image.py` | update |
+| `.github/workflows/ci_check.yml` | update |
+| `docs/household-administration.md` | create |
+| `docs/household-administration-operations.md` | create |
+| `docs/evidence/household-administration.json` | update |
+
+These code/test paths are proposed implementation targets, not availability or acceptance claims. Declare additional actual paths before implementation.
 
 User documentation must describe the normal path, defaults, own alias/preferences, locale and delivery-unavailable behavior. Setup documentation covers permissions and deployment prerequisites. Operator documentation covers source states, original recovery, restoration, cleanup, and rollback. Contributor/architecture documentation covers boundaries, contracts, trust, and test evidence. Migration documentation preserves actual schema/history facts. Keep catalog evidence and generated catalog navigation current; validate examples against fixtures/contracts where practical.
 
@@ -369,7 +409,7 @@ Acceptance scenarios are prospective requirements, not executed tests. Readiness
 - [ ] Failure, partial success, retry, idempotency, restoration, compatible rollback, security, and cleanup pass.
 - [ ] Applicable CI runs all suites and actual amd64/aarch64 images; genuine Copilot failures are reported upstream without Copilot changes or waiting for fixes.
 - [ ] Required generated artifacts and repository validation commands pass.
-- [ ] `specs/catalog.json` evidence and `specs/CATALOG.md` are current and `pnpm run validate:specifications` passes.
+- [ ] `specs/catalog.json` evidence and `specs/CATALOG.md` are current and the original pinned SDD format/consistency validation passes.
 - [ ] No readiness-blocking product decision remains unresolved; Draft/readiness and Action-published branch gates are satisfied before source work or readiness claims.
 
 ## 20. References and decisions

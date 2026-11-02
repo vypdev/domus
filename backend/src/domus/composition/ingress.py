@@ -16,6 +16,7 @@ from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.task_events import TaskEventSource
+from domus.composition.household_administration import administration_services
 from domus.composition.recurrence import bind_lifespan, recurrence_worker
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
@@ -129,6 +130,7 @@ def _compose_business(
         correlation=lambda: "cor_" + entropy.new(),
         entry=EntryHTTPContext(store.installation, "native", clock, utc, True),
         task_context=lambda request: tasks(request_actor(request)),
+        administration_context=lambda request: administration_services(context(request).household),
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
         ui_binding=ui_binding,
     )

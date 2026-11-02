@@ -70,7 +70,7 @@
     "consumer": "Original failing and passing model/backend measurements, source inventory and pinned SDD reproduction retained for current PR review; disposable coverage databases, XML and pytest cache removed.",
     "privateLocalOnly": true
   },
-  "pending": "Owner-private application/HTTP original results and audit privacy, verified HA metadata, separate journal, full EN/ES administration workspace, complete72-case product acceptance and fresh-head image/native checks after documentation correction. Recurrence continuation remains issue23; installed Edge.5 unchanged.",
+  "pending": "Verified HA metadata/directory, separate exact-revision administration browser journal, complete EN/ES roster/settings/profile/mapping workspace, Storybook and real Python/SQLite browser journeys, complete72-case product acceptance and current-head hosted image/native review. Recurrence remains issue23; installed Edge.5 unchanged.",
   "acceptance": "138 parameterized unit executions and a complete backend campaign are not 72 completed administration journeys. No notification delivery, HA metadata availability, schema migration, package/adoption, all-domain release or Stable distribution acceptance is claimed.",
   "storageIncrement": {
     "issue": "https://github.com/vypdev/domus/issues/21",
@@ -173,5 +173,72 @@
       "report": "https://github.com/vypdev/copilot/issues/859",
       "pending": "Fresh native reconciliation after documentation correction; no clean-review claim inferred from an empty or manually resolved thread."
     }
+  },
+  "applicationIncrement": {
+    "issue": "https://github.com/vypdev/domus/issues/25",
+    "sourceBase": "171244421fcc6289180bdb94bf4e7bb52a990a1b",
+    "baselineMerge": "6d84d4815a8bbfe071979df6650d01e433dcc2db",
+    "implemented": "Currently authorized independent alias/private-preference commands and queries, owner-only original-result lookup/replay, safe shared audit/events, atomic CAS and both-deployment protected profile HTTP. Read-only request-key recovery is closed to five administration actions and does not resend mutations.",
+    "sourceIdentity": {
+      "authoredModules": 146,
+      "backendInventorySHA256": "bd91747546304d1e8502abe9111c3432c3e0bf7566c3c3ef76b20b716c34f5a3",
+      "wheelSHA256": "c0a4658b7001e3438407e3a108bc09f93b178cd96dc8d572f0d6afd71c950ade",
+      "everyModuleByteVerified": true
+    },
+    "testsFirst": [
+      "Initial authored application test could not import the absent queries module.",
+      "Original-key recovery test first raised AttributeError before the application method existed.",
+      "First profile HTTP test returned404 before the route was wired.",
+      "Expanded invalid-alias tests found ten500 responses in both modes before safe public error classification was added. No state was committed."
+    ],
+    "completeBackend": {
+      "executions": 4238,
+      "authoredModules": 146,
+      "statements": 10174,
+      "branches": 2864,
+      "coveragePercent": 100,
+      "independentGlobalAndPerModuleAudit": "passed"
+    },
+    "focused": {
+      "executions": 162,
+      "newModules": 6,
+      "statements": 222,
+      "branches": 34,
+      "coveragePercent": 100,
+      "scope": "Application/HTTP, legacy original queries and transport factory controls. The two additional actual production composition executions are included in the4238 full campaign; no product-journey count is inferred."
+    },
+    "checks": {
+      "strictTypes": "passed146modules",
+      "ruff": "passed364files",
+      "architecture": "3kept0broken;190files1252dependencies",
+      "documentationLinks": "passed",
+      "sdd": {
+        "originalPolicyModulesByteVerified": 7,
+        "format": "PASS",
+        "consistency": "PASS",
+        "owningDocuments": 19,
+        "retainedAdministrationCases": 72,
+        "retainedIntegrationRefinements": 8
+      }
+    },
+    "runtimeControls": {
+      "source": "tests/containers/test_administration_image.py",
+      "scope": "Both exact fresh/schema8 owned-runtime storage scripts and both protected ASGI profile API scripts execute on host with fake HA transports. Actual current-source CPU images remain hosted CI work. No owner HA acceptance is claimed.",
+      "notificationDelivery": "unavailable regardless of technical event acknowledgement"
+    },
+    "copilotReports": {
+      "unsupportedCommand": "https://github.com/vypdev/copilot/issues/858#issuecomment-6581571932",
+      "selectedSource": "https://github.com/vypdev/copilot/issues/836#issuecomment-6581572306",
+      "circularRecovery": "https://github.com/vypdev/copilot/issues/860#issuecomment-6581572803",
+      "terminalMapping": "https://github.com/vypdev/copilot/issues/833#issuecomment-6581573338",
+      "recovery": "One terminal-job retry41466725960/job125382987505 succeeded, restored branched/state:working and retained exact1712444 publication. This is recovery, not proof of an upstream fix."
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-api-schema9",
+      "privateLocalOnly": true,
+      "scope": "Original failures, full/focused coverage, source/wheel proof and exact container host controls retained for review. Disposable terminal test DBs are retired after necessary evidence is archived."
+    },
+    "pending": "Verified HA metadata/directory, separate exact-revision administration browser journal, complete EN/ES roster/settings/profile/mapping workspace, Storybook and real Python/SQLite browser journeys, complete72-case product acceptance and current-head hosted image/native review. Recurrence remains issue23; installed Edge.5 unchanged.",
+    "acceptance": "The six-module application/API increment does not complete the retained72 administration journeys, UI/journal/provider metadata, HA adoption, Stable release or complete product."
   }
 }
