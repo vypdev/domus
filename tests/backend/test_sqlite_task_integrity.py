@@ -158,7 +158,7 @@ def test_actual_unit_snapshot_and_reopen_keep_task_cycles_and_one_atomic_receipt
     before = store.path.read_bytes()
     snapshots = SQLiteSnapshots(store, tmp_path / "snapshot", store.installation, Clock())
     checkpoint = snapshots.create("tasks")
-    assert checkpoint.schema_version == 7 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 8 and snapshots.inspect() == checkpoint
     assert store.path.read_bytes() == before
     copy = SQLiteDatabase(tmp_path / "snapshot/domus.sqlite3", store.installation)
     with copy.read() as unit:
@@ -433,5 +433,5 @@ def test_schema4_upgrade_failure_preserves_the_exact_old_database_and_history(
         assert unit.tasks.policy("home") is None and unit.tasks.definitions("home") == ()
         assert unit.receipts.get_operation("home", "human", "operation-a").historical
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 8
         assert connection.execute("SELECT count(*) FROM retained_operations").fetchone()[0] == 2

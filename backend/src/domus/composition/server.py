@@ -13,6 +13,7 @@ from domus.application.authentication import Authentication
 from domus.application.sessions import SessionGuard
 from domus.application.task_events import TaskEventSource
 from domus.composition.household import standalone_context
+from domus.composition.recurrence import bind_lifespan, recurrence_worker
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
@@ -27,6 +28,7 @@ from domus.infrastructure.ha_http import HomeAssistantOAuth
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
 from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
+from domus.infrastructure.recurrence_worker import RecurrenceWorker
 from domus.infrastructure.session_access import SessionActor
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.standalone_sessions import StandaloneIdentity
@@ -38,8 +40,11 @@ class AuthenticationRuntime:
     identity: StandaloneIdentity = field(repr=False)
     storage: OwnedStorage | None = field(default=None, repr=False)
     task_events: TaskEventSource | None = field(default=None, repr=False)
+    recurrence: RecurrenceWorker | None = field(default=None, repr=False)
 
     def close(self) -> tuple[int, int]:
+        if self.recurrence is not None:
+            self.recurrence.close()
         try:
             return self.identity.shutdown()
         finally:
@@ -119,7 +124,11 @@ def _compose(
         task_context=tasks,
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
     )
-    return AuthenticationRuntime(app, identity, task_events=events)
+    worker = None
+    if store is not None:
+        worker = recurrence_worker(store, installation)
+        bind_lifespan(app, worker)
+    return AuthenticationRuntime(app, identity, task_events=events, recurrence=worker)
 
 
 def main(argv: list[str] | None = None) -> int:

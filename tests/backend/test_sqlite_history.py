@@ -81,7 +81,7 @@ def test_frozen_old_schema_migrates_without_losing_existing_evidence(tmp_path, v
     store = SQLiteDatabase(path, Installation("047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6", "edge"))
     store.initialize()
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 7
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 8
         assert connection.execute("SELECT count(*) FROM retained_operations").fetchone()[0] == len(
             before.get("retained_operations", [])
         )

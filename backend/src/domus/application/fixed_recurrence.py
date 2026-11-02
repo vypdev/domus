@@ -1,23 +1,20 @@
 """Side-effect-free bounded planning composes nominal/time ports without claiming persistence."""
 
-import hashlib
-import json
-from dataclasses import asdict, dataclass, replace
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from domus.application.recurrence_ports import NominalExpansion, RecurrenceTimes
 from domus.domain.errors import Conflict, IntegrationUnavailable, InvalidInput
 from domus.domain.recurrence_periods import period_bounds
-from domus.domain.recurrence_planning import FixedBatch, FixedCursor, PlannedFixedSlot, StartCheck
+from domus.domain.recurrence_planning import (
+    FixedBatch,
+    FixedCursor,
+    PlannedFixedSlot,
+    StartCheck,
+    cursor_binding,
+)
 from domus.domain.recurrence_rules import FixedPattern, NominalDate, NominalSlot, slot_datetime
 from domus.domain.recurrence_time import NominalTime, TimePolicy
-
-
-def _binding(pattern: FixedPattern, policy: TimePolicy) -> str:
-    value = {"version": 1, "pattern": pattern.fingerprint, "policy": asdict(policy)}
-    return hashlib.sha256(
-        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
 
 
 def _beyond_end(pattern: FixedPattern, lower: datetime) -> bool:
@@ -66,13 +63,14 @@ class FixedRecurrencePlanner:
             raise InvalidInput("invalid_recurrence_limits")
         if before is not None and type(before) is not type(pattern.start):
             raise InvalidInput("invalid_recurrence_horizon")
-        binding = _binding(pattern, policy)
+        binding = cursor_binding(pattern, policy)
         current = cursor or FixedCursor(binding)
         if current.binding != binding:
             raise Conflict("recurrence_cursor_mismatch")
         if pattern.count is not None and current.nominal_count > pattern.count:
             raise InvalidInput("invalid_recurrence_cursor")
         slots: list[PlannedFixedSlot] = []
+        terminal: PlannedFixedSlot | None = None
         scanned = 0
 
         def result(complete: bool = False, *, closed: bool = False) -> FixedBatch:
@@ -81,6 +79,7 @@ class FixedRecurrencePlanner:
                 replace(current, closed=True) if closed else current,
                 scanned,
                 complete,
+                terminal,
             )
 
         if current.closed or (pattern.count is not None and current.nominal_count == pattern.count):
@@ -122,6 +121,7 @@ class FixedRecurrencePlanner:
                         and resolved.instant_ms > pattern.until
                     )
                 if beyond:
+                    terminal = PlannedFixedSlot(candidate, resolved)
                     return result(True, closed=True)
                 if current.nominal_count == 2**63 - 1:
                     raise InvalidInput("invalid_recurrence_cursor")

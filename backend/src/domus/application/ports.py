@@ -3,6 +3,7 @@
 from contextlib import AbstractContextManager
 from typing import Protocol
 
+from domus.application.recurrence_ports import RecurrenceRepository
 from domus.application.task_material_ports import TaskMaterialRepository
 from domus.application.task_ports import TaskRepository
 from domus.domain.identity import HouseholdPolicy, Member
@@ -61,6 +62,9 @@ class Outbox(Protocol):
 
 
 class UnitOfWork(Protocol):
+    @property
+    def recurrence(self) -> RecurrenceRepository: ...
+
     @property
     def task_materials(self) -> TaskMaterialRepository: ...
 

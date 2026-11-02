@@ -1,0 +1,119 @@
+{
+  "status": "partial; valid Bugbot stored-text finding corrected and independently reproduced SQLite inspection contention fixed; complete recurrence remains in progress",
+  "recordedAtUTC": "2026-11-02T08:58:24.129851+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "872bdba55dc7fa9ec942a9f0ff27a635b62d0169",
+  "backendSourceInventorySHA256": "e21e7eec6efae5109bb6ffe3e8edaf77d0c202824d37445d5641892bd8bac851",
+  "sourceManifestMethod": "SHA256 of compact sorted JSON mapping every authored Python module path, including package initializers, to its byte SHA256 value.",
+  "bugbotFinding": {
+    "url": "https://github.com/vypdev/domus/pull/22#discussion_r4440363749",
+    "id": "sqlite_recurrence_records:321:reject-noncanonical-record-json",
+    "assessment": "Valid; fixed locally, fresh published-source verification required. Not dismissed or reported as a Copilot finding defect.",
+    "fix": "Compare stored text with its exact canonical encoding before typed rule/progress/slot/frontier construction; no byte repair."
+  },
+  "testsFirst": {
+    "canonicalStorage": "36 original failing executions: four formatting transformations across date/time codecs plus real rule/progress/slot/frontier reads and checkpoint refusal.",
+    "inspectionContention": "Four original failing executions: read/write repository entry under a real exclusive writer, plus actual native/standalone authorization HTTP responses.",
+    "semanticFixtureCorrection": "Existing corruption tests now serialize semantic corruption canonically, preserving their original deeper assertions. One first complete campaign had3706 passes and one expected-message mismatch in a noncanonical future-snapshot fixture; that fixture now preserves canonical encoding and the same original effect-validation assertion."
+  },
+  "observedFrontendFailure": {
+    "run": 41414946149,
+    "job": 125176414528,
+    "artifact": 13127212450,
+    "artifactSHA256": "e52360e4f26b7bc60cacf78801c806218d4621067e562ed85776c75907f431d3",
+    "observations": "Concurrent native same-account setup: original POST503 storage_busy, one POST200; immediate authorization GET500 internal_error; accessible UI safely showed Household status unavailable.",
+    "limit": "No internal exception stack was retained. Independent exclusive-writer tests prove the concrete inspection misclassification, not the unlogged historical stack.",
+    "fix": "Keep temporary inspection contention as bounded storage_busy/503. The browser assertion explicitly refreshes read-only status after both original responses, then checks retained rejection and deliberately replays the original request under current authority. No automatic POST replay and no longer timeout are introduced."
+  },
+  "completeBackend": {
+    "executions": 3707,
+    "durationSeconds": 110.6,
+    "authoredModules": 130,
+    "coverageTotals": {
+      "covered_lines": 9248,
+      "num_statements": 9248,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 272,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2634,
+      "num_partial_branches": 0,
+      "covered_branches": 2634,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed"
+  },
+  "focusedRegression": {
+    "executions": 151,
+    "durationSeconds": 2.98,
+    "scope": "Canonical codec/integrity/frontier and real SQLite/HTTP contention campaign before the final semantic-fixture correction; final complete campaign covers that correction."
+  },
+  "browser": {
+    "executions": 49,
+    "durationSeconds": 30.0,
+    "result": "passed",
+    "scope": "Real local browser/native/standalone compositions and SQLite, fictional HA transports; owner HA not used.",
+    "postInvariant": "Exactly two original competing setup keys; explicit refresh adds no POST; one household/member/receipt/audit/outbox remains."
+  },
+  "checks": {
+    "strictTypes": "passed;130 modules",
+    "frontendRuntimeAndCatalogTypes": "passed",
+    "ruff": "check/format passed;328 files",
+    "architecture": "3 contracts kept,0 broken;174 files/1112 dependencies",
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 30029,
+      "renderedCharacters": 30029,
+      "composedCharacters": 30029,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "9395e06f14fd8939950816c707ff3d764bf5489fb7c0cfff8591cf2beae87303",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "packageAndArchitecture": {
+      "executions": 52,
+      "durationSeconds": 6.89,
+      "freshCurrentWheel": "passed"
+    }
+  },
+  "images": {
+    "exactCurrentScriptOnHost": "Current-source recurrence, both owned runtimes and pinned-time codecs passed.",
+    "scope": "Actual fixed/fair SQLite work, both production ASGI lifetimes, all four canonical storage negatives and real exclusive initial-inspection contention. Host execution is not CPU-image evidence.",
+    "freshHosted": "Required after publication of these corrections.",
+    "prior872": "Both real current-source CPU images passed: aarch64 job125176414375 and amd64 job125176414139, run41414946149. Hosted backend passed; frontend failed as separately retained above. This prior result does not validate new correction code."
+  },
+  "reviewAt872": {
+    "partitionsCompleted": 8,
+    "partitionsRequired": 8,
+    "diffFragments": 82,
+    "assignedFiles": 71,
+    "candidateFindings": 1,
+    "publishedFindings": 1,
+    "openFindings": 1,
+    "fixedFindings": 1,
+    "overall": "partial/neutral",
+    "humanConversation": "3 fetched/2 retained/1 omitted/0 truncated/limit reached; maintainer technical inputs manually inspected; no whole-prompt absence inferred."
+  },
+  "copilot": "Existing upstream851/843 reports updated with exact872 telemetry and progress error reference95884a3e-20f2-476b-972f-4c5fa710e671. No Copilot source/configuration/credential/bound was touched.",
+  "rawEvidence": {
+    "privateCampaign": "/private/tmp/domus-recurrence-review-872bdba",
+    "consumer": "Current PR review: original36+4 failing tests, actual hosted failure ZIP and native telemetry, complete source/coverage/SDK proofs,49 browser results, package and image-host controls. Compact cleanup receipt retains necessary evidence."
+  },
+  "pending": "Fresh CI/native review, then complete relative lifecycle, durable attention/calendar, authorized public commands/queries/operation recovery, reviewed schedule changes and the full retained52+37 recurrence cases and all-domain Stable/Edge product release. Owner Edge.5/schema7 and retained Edge.3 are untouched."
+}

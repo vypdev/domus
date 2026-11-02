@@ -2,15 +2,34 @@
 
 from typing import Protocol
 
+from domus.domain.recurrence_frontier import RecurrenceFrontier
+from domus.domain.recurrence_records import (
+    FixedProgress,
+    FixedSchedule,
+    ScheduledSlot,
+    ScheduleState,
+)
 from domus.domain.recurrence_rules import FixedPattern, PeriodCandidates
-from domus.domain.recurrence_time import NominalTime, RelativeInterval, ResolvedTime, TimePolicy
+from domus.domain.recurrence_time import (
+    LocalInstant,
+    NominalTime,
+    RelativeInterval,
+    ResolvedTime,
+    TimePolicy,
+)
+from domus.domain.relative_recurrence import RelativeProgress, RelativeSchedule, RelativeSlot
+from domus.domain.storage import Installation
 
 
 class RecurrenceTimes(Protocol):
     @property
     def data_identity(self) -> str: ...
 
+    def require_policy(self, policy: TimePolicy) -> None: ...
+
     def resolve(self, nominal: NominalTime, policy: TimePolicy) -> ResolvedTime: ...
+
+    def local_at(self, instant_ms: int, policy: TimePolicy) -> LocalInstant: ...
 
     def after_local_days(
         self, performed_at: int, interval: RelativeInterval, policy: TimePolicy
@@ -19,3 +38,52 @@ class RecurrenceTimes(Protocol):
 
 class NominalExpansion(Protocol):
     def period(self, pattern: FixedPattern, index: int) -> PeriodCandidates: ...
+
+
+class RecurrenceRepository(Protocol):
+    @property
+    def installation(self) -> Installation: ...
+
+    def frontier(self, household_id: str) -> RecurrenceFrontier | None: ...
+    def save_frontier(self, value: RecurrenceFrontier, expected_revision: int) -> None: ...
+
+    def relative_schedule(self, household_id: str, schedule_id: str) -> RelativeSchedule | None: ...
+    def relative_progress(self, household_id: str, schedule_id: str) -> RelativeProgress | None: ...
+    def relative_slot(self, household_id: str, slot_key: str) -> RelativeSlot | None: ...
+    def save_relative_schedule(self, value: RelativeSchedule, expected_revision: int) -> None: ...
+    def save_relative_progress(self, value: RelativeProgress, expected_revision: int) -> None: ...
+    def add_relative_slot(self, value: RelativeSlot) -> None: ...
+    def relative_schedules(
+        self,
+        household_id: str,
+        *,
+        limit: int = 25,
+        after: str | None = None,
+        state: ScheduleState | None = None,
+    ) -> tuple[RelativeSchedule, ...]: ...
+    def relative_slots(
+        self, household_id: str, schedule_id: str, *, limit: int = 25, after: str | None = None
+    ) -> tuple[RelativeSlot, ...]: ...
+
+    def schedule(self, household_id: str, schedule_id: str) -> FixedSchedule | None: ...
+    def progress(self, household_id: str, schedule_id: str) -> FixedProgress | None: ...
+    def slot(self, household_id: str, slot_key: str) -> ScheduledSlot | None: ...
+    def save_schedule(self, value: FixedSchedule, expected_revision: int) -> None: ...
+    def save_progress(self, value: FixedProgress, expected_revision: int) -> None: ...
+    def add_slot(self, value: ScheduledSlot) -> None: ...
+    def schedules(
+        self,
+        household_id: str,
+        *,
+        limit: int = 25,
+        after: str | None = None,
+        state: ScheduleState | None = None,
+    ) -> tuple[FixedSchedule, ...]: ...
+    def slots(
+        self,
+        household_id: str,
+        schedule_id: str,
+        *,
+        limit: int = 25,
+        after: str | None = None,
+    ) -> tuple[ScheduledSlot, ...]: ...

@@ -482,7 +482,8 @@
       "lastVerified": "2026-10-29",
       "specs": [
         "specs/recurrence-calendar.md",
-        "specs/recurrence-execution-foundation.md"
+        "specs/recurrence-execution-foundation.md",
+        "specs/recurrence-storage-continuation.md"
       ],
       "workflows": [],
       "entrypoints": [],

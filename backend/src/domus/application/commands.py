@@ -48,24 +48,38 @@ class AtomicCommands:
         apply: Callable[[UnitOfWork], Change],
     ) -> Receipt:
         with self.transactions.write() as unit:
-            self.authorization.require(command, unit)
-            previous = unit.receipts.get(command)
-            if previous is not None:
-                if previous.payload_fingerprint != payload.fingerprint:
-                    raise Conflict("idempotency_conflict")
-                return previous
-            change = apply(unit)
-            operation_id, created_at = self.identifiers.new(), self.clock.now()
-            receipt = Receipt(command, payload.fingerprint, operation_id, change.result, created_at)
-            unit.receipts.add(receipt)
-            unit.audit.append(AuditEntry(operation_id, command, change.audit_detail, created_at))
-            unit.outbox.append(
-                OutboxEvent(
-                    operation_id,
-                    command.household_id,
-                    command.action,
-                    change.event_payload,
-                    created_at,
-                )
+            return self.in_unit(unit, command, payload, apply)
+
+    def in_unit(
+        self,
+        unit: UnitOfWork,
+        command: CommandKey,
+        payload: JsonDocument,
+        apply: Callable[[UnitOfWork], Change],
+    ) -> Receipt:
+        """Join the caller's writer transaction; authorization and replay are never skipped.
+
+        This does not own a connection or commit. The composing use case must keep any related
+        cursor update in that same transaction, including an advance through retained proof.
+        """
+        self.authorization.require(command, unit)
+        previous = unit.receipts.get(command)
+        if previous is not None:
+            if previous.payload_fingerprint != payload.fingerprint:
+                raise Conflict("idempotency_conflict")
+            return previous
+        change = apply(unit)
+        operation_id, created_at = self.identifiers.new(), self.clock.now()
+        receipt = Receipt(command, payload.fingerprint, operation_id, change.result, created_at)
+        unit.receipts.add(receipt)
+        unit.audit.append(AuditEntry(operation_id, command, change.audit_detail, created_at))
+        unit.outbox.append(
+            OutboxEvent(
+                operation_id,
+                command.household_id,
+                command.action,
+                change.event_payload,
+                created_at,
             )
-            return receipt
+        )
+        return receipt

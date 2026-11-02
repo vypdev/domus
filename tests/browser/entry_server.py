@@ -100,6 +100,7 @@ class Fixture:
     def __init__(self, mode: str, port: int) -> None:
         self.mode, self.origin = mode, f"http://127.0.0.1:{port}"
         self.runtime = self.directory = None
+        self.writer = None
         self.patch = pytest.MonkeyPatch()
         self.patch.setattr(ingress, "HomeAssistantWebSocket", lambda endpoint: self.ha)
         self.patch.setattr(server, "HomeAssistantWebSocket", lambda endpoint: self.ha)
@@ -108,6 +109,7 @@ class Fixture:
 
     def reset(self, channel: str = "edge") -> None:
         assert channel in ("edge", "stable")
+        self.release_writer()
         if self.runtime is not None:
             self.runtime.close()
         if self.directory is not None:
@@ -123,6 +125,11 @@ class Fixture:
             HAEndpoint.supervisor() if self.mode == "native" else HAEndpoint(self.origin)
         )
         self.start()
+
+    def release_writer(self) -> None:
+        if self.writer is not None:
+            self.writer.close()  # Closing the independent fixture connection rolls back its lock.
+            self.writer = None
 
     def start(self) -> None:
         if self.mode == "native":
@@ -188,6 +195,7 @@ class Fixture:
                 if event["type"] == "lifespan.startup":
                     await send({"type": "lifespan.startup.complete"})
                 elif event["type"] == "lifespan.shutdown":
+                    self.release_writer()
                     self.runtime.close()
                     self.directory.cleanup()
                     self.patch.undo()
@@ -216,6 +224,17 @@ class Fixture:
             response = JSONResponse({"state": "completed", "fixture": True})
         elif path == "/__fixture__/stats":
             response = JSONResponse(self.stats())
+        elif path == "/__fixture__/writer" and request.method == "POST":
+            values = await request.json()
+            assert set(values) == {"action"}
+            assert values["action"] in ("acquire", "release")
+            if values["action"] == "acquire":
+                assert self.writer is None
+                self.writer = sqlite3.connect(self.database, autocommit=True)
+                self.writer.execute("BEGIN IMMEDIATE")
+            else:
+                self.release_writer()
+            response = JSONResponse({"state": values["action"], "fixture": True})
         elif path == "/__fixture__/identity" and request.method == "POST":
             values = await request.json()
             assert set(values) <= {"subject", "outage", "rejected"}

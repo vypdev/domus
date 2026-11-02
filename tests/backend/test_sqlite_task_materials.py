@@ -58,7 +58,7 @@ def test_original_schema5_migration_preserves_history_and_legacy_request_fingerp
     store = SQLiteDatabase(path, Installation("047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6", "edge"))
     store.initialize(require_existing=True)
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 7
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION == 8
         for table, rows in before.items():
             assert [tuple(row) for row in connection.execute(f"SELECT * FROM {table}")] == rows
     with store.read() as unit:
@@ -134,7 +134,7 @@ def test_real_file_material_cas_preserves_source_pending_and_confirmed_totals(tm
     checkpoint = SQLiteSnapshots(store, tmp_path / "snapshot", store.installation, Clock()).create(
         "materials"
     )
-    assert checkpoint.schema_version == 7
+    assert checkpoint.schema_version == 8
     copy = SQLiteDatabase(tmp_path / "snapshot/domus.sqlite3", store.installation)
     with copy.read() as unit:
         assert unit.task_materials.get("home", "intent") == final
@@ -441,7 +441,7 @@ def test_schema5_real_offline_activation_upgrades_only_target_and_keeps_original
             SQLiteSnapshots(selected.database, tmp_path / "new-snapshot", installation, Clock())
             .create("new")
             .schema_version
-            == 7
+            == 8
         )
     finally:
         selected.close()

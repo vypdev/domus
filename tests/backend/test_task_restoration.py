@@ -32,7 +32,7 @@ def test_restore_keeps_original_task_state_and_retains_later_completion_as_proce
     )
     adapter = SQLiteRestorations(store, archive, target, store.installation, Clock(), checkpoint)
     prepared = adapter.prepare("restore-tasks")
-    assert prepared.source.schema_version == checkpoint.schema_version == 7
+    assert prepared.source.schema_version == checkpoint.schema_version == 8
     assert prepared.operation_count == 3 and prepared.current_operations == 2
     assert adapter.inspect() == prepared and store.path.read_bytes() == source_bytes
     assert (archive / "domus.sqlite3").read_bytes() == checkpoint_bytes

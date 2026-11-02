@@ -27,19 +27,7 @@ class TaskEventKind(StrEnum):
 
 
 def _event_cycle(kind: TaskEventKind, value: TaskCycle) -> TaskCycle:
-    original = TaskCycle.record(
-        value.cycle_id,
-        value.household_id,
-        value.occurrence_id,
-        recorded_by=value.recorded_by,
-        performers=value.performers,
-        rules=value.rules,
-        definition_revision=value.definition_revision,
-        task_policy_revision=value.task_policy_revision,
-        identity_policy_revision=value.identity_policy_revision,
-        performed_at=value.performed_at,
-        recorded_at=value.recorded_at,
-    )
+    original = value.completion_snapshot()
     completed = original
     if value.verification in (VerificationState.APPROVED, VerificationState.REJECTED):
         original = original.verify(
@@ -191,19 +179,7 @@ def _root(evidence: OperationEvidence, cycle: TaskCycle, action: str) -> JsonObj
 def validate_completion(evidence: OperationEvidence, cycle: TaskCycle) -> JsonObject:
     result = _root(evidence, cycle, "task.complete")
     request = operation_request(evidence)
-    original = TaskCycle.record(
-        cycle.cycle_id,
-        cycle.household_id,
-        cycle.occurrence_id,
-        recorded_by=cycle.recorded_by,
-        performers=cycle.performers,
-        rules=cycle.rules,
-        definition_revision=cycle.definition_revision,
-        task_policy_revision=cycle.task_policy_revision,
-        identity_policy_revision=cycle.identity_policy_revision,
-        performed_at=cycle.performed_at,
-        recorded_at=cycle.recorded_at,
-    )
+    original = cycle.completion_snapshot()
     if (
         result.get("state") != "completed"
         or JsonDocument.from_value({"cycle": result.get("cycle")})

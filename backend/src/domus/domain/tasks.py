@@ -239,6 +239,22 @@ class TaskCycle:
             else VerificationState.NONE,
         )
 
+    def completion_snapshot(self) -> Self:
+        """Original recorded work survives later verification and closure unchanged."""
+        return self.record(
+            self.cycle_id,
+            self.household_id,
+            self.occurrence_id,
+            recorded_by=self.recorded_by,
+            performers=self.performers,
+            rules=self.rules,
+            definition_revision=self.definition_revision,
+            task_policy_revision=self.task_policy_revision,
+            identity_policy_revision=self.identity_policy_revision,
+            performed_at=self.performed_at,
+            recorded_at=self.recorded_at,
+        )
+
     def verify(
         self, decision: VerificationState, verifier: TaskPerformer, now: int, reason: str = ""
     ) -> Self:

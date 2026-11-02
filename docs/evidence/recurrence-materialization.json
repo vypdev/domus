@@ -1,0 +1,150 @@
+{
+  "status": "partial; one actual fixed materialization/reconciliation step implemented; production loop and complete recurrence remain in progress",
+  "recordedAtUTC": "2026-11-01T23:40:51.401615+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "9c12953232c0fb967663c1853e5dc48112379623",
+  "backendSourceInventorySHA256": "bb4d3bfe2bdfa3f74a28b0b84c5435c94b0c42c5d79e710a54b17b29d76b311e",
+  "sourceManifestMethod": "SHA256 of compact sorted JSON mapping all authored Python module paths, including package initializers, to their byte SHA256 values.",
+  "implemented": [
+    "Composition-supplied installation/channel/household scope with a fixed technical namespace, separate from human identity and performer authority",
+    "One actual generated occurrence or at most 64 original empty periods per step; pinned date-only/instant policy validation and planning outside writer lock",
+    "Current exact rule/progress/definition checks before original receipt lookup; source changes invalidate planned writes",
+    "Shared AtomicCommands.in_unit joins the existing caller-owned transaction without independent commit or skipped authority/replay",
+    "Real task/slot/progress/original receipt/audit/outbox commit or roll back together",
+    "Current original proof avoids another effect; actual offline restore retains historical absence and advances only reconciled progress without new identity/task/event",
+    "Bounded empty-scan receipts preserve incomplete continuation; date-only tasks retain no fabricated UTC deadline",
+    "Corrupted original result/payload, missing/conflicting current effect and contradictory history projections fail safely"
+  ],
+  "testsFirst": {
+    "initial": "Collection failed with missing domus.application.fixed_materialization before implementation; original output retained.",
+    "authorityOrder": "A targeted public-use-case regression failed on a protected receipt lookup after the rule changed. Implementation now performs every such lookup only inside the shared authorization boundary; original failure and passing regression retained."
+  },
+  "focused": {
+    "executions": 67,
+    "durationSeconds": 1.79,
+    "scope": "The campaign covers the new step and existing atomic/creation regressions. Product journey acceptance is tracked separately.",
+    "authoredModules": 2,
+    "coverageTotals": {
+      "covered_lines": 147,
+      "num_statements": 147,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 40,
+      "num_partial_branches": 0,
+      "covered_branches": 40,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    }
+  },
+  "completeBackend": {
+    "executions": 3584,
+    "durationSeconds": 112.27,
+    "authoredModules": 126,
+    "coverageTotals": {
+      "covered_lines": 8954,
+      "num_statements": 8954,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 269,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2546,
+      "num_partial_branches": 0,
+      "covered_branches": 2546,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentPerModuleAudit": "passed"
+  },
+  "checks": {
+    "strictTypes": {
+      "passed": true,
+      "files": 126
+    },
+    "ruff": "check and format passed;316 files formatted",
+    "architecture": {
+      "contractsKept": 3,
+      "contractsBroken": 0,
+      "filesAnalyzed": 170,
+      "dependencies": 1070
+    },
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 23882,
+      "renderedCharacters": 23882,
+      "composedCharacters": 23882,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "70dc7362f47a59b6f6d9d81c13f9ba7a4e8d720243f58a33ccc4b6c33f448f5c",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "imageControlOnHost": "Exact current image script executes real SQLite creation, both COUNT2 steps, terminal no-op and pinned gap facts successfully on host. Actual both-architecture image jobs remain required after source publication.",
+    "packageAndArchitectureTests": {
+      "passed": true,
+      "executions": 52,
+      "durationSeconds": 7.69,
+      "requires": "Fresh current backend wheel with the unchanged retained frontend bundle; hosted current-source images rebuild UI separately."
+    }
+  },
+  "actualRestore": {
+    "method": "Real SQLiteSnapshots, SQLiteRestorations and offline SQLiteActivation, followed by open_storage on the activated generation.",
+    "observed": "The old cursor advances through the exact retained absent-effect receipt; no replacement task/slot/identity or duplicate event appears, and the next terminal step performs no new work."
+  },
+  "concurrency": "Two independent SQLite writers plan the same actual source. Exactly one commits a complete occurrence; the other returns source conflict or bounded storage contention, never another effect.",
+  "limits": {
+    "step": "At most one generated slot, or at most 64 original periods; current step result refers only to the explicitly requested horizon.",
+    "rangeComplete": "Persisted range_complete alone does not prove arbitrary calendar completeness; future protected queries need the actual requested-range/source/attention predicate.",
+    "scope": "Internal application component only. No HTTP body grants maintenance authority, and no background loop or owner installation starts."
+  },
+  "pending": [
+    "Fair durable multi-rule continuation, global limits of 1,000 slots and 50 definitions, shutdown ownership and both production runners",
+    "Completion-relative persistence and actual lifecycle source/cycle consumption",
+    "Durable historical/review/collision attention and truthful protected calendar predicates/queries",
+    "Reviewed attachment, edits/exceptions/preview, task category/classification and public HTTP/operation recovery surfaces",
+    "Household timing-policy configuration/default wiring, full UI/HA surfaces, actual current-source image evidence and the retained 52 companion and 37 owner cases plus first all-domain release acceptance"
+  ],
+  "priorHeadVerification": {
+    "headRevision": "9c12953232c0fb967663c1853e5dc48112379623",
+    "ciRun": 41361528775,
+    "ciCheck": 125014080825,
+    "allApplicableProductSuites": "passed",
+    "amd64Job": 125012729341,
+    "aarch64Job": 125012729367,
+    "nativeReview": {
+      "jobId": 125012728997,
+      "reviewCheck": 125013191207,
+      "partitionsCompleted": 5,
+      "partitionsAssigned": 5,
+      "filesAssigned": 52,
+      "diffFragments": 57,
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "fixedFindings": 1,
+      "openFindings": 0,
+      "overall": "partial/neutral due to human-conversation dimension; complete code coverage and manually inspected proposed-SDD inputs remain distinct."
+    },
+    "knownCopilotProgressFailure": "validation.evidence-too-large, reference 894d37b9-1732-4cf7-8237-19e46946ab5e, upstream issue #851; no unchanged-input rerun or limit alteration."
+  },
+  "ownerHa": "Installed Edge.5 and retained Edge.3 remain untouched; no release, registry publication or deployment.",
+  "copilot": "No Copilot source, configuration, credential, scope or evidence bound changed. Existing reports #851 and #843 include the exact latest native facts.",
+  "retainedEvidenceDirectory": "/private/tmp/domus-materialization-9c12953"
+}

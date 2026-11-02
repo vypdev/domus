@@ -1,0 +1,213 @@
+{
+  "status": "partial; durable bounded fair application runs implemented; production polling and complete recurrence remain in progress",
+  "recordedAtUTC": "2026-11-02T00:37:54.094645+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "c5819b8ffd217bde96b440a46971e6df77867099",
+  "backendSourceInventorySHA256": "e2369a3dd8875edca196c4da7a0387508eeb18a168089e3c489a5c91a34b56ea",
+  "sourceManifestMethod": "SHA256 of compact sorted JSON mapping every authored Python module path, including package initializers, to its byte SHA256 value.",
+  "implemented": [
+    "Pure scoped selection frontier with closed codec, scoped CAS persistence and checkpoint integrity; no completion/authority meaning",
+    "At most50 selected active rules, at most 1,000 processed nominal slots and a separate bounded empty-period budget per run",
+    "Round-robin service, local-calendar horizon, original-proof/historical work accounting and source-bound horizon validation",
+    "Durable admission for each actually visited rule before provider I/O; unvisited rules keep their turn across repeated interruption",
+    "Cancellation before providers and before atomic write admission, including after writer entry; already admitted effects are retained",
+    "Bounded safe per-rule attention categories and confirmed observation counters; scope failure stays fatal",
+    "Actual global offline restoration and original-proof replay preserve absent-effect/current facts without duplicate tasks"
+  ],
+  "testsFirst": {
+    "frontier": "New collection failed with missing domus.domain.recurrence_frontier before implementation.",
+    "fairRun": "New collection failed with missing domus.application.fair_recurrence before implementation.",
+    "horizonAndShutdown": "Two tests failed on unsupported expected_schedule/should_continue arguments before the step guards existed.",
+    "interruption": "Repeated restart after every first step processed only 2 of 100 rules before changing whole-window reservation to actual-rule admission. The original failing assertion and passing complete campaign are retained.",
+    "attention": "A test failed on missing safe scoped attention_items before the report was implemented."
+  },
+  "completeBackend": {
+    "executions": 3639,
+    "durationSeconds": 114.99,
+    "authoredModules": 128,
+    "coverageTotals": {
+      "covered_lines": 9125,
+      "num_statements": 9125,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 272,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2606,
+      "num_partial_branches": 0,
+      "covered_branches": 2606,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentPerModuleAudit": "passed"
+  },
+  "focusedFairness": {
+    "executions": 94,
+    "durationSeconds": 8.65,
+    "authoredModules": 3,
+    "coverageTotals": {
+      "covered_lines": 262,
+      "num_statements": 262,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 90,
+      "num_partial_branches": 0,
+      "covered_branches": 90,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "scope": "Includes existing step and metadata regressions. Product journey acceptance is tracked separately."
+  },
+  "focusedStorage": {
+    "executions": 119,
+    "authoredModules": 4,
+    "coverageTotals": {
+      "covered_lines": 258,
+      "num_statements": 258,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 68,
+      "num_partial_branches": 0,
+      "covered_branches": 68,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "warningCorrection": "The first campaign observed an unclosed test-only fixture database. Its producer now uses closing(); the targeted refusal test passes with ResourceWarning promoted to error, and the final complete campaign has no warning."
+  },
+  "capacityObservations": {
+    "rules": "101 actual rules receive 50/50/1 new work across durable restart; every selection has at most 50 rules.",
+    "slots": "An actual past backlog of 1,001 nominal slots creates exactly 1,000 in the first run and one in the next; original per-slot evidence remains separate.",
+    "interrupted": "100 actual rules each receive exactly one first-step turn over 100 interrupted restarted runs, rather than revisiting only the first rules of large windows.",
+    "periods": "Empty scan work consumes the global budget and retains its exact continuation for the next run.",
+    "uncertainty": "An unknown post-commit acknowledgement reports safe attention and retains the real committed task; observation counters are not assumed to be database totals."
+  },
+  "checks": {
+    "strictTypes": {
+      "passed": true,
+      "files": 128
+    },
+    "ruff": "check and format passed;322 files formatted",
+    "architecture": {
+      "contractsKept": 3,
+      "contractsBroken": 0,
+      "filesAnalyzed": 172,
+      "dependencies": 1088
+    },
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 26395,
+      "renderedCharacters": 26395,
+      "composedCharacters": 26395,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "a129daa6c324ada4072850e952826992d19054c233110d0b342240de9aa624bf",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "packageAndArchitectureTests": {
+      "passed": true,
+      "executions": 52,
+      "durationSeconds": 7.49,
+      "requires": "Fresh current backend wheel with the retained unchanged frontend bundle; hosted current-source images rebuild UI separately."
+    },
+    "imageControlOnHost": "Exact current script executes real SQLite fair runs, actual materialization, frontier persistence and pinned-time facts. Host execution is separate from required fresh CPU-image jobs."
+  },
+  "migration": {
+    "schema": 8,
+    "supportedHistoricalSchemas": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "selectionTable": "recurrence_frontiers",
+    "unreleasedPriorInput": {
+      "sourceCommit": "c5819b8ffd217bde96b440a46971e6df77867099",
+      "scope": "Genuine prior unreleased schema8 input generated before adding selection metadata. Not a released schema8 migration promise.",
+      "sqlFixture": "tests/fixtures/sqlite/unreleased-c581-schema8.sql",
+      "sqlSHA256": "2f884cd00b735ddf60c567a908bf05e709f887f699953bce7808326e017647b4",
+      "rawSource": "/private/tmp/domus-recurrence-runner-c5819b8/frozen-schema8-c581/domus.sqlite3",
+      "rawSHA256": "b87d0e5af9a9a3df5b8c30f659ed91336c965bf859dc38d0a601a70a92643d96",
+      "actualMaterialization": "identity-7"
+    },
+    "priorLayoutRefusal": "Normal reads/writes and initialization reject the genuine prior development layout without changing bytes. It does not become a released-source migration or a version-number downgrade.",
+    "originalFixturesUnchanged": "Original schemas 1..7 remain unchanged; genuine v7 SHA256 stays c5ca7b2383e9f75561a59b9ea0bbbd98736ae400b19e735b5a6fdf90ca139ea5."
+  },
+  "limits": {
+    "maxDefinitions": 50,
+    "maxProcessedSlots": 1000,
+    "defaultPeriodBudget": 4096,
+    "maximumPeriodBudget": 64000,
+    "defaultLocalHorizonDays": 60,
+    "horizonRangeDays": [
+      7,
+      366
+    ],
+    "meaning": "The frontier records admission, and run counters record confirmed observations for the selected window. Neither proves arbitrary calendar completeness or human performance."
+  },
+  "priorHeadVerification": {
+    "headRevision": "c5819b8ffd217bde96b440a46971e6df77867099",
+    "ciRun": 41363418789,
+    "ciCheck": 125019775929,
+    "allApplicableProductSuites": "passed",
+    "amd64Job": 125018446570,
+    "aarch64Job": 125018446322,
+    "nativeReview": {
+      "jobId": 125018446857,
+      "reviewCheck": 125018888587,
+      "partitionsCompleted": 6,
+      "partitionsAssigned": 6,
+      "filesAssigned": 56,
+      "diffFragments": 63,
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "fixedFindings": 1,
+      "openFindings": 0,
+      "humanConversation": {
+        "fetched": 3,
+        "retained": 2,
+        "omitted": 1,
+        "truncated": 0,
+        "limitReached": true
+      },
+      "overall": "partial/neutral; code is complete and all three nonempty maintainer-account technical review inputs were manually inspected. Telemetry does not identify the omitted input or prove whole-prompt absence."
+    },
+    "copilotProgressFailure": "validation.evidence-too-large, reference e5d87e1e-56a3-4bfb-9d4a-0bf63bb91ca3; existing upstream report851 updated without trimming evidence or restarting unchanged work."
+  },
+  "pending": [
+    "Owned production polling lifecycle and both native/standalone composition paths",
+    "Completion-relative persistence and actual source/cycle handling",
+    "Durable historical/review/collision attention and protected calendar queries with the actual range predicate",
+    "Reviewed attachment, edits/exceptions/preview, category/classification and public HTTP/operation recovery",
+    "Household timing-policy defaults, actual UI/HA surfaces, fresh hosted images and the retained 52 companion plus 37 owner cases for first all-domain acceptance."
+  ],
+  "ownerHa": "Installed Edge.5 schema 7 and retained Edge.3 remain untouched. No deployment or release.",
+  "copilot": "No Copilot/gateway code, configuration, credential, scope or evidence bound changed. Known limitations remain under upstream issues #851 and #843.",
+  "retainedEvidenceDirectory": "/private/tmp/domus-recurrence-runner-c5819b8"
+}

@@ -1,0 +1,152 @@
+{
+  "status": "partial; durable relative storage implemented, full retained issue20 execution remains in progress",
+  "recordedAtUTC": "2026-11-02T12:11:55.026405+00:00",
+  "issue": "https://github.com/vypdev/domus/issues/20",
+  "pullRequest": "https://github.com/vypdev/domus/pull/22",
+  "sourceBase": "8b0aafda1a4cd8d1d63bf782b04f2709fb7db46c",
+  "backendSourceInventorySHA256": "43e40358642c0f0f48282eb4a38d9b65f666ef95e29cd85794b750f231784921",
+  "implemented": [
+    "Closed canonical version1 relative schedule/progress/slot codecs preserve original cycle and actual local-time facts, including an epoch instant whose local date is1969.",
+    "Fixed and relative rules share global identities, closed timing kinds, generation relationships and kind-aware CAS. One nonretired timing owner per definition preserves definition-based execution selection; retired history survives.",
+    "Every relative continuation binds the complete immutable timing generation. Nonbootstrap state additionally matches an exact scoped original command/operation result and revision-bound record proof.",
+    "Present slots match their original full timing/source fingerprint, actual target creation and normalized original source completion, even after later approval or closure. This proves stored facts without granting source eligibility.",
+    "Real offline restore preserves both a restored-away generated task and an absent mapping of still-present adopted manual work as historically processed; no automatic recreation, new original, identity or event delivery occurs.",
+    "Independent SQLite writers have one atomic rule/slot winner. Deferred original evidence, generation pairs, duplicate identities and late failures preserve atomic rollback.",
+    "Shared snapshot validation checks both typed timing kinds and strict originals. Malformed stored originals on writes are storage failures without partial state."
+  ],
+  "testsFirst": {
+    "originalPublishedBase": "Four initial repository tests failed against8b: three missing relative APIs and one accepted prior development layout. A separate codec draft first failed collection because its implementation module did not exist.",
+    "prototypeBinding": "Twelve meaningful value/read/snapshot failures exposed valid-field rebinding in the unpublished initial storage prototype. These are not attributed to nonexistent relative persistence in published8b.",
+    "prototypeRestore": "An actual adopted-manual restore first failed because the provisional missing-mapping check required the task to be absent. The corrected relation preserves existing manual work and historical mapping absence.",
+    "prototypeErrorClassification": "A malformed stored original first raised InvalidInput during progress write; the correction reports StorageFailure and preserves source bytes.",
+    "earlierFull": "First3924-test campaign passed at99.53% coverage. Later3986 passed100%; the final3987 campaign includes the separate malformed-original write regression.",
+    "scope": "78 added backend executions relative to3909 baseline; parameterizations and synthetic repository proofs are not independent product acceptance journeys."
+  },
+  "completeBackend": {
+    "executions": 3987,
+    "durationSeconds": 104.04,
+    "authoredModules": 136,
+    "coverageTotals": {
+      "covered_lines": 9790,
+      "num_statements": 9790,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 292,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2796,
+      "num_partial_branches": 0,
+      "covered_branches": 2796,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed on the final report and current module inventory"
+  },
+  "checks": {
+    "strictTypes": "passed;136 modules",
+    "ruff": "check/format passed;345 files",
+    "architecture": {
+      "contractsKept": 3,
+      "contractsBroken": 0,
+      "filesAnalyzed": 180,
+      "dependencies": 1173
+    },
+    "originalPinnedSdd": {
+      "upstream": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "base": "0806a38f8a2de1f102a017bff25ad6856fb17bcd",
+      "selected": "specs/recurrence-storage-continuation.md",
+      "originalPolicyModulesVerified": 7,
+      "format": "PASS",
+      "consistency": "PASS",
+      "composition": "explicit contributor integration; original publication retained in Git",
+      "unchangedCatalog": "PASS",
+      "immutableOwnerDocumentsUsed": 18,
+      "retainedCompanionCases": 52,
+      "newCases": 4,
+      "rawCharacters": 41753,
+      "renderedCharacters": 41753,
+      "composedCharacters": 41753,
+      "applicableDraftMaximumCharacters": 70000,
+      "sha256": "a317ee4f8b3cc4517098f244966bd04a127f91bc7a70ca6c67dc5723cef57c04",
+      "scope": "Review input only; no gate admission, branch publication, source implementation or runtime acceptance.",
+      "retainedOwningFilesUnchanged": true,
+      "workingDocumentValidated": true
+    },
+    "freshPackageAndArchitecture": {
+      "executions": 52,
+      "durationSeconds": 6.77,
+      "result": "passed"
+    },
+    "exactWheel": {
+      "modules": 136,
+      "wheelSHA256": "208cd14903d6685f4ba863585f53098c35d498087740bbe848aeed6e13a26b77",
+      "scope": "Exact current module bytes match the freshly built wheel; no CPU execution or HA claim."
+    },
+    "currentImageScriptHost": "passed; existing fixed/time/original controls plus an isolated synthetic relative storage/codec proof and full checkpoint. No actual relative consumer is implied.",
+    "freshHosted": "Required after publication. Local host controls are distinct from actual amd64/aarch64 execution; no current hosted success is claimed yet."
+  },
+  "compatibility": {
+    "schema": 8,
+    "status": "unreleased layout refinement; six recurrence tables and typed shared ownership",
+    "supportedReleasedSources": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "genuinePriorSource": "06b3b9f38955a25be2511b68b2ea667a84a42d8f",
+    "originalBackendModulesByteVerified": 133,
+    "completeLogicalFixtureSHA256": "aed613d7a6c2718827c05d44cd3fbbdb9d996fce44097f893b5c9bfd4dc28565",
+    "rawDatabaseSHA256": "5d4c4e26e273e7f26e579e728db243c39e29b21dbef53378cdd2368643debe09",
+    "priorLayout": "Exact captured header pragmas and actual UTC-UNTIL slots retained. Current normal reads/writes and initialization refuse its five-table development layout unchanged. No relabeling or released8 upgrade claim.",
+    "dependenciesChanged": false,
+    "providerIoAdded": false,
+    "timeoutsChanged": false,
+    "copilotChanged": false,
+    "ownerHa": "No HA request, update, migration, release or deployment. Installed Edge.5/schema7 and retained rollback remain unchanged."
+  },
+  "retainedScope": {
+    "companionCases": 52,
+    "originalOwnerCases": 37,
+    "additionalStorageCases": 4,
+    "newCountedProductJourneys": 0,
+    "owningSddsUnchanged": true
+  },
+  "priorPublishedReview": {
+    "head": "8b0aafda1a4cd8d1d63bf782b04f2709fb7db46c",
+    "productRun": 41435797354,
+    "aggregateJob": 125247642850,
+    "productResult": "all applicable suites passed including both actual CPU images",
+    "nativeRun": 41435797183,
+    "nativeJob": 125245131294,
+    "partitions": "12/12",
+    "files": 93,
+    "fragments": 112,
+    "openFindings": 0,
+    "fixedFindings": 6,
+    "result": "partial/neutral; human conversation7 fetched/5 retained/2 omitted/0 truncated/limitReached. Separate issue6/6,PR11/11,threads6/6,diff93/93 complete.",
+    "manualSupplement": "Eight known agent-authored maintainer-account technical inputs inspected; no new owner answers, omitted-item identity or complete-review claim inferred.",
+    "progressReference": "bb80b30f-fb77-4df7-bd60-e5ad40b2d7e2"
+  },
+  "copilotReports": [
+    "https://github.com/vypdev/copilot/issues/851#issuecomment-6565229213",
+    "https://github.com/vypdev/copilot/issues/843#issuecomment-6565011301"
+  ],
+  "rawEvidence": {
+    "privateCampaign": "/private/tmp/domus-relative-storage-06b3b9f",
+    "consumer": "CurrentPR22 storage review: actual original failures, final module/coverage/package proof, strict SDK evidence and genuine original06 input. Compact terminal producers after publication; preserve authored input and active next-consumer plan separately."
+  },
+  "pending": [
+    "Fresh current-source product CI, actual CPU images and native review after publication.",
+    "Current-authorized relative creation/attachment and actual initial/successor materialization.",
+    "Bounded current/historical source observations, inbox, closure dominance, eligibility, invalidation and restore-source reconciliation.",
+    "One global mixed-rule definition/slot budget and durable frontier; both owned runtime compositions.",
+    "Protected calendar/operation APIs, reviewed schedules/exceptions/classification and configurable household timing defaults.",
+    "Complete retained52+37 cases and full UI/HA/Stable-Edge/all-domain release acceptance. KeepPR22 open until complete retained issue20 scope."
+  ]
+}
