@@ -1156,5 +1156,76 @@
       "A completed backup metadata check is not restored-data acceptance or an in-place source migration.",
       "All186case audit, required actual human UX, owner adoption, recurrence23 and remaining full product remain unfinished."
     ]
+  },
+  "frameIdentityReviewClarification": {
+    "recordedAtUTC": "2026-11-03T18:05:01.347945+00:00",
+    "reviewedHead": "127cb48647efb777be8494c40239fd048c751c72",
+    "nativeReview": {
+      "run": 41688262760,
+      "job": 126099694785,
+      "partitions": "12/12",
+      "context": "complete",
+      "publishedFindings": 1,
+      "finding": "tests/python/test_image_channel.py:115:valid-sequence-identity-treated-as-invalid"
+    },
+    "upstreamReport": "https://github.com/vypdev/copilot/issues/875",
+    "originalParameters": [
+      {
+        "repr": "0",
+        "type": "int"
+      },
+      {
+        "repr": "True",
+        "type": "bool"
+      },
+      {
+        "repr": "1.0",
+        "type": "float"
+      },
+      {
+        "repr": "'1'",
+        "type": "str"
+      }
+    ],
+    "independentCounterevidence": "Original four cases pass unchanged. Actual JSON/worker probe rejects all four and accepts integer1; bool/float equality to1 does not satisfy the exact-int guard. Pytest display ID1 belongs to string1, not an integer input.",
+    "clarification": "Name every original parameter type explicitly and add one real-worker valid-integer positive case. Preserve every original negative value and the unchanged exact integer transport guard.",
+    "localTooling": {
+      "passed": 179,
+      "statements": 214,
+      "branches": 98,
+      "coveragePercent": 100
+    },
+    "reviewedHeadProductCI": {
+      "run": 41688262792,
+      "aggregateJob": 126104925491,
+      "allTenJobs": "success",
+      "frontend": 1258,
+      "backend": 4395,
+      "tooling": 178,
+      "sourceBrowserJourneys": 89,
+      "catalogJourneys": 36,
+      "eachCPU": {
+        "containers": 40,
+        "actualImageBrowser": 34,
+        "skipped": 0,
+        "flaky": 0
+      }
+    },
+    "limitations": "Same-head product success and the actual probe disprove the published premise; fresh review of the clarification remains required. No manual finding resolution or full186-case/human/owner-adoption acceptance.",
+    "CopilotChanged": false
+  },
+  "progressScopeRecurrence127": {
+    "source": "127cb48647efb777be8494c40239fd048c751c72",
+    "run": 41688250286,
+    "job": 126099649754,
+    "timestamp": "2026-11-03T17:53:12.8553939Z",
+    "phase": "scope",
+    "reason": "scope-clause-limit",
+    "field": "$.lines",
+    "requirement": "none",
+    "sourceLine": "L155",
+    "reference": "5bd5bc8a-ba99-4ebc-aca4-eeb92d085a12",
+    "existingReport": "https://github.com/vypdev/copilot/issues/828#issuecomment-6599376807",
+    "scope": "Progress publication rejected; prior labels/assessments retained. Independent product CI passes. No returned clause/count or verified requirement identity is exposed, and no internal cause is inferred. No blind retry or bounds change."
   }
 }

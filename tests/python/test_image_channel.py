@@ -112,7 +112,16 @@ def test_close_forces_only_its_owned_stubborn_process_and_is_idempotent():
     assert calls == ["terminate", "wait", "kill", "wait"]
 
 
-@pytest.mark.parametrize("identity", [0, True, 1.0, "1"])
+# Boolean/float values can compare equal to 1 while retaining a different JSON-decoded type.
+@pytest.mark.parametrize(
+    "identity",
+    [
+        pytest.param(0, id="zero-integer"),
+        pytest.param(True, id="boolean"),
+        pytest.param(1.0, id="matching-value-float"),
+        pytest.param("1", id="numeric-string"),
+    ],
+)
 def test_wrong_frame_identity_cannot_be_reported_as_the_current_original_result(identity):
     channel = worker(
         "import sys,json\nsys.stdin.readline()\nprint(json.dumps({'transport_id':"
@@ -122,6 +131,18 @@ def test_wrong_frame_identity_cannot_be_reported_as_the_current_original_result(
     with pytest.raises(ValueError, match="identity"):
         channel.exchange({"original_key": "different-current-context"})
     assert channel.closed and channel.process.poll() is not None
+
+
+def test_matching_integer_first_frame_is_accepted_as_the_current_original_result():
+    channel = worker()
+    original = {"original_key": "valid-integer-first-frame"}
+    try:
+        response = json.loads(channel.exchange(original))
+        assert channel.sequence == 1
+        assert response == {"pid": channel.process.pid, "value": original}
+        assert not channel.closed and channel.process.poll() is None
+    finally:
+        channel.close()
 
 
 def test_a_queued_request_timeout_does_not_close_or_resend_another_context():
