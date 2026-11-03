@@ -702,6 +702,38 @@
     "consumerRegression": "Actual ASGI bridge contract: local metadata200 performs no proxy call; unavailable inner transport produces502; inner503/200 preserve exact body/status. All3readiness exchanges are GET /__fixture__/ready with empty body. Metadata cannot fabricate readiness.",
     "consumerChange": "Regression and explanatory comments only; existing forwarding, timeout and readiness behavior unchanged. No redundant second internal wait or acceptance relaxation.",
     "localCases": 14,
-    "currentReview": "9988native completed9/9 and published1false-premise finding; still open, no manual resolution. Fresh native review required for this clarification."
+    "currentReview": "9988native completed9/9 and published1false-premise finding; still open, no manual resolution. Fresh native review required for this clarification.",
+    "subsequentReview": {
+      "source": "f5715f4b5a1a77efa3d6cf5bda47089ca9d50bd4",
+      "job": 125920283653,
+      "context": "complete",
+      "analysisPartitions": 10,
+      "completedPartitions": 10,
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "openFindings": 0,
+      "historicalResolution": "obsolete; automatically resolved by vypbot, no manual resolution",
+      "report": "https://github.com/vypdev/copilot/issues/869"
+    }
+  },
+  "imageFixtureShutdownIncrement": {
+    "sourceBase": "f5715f4b5a1a77efa3d6cf5bda47089ca9d50bd4",
+    "productionRuntimeChanged": false,
+    "observation": "Two owned disposable containers survived the prior completed local campaign with no host fixture process/listener. Actual2journey reproduction passes but leaves2containers.",
+    "testsFirst": "ASGI lifecycle assertion fails because shutdown completes with its container present. CI contract fails because survivor gate is missing. Original process/container identity and all teardown observations are retained.",
+    "diagnosis": "Pinned Playwright1.64.1 defaults to forceful SIGKILL when gracefulShutdown is unspecified. Its shipped declarations and runner implementation confirm this. An intermediate ASGI-only fix passes10journeys but still leaves2containers; it is retained as a failed cleanup attempt.",
+    "fix": "Use an exec-root server command and bounded SIGTERM5second shutdown; close exact owned container during ASGI lifespan.shutdown before reporting completion. Outer finally remains idempotent. Startup timeout30seconds, global timeout180seconds, retries0, current product code and owner HA are unchanged.",
+    "localActualImageJourneys": 10,
+    "remainingFixtureContainers": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "toolingTests": 165,
+    "toolingCoverage": "214statements/98branches,100%",
+    "CI": "Both required CPU jobs assert docker ps --all --quiet --filter label=domus.browser-fixture=true is empty after all10actual-image journeys. A survivor fails application CI.",
+    "limitations": "Verified graceful Linux/macOS runner teardown. User-space cleanup cannot execute after arbitrary SIGKILL or host/daemon loss. Fresh exact-head hosted CI/native review remains required.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-rollback-6c1a0d",
+      "privateLocalOnly": true
+    }
   }
 }

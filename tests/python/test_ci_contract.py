@@ -274,6 +274,12 @@ def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> Non
         if step.get("name") == "Require all ten actual-image browser journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
+    cleanup = next(
+        step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
+    )
+    assert "docker ps --all --quiet --filter label=domus.browser-fixture=true" in cleanup["run"]
+    assert "assert not" in cleanup["run"] and "check_output" in cleanup["run"]
+    assert steps.index(cleanup) > steps.index(audit)
 
 
 def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair() -> None:

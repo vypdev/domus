@@ -100,6 +100,10 @@ The fixture verifies source/image/CPU identity, starts isolated nonroot containe
 ports or host mounts, and relays browser HTTP over loopback/docker exec. Provider fixtures are copied
 only into the disposable writable container; no test dependency is added to the image. The command
 must report all ten passing journeys with no skips. CI requires that receipt in both CPU jobs.
+The runner uses a bounded graceful shutdown so the bridge can retire its owned container before
+reporting ASGI completion. CI also requires
+`docker ps --all --quiet --filter label=domus.browser-fixture=true` to be empty after the campaign;
+any remaining disposable fixture fails the job. The outer final cleanup is idempotent.
 
 The container suite also requires `DOMUS_SCHEMA9_IMAGE`, the compatible immutable administration
 checkpoint `87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470`. Build it from

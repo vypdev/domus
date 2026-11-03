@@ -157,6 +157,7 @@ class ImageBridge:
                 if event["type"] == "lifespan.startup":
                     await send({"type": "lifespan.startup.complete"})
                 elif event["type"] == "lifespan.shutdown":
+                    self.close()
                     await send({"type": "lifespan.shutdown.complete"})
                     return
         if scope["type"] != "http":

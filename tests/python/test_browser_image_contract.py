@@ -249,3 +249,30 @@ def test_readiness_proxies_inner_failures_until_the_image_server_returns_ready()
     )
     assert all(base64.b64decode(value["body"]) == b"" for value in forwarded)
     app.close()
+
+
+def test_lifespan_shutdown_retires_the_owned_container_before_reporting_completion():
+    docker = Docker()
+    app = bridge(docker)
+    app.start()
+    responses = []
+    pending = iter([{"type": "lifespan.startup"}, {"type": "lifespan.shutdown"}])
+
+    async def receive():
+        return next(pending)
+
+    async def send(value):
+        if value["type"] == "lifespan.shutdown.complete":
+            assert app.container is None
+            assert [args for args, _ in docker.calls if args[1] == "rm"] == [
+                ["docker", "rm", "--force", CONTAINER]
+            ]
+        responses.append(value)
+
+    asyncio.run(app({"type": "lifespan"}, receive, send))
+    app.close()
+    assert responses == [
+        {"type": "lifespan.startup.complete"},
+        {"type": "lifespan.shutdown.complete"},
+    ]
+    assert len([args for args, _ in docker.calls if args[1] == "rm"]) == 1

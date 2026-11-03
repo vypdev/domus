@@ -303,6 +303,11 @@ jobs:
           assert result['stats']['expected']==10 and result['stats']['unexpected']==0
           and result['stats']['skipped']==0 and result['stats']['flaky']==0"
 
+      - name: Require no surviving image browser fixtures
+        run: >-
+          uv run python -c "import subprocess;
+          assert not subprocess.check_output('docker ps --all --quiet --filter label=domus.browser-fixture=true'.split()).strip()"
+
   aggregate:
     name: CI Check
     if: ${{ always() }}
