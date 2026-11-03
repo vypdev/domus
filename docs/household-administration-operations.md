@@ -45,7 +45,10 @@ A draft retains its original revision through translation, same-participant refr
 preflight. **Reset from current data** explicitly adopts fresh values and revision. If the data that
 permit viewing a draft become unavailable, its fields and confirmation are hidden until they can be
 read again. Losing only write access leaves readable values inspectable and disables saving. A
-participant/account/installation/channel change, logout or component retirement clears private drafts.
+participant/account/installation/channel or verified household ID change, missing household proof, logout
+or component retirement clears private drafts. Matching participant IDs or revisions do not transfer a
+draft to another household. A pending refresh without a published view can retain it for fresh matching
+proof; a detached confirmation control cannot submit a retired draft.
 
 ## An unknown result
 

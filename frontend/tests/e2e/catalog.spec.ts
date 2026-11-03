@@ -2,6 +2,7 @@ import {expect, test} from '@playwright/test';
 import {message} from '../../src/presentation/messages';
 import type {MessageKey} from '../../src/presentation/messages';
 import type {DomusApp} from '../../src/presentation/domus-app';
+import type {DomusAdministration} from '../../src/presentation/domus-administration';
 
 const origin = 'http://127.0.0.1:56173';
 test.beforeAll(async ({browser}) => {console.info('Catalog Chromium version: ' + browser.version());});
@@ -166,5 +167,29 @@ test('household-admin-C58: built keyboard validation associates errors and resto
     await expect(widget.getByRole('button',{name:names.back,exact:true})).toBeFocused();await page.keyboard.press('Enter');
     await expect(widget.getByRole('checkbox',{name:names.clear,exact:true})).toBeFocused();await expect(widget.getByRole('textbox',{name:names.alias,exact:true})).toHaveValue('Keyboard draft');
     await expect(widget.getByRole('textbox',{name:names.alias,exact:true})).not.toHaveAttribute('aria-describedby');
+  }
+});
+
+
+test('household-browser-C02: built drafts and detached saves retire when the verified household changes',async({page})=>{
+  for(const locale of ['en','es']) {
+    const labels=locale==='en'?{edit:'Edit household',name:'New household name',review:'Review changes',save:'Save changes'}
+      :{edit:'Editar hogar',name:'Nuevo nombre del hogar',review:'Revisar cambios',save:'Guardar cambios'};
+    await page.goto(administrationUrl('active',locale,'native'));const widget=page.locator('domus-administration');
+    await widget.getByRole('button',{name:labels.edit,exact:true}).click();await widget.getByRole('textbox',{name:labels.name,exact:true}).fill('Former household intent');
+    await widget.getByRole('button',{name:labels.review,exact:true}).click();
+    const intents=await widget.evaluate(async(element,saveLabel)=>{
+      const component=element as DomusAdministration,current=component.view!,intents:unknown[]=[];
+      component.addEventListener('domus-administration-intent',event=>intents.push((event as CustomEvent).detail));
+      const detached=[...component.shadowRoot!.querySelectorAll('button')].find(button=>button.textContent?.trim()===saveLabel)!;
+      component.view={...current,capabilities:{...current.capabilities!,householdId:'replacement-home'},
+        household:{...current.household!,householdId:'replacement-home',name:'Replacement household'},
+        policy:{...current.policy!,householdId:'replacement-home'}};
+      detached.dispatchEvent(new MouseEvent('click'));await component.updateComplete;detached.dispatchEvent(new MouseEvent('click'));await component.updateComplete;
+      return intents;
+    },labels.save);
+    expect(intents).toEqual([]);await expect(widget.locator('form')).toHaveCount(0);
+    await expect(widget.getByText('Former household intent',{exact:true})).toHaveCount(0);
+    await widget.getByRole('button',{name:labels.edit,exact:true}).click();await expect(widget.getByRole('textbox',{name:labels.name,exact:true})).toHaveValue('Replacement household');
   }
 });

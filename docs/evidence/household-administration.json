@@ -612,15 +612,15 @@
     }
   },
   "currentSourcePackage": {
-    "sourceBase": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
-    "sourceIdentity": "All151Pythonmodules unchanged. The administration renderer now falls back to the enabled refresh action when the original focus target disappears or becomes disabled; no authorization, journal or wire change.",
+    "sourceBase": "58957fc8b9da4ce85f0acbd75793f7351026c47a",
+    "sourceIdentity": "All151Pythonmodules unchanged. The administration renderer now binds every private draft and detached confirmation to the verified household ID in addition to installation/channel/subject/member. Missing household proof retires the draft; matching revisions/member IDs do not transfer it.",
     "actualProductFiles": {
-      ".vite/manifest.json": "135a524f75c257533cf9601bafd79896f3d4abd9e2275c4e33427c17abf9f46e",
+      "index.html": "fb4f250c231b0f0b07fd4d99fa00925610f0573b01f033a4bf75178f860887fd",
+      "assets/index-CS8EClQ3.js": "c3103fcc8d107cff163ab5a98c8a587ef5203367624dd1f23fea56b96227dedd",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-DLmPl5j8.js": "162f0935b58728be3a5ae815d19fc23be99651e29c18fc831161c7199ea18800",
-      "index.html": "ec390d8ed7d09d9ac878c7573129d4e3e95c20f62bf83b1bf54d463f7e06aa6f"
+      ".vite/manifest.json": "07f6f6a7f49b0c8691b16dd3e687e17698b4e540e6f3cd2577fcfc187514f159"
     },
-    "wheelSHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754",
+    "wheelSHA256": "6578a595350e00b0df2fb7e12a436a100a6cf8a661ad4147a5fc074d6de05351",
     "originalFailure": {
       "run": 41505801643,
       "aarch64Job": 125484707823,
@@ -629,7 +629,13 @@
     },
     "testsFirst": "The actual aarch64 image exposes the stale historical expectation. A new early wheel/build/declaration assertion first fails with missing currentSourcePackage before this explicit candidate inventory is added.",
     "correction": "Current packaging and image tests use this declaration. The packaging gate compares it against the independently built source bundle and exact wheel bytes; the image fixture compares all installed and HTTP-served resources. Historical entry/Edge.5 evidence remains byte-identical.",
-    "acceptance": "151Pythonmodules/4UIresources match the actual wheel. Local1231Chromium tests,100% all4coverage metrics across31runtimefiles with independent inventory audit;81whole compiled Python/SQLite cases pass in both deployments. Current-head hosted checks/CPUimages/native review and complete owning-case/human UX/owner adoption remain required."
+    "acceptance": "151Pythonmodules/4UIresources independently match the rebuilt wheel. Local1239Chromium frontend tests pass with100% all4metrics globally/per-authored-runtime-file and independent inventory audit. Eight scope regressions first fail against the old renderer. Actual compiled87Python/SQLite journeys and27built catalog journeys pass. Fresh hosted CPUimages/native review, full186case audit, required human UX and owner adoption remain separate.",
+    "householdScopeRegression": {
+      "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4455477782",
+      "testsFirst": "All8new component regressions fail; detached controls emit old household/private preference intents despite changed/missing household scope.",
+      "independentPackageVerification": "All151Python modules/4UI resources verified byte-for-byte against source/build; fixture exclusion verified before updating this declaration.",
+      "rollbackSHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754"
+    }
   },
   "controllerIncrement": {
     "sourceBase": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",

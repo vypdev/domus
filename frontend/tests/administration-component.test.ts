@@ -386,3 +386,33 @@ test('household-workspace-C50: closing an editor during proof refresh never focu
   f.element.pending=true;await f.element.updateComplete;expect(f.root.querySelector('input,button')).toBeNull();expect(f.intents).toEqual([]);
   f.element.pending=false;f.element.view=current;await f.element.updateComplete;expect(f.root.activeElement).toBeNull();expect(f.root.querySelector('form')).toBeNull();
 });
+
+
+for(const scenario of draftFactCases)test('household-browser-C02: a different verified household retires the '+scenario.kind+' draft despite matching member/revisions',async()=>{
+  const current=view(),f=await mount(current);await f.click(scenario.open);
+  if(scenario.kind==='other alias')await f.change('Use Home Assistant name',false);
+  await f.change(scenario.field,scenario.value);
+  f.element.view={...current,capabilities:{...current.capabilities!,householdId:'replacement-home'},
+    household:{...current.household!,householdId:'replacement-home'},policy:{...current.policy!,householdId:'replacement-home'}};
+  await f.element.updateComplete;expect(f.root.querySelector('form')).toBeNull();expect(f.intents).toEqual([]);
+  await f.click(scenario.open);expect(f.input(scenario.field).value).not.toBe(scenario.value);expect(f.intents).toEqual([]);
+});
+test('household-browser-C02: a detached confirmed save cannot submit the former household draft into a replacement household',async()=>{
+  const current=view(),f=await mount(current);await f.click('Edit household');await f.change('New household name','Former household intent');
+  await f.click('Review changes');const save=f.button('Save changes');
+  f.element.view={...current,capabilities:{...current.capabilities!,householdId:'replacement-home'},
+    household:{...current.household!,householdId:'replacement-home',name:'Replacement household'},policy:{...current.policy!,householdId:'replacement-home'}};
+  save.dispatchEvent(new MouseEvent('click'));expect(f.intents).toEqual([]);
+  await f.element.updateComplete;save.dispatchEvent(new MouseEvent('click'));await f.element.updateComplete;
+  expect(f.intents).toEqual([]);expect(f.text()).not.toContain('Former household intent');
+  await f.click('Edit household');expect(f.input('New household name').value).toBe('Replacement household');
+});
+test('HADB-03: missing current household proof retires private drafts and makes detached controls inert until explicit reopening',async()=>{
+  const current=view(),f=await mount(current);await f.click('Edit preferences');await f.change('Saved language','en');await f.click('Review changes');
+  const save=f.button('Save changes');f.element.view={...current,capabilities:null};
+  save.dispatchEvent(new MouseEvent('click'));expect(f.intents).toEqual([]);await f.element.updateComplete;
+  save.dispatchEvent(new MouseEvent('click'));await f.element.updateComplete;expect(f.intents).toEqual([]);
+  expect(f.root.querySelector('form')).toBeNull();expect(f.button('Edit preferences')).toBeUndefined();
+  f.element.view=current;await f.element.updateComplete;expect(f.root.querySelector('form')).toBeNull();
+  await f.click('Edit preferences');expect(f.input('Saved language').value).toBe('es');expect(f.intents).toEqual([]);
+});

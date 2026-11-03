@@ -39,8 +39,8 @@ export class DomusAdministration extends LitElement {
   constructor(){super();this.view=null;this.language='en';this.pending=false;this.retired=false;}
   private t(key:string):string{return administrationMessage(key,this.language);}
   private scope(view:AdministrationView|null):string|null {
-    return view?.session&&view.access?.state==='active'&&view.access.member!==null
-      ?JSON.stringify([view.session.context.installationId,view.session.context.channel,view.session.context.subject,view.access.member.memberId]):null;
+    return view?.session&&view.capabilities!==null&&view.access?.state==='active'&&view.access.member!==null
+      ?JSON.stringify([view.session.context.installationId,view.session.context.channel,view.session.context.subject,view.access.member.memberId,view.capabilities.householdId]):null;
   }
   private ready():AdministrationView|null {
     const view=this.view;

@@ -802,5 +802,49 @@
       "root": "/private/tmp/domus-admin-rollback-6c1a0d",
       "privateLocalOnly": true
     }
+  },
+  "verifiedHouseholdDraftScopeIncrement": {
+    "sourceBase": "58957fc8b9da4ce85f0acbd75793f7351026c47a",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4455477782",
+    "classification": "Reproduced valid consumer finding; no upstream defect claim or manual resolution.",
+    "testsFirst": "All8new source-Chromium regressions fail on the prior renderer. Six form kinds retain former-household drafts despite matching installation/channel/subject/member/revisions. Detached confirmed household and preference controls emit old intents after household change or missing proof. Original8failure PNGs and logs are retained.",
+    "fix": "Private draft ownership and readiness require the verified household routing ID in addition to installation/channel/HA subject/member. Different or missing proof retires drafts and detached callbacks. Pending verification with no published view still preserves a same-owner draft for fresh matching proof; ordinary same-household translation/read-fact loss/revision updates do not rebase it.",
+    "localVerification": {
+      "frontend": 1239,
+      "supportedFrontendCoverage": "100% all4metrics globally and per31authored runtime files, independently audited",
+      "wholeCompiledPythonSQLite": 87,
+      "builtCatalog": 27,
+      "newCompiledScenario": "Both languages prove a detached confirmed save cannot emit the former household intent after a verified household switch, and explicit reopening uses current facts.",
+      "types": "Runtime/catalog pass",
+      "package": {
+        "wheelSHA256": "6578a595350e00b0df2fb7e12a436a100a6cf8a661ad4147a5fc074d6de05351",
+        "PythonModules": 151,
+        "UIFiles": {
+          "index.html": "fb4f250c231b0f0b07fd4d99fa00925610f0573b01f033a4bf75178f860887fd",
+          "assets/index-CS8EClQ3.js": "c3103fcc8d107cff163ab5a98c8a587ef5203367624dd1f23fea56b96227dedd",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          ".vite/manifest.json": "07f6f6a7f49b0c8691b16dd3e687e17698b4e540e6f3cd2577fcfc187514f159"
+        },
+        "allSourceAndWheelBytesMatch": true,
+        "fixtureExcluded": true,
+        "acceptance": "Local candidate; pending composed/catalog/hosted/native verification"
+      },
+      "synchronousWindow": "Former confirmation is inert both immediately after current proof changes, before Lit repaints, and after the old DOM is removed. Source and compiled-catalog assertions cover both moments."
+    },
+    "artifactDiagnostics": [
+      "First compiled-catalog probe cannot run because no prebuilt catalog exists; its404/startup failure is an environment observation, not a product regression. Freshly built27case catalog subsequently passes.",
+      "Current packaging guard correctly rejects the old UI declaration after rebuild. All151Python/4UI wheel bytes and fixture exclusion are checked independently before updating currentSourcePackage; historical entry/Edge.5 declarations remain unchanged."
+    ],
+    "rollback": {
+      "SHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754",
+      "state": "Prior verified package copied and byte-checked before rebuild. Older ae92 rollback retained until candidate verification.",
+      "limitation": "Prior package contains the pre-fix presentation scope behavior; it is an emergency binary/data compatibility reference, not an owner HA promotion."
+    },
+    "unchanged": "151Python modules, schema9/history, all journal formats, original request/key/payload semantics, gateway and Copilot source/resources/config/workflows/credentials/bounds. Owner HA untouched.",
+    "pending": "Exact published candidate image and both hosted CPU jobs, current native review and full owning acceptance remain required. Existing186owner cases and required human UX are not inferred from unit counts.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-rollback-6c1a0d",
+      "privateLocalOnly": true
+    }
   }
 }
