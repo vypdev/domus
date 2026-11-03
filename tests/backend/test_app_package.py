@@ -15,12 +15,17 @@ def test_repository_and_edge_manifest_offer_native_ha_entry_without_user_credent
     manifest = yaml.safe_load((ROOT / "addon-edge/config.yaml").read_text())
     assert repository["url"] == "https://github.com/vypdev/domus"
     assert manifest["slug"] == "domus_edge" and manifest["stage"] == "experimental"
-    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.5"
+    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.6"
     assert manifest["ingress"] is True and manifest["ingress_port"] == 8099
     assert manifest["panel_admin"] is False and manifest["homeassistant_api"] is True
     assert manifest["options"] == {"public_origins": []}
     assert manifest["schema"] == {"public_origins": ["url"]}
-    assert manifest["breaking_versions"] == ["0.0.0-edge.2", "0.0.0-edge.3", "0.0.0-edge.4"]
+    assert manifest["breaking_versions"] == [
+        "0.0.0-edge.2",
+        "0.0.0-edge.3",
+        "0.0.0-edge.4",
+        "0.0.0-edge.6",
+    ]
     assert set(manifest["arch"]) == {"amd64", "aarch64"}
 
 
@@ -47,18 +52,16 @@ def test_build_pins_source_checksum_bases_lock_and_nonroot_native_entrypoint() -
     commits = re.findall(r"^ARG DOMUS_SOURCE_COMMIT=(\w+)$", source, re.MULTILINE)
     assert len(commits) == 2 and len(set(commits)) == 1
     assert re.fullmatch(r"[a-f0-9]{40}", commits[0])
-    assert commits[0] == "271a3a07feb1535f0a5ec8b55abb3de9aac049a9"
+    assert commits[0] == "3200bd9278f57f142ed03b54843a38a4138fc0af"
     assert (
-        "DOMUS_SOURCE_SHA256=5cc9a963b6f064aa48be256a9d5a4274f8c52c878e4ad7f84517cd33f41056c8"
+        "DOMUS_SOURCE_SHA256=ca991d7b3560dbdb7a6a86a34eea19708f01f10c15da502e49ed8ab740a8533b"
         in source
     )
-    assert "ARG BUILD_VERSION=0.0.0-edge.5" in source
-    candidate = json.loads((ROOT / "docs/evidence/household-entry-interface.json").read_text())[
-        "imageCandidate"
-    ]
+    assert "ARG BUILD_VERSION=0.0.0-edge.6" in source
+    candidate = json.loads((ROOT / "addon-edge/artifact.json").read_text())
     assert candidate["sourceCommit"] == commits[0]
-    assert candidate["version"] == "0.0.0-edge.5"
-    assert "DOMUS_SOURCE_SHA256=" + candidate["sourceSHA256"] in source
+    assert candidate["version"] == "0.0.0-edge.6"
+    assert "DOMUS_SOURCE_SHA256=" + candidate["sourceArchiveSHA256"] in source
     assert re.search(r"^ARG DOMUS_SOURCE_SHA256=[a-f0-9]{64}$", source, re.MULTILINE)
     assert "sha256sum --check" in source
     assert "https://codeload.github.com/vypdev/domus/tar.gz/${DOMUS_SOURCE_COMMIT}" in source
@@ -90,3 +93,51 @@ def test_native_options_explain_the_one_time_origin_configuration_without_a_new_
     field = text["configuration"]["public_origins"]
     assert field["name"] == "Home Assistant browser origins"
     assert "one to four" in field["description"] and "existing HA sign-in" in field["description"]
+
+
+def test_edge_five_compatibility_recipe_is_frozen_and_not_a_discoverable_second_app() -> None:
+    folder = ROOT / "tests/fixtures/edge5-app"
+    recipe = (folder / "Dockerfile").read_bytes()
+    assert (
+        hashlib.sha256(recipe).hexdigest()
+        == "aea2d7bc4d135e49827508f011bc1fadbd5f0d3f93b47538e07ed56652b5e28d"
+    )
+    old = json.loads((ROOT / "docs/evidence/household-entry-interface.json").read_text())[
+        "imageCandidate"
+    ]
+    assert old["version"] == "0.0.0-edge.5"
+    assert ("ARG DOMUS_SOURCE_COMMIT=" + old["sourceCommit"]).encode() in recipe
+    assert ("ARG DOMUS_SOURCE_SHA256=" + old["sourceSHA256"]).encode() in recipe
+    assert b"ARG BUILD_VERSION=0.0.0-edge.5" in recipe
+    assert not any(
+        (folder / name).exists() for name in ["config.yaml", "config.yml", "config.json"]
+    )
+
+
+def test_edge_artifact_declares_exact_reviewed_runtime_without_rebinding_historical_evidence() -> (
+    None
+):
+    artifact = json.loads((ROOT / "addon-edge/artifact.json").read_text())
+    assert set(artifact) == {
+        "schemaVersion",
+        "version",
+        "sourceCommit",
+        "sourceArchiveSHA256",
+        "storageSchema",
+        "wheelSHA256",
+        "pythonFiles",
+        "uiFiles",
+    }
+    assert artifact["schemaVersion"] == 1 and artifact["version"] == "0.0.0-edge.6"
+    assert artifact["sourceCommit"] == "3200bd9278f57f142ed03b54843a38a4138fc0af"
+    assert artifact["storageSchema"] == 9
+    for field in ["sourceArchiveSHA256", "wheelSHA256"]:
+        assert re.fullmatch("[a-f0-9]{64}", artifact[field])
+    assert len(artifact["pythonFiles"]) == 151 and len(artifact["uiFiles"]) == 4
+    for name, digest in artifact["pythonFiles"].items():
+        assert re.fullmatch(r"domus/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.py", name)
+        assert re.fullmatch("[a-f0-9]{64}", digest)
+    assert {"index.html", ".vite/manifest.json"} <= set(artifact["uiFiles"])
+    for name, digest in artifact["uiFiles"].items():
+        assert not Path(name).is_absolute() and ".." not in Path(name).parts
+        assert re.fullmatch("[a-f0-9]{64}", digest)

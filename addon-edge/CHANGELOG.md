@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.0.0-edge.6
+
+- Add the English/Spanish household administration workspace for roster, household, member,
+  HA mapping/profile, public alias and private preference changes.
+- Bind drafts and detached controls to the verified household; preserve exact original revisions
+  and require explicit recovery after an uncertain response.
+- Include SQLite schema 9 and verified upgrades from the installed Edge.5 schema-7 runtime.
+- Preserve original operation history through supported restoration and compatible application/data rollback.
+- Freeze Edge.5 independently and exercise the actual pinned Edge.6 image in both CPU jobs.
+- Retain the existing private listener, nonroot server and Core API permission scope.
+- Mark this configuration/schema boundary as breaking and pin the reviewed source/archive/payload.
+- Keep actual owner adoption, required human UX, remaining domains and complete Stable acceptance pending.
+
 ## 0.0.0-edge.5
 
 - Translate the technical membership status in both English and Spanish.

@@ -977,5 +977,121 @@
       "privateLocalOnly": true
     },
     "limitation": "Fresh-head native review and product CI remain required; this is not full product/human-UX acceptance."
+  },
+  "edgeSixDeliveryIncrement": {
+    "status": "Locally verified immutable installation candidate; fresh published-head CI/native review and actual owner adoption remain required.",
+    "recordedAtUTC": "2026-11-03T17:11:55.977Z",
+    "definition": "addon-edge/config.yaml and addon-edge/Dockerfile",
+    "artifact": "addon-edge/artifact.json",
+    "sourceCommit": "3200bd9278f57f142ed03b54843a38a4138fc0af",
+    "sourceArchiveSHA256": "ca991d7b3560dbdb7a6a86a34eea19708f01f10c15da502e49ed8ab740a8533b",
+    "archiveVerification": {
+      "trackedGitBlobsAndModes": 585,
+      "allMatched": true,
+      "hostExtraction": false
+    },
+    "version": "0.0.0-edge.6",
+    "storageSchema": 9,
+    "frozenCompatibility": {
+      "path": "tests/fixtures/edge5-app/Dockerfile",
+      "SHA256": "aea2d7bc4d135e49827508f011bc1fadbd5f0d3f93b47538e07ed56652b5e28d",
+      "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+      "version": "0.0.0-edge.5",
+      "storageSchema": 7,
+      "historicalEvidenceRebound": false,
+      "discoverableSupervisorConfig": false
+    },
+    "testsFirst": {
+      "red": 5,
+      "otherCasesPassed": 42,
+      "thenFocusedGreen": 204,
+      "reproduced": [
+        "old version/source pin",
+        "absent frozen compatibility recipe",
+        "absent artifact declaration",
+        "old CI build context"
+      ]
+    },
+    "actualLocalImage": {
+      "architecture": "arm64",
+      "HAArchitecture": "aarch64",
+      "imageID": "sha256:7d8b528a51f7c2f7873d636a420391522620b560f8816323d54dab53c1b2f4b1",
+      "productFileCheck": {
+        "pythonFiles": 151,
+        "uiFiles": 4,
+        "allDeclaredSHA256Matched": true,
+        "readAsNonroot": true
+      },
+      "containerCases": 4,
+      "containerCoverage": [
+        "all installed product files",
+        "native authority/listener/restart",
+        "same-listener standalone UI",
+        "actual Edge.5 upgrade/replay/restoration and schema9 downgrade refusal"
+      ],
+      "browserSuite": "frontend/tests/e2e/administration.spec.ts",
+      "survivingOwnedBrowserFixtures": 0,
+      "testHAProvider": "Fictional provider copied only into disposable containers after image build; no owner HA calls.",
+      "browserStats": {
+        "startTime": "2026-11-03T17:03:07.965Z",
+        "duration": 54002.547999999995,
+        "expected": 32,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    "permanentC25BoundaryCases": {
+      "backend": 19,
+      "Chromium": 19,
+      "exactAliasCodePoints": 80,
+      "rejectedCodePoints": 81,
+      "alphabet": "Astral Unicode with each of the 19 accepted non-control whitespace variants.",
+      "paths": [
+        "tests/backend/test_member_profiles.py",
+        "frontend/tests/administration.test.ts"
+      ]
+    },
+    "completeLocalVerification": {
+      "backendTests": 4395,
+      "backendRuntimeFiles": 151,
+      "backendStatements": 10438,
+      "backendBranches": 2928,
+      "frontendTests": 1258,
+      "frontendRuntimeFiles": 31,
+      "frontendStatements": 2384,
+      "frontendBranches": 1903,
+      "frontendFunctions": 504,
+      "frontendLines": 1580,
+      "toolingTests": 178,
+      "toolingStatements": 214,
+      "toolingBranches": 98,
+      "coverage": "100% globally and per runtime file in all supported metrics; independent source inventories pass.",
+      "nodePolicyTests": 38,
+      "pythonArchitectureExecutions": 51,
+      "ruff": "PASS",
+      "strictTypes": "PASS",
+      "documentationLinks": "PASS",
+      "originalSDDPolicyModulesByteVerified": 7,
+      "originalSDDSDK": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "owningDocumentsRetained": 20,
+      "requiredCasesRetained": 186
+    },
+    "ownerObservation": {
+      "method": "Fresh Chrome native UI through Home Assistant; no console code or credential extraction.",
+      "installedCurrent": "0.0.0-edge.5, running",
+      "installedRollback": "0.0.0-edge.3, stopped",
+      "Ingress": "Current identity verified; no configured household.",
+      "householdMutations": 0,
+      "applicationUpdates": 0,
+      "scope": "Observation only; does not establish Edge.6 adoption, owner data migration, live administration or human UX approval."
+    },
+    "limitations": [
+      "Both hosted CPU gates must run on the new definition commit.",
+      "The wheel SHA256 is the reviewed source-wheel reference; image acceptance independently checks all installed product files.",
+      "Current source/runtime and installation-definition identities are separate.",
+      "Owner backup/update/rollback and required human UX are separate acceptance.",
+      "Remaining domains, HA services/entities and complete Stable/Edge product are unfinished."
+    ]
   }
 }

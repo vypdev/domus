@@ -9,7 +9,7 @@ from test_app_image import docker, ready, stopped
 from test_app_image import image as image
 
 
-def test_packaged_ui_bytes_and_same_listener_standalone_delivery(image, data_volume):
+def exercise_packaged_ui_delivery(image, data_volume, expected):
     name = "domus-ui-image-" + uuid.uuid4().hex
     prepared = docker(
         "run",
@@ -26,11 +26,6 @@ def test_packaged_ui_bytes_and_same_listener_standalone_delivery(image, data_vol
     )
     assert prepared.returncode == 0, prepared.stderr
     source = Path(__file__).with_name("ui_fixture.py").read_text()
-    expected = json.loads(
-        (
-            Path(__file__).resolve().parents[2] / "docs/evidence/household-administration.json"
-        ).read_text()
-    )["currentSourcePackage"]["actualProductFiles"]
     try:
         started = docker(
             "run",
@@ -71,3 +66,12 @@ def test_packaged_ui_bytes_and_same_listener_standalone_delivery(image, data_vol
     finally:
         removed = docker("rm", "--force", name)
         assert removed.returncode == 0 or "No such container" in removed.stderr, removed.stderr
+
+
+def test_packaged_ui_bytes_and_same_listener_standalone_delivery(image, data_volume):
+    expected = json.loads(
+        (
+            Path(__file__).resolve().parents[2] / "docs/evidence/household-administration.json"
+        ).read_text()
+    )["currentSourcePackage"]["actualProductFiles"]
+    exercise_packaged_ui_delivery(image, data_volume, expected)

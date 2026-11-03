@@ -35,7 +35,7 @@ it preserves later operation evidence without reapplying rolled-away effects. St
 restore preparation/activation. Inspect and resume the same activation ID after an uncertain result.
 The retained source-checkpoint supports deliberate rollback reconciled against the latest history.
 Do not switch root pointers or run an older image manually. See the
-[restoration guide](https://github.com/vypdev/domus/blob/271a3a07feb1535f0a5ec8b55abb3de9aac049a9/docs/restoration.md)
+[restoration guide](https://github.com/vypdev/domus/blob/3200bd9278f57f142ed03b54843a38a4138fc0af/docs/restoration.md)
 for the exact console commands. Restore is not available from the household entry interface.
 App removal with data
 deletion removes the app's private records; use deliberate operator backup procedures before removal.
@@ -48,6 +48,29 @@ rollback. A passing build is separate from actual upgrade, restore and owner ado
 Edge.5 keeps schema 7 and supports the same owned Edge.4 data without a schema transition. It
 localizes the technical state as well as the main heading. Its reviewed immutable source is a new
 build; the previously published Edge.4 source pin is not changed.
+
+Edge.6 adds the household administration workspace and upgrades supported owned data to schema 9.
+An authorized participant can inspect permitted roster facts, review household/member/access-policy
+changes and manage their own private preferences. An optional alias changes presentation while the
+canonical HA account remains the identity. Each form preserves its independent original revision.
+A changed or missing verified household clears private drafts, including detached confirmation controls.
+Opening, translating or refreshing a view sends no household mutation.
+
+Edge.6 is listed in breaking_versions because it crosses the schema-9 boundary. Home Assistant
+requires attention before automatic updates install or cross a listed version; see its
+[app configuration reference](https://contributors.home-assistant.io/apps/reference/configuration/).
+Preserve a complete owned pre-upgrade checkpoint, installation marker and operation history.
+Restoring an earlier household state uses the schema-9 console workflow with the compatible runtime,
+retaining later original-operation evidence. A verified compatible application/data pair supports
+binary rollback. Old Edge.5 and earlier images refuse schema 9 without changing its files; choosing
+an earlier household snapshot does not make a schema-9 generation readable by those images.
+
+The [artifact declaration](artifact.json) fixes the reviewed source/archive and all 151 Python/four UI
+file fingerprints. Application CI builds the actual pinned installer image on amd64 and aarch64,
+checks those bytes, exercises its native restart/authority boundary and standalone UI, and runs
+the installed Edge.5 upgrade/replay/restore cycle. The separate current-source image retains its
+complete administration browser campaign. These fixtures use isolated owned data; actual owner
+adoption and required human UX are additional acceptance steps.
 
 The build fetches exact reviewed source, compiles with pinned Node/pnpm and includes the UI in the
 installed Python wheel. Node and browser test controls are absent from the runtime image. The

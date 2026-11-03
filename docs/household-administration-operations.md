@@ -3,7 +3,8 @@
 The development workspace supports both native Ingress and standalone deployments. Ingress uses
 its verified Home Assistant session; standalone uses the existing Home Assistant sign-in flow.
 Each person needs a separate Home Assistant account. A display name or Domus alias never grants access.
-This source increment does not update an installed application or publish a Stable/Edge release.
+The Edge.6 installation candidate pins the reviewed workspace runtime. Publishing its definition does
+not update an installed application; actual owner adoption and Stable acceptance remain separate.
 
 ## Current access and data
 
@@ -136,3 +137,26 @@ without changing database bytes or creating effects. No owner data or host direc
 The owning SDD acceptance audit and required human UX review remain separate gates. Before owner rollout,
 verify the exact package, both CPU images and compatible data/rollback procedure. Preserve the installed
 owner Edge.5 and Edge.3 rollback until that adoption is verified.
+
+## Pinned Edge.6 installation candidate
+
+The Supervisor recipe in `addon-edge` pins reviewed source
+`3200bd9278f57f142ed03b54843a38a4138fc0af` and its exact archive digest. The
+[artifact declaration](../addon-edge/artifact.json) records all 151 Python and four compiled UI
+fingerprints plus the reviewed source-wheel reference. The installed-image check independently
+reads those product files as a nonroot user; an image is not identified by its mutable tag alone.
+The version is `0.0.0-edge.6`, with the same private listener/Core permission scope and schema 9.
+Read [installation, backup and rollback limits](../addon-edge/DOCS.md) before adoption.
+
+The original Edge.5 Dockerfile remains byte-identical in `tests/fixtures/edge5-app`; it has no
+discoverable app configuration and does not become a second Supervisor listing. Build that fixture
+as `DOMUS_SCHEMA7_IMAGE`, the actual `addon-edge` candidate as `DOMUS_EDGE_IMAGE`, and the normal
+current-source/other compatibility images before running `uv run pytest tests/containers --no-cov`.
+Both CPU jobs now require the actual preview's product-file, native restart/authority, standalone
+delivery and real Edge.5 upgrade/replay/restoration checks in addition to the existing suite.
+The current-source image still runs all 32 administration browser journeys per CPU. A separate local
+aarch64 campaign has also passed all 32 journeys against the actual pinned Edge.6 image.
+
+These isolated campaigns do not change the installed owner's Edge.5 or create a household.
+Fresh Chrome observation confirms the current Edge.5 identity and empty setup state; actual update,
+owned backup/compatible rollback, live administration and human UX review remain unproven.
