@@ -32,6 +32,7 @@ finally:
     connection.close()
 """
 _HOP = {b"connection", b"transfer-encoding", b"keep-alive", b"proxy-connection"}
+_TRANSPORT_ERRORS = (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError)
 
 
 class ImageBridge:
@@ -195,7 +196,7 @@ class ImageBridge:
                 if name.lower().encode() not in _HOP
             ]
             payload = base64.b64decode(response["body"], validate=True)
-        except OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError:
+        except _TRANSPORT_ERRORS:
             await self.respond(send, 502, [[b"cache-control", b"no-store"]], b"")
             return
         await self.respond(send, response["status"], values, payload)

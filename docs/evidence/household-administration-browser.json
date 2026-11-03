@@ -607,5 +607,19 @@
       "Initial build terminates because the existing keychain helper is outside PATH; prepend its installed directory without credential/config changes.",
       "Initial Ruff check cannot write the restricted worktree cache; unchanged no-cache validation passes. These are environmental tool conditions, not Copilot defects."
     ]
+  },
+  "python314ReviewClarification": {
+    "sourceHead": "6e8c22135c019829f62e1ec28872783dc446be75",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4454147614",
+    "report": "https://github.com/vypdev/copilot/issues/831#issuecomment-6602904998",
+    "premise": "Review says comma-separated except types without parentheses cause SyntaxError in Python3. The required interpreter is3.14; PEP758 explicitly permits this syntax without an as binding.",
+    "independentProbe": "Actual CPython3.14.6 compiles the entire unchanged module and independently catches all five listed exception types. This separate language contract is not counted as product acceptance.",
+    "observedProductEvidence": "162tooling tests import/run the module; actual local image10journeys and normal87journeys pass. Current6e8amd64 hosted job125892918209 also passes32container and10actual-image browser cases. These could not run if the import were syntactically invalid.",
+    "consumerChange": "Name the same immutable exception tuple as _TRANSPORT_ERRORS. Equivalent behavior and clearer reading across language versions; no reproduced consumer SyntaxError, formatter/runtime change, threshold relaxation or Copilot change.",
+    "primarySources": [
+      "https://peps.python.org/pep-0758/",
+      "https://docs.python.org/3.14/whatsnew/3.14.html"
+    ],
+    "reviewState": "Current6e8 review complete9/9 publishes one open false-premise finding. Do not claim clean review or manually resolve it; a fresh native review is required for the equivalent readability change."
   }
 }
