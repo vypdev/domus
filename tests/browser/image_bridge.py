@@ -169,6 +169,8 @@ class ImageBridge:
                 json.dumps(self.metadata).encode(),
             )
             return
+        # The readiness URL follows this proxy too: Playwright waits for the inner HTTP 200.
+        # Local image metadata cannot make an unstarted inner fixture appear ready.
         body = bytearray()
         while True:
             event = await receive()

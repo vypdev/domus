@@ -125,7 +125,7 @@ def test_wire_exchange_preserves_original_binary_payload_context_and_non_success
     app.close()
 
 
-async def request(app, events, path="/api/v1/household"):
+async def request(app, events, path="/api/v1/household", *, method="PUT"):
     responses = []
     pending = iter(events)
 
@@ -138,7 +138,7 @@ async def request(app, events, path="/api/v1/household"):
     await app(
         {
             "type": "http",
-            "method": "PUT",
+            "method": method,
             "path": path,
             "raw_path": path.encode(),
             "query_string": b"",
@@ -217,3 +217,35 @@ def test_failed_container_creation_does_not_remove_an_unattributable_container()
     with pytest.raises(subprocess.CalledProcessError):
         bridge(docker).start()
     assert not any(args[1] == "rm" for args, _ in docker.calls)
+
+
+def test_readiness_proxies_inner_failures_until_the_image_server_returns_ready():
+    docker = Docker()
+    app = bridge(docker)
+    app.start()
+    events = [{"type": "http.request", "body": b""}]
+    metadata = asyncio.run(request(app, events, "/__fixture__/image", method="GET"))
+    assert metadata[0]["status"] == 200
+    assert not any(args[1] == "exec" and "-i" in args for args, _ in docker.calls)
+    docker.fail = "exec"
+    unavailable = asyncio.run(request(app, events, "/__fixture__/ready", method="GET"))
+    assert unavailable[0]["status"] == 502 and unavailable[1]["body"] == b""
+    docker.fail = None
+    for status, body in [
+        (503, b'{"state":"starting"}'),
+        (200, b'{"state":"ready","fixture":true}'),
+    ]:
+        docker.reply = {"status": status, "headers": [], "body": base64.b64encode(body).decode()}
+        response = asyncio.run(request(app, events, "/__fixture__/ready", method="GET"))
+        assert response[0]["status"] == status and response[1]["body"] == body
+    forwarded = [
+        json.loads(options["input"])
+        for args, options in docker.calls
+        if args[1] == "exec" and "-i" in args
+    ]
+    assert len(forwarded) == 3
+    assert all(
+        value["method"] == "GET" and value["path"] == "/__fixture__/ready" for value in forwarded
+    )
+    assert all(base64.b64decode(value["body"]) == b"" for value in forwarded)
+    app.close()

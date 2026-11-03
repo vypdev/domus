@@ -674,5 +674,34 @@
       "root": "/private/tmp/domus-admin-rollback-6c1a0d",
       "privateLocalOnly": true
     }
+  },
+  "readinessReviewClarification": {
+    "sourceHead": "9988e44849a9c50a11718aecf88fddddf3e6082d",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4454623826",
+    "report": "https://github.com/vypdev/copilot/issues/869",
+    "premise": "Detached inner launch is reported as a race despite the outer configured readiness GET forwarding to the inner server.",
+    "independentPrimaryProbe": {
+      "playwright": "1.64.1",
+      "coreBundleSHA256": "829521b67ed7be90c7d6d6098ff39f2241562d47e4ad7ccab13710924a56001d",
+      "observations": [
+        {
+          "status": 502,
+          "ready": false
+        },
+        {
+          "status": 503,
+          "ready": false
+        },
+        {
+          "status": 200,
+          "ready": true
+        }
+      ],
+      "scope": "Real pinned isURLAvailable helper and disposable loopback HTTP server; not product acceptance."
+    },
+    "consumerRegression": "Actual ASGI bridge contract: local metadata200 performs no proxy call; unavailable inner transport produces502; inner503/200 preserve exact body/status. All3readiness exchanges are GET /__fixture__/ready with empty body. Metadata cannot fabricate readiness.",
+    "consumerChange": "Regression and explanatory comments only; existing forwarding, timeout and readiness behavior unchanged. No redundant second internal wait or acceptance relaxation.",
+    "localCases": 14,
+    "currentReview": "9988native completed9/9 and published1false-premise finding; still open, no manual resolution. Fresh native review required for this clarification."
   }
 }
