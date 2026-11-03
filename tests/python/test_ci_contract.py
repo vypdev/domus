@@ -263,7 +263,7 @@ def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> Non
         "DOMUS_TEST_ARCH": "${{ matrix.arch }}",
     }
     assert "playwright.entry.config.ts tests/e2e/administration.spec.ts" in actual["run"]
-    assert "HADW-0[1245]:" in actual["run"]
+    assert "--grep" not in actual["run"]
     assert "--pass-with-no-tests" not in actual["run"]
     commands = [step["run"] for step in steps if "run" in step]
     assert "pnpm install --frozen-lockfile" in commands
@@ -271,9 +271,10 @@ def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> Non
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all ten actual-image browser journeys"
+        if step.get("name") == "Require all thirty-two actual-image administration journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
+    assert "expected']==32" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )

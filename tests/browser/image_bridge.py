@@ -9,34 +9,56 @@ import base64
 import json
 import re
 import subprocess
+import threading
 from pathlib import Path
+
+from image_channel import ImageChannel
 
 _CLIENT = r"""
 import base64, http.client, json, sys
-value = json.load(sys.stdin)
-body = base64.b64decode(value['body'], validate=True)
-connection = http.client.HTTPConnection('127.0.0.1', 8099, timeout=15)
-try:
-    connection.putrequest(value['method'], value['path'], skip_host=True, skip_accept_encoding=True)
-    for name, content in value['headers']:
-        if name.lower() not in ('connection', 'transfer-encoding', 'content-length'):
-            connection.putheader(name, content)
-    connection.putheader('Content-Length', str(len(body)))
-    connection.endheaders(body)
-    response = connection.getresponse()
-    data = response.read(2**21 + 1)
-    assert len(data) <= 2**21, 'Fixture response exceeds the transport budget'
-    print(json.dumps({'status': response.status, 'headers': response.getheaders(),
-        'body': base64.b64encode(data).decode()}))
-finally:
-    connection.close()
+for line in sys.stdin:
+    transport_id = None
+    try:
+        packet = json.loads(line)
+        transport_id, value = packet['transport_id'], packet['request']
+        body = base64.b64decode(value['body'], validate=True)
+        connection = http.client.HTTPConnection('127.0.0.1', 8099, timeout=15)
+        try:
+            connection.putrequest(value['method'], value['path'],
+                skip_host=True, skip_accept_encoding=True)
+            for name, content in value['headers']:
+                if name.lower() not in ('connection', 'transfer-encoding', 'content-length'):
+                    connection.putheader(name, content)
+            connection.putheader('Content-Length', str(len(body)))
+            connection.endheaders(body)
+            response = connection.getresponse()
+            data = response.read(2**21 + 1)
+            assert len(data) <= 2**21, 'Fixture response exceeds the transport budget'
+            print(json.dumps({'transport_id': transport_id, 'response': {
+                'status': response.status, 'headers': response.getheaders(),
+                'body': base64.b64encode(data).decode()}}), flush=True)
+        finally:
+            connection.close()
+    except (OSError, ValueError, KeyError, TypeError, http.client.HTTPException):
+        print(json.dumps({'transport_id': transport_id,
+            'response': {'transport_error': True}}), flush=True)
 """
 _HOP = {b"connection", b"transfer-encoding", b"keep-alive", b"proxy-connection"}
 _TRANSPORT_ERRORS = (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError)
 
 
 class ImageBridge:
-    def __init__(self, image, mode, port, source, architecture, *, runner=subprocess.run):
+    def __init__(
+        self,
+        image,
+        mode,
+        port,
+        source,
+        architecture,
+        *,
+        runner=subprocess.run,
+        channel_factory=ImageChannel,
+    ):
         if (
             not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_./:@-]*", image)
             or mode not in ("native", "standalone")
@@ -49,6 +71,8 @@ class ImageBridge:
         self.image, self.mode, self.port = image, mode, port
         self.source, self.architecture = source, architecture
         self.runner, self.container, self.metadata = runner, None, None
+        self.channel_factory = channel_factory
+        self.channels, self.channels_lock = {}, threading.Lock()
 
     def run(self, *arguments, **options):
         return self.runner(
@@ -122,9 +146,14 @@ class ImageBridge:
         }
 
     def close(self):
-        if self.container is not None:
-            self.run("rm", "--force", self.container)
-            self.container = None
+        with self.channels_lock:
+            if self.container is not None:
+                self.run("rm", "--force", self.container)
+                self.container = None
+            channels = tuple(self.channels.values())
+            self.channels.clear()
+        for channel in channels:
+            channel.close()
 
     def exchange(self, method, path, headers, body):
         if self.container is None:
@@ -135,16 +164,27 @@ class ImageBridge:
             "headers": headers,
             "body": base64.b64encode(body).decode(),
         }
-        result = self.run(
-            "exec",
-            "-i",
-            self.container,
-            "/app/.venv/bin/python",
-            "-c",
-            _CLIENT,
-            input=json.dumps(value),
-        )
-        response = json.loads(result.stdout)
+        # A worker belongs to one host transport thread, preserving concurrent requests.
+        # Each frame still creates one inner HTTP request; no mutation is replayed on failure.
+        with self.channels_lock:
+            if self.container is None:
+                raise ValueError("No verified image fixture is running")
+            owner = threading.get_ident()
+            if owner not in self.channels:
+                self.channels[owner] = self.channel_factory(
+                    [
+                        "docker",
+                        "exec",
+                        "-i",
+                        self.container,
+                        "/app/.venv/bin/python",
+                        "-u",
+                        "-c",
+                        _CLIENT,
+                    ]
+                )
+            channel = self.channels[owner]
+        response = json.loads(channel.exchange(value))
         if type(response["status"]) is not int or not 100 <= response["status"] <= 599:
             raise ValueError("Invalid image response status")
         base64.b64decode(response["body"], validate=True)

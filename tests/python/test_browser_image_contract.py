@@ -5,12 +5,15 @@ import base64
 import json
 import runpy
 import subprocess
+import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-ImageBridge = runpy.run_path(str(ROOT / "tests/browser/image_bridge.py"))["ImageBridge"]
+with patch("sys.path", [str(ROOT / "tests/browser"), *sys.path]):
+    ImageBridge = runpy.run_path(str(ROOT / "tests/browser/image_bridge.py"))["ImageBridge"]
 SOURCE = "a" * 40
 IMAGE = "sha256:" + "b" * 64
 CONTAINER = "c" * 64
@@ -60,7 +63,19 @@ class Docker:
 
 
 def bridge(docker):
-    return ImageBridge("domus-app-ci", "native", 56174, SOURCE, "aarch64", runner=docker)
+    class Channel:
+        def __init__(self, command):
+            self.command = command
+
+        def exchange(self, value):
+            return docker(self.command, input=json.dumps(value)).stdout
+
+        def close(self):
+            pass
+
+    return ImageBridge(
+        "domus-app-ci", "native", 56174, SOURCE, "aarch64", runner=docker, channel_factory=Channel
+    )
 
 
 @pytest.mark.parametrize(
@@ -276,3 +291,58 @@ def test_lifespan_shutdown_retires_the_owned_container_before_reporting_completi
         {"type": "lifespan.shutdown.complete"},
     ]
     assert len([args for args, _ in docker.calls if args[1] == "rm"]) == 1
+
+
+def test_each_concurrent_bridge_thread_reuses_its_channel_without_serializing_other_actors():
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    docker = Docker()
+    gate = Barrier(2)
+    created = []
+
+    class Channel:
+        def __init__(self, command):
+            self.command, self.values, self.closed = command, [], False
+            created.append(self)
+
+        def exchange(self, value):
+            if not self.values:
+                gate.wait(timeout=3)
+            self.values.append(value)
+            return json.dumps(docker.reply)
+
+        def close(self):
+            assert [args for args, _ in docker.calls if args[1] == "rm"] == [
+                ["docker", "rm", "--force", CONTAINER]
+            ]
+            self.closed = True
+
+    app = ImageBridge(
+        "domus-app-ci", "native", 56174, SOURCE, "aarch64", runner=docker, channel_factory=Channel
+    )
+    app.start()
+
+    def run(actor):
+        for index in range(2):
+            app.exchange(
+                "PUT",
+                "/original/" + actor,
+                [["Idempotency-Key", actor]],
+                (actor + str(index)).encode(),
+            )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        list(pool.map(run, ["actor-a", "actor-b"]))
+    assert len(created) == 2 and all(len(channel.values) == 2 for channel in created)
+    assert {tuple(value["path"] for value in channel.values) for channel in created} == {
+        ("/original/actor-a", "/original/actor-a"),
+        ("/original/actor-b", "/original/actor-b"),
+    }
+    assert all(
+        channel.command[:3] == ["docker", "exec", "-i"] and CONTAINER in channel.command
+        for channel in created
+    )
+    app.close()
+    app.close()
+    assert all(channel.closed for channel in created)

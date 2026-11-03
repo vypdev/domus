@@ -92,14 +92,19 @@ use fictional HA accounts and cannot establish owner-HA adoption.
 Run `pnpm build:frontend-catalog` and `pnpm test:frontend-catalog` for the built entry and administration
 catalog, including English/Spanish, keyboard focus, inert text, narrow layout and both color schemes.
 Catalog stories explicitly emit intents without a server. They do not fabricate successful operations.
-The same five form journeys also execute against the actual current image on each CI architecture.
+All 32 administration journeys also execute against the actual current image on each CI architecture,
+including exact high revisions, independent-writer conflicts, original recovery, authority outage,
+keyboard errors, closed-tab restoration, conditional BFCache and actual console restoration.
 Set `DOMUS_BROWSER_IMAGE` to the reviewed local image, `DOMUS_TEST_SOURCE_COMMIT` to its exact revision,
-and `DOMUS_TEST_ARCH` to `amd64` or `aarch64`; run the entry Playwright configuration against
-`administration.spec.ts` with `--grep 'HADW-0[1245]:'`. Docker must be available to the test process.
-The fixture verifies source/image/CPU identity, starts isolated nonroot containers without published
-ports or host mounts, and relays browser HTTP over loopback/docker exec. Provider fixtures are copied
-only into the disposable writable container; no test dependency is added to the image. The command
-must report all ten passing journeys with no skips. CI requires that receipt in both CPU jobs.
+and `DOMUS_TEST_ARCH` to `amd64` or `aarch64`; run the entry Playwright configuration against the whole
+`administration.spec.ts` file without a name filter. Docker must be available to the test process.
+The fixture verifies source/image/CPU identity and starts isolated nonroot containers without published
+ports or host mounts. Framed stdio workers preserve each original HTTP request, headers and binary body;
+workers remain independent across host transport threads and match responses to their original frame.
+Each frame makes one inner HTTP request with a fresh connection. I/O failure never resends a mutation.
+Provider fixtures are copied only into the disposable writable container; no test dependency is added
+to the image. The command must report all 32 passing journeys with no skips or flaky results. CI requires
+that exact receipt in both CPU jobs, within the unchanged global suite limit of 180 seconds.
 The runner uses a bounded graceful shutdown so the bridge can retire its owned container before
 reporting ASGI completion. CI also requires
 `docker ps --all --quiet --filter label=domus.browser-fixture=true` to be empty after the campaign;

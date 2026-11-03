@@ -735,5 +735,72 @@
       "root": "/private/tmp/domus-admin-rollback-6c1a0d",
       "privateLocalOnly": true
     }
+  },
+  "persistentImageTransportIncrement": {
+    "sourceBase": "8d8185d4951f2abdebc5a8b0e4964528a86fcf0a",
+    "productionRuntimeChanged": false,
+    "observedFailure": {
+      "job": 125926080155,
+      "architecture": "amd64",
+      "containerCasesPassed": 36,
+      "browserPassed": 9,
+      "browserDidNotRun": 1,
+      "reason": "Existing180second global browser timeout exhausted; failed scope is not called accepted."
+    },
+    "testsFirst": "Concurrent bridge integration test first rejects unsupported channel_factory. Response-identity regression first fails because the unframed channel accepts a wrong frame as the current result. Tests then enforce independent per-thread channels, exact large/concurrent payloads, one process reused, bounded read/write/queue failures, strict frame identities, incomplete/oversized/coalesced unsolicited output and exact idempotent owned-process retirement.",
+    "implementation": "Each host transport thread owns one bounded stdio worker in the same verified isolated image. Every frame carries a checked positive sequence and makes one fresh inner HTTP connection, preserving original method/path/query/header/body/status and duplicate cookies. No automatic request replay, worker restart or success fabrication. Actual concurrency across actors is retained.",
+    "limits": "HTTP15second read timeout, host30second frame deadline,2MiB HTTP body bound and180second suite limit are preserved. New16MiB frame bound includes encoded body/headers; malformed/foreign/truncated frame fails closed. Test-only modules are not installed into the product image.",
+    "microbenchmark": {
+      "before": {
+        "source": "8d8185d4951f2abdebc5a8b0e4964528a86fcf0a",
+        "mode": "native",
+        "architecture": "aarch64",
+        "requests": 40,
+        "seconds": 5.015619208978023,
+        "dockerProcesses": 40,
+        "scope": "Actual loopback read-only fixture readiness microbenchmark, not full product acceptance."
+      },
+      "after": {
+        "requests": 40,
+        "seconds": 0.023703958024270833,
+        "workers": 1,
+        "workerPIDs": [
+          93638
+        ],
+        "transportSHA256": {
+          "tests/browser/image_bridge.py": "b10ff0676b6ca0b4dedde75181e0152106e5dd27431f67d162cb51e02b262262",
+          "tests/browser/image_channel.py": "e5e1b40f02286a4a76d7ec7a3b54befc9b0773c9d15db3be241a60e7c78c2117"
+        },
+        "scope": "Actual read-only readiness microbenchmark using current framed transport. Not full product latency or acceptance."
+      },
+      "limitations": "Same40read-only fixture readiness requests on localaarch64. This measures transport overhead, not product latency or exact-head hosted acceptance."
+    },
+    "localActualImageAdministration": {
+      "cases": 32,
+      "stats": {
+        "startTime": "2026-11-03T13:22:02.328Z",
+        "duration": 50992.67,
+        "expected": 32,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "remainingContainers": 0,
+      "architecture": "aarch64",
+      "imageSource": "3a2c4b33769f26eaa97bd9eeb0c1ce3a6d4fdb50",
+      "scenarios": "All16administration cases in each native/standalone composition, including real high-revision wire/SQLite state, independent-writer race/lost reply, keyboard/CSP, actual trusted BFCache, public sessions-API closed-tab restoration and actual console restore/original replay fence."
+    },
+    "tooling": {
+      "tests": 178,
+      "statements": 214,
+      "branches": 98,
+      "coverage": 100
+    },
+    "CI": "Both mandatory CPU jobs now run the complete administration.spec.ts without --grep and require expected32/unexpected0/skipped0/flaky0 plus zero surviving fixture containers. The global timeout is unchanged. Fresh-head hosted CI and native review remain required.",
+    "SDD": "OriginalSDK7modules byte-verified; unchanged policy accepts format/consistency/catalog and all186retained cases with the2new test-infrastructure paths declared first. No owner case or threshold removed.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-rollback-6c1a0d",
+      "privateLocalOnly": true
+    }
   }
 }
