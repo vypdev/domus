@@ -123,6 +123,7 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         "frontend/.storybook/main.ts",
         "frontend/.storybook/preview.ts",
         "frontend/stories/entry.stories.ts",
+        "frontend/stories/administration.stories.ts",
         "frontend/playwright.config.ts",
         "frontend/playwright.entry.config.ts",
         "frontend/vite.config.ts",

@@ -359,6 +359,7 @@ Tests first. Preserve repository-wide supported coverage, complete global and pe
 | `frontend/tests/page.test.ts` | update |
 | `frontend/tests/component.test.ts` | update |
 | `frontend/tests/administration-component.test.ts` | create |
+| `tests/python/test_ci_contract.py` | update |
 | `frontend/tests/administration-controller.test.ts` | update |
 | `frontend/tests/fixtures/entry-wire.json` | update |
 | `frontend/tests/e2e/administration.spec.ts` | create |

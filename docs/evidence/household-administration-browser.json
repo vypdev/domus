@@ -262,7 +262,7 @@
       "root": "/private/tmp/domus-admin-forms-86e120a",
       "privateLocalOnly": true
     },
-    "review": "Fresh current-head CI/CPU/native review pending publication; prior86 CI/native success remains baseline evidence only.",
+    "review": "Published3da native PR review: complete context,8/8partitions,zero candidate/published/all-state findings. Follow-up consumer inventory correction requires its own current-head CI/CPU/native review; full feature acceptance remains pending.",
     "checks": {
       "strictRuntimeAndCatalogTypes": "passed",
       "architectureAssertions": 51,
@@ -271,6 +271,32 @@
       "nodeSupportedCoveragePercent": 100,
       "documentation": "passed",
       "originalSDDPolicy": "seven original SDK modules byte-verified; format/consistency/catalog passed;20owner documents unchanged"
+    },
+    "consumerCatalogRegistrationCorrection": {
+      "head": "3da7e98a32c5c6ca7d2a9ba2348cfd2b05a3bdb7",
+      "run": 41604593960,
+      "job": 125811179615,
+      "original": "147passed1failed: new administration Storybook file absent from the explicit tested catalog inventory. Reproduced locally before correction.",
+      "change": "Register only frontend/stories/administration.stories.ts alongside the existing entry story. Actual25-case built catalog and strict runtime/catalog type gates already cover it. No coverage prefix/exclusion/threshold changes.",
+      "confirmed": "148Python tooling tests;214statements/98branches100%;Ruff passes"
+    },
+    "nativePublished3da": {
+      "run": 41604593997,
+      "job": 125811180905,
+      "head": "3da7e98a32c5c6ca7d2a9ba2348cfd2b05a3bdb7",
+      "context": "complete",
+      "partitions": "8/8",
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "outcome": "no-findings"
+    },
+    "copilotProgressPublished3da": {
+      "run": 41604586557,
+      "job": 125811154753,
+      "scopeFailure": "scope-clause-limit;$.lines;requirement none;L140",
+      "reference": "0c02fe42-908d-49b2-8c0b-fd5b99203305",
+      "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6599193241",
+      "scope": "Separate progress-contract failure; no Copilot change or inferred candidate/root cause."
     }
   }
 }
