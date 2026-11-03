@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query, Request
 from fastapi.params import Depends
@@ -16,6 +16,7 @@ from domus.application.task_queries import (
     TaskPage,
     TaskPolicyView,
     TaskQueries,
+    TaskWorkspaceView,
 )
 from domus.application.task_requests import (
     AssignTask,
@@ -71,6 +72,15 @@ from domus.entrypoints.task_response import (
     detail_response,
 )
 
+TaskWorkspaceAction = Literal[
+    "task.create", "task.claim", "task.complete", "task.verify", "task.reopen"
+]
+
+
+class TaskOriginalResponse(OperationResponse):
+    action: TaskWorkspaceAction
+    command_key: str
+
 
 @dataclass(frozen=True, slots=True)
 class TaskHTTPContext:
@@ -88,6 +98,10 @@ def create_task_router(
             for name in ("Idempotency-Key", "Origin", "X-CSRF-Token")
         ]
     }
+
+    @router.get("/access", response_model=TaskWorkspaceView)
+    def workspace(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskWorkspaceView:
+        return context(request).queries().workspace()
 
     @router.get("/policy", response_model=TaskPolicyView)
     def policy(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskPolicyView:
@@ -440,6 +454,25 @@ def create_task_router(
         view = context(request).queries().operation(operation_id)
         return OperationResponse(
             **_receipt(view.receipt).model_dump(),
+            delivery="suppressed"
+            if view.receipt.historical
+            else "delivered"
+            if view.delivered
+            else "pending",
+        )
+
+    @router.get("/requests/{action}/{key}", response_model=TaskOriginalResponse)
+    def original_request(
+        action: TaskWorkspaceAction,
+        key: Identifier,
+        request: Request,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> TaskOriginalResponse:
+        view = context(request).queries().original(action, key)
+        return TaskOriginalResponse(
+            **_receipt(view.receipt).model_dump(),
+            action=action,
+            command_key=key,
             delivery="suppressed"
             if view.receipt.historical
             else "delivered"

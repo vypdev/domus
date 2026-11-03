@@ -3,17 +3,32 @@
 These complete household workflows are still under development. This guide describes the intended
 first integrated release. The [current HA preview](installation-home-assistant.md) describes what is available today.
 
-Open Domus, sign in with your own Home Assistant account and use Dashboard, Tasks, Calendar, Shopping,
+Open Domus with your own Home Assistant account. Ingress uses the existing HA session; standalone offers HA sign-in. The complete release will provide Dashboard, Tasks, Calendar, Shopping,
 Inventory, Family or Settings. English and Spanish are supported. Your role controls permitted actions,
 with backend checks applying even when a client presents an outdated button.
 
 During explicit setup, choose how administration maps from HA: all HA administrators by default, only the verified administrator completing setup, or an explicitly selected HA user. The default gives each proven HA administrator inherited Domus administration; ordinary users are not promoted by opening the app. An administrator configures household permission profiles and per-member exceptions. Known suspension or revoked authority still blocks access; changing a label or choosing another performer never changes the caller's permission.
 
+## Current task workspace
+
+The current source increment adds a real task workspace. Published Edge.7 remains administration-only until the next verified preview package is adopted; refreshing that older app does not install this source change.
+
+- **Tasks** is the default workspace. Open **New task**, enter a title, optional instructions and priority, then choose **Create task**. The title-only flow creates actual work, not a schedule draft.
+- Select a task to inspect it. **Claim task** assigns eligible work to your own verified membership. **Mark done now** records you as the performer at the current server-anchored time.
+- Restricted performers require adult approval by default. An authorized adult can approve or reject the current cycle; rejection and reopening require a reason. Reopening preserves the previous cycle and its verification evidence.
+- If a task already has linked materials, review its quantities before completion. Decimal input is converted exactly, including a comma separator, and the linked unit's precision is enforced. Zero means unused. Separate-recording tasks do not silently submit planned consumption.
+- A lost reply leaves a visible saved request. **Check saved request** reads its original result without sending another change. New changes remain blocked while an earlier request is unconfirmed. Resolved browser records can be dismissed without deleting server history.
+- **Household** opens identity, participants, preferences and access settings. Task IDs, revisions and resolved recovery records stay in optional details. A saved language preference applies to both workspaces.
+
+The workspace uses the server's current allowed actions. Read-only HA outage grace permits local queries until the original session deadline and blocks changes. A changed account or membership retires the previous private draft.
+
+This increment does not yet supply calendar or recurrence editors, multi-performer entry, point/reward accounting or the integrated supplies/automation/dashboard workflows. Real Inventory integration is still pending; the current task API cannot link nonempty material selections without an actual provider. Backend event recording is not proof that points, stock or downstream consumers were updated.
+
 ## Daily work
 
 The development task API is documented in [task execution](tasks/execution.md), with
 [operation/recovery guidance](tasks/operator-recovery.md) and [migration limits](tasks/migration.md).
-Those backend contracts do not yet supply the complete task UI or real Points/Inventory effects.
+The current workspace covers the flows above. The remaining paragraphs describe the complete intended release; real Points/Inventory effects and the other task editors remain pending.
 
 Create a task with only a title, then optionally set category, priority, duration, assignment, materials,
 schedule, recurrence and verification. Claim available work or inspect assignments.

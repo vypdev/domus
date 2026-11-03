@@ -6,6 +6,9 @@ import {EntryRuntime} from './entry-runtime';
 import type {EntryBrowser} from './entry-runtime';
 import {language, message} from '../presentation/messages';
 import type {DomusApp, EntryIntent} from '../presentation/domus-app';
+import type {TaskIntent} from '../presentation/domus-tasks';
+import {taskQuantity, TASK_PRIORITIES} from '../domain/tasks';
+import type {TaskPriority} from '../domain/tasks';
 import type {AdministrationIntent} from '../presentation/domus-administration';
 import {administrationCommand} from '../domain/administration-commands';
 import '../presentation/domus-app';
@@ -56,6 +59,38 @@ export function decodeAdministrationIntent(value:unknown):AdministrationIntent|n
   }catch{return null;}
 }
 
+/** Task events contain business inputs only, never a principal, URL, context or raw transport request. */
+export function decodeTaskIntent(value: unknown): TaskIntent | null {
+  try {
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key']);
+    const type = item.type;
+    if (type === 'create') {
+      fields(value, ['type', 'title', 'description', 'priority'], []);
+      check(typeof item.title === 'string' && typeof item.description === 'string' && typeof item.priority === 'string'
+        && TASK_PRIORITIES.includes(item.priority as TaskPriority));
+      return {type, title: item.title, description: item.description, priority: item.priority as TaskPriority};
+    }
+    if (type === 'complete') {
+      fields(value, ['type', 'materialUsages'], []);
+      check(item.materialUsages === null || Array.isArray(item.materialUsages) && item.materialUsages.length <= 32);
+      const materialUsages = item.materialUsages === null ? null : Object.freeze((item.materialUsages as unknown[]).map(raw => {
+        const usage = fields(raw, ['line_id', 'quantity'], []);
+        return Object.freeze({line_id: identifier(usage.line_id), quantity: taskQuantity(usage.quantity)});
+      }));
+      return {type, materialUsages};
+    }
+    if (type === 'verify' || type === 'reopen') {
+      fields(value, type === 'verify' ? ['type', 'decision', 'reason'] : ['type', 'reason'], []);
+      check(typeof item.reason === 'string');
+      if (type === 'reopen') return {type, reason: item.reason};
+      check(item.decision === 'approved' || item.decision === 'rejected'); return {type, decision: item.decision, reason: item.reason};
+    }
+    if (type === 'select') {fields(value, ['type', 'occurrenceId'], []); return {type, occurrenceId: identifier(item.occurrenceId)};}
+    if (type === 'recover' || type === 'dismiss') {fields(value, ['type', 'key'], []); return {type, key: identifier(item.key)};}
+    fields(value, ['type'], []); check(type === 'refresh' || type === 'more' || type === 'claim'); return {type};
+  } catch {return null;}
+}
+
 /** Wire only this document's owned nodes/capabilities; never inspect the HA parent or private storage. */
 export function mountEntry(page: EntryPage): PageMount {
   const doc = page.document; mounts.get(doc)?.();
@@ -93,12 +128,14 @@ export function mountEntry(page: EntryPage): PageMount {
     const element = doc.createElement('domus-app'); app = element;
     element.language = language(null, page.navigator.language); element.deployment = source.target.deployment;
     doc.documentElement.lang = element.language;
+    const section = () => {element.section = new URL(page.location.href).hash === '#household' ? 'household' : 'tasks';};
+    section(); page.addEventListener('hashchange', section, {signal: widget.signal});
     const browser: EntryBrowser = {transport: (path, init) => page.fetch(path, init), storage: () => page.sessionStorage,
       elapsed: () => page.performance.now(), random: bytes => page.crypto.getRandomValues(bytes),
       navigate: path => page.location.assign(path), events: page, visibility: doc,
       schedule: (tick, delay) => {const id = page.setTimeout(tick, delay); return () => page.clearTimeout(id);}};
-    const active = new EntryRuntime(source.target, browser, (view,administration) => {
-      element.view=view;element.administration=administration;
+    const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
+      element.view=view;element.administration=administration;element.tasks=tasks;
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
@@ -162,6 +199,24 @@ export function mountEntry(page: EntryPage): PageMount {
         }
       }catch{fail();}
     },{signal:widget.signal});
+    element.addEventListener('domus-task-intent', async event => {
+      if (event.target !== element) return;
+      try {
+        const intent = decodeTaskIntent((event as CustomEvent<unknown>).detail); if (intent === null) return;
+        switch (intent.type) {
+          case 'refresh': await active.refresh(); break;
+          case 'more': await active.taskWork(controller => controller.more()); break;
+          case 'select': await active.taskWork(controller => controller.select(intent.occurrenceId)); break;
+          case 'create': await active.taskWork(controller => controller.create(intent.title, intent.description, intent.priority)); break;
+          case 'claim': await active.taskWork(controller => controller.claim()); break;
+          case 'complete': await active.taskWork(controller => controller.complete(intent.materialUsages)); break;
+          case 'verify': await active.taskWork(controller => controller.verify(intent.decision, intent.reason)); break;
+          case 'reopen': await active.taskWork(controller => controller.reopen(intent.reason)); break;
+          case 'recover': await active.taskWork(controller => controller.recover(intent.key)); break;
+          case 'dismiss': await active.taskWork(controller => controller.dismiss(intent.key)); break;
+        }
+      } catch {fail();}
+    }, {signal: widget.signal});
     roots[0].replaceChildren(element);
     ready = active.start().catch(() => {fail();});
   } catch {fail(); ready = Promise.resolve();}

@@ -1,4 +1,5 @@
 const english = Object.freeze({
+  navigationTasks: 'Tasks', navigationHousehold: 'Household',
   tagline: 'Your household, together', language: 'Language', english: 'English', spanish: 'Español',
   loading: 'Checking your access', loadingBody: 'Domus is reading your current session and permissions. No household changes are requested.',
   closed: 'This view is closed', closedBody: 'Household records and server history are retained. Reopen Domus to verify access again.',
@@ -56,6 +57,7 @@ const english = Object.freeze({
 export type MessageKey = keyof typeof english;
 export type Language = 'en' | 'es';
 const spanish: Readonly<Record<MessageKey, string>> = Object.freeze({
+  navigationTasks: 'Tareas', navigationHousehold: 'Hogar',
   tagline: 'Tu hogar, en equipo', language: 'Idioma', english: 'English', spanish: 'Español',
   loading: 'Comprobando tu acceso', loadingBody: 'Domus está consultando tu sesión y permisos actuales. No se solicita ningún cambio en el hogar.',
   closed: 'Esta vista está cerrada', closedBody: 'Los registros del hogar y el historial del servidor se conservan. Vuelve a abrir Domus para verificar el acceso.',

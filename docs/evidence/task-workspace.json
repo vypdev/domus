@@ -1,0 +1,146 @@
+{
+  "recordedAtUTC": "2026-11-03T23:17:21.438325+00:00",
+  "status": "Task workspace source implementation; preview packaging and owner adoption pending",
+  "issue": 23,
+  "pullRequest": 29,
+  "preparationBase": "a954ce091d19f6350d64eec759670d5a1fadcfb5",
+  "storageSchema": 9,
+  "implemented": [
+    "Real task creation with title, description and priority; bounded list and task detail.",
+    "Current-member claiming and completion at the server-anchored actual action time.",
+    "Current-cycle adult approval/rejection and reasoned reopening; restricted work waits for approval by default.",
+    "Adjustable linked-material quantities, exact decimal canonicalization, per-unit precision and explicit zero; no fabricated Inventory effects.",
+    "Task-specific access affordances without widening administration permissions; current-authorized original-by-key GET recovery.",
+    "English/Spanish UI, current-account/member/household fencing, bounded private recovery records, session deadlines, keyboard focus and responsive layouts."
+  ],
+  "currentSourcePackage": {
+    "scope": "Current source wheel and compiled UI, not the already installed Edge.7 preview. Both CPU images and owner adoption are separate acceptance.",
+    "wheelSHA256": "eabe7e7325cd0066990426a6d01316c2cd3397b358f36fc0f6153ae6e88093fb",
+    "actualProductFiles": {
+      ".vite/manifest.json": "785db581dde1ff22dda7b1d92756ef55c67078cb558c39a90945f7699a824d0a",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-LD9A1zed.js": "5800c4070013c33158cd37283bcc7fbc9fe5196ca1dae14458f3d33ef2c3da45",
+      "index.html": "85ad753e2af522abd0177014f5db02126e3b1014bcd3bcedb9956db0ece62a65"
+    }
+  },
+  "executedChecks": {
+    "backend": {
+      "passed": 4409,
+      "modules": 151,
+      "statements": 10468,
+      "branches": 2932,
+      "coverage": "100% globally and per module",
+      "independentAudit": "passed"
+    },
+    "frontend": {
+      "passed": 1505,
+      "runtimeFiles": 39,
+      "metrics": {
+        "lines": {
+          "total": 2105,
+          "covered": 2105,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 3202,
+          "covered": 3202,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 683,
+          "covered": 683,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 2583,
+          "covered": 2583,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentAudit": "passed"
+    },
+    "taskBrowser": {
+      "passed": 8,
+      "deployments": [
+        "native Ingress composition",
+        "standalone composition"
+      ],
+      "scope": "Real compiled product UI, Python HTTP and SQLite; HA/Supervisor transports explicitly fictional.",
+      "journeys": [
+        "English and Spanish create/claim/complete/reload for both deployments.",
+        "Restricted performer claims/completes; adult approves and reopens, preserving the original cycle for both deployments.",
+        "Lost committed creation reply survives reload and recovers by protected GET without another POST for both deployments."
+      ]
+    },
+    "catalog": {
+      "passed": 43,
+      "scope": "Built catalog; actual component states in English/Spanish, dark/light narrow layout; no API or foreign requests."
+    },
+    "toolingNode": {
+      "passed": 38,
+      "coverage": "100% all four supported metrics across both authored runtime files"
+    },
+    "compiledProductBrowser": {
+      "passed": 97,
+      "scope": "Complete current compiled UI / real Python / SQLite suite in both deployments, including eight task journeys; no retries or skips."
+    },
+    "platformAndPackage": {
+      "passed": 231,
+      "scope": "Architecture, CI/source-scope contracts, Python tooling and exact wheel/UI acceptance."
+    }
+  },
+  "recovery": {
+    "namespace": "tasks",
+    "version": 1,
+    "maximumRecords": 8,
+    "maximumUTF8Bytes": 65536,
+    "lifetimeMilliseconds": 3600000,
+    "scope": [
+      "installation",
+      "channel",
+      "HA subject",
+      "household",
+      "canonical membership"
+    ],
+    "credentialsStored": false,
+    "automaticPOSTRetry": false,
+    "unresolvedEviction": false
+  },
+  "limitations": [
+    "Owner HA still runs Edge.7; the new task UI has not yet been adopted there. Agent fixture browser acceptance is not human UX review.",
+    "Relative recurrence lifecycle, protected calendar and timing editors remain outstanding; all93retained recurrence cases and18refinements remain required.",
+    "Multi-performer entry, full task/dependency editors, configurable points/rewards, integrated real Inventory/Shopping, automation, HA companion surfaces and complete first-release acceptance remain outstanding.",
+    "A recorded source event does not prove downstream points, stock, notification or automation delivery.",
+    "Original native SDK validation of the contributor SDD correction remains separate; no local SDK cache was restored or modified."
+  ],
+  "copilotModified": false,
+  "gatewayModified": false,
+  "goalComplete": false,
+  "specificationIndependentPreflight": {
+    "sections": 20,
+    "characters": 56546,
+    "sha256": "b53f13afe98984a9c93d1006db72eb70a6615c6b0b19f92e5cc461dd6eb7e249",
+    "pathOperations": 130,
+    "pathCounts": {
+      "create": 60,
+      "update": 63,
+      "reference": 7
+    },
+    "retainedOwners": {
+      "specs/recurrence-calendar.md": "20ef11a108758e1d264c7fedacf6572af871041751aa959f7b00d57210c35ea0",
+      "specs/recurrence-execution-foundation.md": "e0575cf09f6bd2b805956c9a17d16ebe1bd4808b3062b2d0588513d2991d8c4d",
+      "specs/recurrence-storage-continuation.md": "c79c018e359e26e6f6ab0d774c55c7bd39d39452dc06dee81f0d138eb469b43b"
+    },
+    "scope": "Independent consumer structural/path/retained-byte preflight; not original native SDK validation."
+  }
+}

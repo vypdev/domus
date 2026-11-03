@@ -1,5 +1,6 @@
 import {afterEach, expect, test, vi} from 'vitest';
-import {decodeIntent, decodeAdministrationIntent, mountEntry} from '../src/composition/entry-page';
+import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, mountEntry} from '../src/composition/entry-page';
+import {TaskController} from '../src/application/task-controller';
 import type {EntryPage} from '../src/composition/entry-page';
 import type {DomusApp} from '../src/presentation/domus-app';
 import type {DomusAdministration} from '../src/presentation/domus-administration';
@@ -45,6 +46,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='administration/capabilities') raw=JSON.stringify({state:'available',contract_version:2,household_id:'home',exact_revisions:'json-integer-int64',
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
+    else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true});
+    else if (route.startsWith('tasks/occurrences?')) raw=JSON.stringify({items:[],next_cursor:null});
     else if (route==='administration/preferences') raw=JSON.stringify(preferences());
     else if (route==='administration/roster') raw=JSON.stringify({directory_state:'available',members:[{
       member:{...originalAccess.member,member_id:memberId},presentation:presentation(),metadata:{state:'available',name:'Verified owner',avatar_state:'unavailable'}}]});
@@ -261,4 +264,60 @@ test('household-browser-C18: temporary language persists while current own prefe
 test('household-browser-C18: a signed-out language choice has no identity or mutation side effect',async()=>{
   const f=fixture();const {app}=await f.open();intent(app,{type:'logout'});await vi.waitFor(()=>expect(app.view?.notice).toBe('signed_out'));
   const count=f.fetch.mock.calls.length;intent(app,{type:'language',language:'es'});expect(app.language).toBe('es');expect(f.fetch).toHaveBeenCalledTimes(count);expect(f.putRequests()).toBe(0);
+});
+
+
+test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
+  {type: 'create', title: 'Task', description: '', priority: 'normal', householdId: 'forged'},
+  {type: 'create', title: 1, description: '', priority: 'normal'}, {type: 'create', title: 'Task', description: '', priority: 'future'},
+  {type: 'complete', materialUsages: true}, {type: 'complete', materialUsages: [{line_id: 'line', quantity: '1.0'}]},
+  {type: 'verify', decision: 'pending', reason: 'A'}, {type: 'reopen', reason: 1}, {type: 'select', occurrenceId: '../other'},
+  {type: 'recover', key: ''}])('task event %# cannot select a principal, route or arbitrary command', value => {
+    expect(decodeTaskIntent(value)).toBeNull();
+});
+test('closed task events preserve semantic user inputs and exact material quantities', () => {
+  const inputs = [{type: 'refresh'}, {type: 'more'}, {type: 'claim'}, {type: 'select', occurrenceId: 'work-1'},
+    {type: 'create', title: '  Clean 🧹  ', description: '', priority: 'high'}, {type: 'complete', materialUsages: null},
+    {type: 'complete', materialUsages: [{line_id: 'line-1', quantity: '3.333333'}]},
+    {type: 'verify', decision: 'approved', reason: ''}, {type: 'verify', decision: 'rejected', reason: 'Not done'},
+    {type: 'reopen', reason: 'Repeat'}, {type: 'recover', key: 'original'}, {type: 'dismiss', key: 'original'}];
+  for (const value of inputs) expect(decodeTaskIntent(value)).toEqual(value);
+});
+test('public fragment navigation chooses Tasks by default and preserves Household across a reload', async () => {
+  const f = fixture(); f.phase('active'); const {app, mounted} = await f.open(); expect(app.section).toBe('tasks');
+  f.page.location.href += '#household'; f.page.dispatchEvent(new Event('hashchange')); await app.updateComplete; expect(app.section).toBe('household');
+  const next = await f.open(); expect(next.app.section).toBe('household'); mounted.dispose();
+  f.page.location.href = f.page.location.href.replace('#household', '#unknown'); f.page.dispatchEvent(new Event('hashchange')); await next.app.updateComplete;
+  expect(next.app.section).toBe('tasks'); expect(f.putRequests()).toBe(0); expect(f.postRequests()).toBe(0);
+});
+test('the mounted task surface routes only owned semantic intents to its application controller', async () => {
+  const f = fixture(); f.phase('active'); const {app} = await f.open(); expect(app.tasks?.access?.memberId).toBe('identity-1');
+  const spies = {create: vi.spyOn(TaskController.prototype, 'create').mockResolvedValue(undefined),
+    more: vi.spyOn(TaskController.prototype, 'more').mockResolvedValue(undefined), select: vi.spyOn(TaskController.prototype, 'select').mockResolvedValue(undefined),
+    claim: vi.spyOn(TaskController.prototype, 'claim').mockResolvedValue(undefined), complete: vi.spyOn(TaskController.prototype, 'complete').mockResolvedValue(undefined),
+    verify: vi.spyOn(TaskController.prototype, 'verify').mockResolvedValue(undefined), reopen: vi.spyOn(TaskController.prototype, 'reopen').mockResolvedValue(undefined),
+    recover: vi.spyOn(TaskController.prototype, 'recover').mockResolvedValue(undefined), dismiss: vi.spyOn(TaskController.prototype, 'dismiss').mockResolvedValue(undefined),
+    refresh: vi.spyOn(TaskController.prototype, 'refresh').mockResolvedValue(undefined)};
+  const send = (detail: unknown, target: EventTarget = app) => target.dispatchEvent(new CustomEvent('domus-task-intent', {detail, bubbles: true, composed: true}));
+  try {
+    const child = document.createElement('span'); app.append(child); send({type: 'create', title: 'Other target', description: '', priority: 'normal'}, child);
+    send({type: 'create', title: 'Forged actor', description: '', priority: 'normal', actor: 'other'}); await Promise.resolve(); expect(spies.create).not.toHaveBeenCalled();
+    const cases: readonly [unknown, keyof typeof spies, readonly unknown[]][] = [
+      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high']],
+      [{type: 'more'}, 'more', []], [{type: 'select', occurrenceId: 'work-1'}, 'select', ['work-1']], [{type: 'claim'}, 'claim', []],
+      [{type: 'complete', materialUsages: null}, 'complete', [null]], [{type: 'verify', decision: 'approved', reason: ''}, 'verify', ['approved', '']],
+      [{type: 'reopen', reason: 'Repeat'}, 'reopen', ['Repeat']], [{type: 'recover', key: 'original'}, 'recover', ['original']],
+      [{type: 'dismiss', key: 'original'}, 'dismiss', ['original']], [{type: 'refresh'}, 'refresh', []],
+    ];
+    for (const [detail, method, args] of cases) {send(detail); await vi.waitFor(() => expect(app.view?.busy).toBe(false)); expect(spies[method]).toHaveBeenCalledWith(...args);}
+    expect(f.putRequests()).toBe(0); expect(f.postRequests()).toBe(0);
+  } finally {for (const spy of Object.values(spies)) spy.mockRestore();}
+});
+test('an unexpected task delegation failure closes the runtime and shows the bounded failure view', async () => {
+  const f = fixture(); f.phase('active'); const {app} = await f.open();
+  const spy = vi.spyOn(TaskController.prototype, 'create').mockRejectedValue(Error('private delegation fault'));
+  try {app.dispatchEvent(new CustomEvent('domus-task-intent', {detail: {type: 'create', title: 'Clean', description: '', priority: 'normal'}}));
+    await vi.waitFor(() => expect(document.querySelector('#domus-entry-error')).not.toBeNull());
+    expect(document.querySelector('#domus-entry-error')!.textContent).not.toContain('private delegation fault');
+  } finally {spy.mockRestore();}
 });

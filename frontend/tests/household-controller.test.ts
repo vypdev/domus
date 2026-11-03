@@ -1,3 +1,7 @@
+import {TaskController} from '../src/application/task-controller';
+import {TaskSessionJournal} from '../src/adapters/task-journal';
+import type {TaskServer} from '../src/application/task-ports';
+import type {TaskDetail, TaskReceipt} from '../src/domain/tasks';
 import {expect, test, vi} from 'vitest';
 import {HouseholdController} from '../src/application/household-controller';
 import {EntryController} from '../src/application/entry-controller';
@@ -456,4 +460,73 @@ test('household-browser-C04: the scheduling projection contains only immutable a
   expect(deadlines).toEqual([f.proof.expiresAt, f.proof.expiresAt, 3_601_000]);
   expect(Object.isFrozen(deadlines)).toBe(true); expect(JSON.stringify(deadlines)).not.toContain('locale');
   f.controller.close(); expect(f.controller.deadlines).toEqual([]); expect(deadlines).toHaveLength(3);
+});
+
+
+function taskWorkspace(mode: 'native' | 'standalone' = 'standalone') {
+  const f = fixture(mode), proof = {...f.proof}, identity = {session: vi.fn(() => read<VerifiedEntrySession | null>(proof))};
+  const work: TaskDetail = {occurrenceId: 'work-1', definitionId: 'def-1', definitionRevision: revisionValue('1'), title: 'Clean', description: '', priority: 'normal',
+    state: 'available', revision: revisionValue('1'), assigneeIds: [], dueAt: null, currentCycleId: null, allowedActions: ['complete'], cycle: null, materials: [],
+    materialRecording: 'review_on_completion', dependencyReviewRequired: false, pendingMaterials: false};
+  const result: TaskReceipt = {kind: 'receipt', stage: 'committed', action: 'task.create', operationId: 'task-operation', occurrenceId: 'work-1',
+    revision: revisionValue('1'), state: 'available', cycle: null, archivedBy: null};
+  const server = {access: vi.fn(() => read({householdId: 'home', memberId: member.memberId, canCreate: true})),
+    list: vi.fn(() => read({items: [work], nextCursor: null})), detail: vi.fn(() => read(work)), original: vi.fn(() => read(result)),
+    send: vi.fn<TaskServer['send']>(async () => result)};
+  const controllers: TaskController[] = [], factory = vi.fn(() => {const value = new TaskController(mode, identity, server, new TaskSessionJournal(f.storage), f.clock, f.entropy);
+    controllers.push(value); return value;});
+  return {...f, taskIdentity: identity, taskProof: proof, taskServer: server, taskFactory: factory, taskControllers: controllers,
+    workspace: new HouseholdController(f.entry, f.factory, factory)};
+}
+test.each(['native', 'standalone'] as const)('%s: the household owns actual task controllers, mutations, deadlines and closure', async mode => {
+  const f = taskWorkspace(mode); expect(f.workspace.tasks).toBeNull(); await f.workspace.taskWork(controller => controller.refresh()); expect(f.taskFactory).not.toHaveBeenCalled();
+  await f.workspace.refresh(); expect(f.workspace.tasks?.page?.items[0].title).toBe('Clean');
+  await f.workspace.taskWork(controller => controller.create('New', '', 'normal')); expect(f.taskServer.send).toHaveBeenCalledOnce();
+  expect(f.workspace.tasks?.outcome).toMatchObject({kind: 'receipt', operationId: 'task-operation'}); expect(f.workspace.deadlines).toContain(3601000);
+  f.workspace.close(); expect(f.taskControllers[0].view.phase).toBe('closed'); expect(f.workspace.tasks).toBeNull();
+});
+test.each(['subject', 'access', 'member', 'household'])(
+  'task %s drift cannot be combined with the currently verified household view', async field => {
+    const f = taskWorkspace();
+    if (field === 'subject') f.taskIdentity.session.mockReturnValue(read({...f.taskProof, context: {...context, subject: 'b'.repeat(32)}}));
+    if (field === 'access') f.taskIdentity.session.mockReturnValue(read({...f.taskProof, access: 'read_only'}));
+    if (field === 'member') f.taskServer.access.mockReturnValue(read({householdId: 'home', memberId: 'other', canCreate: true}));
+    if (field === 'household') f.taskServer.access.mockReturnValue(read({householdId: 'other', memberId: member.memberId, canCreate: true}));
+    await f.workspace.refresh(); expect(f.workspace.tasks).toBeNull(); expect(f.workspace.administration).toBeNull(); expect(f.workspace.view.notice).toBe('context_changed');
+    f.workspace.close();
+  });
+test('an empty task permission failure is displayed without inventing an empty task list', async () => {
+  const f = taskWorkspace(); f.taskServer.access.mockReturnValue({result: Promise.reject(new EntryReadError('forbidden')), cancel: vi.fn()});
+  await f.workspace.refresh(); expect(f.workspace.tasks?.notice).toBe('forbidden'); expect(f.workspace.tasks?.page).toBeNull(); expect(f.workspace.administration).not.toBeNull(); f.workspace.close();
+});
+test('a shorter verified task lease expires every private household workspace without renewing proof', async () => {
+  const f = taskWorkspace(); f.taskProof.expiresAt = 2000; await f.workspace.refresh(); const calls = f.taskIdentity.session.mock.calls.length;
+  f.setNow(2000); f.workspace.tick(); expect(f.workspace.tasks).toBeNull(); expect(f.workspace.administration).toBeNull();
+  expect(f.workspace.view.decision?.state).toBe('authentication_required'); expect(f.taskIdentity.session).toHaveBeenCalledTimes(calls); f.workspace.close();
+});
+test('parent closure fences a task refresh delivered after its owned lifetime', async () => {
+  const f = taskWorkspace(), pending = deferred<VerifiedEntrySession | null>(); f.taskIdentity.session.mockReturnValue(pending);
+  const opening = f.workspace.refresh(); await vi.waitFor(() => expect(f.taskFactory).toHaveBeenCalledOnce());
+  f.workspace.close(); pending.resolve(f.taskProof); await opening; expect(f.workspace.tasks).toBeNull(); expect(f.workspace.view.phase).toBe('closed');
+});
+test('a changed verified household after a task action hides its old result', async () => {
+  const f = taskWorkspace(); await f.workspace.refresh();
+  await f.workspace.taskWork(async () => {f.taskIdentity.session.mockReturnValue(read({...f.taskProof, context: {...context, subject: 'b'.repeat(32)}}));
+    await f.taskControllers[0].refresh();});
+  expect(f.workspace.tasks).toBeNull(); expect(f.workspace.view.notice).toBe('context_changed'); f.workspace.close();
+});
+test('closure during an in-flight task command retains only its original journal, without reviving a view', async () => {
+  const f = taskWorkspace(); await f.workspace.refresh(); const pending = deferred<TaskReceipt>();
+  f.taskServer.send.mockReturnValueOnce(pending.result);
+  const sending = f.workspace.taskWork(controller => controller.create('New', '', 'normal'));
+  await vi.waitFor(() => expect(f.taskServer.send).toHaveBeenCalledOnce()); f.workspace.close(); pending.resolve({kind: 'receipt', stage: 'committed', action: 'task.create',
+    operationId: 'task-operation', occurrenceId: 'work-1', revision: revisionValue('1'), state: 'available', cycle: null, archivedBy: null});
+  await sending; expect(f.workspace.tasks).toBeNull(); expect(f.workspace.view.phase).toBe('closed');
+});
+
+
+test('unavailable administration metadata does not turn independently protected task reads into an empty list', async () => {
+  const f = taskWorkspace(); f.server.capabilities.mockReturnValue({result: Promise.reject(new EntryReadError('unavailable')), cancel: vi.fn()});
+  await f.workspace.refresh(); expect(f.workspace.tasks?.page?.items[0].title).toBe('Clean'); expect(f.workspace.administration?.notice).toBe('unavailable');
+  f.workspace.close();
 });

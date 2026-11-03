@@ -19,12 +19,12 @@ Current state after PR #28:
 
 - M0: the specification foundation and decisions are recorded. Contracts continue to evolve with implementation evidence.
 - M1: HA identity/session, SQLite, recovery foundations, architecture checks and CI are implemented. The full standalone/Ingress, upgrade/restore and Stable production acceptance remains open.
-- M2: household administration is usable in Edge.7. Task creation, assignment, claiming, completion, verification, reopening, dependencies and material recording exist in the backend. Fixed recurrence execution and relative-rule storage exist. Task and calendar screens, the relative lifecycle consumer, configurable point distribution and complete participation/reward flows remain open.
+- M2: household administration is usable in Edge.7. Task creation, assignment, claiming, completion, verification, reopening, dependencies and material recording exist in the backend. Fixed recurrence execution and relative-rule storage exist. The task workspace is now implemented and locally verified in PR #29. The installed Edge.7 still has administration only until the next verified preview is adopted. Calendar and recurrence editors, the relative lifecycle consumer, full task editors, configurable point distribution and complete participation/reward flows remain open.
 - M3: task-material foundations exist. Integrated product, stock, shopping, receipt, barcode and optional online lookup workflows remain open.
 - M4: the shared automation engine, both editors and Domus-owned HA entities/services remain open. The existing gateway is already integrated and is outside this work.
 - M5: integrated dashboard, complete responsive UX, both deployment journeys and Stable release acceptance remain open.
 
-The next M2 sequence is a usable task workspace (create, list, inspect, complete and review), then recurrence and calendar, then points and participation. Technical records stay available in optional details. Each increment must have real UI and persistence evidence; coverage of implemented code is not a measure of whole-product completion.
+The current M2 increment is the task workspace (create, list, inspect, claim, complete and review), followed by its actual Edge adoption, recurrence and calendar, then points and participation. Technical records stay available in optional details. Each increment must have real UI and persistence evidence; coverage of implemented code is not a measure of whole-product completion.
 
 PR #29 / issue #23 retains all recurrence/calendar obligations. Its initial genuine schema-9 fixture is a migration baseline, not evidence that the relative lifecycle or calendar is implemented. Household administration's remaining full acceptance inventory also remains required after its checkpoint merge.
 

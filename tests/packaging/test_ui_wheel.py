@@ -21,7 +21,7 @@ def test_built_wheel_contains_exact_product_bundle_and_no_browser_fixture(tmp_pa
         if path.is_file()
     }
     assert len(expected) >= 4
-    candidate = json.loads((ROOT / "docs/evidence/household-administration.json").read_text())[
+    candidate = json.loads((ROOT / "docs/evidence/task-workspace.json").read_text())[
         "currentSourcePackage"
     ]["actualProductFiles"]
     assert candidate == {

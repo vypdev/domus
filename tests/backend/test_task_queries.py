@@ -312,6 +312,20 @@ def test_own_operation_lookup_rechecks_original_authority_without_rerunning_prec
     query = queries(store, service.actor.current())
     before = state(store, oid)
     assert query.operation(receipt.operation_id).receipt == receipt
+    if receipt.command.action in {
+        "task.create",
+        "task.claim",
+        "task.complete",
+        "task.verify",
+        "task.reopen",
+    }:
+        assert query.original(receipt.command.action, "lookup").receipt == receipt
+        with pytest.raises(NotFound):
+            queries(store, (commands if service is child else child).actor.current()).original(
+                receipt.command.action, "lookup"
+            )
+        with pytest.raises(NotFound):
+            query.original(receipt.command.action, "unknown")
     assert state(store, oid) == before
     other = commands if service is child else child
     with pytest.raises(NotFound):
@@ -349,6 +363,8 @@ def test_original_configuration_and_attribution_grants_are_required_again_for_op
         query = replace(query, human=HumanIdentity("ha_admin", False, True, False))
     with pytest.raises(Forbidden):
         query.operation(receipt.operation_id)
+    with pytest.raises(Forbidden):
+        query.original(receipt.command.action, receipt.command.key)
 
 
 @pytest.mark.parametrize("kind", ["definitions", "occurrences"])
@@ -575,6 +591,9 @@ def test_actual_offline_restoration_exposes_history_without_reapplying_rolled_ba
             and history[-1].archived_by == "restore-work"
         )
         assert service.operation(receipt.operation_id).receipt.historical
+        original = service.original(receipt.command.action, receipt.command.key)
+        assert original.receipt.historical and not original.receipt.restoration.current
+        assert original.receipt.result == receipt.result
         assert service.occurrence(oid).cycle is None and state(restored.database, oid) == before
         cursor = service.history(oid, limit=2).next_cursor
         fresh = TaskCommands(restored.database, child.actor, child.clock, ids)
@@ -587,3 +606,29 @@ def test_actual_offline_restoration_exposes_history_without_reapplying_rolled_ba
         assert tail[0].historical and not tail[1].historical
     finally:
         restored.close()
+
+
+def test_original_task_request_rejects_non_workspace_actions_and_invalid_keys(tmp_path):
+    _, store, actor, _ = fixture(tmp_path)
+    service = queries(store, actor.current())
+    for action in ("household.update", "task.future", "task.policy.update"):
+        with pytest.raises(Forbidden):
+            service.original(action, "key")
+    with pytest.raises(InvalidInput):
+        service.original("task.create", "../key")
+
+
+def test_workspace_access_uses_current_task_grants_and_canonical_member(tmp_path):
+    commands, child, store, _, admin, _ = prepared(tmp_path)
+    own = queries(store, commands.actor.current()).workspace()
+    assert own.household_id == "home" and own.member_id == admin and own.can_create
+    restricted = queries(store, child.actor.current()).workspace()
+    assert restricted.member_id == "child" and not restricted.can_create
+    with store.write() as unit:
+        member = unit.members.get("home", "child")
+        unit.members.save(
+            replace(member, exceptions=(PermissionRule(Permission.TASKS_READ, False),), revision=2),
+            1,
+        )
+    with pytest.raises(Forbidden):
+        queries(store, child.actor.current()).workspace()
