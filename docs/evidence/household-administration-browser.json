@@ -606,7 +606,21 @@
     "diagnostics": [
       "Initial build terminates because the existing keychain helper is outside PATH; prepend its installed directory without credential/config changes.",
       "Initial Ruff check cannot write the restricted worktree cache; unchanged no-cache validation passes. These are environmental tool conditions, not Copilot defects."
-    ]
+    ],
+    "verifiedCurrentHead": {
+      "source": "6c1a0d2032cef328dc6e58dd2661232f1fbd364d",
+      "CI": "https://github.com/vypdev/domus/actions/runs/41630471010",
+      "amd64Job": 125898427295,
+      "aarch64Job": 125898427633,
+      "containerCasesPerCPU": 32,
+      "actualImageBrowserJourneysPerCPU": 10,
+      "frontend": 1231,
+      "backend": 4374,
+      "tooling": 162,
+      "supportedCoverage": "100% globally and per authored module",
+      "nativeReview": "https://github.com/vypdev/domus/actions/runs/41630471059/job/125898428229",
+      "review": "Complete context; 9/9 partitions; zero open/candidate/published/verification-required findings. Historical false premise automatically resolved."
+    }
   },
   "python314ReviewClarification": {
     "sourceHead": "6e8c22135c019829f62e1ec28872783dc446be75",
@@ -620,6 +634,45 @@
       "https://peps.python.org/pep-0758/",
       "https://docs.python.org/3.14/whatsnew/3.14.html"
     ],
-    "reviewState": "Current6e8 review complete9/9 publishes one open false-premise finding. Do not claim clean review or manually resolve it; a fresh native review is required for the equivalent readability change."
+    "reviewState": "Current6e8 review complete9/9 publishes one open false-premise finding. Do not claim clean review or manually resolve it; a fresh native review is required for the equivalent readability change.",
+    "subsequentReview": {
+      "source": "6c1a0d2032cef328dc6e58dd2661232f1fbd364d",
+      "job": 125898428229,
+      "outcome": "Complete9/9, zero findings; historical thread automatically fixed/resolved by native review, not manually resolved."
+    }
+  },
+  "compatibleApplicationRollbackIncrement": {
+    "sourceBase": "6c1a0d2032cef328dc6e58dd2661232f1fbd364d",
+    "productionRuntimeChanged": false,
+    "testsFirst": "New CI assertion first fails because the immutable schema9 build is missing. After correcting an independent test-fixture import error, the actual-image test fails because its declared rollback program is missing. Original diagnostics are retained separately.",
+    "previousSource": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
+    "previousArchiveSHA256": "d8a9c4c1caf3acbb462ac21ec78ccbab05d756031880fd2f5013b4e528b45758",
+    "sourceVerification": "All232 build input files in the downloaded immutable archive match the original published Git tree. Newly built aarch64 image contains exactly151Python modules and4UI resources matching the original ae92 wheel.",
+    "localImage": {
+      "tag": "domus-administration-schema9-ci:87d726f",
+      "id": "sha256:8f0b4a0090cc04be0e003c9130ad549412abfe4bfc2831b68f04df48198aa405",
+      "source": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
+      "architecture": "arm64",
+      "pythonFiles": 151,
+      "uiFiles": 4,
+      "allFilesMatchOriginalWheel": true,
+      "originalWheelSHA256": "ae92de7841edf0d10dd2448fa6edc2594293a999b77c6f7884acaeb4cb0a7a8c"
+    },
+    "localCases": 4,
+    "modes": [
+      "native",
+      "standalone"
+    ],
+    "originalEventStates": [
+      "pending",
+      "acknowledged"
+    ],
+    "assertions": "Actual prior image creates owned installation/member/profile state and snapshot. Current image commits alias and independent private preferences, then actual console prepares/activates restoration. Actual prior image reopens selected generation with the same installation and original UI bytes; all8 current state/proof tables match the snapshot. All4 complete operation documents preserve namespace, fingerprint, result, time, audit/event payload, position and delivery; only current/archive provenance changes for the two later absent effects. Exact original replays return original IDs and historical status without changing database bytes, proofs or current state.",
+    "CI": "Both mandatory CPU jobs now build the immutable schema9 compatibility application and execute the four rollback scenarios within the full required container suite; no skips or continue-on-error. Fresh-head hosted evidence remains pending.",
+    "limitations": "Local actual execution is aarch64; exact-head amd64/aarch64 CI still required. Fictional verified human/providers and disposable Docker volumes; no owner HA adoption, schema downgrade, new migration or release claim. Full186-case semantic audit, required human UX and recurrence-dependent obligations remain separate.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-rollback-6c1a0d",
+      "privateLocalOnly": true
+    }
   }
 }

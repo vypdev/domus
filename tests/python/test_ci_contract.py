@@ -274,3 +274,38 @@ def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> Non
         if step.get("name") == "Require all ten actual-image browser journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
+
+
+def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair() -> None:
+    steps = workflow()["jobs"]["containers"]["steps"]
+    build = next(
+        step
+        for step in steps
+        if step.get("name") == "Build the immutable compatible schema-9 rollback application"
+    )
+    assert build["run"].split() == [
+        "docker",
+        "build",
+        "--build-arg",
+        "BUILD_ARCH=${{",
+        "matrix.arch",
+        "}}",
+        "-t",
+        "domus-app-schema9",
+        "tests/fixtures/schema9-app",
+    ]
+    verify = next(
+        step for step in steps if step.get("run") == "uv run pytest tests/containers --no-cov"
+    )
+    assert verify["env"]["DOMUS_SCHEMA9_IMAGE"] == "domus-app-schema9"
+    assert steps.index(build) < steps.index(verify)
+    fixture = (ROOT / "tests/fixtures/schema9-app/Dockerfile").read_text()
+    assert "DOMUS_SOURCE_COMMIT=87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470" in fixture
+    assert (
+        "DOMUS_SOURCE_SHA256=d8a9c4c1caf3acbb462ac21ec78ccbab05d756031880fd2f5013b4e528b45758"
+        in fixture
+    )
+    assert "sha256sum --check" in fixture
+    assert "assert SCHEMA_VERSION == 9" in fixture
+    assert "pnpm install --frozen-lockfile" in fixture
+    assert "uv sync --frozen --no-dev --package domus-server --no-editable" in fixture

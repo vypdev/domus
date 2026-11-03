@@ -371,6 +371,8 @@ Tests first. Preserve repository-wide supported coverage, complete global and pe
 | `.github/workflows/ci_check.yml` | update |
 | `tests/packaging/test_ui_wheel.py` | update |
 | `tests/containers/test_administration_image.py` | update |
+| `tests/containers/administration_rollback_fixture.py` | create |
+| `tests/fixtures/schema9-app/Dockerfile` | create |
 | `docs/household-administration.md` | update |
 | `docs/household-api.md` | update |
 | `docs/household-administration-operations.md` | create |

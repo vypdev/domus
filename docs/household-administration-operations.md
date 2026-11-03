@@ -101,6 +101,18 @@ ports or host mounts, and relays browser HTTP over loopback/docker exec. Provide
 only into the disposable writable container; no test dependency is added to the image. The command
 must report all ten passing journeys with no skips. CI requires that receipt in both CPU jobs.
 
+The container suite also requires `DOMUS_SCHEMA9_IMAGE`, the compatible immutable administration
+checkpoint `87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470`. Build it from
+`tests/fixtures/schema9-app`; its source archive is verified by SHA-256 before either the original UI
+or Python package is built. This is a development compatibility fixture, not an installed HA release.
+Both CPU jobs run four application/data/generation rollback scenarios: native and standalone, each
+with pending or acknowledged original event evidence. The older application creates a schema9
+checkpoint, the current application commits separate public/private updates and activates restoration,
+and the older application reopens the selected generation with its original UI. Exact household,
+member, policy and profile state returns; original receipt, fingerprint, result, time, audit, event
+payload/position and delivery proof survive. Explicit replay returns historical original operations
+without changing database bytes or creating effects. No owner data or host directory is mounted.
+
 The owning SDD acceptance audit and required human UX review remain separate gates. Before owner rollout,
 verify the exact package, both CPU images and compatible data/rollback procedure. Preserve the installed
 owner Edge.5 and Edge.3 rollback until that adoption is verified.
