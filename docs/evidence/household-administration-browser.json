@@ -846,5 +846,24 @@
       "root": "/private/tmp/domus-admin-rollback-6c1a0d",
       "privateLocalOnly": true
     }
+  },
+  "confirmationSummaryContractClarification": {
+    "sourceBase": "9ba10d7e559538fd4a05b6d45c03c418077b472a",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4456137778",
+    "report": "https://github.com/vypdev/copilot/issues/872",
+    "classification": "Completed native review uses the edit-state premise at a retained confirmation-summary assertion. Both same-head deployment cases pass; no input exists until explicit reset.",
+    "clarification": "Before reset require no household-name textbox and the exact original value in dl dd. After reset require the old summary absent and the existing textbox value assertion for current facts. Original value/effect checks, timeout180seconds and retries0 are retained.",
+    "localVerification": {
+      "targetedSourceCases": 2,
+      "actualImageAdministrationCases": 32,
+      "actualImageAdministrationSeconds": 50.0,
+      "actualImageContainerCases": 10,
+      "pairedRollbackCasesIncluded": 4,
+      "imageSource": "9ba10d7e559538fd4a05b6d45c03c418077b472a",
+      "imageId": "sha256:144475004a62bed76c2bc0752688638aa7a8b3527ba2d77f8a530b187f838ceb",
+      "architecture": "aarch64"
+    },
+    "unchanged": "No product runtime/UI/package change, no Copilot code/resources/configuration/workflows/models/credentials/bounds change and no manual thread resolution.",
+    "limitation": "Local actual-image execution is distinct from fresh-head hosted/native verification and remaining whole-feature acceptance."
   }
 }

@@ -201,7 +201,11 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     await widget.getByRole('button',{name:'Review changes',exact:true}).click();await widget.getByRole('button',{name:'Save changes',exact:true}).click();
     await expect(widget.getByText('The data changed. Your draft keeps its original revision; reset explicitly to adopt current data.',{exact:true})).toBeVisible();
     await expect(widget.getByText('This request was submitted.',{exact:false})).toHaveCount(0);await expect(widget.getByText('New household name',{exact:true})).toBeVisible();
-    await expect(widget.getByText('Unsent draft',{exact:true})).toBeVisible();await widget.getByRole('button',{name:'Reset from current data',exact:true}).click();
+    // A rejected save retains the reviewed command as a definition list, not an editable input.
+    await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toHaveCount(0);
+    await expect(widget.locator('dl dd').filter({hasText:/^Unsent draft$/u})).toBeVisible();
+    await widget.getByRole('button',{name:'Reset from current data',exact:true}).click();
+    await expect(widget.locator('dl dd').filter({hasText:/^Unsent draft$/u})).toHaveCount(0);
     await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toHaveValue('Other current name');
     await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Explicit new work');await save(widget);
     expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({name:'Explicit new work',revision:3});
