@@ -24,7 +24,7 @@ RUN uv sync --frozen --no-dev --package domus-server --no-editable
 RUN .venv/bin/python -c "from pathlib import Path; import domus; from domus.entrypoints.ui_bundle import load_bundle; assert load_bundle(Path(domus.__file__).parent / 'ui') is not None"
 
 FROM python:3.14.6-slim-trixie@sha256:7bec7ddcddeff7975d6ba9b4be7dd6f6b2f55e7491539145e2978f7f97ce9144
-ARG BUILD_VERSION=0.0.0-edge.6
+ARG BUILD_VERSION=0.0.0-edge.7
 ARG BUILD_ARCH
 ARG DOMUS_SOURCE_COMMIT=3200bd9278f57f142ed03b54843a38a4138fc0af
 LABEL io.hass.type="app" \

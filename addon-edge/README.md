@@ -3,11 +3,14 @@
 Development preview of Domus installed as a Home Assistant app. Open it through HA's Open Web UI;
 it uses your existing HA sign-in without another login.
 
-Edge 0.0.0-edge.6 adds the English/Spanish household administration workspace: participant roster,
+Edge 0.0.0-edge.7 includes the English/Spanish household administration workspace: participant roster,
 household settings, HA administrator mapping, member roles/ordinary permissions, public aliases
 and owner-private preferences. Reviewed changes retain exact revisions and original operation
 identity; a changed verified household retires private drafts. Saved preferences describe stored
 choices; notification delivery remains unavailable.
+
+Edge.7 also requests cold Supervisor backups: HA stops the app while copying its private data.
+The brief interruption closes in-memory sessions; reopening verifies the current HA identity.
 
 This version upgrades verified older data to SQLite schema 9. Preserve the original application/data
 checkpoint and use the documented compatible restore/rollback procedure. Existing identity,

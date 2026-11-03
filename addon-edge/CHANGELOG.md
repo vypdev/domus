@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.0-edge.7
+
+- Require cold Supervisor backups so the app is stopped while its private SQLite data is copied.
+- Document the brief interruption and current-identity revalidation after restart.
+- Require explicit stop/backup/state-aware restart when capturing an older preview without this policy.
+- Preserve the Edge.6 immutable runtime, schema 9, UI bytes and existing permission scope.
+- Keep owner adoption, restore acceptance and required human UX verification pending.
+
 ## 0.0.0-edge.6
 
 - Add the English/Spanish household administration workspace for roster, household, member,

@@ -1,7 +1,7 @@
 # Home Assistant app installation
 
 Current development state (2026-11-03): the owner runs Edge `0.0.0-edge.5` on an `aarch64` HA
-installation. Edge.3 is a separate stopped preview. Edge.6 is the verified installation candidate
+installation. Edge.3 is a separate stopped preview. Edge.7 is the current installation candidate
 for the administration workspace; it is not yet installed on that HA. Stable is not yet published.
 Current image, API and browser verification is recorded in
 [administration evidence](evidence/household-administration-browser.json). Historical receipts below
@@ -15,13 +15,13 @@ The existing Edge.5 app is `60361632_domus_edge`; its source, read from Supervis
 https://github.com/vypdev/domus#feature/8-deliver-the-household-entry-interface-for-native-and-standalone-deployments
 ```
 
-The reviewed Edge.6 candidate is in the existing PR #28 development source:
+The reviewed Edge.7 candidate is in the existing PR #28 development source:
 
 ```text
 https://github.com/vypdev/domus#feature/27-complete-the-household-administration-workspace-after-the-verified-api-and-controller-checkpoint
 ```
 
-These are temporary Action-managed development sources. Publishing Edge.6 on the latter does not
+These are temporary Action-managed development sources. Publishing Edge.7 on the latter does not
 change the former. HA still offers Edge.5 for the installed source; its repository metadata links
 to the same GitHub homepage, so the homepage alone does not identify the branch. Inspect the
 Supervisor store's exact source and installed app slug before deciding which preview to open.
@@ -30,7 +30,7 @@ or migration of the existing app's private data. Keep that existing app and its 
 chosen adoption/data path has been exercised. Never overwrite an old managed Git branch to make
 an installed development repository follow unrelated work.
 
-Edge.6 pins runtime `3200bd9278f57f142ed03b54843a38a4138fc0af` and archive SHA-256
+Edge.7 retains the Edge.6 runtime pin `3200bd9278f57f142ed03b54843a38a4138fc0af` and archive SHA-256
 `ca991d7b3560dbdb7a6a86a34eea19708f01f10c15da502e49ed8ab740a8533b`.
 The [artifact declaration](../addon-edge/artifact.json) fixes the Python and compiled UI bytes.
 Read [configuration, permissions and schema-9 rollback limits](../addon-edge/DOCS.md) before adoption.
@@ -46,18 +46,35 @@ available on the observed system. Inspect the selected app before creating its b
 
 ```sh
 ha apps info <installed_app_slug>
+ha apps stop <installed_app_slug>
+ha apps info <installed_app_slug>
 ha backups new --app <installed_app_slug> --location=.local --name "Domus before update" --raw-json
 ha backups info <returned_backup_slug> --raw-json
 ```
+
+For an older preview such as Edge.5, record whether it was running, explicitly stop it and verify
+that it is stopped before requesting the backup. Keep it stopped until the same job has completed.
+Restart it with `ha apps start <installed_app_slug>` only if it was running beforehand, then inspect
+its state again. If backup fails, retain the error and restore that prior running/stopped state;
+do not update based only on a dispatched job. Never start a preview that was already stopped.
+Edge.7 declares `backup: cold`, so Supervisor handles stopping it during a backup; expect a brief
+availability interruption and fresh identity verification after restart. This is a package policy,
+not evidence of an exercised owner restore. See the
+[official backup configuration](https://contributors.home-assistant.io/apps/reference/configuration/#backups).
 
 Use the exact returned backup identifier. On the observed CLI, the optional location value uses
 `--location=.local`; a separate `.local` argument is rejected before a backup request is accepted.
 A response containing a job ID is dispatch evidence. Inspect that same Supervisor job until it
 is done with no errors, then inspect the backup metadata. Require the intended Domus version and
-only the selected app, without Core or unrelated folders. The current owner preparation produced
-one completed compressed partial backup and rechecked that Edge.5 remained started with the same
-origin configuration. Its private identifier and original device observations are retained locally.
-No owner backup was restored and no Edge.6 adoption is claimed.
+only the selected app, without Core or unrelated folders. An earlier owner preparation produced
+one completed compressed partial backup while Edge.5 remained running. Its outer archive was readable
+and its size/hash/catalog were checked, but concurrent-write consistency was not established. Keep
+that observation separate from the required stopped-app pre-update capture. Private identifiers and
+original device observations remain local. A subsequent selected-app capture was made after an explicit
+successful stop and an independent `app_not_running_error` confirmation. Its job and all children
+completed without errors. Since the app had been running beforehand, it was started afterward;
+the CLI observation timed out, but a fresh app-info read confirmed Edge.5 started with its original
+configuration. The start was not repeated. No owner backup was restored and no Edge.7 adoption is claimed.
 
 A Supervisor app backup and a Domus console snapshot have different boundaries. The app backup
 captures its application/data/configuration at one time; it does not prove that later original

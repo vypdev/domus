@@ -72,6 +72,16 @@ the installed Edge.5 upgrade/replay/restore cycle. The separate current-source i
 complete administration browser campaign. These fixtures use isolated owned data; actual owner
 adoption and required human UX are additional acceptance steps.
 
+Edge.7 retains the Edge.6 runtime/schema and declares `backup: cold`. Supervisor stops Domus while
+copying its private data, causing a brief interruption. In-memory sessions close; after restart,
+reopening the interface verifies the current HA identity. No backup hooks or data exclusions apply.
+See the [Supervisor backup policy](https://contributors.home-assistant.io/apps/reference/configuration/#backups).
+For an older preview without this declaration, explicitly stop it before a pre-update app backup,
+verify the stopped state and backup completion, and restart only if it was running beforehand.
+A readable archive/hash alone does not prove a consistent SQLite capture during concurrent writes.
+An app backup also does not preserve later operations by itself; use the console restoration protocol
+when reconciling newer original-operation evidence. Never replace a live data directory manually.
+
 The build fetches exact reviewed source, compiles with pinned Node/pnpm and includes the UI in the
 installed Python wheel. Node and browser test controls are absent from the runtime image. The
 interface uses the same private listener and accepted Ingress prefix; no extra port, credential,

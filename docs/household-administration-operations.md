@@ -3,7 +3,7 @@
 The development workspace supports both native Ingress and standalone deployments. Ingress uses
 its verified Home Assistant session; standalone uses the existing Home Assistant sign-in flow.
 Each person needs a separate Home Assistant account. A display name or Domus alias never grants access.
-The Edge.6 installation candidate pins the reviewed workspace runtime. Publishing its definition does
+The Edge.7 installation candidate pins the reviewed workspace runtime. Publishing its definition does
 not update an installed application; actual owner adoption and Stable acceptance remain separate.
 
 ## Current access and data
@@ -166,3 +166,21 @@ facts through an administrator alias save. Only a later explicit restricted acti
 the same participant then reads unchanged default private preferences and the saved public alias.
 The [HA installation guide](installation-home-assistant.md) distinguishes the actual old branch source,
 current candidate and completed owner-only backup from an unperformed update or data migration.
+
+## Cold Supervisor backup policy (Edge.7)
+
+The current `0.0.0-edge.7` candidate keeps the Edge.6 immutable runtime/archive, schema9 and all
+155 product file fingerprints. Its distinct package version declares `backup: cold`: Supervisor
+stops Domus while copying private storage, briefly interrupting access and closing memory-only
+sessions. Reopening after restart verifies the current HA identity. The original Edge.5 fixture
+remains unchanged. No backup hooks, exclusions, new permissions or runtime/schema changes are added.
+
+The package contract first failed because `backup` was absent. That omission would use Supervisor's
+hot default, which did not establish a coherent raw copy of live SQLite data. A completed readable
+outer backup archive is separate evidence from transactional consistency or a successful restore.
+The [operator procedure](installation-home-assistant.md) now requires a stopped-app capture for older
+previews and a state-aware restart; a previously stopped app must remain stopped. The earlier owner's
+warm-copy metadata/readability does not close that gate. A later explicit stopped-app capture did
+complete, followed by an independent started-state check after a CLI observation timeout. That is
+not an exercised restore or adoption. Current-head CI, exact-image verification, owner adoption
+and required human UX remain separate acceptance steps.

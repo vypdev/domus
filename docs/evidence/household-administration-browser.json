@@ -1149,7 +1149,7 @@
       "backupRestoreExercised": false,
       "householdMutation": false
     },
-    "guidance": "docs/installation-home-assistant.md separates current sources, backup dispatch/completion, actual current status and historical Edge.1–3 receipts.",
+    "guidance": "docs/installation-home-assistant.md separates current sources, backup dispatch/completion, actual current status and historical Edge.1\u20133 receipts.",
     "limitations": [
       "Source and image identities remain separate from hosted definition-head verification.",
       "New current-head hosted CPU, full coverage and native review gates are required.",
@@ -1227,5 +1227,66 @@
     "reference": "5bd5bc8a-ba99-4ebc-aca4-eeb92d085a12",
     "existingReport": "https://github.com/vypdev/copilot/issues/828#issuecomment-6599376807",
     "scope": "Progress publication rejected; prior labels/assessments retained. Independent product CI passes. No returned clause/count or verified requirement identity is exposed, and no internal cause is inferred. No blind retry or bounds change."
+  },
+  "coldBackupPolicyIncrement": {
+    "recordedAtUTC": "2026-11-03T18:30:18.026677+00:00",
+    "sourceBase": "f459b149475032752476bfd90e77e932c8132b5a",
+    "version": "0.0.0-edge.7",
+    "testsFirst": {
+      "contract": "tests/backend/test_app_package.py::test_supervisor_backup_requires_the_app_to_stop_before_copying_private_storage",
+      "failed": 1,
+      "otherCasesPassed": 7,
+      "cause": "Missing backup key; Supervisor defaults to hot."
+    },
+    "policy": "backup: cold; no backup hooks or exclusions. Supervisor stops the app while copying private data.",
+    "primaryReference": "https://contributors.home-assistant.io/apps/reference/configuration/#backups",
+    "unchanged": [
+      "Runtime commit3200bd9278f57f142ed03b54843a38a4138fc0af and original archive digest",
+      "All151Python/fourUI fingerprints, wheel reference and schema9",
+      "Core permission/private listener and frozen Edge.5 compatibility recipe",
+      "Copilot sources/resources/workflows/configuration/credentials/bounds"
+    ],
+    "ownerEvidenceLimit": "Earlier completed warm backup has readable outer archive and verified size/hash/catalog only. Concurrent-write consistency and restore were not exercised. Older-app pre-update capture requires explicit stop, verified completion and prior-state-aware restart.",
+    "validation": "Local package, exact image, full backend/tooling, unchanged SDD validation and state-aware owner stopped capture/restart pass at their stated scopes. Fresh hosted current-head checks pending. No owner update/restore or required human UX is claimed.",
+    "localValidation": {
+      "backend": {
+        "passed": 4396,
+        "modules": 151,
+        "statements": 10438,
+        "branches": 2928,
+        "coveragePercent": 100,
+        "independentAudit": "pass"
+      },
+      "tooling": {
+        "passed": 179,
+        "statements": 214,
+        "branches": 98,
+        "coveragePercent": 100
+      },
+      "image": {
+        "id": "sha256:3a81102e2eca3f6ce2cf3bb6f8a1d8075b8fd64312e13f085ab03b7f467b697a",
+        "arch": "aarch64",
+        "productFilesVerified": 155,
+        "containerPassed": 4,
+        "browser": {
+          "startTime": "2026-11-03T18:31:10.011Z",
+          "duration": 65018.328,
+          "expected": 34,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "survivingFixtures": 0
+      },
+      "originalSDDPolicy": "Unchanged seven-module SDK validates all20owner documents and186retained/new cases; no acceptance inferred from format success."
+    },
+    "ownerStoppedCapture": {
+      "previousState": "started",
+      "stopResult": "ok; info displayed error, separate stats explicitly returned app_not_running_error. No graceful-exit classification is inferred.",
+      "backupResult": "One new local compressed partial backup of only Domus Edge.5, no Core or unrelated folders. Job and all children done with no errors. Private identifiers/screenshots retained locally.",
+      "restart": "CLI start observation timed out. A fresh independent app-info read confirms Edge.5 started with its original origin, private port and Core permission. The start request was not repeated.",
+      "restoreExercised": false,
+      "actualUpdate": false
+    }
   }
 }
