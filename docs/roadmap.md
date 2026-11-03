@@ -13,22 +13,20 @@ The following milestones are internal integration steps, not proposals to drop l
 | M5 — Integrated acceptance | Dashboard, responsive UX, access control, Stable/Edge packaging | Full CI Check; local Google Chrome dogfooding and recorded cleanup |
 
 The product is not considered first-release complete at M2 or M3.
-Test, user documentation and failure recovery travel with each change.
-PR #3 merged the documentation foundation into develop. Issue #4 begins M1 with locked development
-toolchains, tested quality policies and the project CI Check workflow. This is partial M1 evidence;
-the complete identity/persistence journeys, real HA coverage and channel acceptance remain pending.
-No implementation begins on an invented branch: maintainers and the Action retain their installed lifecycle.
-Issue #6 now has its Action-published companion and verified branch. Its first source checkpoint adds
-the tested SQLite transaction kernel, semantic ports, separate backend coverage and actual import graph.
-The next checkpoint adds pure identity/permission rules, current local authorization, uniquely linked
-member/policy storage, schema 2 migration and bounded session leases. HA protocol adapters now have
-provider/loopback evidence. Standalone browser/session authentication and its HTTP/CLI entrypoints
-now have executable offline coverage. Membership/policy and recovery use cases, manual snapshots,
-business HTTP/console entrypoints and verified offline restore/resume/rollback are implemented and
-tested locally and in the real Edge.3 arm64 image, including actual Edge.2 upgrade/refusal.
-Edge.3 image CI passes on both CPU families and its owner update/session/reload/restart acceptance is bounded. Complete deployment restore,
-product UI, live household/recovery, standalone companion/browser and full
-channel/release acceptance remain M1 work. These source checkpoints do not complete M1 or reduce
-first-release scope.
-Release, merge and deployment require the existing maintainer flow and explicit authorization.
+Tests, user documentation and recovery accompany each usable workflow.
+
+Current state after PR #28:
+
+- M0: the specification foundation and decisions are recorded. Contracts continue to evolve with implementation evidence.
+- M1: HA identity/session, SQLite, recovery foundations, architecture checks and CI are implemented. The full standalone/Ingress, upgrade/restore and Stable production acceptance remains open.
+- M2: household administration is usable in Edge.7. Task creation, assignment, claiming, completion, verification, reopening, dependencies and material recording exist in the backend. Fixed recurrence execution and relative-rule storage exist. Task and calendar screens, the relative lifecycle consumer, configurable point distribution and complete participation/reward flows remain open.
+- M3: task-material foundations exist. Integrated product, stock, shopping, receipt, barcode and optional online lookup workflows remain open.
+- M4: the shared automation engine, both editors and Domus-owned HA entities/services remain open. The existing gateway is already integrated and is outside this work.
+- M5: integrated dashboard, complete responsive UX, both deployment journeys and Stable release acceptance remain open.
+
+The next M2 sequence is a usable task workspace (create, list, inspect, complete and review), then recurrence and calendar, then points and participation. Technical records stay available in optional details. Each increment must have real UI and persistence evidence; coverage of implemented code is not a measure of whole-product completion.
+
+PR #29 / issue #23 retains all recurrence/calendar obligations. Its initial genuine schema-9 fixture is a migration baseline, not evidence that the relative lifecycle or calendar is implemented. Household administration's remaining full acceptance inventory also remains required after its checkpoint merge.
+
+The Action owns managed remote branches. Normal contributor commits use its admitted ref; release and deployment use the authorized maintainer flow.
 Future optional depth includes predictive consumption, workload recommendations, rich rewards and external calendars.

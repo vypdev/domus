@@ -232,6 +232,8 @@ Show current status, completed facts, next transition, required human action, im
 
 ### 9.2 Representative primary view
 
+This fenced block is a literal interface mockup. The action labels describe application buttons; they are not documentation links or proposed URLs.
+
 ```markdown
 # Recurrence review: kitchen filter
 
@@ -251,9 +253,9 @@ Show current status, completed facts, next transition, required human action, im
 
 Approval does not move the next due date. A task explicitly configured to wait for approval shows its next obligation only after approval, using the same actual-work-derived date.
 
-## Links
+## Actions
 
-[Open the task](...) · [Review the schedule](...)
+Buttons: Open the task · Review the schedule
 
 <details><summary>Technical details</summary>Source cycle, revision, and bounded continuation evidence.</details>
 ```
@@ -362,6 +364,21 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `backend/src/domus/entrypoints/calendar_http.py` | create |
 | `backend/src/domus/entrypoints/recurrence_dto.py` | create |
 | `backend/src/domus/composition/calendar.py` | create |
+| `frontend/src/domain/tasks.ts` | create |
+| `frontend/src/application/task-ports.ts` | create |
+| `frontend/src/application/task-controller.ts` | create |
+| `frontend/src/adapters/task-values.ts` | create |
+| `frontend/src/adapters/task-http.ts` | create |
+| `frontend/src/adapters/task-journal.ts` | create |
+| `frontend/src/presentation/domus-tasks.ts` | create |
+| `frontend/src/presentation/task-messages.ts` | create |
+| `frontend/stories/tasks.stories.ts` | create |
+| `frontend/tests/tasks.test.ts` | create |
+| `frontend/tests/task-controller.test.ts` | create |
+| `frontend/tests/task-http.test.ts` | create |
+| `frontend/tests/task-journal.test.ts` | create |
+| `frontend/tests/task-component.test.ts` | create |
+| `frontend/tests/e2e/tasks.spec.ts` | create |
 | `frontend/src/domain/calendar.ts` | create |
 | `frontend/src/application/calendar-controller.ts` | create |
 | `frontend/src/adapters/calendar-http.ts` | create |
@@ -401,6 +418,9 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `backend/src/domus/application/task_creation.py` | update |
 | `backend/src/domus/application/task_commands.py` | update |
 | `backend/src/domus/application/task_queries.py` | update |
+| `backend/src/domus/entrypoints/task_http.py` | update |
+| `tests/backend/test_task_queries.py` | update |
+| `tests/backend/test_task_http.py` | update |
 | `backend/src/domus/application/task_events.py` | update |
 | `backend/src/domus/application/fair_recurrence.py` | update |
 | `backend/src/domus/application/fixed_materialization.py` | update |
@@ -448,6 +468,8 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `docs/evidence/recurrence-rules.json` | update |
 
 Operations are prospective and relative to the verified immutable base 8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9. Each create path is absent and each update/reference path exists there. Declare any additional actual implementation/test/integration paths before implementing them. Preserve the three retained owner documents byte-for-byte. The genuine supported schema-9 fixture must be published before further DDL; preserve released1..8fixtures.
+
+The first visible M2 increment connects the existing task commands and queries to a real create/list/detail/claim/complete/review workflow before adding recurrence and calendar controls. The owner requested a usable task surface before further foundation-only increments. Use server-derived allowed actions and current authorization, preserve original command recovery by key, and keep technical identifiers behind optional details. This sequencing does not retire any retained recurrence/calendar case or all-domain launch obligation.
 
 Document normal paths, current authorization, configuration precedence, pending/absent/unavailable states, original recovery, both deployments and compatible operator rollback. Run the actual existing `uv run domus-check docs` navigation/documentation check. Validate SDD format, consistency, reciprocal traceability, repository paths and catalog through the original unchanged native SDK. Regenerate the canonical catalog through its actual original publication/rendering flow when metadata changes; no nonexistent pnpm command or compatibility shim is introduced. Future source/test paths are declarations here, not false existing-file evidence in the catalog.
 
