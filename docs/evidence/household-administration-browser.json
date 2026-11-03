@@ -1093,5 +1093,68 @@
       "Owner backup/update/rollback and required human UX are separate acceptance.",
       "Remaining domains, HA services/entities and complete Stable/Edge product are unfinished."
     ]
+  },
+  "pendingAliasAndOwnerPreparationIncrement": {
+    "recordedAtUTC": "2026-11-03T17:49:08.466845+00:00",
+    "sourceBase": "fb92abe17594d1d2e6bf32d50ecd48b97d55fc51",
+    "scope": "Two new actual compiled-browser cases plus operator documentation; no authored runtime, schema, package pin or protected Copilot change.",
+    "case": "household-admin-C33",
+    "browserPath": "frontend/tests/e2e/administration.spec.ts",
+    "observations": [
+      "Actual administrator alias PUT preserves exact pending canonical membership/revision and HA metadata in both deployments.",
+      "One original alias key/body creates one receipt/audit/outbox effect; household/member counts, own preferences and mapping remain unchanged.",
+      "The other account remains pending until a separate reviewed restricted activation. The same participant then reads default private locale/summary/revision and saved public alias after reload.",
+      "Markup remains literal; no active b/img/script is rendered."
+    ],
+    "initialCasePreparation": {
+      "completeSuitePassed": 32,
+      "newCasesFailed": 2,
+      "cause": "The test assumed stored pending role restricted. Existing enrollment stores an inactive viewer; the activation editor separately defaults to restricted. The source/owning contract was inspected and only the test premise was corrected. This is not a product bug or a Copilot finding."
+    },
+    "targeted": {
+      "passed": 2,
+      "skipped": 0,
+      "flaky": 0
+    },
+    "actualInstallerImage": {
+      "sourceCommit": "3200bd9278f57f142ed03b54843a38a4138fc0af",
+      "imageID": "sha256:7d8b528a51f7c2f7873d636a420391522620b560f8816323d54dab53c1b2f4b1",
+      "arch": "aarch64",
+      "suite": {
+        "startTime": "2026-11-03T17:46:19.444Z",
+        "duration": 57192.952,
+        "expected": 34,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    "CIContractTestsFirst": {
+      "oldGateFailed": 1,
+      "otherContractCasesPassed": 39,
+      "completeToolingPassedAfterUpdate": 178,
+      "statements": 214,
+      "branches": 98,
+      "coveragePercent": 100
+    },
+    "CIRequirement": "Both CPU jobs require all34 actual-image administration journeys, zero skips/flakes and no surviving owned fixtures. Existing32 cases, timeout180seconds and retries0 remain unchanged.",
+    "ownerPreparation": {
+      "arch": "aarch64",
+      "installedVersion": "0.0.0-edge.5",
+      "latestOffered": "0.0.0-edge.5",
+      "installedSource": "https://github.com/vypdev/domus#feature/8-deliver-the-household-entry-interface-for-native-and-standalone-deployments",
+      "backup": "One completed selected-app compressed partial backup; job and children done without errors; metadata names only Domus Edge.5, no Core or unrelated folders. Private identifiers/screenshots remain local.",
+      "postBackupState": "Started, original public origin/private port/Core permission retained.",
+      "actualUpdate": false,
+      "backupRestoreExercised": false,
+      "householdMutation": false
+    },
+    "guidance": "docs/installation-home-assistant.md separates current sources, backup dispatch/completion, actual current status and historical Edge.1–3 receipts.",
+    "limitations": [
+      "Source and image identities remain separate from hosted definition-head verification.",
+      "New current-head hosted CPU, full coverage and native review gates are required.",
+      "A completed backup metadata check is not restored-data acceptance or an in-place source migration.",
+      "All186case audit, required actual human UX, owner adoption, recurrence23 and remaining full product remain unfinished."
+    ]
   }
 }

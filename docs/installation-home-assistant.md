@@ -1,24 +1,88 @@
 # Home Assistant app installation
 
-Status: Edge 0.0.0-edge.3 is installed and running on the owner's HA. Its update from Edge.2,
-preserved origin, existing-session access, normal Chrome reload and Domus-only restart passed on
-2026-10-31. Package head 0484ba7 passes every CI group, including all 15 image cases on native amd64
-and aarch64. The complete UI, live household/recovery/restore and production release remain pending.
-[Edge.3 owner acceptance](evidence/m1-edge3-ha-acceptance.json) is separate from the earlier
-[persistent Edge.2 receipt](evidence/m1-persistent-ha-acceptance.json) and Edge.1 preview.
+Current development state (2026-11-03): the owner runs Edge `0.0.0-edge.5` on an `aarch64` HA
+installation. Edge.3 is a separate stopped preview. Edge.6 is the verified installation candidate
+for the administration workspace; it is not yet installed on that HA. Stable is not yet published.
+Current image, API and browser verification is recorded in
+[administration evidence](evidence/household-administration-browser.json). Historical receipts below
+retain the original Edge.1–3 observations and do not describe the current installation.
 
-## Intended user journey
+## Current preview and update path
 
-1. Add the published Domus app repository from Settings > Apps > Install app > Repositories.
-2. Install Domus Edge for development, or the separately published stable app for production.
-3. Configure the HA browser origins, then start and select Open Web UI. Optionally enable its sidebar entry.
-4. Use the existing Home Assistant session. There is no second Domus sign-in or password.
+The existing Edge.5 app is `60361632_domus_edge`; its source, read from Supervisor, is:
 
-The independent Docker installation has a separate OAuth journey because it runs outside the
-Supervisor. That journey is not an installation prerequisite for the HA app.
+```text
+https://github.com/vypdev/domus#feature/8-deliver-the-household-entry-interface-for-native-and-standalone-deployments
+```
 
-## Reviewed development repository
+The reviewed Edge.6 candidate is in the existing PR #28 development source:
 
+```text
+https://github.com/vypdev/domus#feature/27-complete-the-household-administration-workspace-after-the-verified-api-and-controller-checkpoint
+```
+
+These are temporary Action-managed development sources. Publishing Edge.6 on the latter does not
+change the former. HA still offers Edge.5 for the installed source; its repository metadata links
+to the same GitHub homepage, so the homepage alone does not identify the branch. Inspect the
+Supervisor store's exact source and installed app slug before deciding which preview to open.
+Adding the new branch as a repository is a separate preview path, not proof of an in-place update
+or migration of the existing app's private data. Keep that existing app and its backup until the
+chosen adoption/data path has been exercised. Never overwrite an old managed Git branch to make
+an installed development repository follow unrelated work.
+
+Edge.6 pins runtime `3200bd9278f57f142ed03b54843a38a4138fc0af` and archive SHA-256
+`ca991d7b3560dbdb7a6a86a34eea19708f01f10c15da502e49ed8ab740a8533b`.
+The [artifact declaration](../addon-edge/artifact.json) fixes the Python and compiled UI bytes.
+Read [configuration, permissions and schema-9 rollback limits](../addon-edge/DOCS.md) before adoption.
+Existing Edge.5/schema7 and old Edge.3 data are distinct from the isolated test fixtures.
+The candidate keeps Ingress, its private listener and the same Core API scope; it requests no
+Supervisor management API, host mount or public port.
+
+## A local pre-update app backup
+
+An operator can use HA's existing Terminal & SSH app. Read the installed CLI's help first;
+current HA calls the commands `ha apps` and `ha backups`. The earlier `ha addons` alias remains
+available on the observed system. Inspect the selected app before creating its backup:
+
+```sh
+ha apps info <installed_app_slug>
+ha backups new --app <installed_app_slug> --location=.local --name "Domus before update" --raw-json
+ha backups info <returned_backup_slug> --raw-json
+```
+
+Use the exact returned backup identifier. On the observed CLI, the optional location value uses
+`--location=.local`; a separate `.local` argument is rejected before a backup request is accepted.
+A response containing a job ID is dispatch evidence. Inspect that same Supervisor job until it
+is done with no errors, then inspect the backup metadata. Require the intended Domus version and
+only the selected app, without Core or unrelated folders. The current owner preparation produced
+one completed compressed partial backup and rechecked that Edge.5 remained started with the same
+origin configuration. Its private identifier and original device observations are retained locally.
+No owner backup was restored and no Edge.6 adoption is claimed.
+
+A Supervisor app backup and a Domus console snapshot have different boundaries. The app backup
+captures its application/data/configuration at one time; it does not prove that later original
+operation history survives restoring that older capture. Use the supported
+[console restoration protocol](restoration.md) for retaining later processed-operation fences
+with a compatible current runtime. An old binary by itself cannot read schema9. Preserve the
+application/data pair and later evidence before a deliberate rollback.
+
+Official references: [store and repository endpoints](https://contributors.home-assistant.io/apps/supervisor-api/store/),
+[repository installation](https://contributors.home-assistant.io/apps/guides/repository/).
+
+## Installation journey
+
+1. Add the selected published development source from Settings > Apps > Install app > Repositories.
+2. Install the intended Domus Edge preview. Stable will have a separate published app and data.
+3. Configure the exact HA browser origins, start the app and select Open Web UI.
+4. Use the existing Home Assistant session. The HA app does not require another Domus login.
+
+Standalone Docker uses HA OAuth because it runs outside Supervisor; this is a separate deployment
+choice, not a prerequisite for the HA app.
+
+## Historical issue #6 repository and Edge.1–3 receipts
+
+The following preserves the earlier development setup and acceptance record. Use the current
+preview instructions above for new work.
 For the issue #6 preview, copy this exact branch URL into the HA repository dialog:
 
 ```text

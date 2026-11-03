@@ -104,7 +104,7 @@ and alias forms. Reordering the roster preserves the selected membership referen
 alias draft. Confirmation emits one intent for that same member. Both languages, deployment
 presentations, themes and reduced motion are covered. This is compiled presentation evidence;
 it does not assert a live HA directory response, successful server write or human UX approval.
-All 32 administration journeys also execute against the actual current image on each CI architecture,
+All 34 administration journeys also execute against the actual current image on each CI architecture,
 including exact high revisions, independent-writer conflicts, original recovery, authority outage,
 keyboard errors, closed-tab restoration, conditional BFCache and actual console restoration.
 Set `DOMUS_BROWSER_IMAGE` to the reviewed local image, `DOMUS_TEST_SOURCE_COMMIT` to its exact revision,
@@ -115,7 +115,7 @@ ports or host mounts. Framed stdio workers preserve each original HTTP request, 
 workers remain independent across host transport threads and match responses to their original frame.
 Each frame makes one inner HTTP request with a fresh connection. I/O failure never resends a mutation.
 Provider fixtures are copied only into the disposable writable container; no test dependency is added
-to the image. The command must report all 32 passing journeys with no skips or flaky results. CI requires
+to the image. The command must report all 34 passing journeys with no skips or flaky results. CI requires
 that exact receipt in both CPU jobs, within the unchanged global suite limit of 180 seconds.
 The runner uses a bounded graceful shutdown so the bridge can retire its owned container before
 reporting ASGI completion. CI also requires
@@ -154,9 +154,15 @@ as `DOMUS_SCHEMA7_IMAGE`, the actual `addon-edge` candidate as `DOMUS_EDGE_IMAGE
 current-source/other compatibility images before running `uv run pytest tests/containers --no-cov`.
 Both CPU jobs now require the actual preview's product-file, native restart/authority, standalone
 delivery and real Edge.5 upgrade/replay/restoration checks in addition to the existing suite.
-The current-source image still runs all 32 administration browser journeys per CPU. A separate local
+The current-source image runs all 34 administration browser journeys per CPU. A prior separate local
 aarch64 campaign has also passed all 32 journeys against the actual pinned Edge.6 image.
 
 These isolated campaigns do not change the installed owner's Edge.5 or create a household.
 Fresh Chrome observation confirms the current Edge.5 identity and empty setup state; actual update,
 owned backup/compatible rollback, live administration and human UX review remain unproven.
+
+The pending-alias journey independently preserves the exact pending membership and canonical source
+facts through an administrator alias save. Only a later explicit restricted activation grants access;
+the same participant then reads unchanged default private preferences and the saved public alias.
+The [HA installation guide](installation-home-assistant.md) distinguishes the actual old branch source,
+current candidate and completed owner-only backup from an unperformed update or data migration.

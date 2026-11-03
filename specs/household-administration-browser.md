@@ -390,6 +390,7 @@ Tests first. Preserve repository-wide supported coverage, complete global and pe
 | `tests/backend/test_app_package.py` | update |
 | `tests/backend/test_member_profiles.py` | update |
 | `frontend/tests/administration.test.ts` | update |
+| `docs/installation-home-assistant.md` | update |
 | `docs/household-administration.md` | update |
 | `docs/household-api.md` | update |
 | `docs/household-administration-operations.md` | create |

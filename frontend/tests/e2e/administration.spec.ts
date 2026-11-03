@@ -147,6 +147,58 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     await page.reload();await widget.getByRole('button',{name:'Edit access rules',exact:true}).click();
     await expect(widget.getByLabel('HA administrator mapping',{exact:true})).toHaveValue('selected_ha_user');await expect(widget.getByLabel('View tasks',{exact:true})).toHaveValue('deny');
   });
+  test('household-admin-C33: an administrator edits a pending alias without activation or private changes, then the same participant gains reviewed access',async({page,context,browser,request})=>{
+    const widget=await create(page,context,mode),peer=await browser.newContext(),other=await peer.newPage();
+    const subject=mode==='native'?'c':'b',alias='<b>Shared participant alias</b>';
+    try{
+      await widget.getByRole('button',{name:'Edit access rules',exact:true}).click();
+      await widget.getByLabel('HA administrator mapping',{exact:true}).selectOption('selected_ha_user');
+      await widget.getByLabel('Target Home Assistant account',{exact:true}).selectOption('a'.repeat(32));await save(widget);
+      await widget.getByRole('button',{name:'Close editor',exact:true}).click();
+      if(mode==='native')await peer.addCookies([{name:'ingress_session',value:'e'.repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
+      else expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:subject.repeat(32)}})).ok()).toBe(true);
+      await other.goto(base(mode)+'/');await signIn(other,mode);
+      await other.getByRole('button',{name:'Request membership',exact:true}).click();
+      await expect(other.getByRole('heading',{name:'Membership pending',exact:true})).toBeVisible();
+      if(mode==='standalone')expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:'a'.repeat(32)}})).ok()).toBe(true);
+      await widget.getByRole('button',{name:'Refresh administration',exact:true}).click();
+      const roster=await(await page.request.get(base(mode)+'/api/v1/administration/roster')).json();
+      const original=roster.members.find((row:{member:{ha_user_id:string}})=>row.member.ha_user_id===subject.repeat(32));
+      // Pending storage is viewer with no active access; the activation editor separately defaults to restricted.
+      expect(original.member).toMatchObject({status:'pending',role:'viewer',revision:1});
+      const preferences=await(await page.request.get(base(mode)+'/api/v1/administration/preferences')).json();
+      const policy=await(await page.request.get(base(mode)+'/api/v1/policy')).json(),before=await statistics(request,mode);
+      const path=base(mode)+'/api/v1/administration/members/'+original.member.member_id+'/presentation',writes:{key:string;body:string|null}[]=[];
+      page.on('request',item=>{if(item.url()===path&&item.method()==='PUT')writes.push({key:item.headers()['idempotency-key'],body:item.postData()});});
+      await widget.getByRole('button',{name:'Change alias: Fictional account '+subject,exact:true}).click();
+      await widget.getByRole('checkbox',{name:'Use Home Assistant name',exact:true}).uncheck();
+      await widget.getByRole('textbox',{name:'Domus alias',exact:true}).fill(alias);await save(widget);
+      expect(writes).toHaveLength(1);expect(JSON.parse(writes[0].body!)).toEqual({expected_revision:1,alias});
+      const current=await(await page.request.get(base(mode)+'/api/v1/administration/roster')).json();
+      const changed=current.members.find((row:{member:{member_id:string}})=>row.member.member_id===original.member.member_id);
+      expect(changed.member).toEqual(original.member);expect(changed.metadata).toEqual(original.metadata);
+      expect(changed.presentation).toEqual({...original.presentation,alias,revision:2});
+      expect(changed).not.toHaveProperty('preferences');await expect(widget.locator('b,img,script')).toHaveCount(0);
+      expect(await(await page.request.get(base(mode)+'/api/v1/administration/preferences')).json()).toEqual(preferences);
+      expect(await(await page.request.get(base(mode)+'/api/v1/policy')).json()).toEqual(policy);
+      const after=await statistics(request,mode);
+      for(const table of ['receipts','audit','outbox'])expect(after.counts[table],table).toBe(before.counts[table]+1);
+      for(const table of ['members','households'])expect(after.counts[table],table).toBe(before.counts[table]);
+      await other.getByRole('button',{name:'Refresh status',exact:true}).click();
+      await expect(other.getByRole('heading',{name:'Membership pending',exact:true})).toBeVisible();
+      await widget.getByRole('button',{name:'Close editor',exact:true}).click();
+      await widget.getByRole('button',{name:'Manage participant: '+alias,exact:true}).click();
+      await expect(widget.getByLabel('Household profile',{exact:true})).toHaveValue('restricted');
+      await widget.getByLabel('Membership status',{exact:true}).selectOption('active');
+      await widget.getByRole('checkbox',{name:'Approve household access',exact:true}).check();await save(widget);
+      await other.getByRole('button',{name:'Refresh status',exact:true}).click();
+      const own=other.locator('domus-administration');await expect(own.getByRole('button',{name:'Edit preferences',exact:true})).toBeEnabled();
+      expect(await(await other.request.get(base(mode)+'/api/v1/administration/preferences')).json()).toMatchObject({
+        member_id:original.member.member_id,locale:null,routine_participation_summaries:true,revision:1,notification_delivery:'unavailable'});
+      expect(await(await other.request.get(path)).json()).toEqual({member_id:original.member.member_id,alias,revision:2});
+      await other.reload();await expect(own.getByText(alias,{exact:true}).first()).toBeVisible();expect(writes).toHaveLength(1);
+    }finally{await peer.close();}
+  });
   test('HADW-04: an actual second HA account requests membership before restricted activation and a later profile change',async({page,context,browser,request})=>{
     const widget=await create(page,context,mode);
     await widget.getByRole('button',{name:'Edit access rules',exact:true}).click();await widget.getByLabel('HA administrator mapping',{exact:true}).selectOption('selected_ha_user');

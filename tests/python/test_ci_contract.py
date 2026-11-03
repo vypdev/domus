@@ -277,10 +277,10 @@ def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> Non
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all thirty-two actual-image administration journeys"
+        if step.get("name") == "Require all thirty-four actual-image administration journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
-    assert "expected']==32" in audit["run"]
+    assert "expected']==34" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )
