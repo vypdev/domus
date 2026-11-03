@@ -64,6 +64,24 @@ original processing; it does not guarantee that later state still has that effec
 a snapshot, historical processing can be retained while the original effect is absent. Inspect current
 facts before requesting new work. Do not use a historical receipt to repopulate private preferences.
 
+## Leaving and restoring the page
+
+Leaving the page retires its private view and resources. Returning requires current proof before
+private facts are shown again; a previous unsent editor is not revived. Private `no-store` responses
+can cause Chromium to reload on back navigation. Browser caching eligibility does not grant access.
+
+Restoring a closed tab can retain that tab's original journal. The workspace still verifies current
+identity and requires an explicit original-result check. Opening an unrelated new tab does not copy
+the old tab's journal. The server retains original processing proof independently; a missing local
+record does not prove that its effect never happened.
+
+The navigation checks distinguish normal no-store reloads from actual BFCache in a separate browser
+with an explicit cache policy. Product headers remain unchanged. Closed-tab checks use the public
+[Chromium sessions API](https://developer.chrome.com/docs/extensions/reference/api/sessions) in a
+disposable test profile with a generated test-only extension; they do not modify the owner's Chrome.
+The [Chrome no-store policy](https://developer.chrome.com/docs/web-platform/bfcache-ccns) explains why
+normal back navigation and conditional persisted navigation need separate assertions.
+
 ## Verification and rollout
 
 Run `pnpm test:frontend` for actual Chromium component/controller coverage and its independent source

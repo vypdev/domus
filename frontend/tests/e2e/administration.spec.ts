@@ -1,4 +1,5 @@
-import {expect,test} from '@playwright/test';
+import {chromium,expect,test} from '@playwright/test';
+import {mkdir,writeFile} from 'node:fs/promises';
 import type {APIRequestContext,BrowserContext,Locator,Page} from '@playwright/test';
 
 const prefix='/api/hassio_ingress/fixture_domus_supervisor_1234567890';
@@ -252,16 +253,155 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     }
     expect(writes).toEqual([]);expect(await statistics(request,mode)).toEqual(before);
   });
-  test('HADB-02: actual console restoration keeps original history without reviving the removed public alias effect',async({page,context,request})=>{
-    const widget=await create(page,context,mode);expect((await request.post(origin(mode)+'/__fixture__/operator',{data:{action:'snapshot'}})).ok()).toBe(true);
+  test('household-admin-C65: normal no-store back navigation reloads with current authority instead of reviving a private draft',async({page,context,request},info)=>{
+    const widget=await create(page,context,mode),before=await statistics(request,mode),writes:string[]=[];
+    page.on('request',item=>{if(item.method()==='PUT')writes.push(item.url());});
+    await widget.getByRole('button',{name:'Edit household',exact:true}).click();
+    await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Unsent private navigation draft');
+    await page.evaluate(()=>{(window as unknown as {domusColdNavigationMarker:string}).domusColdNavigationMarker=crypto.randomUUID();});
+    await page.goto(origin(mode)+'/__fixture__/ready');
+    expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{rejected:true}})).ok()).toBe(true);
+    await page.goBack({waitUntil:'commit'});
+    await expect(page.getByRole('button',{name:mode==='native'?'Reopen Domus':'Sign in with Home Assistant',exact:true})).toBeVisible();
+    await expect(widget.getByRole('heading',{name:'Household administration',exact:true})).toHaveCount(0);
+    await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toHaveCount(0);
+    const observation=await page.evaluate(()=>({marker:(window as unknown as {domusColdNavigationMarker?:string}).domusColdNavigationMarker??null,
+      navigation:(performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming).type,
+      reasons:(performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming&{notRestoredReasons?:{toJSON():unknown}}).notRestoredReasons?.toJSON()??null}));
+    expect(observation.marker).toBeNull();expect(observation.navigation).toBe('back_forward');
+    expect(JSON.stringify(observation.reasons)).toContain('response-cache-control-no-store');
+    expect(writes).toEqual([]);expect(await statistics(request,mode)).toEqual(before);
+    await info.attach('normal-no-store-navigation',{body:JSON.stringify(observation),contentType:'application/json'});
+  });
+  test('household-admin-C64: actual closed-tab restoration recovers a committed request whose response was never delivered',async({request},info)=>{
+    // A disposable Chromium profile/extension invokes the public sessions API. No owner profile or injected journal data.
+    const extension=info.outputPath('session-restore-extension');await mkdir(extension,{recursive:true});
+    await writeFile(extension+'/manifest.json',JSON.stringify({manifest_version:3,name:'Domus closed-tab test driver',version:'1.0',
+      permissions:['sessions','tabs'],background:{service_worker:'worker.js'}}));
+    await writeFile(extension+'/worker.js','chrome.runtime.onInstalled.addListener(() => {});');
+    const context=await chromium.launchPersistentContext(info.outputPath('session-restore-profile'),{channel:'chromium',headless:true,
+      ignoreDefaultArgs:['--disable-extensions'],args:['--disable-extensions-except='+extension,'--load-extension='+extension]});
+    let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
+    try{
+      const worker=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker');
+      expect(worker.url()).toMatch(/^chrome-extension:\/\//u);
+      const page=await context.newPage(),widget=await create(page,context,mode),writes:{key:string;body:string}[]=[],lookups:string[]=[];
+      context.on('request',item=>{if(item.method()==='PUT')writes.push({key:item.headers()['idempotency-key'],body:item.postData()!});
+        if(item.url().includes('/administration/requests/')||item.url().includes('/operations/'))lookups.push(item.url());});
+      let committed!:()=>void;const ready=new Promise<void>(resolve=>{committed=resolve;});
+      await page.route(base(mode)+'/api/v1/administration/preferences',async route=>{
+        if(route.request().method()!=='PUT')return route.continue();
+        const upstream=await route.fetch({maxRetries:0,maxRedirects:0});expect(upstream.status()).toBe(200);await upstream.body();
+        committed();await gate;if(!page.isClosed())await route.abort('connectionreset');
+      });
+      await widget.getByRole('button',{name:'Edit preferences',exact:true}).click();await widget.getByLabel('Saved language',{exact:true}).selectOption('en');
+      await widget.getByRole('checkbox',{name:'Routine participation summaries',exact:true}).uncheck();
+      await widget.getByRole('button',{name:'Review changes',exact:true}).click();await widget.getByRole('button',{name:'Save changes',exact:true}).click();
+      await ready;expect(writes).toHaveLength(1);const before=await statistics(request,mode);
+      const original=await page.evaluate(key=>JSON.parse(sessionStorage.getItem(key)!).records[0],journalKey);
+      expect(original).toMatchObject({key:writes[0].key,stage:'prepared',payload:{expected_revision:'1',locale:'en',routine_participation_summaries:false}});
+      const closedURL=page.url();await page.close();expect(page.isClosed()).toBe(true);
+      const sessions=await worker.evaluate(async()=>{
+        const sessions=(globalThis as unknown as {chrome:{sessions:{getRecentlyClosed(filter:{maxResults:number}):Promise<{tab?:{url?:string;sessionId?:string}}[]>}}}).chrome.sessions;
+        return sessions.getRecentlyClosed({maxResults:10});
+      });
+      const closed=sessions.find(item=>item.tab?.url===closedURL)?.tab;expect(closed?.sessionId).toEqual(expect.any(String));
+      const opened=context.waitForEvent('page');
+      await worker.evaluate(async id=>{
+        const sessions=(globalThis as unknown as {chrome:{sessions:{restore(id:string):Promise<unknown>}}}).chrome.sessions;await sessions.restore(id);
+      },closed!.sessionId!);
+      const restored=await opened;await restored.waitForLoadState('domcontentloaded');const resumed=restored.locator('domus-administration');
+      await expect(resumed.getByRole('button',{name:'Check original request',exact:true})).toBeEnabled();
+      expect(writes).toHaveLength(1);expect(lookups).toEqual([]);
+      expect(await restored.evaluate(key=>JSON.parse(sessionStorage.getItem(key)!).records[0],journalKey)).toEqual(original);
+      await resumed.getByRole('button',{name:'Check original request',exact:true}).click();
+      await expect(resumed.getByRole('heading',{name:'Original request processed',exact:true})).toBeVisible();
+      expect(lookups).toEqual([base(mode)+'/api/v1/administration/requests/member.preferences.update/'+original.key]);
+      expect(writes).toHaveLength(1);expect(await statistics(request,mode)).toEqual(before);
+      expect(await(await restored.request.get(base(mode)+'/api/v1/administration/preferences')).json()).toMatchObject({locale:'en',routine_participation_summaries:false,revision:2});
+      await info.attach('actual-closed-tab-restore',{body:JSON.stringify({closed:true,restoredURL:restored.url(),originalStage:original.stage,mutationCount:writes.length,
+        protectedOriginalReads:lookups.length,counts:before.counts,journalInjected:false}),contentType:'application/json'});
+    }finally{release();await context.close();}
+  });
+  test('household-admin-C65: real BFCache under an explicit browser cache policy retires drafts and requires fresh proof',async({request},info)=>{
+    // Conditional browser policy only: product no-store/CSP/auth headers and all real API responses stay unchanged.
+    const browser=await chromium.launch({channel:'chromium',headless:true,ignoreDefaultArgs:['--disable-back-forward-cache'],args:[
+      '--enable-features=BackForwardCache:should_ignore_blocklists/true,CacheControlNoStoreEnterBackForwardCache:level/restore-unless-cookie-change']});
+    try{
+    const context=await browser.newContext(),page=await context.newPage(),cdp=await context.newCDPSession(page),notUsed:unknown[]=[];
+    cdp.on('Page.backForwardCacheNotUsed',value=>notUsed.push(value));await cdp.send('Page.enable');
+    const widget=await create(page,context,mode),writes:string[]=[],lookups:string[]=[];
+    page.on('request',item=>{if(item.method()==='PUT')writes.push(item.url());
+      if(item.url().includes('/administration/requests/')||item.url().includes('/operations/'))lookups.push(item.url());});
+    await widget.getByRole('button',{name:'Edit own alias',exact:true}).click();await widget.getByRole('checkbox',{name:'Use Home Assistant name',exact:true}).uncheck();
+    await widget.getByRole('textbox',{name:'Domus alias',exact:true}).fill('Freshly revalidated alias');await save(widget);
+    await widget.getByRole('button',{name:'Close editor',exact:true}).click();
+    await widget.getByRole('button',{name:'Edit preferences',exact:true}).click();await widget.getByLabel('Saved language',{exact:true}).selectOption('es');
+    const before=await statistics(request,mode);
+    const marker=await page.evaluate(()=>{
+      type App=HTMLElement&{view:{phase:string;session:unknown};administration:unknown;updateComplete:Promise<boolean>};
+      type Widget=HTMLElement&{updateComplete:Promise<boolean>};
+      const app=document.querySelector('domus-app')! as App,widget=app.shadowRoot!.querySelector('domus-administration')! as Widget;
+      const probe={marker:crypto.randomUUID(),hides:[] as {persisted:boolean;trusted:boolean;retired:boolean;renderedHidden:boolean}[],
+        shows:[] as {persisted:boolean;trusted:boolean;proofPending:boolean}[]};
+      (window as unknown as {domusNavigationProbe:typeof probe}).domusNavigationProbe=probe;
+      addEventListener('pagehide',event=>{
+        const observation={persisted:event.persisted,trusted:event.isTrusted,retired:app.view.phase==='closed'&&app.view.session===null&&app.administration===null,renderedHidden:false};
+        probe.hides.push(observation);
+        void(async()=>{await app.updateComplete;await widget.updateComplete;
+          observation.renderedHidden=widget.shadowRoot!.querySelector('form,input,select')===null
+            &&!widget.shadowRoot!.textContent!.includes('Freshly revalidated alias');})();
+      });
+      addEventListener('pageshow',event=>{probe.shows.push({persisted:event.persisted,trusted:event.isTrusted,proofPending:app.view.session===null&&app.administration===null});});
+      return probe.marker;
+    });
+    const probe=()=>page.evaluate(()=>(window as unknown as {domusNavigationProbe:{marker:string;hides:{persisted:boolean;trusted:boolean;retired:boolean;renderedHidden:boolean}[];
+      shows:{persisted:boolean;trusted:boolean;proofPending:boolean}[]}}).domusNavigationProbe);
+    await page.goto(origin(mode)+'/__fixture__/ready');await page.goBack({waitUntil:'commit'});
+    await expect(widget.getByRole('button',{name:'Edit preferences',exact:true})).toBeEnabled();
+    const diagnostic=await page.evaluate(()=>({userAgent:navigator.userAgent,reasons:(performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming&{notRestoredReasons?:{toJSON():unknown}}).notRestoredReasons?.toJSON()??null}));
+    await info.attach('bfcache-navigation-diagnostic',{body:JSON.stringify({diagnostic,notUsed}),contentType:'application/json'});
+    const first=await probe();expect(first?.marker,JSON.stringify({diagnostic,notUsed})).toBe(marker);
+    expect(first.hides).toEqual([{persisted:true,trusted:true,retired:true,renderedHidden:true}]);
+    expect(first.shows).toEqual([{persisted:true,trusted:true,proofPending:true}]);
+    await expect(widget.getByText('Freshly revalidated alias',{exact:true}).first()).toBeVisible();
+    await expect(widget.getByLabel('Saved language',{exact:true})).toHaveCount(0);
+    await page.goto(origin(mode)+'/__fixture__/ready');
+    expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{rejected:true}})).ok()).toBe(true);
+    await page.goBack({waitUntil:'commit'});
+    await expect(widget.getByRole('heading',{name:'Household administration',exact:true})).toHaveCount(0);
+    await expect(page.getByRole('button',{name:mode==='native'?'Reopen Domus':'Sign in with Home Assistant',exact:true})).toBeVisible();
+    const second=await probe();expect(second.marker).toBe(marker);expect(second.hides).toHaveLength(2);expect(second.shows).toHaveLength(2);
+    expect(second.hides[1]).toEqual({persisted:true,trusted:true,retired:true,renderedHidden:true});
+    expect(second.shows[1]).toEqual({persisted:true,trusted:true,proofPending:true});
+    await expect(widget.getByText('Freshly revalidated alias',{exact:true})).toHaveCount(0);
+    expect(writes).toHaveLength(1);expect(lookups).toEqual([]);expect(await statistics(request,mode)).toEqual(before);
+    await info.attach('actual-bfcache-observations',{body:JSON.stringify(second),contentType:'application/json'});
+    }finally{await browser.close();}
+  });
+  test('household-workspace-C59: actual console restoration fences an exact original PUT replay without reviving the removed alias',async({page,context,request})=>{
+    const widget=await create(page,context,mode),writes:{url:string;body:string;key:string;context:string}[]=[];
+    page.on('request',item=>{if(item.method()==='PUT')writes.push({url:item.url(),body:item.postData()!,
+      key:item.headers()['idempotency-key'],context:item.headers()['x-domus-context']});});
+    expect((await request.post(origin(mode)+'/__fixture__/operator',{data:{action:'snapshot'}})).ok()).toBe(true);
     await widget.getByRole('button',{name:'Edit own alias',exact:true}).click();await widget.getByRole('checkbox',{name:'Use Home Assistant name',exact:true}).uncheck();
     await widget.getByRole('textbox',{name:'Domus alias',exact:true}).fill('Rolled away alias');await save(widget);
+    expect(writes).toHaveLength(1);expect(JSON.parse(writes[0].body)).toEqual({expected_revision:1,alias:'Rolled away alias'});
+    const saved=await page.evaluate(key=>JSON.parse(sessionStorage.getItem(key)!).records[0],journalKey);
+    expect(saved).toMatchObject({key:writes[0].key,stage:'committed',operationId:expect.any(String)});
     expect((await request.post(origin(mode)+'/__fixture__/operator',{data:{action:'restore'}})).ok()).toBe(true);const before=await statistics(request,mode);
     await page.reload();await signIn(page,mode);await expect(widget.getByRole('heading',{name:'Household administration',exact:true})).toBeVisible();
     await expect(widget.getByText('Rolled away alias',{exact:true})).toHaveCount(0);await widget.getByRole('button',{name:'Check original request',exact:true}).click();
     await expect(widget.getByRole('heading',{name:'Processed before restoration',exact:true})).toBeVisible();
     await expect(widget.getByText('This operation was processed before restoration. Its effect is absent from current state.',{exact:true})).toBeVisible();
     await widget.getByRole('button',{name:'Edit own alias',exact:true}).click();await expect(widget.getByRole('checkbox',{name:'Use Home Assistant name',exact:true})).toBeChecked();
-    expect((await statistics(request,mode)).counts).toEqual(before.counts);
+    // Explicit raw API replay, never a UI retry. Use fresh restored authority/CSRF but the exact original key/body/context.
+    const csrf=await(await page.request.get(base(mode)+'/api/v1/auth/csrf')).json();
+    const replay=await page.request.put(writes[0].url,{data:writes[0].body,headers:{'Content-Type':'application/json',Origin:origin(mode),
+      'X-CSRF-Token':csrf.csrf_token,'Idempotency-Key':writes[0].key,'X-Domus-Context':writes[0].context}});
+    expect(replay.status()).toBe(200);expect(await replay.json()).toMatchObject({state:'historical',operation_id:saved.operationId,
+      message:'This operation was processed before restoration. Its effect is absent from current state.'});
+    expect(await(await page.request.get(writes[0].url)).json()).toMatchObject({alias:null,revision:1});
+    expect(writes).toHaveLength(1);expect((await statistics(request,mode)).counts).toEqual(before.counts);
   });
 });

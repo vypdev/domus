@@ -489,5 +489,72 @@
       "privateLocalOnly": true
     },
     "hosted": "New current-head checks and complete native finding review pending."
+  },
+  "navigationIncrement": {
+    "sourceBase": "e32aa071666990e1fed86e9d67be7bb264eb3287",
+    "productionRuntimeChanged": false,
+    "unchangedBaseline": {
+      "frontend": 1231,
+      "frontendJob": 125859691618,
+      "backend": 4374,
+      "backendJob": 125859691661,
+      "coverage": "100%all4global/perfile;31frontendruntimefiles/151Pythonmodules",
+      "wheelSHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754",
+      "scope": "Runtime and compiled resource hashes match the verified e32 baseline. Local unit/backend/catalog baseline is not misreported as a new execution; new-head CI will execute all suites."
+    },
+    "compiledBrowser": {
+      "wholeCampaign": 87,
+      "newCases": 6,
+      "expandedRestoreCases": 2,
+      "skipped": 0,
+      "flaky": 0,
+      "deployments": [
+        "native",
+        "standalone"
+      ],
+      "providers": "Fictional loopback HA/Supervisor; actual compiled product Python/SQLite and actual installation-console restore."
+    },
+    "traceability": [
+      {
+        "case": "household-workspace-C59",
+        "evidence": "frontend/tests/e2e/administration.spec.ts",
+        "assertions": "Actual console snapshot/prepare/activation restores state before alias write. UI originalGET reports historical/absent. An explicit raw PUT retains original key/body/context and fresh current CSRF, returns same operation/historical result, leaves alias null/revision1 and no additional receipts/audit/outbox. The UI never resends."
+      },
+      {
+        "case": "household-admin-C64",
+        "evidence": "frontend/tests/e2e/administration.spec.ts",
+        "assertions": "Disposable full Chromium profile with a generated test-only sessions/tabs extension closes the real tab after the actual SQLite commit but before any PUT reply reaches it. Public sessions.getRecentlyClosed/restore reopens that tab with its own prepared journal. No injected/copied storage. Explicit originalGET recovers committed with one mutation total and unchanged effects. Owner Chrome/profile is untouched."
+      },
+      {
+        "case": "household-admin-C65",
+        "evidence": [
+          "frontend/tests/e2e/administration.spec.ts",
+          "frontend/tests/runtime.test.ts"
+        ],
+        "assertions": "Normal pinned browser policy demonstrably refuses BFCache for private no-store responses and performs fresh back navigation with revoked identity. A separate full Chromium instance with explicit browser-only BFCache policy performs trusted persisted pagehide/pageshow; original heap marker survives, private drafts/DOM retire, fresh proof is pending before facts return, and later rejected identity exposes no private facts. Existing runtime tests separately fence a delayed pre-cache response and preserve its prepared original without automatic GET/PUT."
+      }
+    ],
+    "browserPolicy": {
+      "normal": "Default browser security policy with Playwright BFCache-disabling switch omitted; real no-store refusal is asserted rather than mistaken for a persisted restore.",
+      "conditional": "Separate Chromium channel instance; --enable-features=BackForwardCache:should_ignore_blocklists/true,CacheControlNoStoreEnterBackForwardCache:level/restore-unless-cookie-change. Controlled conditional cache eligibility, not a default owner-Chrome performance claim. Product Cache-Control/CSP/auth/response bytes remain unchanged.",
+      "closedTab": "Separate disposable persistent Chromium profile. Generated manifest/worker are test outputs, never included in Domus or installed in owner Chrome. Only sessions/tabs permissions; no host access or journal injection."
+    },
+    "originalDiagnostics": [
+      "Default no-store exclusion retained with actual notRestoredReasons.",
+      "Headless shell still refuses even under conditional blocklist flag; full Chromium provides real persisted navigation.",
+      "Nested launchOptions is rejected by the pinned runner; dedicated browser ownership fixes that harness configuration.",
+      "Standalone rejected proof correctly offers sign-in; native offers reopening. First assertion assumed the native action for both; no production change for that correction."
+    ],
+    "primarySources": [
+      "https://developer.chrome.com/docs/web-platform/bfcache-ccns",
+      "https://developer.chrome.com/docs/extensions/reference/api/sessions",
+      "https://playwright.dev/docs/chrome-extensions",
+      "https://raw.githubusercontent.com/chromium/chromium/aa94c3c2211d9caae42b2c0af767eda9857fc81b/content/browser/renderer_host/back_forward_cache_impl.cc"
+    ],
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-navigation-e32aa07",
+      "privateLocalOnly": true
+    },
+    "remaining": "Full186-case semantic acceptance audit, image/rollback owning rows, human UX and compatible owner adoption remain separate. Recurrence-dependent obligations are retained. New-head CI/native review pending."
   }
 }
