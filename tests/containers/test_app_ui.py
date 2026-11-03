@@ -70,8 +70,6 @@ def exercise_packaged_ui_delivery(image, data_volume, expected):
 
 def test_packaged_ui_bytes_and_same_listener_standalone_delivery(image, data_volume):
     expected = json.loads(
-        (
-            Path(__file__).resolve().parents[2] / "docs/evidence/household-administration.json"
-        ).read_text()
+        (Path(__file__).resolve().parents[2] / "docs/evidence/task-workspace.json").read_text()
     )["currentSourcePackage"]["actualProductFiles"]
     exercise_packaged_ui_delivery(image, data_volume, expected)

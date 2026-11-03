@@ -1,6 +1,6 @@
 {
   "recordedAtUTC": "2026-11-03T23:17:21.438325+00:00",
-  "status": "Task workspace source implementation; preview packaging and owner adoption pending",
+  "status": "Task workspace source and pinned Edge.8 verified on both CPU families; owner adoption pending",
   "issue": 23,
   "pullRequest": 29,
   "preparationBase": "a954ce091d19f6350d64eec759670d5a1fadcfb5",
@@ -128,13 +128,13 @@
   "goalComplete": false,
   "specificationIndependentPreflight": {
     "sections": 20,
-    "characters": 56546,
-    "sha256": "b53f13afe98984a9c93d1006db72eb70a6615c6b0b19f92e5cc461dd6eb7e249",
-    "pathOperations": 130,
+    "characters": 56935,
+    "sha256": "d0e7c6a14b6d5d8f777395e39f56824ec9d995afde7331f712df2b9768ad9b45",
+    "pathOperations": 138,
     "pathCounts": {
       "create": 60,
-      "update": 63,
-      "reference": 7
+      "update": 72,
+      "reference": 6
     },
     "retainedOwners": {
       "specs/recurrence-calendar.md": "20ef11a108758e1d264c7fedacf6572af871041751aa959f7b00d57210c35ea0",
@@ -142,5 +142,30 @@
       "specs/recurrence-storage-continuation.md": "c79c018e359e26e6f6ab0d774c55c7bd39d39452dc06dee81f0d138eb469b43b"
     },
     "scope": "Independent consumer structural/path/retained-byte preflight; not original native SDK validation."
+  },
+  "publishedRuntime": {
+    "commit": "2ee3ff45babfbc9e16fc345767154b1c546ba327",
+    "sourceArchiveSHA256": "dc5199c8013714cce815371dfa988b97da050bab3b7192442e07319e7146d5a3"
+  },
+  "previewCandidate": {
+    "version": "0.0.0-edge.8",
+    "storageSchema": 9,
+    "artifact": "addon-edge/artifact.json",
+    "bothCPUVerification": {
+      "scope": "Actual pinned installer images; exact155product file fingerprints, native restart/authority, standalone UI and frozen Edge.5 upgrade/replay/restore per CPU. Browser campaign uses real image product with fictional HA/Supervisor transports.",
+      "images": {
+        "aarch64": {
+          "imageID": "sha256:5b5662d99e4d2d843dc5c6452eece07a195925411123128bbf0284ea851f85de",
+          "pinnedImageChecksPassed": 4,
+          "actualImageBrowserJourneysPassed": 42
+        },
+        "amd64": {
+          "imageID": "sha256:7daea4c9c04e92bc30e5f3b50c136cb4cccc62ef24aa282aec1e8efc54c56dfb",
+          "pinnedImageChecksPassed": 4,
+          "actualImageBrowserJourneysPassed": 42
+        }
+      }
+    },
+    "ownerAdoption": "Pending: Chrome browser control reports native pipe unavailable; native observation has stale/empty page content and a uniform screenshot. HA responds to an unauthenticated HTTP request. No installation/update is claimed."
   }
 }

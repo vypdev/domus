@@ -257,19 +257,23 @@ def test_installed_copilot_resources_are_unchanged(relative: str, expected: str)
     assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected, relative
 
 
-def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> None:
+def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     steps = workflow()["jobs"]["containers"]["steps"]
     actual = next(
         step
         for step in steps
-        if step.get("name") == "Execute administration in the actual isolated image from Chromium"
+        if step.get("name")
+        == "Execute household workflows in the actual isolated image from Chromium"
     )
     assert actual["env"] == {
         "DOMUS_BROWSER_IMAGE": "domus-app-ci",
         "DOMUS_TEST_SOURCE_COMMIT": "${{ github.sha }}",
         "DOMUS_TEST_ARCH": "${{ matrix.arch }}",
     }
-    assert "playwright.entry.config.ts tests/e2e/administration.spec.ts" in actual["run"]
+    assert (
+        "playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts"
+        in actual["run"]
+    )
     assert "--grep" not in actual["run"]
     assert "--pass-with-no-tests" not in actual["run"]
     commands = [step["run"] for step in steps if "run" in step]
@@ -278,10 +282,10 @@ def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> Non
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all thirty-four actual-image administration journeys"
+        if step.get("name") == "Require all forty-two actual-image household journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
-    assert "expected']==34" in audit["run"]
+    assert "expected']==42" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )

@@ -1,42 +1,43 @@
 # Home Assistant app installation
 
-Current development state (2026-11-03): the owner runs Edge `0.0.0-edge.5` on an `aarch64` HA
-installation. Edge.3 is a separate stopped preview. Edge.7 is the current installation candidate
-for the administration workspace; it is not yet installed on that HA. Stable is not yet published.
-Current image, API and browser verification is recorded in
-[administration evidence](evidence/household-administration-browser.json). Historical receipts below
-retain the original Edge.1–3 observations and do not describe the current installation.
+Current development state (2026-11-04): the owner runs Edge `0.0.0-edge.7` on an `aarch64` HA
+installation, app `d3c516f0_domus_edge`. The older Edge.3 and Edge.5 apps were uninstalled.
+Edge.8 is the current Tasks workspace candidate; it has not yet been installed on that HA.
+Stable is not yet published. Source tests and package fingerprints are recorded in
+[task workspace evidence](evidence/task-workspace.json). Historical receipts below retain their
+original Edge.1–3 observations and do not describe the current installation.
 
 ## Current preview and update path
 
-The existing Edge.5 app is `60361632_domus_edge`; its source, read from Supervisor, is:
-
-```text
-https://github.com/vypdev/domus#feature/8-deliver-the-household-entry-interface-for-native-and-standalone-deployments
-```
-
-The reviewed Edge.7 candidate is in the existing PR #28 development source:
+The installed Edge.7 repository source, read from Supervisor, is:
 
 ```text
 https://github.com/vypdev/domus#feature/27-complete-the-household-administration-workspace-after-the-verified-api-and-controller-checkpoint
 ```
 
-These are temporary Action-managed development sources. Publishing Edge.7 on the latter does not
-change the former. HA still offers Edge.5 for the installed source; its repository metadata links
-to the same GitHub homepage, so the homepage alone does not identify the branch. Inspect the
-Supervisor store's exact source and installed app slug before deciding which preview to open.
-Adding the new branch as a repository is a separate preview path, not proof of an in-place update
-or migration of the existing app's private data. Keep that existing app and its backup until the
-chosen adoption/data path has been exercised. Never overwrite an old managed Git branch to make
-an installed development repository follow unrelated work.
+The reviewed Edge.8 candidate is in PR #29:
 
-Edge.7 retains the Edge.6 runtime pin `3200bd9278f57f142ed03b54843a38a4138fc0af` and archive SHA-256
-`ca991d7b3560dbdb7a6a86a34eea19708f01f10c15da502e49ed8ab740a8533b`.
-The [artifact declaration](../addon-edge/artifact.json) fixes the Python and compiled UI bytes.
-Read [configuration, permissions and schema-9 rollback limits](../addon-edge/DOCS.md) before adoption.
-Existing Edge.5/schema7 and old Edge.3 data are distinct from the isolated test fixtures.
-The candidate keeps Ingress, its private listener and the same Core API scope; it requests no
-Supervisor management API, host mount or public port.
+```text
+https://github.com/vypdev/domus#feature/23-complete-relative-recurrence-lifecycle-and-protected-calendar-after-the-execution-checkpoint
+```
+
+These temporary branch sources are owned by the Action. Prefer the durable development source
+`https://github.com/vypdev/domus#develop` after its verified merge contains the intended version.
+A published candidate on another source does not update the installed repository. Inspect the
+Supervisor store's exact source, version and app slug; its GitHub homepage does not identify the
+branch. A different repository URL may create a separate app with separate private data. Never
+claim an in-place upgrade or data migration when installing a separate preview. Preserve the
+selected backup before deliberate development data replacement; do not overwrite a managed branch
+to redirect an old repository.
+
+Edge.8 pins published runtime `2ee3ff45babfbc9e16fc345767154b1c546ba327` and archive SHA-256
+`dc5199c8013714cce815371dfa988b97da050bab3b7192442e07319e7146d5a3`.
+The [artifact declaration](../addon-edge/artifact.json) fixes all Python and compiled UI bytes.
+It retains schema 9, cold backups, Ingress and the same Core API scope; no Supervisor management
+API, host mount or public port is requested. Read the
+[configuration, permissions and schema-9 rollback limits](../addon-edge/DOCS.md) before adoption.
+The owner currently has a development household and saved preferences on Edge.7; preserving or
+replacing those records during actual Edge.8 adoption is separate from isolated fixture tests.
 
 ## A local pre-update app backup
 
@@ -74,7 +75,7 @@ original device observations remain local. A subsequent selected-app capture was
 successful stop and an independent `app_not_running_error` confirmation. Its job and all children
 completed without errors. Since the app had been running beforehand, it was started afterward;
 the CLI observation timed out, but a fresh app-info read confirmed Edge.5 started with its original
-configuration. The start was not repeated. No owner backup was restored and no Edge.7 adoption is claimed.
+configuration. The start was not repeated. No owner backup was restored in that capture. Edge.7 was subsequently adopted separately.
 
 A Supervisor app backup and a Domus console snapshot have different boundaries. The app backup
 captures its application/data/configuration at one time; it does not prove that later original

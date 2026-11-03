@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.0-edge.8
+
+- Make Tasks the default household screen, with English/Spanish creation, list and detail.
+- Claim and complete work as the current participant; approve, reject or reopen the current cycle.
+- Review adjustable linked-material quantities without inventing stock or downstream delivery.
+- Recover an uncertain original task request through an authorized read, without another command.
+- Keep household administration available and move technical task details behind optional disclosure.
+- Retain schema 9, cold backups, both CPU families and the existing Core API permission scope.
+- Add eight task journeys to the actual-image browser campaign; owner adoption remains separate.
+
 ## 0.0.0-edge.7
 
 - Require cold Supervisor backups so the app is stopped while its private SQLite data is copied.

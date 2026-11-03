@@ -25,7 +25,15 @@ async function saveAdministration(widget: Locator) {
   await widget.getByRole('button', {name: 'Close editor', exact: true}).click();
 }
 for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + mode, () => {
-  test.beforeEach(async ({request}) => {expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);});
+  test.beforeEach(async ({request}) => {
+    if (process.env.DOMUS_BROWSER_IMAGE) {
+      const image = await request.get(origin(mode) + '/__fixture__/image');
+      expect(image.status()).toBe(200);
+      expect(await image.json()).toEqual({source_commit: process.env.DOMUS_TEST_SOURCE_COMMIT, architecture: process.env.DOMUS_TEST_ARCH,
+        image_id: expect.stringMatching(/^sha256:[a-f0-9]{64}$/u), mode});
+    }
+    expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
+  });
   for (const locale of ['en', 'es'] as const) test('actual UI creates, claims, completes and reloads SQLite work in ' + locale, async ({page, context}) => {
     const tasks = await open(page, context, mode), spanish = locale === 'es';
     if (spanish) await page.getByLabel('Language', {exact: true}).selectOption('es');
