@@ -112,7 +112,9 @@ for(const example of ['active','read-only','sources-unavailable','uncertain','hi
     await page.goto(administrationUrl(example,locale,deployment));const widget=page.locator('domus-administration');
     await expect(widget.getByRole('heading',{name:locale==='es'?'Administración del hogar':'Household administration',exact:true})).toBeVisible();
     await expect(widget).toHaveAttribute('lang',locale);await expect(page.getByText('Fictional administration state.',{exact:false})).toBeVisible();
-    await expect(widget.getByRole('button',{name:locale==='es'?'Editar preferencias':'Edit preferences',exact:true})).toBeEnabled({enabled:example!=='read-only'&&example!=='uncertain'});
+    const preferencesButton=widget.getByRole('button',{name:locale==='es'?'Editar preferencias':'Edit preferences',exact:true});
+    if(example==='read-only'||example==='uncertain')await expect(preferencesButton).toBeDisabled();
+    else await expect(preferencesButton).toBeEnabled();
     if(example==='historical')await expect(widget.getByText(locale==='es'?'Esta operación se procesó antes de la restauración. Su efecto no está presente en el estado actual.':'This operation was processed before restoration. Its effect is absent from current state.',{exact:true})).toBeVisible();
     if(example==='sources-unavailable')await expect(widget.getByText(locale==='es'?'Nombre de Home Assistant: Acceso al nombre de HA denegado':'Home Assistant name: HA name access denied',{exact:true})).toBeVisible();
   }

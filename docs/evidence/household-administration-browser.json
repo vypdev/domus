@@ -366,6 +366,33 @@
     "localEvidence": {
       "root": "/private/tmp/domus-admin-accessibility-e7d090b",
       "privateLocalOnly": true
+    },
+    "hostedB9": {
+      "head": "b9a2dfc8179128fb493ab49666c24967d308c979",
+      "frontendJob": 125829637535,
+      "run": 41610125553,
+      "frontend": 1226,
+      "combinedCompiledCases": 73,
+      "catalog": 26,
+      "native": {
+        "run": 41610125444,
+        "job": 125829638176,
+        "context": "complete",
+        "partitions": "8/8",
+        "candidateFindings": 1,
+        "publishedFindings": 1,
+        "scope": "One matcher-API premise independently disproved; not a no-findings review."
+      }
     }
+  },
+  "playwrightReviewClarification": {
+    "head": "b9a2dfc8179128fb493ab49666c24967d308c979",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4452825495",
+    "report": "https://github.com/vypdev/copilot/issues/867",
+    "premise": "Reviewer says pinned toBeEnabled ignores enabled:false. Installed1.64.1 declaration and matcher implementation explicitly support/select the disabled state.",
+    "independentProbe": "One separate Chromium dependency contract case passes both correct states and rejects both mismatches; not a product journey.",
+    "primaryDocumentation": "https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-be-enabled",
+    "consumerChange": "Equivalent explicit toBeEnabled()/toBeDisabled() branches improve readability. No reproduced consumer failure, assertion weakening, fixture substitution, threshold change or Copilot edit.",
+    "currentGate": "New-head native verification of finding state remains required."
   }
 }
