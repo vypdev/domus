@@ -13,7 +13,7 @@ import {styles} from './styles';
 
 export type AdministrationIntent = Readonly<{type:'submit';command:AdministrationCommand}>
   | Readonly<{type:'recover'|'dismiss';key:string}> | Readonly<{type:'refresh'}>;
-type Draft = {key:string;owner:string;action:AdministrationAction;memberId?:string;payload:Record<string,unknown>;
+type Draft = {key:string;owner:string;action:AdministrationAction;memberId?:string;payload:Record<string,unknown>;first:string;
   clearAlias:boolean;editRole:MemberRole;activationRequired:boolean;approved:boolean;
   review:AdministrationCommand|null;error:string|null;sent:boolean};
 type Option = Readonly<{value:string;label:string;disabled?:boolean}>;
@@ -117,7 +117,7 @@ export class DomusAdministration extends LitElement {
       }
     }
     const key=action+':'+(memberId??'own');
-    const draft:Draft={key,owner,action,...memberId===undefined?{}:{memberId},payload,clearAlias,editRole:'adult',activationRequired,
+    const draft:Draft={key,owner,action,...memberId===undefined?{}:{memberId},payload,first,clearAlias,editRole:'adult',activationRequired,
       approved:false,review:null,error:null,sent:false};
     if(!this.enabled(draft))return;
     this.drafts.set(key,draft);this.focusAfter=this.fieldId(draft,first);this.requestUpdate();
@@ -142,7 +142,7 @@ export class DomusAdministration extends LitElement {
       draft.review=administrationCommand({action:draft.action,payload,...draft.memberId===undefined?{}:{memberId:draft.memberId}});
       draft.error=null;
     } catch {draft.error='invalid';}
-    this.focusAfter=this.fieldId(draft,draft.error===null?'review':'error');this.requestUpdate();
+    this.focusAfter=this.fieldId(draft,draft.error===null?'review':draft.error==='activationRequired'?'approved':draft.first);this.requestUpdate();
   }
   private save(draft:Draft):void {
     if(!this.current(draft)||!this.enabled(draft)||draft.sent||draft.review===null)return;
@@ -159,12 +159,12 @@ export class DomusAdministration extends LitElement {
     const id=this.fieldId(draft,key);
     return html`<div class="field"><label for=${id}>${this.t(label)}</label><input id=${id} type="text" autocomplete="off"
       .value=${live(String(draft.payload[key]))} ?disabled=${disabled||!this.enabled(draft)||draft.sent}
-      aria-invalid=${draft.error===null?'false':'true'} @input=${(event:InputEvent)=>this.change(draft,key,(event.target as HTMLInputElement).value)}></div>`;
+      aria-invalid=${draft.error===null?'false':'true'} aria-describedby=${draft.error===null?nothing:this.fieldId(draft,'error')} @input=${(event:InputEvent)=>this.change(draft,key,(event.target as HTMLInputElement).value)}></div>`;
   }
   private select(draft:Draft,key:string,label:string,options:readonly Option[],disabled=false) {
     const id=this.fieldId(draft,key);
     return html`<div class="field"><label for=${id}>${this.t(label)}</label><select id=${id} .value=${live(String(draft.payload[key]??''))}
-      ?disabled=${disabled||!this.enabled(draft)||draft.sent} aria-invalid=${draft.error===null?'false':'true'}
+      ?disabled=${disabled||!this.enabled(draft)||draft.sent} aria-invalid=${draft.error===null?'false':'true'} aria-describedby=${draft.error===null?nothing:this.fieldId(draft,'error')}
       @change=${(event:Event)=>this.change(draft,key,(event.target as HTMLSelectElement).value)}>
       ${options.map(option=>html`<option value=${option.value} .selected=${option.value===String(draft.payload[key]??'')}
         ?disabled=${option.disabled===true}>${option.label}</option>`)}</select></div>`;
@@ -172,6 +172,7 @@ export class DomusAdministration extends LitElement {
   private checkbox(draft:Draft,key:'clearAlias'|'approved'|'routine_participation_summaries',label:string) {
     const id=this.fieldId(draft,key==='clearAlias'?'clear':key),value=key==='routine_participation_summaries'?draft.payload[key]===true:draft[key];
     return html`<div class="field"><label for=${id}>${this.t(label)}</label><input id=${id} type="checkbox" .checked=${value}
+      aria-describedby=${draft.error===null?nothing:this.fieldId(draft,'error')}
       ?disabled=${!this.enabled(draft)||draft.sent} @change=${(event:Event)=>{
         const checked=(event.target as HTMLInputElement).checked;
         if(key==='routine_participation_summaries')this.change(draft,key,checked);else this.check(draft,key,checked);
@@ -193,7 +194,7 @@ export class DomusAdministration extends LitElement {
         const rule=rules.find(value=>value.permission===permission&&(!profile||(value as ProfileDecision).role===draft.editRole));
         const id=this.fieldId(draft,'rule-'+permission);
         return html`<div class="rule"><label for=${id}>${this.t('permission_'+permission)}</label><select id=${id}
-          .value=${live(rule===undefined?'inherit':rule.allow?'allow':'deny')} ?disabled=${!this.enabled(draft)||draft.sent}
+          .value=${live(rule===undefined?'inherit':rule.allow?'allow':'deny')} aria-describedby=${draft.error===null?nothing:this.fieldId(draft,'error')} ?disabled=${!this.enabled(draft)||draft.sent}
           @change=${(event:Event)=>this.ruleChange(draft,permission,(event.target as HTMLSelectElement).value)}>
           <option value="inherit" .selected=${rule===undefined}>${this.t(profile?'builtIn':'inherit')}</option>
           <option value="allow" .selected=${rule?.allow===true}>${this.t('allow')}</option><option value="deny" .selected=${rule?.allow===false}>${this.t('deny')}</option>
@@ -225,7 +226,7 @@ export class DomusAdministration extends LitElement {
         return html`${this.select(draft,'mapping_mode','mapping',options)}<p class="help">${this.t('mappingHelp')}</p>
           ${draft.payload.mapping_mode!=='all_ha_administrators'?this.select(draft,'target_ha_user_id','target',targetOptions,!available):nothing}
           ${!available?html`<p class="note">${this.t('directoryUnavailable')}</p>`:nothing}
-          <div class="field"><label for=${id}>${this.t('editRole')}</label><select id=${id} .value=${draft.editRole} ?disabled=${!this.enabled(draft)||draft.sent}
+          <div class="field"><label for=${id}>${this.t('editRole')}</label><select id=${id} .value=${draft.editRole} aria-describedby=${draft.error===null?nothing:this.fieldId(draft,'error')} ?disabled=${!this.enabled(draft)||draft.sent}
             @change=${(event:Event)=>{
               if(!this.current(draft)||!this.enabled(draft)||draft.sent)return;
               const value=(event.target as HTMLSelectElement).value;
@@ -278,7 +279,7 @@ export class DomusAdministration extends LitElement {
         :html`<h4 id=${this.fieldId(draft,'review')} tabindex="-1">${this.t('reviewTitle')}</h4>${this.summary(draft.review)}
           ${draft.sent?html`<p role="status">${this.t('submitted')}</p>`:nothing}<div class="actions">
           <button type="button" class="primary" ?disabled=${!enabled||draft.sent} @click=${()=>this.save(draft)}>${this.t('save')}</button>
-          <button type="button" ?disabled=${draft.sent} @click=${()=>{if(this.current(draft)){draft.review=null;draft.error=null;this.requestUpdate();}}}>${this.t('back')}</button>
+          <button type="button" ?disabled=${draft.sent} @click=${()=>{if(this.current(draft)){draft.review=null;draft.error=null;this.focusAfter=this.fieldId(draft,draft.first);this.requestUpdate();}}}>${this.t('back')}</button>
           <button type="button" @click=${()=>this.close(draft)}>${this.t('close')}</button></div>`}
       <button type="button" ?disabled=${!enabled} @click=${()=>this.reset(draft)}>${this.t('reset')}</button></section>`;
   }

@@ -612,15 +612,15 @@
     }
   },
   "currentSourcePackage": {
-    "sourceBase": "86e120ac3254a7b4b91d3d4b817f5234a0916f51",
-    "sourceIdentity": "Current151-module backend is byte-identical to published86. The31-file frontend includes localized administration forms, closed document intents, application controls and current-owner draft/recovery handling. Complete acceptance and owner Edge.5 adoption remain pending.",
+    "sourceBase": "e7d090ba6bc4a0968b6813eef80d78575bcb424a",
+    "sourceIdentity": "Current151-module backend and all other frontend runtime files match reviewed e7. The administration renderer associates validation errors with controls and restores initial/approval/back-to-edit focus while preserving drafts.",
     "actualProductFiles": {
-      ".vite/manifest.json": "97e3e0600974d5ea6eb617be7eed3c377d0fadba49295935c17371aeaabf677e",
-      "assets/index-BsSG5cPr.js": "8d94d5b5085ae82f814eb174ea202356742ae1902cf54f076881c11b93b95058",
+      ".vite/manifest.json": "3e75c5d46ea62c74e675972b07e138ece1fedf60e3ff390b9e3dfc09ecb439cd",
+      "assets/index-BpZvnMgV.js": "97ae3298f6baf5240da7cfabb96ee373370155285dd181281f6c26516ebdc895",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "index.html": "03463192d0e7fb63316fcb577471de5b3eaddf3f667623f35b2cd8f36d1a55f1"
+      "index.html": "d0e16a3cb9640fcf1f78969fbb1211d52e2017a8eac65bf2654d04adf77e0b8a"
     },
-    "wheelSHA256": "3c78a393ebb39664a2a5b73a41b2ddbc1a63d2205a42101d276e086d20cd5695",
+    "wheelSHA256": "ae92de7841edf0d10dd2448fa6edc2594293a999b77c6f7884acaeb4cb0a7a8c",
     "originalFailure": {
       "run": 41505801643,
       "aarch64Job": 125484707823,
@@ -629,7 +629,7 @@
     },
     "testsFirst": "The actual aarch64 image exposes the stale historical expectation. A new early wheel/build/declaration assertion first fails with missing currentSourcePackage before this explicit candidate inventory is added.",
     "correction": "Current packaging and image tests use this declaration. The packaging gate compares it against the independently built source bundle and exact wheel bytes; the image fixture compares all installed and HTTP-served resources. Historical entry/Edge.5 evidence remains byte-identical.",
-    "acceptance": "Actual wheel byte-verifies all151Pythonmodules and4compiledUIresources. Current1223Chromium unit executions have100% all4metrics over31authoredfiles (29nonempty/twotype-only). Current71compiled-browser/PythonSQLite and25built catalog cases pass. Owning-case audit, current-head hostedCPU/native review, humanUX and ownerHA remain pending."
+    "acceptance": "Actual wheel byte-verifies151Pythonmodules and4UIresources. Local1226Chromium executions have100% all4metrics across31authoredruntimefiles plus unchanged staticCSS, with independent runtime inventory audit. Local71combined compiled Python/SQLite cases,2additional EN/ES/mobile/theme/CSP keyboard cases and26built catalog cases pass. Full owning-case/human UX/owner adoption and new current-head CI/CPU/native review remain required."
   },
   "controllerIncrement": {
     "sourceBase": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",

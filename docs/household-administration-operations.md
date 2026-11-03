@@ -21,6 +21,8 @@ confirmed absent, denied or unavailable; an unavailable name or avatar is never 
 
 Choose an available edit, adjust values, select **Review changes**, and inspect the confirmation
 before **Save changes**. Participant edits identify the participant and stable membership reference.
+Validation messages describe the form controls and return keyboard focus to a relevant field or
+required approval. **Back to editing** restores the initial control and retains entered values.
 Household settings, access policy, member configuration, public alias and private preferences each
 keep their own original revision. An unrelated edit does not replace that revision.
 

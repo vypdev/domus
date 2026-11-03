@@ -150,3 +150,19 @@ test('HADB-03: built administration forms fit 360 pixels in both themes with red
     await page.screenshot({path:`test-results/administration-es-360-${colorScheme}.png`,fullPage:true});
   }
 });
+test('household-admin-C58: built keyboard validation associates errors and restores field focus after review and back',async({page})=>{
+  for(const locale of ['en','es']) {
+    const names=locale==='en'?{edit:'Edit own alias',clear:'Use Home Assistant name',alias:'Domus alias',review:'Review changes',back:'Back to editing',heading:'Confirm this household change'}
+      :{edit:'Editar mi alias',clear:'Usar el nombre de Home Assistant',alias:'Alias de Domus',review:'Revisar cambios',back:'Volver a editar',heading:'Confirma este cambio del hogar'};
+    await page.goto(administrationUrl('active',locale,'native'));const widget=page.locator('domus-administration');
+    await widget.getByRole('button',{name:names.edit,exact:true}).click();await page.keyboard.press('Space');await page.keyboard.press('Tab');await page.keyboard.press('Tab');
+    await expect(widget.getByRole('button',{name:names.review,exact:true})).toBeFocused();await page.keyboard.press('Enter');
+    await expect(widget.getByRole('checkbox',{name:names.clear,exact:true})).toBeFocused();const error=widget.getByRole('alert');await expect(error).toBeVisible();
+    const id=await error.getAttribute('id');expect(id).not.toBeNull();await expect(widget.getByRole('textbox',{name:names.alias,exact:true})).toHaveAttribute('aria-describedby',id!);
+    await page.keyboard.press('Tab');await page.keyboard.insertText('Keyboard draft');await page.keyboard.press('Tab');await page.keyboard.press('Enter');
+    await expect(widget.getByRole('heading',{name:names.heading,exact:true})).toBeFocused();await page.keyboard.press('Tab');await page.keyboard.press('Tab');
+    await expect(widget.getByRole('button',{name:names.back,exact:true})).toBeFocused();await page.keyboard.press('Enter');
+    await expect(widget.getByRole('checkbox',{name:names.clear,exact:true})).toBeFocused();await expect(widget.getByRole('textbox',{name:names.alias,exact:true})).toHaveValue('Keyboard draft');
+    await expect(widget.getByRole('textbox',{name:names.alias,exact:true})).not.toHaveAttribute('aria-describedby');
+  }
+});

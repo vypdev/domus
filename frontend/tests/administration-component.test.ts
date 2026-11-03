@@ -348,3 +348,20 @@ test.each([null,'Independently read alias'])('HADW-01: own alias target remains 
   const editor=f.root.querySelector('[role=region][aria-label="Domus alias"]')!;expect(editor.textContent).toContain('Participant: '+(alias??'Verified owner'));
   expect(editor.querySelector('code')?.textContent).toBe('owner');expect(f.intents).toEqual([]);
 });
+test('household-admin-C58: invalid alias submission associates its error with the form controls and restores field focus',async()=>{
+  const f=await mount();await f.click('Edit own alias');await f.change('Domus alias','');await f.click('Review changes');
+  const error=f.root.querySelector<HTMLElement>('[role=alert]')!;expect(error).not.toBeNull();
+  expect(f.root.activeElement).toBe(f.input('Use Home Assistant name'));
+  for(const name of ['Use Home Assistant name','Domus alias'])expect(f.input(name).getAttribute('aria-describedby')).toBe(error.id);
+  f.element.language='es';await f.element.updateComplete;expect(f.input('Alias de Domus').value).toBe('');
+  expect(f.input('Alias de Domus').getAttribute('aria-describedby')).toBe(error.id);expect(f.intents).toEqual([]);
+});
+test('household-admin-C58: missing access approval focuses and describes the required confirmation without submitting',async()=>{
+  const f=await mount();await f.click('Manage participant: Pending member');await f.change('Membership status','active');await f.click('Review changes');
+  const approval=f.input('Approve household access'),error=f.root.querySelector<HTMLElement>('[role=alert]')!;
+  expect(f.root.activeElement).toBe(approval);expect(approval.getAttribute('aria-describedby')).toBe(error.id);expect(f.intents).toEqual([]);
+});
+test('household-workspace-C50: back to editing restores the original field focus and keeps the unsent preference value',async()=>{
+  const f=await mount();await f.click('Edit preferences');await f.change('Saved language','en');await f.click('Review changes');await f.click('Back to editing');
+  expect(f.root.activeElement).toBe(f.input('Saved language'));expect(f.input('Saved language').value).toBe('en');expect(f.intents).toEqual([]);
+});

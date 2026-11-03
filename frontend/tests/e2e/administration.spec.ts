@@ -64,7 +64,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     await page.reload();await widget.getByRole('button',{name:'Edit access rules',exact:true}).click();
     await expect(widget.getByLabel('HA administrator mapping',{exact:true})).toHaveValue('selected_ha_user');await expect(widget.getByLabel('View tasks',{exact:true})).toHaveValue('deny');
   });
-  test('HADW-04: an actual second HA account requests membership before explicit restricted activation',async({page,context,browser,request})=>{
+  test('HADW-04: an actual second HA account requests membership before restricted activation and a later profile change',async({page,context,browser,request})=>{
     const widget=await create(page,context,mode);
     await widget.getByRole('button',{name:'Edit access rules',exact:true}).click();await widget.getByLabel('HA administrator mapping',{exact:true}).selectOption('selected_ha_user');
     await widget.getByLabel('Target Home Assistant account',{exact:true}).selectOption('a'.repeat(32));await save(widget);await widget.getByRole('button',{name:'Close editor',exact:true}).click();
@@ -83,6 +83,14 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       await expect(widget.getByRole('region',{name:'Manage participant',exact:true})).toContainText('Participant: Fictional account '+subject);await save(widget);
       const roster=await(await page.request.get(base(mode)+'/api/v1/administration/roster')).json();
       expect(roster.members.find((row:{member:{ha_user_id:string}})=>row.member.ha_user_id===subject.repeat(32)).member).toMatchObject({role:'restricted',status:'active',revision:2});
+      await widget.getByRole('button',{name:'Close editor',exact:true}).click();
+      await widget.getByRole('button',{name:'Manage participant: Fictional account '+subject,exact:true}).click();
+      await expect(widget.getByLabel('Household profile',{exact:true})).toHaveValue('restricted');
+      await widget.getByLabel('Household profile',{exact:true}).selectOption('adult');await widget.getByLabel('View tasks',{exact:true}).selectOption('deny');await save(widget);
+      const changed=await(await page.request.get(base(mode)+'/api/v1/administration/roster')).json();
+      expect(changed.members.find((row:{member:{ha_user_id:string}})=>row.member.ha_user_id===subject.repeat(32)).member)
+        .toMatchObject({role:'adult',status:'active',revision:3,exceptions:[{permission:'tasks.read',allow:false}]});
+
     }finally{await peer.close();}
   });
   test('HADB-02: a lost actual preference PUT reply recovers by original GET without another SQLite mutation',async({page,context,request})=>{
@@ -114,6 +122,37 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toHaveValue('Other current name');
     await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Explicit new work');await save(widget);
     expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({name:'Explicit new work',revision:3});
+  });
+  test('household-admin-C58: actual compiled keyboard errors and back focus work in both locales with mobile CSP fallback',async({page,context,request},info)=>{
+    await page.setViewportSize({width:360,height:800});const violations:string[]=[],writes:string[]=[];
+    await page.exposeFunction('administrationCSPViolation',(value:string)=>violations.push(value));
+    await page.addInitScript(()=>{
+      delete (Document.prototype as {adoptedStyleSheets?:unknown}).adoptedStyleSheets;
+      document.addEventListener('securitypolicyviolation',event=>{
+        void (window as unknown as {administrationCSPViolation(value:string):Promise<void>}).administrationCSPViolation(event.violatedDirective);
+      });
+    });
+    const widget=await create(page,context,mode),before=await statistics(request,mode);
+    page.on('request',item=>{if(item.method()==='PUT')writes.push(item.url());});
+    for(const locale of ['en','es'])for(const colorScheme of ['light','dark'] as const) {
+      await page.emulateMedia({colorScheme,reducedMotion:'reduce'});await page.locator('domus-app .language select').selectOption(locale);
+      const names=locale==='en'?{edit:'Edit own alias',clear:'Use Home Assistant name',alias:'Domus alias',review:'Review changes',back:'Back to editing',cancel:'Cancel',heading:'Confirm this household change'}
+        :{edit:'Editar mi alias',clear:'Usar el nombre de Home Assistant',alias:'Alias de Domus',review:'Revisar cambios',back:'Volver a editar',cancel:'Cancelar',heading:'Confirma este cambio del hogar'};
+      await widget.getByRole('button',{name:names.edit,exact:true}).click();await expect(widget.getByRole('checkbox',{name:names.clear,exact:true})).toBeFocused();
+      await page.keyboard.press('Space');await page.keyboard.press('Tab');await page.keyboard.press('Tab');await page.keyboard.press('Enter');
+      await expect(widget.getByRole('checkbox',{name:names.clear,exact:true})).toBeFocused();const id=await widget.getByRole('alert').getAttribute('id');expect(id).not.toBeNull();
+      await expect(widget.getByRole('textbox',{name:names.alias,exact:true})).toHaveAttribute('aria-describedby',id!);
+      await page.keyboard.press('Tab');await page.keyboard.insertText('Keyboard '+locale);await page.keyboard.press('Tab');await page.keyboard.press('Enter');
+      await expect(widget.getByRole('heading',{name:names.heading,exact:true})).toBeFocused();await page.keyboard.press('Tab');await page.keyboard.press('Tab');await page.keyboard.press('Enter');
+      await expect(widget.getByRole('checkbox',{name:names.clear,exact:true})).toBeFocused();await expect(widget.getByRole('textbox',{name:names.alias,exact:true})).toHaveValue('Keyboard '+locale);
+      const layout=await widget.evaluate(element=>({nonces:[...element.shadowRoot!.querySelectorAll('style')].map(style=>style.nonce),
+        background:getComputedStyle(element.shadowRoot!.querySelector('button.primary')!).backgroundColor,width:document.documentElement.scrollWidth}));
+      expect(layout.nonces.length).toBeGreaterThan(0);expect(layout.nonces.every(value=>/^[\w-]{32}$/u.test(value))).toBe(true);
+      expect(layout.background).not.toBe('rgba(0, 0, 0, 0)');expect(layout.width).toBeLessThanOrEqual(360);expect(violations).toEqual([]);
+      await page.screenshot({path:info.outputPath('admin-keyboard-'+locale+'-'+colorScheme+'.png'),fullPage:true});
+      await widget.getByRole('button',{name:names.cancel,exact:true}).click();
+    }
+    expect(writes).toEqual([]);expect(await statistics(request,mode)).toEqual(before);
   });
   test('HADB-02: actual console restoration keeps original history without reviving the removed public alias effect',async({page,context,request})=>{
     const widget=await create(page,context,mode);expect((await request.post(origin(mode)+'/__fixture__/operator',{data:{action:'snapshot'}})).ok()).toBe(true);

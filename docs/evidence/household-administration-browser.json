@@ -130,7 +130,7 @@
     },
     "scope": "Original6backend/4frontend permission failures, distinct local/hosted CDP limitations with original traces/screenshots, complete current coverage/source/wheel and actual55browser checks. No owner HA used."
   },
-  "pending": "Complete retained HADM72/HADI8/HADW82 and24browser case audit and remaining boundary journeys, human UX review, owner HA adoption and fresh current-commit CI/CPU/native review. Recurrence23, Stable/Edge and all-domain product acceptance remain required.",
+  "pending": "Continue full retained HADM72/HADI8/HADW82/24browser acceptance mapping, remaining boundary journeys, human UX and compatible owner adoption. Current keyboard/profile continuation cases are locally exercised; new current-head CI/CPU/native gates remain required. Recurrence23 and all-domain/Stable/Edge product work remain unfinished.",
   "goalComplete": false,
   "acceptance": "Current1223Chromium unit executions,71compiled Python/SQLite and25built catalog cases do not substitute for complete owning-case acceptance or owner HA adoption.",
   "recordedAtUTC": "2026-11-02T23:06:09.802178+00:00",
@@ -297,6 +297,75 @@
       "reference": "0c02fe42-908d-49b2-8c0b-fd5b99203305",
       "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6599193241",
       "scope": "Separate progress-contract failure; no Copilot change or inferred candidate/root cause."
+    }
+  },
+  "accessibilityIncrement": {
+    "sourceBase": "e7d090ba6bc4a0968b6813eef80d78575bcb424a",
+    "testsFirst": "Three original component failures: alias-error association/field focus, missing access-approval focus, and back-to-edit preference focus. Original log/screenshots retained locally.",
+    "implemented": "Stored first editor-control ID; current error descriptions linked to text/select/checkbox/rule/profile controls; validation focuses a relevant initial control or required approval; back restores the first field without resetting values.",
+    "frontend": {
+      "executions": 1226,
+      "authoredRuntimeFiles": 31,
+      "staticCSSFiles": 1,
+      "metrics": {
+        "lines": {
+          "total": 1577,
+          "covered": 1577,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 2382,
+          "covered": 2382,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 504,
+          "covered": 504,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1898,
+          "covered": 1898,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentInventory": "passed"
+    },
+    "compiledBrowser": {
+      "wholeCampaign": 71,
+      "additionalTargetedCases": 2,
+      "scope": "Whole71nowincludes actual pending-to-active-to-later-profile/permission change in both deployments. Two additional compiled EN/ES/lightdark/reduced-motion/360px/native-and-standalone keyboard cases force Lit CSP fallback, inspect actual style nonces and unchanged SQLite counts. Distinct cases; not73executions in one local whole campaign."
+    },
+    "catalog": {
+      "wholeCampaign": 26,
+      "newKeyboardCase": "Both languages: validation association, field focus, review/back and retained values."
+    },
+    "package": {
+      "wheelSHA256": "ae92de7841edf0d10dd2448fa6edc2594293a999b77c6f7884acaeb4cb0a7a8c",
+      "backendInventorySHA256": "ce4601f050a56a4bf4e22c5ac6e255fb1c7a9954c7a33d6bc3f0c261834d60b5",
+      "frontendInventorySHA256": "0d5bea106d93584bcf69350be7ea97e0a147eb7787c364cc2e8ca6a23c2ae443",
+      "compiledUI": {
+        ".vite/manifest.json": "3e75c5d46ea62c74e675972b07e138ece1fedf60e3ff390b9e3dfc09ecb439cd",
+        "assets/index-BpZvnMgV.js": "97ae3298f6baf5240da7cfabb96ee373370155285dd181281f6c26516ebdc895",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "d0e16a3cb9640fcf1f78969fbb1211d52e2017a8eac65bf2654d04adf77e0b8a"
+      },
+      "all151PythonModulesAnd4UIResourcesVerified": true
+    },
+    "scope": "Local proof of these explicit cases, not complete HADM72/HADI8/HADW82/24browser acceptance or human review. New current-head hosted gates pending.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-accessibility-e7d090b",
+      "privateLocalOnly": true
     }
   }
 }
