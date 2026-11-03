@@ -1321,5 +1321,45 @@
       "independentInventory": "PASS",
       "runtimeUnchanged": true
     }
+  },
+  "canonicalIdentityAcceptanceIncrement": {
+    "recordedAtUTC": "2026-11-03T20:54:43.943399+00:00",
+    "sourceParent": "e5f08ebe46f1ae3e2f81080746c0fd76c705b9fc",
+    "runtimePin": "3200bd9278f57f142ed03b54843a38a4138fc0af",
+    "scope": "Five retained administration acceptance boundaries strengthened against unchanged product runtime; no new production bug/fix or full-product acceptance claimed.",
+    "cases": {
+      "household-admin-C02": "Rendered own identity and roster both choose the verified HA name for null aliases, or localized neutral fallback for absent/denied/unavailable metadata, in English and Spanish. Exact labels, current actions and no unintended intents/identity disclosure are asserted.",
+      "household-admin-C42": "Denied/unavailable metadata preserves the complete actual canonical member-ID to HA-ID mapping, explicit source state and absent names, with identical database bytes.",
+      "household-admin-C43": "Actual task creation/completion records a restricted participant before archive/reactivation. The exact task/cycle/performance facts, original receipts, full earlier audit/outbox prefixes and canonical membership survive both transitions. Existing self-enrollment nonreplacement negatives remain required and unchanged.",
+      "household-admin-C48": "Every genuine supported pre-recurrence source1..7 upgrades with all six recurrence tables empty, while every original business/history row remains unchanged. Actual schema8 preservation and version-spoof refusal remain separately asserted.",
+      "household-admin-C50": "Existing orphan profile references are deliberately committed with foreign_keys OFF. They are not disclosed or repaired; valid-parent lookup fails closed, independent snapshot inspection rejects, no snapshot remains and source bytes are unchanged. Existing corrupt-value cases remain."
+    },
+    "results": {
+      "backendFocused": 140,
+      "backendFull": 4404,
+      "backendModules": 151,
+      "backendStatements": 10438,
+      "backendBranches": 2928,
+      "backendSupportedCoverage": "100% globally and per module; independent source inventory audit passed",
+      "frontendFullChromium": 1263,
+      "frontendRuntimeFiles": 31,
+      "frontendCoverage": "100% lines/statements/functions/branches globally and per file; independent authored-file audit passed",
+      "frontendStrictTypes": "runtime and catalog passed",
+      "pythonStyle": "Ruff check and format-check passed for all changed Python tests",
+      "diffWhitespace": "passed"
+    },
+    "sourceHashes": {
+      "frontend/tests/administration-component.test.ts": "49b792cfb5047fcb92105b4399c61e221c73acdb9be3b3a9f16841fad2487516",
+      "tests/backend/test_household_roster.py": "9cf5e158e1a32382c8bef0d3d05d3a6a42ba88a5e4e822dccc03d5b30bf34d55",
+      "tests/backend/test_member_commands.py": "ce743b7ae206f93f2b503ec8f044d310332b7c9deee16b3b7ef5451dd2a5ed3d",
+      "tests/backend/test_sqlite_member_profiles.py": "960353cf1137aa181bc28065c5dac5caadca90e077d1c8d6d91e0ba2f201d8ca"
+    },
+    "testPreparation": "The first focused frontend run had six assertion failures because the new test passed translation-helper arguments in reverse order. Corrected only the test call, then the complete1263-test suite and strict types passed. This is not a reproduced runtime bug.",
+    "limits": [
+      "Current-head hosted CI/native review must run after publication; prior-head reviews are not acceptance of this new test increment.",
+      "No production/runtime/package/schema or Copilot source change; installed Edge.7 need not be rebuilt for these test-only assertions.",
+      "All186retained administration cases and20owner documents remain; other semantic gaps and actual human UX/restore acceptance remain open.",
+      "Actual owner fresh-install UI evidence remains separate from fictional-HA/SQLite/Chromium fixtures."
+    ]
   }
 }

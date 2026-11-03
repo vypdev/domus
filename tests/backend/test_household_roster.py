@@ -125,14 +125,23 @@ def test_only_current_policy_authority_reads_complete_eligible_directory_facts(t
 def test_unavailable_source_retains_real_roster_and_explicit_state_without_fake_choices(
     tmp_path, state
 ):
-    query, store, actor, source, _ = fixture(tmp_path)
+    query, store, actor, source, target = fixture(tmp_path)
+    with store.read() as unit:
+        expected_members = tuple(unit.members.list("home"))
+    assert len(expected_members) == 2
+    assert {item.ha_user_id for item in expected_members} == {"ha_admin", "ha_joiner"}
+    assert target in {item.member_id for item in expected_members}
     source.value = MemberSourceSnapshot(
         actor.human.ha_user_id, ProfileDirectory(state), ProfileResult(state)
     )
     before = store.path.read_bytes()
     roster = query.roster()
-    assert len(roster.members) == 2
+    assert {item.member.member_id: item.member.ha_user_id for item in roster.members} == {
+        item.member_id: item.ha_user_id for item in expected_members
+    }
+    assert len(roster.members) == len(expected_members)
     assert all(item.metadata.state is state for item in roster.members)
+    assert all(item.metadata.name is None for item in roster.members)
     directory = query.directory()
     assert directory.state is state and directory.profiles == ()
     assert store.path.read_bytes() == before

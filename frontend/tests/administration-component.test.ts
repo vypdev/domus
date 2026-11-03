@@ -234,11 +234,24 @@ test('HADW-05: invalid injected profile and permission options show a bounded er
   expect(f.intents).toEqual([]);await f.click('Review changes');await f.click('Save changes');
   expect(f.intents[0]).toMatchObject({type:'submit',command:{payload:{adjustments:[{role:'restricted',permission:'shopping.request',allow:false}]}}});
 });
-test.each(['absent','denied','unavailable'] as const)('HADB-03: %s HA names remain distinct facts with no invented identity',async state=>{
+test.each(['en','es'] as const)('household-admin-C02: %s null aliases show the verified HA name in both identity and roster',async locale=>{
+  const current=view(),noAlias={...presentation,alias:null};
+  const f=await mount({...current,presentation:noAlias,roster:{...current.roster!,members:[
+    {...current.roster!.members[0],presentation:noAlias}] }},locale);
+  expect(f.root.querySelector('.card strong')?.textContent).toBe('Verified owner');
+  expect(f.root.querySelector('.people>li strong')?.textContent).toBe('Verified owner');
+  expect(f.button((locale==='en'?'Manage participant':'Gestionar participante')+': Verified owner')).toBeDefined();
+  expect(f.text()).not.toContain('My alias');expect(f.intents).toEqual([]);
+});
+test.each((['en','es'] as const).flatMap(locale=>(['absent','denied','unavailable'] as const).map(state=>[locale,state] as const)))(
+  'household-admin-C02 / HADB-03: %s %s HA names retain their neutral label and distinct source fact',async(locale,state)=>{
   const current=view(),f=await mount({...current,presentation:{...presentation,alias:null},directory:{state:'unavailable',profiles:[]},
-    roster:{directoryState:'unavailable',members:[{...current.roster!.members[0],presentation:{...presentation,alias:null},metadata:{state,name:null,avatarState:'unavailable'}}]}});
-  expect(f.text()).toContain(state==='absent'?'HA name confirmed absent':state==='denied'?'HA name access denied':'HA name unavailable');
-  expect(f.text()).not.toContain('Verified owner');expect(f.intents).toEqual([]);
+    roster:{directoryState:'unavailable',members:[{...current.roster!.members[0],presentation:{...presentation,alias:null},metadata:{state,name:null,avatarState:'unavailable'}}]}},locale);
+  const fallback=locale==='en'?'Name unavailable':'Nombre no disponible';
+  expect(f.root.querySelector('.card strong')?.textContent).toBe(fallback);
+  expect(f.root.querySelector('.people>li strong')?.textContent).toBe(fallback);
+  expect(f.text()).toContain(administrationMessage('metadata_'+state,locale));
+  expect(f.text()).not.toContain('Verified owner');expect(f.text()).not.toContain(context.subject);expect(f.intents).toEqual([]);
 });
 test.each(['committed','historical'] as const)('HADB-02: %s original outcomes do not populate forms or substitute historical result values for current facts',async stage=>{
   const f=await mount(view({outcome:{kind:'receipt',stage,action:'member.presentation.update',operationId:'op_original',archivedBy:stage==='historical'?'restore_original':null,
