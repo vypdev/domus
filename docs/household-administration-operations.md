@@ -92,6 +92,15 @@ use fictional HA accounts and cannot establish owner-HA adoption.
 Run `pnpm build:frontend-catalog` and `pnpm test:frontend-catalog` for the built entry and administration
 catalog, including English/Spanish, keyboard focus, inert text, narrow layout and both color schemes.
 Catalog stories explicitly emit intents without a server. They do not fabricate successful operations.
+The same five form journeys also execute against the actual current image on each CI architecture.
+Set `DOMUS_BROWSER_IMAGE` to the reviewed local image, `DOMUS_TEST_SOURCE_COMMIT` to its exact revision,
+and `DOMUS_TEST_ARCH` to `amd64` or `aarch64`; run the entry Playwright configuration against
+`administration.spec.ts` with `--grep 'HADW-0[1245]:'`. Docker must be available to the test process.
+The fixture verifies source/image/CPU identity, starts isolated nonroot containers without published
+ports or host mounts, and relays browser HTTP over loopback/docker exec. Provider fixtures are copied
+only into the disposable writable container; no test dependency is added to the image. The command
+must report all ten passing journeys with no skips. CI requires that receipt in both CPU jobs.
+
 The owning SDD acceptance audit and required human UX review remain separate gates. Before owner rollout,
 verify the exact package, both CPU images and compatible data/rollback procedure. Preserve the installed
 owner Edge.5 and Edge.3 rollback until that adoption is verified.

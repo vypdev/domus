@@ -29,7 +29,14 @@ async function save(widget:Locator) {
   await expect(widget.getByRole('button',{name:'Refresh administration',exact:true})).toBeEnabled();
 }
 for(const mode of ['native','standalone'] as const)test.describe('administration '+mode,()=>{
-  test.beforeEach(async({request})=>{expect((await request.post(origin(mode)+'/__fixture__/reset')).ok()).toBe(true);});
+  test.beforeEach(async({request})=>{
+    if(process.env.DOMUS_BROWSER_IMAGE){
+      const image=await request.get(origin(mode)+'/__fixture__/image');expect(image.status()).toBe(200);
+      expect(await image.json()).toEqual({source_commit:process.env.DOMUS_TEST_SOURCE_COMMIT,architecture:process.env.DOMUS_TEST_ARCH,
+        image_id:expect.stringMatching(/^sha256:[a-f0-9]{64}$/u),mode});
+    }
+    expect((await request.post(origin(mode)+'/__fixture__/reset')).ok()).toBe(true);
+  });
   test('HADW-01: actual independent alias revision, inert text, reload and explicit clear persist through SQLite',async({page,context})=>{
     const widget=await create(page,context,mode);const access=await(await page.request.get(base(mode)+'/api/v1/authorization')).json();
     const path=base(mode)+'/api/v1/administration/members/'+access.member.member_id+'/presentation';

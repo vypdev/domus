@@ -556,5 +556,56 @@
       "privateLocalOnly": true
     },
     "remaining": "Full186-case semantic acceptance audit, image/rollback owning rows, human UX and compatible owner adoption remain separate. Recurrence-dependent obligations are retained. New-head CI/native review pending."
+  },
+  "actualImageBrowserIncrement": {
+    "sourceBase": "3a2c4b33769f26eaa97bd9eeb0c1ce3a6d4fdb50",
+    "productionRuntimeChanged": false,
+    "testsFirst": "Bridge contract tests first fail to collect because the declared module does not exist. Tests then verify immutable source/CPU identity before creation, no network/published image ports, nonroot UID, exact returned-container cleanup, original bytes/headers/non-success responses, disconnect/size bounds and invalid/failing transport without a fabricated receipt.",
+    "localImage": {
+      "image_id": "sha256:59cba377ca8585178c21e2db6bbe1304661d3d4ec7530bd1e8daa1932e9fd9f1",
+      "source_commit": "3a2c4b33769f26eaa97bd9eeb0c1ce3a6d4fdb50",
+      "architecture": "aarch64",
+      "docker_architecture": "arm64",
+      "pythonFiles": 151,
+      "uiFiles": 4,
+      "allProductFilesMatch": true
+    },
+    "browser": {
+      "actualImageCampaign": 10,
+      "actualImageArchitecture": "aarch64",
+      "actualImageModes": [
+        "native",
+        "standalone"
+      ],
+      "normalComposedCampaign": 87,
+      "imageForms": [
+        "own alias",
+        "own private preferences",
+        "household",
+        "HA mapping/profile",
+        "pending activation/later participant profile"
+      ],
+      "assertions": "Each image journey checks actual inspected image ID, source and CPU metadata before resetting its own image-hosted SQLite. Real Chromium requests traverse an isolated docker-exec HTTP bridge into the installed production modules/UI. Exact 151Python/4UI byte inventories match the reviewed current package. No source-checkout server fallback, copied user storage or product authentication bypass."
+    },
+    "infrastructure": "Fixture-only provider replacement uses stdlib ExitStack/mock rather than shipping pytest into the image. The fixture is copied after image creation; image and installed product bytes stay unchanged. Two temporary containers use immutable image ID, networknone and UID65532 without published ports or host mounts. Loopback bridge preserves payload, original keys/context and response headers/status/body.",
+    "localChecks": {
+      "tooling": 162,
+      "toolingStatements": 214,
+      "toolingBranches": 98,
+      "toolingCoverage": 100,
+      "types": "runtime/catalog/E2E pass",
+      "normalBrowser": 87,
+      "scope": "Production1231frontend/4374backend coverage baseline remains unchanged; new-head CI will execute it independently."
+    },
+    "CI": "Both existing CPU jobs build exact current source and run their32container checks, then install the already-pinned Node/pnpm/Chromium toolchain and execute all10actual-image form journeys. Exact expected10/unexpected0/skipped0/flaky0 receipt is mandatory.",
+    "limitations": "Local actual image is aarch64/base3a2 because product runtime is unchanged. Fresh exact-head amd64/aarch64 evidence remains required. Fictional HA/Supervisor providers remain test-only. This closes the image/browser composition gap; full compatible application/data/generation rollback, full owning acceptance, human UX and owner adoption are still separate.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-image-browser-3a2c4b3",
+      "privateLocalOnly": true
+    },
+    "diagnostics": [
+      "Initial build terminates because the existing keychain helper is outside PATH; prepend its installed directory without credential/config changes.",
+      "Initial Ruff check cannot write the restricted worktree cache; unchanged no-cache validation passes. These are environmental tool conditions, not Copilot defects."
+    ]
   }
 }

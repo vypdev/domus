@@ -248,3 +248,29 @@ def test_backend_cannot_inherit_the_tooling_coverage_result() -> None:
 @pytest.mark.parametrize("relative,expected", sorted(json.loads(PROTECTED.read_text()).items()))
 def test_installed_copilot_resources_are_unchanged(relative: str, expected: str) -> None:
     assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected, relative
+
+
+def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> None:
+    steps = workflow()["jobs"]["containers"]["steps"]
+    actual = next(
+        step
+        for step in steps
+        if step.get("name") == "Execute administration in the actual isolated image from Chromium"
+    )
+    assert actual["env"] == {
+        "DOMUS_BROWSER_IMAGE": "domus-app-ci",
+        "DOMUS_TEST_SOURCE_COMMIT": "${{ github.sha }}",
+        "DOMUS_TEST_ARCH": "${{ matrix.arch }}",
+    }
+    assert "playwright.entry.config.ts tests/e2e/administration.spec.ts" in actual["run"]
+    assert "HADW-0[1245]:" in actual["run"]
+    assert "--pass-with-no-tests" not in actual["run"]
+    commands = [step["run"] for step in steps if "run" in step]
+    assert "pnpm install --frozen-lockfile" in commands
+    assert "pnpm --filter @domus/frontend exec playwright install --with-deps chromium" in commands
+    audit = next(
+        step
+        for step in steps
+        if step.get("name") == "Require all ten actual-image browser journeys"
+    )
+    assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])

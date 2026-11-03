@@ -15,10 +15,11 @@ import os
 import secrets
 import sqlite3
 import tempfile
+from contextlib import ExitStack
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlencode
 
-import pytest
 import uvicorn
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
@@ -123,15 +124,31 @@ class OAuth:
 
 
 class Fixture:
-    def __init__(self, mode: str, port: int) -> None:
-        self.mode, self.origin = mode, f"http://127.0.0.1:{port}"
+    def __init__(self, mode: str, port: int, origin_port: int | None = None) -> None:
+        self.mode, self.origin = mode, f"http://127.0.0.1:{origin_port or port}"
         self.runtime = self.directory = None
         self.writer = None
-        self.patch = pytest.MonkeyPatch()
-        self.patch.setattr(ingress, "HomeAssistantWebSocket", lambda endpoint: self.ha)
-        self.patch.setattr(server, "HomeAssistantWebSocket", lambda endpoint: self.ha)
-        self.patch.setattr(server, "HomeAssistantOAuth", lambda config: OAuth(config, self.ha))
+        self.patch = ExitStack()
+        self.patch.enter_context(
+            patch.object(ingress, "HomeAssistantWebSocket", lambda endpoint: self.ha)
+        )
+        self.patch.enter_context(
+            patch.object(server, "HomeAssistantWebSocket", lambda endpoint: self.ha)
+        )
+        self.patch.enter_context(
+            patch.object(server, "HomeAssistantOAuth", lambda config: OAuth(config, self.ha))
+        )
         self.reset()
+
+    def close(self) -> None:
+        self.release_writer()
+        if self.runtime is not None:
+            self.runtime.close()
+            self.runtime = None
+        if self.directory is not None:
+            self.directory.cleanup()
+            self.directory = None
+        self.patch.close()
 
     def reset(self, channel: str = "edge") -> None:
         assert channel in ("edge", "stable")
@@ -221,10 +238,7 @@ class Fixture:
                 if event["type"] == "lifespan.startup":
                     await send({"type": "lifespan.startup.complete"})
                 elif event["type"] == "lifespan.shutdown":
-                    self.release_writer()
-                    self.runtime.close()
-                    self.directory.cleanup()
-                    self.patch.undo()
+                    self.close()
                     await send({"type": "lifespan.shutdown.complete"})
                     return
         if scope["type"] != "http":
@@ -344,15 +358,33 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=("native", "standalone"), required=True)
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--origin-port", type=int)
     args = parser.parse_args()
-    uvicorn.run(
-        Fixture(args.mode, args.port),
-        host="127.0.0.1",
-        port=args.port,
-        access_log=False,
-        log_level="warning",
-        server_header=False,
-    )
+    image = os.environ.get("DOMUS_BROWSER_IMAGE")
+    if image:
+        from image_bridge import ImageBridge
+
+        fixture = ImageBridge(
+            image,
+            args.mode,
+            args.port,
+            os.environ["DOMUS_TEST_SOURCE_COMMIT"],
+            os.environ["DOMUS_TEST_ARCH"],
+        )
+        fixture.start()
+    else:
+        fixture = Fixture(args.mode, args.port, args.origin_port)
+    try:
+        uvicorn.run(
+            fixture,
+            host="127.0.0.1",
+            port=args.port,
+            access_log=False,
+            log_level="warning",
+            server_header=False,
+        )
+    finally:
+        fixture.close()
 
 
 if __name__ == "__main__":

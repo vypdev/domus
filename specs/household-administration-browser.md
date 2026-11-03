@@ -366,6 +366,9 @@ Tests first. Preserve repository-wide supported coverage, complete global and pe
 | `frontend/stories/administration.stories.ts` | create |
 | `frontend/stories/entry.stories.ts` | update |
 | `tests/browser/entry_server.py` | update |
+| `tests/browser/image_bridge.py` | create |
+| `tests/python/test_browser_image_contract.py` | create |
+| `.github/workflows/ci_check.yml` | update |
 | `tests/packaging/test_ui_wheel.py` | update |
 | `tests/containers/test_administration_image.py` | update |
 | `docs/household-administration.md` | update |
