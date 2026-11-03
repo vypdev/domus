@@ -95,6 +95,14 @@ use fictional HA accounts and cannot establish owner-HA adoption.
 Run `pnpm build:frontend-catalog` and `pnpm test:frontend-catalog` for the built entry and administration
 catalog, including English/Spanish, keyboard focus, inert text, narrow layout and both color schemes.
 Catalog stories explicitly emit intents without a server. They do not fabricate successful operations.
+The **Maximum Labels** administration story contains 256 fictional participants. Every HA name uses
+the full 256 Unicode code points (1,024 UTF-8 bytes); alternating rows use an 80-code-point alias
+(320 bytes) or the HA-name fallback. At 360px, the built-browser acceptance checks every row's
+text/action geometry without clipping, scrolls to the final participant and opens its management
+and alias forms. Reordering the roster preserves the selected membership reference and exact
+alias draft. Confirmation emits one intent for that same member. Both languages, deployment
+presentations, themes and reduced motion are covered. This is compiled presentation evidence;
+it does not assert a live HA directory response, successful server write or human UX approval.
 All 32 administration journeys also execute against the actual current image on each CI architecture,
 including exact high revisions, independent-writer conflicts, original recovery, authority outage,
 keyboard errors, closed-tab restoration, conditional BFCache and actual console restoration.

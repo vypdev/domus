@@ -106,7 +106,7 @@ test('the built interface fits 360 pixels with light/dark contrast and reduced-m
 
 const administrationUrl=(example:string,locale:string,deployment:string)=>origin+'/iframe.html?id=domus-household-administration--'+example
   +'&viewMode=story&args='+encodeURIComponent(`language:${locale};deployment:${deployment}`);
-for(const example of ['active','read-only','sources-unavailable','uncertain','historical'])test('HADB-03: built administration '+example+' is localized in both deployments without external requests',async({page})=>{
+for(const example of ['active','read-only','sources-unavailable','uncertain','historical','maximum-labels'])test('HADB-03: built administration '+example+' is localized in both deployments without external requests',async({page})=>{
   const errors:string[]=[],foreign:string[]=[];page.on('pageerror',error=>errors.push(error.message));
   await page.route('**/*',async route=>{if(new URL(route.request().url()).origin!==origin){foreign.push(route.request().url());await route.abort();}else await route.continue();});
   for(const [locale,deployment] of [['en','native'],['en','standalone'],['es','native'],['es','standalone']]) {
@@ -192,4 +192,68 @@ test('household-browser-C02: built drafts and detached saves retire when the ver
     await expect(widget.getByText('Former household intent',{exact:true})).toHaveCount(0);
     await widget.getByRole('button',{name:labels.edit,exact:true}).click();await expect(widget.getByRole('textbox',{name:labels.name,exact:true})).toHaveValue('Replacement household');
   }
+});
+
+for(const locale of ['en','es'] as const)for(const deployment of ['native','standalone'] as const)for(const colorScheme of ['light','dark'] as const)
+test(`household-admin-C57: maximum Unicode roster remains readable and keeps its selected member at 360px in ${locale}/${deployment}/${colorScheme}`,async({page})=>{
+  const errors:string[]=[],foreign:string[]=[],mutations:string[]=[];
+  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(/^(POST|PUT|PATCH|DELETE)$/u.test(request.method()))mutations.push(request.url());});
+  await page.route('**/*',async route=>{if(new URL(route.request().url()).origin!==origin){foreign.push(route.request().url());await route.abort();}else await route.continue();});
+  await page.setViewportSize({width:360,height:900});await page.emulateMedia({colorScheme,reducedMotion:'reduce'});
+  await page.goto(administrationUrl('maximum-labels',locale,deployment));const widget=page.locator('domus-administration');
+  await expect(widget.locator('ul.people>li')).toHaveCount(256);
+  const fixture=await widget.evaluate(element=>{
+    const component=element as DomusAdministration,members=component.view!.roster!.members,encoder=new TextEncoder();
+    const state=window as unknown as {unicodeIntents:unknown[]};state.unicodeIntents=[];
+    component.addEventListener('domus-administration-intent',event=>state.unicodeIntents.push((event as CustomEvent).detail));
+    const aliases=members.filter(row=>row.presentation.alias!==null);
+    return {names:members.map(row=>Array.from(row.metadata.name!).length),nameBytes:members.map(row=>encoder.encode(row.metadata.name!).byteLength),
+      aliases:aliases.map(row=>Array.from(row.presentation.alias!).length),aliasBytes:aliases.map(row=>encoder.encode(row.presentation.alias!).byteLength)};
+  });
+  expect(fixture.names).toEqual(Array.from({length:256},()=>256));expect(fixture.nameBytes).toEqual(Array.from({length:256},()=>1024));
+  expect(fixture.aliases).toEqual(Array.from({length:128},()=>80));expect(fixture.aliasBytes).toEqual(Array.from({length:128},()=>320));
+  const rows=widget.locator('ul.people>li');await expect(rows).toHaveCount(256);
+  const geometry=await rows.evaluateAll(items=>{
+    const offenders:string[]=[];let textLines=0,buttons=0;
+    items.forEach((item,index)=>{
+      const bounds=item.getBoundingClientRect();if(bounds.left<0||bounds.right>360)offenders.push('row:'+index);
+      const walker=document.createTreeWalker(item,NodeFilter.SHOW_TEXT);let text:Node|null;
+      while((text=walker.nextNode())!==null)if(text.textContent?.trim()){
+        const range=document.createRange();range.selectNodeContents(text);
+        for(const line of range.getClientRects()){textLines++;if(line.left<bounds.left-1||line.right>bounds.right+1)offenders.push('text:'+index);}
+      }
+      for(const control of item.querySelectorAll('strong,p,button')){
+        const style=getComputedStyle(control);
+        if(style.display==='none'||style.visibility!=='visible'||style.overflowX==='hidden'||style.overflowX==='clip'||style.textOverflow==='ellipsis')offenders.push('hidden:'+index);
+        if(control instanceof HTMLButtonElement){buttons++;if(control.getBoundingClientRect().height<44||control.disabled)offenders.push('action:'+index);}
+      }
+    });
+    return {offenderCount:offenders.length,examples:offenders.slice(0,8),textLines,buttons};
+  });
+  expect(geometry).toMatchObject({offenderCount:0,examples:[],buttons:511});expect(geometry.textLines).toBeGreaterThan(256);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+  const names=locale==='en'?{manage:'Manage participant',alias:'Change alias',cancel:'Cancel',field:'Domus alias',review:'Review changes',save:'Save changes',status:'Stored profile: Restricted · Active'}
+    :{manage:'Gestionar participante',alias:'Cambiar alias',cancel:'Cancelar',field:'Alias de Domus',review:'Revisar cambios',save:'Guardar cambios',status:'Perfil guardado: Restringido · Activo'};
+  const selectedAlias='🏡'.repeat(78)+'😏😏',selectedName='😀'.repeat(254)+'😏😏',memberId='fictional-roster-255';
+  const manage=widget.getByRole('button',{name:names.manage+': '+selectedAlias,exact:true});
+  const selected=rows.filter({has:page.getByRole('button',{name:names.manage+': '+selectedAlias,exact:true})});
+  await expect(selected.getByText(selectedAlias,{exact:true})).toBeVisible();await expect(selected.getByText(names.status,{exact:true})).toBeVisible();
+  await expect(selected.locator('p.source')).toContainText(selectedName);await expect(manage).toBeEnabled();
+  if(locale==='es'&&deployment==='standalone')await selected.screenshot({path:`test-results/unicode-roster-${colorScheme}.png`});
+  await manage.click();const editor=widget.getByRole('region',{name:names.manage,exact:true});
+  await expect(editor.getByText(selectedAlias,{exact:true})).toBeVisible();await expect(editor.getByText(memberId,{exact:true})).toBeVisible();
+  await editor.getByRole('button',{name:names.cancel,exact:true}).click();await expect(manage).toBeFocused();
+  await widget.getByRole('button',{name:names.alias+': '+selectedAlias,exact:true}).click();
+  const replacement='🚀'+Array.from(selectedAlias).slice(1).join(''),field=widget.getByRole('textbox',{name:names.field,exact:true});
+  await expect(field).toHaveValue(selectedAlias);await field.fill(replacement);await expect(field).toHaveValue(replacement);
+  await widget.evaluate(async element=>{const component=element as DomusAdministration,view=component.view!;component.view={...view,roster:{...view.roster!,members:[...view.roster!.members].reverse()}};await component.updateComplete;});
+  await expect(rows.first().getByText(selectedAlias,{exact:true})).toBeVisible();await expect(field).toHaveValue(replacement);
+  await widget.getByRole('button',{name:names.review,exact:true}).click();
+  await expect(widget.locator('section.card').filter({has:page.getByRole('button',{name:names.save,exact:true})}).getByText(memberId,{exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+  if(locale==='es'&&deployment==='standalone')await widget.locator('section.card').filter({has:page.getByRole('button',{name:names.save,exact:true})}).screenshot({path:`test-results/unicode-selected-${colorScheme}.png`});
+  await widget.getByRole('button',{name:names.save,exact:true}).click();
+  expect(await page.evaluate(()=>(window as unknown as {unicodeIntents:unknown[]}).unicodeIntents)).toEqual([
+    {type:'submit',command:{action:'member.presentation.update',memberId,payload:{expected_revision:'11',alias:replacement}}}]);
+  expect(errors).toEqual([]);expect(foreign).toEqual([]);expect(mutations).toEqual([]);
 });

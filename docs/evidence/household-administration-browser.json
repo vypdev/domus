@@ -865,5 +865,90 @@
     },
     "unchanged": "No product runtime/UI/package change, no Copilot code/resources/configuration/workflows/models/credentials/bounds change and no manual thread resolution.",
     "limitation": "Local actual-image execution is distinct from fresh-head hosted/native verification and remaining whole-feature acceptance."
+  },
+  "maximumUnicodeRosterAcceptance": {
+    "sourceBase": "76e20ba77a39d0cec0ee838dffc6806bae11ea92",
+    "retainedCase": "household-admin-C57",
+    "testsFirst": {
+      "cases": 8,
+      "seconds": 9.498535,
+      "result": "All pass against the existing compiled renderer before the new story is introduced. No product layout correction was required. Original test source, raw log, statistics and four PNGs are retained."
+    },
+    "story": "domus-household-administration--maximum-labels",
+    "fixture": {
+      "participants": 256,
+      "HANameCodePoints": 256,
+      "HANameUTF8Bytes": 1024,
+      "aliasRows": 128,
+      "aliasCodePoints": 80,
+      "aliasUTF8Bytes": 320,
+      "fallbackRows": 128,
+      "identity": "Independent fictional HA/member IDs; aliases never select identity."
+    },
+    "journeys": {
+      "cases": 8,
+      "locales": [
+        "en",
+        "es"
+      ],
+      "deploymentPresentations": [
+        "native",
+        "standalone"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "viewport": {
+        "width": 360,
+        "height": 900
+      },
+      "reducedMotion": true
+    },
+    "assertions": [
+      "Every rendered row and text-line rectangle remains within horizontal bounds; status and all 511 available actions remain visible, unclipped and usable. Document width never exceeds 360px.",
+      "The final member retains its complete maximal alias, HA name, stored restricted/active status, enabled management and alias actions. Management shows the exact membership reference and Cancel restores focus.",
+      "The maximal alias remains editable. Reversing all 256 rows preserves the selected membership and unsaved 80-code-point alias. Review shows that same reference and Save emits exactly one original revision-11 alias intent for it.",
+      "No foreign requests, browser errors or actual mutation requests occur. These assertions inspect the actual built component; they do not claim a server write or live HA directory."
+    ],
+    "localVerification": {
+      "builtCatalogStats": {
+        "startTime": "2026-11-03T15:29:26.610Z",
+        "duration": 22287.249,
+        "expected": 36,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "catalogCases": 36,
+      "runtimeAndCatalogTypes": "PASS",
+      "originalSDK": "3e7ceea08e6131360e026937d1c0cc1b120472e0; 7 original policy modules byte-verified; current companion format/consistency/catalog PASS against its original owning baseline. No SDK or owning cases changed."
+    },
+    "visualInspection": {
+      "reviewer": "Codex (agent), not a human reviewer",
+      "artifacts": [
+        "unicode-roster-light.png",
+        "unicode-roster-dark.png",
+        "unicode-selected-light.png",
+        "unicode-selected-dark.png"
+      ],
+      "observed": "Full alias/provider name wrap; stored status, both roster actions and selected confirmation/reference remain readable. No UI change was needed.",
+      "limitation": "Required human UX review remains unfulfilled by this agent inspection."
+    },
+    "sourceHashes": {
+      "frontend/stories/administration.stories.ts": "d2920eb975b88a0a498b4a6e3100ecdb5ace1c32232571082e6744babfd154c2",
+      "frontend/tests/e2e/catalog.spec.ts": "286c71b8cc33978a402ff875d787e61a4fddcf0f22769d6ad0a737c0be0c0dda"
+    },
+    "productionRuntimeChanged": false,
+    "package": {
+      "SHA256": "6578a595350e00b0df2fb7e12a436a100a6cf8a661ad4147a5fc074d6de05351",
+      "state": "Verified current package remains byte-identical; 151 Python/four UI payload and all runtime/build inputs are unchanged. No housekeeping rebuild."
+    },
+    "coverageBasis": "Current hosted 76e proves 1,239 frontend executions and 100% on all four metrics globally/per 31 runtime files. No authored runtime file changes in this increment; fresh-head CI/native verification remains required.",
+    "remaining": "All 186 owning cases remain required; this acceptance closes only the stated rendered C57 gap. Full semantic audit, required human UX, compatible owner adoption and the complete product remain in progress.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-unicode-76e20ba",
+      "privateLocalOnly": true
+    }
   }
 }
