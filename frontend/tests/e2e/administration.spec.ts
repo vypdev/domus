@@ -55,6 +55,81 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({name:'Cedar House',time_zone:'Europe/Madrid',revision:2});
     expect((await statistics(request,mode)).counts.receipts).toBe(2);await page.reload();await expect(page.getByText('Cedar House',{exact:true})).toBeVisible();
   });
+  test('household-workspace-C78: an actual administration write preserves a revision above 2^53 through HTTP and SQLite',async({page,context,request})=>{
+    const widget=await create(page,context,mode),before=await statistics(request,mode),writes:{key:string;body:string|null}[]=[];
+    // A legitimate persisted boundary fixture, not a claim that 2^53 commands have executed.
+    expect((await request.post(origin(mode)+'/__fixture__/revision',{data:{revision:'9007199254740993'}})).ok()).toBe(true);
+    await page.reload();await expect(widget.getByRole('button',{name:'Edit household',exact:true})).toBeEnabled();
+    page.on('request',item=>{if(item.url()===base(mode)+'/api/v1/household'&&item.method()==='PUT')
+      writes.push({key:item.headers()['idempotency-key'],body:item.postData()});});
+    await widget.getByRole('button',{name:'Edit household',exact:true}).click();
+    await expect(widget.getByRole('region',{name:'Household settings',exact:true})).toContainText('9007199254740993');
+    await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Exact revision house');await save(widget);
+    expect(writes).toHaveLength(1);expect(writes[0].body).toBe('{"expected_revision":9007199254740993,"name":"Exact revision house","time_zone":"UTC"}');
+    // Assert raw wire integers: JSON.parse would coerce the original revision to an unsafe Number.
+    const persisted=await page.request.get(base(mode)+'/api/v1/household');expect(persisted.status()).toBe(200);
+    expect(await persisted.text()).toMatch(/"revision":\s*9007199254740994(?=[,}])/u);
+    expect((await statistics(request,mode)).counts.receipts).toBe(before.counts.receipts+1);
+    const records=await page.evaluate(key=>JSON.parse(sessionStorage.getItem(key)!).records,journalKey);
+    expect(records).toHaveLength(1);expect(records[0]).toMatchObject({key:writes[0].key,stage:'committed',payload:{expected_revision:'9007199254740993',name:'Exact revision house'}});
+    await page.reload();await widget.getByRole('button',{name:'Edit household',exact:true}).click();
+    await expect(widget.getByRole('region',{name:'Household settings',exact:true})).toContainText('9007199254740994');expect(writes).toHaveLength(1);
+  });
+  for(const actors of ['same_account','different_accounts'] as const)test('household-browser-C22: independent '+actors+' administration writers and a lost committed reply retain one original effect',async({page,context,browser,request})=>{
+    const widget=await create(page,context,mode),peer=await browser.newContext(),other=await peer.newPage();
+    let release!:()=>void,arrived!:()=>void,count=0;
+    const gate=new Promise<void>(resolve=>{release=resolve;}),ready=new Promise<void>(resolve=>{arrived=resolve;});
+    const writes:{index:number;key:string;body:string|null;status:number;code:string|null}[]=[],lookups:string[]=[];
+    const pages=[page,other],names=['Independent house A','Independent house B'];
+    try{
+      if(mode==='native')await peer.addCookies([{name:'ingress_session',value:(actors==='same_account'?'d':'e').repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
+      else if(actors==='different_accounts')expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:'c'.repeat(32)}})).ok()).toBe(true);
+      await other.goto(base(mode)+'/');await signIn(other,mode);
+      // A different verified HA administrator must explicitly join before the mapping can apply.
+      if(actors==='different_accounts')await other.getByRole('button',{name:'Request membership',exact:true}).click();
+      const widgets=[widget,other.locator('domus-administration')];
+      await expect(widgets[1].getByRole('button',{name:'Edit household',exact:true})).toBeEnabled();
+      if(mode==='standalone'&&actors==='different_accounts')expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:'a'.repeat(32)}})).ok()).toBe(true);
+      const before=await statistics(request,mode);
+      for(const [index,candidate]of pages.entries()){
+        candidate.on('request',item=>{if(item.url().includes('/administration/requests/')||item.url().includes('/operations/'))lookups.push(item.url());});
+        await candidate.route(base(mode)+'/api/v1/household',async route=>{
+          if(route.request().method()!=='PUT')return route.continue();
+          const original={index,key:route.request().headers()['idempotency-key'],body:route.request().postData()};
+          if(++count===2)arrived();await gate;
+          const upstream=await route.fetch({maxRetries:0,maxRedirects:0}),body=await upstream.body();
+          writes.push({...original,status:upstream.status(),code:upstream.status()===200?null:JSON.parse(body.toString('utf8')).code});
+          if(upstream.status()===200)await route.abort('connectionreset');else await route.fulfill({response:upstream,body});
+        });
+        await widgets[index].getByRole('button',{name:'Edit household',exact:true}).click();
+        await widgets[index].getByRole('textbox',{name:'New household name',exact:true}).fill(names[index]);
+        await widgets[index].getByRole('button',{name:'Review changes',exact:true}).click();
+      }
+      await Promise.all(widgets.map(candidate=>candidate.getByRole('button',{name:'Save changes',exact:true}).click()));
+      await ready;release();await expect.poll(()=>writes.length).toBe(2);
+      const winner=writes.find(item=>item.status===200)!,loser=writes.find(item=>item.status!==200)!;
+      expect(winner).toBeDefined();expect(loser).toBeDefined();expect([409,503]).toContain(loser.status);
+      if(loser.status===503)expect(loser.code).toBe('storage_busy');else expect(loser.code).toBe('revision_conflict');
+      expect(new Set(writes.map(item=>item.key)).size).toBe(2);
+      for(const write of writes)expect(JSON.parse(write.body!)).toEqual({expected_revision:1,name:names[write.index],time_zone:'UTC'});
+      await expect(widgets[winner.index].getByRole('heading',{name:'Outcome not confirmed',exact:true})).toBeVisible();
+      await expect(widgets[loser.index].getByRole('heading',{name:'Change not accepted',exact:true})).toBeVisible();
+      expect(lookups).toEqual([]);const committed=await statistics(request,mode);
+      for(const table of ['receipts','audit','outbox'])expect(committed.counts[table],table).toBe(before.counts[table]+1);
+      expect(committed.counts.members).toBe(before.counts.members);
+      expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({name:names[winner.index],revision:2});
+      const original=await pages[winner.index].evaluate(key=>JSON.parse(sessionStorage.getItem(key)!).records[0],journalKey);
+      expect(original).toMatchObject({key:winner.key,stage:'uncertain',payload:{expected_revision:'1',name:names[winner.index]}});
+      await pages[winner.index].reload();const restored=pages[winner.index].locator('domus-administration');
+      await expect(restored.getByRole('button',{name:'Check original request',exact:true})).toBeEnabled();expect(count).toBe(2);expect(lookups).toEqual([]);
+      await restored.getByRole('button',{name:'Check original request',exact:true}).click();
+      await expect(restored.getByRole('heading',{name:'Original request processed',exact:true})).toBeVisible();
+      expect(lookups).toEqual([base(mode)+'/api/v1/administration/requests/household.update/'+winner.key]);expect(count).toBe(2);
+      expect(await statistics(request,mode)).toEqual(committed);
+      const recovered=await pages[winner.index].evaluate(key=>JSON.parse(sessionStorage.getItem(key)!).records[0],journalKey);
+      expect(recovered).toMatchObject({...original,stage:'committed',operationId:expect.any(String)});
+    }finally{release();await peer.close();}
+  });
   test('HADW-05: actual mapping/profile form preserves all other profiles and SQLite reauthorizes the selected account',async({page,context})=>{
     const widget=await create(page,context,mode);await widget.getByRole('button',{name:'Edit access rules',exact:true}).click();
     await widget.getByLabel('HA administrator mapping',{exact:true}).selectOption('selected_ha_user');await widget.getByLabel('Target Home Assistant account',{exact:true}).selectOption('a'.repeat(32));
@@ -122,6 +197,29 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toHaveValue('Other current name');
     await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Explicit new work');await save(widget);
     expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({name:'Explicit new work',revision:3});
+  });
+  test('household-workspace-C50: an actual HA outage locks the retained draft and keyboard transitions keep an enabled focus target',async({page,context,request})=>{
+    const widget=await create(page,context,mode),before=await statistics(request,mode),writes:string[]=[];
+    page.on('request',item=>{if(item.method()==='PUT')writes.push(item.url());});
+    await widget.getByRole('button',{name:'Edit household',exact:true}).click();
+    await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Retained outage draft');
+    await widget.getByRole('button',{name:'Review changes',exact:true}).click();
+    expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{outage:true}})).ok()).toBe(true);
+    await widget.getByRole('button',{name:'Refresh administration',exact:true}).click();
+    await expect(page.getByRole('heading',{name:'Read-only access',exact:true})).toBeVisible();
+    await expect(widget.getByRole('button',{name:'Save changes',exact:true})).toBeDisabled();
+    const back=widget.getByRole('button',{name:'Back to editing',exact:true});await back.focus();await back.press('Enter');
+    await expect(widget.getByRole('button',{name:'Refresh administration',exact:true})).toBeFocused();
+    await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toHaveValue('Retained outage draft');
+    await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toBeDisabled();
+    const cancel=widget.getByRole('button',{name:'Cancel',exact:true});await cancel.focus();await cancel.press('Enter');
+    await expect(widget.getByRole('button',{name:'Refresh administration',exact:true})).toBeFocused();
+    await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toHaveCount(0);
+    expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{outage:false}})).ok()).toBe(true);
+    await widget.getByRole('button',{name:'Refresh administration',exact:true}).click();
+    await widget.getByRole('button',{name:'Edit household',exact:true}).click();
+    await expect(widget.getByRole('textbox',{name:'New household name',exact:true})).toHaveValue('Maple House');
+    expect(writes).toEqual([]);expect(await statistics(request,mode)).toEqual(before);
   });
   test('household-admin-C58: actual compiled keyboard errors and back focus work in both locales with mobile CSP fallback',async({page,context,request},info)=>{
     await page.setViewportSize({width:360,height:800});const violations:string[]=[],writes:string[]=[];

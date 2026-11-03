@@ -365,3 +365,24 @@ test('household-workspace-C50: back to editing restores the original field focus
   const f=await mount();await f.click('Edit preferences');await f.change('Saved language','en');await f.click('Review changes');await f.click('Back to editing');
   expect(f.root.activeElement).toBe(f.input('Saved language'));expect(f.input('Saved language').value).toBe('en');expect(f.intents).toEqual([]);
 });
+
+for(const action of ['Back to editing','Cancel','Close editor','Close hidden editor'])test('household-workspace-C50: '+action+' keeps keyboard focus on a current enabled action after write access is lost',async()=>{
+  const current=view(),f=await mount(current);await f.click('Edit household');await f.change('New household name','Retained draft');
+  if(action==='Back to editing'||action==='Close editor')await f.click('Review changes');
+  f.element.view={...current,session:{...current.session!,access:'read_only'},notice:'read_only',
+    household:action==='Close hidden editor'?null:current.household,controls:{...current.controls,household:false}};
+  await f.element.updateComplete;
+  const control=action==='Close hidden editor'?'Close editor':action;
+  f.button(control).focus();expect(f.root.activeElement).toBe(f.button(control));await f.click(control);
+  expect(f.root.activeElement).toBe(f.button('Refresh administration'));expect(f.button('Refresh administration').disabled).toBe(false);
+  if(action==='Back to editing'){
+    expect(f.input('New household name').value).toBe('Retained draft');expect(f.input('New household name').disabled).toBe(true);
+    f.element.view=current;await f.element.updateComplete;expect(f.input('New household name').value).toBe('Retained draft');
+  }else expect(f.root.querySelector('form')).toBeNull();
+  expect(f.intents).toEqual([]);
+});
+test('household-workspace-C50: closing an editor during proof refresh never focuses a removed or private control',async()=>{
+  const current=view(),f=await mount(current);await f.click('Edit household');f.button('Cancel').click();
+  f.element.pending=true;await f.element.updateComplete;expect(f.root.querySelector('input,button')).toBeNull();expect(f.intents).toEqual([]);
+  f.element.pending=false;f.element.view=current;await f.element.updateComplete;expect(f.root.activeElement).toBeNull();expect(f.root.querySelector('form')).toBeNull();
+});

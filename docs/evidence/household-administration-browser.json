@@ -394,5 +394,100 @@
     "primaryDocumentation": "https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-be-enabled",
     "consumerChange": "Equivalent explicit toBeEnabled()/toBeDisabled() branches improve readability. No reproduced consumer failure, assertion weakening, fixture substitution, threshold change or Copilot edit.",
     "currentGate": "New-head native verification of finding state remains required."
+  },
+  "boundaryIncrement": {
+    "sourceBase": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
+    "testsFirst": {
+      "focus": "Four Chromium failures (61passed/4failed): readonly back/cancel/close and hidden-editor close all lose focus. A fifth refresh-retirement safety case already passes.",
+      "fixtureCorrection": "The first real-writer campaign passes4/fails2 because a second HA account has not explicitly requested membership. Add that real authorized join step; no production code changed for the test precondition.",
+      "packageDeclaration": "A new compiled bundle correctly fails the stale previous resource inventory. Update only the current candidate declaration, retaining historical evidence."
+    },
+    "implemented": "Disabled or missing transition targets fall back to the current enabled refresh control; if the view is retired/checking and no control exists, no removed/private field is focused. Draft values and authority controls remain unchanged.",
+    "frontend": {
+      "executions": 1231,
+      "authoredRuntimeFiles": 31,
+      "metrics": {
+        "lines": {
+          "total": 1580,
+          "covered": 1580,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 2384,
+          "covered": 2384,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 504,
+          "covered": 504,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1902,
+          "covered": 1902,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentInventory": "passed"
+    },
+    "compiledBrowser": {
+      "wholeCampaign": 81,
+      "newCases": 8,
+      "deployments": [
+        "native",
+        "standalone"
+      ],
+      "providers": "Fictional loopback HA/Supervisor with actual product Python/SQLite; not owner HA adoption."
+    },
+    "traceability": [
+      {
+        "case": "household-workspace-C78",
+        "evidence": "frontend/tests/e2e/administration.spec.ts",
+        "assertions": "Both deployments read genuine fixture SQLite revision9007199254740993, send the exact unquoted HTTPinteger once, persist9007199254740994, retain original string/key in journal and reload without resend. Fixture setup is not a2^53operation history claim."
+      },
+      {
+        "case": "household-browser-C22",
+        "evidence": "frontend/tests/e2e/administration.spec.ts",
+        "assertions": "Four independent-browser cases (same/different verified HAaccounts in both deployments). Both original revision1 PUTs wait at a barrier. One SQLite effect; loser409revision_conflict or bounded503storage_busy; committed response is lost. Reload keeps exact winner key/payload; explicit originalGET recovers committed without another mutation/audit/outbox. No automatic retries or result queries."
+      },
+      {
+        "case": "household-workspace-C50",
+        "evidence": [
+          "frontend/tests/administration-component.test.ts",
+          "frontend/tests/e2e/administration.spec.ts",
+          "frontend/tests/e2e/catalog.spec.ts"
+        ],
+        "assertions": "Visible focus through entry/validation/review/back/cancel/close. Four reproduced readonly/missing-fact regressions plus checking guard; actual outage proof and keyboard Enter transitions in both deployments retain draft, lock writes, focus enabled refresh, cancel without PUT and return to persisted facts."
+      }
+    ],
+    "package": {
+      "sourceBase": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
+      "sourceIdentity": "All151Pythonmodules unchanged. The administration renderer now falls back to the enabled refresh action when the original focus target disappears or becomes disabled; no authorization, journal or wire change.",
+      "actualProductFiles": {
+        ".vite/manifest.json": "135a524f75c257533cf9601bafd79896f3d4abd9e2275c4e33427c17abf9f46e",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-DLmPl5j8.js": "162f0935b58728be3a5ae815d19fc23be99651e29c18fc831161c7199ea18800",
+        "index.html": "ec390d8ed7d09d9ac878c7573129d4e3e95c20f62bf83b1bf54d463f7e06aa6f"
+      },
+      "wheelSHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754",
+      "acceptance": "151Pythonmodules/4UIresources match the actual wheel. Local1231Chromium tests,100% all4coverage metrics across31runtimefiles with independent inventory audit;81whole compiled Python/SQLite cases pass in both deployments. Current-head hosted checks/CPUimages/native review and complete owning-case/human UX/owner adoption remain required.",
+      "all151PythonModulesAnd4UIResourcesVerified": true
+    },
+    "limits": "These exact cases add inspected semantic evidence; they do not close the entire186-case acceptance ledger. BFCache/tab closure/restore replay, compatible owner adoption and human UX still require their own proof.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-boundaries-87d726f",
+      "privateLocalOnly": true
+    },
+    "hosted": "New current-head checks and complete native finding review pending."
   }
 }

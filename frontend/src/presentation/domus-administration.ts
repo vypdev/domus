@@ -54,7 +54,11 @@ export class DomusAdministration extends LitElement {
   protected updated():void {
     this.lang=this.language==='es'?'es':'en';
     const id=this.focusAfter;this.focusAfter=null;
-    if(id!==null)this.shadowRoot?.getElementById(id)?.focus();
+    if(id!==null){
+      const original=this.shadowRoot!.getElementById(id);
+      const target=original===null||original.matches(':disabled')?this.shadowRoot!.getElementById('administration-refresh'):original;
+      target?.focus();
+    }
   }
   disconnectedCallback():void {super.disconnectedCallback();this.drafts.clear();this.owner=null;this.view=null;}
   private intent(detail:AdministrationIntent):void {
@@ -325,7 +329,7 @@ export class DomusAdministration extends LitElement {
       if(this.pending||this.view?.busy||this.view?.phase==='loading')return html`<section class="note" role="status" aria-busy="true"><h2>${this.t('checking')}</h2><p>${this.t('checkingBody')}</p></section>`;
       if(this.view===null||this.retired)return nothing;
       return html`<section class="note" role="status"><h2>${this.t('title')}</h2><p>${this.t('notice_'+(this.view.notice??'unavailable'))}</p>
-        <button type="button" @click=${()=>this.intent({type:'refresh'})}>${this.t('refresh')}</button></section>`;
+        <button id="administration-refresh" type="button" @click=${()=>this.intent({type:'refresh'})}>${this.t('refresh')}</button></section>`;
     }
     const person=view.access!.member!,own=this.ownPresentation(view);
     const haName=this.ownName(view);
@@ -339,7 +343,7 @@ export class DomusAdministration extends LitElement {
       ${this.participants(view)}<section class="card"><h3>${this.t('household')}</h3>${this.openButton('editHousehold','household.update',view.controls.household)}</section>
       <section class="card"><h3>${this.t('policy')}</h3><p class="help">${this.t('protected')}</p>${this.openButton('editPolicy','policy.update',view.controls.policy)}</section>
       ${[...this.drafts.values()].map(draft=>this.editor(draft,view))}${this.requests(view)}
-      <button type="button" @click=${()=>this.intent({type:'refresh'})}>${this.t('refresh')}</button></section>`;
+      <button id="administration-refresh" type="button" @click=${()=>this.intent({type:'refresh'})}>${this.t('refresh')}</button></section>`;
   }
 }
 customElements.define('domus-administration',DomusAdministration);
