@@ -1149,7 +1149,7 @@
       "backupRestoreExercised": false,
       "householdMutation": false
     },
-    "guidance": "docs/installation-home-assistant.md separates current sources, backup dispatch/completion, actual current status and historical Edge.1\u20133 receipts.",
+    "guidance": "docs/installation-home-assistant.md separates current sources, backup dispatch/completion, actual current status and historical Edge.1–3 receipts.",
     "limitations": [
       "Source and image identities remain separate from hosted definition-head verification.",
       "New current-head hosted CPU, full coverage and native review gates are required.",
@@ -1287,6 +1287,39 @@
       "restart": "CLI start observation timed out. A fresh independent app-info read confirms Edge.5 started with its original origin, private port and Core permission. The start request was not repeated.",
       "restoreExercised": false,
       "actualUpdate": false
+    }
+  },
+  "directoryBoundaryAcceptanceIncrement": {
+    "recordedAtUTC": "2026-11-03T19:06:57.357886+00:00",
+    "sourceBase": "e5eaa37a8179b314006de9babd0d86086bb35185",
+    "owningCase": "household-admin-C47",
+    "scope": "Actual bounded WebSocket adapter with deterministic fictional HA in both native and standalone modes; no owner HA directory modification.",
+    "testsFirst": {
+      "newCases": 6,
+      "firstExecutionPassed": 39,
+      "firstExecutionFailed": 0,
+      "interpretation": "Strengthens an explicit acceptance boundary already handled by the runtime; no production defect or runtime fix is claimed."
+    },
+    "assertions": [
+      "Exactly256 distinct canonical HA accounts are accepted without truncation, preserving provider order, names, eligibility and the exact own subject at the final position. Both modes perform only config/auth/list.",
+      "257 distinct valid accounts make the entire directory unavailable; a verified255-account prefix is never exposed as a complete selector. The fixture independently checks distinctness so duplicate rejection cannot explain success.",
+      "A malformed final account in an otherwise valid256-account response makes the entire directory unavailable rather than silently dropping the last account.",
+      "A standalone grant may separately verify only its exact own profile through auth/current_user; this does not certify the unavailable directory. Native technical credentials never use that fallback."
+    ],
+    "tests": "tests/backend/test_ha_member_profiles.py",
+    "testSourceSHA256": "b7d289bc5d1696112dec721368e7f682cc3a4c3e4eac2cd7ed3602799a205188",
+    "unchanged": "All runtime, Edge.7 source/archive/fingerprints/schema/permissions, frozen Edge.5 fixture and Copilot sources/resources/workflows/configuration/credentials/bounds.",
+    "validation": "Focused39cases and complete4402backend cases pass. All151runtime modules have100% supported statement/branch coverage, independently audited against actual source. Style, links and the unchanged original seven-module SDD SDK pass; all20owner documents and186cases remain. Fresh published-head CI/native review pending.",
+    "limits": "Only the stated provider-contract case is strengthened. Full retained186-case acceptance, actual owner Edge.7 installation/UI, restoration and required human UX remain separate and unfinished.",
+    "localValidation": {
+      "passed": 4402,
+      "runtimeModules": 151,
+      "statements": 10438,
+      "branches": 2928,
+      "missingLines": 0,
+      "missingBranches": 0,
+      "independentInventory": "PASS",
+      "runtimeUnchanged": true
     }
   }
 }
