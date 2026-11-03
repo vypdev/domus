@@ -2,6 +2,8 @@
 import {revisionValue} from './administration';
 import type {Revision} from './administration';
 
+export const TASK_TEXT_LIMITS = Object.freeze({title: 160, description: 4000, reason: 1000});
+
 export class TaskInputError extends Error {
   constructor() {super('invalid_task_input'); this.name = 'TaskInputError';}
 }
@@ -65,7 +67,7 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
       const body = fields(item.payload, ['expected_revision', 'title', 'description', 'priority']);
       requireValue(body.expected_revision === 0);
       return Object.freeze({action, payload: Object.freeze({expected_revision: 0,
-        title: taskText(body.title, 160, true), description: taskText(body.description, 4000, false, true),
+        title: taskText(body.title, TASK_TEXT_LIMITS.title, true), description: taskText(body.description, TASK_TEXT_LIMITS.description, false, true),
         priority: choice(body.priority, TASK_PRIORITIES)})});
     }
     const occurrenceId = taskIdentifier(item.occurrenceId);
@@ -85,7 +87,7 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
       const body = fields(item.payload, action === 'task.verify'
         ? ['expected_revision', 'cycle_id', 'decision', 'reason'] : ['expected_revision', 'cycle_id', 'reason']);
       const payload = {expected_revision: revisionValue(body.expected_revision), cycle_id: taskIdentifier(body.cycle_id),
-        reason: taskText(body.reason, 1000, action === 'task.reopen' || body.decision === 'rejected', true)};
+        reason: taskText(body.reason, TASK_TEXT_LIMITS.reason, action === 'task.reopen' || body.decision === 'rejected', true)};
       return action === 'task.verify' ? Object.freeze({action, occurrenceId,
         payload: Object.freeze({...payload, decision: choice(body.decision, ['approved', 'rejected'])})})
         : Object.freeze({action, occurrenceId, payload: Object.freeze(payload)});

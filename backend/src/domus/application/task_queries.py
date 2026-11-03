@@ -548,7 +548,7 @@ class TaskQueries:
             raise Forbidden("permission_denied")
         command = CommandKey(self.household_id, self.human.ha_user_id, action, key)
         with self.transactions.read() as unit:
-            self._operation_access(unit)
+            self._read(unit)
             receipt = unit.receipts.get(command)
             if receipt is None:
                 raise NotFound("operation_missing")

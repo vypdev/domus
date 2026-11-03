@@ -172,3 +172,30 @@ test('a member without creation permission sees task reads; an unavailable list 
   const f = await mount(view({access: {householdId: 'home', memberId: 'member-1', canCreate: false}, page: null, notice: 'unavailable'}));
   expect(f.root.querySelector('form')).toBeNull(); expect(f.text()).not.toContain('No tasks on this page'); expect(f.text()).toContain('Tasks could not be loaded');
 });
+
+test.each(['a', '🧹'])('creation enforces Unicode code-point bounds without losing the draft (%s)', async character => {
+  const f = await mount(); f.root.querySelector<HTMLDetailsElement>('details.new-task')!.open = true; const form = f.root.querySelector('form')!;
+  await f.input('task-title', character.repeat(161));
+  expect(f.root.querySelector('#task-title')!.getAttribute('aria-invalid')).toBe('true');
+  expect(f.button('Create task').disabled).toBe(true);
+  form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  expect(f.intents).toEqual([]); expect(f.root.activeElement?.id).toBe('task-title');
+  expect(f.root.querySelector<HTMLInputElement>('#task-title')!.value).toBe(character.repeat(161));
+  await f.input('task-title', character.repeat(160)); await f.input('task-description', character.repeat(4001));
+  expect(f.root.querySelector('#task-description')!.getAttribute('aria-invalid')).toBe('true');
+  form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  expect(f.intents).toEqual([]); expect(f.root.activeElement?.id).toBe('task-description');
+  await f.input('task-description', character.repeat(4000)); expect(f.button('Create task').disabled).toBe(false);
+  form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  expect(f.intents).toEqual([{type: 'create', title: character.repeat(160), description: character.repeat(4000), priority: 'normal'}]);
+});
+test.each(['a', '🧹'])('review enforces the same 1,000-code-point reason bound (%s)', async character => {
+  const f = await mount(view({detail: {...work, state: 'completed', allowedActions: ['approve', 'reject', 'reopen'],
+    cycle: {cycleId: 'cycle-1', verification: 'pending', performedAt: '1000', performerIds: ['member-1']}}}));
+  await f.input('task-reason', character.repeat(1001));
+  expect(f.root.querySelector('#task-reason')!.getAttribute('aria-invalid')).toBe('true');
+  for (const label of ['Approve', 'Reject', 'Reopen task']) expect(f.button(label).disabled).toBe(true);
+  await f.input('task-reason', character.repeat(1000));
+  expect(f.button('Reject').disabled).toBe(false); f.button('Reject').click();
+  expect(f.intents).toEqual([{type: 'verify', decision: 'rejected', reason: character.repeat(1000)}]);
+});

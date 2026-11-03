@@ -298,11 +298,11 @@ jobs:
         run: >-
           pnpm --filter @domus/frontend exec playwright test
           -c playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts
-      - name: Require all forty-two actual-image household journeys
+      - name: Require all forty-four actual-image household journeys
         run: >-
           uv run python -c "import json; from pathlib import Path;
           result=json.loads(Path('frontend/test-results/entry-results.json').read_text());
-          assert result['stats']['expected']==42 and result['stats']['unexpected']==0
+          assert result['stats']['expected']==44 and result['stats']['unexpected']==0
           and result['stats']['skipped']==0 and result['stats']['flaky']==0"
 
       - name: Require no surviving image browser fixtures

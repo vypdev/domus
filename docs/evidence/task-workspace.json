@@ -1,6 +1,6 @@
 {
-  "recordedAtUTC": "2026-11-03T23:17:21.438325+00:00",
-  "status": "Task workspace source and pinned Edge.8 verified on both CPU families; owner adoption pending",
+  "recordedAtUTC": "2026-11-03T23:58:13.049072+00:00",
+  "status": "Task-specific recovery and Unicode form corrections verified locally; replacement immutable preview and owner adoption pending.",
   "issue": 23,
   "pullRequest": 29,
   "preparationBase": "a954ce091d19f6350d64eec759670d5a1fadcfb5",
@@ -14,18 +14,18 @@
     "English/Spanish UI, current-account/member/household fencing, bounded private recovery records, session deadlines, keyboard focus and responsive layouts."
   ],
   "currentSourcePackage": {
-    "scope": "Current source wheel and compiled UI, not the already installed Edge.7 preview. Both CPU images and owner adoption are separate acceptance.",
-    "wheelSHA256": "eabe7e7325cd0066990426a6d01316c2cd3397b358f36fc0f6153ae6e88093fb",
+    "scope": "Corrected current source wheel and compiled UI; the published Edge.8 candidate still pins its preceding runtime. A new immutable preview and owner adoption require separate verification.",
+    "wheelSHA256": "7c3e1d6b7078a2ab7177407c027df10afdacb2ef66f63b790782987538d3e0c4",
     "actualProductFiles": {
-      ".vite/manifest.json": "785db581dde1ff22dda7b1d92756ef55c67078cb558c39a90945f7699a824d0a",
+      ".vite/manifest.json": "31afa1ff0c4629340409460e52b6d2901e2a53154efb7c4a12fede871bde200c",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-LD9A1zed.js": "5800c4070013c33158cd37283bcc7fbc9fe5196ca1dae14458f3d33ef2c3da45",
-      "index.html": "85ad753e2af522abd0177014f5db02126e3b1014bcd3bcedb9956db0ece62a65"
+      "assets/index-Cu0tEo5S.js": "d2a7ce802d45bbbf6cc7fcea110e51bd0339f6279a0a7d4ee9df66b0785feee8",
+      "index.html": "1a9d70fdea01faba7f0ea2e5e7a9d3bfdaa2e4a2bd0209c66d85f1d6d1c36048"
     }
   },
   "executedChecks": {
     "backend": {
-      "passed": 4409,
+      "passed": 4411,
       "modules": 151,
       "statements": 10468,
       "branches": 2932,
@@ -33,18 +33,18 @@
       "independentAudit": "passed"
     },
     "frontend": {
-      "passed": 1505,
+      "passed": 1509,
       "runtimeFiles": 39,
       "metrics": {
         "lines": {
-          "total": 2105,
-          "covered": 2105,
+          "total": 2110,
+          "covered": 2110,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 3202,
-          "covered": 3202,
+          "total": 3208,
+          "covered": 3208,
           "skipped": 0,
           "pct": 100
         },
@@ -55,8 +55,8 @@
           "pct": 100
         },
         "branches": {
-          "total": 2583,
-          "covered": 2583,
+          "total": 2606,
+          "covered": 2606,
           "skipped": 0,
           "pct": 100
         },
@@ -70,7 +70,7 @@
       "independentAudit": "passed"
     },
     "taskBrowser": {
-      "passed": 8,
+      "passed": 10,
       "deployments": [
         "native Ingress composition",
         "standalone composition"
@@ -79,7 +79,9 @@
       "journeys": [
         "English and Spanish create/claim/complete/reload for both deployments.",
         "Restricted performer claims/completes; adult approves and reopens, preserving the original cycle for both deployments.",
-        "Lost committed creation reply survives reload and recovers by protected GET without another POST for both deployments."
+        "Lost committed creation reply survives reload and recovers by protected GET without another POST for both deployments.",
+        "Restricted completion loses its committed reply, reloads and recovers its own original by GET before adult review in both deployments.",
+        "Form-level invalid drafts are retained, and exact160/4000Unicode code-point maximums persist through real HTTP/SQLite in both deployments."
       ]
     },
     "catalog": {
@@ -91,8 +93,8 @@
       "coverage": "100% all four supported metrics across both authored runtime files"
     },
     "compiledProductBrowser": {
-      "passed": 97,
-      "scope": "Complete current compiled UI / real Python / SQLite suite in both deployments, including eight task journeys; no retries or skips."
+      "passed": 99,
+      "scope": "Complete corrected compiled UI / real Python / SQLite suite in both deployments, including ten task journeys; no retries or skips."
     },
     "platformAndPackage": {
       "passed": 231,
@@ -166,6 +168,15 @@
         }
       }
     },
-    "ownerAdoption": "Pending: Chrome browser control reports native pipe unavailable; native observation has stale/empty page content and a uniform screenshot. HA responds to an unauthenticated HTTP request. No installation/update is claimed."
+    "ownerAdoption": "Pending: Chrome browser control reports native pipe unavailable; native observation has stale/empty page content and a uniform screenshot. HA responds to an unauthenticated HTTP request. No installation/update is claimed.",
+    "supersededByPendingCorrectedPreview": true
+  },
+  "sourceCorrections": {
+    "taskRecovery": "Current task-read and recorded original command authorization, actor/action/key scope, without requiring the separate operations.read browsing grant. The general operation-by-ID query retains its permission.",
+    "textLimits": "Shared title160, description4000 and reason1000 Unicode code-point limits; visible invalid state prevents submission and preserves the entered draft. Native maxlength remains a UTF-16 capacity bound that permits astral characters.",
+    "regressions": "Explicit operations.read denial with retained claim/complete grants; current permission revocation and foreign actor; real restricted lost completion recovery; exact code-point limits in both browser deployments.",
+    "previewRepackaging": "pending",
+    "upstreamAccuracyReport": "https://github.com/vypdev/copilot/issues/879",
+    "findingState": "Native findings remain open until the configured reviewer verifies the correction; none manually resolved or dismissed."
   }
 }

@@ -91,7 +91,18 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
       const memberTasks = participant.locator('domus-tasks'); await memberTasks.getByRole('button', {name: title, exact: true}).click();
       await expect(memberTasks.getByRole('button', {name: 'Create task', exact: true})).toHaveCount(0);
       await memberTasks.getByRole('button', {name: 'Claim task', exact: true}).click();
+      await memberTasks.locator('summary').filter({hasText: 'Saved requests'}).click();
+      await memberTasks.getByRole('button', {name: 'Dismiss saved request', exact: true}).click();
+      let completionWrites = 0;
+      await participant.route(base(mode) + '/api/v1/tasks/occurrences/*/complete', async route => {
+        completionWrites++; const upstream = await route.fetch({maxRetries: 0, maxRedirects: 0}); expect(upstream.status()).toBe(200);
+        await route.abort('connectionreset');
+      });
       await memberTasks.getByRole('button', {name: 'Mark done now', exact: true}).click();
+      await expect(memberTasks.getByRole('heading', {name: 'Result not confirmed', exact: true})).toBeVisible();
+      await participant.reload(); await memberTasks.getByRole('button', {name: 'Check saved request', exact: true}).click();
+      await expect(memberTasks.getByRole('heading', {name: 'Task change saved', exact: true})).toBeVisible();
+      expect(completionWrites).toBe(1);
       await expect(memberTasks.getByText('Pending approval', {exact: true})).toBeVisible();
       await expect(memberTasks.getByRole('button', {name: 'Approve', exact: true})).toHaveCount(0);
       await page.getByRole('link', {name: 'Tasks', exact: true}).click(); await tasks.getByRole('button', {name: 'Refresh tasks', exact: true}).click();
@@ -110,6 +121,25 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
       expect(reopened.work.state).toBe('assigned'); expect(reopened.work.revision).toBe(5); expect(reopened.cycle).toBeNull();
       expect((await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json()).items).toHaveLength(1);
     } finally {await peer.close();}
+  });
+  test('Unicode field limits retain invalid input and accept exact maximum code-point values', async ({page, context}) => {
+    const tasks = await open(page, context, mode); let writes = 0;
+    page.on('request', request => {if (request.method() === 'POST' && request.url().endsWith('/api/v1/tasks/definitions')) writes++;});
+    await tasks.getByLabel('Title', {exact: true}).fill('a'.repeat(161));
+    await expect(tasks.getByLabel('Title', {exact: true})).toHaveAttribute('aria-invalid', 'true');
+    await expect(tasks.getByRole('button', {name: 'Create task', exact: true})).toBeDisabled();
+    await expect(tasks.getByLabel('Title', {exact: true})).toHaveValue('a'.repeat(161)); expect(writes).toBe(0);
+    const title = '🧹'.repeat(160), description = '🧼'.repeat(4000);
+    await tasks.getByLabel('Title', {exact: true}).fill(title);
+    await tasks.getByLabel('Description', {exact: true}).fill('a'.repeat(4001));
+    await expect(tasks.getByLabel('Description', {exact: true})).toHaveAttribute('aria-invalid', 'true');
+    await expect(tasks.getByRole('button', {name: 'Create task', exact: true})).toBeDisabled(); expect(writes).toBe(0);
+    await tasks.getByLabel('Description', {exact: true}).fill(description);
+    await tasks.getByRole('button', {name: 'Create task', exact: true}).click();
+    await expect(tasks.getByRole('heading', {name: title, exact: true})).toBeVisible(); expect(writes).toBe(1);
+    const list = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json();
+    const work = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences/' + list.items[0].occurrence_id)).json();
+    expect(work.work.definition_snapshot.content).toMatchObject({title, description});
   });
   test('lost committed response survives reload and recovers by GET without a duplicate creation', async ({page, context}) => {
     const tasks = await open(page, context, mode); let writes = 0, reads = 0;

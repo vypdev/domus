@@ -3,7 +3,7 @@ import {live} from 'lit/directives/live.js';
 import type {PropertyValues} from 'lit';
 import type {TaskView} from '../application/task-controller';
 import type {TaskRecord} from '../application/task-ports';
-import {taskQuantity, TASK_PRIORITIES} from '../domain/tasks';
+import {taskQuantity, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
 import type {TaskMaterialUsage, TaskPriority} from '../domain/tasks';
 import {language} from './messages';
 import type {Language} from './messages';
@@ -89,21 +89,27 @@ export class DomusTasks extends LitElement {
     this.dispatchEvent(new CustomEvent<TaskIntent>('domus-task-intent', {detail: Object.freeze(detail), bubbles: true, composed: true}));
   }
   private createForm() {
+    // Native maxlength counts UTF-16 units; the form enforces the shared code-point limits.
+    const titleInvalid = Array.from(this.titleDraft).length > TASK_TEXT_LIMITS.title;
+    const descriptionInvalid = Array.from(this.descriptionDraft).length > TASK_TEXT_LIMITS.description;
     return html`<details class="card new-task" ?open=${this.createOpen || this.view!.page?.items.length === 0}
       @toggle=${(event: Event) => {const target = event.target as HTMLDetailsElement; if (target.isConnected) this.createOpen = target.open;}}><summary><h3 id="new-task-title">${this.text('newTask')}</h3></summary>
       <form novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.lastForm = 'create';
+        if (titleInvalid || descriptionInvalid) {
+          this.shadowRoot?.querySelector<HTMLElement>(titleInvalid ? '#task-title' : '#task-description')?.focus(); return;
+        }
         this.submittedDraft = JSON.stringify([this.titleDraft, this.descriptionDraft, this.priorityDraft]);
         this.intent({type: 'create', title: this.titleDraft, description: this.descriptionDraft, priority: this.priorityDraft});}}>
-        <div class="field"><label for="task-title">${this.text('taskTitle')}</label><input id="task-title" type="text" required maxlength="320" autocomplete="off"
+        <div class="field"><label for="task-title">${this.text('taskTitle')}</label><input id="task-title" type="text" required maxlength=${TASK_TEXT_LIMITS.title * 2} aria-invalid=${titleInvalid ? 'true' : 'false'} autocomplete="off"
           .value=${live(this.titleDraft)} ?disabled=${this.view!.busy} aria-describedby="task-title-help"
-          @input=${(event: InputEvent) => {this.titleDraft = (event.target as HTMLInputElement).value;}}><small id="task-title-help">${this.text('titleHelp')}</small></div>
-        <div class="field"><label for="task-description">${this.text('description')}</label><textarea id="task-description" maxlength="8000"
+          @input=${(event: InputEvent) => {this.titleDraft = (event.target as HTMLInputElement).value;}}><small id="task-title-help">${titleInvalid ? this.text('textTooLong') + ': ' + TASK_TEXT_LIMITS.title : this.text('titleHelp')}</small></div>
+        <div class="field"><label for="task-description">${this.text('description')}</label><textarea id="task-description" maxlength=${TASK_TEXT_LIMITS.description * 2} aria-invalid=${descriptionInvalid ? 'true' : 'false'}
           .value=${live(this.descriptionDraft)} ?disabled=${this.view!.busy} aria-describedby="task-description-help"
-          @input=${(event: InputEvent) => {this.descriptionDraft = (event.target as HTMLTextAreaElement).value;}}></textarea><small id="task-description-help">${this.text('descriptionHelp')}</small></div>
+          @input=${(event: InputEvent) => {this.descriptionDraft = (event.target as HTMLTextAreaElement).value;}}></textarea><small id="task-description-help">${descriptionInvalid ? this.text('textTooLong') + ': ' + TASK_TEXT_LIMITS.description : this.text('descriptionHelp')}</small></div>
         <div class="field"><label for="task-priority">${this.text('priority')}</label><select id="task-priority" ?disabled=${this.view!.busy}
           @change=${(event: Event) => {this.priorityDraft = (event.target as HTMLSelectElement).value as TaskPriority;}}>
           ${TASK_PRIORITIES.map(priority => html`<option value=${priority} .selected=${this.priorityDraft === priority}>${this.text(`priority_${priority}`)}</option>`)}</select></div>
-        <button type="submit" class="primary" ?disabled=${this.blocked}>${this.text('create')}</button>
+        <button type="submit" class="primary" ?disabled=${this.blocked || titleInvalid || descriptionInvalid}>${this.text('create')}</button>
       </form></details>`;
   }
   private complete(): void {
@@ -141,10 +147,10 @@ export class DomusTasks extends LitElement {
           : html`<p class="help">${this.text('separateMaterials')}</p>` : nothing}
         <button class="primary" type="submit" ?disabled=${this.blocked}>${this.text('complete')}</button></form>` : nothing}
       ${work.allowedActions.some(action => ['approve', 'reject', 'reopen'].includes(action)) ? html`<section class="task-fields" aria-labelledby="review-title"><h3 id="review-title">${this.text('review')}</h3>
-        <div class="field"><label for="task-reason">${this.text('reason')}</label><textarea id="task-reason" maxlength="2000" .value=${live(this.reasonDraft)}
+        <div class="field"><label for="task-reason">${this.text('reason')}</label><textarea id="task-reason" maxlength=${TASK_TEXT_LIMITS.reason * 2} aria-invalid=${Array.from(this.reasonDraft).length > TASK_TEXT_LIMITS.reason ? 'true' : 'false'} .value=${live(this.reasonDraft)}
           ?disabled=${this.view!.busy} aria-describedby="task-reason-help" @input=${(event: InputEvent) => {this.reasonDraft = (event.target as HTMLTextAreaElement).value;}}></textarea>
-          <small id="task-reason-help">${this.text('reasonHelp')}</small></div><div class="actions">
-          ${(['approve', 'reject', 'reopen'] as const).filter(action => work.allowedActions.includes(action)).map(action => html`<button type="button" ?disabled=${this.blocked}
+          <small id="task-reason-help">${Array.from(this.reasonDraft).length > TASK_TEXT_LIMITS.reason ? this.text('textTooLong') + ': ' + TASK_TEXT_LIMITS.reason : this.text('reasonHelp')}</small></div><div class="actions">
+          ${(['approve', 'reject', 'reopen'] as const).filter(action => work.allowedActions.includes(action)).map(action => html`<button type="button" ?disabled=${this.blocked || Array.from(this.reasonDraft).length > TASK_TEXT_LIMITS.reason}
             @click=${() => {this.lastForm = 'review'; this.intent(action === 'reopen' ? {type: 'reopen', reason: this.reasonDraft}
               : {type: 'verify', decision: action === 'approve' ? 'approved' : 'rejected', reason: this.reasonDraft});}}>${this.text(action)}</button>`)}
         </div></section>` : nothing}

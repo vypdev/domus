@@ -632,3 +632,50 @@ def test_workspace_access_uses_current_task_grants_and_canonical_member(tmp_path
         )
     with pytest.raises(Forbidden):
         queries(store, child.actor.current()).workspace()
+
+
+@pytest.mark.parametrize(
+    "action,permission",
+    [("claim", Permission.TASKS_CLAIM), ("complete", Permission.TASKS_COMPLETE)],
+)
+def test_task_original_recovery_uses_current_task_grants_without_separate_operation_browsing(
+    tmp_path, action, permission
+):
+    commands, child, store, oid, _, identifiers = prepared(tmp_path, assign=False)
+    with store.write() as unit:
+        member = unit.members.get("home", "child")
+        unit.members.save(
+            replace(
+                member,
+                exceptions=(PermissionRule(Permission.OPERATIONS_READ, False),),
+                revision=member.revision + 1,
+            ),
+            member.revision,
+        )
+    if action == "complete":
+        child.claim("assign-to-self", ClaimTask(oid, 1))
+    result = (
+        child.claim("restricted-original", ClaimTask(oid, 1))
+        if action == "claim"
+        else perform(child, store, oid, ("child",), "restricted-original")
+    )
+    query = queries(store, child.actor.current())
+    before, allocated = state(store, oid), identifiers.count
+    assert query.original(result.command.action, result.command.key).receipt == result
+    with pytest.raises(Forbidden):
+        query.operation(result.operation_id)
+    with pytest.raises(NotFound):
+        queries(store, commands.actor.current()).original(result.command.action, result.command.key)
+    with store.write() as unit:
+        member = unit.members.get("home", "child")
+        unit.members.save(
+            replace(
+                member,
+                exceptions=(*member.exceptions, PermissionRule(permission, False)),
+                revision=member.revision + 1,
+            ),
+            member.revision,
+        )
+    with pytest.raises(Forbidden):
+        query.original(result.command.action, result.command.key)
+    assert state(store, oid) == before and identifiers.count == allocated
