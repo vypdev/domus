@@ -120,3 +120,16 @@ def test_records_are_immutable_and_accept_the_last_supported_revision(model: typ
     assert record.revision == 2**63 - 1
     with pytest.raises(FrozenInstanceError):
         record.revision = 1
+
+
+@pytest.mark.parametrize(
+    "codepoint",
+    [0x20, 0xA0, 0x1680, *range(0x2000, 0x200B), 0x2028, 0x2029, 0x202F, 0x205F, 0x3000],
+    ids=lambda value: f"U+{value:04X}",
+)
+def test_astral_alias_boundary_after_each_supported_non_control_whitespace(codepoint: int) -> None:
+    marker = chr(codepoint)
+    exact = "😀" * 80
+    assert MemberPresentation("member_1", "home", marker + exact + marker).alias == exact
+    with pytest.raises(InvalidInput, match="^invalid_member_alias$"):
+        MemberPresentation("member_1", "home", marker + exact + "😀" + marker)

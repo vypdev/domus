@@ -57,6 +57,71 @@ def test_complete_directory_uses_one_fixed_read_and_preserves_exact_subject_and_
     assert "fixture-access" not in repr(source) and "fixture-refresh" not in repr(source)
 
 
+@pytest.mark.parametrize("standalone", [False, True])
+def test_exactly_256_distinct_accounts_form_a_complete_directory_in_provider_order(standalone):
+    rows = [
+        {
+            **ROW,
+            "id": f"{index:032x}",
+            "name": f"Account {index}",
+            "is_active": index % 2 == 0,
+            "system_generated": index % 3 == 0,
+        }
+        for index in range(255)
+    ] + [ROW]
+    calls = []
+    with provider(protocol({"config/auth/list": (True, rows)}, calls)) as endpoint:
+        value = HomeAssistantMemberProfiles(
+            HomeAssistantWebSocket(endpoint), "fixture-access", USER, GRANT if standalone else None
+        ).read()
+    assert calls == ["config/auth/list"]
+    assert value.directory.state is SourceState.AVAILABLE
+    profiles = value.directory.profiles
+    assert len(profiles) == 256
+    assert tuple(profile.ha_user_id for profile in profiles) == tuple(row["id"] for row in rows)
+    assert tuple(profile.name for profile in profiles) == tuple(row["name"] for row in rows)
+    assert [profile.eligible for profile in profiles[:5]] == [False, False, True, False, True]
+    assert value.subject == USER and value.own.state is SourceState.AVAILABLE
+    assert value.own.profile == profiles[-1]
+    assert value.own.profile.ha_user_id == USER
+    assert value.own.profile.name == "<b>Literal</b>" and value.own.profile.eligible is True
+
+
+@pytest.mark.parametrize("standalone", [False, True])
+@pytest.mark.parametrize("failure", ["distinct-overflow", "malformed-final-account"])
+def test_invalid_boundary_directory_never_certifies_its_valid_prefix(standalone, failure):
+    rows = [{**ROW, "id": f"{index:032x}"} for index in range(255)] + [ROW]
+    if failure == "distinct-overflow":
+        rows.append({**ROW, "id": f"{255:032x}"})
+        assert len({row["id"] for row in rows}) == 257
+    else:
+        rows[-1] = {**ROW, "name": False}
+        assert len({row["id"] for row in rows}) == 256
+    calls = []
+    with provider(
+        protocol(
+            {
+                "config/auth/list": (True, rows),
+                "auth/current_user": (True, {**CURRENT, "name": "Separately verified own name"}),
+            },
+            calls,
+        )
+    ) as endpoint:
+        value = HomeAssistantMemberProfiles(
+            HomeAssistantWebSocket(endpoint), "fixture-access", USER, GRANT if standalone else None
+        ).read()
+    assert value.directory.state is SourceState.UNAVAILABLE and value.directory.profiles == ()
+    assert value.profile(f"{0:032x}").state is SourceState.UNAVAILABLE
+    if standalone:
+        assert calls == ["config/auth/list", "auth/current_user"]
+        assert value.own.state is SourceState.AVAILABLE
+        assert value.own.profile.ha_user_id == USER
+        assert value.own.profile.name == "Separately verified own name"
+    else:
+        assert calls == ["config/auth/list"]
+        assert value.own.state is SourceState.UNAVAILABLE and value.own.profile is None
+
+
 def test_native_directory_denial_never_uses_the_technical_tokens_current_user_as_the_actor():
     calls = []
     with provider(protocol({"config/auth/list": (False, None)}, calls)) as endpoint:

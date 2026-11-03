@@ -230,7 +230,8 @@
         "specs/household-identity.md",
         "specs/household-administration.md",
         "specs/household-administration-integration.md",
-        "specs/household-administration-workspace.md"
+        "specs/household-administration-workspace.md",
+        "specs/household-administration-browser.md"
       ],
       "workflows": [],
       "entrypoints": [
@@ -325,7 +326,10 @@
         "frontend/src/adapters/administration-values.ts",
         "frontend/src/adapters/administration-http.ts",
         "frontend/src/application/administration-controller.ts",
-        "frontend/src/domain/administration-authorization.ts"
+        "frontend/src/domain/administration-authorization.ts",
+        "frontend/src/application/household-controller.ts",
+        "frontend/src/presentation/domus-administration.ts",
+        "frontend/src/presentation/administration-messages.ts"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -402,7 +406,11 @@
         "tests/containers/test_app_ui.py",
         "tests/packaging/test_ui_wheel.py",
         "frontend/tests/administration-controller.test.ts",
-        "frontend/tests/administration-authorization.test.ts"
+        "frontend/tests/administration-authorization.test.ts",
+        "frontend/tests/household-controller.test.ts",
+        "frontend/tests/administration-component.test.ts",
+        "frontend/tests/page.test.ts",
+        "frontend/tests/e2e/administration.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -452,12 +460,14 @@
         "docs/evidence/m1-review-fixes.json",
         "docs/architecture-household-administration.md",
         "docs/evidence/household-administration.json",
-        "docs/household-administration.md"
+        "docs/household-administration.md",
+        "docs/evidence/household-administration-browser.json",
+        "docs/household-administration-operations.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Partial: protected schema9 APIs, verified HA facts, closed exact-revision HTTP/journal and current-authority controller now bind household/policy facts and receipts to server-owned capability-v2 scope independently of aggregate reads. Valid read-only leases preserve original GET recovery; mutations remain blocked. Browser composition/lifetime, complete EN/ES forms and real administration journeys/acceptance remain outstanding; owner Edge.5 unchanged.",
-        "blockingDecisions": "No unanswered product decision for issue #25. Complete retained HADM 72/HADI 8 and all 82 HADW scenarios (all original 80 rows unchanged), full browser lifetime/controller composition and EN/ES workspace, fresh review/CI/images, owner adoption and the wider all-domain/Stable release. Checkpoints do not complete them.",
+        "implementationEvidence": "partial: schema9/profile APIs, bounded HA facts, protected original GET, current-member reconciliation and actual document runtime/journals/lifecycles. Own public alias/read revision now independent of roster permission or availability.4374backend/1129frontend executions with full supported coverage and independent inventories;55actual compiled runtime/PythonSQLite cases. Complete EN/ES forms, administration journeys and retained acceptance remain pending.",
+        "blockingDecisions": "No unanswered product decision for issue27. Complete retained HADM72/HADI8/HADW82 and HADB24 browser refinements, document lifetime/controller wiring and accessible EN/ES forms, actual administration journeys, human UX review, current-head hosted checks/images, owner adoption and all-domain/Stable release remain required.",
         "copilotChangesAllowed": false
       }
     },

@@ -37,6 +37,13 @@ async function forwardSetup(route: Route, observed: Map<string, APIResponse>) {
   observed.set(route.request().headers()['idempotency-key'], response);
   await route.fulfill({response, body});
 }
+async function forwardRead(route: Route, observed: Map<string, {status: number; body: string}>) {
+  expect(route.request().method()).toBe('GET');
+  // Observe protected upstream bytes before forwarding; CDP may retire a completed navigation's body.
+  const response = await route.fetch({maxRetries: 0, maxRedirects: 0}), body = await response.body();
+  observed.set(route.request().url(), {status: response.status(), body: body.toString('utf8')});
+  await route.fulfill({response, body});
+}
 async function replaySetup(page: Page, response: Response) {
   const original = response.request(), headers = await original.allHeaders();
   // An explicit raw-API replay keeps every command assertion; no UI retry or new key is inferred.
@@ -81,6 +88,51 @@ for (const mode of modes) test.describe(mode, () => {
     await expect(page.getByRole('heading', {name: 'Your household', level: 1, exact: true})).toBeVisible();
     await expect(page.getByText('9223372036854775807', {exact: true})).toBeVisible();
     expect(await stats(request, mode)).toEqual(before);
+  });
+
+  test('household-browser-C01: the compiled runtime obtains actual administration facts after explicit setup', async ({page, context, request}) => {
+    await open(page, context, mode);
+    const observed = new Map<string, {status: number; body: string}>();
+    for (const route of ['roster', 'preferences', 'directory'])
+      await page.route(base(mode) + '/api/v1/administration/' + route, route => forwardRead(route, observed));
+    const rosterReply = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/administration/roster');
+    const preferencesReply = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/administration/preferences');
+    const directoryReply = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/administration/directory');
+    await create(page);
+    const [roster, preferences, directory] = await Promise.all([rosterReply, preferencesReply, directoryReply]);
+    expect([roster.status(), preferences.status(), directory.status()]).toEqual([200, 200, 200]);
+    const actual = (route: string) => JSON.parse(observed.get(base(mode) + '/api/v1/administration/' + route)!.body);
+    expect(actual('roster').members[0].metadata).toMatchObject({state: 'available', name: 'Fictional account a', avatar_state: 'unavailable'});
+    expect(actual('preferences')).toMatchObject({locale: null, routine_participation_summaries: true, notification_delivery: 'unavailable'});
+    expect(actual('directory').profiles.map((row: {ha_user_id: string}) => row.ha_user_id)).toEqual(['a'.repeat(32), 'b'.repeat(32), 'c'.repeat(32)]);
+    const current = await stats(request, mode);
+    expect(current.counts.households).toBe(1); expect(current.counts.receipts).toBe(1);
+    await expect(page.getByRole('heading', {name: 'Your household', level: 1, exact: true})).toBeVisible();
+  });
+
+  test('HADW-01: the compiled runtime reads the own alias without roster permission in the actual deployment', async ({page, context}) => {
+    await open(page, context, mode); await create(page);
+    await expect(page.getByRole('heading', {name: 'Your household', level: 1, exact: true})).toBeVisible();
+    await expect(page.getByRole('button', {name: 'Refresh status', exact: true})).toBeEnabled();
+    const access = await (await page.request.get(base(mode) + '/api/v1/authorization')).json();
+    const csrf = await (await page.request.get(base(mode) + '/api/v1/auth/csrf')).json();
+    const changed = await page.request.put(base(mode) + '/api/v1/members/' + access.member.member_id, {data: {
+      expected_revision: access.member.revision, role: access.member.role, status: 'active',
+      exceptions: [{permission: 'members.read', allow: false}],
+    }, headers: {'Origin': origin(mode), 'X-CSRF-Token': csrf.csrf_token, 'Idempotency-Key': 'narrow-public-read'}});
+    expect(changed.status()).toBe(200);
+    expect((await page.request.get(base(mode) + '/api/v1/administration/roster')).status()).toBe(403);
+    const ownPath = base(mode) + '/api/v1/administration/members/' + access.member.member_id + '/presentation';
+    const observed = new Map<string, {status: number; body: string}>();
+    await page.route(ownPath, route => forwardRead(route, observed));
+    const ownRead = page.waitForResponse(response => response.url() === ownPath);
+    const rosterRequests: string[] = [];
+    page.on('request', request => {if (request.url().endsWith('/administration/roster')) rosterRequests.push(request.url());});
+    await page.reload(); const current = await ownRead;
+    expect(current.status()).toBe(200); expect(JSON.parse(observed.get(ownPath)!.body)).toEqual({member_id: access.member.member_id, alias: null, revision: 1});
+    await expect(page.getByRole('button', {name: 'Refresh status', exact: true})).toBeEnabled();
+    expect(rosterRequests).toEqual([]);
+    expect((await page.request.get(base(mode) + '/api/v1/administration/members/not-owned/presentation')).status()).toBe(403);
   });
 
   test('an unavailable module leaves visible reload guidance and never claims an empty home', async ({page, context, request}) => {

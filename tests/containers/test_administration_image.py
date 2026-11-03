@@ -1,8 +1,11 @@
 """Both actual CPU images preserve separate profiles in each owned deployment runtime."""
 
+import json
+import os
 from pathlib import Path
 
 import pytest
+from test_app_image import data_volume as data_volume
 from test_app_image import docker
 from test_app_image import image as image
 
@@ -278,3 +281,80 @@ with TemporaryDirectory(prefix='domus-administration-api-image-') as directory:
         mode,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("mode", ["native", "standalone"])
+@pytest.mark.parametrize("delivery", ["pending", "acknowledged"])
+def test_actual_compatible_application_data_and_generation_rollback(
+    image, data_volume, mode, delivery
+):
+    source = Path(__file__).with_name("administration_rollback_fixture.py").read_text()
+    previous = os.environ.get("DOMUS_SCHEMA9_IMAGE")
+    assert previous, "Set DOMUS_SCHEMA9_IMAGE to the immutable compatible schema-9 image"
+    inspected = []
+    for reference, expected in (
+        (previous, "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470"),
+        (image, os.environ["DOMUS_TEST_SOURCE_COMMIT"]),
+    ):
+        result = docker("image", "inspect", reference)
+        assert result.returncode == 0, result.stderr
+        value = json.loads(result.stdout)[0]
+        assert value["Config"]["Labels"]["org.opencontainers.image.revision"] == expected
+        inspected.append(value)
+    assert inspected[0]["Architecture"] == inspected[1]["Architecture"]
+    assert (
+        inspected[0]["Config"]["Labels"]["io.hass.arch"]
+        == inspected[1]["Config"]["Labels"]["io.hass.arch"]
+    )
+    assert inspected[0]["Id"] != inspected[1]["Id"]
+    previous_id, current_id = (value["Id"] for value in inspected)
+    prepared = docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--volume",
+        data_volume + ":/data",
+        "--entrypoint",
+        "/app/.venv/bin/python",
+        current_id,
+        "-c",
+        "import os; from pathlib import Path; "
+        "\nfor name in ('domus', 'snapshots'):"
+        "\n p=Path('/data')/name; p.mkdir(mode=0o700); os.chown(p,65532,65532)",
+    )
+    assert prepared.returncode == 0, prepared.stdout + prepared.stderr
+    observations = {}
+    for phase, identifier in (
+        ("initialize", previous_id),
+        ("later", current_id),
+        ("rollback", previous_id),
+    ):
+        result = docker(
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--user",
+            "65532:65532",
+            "--volume",
+            data_volume + ":/data",
+            "--entrypoint",
+            "/app/.venv/bin/python",
+            identifier,
+            "-c",
+            source,
+            phase,
+            mode,
+            delivery,
+        )
+        assert result.returncode == 0, f"{phase}: {result.stdout}\n{result.stderr}"
+        observations[phase] = json.loads(result.stdout)
+    before, later, rolled_back = (
+        observations[name] for name in ("initialize", "later", "rollback")
+    )
+    assert before["ui"] != later["ui"]
+    assert rolled_back["ui"] == before["ui"]
+    assert rolled_back["generation_id"] == later["selected_generation"]
+    assert rolled_back["state"] == before["state"]
+    assert rolled_back["original_operations_preserved"] is True

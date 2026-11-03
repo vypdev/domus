@@ -68,7 +68,7 @@ The full administration UI and its separate browser journal remain under develop
 | GET /api/v1/administration/capabilities | Wired action/revision/journal contract | Verified context; availability is not a caller permission |
 | GET /api/v1/administration/roster | Current masked membership, public alias/revision and verified name/source state | Member read before and after bounded source I/O |
 | GET /api/v1/administration/directory | Complete bounded source state and eligible account choices | Current policy management before and after source I/O |
-| GET /api/v1/administration/members/{member_id}/presentation | Public alias and its independent revision | Member read |
+| GET /api/v1/administration/members/{member_id}/presentation | Public alias and its independent revision | Member read, or current owner preference read for their own member only |
 | PUT /api/v1/administration/members/{member_id}/presentation | Set literal alias, or explicitly clear with null | Fresh human and current member management or applicable own preference write |
 | GET /api/v1/administration/preferences | Own locale, summary choice and independent revision | Current owner-scoped preference read |
 | PUT /api/v1/administration/preferences | Replace own locale and summary choice | Fresh human and current owner-scoped preference write |

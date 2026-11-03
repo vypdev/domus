@@ -276,6 +276,91 @@ test('C40: active membership without actual read permission never requests house
   expect(Object.isFrozen(f.controller.view.session?.context)).toBe(true);
 });
 
+for (const deployment of ['native', 'standalone'] as const) {
+  test.each(['unavailable', 'invalid_response', 'forbidden', 'raw'] as const)(
+    'HADB-02: '+deployment+' optional household %s does not erase independently verified access', async code => {
+      const f = fixture(active), proof = {...session, deployment};
+      f.server.session.mockImplementation(() => read(proof));
+      f.server.household.mockImplementation(() => ({cancel: vi.fn(), result: Promise.reject(
+        code === 'raw' ? new Error('private-provider-details') : new EntryReadError(code))}));
+      const controller = new EntryController(deployment, f.server, f.journal, f.clock, f.entropy);
+      await controller.refresh();
+      expect(controller.view.session).toEqual(proof); expect(controller.view.decision?.state).toBe('active');
+      expect(controller.view.authorization).toEqual(active); expect(controller.view.household).toBeNull();
+      expect(controller.view.notice).toBe(code === 'raw' ? 'unavailable' : code);
+      expect(f.server.authorization).toHaveBeenCalledTimes(2); expect(f.server.send).not.toHaveBeenCalled();
+      expect(JSON.stringify(controller.view)).not.toContain('private-provider-details'); controller.close();
+    },
+  );
+}
+test('HADB-02: a failed optional read rereads grants rather than preserving the earlier permissions', async () => {
+  const f = fixture(active), current = {...active, permissions: ['household.manage', 'operations.read']};
+  f.server.authorization.mockReturnValueOnce(read(active)).mockReturnValueOnce(read(current));
+  f.server.household.mockImplementation(() => ({cancel: vi.fn(), result: Promise.reject(new EntryReadError('forbidden'))}));
+  await f.controller.refresh();
+  expect(f.controller.view.authorization).toEqual(current); expect(f.controller.view.decision?.householdReadable).toBe(false);
+  expect(f.controller.view.household).toBeNull(); expect(Object.isFrozen(f.controller.view.authorization?.permissions)).toBe(true);
+  expect(f.server.send).not.toHaveBeenCalled();
+});
+test.each(['pending', 'suspended', 'archived'] as const)(
+  'HADB-01: optional household failure followed by %s authority cannot retain active facts', async state => {
+    const f = fixture(active), current = {...pending, state};
+    f.server.authorization.mockReturnValueOnce(read(active)).mockReturnValueOnce(read(current));
+    f.server.household.mockImplementation(() => ({cancel: vi.fn(), result: Promise.reject(new Error('unavailable'))}));
+    await f.controller.refresh();
+    expect(f.controller.view.decision?.state).toBe(state); expect(f.controller.view.household).toBeNull();
+    expect(f.controller.view.authorization?.permissions).toEqual([]); expect(f.server.send).not.toHaveBeenCalled();
+  },
+);
+test('HADB-01: authentication loss on the optional household route retires proof without a second authorization read', async () => {
+  const f = fixture(active);
+  f.server.household.mockImplementation(() => ({cancel: vi.fn(), result: Promise.reject(new EntryReadError('authentication_required'))}));
+  await f.controller.refresh();
+  expect(f.controller.view.session).toBeNull(); expect(f.controller.view.authorization).toBeNull();
+  expect(f.controller.view.decision?.state).toBe('authentication_required');
+  expect(f.server.authorization).toHaveBeenCalledOnce();
+});
+test.each(['authentication_required', 'forbidden', 'unavailable', 'invalid_response'] as const)(
+  'HADB-01: a failed grant recheck after an optional read maps %s without exposing earlier facts', async code => {
+    const f = fixture(active);
+    f.server.authorization.mockReturnValueOnce(read(active)).mockImplementationOnce(() => ({
+      cancel: vi.fn(), result: Promise.reject(new EntryReadError(code))}));
+    f.server.household.mockImplementation(() => ({cancel: vi.fn(), result: Promise.reject(new Error('source'))}));
+    await f.controller.refresh();
+    expect(f.controller.view.session).toBeNull(); expect(f.controller.view.authorization).toBeNull();
+    expect(f.controller.view.household).toBeNull(); expect(f.controller.view.journal).toBeNull();
+    expect(f.controller.view.notice).toBe(code);
+  },
+);
+test('HADB-01: expiry while rechecking partial access hides the verified session and all private facts', async () => {
+  const f = fixture(active), waiting = deferred<Authorization>();
+  f.server.authorization.mockReturnValueOnce(read(active)).mockReturnValueOnce(waiting);
+  f.server.household.mockImplementation(() => ({cancel: vi.fn(), result: Promise.reject(new Error('source'))}));
+  const opening = f.controller.refresh(); await settle();
+  expect(f.server.authorization).toHaveBeenCalledTimes(2);
+  f.setNow(session.expiresAt); waiting.resolve(active); await opening;
+  expect(f.controller.view.session).toBeNull(); expect(f.controller.view.household).toBeNull();
+  expect(f.controller.view.decision?.state).toBe('authentication_required');
+});
+test('HADB-01: a retired failed optional read cannot start a fresh authorization read or replace the newer view', async () => {
+  const f = fixture(active), old = deferred<typeof household>();
+  f.server.household.mockReturnValueOnce(old);
+  const earlier = f.controller.refresh(); await settle(); await f.controller.refresh();
+  const before = f.controller.view, calls = f.server.authorization.mock.calls.length;
+  old.reject(new EntryReadError('unavailable')); await earlier;
+  expect(old.cancel).toHaveBeenCalledOnce(); expect(f.server.authorization).toHaveBeenCalledTimes(calls);
+  expect(f.controller.view).toEqual(before);
+});
+test('HADB-01: a joint lease expiry hides access without revoking HA or clearing original evidence, including after closure', async () => {
+  const f = fixture(eligible); await f.controller.refresh();
+  f.server.send.mockResolvedValueOnce({kind: 'uncertain'}); await f.controller.requestMembership();
+  const original = f.values.get(ENTRY_JOURNAL_KEY); f.controller.expire();
+  expect(f.controller.view.decision?.state).toBe('authentication_required'); expect(f.controller.view.session).toBeNull();
+  expect(f.values.get(ENTRY_JOURNAL_KEY)).toBe(original); expect(f.server.logout).not.toHaveBeenCalled();
+  await f.controller.refresh(); expect(f.controller.view.session).toEqual(session);
+  f.controller.close(); f.controller.expire(); expect(f.controller.view.phase).toBe('closed');
+});
+
 test.each(['suspended', 'archived'] as const)('C13: %s linkage hides local work and blocks recovery', async state => {
   const f = fixture(eligible); await f.controller.refresh();
   f.server.send.mockResolvedValueOnce({kind: 'uncertain'}); await f.controller.requestMembership();

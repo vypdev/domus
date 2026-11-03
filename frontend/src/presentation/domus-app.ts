@@ -2,6 +2,8 @@ import {LitElement, html, nothing} from 'lit';
 import {live} from 'lit/directives/live.js';
 import type {PropertyValues} from 'lit';
 import type {EntryView} from '../application/entry-controller';
+import type {AdministrationView} from '../application/administration-controller';
+import './domus-administration';
 import type {Deployment} from '../domain/entry';
 import type {JournalRecord} from '../domain/journal';
 import {instant, language, message} from './messages';
@@ -15,16 +17,17 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
-  static properties = {view: {attribute: false}, deployment: {attribute: false}, language: {attribute: false},
+  static properties = {view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
     nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
+  declare administration:AdministrationView|null;
   declare deployment: Deployment;
   declare language: Language;
   private declare nameDraft: string;
   private declare zoneDraft: string;
   private draftScope: string | null = null;
-  constructor() {super(); this.view = null; this.deployment = 'standalone'; this.language = 'en'; this.nameDraft = ''; this.zoneDraft = '';}
+  constructor() {super(); this.view = null; this.administration=null; this.deployment = 'standalone'; this.language = 'en'; this.nameDraft = ''; this.zoneDraft = '';}
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
   private text(key: MessageKey): string {return message(key, this.language);}
   private intent(detail: EntryIntent): void {
@@ -117,6 +120,9 @@ export class DomusApp extends LitElement {
         ${!loading && decision?.action === 'contact_administrator' ? html`<p class="help">${this.text('contact')}</p>` : nothing}
         ${!closed && view?.busy ? html`<p class="busy" role="status">${this.text('busy')}</p>` : nothing}
       </section>
+      <domus-administration .view=${this.administration} .language=${this.language}
+        .pending=${view?.busy===true&&(decision?.state==='active'||this.administration!==null)}
+        .retired=${closed||view?.notice==='context_changed'||(view?.phase==='ready'&&decision?.state!=='active')}></domus-administration>
       ${view?.journal?.records.length ? html`<section class="card" aria-labelledby="requests-title"><h2 id="requests-title">${this.text('journalTitle')}</h2>
         <p class="help">${this.text('journalBody')}</p><ul class="requests">${view.journal.records.map(record => this.request(record))}</ul></section>` : nothing}
       ${view?.session ? html`<details><summary>${this.text('details')}</summary><dl><dt>${this.text('status')}</dt><dd>${this.text(`state_${state}`)}</dd>

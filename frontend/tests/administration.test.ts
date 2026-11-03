@@ -119,3 +119,11 @@ test('HTTP request bodies contain the exact int64 lexeme and only supported owne
   expect(responseRevision(decoded.expected_revision)).toBe(revision);
   expect(JSON.parse(aliasBody(revisionValue('1'), '"\\'))).toEqual({expected_revision: 1, alias: '"\\'});
 });
+
+test.each([0x20,0xa0,0x1680,...Array.from({length:11},(_unused,index)=>0x2000+index),0x2028,0x2029,0x202f,0x205f,0x3000].map(codepoint=>({
+  codepoint,label:'U+'+codepoint.toString(16).toUpperCase().padStart(4,'0')
+})))('household-admin-C25: exact astral alias boundary after whitespace $label',({codepoint})=>{
+  const marker=String.fromCodePoint(codepoint),exact='😀'.repeat(80);
+  expect(aliasValue(marker+exact+marker)).toBe(exact);
+  expect(()=>aliasValue(marker+exact+'😀'+marker)).toThrow('invalid_alias');
+});

@@ -55,8 +55,8 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
     assert container["runs-on"] == "${{ matrix.runner }}"
     commands = [step["run"] for step in container["steps"] if "run" in step]
     assert (
-        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-edge5 addon-edge"
-        in commands
+        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }}"
+        " -t domus-app-edge5 tests/fixtures/edge5-app" in commands
     )
     assert any(
         "docker build --file tests/fixtures/current-app/Dockerfile" in command
@@ -64,6 +64,11 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
         and "--build-arg DOMUS_SOURCE_COMMIT=${{ github.sha }}" in command
         and "--build-arg BUILD_VERSION=ci-current" in command
         and command.rstrip().endswith("-t domus-app-ci .")
+        for command in commands
+    )
+    assert any(
+        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }}" in command
+        and command.rstrip().endswith("-t domus-app-edge addon-edge")
         for command in commands
     )
     assert "uv run pytest tests/containers --no-cov" in commands
@@ -85,6 +90,7 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
     assert verification["env"]["DOMUS_TEST_IMAGE"] == "domus-app-ci"
     assert verification["env"]["DOMUS_TEST_SOURCE_COMMIT"] == "${{ github.sha }}"
     assert verification["env"]["DOMUS_SCHEMA7_IMAGE"] == "domus-app-edge5"
+    assert verification["env"]["DOMUS_EDGE_IMAGE"] == "domus-app-edge"
     assert any("-t domus-app-installed tests/fixtures/edge3-app" in command for command in commands)
     assert "containers" in jobs["aggregate"]["needs"]
 
@@ -123,6 +129,7 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         "frontend/.storybook/main.ts",
         "frontend/.storybook/preview.ts",
         "frontend/stories/entry.stories.ts",
+        "frontend/stories/administration.stories.ts",
         "frontend/playwright.config.ts",
         "frontend/playwright.entry.config.ts",
         "frontend/vite.config.ts",
@@ -247,3 +254,71 @@ def test_backend_cannot_inherit_the_tooling_coverage_result() -> None:
 @pytest.mark.parametrize("relative,expected", sorted(json.loads(PROTECTED.read_text()).items()))
 def test_installed_copilot_resources_are_unchanged(relative: str, expected: str) -> None:
     assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected, relative
+
+
+def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> None:
+    steps = workflow()["jobs"]["containers"]["steps"]
+    actual = next(
+        step
+        for step in steps
+        if step.get("name") == "Execute administration in the actual isolated image from Chromium"
+    )
+    assert actual["env"] == {
+        "DOMUS_BROWSER_IMAGE": "domus-app-ci",
+        "DOMUS_TEST_SOURCE_COMMIT": "${{ github.sha }}",
+        "DOMUS_TEST_ARCH": "${{ matrix.arch }}",
+    }
+    assert "playwright.entry.config.ts tests/e2e/administration.spec.ts" in actual["run"]
+    assert "--grep" not in actual["run"]
+    assert "--pass-with-no-tests" not in actual["run"]
+    commands = [step["run"] for step in steps if "run" in step]
+    assert "pnpm install --frozen-lockfile" in commands
+    assert "pnpm --filter @domus/frontend exec playwright install --with-deps chromium" in commands
+    audit = next(
+        step
+        for step in steps
+        if step.get("name") == "Require all thirty-four actual-image administration journeys"
+    )
+    assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
+    assert "expected']==34" in audit["run"]
+    cleanup = next(
+        step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
+    )
+    assert "docker ps --all --quiet --filter label=domus.browser-fixture=true" in cleanup["run"]
+    assert "assert not" in cleanup["run"] and "check_output" in cleanup["run"]
+    assert steps.index(cleanup) > steps.index(audit)
+
+
+def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair() -> None:
+    steps = workflow()["jobs"]["containers"]["steps"]
+    build = next(
+        step
+        for step in steps
+        if step.get("name") == "Build the immutable compatible schema-9 rollback application"
+    )
+    assert build["run"].split() == [
+        "docker",
+        "build",
+        "--build-arg",
+        "BUILD_ARCH=${{",
+        "matrix.arch",
+        "}}",
+        "-t",
+        "domus-app-schema9",
+        "tests/fixtures/schema9-app",
+    ]
+    verify = next(
+        step for step in steps if step.get("run") == "uv run pytest tests/containers --no-cov"
+    )
+    assert verify["env"]["DOMUS_SCHEMA9_IMAGE"] == "domus-app-schema9"
+    assert steps.index(build) < steps.index(verify)
+    fixture = (ROOT / "tests/fixtures/schema9-app/Dockerfile").read_text()
+    assert "DOMUS_SOURCE_COMMIT=87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470" in fixture
+    assert (
+        "DOMUS_SOURCE_SHA256=d8a9c4c1caf3acbb462ac21ec78ccbab05d756031880fd2f5013b4e528b45758"
+        in fixture
+    )
+    assert "sha256sum --check" in fixture
+    assert "assert SCHEMA_VERSION == 9" in fixture
+    assert "pnpm install --frozen-lockfile" in fixture
+    assert "uv sync --frozen --no-dev --package domus-server --no-editable" in fixture

@@ -218,6 +218,29 @@ def test_missing_profile_cannot_be_silently_recreated_as_a_default(tmp_path, kin
         SQLiteSnapshots(store, tmp_path / "snapshot", store.installation, Clock()).create("invalid")
 
 
+@pytest.mark.parametrize(
+    "kind,table", [("presentations", "member_presentations"), ("preferences", "member_preferences")]
+)
+def test_existing_orphan_profile_is_not_disclosed_repaired_or_accepted_as_a_snapshot(
+    tmp_path, kind, table
+):
+    store = prepared(tmp_path)
+    with closing(sqlite3.connect(store.path, autocommit=True)) as connection:
+        connection.execute("PRAGMA foreign_keys=OFF")
+        connection.execute(f"UPDATE {table} SET member_id='orphan'")
+        assert connection.execute("PRAGMA foreign_key_check").fetchall()
+    before = store.path.read_bytes()
+    with store.read() as unit:
+        assert getattr(unit, kind).get("home", "orphan") is None
+    with pytest.raises(StorageFailure, match="invalid_member_profile_record"):
+        with store.read() as unit:
+            getattr(unit, kind).get("home", "member_1")
+    with pytest.raises(DatabaseRejected, match="invalid_snapshot_database"):
+        SQLiteSnapshots(store, tmp_path / "snapshot", store.installation, Clock()).create("invalid")
+    assert not (tmp_path / "snapshot").exists()
+    assert store.path.read_bytes() == before
+
+
 @pytest.mark.parametrize("version", range(1, 9))
 def test_real_historical_input_upgrade_preserves_every_original_table_and_adds_defaults(
     tmp_path, version
@@ -256,6 +279,16 @@ def test_real_historical_input_upgrade_preserves_every_original_table_and_adds_d
                     expected["definition_snapshot"].update(version=2, materials=[])
                 assert json.loads(new[-1]) == expected
     assert actual == original
+    if version < 8:
+        recurrence_tables = (
+            "recurrence_rules",
+            "recurrence_progress",
+            "recurrence_slots",
+            "recurrence_frontiers",
+            "recurrence_progress_evidence",
+            "recurrence_relative_slots",
+        )
+        assert facts(store.path, recurrence_tables) == {table: [] for table in recurrence_tables}
     with store.read() as unit:
         for household in original["households"]:
             for current in unit.members.list(household[0]):
