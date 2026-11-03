@@ -1,7 +1,8 @@
 import {afterEach, expect, test, vi} from 'vitest';
-import {decodeIntent, mountEntry} from '../src/composition/entry-page';
+import {decodeIntent, decodeAdministrationIntent, mountEntry} from '../src/composition/entry-page';
 import type {EntryPage} from '../src/composition/entry-page';
 import type {DomusApp} from '../src/presentation/domus-app';
+import type {DomusAdministration} from '../src/presentation/domus-administration';
 import {ENTRY_JOURNAL_KEY} from '../src/adapters/session-journal';
 import corpus from './fixtures/entry-wire.json';
 
@@ -17,15 +18,39 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   const data = document.createElement('script'); data.id = 'domus-bootstrap'; data.type = 'application/json';
   data.textContent = JSON.stringify({version: 1, deployment, application_base: wire.endpoint.applicationBase, style_nonce: 'a'.repeat(32)});
   document.head.append(data); nodes.push(data);
-  let phase = 'unconfigured', postRequests = 0;
+  let phase = 'unconfigured', postRequests = 0, putRequests = 0;
+  const originalAccess=JSON.parse(wire.active);
+  let preferenceReceipt:Record<string,unknown>|null=null;
+  let memberId:string=originalAccess.member.member_id, preferenceLocale:'en'|'es'|null=null, preferenceRevision=1, preferencesReadable=true;
+  const presentation=()=>({member_id:memberId,alias:null,revision:1});
+  const preferences=()=>({member_id:memberId,locale:preferenceLocale,revision:preferenceRevision,routine_participation_summaries:true,notification_delivery:'unavailable'});
   const fetch = vi.fn(async (path: string, init: RequestInit) => {
     const route = path.slice(wire.endpoint.applicationBase.length + 'api/v1/'.length);
     let raw: string;
     if (route === 'session') raw = phase === 'eligible' || phase === 'pending' ? wire.participantSession : wire.session;
-    else if (route === 'authorization') raw = phase === 'active' ? wire.active : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
+    else if (route === 'authorization') raw = phase === 'active' ? JSON.stringify({...originalAccess,member:{...originalAccess.member,member_id:memberId},
+      permissions:originalAccess.permissions.filter((permission:string)=>preferencesReadable||permission!=='preferences.read')})
+      : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
     else if (route === 'auth/logout') raw = JSON.stringify({state: 'logged_out', upstream_revoked: true,
       message: 'You are signed out of Domus.', action_required: 'Sign in to continue.'});
+    else if (init.method==='PUT') {
+      if(route!=='administration/preferences')throw new Error('This fixture supports preference mutations only');
+      putRequests++;const body=JSON.parse(init.body as string);preferenceLocale=body.locale;preferenceRevision++;
+      preferenceReceipt={state:'committed',archived_by:null,operation_id:'profile-'+putRequests,created_at:JSON.parse(wire.session).context.server_time,
+        result:preferences(),message:'Saved.',action_required:'Review current state.'};
+      raw=JSON.stringify({...preferenceReceipt,notification_delivery:'unavailable'});
+    }
+    else if (route.startsWith('operations/')&&preferenceReceipt!==null)raw=JSON.stringify({...preferenceReceipt,delivery:'pending'});
+    else if (route==='administration/capabilities') raw=JSON.stringify({state:'available',contract_version:2,household_id:'home',exact_revisions:'json-integer-int64',
+      actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
+      journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
+    else if (route==='administration/preferences') raw=JSON.stringify(preferences());
+    else if (route==='administration/roster') raw=JSON.stringify({directory_state:'available',members:[{
+      member:{...originalAccess.member,member_id:memberId},presentation:presentation(),metadata:{state:'available',name:'Verified owner',avatar_state:'unavailable'}}]});
+    else if (route==='administration/directory') raw=JSON.stringify({state:'available',profiles:[{ha_user_id:originalAccess.member.ha_user_id,name:'Verified owner'}]});
+    else if (route==='administration/members/'+memberId+'/presentation') raw=JSON.stringify(presentation());
+    else if (route==='policy') raw=JSON.stringify({household_id:'home',revision:1,mapping:{mode:'all_ha_administrators',target_ha_user_id:null},adjustments:[]});
     else if (init.method === 'POST') {postRequests++; phase = route === 'household' ? 'active' : 'pending'; raw = route === 'household' ? wire.setup : wire.enrollment;}
     else raw = wire.household;
     const response = new Response(raw, {headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
@@ -41,9 +66,71 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   const open = async () => {const mounted = mountEntry(page); dispose.push(mounted.dispose); await mounted.ready;
     const app = root.querySelector<DomusApp>('domus-app')!; await app?.updateComplete; return {mounted, app};};
   return {root, data, page, open, values, navigation, fetch, events, postRequests: () => postRequests,
+    putRequests:()=>putRequests,preferences:(locale:'en'|'es'|null,revision=1)=>{preferenceLocale=locale;preferenceRevision=revision;},
+    member:(value:string)=>{memberId=value;},preferencesReadable:(value:boolean)=>{preferencesReadable=value;},
     phase: (value: string) => {phase = value;}};
 }
 function intent(app: DomusApp, detail: unknown) {app.dispatchEvent(new CustomEvent('domus-intent', {detail, bubbles: true, composed: true}));}
+function administrationIntent(app:DomusApp,detail:unknown){app.dispatchEvent(new CustomEvent('domus-administration-intent',{detail,bubbles:true,composed:true}));}
+
+test.each(['native','standalone'] as const)('HADB-03: %s document mounts the actual administration widget with current independently verified facts',async mode=>{
+  const f=fixture(mode);f.phase('active');const {app}=await f.open();
+  expect(app.administration?.preferences?.memberId).toBe('identity-1');
+  const widget=app.shadowRoot!.querySelector<DomusAdministration>('domus-administration')!;await widget.updateComplete;
+  expect(widget.view).toEqual(app.administration);expect(widget.shadowRoot!.textContent).toContain('Verified owner');expect(f.putRequests()).toBe(0);
+});
+test('household-browser-C18: saved locale wins, a temporary language stays local, and both higher and restored lower revisions reapply current preferences',async()=>{
+  const f=fixture('standalone','en-GB');f.phase('active');f.preferences('es',4);const {app}=await f.open();
+  expect(app.language).toBe('es');expect(document.documentElement.lang).toBe('es');
+  intent(app,{type:'language',language:'en'});administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(()=>expect(app.view?.busy).toBe(false));expect(app.language).toBe('en');expect(f.putRequests()).toBe(0);
+  f.preferences('es',5);administrationIntent(app,{type:'refresh'});await vi.waitFor(()=>expect(app.language).toBe('es'));
+  f.preferences('en',1);administrationIntent(app,{type:'refresh'});await vi.waitFor(()=>expect(app.language).toBe('en'));
+  expect(f.putRequests()).toBe(0);
+});
+test('household-browser-C18: unavailable own preferences use browser fallback and the same saved revision applies again when readable',async()=>{
+  const f=fixture();f.phase('active');f.preferences('es',3);const {app}=await f.open();expect(app.language).toBe('es');
+  f.preferencesReadable(false);administrationIntent(app,{type:'refresh'});await vi.waitFor(()=>expect(app.language).toBe('en'));
+  f.preferencesReadable(true);administrationIntent(app,{type:'refresh'});await vi.waitFor(()=>expect(app.language).toBe('es'));
+});
+test('household-browser-C13: replacing the same-HA member clears the prior temporary language and private preference scope',async()=>{
+  const f=fixture();f.phase('active');const {app}=await f.open();intent(app,{type:'language',language:'es'});
+  f.member('replacement');administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(()=>expect(app.administration?.preferences?.memberId).toBe('replacement'));
+  expect(app.language).toBe('en');expect(document.documentElement.lang).toBe('en');expect(f.putRequests()).toBe(0);
+});
+test.each([null,{},[],{type:'other'},{type:'refresh',url:'https://foreign.invalid'},
+  {type:'submit',command:{action:'member.preferences.update',payload:{expected_revision:'1',locale:'es',routine_participation_summaries:true}},actor:'forged'},
+  {type:'submit',command:{action:'member.preferences.update',payload:{expected_revision:'1',locale:'es',routine_participation_summaries:true,member_id:'forged'}}},
+  {type:'recover',key:'../other'},{type:'dismiss',key:''}])('household-browser-C15: closed administration intent %j cannot select a principal or route',value=>{
+    expect(decodeAdministrationIntent(value)).toBeNull();
+});
+test('HADB-03: valid administration intents retain the exact immutable command and have no principal selector',()=>{
+  const command={action:'member.preferences.update',payload:{expected_revision:'9007199254740993',locale:null,routine_participation_summaries:false}};
+  expect(decodeAdministrationIntent({type:'submit',command})).toEqual({type:'submit',command});
+  expect(decodeAdministrationIntent({type:'recover',key:'original'})).toEqual({type:'recover',key:'original'});
+  expect(decodeAdministrationIntent({type:'dismiss',key:'original'})).toEqual({type:'dismiss',key:'original'});
+  expect(decodeAdministrationIntent({type:'refresh'})).toEqual({type:'refresh'});
+});
+test('HADB-03: a real mounted preference form reaches the protected HTTP adapter once and applies only freshly read saved locale',async()=>{
+  const f=fixture();f.phase('active');const {app}=await f.open(),widget=app.shadowRoot!.querySelector<DomusAdministration>('domus-administration')!;
+  await widget.updateComplete;const button=(name:string)=>[...widget.shadowRoot!.querySelectorAll('button')].find(value=>value.textContent?.trim()===name)!;
+  button('Edit preferences').click();await widget.updateComplete;const select=widget.shadowRoot!.querySelector('select')!;
+  select.value='es';select.dispatchEvent(new Event('change',{bubbles:true}));await widget.updateComplete;
+  button('Review changes').click();await widget.updateComplete;expect(f.putRequests()).toBe(0);button('Save changes').click();
+  await vi.waitFor(()=>{expect(f.putRequests()).toBe(1);expect(app.administration?.preferences?.locale).toBe('es');expect(app.view?.busy).toBe(false);});
+  expect(app.language).toBe('es');expect(document.documentElement.lang).toBe('es');
+  const mutation=f.fetch.mock.calls.find(([,init])=>init.method==='PUT')!;
+  expect(mutation[0]).toBe('/api/v1/administration/preferences');
+  expect(JSON.parse(mutation[1].body as string)).toEqual({expected_revision:1,locale:'es',routine_participation_summaries:true});
+});
+test('household-browser-C17: an explicit onboarding language survives a proof tick and first membership without saving a preference',async()=>{
+  const f=fixture();let tick!:()=>void;f.page.setTimeout=callback=>{tick=callback;return 1;};f.page.clearTimeout=()=>{};
+  const {app}=await f.open();intent(app,{type:'language',language:'es'});tick();expect(app.language).toBe('es');
+  intent(app,{type:'setup',name:'Home',timeZone:'UTC'});
+  await vi.waitFor(()=>expect(app.administration?.preferences?.memberId).toBe('identity-1'));
+  expect(app.language).toBe('es');expect(app.administration?.preferences?.locale).toBeNull();expect(f.putRequests()).toBe(0);
+});
 
 test.each(['native','standalone'] as const)('%s page wires the owned view to actual controller/adapters without automatic mutation', async deployment => {
   const f = fixture(deployment, 'es-ES'), {app} = await f.open();
@@ -143,4 +230,35 @@ test('the actual module entrypoint starts safely and refuses the test runner loc
   const f = fixture(); await import('../src/composition/main');
   expect(document.querySelector('#domus-entry-error')).not.toBeNull(); expect(f.fetch).not.toHaveBeenCalled();
   const mounted = mountEntry(f.page); dispose.push(mounted.dispose); await mounted.ready;
+});
+
+test('HADB-02: owned administration events recover the actual original by protected GET and dismiss only after resolution',async()=>{
+  const f=fixture();f.phase('active');const {app}=await f.open();administrationIntent(app,{type:'submit',command:{action:'member.preferences.update',
+    payload:{expected_revision:'1',locale:'es',routine_participation_summaries:true}}});
+  await vi.waitFor(()=>{expect(app.administration?.outcome).toMatchObject({kind:'receipt',stage:'committed'});expect(app.view?.busy).toBe(false);});
+  const key=app.administration!.journal!.records[0].key,calls=f.fetch.mock.calls.length;
+  administrationIntent(app,{type:'recover',key});await vi.waitFor(()=>{expect(f.fetch.mock.calls.slice(calls).some(([path,init])=>path.endsWith('/operations/profile-1')&&init.method==='GET')).toBe(true);expect(app.view?.busy).toBe(false);});
+  expect(f.putRequests()).toBe(1);administrationIntent(app,{type:'dismiss',key});await vi.waitFor(()=>expect(app.administration?.journal?.records).toEqual([]));expect(f.putRequests()).toBe(1);
+});
+test('HADB-03: foreign and malformed administration events cannot drive the owned page',async()=>{
+  const f=fixture();f.phase('active');const {app}=await f.open(),child=document.createElement('span');app.append(child);const before=f.fetch.mock.calls.length;
+  child.dispatchEvent(new CustomEvent('domus-administration-intent',{detail:{type:'refresh'},bubbles:true}));
+  administrationIntent(app,{type:'refresh',url:'https://foreign.invalid'});app.dispatchEvent(new Event('domus-administration-intent'));await Promise.resolve();
+  expect(f.fetch).toHaveBeenCalledTimes(before);expect(f.putRequests()).toBe(0);
+});
+test('HADB-03: an exceptional owned administration event replaces controls with safe reload guidance',async()=>{
+  const f=fixture();f.phase('active');const {app}=await f.open(),event=new Event('domus-administration-intent');
+  Object.defineProperty(event,'detail',{get:()=>{throw new Error('Private malformed event source');}});app.dispatchEvent(event);
+  await vi.waitFor(()=>expect(document.querySelector('#domus-entry-error')).not.toBeNull());
+  expect(document.querySelector('#domus-entry-error')!.textContent).not.toContain('Private');expect(app.isConnected).toBe(false);expect(f.putRequests()).toBe(0);
+});
+test('household-browser-C18: temporary language persists while current own preferences are unavailable without saving them',async()=>{
+  const f=fixture();f.phase('active');const {app}=await f.open();f.preferencesReadable(false);administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(()=>{expect(app.administration?.preferences).toBeNull();expect(app.view?.busy).toBe(false);});
+  intent(app,{type:'language',language:'es'});administrationIntent(app,{type:'refresh'});await vi.waitFor(()=>expect(app.view?.busy).toBe(false));
+  expect(app.language).toBe('es');expect(f.putRequests()).toBe(0);
+});
+test('household-browser-C18: a signed-out language choice has no identity or mutation side effect',async()=>{
+  const f=fixture();const {app}=await f.open();intent(app,{type:'logout'});await vi.waitFor(()=>expect(app.view?.notice).toBe('signed_out'));
+  const count=f.fetch.mock.calls.length;intent(app,{type:'language',language:'es'});expect(app.language).toBe('es');expect(f.fetch).toHaveBeenCalledTimes(count);expect(f.putRequests()).toBe(0);
 });

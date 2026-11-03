@@ -612,15 +612,15 @@
     }
   },
   "currentSourcePackage": {
-    "sourceBase": "f491b572cea14e21a0fbfc8c664b110335a54f0e",
-    "sourceIdentity": "Current151-module backend adds capability-v2 verified household scope. Compiled entry UI resource bytes are unchanged;28-file administration source is covered but not yet wired to page composition. No owner Edge.5 update or full workspace acceptance.",
+    "sourceBase": "58957fc8b9da4ce85f0acbd75793f7351026c47a",
+    "sourceIdentity": "All151Pythonmodules unchanged. The administration renderer now binds every private draft and detached confirmation to the verified household ID in addition to installation/channel/subject/member. Missing household proof retires the draft; matching revisions/member IDs do not transfer it.",
     "actualProductFiles": {
-      ".vite/manifest.json": "bb13d320cf8968302162520e722f61f9290f9ca926c863b985288cb4fba2ffc3",
-      "assets/index-CQE4qeI0.js": "810376c1a54cbe125a3334afcc6ff1b81d14c27c089005d23f70a4da4c0dbcf4",
+      "index.html": "fb4f250c231b0f0b07fd4d99fa00925610f0573b01f033a4bf75178f860887fd",
+      "assets/index-CS8EClQ3.js": "c3103fcc8d107cff163ab5a98c8a587ef5203367624dd1f23fea56b96227dedd",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "index.html": "53eb4a7d9debd6dd01e421a564df3432c8d3c523a74acbf1f962c9714cb56911"
+      ".vite/manifest.json": "07f6f6a7f49b0c8691b16dd3e687e17698b4e540e6f3cd2577fcfc187514f159"
     },
-    "wheelSHA256": "11453b1ca6d98b08bbe718cb0b8d9fba2109bdb116cf375f66319e33fc615cd3",
+    "wheelSHA256": "6578a595350e00b0df2fb7e12a436a100a6cf8a661ad4147a5fc074d6de05351",
     "originalFailure": {
       "run": 41505801643,
       "aarch64Job": 125484707823,
@@ -629,7 +629,13 @@
     },
     "testsFirst": "The actual aarch64 image exposes the stale historical expectation. A new early wheel/build/declaration assertion first fails with missing currentSourcePackage before this explicit candidate inventory is added.",
     "correction": "Current packaging and image tests use this declaration. The packaging gate compares it against the independently built source bundle and exact wheel bytes; the image fixture compares all installed and HTTP-served resources. Historical entry/Edge.5 evidence remains byte-identical.",
-    "acceptance": "The source-image binding correction53570f2 passed actual amd64/aarch64 jobs125489680572/125489680631 and CI aggregate125492943440 in41507276305. Current controller source still requires fresh hosted review/CI after push; compiled entry/UI and backend bytes are unchanged."
+    "acceptance": "151Pythonmodules/4UIresources independently match the rebuilt wheel. Local1239Chromium frontend tests pass with100% all4metrics globally/per-authored-runtime-file and independent inventory audit. Eight scope regressions first fail against the old renderer. Actual compiled87Python/SQLite journeys and27built catalog journeys pass. Fresh hosted CPUimages/native review, full186case audit, required human UX and owner adoption remain separate.",
+    "householdScopeRegression": {
+      "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4455477782",
+      "testsFirst": "All8new component regressions fail; detached controls emit old household/private preference intents despite changed/missing household scope.",
+      "independentPackageVerification": "All151Python modules/4UI resources verified byte-for-byte against source/build; fixture exclusion verified before updating this declaration.",
+      "rollbackSHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754"
+    }
   },
   "controllerIncrement": {
     "sourceBase": "53570f20bd8c89cd2940b5b8d5187eb8ed962428",

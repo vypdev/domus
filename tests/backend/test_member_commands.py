@@ -438,16 +438,37 @@ def test_ordinary_member_cannot_assign_itself_privileges_or_change_another_membe
 def test_archived_member_reactivation_is_explicit_and_preserves_ha_linkage_and_history(
     tmp_path: Path,
 ) -> None:
-    commands, store, _, directory, member_id = configured(tmp_path)
-    commands.update("archive", UpdateMember(member_id, 1, Role.VIEWER, MemberStatus.ARCHIVED))
-    commands.update("reactivate", UpdateMember(member_id, 2, Role.RESTRICTED, MemberStatus.ACTIVE))
-    assert directory.calls == ["ha_joiner"]
+    from domus.application.task_commands import CompleteTask, CreateTask, TaskCommands
+    from domus.domain.task_values import TaskContent
+
+    commands, store, actor, directory, member_id = configured(tmp_path)
+    commands.update("activate", UpdateMember(member_id, 1, Role.RESTRICTED, MemberStatus.ACTIVE))
+    tasks = TaskCommands(store, actor, commands.clock, commands.identifiers)
+    created = tasks.create("authored-work", CreateTask(TaskContent("Retained work")))
+    occurrence_id = created.result.decode()["occurrence_id"]
+    completed = tasks.complete("record-work", CompleteTask(occurrence_id, 1, (member_id,), 90))
     with store.read() as unit:
-        member = unit.members.by_user("home", "ha_joiner")
-        assert member.member_id == member_id and member.revision == 3
-        assert member.status is MemberStatus.ACTIVE
+        original_member = unit.members.by_user("home", "ha_joiner")
+        original_work = unit.tasks.occurrence("home", occurrence_id)
+        original_cycles = unit.tasks.cycles("home", occurrence_id)
+        original_audit, original_outbox = unit.audit.entries("home"), unit.outbox.pending()
+    assert len(original_cycles) == 1
+    assert original_cycles[0].performers[0].member_id == member_id
+    assert original_cycles[0].performed_at == 90
+    assert len(original_audit) == len(original_outbox) == 5
+    commands.update("archive", UpdateMember(member_id, 2, Role.RESTRICTED, MemberStatus.ARCHIVED))
+    commands.update("reactivate", UpdateMember(member_id, 3, Role.RESTRICTED, MemberStatus.ACTIVE))
+    assert directory.calls == ["ha_joiner", "ha_joiner"]
+    with store.read() as unit:
+        assert unit.members.by_user("home", "ha_joiner") == replace(original_member, revision=4)
+        assert unit.tasks.occurrence("home", occurrence_id) == original_work
+        assert unit.tasks.cycles("home", occurrence_id) == original_cycles
+        assert unit.receipts.get(created.command) == created
+        assert unit.receipts.get(completed.command) == completed
+        assert unit.audit.entries("home")[:5] == original_audit
+        assert unit.outbox.pending()[:5] == original_outbox
         assert len(unit.members.list("home")) == 2
-        assert len(unit.audit.entries("home")) == len(unit.outbox.pending()) == 4
+        assert len(unit.audit.entries("home")) == len(unit.outbox.pending()) == 7
 
 
 def test_two_identical_concurrent_activations_have_one_effect_and_the_same_receipt(

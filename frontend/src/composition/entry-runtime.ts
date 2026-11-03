@@ -1,5 +1,8 @@
 import {EntryController} from '../application/entry-controller';
 import type {EntryView} from '../application/entry-controller';
+import {HouseholdController} from '../application/household-controller';
+import {AdministrationController} from '../application/administration-controller';
+import type {AdministrationView} from '../application/administration-controller';
 import {EntryReadError} from '../application/ports';
 import {BrowserEntropy, BrowserNavigation, ServerClock} from '../adapters/browser-capabilities';
 import {HttpEntryServer} from '../adapters/http';
@@ -8,6 +11,8 @@ import {endpoint} from '../adapters/http-values';
 import type {EntryEndpoint} from '../adapters/http-values';
 import {SessionJournal} from '../adapters/session-journal';
 import type {OwnedStorage} from '../adapters/session-journal';
+import {AdministrationSessionJournal} from '../adapters/administration-journal';
+import {HttpAdministrationServer} from '../adapters/administration-http';
 
 /** Capabilities of this document only. No parent window, private HA object or host storage access. */
 export interface EntryBrowser {
@@ -20,7 +25,7 @@ export interface EntryBrowser {
   visibility: EventTarget;
   schedule(tick: () => void, delay: number): () => void;
 }
-type OwnedController = Readonly<{controller: EntryController; clock: ServerClock}>;
+type OwnedController = Readonly<{controller: HouseholdController; clock: ServerClock}>;
 
 /** Composition/lifecycle only; commands, authorization and recovery stay in the Application layer. */
 export class EntryRuntime {
@@ -34,22 +39,26 @@ export class EntryRuntime {
   private timerEpoch = 0;
   private cancelTimer: (() => void) | null = null;
   constructor(target: EntryEndpoint, private readonly browser: EntryBrowser,
-    private readonly changed: (view: EntryView) => void, private readonly failed: () => void = () => {}) {
+    private readonly changed: (view: EntryView, administration: AdministrationView | null) => void,
+    private readonly failed: () => void = () => {}) {
     this.target = endpoint(target); this.navigation = new BrowserNavigation(this.target, path => browser.navigate(path));
     this.current = this.compose();
   }
   private compose(): OwnedController {
     const clock = new ServerClock(() => this.browser.elapsed());
-    const journal = new SessionJournal({getItem: key => this.browser.storage().getItem(key),
+    const storage: OwnedStorage = {getItem: key => this.browser.storage().getItem(key),
       setItem: (key, value) => this.browser.storage().setItem(key, value),
-      removeItem: key => this.browser.storage().removeItem(key)});
+      removeItem: key => this.browser.storage().removeItem(key)};
     const server = new HttpEntryServer(this.target, this.browser.transport);
-    return {clock, controller: new EntryController(this.target.deployment, server, journal, clock,
-      new BrowserEntropy(bytes => this.browser.random(bytes)))};
+    const entropy = new BrowserEntropy(bytes => this.browser.random(bytes));
+    const entry = new EntryController(this.target.deployment, server, new SessionJournal(storage), clock, entropy);
+    return {clock, controller: new HouseholdController(entry, () => new AdministrationController(this.target.deployment,
+      server, new HttpAdministrationServer(this.target, this.browser.transport), new AdministrationSessionJournal(storage), clock, entropy))};
   }
   get view(): EntryView {return this.current.controller.view;}
+  get administration(): AdministrationView | null {return this.current.controller.administration;}
   private publish(): void {
-    try {this.changed(this.view);} catch {/* A renderer failure cannot change authority or interrupt resource cleanup. */}
+    try {this.changed(this.view, this.administration);} catch {/* A renderer failure cannot change authority or interrupt resource cleanup. */}
   }
   private stopTimer(): void {
     this.timerEpoch++; const cancel = this.cancelTimer; this.cancelTimer = null;
@@ -57,12 +66,11 @@ export class EntryRuntime {
   }
   private arm(): void {
     this.stopTimer();
-    const owned = this.current, view = this.view;
-    if (!this.active || view.session === null) return;
+    const owned = this.current, deadlines = owned.controller.deadlines;
+    if (!this.active || deadlines.length === 0) return;
     let now: number;
     try {now = owned.clock.now();}
     catch {owned.controller.tick(); this.publish(); return;}
-    const deadlines = [view.session.expiresAt, ...view.journal?.records.map(record => record.expiresAt) ?? []];
     const delay = Math.max(1, Math.min(1000, ...deadlines.map(deadline => deadline - now)));
     const epoch = this.timerEpoch;
     try {
@@ -77,8 +85,8 @@ export class EntryRuntime {
     }
   }
   private later(): void {try {this.arm();} catch {/* Disposal and bounded failure notification already completed. */}}
-  private async perform(work: (controller: EntryController) => Promise<void>): Promise<void> {
-    if (this.disposed || !this.active) return;
+  private async perform(work: (controller: HouseholdController) => Promise<void>): Promise<void> {
+    if (this.disposed || !this.active || this.view.busy) return;
     const owned = this.current, pending = work(owned.controller);
     this.publish(); this.arm();
     try {await pending;}
@@ -113,6 +121,9 @@ export class EntryRuntime {
   requestMembership(): Promise<void> {return this.perform(controller => controller.requestMembership());}
   recover(key: string): Promise<void> {return this.perform(controller => controller.recover(key));}
   dismiss(key: string): Promise<void> {return this.perform(controller => controller.dismiss(key));}
+  submitAdministration(value: unknown): Promise<void> {return this.perform(controller => controller.submitAdministration(value));}
+  recoverAdministration(key: string): Promise<void> {return this.perform(controller => controller.recoverAdministration(key));}
+  dismissAdministration(key: string): Promise<void> {return this.perform(controller => controller.dismissAdministration(key));}
   signIn(): void {if (!this.disposed && !this.paused) this.navigation.signIn();}
   reopen(): void {if (!this.disposed && !this.paused) this.navigation.reopen();}
   async logout(): Promise<void> {

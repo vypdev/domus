@@ -56,6 +56,35 @@ def test_actual_compositions_bind_profile_authority_without_a_second_login(api):
         )
 
 
+@pytest.mark.parametrize("own_read", [True, False])
+def test_own_alias_read_without_roster_authority_is_scoped_in_both_actual_deployments(
+    api, own_read
+):
+    member_id = api.client.get(BASE + "/preferences").json()["member_id"]
+    with api.store.write() as unit:
+        member = unit.members.get("home", member_id)
+        unit.members.save(
+            replace(
+                member,
+                revision=member.revision + 1,
+                exceptions=(
+                    PermissionRule(Permission.MEMBERS_READ, False),
+                    PermissionRule(Permission.PREFERENCES_READ, own_read),
+                ),
+            ),
+            member.revision,
+        )
+    assert api.client.get(BASE + "/roster").status_code == 403
+    before = api.store.path.read_bytes()
+    response = api.client.get(BASE + f"/members/{member_id}/presentation")
+    assert response.status_code == (200 if own_read else 403), response.text
+    if own_read:
+        assert response.json() == {"member_id": member_id, "alias": None, "revision": 1}
+        assert response.headers["cache-control"] == "no-store"
+    assert api.client.get(BASE + "/members/not-an-owned-member/presentation").status_code == 403
+    assert api.store.path.read_bytes() == before
+
+
 @pytest.mark.parametrize("mode", ["native", "standalone"])
 def test_published_int64_revision_schema_never_rounds_its_maximum(tmp_path, monkeypatch, mode):
     with configured(tmp_path, monkeypatch, mode) as (client, _, _, _, _):

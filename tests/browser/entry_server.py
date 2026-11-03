@@ -15,16 +15,17 @@ import os
 import secrets
 import sqlite3
 import tempfile
+from contextlib import ExitStack
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlencode
 
-import pytest
 import uvicorn
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 
 from domus.composition import admin, ingress, server
-from domus.domain.errors import IdentityRejected, IdentityUnavailable
+from domus.domain.errors import Forbidden, IdentityRejected, IdentityUnavailable
 from domus.domain.identity import HumanIdentity
 from domus.infrastructure.ha_config import HAEndpoint
 from domus.infrastructure.ha_http import OAuthTokens
@@ -66,6 +67,32 @@ class HomeAssistant:
     def directory_users(self, token: str, user_ids: tuple[str, ...]) -> tuple:
         return tuple(self.directory_user(token, user_id) for user_id in user_ids)
 
+    def _request(self, token: str, operation: str):
+        """Fixed fictional account responses for the real bounded presentation adapter."""
+        assert token == "fixture-supervisor-token" or token in self.token_subjects
+        actor = self.person(
+            self.subject if token == "fixture-supervisor-token" else self.token_subjects[token]
+        )
+        if operation == "config/auth/list":
+            if token != "fixture-supervisor-token" and not actor.is_administrator:
+                raise Forbidden("ha_directory_forbidden")
+            return [
+                {
+                    "id": person.ha_user_id,
+                    "name": "Fictional account " + person.ha_user_id[0],
+                    "is_active": True,
+                    "system_generated": False,
+                }
+                for person in self.people.values()
+            ]
+        assert operation == "auth/current_user" and token != "fixture-supervisor-token"
+        return {
+            "id": actor.ha_user_id,
+            "name": "Fictional account " + actor.ha_user_id[0],
+            "is_admin": actor.is_administrator,
+            "credentials": [{"auth_provider_type": "homeassistant"}],
+        }
+
 
 class OAuth:
     def __init__(self, configuration, ha: HomeAssistant) -> None:
@@ -97,15 +124,31 @@ class OAuth:
 
 
 class Fixture:
-    def __init__(self, mode: str, port: int) -> None:
-        self.mode, self.origin = mode, f"http://127.0.0.1:{port}"
+    def __init__(self, mode: str, port: int, origin_port: int | None = None) -> None:
+        self.mode, self.origin = mode, f"http://127.0.0.1:{origin_port or port}"
         self.runtime = self.directory = None
         self.writer = None
-        self.patch = pytest.MonkeyPatch()
-        self.patch.setattr(ingress, "HomeAssistantWebSocket", lambda endpoint: self.ha)
-        self.patch.setattr(server, "HomeAssistantWebSocket", lambda endpoint: self.ha)
-        self.patch.setattr(server, "HomeAssistantOAuth", lambda config: OAuth(config, self.ha))
+        self.patch = ExitStack()
+        self.patch.enter_context(
+            patch.object(ingress, "HomeAssistantWebSocket", lambda endpoint: self.ha)
+        )
+        self.patch.enter_context(
+            patch.object(server, "HomeAssistantWebSocket", lambda endpoint: self.ha)
+        )
+        self.patch.enter_context(
+            patch.object(server, "HomeAssistantOAuth", lambda config: OAuth(config, self.ha))
+        )
         self.reset()
+
+    def close(self) -> None:
+        self.release_writer()
+        if self.runtime is not None:
+            self.runtime.close()
+            self.runtime = None
+        if self.directory is not None:
+            self.directory.cleanup()
+            self.directory = None
+        self.patch.close()
 
     def reset(self, channel: str = "edge") -> None:
         assert channel in ("edge", "stable")
@@ -195,10 +238,7 @@ class Fixture:
                 if event["type"] == "lifespan.startup":
                     await send({"type": "lifespan.startup.complete"})
                 elif event["type"] == "lifespan.shutdown":
-                    self.release_writer()
-                    self.runtime.close()
-                    self.directory.cleanup()
-                    self.patch.undo()
+                    self.close()
                     await send({"type": "lifespan.shutdown.complete"})
                     return
         if scope["type"] != "http":
@@ -318,15 +358,33 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=("native", "standalone"), required=True)
     parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--origin-port", type=int)
     args = parser.parse_args()
-    uvicorn.run(
-        Fixture(args.mode, args.port),
-        host="127.0.0.1",
-        port=args.port,
-        access_log=False,
-        log_level="warning",
-        server_header=False,
-    )
+    image = os.environ.get("DOMUS_BROWSER_IMAGE")
+    if image:
+        from image_bridge import ImageBridge
+
+        fixture = ImageBridge(
+            image,
+            args.mode,
+            args.port,
+            os.environ["DOMUS_TEST_SOURCE_COMMIT"],
+            os.environ["DOMUS_TEST_ARCH"],
+        )
+        fixture.start()
+    else:
+        fixture = Fixture(args.mode, args.port, args.origin_port)
+    try:
+        uvicorn.run(
+            fixture,
+            host="127.0.0.1",
+            port=args.port,
+            access_log=False,
+            log_level="warning",
+            server_header=False,
+        )
+    finally:
+        fixture.close()
 
 
 if __name__ == "__main__":

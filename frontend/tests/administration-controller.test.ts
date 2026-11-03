@@ -7,7 +7,7 @@ import {AdministrationSessionJournal, ADMINISTRATION_JOURNAL_KEY} from '../src/a
 import {administrationCommand} from '../src/domain/administration-commands';
 import type {AdministrationCommand} from '../src/domain/administration-commands';
 import {revisionValue} from '../src/domain/administration';
-import type {AdministrationAccess, AdministrationReceipt} from '../src/domain/administration-views';
+import type {AdministrationAccess, AdministrationReceipt, OwnPreferences, Roster} from '../src/domain/administration-views';
 
 function read<T>(value: T): EntryRead<T> {return {result: Promise.resolve(value), cancel: vi.fn()};}
 function deferred<T>() {
@@ -28,7 +28,7 @@ const home = {householdId: 'home', name: 'Home', timeZone: 'UTC', revision: revi
 const policy = {householdId: 'home', revision: revisionValue('5'), mappingMode: 'all_ha_administrators' as const,
   targetHAUserId: null, adjustments: []};
 const own = {memberId: member.memberId, alias: null, revision: revisionValue('11')};
-const preferences = {memberId: member.memberId, revision: revisionValue('13'), locale: 'es' as const,
+const preferences: OwnPreferences = {memberId: member.memberId, revision: revisionValue('13'), locale: 'es',
   routine_participation_summaries: true, notificationDelivery: 'unavailable' as const};
 const commands: readonly AdministrationCommand[] = [
   administrationCommand({action: 'household.update', payload: {expected_revision: '7', name: 'New home', time_zone: 'Europe/Madrid'}}),
@@ -57,7 +57,7 @@ function fixture(initial = access, mode: 'native' | 'standalone' = 'standalone')
   const server = {
     capabilities: vi.fn(() => read({contractVersion: 2 as const, householdId: 'home', actions: commands.map(c => c.action)})),
     authorization: vi.fn(() => read(initial)), household: vi.fn(() => read(home)), policy: vi.fn(() => read(policy)),
-    roster: vi.fn(() => read({directoryState: 'available' as const, members: [{member, presentation: own,
+    roster: vi.fn(() => read<Roster>({directoryState: 'available' as const, members: [{member, presentation: own,
       metadata: {state: 'available' as const, name: 'Verified owner', avatarState: 'unavailable' as const}}]})),
     directory: vi.fn(() => read({state: 'denied' as const, profiles: []})), preferences: vi.fn(() => read(preferences)),
     presentation: vi.fn(() => read(own)),
@@ -220,6 +220,7 @@ test.each(commands)('HADW-04: $action needs the target revision facts, without g
   const field = command.action === 'household.update' ? 'household' : command.action === 'policy.update' ? 'policy'
     : command.action === 'member.preferences.update' ? 'preferences' : 'roster';
   f.server[field].mockImplementation(() => {throw new Error('unavailable');});
+  if (command.action === 'member.presentation.update') f.server.presentation.mockImplementation(() => {throw new Error('unavailable');});
   await f.controller.submit(command); expect(f.controller.view.notice).toBe('action_not_allowed'); expect(f.server.send).not.toHaveBeenCalled();
 });
 test.each([1,3])('HADW-04: member target %s must be present in the current roster', async index => {
@@ -501,4 +502,209 @@ test.each([false,true])('C74/C82: verified read-only grace supports explicit ori
   expect(known?f.server.operation:f.server.original).toHaveBeenCalledTimes(1);expect(f.controller.view.outcome?.kind).toBe('receipt');
   await f.controller.submit(commands[0]);expect(f.server.send).toHaveBeenCalledTimes(1);expect(f.entropy.requestKey).toHaveBeenCalledTimes(1);
   f.setNow(session.expiresAt);f.controller.tick();expect(f.controller.view.outcome).toBeNull();expect(f.controller.view.preferences).toBeNull();
+});
+
+test('HADB-01/C13: reconciliation preserves an invalid draft notice while replacing all current private facts', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  f.server.preferences.mockReturnValue(read({...preferences, locale: 'en', revision: revisionValue('14')}));
+  await f.controller.reconcile();
+  expect(f.controller.view.notice).toBe('invalid_input');
+  expect(f.controller.view.preferences).toMatchObject({locale: 'en', revision: '14'});
+  expect(f.server.send).not.toHaveBeenCalled(); expect(f.server.original).not.toHaveBeenCalled();
+  expect(f.server.operation).not.toHaveBeenCalled(); expect(f.entropy.requestKey).not.toHaveBeenCalled();
+});
+test('HADB-01/C13: reconciliation replaces a prior notice with the current membership transition', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  f.server.authorization.mockReturnValue(read({...access, member: {...member, memberId: 'relinked'}}));
+  f.server.preferences.mockReturnValue(read({...preferences, memberId: 'relinked'}));
+  await f.controller.reconcile();
+  expect(f.controller.view.notice).toBe('access_changed'); expect(f.controller.view.preferences?.memberId).toBe('relinked');
+  expect(f.server.send).not.toHaveBeenCalled();
+});
+test('HADB-01/C02: reconciliation reports a new verified context rather than an earlier invalid draft', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  f.identity.session.mockReturnValue(read({...session, context: {...context, channel: 'stable'}}));
+  await f.controller.reconcile();
+  expect(f.controller.view.notice).toBe('context_changed'); expect(f.controller.view.session?.context.channel).toBe('stable');
+  expect(f.server.send).not.toHaveBeenCalled();
+});
+test.each(['read_only', 'journal_unavailable', 'inactive', 'api_unavailable', 'access_changed'] as const)(
+  'HADB-01/C03: fresh %s proof takes precedence over the earlier action notice', async kind => {
+    const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+    if (kind === 'read_only') f.identity.session.mockReturnValue(read({...session, access: 'read_only'}));
+    if (kind === 'journal_unavailable') f.storage.getItem.mockImplementation(() => {throw new Error('private-storage');});
+    if (kind === 'inactive') f.server.authorization.mockReturnValue(read({...access, state: 'suspended'}));
+    if (kind === 'api_unavailable') f.identity.session.mockReturnValue(read({...session, householdApiAvailable: false}));
+    if (kind === 'access_changed') f.server.authorization.mockReturnValueOnce(read(access))
+      .mockReturnValueOnce(read({...access, policyRevision: revisionValue('6')}));
+    await f.controller.reconcile(); expect(f.controller.view.notice).toBe(kind); expect(f.server.send).not.toHaveBeenCalled();
+  },
+);
+test('HADB-01/C04: failed fresh proof retires earlier private facts and action notices', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  f.identity.session.mockReturnValue(read(null)); await f.controller.reconcile();
+  expect(f.controller.view.notice).toBe('authentication_required'); expect(f.controller.view.preferences).toBeNull();
+});
+test('HADB-01/C07: reconciliation cannot republish facts after disposal while its read is pending', async () => {
+  const f = fixture(); await f.controller.refresh(); const pending = deferred<VerifiedEntrySession | null>();
+  f.identity.session.mockReturnValueOnce(pending); const work = f.controller.reconcile();
+  f.controller.close(); pending.resolve(session); await work;
+  expect(pending.cancel).toHaveBeenCalledOnce(); expect(f.controller.view.phase).toBe('closed');
+  expect(f.controller.view.preferences).toBeNull();
+});
+test('HADB-01/C04: expiry during reconciliation cannot restore the previous notice or private facts', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.submit(null);
+  const pending = deferred<typeof preferences>(); f.server.preferences.mockReturnValueOnce(pending);
+  const work = f.controller.reconcile(); await settle(); f.setNow(session.expiresAt); f.controller.tick();
+  pending.resolve(preferences); await work;
+  expect(f.controller.view.notice).toBe('authentication_required'); expect(f.controller.view.preferences).toBeNull();
+});
+test('HADB-01/C05: reconciliation is passive while idle, closed or a command is pending', async () => {
+  const f = fixture(); await f.controller.reconcile(); expect(f.identity.session).not.toHaveBeenCalled();
+  await f.controller.refresh(); const pending = deferred<AdministrationCommandResult>(); f.server.send.mockReturnValueOnce(pending.result);
+  const work = f.controller.submit(commands[4]); await settle(); const calls = f.identity.session.mock.calls.length;
+  await f.controller.reconcile(); expect(f.identity.session).toHaveBeenCalledTimes(calls);
+  pending.resolve(receipt(commands[4])); await work; f.controller.close();
+  await f.controller.reconcile(); expect(f.controller.view.phase).toBe('closed');
+});
+test('HADB-01/C02: same-context empty rejection survives reconciliation without another read or original lookup', async () => {
+  const f = fixture(); await f.controller.refresh();
+  f.server.send.mockResolvedValueOnce({kind: 'rejected', reason: 'forbidden', correlationId: 'current-correlation'});
+  await f.controller.submit(commands[4]); const calls = f.identity.session.mock.calls.length;
+  await f.controller.reconcile(); expect(f.identity.session).toHaveBeenCalledTimes(calls);
+  expect(f.controller.view.outcome).toEqual({kind: 'rejected', reason: 'forbidden', correlationId: 'current-correlation'});
+  expect(f.server.original).not.toHaveBeenCalled(); expect(f.server.operation).not.toHaveBeenCalled();
+});
+test('HADB-01: reconciliation without an action notice remains a current neutral read', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.reconcile();
+  expect(f.controller.view.notice).toBeNull(); expect(f.controller.view.preferences).toEqual(preferences);
+});
+
+test.each(['without_roster_grant', 'unavailable_roster'] as const)(
+  'HADW-01: independent own alias %s keeps its exact revision and permits one explicit edit', async kind => {
+    const f = fixture(kind === 'without_roster_grant' ? {...access, permissions: ['preferences.read', 'preferences.write']} : access);
+    if (kind === 'unavailable_roster') f.server.roster.mockImplementation(() => {throw new EntryReadError('unavailable');});
+    await f.controller.refresh(); expect(f.controller.view.roster).toBeNull(); expect(f.controller.view.presentation).toEqual(own);
+    expect(f.server.presentation).toHaveBeenCalledExactlyOnceWith(member.memberId, context);
+    await f.controller.submit(commands[3]); expect(f.server.send).toHaveBeenCalledExactlyOnceWith({key: 'request-original', command: commands[3]}, context);
+    expect(f.controller.view.outcome?.kind).toBe('receipt'); expect(f.server.original).not.toHaveBeenCalled();
+  },
+);
+test('HADW-01: an independently returned alias for a former member is never published or used for an own edit', async () => {
+  const f = fixture({...access, permissions: ['preferences.read','preferences.write']});
+  f.server.presentation.mockReturnValue(read({...own, memberId: 'former-member'}));
+  await f.controller.refresh(); expect(f.controller.view.presentation).toBeNull();
+  expect(f.controller.view.errors.presentation).toBe('invalid_response');
+  await f.controller.submit(commands[3]); expect(f.server.send).not.toHaveBeenCalled();
+  expect(JSON.stringify(f.controller.view)).not.toContain('former-member');
+});
+test('HADW-01: lack of either public or own read authority never queries or invents an alias revision', async () => {
+  const f = fixture({...access, permissions: ['preferences.write']}); await f.controller.refresh();
+  expect(f.controller.view.presentation).toBeNull(); expect(f.server.presentation).not.toHaveBeenCalled();
+  await f.controller.submit(commands[3]); expect(f.controller.view.notice).toBe('action_not_allowed'); expect(f.server.send).not.toHaveBeenCalled();
+});
+test('HADW-01: a permitted current roster remains an honest alias source when the independent own read is unavailable', async () => {
+  const f = fixture(); f.server.presentation.mockImplementation(() => {throw new EntryReadError('unavailable');});
+  await f.controller.refresh(); expect(f.controller.view.presentation).toBeNull(); expect(f.controller.view.errors.presentation).toBe('unavailable');
+  await f.controller.submit(commands[3]); expect(f.server.send).toHaveBeenCalledOnce(); expect(f.controller.view.outcome?.kind).toBe('receipt');
+});
+
+const noControls = {household: false, policy: false, preferences: false, ownAlias: false,
+  memberIds: [], aliasMemberIds: [], recoverableKeys: [], dismissibleKeys: []};
+test('HADB-03: idle and disposed views offer no administration controls and obtain no proof', async () => {
+  const f = fixture(); expect(f.controller.view.controls).toEqual(noControls);
+  f.controller.close(); expect(f.controller.view.controls).toEqual(noControls);
+  expect(f.identity.session).not.toHaveBeenCalled(); expect(f.storage.getItem).not.toHaveBeenCalled();
+});
+test('HADB-03: controls describe current permitted facts without producing a command key, lookup or private payload', async () => {
+  const f = fixture(); await f.controller.refresh(); const writes = f.storage.setItem.mock.calls.length;
+  const controls = f.controller.view.controls;
+  expect(controls).toEqual({...noControls, household: true, policy: true, preferences: true, ownAlias: true, memberIds: [member.memberId]});
+  expect(Object.isFrozen(controls)).toBe(true); expect(Object.isFrozen(controls.memberIds)).toBe(true);
+  expect(Object.isFrozen(controls.aliasMemberIds)).toBe(true); expect(Object.isFrozen(controls.recoverableKeys)).toBe(true);
+  expect(Object.isFrozen(controls.dismissibleKeys)).toBe(true);
+  expect(JSON.stringify(controls)).not.toContain('locale'); expect(JSON.stringify(controls)).not.toContain('routine_participation');
+  expect(f.storage.setItem).toHaveBeenCalledTimes(writes); expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  expect(f.server.original).not.toHaveBeenCalled(); expect(f.server.send).not.toHaveBeenCalled();
+});
+test('HADB-03: other-member controls require current facts and never invent masked exceptions', async () => {
+  const f = fixture(); f.server.roster.mockReturnValue(read({directoryState: 'available', members: [
+    {member, presentation: own, metadata: {state: 'available', name: 'Owner', avatarState: 'unavailable'}},
+    {member: {...member, memberId: 'other', exceptions: null}, presentation: {...own, memberId: 'other'},
+      metadata: {state: 'denied', name: null, avatarState: 'unavailable'}},
+  ]}));
+  await f.controller.refresh(); expect(f.controller.view.controls.memberIds).toEqual([member.memberId]);
+  expect(f.controller.view.controls.aliasMemberIds).toEqual(['other']);
+});
+test('HADB-03: ordinary current owner controls expose own edits without exposing other-member management', async () => {
+  const f = fixture({...access, permissions: ['members.read','preferences.read','preferences.write']});
+  await f.controller.refresh(); expect(f.controller.view.controls).toEqual({...noControls, ownAlias: true, preferences: true});
+});
+test('HADB-03: write grants without current aggregate reads do not invent an edit revision, while original GET remains usable', async () => {
+  const f = fixture({...access, permissions: ['household.manage','operations.read']});
+  f.journal.open(context,1000); f.journal.prepare('original',commands[0],1000); f.journal.detach();
+  await f.controller.refresh(); expect(f.controller.view.controls).toEqual({...noControls, recoverableKeys: ['original']});
+  expect(f.server.original).not.toHaveBeenCalled(); await f.controller.recover('original');
+  expect(f.server.original).toHaveBeenCalledOnce(); expect(f.controller.view.controls.dismissibleKeys).toEqual(['original']);
+});
+test('HADB-03: a valid read-only lease offers original recovery and resolved dismissal, with all new edits unavailable', async () => {
+  const f = fixture(); f.journal.open(context,1000); f.journal.prepare('saved',commands[4],1000);
+  f.journal.record('saved',{stage:'committed',operationId:'operation'},1000); f.journal.detach();
+  f.identity.session.mockReturnValue(read({...session,access:'read_only'})); await f.controller.refresh();
+  expect(f.controller.view.controls).toEqual({...noControls,recoverableKeys:['saved'],dismissibleKeys:['saved']});
+  expect(f.server.original).not.toHaveBeenCalled(); expect(f.server.send).not.toHaveBeenCalled();
+});
+test('HADB-03: original stages expose only their permitted recovery and dismissal controls', async () => {
+  const f = fixture(); f.journal.open(context,1000);
+  for (const stage of ['prepared','uncertain','committed','historical','rejected'] as const) {
+    f.journal.prepare(stage,commands[4],1000);
+    if (stage !== 'prepared') f.journal.record(stage,{stage,operationId:stage==='committed'||stage==='historical'?'operation-'+stage:null},1000);
+  }
+  f.journal.detach(); await f.controller.refresh();
+  expect(f.controller.view.controls.recoverableKeys).toEqual(['prepared','uncertain','committed','historical']);
+  expect(f.controller.view.controls.dismissibleKeys).toEqual(['committed','historical','rejected']);
+  f.server.authorization.mockReturnValue(read({...access,permissions:access.permissions.filter(value=>value!=='operations.read')}));
+  await f.controller.refresh(); expect(f.controller.view.controls.recoverableKeys).toEqual([]);
+  expect(f.controller.view.controls.dismissibleKeys).toEqual(['committed','historical','rejected']);
+});
+test('HADB-03: unavailable owned journal disables controls while current permitted facts remain readable', async () => {
+  const f = fixture(); f.storage.getItem.mockImplementation(()=>{throw new Error('private-storage-fault');});
+  await f.controller.refresh(); expect(f.controller.view.preferences).toEqual(preferences);
+  expect(f.controller.view.controls).toEqual(noControls);
+});
+test('HADB-03: pending proof and an in-flight atomic change offer no stale form controls', async () => {
+  const f = fixture(), proof = deferred<VerifiedEntrySession|null>(); f.identity.session.mockReturnValueOnce(proof);
+  const opening = f.controller.refresh(); expect(f.controller.view.controls).toEqual(noControls);
+  proof.resolve(session); await opening; const pending = deferred<AdministrationCommandResult>(); f.server.send.mockReturnValueOnce(pending.result);
+  const work = f.controller.submit(commands[4]); await settle(); expect(f.controller.view.controls).toEqual(noControls);
+  pending.resolve(receipt(commands[4])); await work; expect(f.controller.view.controls.preferences).toBe(true);
+});
+test('HADB-03: an unresolved original disables only its aggregate and leaves independent forms available', async () => {
+  const f = fixture(); await f.controller.refresh(); f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.submit(commands[4]); const controls = f.controller.view.controls;
+  expect(controls.preferences).toBe(false); expect(controls.household).toBe(true); expect(controls.ownAlias).toBe(true);
+  expect(controls.recoverableKeys).toEqual(['request-original']); expect(f.server.send).toHaveBeenCalledOnce();
+});
+test('HADB-03: an unresolved own alias does not disable an authorized different-member alias form', async () => {
+  const f = fixture(); f.server.roster.mockReturnValue(read({directoryState:'available',members:[
+    {member,presentation:own,metadata:{state:'available',name:'Owner',avatarState:'unavailable'}},
+    {member:{...member,memberId:'other'},presentation:{...own,memberId:'other'},metadata:{state:'available',name:'Other',avatarState:'unavailable'}},
+  ]}));
+  await f.controller.refresh(); f.server.send.mockResolvedValueOnce({kind:'uncertain'}); await f.controller.submit(commands[3]);
+  expect(f.controller.view.controls.ownAlias).toBe(false); expect(f.controller.view.controls.aliasMemberIds).toEqual(['other']);
+  expect(f.controller.view.controls.preferences).toBe(true);
+});
+test.each([0,2,4])('household-browser-C13: a captured new intent %s cannot cross a same-HA membership replacement with a coincident revision',async index=>{
+  const f=fixture();await f.controller.refresh();const next={...member,memberId:'replacement'};
+  f.server.authorization.mockReturnValue(read({...access,member:next}));
+  f.server.preferences.mockReturnValue(read({...preferences,memberId:next.memberId}));
+  f.server.presentation.mockReturnValue(read({...own,memberId:next.memberId}));
+  f.server.roster.mockReturnValue(read({directoryState:'available',members:[{member:next,presentation:{...own,memberId:next.memberId},
+    metadata:{state:'available',name:'Current member',avatarState:'unavailable'}}]}));
+  await f.controller.submit(commands[index]);expect(f.server.send).not.toHaveBeenCalled();expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  expect(f.controller.view.notice).toBe('context_changed');expect(f.controller.view.preferences?.memberId).toBe(next.memberId);
+});
+test('HADB-03: a newer access revision for the same member still permits a currently authorized captured intent',async()=>{
+  const f=fixture();await f.controller.refresh();f.server.authorization.mockReturnValue(read({...access,policyRevision:revisionValue('6'),member:{...member,revision:revisionValue('4')}}));
+  await f.controller.submit(commands[4]);expect(f.server.send).toHaveBeenCalledOnce();expect(f.controller.view.outcome?.kind).toBe('receipt');
 });

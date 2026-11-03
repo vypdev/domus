@@ -1,0 +1,1365 @@
+{
+  "status": "partial",
+  "issue": "https://github.com/vypdev/domus/issues/27",
+  "sourceBase": "ad45272a180f4e36d2dd124f950826e41311017d",
+  "baselineMerge": "8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9",
+  "nativePublication": {
+    "run": 41525972873,
+    "job": 125553749391,
+    "commit": "ad45272a180f4e36d2dd124f950826e41311017d",
+    "branch": "feature/27-complete-the-household-administration-workspace-after-the-verified-api-and-controller-checkpoint",
+    "result": "success; branched/state:working verified; exact parent is the actual PR26 merge",
+    "originalPolicyModulesByteVerified": 7,
+    "formatConsistencyAndCatalog": "passed",
+    "retainedOwnerDocuments": 20,
+    "retainedOwnerCases": {
+      "HADM": 72,
+      "HADI": 8,
+      "HADW": 82
+    },
+    "prospectiveBrowserRefinements": 24
+  },
+  "implemented": [
+    "Optional household-read failures retain current entry authority only after rechecking grants; authentication failure and stale generations still retire access.",
+    "Application-only joint coordinator matches context/access/grants and independent household scope, bounds reconciliation, serializes explicit work and preserves original commands/results.",
+    "Earlier joint lease expiry retires both views without renewal; disposal fences reads, late command replies and pending logout revocation.",
+    "A fresh administration reconciliation replaces private facts even after invalid input, missing original or read-only early exits, while preserving same-authority actionable notices. Empty errors retain their verified account context and cannot be joined to a different installation/channel/subject.",
+    "The actual document runtime now constructs the application coordinator, both concrete protected HTTP adapters and separate storage journals with one monotonic clock/cryptographic entropy. Its callback exposes only reconciled administration facts. Both proof/journal deadlines are scheduled without payload disclosure; stale busy events, BFcache, teardown and late effects remain fenced. The page still renders entry only; full administration forms remain pending.",
+    "Own public alias reads retain member-read authority or applicable current-owner preference-read authority. Other-member reads remain protected by member read. The browser independently loads and owner-binds its public presentation/revision, so a missing or denied roster is not an implicit prerequisite for an own alias edit. A permitted current roster can still supply a public alias revision if the independent read fails."
+  ],
+  "testsFirst": [
+    "Real Chromium entry controls first failed16/passed76 against original code; all93 entry cases now pass.",
+    "Coordinator test first failed import on the missing module, then29 initial semantic cases passed.",
+    "After correcting an initial C13 test expectation to the existing original-GET contract, three explicit notice-loss controls failed before removal of the extra refresh.",
+    "Three lifecycle controls failed before stale-notice replacement and disposal-during-logout fencing were corrected.",
+    "Four semantic controls failed against published a721039: three early exits reused a former member private preference and one empty forbidden result crossed a changed installation context.",
+    "Fourteen new reconciliation controls first failed on the missing use case, after a distinct sandbox-only socket denial. The corrected full Chromium suite passes1108; fixture locale typing was widened to the actual own-preference contract before strict types passed.",
+    "Ten runtime integration controls first failed before the existing runtime exposed or composed administration. The actual protected HTTP/journal composition then passes all39runtime cases; six additional current-permission/storage/cancellation/scheduler/expiry/deadline checks pass within1124frontend executions. These HTTP-provider controls are not actual full administration UI journeys.",
+    "Two new actual compiled-browser/Python cases first failed because the test-only HA simulator lacked the fixed account-source request method. Both then pass after completing only that fictional provider; all53entry-plus-read journeys pass without the earlier AttributeError. Original traces/screenshots and the earlier51passing-with-provider-errors log are retained separately.",
+    "Six backend regressions failed before the query correction: four active roles and both actual deployments could not read an own alias after roster permission was denied. Four negative/public-read controls already passed. Four browser application controls first failed before the independently bound presentation fact existed.",
+    "A distinct initial pair of actual-browser checks received status200 but could not retrieve reload response bodies through Chromium CDP. Actual upstream bytes are now captured and forwarded unchanged before retirement; this is not counted as an additional product permission regression.",
+    "The published dfb frontend CI independently failed the same CDP body-unavailable assertion in one administration-read case (52 others passed). Its original trace/screenshot/results are retained. Both new read tests now use protected upstream byte capture and the complete55-case actual browser suite passes."
+  ],
+  "frontend": {
+    "executions": 1129,
+    "coordinatorExecutions": 55,
+    "entryControllerExecutions": 93,
+    "authoredRuntimeFiles": 29,
+    "nonemptyRuntimeFiles": 27,
+    "typeOnlyFiles": 2,
+    "coverage": {
+      "lines": {
+        "total": 1341,
+        "covered": 1341,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 1999,
+        "covered": 1999,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 409,
+        "covered": 409,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 1446,
+        "covered": 1446,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "independentFilesystemInventoryAudit": "passed",
+    "administrationControllerExecutions": 130,
+    "runtimeExecutions": 39
+  },
+  "checks": {
+    "runtimeAndCatalogTypes": "passed",
+    "nodePolicy": "38passed; all supported metrics100%",
+    "entryBrowser": "55passed; actual compiled runtime with Python/SQLite in native and standalone modes, including own alias reads without roster permission and actual account-source facts. Complete visible administration forms remain pending.",
+    "packaging": "1passed; actual d797 wheel matches all151Pythonmodules and4compiledUIresources",
+    "catalogBrowser": "18passed; rebuilt existing entry-state catalog; complete administration forms/catalog remain pending",
+    "nodeInvocationLimitation": "The earlier architecture-only command passed its selected rules but failed global tooling coverage because it omitted the unchanged tooling suite; complete pnpm test then passes38/100%. No product/Copilot failure is inferred.",
+    "strictBackendTypes": "passed151modules",
+    "ruff": "check and375-file format pass",
+    "pythonArchitecture": "51assertions passed",
+    "documentationAndOriginalSDK": "original7policyblobs unchanged; format/consistency/catalog pass with all20retainedowner documents and72/8/82cases preserved;24browser refinements remain required"
+  },
+  "sourceIdentity": {
+    "backendInventorySHA256": "ce4601f050a56a4bf4e22c5ac6e255fb1c7a9954c7a33d6bc3f0c261834d60b5",
+    "backendUnchangedFromReviewedB60": false,
+    "changedBackendModules": [
+      "domus/application/household_administration_queries.py"
+    ],
+    "frontendInventorySHA256": "f3485b8718a077ca88c94d751e53951d65c7a177ac4c02fd8f6e0a50b85b7fa7",
+    "wheelSHA256": "d79751a49cb89891ba1a2cde0086f77c271685dc6af4bd170423c3f244401f7e",
+    "compiledUI": {
+      ".vite/manifest.json": "52478f33798af6644baf27ac754833d63b8e64676483cc76159c4c8abd83da75",
+      "assets/index-1tQXZaXm.js": "5f665d480483e7368d27d6e1bf9f858d16a77323e41fb804d2371e8985d677ed",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "1046899d4a844c45dd67f51686d31941edc0a7b8401d0c0ba4ccc8fed799d9bf"
+    },
+    "everyModuleAndUIByteVerified": true
+  },
+  "backendScope": "Fresh complete local 4,374-test campaign passes; all151modules have100% supported statement/branch coverage and an independent AST/source-inventory audit. Only household_administration_queries.py changes from the prior runtime backend; schema9/DDL, private preference scope and original-operation authority remain unchanged.",
+  "providerFeasibility": {
+    "source": "home-assistant/core@12695a258d937f7943237d6e2cb66eed9d6d2216",
+    "result": "The fixed account response builders expose names and no supported avatar field; explicit unavailable remains appropriate.",
+    "scope": "Pinned upstream source inspection, not installed owner HA/runtime acceptance."
+  },
+  "copilotRecovery": {
+    "report": "https://github.com/vypdev/copilot/issues/763#issuecomment-6588275756",
+    "result": "Three response-size failures are retained separately; explicit same-capability companion recovery then published natively. This does not establish an upstream fix."
+  },
+  "localEvidence": {
+    "root": "/private/tmp/domus-admin-own-alias-dfb488a",
+    "privateLocalOnly": true,
+    "previousCompactEvidence": {
+      "path": "/private/tmp/domus-admin-runtime-185caef/verification-evidence.tar.gz",
+      "sha256": "c39e1e6b656847853bceaca1b0c21f6e0d1ea8ddeeb5f8bd52df12267aab30b5"
+    },
+    "scope": "Original6backend/4frontend permission failures, distinct local/hosted CDP limitations with original traces/screenshots, complete current coverage/source/wheel and actual55browser checks. No owner HA used."
+  },
+  "pending": "Continue full retained HADM72/HADI8/HADW82/24browser acceptance mapping, remaining boundary journeys, human UX and compatible owner adoption. Current keyboard/profile continuation cases are locally exercised; new current-head CI/CPU/native gates remain required. Recurrence23 and all-domain/Stable/Edge product work remain unfinished.",
+  "goalComplete": false,
+  "acceptance": "Current1223Chromium unit executions,71compiled Python/SQLite and25built catalog cases do not substitute for complete owning-case acceptance or owner HA adoption.",
+  "recordedAtUTC": "2026-11-02T23:06:09.802178+00:00",
+  "backend": {
+    "executions": 4374,
+    "authoredModules": 151,
+    "coverage": {
+      "covered_lines": 10438,
+      "num_statements": 10438,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100.00",
+      "missing_lines": 0,
+      "excluded_lines": 311,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100.00",
+      "num_branches": 2928,
+      "num_partial_branches": 0,
+      "covered_branches": 2928,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100.00"
+    },
+    "independentGlobalAndPerModuleAudit": "passed"
+  },
+  "testPreparationNotes": [
+    "The initial C13 expected an uncertain outcome from a rejected original GET; the existing controller contract returns no receipt and an invalid-response notice. Corrected tests then reproduced the genuine notice-loss bug.",
+    "A private evidence writer initially used a nonexistent catalog docs key. It was corrected to the actual documentation key before publication; no production or SDK relaxation.",
+    "Initial new own-alias test titles incorrectly used browser-C15, whose owning row is hostile-text/closed-intent security. Titles now name HADW-01 directly; no new case or full C15 acceptance is claimed from own-alias controls."
+  ],
+  "scopedCorrection": {
+    "baseline": "a72103968dd785252ea5f9cf19e81463c0f44085",
+    "source": "Published185caef correction before runtime composition; its scoped proof is retained as historical evidence.",
+    "types": "runtime and catalog passed",
+    "coverageAudit": "all29authoredruntimefiles and all4metrics100%",
+    "artifact": "At the prior correction the still-unused controllers did not change the compiled entry bundle. The current runtime composition now has its independently verified new wheel/UI identity below."
+  },
+  "publishedBaselineReview": {
+    "head": "dfb488acf984b4ec3ab76df36007b8bd0f19be5c",
+    "run": 41539766059,
+    "job": 125600639709,
+    "context": "complete",
+    "partitions": "4/4",
+    "candidateFindings": 0,
+    "publishedFindings": 0,
+    "outcome": "no-findings",
+    "currentCorrectionReview": "pending normal commit/push"
+  },
+  "publishedBaselineCI": {
+    "head": "dfb488acf984b4ec3ab76df36007b8bd0f19be5c",
+    "run": 41539765726,
+    "result": "failure in frontend job125600638142: one new standalone administration-read assertion could not read its Chromium CDP response body. Backend125600638028, actual amd64125600637895, actual aarch64125600637957 and remaining product suites passed.",
+    "originalFrontendArtifact": {
+      "id": 13187040747,
+      "name": "frontend-application-523a050e8395d4cb5b52d5a628fc39b78d09d648",
+      "bytes": 1131439,
+      "local": "hosted-dfb-frontend",
+      "scope": "Original failing screenshot/trace/results retained; generated duplicate coverage/UI/wheel need not remain after unique evidence is compactly retained."
+    },
+    "currentCorrectionCI": "pending normal commit/push; no merge with the product failure"
+  },
+  "currentRuntimeScope": {
+    "sourceBase": "dfb488acf984b4ec3ab76df36007b8bd0f19be5c",
+    "state": "Current own-alias and protected response-capture correction over the published runtime; not yet committed",
+    "authoredRuntimeFiles": 29,
+    "administrationViews": "Runtime and independently bound own-presentation facts are implemented; complete visible administration forms/page intents remain pending."
+  },
+  "copilotProgressRepeat": {
+    "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6590653046",
+    "run": 41539755883,
+    "job": 125600604587,
+    "verificationCheck": 125601504459,
+    "head": "dfb488acf984b4ec3ab76df36007b8bd0f19be5c",
+    "reason": "scope-clause-limit; field $.lines; requirement none; source L240",
+    "reference": "77635ac9-bf5e-4b50-89ae-0abd3d0adbbe",
+    "scope": "Separate unchanged-Copilot progress rejection; same-head PR review4/4 has no findings. The unrelated product CI body-capture failure remains a real merge blocker until current CI passes."
+  },
+  "visibleWorkspaceIncrement": {
+    "sourceBase": "86e120ac3254a7b4b91d3d4b817f5234a0916f51",
+    "state": "Working-source visible workspace on the same issue27/ref; not complete feature acceptance.",
+    "frontend": {
+      "executions": 1223,
+      "authoredRuntimeFiles": 31,
+      "nonemptyFiles": 29,
+      "typeOnlyFiles": 2,
+      "statements": 2381,
+      "branches": 1886,
+      "functions": 504,
+      "lines": 1577,
+      "allFourMetricsGlobalAndPerFilePercent": 100,
+      "independentInventoryAudit": "passed; all31authoredruntimefiles and all4metrics checked independently"
+    },
+    "compiledBrowser": {
+      "executions": 71,
+      "administrationJourneys": 16,
+      "existingEntryJourneys": 55,
+      "deployments": [
+        "native",
+        "standalone"
+      ],
+      "backend": "Actual Python/SQLite with fictional loopback HA; no owner HA used"
+    },
+    "catalog": {
+      "executions": 25,
+      "newAdministrationCases": 7,
+      "existingEntryCases": 18,
+      "scope": "Actual rebuilt Storybook; both locales/deployments, keyboard/focus, inert text,360px/themes/reduced-motion/contrast. Stories emit intents only."
+    },
+    "testsFirst": [
+      "Seven reproduced current-read-loss draft disclosure cases",
+      "One misleading preflight submission-status failure",
+      "One absent participant target/reference review failure",
+      "Two actual old-bundle missing-workspace failures before rebuilding"
+    ],
+    "distinctPrototypeFailures": "Catalog label selector matched both a region and its textbox. Initial integration expectations confused HA ALL automatic enrollment with pending membership, wire integer with canonical journal string, and preflight conflict with a server rejection. Original logs/traces retained separately; no backend or Copilot fault inferred.",
+    "package": {
+      "wheelSHA256": "3c78a393ebb39664a2a5b73a41b2ddbc1a63d2205a42101d276e086d20cd5695",
+      "backendInventorySHA256": "ce4601f050a56a4bf4e22c5ac6e255fb1c7a9954c7a33d6bc3f0c261834d60b5",
+      "frontendInventorySHA256": "6ad650beec51c7c2f481a99b50e12b79e48167e169885a5a35aa129a1a6074da",
+      "compiledUI": {
+        ".vite/manifest.json": "97e3e0600974d5ea6eb617be7eed3c377d0fadba49295935c17371aeaabf677e",
+        "assets/index-BsSG5cPr.js": "8d94d5b5085ae82f814eb174ea202356742ae1902cf54f076881c11b93b95058",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "03463192d0e7fb63316fcb577471de5b3eaddf3f667623f35b2cd8f36d1a55f1"
+      },
+      "all151PythonModulesAnd4UIFilesByteVerified": true,
+      "backendUnchangedFromPublished86": true
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-forms-86e120a",
+      "privateLocalOnly": true
+    },
+    "review": "Published3da native PR review: complete context,8/8partitions,zero candidate/published/all-state findings. Follow-up consumer inventory correction requires its own current-head CI/CPU/native review; full feature acceptance remains pending.",
+    "checks": {
+      "strictRuntimeAndCatalogTypes": "passed",
+      "architectureAssertions": 51,
+      "wheelAcceptance": "passed",
+      "nodePolicyTests": 38,
+      "nodeSupportedCoveragePercent": 100,
+      "documentation": "passed",
+      "originalSDDPolicy": "seven original SDK modules byte-verified; format/consistency/catalog passed;20owner documents unchanged"
+    },
+    "consumerCatalogRegistrationCorrection": {
+      "head": "3da7e98a32c5c6ca7d2a9ba2348cfd2b05a3bdb7",
+      "run": 41604593960,
+      "job": 125811179615,
+      "original": "147passed1failed: new administration Storybook file absent from the explicit tested catalog inventory. Reproduced locally before correction.",
+      "change": "Register only frontend/stories/administration.stories.ts alongside the existing entry story. Actual25-case built catalog and strict runtime/catalog type gates already cover it. No coverage prefix/exclusion/threshold changes.",
+      "confirmed": "148Python tooling tests;214statements/98branches100%;Ruff passes"
+    },
+    "nativePublished3da": {
+      "run": 41604593997,
+      "job": 125811180905,
+      "head": "3da7e98a32c5c6ca7d2a9ba2348cfd2b05a3bdb7",
+      "context": "complete",
+      "partitions": "8/8",
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "outcome": "no-findings"
+    },
+    "copilotProgressPublished3da": {
+      "run": 41604586557,
+      "job": 125811154753,
+      "scopeFailure": "scope-clause-limit;$.lines;requirement none;L140",
+      "reference": "0c02fe42-908d-49b2-8c0b-fd5b99203305",
+      "report": "https://github.com/vypdev/copilot/issues/828#issuecomment-6599193241",
+      "scope": "Separate progress-contract failure; no Copilot change or inferred candidate/root cause."
+    }
+  },
+  "accessibilityIncrement": {
+    "sourceBase": "e7d090ba6bc4a0968b6813eef80d78575bcb424a",
+    "testsFirst": "Three original component failures: alias-error association/field focus, missing access-approval focus, and back-to-edit preference focus. Original log/screenshots retained locally.",
+    "implemented": "Stored first editor-control ID; current error descriptions linked to text/select/checkbox/rule/profile controls; validation focuses a relevant initial control or required approval; back restores the first field without resetting values.",
+    "frontend": {
+      "executions": 1226,
+      "authoredRuntimeFiles": 31,
+      "staticCSSFiles": 1,
+      "metrics": {
+        "lines": {
+          "total": 1577,
+          "covered": 1577,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 2382,
+          "covered": 2382,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 504,
+          "covered": 504,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1898,
+          "covered": 1898,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentInventory": "passed"
+    },
+    "compiledBrowser": {
+      "wholeCampaign": 71,
+      "additionalTargetedCases": 2,
+      "scope": "Whole71nowincludes actual pending-to-active-to-later-profile/permission change in both deployments. Two additional compiled EN/ES/lightdark/reduced-motion/360px/native-and-standalone keyboard cases force Lit CSP fallback, inspect actual style nonces and unchanged SQLite counts. Distinct cases; not73executions in one local whole campaign."
+    },
+    "catalog": {
+      "wholeCampaign": 26,
+      "newKeyboardCase": "Both languages: validation association, field focus, review/back and retained values."
+    },
+    "package": {
+      "wheelSHA256": "ae92de7841edf0d10dd2448fa6edc2594293a999b77c6f7884acaeb4cb0a7a8c",
+      "backendInventorySHA256": "ce4601f050a56a4bf4e22c5ac6e255fb1c7a9954c7a33d6bc3f0c261834d60b5",
+      "frontendInventorySHA256": "0d5bea106d93584bcf69350be7ea97e0a147eb7787c364cc2e8ca6a23c2ae443",
+      "compiledUI": {
+        ".vite/manifest.json": "3e75c5d46ea62c74e675972b07e138ece1fedf60e3ff390b9e3dfc09ecb439cd",
+        "assets/index-BpZvnMgV.js": "97ae3298f6baf5240da7cfabb96ee373370155285dd181281f6c26516ebdc895",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "d0e16a3cb9640fcf1f78969fbb1211d52e2017a8eac65bf2654d04adf77e0b8a"
+      },
+      "all151PythonModulesAnd4UIResourcesVerified": true
+    },
+    "scope": "Local proof of these explicit cases, not complete HADM72/HADI8/HADW82/24browser acceptance or human review. New current-head hosted gates pending.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-accessibility-e7d090b",
+      "privateLocalOnly": true
+    },
+    "hostedB9": {
+      "head": "b9a2dfc8179128fb493ab49666c24967d308c979",
+      "frontendJob": 125829637535,
+      "run": 41610125553,
+      "frontend": 1226,
+      "combinedCompiledCases": 73,
+      "catalog": 26,
+      "native": {
+        "run": 41610125444,
+        "job": 125829638176,
+        "context": "complete",
+        "partitions": "8/8",
+        "candidateFindings": 1,
+        "publishedFindings": 1,
+        "scope": "One matcher-API premise independently disproved; not a no-findings review."
+      }
+    }
+  },
+  "playwrightReviewClarification": {
+    "head": "b9a2dfc8179128fb493ab49666c24967d308c979",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4452825495",
+    "report": "https://github.com/vypdev/copilot/issues/867",
+    "premise": "Reviewer says pinned toBeEnabled ignores enabled:false. Installed1.64.1 declaration and matcher implementation explicitly support/select the disabled state.",
+    "independentProbe": "One separate Chromium dependency contract case passes both correct states and rejects both mismatches; not a product journey.",
+    "primaryDocumentation": "https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-be-enabled",
+    "consumerChange": "Equivalent explicit toBeEnabled()/toBeDisabled() branches improve readability. No reproduced consumer failure, assertion weakening, fixture substitution, threshold change or Copilot edit.",
+    "currentGate": "New-head native verification of finding state remains required."
+  },
+  "boundaryIncrement": {
+    "sourceBase": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
+    "testsFirst": {
+      "focus": "Four Chromium failures (61passed/4failed): readonly back/cancel/close and hidden-editor close all lose focus. A fifth refresh-retirement safety case already passes.",
+      "fixtureCorrection": "The first real-writer campaign passes4/fails2 because a second HA account has not explicitly requested membership. Add that real authorized join step; no production code changed for the test precondition.",
+      "packageDeclaration": "A new compiled bundle correctly fails the stale previous resource inventory. Update only the current candidate declaration, retaining historical evidence."
+    },
+    "implemented": "Disabled or missing transition targets fall back to the current enabled refresh control; if the view is retired/checking and no control exists, no removed/private field is focused. Draft values and authority controls remain unchanged.",
+    "frontend": {
+      "executions": 1231,
+      "authoredRuntimeFiles": 31,
+      "metrics": {
+        "lines": {
+          "total": 1580,
+          "covered": 1580,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 2384,
+          "covered": 2384,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 504,
+          "covered": 504,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 1902,
+          "covered": 1902,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentInventory": "passed"
+    },
+    "compiledBrowser": {
+      "wholeCampaign": 81,
+      "newCases": 8,
+      "deployments": [
+        "native",
+        "standalone"
+      ],
+      "providers": "Fictional loopback HA/Supervisor with actual product Python/SQLite; not owner HA adoption."
+    },
+    "traceability": [
+      {
+        "case": "household-workspace-C78",
+        "evidence": "frontend/tests/e2e/administration.spec.ts",
+        "assertions": "Both deployments read genuine fixture SQLite revision9007199254740993, send the exact unquoted HTTPinteger once, persist9007199254740994, retain original string/key in journal and reload without resend. Fixture setup is not a2^53operation history claim."
+      },
+      {
+        "case": "household-browser-C22",
+        "evidence": "frontend/tests/e2e/administration.spec.ts",
+        "assertions": "Four independent-browser cases (same/different verified HAaccounts in both deployments). Both original revision1 PUTs wait at a barrier. One SQLite effect; loser409revision_conflict or bounded503storage_busy; committed response is lost. Reload keeps exact winner key/payload; explicit originalGET recovers committed without another mutation/audit/outbox. No automatic retries or result queries."
+      },
+      {
+        "case": "household-workspace-C50",
+        "evidence": [
+          "frontend/tests/administration-component.test.ts",
+          "frontend/tests/e2e/administration.spec.ts",
+          "frontend/tests/e2e/catalog.spec.ts"
+        ],
+        "assertions": "Visible focus through entry/validation/review/back/cancel/close. Four reproduced readonly/missing-fact regressions plus checking guard; actual outage proof and keyboard Enter transitions in both deployments retain draft, lock writes, focus enabled refresh, cancel without PUT and return to persisted facts."
+      }
+    ],
+    "package": {
+      "sourceBase": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
+      "sourceIdentity": "All151Pythonmodules unchanged. The administration renderer now falls back to the enabled refresh action when the original focus target disappears or becomes disabled; no authorization, journal or wire change.",
+      "actualProductFiles": {
+        ".vite/manifest.json": "135a524f75c257533cf9601bafd79896f3d4abd9e2275c4e33427c17abf9f46e",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-DLmPl5j8.js": "162f0935b58728be3a5ae815d19fc23be99651e29c18fc831161c7199ea18800",
+        "index.html": "ec390d8ed7d09d9ac878c7573129d4e3e95c20f62bf83b1bf54d463f7e06aa6f"
+      },
+      "wheelSHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754",
+      "acceptance": "151Pythonmodules/4UIresources match the actual wheel. Local1231Chromium tests,100% all4coverage metrics across31runtimefiles with independent inventory audit;81whole compiled Python/SQLite cases pass in both deployments. Current-head hosted checks/CPUimages/native review and complete owning-case/human UX/owner adoption remain required.",
+      "all151PythonModulesAnd4UIResourcesVerified": true
+    },
+    "limits": "These exact cases add inspected semantic evidence; they do not close the entire186-case acceptance ledger. BFCache/tab closure/restore replay, compatible owner adoption and human UX still require their own proof.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-boundaries-87d726f",
+      "privateLocalOnly": true
+    },
+    "hosted": "New current-head checks and complete native finding review pending."
+  },
+  "navigationIncrement": {
+    "sourceBase": "e32aa071666990e1fed86e9d67be7bb264eb3287",
+    "productionRuntimeChanged": false,
+    "unchangedBaseline": {
+      "frontend": 1231,
+      "frontendJob": 125859691618,
+      "backend": 4374,
+      "backendJob": 125859691661,
+      "coverage": "100%all4global/perfile;31frontendruntimefiles/151Pythonmodules",
+      "wheelSHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754",
+      "scope": "Runtime and compiled resource hashes match the verified e32 baseline. Local unit/backend/catalog baseline is not misreported as a new execution; new-head CI will execute all suites."
+    },
+    "compiledBrowser": {
+      "wholeCampaign": 87,
+      "newCases": 6,
+      "expandedRestoreCases": 2,
+      "skipped": 0,
+      "flaky": 0,
+      "deployments": [
+        "native",
+        "standalone"
+      ],
+      "providers": "Fictional loopback HA/Supervisor; actual compiled product Python/SQLite and actual installation-console restore."
+    },
+    "traceability": [
+      {
+        "case": "household-workspace-C59",
+        "evidence": "frontend/tests/e2e/administration.spec.ts",
+        "assertions": "Actual console snapshot/prepare/activation restores state before alias write. UI originalGET reports historical/absent. An explicit raw PUT retains original key/body/context and fresh current CSRF, returns same operation/historical result, leaves alias null/revision1 and no additional receipts/audit/outbox. The UI never resends."
+      },
+      {
+        "case": "household-admin-C64",
+        "evidence": "frontend/tests/e2e/administration.spec.ts",
+        "assertions": "Disposable full Chromium profile with a generated test-only sessions/tabs extension closes the real tab after the actual SQLite commit but before any PUT reply reaches it. Public sessions.getRecentlyClosed/restore reopens that tab with its own prepared journal. No injected/copied storage. Explicit originalGET recovers committed with one mutation total and unchanged effects. Owner Chrome/profile is untouched."
+      },
+      {
+        "case": "household-admin-C65",
+        "evidence": [
+          "frontend/tests/e2e/administration.spec.ts",
+          "frontend/tests/runtime.test.ts"
+        ],
+        "assertions": "Normal pinned browser policy demonstrably refuses BFCache for private no-store responses and performs fresh back navigation with revoked identity. A separate full Chromium instance with explicit browser-only BFCache policy performs trusted persisted pagehide/pageshow; original heap marker survives, private drafts/DOM retire, fresh proof is pending before facts return, and later rejected identity exposes no private facts. Existing runtime tests separately fence a delayed pre-cache response and preserve its prepared original without automatic GET/PUT."
+      }
+    ],
+    "browserPolicy": {
+      "normal": "Default browser security policy with Playwright BFCache-disabling switch omitted; real no-store refusal is asserted rather than mistaken for a persisted restore.",
+      "conditional": "Separate Chromium channel instance; --enable-features=BackForwardCache:should_ignore_blocklists/true,CacheControlNoStoreEnterBackForwardCache:level/restore-unless-cookie-change. Controlled conditional cache eligibility, not a default owner-Chrome performance claim. Product Cache-Control/CSP/auth/response bytes remain unchanged.",
+      "closedTab": "Separate disposable persistent Chromium profile. Generated manifest/worker are test outputs, never included in Domus or installed in owner Chrome. Only sessions/tabs permissions; no host access or journal injection."
+    },
+    "originalDiagnostics": [
+      "Default no-store exclusion retained with actual notRestoredReasons.",
+      "Headless shell still refuses even under conditional blocklist flag; full Chromium provides real persisted navigation.",
+      "Nested launchOptions is rejected by the pinned runner; dedicated browser ownership fixes that harness configuration.",
+      "Standalone rejected proof correctly offers sign-in; native offers reopening. First assertion assumed the native action for both; no production change for that correction."
+    ],
+    "primarySources": [
+      "https://developer.chrome.com/docs/web-platform/bfcache-ccns",
+      "https://developer.chrome.com/docs/extensions/reference/api/sessions",
+      "https://playwright.dev/docs/chrome-extensions",
+      "https://raw.githubusercontent.com/chromium/chromium/aa94c3c2211d9caae42b2c0af767eda9857fc81b/content/browser/renderer_host/back_forward_cache_impl.cc"
+    ],
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-navigation-e32aa07",
+      "privateLocalOnly": true
+    },
+    "remaining": "Full186-case semantic acceptance audit, image/rollback owning rows, human UX and compatible owner adoption remain separate. Recurrence-dependent obligations are retained. New-head CI/native review pending."
+  },
+  "actualImageBrowserIncrement": {
+    "sourceBase": "3a2c4b33769f26eaa97bd9eeb0c1ce3a6d4fdb50",
+    "productionRuntimeChanged": false,
+    "testsFirst": "Bridge contract tests first fail to collect because the declared module does not exist. Tests then verify immutable source/CPU identity before creation, no network/published image ports, nonroot UID, exact returned-container cleanup, original bytes/headers/non-success responses, disconnect/size bounds and invalid/failing transport without a fabricated receipt.",
+    "localImage": {
+      "image_id": "sha256:59cba377ca8585178c21e2db6bbe1304661d3d4ec7530bd1e8daa1932e9fd9f1",
+      "source_commit": "3a2c4b33769f26eaa97bd9eeb0c1ce3a6d4fdb50",
+      "architecture": "aarch64",
+      "docker_architecture": "arm64",
+      "pythonFiles": 151,
+      "uiFiles": 4,
+      "allProductFilesMatch": true
+    },
+    "browser": {
+      "actualImageCampaign": 10,
+      "actualImageArchitecture": "aarch64",
+      "actualImageModes": [
+        "native",
+        "standalone"
+      ],
+      "normalComposedCampaign": 87,
+      "imageForms": [
+        "own alias",
+        "own private preferences",
+        "household",
+        "HA mapping/profile",
+        "pending activation/later participant profile"
+      ],
+      "assertions": "Each image journey checks actual inspected image ID, source and CPU metadata before resetting its own image-hosted SQLite. Real Chromium requests traverse an isolated docker-exec HTTP bridge into the installed production modules/UI. Exact 151Python/4UI byte inventories match the reviewed current package. No source-checkout server fallback, copied user storage or product authentication bypass."
+    },
+    "infrastructure": "Fixture-only provider replacement uses stdlib ExitStack/mock rather than shipping pytest into the image. The fixture is copied after image creation; image and installed product bytes stay unchanged. Two temporary containers use immutable image ID, networknone and UID65532 without published ports or host mounts. Loopback bridge preserves payload, original keys/context and response headers/status/body.",
+    "localChecks": {
+      "tooling": 162,
+      "toolingStatements": 214,
+      "toolingBranches": 98,
+      "toolingCoverage": 100,
+      "types": "runtime/catalog/E2E pass",
+      "normalBrowser": 87,
+      "scope": "Production1231frontend/4374backend coverage baseline remains unchanged; new-head CI will execute it independently."
+    },
+    "CI": "Both existing CPU jobs build exact current source and run their32container checks, then install the already-pinned Node/pnpm/Chromium toolchain and execute all10actual-image form journeys. Exact expected10/unexpected0/skipped0/flaky0 receipt is mandatory.",
+    "limitations": "Local actual image is aarch64/base3a2 because product runtime is unchanged. Fresh exact-head amd64/aarch64 evidence remains required. Fictional HA/Supervisor providers remain test-only. This closes the image/browser composition gap; full compatible application/data/generation rollback, full owning acceptance, human UX and owner adoption are still separate.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-image-browser-3a2c4b3",
+      "privateLocalOnly": true
+    },
+    "diagnostics": [
+      "Initial build terminates because the existing keychain helper is outside PATH; prepend its installed directory without credential/config changes.",
+      "Initial Ruff check cannot write the restricted worktree cache; unchanged no-cache validation passes. These are environmental tool conditions, not Copilot defects."
+    ],
+    "verifiedCurrentHead": {
+      "source": "6c1a0d2032cef328dc6e58dd2661232f1fbd364d",
+      "CI": "https://github.com/vypdev/domus/actions/runs/41630471010",
+      "amd64Job": 125898427295,
+      "aarch64Job": 125898427633,
+      "containerCasesPerCPU": 32,
+      "actualImageBrowserJourneysPerCPU": 10,
+      "frontend": 1231,
+      "backend": 4374,
+      "tooling": 162,
+      "supportedCoverage": "100% globally and per authored module",
+      "nativeReview": "https://github.com/vypdev/domus/actions/runs/41630471059/job/125898428229",
+      "review": "Complete context; 9/9 partitions; zero open/candidate/published/verification-required findings. Historical false premise automatically resolved."
+    }
+  },
+  "python314ReviewClarification": {
+    "sourceHead": "6e8c22135c019829f62e1ec28872783dc446be75",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4454147614",
+    "report": "https://github.com/vypdev/copilot/issues/831#issuecomment-6602904998",
+    "premise": "Review says comma-separated except types without parentheses cause SyntaxError in Python3. The required interpreter is3.14; PEP758 explicitly permits this syntax without an as binding.",
+    "independentProbe": "Actual CPython3.14.6 compiles the entire unchanged module and independently catches all five listed exception types. This separate language contract is not counted as product acceptance.",
+    "observedProductEvidence": "162tooling tests import/run the module; actual local image10journeys and normal87journeys pass. Current6e8amd64 hosted job125892918209 also passes32container and10actual-image browser cases. These could not run if the import were syntactically invalid.",
+    "consumerChange": "Name the same immutable exception tuple as _TRANSPORT_ERRORS. Equivalent behavior and clearer reading across language versions; no reproduced consumer SyntaxError, formatter/runtime change, threshold relaxation or Copilot change.",
+    "primarySources": [
+      "https://peps.python.org/pep-0758/",
+      "https://docs.python.org/3.14/whatsnew/3.14.html"
+    ],
+    "reviewState": "Current6e8 review complete9/9 publishes one open false-premise finding. Do not claim clean review or manually resolve it; a fresh native review is required for the equivalent readability change.",
+    "subsequentReview": {
+      "source": "6c1a0d2032cef328dc6e58dd2661232f1fbd364d",
+      "job": 125898428229,
+      "outcome": "Complete9/9, zero findings; historical thread automatically fixed/resolved by native review, not manually resolved."
+    }
+  },
+  "compatibleApplicationRollbackIncrement": {
+    "sourceBase": "6c1a0d2032cef328dc6e58dd2661232f1fbd364d",
+    "productionRuntimeChanged": false,
+    "testsFirst": "New CI assertion first fails because the immutable schema9 build is missing. After correcting an independent test-fixture import error, the actual-image test fails because its declared rollback program is missing. Original diagnostics are retained separately.",
+    "previousSource": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
+    "previousArchiveSHA256": "d8a9c4c1caf3acbb462ac21ec78ccbab05d756031880fd2f5013b4e528b45758",
+    "sourceVerification": "All232 build input files in the downloaded immutable archive match the original published Git tree. Newly built aarch64 image contains exactly151Python modules and4UI resources matching the original ae92 wheel.",
+    "localImage": {
+      "tag": "domus-administration-schema9-ci:87d726f",
+      "id": "sha256:8f0b4a0090cc04be0e003c9130ad549412abfe4bfc2831b68f04df48198aa405",
+      "source": "87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470",
+      "architecture": "arm64",
+      "pythonFiles": 151,
+      "uiFiles": 4,
+      "allFilesMatchOriginalWheel": true,
+      "originalWheelSHA256": "ae92de7841edf0d10dd2448fa6edc2594293a999b77c6f7884acaeb4cb0a7a8c"
+    },
+    "localCases": 4,
+    "modes": [
+      "native",
+      "standalone"
+    ],
+    "originalEventStates": [
+      "pending",
+      "acknowledged"
+    ],
+    "assertions": "Actual prior image creates owned installation/member/profile state and snapshot. Current image commits alias and independent private preferences, then actual console prepares/activates restoration. Actual prior image reopens selected generation with the same installation and original UI bytes; all8 current state/proof tables match the snapshot. All4 complete operation documents preserve namespace, fingerprint, result, time, audit/event payload, position and delivery; only current/archive provenance changes for the two later absent effects. Exact original replays return original IDs and historical status without changing database bytes, proofs or current state.",
+    "CI": "Both mandatory CPU jobs now build the immutable schema9 compatibility application and execute the four rollback scenarios within the full required container suite; no skips or continue-on-error. Fresh-head hosted evidence remains pending.",
+    "limitations": "Local actual execution is aarch64; exact-head amd64/aarch64 CI still required. Fictional verified human/providers and disposable Docker volumes; no owner HA adoption, schema downgrade, new migration or release claim. Full186-case semantic audit, required human UX and recurrence-dependent obligations remain separate.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-rollback-6c1a0d",
+      "privateLocalOnly": true
+    }
+  },
+  "readinessReviewClarification": {
+    "sourceHead": "9988e44849a9c50a11718aecf88fddddf3e6082d",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4454623826",
+    "report": "https://github.com/vypdev/copilot/issues/869",
+    "premise": "Detached inner launch is reported as a race despite the outer configured readiness GET forwarding to the inner server.",
+    "independentPrimaryProbe": {
+      "playwright": "1.64.1",
+      "coreBundleSHA256": "829521b67ed7be90c7d6d6098ff39f2241562d47e4ad7ccab13710924a56001d",
+      "observations": [
+        {
+          "status": 502,
+          "ready": false
+        },
+        {
+          "status": 503,
+          "ready": false
+        },
+        {
+          "status": 200,
+          "ready": true
+        }
+      ],
+      "scope": "Real pinned isURLAvailable helper and disposable loopback HTTP server; not product acceptance."
+    },
+    "consumerRegression": "Actual ASGI bridge contract: local metadata200 performs no proxy call; unavailable inner transport produces502; inner503/200 preserve exact body/status. All3readiness exchanges are GET /__fixture__/ready with empty body. Metadata cannot fabricate readiness.",
+    "consumerChange": "Regression and explanatory comments only; existing forwarding, timeout and readiness behavior unchanged. No redundant second internal wait or acceptance relaxation.",
+    "localCases": 14,
+    "currentReview": "9988native completed9/9 and published1false-premise finding; still open, no manual resolution. Fresh native review required for this clarification.",
+    "subsequentReview": {
+      "source": "f5715f4b5a1a77efa3d6cf5bda47089ca9d50bd4",
+      "job": 125920283653,
+      "context": "complete",
+      "analysisPartitions": 10,
+      "completedPartitions": 10,
+      "candidateFindings": 0,
+      "publishedFindings": 0,
+      "openFindings": 0,
+      "historicalResolution": "obsolete; automatically resolved by vypbot, no manual resolution",
+      "report": "https://github.com/vypdev/copilot/issues/869"
+    }
+  },
+  "imageFixtureShutdownIncrement": {
+    "sourceBase": "f5715f4b5a1a77efa3d6cf5bda47089ca9d50bd4",
+    "productionRuntimeChanged": false,
+    "observation": "Two owned disposable containers survived the prior completed local campaign with no host fixture process/listener. Actual2journey reproduction passes but leaves2containers.",
+    "testsFirst": "ASGI lifecycle assertion fails because shutdown completes with its container present. CI contract fails because survivor gate is missing. Original process/container identity and all teardown observations are retained.",
+    "diagnosis": "Pinned Playwright1.64.1 defaults to forceful SIGKILL when gracefulShutdown is unspecified. Its shipped declarations and runner implementation confirm this. An intermediate ASGI-only fix passes10journeys but still leaves2containers; it is retained as a failed cleanup attempt.",
+    "fix": "Use an exec-root server command and bounded SIGTERM5second shutdown; close exact owned container during ASGI lifespan.shutdown before reporting completion. Outer finally remains idempotent. Startup timeout30seconds, global timeout180seconds, retries0, current product code and owner HA are unchanged.",
+    "localActualImageJourneys": 10,
+    "remainingFixtureContainers": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "toolingTests": 165,
+    "toolingCoverage": "214statements/98branches,100%",
+    "CI": "Both required CPU jobs assert docker ps --all --quiet --filter label=domus.browser-fixture=true is empty after all10actual-image journeys. A survivor fails application CI.",
+    "limitations": "Verified graceful Linux/macOS runner teardown. User-space cleanup cannot execute after arbitrary SIGKILL or host/daemon loss. Fresh exact-head hosted CI/native review remains required.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-rollback-6c1a0d",
+      "privateLocalOnly": true
+    }
+  },
+  "persistentImageTransportIncrement": {
+    "sourceBase": "8d8185d4951f2abdebc5a8b0e4964528a86fcf0a",
+    "productionRuntimeChanged": false,
+    "observedFailure": {
+      "job": 125926080155,
+      "architecture": "amd64",
+      "containerCasesPassed": 36,
+      "browserPassed": 9,
+      "browserDidNotRun": 1,
+      "reason": "Existing180second global browser timeout exhausted; failed scope is not called accepted."
+    },
+    "testsFirst": "Concurrent bridge integration test first rejects unsupported channel_factory. Response-identity regression first fails because the unframed channel accepts a wrong frame as the current result. Tests then enforce independent per-thread channels, exact large/concurrent payloads, one process reused, bounded read/write/queue failures, strict frame identities, incomplete/oversized/coalesced unsolicited output and exact idempotent owned-process retirement.",
+    "implementation": "Each host transport thread owns one bounded stdio worker in the same verified isolated image. Every frame carries a checked positive sequence and makes one fresh inner HTTP connection, preserving original method/path/query/header/body/status and duplicate cookies. No automatic request replay, worker restart or success fabrication. Actual concurrency across actors is retained.",
+    "limits": "HTTP15second read timeout, host30second frame deadline,2MiB HTTP body bound and180second suite limit are preserved. New16MiB frame bound includes encoded body/headers; malformed/foreign/truncated frame fails closed. Test-only modules are not installed into the product image.",
+    "microbenchmark": {
+      "before": {
+        "source": "8d8185d4951f2abdebc5a8b0e4964528a86fcf0a",
+        "mode": "native",
+        "architecture": "aarch64",
+        "requests": 40,
+        "seconds": 5.015619208978023,
+        "dockerProcesses": 40,
+        "scope": "Actual loopback read-only fixture readiness microbenchmark, not full product acceptance."
+      },
+      "after": {
+        "requests": 40,
+        "seconds": 0.023703958024270833,
+        "workers": 1,
+        "workerPIDs": [
+          93638
+        ],
+        "transportSHA256": {
+          "tests/browser/image_bridge.py": "b10ff0676b6ca0b4dedde75181e0152106e5dd27431f67d162cb51e02b262262",
+          "tests/browser/image_channel.py": "e5e1b40f02286a4a76d7ec7a3b54befc9b0773c9d15db3be241a60e7c78c2117"
+        },
+        "scope": "Actual read-only readiness microbenchmark using current framed transport. Not full product latency or acceptance."
+      },
+      "limitations": "Same40read-only fixture readiness requests on localaarch64. This measures transport overhead, not product latency or exact-head hosted acceptance."
+    },
+    "localActualImageAdministration": {
+      "cases": 32,
+      "stats": {
+        "startTime": "2026-11-03T13:22:02.328Z",
+        "duration": 50992.67,
+        "expected": 32,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "remainingContainers": 0,
+      "architecture": "aarch64",
+      "imageSource": "3a2c4b33769f26eaa97bd9eeb0c1ce3a6d4fdb50",
+      "scenarios": "All16administration cases in each native/standalone composition, including real high-revision wire/SQLite state, independent-writer race/lost reply, keyboard/CSP, actual trusted BFCache, public sessions-API closed-tab restoration and actual console restore/original replay fence."
+    },
+    "tooling": {
+      "tests": 178,
+      "statements": 214,
+      "branches": 98,
+      "coverage": 100
+    },
+    "CI": "Both mandatory CPU jobs now run the complete administration.spec.ts without --grep and require expected32/unexpected0/skipped0/flaky0 plus zero surviving fixture containers. The global timeout is unchanged. Fresh-head hosted CI and native review remain required.",
+    "SDD": "OriginalSDK7modules byte-verified; unchanged policy accepts format/consistency/catalog and all186retained cases with the2new test-infrastructure paths declared first. No owner case or threshold removed.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-rollback-6c1a0d",
+      "privateLocalOnly": true
+    }
+  },
+  "verifiedHouseholdDraftScopeIncrement": {
+    "sourceBase": "58957fc8b9da4ce85f0acbd75793f7351026c47a",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4455477782",
+    "classification": "Reproduced valid consumer finding; no upstream defect claim or manual resolution.",
+    "testsFirst": "All8new source-Chromium regressions fail on the prior renderer. Six form kinds retain former-household drafts despite matching installation/channel/subject/member/revisions. Detached confirmed household and preference controls emit old intents after household change or missing proof. Original8failure PNGs and logs are retained.",
+    "fix": "Private draft ownership and readiness require the verified household routing ID in addition to installation/channel/HA subject/member. Different or missing proof retires drafts and detached callbacks. Pending verification with no published view still preserves a same-owner draft for fresh matching proof; ordinary same-household translation/read-fact loss/revision updates do not rebase it.",
+    "localVerification": {
+      "frontend": 1239,
+      "supportedFrontendCoverage": "100% all4metrics globally and per31authored runtime files, independently audited",
+      "wholeCompiledPythonSQLite": 87,
+      "builtCatalog": 27,
+      "newCompiledScenario": "Both languages prove a detached confirmed save cannot emit the former household intent after a verified household switch, and explicit reopening uses current facts.",
+      "types": "Runtime/catalog pass",
+      "package": {
+        "wheelSHA256": "6578a595350e00b0df2fb7e12a436a100a6cf8a661ad4147a5fc074d6de05351",
+        "PythonModules": 151,
+        "UIFiles": {
+          "index.html": "fb4f250c231b0f0b07fd4d99fa00925610f0573b01f033a4bf75178f860887fd",
+          "assets/index-CS8EClQ3.js": "c3103fcc8d107cff163ab5a98c8a587ef5203367624dd1f23fea56b96227dedd",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          ".vite/manifest.json": "07f6f6a7f49b0c8691b16dd3e687e17698b4e540e6f3cd2577fcfc187514f159"
+        },
+        "allSourceAndWheelBytesMatch": true,
+        "fixtureExcluded": true,
+        "acceptance": "Local candidate; pending composed/catalog/hosted/native verification"
+      },
+      "synchronousWindow": "Former confirmation is inert both immediately after current proof changes, before Lit repaints, and after the old DOM is removed. Source and compiled-catalog assertions cover both moments."
+    },
+    "artifactDiagnostics": [
+      "First compiled-catalog probe cannot run because no prebuilt catalog exists; its404/startup failure is an environment observation, not a product regression. Freshly built27case catalog subsequently passes.",
+      "Current packaging guard correctly rejects the old UI declaration after rebuild. All151Python/4UI wheel bytes and fixture exclusion are checked independently before updating currentSourcePackage; historical entry/Edge.5 declarations remain unchanged."
+    ],
+    "rollback": {
+      "SHA256": "6f35282534510ee2dbcc3bbd28607d8d9fefdc531f2f23a1c6c26f14ef548754",
+      "state": "Prior verified package copied and byte-checked before rebuild. Older ae92 rollback retained until candidate verification.",
+      "limitation": "Prior package contains the pre-fix presentation scope behavior; it is an emergency binary/data compatibility reference, not an owner HA promotion."
+    },
+    "unchanged": "151Python modules, schema9/history, all journal formats, original request/key/payload semantics, gateway and Copilot source/resources/config/workflows/credentials/bounds. Owner HA untouched.",
+    "pending": "Exact published candidate image and both hosted CPU jobs, current native review and full owning acceptance remain required. Existing186owner cases and required human UX are not inferred from unit counts.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-rollback-6c1a0d",
+      "privateLocalOnly": true
+    }
+  },
+  "confirmationSummaryContractClarification": {
+    "sourceBase": "9ba10d7e559538fd4a05b6d45c03c418077b472a",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4456137778",
+    "report": "https://github.com/vypdev/copilot/issues/872",
+    "classification": "Completed native review uses the edit-state premise at a retained confirmation-summary assertion. Both same-head deployment cases pass; no input exists until explicit reset.",
+    "clarification": "Before reset require no household-name textbox and the exact original value in dl dd. After reset require the old summary absent and the existing textbox value assertion for current facts. Original value/effect checks, timeout180seconds and retries0 are retained.",
+    "localVerification": {
+      "targetedSourceCases": 2,
+      "actualImageAdministrationCases": 32,
+      "actualImageAdministrationSeconds": 50.0,
+      "actualImageContainerCases": 10,
+      "pairedRollbackCasesIncluded": 4,
+      "imageSource": "9ba10d7e559538fd4a05b6d45c03c418077b472a",
+      "imageId": "sha256:144475004a62bed76c2bc0752688638aa7a8b3527ba2d77f8a530b187f838ceb",
+      "architecture": "aarch64"
+    },
+    "unchanged": "No product runtime/UI/package change, no Copilot code/resources/configuration/workflows/models/credentials/bounds change and no manual thread resolution.",
+    "limitation": "Local actual-image execution is distinct from fresh-head hosted/native verification and remaining whole-feature acceptance."
+  },
+  "maximumUnicodeRosterAcceptance": {
+    "sourceBase": "76e20ba77a39d0cec0ee838dffc6806bae11ea92",
+    "retainedCase": "household-admin-C57",
+    "testsFirst": {
+      "cases": 8,
+      "seconds": 9.498535,
+      "result": "All pass against the existing compiled renderer before the new story is introduced. No product layout correction was required. Original test source, raw log, statistics and four PNGs are retained."
+    },
+    "story": "domus-household-administration--maximum-labels",
+    "fixture": {
+      "participants": 256,
+      "HANameCodePoints": 256,
+      "HANameUTF8Bytes": 1024,
+      "aliasRows": 128,
+      "aliasCodePoints": 80,
+      "aliasUTF8Bytes": 320,
+      "fallbackRows": 128,
+      "identity": "Independent fictional HA/member IDs; aliases never select identity."
+    },
+    "journeys": {
+      "cases": 8,
+      "locales": [
+        "en",
+        "es"
+      ],
+      "deploymentPresentations": [
+        "native",
+        "standalone"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "viewport": {
+        "width": 360,
+        "height": 900
+      },
+      "reducedMotion": true
+    },
+    "assertions": [
+      "Every rendered row and text-line rectangle remains within horizontal bounds; status and all 511 available actions remain visible, unclipped and usable. Document width never exceeds 360px.",
+      "The final member retains its complete maximal alias, HA name, stored restricted/active status, enabled management and alias actions. Management shows the exact membership reference and Cancel restores focus.",
+      "The maximal alias remains editable. Reversing all 256 rows preserves the selected membership and unsaved 80-code-point alias. Review shows that same reference and Save emits exactly one original revision-11 alias intent for it.",
+      "No foreign requests, browser errors or actual mutation requests occur. These assertions inspect the actual built component; they do not claim a server write or live HA directory."
+    ],
+    "localVerification": {
+      "builtCatalogStats": {
+        "startTime": "2026-11-03T15:29:26.610Z",
+        "duration": 22287.249,
+        "expected": 36,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "catalogCases": 36,
+      "runtimeAndCatalogTypes": "PASS",
+      "originalSDK": "3e7ceea08e6131360e026937d1c0cc1b120472e0; 7 original policy modules byte-verified; current companion format/consistency/catalog PASS against its original owning baseline. No SDK or owning cases changed."
+    },
+    "visualInspection": {
+      "reviewer": "Codex (agent), not a human reviewer",
+      "artifacts": [
+        "unicode-roster-light.png",
+        "unicode-roster-dark.png",
+        "unicode-selected-light.png",
+        "unicode-selected-dark.png"
+      ],
+      "observed": "Full alias/provider name wrap; stored status, both roster actions and selected confirmation/reference remain readable. No UI change was needed.",
+      "limitation": "Required human UX review remains unfulfilled by this agent inspection."
+    },
+    "sourceHashes": {
+      "frontend/stories/administration.stories.ts": "d2920eb975b88a0a498b4a6e3100ecdb5ace1c32232571082e6744babfd154c2",
+      "frontend/tests/e2e/catalog.spec.ts": "286c71b8cc33978a402ff875d787e61a4fddcf0f22769d6ad0a737c0be0c0dda"
+    },
+    "productionRuntimeChanged": false,
+    "package": {
+      "SHA256": "6578a595350e00b0df2fb7e12a436a100a6cf8a661ad4147a5fc074d6de05351",
+      "state": "Verified current package remains byte-identical; 151 Python/four UI payload and all runtime/build inputs are unchanged. No housekeeping rebuild."
+    },
+    "coverageBasis": "Current hosted 76e proves 1,239 frontend executions and 100% on all four metrics globally/per 31 runtime files. No authored runtime file changes in this increment; fresh-head CI/native verification remains required.",
+    "remaining": "All 186 owning cases remain required; this acceptance closes only the stated rendered C57 gap. Full semantic audit, required human UX, compatible owner adoption and the complete product remain in progress.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-unicode-76e20ba",
+      "privateLocalOnly": true
+    }
+  },
+  "fencedMockupClarification": {
+    "sourceBase": "2155e4b58c46a65bd31c5994eef0fb67c0a904fd",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4456858943",
+    "upstreamReport": "https://github.com/vypdev/copilot/issues/873",
+    "classification": "False live-navigation premise for literal fenced Markdown source. Actual GitHub GFM rendering and an unfenced positive control disprove active broken links.",
+    "nativeReview": {
+      "run": 41665073143,
+      "job": 126018092821,
+      "context": "complete",
+      "partitions": "11/11",
+      "candidateFindings": 1,
+      "publishedFindings": 1,
+      "openFindings": 1
+    },
+    "counterevidence": {
+      "originalFragmentAnchors": 0,
+      "literalCodeStringsRetained": true,
+      "positiveControlFragmentAnchors": 2
+    },
+    "clarification": "Explain that the fenced mockup is literal source and illustrate the actual Edit household / Edit preferences button labels. No arbitrary document-anchor destinations or product navigation changes.",
+    "unchanged": "All 186 owning cases, original SDK, Copilot source/resources/configuration/workflows/models/credentials/bounds, product runtime/package, timeouts, retries and coverage thresholds. No manual thread resolution.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-unicode-76e20ba",
+      "privateLocalOnly": true
+    },
+    "limitation": "Fresh-head native review and product CI remain required; this is not full product/human-UX acceptance."
+  },
+  "edgeSixDeliveryIncrement": {
+    "status": "Locally verified immutable installation candidate; fresh published-head CI/native review and actual owner adoption remain required.",
+    "recordedAtUTC": "2026-11-03T17:11:55.977Z",
+    "definition": "addon-edge/config.yaml and addon-edge/Dockerfile",
+    "artifact": "addon-edge/artifact.json",
+    "sourceCommit": "3200bd9278f57f142ed03b54843a38a4138fc0af",
+    "sourceArchiveSHA256": "ca991d7b3560dbdb7a6a86a34eea19708f01f10c15da502e49ed8ab740a8533b",
+    "archiveVerification": {
+      "trackedGitBlobsAndModes": 585,
+      "allMatched": true,
+      "hostExtraction": false
+    },
+    "version": "0.0.0-edge.6",
+    "storageSchema": 9,
+    "frozenCompatibility": {
+      "path": "tests/fixtures/edge5-app/Dockerfile",
+      "SHA256": "aea2d7bc4d135e49827508f011bc1fadbd5f0d3f93b47538e07ed56652b5e28d",
+      "sourceCommit": "271a3a07feb1535f0a5ec8b55abb3de9aac049a9",
+      "version": "0.0.0-edge.5",
+      "storageSchema": 7,
+      "historicalEvidenceRebound": false,
+      "discoverableSupervisorConfig": false
+    },
+    "testsFirst": {
+      "red": 5,
+      "otherCasesPassed": 42,
+      "thenFocusedGreen": 204,
+      "reproduced": [
+        "old version/source pin",
+        "absent frozen compatibility recipe",
+        "absent artifact declaration",
+        "old CI build context"
+      ]
+    },
+    "actualLocalImage": {
+      "architecture": "arm64",
+      "HAArchitecture": "aarch64",
+      "imageID": "sha256:7d8b528a51f7c2f7873d636a420391522620b560f8816323d54dab53c1b2f4b1",
+      "productFileCheck": {
+        "pythonFiles": 151,
+        "uiFiles": 4,
+        "allDeclaredSHA256Matched": true,
+        "readAsNonroot": true
+      },
+      "containerCases": 4,
+      "containerCoverage": [
+        "all installed product files",
+        "native authority/listener/restart",
+        "same-listener standalone UI",
+        "actual Edge.5 upgrade/replay/restoration and schema9 downgrade refusal"
+      ],
+      "browserSuite": "frontend/tests/e2e/administration.spec.ts",
+      "survivingOwnedBrowserFixtures": 0,
+      "testHAProvider": "Fictional provider copied only into disposable containers after image build; no owner HA calls.",
+      "browserStats": {
+        "startTime": "2026-11-03T17:03:07.965Z",
+        "duration": 54002.547999999995,
+        "expected": 32,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    "permanentC25BoundaryCases": {
+      "backend": 19,
+      "Chromium": 19,
+      "exactAliasCodePoints": 80,
+      "rejectedCodePoints": 81,
+      "alphabet": "Astral Unicode with each of the 19 accepted non-control whitespace variants.",
+      "paths": [
+        "tests/backend/test_member_profiles.py",
+        "frontend/tests/administration.test.ts"
+      ]
+    },
+    "completeLocalVerification": {
+      "backendTests": 4395,
+      "backendRuntimeFiles": 151,
+      "backendStatements": 10438,
+      "backendBranches": 2928,
+      "frontendTests": 1258,
+      "frontendRuntimeFiles": 31,
+      "frontendStatements": 2384,
+      "frontendBranches": 1903,
+      "frontendFunctions": 504,
+      "frontendLines": 1580,
+      "toolingTests": 178,
+      "toolingStatements": 214,
+      "toolingBranches": 98,
+      "coverage": "100% globally and per runtime file in all supported metrics; independent source inventories pass.",
+      "nodePolicyTests": 38,
+      "pythonArchitectureExecutions": 51,
+      "ruff": "PASS",
+      "strictTypes": "PASS",
+      "documentationLinks": "PASS",
+      "originalSDDPolicyModulesByteVerified": 7,
+      "originalSDDSDK": "3e7ceea08e6131360e026937d1c0cc1b120472e0",
+      "owningDocumentsRetained": 20,
+      "requiredCasesRetained": 186
+    },
+    "ownerObservation": {
+      "method": "Fresh Chrome native UI through Home Assistant; no console code or credential extraction.",
+      "installedCurrent": "0.0.0-edge.5, running",
+      "installedRollback": "0.0.0-edge.3, stopped",
+      "Ingress": "Current identity verified; no configured household.",
+      "householdMutations": 0,
+      "applicationUpdates": 0,
+      "scope": "Observation only; does not establish Edge.6 adoption, owner data migration, live administration or human UX approval."
+    },
+    "limitations": [
+      "Both hosted CPU gates must run on the new definition commit.",
+      "The wheel SHA256 is the reviewed source-wheel reference; image acceptance independently checks all installed product files.",
+      "Current source/runtime and installation-definition identities are separate.",
+      "Owner backup/update/rollback and required human UX are separate acceptance.",
+      "Remaining domains, HA services/entities and complete Stable/Edge product are unfinished."
+    ]
+  },
+  "pendingAliasAndOwnerPreparationIncrement": {
+    "recordedAtUTC": "2026-11-03T17:49:08.466845+00:00",
+    "sourceBase": "fb92abe17594d1d2e6bf32d50ecd48b97d55fc51",
+    "scope": "Two new actual compiled-browser cases plus operator documentation; no authored runtime, schema, package pin or protected Copilot change.",
+    "case": "household-admin-C33",
+    "browserPath": "frontend/tests/e2e/administration.spec.ts",
+    "observations": [
+      "Actual administrator alias PUT preserves exact pending canonical membership/revision and HA metadata in both deployments.",
+      "One original alias key/body creates one receipt/audit/outbox effect; household/member counts, own preferences and mapping remain unchanged.",
+      "The other account remains pending until a separate reviewed restricted activation. The same participant then reads default private locale/summary/revision and saved public alias after reload.",
+      "Markup remains literal; no active b/img/script is rendered."
+    ],
+    "initialCasePreparation": {
+      "completeSuitePassed": 32,
+      "newCasesFailed": 2,
+      "cause": "The test assumed stored pending role restricted. Existing enrollment stores an inactive viewer; the activation editor separately defaults to restricted. The source/owning contract was inspected and only the test premise was corrected. This is not a product bug or a Copilot finding."
+    },
+    "targeted": {
+      "passed": 2,
+      "skipped": 0,
+      "flaky": 0
+    },
+    "actualInstallerImage": {
+      "sourceCommit": "3200bd9278f57f142ed03b54843a38a4138fc0af",
+      "imageID": "sha256:7d8b528a51f7c2f7873d636a420391522620b560f8816323d54dab53c1b2f4b1",
+      "arch": "aarch64",
+      "suite": {
+        "startTime": "2026-11-03T17:46:19.444Z",
+        "duration": 57192.952,
+        "expected": 34,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    "CIContractTestsFirst": {
+      "oldGateFailed": 1,
+      "otherContractCasesPassed": 39,
+      "completeToolingPassedAfterUpdate": 178,
+      "statements": 214,
+      "branches": 98,
+      "coveragePercent": 100
+    },
+    "CIRequirement": "Both CPU jobs require all34 actual-image administration journeys, zero skips/flakes and no surviving owned fixtures. Existing32 cases, timeout180seconds and retries0 remain unchanged.",
+    "ownerPreparation": {
+      "arch": "aarch64",
+      "installedVersion": "0.0.0-edge.5",
+      "latestOffered": "0.0.0-edge.5",
+      "installedSource": "https://github.com/vypdev/domus#feature/8-deliver-the-household-entry-interface-for-native-and-standalone-deployments",
+      "backup": "One completed selected-app compressed partial backup; job and children done without errors; metadata names only Domus Edge.5, no Core or unrelated folders. Private identifiers/screenshots remain local.",
+      "postBackupState": "Started, original public origin/private port/Core permission retained.",
+      "actualUpdate": false,
+      "backupRestoreExercised": false,
+      "householdMutation": false
+    },
+    "guidance": "docs/installation-home-assistant.md separates current sources, backup dispatch/completion, actual current status and historical Edge.1–3 receipts.",
+    "limitations": [
+      "Source and image identities remain separate from hosted definition-head verification.",
+      "New current-head hosted CPU, full coverage and native review gates are required.",
+      "A completed backup metadata check is not restored-data acceptance or an in-place source migration.",
+      "All186case audit, required actual human UX, owner adoption, recurrence23 and remaining full product remain unfinished."
+    ]
+  },
+  "frameIdentityReviewClarification": {
+    "recordedAtUTC": "2026-11-03T18:05:01.347945+00:00",
+    "reviewedHead": "127cb48647efb777be8494c40239fd048c751c72",
+    "nativeReview": {
+      "run": 41688262760,
+      "job": 126099694785,
+      "partitions": "12/12",
+      "context": "complete",
+      "publishedFindings": 1,
+      "finding": "tests/python/test_image_channel.py:115:valid-sequence-identity-treated-as-invalid"
+    },
+    "upstreamReport": "https://github.com/vypdev/copilot/issues/875",
+    "originalParameters": [
+      {
+        "repr": "0",
+        "type": "int"
+      },
+      {
+        "repr": "True",
+        "type": "bool"
+      },
+      {
+        "repr": "1.0",
+        "type": "float"
+      },
+      {
+        "repr": "'1'",
+        "type": "str"
+      }
+    ],
+    "independentCounterevidence": "Original four cases pass unchanged. Actual JSON/worker probe rejects all four and accepts integer1; bool/float equality to1 does not satisfy the exact-int guard. Pytest display ID1 belongs to string1, not an integer input.",
+    "clarification": "Name every original parameter type explicitly and add one real-worker valid-integer positive case. Preserve every original negative value and the unchanged exact integer transport guard.",
+    "localTooling": {
+      "passed": 179,
+      "statements": 214,
+      "branches": 98,
+      "coveragePercent": 100
+    },
+    "reviewedHeadProductCI": {
+      "run": 41688262792,
+      "aggregateJob": 126104925491,
+      "allTenJobs": "success",
+      "frontend": 1258,
+      "backend": 4395,
+      "tooling": 178,
+      "sourceBrowserJourneys": 89,
+      "catalogJourneys": 36,
+      "eachCPU": {
+        "containers": 40,
+        "actualImageBrowser": 34,
+        "skipped": 0,
+        "flaky": 0
+      }
+    },
+    "limitations": "Same-head product success and the actual probe disprove the published premise; fresh review of the clarification remains required. No manual finding resolution or full186-case/human/owner-adoption acceptance.",
+    "CopilotChanged": false
+  },
+  "progressScopeRecurrence127": {
+    "source": "127cb48647efb777be8494c40239fd048c751c72",
+    "run": 41688250286,
+    "job": 126099649754,
+    "timestamp": "2026-11-03T17:53:12.8553939Z",
+    "phase": "scope",
+    "reason": "scope-clause-limit",
+    "field": "$.lines",
+    "requirement": "none",
+    "sourceLine": "L155",
+    "reference": "5bd5bc8a-ba99-4ebc-aca4-eeb92d085a12",
+    "existingReport": "https://github.com/vypdev/copilot/issues/828#issuecomment-6599376807",
+    "scope": "Progress publication rejected; prior labels/assessments retained. Independent product CI passes. No returned clause/count or verified requirement identity is exposed, and no internal cause is inferred. No blind retry or bounds change."
+  },
+  "coldBackupPolicyIncrement": {
+    "recordedAtUTC": "2026-11-03T18:30:18.026677+00:00",
+    "sourceBase": "f459b149475032752476bfd90e77e932c8132b5a",
+    "version": "0.0.0-edge.7",
+    "testsFirst": {
+      "contract": "tests/backend/test_app_package.py::test_supervisor_backup_requires_the_app_to_stop_before_copying_private_storage",
+      "failed": 1,
+      "otherCasesPassed": 7,
+      "cause": "Missing backup key; Supervisor defaults to hot."
+    },
+    "policy": "backup: cold; no backup hooks or exclusions. Supervisor stops the app while copying private data.",
+    "primaryReference": "https://contributors.home-assistant.io/apps/reference/configuration/#backups",
+    "unchanged": [
+      "Runtime commit3200bd9278f57f142ed03b54843a38a4138fc0af and original archive digest",
+      "All151Python/fourUI fingerprints, wheel reference and schema9",
+      "Core permission/private listener and frozen Edge.5 compatibility recipe",
+      "Copilot sources/resources/workflows/configuration/credentials/bounds"
+    ],
+    "ownerEvidenceLimit": "Earlier completed warm backup has readable outer archive and verified size/hash/catalog only. Concurrent-write consistency and restore were not exercised. Older-app pre-update capture requires explicit stop, verified completion and prior-state-aware restart.",
+    "validation": "Local package, exact image, full backend/tooling, unchanged SDD validation and state-aware owner stopped capture/restart pass at their stated scopes. Fresh hosted current-head checks pending. No owner update/restore or required human UX is claimed.",
+    "localValidation": {
+      "backend": {
+        "passed": 4396,
+        "modules": 151,
+        "statements": 10438,
+        "branches": 2928,
+        "coveragePercent": 100,
+        "independentAudit": "pass"
+      },
+      "tooling": {
+        "passed": 179,
+        "statements": 214,
+        "branches": 98,
+        "coveragePercent": 100
+      },
+      "image": {
+        "id": "sha256:3a81102e2eca3f6ce2cf3bb6f8a1d8075b8fd64312e13f085ab03b7f467b697a",
+        "arch": "aarch64",
+        "productFilesVerified": 155,
+        "containerPassed": 4,
+        "browser": {
+          "startTime": "2026-11-03T18:31:10.011Z",
+          "duration": 65018.328,
+          "expected": 34,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "survivingFixtures": 0
+      },
+      "originalSDDPolicy": "Unchanged seven-module SDK validates all20owner documents and186retained/new cases; no acceptance inferred from format success."
+    },
+    "ownerStoppedCapture": {
+      "previousState": "started",
+      "stopResult": "ok; info displayed error, separate stats explicitly returned app_not_running_error. No graceful-exit classification is inferred.",
+      "backupResult": "One new local compressed partial backup of only Domus Edge.5, no Core or unrelated folders. Job and all children done with no errors. Private identifiers/screenshots retained locally.",
+      "restart": "CLI start observation timed out. A fresh independent app-info read confirms Edge.5 started with its original origin, private port and Core permission. The start request was not repeated.",
+      "restoreExercised": false,
+      "actualUpdate": false
+    }
+  },
+  "directoryBoundaryAcceptanceIncrement": {
+    "recordedAtUTC": "2026-11-03T19:06:57.357886+00:00",
+    "sourceBase": "e5eaa37a8179b314006de9babd0d86086bb35185",
+    "owningCase": "household-admin-C47",
+    "scope": "Actual bounded WebSocket adapter with deterministic fictional HA in both native and standalone modes; no owner HA directory modification.",
+    "testsFirst": {
+      "newCases": 6,
+      "firstExecutionPassed": 39,
+      "firstExecutionFailed": 0,
+      "interpretation": "Strengthens an explicit acceptance boundary already handled by the runtime; no production defect or runtime fix is claimed."
+    },
+    "assertions": [
+      "Exactly256 distinct canonical HA accounts are accepted without truncation, preserving provider order, names, eligibility and the exact own subject at the final position. Both modes perform only config/auth/list.",
+      "257 distinct valid accounts make the entire directory unavailable; a verified255-account prefix is never exposed as a complete selector. The fixture independently checks distinctness so duplicate rejection cannot explain success.",
+      "A malformed final account in an otherwise valid256-account response makes the entire directory unavailable rather than silently dropping the last account.",
+      "A standalone grant may separately verify only its exact own profile through auth/current_user; this does not certify the unavailable directory. Native technical credentials never use that fallback."
+    ],
+    "tests": "tests/backend/test_ha_member_profiles.py",
+    "testSourceSHA256": "b7d289bc5d1696112dec721368e7f682cc3a4c3e4eac2cd7ed3602799a205188",
+    "unchanged": "All runtime, Edge.7 source/archive/fingerprints/schema/permissions, frozen Edge.5 fixture and Copilot sources/resources/workflows/configuration/credentials/bounds.",
+    "validation": "Focused39cases and complete4402backend cases pass. All151runtime modules have100% supported statement/branch coverage, independently audited against actual source. Style, links and the unchanged original seven-module SDD SDK pass; all20owner documents and186cases remain. Fresh published-head CI/native review pending.",
+    "limits": "Only the stated provider-contract case is strengthened. Full retained186-case acceptance, actual owner Edge.7 installation/UI, restoration and required human UX remain separate and unfinished.",
+    "localValidation": {
+      "passed": 4402,
+      "runtimeModules": 151,
+      "statements": 10438,
+      "branches": 2928,
+      "missingLines": 0,
+      "missingBranches": 0,
+      "independentInventory": "PASS",
+      "runtimeUnchanged": true
+    }
+  },
+  "canonicalIdentityAcceptanceIncrement": {
+    "recordedAtUTC": "2026-11-03T20:54:43.943399+00:00",
+    "sourceParent": "e5f08ebe46f1ae3e2f81080746c0fd76c705b9fc",
+    "runtimePin": "3200bd9278f57f142ed03b54843a38a4138fc0af",
+    "scope": "Five retained administration acceptance boundaries strengthened against unchanged product runtime; no new production bug/fix or full-product acceptance claimed.",
+    "cases": {
+      "household-admin-C02": "Rendered own identity and roster both choose the verified HA name for null aliases, or localized neutral fallback for absent/denied/unavailable metadata, in English and Spanish. Exact labels, current actions and no unintended intents/identity disclosure are asserted.",
+      "household-admin-C42": "Denied/unavailable metadata preserves the complete actual canonical member-ID to HA-ID mapping, explicit source state and absent names, with identical database bytes.",
+      "household-admin-C43": "Actual task creation/completion records a restricted participant before archive/reactivation. The exact task/cycle/performance facts, original receipts, full earlier audit/outbox prefixes and canonical membership survive both transitions. Existing self-enrollment nonreplacement negatives remain required and unchanged.",
+      "household-admin-C48": "Every genuine supported pre-recurrence source1..7 upgrades with all six recurrence tables empty, while every original business/history row remains unchanged. Actual schema8 preservation and version-spoof refusal remain separately asserted.",
+      "household-admin-C50": "Existing orphan profile references are deliberately committed with foreign_keys OFF. They are not disclosed or repaired; valid-parent lookup fails closed, independent snapshot inspection rejects, no snapshot remains and source bytes are unchanged. Existing corrupt-value cases remain."
+    },
+    "results": {
+      "backendFocused": 140,
+      "backendFull": 4404,
+      "backendModules": 151,
+      "backendStatements": 10438,
+      "backendBranches": 2928,
+      "backendSupportedCoverage": "100% globally and per module; independent source inventory audit passed",
+      "frontendFullChromium": 1263,
+      "frontendRuntimeFiles": 31,
+      "frontendCoverage": "100% lines/statements/functions/branches globally and per file; independent authored-file audit passed",
+      "frontendStrictTypes": "runtime and catalog passed",
+      "pythonStyle": "Ruff check and format-check passed for all changed Python tests",
+      "diffWhitespace": "passed"
+    },
+    "sourceHashes": {
+      "frontend/tests/administration-component.test.ts": "49b792cfb5047fcb92105b4399c61e221c73acdb9be3b3a9f16841fad2487516",
+      "tests/backend/test_household_roster.py": "9cf5e158e1a32382c8bef0d3d05d3a6a42ba88a5e4e822dccc03d5b30bf34d55",
+      "tests/backend/test_member_commands.py": "ce743b7ae206f93f2b503ec8f044d310332b7c9deee16b3b7ef5451dd2a5ed3d",
+      "tests/backend/test_sqlite_member_profiles.py": "960353cf1137aa181bc28065c5dac5caadca90e077d1c8d6d91e0ba2f201d8ca"
+    },
+    "testPreparation": "The first focused frontend run had six assertion failures because the new test passed translation-helper arguments in reverse order. Corrected only the test call, then the complete1263-test suite and strict types passed. This is not a reproduced runtime bug.",
+    "limits": [
+      "Current-head hosted CI/native review must run after publication; prior-head reviews are not acceptance of this new test increment.",
+      "No production/runtime/package/schema or Copilot source change; installed Edge.7 need not be rebuilt for these test-only assertions.",
+      "All186retained administration cases and20owner documents remain; other semantic gaps and actual human UX/restore acceptance remain open.",
+      "Actual owner fresh-install UI evidence remains separate from fictional-HA/SQLite/Chromium fixtures."
+    ]
+  }
+}

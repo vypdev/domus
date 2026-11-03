@@ -6,6 +6,8 @@ import {EntryRuntime} from './entry-runtime';
 import type {EntryBrowser} from './entry-runtime';
 import {language, message} from '../presentation/messages';
 import type {DomusApp, EntryIntent} from '../presentation/domus-app';
+import type {AdministrationIntent} from '../presentation/domus-administration';
+import {administrationCommand} from '../domain/administration-commands';
 import '../presentation/domus-app';
 
 export interface EntryPage extends EventTarget {
@@ -44,11 +46,22 @@ export function decodeIntent(value: unknown): EntryIntent | null {
   } catch {return null;}
 }
 
+/** Closed administration events never supply a principal, a context, a URL or an arbitrary transport method. */
+export function decodeAdministrationIntent(value:unknown):AdministrationIntent|null {
+  try {
+    const item=fields(value,['type'],['command','key']),type=item.type;
+    if(type==='submit') {fields(value,['type','command'],[]);return {type,command:administrationCommand(item.command)};}
+    if(type==='recover'||type==='dismiss') {fields(value,['type','key'],[]);return {type,key:identifier(item.key)};}
+    check(type==='refresh');fields(value,['type'],[]);return {type};
+  }catch{return null;}
+}
+
 /** Wire only this document's owned nodes/capabilities; never inspect the HA parent or private storage. */
 export function mountEntry(page: EntryPage): PageMount {
   const doc = page.document; mounts.get(doc)?.();
   const lifetime = new AbortController(), widget = new AbortController();
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
+  let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
     stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); error?.remove();
@@ -84,7 +97,36 @@ export function mountEntry(page: EntryPage): PageMount {
       elapsed: () => page.performance.now(), random: bytes => page.crypto.getRandomValues(bytes),
       navigate: path => page.location.assign(path), events: page, visibility: doc,
       schedule: (tick, delay) => {const id = page.setTimeout(tick, delay); return () => page.clearTimeout(id);}};
-    const active = new EntryRuntime(source.target, browser, view => {element.view = view;}, fail); runtime = active;
+    const active = new EntryRuntime(source.target, browser, (view,administration) => {
+      element.view=view;element.administration=administration;
+      const context=administration?.session?.context,member=administration?.access?.member;
+      const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
+      const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
+      const retired=view.phase==='closed'||view.notice==='context_changed'||(view.phase==='ready'&&view.decision?.state!=='active');
+      if(retired||(administration!==null&&owner===null)) {
+        const entryContext=view.session?.context;
+        const entryKey=entryContext?JSON.stringify([entryContext.installationId,entryContext.channel,entryContext.subject]):null;
+        const keepUnboundChoice=localeOwner===null&&temporaryLanguage&&temporaryContext===entryKey;
+        localeOwner=null;preferenceIdentity=null;hadPreference=false;
+        if(!keepUnboundChoice){temporaryLanguage=false;temporaryContext=null;element.language=language(null,page.navigator.language);}
+      }else if(owner!==null) {
+        if(owner!==localeOwner) {
+          const keepInitialChoice=localeOwner===null&&temporaryLanguage&&temporaryContext===contextKey;
+          localeOwner=owner;preferenceIdentity=null;hadPreference=false;
+          if(!keepInitialChoice){temporaryLanguage=false;temporaryContext=null;element.language=language(null,page.navigator.language);}
+        }
+        const preferences=administration!.preferences;
+        if(preferences!==null) {
+          const identity=JSON.stringify([preferences.revision,preferences.locale,preferences.routine_participation_summaries]);
+          if((identity!==preferenceIdentity&&(preferenceIdentity!==null||preferences.locale!==null||!temporaryLanguage))
+              ||(!hadPreference&&!temporaryLanguage)) {
+            element.language=language(preferences.locale,page.navigator.language);temporaryLanguage=false;temporaryContext=null;
+          }
+          preferenceIdentity=identity;hadPreference=true;
+        }else {hadPreference=false;if(!temporaryLanguage)element.language=language(null,page.navigator.language);}
+      }
+      doc.documentElement.lang=element.language;
+    }, fail); runtime = active;
     element.addEventListener('domus-detached', dispose, {signal: widget.signal});
     element.addEventListener('domus-intent', async event => {
       if (event.target !== element) return;
@@ -92,7 +134,11 @@ export function mountEntry(page: EntryPage): PageMount {
         const intent = decodeIntent((event as CustomEvent<unknown>).detail);
         if (intent === null) return;
         switch (intent.type) {
-          case 'language': element.language = intent.language; doc.documentElement.lang = intent.language; break;
+          case 'language': {
+            element.language=intent.language;doc.documentElement.lang=intent.language;temporaryLanguage=true;
+            const context=active.view.session?.context;
+            temporaryContext=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;break;
+          }
           case 'setup': await active.submitSetup(intent.name, intent.timeZone); break;
           case 'request_membership': await active.requestMembership(); break;
           case 'recover': await active.recover(intent.key); break;
@@ -104,6 +150,18 @@ export function mountEntry(page: EntryPage): PageMount {
         }
       } catch {fail();}
     }, {signal: widget.signal});
+    element.addEventListener('domus-administration-intent',async event=>{
+      if(event.target!==element)return;
+      try {
+        const intent=decodeAdministrationIntent((event as CustomEvent<unknown>).detail);if(intent===null)return;
+        switch(intent.type){
+          case 'submit':await active.submitAdministration(intent.command);break;
+          case 'recover':await active.recoverAdministration(intent.key);break;
+          case 'dismiss':await active.dismissAdministration(intent.key);break;
+          case 'refresh':await active.refresh();break;
+        }
+      }catch{fail();}
+    },{signal:widget.signal});
     roots[0].replaceChildren(element);
     ready = active.start().catch(() => {fail();});
   } catch {fail(); ready = Promise.resolve();}

@@ -2,14 +2,19 @@
 
 The current development backend supports public aliases and owner-private preferences in both
 native Home Assistant Ingress and standalone deployments. It also exposes a bounded verified-name
-roster and current-authorized directory facts. The complete administration workspace remains under
-development. Installed owner Edge.5 is unchanged;
+roster and current-authorized directory facts. The development browser exposes roster, own alias/preferences, household, member and access-rule
+editors with explicit review and confirmation. Complete acceptance remains under development. Installed owner Edge.5 is unchanged;
 this source work does not publish a release or upgrade an installation.
 
 Use the existing verified session. With the appropriate current permission, an API client can read
 the public presentation, then submit its revision and an explicit alias. Null removes an alias;
 literal text remains presentation only and never changes identity or permissions. The absence of a
 saved alias does not fabricate a verified HA name or avatar.
+
+Reading your own alias and its revision requires either member read or your own preference read.
+It does not require permission to view the roster. Reading another participant's public alias
+still requires member read. The browser controller reads your public presentation independently
+of roster availability, so a missing roster does not silently disable a permitted own-alias edit.
 
 Own preferences start with locale null (follow the browser, then English) and routine summaries
 enabled. Save an explicit English/Spanish choice or null, the summary boolean and the independent
@@ -37,14 +42,27 @@ temporary HA outage does not authorize a retry or rebase. Review current state b
 new work. An unexpired existing session may retain local reads during a temporary HA outage, while
 changes remain blocked.
 
-The separate browser administration recovery policy and storage adapter are implemented and tested,
-but are not yet connected to the workspace. Their requests retain exact original intent for up to
+The browser runtime composes the separate administration recovery policy and storage adapter.
+Their requests retain exact original intent for up to
 one hour, with at most eight requests and 65,536 bytes shared across account/installation/channel
-contexts. A current view hides other contexts' pending work without deleting it. This source
-foundation does not yet provide a browser recovery action or automatically resend a mutation.
+contexts. A current view hides other contexts' pending work without deleting it. The workspace renders an explicit administration recovery action. Recovery remains explicit;
+the runtime does not automatically resend a mutation or query an original result.
 
-See the [API contract](household-api.md), [architecture](architecture-household-administration.md)
+The document runtime now coordinates entry and administration proof, earlier lease expiry,
+current grants, original results and disposal. An unavailable household read preserves independently
+verified access only after a current authorization check. The coordinator retains actionable conflict
+and recovery notices and fences late logout responses. After every explicit administration action,
+fresh proof replaces private facts even when an invalid draft, missing original or read-only lease
+prevented sending. A replacement membership cannot inherit the prior member's displayed preferences,
+and an empty action error remains bound to its verified account context. The runtime schedules both
+proof and journal deadlines, closes both controllers on exit and rechecks proof after BFcache
+restoration. The complete owning-case audit, human UX review and owner adoption remain under development in
+[issue #27](https://github.com/vypdev/domus/issues/27). Current scoped verification is recorded in the
+[browser coordination evidence](evidence/household-administration-browser.json).
+
+See the [workspace and operations guide](household-administration-operations.md), [API contract](household-api.md), [architecture](architecture-household-administration.md)
 and [migration/rollback limits](household-administration-migration.md). The original
 [72-case administration contract](../specs/household-administration.md),
 [integration refinements](../specs/household-administration-integration.md) and
-[workspace continuation](../specs/household-administration-workspace.md) remain required.
+[workspace continuation](../specs/household-administration-workspace.md) and
+[browser completion](../specs/household-administration-browser.md) remain required.
