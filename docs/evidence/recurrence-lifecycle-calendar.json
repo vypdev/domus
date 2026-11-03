@@ -1,0 +1,63 @@
+{
+  "recordedAtUTC": "2026-11-03T21:13:28.233144+00:00",
+  "status": "Pre-DDL source acceptance and prospective SDD correction; lifecycle implementation remains outstanding",
+  "issue": 23,
+  "nativePublication": {
+    "commit": "91adfe902055cb2c5bb42ceeb57c2b7ab53fb635",
+    "base": "8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9",
+    "run": 41715125228,
+    "job": 126193121874,
+    "scope": "Original native publication and exact managed branch verified; three prior owners byte-identical."
+  },
+  "consumerCorrection": {
+    "nativeOriginalCommit": "91adfe902055cb2c5bb42ceeb57c2b7ab53fb635",
+    "immutableBase": "8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9",
+    "characters": 53984,
+    "sha256": "0bcf08c32342824b586a5a3a447dc5acc5e00421adcbaf4e13b88f3106ed1c1b",
+    "sections": 20,
+    "retainedCountedCases": 93,
+    "retainedPublishedNonCountedAliases": 18,
+    "independentRefinements": 18,
+    "reciprocalRequirements": 9,
+    "pathOperations": 99,
+    "pathCounts": {
+      "create": 44,
+      "update": 48,
+      "reference": 7
+    },
+    "scope": "Independent consumer correction preflight only; original native SDK validation of this correction is still required.",
+    "upstreamReport": "https://github.com/vypdev/copilot/issues/858#issuecomment-6615277620",
+    "engineeringClarification": "Consumer grant closure is separate from human task-cycle closure; source period/source-row currencies are distinct."
+  },
+  "supportedSchema9Input": {
+    "path": "tests/fixtures/sqlite/v9.sql",
+    "sha256": "e3c81ef1fa42e1ea302de60662c10e7231466ab32da1931ecde1e6d7a49213b7",
+    "bytes": 46361,
+    "sourceRuntime": "e5f08ebe46f1ae3e2f81080746c0fd76c705b9fc",
+    "runtimePin": "3200bd9278f57f142ed03b54843a38a4138fc0af",
+    "origin": "Previously captured genuine schema8 migrated by the actual151-module reviewed runtime and two actual profile commands using fictional HA proof; not owner HA data."
+  },
+  "executedChecks": {
+    "pytest": {
+      "command": "uv run --frozen pytest tests/backend/test_recurrence_lifecycle_migration.py -q",
+      "passed": 3,
+      "assertions": [
+        "Exact captured SQL SHA256 before newDDL.",
+        "Current supported9read/reopen preserves2fixed slots,1pristine relative schedule/progress, null consumer evidence and explicit Spanish/false private preferences.",
+        "Independent snapshot schema9inspection preserves every original table row and source database bytes; source file is explicitly prepared0600."
+      ]
+    },
+    "documentation": "uv run domus-check docs: passed",
+    "style": "Ruff check and format-check for the new test file: passed",
+    "independentDraftPreflight": "20sections,9requirements,18refinements,18noncounted publishedaliases,93retained counted owners; reciprocal traceability,99actual prospective path operations and original owner bytes verified."
+  },
+  "testPreparation": "Raw SQL import initially produced a0644test file and the snapshot correctly rejected unsafe_installation_file. SQLiteDatabase.initialize is not the ownership-permission boundary. The fixture now explicitly prepares0600 before invoking snapshot creation; both original failures remain private diagnostic evidence. No production safety check changed.",
+  "pending": [
+    "Original native SDK validation/review of the contributor correction and new exact-head complete CI.",
+    "Actual relative bootstrap/successor, durable source inbox/closure/invalidation, shared fairness, reviewed schedule changes and actual task/calendar models/APIs/UI.",
+    "Genuine schema10migration/refusal/rollback if required by the planned durable lifecycle data.",
+    "Every93retained case,18refinement and publishedalias, actual human UX, HA companion surfaces, both deployment modes and isolated Stable/Edge full product acceptance."
+  ],
+  "noRuntimeOrCopilotChanges": true,
+  "goalComplete": false
+}

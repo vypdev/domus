@@ -20,6 +20,33 @@ Deliver actual relative initial and successor work, durable source-cycle process
 Configure and review a relative rule -> bounded maintenance observes and validates source facts -> one durable eligible obligation is created -> authorized calendar views distinguish planned, due, and actual facts.
 ```
 
+### Review correction of the first native publication
+
+The first native publication at 91adfe902055cb2c5bb42ceeb57c2b7ab53fb635 succeeded and remains immutable history. It generated 18 broader cases that overlap the retained owners instead of preserving the supplied independent refinements. The published references remain required below as integration aliases; they are not 18 additional counted journeys. Sections 14 and 17 instead count the 18 explicit technical refinements C19 through C36. An execution satisfying several obligations remains one execution.
+
+| Published integration alias | Retained owning/refinement coverage | Counting |
+|---|---|---|
+| recurrence-lifecycle-calendar-C01 | recurrence-execution-C06 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C02 | recurrence-execution-C07, recurrence-execution-C32 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C03 | recurrence-execution-C29, recurrence-calendar-C12, recurrence-calendar-C25 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C04 | recurrence-execution-C21, recurrence-execution-C33, recurrence-calendar-C29, recurrence-calendar-C30 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C05 | recurrence-execution-C24, recurrence-execution-C28 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C06 | recurrence-execution-C28, recurrence-execution-C30 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C07 | recurrence-execution-C17, recurrence-execution-C18, recurrence-execution-C19 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C08 | recurrence-execution-C26 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C09 | recurrence-execution-C27 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C10 | recurrence-execution-C34, recurrence-execution-C43 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C11 | recurrence-execution-C16, recurrence-execution-C23 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C12 | recurrence-execution-C16, recurrence-execution-C23, recurrence-lifecycle-calendar-C21 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C13 | recurrence-execution-C20, recurrence-execution-C31, recurrence-execution-C32, recurrence-execution-C36 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C14 | recurrence-execution-C20, recurrence-execution-C28, recurrence-execution-C30, recurrence-lifecycle-calendar-C22 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C15 | recurrence-execution-C37, recurrence-execution-C38, recurrence-execution-C39, recurrence-execution-C40, recurrence-execution-C41, recurrence-execution-C42 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C16 | recurrence-execution-C22, recurrence-execution-C45, recurrence-execution-C46, recurrence-execution-C48, recurrence-execution-C49, recurrence-lifecycle-calendar-C33 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C17 | recurrence-calendar-C16, recurrence-calendar-C17, recurrence-calendar-C18, recurrence-lifecycle-calendar-C35 | Required alias; not an additional counted case. |
+| recurrence-lifecycle-calendar-C18 | recurrence-execution-C38, recurrence-execution-C43, recurrence-execution-C44, recurrence-lifecycle-calendar-C31, recurrence-lifecycle-calendar-C32 | Required alias; not an additional counted case. |
+
+The native draft also cited nonexistent `validate:specifications` and `generate:specifications` pnpm scripts. Both were checked against the exact selected package and both literal commands exited with ERR_PNPM_NO_SCRIPT. The consumer correction uses existing documentation validation and states the original native SDK outcomes without inventing scripts. Reproduction and the separate semantic observations are reported in [copilot#858](https://github.com/vypdev/copilot/issues/858#issuecomment-6615277620). No Copilot source, workflow, model, cache source or bound is changed. This correction changes planned acceptance; it does not claim implementation or test execution.
+
 ## 2. Problem, current behavior, and evidence
 
 ### 2.1 Problem
@@ -38,7 +65,7 @@ Households need recurring task obligations that follow actual completed work, wi
 - Code/catalog references: `backend/src/domus/domain/recurrence_time.py`, `backend/src/domus/application/recurrence_ports.py`, `backend/src/domus/infrastructure/recurrence_time.py`, `backend/src/domus/domain/recurrence_rules.py`, `backend/src/domus/domain/recurrence_rule_text.py`, `backend/src/domus/domain/recurrence_periods.py`, `backend/src/domus/domain/nominal_recurrence.py`, `backend/src/domus/domain/recurrence_planning.py`, `backend/src/domus/application/fixed_recurrence.py`.
 - Existing owner specifications: `specs/recurrence-calendar.md`, `specs/recurrence-execution-foundation.md`, `specs/recurrence-storage-continuation.md`.
 - Issue evidence: https://github.com/vypdev/domus/issues/23. Reported checkpoint hashes, test counts, reviews, database digests, and preflight results are supplied issue claims; they are not independently reverified here.
-- Unknowns: actual future implementation paths, exact adapter/framework support, whether later DDL is necessary, and implementation/test evidence. These must be established during admitted implementation.
+- Unknowns: actual adapter behavior and implementation/test evidence. Section 15 declares prospective implementation paths; proposed durable inbox/closure data uses the next genuine schema, subject to implementation verification. These must be established during admitted implementation.
 
 ### 2.4 Retrospective classification (as-built baselines only)
 
@@ -141,20 +168,22 @@ Text equivalent: authorized configuration leads to bounded observation, current-
 
 Duplicate source identity returns the exact original outcome. Stale and out-of-order observations cannot reopen closure. Cancellation does not erase started work. A partial scan records continuation and never advances past unprocessed work.
 
+Recurrence closure is consumer-owned grant/effect proof, separate from human TaskCycle.closed_at, performance and approval facts. Later rejection/reopening remains processable to invalidate or flag the recorded successor while retaining the closed grant. Consuming a completion never fabricates closure or approval in the human task cycle.
+
 ## 7. User-facing configuration
 
 | Input | Type | Recommended default | Allowed values/range | Scope/persistence |
 |---|---|---|---|---|
 | Horizon | Integer days | 60 local days | 7..366 | Household policy snapshot |
 | Definition/slot work | Integer budgets | 50 definitions; 1,000 slots | Global across fixed and relative; minimum implementation limits must not exceed these maxima | One durable shared frontier per run |
-| Period scanning | Integer rows | Existing bounded value | Existing maximum 64,000; empty periods consume work | Per run, durable continuation |
+| Period scanning | Integer periods | 4,096 | Existing maximum 64,000; empty periods consume work | Per run, durable continuation |
 | Source scanning | Integer rows | 4,096 proposed technical default | 1..64,000 per run; every examined row, including duplicate/nonactionable/lookahead, consumes currency | Composition policy; independent from slot/period budgets |
 | Source page | Integer rows | At most 100 | No more than remaining scan budget | Per bounded read; no cursor skips unprocessed rows |
 | Preview expiry | Seconds | 300 | Fixed bounded expiry | Context-bound reviewed plan |
 | Calendar query | Days and rows | 31 days; 25 rows | 1..366 days and 1..100 rows; half-open range | Current authorized query; 300-second context-bound cursor |
 | Week start | Enum | Monday | Monday or Sunday | Private member preference; browser-neutral fallback |
 
-Validate cross-field bounds before effects. A run admits at most 50 visited definitions and 1,000 slot work across both recurrence types. A separate source currency counts every examined row. Exhaustion yields incomplete continuation; empty source or period scans consume budget. Resume must preserve a fair durable frontier so a noisy old source cannot starve others. Retain existing RRULE, interval, time-policy, exclusion/addition, text, and horizon bounds. Missing legacy values use retained defaults; unknown values fail closed, never coercing or silently truncating. One recommended configuration is the defaults above; a meaningful alternative is a 14-day horizon with Monday week start. Safety limits, current authorization, and closure semantics are not configurable.
+Validate cross-field bounds before effects. A run admits at most 50 visited definitions and 1,000 slot work across both recurrence types. A separate source currency counts every examined row. Exhaustion yields incomplete continuation; empty source or period scans consume budget. Resume must preserve a fair durable frontier so a noisy old source cannot starve others. Retain existing RRULE, interval, time-policy, exclusion/addition, text, and horizon bounds. Supported legacy defaults are established only during explicit migration or member creation. Ordinary reads never initialize or repair missing/corrupt records; unknown values fail closed without coercion or silent truncation. One recommended configuration is the defaults above; a meaningful alternative is a 14-day horizon with Monday week start. Safety limits, current authorization, and closure semantics are not configurable.
 
 ## 8. Clean Architecture
 
@@ -208,16 +237,19 @@ Show current status, completed facts, next transition, required human action, im
 
 > **Current status:** The task was completed on 1 January; approval is pending.
 >
-> **Action required:** Review the proposed next due date, 31 January.
+> **Next task:** The next obligation is due on 31 January.
+>
+> **Action required:** An adult can review the completed task.
 
 ## Progress
 
 - [x] Completion recorded from the current task cycle
-- [ ] Approval and successor eligibility are pending
+- [x] The next task is created under the default completion policy
+- [ ] Adult approval of the original work is pending
 
 ## What happens next
 
-Approval may make the 31 January obligation visible. It will not change its due date.
+Approval does not move the next due date. A task explicitly configured to wait for approval shows its next obligation only after approval, using the same actual-work-derived date.
 
 ## Links
 
@@ -254,6 +286,10 @@ Errors state impact, cause, action, and retained state in that order. A committe
 4. Calendar ranges and filters are closed and bounded. Outage reads retain only original expiry and current local masking; changes remain blocked.
 5. Preserve both existing closed intent namespaces and lossless int64 revisions. Do not log secrets or unnecessary household personal data. Reject replay, forged scope, stale revisions, and untrusted markup.
 
+The new recurrence intent journal is a separate closed namespace bounded to eight records, 65,536 UTF-8 bytes and one hour, without automatic expiry renewal. It preserves exact original keys/payloads and lossless int64 revisions; entry and administration journals keep their existing closed contracts and cannot cross-decode recurrence records. Never persist tokens or CSRF secrets in these journals.
+
+Calendar display choices use a separate owner-private record and original-action namespace, including against administrators. Explicit migration and deliberate member creation store the Monday default at independent revision 1; ordinary reads never create or repair missing/corrupt records. Existing locale, summary, public profile and membership revisions remain independent. Private preferences and raw provider payloads are excluded from logs, events and public projections.
+
 ## 12. Observability and operational UX
 
 - User-facing state: current, pending with continuation, review attention, paused, or safely blocked; distinguish stale projection from empty calendar.
@@ -265,67 +301,155 @@ Errors state impact, cause, action, and retained state in that order. A committe
 
 ## 13. Compatibility, migration, rollout, and rollback
 
-Preserve actual schema 9, original released fixtures 1..7, genuine schema 8 input, and supported schema 9 input. Any required DDL starts from schema 9 and uses the next genuine version; never relabel an unknown development layout or infer migration acceptance from a version edit. If new DDL is unnecessary, document that with inspected evidence. Preserve in-flight rules, progress, fixed slots, relative pristine progress, original business rows, receipts, profile preferences, and closed intent contracts. Migration must be transactional, independently writable/rollback-tested, and compatible with exact application/data recovery. Roll out only through the admitted Action-owned branch and ordinary review; no release, HA update, tag, deployment, or automatic production promotion is implied. Rollback preserves original history and never fabricates or replays absent effects.
+Preserve schemas1..8 and their immutable fixtures. Capture and publish the genuine supported schema-9 fixture before adding durable inbox/closure/attention/plan data as actual schema 10. Do not edit a version number to reinterpret an unknown layout. Normal operations reject an old supported source until explicit atomic initialization; failed migration preserves original rows/version. Validate canonical tagged data and scope/generation/original-proof relations on direct reads and independent snapshot inspection.
+
+The genuine schema-9 input retains old recurrence and profile/privacy facts. Current schema-9 images must refuse schema 10 without mutation, and rollback selects the compatible complete image/database/generation pair. Restore keeps later original processing history, including closure, without authorizing absent work. Both actual architectures and persistent deployment lifetimes require current-source upgrade/refusal/rollback checks. Stable/Edge remain isolated; no automatic promotion or owner HA update is implied. The Edge.7 administration UI was separately installed and tested on the owner's HA; those observations do not certify recurrence, migration or calendar acceptance.
 
 ## 14. Testing strategy and numeric budget
 
-The inventory below defines 18 new distinct cases. These are planned acceptance cases, not executed tests. The 93 retained cases from the three owning specifications remain mandatory and are not included in this companion’s derived budget. Budget areas are distinct, and each inventory row belongs to exactly one area.
+All 93 counted cases in the three unchanged owners and their integration aliases remain required. Published C01 through C18 remain required non-counted integration aliases as mapped above. The following 18 independently refined technical cases C19 through C36 replace no owning journey. These are prospective assertions, not passing results. One execution satisfying several obligations still counts as one execution.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| Domain/configuration/pure planning | 4 | Observable scenarios in the case inventory. |
-| State/application/idempotency/races | 6 | Observable scenarios in the case inventory. |
-| Application use cases | 3 | Observable scenarios in the case inventory. |
-| Adapters/provider contracts | 2 | Observable scenarios in the case inventory. |
-| Workflows, permissions, schemas, and setup | 1 | Observable scenarios in the case inventory. |
-| UI/UX/localization/sanitization | 1 | Observable scenarios in the case inventory. |
-| Integration/security/migration | 1 | Observable scenarios in the case inventory. |
-| Total | 18 | Distinct inventory cases; repeated executions do not add cases. |
+| State/application/idempotency/races | 6 | Concrete independent refinements in the inventory below. |
+| Application use cases | 4 | Concrete independent refinements in the inventory below. |
+| Adapters/provider contracts | 2 | Concrete independent refinements in the inventory below. |
+| Domain/configuration/pure planning | 1 | Concrete independent refinements in the inventory below. |
+| Integration/security/migration | 3 | Concrete independent refinements in the inventory below. |
+| Workflows, permissions, schemas, and setup | 1 | Concrete independent refinements in the inventory below. |
+| UI/UX/localization/sanitization | 1 | Concrete independent refinements in the inventory below. |
+| Total | 18 | Distinct refinement cases; repeated executions and published aliases do not add cases. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
-| recurrence-lifecycle-calendar-C01 | Domain/configuration/pure planning | RCL-01 | Relative bootstrap produces one stable nominal obligation without consuming a completion or duplicating manual first work. |
-| recurrence-lifecycle-calendar-C02 | Domain/configuration/pure planning | RCL-01,RCL-05 | Compatible reviewed adoption preserves exact unstarted revision; incompatible or started work is rejected for review. |
-| recurrence-lifecycle-calendar-C03 | Domain/configuration/pure planning | RCL-01,RCL-06 | Successor due date anchors to actual local work day, preserving instant wall time and date-only representation. |
-| recurrence-lifecycle-calendar-C04 | Domain/configuration/pure planning | RCL-05 | Pause, resume, overdue keep-visible, and explicit skip preserve nominal identity and record reason without award. |
-| recurrence-lifecycle-calendar-C05 | State/application/idempotency/races | RCL-02 | Duplicate live source observation returns the original successor identity and result. |
-| recurrence-lifecycle-calendar-C06 | State/application/idempotency/races | RCL-02,RCL-07 | Out-of-order historical absent completion or approval cannot grant an effect after cycle closure. |
-| recurrence-lifecycle-calendar-C07 | State/application/idempotency/races | RCL-02,RCL-08 | Independent writers race on one eligible cycle; one atomic effect and closure survive restart. |
-| recurrence-lifecycle-calendar-C08 | State/application/idempotency/races | RCL-03 | Rejection/reopening cancels only unstarted derived successor and retains reason/history. |
-| recurrence-lifecycle-calendar-C09 | State/application/idempotency/races | RCL-03 | Started or completed downstream work survives with review attention and no fabricated performance or compensation. |
-| recurrence-lifecycle-calendar-C10 | State/application/idempotency/races | RCL-05,RCL-07 | Lost response recovers exact original result under current authorization without creating a new key. |
-| recurrence-lifecycle-calendar-C11 | Application use cases | RCL-04 | Shared fixed/relative run admits no more than 50 visited definitions and 1,000 slot work with durable fair continuation. |
-| recurrence-lifecycle-calendar-C12 | Application use cases | RCL-04 | Source scan counts duplicate, nonactionable, historical, and lookahead rows against its separate budget and reports continuation. |
-| recurrence-lifecycle-calendar-C13 | Application use cases | RCL-05 | Reviewed preview/apply detects stale rule, policy, occurrence, and concurrent-start revisions before effects. |
-| recurrence-lifecycle-calendar-C14 | Adapters/provider contracts | RCL-02,RCL-07 | Source adapter pages bounded live and historical observations, revalidates current facts, and never advances past unprocessed rows. |
-| recurrence-lifecycle-calendar-C15 | Adapters/provider contracts | RCL-06,RCL-07 | Protected calendar adapter returns bounded half-open projection and context-bound cursor with current masking. |
-| recurrence-lifecycle-calendar-C16 | Workflows, permissions, schemas, and setup | RCL-04,RCL-08 | Both actual owned runtime lifetimes construct and stop/join their workers; schema input is migrated from genuine schema 9 without relabeling. |
-| recurrence-lifecycle-calendar-C17 | UI/UX/localization/sanitization | RCL-06,RCL-09 | English and Spanish agenda distinguish planned, due-only, actual, and approval facts with keyboard, narrow-screen, and non-color status support. |
-| recurrence-lifecycle-calendar-C18 | Integration/security/migration | RCL-07,RCL-09 | Both deployment surfaces reject forged scope, stale authority, unsafe cursor, and untrusted markup while preserving original operation recovery. |
+| recurrence-lifecycle-calendar-C19 | State/application/idempotency/races | RCL-01,RCL-08 | A restored relative bootstrap has a retained original but no task; a new runner preserves absence, original identities and zero additional receipt/event effects. |
+| recurrence-lifecycle-calendar-C20 | State/application/idempotency/races | RCL-01,RCL-05 | A reviewed manual adoption becomes incompatible before commit; it rejects the exact stale revision without a second initial task or partial mapping. |
+| recurrence-lifecycle-calendar-C21 | Application use cases | RCL-02,RCL-04 | A source page spends the final scan unit on a duplicate/nonactionable lookahead; no unread position is certified and a fresh process resumes the exact remaining work. |
+| recurrence-lifecycle-calendar-C22 | Adapters/provider contracts | RCL-02,RCL-07 | Current and historical rows have tied times or foreign scope; original source identity/position remains deterministic and no historical approval grants a successor. |
+| recurrence-lifecycle-calendar-C23 | State/application/idempotency/races | RCL-02,RCL-03 | A cycle closes under an old rule generation, then delayed completion/approval arrives after a rule edit and restore; durable closure prevents new work without rewriting original completion facts. |
+| recurrence-lifecycle-calendar-C24 | State/application/idempotency/races | RCL-03,RCL-08 | A downstream successor starts between invalidation planning and write; preserve its actual work, persist review attention once and invent no point/stock compensation. |
+| recurrence-lifecycle-calendar-C25 | Application use cases | RCL-04 | Fixed/relative backlogs and replayed slots share exactly one shared limit of 50 definitions and 1,000 slots ceiling; period and source exhaustion retain separate truthful continuations. |
+| recurrence-lifecycle-calendar-C26 | State/application/idempotency/races | RCL-04,RCL-02 | Repeated interruption after individual admission and a noisy unavailable source cannot skip unvisited peers; independent restarted runtimes preserve fair durable frontier and cycle closure. |
+| recurrence-lifecycle-calendar-C27 | State/application/idempotency/races | RCL-05,RCL-07 | A plan containing exclusions, reschedules and newly started work becomes stale; original apply cannot overwrite it, and lost-result recovery never replaces the key or payload. |
+| recurrence-lifecycle-calendar-C28 | Domain/configuration/pure planning | RCL-05,RCL-08 | Individually legal affected records exceed the complete canonical plan/result byte bound; preview/apply rejects without partial cancellation or silent truncation. |
+| recurrence-lifecycle-calendar-C29 | Application use cases | RCL-06 | Combined actual category/type/status/priority/member filters paginate with the same entry/count predicate; due-only dates and actual performers retain different meanings. |
+| recurrence-lifecycle-calendar-C30 | Application use cases | RCL-06,RCL-04 | A scan watermark advances while earlier source work remains unresolved; the calendar stays incomplete and never converts that watermark into an empty complete household. |
+| recurrence-lifecycle-calendar-C31 | Integration/security/migration | RCL-07,RCL-06 | Another current administrator alters a principal-bound cursor or own calendar preference result key; both deployments reject disclosure without changing bytes or extending an outage lease. |
+| recurrence-lifecycle-calendar-C32 | Integration/security/migration | RCL-07,RCL-09 | A calendar edit above 2^53 survives actual browser wire, SQLite and original recovery exactly; corrupt/foreign recurrence intent records cannot decode as entry/admin records. |
+| recurrence-lifecycle-calendar-C33 | Workflows, permissions, schemas, and setup | RCL-08 | The actual frozen9input upgrades atomically to schema 10 with two fixed slots, pristine relative progress, false private summaries and original evidence intact; an injected late failure preserves schema-9 bytes/version. |
+| recurrence-lifecycle-calendar-C34 | Integration/security/migration | RCL-08,RCL-02 | A compatible restored schema-10 generation retains later cycle closure/original proofs while its successor is absent; an actual schema-9 image refuses schema 10 and no edited header is treated as rollback. |
+| recurrence-lifecycle-calendar-C35 | UI/UX/localization/sanitization | RCL-09,RCL-06 | Actual EN/ES narrow-screen month-to-agenda keyboard navigation names planned/due/performed/approval times, retains inert reasons and shows incomplete processing independently of color. |
+| recurrence-lifecycle-calendar-C36 | Adapters/provider contracts | RCL-09,RCL-07 | Actual HA calendar retry preserves UIDs/offset policy and becomes unavailable on source failure; disabled external synchronization transmits no household records. |
 
-Repository-wide and changed-module statement/branch coverage must meet the repository’s supported thresholds; every authored module must reach complete supported statement and branch coverage. Pure policy requires complete branch coverage. Use deterministic clocks, IDs, fake source adapters, independent SQLite writers, rollback/restart/restore tests, and no real waits or live services. Add parsed contract checks for budgets, schemas, both deployment entrypoints, and runtime ownership. OpenAPI, browser, Storybook, real current-source images on both architectures, strict types, package, architecture, and unchanged original SDK checks apply where the implementation changes those surfaces. Manual UX evidence must review legibility, accessibility, localization, and truthful partial status. Planned cases are not evidence of execution.
+Tests first, strict types, real independent SQLite writers, deterministic clocks/provider failures, crash/restore, actual HTTP, Storybook, compiled browser and actual image acceptance. Require 100% supported coverage globally and per authored module: all four frontend metrics, backend statements/branches, independent authored-source inventories, and every-PR CI Check. Do not infer semantic or human acceptance from test counts. Preserve existing timeout, retry, privacy and architecture gates, and necessary actual failure evidence.
 
 ## 15. Documentation and discoverability
 
 | Path | Change |
 |---|---|
 | `specs/recurrence-lifecycle-calendar.md` | create |
+| `backend/src/domus/domain/relative_lifecycle.py` | create |
+| `backend/src/domus/domain/calendar_values.py` | create |
+| `backend/src/domus/application/relative_materialization.py` | create |
+| `backend/src/domus/application/recurrence_sources.py` | create |
+| `backend/src/domus/application/relative_lifecycle.py` | create |
+| `backend/src/domus/application/recurrence_review.py` | create |
+| `backend/src/domus/application/calendar_queries.py` | create |
+| `backend/src/domus/application/calendar_commands.py` | create |
+| `backend/src/domus/infrastructure/sqlite_relative_lifecycle.py` | create |
+| `backend/src/domus/infrastructure/sqlite_calendar.py` | create |
+| `backend/src/domus/entrypoints/recurrence_http.py` | create |
+| `backend/src/domus/entrypoints/calendar_http.py` | create |
+| `backend/src/domus/entrypoints/recurrence_dto.py` | create |
+| `backend/src/domus/composition/calendar.py` | create |
+| `frontend/src/domain/calendar.ts` | create |
+| `frontend/src/application/calendar-controller.ts` | create |
+| `frontend/src/adapters/calendar-http.ts` | create |
+| `frontend/src/adapters/calendar-journal.ts` | create |
+| `frontend/src/presentation/domus-calendar.ts` | create |
+| `frontend/src/presentation/calendar-messages.ts` | create |
+| `frontend/stories/calendar.stories.ts` | create |
+| `tests/backend/test_relative_materialization.py` | create |
+| `tests/backend/test_recurrence_source_observations.py` | create |
+| `tests/backend/test_relative_lifecycle.py` | create |
+| `tests/backend/test_sqlite_relative_lifecycle.py` | create |
+| `tests/backend/test_mixed_recurrence.py` | create |
+| `tests/backend/test_recurrence_review.py` | create |
+| `tests/backend/test_calendar_values.py` | create |
+| `tests/backend/test_calendar_queries.py` | create |
+| `tests/backend/test_calendar_http.py` | create |
+| `tests/backend/test_recurrence_http.py` | create |
+| `tests/backend/test_recurrence_lifecycle_migration.py` | create |
+| `frontend/tests/calendar-controller.test.ts` | create |
+| `frontend/tests/calendar-http.test.ts` | create |
+| `frontend/tests/calendar-journal.test.ts` | create |
+| `frontend/tests/calendar-component.test.ts` | create |
+| `frontend/tests/e2e/calendar.spec.ts` | create |
+| `tests/fixtures/sqlite/v9.sql` | create |
+| `tests/containers/test_relative_recurrence_image.py` | create |
+| `tests/containers/test_calendar_image.py` | create |
+| `docs/tasks/recurrence.md` | create |
+| `docs/tasks/calendar.md` | create |
+| `docs/evidence/recurrence-lifecycle-calendar.json` | create |
+| `specs/catalog.json` | update |
+| `specs/CATALOG.md` | update |
+| `backend/src/domus/domain/tasks.py` | update |
+| `backend/src/domus/domain/task_values.py` | update |
+| `backend/src/domus/domain/relative_recurrence.py` | update |
+| `backend/src/domus/application/ports.py` | update |
+| `backend/src/domus/application/recurrence_ports.py` | update |
+| `backend/src/domus/application/task_creation.py` | update |
+| `backend/src/domus/application/task_commands.py` | update |
+| `backend/src/domus/application/task_queries.py` | update |
+| `backend/src/domus/application/task_events.py` | update |
+| `backend/src/domus/application/fair_recurrence.py` | update |
+| `backend/src/domus/application/fixed_materialization.py` | update |
+| `backend/src/domus/application/relative_recurrence_commands.py` | update |
+| `backend/src/domus/infrastructure/sqlite.py` | update |
+| `backend/src/domus/infrastructure/sqlite_snapshots.py` | update |
+| `backend/src/domus/infrastructure/sqlite_recurrence_schema.py` | update |
+| `backend/src/domus/infrastructure/sqlite_relative_recurrence.py` | update |
+| `backend/src/domus/infrastructure/sqlite_relative_recurrence_records.py` | update |
+| `backend/src/domus/infrastructure/sqlite_recurrence_integrity.py` | update |
+| `backend/src/domus/infrastructure/sqlite_tasks.py` | update |
+| `backend/src/domus/infrastructure/recurrence_worker.py` | update |
+| `backend/src/domus/composition/recurrence.py` | update |
+| `backend/src/domus/composition/server.py` | update |
+| `backend/src/domus/composition/ingress.py` | update |
+| `frontend/src/composition/entry-page.ts` | update |
+| `frontend/src/presentation/domus-app.ts` | update |
+| `tests/browser/entry_server.py` | update |
+| `tests/backend/test_openapi.py` | update |
+| `tests/python/test_ci_contract.py` | update |
+| `.github/workflows/ci_check.yml` | update |
+| `architecture/python-application.ini` | update |
+| `tests/architecture/test_python_architecture.py` | update |
+| `docs/contracts/household-api.openapi.json` | update |
+| `docs/contracts/native-household-api.openapi.json` | update |
+| `docs/architecture-recurrence.md` | update |
+| `docs/tasks/execution.md` | update |
+| `docs/tasks/migration.md` | update |
+| `docs/development.md` | update |
+| `docs/operations.md` | update |
+| `docs/user-guide.md` | update |
+| `docs/acceptance-plan.md` | update |
+| `docs/roadmap.md` | update |
 | `specs/recurrence-calendar.md` | reference |
 | `specs/recurrence-execution-foundation.md` | reference |
 | `specs/recurrence-storage-continuation.md` | reference |
-| `specs/catalog.json` | update |
-| `specs/CATALOG.md` | update |
+| `specs/household-tasks.md` | reference |
+| `specs/task-execution-foundation.md` | reference |
+| `specs/household-administration.md` | reference |
+| `docs/contracts/home-assistant.md` | update |
+| `addon-edge/config.yaml` | reference |
 | `docs/product-vision.md` | update |
 | `docs/architecture.md` | update |
-| `docs/operations.md` | update |
-| `docs/user-guide.md` | update |
-| `docs/contracts/home-assistant.md` | update |
-| `docs/architecture-recurrence.md` | update |
 | `docs/evidence/recurrence-execution.json` | update |
 | `docs/evidence/recurrence-rules.json` | update |
-| `tests/fixtures/sqlite/v9.sql` | create |
 
-The fixture is required only if implementation needs it; declare it before a future commit, preserve existing fixtures, and do not imply it exists today. Update user guidance for configuration, calendar meanings, and reviewed changes; setup guidance for permissions and both deployments; operator guidance for continuation, restore, and cleanup; contributor guidance for ports, trust boundaries, migration, and architecture checks. Keep examples synchronized with executable fixtures/contracts. Validate navigation and run `pnpm run validate:specifications`; regenerate the catalog with `pnpm run generate:specifications` when catalog metadata changes.
+Operations are prospective and relative to the verified immutable base 8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9. Each create path is absent and each update/reference path exists there. Declare any additional actual implementation/test/integration paths before implementing them. Preserve the three retained owner documents byte-for-byte. The genuine supported schema-9 fixture must be published before further DDL; preserve released1..8fixtures.
+
+Document normal paths, current authorization, configuration precedence, pending/absent/unavailable states, original recovery, both deployments and compatible operator rollback. Run the actual existing `uv run domus-check docs` navigation/documentation check. Validate SDD format, consistency, reciprocal traceability, repository paths and catalog through the original unchanged native SDK. Regenerate the canonical catalog through its actual original publication/rendering flow when metadata changes; no nonexistent pnpm command or compatibility shim is introduced. Future source/test paths are declarations here, not false existing-file evidence in the catalog.
 
 ## 16. Acceptance
 
@@ -345,17 +469,17 @@ The fixture is required only if implementation needs it; declare it before a fut
 
 | Requirement | Cases |
 |---|---|
-| RCL-01 | recurrence-lifecycle-calendar-C01, recurrence-lifecycle-calendar-C02, recurrence-lifecycle-calendar-C03 |
-| RCL-02 | recurrence-lifecycle-calendar-C05, recurrence-lifecycle-calendar-C06, recurrence-lifecycle-calendar-C07, recurrence-lifecycle-calendar-C14 |
-| RCL-03 | recurrence-lifecycle-calendar-C08, recurrence-lifecycle-calendar-C09 |
-| RCL-04 | recurrence-lifecycle-calendar-C11, recurrence-lifecycle-calendar-C12, recurrence-lifecycle-calendar-C16 |
-| RCL-05 | recurrence-lifecycle-calendar-C02, recurrence-lifecycle-calendar-C04, recurrence-lifecycle-calendar-C10, recurrence-lifecycle-calendar-C13 |
-| RCL-06 | recurrence-lifecycle-calendar-C03, recurrence-lifecycle-calendar-C15, recurrence-lifecycle-calendar-C17 |
-| RCL-07 | recurrence-lifecycle-calendar-C06, recurrence-lifecycle-calendar-C10, recurrence-lifecycle-calendar-C14, recurrence-lifecycle-calendar-C15, recurrence-lifecycle-calendar-C18 |
-| RCL-08 | recurrence-lifecycle-calendar-C07, recurrence-lifecycle-calendar-C16 |
-| RCL-09 | recurrence-lifecycle-calendar-C17, recurrence-lifecycle-calendar-C18 |
+| RCL-01 | recurrence-lifecycle-calendar-C19, recurrence-lifecycle-calendar-C20 |
+| RCL-02 | recurrence-lifecycle-calendar-C21, recurrence-lifecycle-calendar-C22, recurrence-lifecycle-calendar-C23, recurrence-lifecycle-calendar-C26, recurrence-lifecycle-calendar-C34 |
+| RCL-03 | recurrence-lifecycle-calendar-C23, recurrence-lifecycle-calendar-C24 |
+| RCL-04 | recurrence-lifecycle-calendar-C21, recurrence-lifecycle-calendar-C25, recurrence-lifecycle-calendar-C26, recurrence-lifecycle-calendar-C30 |
+| RCL-05 | recurrence-lifecycle-calendar-C20, recurrence-lifecycle-calendar-C27, recurrence-lifecycle-calendar-C28 |
+| RCL-06 | recurrence-lifecycle-calendar-C29, recurrence-lifecycle-calendar-C30, recurrence-lifecycle-calendar-C31, recurrence-lifecycle-calendar-C35 |
+| RCL-07 | recurrence-lifecycle-calendar-C22, recurrence-lifecycle-calendar-C27, recurrence-lifecycle-calendar-C31, recurrence-lifecycle-calendar-C32, recurrence-lifecycle-calendar-C36 |
+| RCL-08 | recurrence-lifecycle-calendar-C19, recurrence-lifecycle-calendar-C24, recurrence-lifecycle-calendar-C28, recurrence-lifecycle-calendar-C33, recurrence-lifecycle-calendar-C34 |
+| RCL-09 | recurrence-lifecycle-calendar-C32, recurrence-lifecycle-calendar-C35, recurrence-lifecycle-calendar-C36 |
 
-Retained traceability remains in the three existing owner documents; this companion neither copies nor regenerates their inventories. The derived table above must link every RCL requirement to exactly the full case IDs in the inventory, with no unowned or undefined IDs.
+The table covers exactly the 18 independent refinements C19 through C36. The 93 retained owning cases and published integration aliases remain mandatory with their original mappings; they are not recounted here. Every requirement/case link must be reciprocal. Proposed inventories do not establish actual execution or acceptance.
 
 ## 18. Implementation sequence
 
@@ -381,7 +505,7 @@ Do not declare a planned acceptance case executed until its implementation evide
 - [ ] Migration starts from genuine supported schema 9 if needed and preserves fixtures and rollback evidence.
 - [ ] User, setup, operator, contributor, migration, and troubleshooting documentation is discoverable and validated.
 - [ ] Required generated artifacts and applicable OpenAPI/browser/Storybook, architecture, package, type, image, and CI checks pass; no unresolved Bugbot finding remains.
-- [ ] `specs/catalog.json` evidence and `specs/CATALOG.md` are current and `pnpm run validate:specifications` passes.
+- [ ] `specs/catalog.json` evidence and `specs/CATALOG.md` are current; actual documentation checks and the original native SDK format/consistency/catalog gates pass.
 - [ ] No readiness-blocking decision remains unresolved; no release, deployment, HA update, or promotion is inferred.
 
 ## 20. References and decisions
