@@ -950,5 +950,32 @@
       "root": "/private/tmp/domus-admin-unicode-76e20ba",
       "privateLocalOnly": true
     }
+  },
+  "fencedMockupClarification": {
+    "sourceBase": "2155e4b58c46a65bd31c5994eef0fb67c0a904fd",
+    "finding": "https://github.com/vypdev/domus/pull/28#discussion_r4456858943",
+    "upstreamReport": "https://github.com/vypdev/copilot/issues/873",
+    "classification": "False live-navigation premise for literal fenced Markdown source. Actual GitHub GFM rendering and an unfenced positive control disprove active broken links.",
+    "nativeReview": {
+      "run": 41665073143,
+      "job": 126018092821,
+      "context": "complete",
+      "partitions": "11/11",
+      "candidateFindings": 1,
+      "publishedFindings": 1,
+      "openFindings": 1
+    },
+    "counterevidence": {
+      "originalFragmentAnchors": 0,
+      "literalCodeStringsRetained": true,
+      "positiveControlFragmentAnchors": 2
+    },
+    "clarification": "Explain that the fenced mockup is literal source and illustrate the actual Edit household / Edit preferences button labels. No arbitrary document-anchor destinations or product navigation changes.",
+    "unchanged": "All 186 owning cases, original SDK, Copilot source/resources/configuration/workflows/models/credentials/bounds, product runtime/package, timeouts, retries and coverage thresholds. No manual thread resolution.",
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-unicode-76e20ba",
+      "privateLocalOnly": true
+    },
+    "limitation": "Fresh-head native review and product CI remain required; this is not full product/human-UX acceptance."
   }
 }

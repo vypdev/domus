@@ -202,6 +202,9 @@ Show current status, completed facts, next transition, required human action, im
 
 ### 9.2 Representative primary view
 
+This fenced example is literal source for an application view. Its action labels represent buttons
+in Domus, rather than navigation links into this specification.
+
 ```markdown
 # Household members
 
@@ -218,9 +221,9 @@ Show current status, completed facts, next transition, required human action, im
 
 Changes require confirmation and use the revision shown on the relevant form.
 
-## Links
+## Actions
 
-[Household settings](#household-settings) · [Your preferences](#your-preferences)
+**Edit household** · **Edit preferences**
 
 <details>
 <summary>Technical details</summary>
