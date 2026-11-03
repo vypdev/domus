@@ -130,9 +130,9 @@
     },
     "scope": "Original6backend/4frontend permission failures, distinct local/hosted CDP limitations with original traces/screenshots, complete current coverage/source/wheel and actual55browser checks. No owner HA used."
   },
-  "pending": "Complete accessible EN/ES administration forms and closed page intents, administration Storybook/actual complete administration Python-SQLite journeys, all retained owner/browser cases, human UX review, owner HA adoption and fresh current-commit CI/native review. Recurrence23, Stable/Edge and all-domain product acceptance remain required.",
+  "pending": "Complete retained HADM72/HADI8/HADW82 and24browser case audit and remaining boundary journeys, human UX review, owner HA adoption and fresh current-commit CI/CPU/native review. Recurrence23, Stable/Edge and all-domain product acceptance remain required.",
   "goalComplete": false,
-  "acceptance": "Unit/controller and51entry journeys are not complete administration browser or owner HA acceptance.",
+  "acceptance": "Current1223Chromium unit executions,71compiled Python/SQLite and25built catalog cases do not substitute for complete owning-case acceptance or owner HA adoption.",
   "recordedAtUTC": "2026-11-02T23:06:09.802178+00:00",
   "backend": {
     "executions": 4374,
@@ -206,5 +206,71 @@
     "reason": "scope-clause-limit; field $.lines; requirement none; source L240",
     "reference": "77635ac9-bf5e-4b50-89ae-0abd3d0adbbe",
     "scope": "Separate unchanged-Copilot progress rejection; same-head PR review4/4 has no findings. The unrelated product CI body-capture failure remains a real merge blocker until current CI passes."
+  },
+  "visibleWorkspaceIncrement": {
+    "sourceBase": "86e120ac3254a7b4b91d3d4b817f5234a0916f51",
+    "state": "Working-source visible workspace on the same issue27/ref; not complete feature acceptance.",
+    "frontend": {
+      "executions": 1223,
+      "authoredRuntimeFiles": 31,
+      "nonemptyFiles": 29,
+      "typeOnlyFiles": 2,
+      "statements": 2381,
+      "branches": 1886,
+      "functions": 504,
+      "lines": 1577,
+      "allFourMetricsGlobalAndPerFilePercent": 100,
+      "independentInventoryAudit": "passed; all31authoredruntimefiles and all4metrics checked independently"
+    },
+    "compiledBrowser": {
+      "executions": 71,
+      "administrationJourneys": 16,
+      "existingEntryJourneys": 55,
+      "deployments": [
+        "native",
+        "standalone"
+      ],
+      "backend": "Actual Python/SQLite with fictional loopback HA; no owner HA used"
+    },
+    "catalog": {
+      "executions": 25,
+      "newAdministrationCases": 7,
+      "existingEntryCases": 18,
+      "scope": "Actual rebuilt Storybook; both locales/deployments, keyboard/focus, inert text,360px/themes/reduced-motion/contrast. Stories emit intents only."
+    },
+    "testsFirst": [
+      "Seven reproduced current-read-loss draft disclosure cases",
+      "One misleading preflight submission-status failure",
+      "One absent participant target/reference review failure",
+      "Two actual old-bundle missing-workspace failures before rebuilding"
+    ],
+    "distinctPrototypeFailures": "Catalog label selector matched both a region and its textbox. Initial integration expectations confused HA ALL automatic enrollment with pending membership, wire integer with canonical journal string, and preflight conflict with a server rejection. Original logs/traces retained separately; no backend or Copilot fault inferred.",
+    "package": {
+      "wheelSHA256": "3c78a393ebb39664a2a5b73a41b2ddbc1a63d2205a42101d276e086d20cd5695",
+      "backendInventorySHA256": "ce4601f050a56a4bf4e22c5ac6e255fb1c7a9954c7a33d6bc3f0c261834d60b5",
+      "frontendInventorySHA256": "6ad650beec51c7c2f481a99b50e12b79e48167e169885a5a35aa129a1a6074da",
+      "compiledUI": {
+        ".vite/manifest.json": "97e3e0600974d5ea6eb617be7eed3c377d0fadba49295935c17371aeaabf677e",
+        "assets/index-BsSG5cPr.js": "8d94d5b5085ae82f814eb174ea202356742ae1902cf54f076881c11b93b95058",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "03463192d0e7fb63316fcb577471de5b3eaddf3f667623f35b2cd8f36d1a55f1"
+      },
+      "all151PythonModulesAnd4UIFilesByteVerified": true,
+      "backendUnchangedFromPublished86": true
+    },
+    "localEvidence": {
+      "root": "/private/tmp/domus-admin-forms-86e120a",
+      "privateLocalOnly": true
+    },
+    "review": "Fresh current-head CI/CPU/native review pending publication; prior86 CI/native success remains baseline evidence only.",
+    "checks": {
+      "strictRuntimeAndCatalogTypes": "passed",
+      "architectureAssertions": 51,
+      "wheelAcceptance": "passed",
+      "nodePolicyTests": 38,
+      "nodeSupportedCoveragePercent": 100,
+      "documentation": "passed",
+      "originalSDDPolicy": "seven original SDK modules byte-verified; format/consistency/catalog passed;20owner documents unchanged"
+    }
   }
 }

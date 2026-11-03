@@ -7,7 +7,7 @@ import {AdministrationSessionJournal, ADMINISTRATION_JOURNAL_KEY} from '../src/a
 import {administrationCommand} from '../src/domain/administration-commands';
 import type {AdministrationCommand} from '../src/domain/administration-commands';
 import {revisionValue} from '../src/domain/administration';
-import type {AdministrationAccess, AdministrationReceipt, OwnPreferences} from '../src/domain/administration-views';
+import type {AdministrationAccess, AdministrationReceipt, OwnPreferences, Roster} from '../src/domain/administration-views';
 
 function read<T>(value: T): EntryRead<T> {return {result: Promise.resolve(value), cancel: vi.fn()};}
 function deferred<T>() {
@@ -57,7 +57,7 @@ function fixture(initial = access, mode: 'native' | 'standalone' = 'standalone')
   const server = {
     capabilities: vi.fn(() => read({contractVersion: 2 as const, householdId: 'home', actions: commands.map(c => c.action)})),
     authorization: vi.fn(() => read(initial)), household: vi.fn(() => read(home)), policy: vi.fn(() => read(policy)),
-    roster: vi.fn(() => read({directoryState: 'available' as const, members: [{member, presentation: own,
+    roster: vi.fn(() => read<Roster>({directoryState: 'available' as const, members: [{member, presentation: own,
       metadata: {state: 'available' as const, name: 'Verified owner', avatarState: 'unavailable' as const}}]})),
     directory: vi.fn(() => read({state: 'denied' as const, profiles: []})), preferences: vi.fn(() => read(preferences)),
     presentation: vi.fn(() => read(own)),
@@ -607,4 +607,104 @@ test('HADW-01: a permitted current roster remains an honest alias source when th
   const f = fixture(); f.server.presentation.mockImplementation(() => {throw new EntryReadError('unavailable');});
   await f.controller.refresh(); expect(f.controller.view.presentation).toBeNull(); expect(f.controller.view.errors.presentation).toBe('unavailable');
   await f.controller.submit(commands[3]); expect(f.server.send).toHaveBeenCalledOnce(); expect(f.controller.view.outcome?.kind).toBe('receipt');
+});
+
+const noControls = {household: false, policy: false, preferences: false, ownAlias: false,
+  memberIds: [], aliasMemberIds: [], recoverableKeys: [], dismissibleKeys: []};
+test('HADB-03: idle and disposed views offer no administration controls and obtain no proof', async () => {
+  const f = fixture(); expect(f.controller.view.controls).toEqual(noControls);
+  f.controller.close(); expect(f.controller.view.controls).toEqual(noControls);
+  expect(f.identity.session).not.toHaveBeenCalled(); expect(f.storage.getItem).not.toHaveBeenCalled();
+});
+test('HADB-03: controls describe current permitted facts without producing a command key, lookup or private payload', async () => {
+  const f = fixture(); await f.controller.refresh(); const writes = f.storage.setItem.mock.calls.length;
+  const controls = f.controller.view.controls;
+  expect(controls).toEqual({...noControls, household: true, policy: true, preferences: true, ownAlias: true, memberIds: [member.memberId]});
+  expect(Object.isFrozen(controls)).toBe(true); expect(Object.isFrozen(controls.memberIds)).toBe(true);
+  expect(Object.isFrozen(controls.aliasMemberIds)).toBe(true); expect(Object.isFrozen(controls.recoverableKeys)).toBe(true);
+  expect(Object.isFrozen(controls.dismissibleKeys)).toBe(true);
+  expect(JSON.stringify(controls)).not.toContain('locale'); expect(JSON.stringify(controls)).not.toContain('routine_participation');
+  expect(f.storage.setItem).toHaveBeenCalledTimes(writes); expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  expect(f.server.original).not.toHaveBeenCalled(); expect(f.server.send).not.toHaveBeenCalled();
+});
+test('HADB-03: other-member controls require current facts and never invent masked exceptions', async () => {
+  const f = fixture(); f.server.roster.mockReturnValue(read({directoryState: 'available', members: [
+    {member, presentation: own, metadata: {state: 'available', name: 'Owner', avatarState: 'unavailable'}},
+    {member: {...member, memberId: 'other', exceptions: null}, presentation: {...own, memberId: 'other'},
+      metadata: {state: 'denied', name: null, avatarState: 'unavailable'}},
+  ]}));
+  await f.controller.refresh(); expect(f.controller.view.controls.memberIds).toEqual([member.memberId]);
+  expect(f.controller.view.controls.aliasMemberIds).toEqual(['other']);
+});
+test('HADB-03: ordinary current owner controls expose own edits without exposing other-member management', async () => {
+  const f = fixture({...access, permissions: ['members.read','preferences.read','preferences.write']});
+  await f.controller.refresh(); expect(f.controller.view.controls).toEqual({...noControls, ownAlias: true, preferences: true});
+});
+test('HADB-03: write grants without current aggregate reads do not invent an edit revision, while original GET remains usable', async () => {
+  const f = fixture({...access, permissions: ['household.manage','operations.read']});
+  f.journal.open(context,1000); f.journal.prepare('original',commands[0],1000); f.journal.detach();
+  await f.controller.refresh(); expect(f.controller.view.controls).toEqual({...noControls, recoverableKeys: ['original']});
+  expect(f.server.original).not.toHaveBeenCalled(); await f.controller.recover('original');
+  expect(f.server.original).toHaveBeenCalledOnce(); expect(f.controller.view.controls.dismissibleKeys).toEqual(['original']);
+});
+test('HADB-03: a valid read-only lease offers original recovery and resolved dismissal, with all new edits unavailable', async () => {
+  const f = fixture(); f.journal.open(context,1000); f.journal.prepare('saved',commands[4],1000);
+  f.journal.record('saved',{stage:'committed',operationId:'operation'},1000); f.journal.detach();
+  f.identity.session.mockReturnValue(read({...session,access:'read_only'})); await f.controller.refresh();
+  expect(f.controller.view.controls).toEqual({...noControls,recoverableKeys:['saved'],dismissibleKeys:['saved']});
+  expect(f.server.original).not.toHaveBeenCalled(); expect(f.server.send).not.toHaveBeenCalled();
+});
+test('HADB-03: original stages expose only their permitted recovery and dismissal controls', async () => {
+  const f = fixture(); f.journal.open(context,1000);
+  for (const stage of ['prepared','uncertain','committed','historical','rejected'] as const) {
+    f.journal.prepare(stage,commands[4],1000);
+    if (stage !== 'prepared') f.journal.record(stage,{stage,operationId:stage==='committed'||stage==='historical'?'operation-'+stage:null},1000);
+  }
+  f.journal.detach(); await f.controller.refresh();
+  expect(f.controller.view.controls.recoverableKeys).toEqual(['prepared','uncertain','committed','historical']);
+  expect(f.controller.view.controls.dismissibleKeys).toEqual(['committed','historical','rejected']);
+  f.server.authorization.mockReturnValue(read({...access,permissions:access.permissions.filter(value=>value!=='operations.read')}));
+  await f.controller.refresh(); expect(f.controller.view.controls.recoverableKeys).toEqual([]);
+  expect(f.controller.view.controls.dismissibleKeys).toEqual(['committed','historical','rejected']);
+});
+test('HADB-03: unavailable owned journal disables controls while current permitted facts remain readable', async () => {
+  const f = fixture(); f.storage.getItem.mockImplementation(()=>{throw new Error('private-storage-fault');});
+  await f.controller.refresh(); expect(f.controller.view.preferences).toEqual(preferences);
+  expect(f.controller.view.controls).toEqual(noControls);
+});
+test('HADB-03: pending proof and an in-flight atomic change offer no stale form controls', async () => {
+  const f = fixture(), proof = deferred<VerifiedEntrySession|null>(); f.identity.session.mockReturnValueOnce(proof);
+  const opening = f.controller.refresh(); expect(f.controller.view.controls).toEqual(noControls);
+  proof.resolve(session); await opening; const pending = deferred<AdministrationCommandResult>(); f.server.send.mockReturnValueOnce(pending.result);
+  const work = f.controller.submit(commands[4]); await settle(); expect(f.controller.view.controls).toEqual(noControls);
+  pending.resolve(receipt(commands[4])); await work; expect(f.controller.view.controls.preferences).toBe(true);
+});
+test('HADB-03: an unresolved original disables only its aggregate and leaves independent forms available', async () => {
+  const f = fixture(); await f.controller.refresh(); f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.submit(commands[4]); const controls = f.controller.view.controls;
+  expect(controls.preferences).toBe(false); expect(controls.household).toBe(true); expect(controls.ownAlias).toBe(true);
+  expect(controls.recoverableKeys).toEqual(['request-original']); expect(f.server.send).toHaveBeenCalledOnce();
+});
+test('HADB-03: an unresolved own alias does not disable an authorized different-member alias form', async () => {
+  const f = fixture(); f.server.roster.mockReturnValue(read({directoryState:'available',members:[
+    {member,presentation:own,metadata:{state:'available',name:'Owner',avatarState:'unavailable'}},
+    {member:{...member,memberId:'other'},presentation:{...own,memberId:'other'},metadata:{state:'available',name:'Other',avatarState:'unavailable'}},
+  ]}));
+  await f.controller.refresh(); f.server.send.mockResolvedValueOnce({kind:'uncertain'}); await f.controller.submit(commands[3]);
+  expect(f.controller.view.controls.ownAlias).toBe(false); expect(f.controller.view.controls.aliasMemberIds).toEqual(['other']);
+  expect(f.controller.view.controls.preferences).toBe(true);
+});
+test.each([0,2,4])('household-browser-C13: a captured new intent %s cannot cross a same-HA membership replacement with a coincident revision',async index=>{
+  const f=fixture();await f.controller.refresh();const next={...member,memberId:'replacement'};
+  f.server.authorization.mockReturnValue(read({...access,member:next}));
+  f.server.preferences.mockReturnValue(read({...preferences,memberId:next.memberId}));
+  f.server.presentation.mockReturnValue(read({...own,memberId:next.memberId}));
+  f.server.roster.mockReturnValue(read({directoryState:'available',members:[{member:next,presentation:{...own,memberId:next.memberId},
+    metadata:{state:'available',name:'Current member',avatarState:'unavailable'}}]}));
+  await f.controller.submit(commands[index]);expect(f.server.send).not.toHaveBeenCalled();expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  expect(f.controller.view.notice).toBe('context_changed');expect(f.controller.view.preferences?.memberId).toBe(next.memberId);
+});
+test('HADB-03: a newer access revision for the same member still permits a currently authorized captured intent',async()=>{
+  const f=fixture();await f.controller.refresh();f.server.authorization.mockReturnValue(read({...access,policyRevision:revisionValue('6'),member:{...member,revision:revisionValue('4')}}));
+  await f.controller.submit(commands[4]);expect(f.server.send).toHaveBeenCalledOnce();expect(f.controller.view.outcome?.kind).toBe('receipt');
 });

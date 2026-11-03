@@ -23,7 +23,12 @@ type State = Readonly<Facts & {phase: 'idle' | 'loading' | 'ready' | 'sending' |
   session: VerifiedEntrySession | null; access: AdministrationAccess | null; capabilities: AdministrationCapabilities | null;
   journal: AdministrationJournalView | null; outcome: AdministrationCommandResult | null;
   errors: Readonly<Partial<Record<keyof Facts, ReadFault>>>; notice: AdministrationNotice | null}>;
-export type AdministrationView = State & Readonly<{busy: boolean}>;
+export interface AdministrationControls {
+  readonly household: boolean; readonly policy: boolean; readonly preferences: boolean; readonly ownAlias: boolean;
+  readonly memberIds: readonly string[]; readonly aliasMemberIds: readonly string[];
+  readonly recoverableKeys: readonly string[]; readonly dismissibleKeys: readonly string[];
+}
+export type AdministrationView = State & Readonly<{busy: boolean; controls: AdministrationControls}>;
 type Intent = Readonly<{kind: 'new'; command: AdministrationCommand}> | Readonly<{kind: 'recover' | 'dismiss'; key: string}>;
 type Retained = Readonly<{context: JournalContext; request: AdministrationRecord;
   outcome: AdministrationCommandResult; notice: AdministrationNotice | null}>;
@@ -55,7 +60,37 @@ export class AdministrationController {
   constructor(private readonly deployment: Deployment, private readonly identity: Pick<EntryServer, 'session'>,
     private readonly server: AdministrationServer, private readonly journal: AdministrationJournalPort,
     private readonly clock: EntryClock, private readonly entropy: EntryEntropy) {}
-  get view(): AdministrationView {return Object.freeze({...this.state, busy: this.running});}
+  get view(): AdministrationView {return Object.freeze({...this.state, busy: this.running, controls: this.controls()});}
+  private controls(): AdministrationControls {
+    const {phase, session, access, journal, household, policy, preferences, roster} = this.state;
+    const ready = phase === 'ready' && !this.running && session !== null && access?.state === 'active' && journal !== null;
+    const edit = (command: AdministrationCommand | null): boolean => ready && session!.access === 'full'
+      && command !== null && allowed(access!, command) && !journal!.records.some(record =>
+        (record.stage === 'prepared' || record.stage === 'uncertain') && sameAggregate(record, command));
+    const owner = access?.member?.memberId;
+    const presentation = this.state.presentation ?? roster?.members.find(row => row.member.memberId === owner)?.presentation ?? null;
+    return Object.freeze({
+      household: edit(household === null ? null : {action: 'household.update', payload: {
+        expected_revision: household.revision, name: household.name, time_zone: household.timeZone}}),
+      policy: edit(policy === null ? null : {action: 'policy.update', payload: {
+        expected_revision: policy.revision, mapping_mode: policy.mappingMode, target_ha_user_id: policy.targetHAUserId,
+        adjustments: policy.adjustments}}),
+      preferences: edit(preferences === null ? null : {action: 'member.preferences.update', payload: {
+        expected_revision: preferences.revision, locale: preferences.locale, routine_participation_summaries: preferences.routine_participation_summaries}}),
+      ownAlias: edit(presentation === null ? null : {action: 'member.presentation.update', memberId: presentation.memberId,
+        payload: {expected_revision: presentation.revision, alias: presentation.alias}}),
+      memberIds: Object.freeze(roster?.members.filter(({member}) => member.exceptions !== null && edit({action: 'member.update',
+        memberId: member.memberId, payload: {expected_revision: member.revision, role: member.role, status: member.status,
+          exceptions: member.exceptions}})).map(row => row.member.memberId) ?? []),
+      aliasMemberIds: Object.freeze(roster?.members.filter(row => row.member.memberId !== owner && edit({action: 'member.presentation.update',
+        memberId: row.member.memberId, payload: {expected_revision: row.presentation.revision, alias: row.presentation.alias}}))
+        .map(row => row.member.memberId) ?? []),
+      recoverableKeys: Object.freeze(ready && access!.permissions.includes('operations.read')
+        ? journal!.records.filter(record => record.stage !== 'rejected').map(record => record.key) : []),
+      dismissibleKeys: Object.freeze(ready ? journal!.records.filter(record => record.stage !== 'prepared' && record.stage !== 'uncertain')
+        .map(record => record.key) : []),
+    });
+  }
   private update(patch: Partial<State>): void {this.state = Object.freeze({...this.state, ...patch});}
   private invalidate(): number {
     this.generation++;
@@ -206,6 +241,7 @@ export class AdministrationController {
   dismiss(key: string): Promise<void> {return this.run({kind: 'dismiss', key});}
   private async run(intent: Intent): Promise<void> {
     const context = this.context(intent.kind === 'new'); if (context === null) return;
+    const memberId = this.state.access!.member!.memberId;
     const original = intent.kind === 'new' ? null : this.opened!.records.find(record => record.key === intent.key);
     if (original === undefined) {this.update({notice: 'request_unavailable'}); return;}
     this.running = true;
@@ -214,6 +250,7 @@ export class AdministrationController {
       if (!await this.load(generation) || generation !== this.generation) return;
       if (this.state.session === null || !sameContext(context, this.state.session.context)) {this.update({notice: 'context_changed'}); return;}
       const access = this.state.access;
+      if (access?.state === 'active' && access.member!.memberId !== memberId) {this.update({notice: 'context_changed'}); return;}
       if ((intent.kind === 'new' && this.state.session.access !== 'full') || access?.state !== 'active' || this.opened === null) return;
       let request: AdministrationRecord;
       if (intent.kind === 'new') {

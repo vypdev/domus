@@ -102,3 +102,51 @@ test('the built interface fits 360 pixels with light/dark contrast and reduced-m
     await page.screenshot({path: `test-results/setup-es-360-${colorScheme}.png`, fullPage: true});
   }
 });
+
+const administrationUrl=(example:string,locale:string,deployment:string)=>origin+'/iframe.html?id=domus-household-administration--'+example
+  +'&viewMode=story&args='+encodeURIComponent(`language:${locale};deployment:${deployment}`);
+for(const example of ['active','read-only','sources-unavailable','uncertain','historical'])test('HADB-03: built administration '+example+' is localized in both deployments without external requests',async({page})=>{
+  const errors:string[]=[],foreign:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.route('**/*',async route=>{if(new URL(route.request().url()).origin!==origin){foreign.push(route.request().url());await route.abort();}else await route.continue();});
+  for(const [locale,deployment] of [['en','native'],['en','standalone'],['es','native'],['es','standalone']]) {
+    await page.goto(administrationUrl(example,locale,deployment));const widget=page.locator('domus-administration');
+    await expect(widget.getByRole('heading',{name:locale==='es'?'Administración del hogar':'Household administration',exact:true})).toBeVisible();
+    await expect(widget).toHaveAttribute('lang',locale);await expect(page.getByText('Fictional administration state.',{exact:false})).toBeVisible();
+    await expect(widget.getByRole('button',{name:locale==='es'?'Editar preferencias':'Edit preferences',exact:true})).toBeEnabled({enabled:example!=='read-only'&&example!=='uncertain'});
+    if(example==='historical')await expect(widget.getByText(locale==='es'?'Esta operación se procesó antes de la restauración. Su efecto no está presente en el estado actual.':'This operation was processed before restoration. Its effect is absent from current state.',{exact:true})).toBeVisible();
+    if(example==='sources-unavailable')await expect(widget.getByText(locale==='es'?'Nombre de Home Assistant: Acceso al nombre de HA denegado':'Home Assistant name: HA name access denied',{exact:true})).toBeVisible();
+  }
+  expect(foreign).toEqual([]);expect(errors).toEqual([]);
+});
+test('HADB-03: built administration supports keyboard review, focus, locale retention and one exact immutable intent',async({page})=>{
+  await page.goto(administrationUrl('active','en','native'));const widget=page.locator('domus-administration');
+  await widget.evaluate(element=>{const current=window as unknown as {administrationIntents:unknown[]};current.administrationIntents=[];
+    element.addEventListener('domus-administration-intent',event=>current.administrationIntents.push((event as CustomEvent).detail));});
+  await widget.getByRole('button',{name:'Edit own alias',exact:true}).click();await expect(widget.getByLabel('Use Home Assistant name',{exact:true})).toBeFocused();
+  await page.keyboard.press('Space');await page.keyboard.press('Tab');await expect(widget.getByRole('textbox',{name:'Domus alias',exact:true})).toBeFocused();
+  const alias='<img src=x onerror=alert(1)> & Maple';await page.keyboard.insertText(alias);await page.keyboard.press('Tab');await page.keyboard.press('Enter');
+  await expect(widget.getByRole('heading',{name:'Confirm this household change',exact:true})).toBeFocused();await expect(widget.locator('img,script')).toHaveCount(0);
+  await widget.evaluate(element=>{(element as HTMLElement & {language:string}).language='es';});
+  await expect(widget.getByRole('heading',{name:'Confirma este cambio del hogar',exact:true})).toBeVisible();
+  await page.keyboard.press('Tab');await expect(widget.getByRole('button',{name:'Guardar cambios',exact:true})).toBeFocused();await page.keyboard.press('Enter');
+  const intents=await page.evaluate(()=>(window as unknown as {administrationIntents:unknown[]}).administrationIntents);
+  expect(intents).toEqual([{type:'submit',command:{action:'member.presentation.update',memberId:'fictional-owner',payload:{expected_revision:'11',alias}}}]);
+  await expect(widget.getByRole('button',{name:'Guardar cambios',exact:true})).toBeDisabled();
+});
+test('HADB-03: built administration forms fit 360 pixels in both themes with reduced motion and readable action contrast',async({page})=>{
+  await page.setViewportSize({width:360,height:800});
+  for(const colorScheme of ['light','dark'] as const) {
+    await page.emulateMedia({colorScheme,reducedMotion:'reduce'});await page.goto(administrationUrl('active','es','standalone'));const widget=page.locator('domus-administration');
+    for(const name of ['Editar hogar','Editar preferencias','Editar reglas de acceso','Gestionar participante: Fictional pending participant'])
+      await widget.getByRole('button',{name,exact:true}).click();
+    await expect(widget.getByLabel('Nuevo nombre del hogar',{exact:true})).toHaveValue('Maple House');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+    const contrast=await widget.locator('button.primary').first().evaluate(button=>{
+      const style=getComputedStyle(button);const luminance=(rgb:string)=>{
+        const v=rgb.match(/[\d.]+/gu)!.slice(0,3).map(Number).map(value=>{const x=value/255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});
+        return v[0]*.2126+v[1]*.7152+v[2]*.0722;};
+      const a=luminance(style.color),b=luminance(style.backgroundColor);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+    });expect(contrast).toBeGreaterThanOrEqual(4.5);
+    await page.screenshot({path:`test-results/administration-es-360-${colorScheme}.png`,fullPage:true});
+  }
+});

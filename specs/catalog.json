@@ -327,7 +327,9 @@
         "frontend/src/adapters/administration-http.ts",
         "frontend/src/application/administration-controller.ts",
         "frontend/src/domain/administration-authorization.ts",
-        "frontend/src/application/household-controller.ts"
+        "frontend/src/application/household-controller.ts",
+        "frontend/src/presentation/domus-administration.ts",
+        "frontend/src/presentation/administration-messages.ts"
       ],
       "tests": [
         "tests/backend/test_identity_policy.py",
@@ -405,7 +407,10 @@
         "tests/packaging/test_ui_wheel.py",
         "frontend/tests/administration-controller.test.ts",
         "frontend/tests/administration-authorization.test.ts",
-        "frontend/tests/household-controller.test.ts"
+        "frontend/tests/household-controller.test.ts",
+        "frontend/tests/administration-component.test.ts",
+        "frontend/tests/page.test.ts",
+        "frontend/tests/e2e/administration.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -456,7 +461,8 @@
         "docs/architecture-household-administration.md",
         "docs/evidence/household-administration.json",
         "docs/household-administration.md",
-        "docs/evidence/household-administration-browser.json"
+        "docs/evidence/household-administration-browser.json",
+        "docs/household-administration-operations.md"
       ],
       "readiness": {
         "state": "draft",

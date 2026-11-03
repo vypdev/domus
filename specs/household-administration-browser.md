@@ -350,12 +350,16 @@ Tests first. Preserve repository-wide supported coverage, complete global and pe
 | `frontend/src/presentation/administration-messages.ts` | create |
 | `frontend/src/presentation/messages.ts` | update |
 | `frontend/src/presentation/styles.ts` | update |
+| `frontend/vitest.config.ts` | update |
+| `frontend/playwright.entry.config.ts` | update |
+| `frontend/tests/e2e/catalog.spec.ts` | update |
 | `frontend/tests/household-controller.test.ts` | create |
 | `frontend/tests/controller.test.ts` | update |
 | `frontend/tests/runtime.test.ts` | update |
 | `frontend/tests/page.test.ts` | update |
 | `frontend/tests/component.test.ts` | update |
 | `frontend/tests/administration-component.test.ts` | create |
+| `frontend/tests/administration-controller.test.ts` | update |
 | `frontend/tests/fixtures/entry-wire.json` | update |
 | `frontend/tests/e2e/administration.spec.ts` | create |
 | `frontend/stories/administration.stories.ts` | create |
