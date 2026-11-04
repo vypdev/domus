@@ -9,6 +9,7 @@ from domus.application.task_ports import TaskRepository, TaskReviewEvidence
 from domus.domain.errors import Conflict, InvalidInput, StorageFailure
 from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import validate_identifier
+from domus.domain.task_events import TaskSourceRecord
 from domus.domain.task_reviews import DependencyReviewState
 from domus.domain.task_values import DefinitionState, OccurrenceState, VerificationState
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
@@ -105,6 +106,13 @@ class SQLiteTasks(TaskRepository):
 
     connection: sqlite3.Connection
     record_version: int = 2
+
+    def lifecycle_sources(
+        self, household_id: str, *, limit: int = 100, after: int = 0
+    ) -> tuple[TaskSourceRecord, ...]:
+        return SQLiteTaskHistory(self.connection).lifecycle_sources(
+            household_id, limit=limit, after=after
+        )
 
     def lifecycle_events(
         self, household_id: str, *, limit: int = 25, after: int = 0

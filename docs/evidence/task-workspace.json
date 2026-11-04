@@ -15,7 +15,7 @@
   ],
   "currentSourcePackage": {
     "scope": "Current source wheel/UI including required review reason gating. The installed Edge.9 package remains independently pinned to 93d7d77.",
-    "wheelSHA256": "24483641c624615446cdff44dbf46cc42bcee50e424dfe74150212de8bd085f7",
+    "wheelSHA256": "994197949f06037cc0e795c17e486368929beaac812c9e35641e58b88268a46e",
     "actualProductFiles": {
       ".vite/manifest.json": "d2bc7b53fd3413e3a6eb29ab24694bf4db287d5c36e1701204bf242001c17d60",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
@@ -25,13 +25,13 @@
   },
   "executedChecks": {
     "backend": {
-      "passed": 4472,
-      "modules": 152,
-      "statements": 10545,
-      "branches": 2962,
+      "passed": 4501,
+      "modules": 153,
+      "statements": 10619,
+      "branches": 2986,
       "coverage": "100% globally and per module",
       "independentAudit": "passed",
-      "scope": "Current backend including the pure recurrence closure policy. The installed Edge.9 remains pinned to the earlier 151-module source."
+      "scope": "Current backend with pure closure policy and bounded current/historical source observations. Installed Edge.9 remains pinned to the earlier 151-module source."
     },
     "frontend": {
       "passed": 1512,
@@ -132,12 +132,12 @@
   "goalComplete": false,
   "specificationIndependentPreflight": {
     "sections": 20,
-    "characters": 56935,
-    "sha256": "d0e7c6a14b6d5d8f777395e39f56824ec9d995afde7331f712df2b9768ad9b45",
-    "pathOperations": 138,
+    "characters": 57120,
+    "sha256": "1d237e989faeed58bc3a1d2d4c486d1754635f996851420c747fdcb953eaa924",
+    "pathOperations": 141,
     "pathCounts": {
       "create": 60,
-      "update": 72,
+      "update": 75,
       "reference": 6
     },
     "retainedOwners": {
@@ -145,7 +145,7 @@
       "specs/recurrence-execution-foundation.md": "e0575cf09f6bd2b805956c9a17d16ebe1bd4808b3062b2d0588513d2991d8c4d",
       "specs/recurrence-storage-continuation.md": "c79c018e359e26e6f6ab0d774c55c7bd39d39452dc06dee81f0d138eb469b43b"
     },
-    "scope": "Independent consumer structural/path/retained-byte preflight; not original native SDK validation."
+    "scope": "Independent 20-section/path-inventory/retained-owner-byte preflight. Native SDK format/budget/catalog acceptance remains separate; no SDK cache was restored or modified."
   },
   "publishedRuntime": {
     "commit": "93d7d77b98a196640bf0049bca36a3d90b7a5857",
@@ -157,7 +157,7 @@
     "regressions": "Explicit operations.read denial with retained claim/complete grants; current permission revocation and foreign actor; real restricted lost completion recovery; exact code-point limits in both browser deployments.",
     "previewRepackaging": "Edge.9 exact pinned installer verified on both CPU families with44household/task browser journeys each.",
     "upstreamAccuracyReport": "https://github.com/vypdev/copilot/issues/879",
-    "findingState": "Recovery, Unicode limits and required-reason gating were natively verified fixed; pagination was natively classified obsolete. The subsequent installation-guide observation is corrected to match actual owner adoption and awaits reassessment. No finding manually resolved or dismissed.",
+    "findingState": "The five task/documentation observations were natively verified fixed, and pagination classified obsolete at b2729f3 with complete coverage and zero active findings. Fresh review is required for later commits; no manual finding resolution or dismissal.",
     "reviewReasons": "Reject/reopen are disabled for blank or whitespace-only reasons. Approval may omit a reason. The 1,000-code-point bound and current authorization remain unchanged."
   },
   "precedingCandidateVerification": {

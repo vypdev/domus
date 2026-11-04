@@ -417,3 +417,23 @@ The 61 pure-policy tests and full backend campaign are recorded in
 [lifecycle evidence](evidence/recurrence-lifecycle-calendar.json). Durable inbox/closure storage,
 atomic source revalidation and successor effects, schema-10 compatibility, mixed execution and
 calendar/UI integration remain required. The current runtime runner does not yet consume this policy.
+
+
+## Bounded current and historical source observations
+
+RecurrenceSourceObservations now reads original task completion, verification and reopening facts
+through a composition-owned MaintenanceScope and the semantic task source port. SQLite orders one
+bounded union of live and retained-absent operations by their stable position. No lookahead is fetched
+or discarded. A requested page contains at most 100 facts; an exact full page remains incomplete,
+and an empty scan still consumes one unit of the independent source currency.
+
+Original receipt, audit, event and decoded cycle evidence remain distinct from current work. Actual
+restore tests retain historical approvals/reopenings without changing a live pending cycle and
+observe a restored-away completion whose live cycle no longer exists. Transport acknowledgement
+does not hide facts. Current application reads validate immutable request/result shape and reject
+malformed, foreign or unordered evidence without writing progress or allocating identifiers.
+
+This is a read boundary for the future durable consumer. Historical facts cannot grant new work;
+the successor writer still needs atomic live revalidation, inbox/closure and invalidation/attention
+persistence. Schema 9, original task event behavior and the three retained recurrence owners stay
+unchanged. See [lifecycle evidence](evidence/recurrence-lifecycle-calendar.json) for measured scope.

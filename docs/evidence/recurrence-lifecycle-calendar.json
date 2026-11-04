@@ -82,5 +82,34 @@
   },
   "copilotModified": false,
   "storageSchema": 9,
-  "schemaChanged": false
+  "schemaChanged": false,
+  "boundedSourceObservations": {
+    "recordedAtUTC": "2026-11-04T00:55:13.412741+00:00",
+    "tests": "tests/backend/test_recurrence_source_observations.py",
+    "focusedPassed": 29,
+    "combinedSourceAndExistingEventPassed": 75,
+    "application": "backend/src/domus/application/recurrence_sources.py",
+    "logicalSourceBudget": "One SQL-ordered union of current and retained-absent originals; at most the requested 1..100 facts, without lookahead or skipped rows. An empty scan costs one source unit; an exact full page is conservatively incomplete.",
+    "verified": [
+      "Stable original event/cycle identity and positional order when timestamps tie; delivery acknowledgement does not remove facts.",
+      "Current and genuinely restored historical approval/reopening retain their original snapshots independently of the current pending cycle.",
+      "A genuinely restored-away completion is readable as historical evidence even when its live cycle is absent; no work, receipt, outbox delivery or identifier is created.",
+      "Canonical original request/result/audit/event shape, bounded typed ports and composition-owned installation/channel/household scope are checked before observation.",
+      "Malformed cycle evidence and missing audit records fail closed without changing database bytes."
+    ],
+    "limitations": [
+      "This read port is not a durable inbox, per-cycle closure writer or successor consumer.",
+      "Historical facts are observations, not eligibility or permission to create new work; the future writer must revalidate live facts atomically.",
+      "No schema change, calendar or full retained-case acceptance is claimed."
+    ]
+  },
+  "currentBackendCampaign": {
+    "passed": 4501,
+    "runtimeModules": 153,
+    "statements": 10619,
+    "branches": 2986,
+    "coverage": "100% globally and per module, independently source-audited",
+    "strictTypes": "passed",
+    "cleanArchitecture": "passed"
+  }
 }

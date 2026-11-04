@@ -412,6 +412,9 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `tests/packaging/test_ui_wheel.py` | update |
 | `specs/catalog.json` | update |
 | `specs/CATALOG.md` | update |
+| `backend/src/domus/domain/task_events.py` | update |
+| `backend/src/domus/application/task_ports.py` | update |
+| `backend/src/domus/infrastructure/sqlite_task_history.py` | update |
 | `backend/src/domus/domain/tasks.py` | update |
 | `backend/src/domus/domain/task_values.py` | update |
 | `backend/src/domus/domain/relative_recurrence.py` | update |

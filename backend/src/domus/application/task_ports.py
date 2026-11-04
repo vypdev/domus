@@ -5,6 +5,7 @@ from typing import Protocol
 
 from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import JsonDocument
+from domus.domain.task_events import TaskSourceRecord
 from domus.domain.task_reviews import DependencyReviewState
 from domus.domain.task_values import DefinitionState, OccurrenceState
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
@@ -24,6 +25,10 @@ class TaskReviewEvidence:
 
 
 class TaskRepository(Protocol):
+    def lifecycle_sources(
+        self, household_id: str, *, limit: int = 100, after: int = 0
+    ) -> tuple[TaskSourceRecord, ...]: ...
+
     def lifecycle_events(
         self, household_id: str, *, limit: int = 25, after: int = 0
     ) -> tuple[OperationEvidence, ...]: ...

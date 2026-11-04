@@ -8,7 +8,7 @@ from typing import cast
 
 from domus.domain.errors import InvalidInput
 from domus.domain.identity import validate_revision
-from domus.domain.restoration import OperationEvidence
+from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import Installation, JsonDocument, JsonObject, validate_identifier
 from domus.domain.task_values import (
     TaskPerformer,
@@ -222,9 +222,10 @@ def validate_reopening(evidence: OperationEvidence, cycle: TaskCycle) -> JsonObj
     return result
 
 
-def lifecycle_event(
-    evidence: OperationEvidence, work: TaskOccurrence, cycle: TaskCycle, installation: Installation
+def original_lifecycle_event(
+    evidence: OperationEvidence, cycle: TaskCycle, installation: Installation
 ) -> TaskLifecycleEvent:
+    """Decode the original fact without asserting that its work is present or currently eligible."""
     action = evidence.receipt.command.action
     try:
         kind = {
@@ -250,19 +251,43 @@ def lifecycle_event(
             != JsonDocument.from_value({"cycle": _cycle_snapshot(snapshot).decode()})
         ):
             raise InvalidInput("invalid_task_event")
-    if (
-        cycle.household_id != work.household_id
-        or cycle.occurrence_id != work.occurrence_id
-        or result.get("definition_id") != work.definition_snapshot.definition_id
-    ):
-        raise InvalidInput("invalid_task_event")
     return TaskLifecycleEvent(
         installation,
         evidence.receipt.operation_id,
         evidence.position,
         kind,
-        work.definition_snapshot.definition_id,
+        cast(str, result["definition_id"]),
         cast(int, result["revision"]),
         snapshot,
         evidence.receipt.created_at,
     )
+
+
+def lifecycle_event(
+    evidence: OperationEvidence, work: TaskOccurrence, cycle: TaskCycle, installation: Installation
+) -> TaskLifecycleEvent:
+    event = original_lifecycle_event(evidence, cycle, installation)
+    if (
+        cycle.household_id != work.household_id
+        or cycle.occurrence_id != work.occurrence_id
+        or event.definition_id != work.definition_snapshot.definition_id
+    ):
+        raise InvalidInput("invalid_task_event")
+    return event
+
+
+@dataclass(frozen=True, slots=True)
+class TaskSourceRecord:
+    """An original decoded cycle and its retained evidence; current eligibility is separate."""
+
+    original: RetainedOperation
+    cycle: TaskCycle
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.original, RetainedOperation) or not isinstance(
+            self.cycle, TaskCycle
+        ):
+            raise InvalidInput("invalid_task_event")
+
+    def event(self, installation: Installation) -> TaskLifecycleEvent:
+        return original_lifecycle_event(self.original.evidence, self.cycle, installation)
