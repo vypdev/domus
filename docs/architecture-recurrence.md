@@ -462,3 +462,23 @@ globally and per module; all five import contracts and 51 architecture cases pas
 This is a source-level application service. It is not yet wired into the mixed maintenance runner,
 an API or the installed Edge image. Reviewed manual adoption, successor materialization, durable
 cycle closure, shared fairness and protected calendar acceptance remain required. Schema stays 9.
+
+## Closed relative lifecycle storage values
+
+The [closure codec](../backend/src/domus/infrastructure/sqlite_relative_lifecycle.py) encodes the
+complete original installation, rule, human cycle, technical operation and optional successor
+snapshot. It reuses the existing closed rule/slot/cycle decoders and reconstructs the immutable
+closure. Unsupported versions, missing or unknown fields, duplicate keys, noncanonical storage
+bytes and contradictory source/command/successor relationships fail without defaults or repair.
+Date-only successors keep their original nominal date; no instant is invented.
+
+The [64 codec cases](../tests/backend/test_sqlite_relative_lifecycle.py) cover generated timed and
+date-only work, rejected/reopened/historical absence, original receipt matching, and nested corruption
+in canonical fixtures. The complete current backend campaign passes 4,616 tests across 155 modules,
+with 100% supported statement/branch coverage globally and per module, strict types and architecture
+checks. [Lifecycle evidence](evidence/recurrence-lifecycle-calendar.json) records the exact scope.
+
+This codec prepares storage values; it does not read a database original or grant consumer authority.
+The repository must independently check original proof and row scope when its schema-10 closure
+table is implemented. Durable inbox/closure writes, successor generation, maintenance wiring and
+calendar acceptance remain pending. Schema stays 9.

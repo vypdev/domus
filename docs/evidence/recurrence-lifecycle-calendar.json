@@ -1,5 +1,5 @@
 {
-  "recordedAtUTC": "2026-11-04T02:34:26.799819+00:00",
+  "recordedAtUTC": "2026-11-04T03:36:30.445127+00:00",
   "status": "Genuine schema-9 acceptance, pure cycle policy, bounded source observations and atomic initial relative work verified in source; maintenance integration, durable successor lifecycle and calendar remain outstanding.",
   "issue": 23,
   "nativePublication": {
@@ -104,12 +104,12 @@
     ]
   },
   "currentBackendCampaign": {
-    "passed": 4552,
-    "runtimeModules": 154,
-    "statements": 10727,
+    "passed": 4616,
+    "runtimeModules": 155,
+    "statements": 10742,
     "branches": 3022,
     "coverage": "100% globally and per module, independently source-audited",
-    "strictTypes": "passed (154 source files)",
+    "strictTypes": "passed (155 source files)",
     "cleanArchitecture": "5 import contracts kept; 51 architecture tests passed"
   },
   "initialRelativeMaterialization": {
@@ -134,5 +134,30 @@
       "Successor generation, durable source inbox/closure, fair shared budgets, calendar projection, complete retained-case acceptance and owner HA execution remain pending.",
       "Schema remains 9; no migration or new compiled image acceptance is claimed."
     ]
+  },
+  "closureStorageCodec": {
+    "path": "backend/src/domus/infrastructure/sqlite_relative_lifecycle.py",
+    "tests": "tests/backend/test_sqlite_relative_lifecycle.py",
+    "focusedPassed": 64,
+    "statements": 15,
+    "branches": 0,
+    "coverage": "100% supported statements; all successor/non-successor, timed/date-only encoding and decoding paths exercised.",
+    "verified": [
+      "Full immutable schedule/cycle/operation/successor snapshots survive encode/decode without changing original receipt matching or cycle-stable key.",
+      "Generated timed/date-only, rejected, reopened and historical-absent records retain their distinct original facts.",
+      "Canonical versioned storage rejects missing/unknown fields, duplicate JSON keys, malformed UTF-8, noncanonical bytes and unsupported scalar/nested versions without defaults or repair.",
+      "Scope, original command and successor/source relationships are checked by the existing domain constructors after closed nested decoding."
+    ],
+    "limitations": [
+      "Encoding/decoding alone does not prove the record has a matching stored original receipt or current authorization; the future repository/application writer must verify those independently.",
+      "No closure table, SQL persistence API, schema-10 migration, durable inbox, successor writer, invalidation/review flow, calendar or new owner HA execution is claimed.",
+      "The schema remains 9 and all retained owners and genuine schema-9 fixture remain unchanged."
+    ],
+    "sourcePackage": {
+      "pythonModules": 155,
+      "uiFiles": 4,
+      "wheelSha256": "e928f2a8ba749e75ea8e36b898cb48e97fbca8847e11d88b1898b0d13e15fdc0",
+      "scope": "Every runtime Python/compiled UI byte matches the current source wheel; no installed image acceptance claimed."
+    }
   }
 }

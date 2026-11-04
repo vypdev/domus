@@ -14,8 +14,8 @@
     "English/Spanish UI, current-account/member/household fencing, bounded private recovery records, session deadlines, keyboard focus and responsive layouts."
   ],
   "currentSourcePackage": {
-    "scope": "Current 154-module source wheel, including required review reason gating and initial relative application service. The installed Edge.9 remains separately pinned to 93d7d77; the initial relative service is not yet maintenance/API/UI-wired.",
-    "wheelSHA256": "0f2ed83b9e25874decf1017f354e446c8670bcd7bf3e12f010d8401dde183674",
+    "scope": "Current 155-module source wheel, including required review reason gating, initial relative application service and closed lifecycle codec. The installed Edge.9 remains separately pinned to 93d7d77; relative maintenance/lifecycle wiring and owner adoption remain pending.",
+    "wheelSHA256": "e928f2a8ba749e75ea8e36b898cb48e97fbca8847e11d88b1898b0d13e15fdc0",
     "actualProductFiles": {
       ".vite/manifest.json": "d2bc7b53fd3413e3a6eb29ab24694bf4db287d5c36e1701204bf242001c17d60",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
