@@ -1,6 +1,6 @@
 {
-  "recordedAtUTC": "2026-11-03T21:13:28.233144+00:00",
-  "status": "Genuine supported schema-9 acceptance and pure cycle-closure policy verified; durable source consumption, schema-10 lifecycle and calendar remain outstanding.",
+  "recordedAtUTC": "2026-11-04T02:34:26.799819+00:00",
+  "status": "Genuine schema-9 acceptance, pure cycle policy, bounded source observations and atomic initial relative work verified in source; maintenance integration, durable successor lifecycle and calendar remain outstanding.",
   "issue": 23,
   "nativePublication": {
     "commit": "91adfe902055cb2c5bb42ceeb57c2b7ab53fb635",
@@ -54,7 +54,7 @@
   "testPreparation": "Raw SQL import initially produced a0644test file and the snapshot correctly rejected unsafe_installation_file. SQLiteDatabase.initialize is not the ownership-permission boundary. The fixture now explicitly prepares0600 before invoking snapshot creation; both original failures remain private diagnostic evidence. No production safety check changed.",
   "pending": [
     "Original native SDK validation/review of the contributor correction and new exact-head complete CI.",
-    "Actual relative bootstrap/successor, durable source inbox/closure/invalidation, shared fairness, reviewed schedule changes and actual task/calendar models/APIs/UI.",
+    "Mixed maintenance wiring and reviewed manual initial adoption, successor generation, durable source inbox/closure/invalidation, shared fairness, reviewed schedule changes and actual task/calendar models/APIs/UI.",
     "Genuine schema10migration/refusal/rollback if required by the planned durable lifecycle data.",
     "Every93retained case,18refinement and publishedalias, actual human UX, HA companion surfaces, both deployment modes and isolated Stable/Edge full product acceptance."
   ],
@@ -104,12 +104,35 @@
     ]
   },
   "currentBackendCampaign": {
-    "passed": 4501,
-    "runtimeModules": 153,
-    "statements": 10619,
-    "branches": 2986,
+    "passed": 4552,
+    "runtimeModules": 154,
+    "statements": 10727,
+    "branches": 3022,
     "coverage": "100% globally and per module, independently source-audited",
-    "strictTypes": "passed",
-    "cleanArchitecture": "passed"
+    "strictTypes": "passed (154 source files)",
+    "cleanArchitecture": "5 import contracts kept; 51 architecture tests passed"
+  },
+  "initialRelativeMaterialization": {
+    "application": "backend/src/domus/application/relative_materialization.py",
+    "tests": "tests/backend/test_relative_materialization.py",
+    "focusedPassed": 51,
+    "statements": 108,
+    "branches": 36,
+    "coverage": "100% statement and branch coverage",
+    "redFirst": "The new test module failed collection with ModuleNotFoundError before implementation; retained in private validation evidence.",
+    "verified": [
+      "One initial obligation, scoped immutable slot, original receipt, audit, outbox and continuation commit atomically in actual SQLite for date-only and timed rules.",
+      "Installation/channel/household scope and exact current rule, definition and progress are rechecked in the writer; changed sources, a racing manual occurrence and stopped lifetimes create no partial effects.",
+      "Restart does not create another obligation. Existing live original proof reconciles pristine continuation without new provider work or identifiers.",
+      "Compatible restoration retains original processing proof, advances continuation as historical absence and never recreates absent work, slot, receipt or outbox.",
+      "Canonical proof and slot relationships are checked; malformed or contradictory typed port results fail closed.",
+      "Six injected transaction failures roll back all writes; independent writers preserve one original effect."
+    ],
+    "limitations": [
+      "This service is not yet invoked by the mixed maintenance runner or exposed by an API/UI.",
+      "Existing manual work returns initial_review_required; explicit reviewed adoption remains to implement.",
+      "Successor generation, durable source inbox/closure, fair shared budgets, calendar projection, complete retained-case acceptance and owner HA execution remain pending.",
+      "Schema remains 9; no migration or new compiled image acceptance is claimed."
+    ]
   }
 }

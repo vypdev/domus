@@ -437,3 +437,28 @@ This is a read boundary for the future durable consumer. Historical facts cannot
 the successor writer still needs atomic live revalidation, inbox/closure and invalidation/attention
 persistence. Schema 9, original task event behavior and the three retained recurrence owners stay
 unchanged. See [lifecycle evidence](evidence/recurrence-lifecycle-calendar.json) for measured scope.
+
+## Atomic initial relative work
+
+The application [initial relative step](../backend/src/domus/application/relative_materialization.py)
+now materializes one initial obligation for an active, pristine relative rule. The composition-owned
+maintenance scope and the exact current rule, definition and progress are rechecked inside the
+writer. One real task occurrence, immutable relative slot, original receipt, audit, outbox and
+compare-and-swap continuation commit together. Date-only work preserves its date without inventing
+a UTC due time. This technical action never completes human work or awards points.
+
+An original receipt is checked before requesting timezone-provider work or allocating new effect
+identifiers. Restart returns current continuation. A retained original can reconcile pristine
+continuation after restoration; absent effects stay absent and are not re-created. Canonical
+result fields and the saved slot must agree with the original proof. Existing manual work requires
+explicit review, and racing source changes abort without partial writes.
+
+[The 51 focused cases](../tests/backend/test_relative_materialization.py) use actual SQLite for
+rollback, restoration, independent writers, scope and source races, lifetime stops and integrity
+failures. The complete backend campaign passes 4,552 cases with 100% statement and branch coverage
+globally and per module; all five import contracts and 51 architecture cases pass. See the
+[updated lifecycle evidence](evidence/recurrence-lifecycle-calendar.json).
+
+This is a source-level application service. It is not yet wired into the mixed maintenance runner,
+an API or the installed Edge image. Reviewed manual adoption, successor materialization, durable
+cycle closure, shared fairness and protected calendar acceptance remain required. Schema stays 9.
