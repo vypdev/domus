@@ -121,8 +121,9 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
       await expect(tasks.getByRole('button', {name: 'Reopen task', exact: true})).toBeDisabled();
       await tasks.getByLabel('Reason', {exact: true}).fill('Repeat after review');
       await expect(tasks.getByRole('button', {name: 'Reopen task', exact: true})).toBeEnabled();
-      const reopening = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/tasks/occurrences/' + id + '/reopen' && response.request().method() === 'POST');
-      await tasks.getByRole('button', {name: 'Reopen task', exact: true}).click(); const original = await (await reopening).json();
+      // Capture the body as soon as the response arrives, before click auto-waiting completes.
+      const reopening = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/tasks/occurrences/' + id + '/reopen' && response.request().method() === 'POST').then(response => response.json());
+      await tasks.getByRole('button', {name: 'Reopen task', exact: true}).click(); const original = await reopening;
       expect(original.result.cycle.closed_at).not.toBeNull(); expect(original.result.cycle.performers).toEqual(approved.cycle.performers);
       await expect(tasks.getByRole('button', {name: 'Mark done now', exact: true})).toBeVisible();
       const reopened = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences/' + id)).json();
