@@ -8,7 +8,7 @@
 - Scope: Complete relative recurrence lifecycle, shared maintenance, and protected calendar behavior as a companion to the existing recurrence owners.
 - Related issues/PRs: https://github.com/vypdev/domus/issues/23; PR #22; PR #24
 - Required review gates: product UX, architecture, testing, documentation, security/operations
-- Open decisions blocking readiness: none. Proposed engineering bounds require implementation evidence.
+- Open decisions blocking readiness: no unanswered product choice specific to this companion. Capability readiness remains draft: the retained catalog blockers for the supported RRULE subset, time-zone/gap/fold library interoperability, and calendar projection review still apply. Proposed engineering bounds require implementation evidence.
 
 This is a proposed companion at `specs/recurrence-lifecycle-calendar.md`. Preserve `specs/recurrence-calendar.md`, `specs/recurrence-execution-foundation.md`, and `specs/recurrence-storage-continuation.md` verbatim. Their 37, 52, and four required cases remain required (93 counted cases); retained integration aliases remain unchanged and are not recounted. This draft adds its own cases only. Native SDD publication and verification of the exact Action-managed branch precede implementation. The catalog preflight and checkpoint evidence described in the issue do not establish native publication, branch readiness, or feature acceptance.
 
