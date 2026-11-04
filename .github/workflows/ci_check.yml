@@ -305,7 +305,18 @@ jobs:
           assert result['stats']['expected']==44 and result['stats']['unexpected']==0
           and result['stats']['skipped']==0 and result['stats']['flaky']==0"
 
+      - name: Retain actual-image browser evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-browser-${{ matrix.arch }}-${{ github.sha }}
+          path: frontend/test-results/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Require no surviving image browser fixtures
+        if: ${{ always() }}
         run: >-
           uv run python -c "import subprocess;
           assert not subprocess.check_output('docker ps --all --quiet --filter label=domus.browser-fixture=true'.split()).strip()"

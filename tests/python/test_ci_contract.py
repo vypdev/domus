@@ -327,3 +327,35 @@ def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair
     assert "assert SCHEMA_VERSION == 9" in fixture
     assert "pnpm install --frozen-lockfile" in fixture
     assert "uv sync --frozen --no-dev --package domus-server --no-editable" in fixture
+
+
+def test_actual_image_browser_evidence_is_retained_per_cpu_even_after_failure() -> None:
+    steps = workflow()["jobs"]["containers"]["steps"]
+    artifact = next(
+        (step for step in steps if step.get("name") == "Retain actual-image browser evidence"),
+        None,
+    )
+    assert artifact is not None, "A failing actual-image browser run must retain its evidence"
+    assert artifact["if"] == "${{ always() }}"
+    assert artifact["with"]["name"] == "image-browser-${{ matrix.arch }}-${{ github.sha }}"
+    assert artifact["with"]["path"] == "frontend/test-results/"
+    assert artifact["with"]["include-hidden-files"] == "true"
+    assert artifact["with"]["retention-days"] == "7"
+    assert artifact["with"]["if-no-files-found"] == "warn"
+    execution = next(
+        step
+        for step in steps
+        if step.get("name")
+        == "Execute household workflows in the actual isolated image from Chromium"
+    )
+    assert steps.index(artifact) > steps.index(execution)
+
+
+def test_actual_image_fixture_retirement_is_checked_even_after_browser_failure() -> None:
+    cleanup = next(
+        step
+        for step in workflow()["jobs"]["containers"]["steps"]
+        if step.get("name") == "Require no surviving image browser fixtures"
+    )
+    assert cleanup.get("if") == "${{ always() }}"
+    assert "continue-on-error" not in cleanup

@@ -121,11 +121,22 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
       await expect(tasks.getByRole('button', {name: 'Reopen task', exact: true})).toBeDisabled();
       await tasks.getByLabel('Reason', {exact: true}).fill('Repeat after review');
       await expect(tasks.getByRole('button', {name: 'Reopen task', exact: true})).toBeEnabled();
-      // Capture the body as soon as the response arrives, before click auto-waiting completes.
-      const reopening = page.waitForResponse(response => response.url() === base(mode) + '/api/v1/tasks/occurrences/' + id + '/reopen' && response.request().method() === 'POST').then(response => response.json());
-      await tasks.getByRole('button', {name: 'Reopen task', exact: true}).click(); const original = await reopening;
-      expect(original.result.cycle.closed_at).not.toBeNull(); expect(original.result.cycle.performers).toEqual(approved.cycle.performers);
+      // Retain real upstream bytes before delivery; avoid depending on Chromium's
+      // response-body cache for the original-result assertion.
+      const reopeningResults: {result: {cycle: {closed_at: number | null; performers: unknown}}}[] = [];
+      let reopeningWrites = 0;
+      await page.route(base(mode) + '/api/v1/tasks/occurrences/' + id + '/reopen', async route => {
+        expect(route.request().method()).toBe('POST'); reopeningWrites++;
+        const upstream = await route.fetch({maxRetries: 0, maxRedirects: 0}); expect(upstream.status()).toBe(200);
+        const body = await upstream.body(); reopeningResults.push(JSON.parse(body.toString('utf8')));
+        await route.fulfill({response: upstream, body});
+      });
+      const currentLocation = page.url();
+      await tasks.getByRole('button', {name: 'Reopen task', exact: true}).click();
       await expect(tasks.getByRole('button', {name: 'Mark done now', exact: true})).toBeVisible();
+      expect(page.url()).toBe(currentLocation); expect(reopeningWrites).toBe(1); expect(reopeningResults).toHaveLength(1);
+      const [original] = reopeningResults;
+      expect(original.result.cycle.closed_at).not.toBeNull(); expect(original.result.cycle.performers).toEqual(approved.cycle.performers);
       const reopened = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences/' + id)).json();
       expect(reopened.work.state).toBe('assigned'); expect(reopened.work.revision).toBe(5); expect(reopened.cycle).toBeNull();
       expect((await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json()).items).toHaveLength(1);

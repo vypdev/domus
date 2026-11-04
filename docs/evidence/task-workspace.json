@@ -1,5 +1,5 @@
 {
-  "recordedAtUTC": "2026-11-04T00:24:09.939060+00:00",
+  "recordedAtUTC": "2026-11-04T03:02:55.107721+00:00",
   "status": "Task workspace adopted in owner Home Assistant as Edge.9; the subsequent required-reason form correction is verified in source and pending a future preview package.",
   "issue": 23,
   "pullRequest": 29,
@@ -14,8 +14,8 @@
     "English/Spanish UI, current-account/member/household fencing, bounded private recovery records, session deadlines, keyboard focus and responsive layouts."
   ],
   "currentSourcePackage": {
-    "scope": "Current source wheel/UI including required review reason gating. The installed Edge.9 package remains independently pinned to 93d7d77.",
-    "wheelSHA256": "994197949f06037cc0e795c17e486368929beaac812c9e35641e58b88268a46e",
+    "scope": "Current 154-module source wheel, including required review reason gating and initial relative application service. The installed Edge.9 remains separately pinned to 93d7d77; the initial relative service is not yet maintenance/API/UI-wired.",
+    "wheelSHA256": "0f2ed83b9e25874decf1017f354e446c8670bcd7bf3e12f010d8401dde183674",
     "actualProductFiles": {
       ".vite/manifest.json": "d2bc7b53fd3413e3a6eb29ab24694bf4db287d5c36e1701204bf242001c17d60",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
@@ -233,5 +233,37 @@
     ],
     "privateEvidence": "Original owner screenshots and compact receipt retained locally under /private/tmp/domus-owner-edge9-93d7d77; private identifiers are not published.",
     "priorRollback": "Selected local Edge.7 backup was created and inspected; prior app is retained until the next corrected preview is accepted."
+  },
+  "actualImageBrowserHarnessCorrection": {
+    "runtime": {
+      "imageId": "sha256:a29e09738084d5573c71b9606fbafe63741f068e56a454ccc8fa18880a3f1301",
+      "runtimeSource": "8d2742ef596f23128ea2e0600db9f41e79c70531",
+      "pythonModules": 154,
+      "uiFiles": 4,
+      "wheelSha256": "0f2ed83b9e25874decf1017f354e446c8670bcd7bf3e12f010d8401dde183674",
+      "allRuntimeBytes": "image matches exact reviewed wheel"
+    },
+    "originalFailure": {
+      "run": 41762169957,
+      "job": 126352129417,
+      "architecture": "aarch64",
+      "failed": 2,
+      "observation": "Chromium Network.getResponseBody could not return the original reopening body, even after capture was moved to the response event. Cache eviction or navigation cause is not independently established. The CI job did not yet retain its trace files."
+    },
+    "correction": "The test intercepts the actual UI reopening request, fetches once with zero retries/redirects, retains real upstream bytes before forwarding that same status/headers/body, then checks one POST, no navigation, retained cycle and current SQLite state. No fabricated payload or production change.",
+    "verified": {
+      "toolingTests": 181,
+      "toolingCoverage": "100% supported statement and branch coverage",
+      "newCiContracts": "2 red first, then green: per-CPU always-retained browser evidence and post-failure fixture-retirement audit",
+      "frontendTypecheck": "passed",
+      "targetedBrowserExecutions": 6,
+      "actualAarch64ImageJourneys": 44,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "actualImageCampaignMilliseconds": 76857.33,
+      "survivingFixtureContainers": 0
+    },
+    "pending": "Fresh exact-head hosted validation of the test/CI correction in both CPU jobs; complete recurrence/calendar and installed owner product acceptance remain separate."
   }
 }
