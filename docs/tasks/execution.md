@@ -223,3 +223,5 @@ The UI retains at most eight originals and 65,536 UTF-8 bytes for one hour in it
 Task forms enforce the same Unicode code-point limits as their command inputs: 160 for a title, 4,000 for a description and 1,000 for a review reason. An overlong draft stays visible with its field marked invalid and submission disabled until corrected. The native UTF-16 maxlength capacity permits astral characters without treating them as two business characters.
 
 The task list uses bounded page navigation, not an accumulating feed. Next page replaces the displayed page with the next at-most-25 items using its opaque cursor; Refresh tasks returns to the first page. Every navigation rechecks current identity, household/member scope and local task grants. Earlier pages are not cached or appended, so an arbitrarily large household list cannot become an unbounded private browser collection.
+
+Reject and reopen stay disabled until a nonblank reason is entered. Approval remains available without a reason; all three actions still enforce the shared 1,000-code-point maximum.

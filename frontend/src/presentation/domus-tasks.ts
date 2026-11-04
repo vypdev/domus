@@ -150,7 +150,7 @@ export class DomusTasks extends LitElement {
         <div class="field"><label for="task-reason">${this.text('reason')}</label><textarea id="task-reason" maxlength=${TASK_TEXT_LIMITS.reason * 2} aria-invalid=${Array.from(this.reasonDraft).length > TASK_TEXT_LIMITS.reason ? 'true' : 'false'} .value=${live(this.reasonDraft)}
           ?disabled=${this.view!.busy} aria-describedby="task-reason-help" @input=${(event: InputEvent) => {this.reasonDraft = (event.target as HTMLTextAreaElement).value;}}></textarea>
           <small id="task-reason-help">${Array.from(this.reasonDraft).length > TASK_TEXT_LIMITS.reason ? this.text('textTooLong') + ': ' + TASK_TEXT_LIMITS.reason : this.text('reasonHelp')}</small></div><div class="actions">
-          ${(['approve', 'reject', 'reopen'] as const).filter(action => work.allowedActions.includes(action)).map(action => html`<button type="button" ?disabled=${this.blocked || Array.from(this.reasonDraft).length > TASK_TEXT_LIMITS.reason}
+          ${(['approve', 'reject', 'reopen'] as const).filter(action => work.allowedActions.includes(action)).map(action => html`<button type="button" ?disabled=${this.blocked || Array.from(this.reasonDraft).length > TASK_TEXT_LIMITS.reason || action !== 'approve' && this.reasonDraft.trim().length === 0}
             @click=${() => {this.lastForm = 'review'; this.intent(action === 'reopen' ? {type: 'reopen', reason: this.reasonDraft}
               : {type: 'verify', decision: action === 'approve' ? 'approved' : 'rejected', reason: this.reasonDraft});}}>${this.text(action)}</button>`)}
         </div></section>` : nothing}

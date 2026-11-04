@@ -199,3 +199,21 @@ test.each(['a', '🧹'])('review enforces the same 1,000-code-point reason bound
   expect(f.button('Reject').disabled).toBe(false); f.button('Reject').click();
   expect(f.intents).toEqual([{type: 'verify', decision: 'rejected', reason: character.repeat(1000)}]);
 });
+
+
+test.each(['en', 'es'] as const)('required review reasons prevent impossible actions in %s', async locale => {
+  const labels = locale === 'es' ? ['Aprobar', 'Rechazar', 'Reabrir tarea'] : ['Approve', 'Reject', 'Reopen task'];
+  const f = await mount(view({detail: {...work, state: 'completed', allowedActions: ['approve', 'reject', 'reopen']}}), locale);
+  for (const reason of ['', ' \t\n ']) {
+    await f.input('task-reason', reason);
+    expect(f.button(labels[0]).disabled).toBe(false);
+    for (const label of labels.slice(1)) {expect(f.button(label).disabled).toBe(true); f.button(label).click();}
+    expect(f.intents).toEqual([]);
+  }
+  f.button(labels[0]).click();
+  expect(f.intents).toEqual([{type: 'verify', decision: 'approved', reason: ' \t\n '}]);
+  await f.input('task-reason', '  Correct the completion  ');
+  for (const label of labels.slice(1)) {expect(f.button(label).disabled).toBe(false); f.button(label).click();}
+  expect(f.intents.slice(1)).toEqual([{type: 'verify', decision: 'rejected', reason: '  Correct the completion  '},
+    {type: 'reopen', reason: '  Correct the completion  '}]);
+});

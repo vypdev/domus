@@ -1,6 +1,6 @@
 {
-  "recordedAtUTC": "2026-11-04T00:07:32.714505+00:00",
-  "status": "Corrected task workspace and exact Edge.9 installer verified on both CPU families; owner adoption pending.",
+  "recordedAtUTC": "2026-11-04T00:24:09.939060+00:00",
+  "status": "Task workspace adopted in owner Home Assistant as Edge.9; the subsequent required-reason form correction is verified in source and pending a future preview package.",
   "issue": 23,
   "pullRequest": 29,
   "preparationBase": "a954ce091d19f6350d64eec759670d5a1fadcfb5",
@@ -14,13 +14,13 @@
     "English/Spanish UI, current-account/member/household fencing, bounded private recovery records, session deadlines, keyboard focus and responsive layouts."
   ],
   "currentSourcePackage": {
-    "scope": "Exact corrected source wheel/UI used by the pinned Edge.9 installer; actual owner acceptance is separate.",
-    "wheelSHA256": "7c3e1d6b7078a2ab7177407c027df10afdacb2ef66f63b790782987538d3e0c4",
+    "scope": "Current source wheel/UI including required review reason gating. The installed Edge.9 package remains independently pinned to 93d7d77.",
+    "wheelSHA256": "879c1adf47e6d58eac8bcd99dc3304e0d5e0bc21da413708b35770bed834e749",
     "actualProductFiles": {
-      ".vite/manifest.json": "31afa1ff0c4629340409460e52b6d2901e2a53154efb7c4a12fede871bde200c",
+      ".vite/manifest.json": "d2bc7b53fd3413e3a6eb29ab24694bf4db287d5c36e1701204bf242001c17d60",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-Cu0tEo5S.js": "d2a7ce802d45bbbf6cc7fcea110e51bd0339f6279a0a7d4ee9df66b0785feee8",
-      "index.html": "1a9d70fdea01faba7f0ea2e5e7a9d3bfdaa2e4a2bd0209c66d85f1d6d1c36048"
+      "assets/index-CwOkFHeO.js": "f328b3ee9e0a8cdb706ce8d583feea426fba10de4e8d348f0bf4e1986d5a0d5b",
+      "index.html": "72b7d0ea7474d7023082fea09a2821b9910e947243477a325a4c41d2746aa456"
     }
   },
   "executedChecks": {
@@ -33,7 +33,7 @@
       "independentAudit": "passed"
     },
     "frontend": {
-      "passed": 1510,
+      "passed": 1512,
       "runtimeFiles": 39,
       "metrics": {
         "lines": {
@@ -55,8 +55,8 @@
           "pct": 100
         },
         "branches": {
-          "total": 2606,
-          "covered": 2606,
+          "total": 2608,
+          "covered": 2608,
           "skipped": 0,
           "pct": 100
         },
@@ -81,7 +81,8 @@
         "Restricted performer claims/completes; adult approves and reopens, preserving the original cycle for both deployments.",
         "Lost committed creation reply survives reload and recovers by protected GET without another POST for both deployments.",
         "Restricted completion loses its committed reply, reloads and recovers its own original by GET before adult review in both deployments.",
-        "Form-level invalid drafts are retained, and exact160/4000Unicode code-point maximums persist through real HTTP/SQLite in both deployments."
+        "Form-level invalid drafts are retained, and exact160/4000Unicode code-point maximums persist through real HTTP/SQLite in both deployments.",
+        "Reject and reopen remain disabled for blank or whitespace-only reasons; approval stays available without a reason, in both deployments."
       ]
     },
     "catalog": {
@@ -94,7 +95,7 @@
     },
     "compiledProductBrowser": {
       "passed": 99,
-      "scope": "Complete corrected compiled UI / real Python / SQLite suite in both deployments, including ten task journeys; no retries or skips."
+      "scope": "Previous complete compiled UI / real Python / SQLite campaign at source 93d7d77 in both deployments, including ten task journeys; no retries or skips. The subsequent reason gating correction reran the complete frontend coverage and all ten affected task journeys."
     },
     "platformAndPackage": {
       "passed": 231,
@@ -119,7 +120,7 @@
     "unresolvedEviction": false
   },
   "limitations": [
-    "Owner HA still runs Edge.7; the new task UI has not yet been adopted there. Agent fixture browser acceptance is not human UX review.",
+    "Actual owner Edge.9 now serves the task workspace and retained task/preferences after reload. This agent-operated owner test is separate from human UX review. Its pinned source predates the later required-reason form gating correction.",
     "Relative recurrence lifecycle, protected calendar and timing editors remain outstanding; all 93 retained recurrence cases and 18 refinements remain required.",
     "Multi-performer entry, full task/dependency editors, configurable points/rewards, integrated real Inventory/Shopping, automation, HA companion surfaces and complete first-release acceptance remain outstanding.",
     "A recorded source event does not prove downstream points, stock, notification or automation delivery.",
@@ -155,7 +156,8 @@
     "regressions": "Explicit operations.read denial with retained claim/complete grants; current permission revocation and foreign actor; real restricted lost completion recovery; exact code-point limits in both browser deployments.",
     "previewRepackaging": "Edge.9 exact pinned installer verified on both CPU families with44household/task browser journeys each.",
     "upstreamAccuracyReport": "https://github.com/vypdev/copilot/issues/879",
-    "findingState": "Both original task findings were natively verified fixed at93d7d77. A new bounded-pagination observation is documented and reported upstream for native reassessment; no finding manually resolved or dismissed."
+    "findingState": "The original recovery and Unicode-limit findings were natively verified fixed; pagination was natively classified obsolete at 2b2da5f. Required-reason gating is subsequently corrected with a red/green regression and awaits fresh native reassessment. No finding manually resolved or dismissed.",
+    "reviewReasons": "Reject/reopen are disabled for blank or whitespace-only reasons. Approval may omit a reason. The 1,000-code-point bound and current authorization remain unchanged."
   },
   "precedingCandidateVerification": {
     "version": "0.0.0-edge.8",
@@ -200,7 +202,7 @@
         }
       }
     },
-    "ownerAdoption": "pending"
+    "ownerAdoption": "Installed, configured and started on actual owner HA; existing HA session, development household setup, create/claim/complete/reopen/second completion, saved Spanish preference and persisted detail after reload observed. Source is exactly the pinned 93d7d77 candidate; later source corrections are not silently included."
   },
   "paginationReview": {
     "scope": "Next page replaces one bounded page; Refresh tasks rereads the first page, with fresh current authority. No accumulating list is promised.",
@@ -209,6 +211,26 @@
   },
   "ownerPreparation": {
     "scope": "The owner Edge.7 app was freshly observed running in Chrome; a selected local partial backup was created and its catalog inspected, then the app was observed started. Actual backup restoration has not been exercised. Private identifiers/screenshots remain local.",
-    "next": "Install the verified Edge.9 candidate and exercise real task UI through owner Ingress."
+    "next": "Keep the selected Edge.7 backup and rollback until the next corrected preview has been verified; continue recurrence/calendar implementation."
+  },
+  "ownerAdoption": {
+    "version": "0.0.0-edge.9",
+    "sourceCommit": "93d7d77b98a196640bf0049bca36a3d90b7a5857",
+    "deployment": "Actual Home Assistant Supervisor installation and Ingress, operated through Chrome native controls.",
+    "dataBoundary": "Separate app/private data from the prior Edge.7 repository; a new development household was explicitly created. No in-place migration claim.",
+    "observed": [
+      "Installation completed with an ok result; Supervisor reported Edge.9 installed and running.",
+      "The exact local HA browser origin was saved; existing HA identity was verified without another login.",
+      "Created one development task, claimed it, completed it, reopened it with a reason and completed a second cycle.",
+      "Changed the visible UI to Spanish, reviewed/saved the private Spanish preference and reloaded HA.",
+      "The task list and selected second completed cycle remained present after reload, in Spanish."
+    ],
+    "notExercised": [
+      "Actual two-account adult/restricted review on owner HA; that journey is covered by isolated real-product fixtures.",
+      "Actual backup restoration, stock posting, points, notification or automation delivery.",
+      "Human UX acceptance; agent observation is distinct."
+    ],
+    "privateEvidence": "Original owner screenshots and compact receipt retained locally under /private/tmp/domus-owner-edge9-93d7d77; private identifiers are not published.",
+    "priorRollback": "Selected local Edge.7 backup was created and inspected; prior app is retained until the next corrected preview is accepted."
   }
 }
