@@ -1,6 +1,6 @@
 {
   "recordedAtUTC": "2026-11-03T21:13:28.233144+00:00",
-  "status": "Pre-DDL source acceptance and prospective SDD correction; lifecycle implementation remains outstanding",
+  "status": "Genuine supported schema-9 acceptance and pure cycle-closure policy verified; durable source consumption, schema-10 lifecycle and calendar remain outstanding.",
   "issue": 23,
   "nativePublication": {
     "commit": "91adfe902055cb2c5bb42ceeb57c2b7ab53fb635",
@@ -58,6 +58,29 @@
     "Genuine schema10migration/refusal/rollback if required by the planned durable lifecycle data.",
     "Every93retained case,18refinement and publishedalias, actual human UX, HA companion surfaces, both deployment modes and isolated Stable/Edge full product acceptance."
   ],
-  "noRuntimeOrCopilotChanges": true,
-  "goalComplete": false
+  "noRuntimeOrCopilotChanges": false,
+  "goalComplete": false,
+  "pureClosurePolicy": {
+    "recordedAtUTC": "2026-11-04T00:34:31.945147+00:00",
+    "path": "backend/src/domus/domain/relative_lifecycle.py",
+    "tests": "tests/backend/test_relative_lifecycle.py",
+    "focusedPassed": 61,
+    "statements": 77,
+    "branches": 30,
+    "coverage": "100% statement and branch coverage",
+    "invariants": [
+      "Cycle closure identity remains stable across rule generations, mutable verification and revision changes, while preserving installation/channel/household/rule/definition/source occurrence/cycle scope.",
+      "Grant proof retains its exact original successor, operation and immutable completion basis; consumer closure does not close or approve the human TaskCycle.",
+      "Canonical original receipts, including retained absent-effect history, can prove prior processing without granting recreation.",
+      "Late approval preserves the original completion basis; rejection/reopening cancels only proven unstarted derived work, retains stopped work and requires review for started/completed/unknown history.",
+      "Closure cannot predate rule creation or the observed completion/approval/reopening; zero remains a valid timestamp."
+    ],
+    "notImplemented": [
+      "No current maintenance runner consumes this policy yet.",
+      "No durable inbox/closure/attention tables, schema-10 migration, atomic successor writer, calendar projection or product UI acceptance is claimed."
+    ]
+  },
+  "copilotModified": false,
+  "storageSchema": 9,
+  "schemaChanged": false
 }

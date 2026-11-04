@@ -1,21 +1,17 @@
 # Home Assistant app installation
 
-Current development state (2026-11-04): the owner runs Edge `0.0.0-edge.7` on an `aarch64` HA
-installation, app `d3c516f0_domus_edge`. The older Edge.3 and Edge.5 apps were uninstalled.
-Edge.9 is the current Tasks workspace candidate; it has not yet been installed on that HA.
-Stable is not yet published. Source tests and package fingerprints are recorded in
+Current development state (2026-11-04): Edge `0.0.0-edge.9` is installed and running on the
+owner's `aarch64` Home Assistant. Through its existing HA session and Ingress, the agent created,
+claimed, completed and reopened a development task, completed a second cycle, and verified the task
+and saved Spanish preference after reloading. This is agent-operated acceptance on actual hardware;
+human usability review and complete first-release acceptance remain separate. Stable is not yet
+published. Source, package and adoption evidence are recorded in
 [task workspace evidence](evidence/task-workspace.json). Historical receipts below retain their
 original Edge.1–3 observations and do not describe the current installation.
 
 ## Current preview and update path
 
-The installed Edge.7 repository source, read from Supervisor, is:
-
-```text
-https://github.com/vypdev/domus#feature/27-complete-the-household-administration-workspace-after-the-verified-api-and-controller-checkpoint
-```
-
-The reviewed Edge.9 candidate is in PR #29:
+The current Edge.9 repository source, verified in Supervisor and tracked in PR #29, is:
 
 ```text
 https://github.com/vypdev/domus#feature/23-complete-relative-recurrence-lifecycle-and-protected-calendar-after-the-execution-checkpoint
@@ -36,8 +32,15 @@ The [artifact declaration](../addon-edge/artifact.json) fixes all Python and com
 It retains schema 9, cold backups, Ingress and the same Core API scope; no Supervisor management
 API, host mount or public port is requested. Read the
 [configuration, permissions and schema-9 rollback limits](../addon-edge/DOCS.md) before adoption.
-The owner currently has a development household and saved preferences on Edge.7; preserving or
-replacing those records during actual Edge.9 adoption is separate from isolated fixture tests.
+The branch repository created a separate app with separate private data. A new development
+household was created explicitly; the earlier Edge.7 household/preferences were not migrated into
+it. Edge.7 and its selected local app backup remain the prior rollback while the next corrected
+preview is prepared. No actual backup restoration is claimed. The older Edge.3 and Edge.5 apps
+were uninstalled.
+
+The later required-reason button correction is verified in current source and will ship in the
+next preview. The installed Edge.9 remains fixed to the runtime above; a newer PR commit does not
+silently replace its immutable application bytes.
 
 ## A local pre-update app backup
 
@@ -58,7 +61,7 @@ that it is stopped before requesting the backup. Keep it stopped until the same 
 Restart it with `ha apps start <installed_app_slug>` only if it was running beforehand, then inspect
 its state again. If backup fails, retain the error and restore that prior running/stopped state;
 do not update based only on a dispatched job. Never start a preview that was already stopped.
-Edge.7 declares `backup: cold`, so Supervisor handles stopping it during a backup; expect a brief
+Edge.7 and later previews declare `backup: cold`, so Supervisor handles stopping it during a backup; expect a brief
 availability interruption and fresh identity verification after restart. This is a package policy,
 not evidence of an exercised owner restore. See the
 [official backup configuration](https://contributors.home-assistant.io/apps/reference/configuration/#backups).

@@ -398,3 +398,22 @@ historically processed creation returns original evidence without recreating its
 definition/rule or event delivery. This is distinct from the still-required relative materializer,
 source inbox/closure/eligibility/invalidation, reviewed attachment and mixed-rule runtime. See
 [relative creation evidence](evidence/recurrence-relative-creation.json) for measured scope and limits.
+
+
+## Cycle-closure policy before durable integration
+
+The pure RelativeClosure policy records one original consumer grant or terminal fence per source
+cycle. Its identity spans rule generations and later approval/reopening while preserving the exact
+installation, channel, household, rule, definition and source occurrence/cycle. Original successor
+and completion snapshots remain immutable. This consumer proof does not close or approve the human
+TaskCycle, authorize maintenance or create an obligation by construction.
+
+A later rejection or reopening may cancel only derived work proven never to have started. Existing
+cancelled/skipped work is retained; started/completed work or unknown history requires review.
+Retained processing proof cannot recreate an absent successor. Closure chronology includes rule
+creation and the observed human decision; zero is a valid timestamp.
+
+The 61 pure-policy tests and full backend campaign are recorded in
+[lifecycle evidence](evidence/recurrence-lifecycle-calendar.json). Durable inbox/closure storage,
+atomic source revalidation and successor effects, schema-10 compatibility, mixed execution and
+calendar/UI integration remain required. The current runtime runner does not yet consume this policy.

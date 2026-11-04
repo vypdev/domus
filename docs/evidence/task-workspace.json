@@ -15,7 +15,7 @@
   ],
   "currentSourcePackage": {
     "scope": "Current source wheel/UI including required review reason gating. The installed Edge.9 package remains independently pinned to 93d7d77.",
-    "wheelSHA256": "879c1adf47e6d58eac8bcd99dc3304e0d5e0bc21da413708b35770bed834e749",
+    "wheelSHA256": "24483641c624615446cdff44dbf46cc42bcee50e424dfe74150212de8bd085f7",
     "actualProductFiles": {
       ".vite/manifest.json": "d2bc7b53fd3413e3a6eb29ab24694bf4db287d5c36e1701204bf242001c17d60",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
@@ -25,12 +25,13 @@
   },
   "executedChecks": {
     "backend": {
-      "passed": 4411,
-      "modules": 151,
-      "statements": 10468,
-      "branches": 2932,
+      "passed": 4472,
+      "modules": 152,
+      "statements": 10545,
+      "branches": 2962,
       "coverage": "100% globally and per module",
-      "independentAudit": "passed"
+      "independentAudit": "passed",
+      "scope": "Current backend including the pure recurrence closure policy. The installed Edge.9 remains pinned to the earlier 151-module source."
     },
     "frontend": {
       "passed": 1512,
@@ -156,7 +157,7 @@
     "regressions": "Explicit operations.read denial with retained claim/complete grants; current permission revocation and foreign actor; real restricted lost completion recovery; exact code-point limits in both browser deployments.",
     "previewRepackaging": "Edge.9 exact pinned installer verified on both CPU families with44household/task browser journeys each.",
     "upstreamAccuracyReport": "https://github.com/vypdev/copilot/issues/879",
-    "findingState": "The original recovery and Unicode-limit findings were natively verified fixed; pagination was natively classified obsolete at 2b2da5f. Required-reason gating is subsequently corrected with a red/green regression and awaits fresh native reassessment. No finding manually resolved or dismissed.",
+    "findingState": "Recovery, Unicode limits and required-reason gating were natively verified fixed; pagination was natively classified obsolete. The subsequent installation-guide observation is corrected to match actual owner adoption and awaits reassessment. No finding manually resolved or dismissed.",
     "reviewReasons": "Reject/reopen are disabled for blank or whitespace-only reasons. Approval may omit a reason. The 1,000-code-point bound and current authorization remain unchanged."
   },
   "precedingCandidateVerification": {
