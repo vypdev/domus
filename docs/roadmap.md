@@ -40,6 +40,14 @@ independently published dependency. Reusable styles are split between applicatio
 The first step is therefore a coherent extraction with one source and versioned public API, followed
 by actual adoption in both apps. Copying components/CSS into Domus is not completion of reuse.
 
+The chosen ownership/delivery direction is a dedicated vypdev/ha-ui repository, an independently
+versioned @vypdev/ha-ui npm package, and its own static component Storybook on GitHub Pages. These
+resources are planned, not yet created or published; repository/publisher rights and source-to-artifact
+integrity must be verified before publication. The library owns its tests, API compatibility and
+catalog. Both apps consume exact reviewed versions and may upgrade independently within tested
+compatibility. Storybook is built from the same component implementation, with reviewable PR catalog
+builds. Domus retains app-level stories for its own composed household pages.
+
 The shared package owns presentation tokens, type/spacing scales, tabs, buttons, fields, selects,
 checkboxes, cards, rows/grids, dialogs and feedback states. Each app owns its controllers, routing,
 permissions, domain models, API clients and data. Package changes must not require Gateway to run,
