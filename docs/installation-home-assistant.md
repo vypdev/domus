@@ -2,7 +2,7 @@
 
 Current development state (2026-11-04): the owner runs Edge `0.0.0-edge.7` on an `aarch64` HA
 installation, app `d3c516f0_domus_edge`. The older Edge.3 and Edge.5 apps were uninstalled.
-Edge.8 is the current Tasks workspace candidate; it has not yet been installed on that HA.
+Edge.9 is the current Tasks workspace candidate; it has not yet been installed on that HA.
 Stable is not yet published. Source tests and package fingerprints are recorded in
 [task workspace evidence](evidence/task-workspace.json). Historical receipts below retain their
 original Edge.1–3 observations and do not describe the current installation.
@@ -15,7 +15,7 @@ The installed Edge.7 repository source, read from Supervisor, is:
 https://github.com/vypdev/domus#feature/27-complete-the-household-administration-workspace-after-the-verified-api-and-controller-checkpoint
 ```
 
-The reviewed Edge.8 candidate is in PR #29:
+The reviewed Edge.9 candidate is in PR #29:
 
 ```text
 https://github.com/vypdev/domus#feature/23-complete-relative-recurrence-lifecycle-and-protected-calendar-after-the-execution-checkpoint
@@ -30,14 +30,14 @@ claim an in-place upgrade or data migration when installing a separate preview. 
 selected backup before deliberate development data replacement; do not overwrite a managed branch
 to redirect an old repository.
 
-Edge.8 pins published runtime `2ee3ff45babfbc9e16fc345767154b1c546ba327` and archive SHA-256
-`dc5199c8013714cce815371dfa988b97da050bab3b7192442e07319e7146d5a3`.
+Edge.9 pins published runtime `93d7d77b98a196640bf0049bca36a3d90b7a5857` and archive SHA-256
+`97dc46699ad7eab54c487386ffaffc28624e8e50f9d3a2f1ffc6b525fb7b8f0e`.
 The [artifact declaration](../addon-edge/artifact.json) fixes all Python and compiled UI bytes.
 It retains schema 9, cold backups, Ingress and the same Core API scope; no Supervisor management
 API, host mount or public port is requested. Read the
 [configuration, permissions and schema-9 rollback limits](../addon-edge/DOCS.md) before adoption.
 The owner currently has a development household and saved preferences on Edge.7; preserving or
-replacing those records during actual Edge.8 adoption is separate from isolated fixture tests.
+replacing those records during actual Edge.9 adoption is separate from isolated fixture tests.
 
 ## A local pre-update app backup
 

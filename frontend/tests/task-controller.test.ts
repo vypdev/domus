@@ -224,3 +224,15 @@ test.each(['journal_too_large', 'duplicate_request'] as const)('journal %s refus
   await f.controller.create('New', '', 'normal'); expect(f.controller.view.notice).toBe(code === 'journal_too_large' ? 'journal_capacity' : 'journal_unavailable');
   expect(f.server.send).not.toHaveBeenCalled(); expect(f.entropy.requestKey).toHaveBeenCalledOnce();
 });
+
+test('Next page replaces one bounded page and Refresh tasks returns to the first page with fresh authority', async () => {
+  const f = fixture(), first = {...detail, occurrenceId: 'work-first'}, next = {...detail, occurrenceId: 'work-next'};
+  f.server.list.mockReturnValueOnce(read({items: [first], nextCursor: 'next-page'}));
+  await f.controller.refresh(); expect(f.controller.view.page?.items.map(item => item.occurrenceId)).toEqual(['work-first']);
+  f.server.list.mockReturnValueOnce(read({items: [next], nextCursor: null}));
+  await f.controller.more(); expect(f.controller.view.page?.items.map(item => item.occurrenceId)).toEqual(['work-next']);
+  expect(f.server.list.mock.calls.at(-1)).toEqual([context, 'next-page']);
+  f.server.list.mockReturnValueOnce(read({items: [first], nextCursor: 'next-page'}));
+  await f.controller.refresh(); expect(f.controller.view.page?.items.map(item => item.occurrenceId)).toEqual(['work-first']);
+  expect(f.server.list.mock.calls.at(-1)).toEqual([context, null]); expect(f.identity.session).toHaveBeenCalledTimes(3);
+});

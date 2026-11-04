@@ -3,11 +3,12 @@
 Development preview of Domus installed as a Home Assistant app. Open it through HA's Open Web UI;
 it uses your existing HA sign-in without another login.
 
-Edge 0.0.0-edge.8 adds the Tasks workspace: create, claim, complete, approve/reject and reopen work
+Edge 0.0.0-edge.9 includes the Tasks workspace: create, claim, complete, approve/reject and reopen work
 in English or Spanish. Tasks open by default; household administration remains available from the
 Household tab. Material quantities and original-request recovery preserve the existing server
 authorization and exact operation identity. Calendar, recurrence controls, points and supplies
-remain in progress.
+remain in progress. Task forms retain invalid drafts and enforce exact Unicode character limits;
+original task recovery uses the current task grants independently of general operation browsing.
 
 It retains the English/Spanish household administration workspace: participant roster,
 household settings, HA administrator mapping, member roles/ordinary permissions, public aliases

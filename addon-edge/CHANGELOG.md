@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.0-edge.9
+
+- Recover the caller's original task action using its current recorded task authority, even when
+  general operation browsing is disabled; retain the separate browsing permission boundary.
+- Enforce shared Unicode code-point limits in task forms, preserve overlong drafts and show the
+  field that needs correction; accept the exact limits for astral characters.
+- Exercise restricted lost-response recovery and exact Unicode limits in both deployment modes,
+  increasing the actual-image campaign to 44 household/task journeys per CPU.
+- Replace the earlier Edge.8 candidate with a distinct immutable reviewed runtime.
+- Retain schema 9, cold backups and the existing Core API permission scope.
+
 ## 0.0.0-edge.8
 
 - Make Tasks the default household screen, with English/Spanish creation, list and detail.

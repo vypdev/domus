@@ -1,6 +1,6 @@
 {
-  "recordedAtUTC": "2026-11-03T23:58:13.049072+00:00",
-  "status": "Task-specific recovery and Unicode form corrections verified locally; replacement immutable preview and owner adoption pending.",
+  "recordedAtUTC": "2026-11-04T00:07:32.714505+00:00",
+  "status": "Corrected task workspace and exact Edge.9 installer verified on both CPU families; owner adoption pending.",
   "issue": 23,
   "pullRequest": 29,
   "preparationBase": "a954ce091d19f6350d64eec759670d5a1fadcfb5",
@@ -14,7 +14,7 @@
     "English/Spanish UI, current-account/member/household fencing, bounded private recovery records, session deadlines, keyboard focus and responsive layouts."
   ],
   "currentSourcePackage": {
-    "scope": "Corrected current source wheel and compiled UI; the published Edge.8 candidate still pins its preceding runtime. A new immutable preview and owner adoption require separate verification.",
+    "scope": "Exact corrected source wheel/UI used by the pinned Edge.9 installer; actual owner acceptance is separate.",
     "wheelSHA256": "7c3e1d6b7078a2ab7177407c027df10afdacb2ef66f63b790782987538d3e0c4",
     "actualProductFiles": {
       ".vite/manifest.json": "31afa1ff0c4629340409460e52b6d2901e2a53154efb7c4a12fede871bde200c",
@@ -33,7 +33,7 @@
       "independentAudit": "passed"
     },
     "frontend": {
-      "passed": 1509,
+      "passed": 1510,
       "runtimeFiles": 39,
       "metrics": {
         "lines": {
@@ -120,7 +120,7 @@
   },
   "limitations": [
     "Owner HA still runs Edge.7; the new task UI has not yet been adopted there. Agent fixture browser acceptance is not human UX review.",
-    "Relative recurrence lifecycle, protected calendar and timing editors remain outstanding; all93retained recurrence cases and18refinements remain required.",
+    "Relative recurrence lifecycle, protected calendar and timing editors remain outstanding; all 93 retained recurrence cases and 18 refinements remain required.",
     "Multi-performer entry, full task/dependency editors, configurable points/rewards, integrated real Inventory/Shopping, automation, HA companion surfaces and complete first-release acceptance remain outstanding.",
     "A recorded source event does not prove downstream points, stock, notification or automation delivery.",
     "Original native SDK validation of the contributor SDD correction remains separate; no local SDK cache was restored or modified."
@@ -146,10 +146,18 @@
     "scope": "Independent consumer structural/path/retained-byte preflight; not original native SDK validation."
   },
   "publishedRuntime": {
-    "commit": "2ee3ff45babfbc9e16fc345767154b1c546ba327",
-    "sourceArchiveSHA256": "dc5199c8013714cce815371dfa988b97da050bab3b7192442e07319e7146d5a3"
+    "commit": "93d7d77b98a196640bf0049bca36a3d90b7a5857",
+    "sourceArchiveSHA256": "97dc46699ad7eab54c487386ffaffc28624e8e50f9d3a2f1ffc6b525fb7b8f0e"
   },
-  "previewCandidate": {
+  "sourceCorrections": {
+    "taskRecovery": "Current task-read and recorded original command authorization, actor/action/key scope, without requiring the separate operations.read browsing grant. The general operation-by-ID query retains its permission.",
+    "textLimits": "Shared title160, description4000 and reason1000 Unicode code-point limits; visible invalid state prevents submission and preserves the entered draft. Native maxlength remains a UTF-16 capacity bound that permits astral characters.",
+    "regressions": "Explicit operations.read denial with retained claim/complete grants; current permission revocation and foreign actor; real restricted lost completion recovery; exact code-point limits in both browser deployments.",
+    "previewRepackaging": "Edge.9 exact pinned installer verified on both CPU families with44household/task browser journeys each.",
+    "upstreamAccuracyReport": "https://github.com/vypdev/copilot/issues/879",
+    "findingState": "Both original task findings were natively verified fixed at93d7d77. A new bounded-pagination observation is documented and reported upstream for native reassessment; no finding manually resolved or dismissed."
+  },
+  "precedingCandidateVerification": {
     "version": "0.0.0-edge.8",
     "storageSchema": 9,
     "artifact": "addon-edge/artifact.json",
@@ -171,12 +179,36 @@
     "ownerAdoption": "Pending: Chrome browser control reports native pipe unavailable; native observation has stale/empty page content and a uniform screenshot. HA responds to an unauthenticated HTTP request. No installation/update is claimed.",
     "supersededByPendingCorrectedPreview": true
   },
-  "sourceCorrections": {
-    "taskRecovery": "Current task-read and recorded original command authorization, actor/action/key scope, without requiring the separate operations.read browsing grant. The general operation-by-ID query retains its permission.",
-    "textLimits": "Shared title160, description4000 and reason1000 Unicode code-point limits; visible invalid state prevents submission and preserves the entered draft. Native maxlength remains a UTF-16 capacity bound that permits astral characters.",
-    "regressions": "Explicit operations.read denial with retained claim/complete grants; current permission revocation and foreign actor; real restricted lost completion recovery; exact code-point limits in both browser deployments.",
-    "previewRepackaging": "pending",
-    "upstreamAccuracyReport": "https://github.com/vypdev/copilot/issues/879",
-    "findingState": "Native findings remain open until the configured reviewer verifies the correction; none manually resolved or dismissed."
+  "previewCandidate": {
+    "version": "0.0.0-edge.9",
+    "sourceCommit": "93d7d77b98a196640bf0049bca36a3d90b7a5857",
+    "sourceArchiveSHA256": "97dc46699ad7eab54c487386ffaffc28624e8e50f9d3a2f1ffc6b525fb7b8f0e",
+    "storageSchema": 9,
+    "artifact": "addon-edge/artifact.json",
+    "bothCPUVerification": {
+      "scope": "Actual pinned installers, exact 151 Python/four UI fingerprints, native authority/restart, standalone delivery and frozen Edge.5 upgrade/replay/restore on both CPU families. Each actual-image browser campaign has44expected, zero unexpected/skipped/flaky; HA/Supervisor transports are fictional fixtures, distinct from owner adoption.",
+      "images": {
+        "aarch64": {
+          "imageID": "sha256:3f46dc72e93c6aa2df637948580ed8d5d3093c5aa08470db751b7fb24e55a39f",
+          "pinnedImageChecksPassed": 4,
+          "actualImageBrowserJourneysPassed": 44
+        },
+        "amd64": {
+          "imageID": "sha256:5e0408f902cc98c48b911b7bebaf983c419d419145d6a17123dee6a4412668a3",
+          "pinnedImageChecksPassed": 4,
+          "actualImageBrowserJourneysPassed": 44
+        }
+      }
+    },
+    "ownerAdoption": "pending"
+  },
+  "paginationReview": {
+    "scope": "Next page replaces one bounded page; Refresh tasks rereads the first page, with fresh current authority. No accumulating list is promised.",
+    "regression": "frontend/tests/task-controller.test.ts",
+    "upstreamReport": "https://github.com/vypdev/copilot/issues/880"
+  },
+  "ownerPreparation": {
+    "scope": "The owner Edge.7 app was freshly observed running in Chrome; a selected local partial backup was created and its catalog inspected, then the app was observed started. Actual backup restoration has not been exercised. Private identifiers/screenshots remain local.",
+    "next": "Install the verified Edge.9 candidate and exercise real task UI through owner Ingress."
   }
 }

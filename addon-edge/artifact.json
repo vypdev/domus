@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.8",
-  "sourceCommit": "2ee3ff45babfbc9e16fc345767154b1c546ba327",
-  "sourceArchiveSHA256": "dc5199c8013714cce815371dfa988b97da050bab3b7192442e07319e7146d5a3",
+  "version": "0.0.0-edge.9",
+  "sourceCommit": "93d7d77b98a196640bf0049bca36a3d90b7a5857",
+  "sourceArchiveSHA256": "97dc46699ad7eab54c487386ffaffc28624e8e50f9d3a2f1ffc6b525fb7b8f0e",
   "storageSchema": 9,
-  "wheelSHA256": "eabe7e7325cd0066990426a6d01316c2cd3397b358f36fc0f6153ae6e88093fb",
+  "wheelSHA256": "7c3e1d6b7078a2ab7177407c027df10afdacb2ef66f63b790782987538d3e0c4",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -49,7 +49,7 @@
     "domus/application/task_material_views.py": "1f4e1b52c17064b73e3c6502b38fc578a7589d68044279312c783b656e5aa5bf",
     "domus/application/task_materials.py": "caa132a7b16fca293770deba3da149cf9bda2e24d4719abe9de39470d686698e",
     "domus/application/task_ports.py": "67ede6022534205e35878c695c0fee4354ccfa207140e8c4043888fc133c5076",
-    "domus/application/task_queries.py": "689967c5a70e07cb315a09730c62ba2e05842b34cb4727a16a2a81ba8ba4b391",
+    "domus/application/task_queries.py": "4a36d6712634ed778755d52a7203af91132c5532ad05d3300e374ec337f50c83",
     "domus/application/task_requests.py": "ca196b2fdfecd1110d03caff6121be0ca50c505a4f7713f97a8f62d2449556ec",
     "domus/application/task_reviews.py": "dcc288cda6cdcf5073bad4f24133b9d3496c0b0cf1272e8328e6df38129f3328",
     "domus/composition/__init__.py": "a902d8faf7dd19da6829fb730d81e32d34ec38ee6cfafd676966a95d0ad31366",
@@ -159,9 +159,9 @@
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
   "uiFiles": {
-    ".vite/manifest.json": "785db581dde1ff22dda7b1d92756ef55c67078cb558c39a90945f7699a824d0a",
+    ".vite/manifest.json": "31afa1ff0c4629340409460e52b6d2901e2a53154efb7c4a12fede871bde200c",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-LD9A1zed.js": "5800c4070013c33158cd37283bcc7fbc9fe5196ca1dae14458f3d33ef2c3da45",
-    "index.html": "85ad753e2af522abd0177014f5db02126e3b1014bcd3bcedb9956db0ece62a65"
+    "assets/index-Cu0tEo5S.js": "d2a7ce802d45bbbf6cc7fcea110e51bd0339f6279a0a7d4ee9df66b0785feee8",
+    "index.html": "1a9d70fdea01faba7f0ea2e5e7a9d3bfdaa2e4a2bd0209c66d85f1d6d1c36048"
   }
 }

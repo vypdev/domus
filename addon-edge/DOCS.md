@@ -35,7 +35,7 @@ it preserves later operation evidence without reapplying rolled-away effects. St
 restore preparation/activation. Inspect and resume the same activation ID after an uncertain result.
 The retained source-checkpoint supports deliberate rollback reconciled against the latest history.
 Do not switch root pointers or run an older image manually. See the
-[restoration guide](https://github.com/vypdev/domus/blob/2ee3ff45babfbc9e16fc345767154b1c546ba327/docs/restoration.md)
+[restoration guide](https://github.com/vypdev/domus/blob/93d7d77b98a196640bf0049bca36a3d90b7a5857/docs/restoration.md)
 for the exact console commands. Restore is not available from the household entry interface.
 App removal with data
 deletion removes the app's private records; use deliberate operator backup procedures before removal.
@@ -102,6 +102,14 @@ identifiers are under optional details. Household settings remain in the Househo
 
 This increment keeps schema 9 and the existing installation options. It adds no breaking-version
 boundary, host exposure or Core API permission. The immutable artifact fixes the published runtime;
-both CPU jobs exercise all 42 household/task browser journeys in the current-source image. The
+both CPU jobs exercise all 44 household/task browser journeys in the current-source image. The
 calendar, full recurrence editors, points/rewards and supplies screens are still being developed.
 Actual owner installation and usability review are separate from isolated browser fixtures.
+
+
+Edge.9 corrects task-specific original recovery so it checks current task-read and the recorded
+command grants without requiring operations.read for general browsing. The general operation-by-ID
+query keeps that separate permission. Form-level title, description and reason limits count Unicode
+code points, retain invalid input with a visible error and prevent submission until corrected. Both
+deployments exercise restricted lost-response recovery and exact astral-character bounds. This is
+a distinct immutable preview from Edge.8; it retains the same schema and permission scope.
