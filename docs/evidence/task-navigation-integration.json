@@ -9,5 +9,20 @@
     "assets/index-CHPRUong.js": "11e23c908c896da224b72a9cc03b841bbab6da89c392f86bb9d09f8faeb47e6c",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
     "index.html": "0cbcf5d61efb00d3afabf6204ce8480d4648a1d0eb4e8556d0730c90a437878d"
+  },
+  "localValidation": {
+    "commit": "9a10d8114869be754962953903e773fe8e12c723",
+    "frontendTests": 1513,
+    "frontendCoverage": "100% of all four metrics globally and per authored file",
+    "compiledBrowserTests": 101,
+    "wheelAssetAndLicenseVerification": "passed",
+    "imageBrowserJourneysPerArchitecture": 46,
+    "images": {
+      "amd64": "sha256:927f67d3ab6cd725ad3e2cef703220fd28d9b71dc5e16da544a489a89120e9d3",
+      "aarch64": "sha256:f3ab2379a5b8103354cdb3adc539cf8a04b79bd77f3802be3e09fc732968efa8"
+    },
+    "imageScope": "Local source images and exact package/listener bytes in both CPUs. Browser fixtures exercised Ingress and standalone, English and Spanish, native links, keyboard focus, Back/Forward and current-authorized task recovery.",
+    "managedBranchReconciliation": "https://github.com/vypdev/domus/actions/runs/42284834425/job/128122841461",
+    "scope": "These observations cover the navigation integration source only. Later lifecycle changes require independent current-head evidence."
   }
 }
