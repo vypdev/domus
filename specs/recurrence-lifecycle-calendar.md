@@ -509,6 +509,8 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `addon-edge/DOCS.md` | update |
 | `tests/backend/test_app_package.py` | update |
 | `tests/containers/test_app_ui.py` | update |
+| `tests/containers/test_app_image.py` | update |
+| `tests/containers/test_app_compatibility.py` | update |
 | `docs/installation-home-assistant.md` | update |
 | `docs/product-vision.md` | update |
 | `docs/architecture.md` | update |

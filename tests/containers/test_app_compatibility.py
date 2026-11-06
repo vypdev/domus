@@ -219,7 +219,7 @@ def test_real_older_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot
                 "/data/snapshots/current",
             )
         )
-        assert current["snapshot"]["schema_version"] == 9
+        assert current["snapshot"]["schema_version"] == 10
         assert current["snapshot"]["instance_id"] == instance_id
         inspected = successful(
             console(
