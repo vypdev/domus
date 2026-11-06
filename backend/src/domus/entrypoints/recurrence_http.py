@@ -17,9 +17,11 @@ from domus.entrypoints.household_http import (
 from domus.entrypoints.recurrence_dto import (
     FixedSkipBody,
     ManualAdoptionBody,
+    RelativeAttachmentBody,
     RelativeStateBody,
     ReviewedAdoptionBody,
     ReviewedFixedSkipBody,
+    ReviewedRelativeAttachmentBody,
     ReviewedStateBody,
 )
 from domus.entrypoints.task_dto import Identifier
@@ -77,6 +79,22 @@ def create_recurrence_review_router(context: Callable[[Request], RecurrenceRevie
     @router.post("/fixed-skip/apply", response_model=ReceiptResponse, openapi_extra=write_contract)
     def apply_fixed_skip(
         request: Request, body: ReviewedFixedSkipBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).apply(_key(request), body.reviewed()))
+
+    @router.post(
+        "/attachment/preview", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def preview_attachment(
+        request: Request, body: RelativeAttachmentBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).preview(_key(request), body.selection()))
+
+    @router.post("/attachment/apply", response_model=ReceiptResponse, openapi_extra=write_contract)
+    def apply_attachment(
+        request: Request,
+        body: ReviewedRelativeAttachmentBody,
+        query: Annotated[_EmptyQuery, Query()],
     ) -> ReceiptResponse:
         return _receipt(context(request).apply(_key(request), body.reviewed()))
 

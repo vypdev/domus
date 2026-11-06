@@ -118,6 +118,31 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
     connection: sqlite3.Connection
     installation: Installation
 
+    def has_current_schedule(self, household_id: str, definition_id: str) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(definition_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM recurrence_rules WHERE household_id=? AND definition_id=? "
+                "AND state!='retired'",
+                (household_id, definition_id),
+            ).fetchone()
+            is not None
+        )
+
+    def occurrence_is_scheduled(self, household_id: str, occurrence_id: str) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM recurrence_slots WHERE household_id=? AND occurrence_id=? "
+                "UNION ALL SELECT 1 FROM recurrence_relative_slots "
+                "WHERE household_id=? AND occurrence_id=? LIMIT 1",
+                (household_id, occurrence_id, household_id, occurrence_id),
+            ).fetchone()
+            is not None
+        )
+
     def maintenance_schedules(
         self, household_id: str, *, limit: int, after: str | None = None
     ) -> tuple[FixedSchedule | RelativeSchedule, ...]:

@@ -10,6 +10,12 @@ from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.fixed_skip_review import FixedSkip, FixedSkipPlan, fixed_skip_plan
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
+from domus.application.relative_attachment_review import (
+    AttachmentTiming,
+    AttachRelative,
+    attach_relative,
+    attachment_plan,
+)
 from domus.application.relative_lifecycle import occurrence_work_history
 from domus.application.relative_materialization import RelativeSource, adopt_initial, initial_source
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
@@ -62,9 +68,12 @@ class ManualAdoption:
         return JsonDocument.from_value({"version": 1, "kind": "adopt_manual", **asdict(self)})
 
 
+type ReviewSelection = ManualAdoption | AttachRelative | RelativeStateChange | FixedSkip
+
+
 @dataclass(frozen=True, slots=True)
 class ReviewedChange:
-    selection: ManualAdoption | RelativeStateChange | FixedSkip
+    selection: ReviewSelection
     preview_key: str
     plan_fingerprint: str
 
@@ -194,19 +203,44 @@ class RecurrenceReview:
             if isinstance(selection, RelativeStateChange)
             else fixed_skip_plan(unit, authority.scope, selection)
         )
-        snapshot = JsonDocument.from_value(
+        return plan, RecurrenceReview._snapshot(
+            authority.scope, actor, selection.document(), plan.snapshot
+        )
+
+    @staticmethod
+    def _snapshot(
+        scope: MaintenanceScope, actor: TaskActor, request: JsonDocument, source: JsonDocument
+    ) -> JsonDocument:
+        return JsonDocument.from_value(
             {
-                "request": selection.document().decode(),
-                "installation": asdict(authority.scope.installation),
-                "household_id": authority.scope.household_id,
+                "request": request.decode(),
+                "installation": asdict(scope.installation),
+                "household_id": scope.household_id,
                 "member_id": actor.member.member_id,
                 "member_revision": actor.member.revision,
                 "policy_revision": actor.identity_policy_revision,
                 "role": actor.role.value,
-                "source": plan.snapshot.decode(),
+                "source": source.decode(),
             }
         )
-        return plan, snapshot
+
+    def _preview_attachment(
+        self, authority: _ReviewAuthority, commands: AtomicCommands, selection: AttachRelative
+    ) -> Receipt:
+        payload = selection.document()
+        previous = commands.replay(authority.command, payload)
+        if previous is not None:
+            return previous
+        timing = selection.prepare(self.planner.times)
+
+        def commit(unit: UnitOfWork) -> Change:
+            actor = authority.current(unit)
+            plan = attachment_plan(unit, authority.scope, selection, timing)
+            return self._preview_change(
+                payload, self._snapshot(authority.scope, actor, payload, plan.document)
+            )
+
+        return commands.execute(authority.command, payload, commit)
 
     def _preview_prepared(
         self,
@@ -321,14 +355,14 @@ class RecurrenceReview:
             JsonDocument.from_value({"version": 1, "kind": action.value}),
         )
 
-    def preview(
-        self, key: str, selection: ManualAdoption | RelativeStateChange | FixedSkip
-    ) -> Receipt:
+    def preview(self, key: str, selection: ReviewSelection) -> Receipt:
         action = ReviewAction.PREVIEW
         authority = self._authority(self.actor.current(), action, key)
         commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
         payload = selection.document()
 
+        if isinstance(selection, AttachRelative):
+            return self._preview_attachment(authority, commands, selection)
         if isinstance(selection, RelativeStateChange | FixedSkip):
             return self._preview_prepared(authority, commands, selection, payload)
 
@@ -344,35 +378,30 @@ class RecurrenceReview:
         commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
         payload = request.document()
 
+        timing: AttachmentTiming | None = None
+        if isinstance(request.selection, AttachRelative):
+            previous = commands.replay(authority.command, payload)
+            if previous is not None:
+                return previous
+            with self.transactions.read() as unit:
+                authority.require(authority.command, unit)
+                self._reviewed_plan(unit, authority.command, request)
+            timing = request.selection.prepare(self.planner.times)
+
         def apply(unit: UnitOfWork) -> Change:
-            preview_key = CommandKey(
-                self.household_id,
-                authority.command.actor_id,
-                ReviewAction.PREVIEW.value,
-                request.preview_key,
-            )
-            preview = unit.receipts.get(preview_key)
-            if (
-                preview is None
-                or preview.historical
-                or preview.payload_fingerprint != request.selection.document().fingerprint
-            ):
-                raise Conflict("recurrence_review_stale")
-            saved = preview.result.decode()
-            expires = saved.get("expires_at")
-            if (
-                saved.get("plan_fingerprint") != request.plan_fingerprint
-                or type(expires) is not int
-                or not preview.created_at <= self.clock.now() < expires
-            ):
-                raise Conflict("recurrence_review_stale")
-            saved_plan = saved.get("plan")
-            if not isinstance(saved_plan, dict) or (
-                JsonDocument.from_value(saved_plan).fingerprint != request.plan_fingerprint
-            ):
-                raise Conflict("recurrence_review_stale")
+            saved_plan = self._reviewed_plan(unit, authority.command, request)
             selection = request.selection
-            if isinstance(selection, RelativeStateChange | FixedSkip):
+            if isinstance(selection, AttachRelative):
+                assert timing is not None
+                actor = authority.current(unit)
+                attachment = attachment_plan(unit, authority.scope, selection, timing)
+                snapshot = self._snapshot(
+                    authority.scope, actor, selection.document(), attachment.document
+                )
+                if snapshot.fingerprint != request.plan_fingerprint:
+                    raise Conflict("recurrence_review_stale")
+                outcome = attach_relative(unit, commands, authority.scope, selection, attachment)
+            elif isinstance(selection, RelativeStateChange | FixedSkip):
                 outcome = self._apply_prepared(unit, authority, commands, selection, saved_plan)
             else:
                 plan = self._plan(unit, authority.scope, authority.current(unit), selection)
@@ -392,6 +421,37 @@ class RecurrenceReview:
             return self._change(action, payload, result)
 
         return commands.execute(authority.command, payload, apply)
+
+    def _reviewed_plan(
+        self, unit: UnitOfWork, command: CommandKey, request: ReviewedChange
+    ) -> JsonObject:
+        preview_key = CommandKey(
+            self.household_id,
+            command.actor_id,
+            ReviewAction.PREVIEW.value,
+            request.preview_key,
+        )
+        preview = unit.receipts.get(preview_key)
+        if (
+            preview is None
+            or preview.historical
+            or preview.payload_fingerprint != request.selection.document().fingerprint
+        ):
+            raise Conflict("recurrence_review_stale")
+        saved = preview.result.decode()
+        expires = saved.get("expires_at")
+        if (
+            saved.get("plan_fingerprint") != request.plan_fingerprint
+            or type(expires) is not int
+            or not preview.created_at <= self.clock.now() < expires
+        ):
+            raise Conflict("recurrence_review_stale")
+        saved_plan = saved.get("plan")
+        if not isinstance(saved_plan, dict) or (
+            JsonDocument.from_value(saved_plan).fingerprint != request.plan_fingerprint
+        ):
+            raise Conflict("recurrence_review_stale")
+        return saved_plan
 
     def original(self, action: ReviewAction, key: str) -> Receipt:
         if not isinstance(action, ReviewAction):

@@ -208,3 +208,50 @@ def test_protected_overdue_fixed_skip_recovers_original_exception(api):
         f"{BASE}/requests/recurrence.review.apply/apply-skip", headers=CONTEXT
     )
     assert original.json() == result.json()
+
+
+def test_protected_attachment_from_ordinary_task_uses_exact_wire_choice(api):
+    api.user(USER, True)
+    original = api.client.post(
+        "/api/v1/tasks/definitions",
+        json={"title": "Existing task", "expected_revision": 0},
+        headers=api.headers("manual"),
+    )
+    assert original.status_code == 200, original.text
+    task = original.json()["result"]
+    choice = {
+        "definition_id": task["definition_id"],
+        "definition_revision": 1,
+        "occurrence_id": task["occurrence_id"],
+        "occurrence_revision": 1,
+        "initial": {"kind": "date", "local": "2026-12-31"},
+        "interval_days": 30,
+        "zone": "UTC",
+        "choice": "adopt",
+    }
+    headers = api.headers("attachment-preview") | CONTEXT
+    endpoint = f"{BASE}/attachment/preview"
+    for initial, status in [
+        ({"kind": "date", "local": "2026-02-30"}, 422),
+        ({"kind": "time", "local": "2026-12-31T20:30Z"}, 422),
+        ({"kind": "time", "local": "2026-12-31T20:30:00.123"}, 409),
+    ]:
+        invalid = api.client.post(endpoint, json=choice | {"initial": initial}, headers=headers)
+        assert invalid.status_code == status, invalid.text
+    preview = api.client.post(endpoint, json=choice, headers=headers)
+    assert preview.status_code == 200, preview.text
+    applied = api.client.post(
+        f"{BASE}/attachment/apply",
+        json=choice
+        | {
+            "preview_key": "attachment-preview",
+            "plan_fingerprint": preview.json()["result"]["plan_fingerprint"],
+        },
+        headers=api.headers("attachment-apply") | CONTEXT,
+    )
+    assert applied.status_code == 200, applied.text
+    assert applied.json()["result"]["first_occurrence_id"] == task["occurrence_id"]
+    original = api.client.get(
+        f"{BASE}/requests/recurrence.review.apply/attachment-apply", headers=CONTEXT
+    )
+    assert original.json() == applied.json()

@@ -47,3 +47,22 @@ Apply through `POST /fixed-skip/apply` with the original selection, preview key,
 The skipped task keeps its original slot and reason. Future fixed slots continue from their
 existing schedule. The operation records the original actor and transition without recording a
 completion or awarding points.
+
+## Attach a relative rule to an existing task
+
+Use `POST /attachment/preview` with the definition and occurrence IDs and revisions, the initial
+nominal date or local time, the interval in local days, the time zone and the attachment choice.
+An active task definition can have one current recurrence rule. The preview resolves the initial
+time with the packaged time-zone data and records the exact manual work under review.
+
+- Choose `adopt` to use an available or assigned occurrence with a proven unstarted history as
+  the first recurring obligation. A timed initial slot must resolve to the occurrence's existing
+  due instant. An untimed occurrence can adopt a date-only slot.
+- Choose `retain_manual` to keep the occurrence independent. The reviewed first recurring
+  obligation must be separate from all open manual work on the definition. With open manual
+  work, Domus requires a timed first recurring due date after every known manual deadline.
+  A date-only first recurring slot is available when the existing work is closed.
+
+Apply with `POST /attachment/apply`, the same selection, the original preview key and its plan
+fingerprint. If the task, reviewed backlog, or time-zone facts change, refresh the preview. The
+rule, the first recurring obligation and the original receipt commit together.

@@ -1750,6 +1750,48 @@
         "title": "MembersResponse",
         "type": "object"
       },
+      "NominalDateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "date",
+            "title": "Kind",
+            "type": "string"
+          },
+          "local": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "title": "Local",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "local"
+        ],
+        "title": "NominalDateBody",
+        "type": "object"
+      },
+      "NominalTimeBody": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "time",
+            "title": "Kind",
+            "type": "string"
+          },
+          "local": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,3})?)?$",
+            "title": "Local",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "local"
+        ],
+        "title": "NominalTimeBody",
+        "type": "object"
+      },
       "OccurrenceBody": {
         "additionalProperties": false,
         "properties": {
@@ -2472,6 +2514,103 @@
         "title": "RecoveryTransitionRequest",
         "type": "object"
       },
+      "RelativeAttachmentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "choice": {
+            "enum": [
+              "adopt",
+              "retain_manual"
+            ],
+            "title": "Choice",
+            "type": "string"
+          },
+          "definition_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Definition Id",
+            "type": "string"
+          },
+          "definition_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Definition Revision",
+            "type": "integer"
+          },
+          "initial": {
+            "discriminator": {
+              "mapping": {
+                "date": "#/components/schemas/NominalDateBody",
+                "time": "#/components/schemas/NominalTimeBody"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NominalDateBody"
+              },
+              {
+                "$ref": "#/components/schemas/NominalTimeBody"
+              }
+            ],
+            "title": "Initial"
+          },
+          "interval_days": {
+            "maximum": 36600.0,
+            "minimum": 1.0,
+            "title": "Interval Days",
+            "type": "integer"
+          },
+          "occurrence_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "occurrence_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Occurrence Revision",
+            "type": "integer"
+          },
+          "repeated_time": {
+            "default": "first_instant",
+            "enum": [
+              "first_instant",
+              "second_instant"
+            ],
+            "title": "Repeated Time",
+            "type": "string"
+          },
+          "visibility": {
+            "default": "at_completion",
+            "enum": [
+              "at_completion",
+              "at_verification"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "zone": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "definition_id",
+          "definition_revision",
+          "occurrence_id",
+          "occurrence_revision",
+          "initial",
+          "interval_days",
+          "zone",
+          "choice"
+        ],
+        "title": "RelativeAttachmentBody",
+        "type": "object"
+      },
       "RelativeStateBody": {
         "additionalProperties": false,
         "properties": {
@@ -2651,6 +2790,115 @@
           "plan_fingerprint"
         ],
         "title": "ReviewedFixedSkipBody",
+        "type": "object"
+      },
+      "ReviewedRelativeAttachmentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "choice": {
+            "enum": [
+              "adopt",
+              "retain_manual"
+            ],
+            "title": "Choice",
+            "type": "string"
+          },
+          "definition_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Definition Id",
+            "type": "string"
+          },
+          "definition_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Definition Revision",
+            "type": "integer"
+          },
+          "initial": {
+            "discriminator": {
+              "mapping": {
+                "date": "#/components/schemas/NominalDateBody",
+                "time": "#/components/schemas/NominalTimeBody"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NominalDateBody"
+              },
+              {
+                "$ref": "#/components/schemas/NominalTimeBody"
+              }
+            ],
+            "title": "Initial"
+          },
+          "interval_days": {
+            "maximum": 36600.0,
+            "minimum": 1.0,
+            "title": "Interval Days",
+            "type": "integer"
+          },
+          "occurrence_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "occurrence_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Occurrence Revision",
+            "type": "integer"
+          },
+          "plan_fingerprint": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Plan Fingerprint",
+            "type": "string"
+          },
+          "preview_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Preview Key",
+            "type": "string"
+          },
+          "repeated_time": {
+            "default": "first_instant",
+            "enum": [
+              "first_instant",
+              "second_instant"
+            ],
+            "title": "Repeated Time",
+            "type": "string"
+          },
+          "visibility": {
+            "default": "at_completion",
+            "enum": [
+              "at_completion",
+              "at_verification"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          },
+          "zone": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "definition_id",
+          "definition_revision",
+          "occurrence_id",
+          "occurrence_revision",
+          "initial",
+          "interval_days",
+          "zone",
+          "choice",
+          "preview_key",
+          "plan_fingerprint"
+        ],
+        "title": "ReviewedRelativeAttachmentBody",
         "type": "object"
       },
       "ReviewedStateBody": {
@@ -13256,6 +13504,362 @@
           }
         ],
         "summary": "Preview Adoption"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/attachment/apply": {
+      "post": {
+        "operationId": "apply_attachment_api_v1_tasks_recurrence_reviews_attachment_apply_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewedRelativeAttachmentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Apply Attachment"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/attachment/preview": {
+      "post": {
+        "operationId": "preview_attachment_api_v1_tasks_recurrence_reviews_attachment_preview_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelativeAttachmentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Preview Attachment"
       }
     },
     "/api/v1/tasks/recurrence/reviews/fixed-skip/apply": {

@@ -62,6 +62,22 @@ class CreateRelativeTask:
         )
 
 
+def resolve_initial(
+    times: RecurrenceTimes, initial: NominalSlot, policy: TimePolicy
+) -> PlannedSlot:
+    times.require_policy(policy)
+    if isinstance(initial, NominalDate):
+        return PlannedSlot(initial, None)
+    resolved = times.resolve(initial, policy)
+    if (
+        not isinstance(resolved, ResolvedTime)
+        or resolved.nominal != initial
+        or resolved.policy != policy
+    ):
+        raise IntegrationUnavailable("recurrence_time_source_invalid")
+    return PlannedSlot(initial, resolved)
+
+
 @dataclass
 class RelativeRecurrenceCommands:
     transactions: Transactions
@@ -93,17 +109,7 @@ class RelativeRecurrenceCommands:
         if previous is not None:
             return previous
         # Actual timezone work precedes the writer; execute checks current local grants again.
-        self.times.require_policy(request.policy)
-        resolved = None
-        if isinstance(request.initial, NominalTime):
-            resolved = self.times.resolve(request.initial, request.policy)
-            if (
-                not isinstance(resolved, ResolvedTime)
-                or resolved.nominal != request.initial
-                or resolved.policy != request.policy
-            ):
-                raise IntegrationUnavailable("recurrence_time_source_invalid")
-        initial = PlannedSlot(request.initial, resolved)
+        initial = resolve_initial(self.times, request.initial, request.policy)
 
         def apply(unit: UnitOfWork) -> Change:
             item = TaskCreation(self.clock, self.identifiers, self.inventory_factory).definition(

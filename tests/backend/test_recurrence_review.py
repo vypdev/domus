@@ -699,3 +699,242 @@ def test_fixed_skip_rolls_back_task_transition_if_review_receipt_fails(tmp_path,
         )
         assert unit.tasks.history("home", choice.occurrence_id) == ()
     assert review.apply("skip", change).result.decode()["work"]["state"] == "skipped"
+
+
+def attachment_fixture(tmp_path, *, timed=False, retain=False):
+    from test_relative_recurrence_creation import request as relative_request
+    from test_task_commands import fixture
+
+    from domus.application.relative_attachment_review import AttachmentChoice, AttachRelative
+    from domus.application.task_requests import CreateTask
+    from domus.domain.task_values import TaskContent
+    from domus.infrastructure.recurrence_time import PinnedRecurrenceTime
+
+    tasks, store, actor, ids = fixture(tmp_path)
+    times = PinnedRecurrenceTime()
+    original = relative_request(timed=timed)
+    definition = tasks.create(
+        "manual-definition", CreateTask(TaskContent("Existing task"))
+    ).result.decode()
+    due_at = times.resolve(original.initial, original.policy).instant_ms if timed else None
+    if timed:
+        if retain:
+            due_at -= 86_400_000
+        work = tasks.create_occurrence(
+            "manual-due",
+            CreateTaskOccurrence(
+                definition["definition_id"], assignee_ids=("child",), due_at=due_at
+            ),
+        ).result.decode()["occurrence_id"]
+        tasks.transition(
+            "close-placeholder",
+            TransitionTask(
+                definition["occurrence_id"], 1, OccurrenceState.CANCELLED, "Use dated work"
+            ),
+        )
+    else:
+        work = definition["occurrence_id"]
+    selection = AttachRelative(
+        definition["definition_id"],
+        1,
+        work,
+        1,
+        original.initial,
+        original.interval,
+        original.policy.zone,
+        original.policy.repeated_time,
+        original.visibility,
+        AttachmentChoice.RETAIN if retain else AttachmentChoice.ADOPT,
+    )
+    service = RecurrenceReview(
+        store,
+        store.installation,
+        actor,
+        actor.current,
+        tasks.clock,
+        ids,
+        RelativeRecurrencePlanner(times),
+    )
+    return service, tasks, selection
+
+
+@pytest.mark.parametrize("timed,retain", [(False, False), (True, False), (True, True)])
+def test_attach_unconfigured_definition_preserves_manual_work_and_recovers_original(
+    tmp_path, monkeypatch, timed, retain
+):
+    service, _, choice = attachment_fixture(tmp_path, timed=timed, retain=retain)
+    store = service.transactions
+    before = counts(store)
+    with store.read() as unit:
+        manual = unit.tasks.occurrence("home", choice.occurrence_id)
+        assert not unit.recurrence.has_current_schedule("home", choice.definition_id)
+        assert not unit.recurrence.occurrence_is_scheduled("home", choice.occurrence_id)
+    preview, request = reviewed(service, choice)
+    assert preview.result.decode()["plan"]["source"]["creates_first_occurrence"] is retain
+    applied = service.apply("attach", request)
+    facts = applied.result.decode()
+    rule_id, first = facts["schedule_id"], facts["first_occurrence_id"]
+    assert facts["manual_occurrence_id"] == choice.occurrence_id
+    assert (first != choice.occurrence_id) is retain
+    assert counts(store)[:2] == (before[0], before[1] + int(retain))
+    with store.read() as unit:
+        rule = unit.recurrence.relative_schedule("home", rule_id)
+        (slot,) = unit.recurrence.relative_slots("home", rule_id)
+        assert slot.occurrence_id == first and unit.recurrence.occurrence_is_scheduled(
+            "home", first
+        )
+        assert unit.recurrence.relative_progress("home", rule_id).current_occurrence_id == first
+        assert unit.tasks.occurrence("home", choice.occurrence_id) == manual
+        assert rule.definition_id == choice.definition_id
+        assert unit.receipts.get(slot.command).operation_id == facts["materialization_operation_id"]
+    with pytest.raises(Conflict, match="recurrence_attachment_already_scheduled"):
+        service.preview("another", choice)
+
+    def unavailable(*_):
+        raise AssertionError("Replaying the original must precede timezone lookup")
+
+    monkeypatch.setattr(type(service.planner.times), "require_policy", unavailable)
+    restarted = replace(service, transactions=SQLiteDatabase(store.path, store.installation))
+    assert restarted.preview("preview", choice) == preview
+    assert restarted.apply("attach", request) == applied
+    assert restarted.original(ReviewAction.APPLY, "attach") == applied
+
+
+def test_attachment_rejects_changed_work_and_rolls_back_new_rule_and_mapping(tmp_path, monkeypatch):
+    service, tasks, choice = attachment_fixture(tmp_path)
+    _, stale = reviewed(service, choice)
+    tasks.assign("assign", AssignTask(choice.occurrence_id, 1, ("child",)))
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        service.apply("stale", stale)
+    _, request = reviewed(service, replace(choice, occurrence_revision=2), "fresh")
+    before = counts(service.transactions)
+    append = SQLiteOutbox.append
+
+    def fail(self, event):
+        append(self, event)
+        if event.event_type == ReviewAction.APPLY:
+            raise StorageFailure("attachment_rollback")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteOutbox, "append", fail)
+        with pytest.raises(StorageFailure, match="attachment_rollback"):
+            service.apply("attach", request)
+    assert counts(service.transactions) == before
+    with service.transactions.read() as unit:
+        assert not unit.recurrence.has_current_schedule("home", choice.definition_id)
+        assert not unit.recurrence.occurrence_is_scheduled("home", choice.occurrence_id)
+    assert (
+        service.apply("attach", request).result.decode()["first_occurrence_id"]
+        == choice.occurrence_id
+    )
+
+
+def test_retain_manual_rejects_overlap_and_changes_to_other_reviewed_work(tmp_path):
+    service, tasks, choice = attachment_fixture(tmp_path, timed=True, retain=True)
+    _, request = reviewed(service, choice)
+    work = tasks.create_occurrence(
+        "added", CreateTaskOccurrence(choice.definition_id, due_at=1000)
+    ).result.decode()
+    assert work["occurrence_id"] != choice.occurrence_id
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        service.apply("attach", request)
+    tasks.create_occurrence("undated", CreateTaskOccurrence(choice.definition_id))
+    with pytest.raises(Conflict, match="recurrence_attachment_overlap"):
+        service.preview("refresh", choice)
+
+
+def test_attachment_rejects_retired_owned_occurrence_and_oversized_manual_plan(
+    tmp_path, monkeypatch
+):
+    from domus.application.relative_attachment_review import AttachmentChoice
+
+    service, _, choice = attachment_fixture(tmp_path)
+    _, request = reviewed(service, choice)
+    facts = service.apply("attach", request).result.decode()
+    store = service.transactions
+    with store.write() as unit:
+        rule = unit.recurrence.relative_schedule("home", facts["schedule_id"])
+        unit.recurrence.save_relative_schedule(
+            replace(rule, revision=2, state=ScheduleState.RETIRED), 1
+        )
+    with pytest.raises(Conflict, match="recurrence_attachment_incompatible"):
+        service.preview("reattach", choice)
+
+    (tmp_path / "other").mkdir()
+    service, _, choice = attachment_fixture(tmp_path / "other")
+    with service.transactions.read() as unit:
+        work = unit.tasks.occurrence("home", choice.occurrence_id)
+    monkeypatch.setattr(SQLiteTasks, "occurrences", lambda *a, **kw: (work,) * 101)
+    with pytest.raises(Conflict, match="recurrence_review_too_large"):
+        service.preview("oversized", replace(choice, choice=AttachmentChoice.RETAIN))
+
+
+def test_original_attachment_after_restore_does_not_recreate_rule_or_work(tmp_path):
+    root, archive, target = (tmp_path / part for part in ("root", "archive", "target"))
+    root.mkdir(mode=0o700)
+    service, _, choice = attachment_fixture(root)
+    store = service.transactions
+    identity_at(root, store.installation)
+    checkpoint = SQLiteSnapshots(store, archive, store.installation, Clock()).create(
+        "before-attachment"
+    )
+    _, request = reviewed(service, choice)
+    applied = service.apply("attach", request)
+    SQLiteRestorations(store, archive, target, store.installation, Clock(), checkpoint).prepare(
+        "restore"
+    )
+    assert SQLiteActivation(root, store.installation, Clock(), target).activate().state == "active"
+    restored = open_storage(root, "edge")
+    try:
+        reopened = replace(service, transactions=restored.database)
+        original = reopened.original(ReviewAction.APPLY, "attach")
+        assert original.historical and original.operation_id == applied.operation_id
+        assert reopened.apply("attach", request) == original
+        with restored.database.read() as unit:
+            assert not unit.recurrence.has_current_schedule("home", choice.definition_id)
+            assert not unit.recurrence.occurrence_is_scheduled("home", choice.occurrence_id)
+            assert len(unit.tasks.occurrences("home")) == 1
+    finally:
+        restored.close()
+
+
+def test_unconfigured_adoption_rejects_incompatible_choice(tmp_path):
+    service, tasks, choice = attachment_fixture(tmp_path)
+    with pytest.raises(InvalidInput, match="invalid_recurrence_attachment"):
+        replace(choice, choice="adopt")
+    tasks.assign("assign", AssignTask(choice.occurrence_id, 1, ("child",)))
+    tasks.transition("start", TransitionTask(choice.occurrence_id, 2, OccurrenceState.IN_PROGRESS))
+    with pytest.raises(Conflict, match="recurrence_adoption_incompatible"):
+        service.preview("started", replace(choice, occurrence_revision=3))
+
+
+def test_competing_new_attachments_share_exact_original_or_reject_second_rule(tmp_path):
+    service, _, choice = attachment_fixture(tmp_path)
+    _, request = reviewed(service, choice)
+    store = service.transactions
+    barrier = Barrier(3)
+
+    def apply(key):
+        client = replace(
+            service,
+            transactions=SQLiteDatabase(store.path, store.installation, busy_timeout=5),
+            identifiers=SecureIdentifiers(),
+        )
+        barrier.wait(timeout=5)
+        try:
+            return client.apply(key, request)
+        except Conflict as error:
+            return error
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        same, retry, another = tuple(pool.map(apply, ("same", "same", "another")))
+    if isinstance(another, Conflict):
+        assert str(another) == "recurrence_attachment_already_scheduled"
+        assert not isinstance(same, Conflict) and same == retry
+    else:
+        assert all(
+            str(error) == "recurrence_attachment_already_scheduled" for error in (same, retry)
+        )
+    with store.read() as unit:
+        assert len(unit.recurrence.relative_schedules("home")) == 1
+        assert len(unit.tasks.occurrences("home")) == 1
