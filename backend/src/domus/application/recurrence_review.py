@@ -1,8 +1,8 @@
-"""Review an exact manual occurrence before binding it to a relative initial slot."""
+"""Review a manual adoption or relative rule state change before committing it."""
 
 import re
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from enum import StrEnum
 
 from domus.application.commands import AtomicCommands, Change
@@ -11,6 +11,12 @@ from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.relative_lifecycle import occurrence_work_history
 from domus.application.relative_materialization import RelativeSource, adopt_initial, initial_source
+from domus.application.relative_recurrence import RelativeRecurrencePlanner
+from domus.application.relative_state_review import (
+    RelativeStateChange,
+    RelativeStatePlan,
+    state_plan,
+)
 from domus.application.task_authorization import TaskAccess, TaskActor
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
@@ -21,6 +27,7 @@ from domus.domain.storage import (
     CommandKey,
     Installation,
     JsonDocument,
+    JsonObject,
     Receipt,
     validate_identifier,
 )
@@ -53,8 +60,8 @@ class ManualAdoption:
 
 
 @dataclass(frozen=True, slots=True)
-class ReviewedAdoption:
-    selection: ManualAdoption
+class ReviewedChange:
+    selection: ManualAdoption | RelativeStateChange
     preview_key: str
     plan_fingerprint: str
 
@@ -107,6 +114,7 @@ class RecurrenceReview:
     read_actor: Callable[[], HumanIdentity]
     clock: Clock
     identifiers: Identifiers
+    planner: RelativeRecurrencePlanner
     household_id: str = "home"
 
     def _authority(self, human: HumanIdentity, action: ReviewAction, key: str) -> _ReviewAuthority:
@@ -174,6 +182,84 @@ class RecurrenceReview:
         )
 
     @staticmethod
+    def _state_snapshot(
+        unit: UnitOfWork, authority: _ReviewAuthority, selection: RelativeStateChange
+    ) -> tuple[RelativeStatePlan, JsonDocument]:
+        actor = authority.current(unit)
+        plan = state_plan(unit, authority.scope, selection)
+        snapshot = JsonDocument.from_value(
+            {
+                "request": selection.document().decode(),
+                "installation": asdict(authority.scope.installation),
+                "household_id": authority.scope.household_id,
+                "member_id": actor.member.member_id,
+                "member_revision": actor.member.revision,
+                "policy_revision": actor.identity_policy_revision,
+                "role": actor.role.value,
+                "source": plan.snapshot.decode(),
+            }
+        )
+        return plan, snapshot
+
+    def _preview_state(
+        self,
+        authority: _ReviewAuthority,
+        commands: AtomicCommands,
+        selection: RelativeStateChange,
+        payload: JsonDocument,
+    ) -> Receipt:
+        previous = commands.replay(authority.command, payload)
+        if previous is not None:
+            return previous
+        with self.transactions.read() as unit:
+            plan, snapshot = self._state_snapshot(unit, authority, selection)
+        backlog = plan.backlog(self.planner)
+
+        def commit(unit: UnitOfWork) -> Change:
+            _, current = self._state_snapshot(unit, authority, selection)
+            if current != snapshot:
+                raise Conflict("recurrence_review_stale")
+            return self._preview_change(
+                payload,
+                JsonDocument.from_value({"snapshot": snapshot.decode(), "backlog": backlog}),
+            )
+
+        return commands.execute(authority.command, payload, commit)
+
+    def _preview_change(self, payload: JsonDocument, plan: JsonDocument) -> Change:
+        result = JsonDocument.from_value(
+            {
+                "plan": plan.decode(),
+                "plan_fingerprint": plan.fingerprint,
+                "expires_at": self.clock.now() + _REVIEW_TTL_MS,
+            }
+        )
+        return self._change(ReviewAction.PREVIEW, payload, result)
+
+    def _apply_state(
+        self,
+        unit: UnitOfWork,
+        authority: _ReviewAuthority,
+        selection: RelativeStateChange,
+        saved: JsonObject,
+    ) -> JsonObject:
+        plan, snapshot = self._state_snapshot(unit, authority, selection)
+        if JsonDocument.from_value({"snapshot": saved.get("snapshot")}) != JsonDocument.from_value(
+            {"snapshot": snapshot.decode()}
+        ):
+            raise Conflict("recurrence_review_stale")
+        rule = plan.source.schedule
+        updated = replace(rule, state=selection.target, revision=rule.revision + 1)
+        unit.recurrence.save_relative_schedule(updated, rule.revision)
+        return {
+            "kind": "relative_state",
+            "schedule_id": updated.schedule_id,
+            "schedule_revision": updated.revision,
+            "state": updated.state.value,
+            "backlog": saved.get("backlog"),
+        }
+
+    @staticmethod
     def _change(action: ReviewAction, payload: JsonDocument, result: JsonDocument) -> Change:
         return Change(
             result,
@@ -181,26 +267,22 @@ class RecurrenceReview:
             JsonDocument.from_value({"version": 1, "kind": action.value}),
         )
 
-    def preview(self, key: str, selection: ManualAdoption) -> Receipt:
+    def preview(self, key: str, selection: ManualAdoption | RelativeStateChange) -> Receipt:
         action = ReviewAction.PREVIEW
         authority = self._authority(self.actor.current(), action, key)
         commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
         payload = selection.document()
 
+        if isinstance(selection, RelativeStateChange):
+            return self._preview_state(authority, commands, selection, payload)
+
         def apply(unit: UnitOfWork) -> Change:
             plan = self._plan(unit, authority.scope, authority.current(unit), selection)
-            result = JsonDocument.from_value(
-                {
-                    "plan": plan.document.decode(),
-                    "plan_fingerprint": plan.document.fingerprint,
-                    "expires_at": self.clock.now() + _REVIEW_TTL_MS,
-                }
-            )
-            return self._change(action, payload, result)
+            return self._preview_change(payload, plan.document)
 
         return commands.execute(authority.command, payload, apply)
 
-    def apply(self, key: str, request: ReviewedAdoption) -> Receipt:
+    def apply(self, key: str, request: ReviewedChange) -> Receipt:
         action = ReviewAction.APPLY
         authority = self._authority(self.actor.current(), action, key)
         commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
@@ -228,23 +310,28 @@ class RecurrenceReview:
                 or not preview.created_at <= self.clock.now() < expires
             ):
                 raise Conflict("recurrence_review_stale")
-            plan = self._plan(unit, authority.scope, authority.current(unit), request.selection)
-            if (
-                plan.document.fingerprint != request.plan_fingerprint
-                or plan.document.decode() != saved.get("plan")
+            saved_plan = saved.get("plan")
+            if not isinstance(saved_plan, dict) or (
+                JsonDocument.from_value(saved_plan).fingerprint != request.plan_fingerprint
             ):
                 raise Conflict("recurrence_review_stale")
-            effect = adopt_initial(unit, commands, authority.scope, plan.source, plan.slot)
-            result = JsonDocument.from_value(
-                {
-                    "version": 1,
+            selection = request.selection
+            if isinstance(selection, RelativeStateChange):
+                outcome = self._apply_state(unit, authority, selection, saved_plan)
+            else:
+                plan = self._plan(unit, authority.scope, authority.current(unit), selection)
+                if plan.document.fingerprint != request.plan_fingerprint:
+                    raise Conflict("recurrence_review_stale")
+                effect = adopt_initial(unit, commands, authority.scope, plan.source, plan.slot)
+                outcome = {
                     "kind": "adopt_manual",
                     "schedule_id": plan.source.schedule.schedule_id,
                     "occurrence_id": plan.work.occurrence_id,
                     "occurrence_revision": plan.work.revision,
                     "materialization_operation_id": effect.operation_id,
-                    "plan_fingerprint": request.plan_fingerprint,
                 }
+            result = JsonDocument.from_value(
+                {"version": 1, "plan_fingerprint": request.plan_fingerprint, **outcome}
             )
             return self._change(action, payload, result)
 

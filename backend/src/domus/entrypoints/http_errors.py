@@ -135,6 +135,7 @@ PUBLIC_CODES = frozenset(
         "recurrence_adoption_incompatible",
         "recurrence_initial_already_consumed",
         "recurrence_review_stale",
+        "recurrence_state_change_unavailable",
     }
 )
 

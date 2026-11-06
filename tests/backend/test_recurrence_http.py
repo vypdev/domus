@@ -122,3 +122,33 @@ def test_protected_review_preview_apply_and_original_receipt(api):
         ).status_code
         == 404
     )
+
+
+def test_protected_relative_state_review_exposes_manual_backlog(api):
+    api.user(USER, True)
+    manual = seed_manual(api)
+    choice = {"schedule_id": manual["schedule_id"], "schedule_revision": 1, "target": "paused"}
+    response = api.client.post(
+        f"{BASE}/state/preview",
+        json=choice | {"target": "retired"},
+        headers=api.headers("bad-state") | CONTEXT,
+    )
+    assert response.status_code == 422
+    for index, target in enumerate(("paused", "active"), 1):
+        choice |= {"schedule_revision": index, "target": target}
+        preview_key = f"preview-state-{index}"
+        preview = api.client.post(
+            f"{BASE}/state/preview", json=choice, headers=api.headers(preview_key) | CONTEXT
+        )
+        assert preview.status_code == 200, preview.text
+        result = preview.json()["result"]
+        expected = "paused" if index == 1 else "initial_review_required"
+        assert result["plan"]["backlog"] == {"status": expected, "next_slot": None}
+        applied = api.client.post(
+            f"{BASE}/state/apply",
+            json=choice
+            | {"preview_key": preview_key, "plan_fingerprint": result["plan_fingerprint"]},
+            headers=api.headers(f"apply-state-{index}") | CONTEXT,
+        )
+        assert applied.status_code == 200, applied.text
+        assert applied.json()["result"]["state"] == target

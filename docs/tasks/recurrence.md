@@ -22,3 +22,15 @@ session's CSRF token, Origin, and a unique Idempotency-Key on each write.
    corresponding action `recurrence.review.preview` or `recurrence.review.apply`. A historical
    apply receipt records a previously processed operation whose effect is absent from current
    state. Inspect current state before choosing further work.
+
+## Pause and resume a relative schedule
+
+Use `POST /state/preview` with the current schedule ID and revision. Set `target` to `paused` to
+stop generation or `active` to resume. Inspect the retained work and backlog. Apply the reviewed
+state through `POST /state/apply` with the same selection, original preview key, and fingerprint.
+
+Pause preserves assignments and existing task history. A completion observed while paused can
+still supply the next date after resume. The preview derives that date from the original performed
+time and schedule policy. Pending verification, a closed cycle, manual work requiring adoption, and
+historical absent effects have separate backlog statuses. Resuming saves the rule state. The owned
+maintenance runner processes the backlog and preserves the due date even when it is overdue.

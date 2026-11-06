@@ -219,5 +219,37 @@
       "Existing task, administration and shared navigation journeys pass in both languages and architectures."
     ],
     "scope": "Results apply to the exact source commit above. Reviewed schedule changes, protected calendar and the complete retained acceptance inventory remain pending."
+  },
+  "manualAdoptionCheckpoint": {
+    "sourceCommit": "5241453fc390e69bd544245ec321b37f41fab5f6",
+    "baseCommit": "878a73b5f06629fa028a2daed87268b717765e45",
+    "schema": 10,
+    "verified": [
+      "Both protected HTTP compositions preview, apply and recover the exact manual adoption under current task-manager grants.",
+      "The concurrent-start refinement C20 rejects stale work without a second obligation or partial mapping.",
+      "Independent SQLite writers, rollback after the human outbox write, restart and actual restore preserve the original operation and existing manual work."
+    ],
+    "backend": {
+      "passed": 4710,
+      "runtimeModules": 159,
+      "statements": 11351,
+      "branches": 3214,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "frontend": {
+      "passed": 1515,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "images": {
+      "amd64": "sha256:f78184907d197f6d9fd1f6087a95f0af961008fbdedfdbe4017a886c7cd566f5",
+      "aarch64": "sha256:4c50f7ccc53e2ed14b241e7d1b06b8c52b11263d2cdd4cd6d7adba6fce8fb299",
+      "compatibilityAndIntegrationTestsPerArchitecture": 42,
+      "existingBrowserJourneysPerArchitecture": 46,
+      "browserScope": "Ingress and standalone, English and Spanish, exact source images"
+    },
+    "bugbot": "https://github.com/vypdev/domus/runs/128187530658",
+    "progressVerification": "https://github.com/vypdev/domus/runs/128186004050",
+    "progressReport": "https://github.com/vypdev/copilot/issues/910#issuecomment-6697253768",
+    "scope": "Results apply to the exact source commit above. The adoption interaction was verified through HTTP. The existing browser suite exercises task, administration and shared navigation journeys."
   }
 }

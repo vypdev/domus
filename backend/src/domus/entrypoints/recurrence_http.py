@@ -14,7 +14,12 @@ from domus.entrypoints.household_http import (
     _key,
     _receipt,
 )
-from domus.entrypoints.recurrence_dto import ManualAdoptionBody, ReviewedAdoptionBody
+from domus.entrypoints.recurrence_dto import (
+    ManualAdoptionBody,
+    RelativeStateBody,
+    ReviewedAdoptionBody,
+    ReviewedStateBody,
+)
 from domus.entrypoints.task_dto import Identifier
 
 
@@ -44,6 +49,18 @@ def create_recurrence_review_router(context: Callable[[Request], RecurrenceRevie
     @router.post("/adoption/apply", response_model=ReceiptResponse, openapi_extra=write_contract)
     def apply_adoption(
         request: Request, body: ReviewedAdoptionBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).apply(_key(request), body.reviewed()))
+
+    @router.post("/state/preview", response_model=ReceiptResponse, openapi_extra=write_contract)
+    def preview_relative_state(
+        request: Request, body: RelativeStateBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).preview(_key(request), body.selection()))
+
+    @router.post("/state/apply", response_model=ReceiptResponse, openapi_extra=write_contract)
+    def apply_relative_state(
+        request: Request, body: ReviewedStateBody, query: Annotated[_EmptyQuery, Query()]
     ) -> ReceiptResponse:
         return _receipt(context(request).apply(_key(request), body.reviewed()))
 
