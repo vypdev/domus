@@ -278,3 +278,72 @@ def test_owned_runtime_keeps_actual_installation_lease_until_its_worker_has_join
     assert closed.is_set() and not runtime.recurrence.is_running
     reopened = open_storage(directory, "edge")
     reopened.close()
+
+
+def test_both_owned_lifetimes_resume_a_relative_cycle_after_bootstrap(api, monkeypatch):
+    from test_relative_recurrence_creation import request as relative_request
+
+    from domus.application.relative_recurrence_commands import RelativeRecurrenceCommands
+    from domus.application.task_commands import TaskCommands
+    from domus.application.task_requests import CompleteTask
+    from domus.composition import ingress, server
+
+    human = (
+        api.source.people[api.client.headers["X-Remote-User-Id"]]
+        if api.mode == "native"
+        else api.source.human
+    )
+
+    class Actor:
+        def current(self):
+            return human
+
+    actor, clock, ids = Actor(), SystemClock(), SecureIdentifiers()
+    schedule = (
+        RelativeRecurrenceCommands(api.store, actor, clock, ids, PinnedRecurrenceTime())
+        .create("runtime-relative", relative_request())
+        .result.decode()["schedule_id"]
+    )
+    ready = observed(api.runtime.recurrence, monkeypatch)
+    try:
+        with TestClient(api.runtime.app, base_url=api.origin):
+            assert ready.wait(5)
+        with api.store.read() as unit:
+            bootstrap = unit.recurrence.relative_progress("home", schedule)
+            assert bootstrap.current_occurrence_id is not None
+            member = unit.members.by_user("home", human.ha_user_id).member_id
+        original = TaskCommands(api.store, actor, clock, ids).complete(
+            "runtime-complete",
+            CompleteTask(bootstrap.current_occurrence_id, 1, (member,), clock.now()),
+        )
+    finally:
+        api.runtime.close()
+
+    if api.mode == "native":
+        runtime = ingress.create_business_runtime(
+            "private-supervisor-token",
+            "edge",
+            api.store.path,
+            api.store.installation.instance_id,
+            (api.origin,),
+        )
+    else:
+        runtime = server.create_runtime(
+            "http://ha.local",
+            api.origin,
+            api.store.installation.instance_id,
+            "edge",
+            database=api.store.path,
+        )
+    ready = observed(runtime.recurrence, monkeypatch)
+    try:
+        with TestClient(runtime.app, base_url=api.origin):
+            assert ready.wait(5)
+        assert runtime.recurrence.last_run.relative_slots_observed == 1
+        with api.store.read() as unit:
+            slots = unit.recurrence.relative_slots("home", schedule)
+            assert len(slots) == 2
+            successor = next(slot for slot in slots if slot.source is not None)
+            assert successor.source.cycle.cycle_id == original.result.decode()["cycle"]["cycle_id"]
+    finally:
+        runtime.close()

@@ -18,7 +18,8 @@ from domus.domain.storage import (
     JsonValue,
     validate_identifier,
 )
-from domus.domain.task_events import TaskSourceRecord
+from domus.domain.task_events import TaskEventKind, TaskSourceRecord
+from domus.domain.task_values import VerificationState
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 from domus.infrastructure.sqlite_recurrence_records import _object, _read, _record
 from domus.infrastructure.sqlite_relative_recurrence_records import (
@@ -87,11 +88,22 @@ class SQLiteRelativeInbox:
     connection: sqlite3.Connection
     installation: Installation
 
-    def _identity(self, record: TaskSourceRecord) -> tuple[str, int, str, str, str, str]:
+    def _identity(
+        self, record: TaskSourceRecord
+    ) -> tuple[str, int, str, str, str, str, str | None, int]:
         try:
             event = record.event(self.installation)
         except InvalidInput:
             raise StorageFailure("invalid_recurrence_source") from None
+        mapped = self.connection.execute(
+            "SELECT schedule_id FROM recurrence_relative_slots "
+            "WHERE household_id=? AND occurrence_id=?",
+            (event.cycle.household_id, event.cycle.occurrence_id),
+        ).fetchone()
+        terminal = (
+            event.kind is TaskEventKind.REOPENED
+            or event.cycle.verification is VerificationState.REJECTED
+        )
         return (
             event.cycle.household_id,
             event.position,
@@ -99,6 +111,8 @@ class SQLiteRelativeInbox:
             event.event_id,
             record.original.evidence.receipt.command.actor_id,
             event.cycle_key,
+            None if mapped is None else mapped["schedule_id"],
+            int(terminal),
         )
 
     def _source(self, row: sqlite3.Row) -> TaskSourceRecord:
@@ -111,6 +125,8 @@ class SQLiteRelativeInbox:
                 "operation_id",
                 "actor_id",
                 "cycle_key",
+                "source_schedule_id",
+                "source_terminal",
             )
         )
         retained = SQLiteTaskHistory(self.connection).operation(
@@ -149,6 +165,30 @@ class SQLiteRelativeInbox:
             )
         )
 
+    def relative_sources_pending(self, household_id: str) -> bool:
+        validate_identifier(household_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM recurrence_relative_inbox WHERE household_id=? "
+                "AND source_schedule_id IS NOT NULL AND outcome_status IS NULL LIMIT 1",
+                (household_id,),
+            ).fetchone()
+            is not None
+        )
+
+    def next_relative_source(self, household_id: str, schedule_id: str) -> str | None:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        row = self.connection.execute(
+            "SELECT * FROM recurrence_relative_inbox WHERE household_id=? "
+            "AND source_schedule_id=? AND outcome_status IS NULL "
+            "ORDER BY source_terminal DESC,position LIMIT 1",
+            (household_id, schedule_id),
+        ).fetchone()
+        if row is None:
+            return None
+        return self._source(row).event(self.installation).event_key
+
     def relative_source(self, household_id: str, event_key: str) -> TaskSourceRecord | None:
         validate_identifier(household_id)
         validate_identifier(event_key)
@@ -159,13 +199,14 @@ class SQLiteRelativeInbox:
         return None if row is None else self._source(row)
 
     def add_relative_source(self, record: TaskSourceRecord) -> None:
-        household, position, key, operation, actor, cycle_key = self._identity(record)
+        identity = self._identity(record)
+        household, _, key, operation, actor, _, _, _ = identity
         prior = self.connection.execute(
             "SELECT * FROM recurrence_relative_inbox WHERE household_id=? AND event_key=?",
             (household, key),
         ).fetchone()
         if prior is not None:
-            if self._identity(self._source(prior)) != self._identity(record):
+            if self._identity(self._source(prior)) != identity:
                 raise Conflict("relative_source_conflict")
             return
         original = SQLiteTaskHistory(self.connection).operation(household, actor, operation)
@@ -174,9 +215,9 @@ class SQLiteRelativeInbox:
         try:
             self.connection.execute(
                 "INSERT INTO recurrence_relative_inbox "
-                "(household_id,position,event_key,operation_id,actor_id,cycle_key) "
-                "VALUES (?,?,?,?,?,?)",
-                (household, position, key, operation, actor, cycle_key),
+                "(household_id,position,event_key,operation_id,actor_id,cycle_key,"
+                "source_schedule_id,source_terminal) VALUES (?,?,?,?,?,?,?,?)",
+                identity,
             )
         except sqlite3.IntegrityError:
             raise Conflict("relative_source_conflict") from None

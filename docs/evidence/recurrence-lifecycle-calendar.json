@@ -159,5 +159,37 @@
       "wheelSha256": "e928f2a8ba749e75ea8e36b898cb48e97fbca8847e11d88b1898b0d13e15fdc0",
       "scope": "Every runtime Python/compiled UI byte matches the current source wheel; no installed image acceptance claimed."
     }
+  },
+  "durableLifecycleCheckpoint": {
+    "sourceCommit": "3c7d0c8b57cc6a53c611646e12a33b752d481730",
+    "schema": 10,
+    "fixture": "tests/fixtures/sqlite/v9.sql",
+    "verified": [
+      "Durable inbox, atomic closure and successor receipts in actual SQLite.",
+      "Independent writers, rollback after effect and acknowledgement, restart, compatible restoration and retained original proofs.",
+      "Started and completed successors remain intact with a durable review outcome. Proven unstarted successors are cancelled with a recorded cause.",
+      "Both images exercised schema-9 upgrade, schema-10 refusal by the schema-9 application, compatible rollback and packaged asset verification."
+    ],
+    "backend": {
+      "passed": 4673,
+      "runtimeModules": 156,
+      "statements": 11082,
+      "branches": 3150,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "frontend": {
+      "passed": 1513,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "browser": {
+      "scope": "Ingress and standalone in English and Spanish, exact source images",
+      "passedPerArchitecture": 46
+    },
+    "compatibilityTestsPerArchitecture": 11,
+    "images": {
+      "amd64": "sha256:258b14f6d6971ecde0410f384b359f3646d7907eebcd546c47c3754462add229",
+      "aarch64": "sha256:a22bce18515b38bfd860db061013b3502c65b0278fe53f7e3f38d455d7c3e317"
+    },
+    "limits": "Evidence is scoped to this source commit. Later shared maintenance and calendar work require independent evidence. No owner HA or release acceptance is claimed."
   }
 }

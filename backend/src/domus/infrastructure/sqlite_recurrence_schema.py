@@ -108,13 +108,20 @@ RELATIVE_LIFECYCLE_STATEMENTS = (
     "REFERENCES households(household_id), position INTEGER NOT NULL "
     "CHECK(typeof(position)='integer' AND position>=1), "
     "event_key TEXT NOT NULL, operation_id TEXT NOT NULL UNIQUE, actor_id TEXT NOT NULL, "
-    "cycle_key TEXT NOT NULL, outcome_status TEXT, outcome_schedule_id TEXT, "
+    "cycle_key TEXT NOT NULL, source_schedule_id TEXT, source_terminal INTEGER NOT NULL "
+    "CHECK(typeof(source_terminal)='integer' AND source_terminal IN (0,1)), "
+    "outcome_status TEXT, outcome_schedule_id TEXT, "
     "outcome_operation_id TEXT, outcome_occurrence_id TEXT, "
     "CHECK((outcome_status IS NULL)=(outcome_schedule_id IS NULL) AND "
     "(outcome_status IS NOT NULL OR "
     "(outcome_operation_id IS NULL AND outcome_occurrence_id IS NULL))), "
-    "PRIMARY KEY(household_id,position), UNIQUE(household_id,event_key))",
+    "PRIMARY KEY(household_id,position), UNIQUE(household_id,event_key), "
+    "FOREIGN KEY(household_id,source_schedule_id) "
+    "REFERENCES recurrence_rules(household_id,schedule_id))",
     "CREATE INDEX recurrence_relative_pending ON recurrence_relative_inbox(household_id,position) "
+    "WHERE outcome_status IS NULL",
+    "CREATE INDEX recurrence_relative_pending_rule "
+    "ON recurrence_relative_inbox(household_id,source_schedule_id,source_terminal DESC,position) "
     "WHERE outcome_status IS NULL",
     # Closures can outlive the rule, source cycle, and live receipt after compatible restoration.
     "CREATE TABLE recurrence_relative_closures(household_id TEXT NOT NULL, "

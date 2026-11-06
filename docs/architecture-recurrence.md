@@ -500,6 +500,19 @@ with incomplete history, retains its facts and has a durable review outcome.
 
 Compatible restoration carries later cycle closures into the restored generation with their retained
 operation proofs. A successor absent from the selected checkpoint stays absent. The original
-operation remains recoverable with historical provenance. This increment exposes an application
-maintenance step. Mixed scheduling, reviewed schedule commands and calendar projections are
-separate increments.
+operation remains recoverable with historical provenance.
+
+## Shared maintenance in owned runtimes
+
+Ingress and standalone use the same maintenance runner. It selects fixed and relative schedules
+in a single bounded order and records each admitted schedule in the shared durable frontier. Both
+types spend the same slot budget. A separate source intake budget persists bounded original
+positions and keeps the run pending when more events remain. Exhausting the fixed period budget
+still allows already selected relative rules to take a turn.
+
+A relative turn produces the initial obligation or consumes one routed source. Source routing is
+bound to the actual occurrence and schedule mapping. Rejection and reopening take precedence
+within a relative rule so that a paused rule can still invalidate or flag prior derived work.
+An unconfirmed source scan leaves its continuation available for the next poll and permits other
+selected work to continue. Reviewed schedule commands and protected calendar projections remain
+outside this increment.

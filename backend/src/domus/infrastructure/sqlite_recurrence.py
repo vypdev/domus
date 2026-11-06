@@ -13,6 +13,7 @@ from domus.domain.recurrence_records import (
     ScheduleState,
 )
 from domus.domain.recurrence_rules import NominalDate
+from domus.domain.relative_recurrence import RelativeSchedule
 from domus.domain.storage import Installation, validate_identifier
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 from domus.infrastructure.sqlite_recurrence_records import (
@@ -116,6 +117,31 @@ def slot_headers(value: ScheduledSlot) -> dict[str, object]:
 class SQLiteRecurrences(SQLiteRelativeRecurrences):
     connection: sqlite3.Connection
     installation: Installation
+
+    def maintenance_schedules(
+        self, household_id: str, *, limit: int, after: str | None = None
+    ) -> tuple[FixedSchedule | RelativeSchedule, ...]:
+        where, parameters = _page(household_id, limit, after, "schedule_id")
+        where.append(
+            "(state='active' OR (timing_kind='completion_relative' AND EXISTS "
+            "(SELECT 1 FROM recurrence_relative_inbox AS i WHERE i.household_id=r.household_id "
+            "AND i.source_schedule_id=r.schedule_id AND i.outcome_status IS NULL)))"
+        )
+        selected: list[FixedSchedule | RelativeSchedule] = []
+        for row in self.connection.execute(
+            "SELECT schedule_id,timing_kind FROM recurrence_rules AS r WHERE "
+            + " AND ".join(where)
+            + " ORDER BY schedule_id LIMIT ?",
+            (*parameters, limit),
+        ):
+            load = (
+                self.schedule if row["timing_kind"] == "fixed_calendar" else self.relative_schedule
+            )
+            record = load(household_id, row["schedule_id"])
+            if record is None:
+                raise StorageFailure("invalid_recurrence_record")
+            selected.append(record)
+        return tuple(selected)
 
     def frontier(self, household_id: str) -> RecurrenceFrontier | None:
         validate_identifier(household_id)

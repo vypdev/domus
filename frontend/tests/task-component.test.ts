@@ -105,6 +105,13 @@ test('task material review accepts exact decimal input and zero without floating
   f.root.querySelector('#complete-form')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
   expect(f.intents).toEqual([{type: 'complete', materialUsages: [{line_id: 'cleaner', quantity: '3.33'}, {line_id: 'cloth', quantity: '0'}]}]);
 });
+test.each([['en', '1.123456'], ['es', '1,123456']] as const)(
+  'a precision-six material submits all six decimal places in %s', async (locale, input) => {
+    const f = await mount(view({detail: {...work, materials: [{lineId: 'cleaner', label: 'Cleaner', plannedQuantity: '1', precision: 6}]}}), locale);
+    await f.input('material-0', input);
+    f.root.querySelector('#complete-form')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+    expect(f.intents).toEqual([{type: 'complete', materialUsages: [{line_id: 'cleaner', quantity: '1.123456'}]}]);
+  });
 test.each(['-1', '1e3', '', '1000000000000', '0.0000001', '1'.repeat(65)])(
   'unsupported material quantity %j focuses the actual invalid line and sends no command', async value => {
     const f = await mount(view({detail: {...work, materials: [{lineId: 'first', label: 'First', plannedQuantity: '1', precision: 6}, {lineId: 'second', label: 'Second', plannedQuantity: '1', precision: 6}]}}));

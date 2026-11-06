@@ -1,5 +1,6 @@
 """Reconcile one admitted original task event and its relative cycle in one writer."""
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import cast
 
@@ -51,11 +52,19 @@ class RelativeLifecycle:
     clock: Clock
     identifiers: Identifiers
 
-    def consume(self, schedule_id: str, event_key: str) -> RelativeStep:
+    def consume(
+        self,
+        schedule_id: str,
+        event_key: str,
+        *,
+        should_continue: Callable[[], bool] = lambda: True,
+    ) -> RelativeStep:
         """Recheck persisted source, current work and rule in the transaction that effects them."""
         household = self.scope.household_id
         with self.transactions.write() as unit:
             self.scope.require(unit)
+            if not should_continue():
+                return RelativeStep("stopped", schedule_id)
             record = unit.recurrence.relative_source(household, event_key)
             if record is None:
                 raise NotFound("recurrence_source_missing")
