@@ -20,8 +20,11 @@ from domus.application.relative_lifecycle import occurrence_work_history
 from domus.application.relative_materialization import RelativeSource, adopt_initial, initial_source
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
 from domus.application.relative_state_review import (
+    RelativeSettings,
+    RelativeSettingsPlan,
     RelativeStateChange,
     RelativeStatePlan,
+    settings_plan,
     state_plan,
 )
 from domus.application.task_authorization import TaskAccess, TaskActor, TaskCommandAuthorization
@@ -68,7 +71,9 @@ class ManualAdoption:
         return JsonDocument.from_value({"version": 1, "kind": "adopt_manual", **asdict(self)})
 
 
-type ReviewSelection = ManualAdoption | AttachRelative | RelativeStateChange | FixedSkip
+type ReviewSelection = (
+    ManualAdoption | AttachRelative | RelativeStateChange | FixedSkip | RelativeSettings
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -367,8 +372,13 @@ class RecurrenceReview:
             return self._preview_prepared(authority, commands, selection, payload)
 
         def apply(unit: UnitOfWork) -> Change:
-            plan = self._plan(unit, authority.scope, authority.current(unit), selection)
-            return self._preview_change(payload, plan.document)
+            actor = authority.current(unit)
+            if isinstance(selection, RelativeSettings):
+                plan = settings_plan(unit, authority.scope, selection)
+                snapshot = self._snapshot(authority.scope, actor, payload, plan.snapshot)
+            else:
+                snapshot = self._plan(unit, authority.scope, actor, selection).document
+            return self._preview_change(payload, snapshot)
 
         return commands.execute(authority.command, payload, apply)
 
@@ -388,7 +398,10 @@ class RecurrenceReview:
                 self._reviewed_plan(unit, authority.command, request)
             timing = request.selection.prepare(self.planner.times)
 
+        revision: RelativeSettingsPlan | None = None
+
         def apply(unit: UnitOfWork) -> Change:
+            nonlocal revision
             saved_plan = self._reviewed_plan(unit, authority.command, request)
             selection = request.selection
             if isinstance(selection, AttachRelative):
@@ -401,6 +414,25 @@ class RecurrenceReview:
                 if snapshot.fingerprint != request.plan_fingerprint:
                     raise Conflict("recurrence_review_stale")
                 outcome = attach_relative(unit, commands, authority.scope, selection, attachment)
+            elif isinstance(selection, RelativeSettings):
+                actor = authority.current(unit)
+                revision = settings_plan(unit, authority.scope, selection)
+                snapshot = self._snapshot(
+                    authority.scope, actor, selection.document(), revision.snapshot
+                )
+                if snapshot.fingerprint != request.plan_fingerprint:
+                    raise Conflict("recurrence_review_stale")
+                updated = revision.schedule
+                unit.recurrence.save_relative_schedule(updated, selection.schedule_revision)
+                outcome = {
+                    "kind": "relative_settings",
+                    "schedule_id": updated.schedule_id,
+                    "schedule_revision": updated.revision,
+                    "pattern_revision": updated.pattern_revision,
+                    "interval_days": updated.interval.days,
+                    "visibility": updated.visibility.value,
+                    "relative_progress": revision.progress.state_document().decode(),
+                }
             elif isinstance(selection, RelativeStateChange | FixedSkip):
                 outcome = self._apply_prepared(unit, authority, commands, selection, saved_plan)
             else:
@@ -420,7 +452,11 @@ class RecurrenceReview:
             )
             return self._change(action, payload, result)
 
-        return commands.execute(authority.command, payload, apply)
+        with self.transactions.write() as unit:
+            receipt = commands.in_unit(unit, authority.command, payload, apply)
+            if revision is not None:
+                revision.save_progress(unit, receipt)
+            return receipt
 
     def _reviewed_plan(
         self, unit: UnitOfWork, command: CommandKey, request: ReviewedChange

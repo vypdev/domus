@@ -8,7 +8,7 @@ from pydantic import Field
 from domus.application.fixed_skip_review import FixedSkip
 from domus.application.recurrence_review import ManualAdoption, ReviewedChange
 from domus.application.relative_attachment_review import AttachmentChoice, AttachRelative
-from domus.application.relative_state_review import RelativeStateChange
+from domus.application.relative_state_review import RelativeSettings, RelativeStateChange
 from domus.domain.errors import InvalidInput
 from domus.domain.recurrence_records import ScheduleState
 from domus.domain.recurrence_rules import NominalDate, NominalSlot
@@ -134,6 +134,29 @@ class RelativeAttachmentBody(StrictModel):
 
 
 class ReviewedRelativeAttachmentBody(RelativeAttachmentBody):
+    preview_key: Identifier
+    plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+    def reviewed(self) -> ReviewedChange:
+        return ReviewedChange(self.selection(), self.preview_key, self.plan_fingerprint)
+
+
+class RelativeSettingsBody(StrictModel):
+    schedule_id: Identifier
+    schedule_revision: Revision
+    interval_days: Annotated[int, Field(ge=1, le=36600)]
+    visibility: Literal["at_completion", "at_verification"]
+
+    def selection(self) -> RelativeSettings:
+        return RelativeSettings(
+            self.schedule_id,
+            self.schedule_revision,
+            RelativeInterval(self.interval_days),
+            SuccessorVisibility(self.visibility),
+        )
+
+
+class ReviewedRelativeSettingsBody(RelativeSettingsBody):
     preview_key: Identifier
     plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 

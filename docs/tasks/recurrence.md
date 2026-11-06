@@ -66,3 +66,15 @@ time with the packaged time-zone data and records the exact manual work under re
 Apply with `POST /attachment/apply`, the same selection, the original preview key and its plan
 fingerprint. If the task, reviewed backlog, or time-zone facts change, refresh the preview. The
 rule, the first recurring obligation and the original receipt commit together.
+
+## Review relative successor settings
+
+Use `POST /relative-settings/preview` with the current schedule ID and revision, the interval in
+local days and successor visibility. The preview identifies the retained initial timing and
+current occurrence. Changes affect future successors. Already issued task identities, assignments,
+and deadlines are preserved. A current unclosed completion or an absent restored obligation
+requires reconciliation before editing so that the rule never reinterprets an earlier effect.
+
+Apply through `POST /relative-settings/apply` with the original selection, preview key, and
+fingerprint. Domus saves the updated rule revision and binds its progress to the original
+operation in the same transaction.

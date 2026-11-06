@@ -938,3 +938,115 @@ def test_competing_new_attachments_share_exact_original_or_reject_second_rule(tm
     with store.read() as unit:
         assert len(unit.recurrence.relative_schedules("home")) == 1
         assert len(unit.tasks.occurrences("home")) == 1
+
+
+def test_reviewed_relative_settings_rebind_original_progress_and_generate_at_new_interval(tmp_path):
+    from domus.application.recurrence_sources import RecurrenceSourceObservations
+    from domus.application.relative_lifecycle import RelativeLifecycle
+    from domus.application.relative_state_review import RelativeSettings
+    from domus.application.task_requests import CompleteTask
+    from domus.domain.recurrence_time import RelativeInterval
+
+    initial, store, actor, ids, schedule_id, tasks = configured(tmp_path)
+    bootstrap = initial.initial(schedule_id)
+    service = review_service(initial, store, actor, ids)
+    choice = RelativeSettings(
+        schedule_id, 1, RelativeInterval(45), SuccessorVisibility.AT_COMPLETION
+    )
+    preview, request = reviewed(service, choice)
+    old = progress(store, schedule_id)
+    result = service.apply("settings", request)
+    assert service.apply("settings", request) == result
+    assert preview.result.decode()["plan"]["source"]["previous_interval_days"] == 30
+    with store.read() as unit:
+        rule = unit.recurrence.relative_schedule("home", schedule_id)
+        assert rule.pattern_revision == rule.revision == 2
+        assert rule.interval.days == 45
+        saved = unit.recurrence.relative_progress("home", schedule_id)
+        assert saved.current_occurrence_id == bootstrap.occurrence_id
+        assert saved.current_slot_key == old.current_slot_key
+        assert saved.matches_schedule(rule) and saved.matches_receipt(result)
+        member = unit.members.by_user("home", actor.human.ha_user_id)
+    tasks.complete("complete", CompleteTask(bootstrap.occurrence_id, 1, (member.member_id,), 90))
+    observations = RecurrenceSourceObservations(store, initial.scope)
+    (item,) = observations.ingest().items
+    lifecycle = RelativeLifecycle(store, initial.scope, service.planner, initial.clock, ids)
+    generated = lifecycle.consume(schedule_id, item.event.event_key)
+    assert generated.status == "generated"
+    with store.read() as unit:
+        slot = unit.recurrence.relative_slot_for_occurrence("home", generated.occurrence_id)
+        assert slot.planned.value()["nominal"]["local"] == "1970-02-15"
+        assert (
+            unit.tasks.occurrence("home", bootstrap.occurrence_id).state
+            is OccurrenceState.COMPLETED
+        )
+
+
+def test_settings_changes_on_pristine_rule_rollback_with_receipt_and_remain_pristine(
+    tmp_path, monkeypatch
+):
+    from domus.application.relative_state_review import RelativeSettings
+    from domus.domain.recurrence_time import RelativeInterval
+    from domus.infrastructure.sqlite_relative_recurrence import SQLiteRelativeRecurrences
+
+    initial, store, actor, ids, schedule_id, _ = configured(tmp_path)
+    service = review_service(initial, store, actor, ids)
+    choice = RelativeSettings(
+        schedule_id, 1, RelativeInterval(30), SuccessorVisibility.AT_VERIFICATION
+    )
+    with pytest.raises(InvalidInput):
+        replace(choice, visibility="invalid")
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        service.preview("stale", replace(choice, schedule_revision=2))
+    with pytest.raises(Conflict, match="recurrence_state_change_unavailable"):
+        service.preview("same", replace(choice, visibility=SuccessorVisibility.AT_COMPLETION))
+    _, request = reviewed(service, choice)
+    save = SQLiteRelativeRecurrences.save_relative_progress
+
+    def fail(self, *args):
+        save(self, *args)
+        raise StorageFailure("settings_rollback")
+
+    before = counts(store)
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteRelativeRecurrences, "save_relative_progress", fail)
+        with pytest.raises(StorageFailure, match="settings_rollback"):
+            service.apply("settings", request)
+    with store.read() as unit:
+        assert unit.recurrence.relative_schedule("home", schedule_id).revision == 1
+    assert counts(store) == before
+    assert service.apply("settings", request)
+    assert progress(store, schedule_id).pristine
+    assert initial.initial(schedule_id).status == "created"
+
+
+def test_settings_never_reinterpret_pending_completion_or_overwrite_changed_work(tmp_path):
+    from domus.application.relative_state_review import RelativeSettings
+    from domus.domain.recurrence_time import RelativeInterval
+
+    pending = tmp_path / "pending"
+    pending.mkdir()
+    store, schedule_id, _, _, lifecycle, _, tasks, _ = completed(pending)
+    service = RecurrenceReview(
+        store,
+        store.installation,
+        tasks.actor,
+        tasks.actor.current,
+        lifecycle.clock,
+        lifecycle.identifiers,
+        lifecycle.planner,
+    )
+    choice = RelativeSettings(
+        schedule_id, 1, RelativeInterval(45), SuccessorVisibility.AT_VERIFICATION
+    )
+    with pytest.raises(Conflict, match="recurrence_review_source_pending"):
+        service.preview("pending", choice)
+
+    initial, store, actor, ids, schedule_id, tasks = configured(tmp_path)
+    first = initial.initial(schedule_id)
+    service = review_service(initial, store, actor, ids)
+    choice = replace(choice, schedule_id=schedule_id)
+    _, request = reviewed(service, choice)
+    tasks.assign("changed", AssignTask(first.occurrence_id, 1, ("child",)))
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        service.apply("apply", request)

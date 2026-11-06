@@ -18,10 +18,12 @@ from domus.entrypoints.recurrence_dto import (
     FixedSkipBody,
     ManualAdoptionBody,
     RelativeAttachmentBody,
+    RelativeSettingsBody,
     RelativeStateBody,
     ReviewedAdoptionBody,
     ReviewedFixedSkipBody,
     ReviewedRelativeAttachmentBody,
+    ReviewedRelativeSettingsBody,
     ReviewedStateBody,
 )
 from domus.entrypoints.task_dto import Identifier
@@ -95,6 +97,22 @@ def create_recurrence_review_router(context: Callable[[Request], RecurrenceRevie
         request: Request,
         body: ReviewedRelativeAttachmentBody,
         query: Annotated[_EmptyQuery, Query()],
+    ) -> ReceiptResponse:
+        return _receipt(context(request).apply(_key(request), body.reviewed()))
+
+    @router.post(
+        "/relative-settings/preview", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def preview_relative_settings(
+        request: Request, body: RelativeSettingsBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).preview(_key(request), body.selection()))
+
+    @router.post(
+        "/relative-settings/apply", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def apply_relative_settings(
+        request: Request, body: ReviewedRelativeSettingsBody, query: Annotated[_EmptyQuery, Query()]
     ) -> ReceiptResponse:
         return _receipt(context(request).apply(_key(request), body.reviewed()))
 

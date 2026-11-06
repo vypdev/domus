@@ -142,6 +142,8 @@ PUBLIC_CODES = frozenset(
         "invalid_recurrence_time_policy",
         "recurrence_initial_already_consumed",
         "recurrence_review_stale",
+        "recurrence_review_source_pending",
+        "invalid_recurrence_settings",
         "recurrence_skip_incompatible",
         "recurrence_slot_not_overdue",
         "recurrence_time_source_invalid",

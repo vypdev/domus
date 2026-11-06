@@ -255,3 +255,34 @@ def test_protected_attachment_from_ordinary_task_uses_exact_wire_choice(api):
         f"{BASE}/requests/recurrence.review.apply/attachment-apply", headers=CONTEXT
     )
     assert original.json() == applied.json()
+
+
+def test_protected_relative_settings_review_preserves_manual_work(api):
+    api.user(USER, True)
+    manual = seed_manual(api)
+    selection = {
+        "schedule_id": manual["schedule_id"],
+        "schedule_revision": 1,
+        "interval_days": 45,
+        "visibility": "at_verification",
+    }
+    preview = api.client.post(
+        f"{BASE}/relative-settings/preview",
+        json=selection,
+        headers=api.headers("settings-preview") | CONTEXT,
+    )
+    assert preview.status_code == 200, preview.text
+    applied = api.client.post(
+        f"{BASE}/relative-settings/apply",
+        json=selection
+        | {
+            "preview_key": "settings-preview",
+            "plan_fingerprint": preview.json()["result"]["plan_fingerprint"],
+        },
+        headers=api.headers("settings-apply") | CONTEXT,
+    )
+    assert applied.status_code == 200, applied.text
+    assert applied.json()["result"]["interval_days"] == 45
+    assert applied.json()["result"]["pattern_revision"] == 2
+    with api.store.read() as unit:
+        assert len(unit.tasks.occurrences("home")) == 1
