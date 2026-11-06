@@ -272,8 +272,7 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     }
     assert (
         "playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts"
-        " tests/e2e/workspace-navigation.spec.ts"
-        in actual["run"]
+        " tests/e2e/workspace-navigation.spec.ts" in actual["run"]
     )
     assert "--grep" not in actual["run"]
     assert "--pass-with-no-tests" not in actual["run"]
