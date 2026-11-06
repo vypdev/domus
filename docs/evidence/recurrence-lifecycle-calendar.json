@@ -191,5 +191,33 @@
       "aarch64": "sha256:a22bce18515b38bfd860db061013b3502c65b0278fe53f7e3f38d455d7c3e317"
     },
     "limits": "Evidence is scoped to this source commit. Later shared maintenance and calendar work require independent evidence. No owner HA or release acceptance is claimed."
+  },
+  "mixedMaintenanceCheckpoint": {
+    "sourceCommit": "871b313904e1cdde00a7a49809115542e7291b96",
+    "schema": 10,
+    "backend": {
+      "passed": 4691,
+      "runtimeModules": 156,
+      "statements": 11189,
+      "branches": 3194,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "frontend": {
+      "passed": 1515,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "exactSourceImageValidation": {
+      "amd64": "sha256:ba845ad6e2816197a21accc705679198bfc2bdc8a796fa00a2395985db4dde05",
+      "aarch64": "sha256:78f42493ee3fc1aca73b96deee817e7f731a6522221333c306a3f98c2dc7d1dc",
+      "browserJourneysPerArchitecture": 46,
+      "lifecycleAndCompatibilityTestsPerArchitecture": 13
+    },
+    "verified": [
+      "One durable frontier and one definition/slot budget across fixed and relative maintenance.",
+      "Independent source budget and truthful continuation through restart and interrupted processing.",
+      "Actual packaged Ingress and standalone lifetimes generate one successor after restart from original task completion evidence.",
+      "Existing task, administration and shared navigation journeys pass in both languages and architectures."
+    ],
+    "scope": "Results apply to the exact source commit above. Reviewed schedule changes, protected calendar and the complete retained acceptance inventory remain pending."
   }
 }

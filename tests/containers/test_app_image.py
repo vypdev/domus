@@ -126,6 +126,7 @@ def data_volume(image: str):
 def test_real_nonroot_listener_rejects_forgery_and_retains_storage_and_replay_on_restart(
     image: str,
     data_volume: str,
+    expected_schema: int = 10,
 ) -> None:
     name = "domus-persistent-test-" + uuid.uuid4().hex
     try:
@@ -222,14 +223,14 @@ for path in ('/', '/api/v1/identity'):
             "print(open('/data/domus/installation.json').read())",
         )
         assert after.returncode == 0 and after.stdout == before.stdout
-        snapshot_roundtrip(name, json.loads(after.stdout)["instance_id"])
+        snapshot_roundtrip(name, json.loads(after.stdout)["instance_id"], expected_schema)
         stopped(name)
     finally:
         removed = docker("rm", "--force", name)
         assert removed.returncode == 0 or "No such container" in removed.stderr, removed.stderr
 
 
-def snapshot_roundtrip(name: str, instance_id: str) -> None:
+def snapshot_roundtrip(name: str, instance_id: str, expected_schema: int) -> None:
     prepared = docker(
         "exec",
         name,
@@ -255,7 +256,7 @@ def snapshot_roundtrip(name: str, instance_id: str) -> None:
     assert created.returncode == 0, created.stderr
     original = json.loads(created.stdout)
     assert original["state"] == "created"
-    assert original["snapshot"]["schema_version"] == 10
+    assert original["snapshot"]["schema_version"] == expected_schema
     assert original["snapshot"]["last_committed_at"] == 100
     inspected = docker(
         "exec",
