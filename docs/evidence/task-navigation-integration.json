@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled bundle for the integrated Overview, Tasks and Household navigation with required-reason validation. The localValidation block retains the exact earlier integration source and assets.",
+  "scope": "Compiled bundle for the integrated Overview, Tasks and Household navigation with required-title and required-reason validation. Earlier exact assets and source are retained in the historical blocks.",
   "actualProductFiles": {
-    ".vite/manifest.json": "45512cad52a09b32ab05d6200b094d8fa1bdd694ed473e0228c4b8ea95235b9c",
-    "assets/index-BZyPyyMk.js": "f13c739cba80765c6aa2c31b9b061bd24f6054e85356ec87363ca9ff2eedcec5",
+    ".vite/manifest.json": "d86e552d1badabca296030b011108afcf21c388edaeec4c123afb30abff5e939",
+    "assets/index-CZo7ZIF6.js": "cf4a9812a628d8875c01badeee9beb3eff3b7b0bc0c90dd85a478fcc770a16a5",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "9085173d34adf3d0c0540d649af14bd682a87ebbe745b5b9ef23c2389274f972"
+    "index.html": "d903bf5e4de1701656701872b862be84a0db093c1f20bd1c847b9f5d0963467a"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -29,6 +29,15 @@
       "assets/index-CHPRUong.js": "11e23c908c896da224b72a9cc03b841bbab6da89c392f86bb9d09f8faeb47e6c",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "index.html": "0cbcf5d61efb00d3afabf6204ce8480d4648a1d0eb4e8556d0730c90a437878d"
+    }
+  },
+  "preRequiredTitleValidation": {
+    "sourceCommit": "522b27b35629ca1551e51dc89fa0a0d9a0c09523",
+    "actualProductFiles": {
+      ".vite/manifest.json": "45512cad52a09b32ab05d6200b094d8fa1bdd694ed473e0228c4b8ea95235b9c",
+      "assets/index-BZyPyyMk.js": "f13c739cba80765c6aa2c31b9b061bd24f6054e85356ec87363ca9ff2eedcec5",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "9085173d34adf3d0c0540d649af14bd682a87ebbe745b5b9ef23c2389274f972"
     }
   }
 }

@@ -28,7 +28,7 @@ function quantityInput(value: string, precision: number): string | null {
 /** Render only verified task facts; emitted intents never select an actor or grant a permission. */
 export class DomusTasks extends LitElement {
   static properties = {view: {attribute: false}, retired: {attribute: false}, language: {attribute: false}, titleDraft: {state: true}, descriptionDraft: {state: true},
-    priorityDraft: {state: true}, reasonDraft: {state: true}, quantities: {state: true}, quantityError: {state: true}, createOpen: {state: true}};
+    titleRequired: {state: true}, priorityDraft: {state: true}, reasonDraft: {state: true}, quantities: {state: true}, quantityError: {state: true}, createOpen: {state: true}};
   static styles = [styles, css`:host {min-height:0;background:transparent;overflow-wrap:anywhere}.task-header {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
     .task-header h2 {font-size:1.6rem;margin:0} .task-layout {display:grid;gap:20px}.task-layout .card {margin:0}
     .task-layout>div {display:grid;gap:20px;align-content:start} .new-task summary h3 {display:inline} .new-task form {margin-top:20px}
@@ -41,6 +41,7 @@ export class DomusTasks extends LitElement {
   declare retired: boolean;
   declare language: Language;
   private declare titleDraft: string;
+  private declare titleRequired: boolean;
   private declare createOpen: boolean;
   private declare descriptionDraft: string;
   private declare priorityDraft: TaskPriority;
@@ -52,12 +53,12 @@ export class DomusTasks extends LitElement {
   private submittedDraft: string | null = null;
   private lastForm: 'create' | 'review' = 'create';
   private focusDetail = false;
-  constructor() {super(); this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.descriptionDraft = '';
+  constructor() {super(); this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = '';
     this.priorityDraft = 'normal'; this.createOpen = false; this.reasonDraft = ''; this.quantities = {}; this.quantityError = null;}
   private text(key: TaskMessageKey): string {return taskMessage(key, this.language);}
   private get blocked(): boolean {return this.view?.busy !== false || this.view.readOnly || this.view.records === null
     || this.view.records.some(record => record.stage === 'prepared' || record.stage === 'uncertain');}
-  private reset(): void {this.createOpen = false; this.titleDraft = ''; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.reasonDraft = '';
+  private reset(): void {this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.reasonDraft = '';
     this.quantities = {}; this.quantityError = null; this.detailKey = null; this.focusDetail = false; this.submittedDraft = null; this.draftScope = null;}
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('retired') && this.retired) this.reset();
@@ -72,7 +73,7 @@ export class DomusTasks extends LitElement {
       this.quantities = Object.fromEntries(detail!.materials.map(item => [item.lineId, item.plannedQuantity]));}
     if (this.view?.outcome?.kind === 'receipt' && this.view.outcome.stage === 'committed' && this.view.outcome.action === 'task.create'
         && this.submittedDraft === JSON.stringify([this.titleDraft, this.descriptionDraft, this.priorityDraft])) {
-      this.createOpen = false; this.titleDraft = ''; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.submittedDraft = null;
+      this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.submittedDraft = null;
     }
   }
   protected updated(changed: PropertyValues): void {
@@ -90,26 +91,28 @@ export class DomusTasks extends LitElement {
   }
   private createForm() {
     // Native maxlength counts UTF-16 units; the form enforces the shared code-point limits.
-    const titleInvalid = Array.from(this.titleDraft).length > TASK_TEXT_LIMITS.title;
+    const titleTooLong = Array.from(this.titleDraft).length > TASK_TEXT_LIMITS.title;
+    const titleMissing = this.titleRequired && !hasTaskText(this.titleDraft);
     const descriptionInvalid = Array.from(this.descriptionDraft).length > TASK_TEXT_LIMITS.description;
     return html`<details class="card new-task" ?open=${this.createOpen || this.view!.page?.items.length === 0}
       @toggle=${(event: Event) => {const target = event.target as HTMLDetailsElement; if (target.isConnected) this.createOpen = target.open;}}><summary><h3 id="new-task-title">${this.text('newTask')}</h3></summary>
       <form novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.lastForm = 'create';
-        if (titleInvalid || descriptionInvalid) {
-          this.shadowRoot?.querySelector<HTMLElement>(titleInvalid ? '#task-title' : '#task-description')?.focus(); return;
+        this.titleRequired = !hasTaskText(this.titleDraft);
+        if (this.titleRequired || titleTooLong || descriptionInvalid) {
+          this.shadowRoot?.querySelector<HTMLElement>(this.titleRequired || titleTooLong ? '#task-title' : '#task-description')?.focus(); return;
         }
         this.submittedDraft = JSON.stringify([this.titleDraft, this.descriptionDraft, this.priorityDraft]);
         this.intent({type: 'create', title: this.titleDraft, description: this.descriptionDraft, priority: this.priorityDraft});}}>
-        <div class="field"><label for="task-title">${this.text('taskTitle')}</label><input id="task-title" type="text" required maxlength=${TASK_TEXT_LIMITS.title * 2} aria-invalid=${titleInvalid ? 'true' : 'false'} autocomplete="off"
+        <div class="field"><label for="task-title">${this.text('taskTitle')}</label><input id="task-title" type="text" required maxlength=${TASK_TEXT_LIMITS.title * 2} aria-invalid=${titleMissing || titleTooLong ? 'true' : 'false'} autocomplete="off"
           .value=${live(this.titleDraft)} ?disabled=${this.view!.busy} aria-describedby="task-title-help"
-          @input=${(event: InputEvent) => {this.titleDraft = (event.target as HTMLInputElement).value;}}><small id="task-title-help">${titleInvalid ? this.text('textTooLong') + ': ' + TASK_TEXT_LIMITS.title : this.text('titleHelp')}</small></div>
+          @input=${(event: InputEvent) => {this.titleDraft = (event.target as HTMLInputElement).value;}}><small id="task-title-help" aria-live="polite">${titleMissing ? this.text('titleRequired') : titleTooLong ? this.text('textTooLong') + ': ' + TASK_TEXT_LIMITS.title : this.text('titleHelp')}</small></div>
         <div class="field"><label for="task-description">${this.text('description')}</label><textarea id="task-description" maxlength=${TASK_TEXT_LIMITS.description * 2} aria-invalid=${descriptionInvalid ? 'true' : 'false'}
           .value=${live(this.descriptionDraft)} ?disabled=${this.view!.busy} aria-describedby="task-description-help"
           @input=${(event: InputEvent) => {this.descriptionDraft = (event.target as HTMLTextAreaElement).value;}}></textarea><small id="task-description-help">${descriptionInvalid ? this.text('textTooLong') + ': ' + TASK_TEXT_LIMITS.description : this.text('descriptionHelp')}</small></div>
         <div class="field"><label for="task-priority">${this.text('priority')}</label><select id="task-priority" ?disabled=${this.view!.busy}
           @change=${(event: Event) => {this.priorityDraft = (event.target as HTMLSelectElement).value as TaskPriority;}}>
           ${TASK_PRIORITIES.map(priority => html`<option value=${priority} .selected=${this.priorityDraft === priority}>${this.text(`priority_${priority}`)}</option>`)}</select></div>
-        <button type="submit" class="primary" ?disabled=${this.blocked || titleInvalid || descriptionInvalid}>${this.text('create')}</button>
+        <button type="submit" class="primary" ?disabled=${this.blocked || titleTooLong || descriptionInvalid}>${this.text('create')}</button>
       </form></details>`;
   }
   private complete(): void {

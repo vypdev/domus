@@ -278,5 +278,36 @@
     },
     "progressVerification": "https://github.com/vypdev/domus/runs/128190906551",
     "scope": "Results apply to the exact source commit above. Pause and resume were verified through HTTP. The existing browser suite exercises task, administration and shared navigation journeys."
+  },
+  "fixedSkipCheckpoint": {
+    "sourceCommit": "522b27b35629ca1551e51dc89fa0a0d9a0c09523",
+    "schema": 10,
+    "verified": [
+      "Both protected HTTP compositions preview, apply and recover explicit overdue fixed-slot skips.",
+      "The exact saved date or instant, task, manager and reason remain inspectable without completion, points or changed future fixed progress.",
+      "SQLite rollback, original-key replay, independent writer and restore controls preserve one skip effect and never reinstate a restored-away skip."
+    ],
+    "backend": {
+      "passed": 4741,
+      "runtimeModules": 161,
+      "statements": 11556,
+      "branches": 3272,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "frontend": {
+      "passed": 1515,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "images": {
+      "amd64": "sha256:775f7ab21e993b721bb52c2efd7d273b4eda11373774ae73f89f0c69887a5463",
+      "aarch64": "sha256:fe62cb9c7e1c87384858fcdc83733610d82b0665b95a8e3715743abe7d1a1dea",
+      "existingBrowserJourneysPerArchitecture": 46,
+      "targetedRecurrenceTestsPerArchitecture": 3,
+      "browserScope": "Ingress and standalone, English and Spanish, exact source images"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42305279108",
+    "review": "https://github.com/vypdev/domus/runs/128196068455",
+    "progressVerification": "https://github.com/vypdev/domus/runs/128194043945",
+    "scope": "Results apply to the exact source commit above. Protected recurrence commands were tested through HTTP and exercised inside both built images. The existing browser suite tests the task, administration and shared navigation interfaces."
   }
 }

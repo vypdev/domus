@@ -33,6 +33,21 @@ test('usable task creation preserves literal input and emits one semantic intent
   expect(f.intents).toEqual([{type: 'create', title: '  Clean 🧹  ', description: 'Wipe then dry', priority: 'normal'}]);
   expect(f.text()).not.toContain('private-home-id'); expect(f.text()).not.toContain('private-member-id');
 });
+test.each([['en', '', 'Enter a title.'], ['es', '   ', 'Introduce un título.']] as const)(
+  'creation rejects a missing title locally in %s and preserves the other fields', async (locale, title, message) => {
+    const f = await mount(view(), locale); f.root.querySelector<HTMLDetailsElement>('details.new-task')!.open = true;
+    await f.input('task-title', title); await f.input('task-description', 'Keep this draft');
+    const form = f.root.querySelector('form')!, field = f.root.querySelector<HTMLInputElement>('#task-title')!;
+    expect(field.getAttribute('aria-invalid')).toBe('false');
+    form.dispatchEvent(new SubmitEvent('submit', {cancelable: true})); await f.element.updateComplete;
+    expect(f.intents).toEqual([]); expect(f.root.activeElement).toBe(field);
+    expect(field.getAttribute('aria-invalid')).toBe('true'); expect(f.text()).toContain(message);
+    await f.input('task-title', 'Clean the filter');
+    expect(field.getAttribute('aria-invalid')).toBe('false');
+    form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+    expect(f.intents).toEqual([{type: 'create', title: 'Clean the filter', description: 'Keep this draft', priority: 'normal'}]);
+  },
+);
 test('list content is inert, and selecting work opens its actual task rather than an invented route', async () => {
   const f = await mount(); expect(f.root.querySelector('b,script,img')).toBeNull();
   f.button('<b>Clean 🧹</b>').click(); expect(f.intents).toEqual([{type: 'select', occurrenceId: 'work-1'}]);
@@ -82,7 +97,7 @@ test('task date formatting respects exact bounds and uses English fallback witho
   for (const value of ['9223372036854775807', '-1', 'not-a-time']) expect(taskInstant(value, 'en')).toBe('Time unavailable');
 });
 test('choosing a priority retains the visible value across language changes', async () => {
-  const f = await mount(); const select = f.root.querySelector<HTMLSelectElement>('#task-priority')!;
+  const f = await mount(); await f.input('task-title', 'Clean the filter'); const select = f.root.querySelector<HTMLSelectElement>('#task-priority')!;
   select.value = 'urgent'; select.dispatchEvent(new Event('change', {bubbles: true})); await f.element.updateComplete;
   f.element.language = 'es'; await f.element.updateComplete; expect(select.value).toBe('urgent');
   f.root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true})); expect(f.intents[0]).toMatchObject({priority: 'urgent'});
@@ -153,7 +168,7 @@ test('an invalid creation or review focuses its corresponding field; retired vie
   expect(f.root.querySelector<HTMLInputElement>('#task-title')!.value).toBe('');
 });
 test('a pending event and a manually dispatched disabled form cannot request a mutation', async () => {
-  const f = await mount(view({busy: true, detail: work}));
+  const f = await mount(view({busy: true, detail: work})); await f.input('task-title', 'Clean the filter');
   f.root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true})); expect(f.intents).toEqual([]);
   f.element.view = view({records: null, detail: work}); await f.element.updateComplete;
   f.root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true})); expect(f.intents).toEqual([]);

@@ -147,7 +147,14 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
   test('Unicode field limits retain invalid input and accept exact maximum code-point values', async ({page, context}) => {
     const tasks = await open(page, context, mode); let writes = 0;
     page.on('request', request => {if (request.method() === 'POST' && request.url().endsWith('/api/v1/tasks/definitions')) writes++;});
-    await tasks.getByLabel('Title', {exact: true}).fill('a'.repeat(161));
+    const titleField = tasks.getByLabel('Title', {exact: true});
+    await titleField.fill('   ');
+    await tasks.getByRole('button', {name: 'Create task', exact: true}).click();
+    await expect(titleField).toBeFocused();
+    await expect(titleField).toHaveAttribute('aria-invalid', 'true');
+    await expect(tasks.getByText('Enter a title.', {exact: true})).toBeVisible();
+    expect(writes).toBe(0);
+    await titleField.fill('a'.repeat(161));
     await expect(tasks.getByLabel('Title', {exact: true})).toHaveAttribute('aria-invalid', 'true');
     await expect(tasks.getByRole('button', {name: 'Create task', exact: true})).toBeDisabled();
     await expect(tasks.getByLabel('Title', {exact: true})).toHaveValue('a'.repeat(161)); expect(writes).toBe(0);
