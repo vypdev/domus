@@ -30,7 +30,7 @@ class RelativeStep:
 
 
 @dataclass(frozen=True, slots=True)
-class _Source:
+class RelativeSource:
     schedule: RelativeSchedule
     progress: RelativeProgress
     definition: TaskDefinition
@@ -39,7 +39,7 @@ class _Source:
 @dataclass(frozen=True, slots=True)
 class _InitialAuthority:
     scope: MaintenanceScope
-    source: _Source
+    source: RelativeSource
     command: CommandKey
 
     def require(self, command: CommandKey, unit: UnitOfWork) -> None:
@@ -57,6 +57,94 @@ class _InitialAuthority:
             raise Conflict("recurrence_source_changed")
 
 
+def initial_source(unit: UnitOfWork, scope: MaintenanceScope, schedule_id: str) -> RelativeSource:
+    scope.require(unit)
+    rule = unit.recurrence.relative_schedule(scope.household_id, schedule_id)
+    if rule is None:
+        raise NotFound("recurrence_rule_missing")
+    progress = unit.recurrence.relative_progress(rule.household_id, schedule_id)
+    definition = unit.tasks.definition(rule.household_id, rule.definition_id)
+    if progress is None or definition is None or not progress.matches_schedule(rule):
+        raise StorageFailure("invalid_recurrence_source")
+    return RelativeSource(rule, progress, definition)
+
+
+def _payload(slot: RelativeSlot) -> JsonDocument:
+    return JsonDocument.from_value(
+        {
+            "version": 1,
+            "slot_key": slot.key,
+            "generation": slot.schedule.binding,
+            "initial": slot.schedule.initial.value(),
+        }
+    )
+
+
+def _result(source: RelativeSource, slot: RelativeSlot) -> JsonDocument:
+    continuation = replace(
+        source.progress,
+        current_occurrence_id=slot.occurrence_id,
+        current_slot_key=slot.key,
+    )
+    return JsonDocument.from_value(
+        {
+            "version": 1,
+            "slot_key": slot.key,
+            "occurrence_id": slot.occurrence_id,
+            "schedule_id": slot.schedule.schedule_id,
+            "definition_id": slot.schedule.definition_id,
+            "created_at": slot.created_at,
+            "relative_slot_fingerprint": slot.evidence_fingerprint,
+            "relative_progress": continuation.state_document().decode(),
+        }
+    )
+
+
+def _add_initial_slot(
+    unit: UnitOfWork, source: RelativeSource, slot: RelativeSlot, payload: JsonDocument
+) -> Change:
+    unit.recurrence.add_relative_slot(slot)
+    result = _result(source, slot)
+    return Change(
+        result,
+        JsonDocument.from_value({"request": payload.decode(), "result": result.decode()}),
+        JsonDocument.from_value({"version": 1, "kind": slot.command.action, **result.decode()}),
+    )
+
+
+def _advance_initial(
+    unit: UnitOfWork, progress: RelativeProgress, slot: RelativeSlot, receipt: Receipt, now: int
+) -> None:
+    unit.recurrence.save_relative_progress(
+        replace(
+            progress,
+            current_occurrence_id=slot.occurrence_id,
+            current_slot_key=slot.key,
+            last_run_at=now,
+            revision=progress.revision + 1,
+            evidence=RelativeOperation(receipt.command, receipt.operation_id),
+        ),
+        progress.revision,
+    )
+
+
+def adopt_initial(
+    unit: UnitOfWork,
+    commands: AtomicCommands,
+    scope: MaintenanceScope,
+    source: RelativeSource,
+    slot: RelativeSlot,
+) -> Receipt:
+    """Record the ordinary initial effect for a manual task selected by the reviewed writer."""
+    payload = _payload(slot)
+    technical = replace(commands, authorization=_InitialAuthority(scope, source, slot.command))
+    receipt = technical.in_unit(
+        unit, slot.command, payload, lambda active: _add_initial_slot(active, source, slot, payload)
+    )
+    _advance_initial(unit, source.progress, slot, receipt, technical.clock.now())
+    return receipt
+
+
 @dataclass
 class RelativeMaintenance:
     transactions: Transactions
@@ -65,44 +153,13 @@ class RelativeMaintenance:
     clock: Clock
     identifiers: Identifiers
 
-    def _source(self, unit: UnitOfWork, schedule_id: str) -> _Source:
-        self.scope.require(unit)
-        rule = unit.recurrence.relative_schedule(self.scope.household_id, schedule_id)
-        if rule is None:
-            raise NotFound("recurrence_rule_missing")
-        progress = unit.recurrence.relative_progress(rule.household_id, schedule_id)
-        definition = unit.tasks.definition(rule.household_id, rule.definition_id)
-        if progress is None or definition is None or not progress.matches_schedule(rule):
-            raise StorageFailure("invalid_recurrence_source")
-        return _Source(rule, progress, definition)
-
     @staticmethod
     def _has_work(unit: UnitOfWork, rule: RelativeSchedule) -> bool:
         return bool(
             unit.tasks.occurrences(rule.household_id, definition_id=rule.definition_id, limit=1)
         )
 
-    @staticmethod
-    def _result(source: _Source, slot: RelativeSlot) -> JsonDocument:
-        continuation = replace(
-            source.progress,
-            current_occurrence_id=slot.occurrence_id,
-            current_slot_key=slot.key,
-        )
-        return JsonDocument.from_value(
-            {
-                "version": 1,
-                "slot_key": slot.key,
-                "occurrence_id": slot.occurrence_id,
-                "schedule_id": slot.schedule.schedule_id,
-                "definition_id": slot.schedule.definition_id,
-                "created_at": slot.created_at,
-                "relative_slot_fingerprint": slot.evidence_fingerprint,
-                "relative_progress": continuation.state_document().decode(),
-            }
-        )
-
-    def _original_slot(self, source: _Source, receipt: Receipt) -> RelativeSlot:
+    def _original_slot(self, source: RelativeSource, receipt: Receipt) -> RelativeSlot:
         data = receipt.result.decode()
         try:
             slot = RelativeSlot(
@@ -117,7 +174,7 @@ class RelativeMaintenance:
         if (
             receipt.command != slot.command
             or receipt.created_at < slot.created_at
-            or receipt.result != self._result(source, slot)
+            or receipt.result != _result(source, slot)
         ):
             raise StorageFailure("invalid_recurrence_effect")
         return slot
@@ -132,7 +189,7 @@ class RelativeMaintenance:
         """Create one initial obligation; existing manual work needs its explicit review flow."""
         validate_identifier(schedule_id)
         with self.transactions.read() as unit:
-            source = self._source(unit, schedule_id)
+            source = initial_source(unit, self.scope, schedule_id)
             existing_work = (
                 self._has_work(unit, source.schedule) if source.progress.pristine else False
             )
@@ -152,14 +209,7 @@ class RelativeMaintenance:
         probe = RelativeSlot(
             self.scope.installation, rule, rule.initial, "pending", self.clock.now()
         )
-        payload = JsonDocument.from_value(
-            {
-                "version": 1,
-                "slot_key": probe.key,
-                "generation": rule.binding,
-                "initial": rule.initial.value(),
-            }
-        )
+        payload = _payload(probe)
         commands = AtomicCommands(
             self.transactions,
             _InitialAuthority(self.scope, source, probe.command),
@@ -189,16 +239,8 @@ class RelativeMaintenance:
                 self.scope.installation, rule, rule.initial, work.occurrence_id, work.created_at
             )
             unit.tasks.save_occurrence(work, 0)
-            unit.recurrence.add_relative_slot(slot)
             created = True
-            result = self._result(source, slot)
-            return Change(
-                result,
-                JsonDocument.from_value({"request": payload.decode(), "result": result.decode()}),
-                JsonDocument.from_value(
-                    {"version": 1, "kind": probe.command.action, **result.decode()}
-                ),
-            )
+            return _add_initial_slot(unit, source, slot, payload)
 
         with self.transactions.write() as unit:
             if not should_continue():
@@ -214,15 +256,5 @@ class RelativeMaintenance:
                 if saved is None or saved.evidence_fingerprint != original.evidence_fingerprint:
                     raise StorageFailure("invalid_recurrence_effect")
                 status = "created" if created else "replayed"
-            unit.recurrence.save_relative_progress(
-                replace(
-                    progress,
-                    current_occurrence_id=original.occurrence_id,
-                    current_slot_key=original.key,
-                    last_run_at=self.clock.now(),
-                    revision=progress.revision + 1,
-                    evidence=RelativeOperation(receipt.command, receipt.operation_id),
-                ),
-                progress.revision,
-            )
+            _advance_initial(unit, progress, original, receipt, self.clock.now())
         return RelativeStep(status, schedule_id, receipt, original.occurrence_id)

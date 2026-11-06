@@ -427,6 +427,8 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `backend/src/domus/application/task_commands.py` | update |
 | `backend/src/domus/application/task_queries.py` | update |
 | `backend/src/domus/entrypoints/task_http.py` | update |
+| `backend/src/domus/entrypoints/http_errors.py` | update |
+| `backend/src/domus/composition/tasks.py` | update |
 | `tests/backend/test_activation_compatibility.py` | update |
 | `tests/backend/test_recurrence_frontier.py` | update |
 | `tests/backend/test_restore_source.py` | update |

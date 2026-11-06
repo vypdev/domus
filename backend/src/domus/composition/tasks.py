@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Protocol
 
 from domus.application.ports import Transactions
+from domus.application.recurrence_review import RecurrenceReview
 from domus.application.task_commands import TaskCommands
 from domus.application.task_events import TaskEventFeed, TaskEventSource
 from domus.application.task_queries import TaskQueries
@@ -34,6 +35,7 @@ def task_contexts(
         return TaskHTTPContext(
             lambda: TaskQueries(store, actor.read(), cursors, installation),
             TaskCommands(store, actor, clock, identifiers),
+            RecurrenceReview(store, installation, actor, actor.read, clock, identifiers),
         )
 
     return context

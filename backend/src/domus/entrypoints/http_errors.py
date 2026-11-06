@@ -131,6 +131,10 @@ PUBLIC_CODES = frozenset(
         "material_already_settled",
         "material_unchanged",
         "inventory_unavailable",
+        "recurrence_rule_missing",
+        "recurrence_adoption_incompatible",
+        "recurrence_initial_already_consumed",
+        "recurrence_review_stale",
     }
 )
 

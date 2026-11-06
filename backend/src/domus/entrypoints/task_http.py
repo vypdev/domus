@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Query, Request
 from fastapi.params import Depends
 
+from domus.application.recurrence_review import RecurrenceReview
 from domus.application.task_commands import TaskCommands
 from domus.application.task_queries import (
     DefinitionSummary,
@@ -44,6 +45,7 @@ from domus.entrypoints.household_http import (
     _key,
     _receipt,
 )
+from domus.entrypoints.recurrence_http import create_recurrence_review_router
 from domus.entrypoints.task_dto import (
     AssignmentBody,
     CompleteBody,
@@ -86,6 +88,7 @@ class TaskOriginalResponse(OperationResponse):
 class TaskHTTPContext:
     queries: Callable[[], TaskQueries]
     commands: TaskCommands
+    recurrence_review: RecurrenceReview
 
 
 def create_task_router(
@@ -480,4 +483,7 @@ def create_task_router(
             else "pending",
         )
 
+    router.include_router(
+        create_recurrence_review_router(lambda request: context(request).recurrence_review)
+    )
     return router

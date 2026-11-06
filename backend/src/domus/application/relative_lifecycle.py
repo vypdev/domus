@@ -33,6 +33,24 @@ from domus.domain.task_values import DefinitionState, OccurrenceState, Verificat
 from domus.domain.tasks import TaskCycle, TaskDefinition, TaskOccurrence
 
 
+def occurrence_work_history(unit: UnitOfWork, work: TaskOccurrence) -> WorkHistory:
+    rows = unit.tasks.history(work.household_id, work.occurrence_id, limit=100)
+    revisions = set()
+    for row in rows:
+        result = row.evidence.receipt.result.decode()
+        if (
+            result.get("state") in ("in_progress", "completed")
+            or row.evidence.receipt.command.action == "task.complete"
+        ):
+            return WorkHistory.STARTED
+        revision = result.get("revision")
+        if row.current and type(revision) is int and 2 <= revision <= work.revision:
+            revisions.add(revision)
+    if len(rows) < 100 and len(revisions) == work.revision - 1:
+        return WorkHistory.UNSTARTED
+    return WorkHistory.UNKNOWN
+
+
 @dataclass(frozen=True, slots=True)
 class _CycleAuthority:
     scope: MaintenanceScope
@@ -254,24 +272,6 @@ class RelativeLifecycle:
             kind.value, rule.schedule_id, receipt, None if slot is None else slot.occurrence_id
         )
 
-    @staticmethod
-    def _history(unit: UnitOfWork, successor: TaskOccurrence) -> WorkHistory:
-        rows = unit.tasks.history(successor.household_id, successor.occurrence_id, limit=100)
-        revisions = set()
-        for row in rows:
-            result = row.evidence.receipt.result.decode()
-            if (
-                result.get("state") in ("in_progress", "completed")
-                or row.evidence.receipt.command.action == "task.complete"
-            ):
-                return WorkHistory.STARTED
-            revision = result.get("revision")
-            if row.current and type(revision) is int and 2 <= revision <= successor.revision:
-                revisions.add(revision)
-        if len(rows) < 100 and len(revisions) == successor.revision - 1:
-            return WorkHistory.UNSTARTED
-        return WorkHistory.UNKNOWN
-
     def _reconcile(
         self,
         unit: UnitOfWork,
@@ -298,7 +298,9 @@ class RelativeLifecycle:
         if invalidation is not None:
             return self._invalidation_step(closure, invalidation)
         successor = unit.tasks.occurrence(rule.household_id, slot.occurrence_id)
-        history = WorkHistory.UNKNOWN if successor is None else self._history(unit, successor)
+        history = (
+            WorkHistory.UNKNOWN if successor is None else occurrence_work_history(unit, successor)
+        )
         decision = successor_disposition(closure, cycle, successor, history)
         if decision is SuccessorDisposition.CURRENT:
             return RelativeStep("generated", rule.schedule_id, original, slot.occurrence_id)
