@@ -272,6 +272,7 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     }
     assert (
         "playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts"
+        " tests/e2e/workspace-navigation.spec.ts"
         in actual["run"]
     )
     assert "--grep" not in actual["run"]
@@ -282,10 +283,10 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all forty-four actual-image household journeys"
+        if step.get("name") == "Require all forty-six actual-image household journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
-    assert "expected']==44" in audit["run"]
+    assert "expected']==46" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )

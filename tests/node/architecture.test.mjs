@@ -74,6 +74,13 @@ describe("executable frontend architecture policy", () => {
     },
   );
 
+  it.each(["domain", "application", "adapters", "composition"])(
+    "rejects shared presentation dependencies from %s", async layer => {
+      expect(await check({[`${layer}/invalid.ts`]: "import '@vypdev/ha-ui/tabs'; export const value = 1;"}))
+        .toContain("ha-ui-is-presentation-only");
+    },
+  );
+
   it("rejects a concrete transport in presentation", async () => {
     expect(await check({
       "adapters/http.ts": "export const value = 1;",

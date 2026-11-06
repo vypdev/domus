@@ -409,6 +409,7 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `docs/tasks/calendar.md` | create |
 | `docs/evidence/recurrence-lifecycle-calendar.json` | create |
 | `docs/evidence/task-workspace.json` | create |
+| `docs/evidence/task-navigation-integration.json` | create |
 | `tests/packaging/test_ui_wheel.py` | update |
 | `specs/catalog.json` | update |
 | `specs/CATALOG.md` | update |
@@ -450,6 +451,7 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `frontend/tests/household-controller.test.ts` | update |
 | `frontend/tests/component.test.ts` | update |
 | `frontend/tests/e2e/administration.spec.ts` | update |
+| `frontend/tests/e2e/workspace-navigation.spec.ts` | update |
 | `frontend/tests/e2e/entry.spec.ts` | update |
 | `frontend/tests/e2e/catalog.spec.ts` | update |
 | `frontend/src/composition/entry-page.ts` | update |
@@ -491,7 +493,7 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `docs/evidence/recurrence-execution.json` | update |
 | `docs/evidence/recurrence-rules.json` | update |
 
-Operations are prospective and relative to the verified immutable base 8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9. The task-workspace integration and preview-packaging paths inherited from merged PR #28, including addon-edge/artifact.json, are updates against the Action-published synchronized head a954ce091d19f6350d64eec759670d5a1fadcfb5; all other original operations retain that immutable base. No managed remote branch was synchronized by a contributor. Each prospective path is checked against its stated actual base. Declare any additional actual implementation/test/integration paths before implementing them. Preserve the three retained owner documents byte-for-byte. The genuine supported schema-9 fixture must be published before further DDL; preserve released1..8fixtures.
+Operations are prospective and relative to the verified immutable base 8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9. The task-workspace integration and preview-packaging paths inherited from merged PR #28, including addon-edge/artifact.json, are updates against the Action-published synchronized head a954ce091d19f6350d64eec759670d5a1fadcfb5; all other original operations retain that immutable base. No managed remote branch was synchronized by a contributor. The shared navigation browser suite is an update against develop at 5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775. Each prospective path is checked against its stated actual base. Declare any additional actual implementation/test/integration paths before implementing them. Preserve the three retained owner documents byte-for-byte. The genuine supported schema-9 fixture must be published before further DDL; preserve released1..8fixtures.
 
 The first visible M2 increment connects the existing task commands and queries to a real create/list/detail/claim/complete/review workflow before adding recurrence and calendar controls. The owner requested a usable task surface before further foundation-only increments. Use server-derived allowed actions and current authorization, preserve original command recovery by key, and keep technical identifiers behind optional details. This sequencing does not retire any retained recurrence/calendar case or all-domain launch obligation.
 

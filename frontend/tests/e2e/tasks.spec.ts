@@ -14,6 +14,7 @@ async function open(page: Page, context: BrowserContext, mode: Mode) {
   await page.getByLabel('Household name', {exact: true}).fill('Maple House');
   await page.getByLabel('Timezone', {exact: true}).fill('Europe/Madrid');
   await page.getByRole('button', {name: 'Create household', exact: true}).click();
+  await page.getByRole('link', {name: 'Tasks', exact: true}).click();
   const tasks = page.locator('domus-tasks');
   await expect(tasks.getByRole('button', {name: 'Create task', exact: true})).toBeEnabled();
   return tasks;
@@ -88,6 +89,7 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
       await expect(administration.getByRole('heading', {name: 'Original request processed', exact: true})).toBeVisible();
       await administration.getByRole('button', {name: 'Close editor', exact: true}).click();
       await participant.getByRole('button', {name: 'Refresh status', exact: true}).click();
+      await participant.getByRole('link', {name: 'Tasks', exact: true}).click();
       const memberTasks = participant.locator('domus-tasks'); await memberTasks.getByRole('button', {name: title, exact: true}).click();
       await expect(memberTasks.getByRole('button', {name: 'Create task', exact: true})).toHaveCount(0);
       await memberTasks.getByRole('button', {name: 'Claim task', exact: true}).click();

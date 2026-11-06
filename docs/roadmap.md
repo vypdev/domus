@@ -12,12 +12,14 @@ The following milestones are internal integration steps, not proposals to drop l
 | M4 — Automation and HA surface | One durable engine, simple/default and optional advanced editors, entities and response services across domains | Replay/restart/loop/partial-run cases plus disposable-HA contracts in both deployment targets |
 | M5 — Integrated acceptance | Complete household overview, cross-domain UX/accessibility, access control, Stable/Edge packaging | Full CI Check; local Google Chrome dogfooding and recorded cleanup |
 
+The shared navigation connects Overview, Tasks and Household. Additional destinations become
+available as their workflows are ready.
 The product is not considered first-release complete at M2 or M3.
 Tests, user documentation and recovery accompany each usable workflow.
 
 ## Current state
 
-As of 2026-11-04, with PR #29 still under development:
+With PR #29 still under development:
 
 - M0: the specification foundation and decisions are recorded. Contracts continue to evolve with implementation evidence.
 - M1: HA identity/session, SQLite, recovery foundations, architecture checks and CI are implemented. Full standalone/Ingress, upgrade/restore and Stable production acceptance remains open.
@@ -35,16 +37,13 @@ composition, information hierarchy, wording and household workflows; it does not
 technical/MCP dashboard.
 
 [ha-ui issue #7](https://github.com/vypdev/ha-ui/issues/7) owns the shared component/adapter contract.
-[Domus issue #30](https://github.com/vypdev/domus/issues/30) owns consumer adoption and the Domus shell. Gateway currently has local Lit primitives/layouts under frontend/src/ui, not an
-independently published dependency. Reusable styles are split between application and catalog files.
-The first step is therefore a coherent extraction with one source and versioned public API, followed
-by actual adoption in both apps. Copying components/CSS into Domus is not completion of reuse.
+[Domus PR #31](https://github.com/vypdev/domus/pull/31) integrated the published
+`@vypdev/ha-ui@0.1.0-next.1` navigation for Overview and Household. PR #29 connects the existing
+Tasks workflow to that same bar. Broader shared component adoption remains part of M2.
 
 The chosen ownership/delivery direction is a dedicated vypdev/ha-ui repository, an independently
 versioned @vypdev/ha-ui npm package, and its own static component Storybook on GitHub Pages. The
-repository now exists, and the official web-generated Copilot installation has been reviewed and
-merged into master and develop. The packages and Storybook remain unimplemented and unpublished;
-publisher rights and source-to-artifact integrity must be verified before publication. The library owns its tests, API compatibility and
+library owns its tests, API compatibility and
 catalog. Both apps consume exact reviewed versions and may upgrade independently within tested
 compatibility. Storybook is built from the same component implementation, with reviewable PR catalog
 builds. Domus retains app-level stories for its own composed household pages.

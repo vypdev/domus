@@ -9,11 +9,19 @@ with backend checks applying even when a client presents an outdated button.
 
 During explicit setup, choose how administration maps from HA: all HA administrators by default, only the verified administrator completing setup, or an explicitly selected HA user. The default gives each proven HA administrator inherited Domus administration; ordinary users are not promoted by opening the app. An administrator configures household permission profiles and per-member exceptions. Known suspension or revoked authority still blocks access; changing a label or choosing another performer never changes the caller's permission.
 
+## Household navigation
+
+Once household access is verified, **Overview** jumps to your current household status and
+**Tasks** opens the task workspace. **Household** opens administration. The same links work in Home Assistant Ingress and
+standalone. Use Tab and Enter or the browser's Back and Forward actions. Moving between
+sections keeps an unsent draft in the current page; reload verifies access again and does
+not restore an unsent administration draft.
+
 ## Current task workspace
 
 The current source increment adds a real task workspace. Published Edge.7 remains administration-only until the next verified preview package is adopted; refreshing that older app does not install this source change.
 
-- **Tasks** is the default workspace. Open **New task**, enter a title, optional instructions and priority, then choose **Create task**. The title-only flow creates actual work, not a schedule draft.
+- In **Tasks**, open **New task**, enter a title, optional instructions and priority, then choose **Create task**. The title-only flow creates actual work, not a schedule draft.
 - Select a task to inspect it. **Claim task** assigns eligible work to your own verified membership. **Mark done now** records you as the performer at the current server-anchored time.
 - Restricted performers require adult approval by default. An authorized adult can approve or reject the current cycle; rejection and reopening require a reason. Reopening preserves the previous cycle and its verification evidence.
 - If a task already has linked materials, review its quantities before completion. Decimal input is converted exactly, including a comma separator, and the linked unit's precision is enforced. Zero means unused. Separate-recording tasks do not silently submit planned consumption.

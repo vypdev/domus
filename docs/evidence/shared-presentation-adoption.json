@@ -1,0 +1,17 @@
+{
+  "issue": "https://github.com/vypdev/domus/issues/30",
+  "base": "0170085f283ea5775f41e77a2f8c8d9cc69f20b7",
+  "package": {
+    "name": "@vypdev/ha-ui",
+    "version": "0.1.0-next.1",
+    "registry": "https://registry.npmjs.org/",
+    "integrity": "sha512-MfY1sHgx8pbAOOATiPG2Pf5Qhp9T7CzMPBTzXphuqs66G2ck1zf+Y9GzOLwWeBUzZfY8+VAJObkjVWUvP/wd7w==",
+    "lit": "3.3.3"
+  },
+  "actualProductFiles": {
+    ".vite/manifest.json": "8bb4f52fc2b67111198dc41cf9e092f7470a7d38bdef1d19c98ab0e15f228bbe",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "assets/index-fxMO1NYb.js": "ff3884f2f69dd1941f8ed34b5fff0fdffe4761bb93d83b86502e69c35d73aa6a",
+    "index.html": "f455c40a86859e3312c49a4ca32d82110818b7e6901d4786ec731d97d1bd8f4f"
+  }
+}

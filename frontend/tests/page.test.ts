@@ -283,13 +283,6 @@ test('closed task events preserve semantic user inputs and exact material quanti
     {type: 'reopen', reason: 'Repeat'}, {type: 'recover', key: 'original'}, {type: 'dismiss', key: 'original'}];
   for (const value of inputs) expect(decodeTaskIntent(value)).toEqual(value);
 });
-test('public fragment navigation chooses Tasks by default and preserves Household across a reload', async () => {
-  const f = fixture(); f.phase('active'); const {app, mounted} = await f.open(); expect(app.section).toBe('tasks');
-  f.page.location.href += '#household'; f.page.dispatchEvent(new Event('hashchange')); await app.updateComplete; expect(app.section).toBe('household');
-  const next = await f.open(); expect(next.app.section).toBe('household'); mounted.dispose();
-  f.page.location.href = f.page.location.href.replace('#household', '#unknown'); f.page.dispatchEvent(new Event('hashchange')); await next.app.updateComplete;
-  expect(next.app.section).toBe('tasks'); expect(f.putRequests()).toBe(0); expect(f.postRequests()).toBe(0);
-});
 test('the mounted task surface routes only owned semantic intents to its application controller', async () => {
   const f = fixture(); f.phase('active'); const {app} = await f.open(); expect(app.tasks?.access?.memberId).toBe('identity-1');
   const spies = {create: vi.spyOn(TaskController.prototype, 'create').mockResolvedValue(undefined),
@@ -320,4 +313,68 @@ test('an unexpected task delegation failure closes the runtime and shows the bou
     await vi.waitFor(() => expect(document.querySelector('#domus-entry-error')).not.toBeNull());
     expect(document.querySelector('#domus-entry-error')!.textContent).not.toContain('private delegation fault');
   } finally {spy.mockRestore();}
+});
+
+test('workspace fragments preserve the mounted administration and stop after disposal', async () => {
+  const f = fixture('native');
+  const base = f.page.location.href;
+  const route = (fragment: string) => {
+    f.page.location.href = base + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  f.phase('active');
+  route('#household');
+  const {app, mounted} = await f.open();
+  const tabs = () => app.shadowRoot!.querySelector('vyp-ha-tabs')!;
+  const widget = app.shadowRoot!.querySelector('domus-administration');
+  expect(tabs()).not.toBeNull();
+  expect(tabs().state.selected).toBe('household');
+  expect(app.shadowRoot!.activeElement?.id).toBe('household');
+  const select = (kind: 'navigation' | 'panels', id: string) => tabs().dispatchEvent(
+    new CustomEvent('ha-selection-request', {detail: {kind, id}, cancelable: true}));
+  const state = tabs().state;
+  app.view = {...app.view!};
+  await app.updateComplete;
+  expect(tabs().state).toBe(state);
+  const language = app.shadowRoot!.querySelector('select')!;
+  language.focus();
+  expect(select('panels', 'household')).toBe(true);
+  expect(select('navigation', 'overview')).toBe(true);
+  expect(app.shadowRoot!.activeElement).toBe(language);
+  expect(select('navigation', 'household')).toBe(false);
+  expect(app.shadowRoot!.activeElement?.id).toBe('household');
+  route('#overview');
+  await app.updateComplete;
+  expect(tabs().state.selected).toBe('overview');
+  expect(app.shadowRoot!.activeElement?.id).toBe('overview');
+  route('#tasks');
+  await app.updateComplete;
+  expect(tabs().state.selected).toBe('tasks');
+  expect(app.shadowRoot!.activeElement?.id).toBe('tasks');
+  route('#household%2Fprivate');
+  await app.updateComplete;
+  expect(tabs().state.selected).toBe('overview');
+  expect(f.page.location.href).toBe(base + '#household%2Fprivate');
+  expect(select('navigation', 'overview')).toBe(true);
+  expect(app.shadowRoot!.querySelector('domus-administration')).toBe(widget);
+  expect(f.putRequests()).toBe(0);
+  mounted.dispose();
+  route('#household');
+  await app.updateComplete;
+  expect(app.workspaceDestination).toBeNull();
+  expect(tabs()).toBeNull();
+});
+
+test('unverified and retired views do not expose the household destination', async () => {
+  const f = fixture();
+  f.page.location.href += '#household';
+  const {app} = await f.open();
+  const tabs = () => app.shadowRoot!.querySelector('vyp-ha-tabs');
+  expect(tabs()).toBeNull();
+  f.phase('active');
+  intent(app, {type: 'refresh'});
+  await vi.waitFor(() => expect(tabs()).not.toBeNull());
+  app.view = {...app.view!, notice: 'context_changed'};
+  await app.updateComplete;
+  expect(tabs()).toBeNull();
 });

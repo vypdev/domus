@@ -8,6 +8,12 @@ export const styles = css`
     --muted:#bbcbd8;--line:#506576;--accent:#8bccff;--soft:#203c51;--warning:#ffd096;color-scheme:dark}}
   * {box-sizing:border-box} main {width:min(100%,960px);margin:auto;padding:24px 20px 64px}
   header {display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:32px}
+  .workspace-nav {
+    position:sticky;inset-block-start:0;z-index:1;margin-block-end:20px;
+    --vyp-ha-surface:var(--surface);--vyp-ha-text:var(--text);--vyp-ha-text-secondary:var(--muted);
+    --vyp-ha-border:var(--line);--vyp-ha-primary:var(--accent);--vyp-ha-tab-indicator-color:var(--accent)
+  }
+  #overview,#household {scroll-margin-block-start:68px}
   .brand {display:flex;align-items:center;gap:12px} .logo {width:44px;height:44px;color:var(--accent)}
   .wordmark {font-size:1.5rem;font-weight:750;letter-spacing:.12em;line-height:1.2}
   .tagline {font-size:.8rem;color:var(--muted)} .language {font-size:.8rem;display:flex;align-items:center;gap:8px}

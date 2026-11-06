@@ -1,0 +1,13 @@
+{
+  "issue": "https://github.com/vypdev/domus/issues/23",
+  "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
+  "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
+  "command": "pnpm build:frontend",
+  "scope": "Compiled bundle for the integrated Overview, Tasks and Household navigation. Historical product and browser evidence stays in task-workspace.json and shared-presentation-adoption.json.",
+  "actualProductFiles": {
+    ".vite/manifest.json": "76044b3a0e114bbde7a14d4e3169710ce681f6ce444dda188690064f8fd9bf00",
+    "assets/index-CHPRUong.js": "11e23c908c896da224b72a9cc03b841bbab6da89c392f86bb9d09f8faeb47e6c",
+    "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+    "index.html": "0cbcf5d61efb00d3afabf6204ce8480d4648a1d0eb4e8556d0730c90a437878d"
+  }
+}

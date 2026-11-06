@@ -128,8 +128,12 @@ export function mountEntry(page: EntryPage): PageMount {
     const element = doc.createElement('domus-app'); app = element;
     element.language = language(null, page.navigator.language); element.deployment = source.target.deployment;
     doc.documentElement.lang = element.language;
-    const section = () => {element.section = new URL(page.location.href).hash === '#household' ? 'household' : 'tasks';};
-    section(); page.addEventListener('hashchange', section, {signal: widget.signal});
+    const syncWorkspace = () => {
+      const fragment = new URL(page.location.href).hash;
+      element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household' : fragment === '#tasks' ? 'tasks' : null;
+    };
+    syncWorkspace();
+    page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const browser: EntryBrowser = {transport: (path, init) => page.fetch(path, init), storage: () => page.sessionStorage,
       elapsed: () => page.performance.now(), random: bytes => page.crypto.getRandomValues(bytes),
       navigate: path => page.location.assign(path), events: page, visibility: doc,

@@ -50,8 +50,16 @@ Directory names will follow these boundaries, but no fake source files are creat
 
 ## Selected stack and trade-offs
 
-The owner selected Python/FastAPI, SQLite and Lit/TypeScript/Vite on 2026-10-29 after reviewing Gateway and Symphonia. The 2026-11-04 clarification supersedes separate ownership of presentation primitives: Domus and Gateway must consume one maintained, independently versioned presentation package. The upper dashboard-style tab bar is common; Domus owns its household information architecture, composition and workflows. Components contain presentation behavior only; API clients, authorization and domain orchestration stay in their applications. The reviewed package is bundled into each app; Gateway's application/runtime and private HA bundles are not runtime dependencies. Current Domus still uses its original components until the extraction and consumer adoption in [issue #30](https://github.com/vypdev/domus/issues/30) are verified. See the [early-M2 sequence and section responsibilities](roadmap.md).
-The shared package has its own planned repository, vypdev/ha-ui, npm coordinate @vypdev/ha-ui and Storybook hosted by that repository's GitHub Pages. This separates library API/version/catalog ownership from either application. Exact artifacts and integrity are recorded per consumer; publication, both consumer adoptions and human UX acceptance are distinct gates. No repository or package publication is claimed yet.
+The owner selected Python/FastAPI, SQLite and Lit/TypeScript/Vite on 2026-10-29 after reviewing Gateway and Symphonia. Domus owns HA-coherent presentation components, a Storybook catalog and Playwright browser contracts. Components contain presentation behavior; API clients, authorization and domain orchestration remain outside them. Neither gateway code nor private HA bundles become runtime dependencies.
+Domus and Gateway share the dashboard-style tab bar through an independently versioned
+presentation library. Domus owns its information architecture and household workflows. The
+Overview, Tasks and Household navigation uses the public
+[@vypdev/ha-ui 0.1.0-next.1](https://www.npmjs.com/package/@vypdev/ha-ui/v/0.1.0-next.1)
+package. The lockfile pins the exact artifact and reuses the application's Lit runtime. Domus
+composition maps the three known browser fragments and presentation renders the shared bar.
+Permissions and household operations remain under the existing controllers. The compiled
+distribution retains the package and third-party license notices.
+
 React was an evaluated alternative and is not the selected UI stack. A later change needs explicit evidence and a superseding decision.
 One household per installation is confirmed. A single DB writer remains the initial concurrency proposal; a port-based storage seam permits a reviewed later database migration.
 There is no broker, microservice mesh, cloud backend, event-sourced reconstruction requirement or MCP server.
