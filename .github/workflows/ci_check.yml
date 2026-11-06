@@ -305,6 +305,21 @@ jobs:
           assert result['stats']['expected']==34 and result['stats']['unexpected']==0
           and result['stats']['skipped']==0 and result['stats']['flaky']==0"
 
+      - name: Execute shared navigation in both deployments from the actual image
+        env:
+          DOMUS_BROWSER_IMAGE: domus-app-ci
+          DOMUS_TEST_SOURCE_COMMIT: ${{ github.sha }}
+          DOMUS_TEST_ARCH: ${{ matrix.arch }}
+        run: >-
+          pnpm --filter @domus/frontend exec playwright test
+          -c playwright.entry.config.ts tests/e2e/workspace-navigation.spec.ts
+      - name: Require both actual-image navigation journeys
+        run: >-
+          uv run python -c "import json; from pathlib import Path;
+          result=json.loads(Path('frontend/test-results/entry-results.json').read_text());
+          assert result['stats']['expected']==2 and result['stats']['unexpected']==0
+          and result['stats']['skipped']==0 and result['stats']['flaky']==0"
+
       - name: Require no surviving image browser fixtures
         run: >-
           uv run python -c "import subprocess;

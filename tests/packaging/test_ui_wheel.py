@@ -21,9 +21,9 @@ def test_built_wheel_contains_exact_product_bundle_and_no_browser_fixture(tmp_pa
         if path.is_file()
     }
     assert len(expected) >= 4
-    candidate = json.loads((ROOT / "docs/evidence/household-administration.json").read_text())[
-        "currentSourcePackage"
-    ]["actualProductFiles"]
+    candidate = json.loads((ROOT / "docs/evidence/shared-presentation-adoption.json").read_text())[
+        "actualProductFiles"
+    ]
     assert candidate == {
         name.removeprefix("domus/ui/"): hashlib.sha256(data).hexdigest()
         for name, data in expected.items()
@@ -35,6 +35,17 @@ def test_built_wheel_contains_exact_product_bundle_and_no_browser_fixture(tmp_pa
         assert {key: hashlib.sha256(value).hexdigest() for key, value in actual.items()} == {
             key: hashlib.sha256(value).hexdigest() for key, value in expected.items()
         }
+        scripts = [data for name, data in actual.items() if name.endswith(".js")]
+        installed = ROOT / "frontend/node_modules/@vypdev/ha-ui"
+        notices = [
+            installed / "LICENSE",
+            installed / "NOTICE",
+            *sorted((installed / "LICENSES").glob("*.txt")),
+        ]
+        assert len(notices) >= 6
+        for notice in notices:
+            text = notice.read_bytes().replace(b"*/", b"* /")
+            assert text and any(text in script for script in scripts), notice.name
         assert not any(name.startswith(("tests/", "frontend/")) for name in names)
         assert not any(b"__fixture__" in wheel.read(name) for name in names)
         for name, data in actual.items():

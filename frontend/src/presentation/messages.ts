@@ -1,5 +1,7 @@
 const english = Object.freeze({
   tagline: 'Your household, together', language: 'Language', english: 'English', spanish: 'Español',
+  workspaceNavigation: 'Household navigation', workspaceOverview: 'Overview', workspaceHousehold: 'Household',
+  workspaceScrollStart: 'Scroll to start', workspaceScrollEnd: 'Scroll to end',
   loading: 'Checking your access', loadingBody: 'Domus is reading your current session and permissions. No household changes are requested.',
   closed: 'This view is closed', closedBody: 'Household records and server history are retained. Reopen Domus to verify access again.',
   state_unconfigured: 'Set up your household', body_unconfigured: 'No household is configured. An authorized Home Assistant administrator can create it.',
@@ -57,6 +59,8 @@ export type MessageKey = keyof typeof english;
 export type Language = 'en' | 'es';
 const spanish: Readonly<Record<MessageKey, string>> = Object.freeze({
   tagline: 'Tu hogar, en equipo', language: 'Idioma', english: 'English', spanish: 'Español',
+  workspaceNavigation: 'Navegación del hogar', workspaceOverview: 'Inicio', workspaceHousehold: 'Hogar',
+  workspaceScrollStart: 'Desplazar al inicio', workspaceScrollEnd: 'Desplazar al final',
   loading: 'Comprobando tu acceso', loadingBody: 'Domus está consultando tu sesión y permisos actuales. No se solicita ningún cambio en el hogar.',
   closed: 'Esta vista está cerrada', closedBody: 'Los registros del hogar y el historial del servidor se conservan. Vuelve a abrir Domus para verificar el acceso.',
   state_unconfigured: 'Configura tu hogar', body_unconfigured: 'No hay un hogar configurado. Un administrador autorizado de Home Assistant puede crearlo.',
