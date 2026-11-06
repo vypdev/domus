@@ -11,9 +11,12 @@ function requireValue(condition: unknown): asserts condition {if (!condition) th
 export function taskIdentifier(value: unknown): string {
   requireValue(typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/u.test(value)); return value;
 }
+export function hasTaskText(value: string): boolean {
+  return /\P{White_Space}/u.test(value);
+}
 export function taskText(value: unknown, maximum: number, required: boolean, multiline = false): string {
   requireValue(typeof value === 'string' && Array.from(value).length <= maximum
-    && (!required || !/^\p{White_Space}*$/u.test(value))
+    && (!required || hasTaskText(value))
     && !/[\uD800-\uDFFF\u007F]/u.test(value)
     && !(multiline ? /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/u : /[\u0000-\u001F]/u).test(value));
   return value;

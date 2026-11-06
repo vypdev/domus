@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled bundle for the integrated Overview, Tasks and Household navigation. Historical product and browser evidence stays in task-workspace.json and shared-presentation-adoption.json.",
+  "scope": "Compiled bundle for the integrated Overview, Tasks and Household navigation with required-reason validation. The localValidation block retains the exact earlier integration source and assets.",
   "actualProductFiles": {
-    ".vite/manifest.json": "76044b3a0e114bbde7a14d4e3169710ce681f6ce444dda188690064f8fd9bf00",
-    "assets/index-CHPRUong.js": "11e23c908c896da224b72a9cc03b841bbab6da89c392f86bb9d09f8faeb47e6c",
+    ".vite/manifest.json": "45512cad52a09b32ab05d6200b094d8fa1bdd694ed473e0228c4b8ea95235b9c",
+    "assets/index-BZyPyyMk.js": "f13c739cba80765c6aa2c31b9b061bd24f6054e85356ec87363ca9ff2eedcec5",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "0cbcf5d61efb00d3afabf6204ce8480d4648a1d0eb4e8556d0730c90a437878d"
+    "index.html": "9085173d34adf3d0c0540d649af14bd682a87ebbe745b5b9ef23c2389274f972"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -23,6 +23,12 @@
     },
     "imageScope": "Local source images and exact package/listener bytes in both CPUs. Browser fixtures exercised Ingress and standalone, English and Spanish, native links, keyboard focus, Back/Forward and current-authorized task recovery.",
     "managedBranchReconciliation": "https://github.com/vypdev/domus/actions/runs/42284834425/job/128122841461",
-    "scope": "These observations cover the navigation integration source only. Later lifecycle changes require independent current-head evidence."
+    "scope": "These observations cover the navigation integration source only. Later lifecycle changes require independent current-head evidence.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "76044b3a0e114bbde7a14d4e3169710ce681f6ce444dda188690064f8fd9bf00",
+      "assets/index-CHPRUong.js": "11e23c908c896da224b72a9cc03b841bbab6da89c392f86bb9d09f8faeb47e6c",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "0cbcf5d61efb00d3afabf6204ce8480d4648a1d0eb4e8556d0730c90a437878d"
+    }
   }
 }

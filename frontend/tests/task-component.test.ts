@@ -204,7 +204,7 @@ test.each(['a', '🧹'])('review enforces the same 1,000-code-point reason bound
 test.each(['en', 'es'] as const)('required review reasons prevent impossible actions in %s', async locale => {
   const labels = locale === 'es' ? ['Aprobar', 'Rechazar', 'Reabrir tarea'] : ['Approve', 'Reject', 'Reopen task'];
   const f = await mount(view({detail: {...work, state: 'completed', allowedActions: ['approve', 'reject', 'reopen']}}), locale);
-  for (const reason of ['', ' \t\n ']) {
+  for (const reason of ['', '\u0085', ' \t\n ']) {
     await f.input('task-reason', reason);
     expect(f.button(labels[0]).disabled).toBe(false);
     for (const label of labels.slice(1)) {expect(f.button(label).disabled).toBe(true); f.button(label).click();}
