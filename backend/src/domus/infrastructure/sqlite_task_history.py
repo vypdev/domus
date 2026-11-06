@@ -22,6 +22,14 @@ _CURRENT = (
 )
 
 
+def task_source_record(retained: RetainedOperation) -> TaskSourceRecord:
+    raw = retained.evidence.receipt.result.decode().get("cycle")
+    if not isinstance(raw, dict):
+        raise StorageFailure("invalid_recurrence_source")
+    cycle = read_cycle(JsonDocument.from_value({"version": 1, **raw}).encoded)
+    return TaskSourceRecord(retained, cycle)
+
+
 @dataclass
 class SQLiteTaskHistory:
     connection: sqlite3.Connection
@@ -56,11 +64,7 @@ class SQLiteTaskHistory:
                 or row["position"] <= previous
             ):
                 raise StorageFailure("invalid_recurrence_source")
-            raw = retained.evidence.receipt.result.decode().get("cycle")
-            if not isinstance(raw, dict):
-                raise StorageFailure("invalid_recurrence_source")
-            cycle = read_cycle(JsonDocument.from_value({"version": 1, **raw}).encoded)
-            result.append(TaskSourceRecord(retained, cycle))
+            result.append(task_source_record(retained))
             previous = row["position"]
         return tuple(result)
 

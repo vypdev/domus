@@ -299,7 +299,7 @@ def test_real_historical_input_upgrade_preserves_every_original_table_and_adds_d
                     current.household_id, current.member_id
                 ) == MemberPreferences(current.member_id, current.household_id)
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 
@@ -331,7 +331,7 @@ def test_schema9_version_on_unmigrated_schema8_does_not_authorize_profile_use(tm
         connection.execute("PRAGMA user_version=9")
     before = store.path.read_bytes()
     for transaction in (store.read, store.write):
-        with pytest.raises(DatabaseRejected, match="unrelated_database"):
+        with pytest.raises(DatabaseRejected, match="unsupported_schema"):
             with transaction():
                 pytest.fail("A changed version number is not a schema upgrade")
     assert store.path.read_bytes() == before
@@ -347,7 +347,7 @@ def test_snapshot_independently_preserves_both_profiles_without_changing_member_
     archive = tmp_path / "snapshot"
     snapshots = SQLiteSnapshots(store, archive, store.installation, Clock())
     checkpoint = snapshots.create("original")
-    assert checkpoint.schema_version == 9 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 10 and snapshots.inspect() == checkpoint
     with SQLiteDatabase(archive / "domus.sqlite3", store.installation).read() as unit:
         assert unit.presentations.get("home", "member_1") == public
         assert unit.preferences.get("home", "member_1") == private

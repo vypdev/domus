@@ -110,6 +110,7 @@ def reset_progress(store, schedule_id):
                 previous,
                 current_occurrence_id=None,
                 current_slot_key=None,
+                source_after=0,
                 last_run_at=None,
                 evidence=None,
                 revision=previous.revision + 1,

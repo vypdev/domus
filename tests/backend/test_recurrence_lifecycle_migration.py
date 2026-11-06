@@ -3,8 +3,10 @@
 import hashlib
 from types import SimpleNamespace
 
+import pytest
 from test_sqlite_member_profiles import FIXTURES, facts, frozen
 
+from domus.domain.errors import DatabaseRejected, StorageFailure
 from domus.domain.member_profiles import MemberLocale
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
@@ -20,7 +22,14 @@ def test_supported_schema9_keeps_fixed_work_pristine_relative_progress_and_priva
     tmp_path,
 ):
     store = frozen(tmp_path, 9)
-    before = store.path.read_bytes()
+    with store._connection() as connection:
+        tables = tuple(
+            row[0]
+            for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        )
+    original = facts(store.path, tables)
+    with pytest.raises(DatabaseRejected, match="unsupported_schema"), store.read():
+        pass
     store.initialize(require_existing=True)
     restarted = SQLiteDatabase(store.path, store.installation)
     with restarted.read() as unit:
@@ -46,10 +55,14 @@ def test_supported_schema9_keeps_fixed_work_pristine_relative_progress_and_priva
         assert public.alias == "Fixture 🧹" and public.revision == 2
         assert private.locale is MemberLocale.SPANISH
         assert private.routine_participation_summaries is False and private.revision == 2
-    assert store.path.read_bytes() == before
+    assert facts(store.path, tables) == original
+    with restarted._connection() as connection:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
+    with restarted.read() as unit:
+        assert unit.recurrence.relative_inbox_after("home") == 0
 
 
-def test_independent_schema9_snapshot_inspection_preserves_every_original_row(tmp_path):
+def test_independent_snapshot_inspection_after_migration_preserves_every_original_row(tmp_path):
     store = frozen(tmp_path, 9)
     # Raw SQL import is test setup; the snapshot boundary requires an owned private file.
     store.path.chmod(0o600)
@@ -61,12 +74,38 @@ def test_independent_schema9_snapshot_inspection_preserves_every_original_row(tm
         )
         assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
     original = facts(store.path, tables)
+    store.initialize(require_existing=True)
     before = store.path.read_bytes()
     archive = tmp_path / "snapshot"
     snapshots = SQLiteSnapshots(
         store, archive, store.installation, SimpleNamespace(now=lambda: 1800000000000)
     )
     checkpoint = snapshots.create("source-nine")
-    assert checkpoint.schema_version == 9 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 10 and snapshots.inspect() == checkpoint
     assert facts(archive / "domus.sqlite3", tables) == original
+    assert store.path.read_bytes() == before
+
+
+def test_late_lifecycle_ddl_failure_leaves_genuine_schema9_bytes_untouched(tmp_path, monkeypatch):
+    from domus.infrastructure import sqlite as adapter
+
+    store = frozen(tmp_path, 9)
+    before = store.path.read_bytes()
+    monkeypatch.setattr(
+        adapter,
+        "RELATIVE_LIFECYCLE_STATEMENTS",
+        (*adapter.RELATIVE_LIFECYCLE_STATEMENTS, "INVALID SQL"),
+    )
+    with pytest.raises(StorageFailure, match="storage_failure"):
+        store.initialize(require_existing=True)
+    assert store.path.read_bytes() == before
+
+
+def test_relabelled_schema9_with_an_unrecognized_layout_is_refused(tmp_path):
+    store = frozen(tmp_path, 9)
+    with store._connection() as connection:
+        connection.execute("CREATE INDEX bogus_profile_index ON member_preferences(locale)")
+    before = store.path.read_bytes()
+    with pytest.raises(DatabaseRejected, match="unrelated_database"):
+        store.initialize(require_existing=True)
     assert store.path.read_bytes() == before

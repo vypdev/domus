@@ -8,7 +8,7 @@ from test_relative_lifecycle import closure
 from test_relative_recurrence_records import values
 
 from domus.domain.errors import StorageFailure
-from domus.domain.relative_lifecycle import RelativeClosureKind
+from domus.domain.relative_lifecycle import RelativeClosureKind, RelativeEventOutcome
 from domus.domain.relative_recurrence import RelativeOperation
 from domus.domain.storage import JsonDocument, Receipt, RestorationProvenance
 from domus.infrastructure.sqlite_relative_lifecycle import (
@@ -190,3 +190,55 @@ def test_non_generated_closure_does_not_accept_a_successor_mapping(kind):
     data["successor"] = relative_closure_document(closure()).decode()["successor"]
     with pytest.raises(StorageFailure, match="invalid_recurrence_record"):
         read_relative_closure(JsonDocument.from_value(data).encoded)
+
+
+def test_inbox_restart_and_rollback_preserve_original_position_and_pending_state(tmp_path):
+    from test_recurrence_source_observations import source
+    from test_task_events import prepared
+
+    from domus.infrastructure.sqlite import SQLiteDatabase
+
+    _, store, _, _, _, _ = prepared(tmp_path)
+    page = source(store).read()
+    (observed,) = page.items
+    with store.write() as unit:
+        (original,) = unit.tasks.lifecycle_sources("home")
+        assert unit.recurrence.relative_inbox_after("home") == 0
+        unit.recurrence.add_relative_source(original)
+        unit.recurrence.add_relative_source(original)
+    restarted = SQLiteDatabase(store.path, store.installation)
+    with pytest.raises(RuntimeError, match="rollback"), restarted.write() as unit:
+        assert unit.recurrence.relative_inbox_after("home") == observed.event.position
+        assert unit.recurrence.pending_relative_sources("home") == (original,)
+        unit.recurrence.finish_relative_source(
+            "home", observed.event.event_key, RelativeEventOutcome("unrelated", "fixture")
+        )
+        raise RuntimeError("rollback")
+    with restarted.write() as unit:
+        assert unit.recurrence.pending_relative_sources("home") == (original,)
+        unit.recurrence.finish_relative_source(
+            "home", observed.event.event_key, RelativeEventOutcome("unrelated", "fixture")
+        )
+    with restarted.read() as unit:
+        assert unit.recurrence.pending_relative_sources("home") == ()
+        assert unit.recurrence.relative_inbox_after("home") == observed.event.position
+
+
+def test_conflicting_durable_positions_cannot_be_reused(tmp_path):
+    from test_task_events import prepared
+
+    from domus.application.task_requests import ReopenTask
+    from domus.domain.errors import Conflict
+
+    tasks, store, _, _, oid, done = prepared(tmp_path)
+    cid = done.result.decode()["cycle"]["cycle_id"]
+    tasks.reopen("opened", ReopenTask(oid, 2, cid, "Again"))
+    with store.write() as unit:
+        first, second = unit.tasks.lifecycle_sources("home")
+        unit.recurrence.add_relative_source(first)
+    with store._connection() as connection:
+        connection.execute(
+            "UPDATE recurrence_relative_inbox SET position=?", (second.original.evidence.position,)
+        )
+    with store.write() as unit, pytest.raises(Conflict, match="relative_source_conflict"):
+        unit.recurrence.add_relative_source(second)

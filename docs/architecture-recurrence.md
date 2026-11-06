@@ -482,3 +482,24 @@ This codec prepares storage values; it does not read a database original or gran
 The repository must independently check original proof and row scope when its schema-10 closure
 table is implemented. Durable inbox/closure writes, successor generation, maintenance wiring and
 calendar acceptance remain pending. Schema stays 9.
+
+## Durable relative cycle reconciliation
+
+Schema 10 adds the relative source inbox and the per-cycle closure ledger. The inbox holds an
+installation-scoped reference to the original task operation and its exact position. Admission
+persists a bounded page in one writer. Completed rows retain the original outcome and reference
+its existing receipt when the outcome changed work. The scan continuation is independent of whether
+earlier rows are ready to produce a successor.
+
+A cycle step rechecks the original event, current cycle, rule, definition and progress in the same
+SQLite writer. An eligible completion creates a successor using the actual-work time and the pinned
+time policy. The task, slot, original receipt, audit, outbox, closure, progress and inbox outcome
+commit together. A late approval uses the original performance time. Rejection or reopening
+cancels a proven unstarted successor and records why. Existing work with evidence of a start, or
+with incomplete history, retains its facts and has a durable review outcome.
+
+Compatible restoration carries later cycle closures into the restored generation with their retained
+operation proofs. A successor absent from the selected checkpoint stays absent. The original
+operation remains recoverable with historical provenance. This increment exposes an application
+maintenance step. Mixed scheduling, reviewed schedule commands and calendar projections are
+separate increments.

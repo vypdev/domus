@@ -2,6 +2,7 @@
 
 import math
 import os
+import re
 import sqlite3
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
@@ -32,7 +33,12 @@ from domus.infrastructure.sqlite_member_profiles import SQLitePreferences, SQLit
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts, _command, _scope
 from domus.infrastructure.sqlite_recovery import SQLiteRecoveries
 from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
-from domus.infrastructure.sqlite_recurrence_schema import RECURRENCE_STATEMENTS, RECURRENCE_TABLES
+from domus.infrastructure.sqlite_recurrence_schema import (
+    RECURRENCE_STATEMENTS,
+    RECURRENCE_TABLES,
+    RELATIVE_LIFECYCLE_STATEMENTS,
+    RELATIVE_LIFECYCLE_TABLES,
+)
 from domus.infrastructure.sqlite_task_material_schema import (
     MATERIAL_STATEMENTS,
     MATERIAL_TABLES,
@@ -43,7 +49,7 @@ from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS, TASK_TABLES
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -99,6 +105,7 @@ SCHEMA_STATEMENTS = (
     *REVIEW_STATEMENTS,
     *RECURRENCE_STATEMENTS,
     *PROFILE_STATEMENTS,
+    *RELATIVE_LIFECYCLE_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -107,7 +114,39 @@ HISTORY_TABLES = RECOVERY_TABLES | {"retained_operations"}
 TASK_SCHEMA_TABLES = HISTORY_TABLES | TASK_TABLES
 MATERIAL_SCHEMA_TABLES = TASK_SCHEMA_TABLES | MATERIAL_TABLES
 RECURRENCE_SCHEMA_TABLES = MATERIAL_SCHEMA_TABLES | RECURRENCE_TABLES
-TABLES = RECURRENCE_SCHEMA_TABLES | PROFILE_TABLES
+PROFILE_SCHEMA_TABLES = RECURRENCE_SCHEMA_TABLES | PROFILE_TABLES
+TABLES = PROFILE_SCHEMA_TABLES | RELATIVE_LIFECYCLE_TABLES
+
+
+def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
+    return tuple(
+        (row[0], re.sub(r"\s+", " ", row[1]))
+        for row in connection.execute(
+            "SELECT name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name"
+        )
+    )
+
+
+def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
+    connection = sqlite3.connect(":memory:", autocommit=True)
+    try:
+        statements = (
+            *BASE_STATEMENTS,
+            *(IDENTITY_STATEMENTS if version >= 2 else ()),
+            *(RECOVERY_STATEMENTS if version >= 3 else ()),
+            *(HISTORY_STATEMENTS if version >= 4 else ()),
+            *(TASK_STATEMENTS if version >= 5 else ()),
+            *(MATERIAL_STATEMENTS if version >= 6 else ()),
+            *(REVIEW_STATEMENTS if version >= 7 else ()),
+            *(RECURRENCE_STATEMENTS if version >= 8 else ()),
+            *(PROFILE_STATEMENTS if version >= 9 else ()),
+            *(RELATIVE_LIFECYCLE_STATEMENTS if version >= 10 else ()),
+        )
+        for statement in statements:
+            connection.execute(statement)
+        return _schema(connection)
+    finally:
+        connection.close()
 
 
 def _storage_error(error: sqlite3.Error) -> DomusError:
@@ -320,7 +359,7 @@ class SQLiteDatabase:
             if version == 0 and application_id == 0 and not objects and allow_empty:
                 return 0
             if version != SCHEMA_VERSION and not (
-                allow_previous and version in (1, 2, 3, 4, 5, 6, 7, 8)
+                allow_previous and version in (1, 2, 3, 4, 5, 6, 7, 8, 9)
             ):
                 raise DatabaseRejected("unsupported_schema")
             expected_tables = {
@@ -332,6 +371,7 @@ class SQLiteDatabase:
                 6: MATERIAL_SCHEMA_TABLES,
                 7: MATERIAL_SCHEMA_TABLES,
                 8: RECURRENCE_SCHEMA_TABLES,
+                9: PROFILE_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -375,7 +415,9 @@ class SQLiteDatabase:
                     )
                     connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
-                elif version in (1, 2, 3, 4, 5, 6, 7, 8):
+                elif version in (1, 2, 3, 4, 5, 6, 7, 8, 9):
+                    if version == 9 and _schema(connection) != _expected_schema(version):
+                        raise DatabaseRejected("unrelated_database")
                     migration = (
                         *(IDENTITY_STATEMENTS if version == 1 else ()),
                         *(RECOVERY_STATEMENTS if version < 3 else ()),
@@ -384,7 +426,8 @@ class SQLiteDatabase:
                         *(MATERIAL_STATEMENTS if version < 6 else ()),
                         *(REVIEW_STATEMENTS if version < 7 else ()),
                         *(RECURRENCE_STATEMENTS if version < 8 else ()),
-                        *PROFILE_STATEMENTS,
+                        *(PROFILE_STATEMENTS if version < 9 else ()),
+                        *RELATIVE_LIFECYCLE_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)

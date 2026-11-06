@@ -4,6 +4,7 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from domus.application.member_profile_commands import (
     PreferencesUpdate,
 )
 from domus.composition import admin, ingress, server
+from domus.domain.errors import DatabaseRejected
 from domus.domain.identity import HumanIdentity
 from domus.domain.member_profiles import MemberLocale
 from domus.entrypoints.ui_bundle import load_bundle
@@ -59,7 +61,7 @@ def console(*arguments):
 
 def state(store):
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
         return {
             table: [
@@ -89,16 +91,51 @@ def ui():
     return result
 
 
+def runtime_at(mode, root):
+    return (
+        ingress.create_owned_runtime("fictional-supervisor", "edge", root, (ORIGIN,))
+        if mode == "native"
+        else server.create_owned_runtime("http://fictional-ha.local", ORIGIN, "edge", root)
+    )
+
+
 def main():
     phase, mode, delivery = sys.argv[1:]
-    assert phase in ("initialize", "later", "rollback")
+    assert phase in ("initialize", "later", "refuse", "restored", "rollback")
     assert mode in ("native", "standalone") and delivery in ("pending", "acknowledged")
-    assert os.getuid() == os.getgid() == 65532 and SCHEMA_VERSION == 9
-    runtime = (
-        ingress.create_owned_runtime("fictional-supervisor", "edge", ROOT, (ORIGIN,))
-        if mode == "native"
-        else server.create_owned_runtime("http://fictional-ha.local", ORIGIN, "edge", ROOT)
-    )
+    assert os.getuid() == os.getgid() == 65532
+    assert SCHEMA_VERSION == (10 if phase in ("later", "restored") else 9)
+    if phase == "refuse":
+        saved = json.loads(RECORD.read_text())
+        selected = ROOT / "generations" / saved["selected_generation"] / "domus.sqlite3"
+        digest = hashlib.sha256(selected.read_bytes()).hexdigest()
+        try:
+            runtime_at(mode, ROOT)
+        except DatabaseRejected as error:
+            assert error.code == "unsupported_schema"
+        else:
+            raise AssertionError("Schema 9 runtime accepted a schema 10 generation")
+        assert hashlib.sha256(selected.read_bytes()).hexdigest() == digest
+        print(json.dumps({"refused_schema": 10, "database_sha256": digest}))
+        return
+    if phase == "rollback":
+        before = Path("/data/snapshots/before")
+        compatible = Path("/data/snapshots/compatible-nine")
+        compatible.mkdir(mode=0o700)
+        for name in ("installation.json", "domus.sqlite3"):
+            shutil.copyfile(before / name, compatible / name)
+            (compatible / name).chmod(0o600)
+        saved = json.loads(RECORD.read_text())
+        runtime = runtime_at(mode, compatible)
+        try:
+            store = runtime.storage.database
+            assert state(store) == saved["initial_state"]
+            assert set(proofs(store)) == {saved["setup_operation"], saved["before_operation"]}
+            print(json.dumps({"state": state(store), "ui": ui(), "schema": SCHEMA_VERSION}))
+        finally:
+            runtime.close()
+        return
+    runtime = runtime_at(mode, ROOT)
     try:
         store, actor, clock, ids = (
             runtime.storage.database,
@@ -190,6 +227,7 @@ def main():
         observation = {
             "state": state(store),
             "ui": ui(),
+            "schema": SCHEMA_VERSION,
             "generation_id": runtime.storage.generation_id,
         }
     finally:

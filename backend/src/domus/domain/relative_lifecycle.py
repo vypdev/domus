@@ -7,7 +7,7 @@ from enum import StrEnum
 from domus.domain.errors import InvalidInput
 from domus.domain.recurrence_records import MAINTENANCE_ACTOR
 from domus.domain.relative_recurrence import RelativeOperation, RelativeSchedule, RelativeSlot
-from domus.domain.storage import Installation, JsonDocument, Receipt
+from domus.domain.storage import Installation, JsonDocument, Receipt, validate_identifier
 from domus.domain.task_values import OccurrenceState, VerificationState, validate_task_time
 from domus.domain.tasks import TaskCycle, TaskOccurrence
 
@@ -214,3 +214,45 @@ def successor_disposition(
     ):
         return SuccessorDisposition.REVIEW
     return SuccessorDisposition.CANCEL
+
+
+@dataclass(frozen=True, slots=True)
+class RelativeEventOutcome:
+    """Durable result for one admitted event, including non-effect decisions."""
+
+    status: str
+    schedule_id: str
+    receipt: Receipt | None = None
+    occurrence_id: str | None = None
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.schedule_id)
+        if self.occurrence_id is not None:
+            validate_identifier(self.occurrence_id)
+        if self.status in ("unrelated", "retired", "definition_inactive", "waiting_verification"):
+            if self.receipt is not None or self.occurrence_id is not None:
+                raise InvalidInput("invalid_relative_outcome")
+            return
+        if (
+            self.status
+            not in (
+                "generated",
+                "rejected",
+                "reopened",
+                "historical_absent",
+                "cancel",
+                "retained",
+                "review",
+                "absent",
+            )
+            or self.receipt is None
+            or self.receipt.command.actor_id != MAINTENANCE_ACTOR
+            or self.receipt.command.action
+            not in (
+                "recurrence.materialize",
+                "recurrence.relative.close",
+                "recurrence.relative.invalidate",
+            )
+            or self.receipt.result.decode().get("occurrence_id") != self.occurrence_id
+        ):
+            raise InvalidInput("invalid_relative_outcome")

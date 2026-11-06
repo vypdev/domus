@@ -37,7 +37,7 @@ def test_checkpoint_verifies_and_reopens_real_rule_progress_slot_and_original_re
     snapshots = SQLiteSnapshots(store, tmp_path / "snapshot", store.installation, Clock())
     before = store.path.read_bytes()
     checkpoint = snapshots.create("recurrence")
-    assert checkpoint.schema_version == 9 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 10 and snapshots.inspect() == checkpoint
     assert store.path.read_bytes() == before
     reopened = SQLiteDatabase(tmp_path / "snapshot/domus.sqlite3", store.installation)
     with reopened.read() as unit:
@@ -264,7 +264,7 @@ def test_pattern_edit_requires_matching_progress_and_preserves_existing_slot_sna
         SQLiteSnapshots(store, tmp_path / "edited", store.installation, Clock())
         .create("edited")
         .schema_version
-        == 9
+        == 10
     )
 
 

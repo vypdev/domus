@@ -3,7 +3,6 @@
 import hashlib
 import math
 import os
-import re
 import sqlite3
 import time
 from collections.abc import Callable, Iterator
@@ -25,26 +24,22 @@ from domus.domain.snapshots import Snapshot
 from domus.domain.storage import CommandKey, Installation, JsonDocument, validate_identifier
 from domus.infrastructure.owned_storage import _file, _identity, _write_identity
 from domus.infrastructure.sqlite import (
-    BASE_STATEMENTS,
-    IDENTITY_STATEMENTS,
-    RECOVERY_STATEMENTS,
     SQLiteDatabase,
     SQLiteUnit,
+    _expected_schema,
+    _schema,
     _storage_error,
 )
 from domus.infrastructure.sqlite_history import (
-    HISTORY_STATEMENTS,
     last_committed_at,
     verify_history,
 )
-from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS
 from domus.infrastructure.sqlite_recovery import _record as _recovery
-from domus.infrastructure.sqlite_recurrence_integrity import verify_recurrence_records
-from domus.infrastructure.sqlite_recurrence_schema import RECURRENCE_STATEMENTS
+from domus.infrastructure.sqlite_recurrence_integrity import (
+    verify_recurrence_records,
+    verify_relative_lifecycle_records,
+)
 from domus.infrastructure.sqlite_task_integrity import verify_task_records
-from domus.infrastructure.sqlite_task_material_schema import MATERIAL_STATEMENTS
-from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
-from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS
 
 _DATABASE = "domus.sqlite3"
 _IDENTITY = "installation.json"
@@ -102,36 +97,6 @@ def _connection(path: Path, budget: _Budget, *, readonly: bool) -> Iterator[sqli
     except sqlite3.Error as error:
         budget.check()
         raise _storage_error(error) from None
-
-
-def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
-    return tuple(
-        (row[0], re.sub(r"\s+", " ", row[1]))
-        for row in connection.execute(
-            "SELECT name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name"
-        )
-    )
-
-
-def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
-    connection = sqlite3.connect(":memory:", autocommit=True)
-    try:
-        statements = (
-            *BASE_STATEMENTS,
-            *(IDENTITY_STATEMENTS if version >= 2 else ()),
-            *(RECOVERY_STATEMENTS if version >= 3 else ()),
-            *(HISTORY_STATEMENTS if version >= 4 else ()),
-            *(TASK_STATEMENTS if version >= 5 else ()),
-            *(MATERIAL_STATEMENTS if version >= 6 else ()),
-            *(REVIEW_STATEMENTS if version >= 7 else ()),
-            *(RECURRENCE_STATEMENTS if version >= 8 else ()),
-            *(PROFILE_STATEMENTS if version >= 9 else ()),
-        )
-        for statement in statements:
-            connection.execute(statement)
-        return _schema(connection)
-    finally:
-        connection.close()
 
 
 def _records(connection: sqlite3.Connection, version: int, installation: Installation) -> None:
@@ -201,6 +166,8 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
             verify_history(connection)
         if version >= 8:
             verify_recurrence_records(connection, installation)
+        if version >= 10:
+            verify_relative_lifecycle_records(connection, installation)
     except DomusError as error:
         raise DatabaseRejected("invalid_snapshot_records") from error
 
