@@ -21,13 +21,22 @@ from domus.application.recurrence_review import (
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
 from domus.application.relative_state_review import RelativeStateChange
 from domus.application.task_authorization import TaskAccess
+from domus.application.task_commands import TaskCommands
 from domus.application.task_requests import (
+    AssignTask,
     CreateTaskOccurrence,
     ReopenTask,
     TransitionTask,
     VerifyTask,
 )
-from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
+from domus.domain.errors import (
+    Conflict,
+    Forbidden,
+    IntegrationUnavailable,
+    InvalidInput,
+    NotFound,
+    StorageFailure,
+)
 from domus.domain.identity import HumanIdentity
 from domus.domain.recurrence_records import ScheduleState
 from domus.domain.relative_recurrence import RelativeSlot, SuccessorVisibility
@@ -552,3 +561,141 @@ def test_apply_rejects_a_plan_that_disagrees_with_its_original_fingerprint(
     with pytest.raises(Conflict, match="recurrence_review_stale"):
         review.apply("apply", request)
     assert progress(review.transactions, choice.schedule_id).pristine
+
+
+def fixed_skip_fixture(tmp_path, *, timed=False):
+    from datetime import UTC, datetime
+
+    from test_fixed_materialization import configured as fixed
+
+    from domus.application.fixed_skip_review import FixedSkip
+
+    service, store, actor, ids, rule_id, before = fixed(tmp_path, timed=timed, count=2)
+    result = service.step(rule_id, before)
+    planner = RelativeRecurrencePlanner(service.planner.times)
+    now = int(datetime(2026, 3, 31, tzinfo=UTC).timestamp() * 1000)
+    clock = type("Clock", (), {"now": lambda _: now})()
+    review = RecurrenceReview(store, store.installation, actor, actor.current, clock, ids, planner)
+    selection = FixedSkip(
+        rule_id, 1, result.receipt.command.key, result.occurrence_id, 1, "Vacation"
+    )
+    return review, selection, service, before
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_fixed_overdue_skip_keeps_slot_and_task_history_without_affecting_later_work(
+    tmp_path, timed
+):
+    review, choice, service, before = fixed_skip_fixture(tmp_path, timed=timed)
+    store = review.transactions
+    with store.read() as unit:
+        original = unit.recurrence.slot("home", choice.slot_key)
+        progress = unit.recurrence.progress("home", choice.schedule_id)
+    preview, command = reviewed(review, choice)
+    plan = preview.result.decode()["plan"]
+    assert plan["exception"] == "overdue_skip"
+    assert plan["snapshot"]["source"]["nominal"] == original.planned.value()
+    first = review.apply("skip", command)
+    restarted = replace(review, transactions=SQLiteDatabase(store.path, store.installation))
+    assert restarted.original(ReviewAction.APPLY, "skip") == first
+    assert restarted.apply("skip", command) == first
+    with store.read() as unit:
+        (history,) = unit.tasks.history("home", choice.occurrence_id)
+        assert (
+            history.evidence.receipt.operation_id
+            == first.result.decode()["transition_operation_id"]
+        )
+        assert history.evidence.receipt.command.actor_id == review.actor.human.ha_user_id
+        assert unit.recurrence.slot("home", choice.slot_key) == original
+        assert unit.recurrence.progress("home", choice.schedule_id) == progress
+        assert unit.tasks.cycles("home") == ()
+        work = unit.tasks.occurrence("home", choice.occurrence_id)
+        assert work.state is OccurrenceState.SKIPPED and work.state_reason == choice.reason
+    later = service.step(choice.schedule_id, before)
+    assert later.status == "created" and later.occurrence_id != choice.occurrence_id
+    assert review.preview("preview", choice) == preview
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_due_slot_must_be_overdue_before_it_can_be_reviewed(tmp_path, timed):
+    from test_household_commands import Clock
+
+    review, choice, _, _ = fixed_skip_fixture(tmp_path, timed=timed)
+    with pytest.raises(Conflict, match="recurrence_slot_not_overdue"):
+        replace(review, clock=Clock()).preview("early", choice)
+    with pytest.raises(InvalidInput):
+        replace(choice, reason="")
+
+
+@pytest.mark.parametrize(
+    "change", ["missing", "rule_revision", "occurrence", "slot", "started", "retired"]
+)
+def test_fixed_skip_rechecks_exact_current_rule_slot_work_and_history(tmp_path, change):
+    review, choice, service, _ = fixed_skip_fixture(tmp_path)
+    store = review.transactions
+    tasks = TaskCommands(store, review.actor, service.clock, service.identifiers)
+    _, command = reviewed(review, choice)
+    if change == "missing":
+        with pytest.raises(NotFound):
+            review.preview("missing", replace(choice, schedule_id="missing"))
+        return
+    if change == "occurrence":
+        with pytest.raises(Conflict, match="recurrence_review_stale"):
+            review.preview("missing", replace(choice, occurrence_id="missing"))
+        return
+    if change == "slot":
+        with pytest.raises(Conflict, match="recurrence_review_stale"):
+            review.preview("missing", replace(choice, slot_key="missing"))
+        return
+    if change == "started":
+        tasks.assign("assign", AssignTask(choice.occurrence_id, 1, ("child",)))
+        tasks.transition(
+            "start", TransitionTask(choice.occurrence_id, 2, OccurrenceState.IN_PROGRESS)
+        )
+    else:
+        with store.write() as unit:
+            rule = unit.recurrence.schedule("home", choice.schedule_id)
+            state = ScheduleState.RETIRED if change == "retired" else ScheduleState.PAUSED
+            unit.recurrence.save_schedule(replace(rule, revision=2, state=state), 1)
+    before = counts(store)
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        review.apply("apply", command)
+    if change == "retired":
+        with pytest.raises(Conflict, match="recurrence_skip_incompatible"):
+            review.preview("fresh", replace(choice, schedule_revision=2))
+    if change == "started":
+        with pytest.raises(Conflict, match="recurrence_skip_incompatible"):
+            review.preview("fresh", replace(choice, occurrence_revision=3))
+    assert counts(store) == before
+
+
+def test_fixed_skip_refuses_contradictory_provider_fact(tmp_path, monkeypatch):
+    review, choice, _, _ = fixed_skip_fixture(tmp_path)
+    monkeypatch.setattr(type(review.planner.times), "local_at", lambda *_: None)
+    with pytest.raises(IntegrationUnavailable, match="recurrence_time_source_invalid"):
+        review.preview("skip", choice)
+
+
+def test_fixed_skip_rolls_back_task_transition_if_review_receipt_fails(tmp_path, monkeypatch):
+    review, choice, _, _ = fixed_skip_fixture(tmp_path)
+    _, change = reviewed(review, choice)
+    store = review.transactions
+    before = counts(store)
+    original = SQLiteReceipts.add
+
+    def fail(self, receipt):
+        original(self, receipt)
+        if receipt.command.action == ReviewAction.APPLY:
+            raise StorageFailure("review_receipt_failure")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteReceipts, "add", fail)
+        with pytest.raises(StorageFailure, match="review_receipt_failure"):
+            review.apply("skip", change)
+    assert counts(store) == before
+    with store.read() as unit:
+        assert (
+            unit.tasks.occurrence("home", choice.occurrence_id).state is OccurrenceState.AVAILABLE
+        )
+        assert unit.tasks.history("home", choice.occurrence_id) == ()
+    assert review.apply("skip", change).result.decode()["work"]["state"] == "skipped"

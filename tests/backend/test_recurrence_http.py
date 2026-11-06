@@ -152,3 +152,59 @@ def test_protected_relative_state_review_exposes_manual_backlog(api):
         )
         assert applied.status_code == 200, applied.text
         assert applied.json()["result"]["state"] == target
+
+
+def test_protected_overdue_fixed_skip_recovers_original_exception(api):
+    from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
+    from domus.application.fixed_recurrence import FixedRecurrencePlanner
+    from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
+    from domus.domain.nominal_recurrence import CalendarNominalExpansion
+    from domus.domain.recurrence_rules import FixedPattern, Frequency
+
+    api.user(USER, True)
+    times, clock, ids = PinnedRecurrenceTime(), SystemClock(), SecureIdentifiers()
+    planner = FixedRecurrencePlanner(CalendarNominalExpansion(), times)
+    admin = SimpleNamespace(current=lambda: HumanIdentity(USER, True, True, False))
+    schedule = RecurrenceCommands(api.store, admin, clock, ids, planner).create_fixed(
+        "fixed",
+        CreateFixedTask(
+            CreateTask(TaskContent("Overdue maintenance")),
+            FixedPattern(NominalDate(date(2001, 1, 1)), Frequency.DAILY, count=1),
+            TimePolicy("UTC", times.data_identity),
+        ),
+    )
+    schedule_id = schedule.result.decode()["schedule_id"]
+    step = FixedMaintenance(
+        api.store, MaintenanceScope(api.store.installation, "home"), planner, clock, ids
+    ).step(schedule_id, NominalDate(date(2001, 1, 2)))
+    choice = {
+        "schedule_id": schedule_id,
+        "schedule_revision": 1,
+        "slot_key": step.receipt.command.key,
+        "occurrence_id": step.occurrence_id,
+        "occurrence_revision": 1,
+        "reason": "<em>away</em>",
+    }
+    preview = api.client.post(
+        f"{BASE}/fixed-skip/preview",
+        json=choice,
+        headers=api.headers("preview-skip") | CONTEXT,
+    )
+    assert preview.status_code == 200, preview.text
+    assert preview.json()["result"]["plan"]["exception"] == "overdue_skip"
+    result = api.client.post(
+        f"{BASE}/fixed-skip/apply",
+        json=choice
+        | {
+            "preview_key": "preview-skip",
+            "plan_fingerprint": preview.json()["result"]["plan_fingerprint"],
+        },
+        headers=api.headers("apply-skip") | CONTEXT,
+    )
+    assert result.status_code == 200, result.text
+    work = result.json()["result"]["work"]
+    assert work["state"] == "skipped" and work["state_reason"] == "<em>away</em>"
+    original = api.client.get(
+        f"{BASE}/requests/recurrence.review.apply/apply-skip", headers=CONTEXT
+    )
+    assert original.json() == result.json()

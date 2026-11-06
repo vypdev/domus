@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
+from domus.application.fixed_skip_review import FixedSkip
 from domus.application.recurrence_review import ManualAdoption, ReviewedChange
 from domus.application.relative_state_review import RelativeStateChange
 from domus.domain.recurrence_records import ScheduleState
@@ -43,6 +44,33 @@ class RelativeStateBody(StrictModel):
 
 
 class ReviewedStateBody(RelativeStateBody):
+    preview_key: Identifier
+    plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+    def reviewed(self) -> ReviewedChange:
+        return ReviewedChange(self.selection(), self.preview_key, self.plan_fingerprint)
+
+
+class FixedSkipBody(StrictModel):
+    schedule_id: Identifier
+    schedule_revision: Revision
+    slot_key: Identifier
+    occurrence_id: Identifier
+    occurrence_revision: Revision
+    reason: Annotated[str, Field(min_length=1, max_length=1000)]
+
+    def selection(self) -> FixedSkip:
+        return FixedSkip(
+            self.schedule_id,
+            self.schedule_revision,
+            self.slot_key,
+            self.occurrence_id,
+            self.occurrence_revision,
+            self.reason,
+        )
+
+
+class ReviewedFixedSkipBody(FixedSkipBody):
     preview_key: Identifier
     plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 

@@ -34,3 +34,16 @@ still supply the next date after resume. The preview derives that date from the 
 time and schedule policy. Pending verification, a closed cycle, manual work requiring adoption, and
 historical absent effects have separate backlog statuses. Resuming saves the rule state. The owned
 maintenance runner processes the backlog and preserves the due date even when it is overdue.
+
+## Skip an overdue fixed slot
+
+Review a specific materialized fixed slot through `POST /fixed-skip/preview`. Supply the current
+schedule and occurrence IDs and revisions, the original slot key, and a reason. A date-only slot
+becomes overdue after its nominal date in the slot's saved time zone. A timed slot becomes overdue
+after its saved due instant. Only available or assigned work with a proven unstarted history can
+be skipped.
+
+Apply through `POST /fixed-skip/apply` with the original selection, preview key, and fingerprint.
+The skipped task keeps its original slot and reason. Future fixed slots continue from their
+existing schedule. The operation records the original actor and transition without recording a
+completion or awarding points.

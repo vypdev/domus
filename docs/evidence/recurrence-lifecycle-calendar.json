@@ -251,5 +251,32 @@
     "progressVerification": "https://github.com/vypdev/domus/runs/128186004050",
     "progressReport": "https://github.com/vypdev/copilot/issues/910#issuecomment-6697253768",
     "scope": "Results apply to the exact source commit above. The adoption interaction was verified through HTTP. The existing browser suite exercises task, administration and shared navigation journeys."
+  },
+  "relativeStateReviewCheckpoint": {
+    "sourceCommit": "51425d54b80cd16063444a40d2a9445b5846b3da",
+    "schema": 10,
+    "verified": [
+      "Both protected HTTP compositions preview and apply relative pause/resume under current task-manager grants.",
+      "Pause retains task work and the pending completion source. Resume previews the next local slot from the original performed time or explains why no slot can yet be projected.",
+      "The writer rejects changed work after provider preparation, preserves closed sources and distinguishes a restored absent effect from an unconsumed first slot."
+    ],
+    "backend": {
+      "passed": 4727,
+      "runtimeModules": 160,
+      "statements": 11476,
+      "branches": 3254,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "images": {
+      "amd64": "sha256:fab6f29ca35a30df0af6d3f14e953b81ceeb9a4f5d419009dd69f4dc8a663718",
+      "aarch64": "sha256:279fb6f99d9c61524a68c483837863ef2b41da03d8bce95ae8e891c2c6cb5805",
+      "existingBrowserJourneysPerArchitecture": 46,
+      "browserScope": "Ingress and standalone, English and Spanish, exact source images"
+    },
+    "wheel": {
+      "passed": 1
+    },
+    "progressVerification": "https://github.com/vypdev/domus/runs/128190906551",
+    "scope": "Results apply to the exact source commit above. Pause and resume were verified through HTTP. The existing browser suite exercises task, administration and shared navigation journeys."
   }
 }

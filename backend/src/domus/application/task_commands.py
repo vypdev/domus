@@ -115,6 +115,13 @@ def _change(transition: str, request: TaskRequest, result: JsonDocument) -> Chan
     return Change(result, detail, event)
 
 
+def transition_occurrence(unit: UnitOfWork, household_id: str, request: TransitionTask) -> Change:
+    work = _occurrence(unit, household_id, request)
+    updated = work.transition(request.target, request.reason)
+    unit.tasks.save_occurrence(updated, request.expected_revision)
+    return _change("task.transitioned", request, _result(updated))
+
+
 def _cycle_result(
     work: TaskOccurrence, cycle: TaskCycle, *, reopened: bool = False
 ) -> JsonDocument:
@@ -309,17 +316,11 @@ class TaskCommands:
         return self._execute(key, "task.claim", request, apply, occurrence_id=request.occurrence_id)
 
     def transition(self, key: str, request: TransitionTask) -> Receipt:
-        def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
-            work = _occurrence(unit, self.household_id, request)
-            updated = work.transition(request.target, request.reason)
-            unit.tasks.save_occurrence(updated, request.expected_revision)
-            return _change("task.transitioned", request, _result(updated))
-
         return self._execute(
             key,
             "task.transition",
             request,
-            apply,
+            lambda unit, access: transition_occurrence(unit, self.household_id, request),
             occurrence_id=request.occurrence_id,
             transition_target=request.target,
         )

@@ -7,6 +7,7 @@ from enum import StrEnum
 
 from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_materialization import MaintenanceScope
+from domus.application.fixed_skip_review import FixedSkip, FixedSkipPlan, fixed_skip_plan
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.relative_lifecycle import occurrence_work_history
@@ -17,7 +18,9 @@ from domus.application.relative_state_review import (
     RelativeStatePlan,
     state_plan,
 )
-from domus.application.task_authorization import TaskAccess, TaskActor
+from domus.application.task_authorization import TaskAccess, TaskActor, TaskCommandAuthorization
+from domus.application.task_commands import transition_occurrence
+from domus.application.task_requests import TransitionTask
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
 from domus.domain.recurrence_records import ScheduleState
@@ -61,7 +64,7 @@ class ManualAdoption:
 
 @dataclass(frozen=True, slots=True)
 class ReviewedChange:
-    selection: ManualAdoption | RelativeStateChange
+    selection: ManualAdoption | RelativeStateChange | FixedSkip
     preview_key: str
     plan_fingerprint: str
 
@@ -182,11 +185,15 @@ class RecurrenceReview:
         )
 
     @staticmethod
-    def _state_snapshot(
-        unit: UnitOfWork, authority: _ReviewAuthority, selection: RelativeStateChange
-    ) -> tuple[RelativeStatePlan, JsonDocument]:
+    def _prepare(
+        unit: UnitOfWork, authority: _ReviewAuthority, selection: RelativeStateChange | FixedSkip
+    ) -> tuple[RelativeStatePlan | FixedSkipPlan, JsonDocument]:
         actor = authority.current(unit)
-        plan = state_plan(unit, authority.scope, selection)
+        plan = (
+            state_plan(unit, authority.scope, selection)
+            if isinstance(selection, RelativeStateChange)
+            else fixed_skip_plan(unit, authority.scope, selection)
+        )
         snapshot = JsonDocument.from_value(
             {
                 "request": selection.document().decode(),
@@ -201,27 +208,31 @@ class RecurrenceReview:
         )
         return plan, snapshot
 
-    def _preview_state(
+    def _preview_prepared(
         self,
         authority: _ReviewAuthority,
         commands: AtomicCommands,
-        selection: RelativeStateChange,
+        selection: RelativeStateChange | FixedSkip,
         payload: JsonDocument,
     ) -> Receipt:
         previous = commands.replay(authority.command, payload)
         if previous is not None:
             return previous
         with self.transactions.read() as unit:
-            plan, snapshot = self._state_snapshot(unit, authority, selection)
-        backlog = plan.backlog(self.planner)
+            plan, snapshot = self._prepare(unit, authority, selection)
+        effect: JsonObject
+        if isinstance(plan, RelativeStatePlan):
+            effect = {"backlog": plan.backlog(self.planner)}
+        else:
+            plan.require_overdue(self.planner.times, self.clock.now())
+            effect = {"exception": "overdue_skip"}
 
         def commit(unit: UnitOfWork) -> Change:
-            _, current = self._state_snapshot(unit, authority, selection)
+            _, current = self._prepare(unit, authority, selection)
             if current != snapshot:
                 raise Conflict("recurrence_review_stale")
             return self._preview_change(
-                payload,
-                JsonDocument.from_value({"snapshot": snapshot.decode(), "backlog": backlog}),
+                payload, JsonDocument.from_value({"snapshot": snapshot.decode(), **effect})
             )
 
         return commands.execute(authority.command, payload, commit)
@@ -236,18 +247,22 @@ class RecurrenceReview:
         )
         return self._change(ReviewAction.PREVIEW, payload, result)
 
-    def _apply_state(
+    def _apply_prepared(
         self,
         unit: UnitOfWork,
         authority: _ReviewAuthority,
-        selection: RelativeStateChange,
+        commands: AtomicCommands,
+        selection: RelativeStateChange | FixedSkip,
         saved: JsonObject,
     ) -> JsonObject:
-        plan, snapshot = self._state_snapshot(unit, authority, selection)
+        plan, snapshot = self._prepare(unit, authority, selection)
         if JsonDocument.from_value({"snapshot": saved.get("snapshot")}) != JsonDocument.from_value(
             {"snapshot": snapshot.decode()}
         ):
             raise Conflict("recurrence_review_stale")
+        if isinstance(selection, FixedSkip):
+            return self._apply_skip(unit, authority, commands, selection)
+        assert isinstance(plan, RelativeStatePlan)
         rule = plan.source.schedule
         updated = replace(rule, state=selection.target, revision=rule.revision + 1)
         unit.recurrence.save_relative_schedule(updated, rule.revision)
@@ -260,6 +275,45 @@ class RecurrenceReview:
         }
 
     @staticmethod
+    def _apply_skip(
+        unit: UnitOfWork,
+        authority: _ReviewAuthority,
+        commands: AtomicCommands,
+        selection: FixedSkip,
+    ) -> JsonObject:
+        home = authority.scope.household_id
+        request = TransitionTask(
+            selection.occurrence_id,
+            selection.occurrence_revision,
+            OccurrenceState.SKIPPED,
+            selection.reason,
+        )
+        key = JsonDocument.from_value(
+            {"action": authority.command.action, "key": authority.command.key}
+        ).fingerprint
+        command = CommandKey(home, authority.command.actor_id, "task.transition", key)
+        task_authority = TaskCommandAuthorization(
+            authority.access,
+            home,
+            command.action,
+            selection.occurrence_id,
+            transition_target=request.target,
+        )
+        effect = replace(commands, authorization=task_authority).in_unit(
+            unit,
+            command,
+            request.document(),
+            lambda active: transition_occurrence(active, home, request),
+        )
+        return {
+            "kind": "fixed_skip",
+            "schedule_id": selection.schedule_id,
+            "slot_key": selection.slot_key,
+            "transition_operation_id": effect.operation_id,
+            "work": effect.result.decode(),
+        }
+
+    @staticmethod
     def _change(action: ReviewAction, payload: JsonDocument, result: JsonDocument) -> Change:
         return Change(
             result,
@@ -267,14 +321,16 @@ class RecurrenceReview:
             JsonDocument.from_value({"version": 1, "kind": action.value}),
         )
 
-    def preview(self, key: str, selection: ManualAdoption | RelativeStateChange) -> Receipt:
+    def preview(
+        self, key: str, selection: ManualAdoption | RelativeStateChange | FixedSkip
+    ) -> Receipt:
         action = ReviewAction.PREVIEW
         authority = self._authority(self.actor.current(), action, key)
         commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
         payload = selection.document()
 
-        if isinstance(selection, RelativeStateChange):
-            return self._preview_state(authority, commands, selection, payload)
+        if isinstance(selection, RelativeStateChange | FixedSkip):
+            return self._preview_prepared(authority, commands, selection, payload)
 
         def apply(unit: UnitOfWork) -> Change:
             plan = self._plan(unit, authority.scope, authority.current(unit), selection)
@@ -316,8 +372,8 @@ class RecurrenceReview:
             ):
                 raise Conflict("recurrence_review_stale")
             selection = request.selection
-            if isinstance(selection, RelativeStateChange):
-                outcome = self._apply_state(unit, authority, selection, saved_plan)
+            if isinstance(selection, RelativeStateChange | FixedSkip):
+                outcome = self._apply_prepared(unit, authority, commands, selection, saved_plan)
             else:
                 plan = self._plan(unit, authority.scope, authority.current(unit), selection)
                 if plan.document.fingerprint != request.plan_fingerprint:
