@@ -16,12 +16,20 @@ const configuration = {
       to: {path: "(^|/)(node_modules/)?(lit|@lit/[^/]+|vite|home-assistant-js-websocket)(/|$)"},
     },
     {
+      name: "ha-ui-is-presentation-only", severity: "error",
+      from: {path: "^frontend/src/", pathNot: "^frontend/src/presentation/"},
+      to: {path: "(^|/)@vypdev/ha-ui(/|$)"},
+    },
+    {
       name: "presentation-no-concrete-adapters", severity: "error",
       from: {path: "^frontend/src/presentation/"},
       to: {path: "^frontend/src/(adapters|infrastructure|composition)/"},
     },
   ],
-  options: {doNotFollow: {path: "node_modules"}, tsPreCompilationDeps: true},
+  options: {
+    doNotFollow: {path: "node_modules"}, tsPreCompilationDeps: true,
+    enhancedResolveOptions: {exportsFields: ["exports"], conditionNames: ["import", "node", "default"]},
+  },
 };
 
 export default configuration;

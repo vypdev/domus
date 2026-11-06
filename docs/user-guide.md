@@ -9,6 +9,14 @@ with backend checks applying even when a client presents an outdated button.
 
 During explicit setup, choose how administration maps from HA: all HA administrators by default, only the verified administrator completing setup, or an explicitly selected HA user. The default gives each proven HA administrator inherited Domus administration; ordinary users are not promoted by opening the app. An administrator configures household permission profiles and per-member exceptions. Known suspension or revoked authority still blocks access; changing a label or choosing another performer never changes the caller's permission.
 
+## Overview and Household
+
+Once household access is verified, **Overview** jumps to your current household status and
+**Household** jumps to administration. The same links work in Home Assistant Ingress and
+standalone. Use Tab and Enter or the browser's Back and Forward actions. Moving between
+sections keeps an unsent draft in the current page; reload verifies access again and does
+not restore an unsent administration draft.
+
 ## Daily work
 
 The development task API is documented in [task execution](tasks/execution.md), with

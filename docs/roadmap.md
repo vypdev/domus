@@ -7,11 +7,13 @@ The following milestones are internal integration steps, not proposals to drop l
 |---|---|---|
 | M0 — Specification foundation | Research, vision, eleven Draft SDDs, decisions and review | Format/traceability checks; explicit unresolved items |
 | M1 — Tested platform | Identity, persistence, architecture rules, CI Check and channel isolation | 100% supported coverage; restart, migration and deployment fixtures |
-| M2 — Household work | Members, tasks, recurrence, calendar, points | Complete/reopen/verify/replay races and localized UI |
+| M2 — Household work | Shared navigation foundation, members, tasks, recurrence, calendar, points | Complete/reopen/verify/replay races and localized UI |
 | M3 — Household supplies | Products, stock ledger, demand, purchase and receipt | End-to-end material and replenishment consistency |
 | M4 — Automation and HA surface | One durable engine, simple/default and optional advanced editors, entities and response services across domains | Replay/restart/loop/partial-run cases plus disposable-HA contracts in both deployment targets |
 | M5 — Integrated acceptance | Dashboard, responsive UX, access control, Stable/Edge packaging | Full CI Check; local Google Chrome dogfooding and recorded cleanup |
 
+The shared navigation foundation starts with the real Overview and Household surfaces.
+Additional destinations become available when their Domus workflows are ready.
 The product is not considered first-release complete at M2 or M3.
 Test, user documentation and failure recovery travel with each change.
 PR #3 merged the documentation foundation into develop. Issue #4 begins M1 with locked development

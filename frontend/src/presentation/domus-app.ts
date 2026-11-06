@@ -1,5 +1,9 @@
 import {LitElement, html, nothing} from 'lit';
+import {guard} from 'lit/directives/guard.js';
 import {live} from 'lit/directives/live.js';
+import {navigationState} from '@vypdev/ha-ui/contracts';
+import {registerTabs} from '@vypdev/ha-ui/tabs';
+import type {NavigationSelectionEvent} from '@vypdev/ha-ui/tabs';
 import type {PropertyValues} from 'lit';
 import type {EntryView} from '../application/entry-controller';
 import type {AdministrationView} from '../application/administration-controller';
@@ -10,6 +14,8 @@ import {instant, language, message} from './messages';
 import type {Language, MessageKey} from './messages';
 import {styles} from './styles';
 
+export type WorkspaceDestination = 'overview' | 'household';
+
 export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'logout' | 'sign_in' | 'reopen'}>
   | Readonly<{type: 'setup'; name: string; timeZone: string}>
   | Readonly<{type: 'recover' | 'dismiss'; key: string}>
@@ -18,16 +24,21 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
   static properties = {view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
-    nameDraft: {state: true}, zoneDraft: {state: true}};
+    workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
   declare administration:AdministrationView|null;
   declare deployment: Deployment;
   declare language: Language;
+  declare workspaceDestination: WorkspaceDestination | null;
   private declare nameDraft: string;
   private declare zoneDraft: string;
   private draftScope: string | null = null;
-  constructor() {super(); this.view = null; this.administration=null; this.deployment = 'standalone'; this.language = 'en'; this.nameDraft = ''; this.zoneDraft = '';}
+  private focusDestination: WorkspaceDestination | null = null;
+  constructor() {
+    super(); this.view = null; this.administration = null; this.deployment = 'standalone'; this.language = 'en';
+    this.workspaceDestination = null; this.nameDraft = ''; this.zoneDraft = '';
+  }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
   private text(key: MessageKey): string {return message(key, this.language);}
   private intent(detail: EntryIntent): void {
@@ -46,6 +57,40 @@ export class DomusApp extends LitElement {
     this.lang = this.language;
     if (changed.has('view') && this.view?.fields.length)
       this.shadowRoot?.querySelector<HTMLInputElement>('#' + this.view.fields[0])?.focus();
+    const destination = this.hasWorkspace() ? this.workspaceDestination : null;
+    if (destination !== this.focusDestination) {
+      this.focusDestination = destination;
+      if (destination !== null) this.focusWorkspace(destination);
+    }
+  }
+  private hasWorkspace(): boolean {
+    return this.view?.decision?.state === 'active' && this.view.phase !== 'closed' &&
+      this.view.notice !== 'context_changed' && (this.view.busy || this.administration !== null);
+  }
+  private focusWorkspace(destination: WorkspaceDestination): void {
+    this.renderRoot.querySelector<HTMLElement>('#' + destination)!.focus();
+  }
+  private repeatWorkspaceSelection(event: NavigationSelectionEvent): void {
+    const destination = this.workspaceDestination;
+    if (destination !== null && event.detail.kind === 'navigation' && event.detail.id === destination) {
+      // A same-fragment activation has no hashchange. Keep native behavior for all other links.
+      event.preventDefault();
+      this.focusWorkspace(destination);
+    }
+  }
+  private workspaceNavigation() {
+    const state = navigationState({
+      kind: 'navigation', label: this.text('workspaceNavigation'), selected: this.workspaceDestination ?? 'overview',
+      scrollStartLabel: this.text('workspaceScrollStart'), scrollEndLabel: this.text('workspaceScrollEnd'),
+      items: [
+        {id: 'overview', href: '#overview', label: this.text('workspaceOverview'),
+          iconPath: 'M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z'},
+        {id: 'household', href: '#household', label: this.text('workspaceHousehold'),
+          iconPath: 'M3 11l9-8 9 8v10h-6v-7H9v7H3z'},
+      ],
+    });
+    return html`<vyp-ha-tabs class="workspace-nav" .state=${state}
+      @ha-selection-request=${this.repeatWorkspaceSelection}></vyp-ha-tabs>`;
   }
   private button(key: MessageKey, type: 'refresh' | 'request_membership' | 'logout' | 'sign_in' | 'reopen', primary = false) {
     return html`<button type="button" class=${primary ? 'primary' : ''}
@@ -92,13 +137,14 @@ export class DomusApp extends LitElement {
   protected render() {
     const view = this.view, closed = view?.phase === 'closed';
     const loading = view === null || view.phase === 'idle' || view.phase === 'loading' || view.phase === 'sending';
-    const decision = view?.decision, state = decision?.state ?? 'unavailable';
+    const decision = view?.decision, state = decision?.state ?? 'unavailable', workspace = this.hasWorkspace();
     return html`<main><header><div class="brand"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5">
       <path d="M8 23 24 9l16 14v16H8Z"/><path d="M19 39V25h10v14"/></svg><div><div class="wordmark">DOMUS</div><div class="tagline">${this.text('tagline')}</div></div></div>
       <label class="language">${this.text('language')}<select aria-label=${this.text('language')} .value=${this.language}
         @change=${(event: Event) => {this.language = language((event.target as HTMLSelectElement).value, 'en'); this.intent({type: 'language', language: this.language});}}>
         <option value="en">${this.text('english')}</option><option value="es">${this.text('spanish')}</option></select></label></header>
-      <section aria-labelledby="entry-title" aria-busy=${loading || view!.busy}>
+      ${workspace ? guard([this.language, this.workspaceDestination], () => this.workspaceNavigation()) : nothing}
+      <section id="overview" tabindex="-1" aria-labelledby="entry-title" aria-busy=${loading || view!.busy}>
         <div class="eyebrow">${view?.session ? this.text(view.session.context.channel === 'stable' ? 'stable' : 'edge') : 'Domus'}</div>
         <h1 id="entry-title">${this.text(closed ? 'closed' : loading ? 'loading' : `state_${state}`)}</h1>
         <p class="intro" role="status" aria-live="polite">${this.text(closed ? 'closedBody' : loading ? 'loadingBody' : `body_${state}`)}</p>
@@ -120,9 +166,12 @@ export class DomusApp extends LitElement {
         ${!loading && decision?.action === 'contact_administrator' ? html`<p class="help">${this.text('contact')}</p>` : nothing}
         ${!closed && view?.busy ? html`<p class="busy" role="status">${this.text('busy')}</p>` : nothing}
       </section>
-      <domus-administration .view=${this.administration} .language=${this.language}
-        .pending=${view?.busy===true&&(decision?.state==='active'||this.administration!==null)}
-        .retired=${closed||view?.notice==='context_changed'||(view?.phase==='ready'&&decision?.state!=='active')}></domus-administration>
+      <div id="household" tabindex="-1" role=${workspace ? 'group' : nothing}
+        aria-label=${workspace ? this.text('workspaceHousehold') : nothing}>
+        <domus-administration .view=${this.administration} .language=${this.language}
+          .pending=${view?.busy===true&&(decision?.state==='active'||this.administration!==null)}
+          .retired=${closed||view?.notice==='context_changed'||(view?.phase==='ready'&&decision?.state!=='active')}></domus-administration>
+      </div>
       ${view?.journal?.records.length ? html`<section class="card" aria-labelledby="requests-title"><h2 id="requests-title">${this.text('journalTitle')}</h2>
         <p class="help">${this.text('journalBody')}</p><ul class="requests">${view.journal.records.map(record => this.request(record))}</ul></section>` : nothing}
       ${view?.session ? html`<details><summary>${this.text('details')}</summary><dl><dt>${this.text('status')}</dt><dd>${this.text(`state_${state}`)}</dd>
@@ -133,5 +182,6 @@ export class DomusApp extends LitElement {
     </main>`;
   }
 }
+registerTabs();
 customElements.define('domus-app', DomusApp);
 declare global {interface HTMLElementTagNameMap {'domus-app': DomusApp;}}

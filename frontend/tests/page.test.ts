@@ -262,3 +262,63 @@ test('household-browser-C18: a signed-out language choice has no identity or mut
   const f=fixture();const {app}=await f.open();intent(app,{type:'logout'});await vi.waitFor(()=>expect(app.view?.notice).toBe('signed_out'));
   const count=f.fetch.mock.calls.length;intent(app,{type:'language',language:'es'});expect(app.language).toBe('es');expect(f.fetch).toHaveBeenCalledTimes(count);expect(f.putRequests()).toBe(0);
 });
+
+test('workspace fragments preserve the mounted administration and stop after disposal', async () => {
+  const f = fixture('native');
+  const base = f.page.location.href;
+  const route = (fragment: string) => {
+    f.page.location.href = base + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  f.phase('active');
+  route('#household');
+  const {app, mounted} = await f.open();
+  const tabs = () => app.shadowRoot!.querySelector('vyp-ha-tabs')!;
+  const widget = app.shadowRoot!.querySelector('domus-administration');
+  expect(tabs()).not.toBeNull();
+  expect(tabs().state.selected).toBe('household');
+  expect(app.shadowRoot!.activeElement?.id).toBe('household');
+  const select = (kind: 'navigation' | 'panels', id: string) => tabs().dispatchEvent(
+    new CustomEvent('ha-selection-request', {detail: {kind, id}, cancelable: true}));
+  const state = tabs().state;
+  app.view = {...app.view!};
+  await app.updateComplete;
+  expect(tabs().state).toBe(state);
+  const language = app.shadowRoot!.querySelector('select')!;
+  language.focus();
+  expect(select('panels', 'household')).toBe(true);
+  expect(select('navigation', 'overview')).toBe(true);
+  expect(app.shadowRoot!.activeElement).toBe(language);
+  expect(select('navigation', 'household')).toBe(false);
+  expect(app.shadowRoot!.activeElement?.id).toBe('household');
+  route('#overview');
+  await app.updateComplete;
+  expect(tabs().state.selected).toBe('overview');
+  expect(app.shadowRoot!.activeElement?.id).toBe('overview');
+  route('#household%2Fprivate');
+  await app.updateComplete;
+  expect(tabs().state.selected).toBe('overview');
+  expect(f.page.location.href).toBe(base + '#household%2Fprivate');
+  expect(select('navigation', 'overview')).toBe(true);
+  expect(app.shadowRoot!.querySelector('domus-administration')).toBe(widget);
+  expect(f.putRequests()).toBe(0);
+  mounted.dispose();
+  route('#household');
+  await app.updateComplete;
+  expect(app.workspaceDestination).toBeNull();
+  expect(tabs()).toBeNull();
+});
+
+test('unverified and retired views do not expose the household destination', async () => {
+  const f = fixture();
+  f.page.location.href += '#household';
+  const {app} = await f.open();
+  const tabs = () => app.shadowRoot!.querySelector('vyp-ha-tabs');
+  expect(tabs()).toBeNull();
+  f.phase('active');
+  intent(app, {type: 'refresh'});
+  await vi.waitFor(() => expect(tabs()).not.toBeNull());
+  app.view = {...app.view!, notice: 'context_changed'};
+  await app.updateComplete;
+  expect(tabs()).toBeNull();
+});
