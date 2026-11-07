@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from typing import Protocol
 
+from domus.application.calendar_queries import CalendarQueries
+from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import Transactions
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
@@ -39,6 +41,9 @@ def task_contexts(
             lambda: TaskQueries(store, actor.read(), cursors, installation),
             TaskCommands(store, actor, clock, identifiers),
             RecurrenceReview(store, installation, actor, actor.read, clock, identifiers, planner),
+            lambda: CalendarQueries(
+                store, MaintenanceScope(installation, "home"), actor.read(), cursors, planner.times
+            ),
         )
 
     return context

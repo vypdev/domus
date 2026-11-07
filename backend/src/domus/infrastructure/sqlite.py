@@ -26,6 +26,7 @@ from domus.domain.storage import (
     OutboxEvent,
     validate_identifier,
 )
+from domus.infrastructure.sqlite_calendar import SQLiteCalendar
 from domus.infrastructure.sqlite_history import HISTORY_STATEMENTS, SQLiteHistory
 from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
 from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS, PROFILE_TABLES
@@ -299,6 +300,7 @@ class SQLiteOutbox:
 class SQLiteUnit:
     def __init__(self, connection: sqlite3.Connection, installation: Installation) -> None:
         self.recurrence = SQLiteRecurrences(connection, installation)
+        self.calendar = SQLiteCalendar(connection)
         self.households = SQLiteHouseholds(connection)
         self.receipts = SQLiteReceipts(connection)
         self.audit = SQLiteAudit(connection)
