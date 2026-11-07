@@ -3133,6 +3133,142 @@
         "title": "ReviewAction",
         "type": "string"
       },
+      "ReviewSchedule": {
+        "properties": {
+          "interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Days"
+          },
+          "local": {
+            "title": "Local",
+            "type": "string"
+          },
+          "nominal_kind": {
+            "enum": [
+              "date",
+              "time"
+            ],
+            "title": "Nominal Kind",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "schedule_id": {
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ScheduleState"
+          },
+          "visibility": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuccessorVisibility"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "zone": {
+            "title": "Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "revision",
+          "state",
+          "nominal_kind",
+          "local",
+          "zone"
+        ],
+        "title": "ReviewSchedule",
+        "type": "object"
+      },
+      "ReviewTarget": {
+        "properties": {
+          "actions": {
+            "items": {
+              "enum": [
+                "adoption",
+                "attachment",
+                "state",
+                "fixed-state",
+                "relative-settings",
+                "fixed-pattern",
+                "reschedule",
+                "fixed-skip"
+              ],
+              "type": "string"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "definition_id": {
+            "title": "Definition Id",
+            "type": "string"
+          },
+          "definition_revision": {
+            "title": "Definition Revision",
+            "type": "integer"
+          },
+          "occurrence_id": {
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "occurrence_revision": {
+            "title": "Occurrence Revision",
+            "type": "integer"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewSchedule"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slot_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot Key"
+          },
+          "zone": {
+            "title": "Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "occurrence_id",
+          "occurrence_revision",
+          "definition_id",
+          "definition_revision",
+          "zone",
+          "schedule",
+          "slot_key",
+          "actions"
+        ],
+        "title": "ReviewTarget",
+        "type": "object"
+      },
       "ReviewedAdoptionBody": {
         "additionalProperties": false,
         "properties": {
@@ -3772,6 +3908,15 @@
         "title": "RulesBody",
         "type": "object"
       },
+      "ScheduleState": {
+        "enum": [
+          "active",
+          "paused",
+          "retired"
+        ],
+        "title": "ScheduleState",
+        "type": "string"
+      },
       "SetupRequest": {
         "additionalProperties": false,
         "properties": {
@@ -3826,6 +3971,14 @@
           "unavailable"
         ],
         "title": "SourceState",
+        "type": "string"
+      },
+      "SuccessorVisibility": {
+        "enum": [
+          "at_completion",
+          "at_verification"
+        ],
+        "title": "SuccessorVisibility",
         "type": "string"
       },
       "TaskContent": {
@@ -4760,6 +4913,10 @@
             "title": "Can Create",
             "type": "boolean"
           },
+          "can_review_schedule": {
+            "title": "Can Review Schedule",
+            "type": "boolean"
+          },
           "household_id": {
             "title": "Household Id",
             "type": "string"
@@ -4772,7 +4929,8 @@
         "required": [
           "household_id",
           "member_id",
-          "can_create"
+          "can_create",
+          "can_review_schedule"
         ],
         "title": "TaskWorkspaceView",
         "type": "object"
@@ -16760,6 +16918,160 @@
           }
         ],
         "summary": "Preview Relative State"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/targets/{occurrence_id}": {
+      "get": {
+        "operationId": "target_api_v1_tasks_recurrence_reviews_targets__occurrence_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "occurrence_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Occurrence Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewTarget"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Target"
       }
     },
     "/api/v1/tasks/requests/{action}/{key}": {

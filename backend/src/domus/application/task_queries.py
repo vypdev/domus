@@ -61,6 +61,7 @@ class TaskWorkspaceView:
     household_id: str
     member_id: str
     can_create: bool
+    can_review_schedule: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -508,7 +509,14 @@ class TaskQueries:
                     unit, self.household_id, Permission.TASKS_CREATE
                 )
             )
-            return TaskWorkspaceView(self.household_id, actor.member.member_id, can_create)
+            can_review = _possible(
+                lambda: TaskAccess(self.human).require(
+                    unit, self.household_id, Permission.TASKS_MANAGE
+                )
+            )
+            return TaskWorkspaceView(
+                self.household_id, actor.member.member_id, can_create, can_review
+            )
 
     def _operation_access(self, unit: UnitOfWork) -> None:
         actor = self._read(unit)

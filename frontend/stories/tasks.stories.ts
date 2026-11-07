@@ -16,7 +16,7 @@ function fixture(example: Example): TaskView | null {
     cycle: example === 'pending' ? {cycleId: 'fictional-cycle', verification: 'pending' as const, performedAt: '1800000000000', performerIds: ['fictional-member']} : null,
     materials: [], materialRecording: 'review_on_completion' as const, dependencyReviewRequired: false, pendingMaterials: false};
   return {phase: 'ready', busy: false, session: {context, deployment: 'native', access: example === 'read_only' ? 'read_only' : 'full', serverTime: 1800000000000, expiresAt: 1800000900000, householdApiAvailable: true},
-    access: {householdId: 'fictional-home', memberId: 'fictional-member', canCreate: true}, scopeKey: 'fictional-verified-scope', readOnly: example === 'read_only',
+    access: {householdId: 'fictional-home', memberId: 'fictional-member', canCreate: true, canReviewSchedule: true}, scopeKey: 'fictional-verified-scope', readOnly: example === 'read_only',
     page: {items: example === 'empty' ? [] : [work], nextCursor: null}, detail: example === 'empty' ? null : work, records: [], outcome: null, notice: null};
 }
 const meta: Meta<Arguments> = {title: 'Domus/Tasks', args: {language: 'en', example: 'available'},

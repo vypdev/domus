@@ -20,7 +20,12 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
     workspace = api.client.get(PREFIX + "/access")
     assert workspace.status_code == 200, workspace.text
     member_id = api.client.get("/api/v1/authorization").json()["member"]["member_id"]
-    assert workspace.json() == {"household_id": "home", "member_id": member_id, "can_create": True}
+    assert workspace.json() == {
+        "household_id": "home",
+        "member_id": member_id,
+        "can_create": True,
+        "can_review_schedule": True,
+    }
     assert result["state"] == "available" and result["revision"] == 1
     assert create(api) == receipt
     definitions = api.client.get(PREFIX + "/definitions").json()["items"]

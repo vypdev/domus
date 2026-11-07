@@ -69,6 +69,36 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
     await expect(tasks.getByText('No approval required', {exact: true})).toBeVisible();
     const stats = await (await page.request.get(origin(mode) + '/__fixture__/stats')).json(); expect(stats.counts.receipts).toBe(4);
     if (mode === 'native' && !spanish) await page.screenshot({path: 'test-results/tasks-native-completed.png', fullPage: true});
+    if (spanish) await page.getByLabel('Language', {exact: true}).selectOption('es');
+    const manual = spanish ? 'Revisar el filtro' : 'Check the filter';
+    const manualTitle = tasks.getByLabel(spanish ? 'Título' : 'Title', {exact: true});
+    if (!await manualTitle.isVisible())
+      await tasks.getByRole('heading', {name: spanish ? 'Nueva tarea' : 'New task', exact: true}).click();
+    await manualTitle.fill(manual);
+    await tasks.getByRole('button', {name: spanish ? 'Crear tarea' : 'Create task', exact: true}).click();
+    await expect(tasks.getByRole('heading', {name: manual, exact: true})).toBeVisible();
+    const review = page.locator('domus-recurrence-review');
+    await review.getByRole('button', {name: spanish ? 'Revisar programación' : 'Review scheduling', exact: true}).click();
+    const localDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+    await review.getByLabel(spanish ? 'Fecha local' : 'Local date', {exact: true}).fill(localDate);
+    await review.getByRole('button', {name: spanish ? 'Previsualizar cambio de programación' : 'Preview schedule change', exact: true}).click();
+    await expect(review.getByText(localDate, {exact: false})).toBeVisible();
+    let applications = 0;
+    await page.route(base(mode) + '/api/v1/tasks/recurrence/reviews/attachment/apply', async route => {
+      applications++;
+      const committed = await route.fetch({maxRetries: 0, maxRedirects: 0});
+      expect(committed.status()).toBe(200);
+      await route.abort('connectionreset');
+    });
+    await review.getByRole('button', {name: spanish ? 'Aplicar cambio revisado' : 'Apply reviewed change', exact: true}).click();
+    await expect(review.getByRole('alert')).toContainText(spanish ? 'El resultado no está confirmado' : 'The result is unconfirmed');
+    await page.reload();
+    await review.getByRole('button', {name: 'Check original schedule request', exact: true}).last().click();
+    await expect(review.getByRole('heading', {name: 'Schedule change saved', exact: true})).toBeVisible();
+    expect(applications).toBe(1);
+    const retained = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json();
+    expect(retained.items.filter((item: {title: string}) => item.title === manual)).toHaveLength(1);
+
   });
   test('a restricted member claims and performs work; an adult approves and reopens its retained cycle', async ({page, context, browser, request}) => {
     const tasks = await open(page, context, mode), title = 'Kitchen responsibility';

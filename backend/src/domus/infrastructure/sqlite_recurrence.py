@@ -119,16 +119,21 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
     installation: Installation
 
     def has_current_schedule(self, household_id: str, definition_id: str) -> bool:
+        return self.current_schedule_id(household_id, definition_id) is not None
+
+    def current_schedule_id(self, household_id: str, definition_id: str) -> str | None:
         validate_identifier(household_id)
         validate_identifier(definition_id)
-        return (
-            self.connection.execute(
-                "SELECT 1 FROM recurrence_rules WHERE household_id=? AND definition_id=? "
-                "AND state!='retired'",
-                (household_id, definition_id),
-            ).fetchone()
-            is not None
-        )
+        row = self.connection.execute(
+            "SELECT schedule_id FROM recurrence_rules WHERE household_id=? AND definition_id=? "
+            "AND state!='retired'",
+            (household_id, definition_id),
+        ).fetchone()
+        if row is None:
+            return None
+        schedule_id: str = row["schedule_id"]
+        validate_identifier(schedule_id)
+        return schedule_id
 
     def has_fixed_materialization_from(
         self, household_id: str, schedule_id: str, from_nominal: str

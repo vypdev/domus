@@ -16,6 +16,7 @@ from domus.application.fixed_skip_review import FixedSkip, FixedSkipPlan, fixed_
 from domus.application.fixed_state_review import FixedStateChange, FixedStatePlan, fixed_state_plan
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
+from domus.application.recurrence_review_target import ReviewTarget, review_target
 from domus.application.relative_attachment_review import (
     AttachmentTiming,
     AttachRelative,
@@ -152,6 +153,13 @@ class RecurrenceReview:
     identifiers: Identifiers
     planner: RelativeRecurrencePlanner
     household_id: str = "home"
+
+    def target(self, occurrence_id: str) -> ReviewTarget:
+        human = self.read_actor()
+        with self.transactions.read() as unit:
+            return review_target(
+                unit, MaintenanceScope(self.installation, self.household_id), human, occurrence_id
+            )
 
     def _authority(self, human: HumanIdentity, action: ReviewAction, key: str) -> _ReviewAuthority:
         scope = MaintenanceScope(self.installation, self.household_id)

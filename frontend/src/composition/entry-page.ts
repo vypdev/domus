@@ -1,3 +1,9 @@
+import {HttpRecurrenceServer} from '../adapters/recurrence-http';
+import {RecurrenceSessionJournal} from '../adapters/recurrence-journal';
+import {BrowserEntropy, ServerClock} from '../adapters/browser-capabilities';
+import {RecurrenceReviewController} from '../application/recurrence-review-controller';
+import {reviewDraft} from '../domain/recurrence-review';
+import type {ReviewIntent} from '../presentation/domus-recurrence-review';
 import {HttpCalendarServer} from '../adapters/calendar-http';
 import {CalendarController} from '../application/calendar-controller';
 import {calendarQuery, calendarToday} from '../domain/calendar';
@@ -106,16 +112,26 @@ export function decodeCalendarIntent(value: unknown): CalendarIntent | null {
   } catch {return null;}
 }
 
+export function decodeReviewIntent(value: unknown): ReviewIntent | null {
+  try {
+    const {type} = fields(value, ['type'], ['draft','key']);
+    if (type === 'preview') return {type, draft: reviewDraft(fields(value, ['type','draft'], []).draft)};
+    if (type === 'recover' || type === 'forget') return {type, key: identifier(fields(value, ['type','key'], []).key)};
+    fields(value, ['type'], []); check(type === 'open' || type === 'close' || type === 'apply');
+    return {type};
+  } catch {return null;}
+}
+
 /** Wire only this document's owned nodes/capabilities; never inspect the HA parent or private storage. */
 export function mountEntry(page: EntryPage): PageMount {
   const doc = page.document; mounts.get(doc)?.();
   const lifetime = new AbortController(), widget = new AbortController();
-  let calendar: CalendarController | null = null;
+  let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); review?.bind(null); error?.remove();
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -124,7 +140,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); review?.bind(null); app?.remove();
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -162,16 +178,31 @@ export function mountEntry(page: EntryPage): PageMount {
         calendarController.bind(null); element.calendarScopeKey = null;
       }
     };
+    const reviews = new RecurrenceReviewController(new HttpRecurrenceServer(source.target, browser.transport),
+      new RecurrenceSessionJournal({getItem: key => browser.storage().getItem(key),
+        setItem: (key, value) => browser.storage().setItem(key, value)}), new ServerClock(browser.elapsed), new BrowserEntropy(browser.random),
+      view => {element.recurrenceReview = view;});
+    review = reviews;
+    const syncReview = () => {
+      const entry = element.view, tasks = element.tasks;
+      if (element.workspaceDestination === 'tasks' && entry?.phase === 'ready'
+          && entry.decision?.state === 'active'
+          && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey && tasks.access?.canReviewSchedule) {
+        const {context, serverTime, expiresAt} = tasks.session;
+        reviews.bind({key: tasks.scopeKey, context, serverTime, expiresAt, readOnly: tasks.readOnly,
+          occurrenceId: tasks.detail?.occurrenceId ?? null});
+      } else reviews.bind(null);
+    };
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : null;
-      syncCalendar();
+      syncCalendar(); syncReview();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
@@ -258,6 +289,19 @@ export function mountEntry(page: EntryPage): PageMount {
       const intent = decodeCalendarIntent((event as CustomEvent<unknown>).detail);
       if (intent?.type === 'load') await calendarController.load(intent.query);
       if (intent?.type === 'more') await calendarController.more();
+    }, {signal: widget.signal});
+    element.addEventListener('domus-review-intent', async event => {
+      if (event.target !== element) return;
+      const intent = decodeReviewIntent((event as CustomEvent<unknown>).detail);
+      if (intent === null) return;
+      switch (intent.type) {
+        case 'open': await reviews.open(); break;
+        case 'close': reviews.close(); break;
+        case 'preview': await reviews.preview(intent.draft); break;
+        case 'apply': await reviews.apply(); break;
+        case 'recover': await reviews.recover(intent.key); break;
+        case 'forget': reviews.forget(intent.key); break;
+      }
     }, {signal: widget.signal});
     roots[0].replaceChildren(element);
     ready = active.start().catch(() => {fail();});

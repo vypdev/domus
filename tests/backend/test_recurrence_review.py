@@ -1664,3 +1664,83 @@ def test_fixed_pattern_review_blocks_restored_absent_future_materialization(tmp_
             review.preview("edit", choice)
     finally:
         restored.close()
+
+
+def test_review_discovery_covers_current_and_archived_tasks(tmp_path, monkeypatch):
+    from domus.application.task_requests import CreateTask
+    from domus.domain.task_values import TaskContent
+
+    review, initial, tasks, choice = manual_fixture(tmp_path)
+    manual = tasks.create("ordinary", CreateTask(TaskContent("Ordinary task"))).result.decode()
+    oid = manual["occurrence_id"]
+    assert review.target(oid).actions == ("attachment",)
+    _, request = reviewed(review, choice)
+    review.apply("adopt", request)
+    scheduled = review.target(choice.occurrence_id)
+    assert scheduled.schedule.schedule_id == choice.schedule_id
+    assert scheduled.actions == ("state", "relative-settings", "reschedule")
+    additional = tasks.create_occurrence(
+        "additional", CreateTaskOccurrence(scheduled.definition_id)
+    ).result.decode()
+    assert review.target(additional["occurrence_id"]).actions == ("state", "relative-settings")
+    from domus.domain.relative_recurrence import RelativeProgress
+
+    with review.transactions.write() as unit:
+        old = unit.recurrence.relative_schedule("home", choice.schedule_id)
+        unit.recurrence.save_relative_schedule(
+            replace(old, state=ScheduleState.RETIRED, revision=old.revision + 1), old.revision
+        )
+        current = replace(
+            old, schedule_id="current-relative", revision=1, state=ScheduleState.ACTIVE
+        )
+        unit.recurrence.save_relative_schedule(current, 0)
+        unit.recurrence.save_relative_progress(
+            RelativeProgress(
+                current.schedule_id, "home", current.pattern_revision, current.binding
+            ),
+            0,
+        )
+    previous = review.target(choice.occurrence_id)
+    assert previous.schedule.schedule_id == "current-relative"
+    assert previous.slot_key is None and previous.actions == ("state", "relative-settings")
+    with review.transactions.write() as unit:
+        definition = unit.tasks.definition("home", manual["definition_id"])
+        unit.tasks.save_definition(
+            replace(definition, state=DefinitionState.ARCHIVED, revision=2), 1
+        )
+    assert review.target(oid).actions == ()
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteTasks, "definition", lambda *_: None)
+        with pytest.raises(StorageFailure, match="invalid_recurrence_source"):
+            review.target(oid)
+    with monkeypatch.context() as patch:
+        from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
+
+        patch.setattr(SQLiteRecurrences, "relative_schedule", lambda *_: None)
+        with pytest.raises(StorageFailure, match="invalid_recurrence_source"):
+            review.target(additional["occurrence_id"])
+    with monkeypatch.context() as patch:
+        from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
+
+        patch.setattr(SQLiteRecurrences, "current_schedule_id", lambda *_: None)
+        assert review.target(choice.occurrence_id).actions == ()
+    empty = SQLiteDatabase(tmp_path / "empty.sqlite3", review.installation)
+    empty.initialize()
+    with pytest.raises(Forbidden, match="maintenance_scope_denied"):
+        replace(review, transactions=empty).target(oid)
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_fixed_review_discovery_selects_only_its_current_occurrence_slot(tmp_path, timed):
+    review, choice, _, _ = fixed_move(tmp_path, timed=timed)
+    target = review.target(choice.occurrence_id)
+    assert target.actions == ("fixed-state", "fixed-pattern", "reschedule", "fixed-skip")
+    assert target.slot_key == choice.slot_key
+    assert target.schedule.nominal_kind == ("time" if timed else "date")
+    with review.transactions.read() as unit:
+        schedule = unit.recurrence.schedule("home", choice.schedule_id)
+    tasks = TaskCommands(review.transactions, review.actor, review.clock, review.identifiers)
+    other = tasks.create_occurrence(
+        "other", CreateTaskOccurrence(schedule.definition_id)
+    ).result.decode()
+    assert review.target(other["occurrence_id"]).actions == ("fixed-state", "fixed-pattern")

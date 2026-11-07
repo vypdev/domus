@@ -1,5 +1,21 @@
 # Review a manual task for relative recurrence
 
+## Review scheduling from Tasks
+
+Select a task in **Tasks**, then open **Review scheduling**. Domus loads the current rule and
+task revisions and offers the applicable choices to members who can manage tasks. Enter the
+local date, optional time or other details for the selected change. **Preview schedule change**
+shows the impact before **Apply reviewed change** confirms the exact selection. A preview expires
+after five minutes. Review the current rule again if the plan expires or a concurrent change
+makes it stale.
+
+If a response is lost, open **Saved schedule requests** and choose **Check original schedule
+request**. This reads the original operation without sending another change. A recovered
+historical receipt means the operation was processed before a restore and the effect is absent
+from the current generation. Saved requests are scoped to the verified household member in
+this browser tab. The registry holds eight requests for one hour from their original creation.
+
+
 A relative schedule with an unconsumed first slot waits when its task definition already has manual
 work. A household task manager can select one compatible occurrence and review its exact schedule
 and task revisions. The review shows the task and due date that will be retained. Applying it binds

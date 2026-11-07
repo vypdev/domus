@@ -112,7 +112,9 @@ test('detail rejects another household or task before publishing its content', a
 
 for (const mode of ['native', 'standalone'] as const) test(`${mode}: task-specific access uses its own protected contract`, async () => {
   const f = fixture(mode); f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: false}));
-  expect(await f.server.access(context).result).toEqual({householdId: 'home', memberId: 'member-1', canCreate: false});
+  expect(await f.server.access(context).result).toEqual({householdId: 'home', memberId: 'member-1', canCreate: false, canReviewSchedule: false});
+  f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: true, can_review_schedule: true}));
+  expect(await f.server.access(context).result).toMatchObject({canReviewSchedule: true});
   expect(f.transport.mock.calls[0][0]).toBe(f.target.applicationBase + 'api/v1/tasks/access');
 });
 

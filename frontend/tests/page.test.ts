@@ -1,5 +1,5 @@
 import {afterEach, expect, test, vi} from 'vitest';
-import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, decodeCalendarIntent, mountEntry} from '../src/composition/entry-page';
+import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, decodeCalendarIntent, decodeReviewIntent, mountEntry} from '../src/composition/entry-page';
 import {TaskController} from '../src/application/task-controller';
 import type {EntryPage} from '../src/composition/entry-page';
 import type {DomusApp} from '../src/presentation/domus-app';
@@ -13,7 +13,7 @@ afterEach(() => {
   for (const node of nodes.splice(0)) node.remove();
   document.querySelector('#domus-entry-error')?.remove();
 });
-function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'en') {
+function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'en', canReview = false) {
   const wire = corpus[deployment], values = new Map<string, string>(), navigation: string[] = [];
   const root = document.createElement('div'); root.id = 'domus-entry'; document.body.append(root); nodes.push(root);
   const data = document.createElement('script'); data.id = 'domus-bootstrap'; data.type = 'application/json';
@@ -46,7 +46,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='administration/capabilities') raw=JSON.stringify({state:'available',contract_version:2,household_id:'home',exact_revisions:'json-integer-int64',
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
-    else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true});
+    else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview});
     else if (route.startsWith('tasks/calendar?')) {
       const query=new URLSearchParams(route.split('?')[1]);
       raw=JSON.stringify({period:{start:query.get('start'),end:query.get('end')},time_zone:'UTC',
@@ -410,4 +410,29 @@ test('calendar composition accepts bounded reads only on the verified route and 
   expect(calls()[2][0]).toContain('cursor=next-page');
   navigate('#tasks');expect(app.calendarScopeKey).toBeNull();expect(app.calendar?.page).toBeNull();
   sends({type:'more'});expect(calls()).toHaveLength(3);
+});
+
+test('review composition accepts only closed events in the current task manager workspace', async () => {
+  const draft = {kind:'attachment',date:'2026-12-01',time:'',zone:'UTC',interval:'30',
+    visibility:'at_completion',choice:'adopt',fold:'first_instant',reason:'',rrule:''};
+  expect(decodeReviewIntent({type:'preview',draft})).toEqual({type:'preview',draft});
+  for (const value of [null,{type:'preview'}, {type:'preview',draft:{...draft, actor:'forged'}},
+    {type:'open',key:'original'}, {type:'recover',key:'../x'}, {type:'resend'}]) {
+    expect(decodeReviewIntent(value)).toBeNull();
+  }
+  const f=fixture('standalone','en',true); f.phase('active'); const {app}=await f.open();
+  const navigate=(fragment:string)=>{
+    f.page.location.href=f.page.location.href.split('#')[0]+fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  const send=(detail:unknown,target:EventTarget=app)=>target.dispatchEvent(new CustomEvent('domus-review-intent',{detail,bubbles:true,composed:true}));
+  send({type:'open'}); expect(app.recurrenceReview).toBeNull();
+  navigate('#tasks'); expect(app.recurrenceReview?.open).toBe(false);
+  const nested=app.appendChild(document.createElement('span'));
+  send({type:'open'},nested); send({type:'resend'}); expect(app.recurrenceReview?.open).toBe(false);
+  send({type:'open'}); expect(app.recurrenceReview?.open).toBe(true);
+  send({type:'preview',draft}); send({type:'apply'}); send({type:'recover',key:'saved'}); send({type:'forget',key:'saved'});
+  expect(f.fetch.mock.calls.some(([path])=>path.includes('recurrence/reviews'))).toBe(false);
+  send({type:'close'}); expect(app.recurrenceReview?.open).toBe(false);
+  navigate('#household'); expect(app.recurrenceReview).toBeNull();
 });

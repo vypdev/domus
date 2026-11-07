@@ -19,8 +19,9 @@ export class HttpTaskServer implements TaskServer {
   constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
   access(expected: JournalContext) {
     return this.network.owned(async signal => {
-      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'], []);
-      return Object.freeze({householdId: identifier(access.household_id), memberId: identifier(access.member_id), canCreate: boolean(access.can_create)});
+      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'], ['can_review_schedule']);
+      return Object.freeze({householdId: identifier(access.household_id), memberId: identifier(access.member_id), canCreate: boolean(access.can_create),
+        canReviewSchedule: access.can_review_schedule === undefined ? false : boolean(access.can_review_schedule)});
     });
   }
   list(expected: JournalContext, cursor: string | null) {

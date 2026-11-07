@@ -624,6 +624,7 @@ def test_workspace_access_uses_current_task_grants_and_canonical_member(tmp_path
     assert own.household_id == "home" and own.member_id == admin and own.can_create
     restricted = queries(store, child.actor.current()).workspace()
     assert restricted.member_id == "child" and not restricted.can_create
+    assert own.can_review_schedule and not restricted.can_review_schedule
     with store.write() as unit:
         member = unit.members.get("home", "child")
         unit.members.save(

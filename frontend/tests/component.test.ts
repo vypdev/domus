@@ -240,7 +240,7 @@ test('a narrow real layout wraps long inert facts without horizontal main overfl
 test('the task workspace keeps household metadata and resolved setup recovery in secondary details', async () => {
   const current = view('active', {household: {householdId: 'home', name: 'Maple House', timeZone: 'Europe/Madrid', revision: revisionValue('1')},
     outcome: receipt, journal: {...view().journal!, records: [record('committed')]}});
-  const tasks: TaskView = {phase: 'ready', busy: false, session: current.session, access: {householdId: 'home', memberId: 'member-1', canCreate: true},
+  const tasks: TaskView = {phase: 'ready', busy: false, session: current.session, access: {householdId: 'home', memberId: 'member-1', canCreate: true, canReviewSchedule: true},
     scopeKey: 'current-scope', readOnly: false, page: {items: [], nextCursor: null}, detail: null, records: [], outcome: null, notice: null};
   const f = await mount(current); f.element.tasks = tasks; f.element.workspaceDestination = 'tasks'; await f.element.updateComplete;
   expect(f.root.querySelector('h1')!.textContent).toBe('Maple House'); expect(f.button('Refresh status')).toBeUndefined();

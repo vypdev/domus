@@ -370,3 +370,27 @@ def test_protected_reschedule_preserves_slot_and_exposes_task_history(api):
     history = api.client.get(f"/api/v1/tasks/occurrences/{choice['occurrence_id']}/history")
     assert history.status_code == 200, history.text
     assert history.json()["items"][-1]["reason"] == "Scheduled absence"
+
+
+def test_recurrence_target_uses_the_current_rule_and_requires_manager_context(api):
+    api.user(USER, True)
+    choice = seed_manual(api)
+    endpoint = f"{BASE}/targets/{choice['occurrence_id']}"
+    assert api.client.get(endpoint).status_code == 422
+    assert api.client.get(f"{endpoint}?household=other", headers=CONTEXT).status_code == 422
+    response = api.client.get(endpoint, headers=CONTEXT)
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["schedule"]["schedule_id"] == choice["schedule_id"]
+    assert payload["schedule"]["nominal_kind"] == "date"
+    assert payload["actions"] == ["state", "relative-settings", "adoption"]
+    assert payload["slot_key"] is None
+    assert api.client.get(f"{BASE}/targets/unknown", headers=CONTEXT).status_code == 404
+    member = "b" * 32
+    api.user(member)
+    assert (
+        api.client.get(
+            endpoint, headers={"X-Domus-Context": f"v1:{INSTANCE}:edge:{member}"}
+        ).status_code
+        == 403
+    )

@@ -6,6 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Query, Request
 
 from domus.application.recurrence_review import RecurrenceReview, ReviewAction
+from domus.application.recurrence_review_target import ReviewTarget
 from domus.entrypoints.entry_context import CONTEXT_HEADER
 from domus.entrypoints.household_http import (
     ReceiptResponse,
@@ -51,6 +52,12 @@ def create_recurrence_review_router(context: Callable[[Request], RecurrenceRevie
             for name in ("Idempotency-Key", "Origin", "X-CSRF-Token")
         ]
     }
+
+    @router.get("/targets/{occurrence_id}", response_model=ReviewTarget)
+    def target(
+        occurrence_id: Identifier, request: Request, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReviewTarget:
+        return context(request).target(occurrence_id)
 
     @router.post("/adoption/preview", response_model=ReceiptResponse, openapi_extra=write_contract)
     def preview_adoption(

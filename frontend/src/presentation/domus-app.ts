@@ -9,6 +9,8 @@ import type {EntryView} from '../application/entry-controller';
 import type {TaskView} from '../application/task-controller';
 import './domus-tasks';
 import './domus-calendar';
+import './domus-recurrence-review';
+import type {ReviewView} from '../application/recurrence-review-controller';
 import type {CalendarView} from '../application/calendar-controller';
 import {DATE_MIN} from '../domain/calendar';
 import type {AdministrationView} from '../application/administration-controller';
@@ -28,13 +30,14 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
-  static properties = {calendar: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
+  static properties = {recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
     workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
   declare administration:AdministrationView|null;
   declare tasks: TaskView | null;
   declare calendar: CalendarView | null;
+  declare recurrenceReview: ReviewView | null;
   declare calendarScopeKey: string | null;
   declare calendarToday: string;
   declare deployment: Deployment;
@@ -46,7 +49,7 @@ export class DomusApp extends LitElement {
   private focusDestination: WorkspaceDestination | null = null;
   constructor() {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
-    this.calendar = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
+    this.recurrenceReview = null; this.calendar = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
     this.workspaceDestination = null; this.nameDraft = ''; this.zoneDraft = '';
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
@@ -188,6 +191,7 @@ export class DomusApp extends LitElement {
         ?hidden=${!workspace || this.workspaceDestination !== 'tasks'}>
         <domus-tasks .view=${this.tasks} .language=${this.language}
           .retired=${closed || view?.notice === 'context_changed' || view?.phase === 'ready' && decision?.state !== 'active'}></domus-tasks>
+        <domus-recurrence-review .view=${this.recurrenceReview} .language=${this.language}></domus-recurrence-review>
       </section>
       <section id="calendar" tabindex="-1" aria-label=${this.text('navigationCalendar')}
         ?hidden=${!workspace || this.workspaceDestination !== 'calendar'}>

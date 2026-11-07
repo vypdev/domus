@@ -19,7 +19,7 @@ function fixture() {
   const storage = new Map<string, string>();
   const session = {context, deployment: 'native' as const, access: 'full' as 'full' | 'read_only', serverTime: now, expiresAt: 100000, householdApiAvailable: true};
   const identity = {session: vi.fn(() => read<VerifiedEntrySession | null>(session))};
-  const server = {access: vi.fn(() => read({householdId: 'home', memberId: 'member-1', canCreate: true})),
+  const server = {access: vi.fn(() => read({householdId: 'home', memberId: 'member-1', canCreate: true, canReviewSchedule: true})),
     list: vi.fn(() => read({items: [detail], nextCursor: null as string | null})), detail: vi.fn(() => read(detail)),
     original: vi.fn(() => read(saved)), send: vi.fn<TaskServer['send']>(async () => saved)};
   const journal = new TaskSessionJournal({getItem: key => storage.get(key) ?? null, setItem: (key, value) => {storage.set(key, value);}, removeItem: key => {storage.delete(key);}});
@@ -90,7 +90,7 @@ test('unavailable or corrupt recovery storage allows queries and blocks new task
 });
 test('no task-creation grant and changed current action hints both refuse before posting', async () => {
   const f = fixture(); await f.controller.refresh();
-  f.server.access.mockReturnValue(read({householdId: 'home', memberId: 'member-1', canCreate: false}));
+  f.server.access.mockReturnValue(read({householdId: 'home', memberId: 'member-1', canCreate: false, canReviewSchedule: false}));
   await f.controller.create('New', '', 'normal'); expect(f.controller.view.notice).toBe('action_not_allowed');
   await f.controller.select('work-1'); f.server.detail.mockReturnValue(read({...detail, allowedActions: []}));
   await f.controller.claim(); expect(f.controller.view.notice).toBe('action_not_allowed'); expect(f.server.send).not.toHaveBeenCalled();
@@ -104,20 +104,20 @@ test('a concurrently changed task revision is shown for review without rebasing 
 test.each(['household', 'member'])(
   'a changed canonical %s rejects the previous draft even for the same HA identity', async kind => {
     const f = fixture(); await f.controller.refresh(); f.server.access.mockReturnValue(read({householdId: kind === 'household' ? 'other' : 'home',
-      memberId: kind === 'member' ? 'replacement' : 'member-1', canCreate: true}));
+      memberId: kind === 'member' ? 'replacement' : 'member-1', canCreate: true, canReviewSchedule: true}));
     await f.controller.create('Private draft', '', 'normal'); expect(f.controller.view.notice).toBe('context_changed'); expect(f.server.send).not.toHaveBeenCalled();
   });
 test('paging uses the captured opaque cursor, and an authority change refuses its continuation', async () => {
   const f = fixture(); await f.controller.more(); expect(f.identity.session).not.toHaveBeenCalled();
   f.server.list.mockReturnValue(read({items: [detail], nextCursor: 'opaque/+?'})); await f.controller.refresh();
   await f.controller.more(); expect(f.server.list.mock.calls.at(-1)).toEqual([context, 'opaque/+?']); expect(f.controller.view.detail).toBeNull();
-  f.server.access.mockReturnValue(read({householdId: 'other', memberId: 'member-1', canCreate: true}));
+  f.server.access.mockReturnValue(read({householdId: 'other', memberId: 'member-1', canCreate: true, canReviewSchedule: true}));
   const calls = f.server.list.mock.calls.length; await f.controller.more(); expect(f.server.list).toHaveBeenCalledTimes(calls);
   expect(f.controller.view.notice).toBe('context_changed');
 });
 test('selection accepts only an identifier and does not carry a task into another verified scope', async () => {
   const f = fixture(); await f.controller.select('../work'); expect(f.identity.session).not.toHaveBeenCalled();
-  await f.controller.refresh(); f.server.access.mockReturnValue(read({householdId: 'other', memberId: 'member-1', canCreate: true}));
+  await f.controller.refresh(); f.server.access.mockReturnValue(read({householdId: 'other', memberId: 'member-1', canCreate: true, canReviewSchedule: true}));
   await f.controller.select('work-1'); expect(f.server.detail).not.toHaveBeenCalled(); expect(f.controller.view.notice).toBe('context_changed');
 });
 test('no selected work or cycle means no implicit claim, completion, review or reopening', async () => {
@@ -186,7 +186,7 @@ test('resolved originals can be explicitly dismissed without changing tasks or s
 });
 test.each(['recover', 'dismiss'] as const)('a changed owner cannot %s an earlier private task request', async method => {
   const f = fixture(); await f.controller.refresh(); await f.controller.create('New', '', 'normal');
-  f.server.access.mockReturnValue(read({householdId: 'home', memberId: 'replacement', canCreate: true}));
+  f.server.access.mockReturnValue(read({householdId: 'home', memberId: 'replacement', canCreate: true, canReviewSchedule: true}));
   await f.controller[method]('key-1'); expect(f.controller.view.notice).toBe('context_changed'); expect(f.server.original).not.toHaveBeenCalled();
 });
 test('retired cancellation errors and unavailable server reads cannot disclose internal diagnostics', async () => {

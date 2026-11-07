@@ -470,7 +470,7 @@ function taskWorkspace(mode: 'native' | 'standalone' = 'standalone') {
     materialRecording: 'review_on_completion', dependencyReviewRequired: false, pendingMaterials: false};
   const result: TaskReceipt = {kind: 'receipt', stage: 'committed', action: 'task.create', operationId: 'task-operation', occurrenceId: 'work-1',
     revision: revisionValue('1'), state: 'available', cycle: null, archivedBy: null};
-  const server = {access: vi.fn(() => read({householdId: 'home', memberId: member.memberId, canCreate: true})),
+  const server = {access: vi.fn(() => read({householdId: 'home', memberId: member.memberId, canCreate: true, canReviewSchedule: true})),
     list: vi.fn(() => read({items: [work], nextCursor: null})), detail: vi.fn(() => read(work)), original: vi.fn(() => read(result)),
     send: vi.fn<TaskServer['send']>(async () => result)};
   const controllers: TaskController[] = [], factory = vi.fn(() => {const value = new TaskController(mode, identity, server, new TaskSessionJournal(f.storage), f.clock, f.entropy);
@@ -490,8 +490,8 @@ test.each(['subject', 'access', 'member', 'household'])(
     const f = taskWorkspace();
     if (field === 'subject') f.taskIdentity.session.mockReturnValue(read({...f.taskProof, context: {...context, subject: 'b'.repeat(32)}}));
     if (field === 'access') f.taskIdentity.session.mockReturnValue(read({...f.taskProof, access: 'read_only'}));
-    if (field === 'member') f.taskServer.access.mockReturnValue(read({householdId: 'home', memberId: 'other', canCreate: true}));
-    if (field === 'household') f.taskServer.access.mockReturnValue(read({householdId: 'other', memberId: member.memberId, canCreate: true}));
+    if (field === 'member') f.taskServer.access.mockReturnValue(read({householdId: 'home', memberId: 'other', canCreate: true, canReviewSchedule: true}));
+    if (field === 'household') f.taskServer.access.mockReturnValue(read({householdId: 'other', memberId: member.memberId, canCreate: true, canReviewSchedule: true}));
     await f.workspace.refresh(); expect(f.workspace.tasks).toBeNull(); expect(f.workspace.administration).toBeNull(); expect(f.workspace.view.notice).toBe('context_changed');
     f.workspace.close();
   });

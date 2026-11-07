@@ -12,7 +12,7 @@ const work = {occurrenceId: 'work-1', definitionId: 'def-1', definitionRevision:
 const context = {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel: 'edge' as const, subject: 'a'.repeat(32)};
 function view(patch: Partial<TaskView> = {}): TaskView {
   return {phase: 'ready', busy: false, session: {context, deployment: 'native', access: 'full', serverTime: 1000, expiresAt: 100000, householdApiAvailable: true},
-    access: {householdId: 'private-home-id', memberId: 'private-member-id', canCreate: true}, scopeKey: 'same-verified-scope',
+    access: {householdId: 'private-home-id', memberId: 'private-member-id', canCreate: true, canReviewSchedule: true}, scopeKey: 'same-verified-scope',
     readOnly: false, page: {items: [work], nextCursor: null}, detail: null, records: [], outcome: null, notice: null, ...patch};
 }
 const mounted: DomusTasks[] = [];
@@ -191,7 +191,7 @@ test('an unexpected unreviewed material line never substitutes its planned amoun
   expect(f.intents).toEqual([]); expect(f.root.querySelector('.description')).toBeNull();
 });
 test('a member without creation permission sees task reads; an unavailable list never claims an empty household', async () => {
-  const f = await mount(view({access: {householdId: 'home', memberId: 'member-1', canCreate: false}, page: null, notice: 'unavailable'}));
+  const f = await mount(view({access: {householdId: 'home', memberId: 'member-1', canCreate: false, canReviewSchedule: false}, page: null, notice: 'unavailable'}));
   expect(f.root.querySelector('form')).toBeNull(); expect(f.text()).not.toContain('No tasks on this page'); expect(f.text()).toContain('Tasks could not be loaded');
 });
 

@@ -356,6 +356,7 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `backend/src/domus/application/recurrence_sources.py` | create |
 | `backend/src/domus/application/relative_lifecycle.py` | create |
 | `backend/src/domus/application/recurrence_review.py` | create |
+| `backend/src/domus/application/recurrence_review_target.py` | create |
 | `backend/src/domus/application/relative_attachment_review.py` | create |
 | `backend/src/domus/application/reschedule_review.py` | create |
 | `backend/src/domus/application/task_authorization.py` | update |
@@ -387,6 +388,14 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `frontend/tests/task-journal.test.ts` | create |
 | `frontend/tests/task-component.test.ts` | create |
 | `frontend/tests/e2e/tasks.spec.ts` | create |
+| `frontend/src/domain/recurrence-review.ts` | create |
+| `frontend/src/application/recurrence-review-controller.ts` | create |
+| `frontend/src/adapters/recurrence-http.ts` | create |
+| `frontend/src/adapters/recurrence-journal.ts` | create |
+| `frontend/src/presentation/domus-recurrence-review.ts` | create |
+| `frontend/src/presentation/recurrence-messages.ts` | create |
+| `frontend/tests/recurrence-review.test.ts` | create |
+| `frontend/vitest.config.ts` | update |
 | `frontend/src/domain/calendar.ts` | create |
 | `frontend/src/application/calendar-controller.ts` | create |
 | `frontend/src/adapters/calendar-http.ts` | create |

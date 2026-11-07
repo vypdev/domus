@@ -119,7 +119,7 @@ export interface TaskDetail extends TaskSummary {
   readonly pendingMaterials: boolean;
 }
 export interface TaskAccess {
-  readonly householdId: string; readonly memberId: string; readonly canCreate: boolean;
+  readonly householdId: string; readonly memberId: string; readonly canCreate: boolean; readonly canReviewSchedule: boolean;
 }
 export interface TaskReceipt {
   readonly kind: 'receipt'; readonly stage: 'committed' | 'historical'; readonly operationId: string;

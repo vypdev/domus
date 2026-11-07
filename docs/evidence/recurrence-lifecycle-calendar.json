@@ -352,5 +352,30 @@
       "coverage": "100% globally and per file, independently audited"
     },
     "scope": "Local evidence for the protected API source only. Browser, packaged and subsequent source evidence is tracked separately."
+  },
+  "protectedCalendarWorkspaceCheckpoint": {
+    "sourceCommit": "5440f53aa91881d9e3c95c3ae1f99c9682e2b31f",
+    "backend": {
+      "passed": 4798,
+      "coverage": "100% globally and per file"
+    },
+    "frontend": {
+      "passed": 1525,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "browser": {
+      "perImageArchitecture": 46,
+      "deployments": [
+        "Ingress",
+        "standalone"
+      ],
+      "languages": [
+        "English",
+        "Spanish"
+      ]
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42319348811",
+    "progressFailure": "https://github.com/vypdev/domus/runs/128241927837",
+    "scope": "Exact-source protected calendar workspace evidence before the schedule review browser flow."
   }
 }
