@@ -156,6 +156,16 @@ class SQLiteTaskHistory:
             raise StorageFailure("invalid_retained_projection")
         return rows[:limit]
 
+    def latest_reschedule(self, household_id: str, occurrence_id: str) -> RetainedOperation | None:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        row = self.connection.execute(
+            _CURRENT + "WHERE r.household_id=? AND r.action='task.recurrence.reschedule' "
+            "AND json_extract(o.payload,'$.occurrence_id')=? ORDER BY o.position DESC LIMIT 1",
+            (household_id, occurrence_id),
+        ).fetchone()
+        return None if row is None else self._live(row)
+
     def operation(
         self, household_id: str, actor_id: str, operation_id: str
     ) -> RetainedOperation | None:

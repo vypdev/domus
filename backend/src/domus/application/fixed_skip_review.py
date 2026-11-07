@@ -6,10 +6,10 @@ from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import UnitOfWork
 from domus.application.recurrence_ports import RecurrenceTimes
 from domus.application.relative_lifecycle import occurrence_work_history
+from domus.application.reschedule_review import EffectiveDeadline, effective_deadline
 from domus.domain.errors import Conflict, IntegrationUnavailable, NotFound
 from domus.domain.identity import validate_revision
 from domus.domain.recurrence_records import ScheduledSlot, ScheduleState
-from domus.domain.recurrence_rules import NominalDate
 from domus.domain.recurrence_time import LocalInstant
 from domus.domain.relative_lifecycle import WorkHistory
 from domus.domain.storage import JsonDocument, validate_identifier
@@ -39,11 +39,11 @@ class FixedSkip:
 @dataclass(frozen=True, slots=True)
 class FixedSkipPlan:
     slot: ScheduledSlot
+    deadline: EffectiveDeadline
     snapshot: JsonDocument
 
     def require_overdue(self, times: RecurrenceTimes, now: int) -> None:
-        planned = self.slot.planned
-        if isinstance(planned.nominal, NominalDate):
+        if self.deadline.local_date is not None:
             local = times.local_at(now, self.slot.schedule.policy)
             if (
                 not isinstance(local, LocalInstant)
@@ -51,10 +51,10 @@ class FixedSkipPlan:
                 or local.policy != self.slot.schedule.policy
             ):
                 raise IntegrationUnavailable("recurrence_time_source_invalid")
-            overdue = local.local.date() > planned.nominal.local
+            overdue = local.local.date() > self.deadline.local_date
         else:
-            assert planned.resolved is not None
-            overdue = now > planned.resolved.instant_ms
+            assert self.deadline.due_at is not None
+            overdue = now > self.deadline.due_at
         if not overdue:
             raise Conflict("recurrence_slot_not_overdue")
 
@@ -75,26 +75,36 @@ def fixed_skip_plan(
         or work.revision != selection.occurrence_revision
     ):
         raise Conflict("recurrence_review_stale")
-    due_at = None if slot.planned.resolved is None else slot.planned.resolved.instant_ms
     if (
         rule.state is ScheduleState.RETIRED
         or not slot.consistent_with(rule)
         or slot.occurrence_id != work.occurrence_id
         or work.definition_snapshot.definition_id != rule.definition_id
-        or work.due_at != due_at
         or work.state not in (OccurrenceState.AVAILABLE, OccurrenceState.ASSIGNED)
+    ):
+        raise Conflict("recurrence_skip_incompatible")
+    deadline = effective_deadline(unit, work, slot)
+    if (
+        work.due_at != deadline.due_at
         or occurrence_work_history(unit, work) is not WorkHistory.UNSTARTED
     ):
         raise Conflict("recurrence_skip_incompatible")
+    effective = (
+        {}
+        if deadline.document.decode() == slot.planned.value()
+        else {"rescheduled_due": deadline.document.decode()}
+    )
     return FixedSkipPlan(
         slot,
+        deadline,
         JsonDocument.from_value(
             {
                 "schedule_state": rule.state.value,
                 "pattern_revision": rule.pattern_revision,
                 "slot_key": slot.key,
                 "nominal": slot.planned.value(),
-                "due_at": due_at,
+                "due_at": deadline.due_at,
+                **effective,
                 "occurrence_id": work.occurrence_id,
                 "occurrence_revision": work.revision,
                 "occurrence_state": work.state.value,

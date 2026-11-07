@@ -40,6 +40,7 @@ from domus.application.task_requests import (
 )
 from domus.application.task_requests import (
     OccurrenceRequest,
+    RescheduleTask,
     ReviewTaskDependency,
     TaskRequest,
 )
@@ -120,6 +121,15 @@ def transition_occurrence(unit: UnitOfWork, household_id: str, request: Transiti
     updated = work.transition(request.target, request.reason)
     unit.tasks.save_occurrence(updated, request.expected_revision)
     return _change("task.transitioned", request, _result(updated))
+
+
+def reschedule_occurrence(unit: UnitOfWork, household_id: str, request: RescheduleTask) -> Change:
+    work = _occurrence(unit, household_id, request)
+    updated = work.reschedule(request.due_at)
+    unit.tasks.save_occurrence(updated, request.expected_revision)
+    result = _result(updated).decode()
+    result["recurrence_reschedule"] = request.document().decode()
+    return _change("task.recurrence.rescheduled", request, JsonDocument.from_value(result))
 
 
 def _cycle_result(

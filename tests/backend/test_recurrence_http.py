@@ -177,9 +177,26 @@ def test_protected_overdue_fixed_skip_recovers_original_exception(api):
     step = FixedMaintenance(
         api.store, MaintenanceScope(api.store.installation, "home"), planner, clock, ids
     ).step(schedule_id, NominalDate(date(2001, 1, 2)))
+    for index, target in enumerate(("paused", "active"), 1):
+        state = {"schedule_id": schedule_id, "schedule_revision": index, "target": target}
+        key = f"fixed-state-preview-{index}"
+        preview = api.client.post(
+            f"{BASE}/fixed-state/preview", json=state, headers=api.headers(key) | CONTEXT
+        )
+        assert preview.status_code == 200, preview.text
+        applied = api.client.post(
+            f"{BASE}/fixed-state/apply",
+            json=state
+            | {
+                "preview_key": key,
+                "plan_fingerprint": preview.json()["result"]["plan_fingerprint"],
+            },
+            headers=api.headers(f"fixed-state-apply-{index}") | CONTEXT,
+        )
+        assert applied.status_code == 200, applied.text
     choice = {
         "schedule_id": schedule_id,
-        "schedule_revision": 1,
+        "schedule_revision": 3,
         "slot_key": step.receipt.command.key,
         "occurrence_id": step.occurrence_id,
         "occurrence_revision": 1,
@@ -286,3 +303,48 @@ def test_protected_relative_settings_review_preserves_manual_work(api):
     assert applied.json()["result"]["pattern_revision"] == 2
     with api.store.read() as unit:
         assert len(unit.tasks.occurrences("home")) == 1
+
+
+def test_protected_reschedule_preserves_slot_and_exposes_task_history(api):
+    api.user(USER, True)
+    choice = seed_manual(api)
+    headers = api.headers("adopt-preview") | CONTEXT
+    preview = api.client.post(f"{BASE}/adoption/preview", json=choice, headers=headers)
+    assert preview.status_code == 200, preview.text
+    adopted = api.client.post(
+        f"{BASE}/adoption/apply",
+        json=choice
+        | {
+            "preview_key": "adopt-preview",
+            "plan_fingerprint": preview.json()["result"]["plan_fingerprint"],
+        },
+        headers=api.headers("adopt") | CONTEXT,
+    )
+    assert adopted.status_code == 200, adopted.text
+    with api.store.read() as unit:
+        slot = unit.recurrence.relative_slot_for_occurrence("home", choice["occurrence_id"])
+    move = choice | {
+        "slot_key": slot.key,
+        "destination": {"kind": "date", "local": "2090-01-04"},
+        "reason": "Scheduled absence",
+    }
+    preview = api.client.post(
+        f"{BASE}/reschedule/preview",
+        json=move,
+        headers=api.headers("move-preview") | CONTEXT,
+    )
+    assert preview.status_code == 200, preview.text
+    moved = api.client.post(
+        f"{BASE}/reschedule/apply",
+        json=move
+        | {
+            "preview_key": "move-preview",
+            "plan_fingerprint": preview.json()["result"]["plan_fingerprint"],
+        },
+        headers=api.headers("move-apply") | CONTEXT,
+    )
+    assert moved.status_code == 200, moved.text
+    assert moved.json()["result"]["work"]["revision"] == 2
+    history = api.client.get(f"/api/v1/tasks/occurrences/{choice['occurrence_id']}/history")
+    assert history.status_code == 200, history.text
+    assert history.json()["items"][-1]["reason"] == "Scheduled absence"

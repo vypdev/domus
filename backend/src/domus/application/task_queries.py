@@ -451,7 +451,10 @@ class TaskQueries:
                 reason = cast(str, request["reason"])
                 material_action = MaterialAction(cast(str, request["action"]))
                 material_intent_id = cast(str, request["intent_id"])
-            if evidence.receipt.command.action == "task.dependency.review":
+            if evidence.receipt.command.action in {
+                "task.dependency.review",
+                "task.recurrence.reschedule",
+            }:
                 reason = cast(str, request["reason"])
             validate_task_text(reason, 1000, required=False, multiline=True)
             cycle = value.get("cycle")

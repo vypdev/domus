@@ -1078,6 +1078,38 @@
         "title": "FixedSkipBody",
         "type": "object"
       },
+      "FixedStateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "schedule_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "schedule_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Schedule Revision",
+            "type": "integer"
+          },
+          "target": {
+            "enum": [
+              "active",
+              "paused"
+            ],
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "schedule_revision",
+          "target"
+        ],
+        "title": "FixedStateBody",
+        "type": "object"
+      },
       "HouseholdResponse": {
         "additionalProperties": false,
         "properties": {
@@ -2733,6 +2765,75 @@
         "title": "ReopenBody",
         "type": "object"
       },
+      "RescheduleBody": {
+        "additionalProperties": false,
+        "properties": {
+          "destination": {
+            "discriminator": {
+              "mapping": {
+                "date": "#/components/schemas/NominalDateBody",
+                "time": "#/components/schemas/NominalTimeBody"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NominalDateBody"
+              },
+              {
+                "$ref": "#/components/schemas/NominalTimeBody"
+              }
+            ],
+            "title": "Destination"
+          },
+          "occurrence_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "occurrence_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Occurrence Revision",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "schedule_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "schedule_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Schedule Revision",
+            "type": "integer"
+          },
+          "slot_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Slot Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "schedule_revision",
+          "slot_key",
+          "occurrence_id",
+          "occurrence_revision",
+          "reason",
+          "destination"
+        ],
+        "title": "RescheduleBody",
+        "type": "object"
+      },
       "ReviewAction": {
         "enum": [
           "recurrence.review.preview",
@@ -2850,6 +2951,50 @@
           "plan_fingerprint"
         ],
         "title": "ReviewedFixedSkipBody",
+        "type": "object"
+      },
+      "ReviewedFixedStateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "plan_fingerprint": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Plan Fingerprint",
+            "type": "string"
+          },
+          "preview_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Preview Key",
+            "type": "string"
+          },
+          "schedule_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "schedule_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Schedule Revision",
+            "type": "integer"
+          },
+          "target": {
+            "enum": [
+              "active",
+              "paused"
+            ],
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "schedule_revision",
+          "target",
+          "preview_key",
+          "plan_fingerprint"
+        ],
+        "title": "ReviewedFixedStateBody",
         "type": "object"
       },
       "ReviewedRelativeAttachmentBody": {
@@ -3010,6 +3155,87 @@
           "plan_fingerprint"
         ],
         "title": "ReviewedRelativeSettingsBody",
+        "type": "object"
+      },
+      "ReviewedRescheduleBody": {
+        "additionalProperties": false,
+        "properties": {
+          "destination": {
+            "discriminator": {
+              "mapping": {
+                "date": "#/components/schemas/NominalDateBody",
+                "time": "#/components/schemas/NominalTimeBody"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NominalDateBody"
+              },
+              {
+                "$ref": "#/components/schemas/NominalTimeBody"
+              }
+            ],
+            "title": "Destination"
+          },
+          "occurrence_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "occurrence_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Occurrence Revision",
+            "type": "integer"
+          },
+          "plan_fingerprint": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Plan Fingerprint",
+            "type": "string"
+          },
+          "preview_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Preview Key",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "schedule_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "schedule_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Schedule Revision",
+            "type": "integer"
+          },
+          "slot_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Slot Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "schedule_revision",
+          "slot_key",
+          "occurrence_id",
+          "occurrence_revision",
+          "reason",
+          "destination",
+          "preview_key",
+          "plan_fingerprint"
+        ],
+        "title": "ReviewedRescheduleBody",
         "type": "object"
       },
       "ReviewedStateBody": {
@@ -13949,6 +14175,362 @@
         "summary": "Preview Fixed Skip"
       }
     },
+    "/api/v1/tasks/recurrence/reviews/fixed-state/apply": {
+      "post": {
+        "operationId": "apply_fixed_state_api_v1_tasks_recurrence_reviews_fixed_state_apply_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewedFixedStateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Apply Fixed State"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/fixed-state/preview": {
+      "post": {
+        "operationId": "preview_fixed_state_api_v1_tasks_recurrence_reviews_fixed_state_preview_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FixedStateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Preview Fixed State"
+      }
+    },
     "/api/v1/tasks/recurrence/reviews/relative-settings/apply": {
       "post": {
         "operationId": "apply_relative_settings_api_v1_tasks_recurrence_reviews_relative_settings_apply_post",
@@ -14465,6 +15047,362 @@
           }
         ],
         "summary": "Original Recurrence Request"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/reschedule/apply": {
+      "post": {
+        "operationId": "apply_reschedule_api_v1_tasks_recurrence_reviews_reschedule_apply_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewedRescheduleBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Apply Reschedule"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/reschedule/preview": {
+      "post": {
+        "operationId": "preview_reschedule_api_v1_tasks_recurrence_reviews_reschedule_preview_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Preview Reschedule"
       }
     },
     "/api/v1/tasks/recurrence/reviews/state/apply": {

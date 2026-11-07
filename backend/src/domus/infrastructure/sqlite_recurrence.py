@@ -251,6 +251,18 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
             ).fetchone()
         )
 
+    def fixed_slot_for_occurrence(
+        self, household_id: str, occurrence_id: str
+    ) -> ScheduledSlot | None:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        return self._slot(
+            self.connection.execute(
+                "SELECT * FROM recurrence_slots WHERE household_id=? AND occurrence_id=?",
+                (household_id, occurrence_id),
+            ).fetchone()
+        )
+
     def _slot(self, row: sqlite3.Row | None) -> ScheduledSlot | None:
         value = _model(row, read_slot, slot_headers)
         if value is not None and value.installation != self.installation:

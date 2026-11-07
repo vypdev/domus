@@ -1050,3 +1050,373 @@ def test_settings_never_reinterpret_pending_completion_or_overwrite_changed_work
     tasks.assign("changed", AssignTask(first.occurrence_id, 1, ("child",)))
     with pytest.raises(Conflict, match="recurrence_review_stale"):
         service.apply("apply", request)
+
+
+def fixed_move(tmp_path, *, timed=False):
+    from datetime import date, datetime
+
+    from domus.application.reschedule_review import RescheduleSelection
+    from domus.domain.recurrence_rules import NominalDate
+    from domus.domain.recurrence_time import NominalTime
+
+    review, choice, service, _ = fixed_skip_fixture(tmp_path, timed=timed)
+    target = NominalTime(datetime(2026, 4, 2, 9, 30)) if timed else NominalDate(date(2026, 4, 2))
+    selection = RescheduleSelection(
+        choice.schedule_id,
+        choice.schedule_revision,
+        choice.slot_key,
+        choice.occurrence_id,
+        choice.occurrence_revision,
+        target,
+        "A different day",
+    )
+    return review, selection, choice, service
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_reschedule_preserves_original_slot_and_moves_effective_deadline(tmp_path, timed):
+    from domus.application.reschedule_review import effective_deadline
+
+    service, choice, skip, _ = fixed_move(tmp_path, timed=timed)
+    store = service.transactions
+    preview, request = reviewed(service, choice)
+    snapshot = preview.result.decode()["plan"]["source"]
+    assert snapshot["original"]["nominal"]["local"].startswith("2026-03-29")
+    assert snapshot["destination"]["nominal"]["local"].startswith("2026-04-02")
+    receipt = service.apply("reschedule", request)
+    assert service.preview("preview", choice) == preview
+    assert service.apply("reschedule", request) == receipt
+    with store.read() as unit:
+        slot = unit.recurrence.fixed_slot_for_occurrence("home", choice.occurrence_id)
+        work = unit.tasks.occurrence("home", choice.occurrence_id)
+        assert slot.key == choice.slot_key and slot.planned.value() == snapshot["original"]
+        assert effective_deadline(unit, work, slot).document.decode() == snapshot["destination"]
+        assert work.revision == 2 and work.due_at == snapshot["due_at"]
+        assert work.current_cycle_id is None and unit.tasks.cycles("home") == ()
+    with pytest.raises(Conflict, match="recurrence_slot_not_overdue"):
+        service.preview("skip-too-early", replace(skip, occurrence_revision=2))
+
+
+def test_fixed_move_rejects_a_future_nominal_collision_even_before_materialization(tmp_path):
+    from datetime import date
+
+    from test_household_commands import Clock as EarlyClock
+
+    from domus.domain.recurrence_rules import NominalDate
+
+    service, choice, _, _ = fixed_move(tmp_path)
+    earlier = replace(service, clock=EarlyClock())
+    with pytest.raises(Conflict, match="recurrence_reschedule_collision"):
+        earlier.preview("collision", replace(choice, destination=NominalDate(date(2026, 3, 30))))
+    with pytest.raises(Conflict, match="recurrence_reschedule_in_past"):
+        service.preview("past", replace(choice, destination=NominalDate(date(2026, 3, 30))))
+
+
+def test_timed_move_rejects_current_manual_due_collision_and_stale_assignment(tmp_path):
+    service, choice, _, materializer = fixed_move(tmp_path, timed=True)
+    store = service.transactions
+    tasks = TaskCommands(store, service.actor, materializer.clock, materializer.identifiers)
+    preview, request = reviewed(service, choice)
+    due_at = preview.result.decode()["plan"]["source"]["due_at"]
+    with store.read() as unit:
+        rule = unit.recurrence.schedule("home", choice.schedule_id)
+    tasks.create_occurrence("collision", CreateTaskOccurrence(rule.definition_id, due_at=due_at))
+    with pytest.raises(Conflict, match="recurrence_reschedule_collision"):
+        service.apply("move", request)
+    tasks.assign("assignment", AssignTask(choice.occurrence_id, 1, ("child",)))
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        service.apply("move", request)
+
+
+def test_date_only_relative_move_preserves_mapping_and_refuses_redundant_destination(tmp_path):
+    from datetime import date
+
+    from domus.application.reschedule_review import RescheduleSelection
+    from domus.domain.recurrence_rules import NominalDate
+
+    initial, store, actor, ids, schedule_id, _ = configured(tmp_path)
+    bootstrap = initial.initial(schedule_id)
+    service = review_service(initial, store, actor, ids)
+    choice = RescheduleSelection(
+        schedule_id,
+        1,
+        bootstrap.receipt.command.key,
+        bootstrap.occurrence_id,
+        1,
+        NominalDate(date(2026, 4, 3)),
+        "A different date",
+    )
+    _, request = reviewed(service, choice)
+    assert service.apply("move", request)
+    with store.read() as unit:
+        slot = unit.recurrence.relative_slot_for_occurrence("home", choice.occurrence_id)
+        assert slot.key == choice.slot_key
+        assert slot.planned.nominal.local == date(2026, 3, 29)
+    with pytest.raises(Conflict, match="recurrence_reschedule_incompatible"):
+        service.preview("same", replace(choice, occurrence_revision=2))
+    with pytest.raises(InvalidInput):
+        replace(choice, destination=None)
+
+
+def test_reschedule_rolls_back_occurrence_and_history_when_review_receipt_fails(
+    tmp_path, monkeypatch
+):
+    service, choice, _, _ = fixed_move(tmp_path)
+    _, request = reviewed(service, choice)
+    store = service.transactions
+    before = counts(store)
+    write = SQLiteReceipts.add
+
+    def fail(self, receipt):
+        write(self, receipt)
+        if receipt.command.action == ReviewAction.APPLY:
+            raise StorageFailure("reschedule_rollback")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteReceipts, "add", fail)
+        with pytest.raises(StorageFailure, match="reschedule_rollback"):
+            service.apply("move", request)
+    assert counts(store) == before
+    with store.read() as unit:
+        assert unit.tasks.latest_reschedule("home", choice.occurrence_id) is None
+        assert unit.tasks.occurrence("home", choice.occurrence_id).revision == 1
+
+
+def test_move_rejects_missing_slot_wrong_rule_started_work_and_changed_reviewer(tmp_path):
+    service, choice, _, materializer = fixed_move(tmp_path)
+    store = service.transactions
+    for selection in (replace(choice, slot_key="missing"), replace(choice, schedule_id="missing")):
+        with pytest.raises(Conflict, match="recurrence_review_stale"):
+            service.preview("missing", selection)
+    _, request = reviewed(service, choice)
+    with store.write() as unit:
+        actor = unit.members.by_user("home", service.actor.human.ha_user_id)
+        unit.members.save(replace(actor, revision=actor.revision + 1), actor.revision)
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        service.apply("changed-reviewer", request)
+    tasks = TaskCommands(store, service.actor, materializer.clock, materializer.identifiers)
+    tasks.assign("assign", AssignTask(choice.occurrence_id, 1, ("child",)))
+    tasks.transition("start", TransitionTask(choice.occurrence_id, 2, OccurrenceState.IN_PROGRESS))
+    with pytest.raises(Conflict, match="recurrence_reschedule_incompatible"):
+        service.preview("started", replace(choice, occurrence_revision=3))
+    with store.read() as unit:
+        work = unit.tasks.occurrence("home", choice.occurrence_id)
+        with pytest.raises(Conflict, match="task_transition_conflict"):
+            work.reschedule(None)
+
+
+def test_date_only_collision_considers_current_exception_instead_of_original_slot(tmp_path):
+    from datetime import date
+
+    from domus.domain.recurrence_rules import NominalDate
+
+    service, first, _, materializer = fixed_move(tmp_path)
+    second = materializer.step(first.schedule_id, NominalDate(date(2026, 3, 31)))
+    assert second.status == "created"
+    _, request = reviewed(service, first)
+    assert service.apply("first", request)
+    choice = replace(first, slot_key=second.receipt.command.key, occurrence_id=second.occurrence_id)
+    with pytest.raises(Conflict, match="recurrence_reschedule_collision"):
+        service.preview("collision", choice)
+    free = replace(choice, destination=NominalDate(date(2026, 4, 3)))
+    assert service.preview("free", free).result.decode()["plan"]["source"]["effect"] == "move"
+
+
+def test_move_rejects_oversized_scope_invalid_time_provider_and_inconsistent_facts(
+    tmp_path, monkeypatch
+):
+    from datetime import date
+
+    from domus.application.fixed_materialization import MaintenanceScope
+    from domus.application.reschedule_review import reschedule_plan, reschedule_source
+    from domus.domain.recurrence_planning import PlannedSlot
+    from domus.domain.recurrence_rules import NominalDate
+
+    service, choice, skip, _ = fixed_move(tmp_path)
+    store = service.transactions
+    scope = MaintenanceScope(store.installation, "home")
+    with store.read() as unit:
+        source = reschedule_source(unit, scope, choice)
+        planned = source.prepare(service.planner.times, choice, service.clock.now())
+        with pytest.raises(Conflict, match="recurrence_review_stale"):
+            reschedule_plan(unit, source, choice, PlannedSlot(NominalDate(date(2026, 4, 4)), None))
+        _, request = reschedule_plan(unit, source, choice, planned)
+        with pytest.raises(InvalidInput, match="invalid_recurrence_reschedule"):
+            replace(request, destination="not a document")
+    with monkeypatch.context() as patch:
+        patch.setattr(type(service.planner.times), "local_at", lambda *_: None)
+        with pytest.raises(IntegrationUnavailable, match="recurrence_time_source_invalid"):
+            service.preview("provider", choice)
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteTasks, "occurrences", lambda *a, **kw: (source.work,) * 101)
+        with pytest.raises(Conflict, match="recurrence_review_too_large"):
+            service.preview("oversized", choice)
+    with store.write() as unit:
+        unit.tasks.save_occurrence(replace(source.work, due_at=123, revision=2), 1)
+    with pytest.raises(Conflict, match="recurrence_skip_incompatible"):
+        service.preview("mismatched", replace(skip, occurrence_revision=2))
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"slot_key": "foreign"},
+        {"destination": {"nominal": {}}},
+        {"destination": {"nominal": {"kind": "date", "local": 0}}},
+    ],
+)
+def test_effective_move_refuses_corrupt_original_proof(tmp_path, monkeypatch, change):
+    from types import SimpleNamespace
+
+    from domus.application import reschedule_review
+
+    service, choice, _, _ = fixed_move(tmp_path)
+    store = service.transactions
+    _, request = reviewed(service, choice)
+    service.apply("moved", request)
+    with store.read() as unit:
+        slot = unit.recurrence.fixed_slot_for_occurrence("home", choice.occurrence_id)
+        work = unit.tasks.occurrence("home", choice.occurrence_id)
+        original = unit.tasks.latest_reschedule("home", choice.occurrence_id)
+    base = original.evidence.receipt.result.decode()
+    record = base["recurrence_reschedule"] | change
+    proof = SimpleNamespace(
+        receipt=SimpleNamespace(
+            result=JsonDocument.from_value(base | {"recurrence_reschedule": record})
+        )
+    )
+    monkeypatch.setattr(
+        SQLiteTasks, "latest_reschedule", lambda *_: SimpleNamespace(evidence=proof)
+    )
+    monkeypatch.setattr(reschedule_review, "recorded_request", lambda _: record)
+    with store.read() as unit, pytest.raises(StorageFailure, match="invalid_recurrence_effect"):
+        reschedule_review.effective_deadline(unit, work, slot)
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_fixed_pause_and_resume_preview_retained_and_unmaterialized_work(tmp_path, timed):
+    from domus.application.fixed_state_review import FixedStateChange
+
+    service, choice, materializer, before = fixed_skip_fixture(tmp_path, timed=timed)
+    store = service.transactions
+    tasks = TaskCommands(store, service.actor, materializer.clock, materializer.identifiers)
+    with store.read() as unit:
+        cursor = unit.recurrence.progress("home", choice.schedule_id)
+        rule = unit.recurrence.schedule("home", choice.schedule_id)
+    manual = tasks.create_occurrence("independent", CreateTaskOccurrence(rule.definition_id))
+    pause = FixedStateChange(rule.schedule_id, 1, ScheduleState.PAUSED)
+    preview, request = reviewed(service, pause)
+    retained = preview.result.decode()["plan"]["snapshot"]["source"]["retained_work"]
+    assert {item["occurrence_id"] for item in retained} == {
+        choice.occurrence_id,
+        manual.result.decode()["occurrence_id"],
+    }
+    assert service.apply("pause", request).result.decode()["state"] == "paused"
+    assert materializer.step(rule.schedule_id, before).status == "paused"
+    resume = replace(pause, schedule_revision=2, target=ScheduleState.ACTIVE)
+    preview, request = reviewed(service, resume, "resume-preview")
+    backlog = preview.result.decode()["plan"]["backlog"]
+    assert backlog["status"] == "resume"
+    assert backlog["pending_slots"][0]["nominal"]["local"].startswith("2026-03-30")
+    applied = service.apply("resume", request)
+    assert service.apply("resume", request) == applied
+    with store.read() as unit:
+        assert unit.recurrence.progress("home", rule.schedule_id) == cursor
+    assert materializer.step(rule.schedule_id, before).status == "created"
+
+
+def test_fixed_state_rejects_bad_authoritative_state_and_unconfirmed_work(tmp_path, monkeypatch):
+    from domus.application.fixed_state_review import FixedStateChange
+    from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
+
+    service, selection, _, _ = fixed_skip_fixture(tmp_path)
+    store = service.transactions
+    pause = FixedStateChange(selection.schedule_id, 1, ScheduleState.PAUSED)
+    with pytest.raises(InvalidInput):
+        replace(pause, target=ScheduleState.RETIRED)
+    with pytest.raises(NotFound, match="recurrence_rule_missing"):
+        service.preview("missing", replace(pause, schedule_id="missing"))
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        service.preview("stale", replace(pause, schedule_revision=2))
+    with pytest.raises(Conflict, match="recurrence_state_change_unavailable"):
+        service.preview("same", replace(pause, target=ScheduleState.ACTIVE))
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteRecurrences, "progress", lambda *_: None)
+        with pytest.raises(StorageFailure, match="invalid_recurrence_source"):
+            service.preview("unconfirmed", pause)
+    with store.read() as unit:
+        work = unit.tasks.occurrence("home", selection.occurrence_id)
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteTasks, "occurrences", lambda *a, **kw: (work,) * 101)
+        with pytest.raises(Conflict, match="recurrence_review_too_large"):
+            service.preview("oversized", pause)
+    _, request = reviewed(service, pause)
+    service.apply("pause", request)
+    with store.write() as unit:
+        rule = unit.recurrence.schedule("home", selection.schedule_id)
+        definition = unit.tasks.definition("home", rule.definition_id)
+        unit.tasks.save_definition(
+            replace(definition, state=DefinitionState.ARCHIVED, revision=2), 1
+        )
+    with pytest.raises(Conflict, match="recurrence_state_change_unavailable"):
+        service.preview(
+            "inactive", replace(pause, schedule_revision=2, target=ScheduleState.ACTIVE)
+        )
+
+
+def test_fixed_resume_rejects_untrusted_time_collision_and_oversized_preview(tmp_path, monkeypatch):
+    from datetime import datetime
+
+    from domus.application.fixed_recurrence import FixedRecurrencePlanner
+    from domus.application.fixed_state_review import FixedStateChange, FixedStatePlan
+    from domus.domain.recurrence_time import MAX_INSTANT_MS, LocalInstant
+
+    service, selection, _, _ = fixed_skip_fixture(tmp_path, timed=True)
+    pause = FixedStateChange(selection.schedule_id, 1, ScheduleState.PAUSED)
+    _, request = reviewed(service, pause)
+    service.apply("pause", request)
+    resume = replace(pause, schedule_revision=2, target=ScheduleState.ACTIVE)
+    times = type(service.planner.times)
+    with monkeypatch.context() as patch:
+        patch.setattr(times, "local_at", lambda *_: None)
+        with pytest.raises(IntegrationUnavailable, match="recurrence_time_source_invalid"):
+            service.preview("provider", resume)
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            times,
+            "local_at",
+            lambda _, ms, policy: LocalInstant(
+                ms, datetime(9999, 12, 31, 23, 59, 59, 999000), 0, policy, "0" * 64
+            ),
+        )
+        late = replace(service, clock=type("Clock", (), {"now": lambda _: MAX_INSTANT_MS})())
+        with pytest.raises(Conflict, match="recurrence_review_too_large"):
+            late.preview("overflow", resume)
+    expand = FixedRecurrencePlanner.expand
+
+    def batch(planner, *args, **kwargs):
+        result = expand(planner, *args, **kwargs)
+        return result
+
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            FixedRecurrencePlanner,
+            "expand",
+            lambda p, *a, **kw: replace(batch(p, *a, **kw), range_complete=False),
+        )
+        with pytest.raises(Conflict, match="recurrence_review_too_large"):
+            service.preview("incomplete", resume)
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            FixedRecurrencePlanner,
+            "expand",
+            lambda p, *a, **kw: replace(batch(p, *a, **kw), slots=batch(p, *a, **kw).slots * 2),
+        )
+        with pytest.raises(Conflict, match="recurrence_reschedule_collision"):
+            service.preview("collision", resume)
+    with monkeypatch.context() as patch:
+        patch.setattr(FixedStatePlan, "backlog", lambda *_: {"fixture": "é" * 40_000})
+        with pytest.raises(Conflict, match="recurrence_review_too_large"):
+            service.preview("oversized-plan", resume)
+    with pytest.raises(NotFound):
+        service.original(ReviewAction.PREVIEW, "oversized-plan")

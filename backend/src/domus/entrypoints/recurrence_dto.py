@@ -6,9 +6,11 @@ from typing import Annotated, Literal
 from pydantic import Field
 
 from domus.application.fixed_skip_review import FixedSkip
+from domus.application.fixed_state_review import FixedStateChange
 from domus.application.recurrence_review import ManualAdoption, ReviewedChange
 from domus.application.relative_attachment_review import AttachmentChoice, AttachRelative
 from domus.application.relative_state_review import RelativeSettings, RelativeStateChange
+from domus.application.reschedule_review import RescheduleSelection
 from domus.domain.errors import InvalidInput
 from domus.domain.recurrence_records import ScheduleState
 from domus.domain.recurrence_rules import NominalDate, NominalSlot
@@ -157,6 +159,48 @@ class RelativeSettingsBody(StrictModel):
 
 
 class ReviewedRelativeSettingsBody(RelativeSettingsBody):
+    preview_key: Identifier
+    plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+    def reviewed(self) -> ReviewedChange:
+        return ReviewedChange(self.selection(), self.preview_key, self.plan_fingerprint)
+
+
+class RescheduleBody(FixedSkipBody):
+    destination: NominalBody
+
+    def move(self) -> RescheduleSelection:
+        return RescheduleSelection(
+            self.schedule_id,
+            self.schedule_revision,
+            self.slot_key,
+            self.occurrence_id,
+            self.occurrence_revision,
+            nominal(self.destination),
+            self.reason,
+        )
+
+
+class ReviewedRescheduleBody(RescheduleBody):
+    preview_key: Identifier
+    plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+    def reviewed(self) -> ReviewedChange:
+        return ReviewedChange(self.move(), self.preview_key, self.plan_fingerprint)
+
+
+class FixedStateBody(StrictModel):
+    schedule_id: Identifier
+    schedule_revision: Revision
+    target: Literal["active", "paused"]
+
+    def selection(self) -> FixedStateChange:
+        return FixedStateChange(
+            self.schedule_id, self.schedule_revision, ScheduleState(self.target)
+        )
+
+
+class ReviewedFixedStateBody(FixedStateBody):
     preview_key: Identifier
     plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 

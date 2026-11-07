@@ -78,3 +78,27 @@ requires reconciliation before editing so that the rule never reinterprets an ea
 Apply through `POST /relative-settings/apply` with the original selection, preview key, and
 fingerprint. Domus saves the updated rule revision and binds its progress to the original
 operation in the same transaction.
+
+## Move an unstarted scheduled occurrence
+
+Use `POST /reschedule/preview` with the schedule and task IDs and revisions, the original slot
+key, the destination in the same nominal kind, and a reason. Domus resolves a timed destination
+under the original slot's saved time policy. The preview shows the original slot, current
+deadline and new deadline. An occupied destination or a fixed nominal slot belonging to another
+obligation requires a different choice.
+
+Apply through `POST /reschedule/apply` with the original selection, preview key, and fingerprint.
+The task keeps its identity and assignments. Task history records the reason and destination.
+The original recurrence slot stays available as planned history. A later reviewed skip uses the
+effective deadline.
+
+## Pause and resume a fixed schedule
+
+Use `POST /fixed-state/preview` with the schedule ID and current revision. A pause retains open
+work, its assignments, and the existing recurrence cursor. A resume previews the pending
+nominal slots through the current local day and the open work that will be retained. If the
+complete plan exceeds the review bound or contains coincident instants, Domus blocks the change
+and keeps the rule paused.
+
+Apply through `POST /fixed-state/apply` with the original selection, preview key, and
+fingerprint. The maintenance runner continues from the same cursor after resume.

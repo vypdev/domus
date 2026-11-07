@@ -16,14 +16,18 @@ from domus.entrypoints.household_http import (
 )
 from domus.entrypoints.recurrence_dto import (
     FixedSkipBody,
+    FixedStateBody,
     ManualAdoptionBody,
     RelativeAttachmentBody,
     RelativeSettingsBody,
     RelativeStateBody,
+    RescheduleBody,
     ReviewedAdoptionBody,
     ReviewedFixedSkipBody,
+    ReviewedFixedStateBody,
     ReviewedRelativeAttachmentBody,
     ReviewedRelativeSettingsBody,
+    ReviewedRescheduleBody,
     ReviewedStateBody,
 )
 from domus.entrypoints.task_dto import Identifier
@@ -113,6 +117,34 @@ def create_recurrence_review_router(context: Callable[[Request], RecurrenceRevie
     )
     def apply_relative_settings(
         request: Request, body: ReviewedRelativeSettingsBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).apply(_key(request), body.reviewed()))
+
+    @router.post(
+        "/reschedule/preview", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def preview_reschedule(
+        request: Request, body: RescheduleBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).preview(_key(request), body.move()))
+
+    @router.post("/reschedule/apply", response_model=ReceiptResponse, openapi_extra=write_contract)
+    def apply_reschedule(
+        request: Request, body: ReviewedRescheduleBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).apply(_key(request), body.reviewed()))
+
+    @router.post(
+        "/fixed-state/preview", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def preview_fixed_state(
+        request: Request, body: FixedStateBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).preview(_key(request), body.selection()))
+
+    @router.post("/fixed-state/apply", response_model=ReceiptResponse, openapi_extra=write_contract)
+    def apply_fixed_state(
+        request: Request, body: ReviewedFixedStateBody, query: Annotated[_EmptyQuery, Query()]
     ) -> ReceiptResponse:
         return _receipt(context(request).apply(_key(request), body.reviewed()))
 

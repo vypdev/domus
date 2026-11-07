@@ -149,6 +149,9 @@ class SQLiteTasks(TaskRepository):
             household_id, occurrence_id, limit=limit, after=after
         )
 
+    def latest_reschedule(self, household_id: str, occurrence_id: str) -> RetainedOperation | None:
+        return SQLiteTaskHistory(self.connection).latest_reschedule(household_id, occurrence_id)
+
     def operation(
         self, household_id: str, actor_id: str, operation_id: str
     ) -> RetainedOperation | None:
@@ -298,6 +301,7 @@ class SQLiteTasks(TaskRepository):
         state: OccurrenceState | None = None,
         definition_id: str | None = None,
         assignee_id: str | None = None,
+        open_only: bool = False,
     ) -> tuple[TaskOccurrence, ...]:
         where, parameters = _page(household_id, limit, after, "occurrence_id")
         if state is not None:
@@ -316,6 +320,8 @@ class SQLiteTasks(TaskRepository):
                 "AS assigned WHERE assigned.value=?)"
             )
             parameters.append(assignee_id)
+        if open_only:
+            where.append("state NOT IN ('completed','cancelled','skipped')")
         rows = self.connection.execute(
             "SELECT * FROM task_occurrences WHERE "
             + " AND ".join(where)

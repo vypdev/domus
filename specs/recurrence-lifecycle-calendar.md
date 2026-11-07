@@ -357,8 +357,12 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `backend/src/domus/application/relative_lifecycle.py` | create |
 | `backend/src/domus/application/recurrence_review.py` | create |
 | `backend/src/domus/application/relative_attachment_review.py` | create |
+| `backend/src/domus/application/reschedule_review.py` | create |
+| `backend/src/domus/application/task_authorization.py` | update |
+| `backend/src/domus/application/task_requests.py` | update |
 | `backend/src/domus/application/relative_state_review.py` | create |
 | `backend/src/domus/application/fixed_skip_review.py` | create |
+| `backend/src/domus/application/fixed_state_review.py` | create |
 | `backend/src/domus/application/calendar_queries.py` | create |
 | `backend/src/domus/application/calendar_commands.py` | create |
 | `backend/src/domus/infrastructure/sqlite_relative_lifecycle.py` | create |
