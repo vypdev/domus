@@ -428,5 +428,29 @@
     "homeAssistantProjection": "tests/backend/test_ha_calendar_projection.py",
     "nativeHomeAssistantRegistration": "specs/home-assistant-surface.md",
     "scope": "Acceptance paths for this source change. Use check runs tied to the tested commit for execution evidence."
+  },
+  "reviewedExceptionsHistoricalCheckpoint": {
+    "sourceCommit": "5e78cdb78d10e0ae98b8a177ec22e06ca3b98ba9",
+    "backend": {
+      "passed": 4876,
+      "coverage": "100% globally and per file"
+    },
+    "frontend": {
+      "passed": 1545,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "actualImageChecks": {
+      "amd64": {
+        "browserJourneys": 46,
+        "packageChecks": 4
+      },
+      "aarch64": {
+        "browserJourneys": 46,
+        "packageChecks": 4
+      }
+    },
+    "copilotVerification": "https://github.com/vypdev/domus/runs/128282611955",
+    "typeCheckCorrection": "e048707e56e65db2f5223947dc8f01c6943a6856",
+    "scope": "Historical local runtime evidence. The published check for this commit also identified a frontend test type error that was corrected separately."
   }
 }

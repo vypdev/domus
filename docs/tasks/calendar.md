@@ -28,7 +28,7 @@ projection can return valid entries while additional recurrence sources still ne
 ranges and month column alignment. The default is Monday. Each member's choice has its
 own revision and is private, including when another member administers the household.
 If a save response is lost, use **Check original week-start change** before changing the
-preference again.
+preference again. Signing out clears the saved request from the browser.
 
 The protected calendar also exposes `GET /api/v1/tasks/calendar/home-assistant` with
 the same date range, filters, page size and current task-read grant. Each event's

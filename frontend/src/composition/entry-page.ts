@@ -1,11 +1,11 @@
 import {HttpRecurrenceServer} from '../adapters/recurrence-http';
-import {RecurrenceSessionJournal} from '../adapters/recurrence-journal';
+import {RECURRENCE_JOURNAL_KEY, RecurrenceSessionJournal} from '../adapters/recurrence-journal';
 import {BrowserEntropy, ServerClock} from '../adapters/browser-capabilities';
 import {RecurrenceReviewController} from '../application/recurrence-review-controller';
 import {reviewDraft} from '../domain/recurrence-review';
 import type {ReviewIntent} from '../presentation/domus-recurrence-review';
 import {HttpCalendarPreferences} from '../adapters/calendar-preference-http';
-import {CalendarSessionJournal} from '../adapters/calendar-journal';
+import {CALENDAR_JOURNAL_KEY, CalendarSessionJournal} from '../adapters/calendar-journal';
 import {CalendarPreferenceController} from '../application/calendar-preferences';
 import {HttpCalendarServer} from '../adapters/calendar-http';
 import {CalendarController} from '../application/calendar-controller';
@@ -266,7 +266,14 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'recover': await active.recover(intent.key); break;
           case 'dismiss': await active.dismiss(intent.key); break;
           case 'refresh': await active.refresh(); break;
-          case 'logout': await active.logout(); break;
+          case 'logout': {
+            const signOut = active.logout();
+            const storage = browser.storage();
+            storage.removeItem(CALENDAR_JOURNAL_KEY);
+            storage.removeItem(RECURRENCE_JOURNAL_KEY);
+            await signOut;
+            break;
+          }
           case 'sign_in': active.signIn(); break;
           case 'reopen': active.reopen(); break;
         }

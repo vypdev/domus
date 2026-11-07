@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with reviewed fixed exceptions and private calendar preferences.",
   "actualProductFiles": {
-    ".vite/manifest.json": "4322c55c28a113e005722566b1d3c861fa3424fd25474aea9ffe227fb65e3829",
-    "assets/index-ByQ-22U-.js": "fef080be673b17bd31eb0c9122242f5bcaaf0d2fe76d81d8e3588e5add7d0361",
+    ".vite/manifest.json": "c777ceb6aeb4e0e504e1215b8c7d8d46efcea3730d0ab95dcf46e42f32c91d46",
+    "assets/index-BLr-TULQ.js": "8637670e17a260f9d5e71b82915042c1bcc86e0cd7de9665ec9afa98e4d7d610",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "3752a9b10f653afe7b7b8e6101a96b26b6a485ff9530376a7d24a98c003630a7"
+    "index.html": "ee7a6b61d97fd7abb1fd6c85c87e4a691e72ec869185ab0508b215b05e6cb4ca"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -80,5 +80,16 @@
     },
     "ci": "https://github.com/vypdev/domus/actions/runs/42326875268",
     "scope": "Historical asset bytes for the prior scheduling review and fixed batch replacement."
+  },
+  "reviewedExceptionsHistoricalValidation": {
+    "sourceCommit": "5e78cdb78d10e0ae98b8a177ec22e06ca3b98ba9",
+    "actualProductFiles": {
+      ".vite/manifest.json": "4322c55c28a113e005722566b1d3c861fa3424fd25474aea9ffe227fb65e3829",
+      "assets/index-ByQ-22U-.js": "fef080be673b17bd31eb0c9122242f5bcaaf0d2fe76d81d8e3588e5add7d0361",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "3752a9b10f653afe7b7b8e6101a96b26b6a485ff9530376a7d24a98c003630a7"
+    },
+    "browserJourneysPerArchitecture": 46,
+    "scope": "Historical runtime evidence before explicit logout retired scheduling journals."
   }
 }

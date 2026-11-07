@@ -1,3 +1,5 @@
+import {CALENDAR_JOURNAL_KEY} from '../src/adapters/calendar-journal';
+import {RECURRENCE_JOURNAL_KEY} from '../src/adapters/recurrence-journal';
 import {afterEach, expect, test, vi} from 'vitest';
 import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, decodeCalendarIntent, decodeReviewIntent, mountEntry} from '../src/composition/entry-page';
 import {TaskController} from '../src/application/task-controller';
@@ -177,8 +179,15 @@ test('language is presentation-only, and navigation has only fixed reviewed dest
   expect(f.navigation).toEqual(['/api/v1/auth/start','/']);
 });
 test('logout closes local access and keeps explicit deployment-specific reentry available', async () => {
-  const f = fixture(), {app} = await f.open(); intent(app, {type: 'logout'});
-  await vi.waitFor(() => {expect(app.view?.notice).toBe('signed_out');});
+  const f = fixture(), {app} = await f.open();
+  f.values.set(CALENDAR_JOURNAL_KEY, 'private pending preference');
+  f.values.set(RECURRENCE_JOURNAL_KEY, 'private pending schedule change');
+  intent(app, {type: 'logout'});
+  await vi.waitFor(() => {
+    expect(app.view?.notice).toBe('signed_out');
+    expect(f.values.has(CALENDAR_JOURNAL_KEY)).toBe(false);
+    expect(f.values.has(RECURRENCE_JOURNAL_KEY)).toBe(false);
+  });
   expect(f.values.has(ENTRY_JOURNAL_KEY)).toBe(false); intent(app, {type: 'sign_in'});
   expect(f.navigation).toEqual(['/api/v1/auth/start']);
 });
