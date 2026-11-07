@@ -309,5 +309,48 @@
     "review": "https://github.com/vypdev/domus/runs/128196068455",
     "progressVerification": "https://github.com/vypdev/domus/runs/128194043945",
     "scope": "Results apply to the exact source commit above. Protected recurrence commands were tested through HTTP and exercised inside both built images. The existing browser suite tests the task, administration and shared navigation interfaces."
+  },
+  "manualAttachmentCheckpoint": {
+    "sourceCommit": "0c2ce01d7f000a8ccdbe5560c6fe744776f5596c",
+    "verified": [
+      "Compatible unstarted manual work is adopted explicitly, or manual work is retained and the first scheduled deadline is reviewed.",
+      "SQLite preserves the definition, schedule, first occurrence and original receipt as one outcome across rollback, retry and restoration."
+    ],
+    "backend": {
+      "passed": 4752,
+      "coverage": "100% globally and per file"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42314758140",
+    "bugbot": "https://github.com/vypdev/domus/runs/128226926963",
+    "progressFailure": "https://github.com/vypdev/domus/runs/128226245761"
+  },
+  "reviewedSchedulingCheckpoint": {
+    "sourceCommit": "f390148714c3160b6caadc0cde22dc44d10f9314",
+    "verified": [
+      "Review relative successor settings, fixed pause and resume, and one-off fixed or relative work rescheduling without overwriting original slot history.",
+      "Apply a prospective fixed pattern when no issued work occupies the affected frontier."
+    ],
+    "backend": {
+      "passed": 4782,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42317369128",
+    "progressFailure": "https://github.com/vypdev/domus/runs/128235329605",
+    "scope": "Exact-source backend and CI evidence. Bulk replacement of issued work and explicit fixed exclusions or additions are outside these observations."
+  },
+  "protectedCalendarAPICheckpoint": {
+    "sourceCommit": "ad2264c28f9734181586253ccc1610bbdb86d200",
+    "verified": [
+      "Both HTTP compositions share the current task-read authorization and the bounded local date range.",
+      "Signed cursors bind the original principal, local authority, filters, range and limit. The SQLite count and page share the same filter predicates.",
+      "Planned work, effective deadlines, actual performance and verification remain separate. Date-only values have no instant."
+    ],
+    "backend": {
+      "passed": 4798,
+      "statements": 12422,
+      "branches": 3512,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "scope": "Local evidence for the protected API source only. Browser, packaged and subsequent source evidence is tracked separately."
   }
 }

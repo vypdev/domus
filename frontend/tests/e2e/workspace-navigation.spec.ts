@@ -40,15 +40,18 @@ for (const mode of ['native', 'standalone'] as const) {
     const administration = page.locator('domus-administration');
     const overview = tabs.getByRole('link', {name: 'Overview', exact: true});
     const tasks = tabs.getByRole('link', {name: 'Tasks', exact: true});
+    const calendar = tabs.getByRole('link', {name: 'Calendar', exact: true});
     const household = tabs.getByRole('link', {name: 'Household', exact: true});
     const overviewRegion = page.locator('domus-app #overview');
     const tasksRegion = page.locator('domus-app #tasks');
+    const calendarRegion = page.locator('domus-app #calendar');
     const householdRegion = page.locator('domus-app #household');
     if (mode === 'standalone') await household.click();
     await expect(administration.getByRole('button', {name: 'Edit own alias', exact: true})).toBeEnabled();
     await expect(tabs.getByRole('navigation', {name: 'Household navigation'})).toBeVisible();
     await expect(overview).toHaveAttribute('href', '#overview');
     await expect(tasks).toHaveAttribute('href', '#tasks');
+    await expect(calendar).toHaveAttribute('href', '#calendar');
     await expect(household).toHaveAttribute('href', '#household');
     await expect(household).toHaveCSS('height', '56px');
     await overview.click();
@@ -72,6 +75,20 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.goForward();
     await expect(tasks).toHaveAttribute('aria-current', 'page');
     await tasks.focus();
+    await page.keyboard.press('Tab');
+    await expect(calendar).toBeFocused();
+    const reading = page.waitForResponse(response => response.url().startsWith(base + 'api/v1/tasks/calendar?'));
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(base + '#calendar');
+    await expect(calendarRegion).toBeFocused();
+    await expect(calendar).toHaveAttribute('aria-current', 'page');
+    expect((await reading).ok()).toBe(true);
+    await expect(calendarRegion.getByText('There are no matching entries in this range.')).toBeVisible();
+    await page.goBack();
+    await expect(tasks).toHaveAttribute('aria-current', 'page');
+    await page.goForward();
+    await expect(calendar).toHaveAttribute('aria-current', 'page');
+    await calendar.focus();
     await page.keyboard.press('Tab');
     await expect(household).toBeFocused();
     await expect(household.locator('[part=content]')).toHaveCSS('outline-style', 'solid');
@@ -117,6 +134,14 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(inicio).toHaveAttribute('aria-current', 'page');
     await expect(tabs.locator('[part=frame]')).toHaveCSS('background-color', 'rgb(24, 36, 47)');
     await tabs.screenshot({path: info.outputPath('es-dark-narrow.png')});
+
+    await tabs.getByRole('link', {name: 'Calendario', exact: true}).click();
+    await expect(calendarRegion).toBeFocused();
+    await expect(calendarRegion.getByText('No hay entradas que coincidan en este intervalo.')).toBeVisible();
+    await calendarRegion.getByLabel('Vista del calendario').selectOption('agenda');
+    await calendarRegion.getByRole('button', {name: 'Mostrar calendario'}).click();
+    await expect(calendarRegion.getByText('Entradas que coinciden 0')).toBeVisible();
+    await expect(calendarRegion.locator('.calendar-grid')).toHaveCount(0);
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

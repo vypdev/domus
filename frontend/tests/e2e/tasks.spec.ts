@@ -52,6 +52,18 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
     expect(pageOfWork.items).toHaveLength(1); expect(pageOfWork.items[0]).toMatchObject({title, state: 'completed', revision: 3});
     const actual = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences/' + pageOfWork.items[0].occurrence_id)).json();
     expect(actual.cycle.performers).toHaveLength(1); expect(actual.cycle.verification).toBe('none'); expect(actual.consumer_delivery).toBe('unconfirmed');
+    await page.getByRole('link', {name: spanish ? 'Calendario' : 'Calendar', exact: true}).click();
+    const calendar = page.locator('domus-calendar');
+    await calendar.getByRole('combobox', {name: spanish ? 'Vista del calendario' : 'Calendar view', exact: true}).selectOption('day');
+    await calendar.getByRole('combobox', {name: spanish ? 'Tipo de entrada' : 'Entry kind', exact: true}).selectOption('performed');
+    await calendar.getByLabel(spanish ? 'Solo mis entradas' : 'Only my entries', {exact: true}).check();
+    await calendar.getByRole('button', {name: spanish ? 'Mostrar calendario' : 'Show calendar', exact: true}).click();
+    const performed = calendar.locator('.calendar-entries li').filter({hasText: title});
+    await expect(performed).toHaveCount(1);
+    await expect(performed).toContainText(spanish ? 'Realizado' : 'Performed');
+    await expect(performed.locator('time')).toBeVisible();
+    await expect(calendar.locator('script,img')).toHaveCount(0);
+    await page.getByRole('link', {name: spanish ? 'Tareas' : 'Tasks', exact: true}).click();
     await page.reload(); await expect(tasks.getByRole('button', {name: title, exact: true})).toBeVisible();
     await tasks.getByRole('button', {name: title, exact: true}).click();
     await expect(tasks.getByText('No approval required', {exact: true})).toBeVisible();

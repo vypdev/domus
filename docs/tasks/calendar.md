@@ -1,7 +1,12 @@
 # Protected household calendar
 
-The calendar reads the same household and task records in Ingress and standalone. Send the
-verified `X-Domus-Context` when requesting `GET /api/v1/tasks/calendar`. The endpoint uses
+Open **Calendar** in the household navigation in Ingress or standalone. Choose Month, Week,
+Day or Agenda and a reference date, then select **Show calendar**. Agenda lists entries by
+date and fits narrow displays. Select **Only my entries** to see work assigned to you, work
+you performed, or work you verified. **More entries** loads the next page for the selected
+range and filters. Calendar reads do not change the task or advance recurrence processing.
+
+For API clients, send the verified `X-Domus-Context` when requesting `GET /api/v1/tasks/calendar`. The endpoint uses
 current local task-read authority and the existing session boundary.
 
 Supply `start` and `end` as local ISO dates. The half-open range can cover one to 366 days.

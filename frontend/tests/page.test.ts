@@ -1,5 +1,5 @@
 import {afterEach, expect, test, vi} from 'vitest';
-import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, mountEntry} from '../src/composition/entry-page';
+import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, decodeCalendarIntent, mountEntry} from '../src/composition/entry-page';
 import {TaskController} from '../src/application/task-controller';
 import type {EntryPage} from '../src/composition/entry-page';
 import type {DomusApp} from '../src/presentation/domus-app';
@@ -47,6 +47,11 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true});
+    else if (route.startsWith('tasks/calendar?')) {
+      const query=new URLSearchParams(route.split('?')[1]);
+      raw=JSON.stringify({period:{start:query.get('start'),end:query.get('end')},time_zone:'UTC',
+        entries:[],count:0,next_cursor:query.has('cursor')?null:'next-page',pending:false});
+    }
     else if (route.startsWith('tasks/occurrences?')) raw=JSON.stringify({items:[],next_cursor:null});
     else if (route==='administration/preferences') raw=JSON.stringify(preferences());
     else if (route==='administration/roster') raw=JSON.stringify({directory_state:'available',members:[{
@@ -377,4 +382,32 @@ test('unverified and retired views do not expose the household destination', asy
   app.view = {...app.view!, notice: 'context_changed'};
   await app.updateComplete;
   expect(tabs()).toBeNull();
+});
+
+test('calendar composition accepts bounded reads only on the verified route and clears them on navigation', async () => {
+  const query = {start:'2026-11-01',end:'2026-12-01',kind:'',timing:'',state:'',priority:'',category:'',own:true};
+  expect(decodeCalendarIntent({type:'load',query})).toEqual({type:'load',query});
+  expect(decodeCalendarIntent({type:'more'})).toEqual({type:'more'});
+  for (const value of [{type:'load'}, {type:'load',query:{...query,member:'another'}}, {type:'more',query}, {type:'refresh'}, null]) {
+    expect(decodeCalendarIntent(value)).toBeNull();
+  }
+  const f=fixture();f.phase('active');const {app}=await f.open();
+  const sends=(detail:unknown,target:EventTarget=app)=>target.dispatchEvent(new CustomEvent('domus-calendar-intent',{detail,bubbles:true,composed:true}));
+  const calls=()=>f.fetch.mock.calls.filter(([path])=>path.includes('/tasks/calendar?'));
+  sends({type:'load',query});expect(calls()).toHaveLength(0);
+  const navigate=(fragment:string)=>{
+    f.page.location.href=f.page.location.href.split('#')[0]+fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  navigate('#calendar');
+  await vi.waitFor(()=>expect(app.calendar?.status).toBe('ready'));
+  expect(calls()).toHaveLength(1);
+  sends({type:'load',query},app.querySelector('span')??app.appendChild(document.createElement('span')));
+  sends({type:'invalid'});expect(calls()).toHaveLength(1);
+  sends({type:'load',query});await vi.waitFor(()=>expect(app.calendar?.page?.cursor).toBe('next-page'));
+  expect(calls()[1][0]).toContain('member_id=identity-1');
+  sends({type:'more'});await vi.waitFor(()=>expect(app.calendar?.page?.cursor).toBe(null));
+  expect(calls()[2][0]).toContain('cursor=next-page');
+  navigate('#tasks');expect(app.calendarScopeKey).toBeNull();expect(app.calendar?.page).toBeNull();
+  sends({type:'more'});expect(calls()).toHaveLength(3);
 });

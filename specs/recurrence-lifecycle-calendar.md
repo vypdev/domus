@@ -412,6 +412,8 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `frontend/tests/calendar-journal.test.ts` | create |
 | `frontend/tests/calendar-component.test.ts` | create |
 | `frontend/tests/e2e/calendar.spec.ts` | create |
+| `frontend/tests/e2e/workspace-navigation.spec.ts` | update |
+| `frontend/tests/e2e/tasks.spec.ts` | update |
 | `tests/fixtures/sqlite/v9.sql` | create |
 | `tests/containers/test_relative_recurrence_image.py` | create |
 | `tests/containers/test_calendar_image.py` | create |
@@ -488,6 +490,9 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `frontend/tests/e2e/catalog.spec.ts` | update |
 | `frontend/src/composition/entry-page.ts` | update |
 | `frontend/src/presentation/domus-app.ts` | update |
+| `frontend/src/presentation/messages.ts` | update |
+| `frontend/tests/component.test.ts` | update |
+| `frontend/tests/page.test.ts` | update |
 | `tests/browser/entry_server.py` | update |
 | `tests/backend/test_openapi.py` | update |
 | `tests/python/test_ci_contract.py` | update |

@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled bundle for the integrated Overview, Tasks and Household navigation with required-title and required-reason validation. Earlier exact assets and source are retained in the historical blocks.",
+  "scope": "Compiled product bundle for the integrated Overview, Tasks, Calendar and Household navigation. Earlier exact assets and source are retained in the historical blocks.",
   "actualProductFiles": {
-    ".vite/manifest.json": "d86e552d1badabca296030b011108afcf21c388edaeec4c123afb30abff5e939",
-    "assets/index-CZo7ZIF6.js": "cf4a9812a628d8875c01badeee9beb3eff3b7b0bc0c90dd85a478fcc770a16a5",
+    ".vite/manifest.json": "5b8c8f5c9bf2d18a1162b8a6dd7cf54980a385c60a6cbd5a7b05c8c8f8a89eca",
+    "assets/index-CmtVd76i.js": "5a2723a1c60c817282847f71c2136735663f1d67aa067e53bd1378508da338f2",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "d903bf5e4de1701656701872b862be84a0db093c1f20bd1c847b9f5d0963467a"
+    "index.html": "d77183fdf24bef34ce731dad62fc2a5ebccf227768626059ea63626359675301"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -38,6 +38,16 @@
       "assets/index-BZyPyyMk.js": "f13c739cba80765c6aa2c31b9b061bd24f6054e85356ec87363ca9ff2eedcec5",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "index.html": "9085173d34adf3d0c0540d649af14bd682a87ebbe745b5b9ef23c2389274f972"
+    }
+  },
+  "preProtectedCalendar": {
+    "sourceCommit": "ad2264c28f9734181586253ccc1610bbdb86d200",
+    "scope": "Integrated Overview, Tasks and Household bundle immediately before the protected Calendar view.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "d86e552d1badabca296030b011108afcf21c388edaeec4c123afb30abff5e939",
+      "assets/index-CZo7ZIF6.js": "cf4a9812a628d8875c01badeee9beb3eff3b7b0bc0c90dd85a478fcc770a16a5",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "d903bf5e4de1701656701872b862be84a0db093c1f20bd1c847b9f5d0963467a"
     }
   }
 }

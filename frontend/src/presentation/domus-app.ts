@@ -8,6 +8,9 @@ import type {PropertyValues} from 'lit';
 import type {EntryView} from '../application/entry-controller';
 import type {TaskView} from '../application/task-controller';
 import './domus-tasks';
+import './domus-calendar';
+import type {CalendarView} from '../application/calendar-controller';
+import {DATE_MIN} from '../domain/calendar';
 import type {AdministrationView} from '../application/administration-controller';
 import './domus-administration';
 import type {Deployment} from '../domain/entry';
@@ -16,7 +19,7 @@ import {instant, language, message} from './messages';
 import type {Language, MessageKey} from './messages';
 import {styles} from './styles';
 
-export type WorkspaceDestination = 'overview' | 'tasks' | 'household';
+export type WorkspaceDestination = 'overview' | 'tasks' | 'calendar' | 'household';
 
 export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'logout' | 'sign_in' | 'reopen'}>
   | Readonly<{type: 'setup'; name: string; timeZone: string}>
@@ -25,12 +28,15 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
-  static properties = {tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
+  static properties = {calendar: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
     workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
   declare administration:AdministrationView|null;
   declare tasks: TaskView | null;
+  declare calendar: CalendarView | null;
+  declare calendarScopeKey: string | null;
+  declare calendarToday: string;
   declare deployment: Deployment;
   declare language: Language;
   declare workspaceDestination: WorkspaceDestination | null;
@@ -40,6 +46,7 @@ export class DomusApp extends LitElement {
   private focusDestination: WorkspaceDestination | null = null;
   constructor() {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
+    this.calendar = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
     this.workspaceDestination = null; this.nameDraft = ''; this.zoneDraft = '';
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
@@ -90,6 +97,8 @@ export class DomusApp extends LitElement {
           iconPath: 'M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z'},
         {id: 'tasks', href: '#tasks', label: this.text('navigationTasks'),
           iconPath: 'M3 3h18v18H3zM7 12l3 3 7-7'},
+        {id: 'calendar', href: '#calendar', label: this.text('navigationCalendar'),
+          iconPath: 'M3 5h18v16H3zM3 10h18M7 2v5M17 2v5'},
         {id: 'household', href: '#household', label: this.text('workspaceHousehold'),
           iconPath: 'M3 11l9-8 9 8v10h-6v-7H9v7H3z'},
       ],
@@ -179,6 +188,11 @@ export class DomusApp extends LitElement {
         ?hidden=${!workspace || this.workspaceDestination !== 'tasks'}>
         <domus-tasks .view=${this.tasks} .language=${this.language}
           .retired=${closed || view?.notice === 'context_changed' || view?.phase === 'ready' && decision?.state !== 'active'}></domus-tasks>
+      </section>
+      <section id="calendar" tabindex="-1" aria-label=${this.text('navigationCalendar')}
+        ?hidden=${!workspace || this.workspaceDestination !== 'calendar'}>
+        <domus-calendar .view=${this.calendar} .language=${this.language} .today=${this.calendarToday}
+          .scopeKey=${this.calendarScopeKey}></domus-calendar>
       </section>
       <div id="household" tabindex="-1" ?hidden=${!workspace || this.workspaceDestination !== 'household'} role=${workspace ? 'group' : nothing}
         aria-label=${workspace ? this.text('workspaceHousehold') : nothing}>

@@ -244,11 +244,11 @@ test('the task workspace keeps household metadata and resolved setup recovery in
     scopeKey: 'current-scope', readOnly: false, page: {items: [], nextCursor: null}, detail: null, records: [], outcome: null, notice: null};
   const f = await mount(current); f.element.tasks = tasks; f.element.workspaceDestination = 'tasks'; await f.element.updateComplete;
   expect(f.root.querySelector('h1')!.textContent).toBe('Maple House'); expect(f.button('Refresh status')).toBeUndefined();
-  const links = [...f.root.querySelector('vyp-ha-tabs')!.shadowRoot!.querySelectorAll('nav a')]; expect(links.map(link => link.getAttribute('href'))).toEqual(['#overview', '#tasks', '#household']);
+  const links = [...f.root.querySelector('vyp-ha-tabs')!.shadowRoot!.querySelectorAll('nav a')]; expect(links.map(link => link.getAttribute('href'))).toEqual(['#overview', '#tasks', '#calendar', '#household']);
   expect(links[1].getAttribute('aria-current')).toBe('page');
   expect([...f.root.querySelectorAll('details')].some(item => item.textContent?.includes('Previous requests in this tab'))).toBe(true);
   f.element.workspaceDestination = 'household'; await f.element.updateComplete; expect(f.root.querySelector('h1')!.textContent).toBe('Your household');
-  expect(f.button('Refresh status')).toBeDefined(); expect(links[2].getAttribute('aria-current')).toBe('page');
+  expect(f.button('Refresh status')).toBeDefined(); expect(links[3].getAttribute('aria-current')).toBe('page');
   f.element.workspaceDestination = 'tasks'; f.element.view = {...current, outcome: {kind: 'uncertain'}, journal: {...current.journal!, records: [record('uncertain')]}}; await f.element.updateComplete;
   expect(f.root.querySelector('#requests-title')).not.toBeNull(); expect(f.text()).toContain('Result not confirmed');
   f.element.view = {...current, household: null}; await f.element.updateComplete; expect(f.root.querySelector('h1')!.textContent).toBe('Your household');
