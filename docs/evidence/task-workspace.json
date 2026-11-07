@@ -1,0 +1,269 @@
+{
+  "recordedAtUTC": "2026-11-04T03:02:55.107721+00:00",
+  "status": "Task workspace adopted in owner Home Assistant as Edge.9; the subsequent required-reason form correction is verified in source and pending a future preview package.",
+  "issue": 23,
+  "pullRequest": 29,
+  "preparationBase": "a954ce091d19f6350d64eec759670d5a1fadcfb5",
+  "storageSchema": 9,
+  "implemented": [
+    "Real task creation with title, description and priority; bounded list and task detail.",
+    "Current-member claiming and completion at the server-anchored actual action time.",
+    "Current-cycle adult approval/rejection and reasoned reopening; restricted work waits for approval by default.",
+    "Adjustable linked-material quantities, exact decimal canonicalization, per-unit precision and explicit zero; no fabricated Inventory effects.",
+    "Task-specific access affordances without widening administration permissions; current-authorized original-by-key GET recovery.",
+    "English/Spanish UI, current-account/member/household fencing, bounded private recovery records, session deadlines, keyboard focus and responsive layouts."
+  ],
+  "currentSourcePackage": {
+    "scope": "Current 155-module source wheel, including required review reason gating, initial relative application service and closed lifecycle codec. The installed Edge.9 remains separately pinned to 93d7d77; relative maintenance/lifecycle wiring and owner adoption remain pending.",
+    "wheelSHA256": "e928f2a8ba749e75ea8e36b898cb48e97fbca8847e11d88b1898b0d13e15fdc0",
+    "actualProductFiles": {
+      ".vite/manifest.json": "d2bc7b53fd3413e3a6eb29ab24694bf4db287d5c36e1701204bf242001c17d60",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-CwOkFHeO.js": "f328b3ee9e0a8cdb706ce8d583feea426fba10de4e8d348f0bf4e1986d5a0d5b",
+      "index.html": "72b7d0ea7474d7023082fea09a2821b9910e947243477a325a4c41d2746aa456"
+    }
+  },
+  "executedChecks": {
+    "backend": {
+      "passed": 4501,
+      "modules": 153,
+      "statements": 10619,
+      "branches": 2986,
+      "coverage": "100% globally and per module",
+      "independentAudit": "passed",
+      "scope": "Current backend with pure closure policy and bounded current/historical source observations. Installed Edge.9 remains pinned to the earlier 151-module source."
+    },
+    "frontend": {
+      "passed": 1512,
+      "runtimeFiles": 39,
+      "metrics": {
+        "lines": {
+          "total": 2110,
+          "covered": 2110,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 3208,
+          "covered": 3208,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 683,
+          "covered": 683,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 2608,
+          "covered": 2608,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "independentAudit": "passed"
+    },
+    "taskBrowser": {
+      "passed": 10,
+      "deployments": [
+        "native Ingress composition",
+        "standalone composition"
+      ],
+      "scope": "Real compiled product UI, Python HTTP and SQLite; HA/Supervisor transports explicitly fictional.",
+      "journeys": [
+        "English and Spanish create/claim/complete/reload for both deployments.",
+        "Restricted performer claims/completes; adult approves and reopens, preserving the original cycle for both deployments.",
+        "Lost committed creation reply survives reload and recovers by protected GET without another POST for both deployments.",
+        "Restricted completion loses its committed reply, reloads and recovers its own original by GET before adult review in both deployments.",
+        "Form-level invalid drafts are retained, and exact160/4000Unicode code-point maximums persist through real HTTP/SQLite in both deployments.",
+        "Reject and reopen remain disabled for blank or whitespace-only reasons; approval stays available without a reason, in both deployments."
+      ]
+    },
+    "catalog": {
+      "passed": 43,
+      "scope": "Built catalog; actual component states in English/Spanish, dark/light narrow layout; no API or foreign requests."
+    },
+    "toolingNode": {
+      "passed": 38,
+      "coverage": "100% all four supported metrics across both authored runtime files"
+    },
+    "compiledProductBrowser": {
+      "passed": 99,
+      "scope": "Previous complete compiled UI / real Python / SQLite campaign at source 93d7d77 in both deployments, including ten task journeys; no retries or skips. The subsequent reason gating correction reran the complete frontend coverage and all ten affected task journeys."
+    },
+    "platformAndPackage": {
+      "passed": 231,
+      "scope": "Architecture, CI/source-scope contracts, Python tooling and exact wheel/UI acceptance."
+    }
+  },
+  "recovery": {
+    "namespace": "tasks",
+    "version": 1,
+    "maximumRecords": 8,
+    "maximumUTF8Bytes": 65536,
+    "lifetimeMilliseconds": 3600000,
+    "scope": [
+      "installation",
+      "channel",
+      "HA subject",
+      "household",
+      "canonical membership"
+    ],
+    "credentialsStored": false,
+    "automaticPOSTRetry": false,
+    "unresolvedEviction": false
+  },
+  "limitations": [
+    "Actual owner Edge.9 now serves the task workspace and retained task/preferences after reload. This agent-operated owner test is separate from human UX review. Its pinned source predates the later required-reason form gating correction.",
+    "Relative recurrence lifecycle, protected calendar and timing editors remain outstanding; all 93 retained recurrence cases and 18 refinements remain required.",
+    "Multi-performer entry, full task/dependency editors, configurable points/rewards, integrated real Inventory/Shopping, automation, HA companion surfaces and complete first-release acceptance remain outstanding.",
+    "A recorded source event does not prove downstream points, stock, notification or automation delivery.",
+    "Original native SDK validation of the contributor SDD correction remains separate; no local SDK cache was restored or modified."
+  ],
+  "copilotModified": false,
+  "gatewayModified": false,
+  "goalComplete": false,
+  "specificationIndependentPreflight": {
+    "sections": 20,
+    "characters": 57120,
+    "sha256": "1d237e989faeed58bc3a1d2d4c486d1754635f996851420c747fdcb953eaa924",
+    "pathOperations": 141,
+    "pathCounts": {
+      "create": 60,
+      "update": 75,
+      "reference": 6
+    },
+    "retainedOwners": {
+      "specs/recurrence-calendar.md": "20ef11a108758e1d264c7fedacf6572af871041751aa959f7b00d57210c35ea0",
+      "specs/recurrence-execution-foundation.md": "e0575cf09f6bd2b805956c9a17d16ebe1bd4808b3062b2d0588513d2991d8c4d",
+      "specs/recurrence-storage-continuation.md": "c79c018e359e26e6f6ab0d774c55c7bd39d39452dc06dee81f0d138eb469b43b"
+    },
+    "scope": "Independent 20-section/path-inventory/retained-owner-byte preflight. Native SDK format/budget/catalog acceptance remains separate; no SDK cache was restored or modified."
+  },
+  "publishedRuntime": {
+    "commit": "93d7d77b98a196640bf0049bca36a3d90b7a5857",
+    "sourceArchiveSHA256": "97dc46699ad7eab54c487386ffaffc28624e8e50f9d3a2f1ffc6b525fb7b8f0e"
+  },
+  "sourceCorrections": {
+    "taskRecovery": "Current task-read and recorded original command authorization, actor/action/key scope, without requiring the separate operations.read browsing grant. The general operation-by-ID query retains its permission.",
+    "textLimits": "Shared title160, description4000 and reason1000 Unicode code-point limits; visible invalid state prevents submission and preserves the entered draft. Native maxlength remains a UTF-16 capacity bound that permits astral characters.",
+    "regressions": "Explicit operations.read denial with retained claim/complete grants; current permission revocation and foreign actor; real restricted lost completion recovery; exact code-point limits in both browser deployments.",
+    "previewRepackaging": "Edge.9 exact pinned installer verified on both CPU families with44household/task browser journeys each.",
+    "upstreamAccuracyReport": "https://github.com/vypdev/copilot/issues/879",
+    "findingState": "The five task/documentation observations were natively verified fixed, and pagination classified obsolete at b2729f3 with complete coverage and zero active findings. Fresh review is required for later commits; no manual finding resolution or dismissal.",
+    "reviewReasons": "Reject/reopen are disabled for blank or whitespace-only reasons. Approval may omit a reason. The 1,000-code-point bound and current authorization remain unchanged."
+  },
+  "precedingCandidateVerification": {
+    "version": "0.0.0-edge.8",
+    "storageSchema": 9,
+    "artifact": "addon-edge/artifact.json",
+    "bothCPUVerification": {
+      "scope": "Actual pinned installer images; exact155product file fingerprints, native restart/authority, standalone UI and frozen Edge.5 upgrade/replay/restore per CPU. Browser campaign uses real image product with fictional HA/Supervisor transports.",
+      "images": {
+        "aarch64": {
+          "imageID": "sha256:5b5662d99e4d2d843dc5c6452eece07a195925411123128bbf0284ea851f85de",
+          "pinnedImageChecksPassed": 4,
+          "actualImageBrowserJourneysPassed": 42
+        },
+        "amd64": {
+          "imageID": "sha256:7daea4c9c04e92bc30e5f3b50c136cb4cccc62ef24aa282aec1e8efc54c56dfb",
+          "pinnedImageChecksPassed": 4,
+          "actualImageBrowserJourneysPassed": 42
+        }
+      }
+    },
+    "ownerAdoption": "Pending: Chrome browser control reports native pipe unavailable; native observation has stale/empty page content and a uniform screenshot. HA responds to an unauthenticated HTTP request. No installation/update is claimed.",
+    "supersededByPendingCorrectedPreview": true
+  },
+  "previewCandidate": {
+    "version": "0.0.0-edge.9",
+    "sourceCommit": "93d7d77b98a196640bf0049bca36a3d90b7a5857",
+    "sourceArchiveSHA256": "97dc46699ad7eab54c487386ffaffc28624e8e50f9d3a2f1ffc6b525fb7b8f0e",
+    "storageSchema": 9,
+    "artifact": "addon-edge/artifact.json",
+    "bothCPUVerification": {
+      "scope": "Actual pinned installers, exact 151 Python/four UI fingerprints, native authority/restart, standalone delivery and frozen Edge.5 upgrade/replay/restore on both CPU families. Each actual-image browser campaign has44expected, zero unexpected/skipped/flaky; HA/Supervisor transports are fictional fixtures, distinct from owner adoption.",
+      "images": {
+        "aarch64": {
+          "imageID": "sha256:3f46dc72e93c6aa2df637948580ed8d5d3093c5aa08470db751b7fb24e55a39f",
+          "pinnedImageChecksPassed": 4,
+          "actualImageBrowserJourneysPassed": 44
+        },
+        "amd64": {
+          "imageID": "sha256:5e0408f902cc98c48b911b7bebaf983c419d419145d6a17123dee6a4412668a3",
+          "pinnedImageChecksPassed": 4,
+          "actualImageBrowserJourneysPassed": 44
+        }
+      }
+    },
+    "ownerAdoption": "Installed, configured and started on actual owner HA; existing HA session, development household setup, create/claim/complete/reopen/second completion, saved Spanish preference and persisted detail after reload observed. Source is exactly the pinned 93d7d77 candidate; later source corrections are not silently included."
+  },
+  "paginationReview": {
+    "scope": "Next page replaces one bounded page; Refresh tasks rereads the first page, with fresh current authority. No accumulating list is promised.",
+    "regression": "frontend/tests/task-controller.test.ts",
+    "upstreamReport": "https://github.com/vypdev/copilot/issues/880"
+  },
+  "ownerPreparation": {
+    "scope": "The owner Edge.7 app was freshly observed running in Chrome; a selected local partial backup was created and its catalog inspected, then the app was observed started. Actual backup restoration has not been exercised. Private identifiers/screenshots remain local.",
+    "next": "Keep the selected Edge.7 backup and rollback until the next corrected preview has been verified; continue recurrence/calendar implementation."
+  },
+  "ownerAdoption": {
+    "version": "0.0.0-edge.9",
+    "sourceCommit": "93d7d77b98a196640bf0049bca36a3d90b7a5857",
+    "deployment": "Actual Home Assistant Supervisor installation and Ingress, operated through Chrome native controls.",
+    "dataBoundary": "Separate app/private data from the prior Edge.7 repository; a new development household was explicitly created. No in-place migration claim.",
+    "observed": [
+      "Installation completed with an ok result; Supervisor reported Edge.9 installed and running.",
+      "The exact local HA browser origin was saved; existing HA identity was verified without another login.",
+      "Created one development task, claimed it, completed it, reopened it with a reason and completed a second cycle.",
+      "Changed the visible UI to Spanish, reviewed/saved the private Spanish preference and reloaded HA.",
+      "The task list and selected second completed cycle remained present after reload, in Spanish."
+    ],
+    "notExercised": [
+      "Actual two-account adult/restricted review on owner HA; that journey is covered by isolated real-product fixtures.",
+      "Actual backup restoration, stock posting, points, notification or automation delivery.",
+      "Human UX acceptance; agent observation is distinct."
+    ],
+    "privateEvidence": "Original owner screenshots and compact receipt retained locally under /private/tmp/domus-owner-edge9-93d7d77; private identifiers are not published.",
+    "priorRollback": "Selected local Edge.7 backup was created and inspected; prior app is retained until the next corrected preview is accepted."
+  },
+  "actualImageBrowserHarnessCorrection": {
+    "runtime": {
+      "imageId": "sha256:a29e09738084d5573c71b9606fbafe63741f068e56a454ccc8fa18880a3f1301",
+      "runtimeSource": "8d2742ef596f23128ea2e0600db9f41e79c70531",
+      "pythonModules": 154,
+      "uiFiles": 4,
+      "wheelSha256": "0f2ed83b9e25874decf1017f354e446c8670bcd7bf3e12f010d8401dde183674",
+      "allRuntimeBytes": "image matches exact reviewed wheel"
+    },
+    "originalFailure": {
+      "run": 41762169957,
+      "job": 126352129417,
+      "architecture": "aarch64",
+      "failed": 2,
+      "observation": "Chromium Network.getResponseBody could not return the original reopening body, even after capture was moved to the response event. Cache eviction or navigation cause is not independently established. The CI job did not yet retain its trace files."
+    },
+    "correction": "The test intercepts the actual UI reopening request, fetches once with zero retries/redirects, retains real upstream bytes before forwarding that same status/headers/body, then checks one POST, no navigation, retained cycle and current SQLite state. No fabricated payload or production change.",
+    "verified": {
+      "toolingTests": 181,
+      "toolingCoverage": "100% supported statement and branch coverage",
+      "newCiContracts": "2 red first, then green: per-CPU always-retained browser evidence and post-failure fixture-retirement audit",
+      "frontendTypecheck": "passed",
+      "targetedBrowserExecutions": 6,
+      "actualAarch64ImageJourneys": 44,
+      "unexpected": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "actualImageCampaignMilliseconds": 76857.33,
+      "survivingFixtureContainers": 0
+    },
+    "pending": "Fresh exact-head hosted validation of the test/CI correction in both CPU jobs; complete recurrence/calendar and installed owner product acceptance remain separate."
+  }
+}

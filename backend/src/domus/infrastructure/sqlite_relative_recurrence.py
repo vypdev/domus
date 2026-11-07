@@ -6,14 +6,20 @@ from typing import cast
 
 from domus.domain.errors import Conflict, DomusError, InvalidInput, StorageFailure
 from domus.domain.recurrence_records import MAINTENANCE_ACTOR, ScheduleState
+from domus.domain.relative_lifecycle import RelativeClosure
 from domus.domain.relative_recurrence import RelativeProgress, RelativeSchedule, RelativeSlot
-from domus.domain.storage import CommandKey, JsonDocument, validate_identifier
+from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 from domus.infrastructure.sqlite_recurrence_rows import (
     SQLiteRecurrenceRows,
     _expected,
     _model,
     _page,
+)
+from domus.infrastructure.sqlite_relative_lifecycle import (
+    SQLiteRelativeInbox,
+    read_relative_closure,
+    relative_closure_document,
 )
 from domus.infrastructure.sqlite_relative_recurrence_records import (
     read_relative_progress,
@@ -78,7 +84,51 @@ def _slot_headers(value: RelativeSlot) -> dict[str, object]:
 
 
 @dataclass
-class SQLiteRelativeRecurrences(SQLiteRecurrenceRows):
+class SQLiteRelativeRecurrences(SQLiteRecurrenceRows, SQLiteRelativeInbox):
+    def _verify_closure(self, value: RelativeClosure) -> None:
+        receipt = SQLiteReceipts(self.connection).get(value.operation.command)
+        if value.installation != self.installation or not value.matches_receipt(receipt):
+            raise StorageFailure("invalid_relative_closure_record")
+        slot = value.successor
+        if slot is not None:
+            saved = self.relative_slot(value.schedule.household_id, slot.key)
+            if saved != (None if cast(Receipt, receipt).historical else slot):
+                raise StorageFailure("invalid_relative_closure_record")
+
+    def relative_closure(self, household_id: str, closure_key: str) -> RelativeClosure | None:
+        validate_identifier(household_id)
+        validate_identifier(closure_key)
+        row = self.connection.execute(
+            "SELECT * FROM recurrence_relative_closures WHERE household_id=? AND closure_key=?",
+            (household_id, closure_key),
+        ).fetchone()
+        if row is None:
+            return None
+        value = read_relative_closure(row["document"])
+        if (value.schedule.household_id, value.key, value.operation.operation_id) != (
+            household_id,
+            closure_key,
+            row["operation_id"],
+        ):
+            raise StorageFailure("invalid_relative_closure_record")
+        self._verify_closure(value)
+        return value
+
+    def add_relative_closure(self, value: RelativeClosure) -> None:
+        self._verify_closure(value)
+        try:
+            self.connection.execute(
+                "INSERT INTO recurrence_relative_closures VALUES (?,?,?,?)",
+                (
+                    value.schedule.household_id,
+                    value.key,
+                    value.operation.operation_id,
+                    relative_closure_document(value).encoded,
+                ),
+            )
+        except sqlite3.IntegrityError:
+            raise Conflict("relative_closure_conflict") from None
+
     def relative_schedule(self, household_id: str, schedule_id: str) -> RelativeSchedule | None:
         validate_identifier(household_id)
         validate_identifier(schedule_id)
@@ -158,6 +208,18 @@ class SQLiteRelativeRecurrences(SQLiteRecurrenceRows):
             self.connection.execute(
                 "SELECT * FROM recurrence_relative_slots WHERE household_id=? AND slot_key=?",
                 (household_id, slot_key),
+            ).fetchone()
+        )
+
+    def relative_slot_for_occurrence(
+        self, household_id: str, occurrence_id: str
+    ) -> RelativeSlot | None:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        return self._relative_slot(
+            self.connection.execute(
+                "SELECT * FROM recurrence_relative_slots WHERE household_id=? AND occurrence_id=?",
+                (household_id, occurrence_id),
             ).fetchone()
         )
 

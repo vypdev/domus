@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.0.0-edge.9
+
+- Recover the caller's original task action using its current recorded task authority, even when
+  general operation browsing is disabled; retain the separate browsing permission boundary.
+- Enforce shared Unicode code-point limits in task forms, preserve overlong drafts and show the
+  field that needs correction; accept the exact limits for astral characters.
+- Exercise restricted lost-response recovery and exact Unicode limits in both deployment modes,
+  increasing the actual-image campaign to 44 household/task journeys per CPU.
+- Replace the earlier Edge.8 candidate with a distinct immutable reviewed runtime.
+- Retain schema 9, cold backups and the existing Core API permission scope.
+
+## 0.0.0-edge.8
+
+- Make Tasks the default household screen, with English/Spanish creation, list and detail.
+- Claim and complete work as the current participant; approve, reject or reopen the current cycle.
+- Review adjustable linked-material quantities without inventing stock or downstream delivery.
+- Recover an uncertain original task request through an authorized read, without another command.
+- Keep household administration available and move technical task details behind optional disclosure.
+- Retain schema 9, cold backups, both CPU families and the existing Core API permission scope.
+- Add eight task journeys to the actual-image browser campaign; owner adoption remains separate.
+
 ## 0.0.0-edge.7
 
 - Require cold Supervisor backups so the app is stopped while its private SQLite data is copied.

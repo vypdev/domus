@@ -1,0 +1,68 @@
+/** Same-origin task transport with bounded reads and no automatic write retry. */
+import {EntryReadError} from '../application/ports';
+import type {TaskCommandResult, TaskOriginal, TaskRequest, TaskServer} from '../application/task-ports';
+import type {JournalContext} from '../domain/journal';
+import type {TaskCommand} from '../domain/tasks';
+import {BoundedHTTP, reason} from './http-transport';
+import type {FetchTransport} from './http-transport';
+import type {EntryEndpoint} from './http-values';
+import {assertion, csrf, failure} from './http-values';
+import {boolean, check, fields, identifier} from './json-values';
+import {taskCommandBody, taskDetail, taskPage, taskReceipt, taskRequest} from './task-values';
+function route(command: TaskCommand): string {
+  if (command.action === 'task.create') return 'tasks/definitions';
+  const action = command.action.slice(5);
+  return 'tasks/occurrences/' + command.occurrenceId + '/' + action;
+}
+export class HttpTaskServer implements TaskServer {
+  private readonly network: BoundedHTTP;
+  constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
+  access(expected: JournalContext) {
+    return this.network.owned(async signal => {
+      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'], ['can_review_schedule']);
+      return Object.freeze({householdId: identifier(access.household_id), memberId: identifier(access.member_id), canCreate: boolean(access.can_create),
+        canReviewSchedule: access.can_review_schedule === undefined ? false : boolean(access.can_review_schedule)});
+    });
+  }
+  list(expected: JournalContext, cursor: string | null) {
+    return this.network.owned(async signal => {
+      check(cursor === null || typeof cursor === 'string' && cursor.length > 0 && cursor.length <= 512);
+      const query = new URLSearchParams({limit: '25'}); if (cursor !== null) query.set('cursor', cursor);
+      return taskPage(await this.network.get('tasks/occurrences?' + query.toString(), expected, signal));
+    });
+  }
+  detail(occurrenceId: string, householdId: string, expected: JournalContext) {
+    return this.network.owned(async signal => {
+      const id = identifier(occurrenceId), home = identifier(householdId);
+      return taskDetail(await this.network.get('tasks/occurrences/' + id, expected, signal), id, home);
+    });
+  }
+  original(value: TaskOriginal, expected: JournalContext) {
+    return this.network.owned(async signal => {
+      const input = taskRequest(value, true);
+      return taskReceipt(await this.network.get('tasks/requests/' + input.command.action + '/' + input.key, expected, signal), input, true);
+    });
+  }
+  async send(value: TaskRequest, expected: JournalContext): Promise<TaskCommandResult> {
+    let posted = false;
+    return this.network.owned(async signal => {
+      let input: TaskRequest;
+      try {input = taskRequest(value, false);}
+      catch {return Object.freeze({kind: 'rejected' as const, reason: 'invalid_input' as const, correlationId: null});}
+      let token: string;
+      try {assertion(expected); token = csrf(await this.network.get('auth/csrf', expected, signal));}
+      catch (error) {return Object.freeze({kind: 'rejected' as const, reason: error instanceof EntryReadError ? error.code : 'unavailable' as const, correlationId: null});}
+      try {
+        const body = taskCommandBody(input.command);
+        if (signal.aborted) throw new EntryReadError('unavailable');
+        posted = true;
+        const reply = await this.network.request(route(input.command), 'POST', expected, body, input.key, token, signal);
+        if (reply.status === 200) return taskReceipt(reply.value, input, false);
+        if ([401,403,409,422,503].includes(reply.status)) return Object.freeze({kind: 'rejected' as const,
+          reason: reason(reply.status), correlationId: failure(reply.value)});
+      } catch {/* An unbound or missing reply cannot establish absence of the committed effect. */}
+      return Object.freeze({kind: 'uncertain' as const});
+    }).result.catch(() => posted ? Object.freeze({kind: 'uncertain' as const})
+      : Object.freeze({kind: 'rejected' as const, reason: 'unavailable' as const, correlationId: null}));
+  }
+}

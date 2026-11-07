@@ -12,16 +12,17 @@ from domus.domain.recurrence_planning import (
     PlannedFixedSlot,
     cursor_binding,
 )
-from domus.domain.recurrence_rules import FixedPattern, NominalDate
-from domus.domain.recurrence_time import TimePolicy
+from domus.domain.recurrence_rules import FixedPattern, NominalDate, NominalSlot, slot_datetime
+from domus.domain.recurrence_time import NominalTime, TimePolicy
 from domus.domain.storage import (
     CommandKey,
     Installation,
     JsonDocument,
+    JsonObject,
     Receipt,
     validate_identifier,
 )
-from domus.domain.task_values import validate_task_time
+from domus.domain.task_values import validate_task_text, validate_task_time
 
 MAINTENANCE_ACTOR = "system:recurrence"
 
@@ -30,6 +31,35 @@ class ScheduleState(StrEnum):
     ACTIVE = "active"
     PAUSED = "paused"
     RETIRED = "retired"
+
+
+class FixedExceptionKind(StrEnum):
+    EXCLUDE = "exclude"
+    ADD = "add"
+
+
+@dataclass(frozen=True, slots=True)
+class FixedException:
+    kind: FixedExceptionKind
+    nominal: NominalSlot
+    reason: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.kind, FixedExceptionKind) or not isinstance(
+            self.nominal, NominalDate | NominalTime
+        ):
+            raise InvalidInput("invalid_recurrence_exception")
+        validate_task_text(self.reason, 1000, required=True, multiline=True)
+
+    def value(self) -> JsonObject:
+        return {
+            "kind": self.kind.value,
+            "nominal": {
+                "kind": "date" if isinstance(self.nominal, NominalDate) else "time",
+                "local": self.nominal.local.isoformat(),
+            },
+            "reason": self.reason,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +73,7 @@ class FixedSchedule:
     state: ScheduleState = ScheduleState.ACTIVE
     revision: int = 1
     pattern_revision: int = 1
+    exceptions: tuple[FixedException, ...] = ()
 
     def __post_init__(self) -> None:
         for value in (self.schedule_id, self.household_id, self.definition_id):
@@ -57,6 +88,30 @@ class FixedSchedule:
             or self.pattern_revision > self.revision
         ):
             raise InvalidInput("invalid_recurrence_schedule")
+        if type(self.exceptions) is not tuple or any(
+            not isinstance(item, FixedException)
+            or type(item.nominal) is not type(self.pattern.start)
+            for item in self.exceptions
+        ):
+            raise InvalidInput("invalid_recurrence_exception")
+        if len({item.nominal for item in self.exceptions}) != len(self.exceptions) or any(
+            sum(item.kind is kind for item in self.exceptions) > 128 for kind in FixedExceptionKind
+        ):
+            raise InvalidInput("invalid_recurrence_exception")
+        if self.exceptions:
+            document = JsonDocument.from_value(
+                {"exceptions": [item.value() for item in self.exceptions]}
+            )
+            if len(document.encoded.encode("utf-8")) > 48 * 1024:
+                raise InvalidInput("invalid_recurrence_exception")
+            object.__setattr__(
+                self,
+                "exceptions",
+                tuple(sorted(self.exceptions, key=lambda item: slot_datetime(item.nominal))),
+            )
+
+    def exception(self, nominal: NominalSlot) -> FixedException | None:
+        return next((item for item in self.exceptions if item.nominal == nominal), None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,6 +191,7 @@ class ScheduledSlot:
     planned: PlannedFixedSlot
     occurrence_id: str
     created_at: int
+    added: bool = False
 
     def __post_init__(self) -> None:
         validate_identifier(self.occurrence_id)
@@ -150,9 +206,34 @@ class ScheduledSlot:
                 and self.planned.resolved.policy != self.schedule.policy
             )
             or self.created_at < self.schedule.created_at
-            or not accepts_fixed_slot(self.schedule.pattern, self.planned)
+            or type(self.added) is not bool
+            or (
+                self.addition is None
+                if self.added
+                else not accepts_fixed_slot(self.schedule.pattern, self.planned)
+            )
         ):
             raise InvalidInput("invalid_recurrence_slot")
+
+    @property
+    def addition(self) -> FixedException | None:
+        item = self.schedule.exception(self.planned.nominal)
+        return item if item is not None and item.kind is FixedExceptionKind.ADD else None
+
+    def addition_result(self) -> JsonDocument:
+        item = self.addition
+        assert self.added and item is not None
+        return JsonDocument.from_value(
+            {
+                "slot_key": self.key,
+                "occurrence_id": self.occurrence_id,
+                "schedule_id": self.schedule.schedule_id,
+                "definition_id": self.schedule.definition_id,
+                "nominal": item.value()["nominal"],
+                "addition": item.value(),
+                "planned": self.planned.value(),
+            }
+        )
 
     def consistent_with(self, schedule: FixedSchedule) -> bool:
         """Older snapshots survive edits; future or contradictory generations do not."""
@@ -164,6 +245,7 @@ class ScheduledSlot:
             and source.created_at == schedule.created_at
             and source.revision <= schedule.revision
             and source.pattern_revision <= schedule.pattern_revision
+            and all(item in schedule.exceptions for item in source.exceptions)
             and (
                 source.pattern_revision < schedule.pattern_revision
                 or (source.pattern == schedule.pattern and source.policy == schedule.policy)
@@ -174,6 +256,8 @@ class ScheduledSlot:
         """Original generation and realized facts must survive later rule edits unchanged."""
         if receipt is None or receipt.command != self.command or receipt.historical:
             return False
+        if self.added:
+            return receipt.result == self.addition_result()
         result = receipt.result.decode()
         core = result.get("cursor_evidence")
         if not isinstance(core, dict):
@@ -219,7 +303,11 @@ class ScheduledSlot:
                 "channel": self.installation.channel,
                 "household": self.schedule.household_id,
                 "schedule": self.schedule.schedule_id,
-                "pattern_revision": self.schedule.pattern_revision,
+                **(
+                    {"addition": True}
+                    if self.added
+                    else {"pattern_revision": self.schedule.pattern_revision}
+                ),
                 "kind": "date" if isinstance(self.planned.nominal, NominalDate) else "time",
                 "nominal": self.planned.nominal.local.isoformat(),
             }

@@ -130,6 +130,7 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         "frontend/.storybook/preview.ts",
         "frontend/stories/entry.stories.ts",
         "frontend/stories/administration.stories.ts",
+        "frontend/stories/tasks.stories.ts",
         "frontend/playwright.config.ts",
         "frontend/playwright.entry.config.ts",
         "frontend/vite.config.ts",
@@ -256,19 +257,23 @@ def test_installed_copilot_resources_are_unchanged(relative: str, expected: str)
     assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected, relative
 
 
-def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> None:
+def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     steps = workflow()["jobs"]["containers"]["steps"]
     actual = next(
         step
         for step in steps
-        if step.get("name") == "Execute administration in the actual isolated image from Chromium"
+        if step.get("name")
+        == "Execute household workflows in the actual isolated image from Chromium"
     )
     assert actual["env"] == {
         "DOMUS_BROWSER_IMAGE": "domus-app-ci",
         "DOMUS_TEST_SOURCE_COMMIT": "${{ github.sha }}",
         "DOMUS_TEST_ARCH": "${{ matrix.arch }}",
     }
-    assert "playwright.entry.config.ts tests/e2e/administration.spec.ts" in actual["run"]
+    assert (
+        "playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts"
+        " tests/e2e/workspace-navigation.spec.ts" in actual["run"]
+    )
     assert "--grep" not in actual["run"]
     assert "--pass-with-no-tests" not in actual["run"]
     commands = [step["run"] for step in steps if "run" in step]
@@ -277,10 +282,10 @@ def test_both_cpu_images_run_all_actual_administration_browser_journeys() -> Non
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all thirty-four actual-image administration journeys"
+        if step.get("name") == "Require all forty-six actual-image household journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
-    assert "expected']==34" in audit["run"]
+    assert "expected']==46" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )
@@ -322,3 +327,35 @@ def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair
     assert "assert SCHEMA_VERSION == 9" in fixture
     assert "pnpm install --frozen-lockfile" in fixture
     assert "uv sync --frozen --no-dev --package domus-server --no-editable" in fixture
+
+
+def test_actual_image_browser_evidence_is_retained_per_cpu_even_after_failure() -> None:
+    steps = workflow()["jobs"]["containers"]["steps"]
+    artifact = next(
+        (step for step in steps if step.get("name") == "Retain actual-image browser evidence"),
+        None,
+    )
+    assert artifact is not None, "A failing actual-image browser run must retain its evidence"
+    assert artifact["if"] == "${{ always() }}"
+    assert artifact["with"]["name"] == "image-browser-${{ matrix.arch }}-${{ github.sha }}"
+    assert artifact["with"]["path"] == "frontend/test-results/"
+    assert artifact["with"]["include-hidden-files"] == "true"
+    assert artifact["with"]["retention-days"] == "7"
+    assert artifact["with"]["if-no-files-found"] == "warn"
+    execution = next(
+        step
+        for step in steps
+        if step.get("name")
+        == "Execute household workflows in the actual isolated image from Chromium"
+    )
+    assert steps.index(artifact) > steps.index(execution)
+
+
+def test_actual_image_fixture_retirement_is_checked_even_after_browser_failure() -> None:
+    cleanup = next(
+        step
+        for step in workflow()["jobs"]["containers"]["steps"]
+        if step.get("name") == "Require no surviving image browser fixtures"
+    )
+    assert cleanup.get("if") == "${{ always() }}"
+    assert "continue-on-error" not in cleanup

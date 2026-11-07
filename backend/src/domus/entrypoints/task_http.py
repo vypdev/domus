@@ -2,11 +2,14 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query, Request
 from fastapi.params import Depends
 
+from domus.application.calendar_commands import CalendarCommands
+from domus.application.calendar_queries import CalendarQueries
+from domus.application.recurrence_review import RecurrenceReview
 from domus.application.task_commands import TaskCommands
 from domus.application.task_queries import (
     DefinitionSummary,
@@ -16,6 +19,7 @@ from domus.application.task_queries import (
     TaskPage,
     TaskPolicyView,
     TaskQueries,
+    TaskWorkspaceView,
 )
 from domus.application.task_requests import (
     AssignTask,
@@ -35,6 +39,7 @@ from domus.application.task_requests import (
 from domus.application.task_reviews import DependencyReviewView
 from domus.domain.task_material_values import MaterialQuantity
 from domus.domain.task_values import DefinitionState
+from domus.entrypoints.calendar_http import create_calendar_router
 from domus.entrypoints.household_http import (
     OperationResponse,
     ReceiptResponse,
@@ -43,6 +48,7 @@ from domus.entrypoints.household_http import (
     _key,
     _receipt,
 )
+from domus.entrypoints.recurrence_http import create_recurrence_review_router
 from domus.entrypoints.task_dto import (
     AssignmentBody,
     CompleteBody,
@@ -71,11 +77,23 @@ from domus.entrypoints.task_response import (
     detail_response,
 )
 
+TaskWorkspaceAction = Literal[
+    "task.create", "task.claim", "task.complete", "task.verify", "task.reopen"
+]
+
+
+class TaskOriginalResponse(OperationResponse):
+    action: TaskWorkspaceAction
+    command_key: str
+
 
 @dataclass(frozen=True, slots=True)
 class TaskHTTPContext:
     queries: Callable[[], TaskQueries]
     commands: TaskCommands
+    recurrence_review: RecurrenceReview
+    calendar: Callable[[], CalendarQueries]
+    calendar_commands: CalendarCommands
 
 
 def create_task_router(
@@ -88,6 +106,10 @@ def create_task_router(
             for name in ("Idempotency-Key", "Origin", "X-CSRF-Token")
         ]
     }
+
+    @router.get("/access", response_model=TaskWorkspaceView)
+    def workspace(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskWorkspaceView:
+        return context(request).queries().workspace()
 
     @router.get("/policy", response_model=TaskPolicyView)
     def policy(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskPolicyView:
@@ -447,4 +469,32 @@ def create_task_router(
             else "pending",
         )
 
+    @router.get("/requests/{action}/{key}", response_model=TaskOriginalResponse)
+    def original_request(
+        action: TaskWorkspaceAction,
+        key: Identifier,
+        request: Request,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> TaskOriginalResponse:
+        view = context(request).queries().original(action, key)
+        return TaskOriginalResponse(
+            **_receipt(view.receipt).model_dump(),
+            action=action,
+            command_key=key,
+            delivery="suppressed"
+            if view.receipt.historical
+            else "delivered"
+            if view.delivered
+            else "pending",
+        )
+
+    router.include_router(
+        create_recurrence_review_router(lambda request: context(request).recurrence_review)
+    )
+    router.include_router(
+        create_calendar_router(
+            lambda request: context(request).calendar(),
+            lambda request: context(request).calendar_commands,
+        )
+    )
     return router

@@ -57,6 +57,14 @@ class TaskPage[T]:
 
 
 @dataclass(frozen=True, slots=True)
+class TaskWorkspaceView:
+    household_id: str
+    member_id: str
+    can_create: bool
+    can_review_schedule: bool
+
+
+@dataclass(frozen=True, slots=True)
 class TaskPolicyView:
     rules: TaskRules
     revision: int
@@ -444,7 +452,10 @@ class TaskQueries:
                 reason = cast(str, request["reason"])
                 material_action = MaterialAction(cast(str, request["action"]))
                 material_intent_id = cast(str, request["intent_id"])
-            if evidence.receipt.command.action == "task.dependency.review":
+            if evidence.receipt.command.action in {
+                "task.dependency.review",
+                "task.recurrence.reschedule",
+            }:
                 reason = cast(str, request["reason"])
             validate_task_text(reason, 1000, required=False, multiline=True)
             cycle = value.get("cycle")
@@ -489,28 +500,70 @@ class TaskQueries:
             material_intent_id=material_intent_id,
         )
 
+    def workspace(self) -> TaskWorkspaceView:
+        """Return task-specific affordances without widening the administration permission scope."""
+        with self.transactions.read() as unit:
+            actor = self._read(unit)
+            can_create = _possible(
+                lambda: TaskAccess(self.human).require(
+                    unit, self.household_id, Permission.TASKS_CREATE
+                )
+            )
+            can_review = _possible(
+                lambda: TaskAccess(self.human).require(
+                    unit, self.household_id, Permission.TASKS_MANAGE
+                )
+            )
+            return TaskWorkspaceView(
+                self.household_id, actor.member.member_id, can_create, can_review
+            )
+
+    def _operation_access(self, unit: UnitOfWork) -> None:
+        actor = self._read(unit)
+        HouseholdAccess(self.human).require(
+            unit,
+            self.household_id,
+            Permission.OPERATIONS_READ,
+            subject_member_id=actor.member.member_id,
+        )
+
+    def _operation_view(self, unit: UnitOfWork, operation_id: str) -> OperationView:
+        row = unit.tasks.operation(self.household_id, self.human.ha_user_id, operation_id)
+        if row is None:
+            raise NotFound("operation_missing")
+        authority = recorded_authorization(TaskAccess(self.human), row.evidence)
+        authority.require(row.evidence.receipt.command, unit)
+        receipt = replace(
+            row.evidence.receipt,
+            restoration=None
+            if row.archived_by is None
+            else RestorationProvenance(row.archived_by, row.current),
+        )
+        return OperationView(receipt, row.evidence.delivered)
+
     def operation(self, operation_id: str) -> OperationView:
         validate_identifier(operation_id)
         with self.transactions.read() as unit:
-            actor = self._read(unit)
-            HouseholdAccess(self.human).require(
-                unit,
-                self.household_id,
-                Permission.OPERATIONS_READ,
-                subject_member_id=actor.member.member_id,
-            )
-            row = unit.tasks.operation(self.household_id, self.human.ha_user_id, operation_id)
-            if row is None:
+            self._operation_access(unit)
+            return self._operation_view(unit, operation_id)
+
+    def original(self, action: str, key: str) -> OperationView:
+        """Recover the caller's original workspace request without executing or resending it."""
+        if action not in {
+            "task.create",
+            "task.claim",
+            "task.complete",
+            "task.verify",
+            "task.reopen",
+        }:
+            raise Forbidden("permission_denied")
+        command = CommandKey(self.household_id, self.human.ha_user_id, action, key)
+        with self.transactions.read() as unit:
+            self._read(unit)
+            receipt = unit.receipts.get(command)
+            if receipt is None:
                 raise NotFound("operation_missing")
-            authority = recorded_authorization(TaskAccess(self.human), row.evidence)
-            authority.require(row.evidence.receipt.command, unit)
-            receipt = replace(
-                row.evidence.receipt,
-                restoration=None
-                if row.archived_by is None
-                else RestorationProvenance(row.archived_by, row.current),
-            )
-            return OperationView(receipt, row.evidence.delivered)
+            return self._operation_view(unit, receipt.operation_id)
 
     def _actions(
         self,

@@ -3,7 +3,7 @@ import {playwright} from '@vitest/browser-playwright';
 import {completeCoverage} from '../tooling/frontend-coverage.mjs';
 
 export default defineConfig({optimizeDeps: {include: [
-  'lit', 'lit/directives/guard.js', 'lit/directives/live.js', 'lit/directives/repeat.js',
+  'lit', 'lit/directives/guard.js', 'lit/directives/keyed.js', 'lit/directives/live.js', 'lit/directives/repeat.js',
   '@vypdev/ha-ui/contracts', '@vypdev/ha-ui/tabs',
 ]}, test: {
   include: ['tests/*.test.ts'],

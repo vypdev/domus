@@ -540,7 +540,8 @@
       "specs": [
         "specs/recurrence-calendar.md",
         "specs/recurrence-execution-foundation.md",
-        "specs/recurrence-storage-continuation.md"
+        "specs/recurrence-storage-continuation.md",
+        "specs/recurrence-lifecycle-calendar.md"
       ],
       "workflows": [],
       "entrypoints": [],

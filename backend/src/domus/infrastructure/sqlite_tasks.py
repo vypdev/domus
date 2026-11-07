@@ -9,6 +9,7 @@ from domus.application.task_ports import TaskRepository, TaskReviewEvidence
 from domus.domain.errors import Conflict, InvalidInput, StorageFailure
 from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import validate_identifier
+from domus.domain.task_events import TaskSourceRecord
 from domus.domain.task_reviews import DependencyReviewState
 from domus.domain.task_values import DefinitionState, OccurrenceState, VerificationState
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
@@ -106,6 +107,13 @@ class SQLiteTasks(TaskRepository):
     connection: sqlite3.Connection
     record_version: int = 2
 
+    def lifecycle_sources(
+        self, household_id: str, *, limit: int = 100, after: int = 0
+    ) -> tuple[TaskSourceRecord, ...]:
+        return SQLiteTaskHistory(self.connection).lifecycle_sources(
+            household_id, limit=limit, after=after
+        )
+
     def lifecycle_events(
         self, household_id: str, *, limit: int = 25, after: int = 0
     ) -> tuple[OperationEvidence, ...]:
@@ -140,6 +148,9 @@ class SQLiteTasks(TaskRepository):
         return SQLiteTaskHistory(self.connection).history(
             household_id, occurrence_id, limit=limit, after=after
         )
+
+    def latest_reschedule(self, household_id: str, occurrence_id: str) -> RetainedOperation | None:
+        return SQLiteTaskHistory(self.connection).latest_reschedule(household_id, occurrence_id)
 
     def operation(
         self, household_id: str, actor_id: str, operation_id: str
@@ -281,6 +292,22 @@ class SQLiteTasks(TaskRepository):
             expected_revision,
         )
 
+    def has_current_dependents(self, household_id: str, occurrence_id: str) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM task_occurrences AS work WHERE household_id=? "
+                "AND state NOT IN ('completed','cancelled','skipped') AND ("
+                "EXISTS (SELECT 1 FROM json_each(work.document,'$.prerequisite_ids') "
+                "WHERE value=?) OR EXISTS (SELECT 1 "
+                "FROM json_each(work.document,'$.required_subtask_ids') WHERE value=?)) "
+                "LIMIT 1",
+                (household_id, occurrence_id, occurrence_id),
+            ).fetchone()
+            is not None
+        )
+
     def occurrences(
         self,
         household_id: str,
@@ -290,6 +317,7 @@ class SQLiteTasks(TaskRepository):
         state: OccurrenceState | None = None,
         definition_id: str | None = None,
         assignee_id: str | None = None,
+        open_only: bool = False,
     ) -> tuple[TaskOccurrence, ...]:
         where, parameters = _page(household_id, limit, after, "occurrence_id")
         if state is not None:
@@ -308,6 +336,8 @@ class SQLiteTasks(TaskRepository):
                 "AS assigned WHERE assigned.value=?)"
             )
             parameters.append(assignee_id)
+        if open_only:
+            where.append("state NOT IN ('completed','cancelled','skipped')")
         rows = self.connection.execute(
             "SELECT * FROM task_occurrences WHERE "
             + " AND ".join(where)

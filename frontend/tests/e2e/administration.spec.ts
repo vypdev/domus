@@ -12,11 +12,12 @@ async function signIn(page:Page,mode:Mode) {
   if(mode==='standalone') {
     await page.getByRole('button',{name:'Sign in with Home Assistant',exact:true}).click();
     await page.getByRole('link',{name:'Continue as fixture user',exact:true}).click();
+    await page.goto(page.url().split('#')[0]+'#household');
   }
 }
 async function create(page:Page,context:BrowserContext,mode:Mode) {
   if(mode==='native')await context.addCookies([{name:'ingress_session',value:'f'.repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
-  await page.goto(base(mode)+'/');await signIn(page,mode);
+  await page.goto(base(mode)+'/#household');await signIn(page,mode);
   await page.getByLabel('Household name',{exact:true}).fill('Maple House');await page.getByLabel('Timezone',{exact:true}).fill('UTC');
   await page.getByRole('button',{name:'Create household',exact:true}).click();
   const widget=page.locator('domus-administration');await expect(widget.getByRole('heading',{name:'Household administration',exact:true})).toBeVisible();
@@ -92,7 +93,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     try{
       if(mode==='native')await peer.addCookies([{name:'ingress_session',value:(actors==='same_account'?'d':'e').repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
       else if(actors==='different_accounts')expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:'c'.repeat(32)}})).ok()).toBe(true);
-      await other.goto(base(mode)+'/');await signIn(other,mode);
+      await other.goto(base(mode)+'/#household');await signIn(other,mode);
       // A different verified HA administrator must explicitly join before the mapping can apply.
       if(actors==='different_accounts')await other.getByRole('button',{name:'Request membership',exact:true}).click();
       const widgets=[widget,other.locator('domus-administration')];
@@ -157,7 +158,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       await widget.getByRole('button',{name:'Close editor',exact:true}).click();
       if(mode==='native')await peer.addCookies([{name:'ingress_session',value:'e'.repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
       else expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:subject.repeat(32)}})).ok()).toBe(true);
-      await other.goto(base(mode)+'/');await signIn(other,mode);
+      await other.goto(base(mode)+'/#household');await signIn(other,mode);
       await other.getByRole('button',{name:'Request membership',exact:true}).click();
       await expect(other.getByRole('heading',{name:'Membership pending',exact:true})).toBeVisible();
       if(mode==='standalone')expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:'a'.repeat(32)}})).ok()).toBe(true);
@@ -207,7 +208,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     try {
       if(mode==='native')await peer.addCookies([{name:'ingress_session',value:'e'.repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
       else expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:subject.repeat(32)}})).ok()).toBe(true);
-      await other.goto(base(mode)+'/');await signIn(other,mode);await other.getByRole('button',{name:'Request membership',exact:true}).click();
+      await other.goto(base(mode)+'/#household');await signIn(other,mode);await other.getByRole('button',{name:'Request membership',exact:true}).click();
       await expect(other.getByRole('heading',{name:'Membership pending',exact:true})).toBeVisible();
       if(mode==='standalone')await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:'a'.repeat(32)}});
       await widget.getByRole('button',{name:'Refresh administration',exact:true}).click();

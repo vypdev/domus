@@ -1,6 +1,7 @@
 /** Coordinate verified application views; concrete document resources and command authority stay with their owners. */
 import type {EntryController, EntryNotice, EntryView} from './entry-controller';
 import type {AdministrationController, AdministrationView} from './administration-controller';
+import type {TaskController, TaskView} from './task-controller';
 import type {JournalContext} from '../domain/journal';
 
 function sameContext(left: JournalContext, right: JournalContext): boolean {
@@ -13,28 +14,45 @@ function sameGrants(left: readonly string[], right: readonly string[]): boolean 
 export class HouseholdController {
   private current: AdministrationController | null = null;
   private currentContext: JournalContext | null = null;
+  private taskCurrent: TaskController | null = null;
   private visible = false;
   private running = false;
   private closed = false;
   private generation = 0;
   private notice: EntryNotice | null = null;
-  constructor(private readonly entry: EntryController, private readonly administrationFactory: () => AdministrationController) {}
+  constructor(private readonly entry: EntryController, private readonly administrationFactory: () => AdministrationController,
+    private readonly taskFactory?: () => TaskController) {}
   get view(): EntryView {
     const view = this.entry.view;
-    return Object.freeze({...view, busy: this.running || view.busy || this.current?.view.busy === true,
+    return Object.freeze({...view, busy: this.running || view.busy || this.current?.view.busy === true || this.taskCurrent?.view.busy === true,
       notice: this.notice ?? view.notice});
   }
   get administration(): AdministrationView | null {return this.visible ? this.current!.view : null;}
+  get tasks(): TaskView | null {
+    if (!this.visible || !this.eligible() || this.taskCurrent === null) return null;
+    const view = this.taskCurrent.view, entry = this.entry.view, administration = this.current!.view;
+    if (view.session === null) return view;
+    if (!sameContext(view.session.context, entry.session!.context) || view.session.access !== entry.session!.access) return null;
+    if (view.access !== null && administration.access?.member != null
+        && (view.access.memberId !== administration.access.member.memberId)) return null;
+    const home = administration.capabilities?.householdId ?? entry.household?.householdId;
+    if (view.access !== null && home !== undefined && home !== view.access.householdId) return null;
+    return view;
+  }
   /** Scheduling needs only absolute deadlines, never a command payload or a renewed proof. */
   get deadlines(): readonly number[] {
-    return Object.freeze([this.entry.view, this.current?.view].flatMap(view => view === undefined ? [] : [
+    const task = this.taskCurrent?.view;
+    return Object.freeze([...task?.session ? [task.session.expiresAt] : [],
+      ...task?.records?.map(record => record.expiresAt) ?? [],
+      ...[this.entry.view, this.current?.view].flatMap(view => view === undefined ? [] : [
       ...view.session === null ? [] : [view.session.expiresAt],
       ...view.journal?.records.map(record => record.expiresAt) ?? [],
-    ]));
+    ])]);
   }
   private live(generation: number): boolean {return !this.closed && generation === this.generation;}
   private retire(): void {
     this.visible = false; this.current?.close(); this.current = null; this.currentContext = null;
+    this.taskCurrent?.close(); this.taskCurrent = null;
   }
   private eligible(): boolean {
     const view = this.entry.view;
@@ -57,10 +75,11 @@ export class HouseholdController {
   /** No tick obtains new proof, extends a lease, sends a command or queries an original operation. */
   tick(): void {
     if (this.closed) return;
-    this.entry.tick(); this.current?.tick();
+    this.entry.tick(); this.current?.tick(); this.taskCurrent?.tick();
     const entry = this.entry.view, administration = this.current?.view;
     if (entry.decision?.state === 'authentication_required'
-        || (administration?.session === null && administration.notice === 'authentication_required')) {
+        || (administration?.session === null && administration.notice === 'authentication_required')
+        || this.taskCurrent?.view.notice === 'authentication_required') {
       this.generation++; this.notice = null; this.entry.expire(); this.retire(); return;
     }
     if (entry.phase === 'ready' && entry.decision?.state !== 'active') {this.notice = null; this.retire(); return;}
@@ -87,11 +106,19 @@ export class HouseholdController {
     if (this.matched()) this.visible = true;
     else {this.retire(); this.notice = 'context_changed';}
   }
-  private async perform(work: (generation: number) => Promise<void>): Promise<void> {
+  private async perform(work: (generation: number) => Promise<void>, refreshTasks = true): Promise<void> {
     if (this.closed || this.view.busy) return;
     this.running = true; this.visible = false; this.notice = null;
     const generation = ++this.generation;
-    try {await work(generation);} finally {this.running = false;}
+    try {
+      await work(generation);
+      if (refreshTasks && this.live(generation) && this.visible && this.eligible() && this.taskFactory !== undefined) {
+        this.taskCurrent ??= this.taskFactory();
+        await this.taskCurrent.refresh();
+        if (this.live(generation) && this.tasks === null) {this.visible = false; this.notice = 'context_changed';}
+        this.tick();
+      }
+    } finally {this.running = false;}
   }
   refresh(): Promise<void> {
     return this.perform(async generation => {
@@ -126,6 +153,19 @@ export class HouseholdController {
   submitAdministration(value: unknown): Promise<void> {return this.administrationWork(controller => controller.submit(value));}
   recoverAdministration(key: string): Promise<void> {return this.administrationWork(controller => controller.recover(key));}
   dismissAdministration(key: string): Promise<void> {return this.administrationWork(controller => controller.dismiss(key));}
+  taskWork(work: (controller: TaskController) => Promise<void>): Promise<void> {
+    const current = this.taskCurrent;
+    if (current === null || this.tasks === null) return Promise.resolve();
+    return this.perform(async generation => {
+      await work(current);
+      if (!this.live(generation)) return;
+      await Promise.all([this.entry.refresh(), this.current!.reconcile()]);
+      await this.synchronize(generation, true);
+      if (this.live(generation) && this.taskCurrent !== null && this.tasks === null) {
+        this.visible = false; this.notice = 'context_changed';
+      }
+    }, false);
+  }
   async logout(): Promise<void> {
     if (this.closed || this.view.busy) return;
     this.closed = true; this.generation++; this.notice = null; this.retire();

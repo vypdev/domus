@@ -267,11 +267,20 @@ class Fixture:
         elif path == "/__fixture__/revision" and request.method == "POST":
             # Direct disposable fixture setup, not a product command or migration/history claim.
             values = await request.json()
-            assert set(values) == {"revision"} and type(values["revision"]) is str
+            assert (
+                set(values) in ({"revision"}, {"revision", "calendar"})
+                and type(values["revision"]) is str
+            )
+            assert "calendar" not in values or values["calendar"] is True
             revision = int(values["revision"])
             assert str(revision) == values["revision"] and 1 <= revision <= 2**63 - 1
             with sqlite3.connect(self.database) as connection:
-                for table in ("households", "members", "household_policy"):
+                tables = (
+                    ("calendar_preferences",)
+                    if values.get("calendar")
+                    else ("households", "members", "household_policy")
+                )
+                for table in tables:
                     cursor = connection.execute(f'UPDATE "{table}" SET revision=?', (revision,))
                     assert cursor.rowcount > 0
             response = JSONResponse({"state": "changed", "fixture": True})

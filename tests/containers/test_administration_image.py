@@ -42,7 +42,7 @@ from domus.infrastructure.application_runtime import SecureIdentifiers, SystemCl
 from domus.infrastructure.sqlite import SQLiteDatabase, SCHEMA_VERSION
 from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
 
-assert SCHEMA_VERSION == 9
+assert SCHEMA_VERSION == 11
 class Human:
     user_id = 'fictional_profile_ha_user'
     def current(self):
@@ -106,7 +106,7 @@ with TemporaryDirectory(prefix='domus-profile-image-') as directory:
             unit.preferences.save(private, 1)
         checkpoint = SQLiteSnapshots(store, Path(directory) / 'snapshot', storage.installation,
             clock).create('profile-checkpoint')
-        assert checkpoint.schema_version == 9
+        assert checkpoint.schema_version == 11
         assert len(tuple((Path(directory) / 'snapshot').iterdir())) == 3
     finally:
         runtime.close()
@@ -328,6 +328,8 @@ def test_actual_compatible_application_data_and_generation_rollback(
     for phase, identifier in (
         ("initialize", previous_id),
         ("later", current_id),
+        ("refuse", previous_id),
+        ("restored", current_id),
         ("rollback", previous_id),
     ):
         result = docker(
@@ -350,11 +352,15 @@ def test_actual_compatible_application_data_and_generation_rollback(
         )
         assert result.returncode == 0, f"{phase}: {result.stdout}\n{result.stderr}"
         observations[phase] = json.loads(result.stdout)
-    before, later, rolled_back = (
-        observations[name] for name in ("initialize", "later", "rollback")
+    before, later, refusal, restored, rolled_back = (
+        observations[name] for name in ("initialize", "later", "refuse", "restored", "rollback")
     )
     assert before["ui"] != later["ui"]
+    assert restored["ui"] == later["ui"]
+    assert restored["generation_id"] == later["selected_generation"]
+    assert restored["state"] == before["state"]
+    assert restored["schema"] == refusal["refused_schema"] == 11
+    assert restored["original_operations_preserved"] is True
     assert rolled_back["ui"] == before["ui"]
-    assert rolled_back["generation_id"] == later["selected_generation"]
     assert rolled_back["state"] == before["state"]
-    assert rolled_back["original_operations_preserved"] is True
+    assert rolled_back["schema"] == before["schema"] == 9

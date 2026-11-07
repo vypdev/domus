@@ -1,0 +1,465 @@
+{
+  "recordedAtUTC": "2026-11-04T03:36:30.445127+00:00",
+  "status": "Genuine schema-9 acceptance, pure cycle policy, bounded source observations and atomic initial relative work verified in source; maintenance integration, durable successor lifecycle and calendar remain outstanding.",
+  "issue": 23,
+  "nativePublication": {
+    "commit": "91adfe902055cb2c5bb42ceeb57c2b7ab53fb635",
+    "base": "8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9",
+    "run": 41715125228,
+    "job": 126193121874,
+    "scope": "Original native publication and exact managed branch verified; three prior owners byte-identical."
+  },
+  "consumerCorrection": {
+    "nativeOriginalCommit": "91adfe902055cb2c5bb42ceeb57c2b7ab53fb635",
+    "immutableBase": "8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9",
+    "characters": 53984,
+    "sha256": "0bcf08c32342824b586a5a3a447dc5acc5e00421adcbaf4e13b88f3106ed1c1b",
+    "sections": 20,
+    "retainedCountedCases": 93,
+    "retainedPublishedNonCountedAliases": 18,
+    "independentRefinements": 18,
+    "reciprocalRequirements": 9,
+    "pathOperations": 99,
+    "pathCounts": {
+      "create": 44,
+      "update": 48,
+      "reference": 7
+    },
+    "scope": "Independent consumer correction preflight only; original native SDK validation of this correction is still required.",
+    "upstreamReport": "https://github.com/vypdev/copilot/issues/858#issuecomment-6615277620",
+    "engineeringClarification": "Consumer grant closure is separate from human task-cycle closure; source period/source-row currencies are distinct."
+  },
+  "supportedSchema9Input": {
+    "path": "tests/fixtures/sqlite/v9.sql",
+    "sha256": "e3c81ef1fa42e1ea302de60662c10e7231466ab32da1931ecde1e6d7a49213b7",
+    "bytes": 46361,
+    "sourceRuntime": "e5f08ebe46f1ae3e2f81080746c0fd76c705b9fc",
+    "runtimePin": "3200bd9278f57f142ed03b54843a38a4138fc0af",
+    "origin": "Previously captured genuine schema8 migrated by the actual151-module reviewed runtime and two actual profile commands using fictional HA proof; not owner HA data."
+  },
+  "executedChecks": {
+    "pytest": {
+      "command": "uv run --frozen pytest tests/backend/test_recurrence_lifecycle_migration.py -q",
+      "passed": 3,
+      "assertions": [
+        "Exact captured SQL SHA256 before newDDL.",
+        "Current supported9read/reopen preserves2fixed slots,1pristine relative schedule/progress, null consumer evidence and explicit Spanish/false private preferences.",
+        "Independent snapshot schema9inspection preserves every original table row and source database bytes; source file is explicitly prepared0600."
+      ]
+    },
+    "documentation": "uv run domus-check docs: passed",
+    "style": "Ruff check and format-check for the new test file: passed",
+    "independentDraftPreflight": "20sections,9requirements,18refinements,18noncounted publishedaliases,93retained counted owners; reciprocal traceability,99actual prospective path operations and original owner bytes verified."
+  },
+  "testPreparation": "Raw SQL import initially produced a0644test file and the snapshot correctly rejected unsafe_installation_file. SQLiteDatabase.initialize is not the ownership-permission boundary. The fixture now explicitly prepares0600 before invoking snapshot creation; both original failures remain private diagnostic evidence. No production safety check changed.",
+  "pending": [
+    "Original native SDK validation/review of the contributor correction and new exact-head complete CI.",
+    "Mixed maintenance wiring and reviewed manual initial adoption, successor generation, durable source inbox/closure/invalidation, shared fairness, reviewed schedule changes and actual task/calendar models/APIs/UI.",
+    "Genuine schema10migration/refusal/rollback if required by the planned durable lifecycle data.",
+    "Every93retained case,18refinement and publishedalias, actual human UX, HA companion surfaces, both deployment modes and isolated Stable/Edge full product acceptance."
+  ],
+  "noRuntimeOrCopilotChanges": false,
+  "goalComplete": false,
+  "pureClosurePolicy": {
+    "recordedAtUTC": "2026-11-04T00:34:31.945147+00:00",
+    "path": "backend/src/domus/domain/relative_lifecycle.py",
+    "tests": "tests/backend/test_relative_lifecycle.py",
+    "focusedPassed": 61,
+    "statements": 77,
+    "branches": 30,
+    "coverage": "100% statement and branch coverage",
+    "invariants": [
+      "Cycle closure identity remains stable across rule generations, mutable verification and revision changes, while preserving installation/channel/household/rule/definition/source occurrence/cycle scope.",
+      "Grant proof retains its exact original successor, operation and immutable completion basis; consumer closure does not close or approve the human TaskCycle.",
+      "Canonical original receipts, including retained absent-effect history, can prove prior processing without granting recreation.",
+      "Late approval preserves the original completion basis; rejection/reopening cancels only proven unstarted derived work, retains stopped work and requires review for started/completed/unknown history.",
+      "Closure cannot predate rule creation or the observed completion/approval/reopening; zero remains a valid timestamp."
+    ],
+    "notImplemented": [
+      "No current maintenance runner consumes this policy yet.",
+      "No durable inbox/closure/attention tables, schema-10 migration, atomic successor writer, calendar projection or product UI acceptance is claimed."
+    ]
+  },
+  "copilotModified": false,
+  "storageSchema": 9,
+  "schemaChanged": false,
+  "boundedSourceObservations": {
+    "recordedAtUTC": "2026-11-04T00:55:13.412741+00:00",
+    "tests": "tests/backend/test_recurrence_source_observations.py",
+    "focusedPassed": 29,
+    "combinedSourceAndExistingEventPassed": 75,
+    "application": "backend/src/domus/application/recurrence_sources.py",
+    "logicalSourceBudget": "One SQL-ordered union of current and retained-absent originals; at most the requested 1..100 facts, without lookahead or skipped rows. An empty scan costs one source unit; an exact full page is conservatively incomplete.",
+    "verified": [
+      "Stable original event/cycle identity and positional order when timestamps tie; delivery acknowledgement does not remove facts.",
+      "Current and genuinely restored historical approval/reopening retain their original snapshots independently of the current pending cycle.",
+      "A genuinely restored-away completion is readable as historical evidence even when its live cycle is absent; no work, receipt, outbox delivery or identifier is created.",
+      "Canonical original request/result/audit/event shape, bounded typed ports and composition-owned installation/channel/household scope are checked before observation.",
+      "Malformed cycle evidence and missing audit records fail closed without changing database bytes."
+    ],
+    "limitations": [
+      "This read port is not a durable inbox, per-cycle closure writer or successor consumer.",
+      "Historical facts are observations, not eligibility or permission to create new work; the future writer must revalidate live facts atomically.",
+      "No schema change, calendar or full retained-case acceptance is claimed."
+    ]
+  },
+  "currentBackendCampaign": {
+    "passed": 4616,
+    "runtimeModules": 155,
+    "statements": 10742,
+    "branches": 3022,
+    "coverage": "100% globally and per module, independently source-audited",
+    "strictTypes": "passed (155 source files)",
+    "cleanArchitecture": "5 import contracts kept; 51 architecture tests passed"
+  },
+  "initialRelativeMaterialization": {
+    "application": "backend/src/domus/application/relative_materialization.py",
+    "tests": "tests/backend/test_relative_materialization.py",
+    "focusedPassed": 51,
+    "statements": 108,
+    "branches": 36,
+    "coverage": "100% statement and branch coverage",
+    "redFirst": "The new test module failed collection with ModuleNotFoundError before implementation; retained in private validation evidence.",
+    "verified": [
+      "One initial obligation, scoped immutable slot, original receipt, audit, outbox and continuation commit atomically in actual SQLite for date-only and timed rules.",
+      "Installation/channel/household scope and exact current rule, definition and progress are rechecked in the writer; changed sources, a racing manual occurrence and stopped lifetimes create no partial effects.",
+      "Restart does not create another obligation. Existing live original proof reconciles pristine continuation without new provider work or identifiers.",
+      "Compatible restoration retains original processing proof, advances continuation as historical absence and never recreates absent work, slot, receipt or outbox.",
+      "Canonical proof and slot relationships are checked; malformed or contradictory typed port results fail closed.",
+      "Six injected transaction failures roll back all writes; independent writers preserve one original effect."
+    ],
+    "limitations": [
+      "This service is not yet invoked by the mixed maintenance runner or exposed by an API/UI.",
+      "Existing manual work returns initial_review_required; explicit reviewed adoption remains to implement.",
+      "Successor generation, durable source inbox/closure, fair shared budgets, calendar projection, complete retained-case acceptance and owner HA execution remain pending.",
+      "Schema remains 9; no migration or new compiled image acceptance is claimed."
+    ]
+  },
+  "closureStorageCodec": {
+    "path": "backend/src/domus/infrastructure/sqlite_relative_lifecycle.py",
+    "tests": "tests/backend/test_sqlite_relative_lifecycle.py",
+    "focusedPassed": 64,
+    "statements": 15,
+    "branches": 0,
+    "coverage": "100% supported statements; all successor/non-successor, timed/date-only encoding and decoding paths exercised.",
+    "verified": [
+      "Full immutable schedule/cycle/operation/successor snapshots survive encode/decode without changing original receipt matching or cycle-stable key.",
+      "Generated timed/date-only, rejected, reopened and historical-absent records retain their distinct original facts.",
+      "Canonical versioned storage rejects missing/unknown fields, duplicate JSON keys, malformed UTF-8, noncanonical bytes and unsupported scalar/nested versions without defaults or repair.",
+      "Scope, original command and successor/source relationships are checked by the existing domain constructors after closed nested decoding."
+    ],
+    "limitations": [
+      "Encoding/decoding alone does not prove the record has a matching stored original receipt or current authorization; the future repository/application writer must verify those independently.",
+      "No closure table, SQL persistence API, schema-10 migration, durable inbox, successor writer, invalidation/review flow, calendar or new owner HA execution is claimed.",
+      "The schema remains 9 and all retained owners and genuine schema-9 fixture remain unchanged."
+    ],
+    "sourcePackage": {
+      "pythonModules": 155,
+      "uiFiles": 4,
+      "wheelSha256": "e928f2a8ba749e75ea8e36b898cb48e97fbca8847e11d88b1898b0d13e15fdc0",
+      "scope": "Every runtime Python/compiled UI byte matches the current source wheel; no installed image acceptance claimed."
+    }
+  },
+  "durableLifecycleCheckpoint": {
+    "sourceCommit": "3c7d0c8b57cc6a53c611646e12a33b752d481730",
+    "schema": 10,
+    "fixture": "tests/fixtures/sqlite/v9.sql",
+    "verified": [
+      "Durable inbox, atomic closure and successor receipts in actual SQLite.",
+      "Independent writers, rollback after effect and acknowledgement, restart, compatible restoration and retained original proofs.",
+      "Started and completed successors remain intact with a durable review outcome. Proven unstarted successors are cancelled with a recorded cause.",
+      "Both images exercised schema-9 upgrade, schema-10 refusal by the schema-9 application, compatible rollback and packaged asset verification."
+    ],
+    "backend": {
+      "passed": 4673,
+      "runtimeModules": 156,
+      "statements": 11082,
+      "branches": 3150,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "frontend": {
+      "passed": 1513,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "browser": {
+      "scope": "Ingress and standalone in English and Spanish, exact source images",
+      "passedPerArchitecture": 46
+    },
+    "compatibilityTestsPerArchitecture": 11,
+    "images": {
+      "amd64": "sha256:258b14f6d6971ecde0410f384b359f3646d7907eebcd546c47c3754462add229",
+      "aarch64": "sha256:a22bce18515b38bfd860db061013b3502c65b0278fe53f7e3f38d455d7c3e317"
+    },
+    "limits": "Evidence is scoped to this source commit. Later shared maintenance and calendar work require independent evidence. No owner HA or release acceptance is claimed."
+  },
+  "mixedMaintenanceCheckpoint": {
+    "sourceCommit": "871b313904e1cdde00a7a49809115542e7291b96",
+    "schema": 10,
+    "backend": {
+      "passed": 4691,
+      "runtimeModules": 156,
+      "statements": 11189,
+      "branches": 3194,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "frontend": {
+      "passed": 1515,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "exactSourceImageValidation": {
+      "amd64": "sha256:ba845ad6e2816197a21accc705679198bfc2bdc8a796fa00a2395985db4dde05",
+      "aarch64": "sha256:78f42493ee3fc1aca73b96deee817e7f731a6522221333c306a3f98c2dc7d1dc",
+      "browserJourneysPerArchitecture": 46,
+      "lifecycleAndCompatibilityTestsPerArchitecture": 13
+    },
+    "verified": [
+      "One durable frontier and one definition/slot budget across fixed and relative maintenance.",
+      "Independent source budget and truthful continuation through restart and interrupted processing.",
+      "Actual packaged Ingress and standalone lifetimes generate one successor after restart from original task completion evidence.",
+      "Existing task, administration and shared navigation journeys pass in both languages and architectures."
+    ],
+    "scope": "Results apply to the exact source commit above. Reviewed schedule changes, protected calendar and the complete retained acceptance inventory remain pending."
+  },
+  "manualAdoptionCheckpoint": {
+    "sourceCommit": "5241453fc390e69bd544245ec321b37f41fab5f6",
+    "baseCommit": "878a73b5f06629fa028a2daed87268b717765e45",
+    "schema": 10,
+    "verified": [
+      "Both protected HTTP compositions preview, apply and recover the exact manual adoption under current task-manager grants.",
+      "The concurrent-start refinement C20 rejects stale work without a second obligation or partial mapping.",
+      "Independent SQLite writers, rollback after the human outbox write, restart and actual restore preserve the original operation and existing manual work."
+    ],
+    "backend": {
+      "passed": 4710,
+      "runtimeModules": 159,
+      "statements": 11351,
+      "branches": 3214,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "frontend": {
+      "passed": 1515,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "images": {
+      "amd64": "sha256:f78184907d197f6d9fd1f6087a95f0af961008fbdedfdbe4017a886c7cd566f5",
+      "aarch64": "sha256:4c50f7ccc53e2ed14b241e7d1b06b8c52b11263d2cdd4cd6d7adba6fce8fb299",
+      "compatibilityAndIntegrationTestsPerArchitecture": 42,
+      "existingBrowserJourneysPerArchitecture": 46,
+      "browserScope": "Ingress and standalone, English and Spanish, exact source images"
+    },
+    "bugbot": "https://github.com/vypdev/domus/runs/128187530658",
+    "progressVerification": "https://github.com/vypdev/domus/runs/128186004050",
+    "progressReport": "https://github.com/vypdev/copilot/issues/910#issuecomment-6697253768",
+    "scope": "Results apply to the exact source commit above. The adoption interaction was verified through HTTP. The existing browser suite exercises task, administration and shared navigation journeys."
+  },
+  "relativeStateReviewCheckpoint": {
+    "sourceCommit": "51425d54b80cd16063444a40d2a9445b5846b3da",
+    "schema": 10,
+    "verified": [
+      "Both protected HTTP compositions preview and apply relative pause/resume under current task-manager grants.",
+      "Pause retains task work and the pending completion source. Resume previews the next local slot from the original performed time or explains why no slot can yet be projected.",
+      "The writer rejects changed work after provider preparation, preserves closed sources and distinguishes a restored absent effect from an unconsumed first slot."
+    ],
+    "backend": {
+      "passed": 4727,
+      "runtimeModules": 160,
+      "statements": 11476,
+      "branches": 3254,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "images": {
+      "amd64": "sha256:fab6f29ca35a30df0af6d3f14e953b81ceeb9a4f5d419009dd69f4dc8a663718",
+      "aarch64": "sha256:279fb6f99d9c61524a68c483837863ef2b41da03d8bce95ae8e891c2c6cb5805",
+      "existingBrowserJourneysPerArchitecture": 46,
+      "browserScope": "Ingress and standalone, English and Spanish, exact source images"
+    },
+    "wheel": {
+      "passed": 1
+    },
+    "progressVerification": "https://github.com/vypdev/domus/runs/128190906551",
+    "scope": "Results apply to the exact source commit above. Pause and resume were verified through HTTP. The existing browser suite exercises task, administration and shared navigation journeys."
+  },
+  "fixedSkipCheckpoint": {
+    "sourceCommit": "522b27b35629ca1551e51dc89fa0a0d9a0c09523",
+    "schema": 10,
+    "verified": [
+      "Both protected HTTP compositions preview, apply and recover explicit overdue fixed-slot skips.",
+      "The exact saved date or instant, task, manager and reason remain inspectable without completion, points or changed future fixed progress.",
+      "SQLite rollback, original-key replay, independent writer and restore controls preserve one skip effect and never reinstate a restored-away skip."
+    ],
+    "backend": {
+      "passed": 4741,
+      "runtimeModules": 161,
+      "statements": 11556,
+      "branches": 3272,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "frontend": {
+      "passed": 1515,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "images": {
+      "amd64": "sha256:775f7ab21e993b721bb52c2efd7d273b4eda11373774ae73f89f0c69887a5463",
+      "aarch64": "sha256:fe62cb9c7e1c87384858fcdc83733610d82b0665b95a8e3715743abe7d1a1dea",
+      "existingBrowserJourneysPerArchitecture": 46,
+      "targetedRecurrenceTestsPerArchitecture": 3,
+      "browserScope": "Ingress and standalone, English and Spanish, exact source images"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42305279108",
+    "review": "https://github.com/vypdev/domus/runs/128196068455",
+    "progressVerification": "https://github.com/vypdev/domus/runs/128194043945",
+    "scope": "Results apply to the exact source commit above. Protected recurrence commands were tested through HTTP and exercised inside both built images. The existing browser suite tests the task, administration and shared navigation interfaces."
+  },
+  "manualAttachmentCheckpoint": {
+    "sourceCommit": "0c2ce01d7f000a8ccdbe5560c6fe744776f5596c",
+    "verified": [
+      "Compatible unstarted manual work is adopted explicitly, or manual work is retained and the first scheduled deadline is reviewed.",
+      "SQLite preserves the definition, schedule, first occurrence and original receipt as one outcome across rollback, retry and restoration."
+    ],
+    "backend": {
+      "passed": 4752,
+      "coverage": "100% globally and per file"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42314758140",
+    "bugbot": "https://github.com/vypdev/domus/runs/128226926963",
+    "progressFailure": "https://github.com/vypdev/domus/runs/128226245761"
+  },
+  "reviewedSchedulingCheckpoint": {
+    "sourceCommit": "f390148714c3160b6caadc0cde22dc44d10f9314",
+    "verified": [
+      "Review relative successor settings, fixed pause and resume, and one-off fixed or relative work rescheduling without overwriting original slot history.",
+      "Apply a prospective fixed pattern when no issued work occupies the affected frontier."
+    ],
+    "backend": {
+      "passed": 4782,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42317369128",
+    "progressFailure": "https://github.com/vypdev/domus/runs/128235329605",
+    "scope": "Exact-source backend and CI evidence. Bulk replacement of issued work and explicit fixed exclusions or additions are outside these observations."
+  },
+  "protectedCalendarAPICheckpoint": {
+    "sourceCommit": "ad2264c28f9734181586253ccc1610bbdb86d200",
+    "verified": [
+      "Both HTTP compositions share the current task-read authorization and the bounded local date range.",
+      "Signed cursors bind the original principal, local authority, filters, range and limit. The SQLite count and page share the same filter predicates.",
+      "Planned work, effective deadlines, actual performance and verification remain separate. Date-only values have no instant."
+    ],
+    "backend": {
+      "passed": 4798,
+      "statements": 12422,
+      "branches": 3512,
+      "coverage": "100% globally and per file, independently audited"
+    },
+    "scope": "Local evidence for the protected API source only. Browser, packaged and subsequent source evidence is tracked separately."
+  },
+  "protectedCalendarWorkspaceCheckpoint": {
+    "sourceCommit": "5440f53aa91881d9e3c95c3ae1f99c9682e2b31f",
+    "backend": {
+      "passed": 4798,
+      "coverage": "100% globally and per file"
+    },
+    "frontend": {
+      "passed": 1525,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "browser": {
+      "perImageArchitecture": 46,
+      "deployments": [
+        "Ingress",
+        "standalone"
+      ],
+      "languages": [
+        "English",
+        "Spanish"
+      ]
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42319348811",
+    "progressFailure": "https://github.com/vypdev/domus/runs/128241927837",
+    "scope": "Exact-source protected calendar workspace evidence before the schedule review browser flow."
+  },
+  "scheduleReviewWorkspaceCheckpoint": {
+    "sourceCommit": "3bbec45a6f924527d6a00e93817c1aaf1523ce1f",
+    "backend": {
+      "passed": 4803,
+      "coverage": "100% globally and per file"
+    },
+    "frontend": {
+      "passed": 1536,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "browser": {
+      "perImageArchitecture": 46,
+      "deployments": [
+        "Ingress",
+        "standalone"
+      ],
+      "languages": [
+        "English",
+        "Spanish"
+      ]
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42324407640",
+    "progress": "https://github.com/vypdev/domus/runs/128258339350",
+    "review": "https://github.com/vypdev/domus/pull/29#discussion_r4499405585",
+    "scope": "Exact-source scheduling interface evidence. Browser flows drop a committed apply response and recover by original GET without a duplicate write. The later deadline fence and batch replacement have separate acceptance."
+  },
+  "fixedBatchAndCutoffHistoricalCheckpoint": {
+    "sourceCommit": "2a35e2a3bcfe98b58ddf184b6e781a1f8e3745d5",
+    "backend": {
+      "passed": 4828,
+      "coverage": "100% globally and per file"
+    },
+    "frontend": {
+      "passed": 1537,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42326875268",
+    "copilotVerification": "https://github.com/vypdev/domus/runs/128264839973",
+    "scope": "Historical validation of batch replacement and the writer cutoff."
+  },
+  "exceptionAndCalendarAcceptancePaths": {
+    "sourceParent": "2a35e2a3bcfe98b58ddf184b6e781a1f8e3745d5",
+    "schema10FixtureSha256": "dc23b125821550920eda487685c353aed6485bf36d0d0a7f60902967397a8e83",
+    "schema9FixtureSha256": "e3c81ef1fa42e1ea302de60662c10e7231466ab32da1931ecde1e6d7a49213b7",
+    "exceptionCases": "tests/backend/test_fixed_exception_review.py",
+    "privatePreferenceCases": "tests/backend/test_calendar_preferences.py",
+    "browserRecovery": "frontend/tests/e2e/workspace-navigation.spec.ts",
+    "homeAssistantProjection": "tests/backend/test_ha_calendar_projection.py",
+    "nativeHomeAssistantRegistration": "specs/home-assistant-surface.md",
+    "scope": "Acceptance paths for this source change. Use check runs tied to the tested commit for execution evidence."
+  },
+  "reviewedExceptionsHistoricalCheckpoint": {
+    "sourceCommit": "5e78cdb78d10e0ae98b8a177ec22e06ca3b98ba9",
+    "backend": {
+      "passed": 4876,
+      "coverage": "100% globally and per file"
+    },
+    "frontend": {
+      "passed": 1545,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "actualImageChecks": {
+      "amd64": {
+        "browserJourneys": 46,
+        "packageChecks": 4
+      },
+      "aarch64": {
+        "browserJourneys": 46,
+        "packageChecks": 4
+      }
+    },
+    "copilotVerification": "https://github.com/vypdev/domus/runs/128282611955",
+    "typeCheckCorrection": "e048707e56e65db2f5223947dc8f01c6943a6856",
+    "scope": "Historical local runtime evidence. The published check for this commit also identified a frontend test type error that was corrected separately."
+  },
+  "reviewRefinementAcceptancePaths": {
+    "sourceParent": "c64c6a75a0731b16d4b376d981acf90753f44310",
+    "greenParentCI": "https://github.com/vypdev/domus/actions/runs/42334330547",
+    "resumeAndProspectiveExceptionCases": "tests/backend/test_fixed_exception_review.py",
+    "realRestoreEvidence": "tests/backend/test_reschedule_restoration.py",
+    "unicodeCategoryCases": "frontend/tests/calendar-component.test.ts",
+    "unicodeBrowserCase": "frontend/tests/e2e/workspace-navigation.spec.ts",
+    "scope": "New regression assertions and runtime corrections. Check runs on the executing commit establish verification."
+  }
+}
