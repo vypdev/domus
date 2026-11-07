@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with reviewed fixed exceptions and private calendar preferences.",
   "actualProductFiles": {
-    ".vite/manifest.json": "88eede2e4b38eed02485ed236070c038e6093124808f1b09acca781d9def2923",
-    "assets/index-BBIdLdsB.js": "bbec8cf28efc3be93c0aaf0ea8ac0a6a84a2a96b1fb594a49487f7c856cb1c96",
+    ".vite/manifest.json": "107eb37b2efdd3f7e4c5621344c0fbe03393f4c32bc0a6816411dc45bde10e17",
+    "assets/index-OJd2I-B6.js": "2519e225914cab03e52e32551016a329db7e6b25b8a5f659bab1ec3c2f095359",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "f5fb62057093f3dcf0813d703ce9e492416d18022130de82b15b8b0fabaedf2d"
+    "index.html": "81269fd15dd7252ffda670b3fd14a1f16273333b406ceb0869e1901e5dcf3884"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

@@ -49,12 +49,16 @@ export class DomusCalendar extends LitElement {
     }
   }
   protected updated(changed: PropertyValues<this>): void {
+    this.categoryValidity(this.renderRoot.querySelector<HTMLInputElement>('input[name=category]')!);
     const before = changed.get('preference')?.value?.weekStart ?? 'monday';
     if (this.scopeKey !== null && (changed.has('scopeKey') ||
         changed.has('preference') && this.shownMode === 'week' && before !== this.weekStart)) this.submit();
   }
 
   private get weekStart(): WeekStart {return this.preference?.value?.weekStart ?? 'monday';}
+  private categoryValidity(input: HTMLInputElement): void {
+    input.setCustomValidity(Array.from(input.value).length > 64 ? this.text('categoryLimit') : '');
+  }
   private text(key: CalendarMessage): string {return calendarMessage(key, this.language);}
   private dayLabel(value: string): string {
     return new Intl.DateTimeFormat(this.language, {dateStyle: 'medium', timeZone: 'UTC'}).format(new Date(value));
@@ -145,7 +149,7 @@ export class DomusCalendar extends LitElement {
           <label>${this.text('category')}<input name="category" .value=${this.filters.category}
             @input=${(event: Event) => {
               const input = event.target as HTMLInputElement, category = input.value;
-              input.setCustomValidity(Array.from(category).length > 64 ? this.text('categoryLimit') : '');
+              this.categoryValidity(input);
               this.filters = {...this.filters, category};
             }}></label>
           <label><input type="checkbox" .checked=${this.filters.own}

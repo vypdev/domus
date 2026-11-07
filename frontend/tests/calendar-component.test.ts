@@ -93,4 +93,9 @@ test('category filters preserve up to 64 Unicode code points and reject oversize
     expect(sent).toHaveBeenCalledTimes(count);
     expect(input.value).toBe('🌿'.repeat(65));
   }
+  element.language='en'; await element.updateComplete;
+  expect(input.validationMessage).toBe('Use at most 64 characters for the category.');
+  element.scopeKey='other-member'; await element.updateComplete;
+  expect(input.value).toBe('');
+  expect(input.validity.valid).toBe(true);
 });
