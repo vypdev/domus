@@ -452,5 +452,14 @@
     "copilotVerification": "https://github.com/vypdev/domus/runs/128282611955",
     "typeCheckCorrection": "e048707e56e65db2f5223947dc8f01c6943a6856",
     "scope": "Historical local runtime evidence. The published check for this commit also identified a frontend test type error that was corrected separately."
+  },
+  "reviewRefinementAcceptancePaths": {
+    "sourceParent": "c64c6a75a0731b16d4b376d981acf90753f44310",
+    "greenParentCI": "https://github.com/vypdev/domus/actions/runs/42334330547",
+    "resumeAndProspectiveExceptionCases": "tests/backend/test_fixed_exception_review.py",
+    "realRestoreEvidence": "tests/backend/test_reschedule_restoration.py",
+    "unicodeCategoryCases": "frontend/tests/calendar-component.test.ts",
+    "unicodeBrowserCase": "frontend/tests/e2e/workspace-navigation.spec.ts",
+    "scope": "New regression assertions and runtime corrections. Check runs on the executing commit establish verification."
   }
 }

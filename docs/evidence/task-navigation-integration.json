@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with reviewed fixed exceptions and private calendar preferences.",
   "actualProductFiles": {
-    ".vite/manifest.json": "c777ceb6aeb4e0e504e1215b8c7d8d46efcea3730d0ab95dcf46e42f32c91d46",
-    "assets/index-BLr-TULQ.js": "8637670e17a260f9d5e71b82915042c1bcc86e0cd7de9665ec9afa98e4d7d610",
+    ".vite/manifest.json": "88eede2e4b38eed02485ed236070c038e6093124808f1b09acca781d9def2923",
+    "assets/index-BBIdLdsB.js": "bbec8cf28efc3be93c0aaf0ea8ac0a6a84a2a96b1fb594a49487f7c856cb1c96",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "ee7a6b61d97fd7abb1fd6c85c87e4a691e72ec869185ab0508b215b05e6cb4ca"
+    "index.html": "f5fb62057093f3dcf0813d703ce9e492416d18022130de82b15b8b0fabaedf2d"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -91,5 +91,16 @@
     },
     "browserJourneysPerArchitecture": 46,
     "scope": "Historical runtime evidence before explicit logout retired scheduling journals."
+  },
+  "privateDraftRetirementHistoricalValidation": {
+    "sourceCommit": "c64c6a75a0731b16d4b376d981acf90753f44310",
+    "actualProductFiles": {
+      ".vite/manifest.json": "c777ceb6aeb4e0e504e1215b8c7d8d46efcea3730d0ab95dcf46e42f32c91d46",
+      "assets/index-BLr-TULQ.js": "8637670e17a260f9d5e71b82915042c1bcc86e0cd7de9665ec9afa98e4d7d610",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "ee7a6b61d97fd7abb1fd6c85c87e4a691e72ec869185ab0508b215b05e6cb4ca"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42334330547",
+    "scope": "Historical green CI checkpoint before resume-preview and Unicode category refinements."
   }
 }

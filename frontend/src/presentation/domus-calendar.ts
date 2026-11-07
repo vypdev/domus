@@ -2,7 +2,7 @@ import {LitElement, css, html, nothing} from 'lit';
 import type {PropertyValues} from 'lit';
 import type {CalendarPreferenceView} from '../application/calendar-preferences';
 import type {CalendarView} from '../application/calendar-controller';
-import {CALENDAR_KINDS, CALENDAR_MODES, CALENDAR_TIMINGS, DATE_MAX, DATE_MIN, calendarDays, calendarPeriod, calendarWeekOffset, civilDate, WEEK_STARTS} from '../domain/calendar';
+import {CALENDAR_KINDS, CALENDAR_MODES, CALENDAR_TIMINGS, DATE_MAX, DATE_MIN, calendarDays, calendarPeriod, calendarQuery, calendarWeekOffset, civilDate, WEEK_STARTS} from '../domain/calendar';
 import type {CalendarEntry, CalendarMode, CalendarPeriod, CalendarQuery, WeekStart} from '../domain/calendar';
 import {TASK_PRIORITIES, TASK_STATES} from '../domain/tasks';
 import {calendarMessage} from './calendar-messages';
@@ -65,8 +65,11 @@ export class DomusCalendar extends LitElement {
   }
   private submit(): void {
     if (this.scopeKey === null || !civilDate(this.anchor) || this.anchor > DATE_MAX) return;
-    this.shownMode = this.mode; this.shownRange = calendarPeriod(this.mode, this.anchor, this.weekStart);
-    this.intent({type: 'load', query: {...this.shownRange, ...this.filters}});
+    const range = calendarPeriod(this.mode, this.anchor, this.weekStart);
+    const query = {...range,...this.filters};
+    if (!calendarQuery(query)) return;
+    this.shownMode = this.mode; this.shownRange = range;
+    this.intent({type: 'load', query});
   }
 
   private renderEntry(item: CalendarEntry) {
@@ -139,8 +142,12 @@ export class DomusCalendar extends LitElement {
           ${this.select('timing', this.filters.timing, CALENDAR_TIMINGS, timing => this.text(timing), timing => {this.filters = {...this.filters, timing};})}
           ${this.select('status', this.filters.state, TASK_STATES, state => taskMessage(`state_${state}`, this.language), state => {this.filters = {...this.filters, state};})}
           ${this.select('priority', this.filters.priority, TASK_PRIORITIES, priority => taskMessage(`priority_${priority}`, this.language), priority => {this.filters = {...this.filters, priority};})}
-          <label>${this.text('category')}<input maxlength="64" .value=${this.filters.category}
-            @input=${(event: Event) => {this.filters = {...this.filters, category: (event.target as HTMLInputElement).value};}}></label>
+          <label>${this.text('category')}<input name="category" .value=${this.filters.category}
+            @input=${(event: Event) => {
+              const input = event.target as HTMLInputElement, category = input.value;
+              input.setCustomValidity(Array.from(category).length > 64 ? this.text('categoryLimit') : '');
+              this.filters = {...this.filters, category};
+            }}></label>
           <label><input type="checkbox" .checked=${this.filters.own}
             @change=${(event: Event) => {this.filters = {...this.filters, own: (event.target as HTMLInputElement).checked};}}>${this.text('mine')}</label>
         </div>

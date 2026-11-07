@@ -146,6 +146,13 @@ for (const mode of ['native', 'standalone'] as const) {
     await calendarRegion.getByRole('button', {name: 'Mostrar calendario'}).click();
     await expect(calendarRegion.getByText('Entradas que coinciden 0')).toBeVisible();
     await expect(calendarRegion.locator('.calendar-grid')).toHaveCount(0);
+    const unicodeCategory = '🌿'.repeat(64);
+    await calendarRegion.getByLabel('Etiqueta de categoría', {exact:true}).fill(unicodeCategory);
+    const categoryRead = page.waitForResponse(response => response.url().startsWith(base + 'api/v1/tasks/calendar?')
+      && new URL(response.url()).searchParams.get('category') === unicodeCategory);
+    await calendarRegion.getByRole('button', {name:'Mostrar calendario',exact:true}).click();
+    expect((await categoryRead).ok()).toBe(true);
+
 
     const pref = base + 'api/v1/tasks/calendar/preferences';
     const choose = calendarRegion.getByLabel('Mi semana empieza el');

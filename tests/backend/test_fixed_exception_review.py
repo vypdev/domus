@@ -554,3 +554,115 @@ def test_sqlite_exception_documents_reject_noncanonical_lists_and_addition_tags(
     data = slot_document(slot).decode()
     with pytest.raises(StorageFailure, match="invalid_recurrence_record"):
         read_slot(JsonDocument.from_value(data | {"added": False}).encoded)
+
+
+@pytest.mark.parametrize("historical", [False, True])
+def test_resume_preview_uses_the_same_current_and_historical_exception_set(
+    tmp_path, request, historical
+):
+    from datetime import UTC, datetime
+    from types import SimpleNamespace
+
+    from test_activation_compatibility import identity_at
+    from test_sqlite_snapshots import Clock
+
+    from domus.application.fixed_state_review import FixedStateChange
+    from domus.domain.recurrence_records import ScheduleState
+    from domus.infrastructure.owned_storage import open_storage
+    from domus.infrastructure.sqlite_activation import SQLiteActivation
+    from domus.infrastructure.sqlite_restoration import SQLiteRestorations
+    from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
+
+    root = tmp_path / "runtime"
+    root.mkdir(mode=0o700)
+    review, _, rule = seed(root)
+    store = review.transactions
+    if historical:
+        identity_at(root, store.installation)
+        checkpoint = SQLiteSnapshots(
+            store, tmp_path / "archive", store.installation, Clock()
+        ).create("before")
+    _, change = reviewed(review, selection(rule, 1, FixedExceptionKind.EXCLUDE, 27))
+    review.apply("exclude", change)
+    revision = 2
+    if historical:
+        target = tmp_path / "target"
+        SQLiteRestorations(
+            store, tmp_path / "archive", target, store.installation, Clock(), checkpoint
+        ).prepare("restore")
+        assert (
+            SQLiteActivation(root, store.installation, Clock(), target).activate().state == "active"
+        )
+        opened = open_storage(root, "edge")
+        request.addfinalizer(opened.close)
+        review = replace(review, transactions=opened.database)
+        revision = 1
+    _, pause = reviewed(
+        review, FixedStateChange(rule, revision, ScheduleState.PAUSED), "preview-pause"
+    )
+    review.apply("pause", pause)
+    now = int(datetime(2026, 3, 29, 12, tzinfo=UTC).timestamp() * 1000)
+    review = replace(review, clock=SimpleNamespace(now=lambda: now))
+    preview, resume = reviewed(
+        review, FixedStateChange(rule, revision + 1, ScheduleState.ACTIVE), "preview-resume"
+    )
+    pending = preview.result.decode()["plan"]["backlog"]["pending_slots"]
+    assert [slot["nominal"]["local"] for slot in pending] == ["2026-03-29"]
+    review.apply("resume", resume)
+    with review.transactions.read() as unit:
+        assert unit.recurrence.progress("home", rule).cursor.nominal_count == 0
+
+
+def test_excluded_gap_slot_cannot_trigger_a_false_resume_collision(tmp_path):
+    from datetime import datetime
+    from types import SimpleNamespace
+
+    from domus.application.fixed_state_review import FixedStateChange
+    from domus.domain.recurrence_records import ScheduleState
+    from domus.domain.recurrence_time import NominalTime
+
+    creator, _, store, actor, identifiers = setup(tmp_path)
+    selected = request(timed=True)
+    start = NominalTime(datetime(2011, 12, 30, 0))
+    pattern = parse_fixed_pattern("FREQ=DAILY;COUNT=2", start)
+    policy = replace(selected.policy, zone="Pacific/Apia")
+    result = creator.create_fixed("gap", replace(selected, pattern=pattern, policy=policy))
+    rule = result.result.decode()["schedule_id"]
+    review = RecurrenceReview(
+        store,
+        store.installation,
+        actor,
+        actor.current,
+        creator.clock,
+        identifiers,
+        RelativeRecurrencePlanner(creator.planner.times),
+    )
+    _, exclude = reviewed(
+        review,
+        FixedExceptionChange(
+            rule, 1, FixedException(FixedExceptionKind.EXCLUDE, start, "Missing local day")
+        ),
+    )
+    review.apply("exclude", exclude)
+    _, pause = reviewed(review, FixedStateChange(rule, 2, ScheduleState.PAUSED), "preview-pause")
+    review.apply("pause", pause)
+    now = creator.planner.times.resolve(NominalTime(datetime(2011, 12, 31, 12)), policy).instant_ms
+    review = replace(review, clock=SimpleNamespace(now=lambda: now))
+    preview, _ = reviewed(review, FixedStateChange(rule, 3, ScheduleState.ACTIVE), "preview-resume")
+    pending = preview.result.decode()["plan"]["backlog"]["pending_slots"]
+    assert [slot["nominal"]["local"] for slot in pending] == ["2011-12-31T00:00:00"]
+
+
+def test_prospective_pattern_preview_filters_the_retained_exception_before_collision_checks(
+    recurrence,
+):
+    from domus.application.fixed_pattern_review import FixedPatternChange
+
+    review, _, rule = recurrence
+    _, exclude = reviewed(review, selection(rule, 1, FixedExceptionKind.EXCLUDE, 29))
+    review.apply("exclude", exclude)
+    pattern = parse_fixed_pattern("FREQ=DAILY;COUNT=3", nominal(27))
+    preview, change = reviewed(review, FixedPatternChange(rule, 2, pattern), "preview-pattern")
+    proposed = preview.result.decode()["plan"]["backlog"]["prospective_slots"]
+    assert [slot["nominal"]["local"] for slot in proposed] == ["2026-03-27", "2026-03-28"]
+    assert review.apply("pattern", change).result.decode()["kind"] == "fixed_pattern"

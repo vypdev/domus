@@ -57,6 +57,7 @@ from domus.domain.identity import HumanIdentity, Permission, validate_revision
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_planning import PlannedSlot
 from domus.domain.recurrence_records import ScheduleState
+from domus.domain.recurrence_rules import NominalSlot
 from domus.domain.relative_lifecycle import WorkHistory
 from domus.domain.relative_recurrence import RelativeSlot
 from domus.domain.storage import (
@@ -341,7 +342,18 @@ class RecurrenceReview:
         if isinstance(plan, RelativeStatePlan):
             effect = {"backlog": plan.backlog(self.planner)}
         elif isinstance(plan, FixedStatePlan | FixedPatternPlan):
-            effect = {"backlog": plan.backlog(self.planner.times, self.clock.now())}
+            rule = plan.schedule
+
+            def suppressed(nominal: NominalSlot) -> bool:
+                if rule.exception(nominal) is not None:
+                    return True
+                with self.transactions.read() as current:
+                    authority.require(authority.command, current)
+                    return current.recurrence.has_historical_fixed_exception(
+                        rule.household_id, rule.schedule_id, nominal.local.isoformat()
+                    )
+
+            effect = {"backlog": plan.backlog(self.planner.times, self.clock.now(), suppressed)}
         else:
             plan.require_overdue(self.planner.times, self.clock.now())
             effect = {"exception": "overdue_skip"}

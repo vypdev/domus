@@ -1,5 +1,6 @@
 """Review fixed-rule pause or resume without advancing its durable cursor."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 
@@ -18,7 +19,7 @@ from domus.domain.errors import (
 from domus.domain.identity import validate_revision
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_records import FixedProgress, FixedSchedule, ScheduleState
-from domus.domain.recurrence_rules import NominalDate
+from domus.domain.recurrence_rules import NominalDate, NominalSlot
 from domus.domain.recurrence_time import LocalInstant, NominalTime
 from domus.domain.storage import JsonDocument, JsonObject, validate_identifier
 from domus.domain.task_values import DefinitionState
@@ -55,7 +56,9 @@ class FixedStatePlan:
     target: ScheduleState
     snapshot: JsonDocument
 
-    def backlog(self, times: RecurrenceTimes, now: int) -> JsonObject:
+    def backlog(
+        self, times: RecurrenceTimes, now: int, suppressed: Callable[[NominalSlot], bool]
+    ) -> JsonObject:
         if self.target is ScheduleState.PAUSED:
             return {"status": "paused", "pending_slots": []}
         rule = self.schedule
@@ -85,13 +88,14 @@ class FixedStatePlan:
         )
         if len(batch.slots) > 100 or not batch.range_complete:
             raise Conflict("recurrence_review_too_large")
-        instants = [slot.resolved.instant_ms for slot in batch.slots if slot.resolved is not None]
+        pending = tuple(slot for slot in batch.slots if not suppressed(slot.nominal))
+        instants = [slot.resolved.instant_ms for slot in pending if slot.resolved is not None]
         if len(set(instants)) != len(instants):
             raise Conflict("recurrence_reschedule_collision")
         return {
             "status": "resume",
             "before": before.local.isoformat(),
-            "pending_slots": [slot.value() for slot in batch.slots],
+            "pending_slots": [slot.value() for slot in pending],
         }
 
 

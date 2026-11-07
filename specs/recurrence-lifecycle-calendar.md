@@ -430,6 +430,7 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `tests/backend/test_mixed_recurrence.py` | create |
 | `tests/backend/test_recurrence_runtime.py` | update |
 | `tests/backend/test_recurrence_review.py` | create |
+| `tests/backend/test_reschedule_restoration.py` | create |
 | `tests/backend/test_fixed_batch_review.py` | create |
 | `tests/backend/test_calendar_values.py` | create |
 | `tests/backend/test_calendar_queries.py` | create |

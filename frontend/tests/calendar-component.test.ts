@@ -38,7 +38,7 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   dateValue('9998-12-02'); submit();
   expect(listener).toHaveBeenCalledOnce();
   select(0, 'week'); select(1, 'approval'); select(2, 'manual'); select(3, 'completed'); select(4, 'high');
-  const tag = form.querySelector<HTMLInputElement>('input[maxlength]')!;
+  const tag = form.querySelector<HTMLInputElement>('input[name=category]')!;
   tag.value = 'Hogar & más'; tag.dispatchEvent(new Event('input'));
   const own = form.querySelector<HTMLInputElement>('input[type=checkbox]')!;
   own.checked = true; own.dispatchEvent(new Event('change'));
@@ -68,4 +68,29 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   element.scopeKey = null; await element.updateComplete;
   expect(date.value).toBe('2026-11-03');
   expect(own.checked).toBe(false); expect(tag.value).toBe('');
+});
+
+
+test('category filters preserve up to 64 Unicode code points and reject oversized drafts', async () => {
+  const element = document.createElement('domus-calendar'), sent = vi.fn();
+  element.addEventListener('domus-calendar-intent',sent);
+  document.body.append(element); nodes.push(element);
+  element.today='2026-11-01'; element.scopeKey='unicode-member'; await element.updateComplete;
+  const root=element.shadowRoot!, input=root.querySelector<HTMLInputElement>('input[name=category]')!;
+  const form=root.querySelector('form')!;
+  expect(input.hasAttribute('maxlength')).toBe(false);
+  for (const language of ['en','es'] as const) {
+    element.language=language; await element.updateComplete;
+    input.value='🌿'.repeat(64); input.dispatchEvent(new Event('input'));
+    expect(input.validity.valid).toBe(true);
+    form.dispatchEvent(new Event('submit',{cancelable:true}));
+    expect(sent.mock.calls.at(-1)?.[0].detail.query.category).toBe('🌿'.repeat(64));
+    const count=sent.mock.calls.length;
+    input.value='🌿'.repeat(65); input.dispatchEvent(new Event('input'));
+    expect(input.validity.customError).toBe(true);
+    expect(input.validationMessage).toContain('64');
+    form.dispatchEvent(new Event('submit',{cancelable:true}));
+    expect(sent).toHaveBeenCalledTimes(count);
+    expect(input.value).toBe('🌿'.repeat(65));
+  }
 });

@@ -1,5 +1,6 @@
 """Review a prospective fixed-pattern change past the issued-work frontier."""
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import timedelta
 
@@ -19,7 +20,7 @@ from domus.domain.identity import validate_revision
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_planning import FixedCursor, cursor_binding
 from domus.domain.recurrence_records import FixedProgress, FixedSchedule, ScheduleState
-from domus.domain.recurrence_rules import FixedPattern, NominalDate
+from domus.domain.recurrence_rules import FixedPattern, NominalDate, NominalSlot
 from domus.domain.recurrence_time import LocalInstant, NominalTime
 from domus.domain.storage import JsonDocument, JsonObject, validate_identifier
 from domus.domain.task_values import DefinitionState
@@ -55,7 +56,9 @@ class FixedPatternPlan:
     progress: FixedProgress
     snapshot: JsonDocument
 
-    def backlog(self, times: RecurrenceTimes, now: int) -> JsonObject:
+    def backlog(
+        self, times: RecurrenceTimes, now: int, suppressed: Callable[[NominalSlot], bool]
+    ) -> JsonObject:
         rule, start = self.schedule, self.schedule.pattern.start
         local = times.local_at(now, rule.policy)
         if (
@@ -86,14 +89,13 @@ class FixedPatternPlan:
         )
         if len(batch.slots) > 100 or not batch.range_complete:
             raise Conflict("recurrence_review_too_large")
-        instants = [slot.resolved.instant_ms for slot in batch.slots if slot.resolved is not None]
+        pending = tuple(slot for slot in batch.slots if not suppressed(slot.nominal))
+        instants = [slot.resolved.instant_ms for slot in pending if slot.resolved is not None]
         if len(instants) != len(set(instants)):
             raise Conflict("recurrence_reschedule_collision")
         return {
             "before": before.local.isoformat(),
-            "prospective_slots": [
-                slot.value() for slot in batch.slots if rule.exception(slot.nominal) is None
-            ],
+            "prospective_slots": [slot.value() for slot in pending],
         }
 
 
