@@ -553,9 +553,7 @@ def test_batch_does_not_open_a_new_generation_when_the_first_date_passes_before_
 
 
 @pytest.mark.parametrize("timed", [False, True])
-def test_replacement_cannot_recreate_historically_excluded_work(
-    tmp_path, request, timed
-):
+def test_replacement_cannot_recreate_historically_excluded_work(tmp_path, request, timed):
     from test_activation_compatibility import identity_at
     from test_sqlite_snapshots import Clock
 
