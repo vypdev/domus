@@ -550,3 +550,66 @@ def test_batch_does_not_open_a_new_generation_when_the_first_date_passes_before_
     with pytest.raises(Conflict, match="recurrence_reschedule_in_past"):
         review.apply("past", request)
     assert counts(review.transactions) == before
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_replacement_cannot_recreate_historically_excluded_work(
+    tmp_path, request, timed
+):
+    from test_activation_compatibility import identity_at
+    from test_sqlite_snapshots import Clock
+
+    from domus.application.fixed_exception_review import FixedExceptionChange
+    from domus.domain.recurrence_records import FixedException, FixedExceptionKind
+    from domus.infrastructure.owned_storage import open_storage
+    from domus.infrastructure.sqlite_activation import SQLiteActivation
+    from domus.infrastructure.sqlite_restoration import SQLiteRestorations
+    from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
+
+    root = tmp_path / "runtime"
+    root.mkdir(mode=0o700)
+    review, _, choice, old = prepared(root, timed=timed)
+    store = review.transactions
+    tasks = TaskCommands(store, review.actor, review.clock, review.identifiers)
+    tasks.assign("assignment", AssignTask(old[2].occurrence_id, 1, ("child",)))
+    identity_at(root, store.installation)
+    archive, target = tmp_path / "archive", tmp_path / "target"
+    checkpoint = SQLiteSnapshots(store, archive, store.installation, Clock()).create("before")
+    excluded = choice.pattern.start
+    selection = FixedExceptionChange(
+        choice.schedule_id,
+        1,
+        FixedException(FixedExceptionKind.EXCLUDE, excluded, "School break"),
+    )
+    _, change = reviewed(review, selection, "preview-exclude")
+    original = review.apply("exclude", change)
+    SQLiteRestorations(store, archive, target, store.installation, Clock(), checkpoint).prepare(
+        "restore"
+    )
+    assert SQLiteActivation(root, store.installation, Clock(), target).activate().state == "active"
+    opened = open_storage(root, "edge")
+    request.addfinalizer(opened.close)
+    review = replace(review, transactions=opened.database)
+    assert review.original(ReviewAction.APPLY, "exclude").historical
+    assert review.original(ReviewAction.APPLY, "exclude").operation_id == original.operation_id
+    with opened.database.read() as unit:
+        assert unit.recurrence.schedule("home", choice.schedule_id).exceptions == ()
+    before = opened.database.path.read_bytes()
+    before_counts = counts(opened.database)
+    with pytest.raises(Conflict, match="recurrence_review_source_absent"):
+        review.preview("preview-replacement", choice)
+    assert opened.database.path.read_bytes() == before
+    assert counts(opened.database) == before_counts
+    restarted = replace(
+        review, transactions=SQLiteDatabase(opened.database.path, opened.database.installation)
+    )
+    with pytest.raises(Conflict, match="recurrence_review_source_absent"):
+        restarted.preview("restart-preview", choice)
+    assert opened.database.path.read_bytes() == before
+    assert counts(opened.database) == before_counts
+    with opened.database.read() as unit:
+        assert unit.recurrence.schedule("home", choice.schedule_id).revision == 1
+        assert unit.recurrence.progress("home", choice.schedule_id).cursor.nominal_count == 3
+        restored_work = unit.tasks.occurrence("home", old[1].occurrence_id)
+        assert restored_work.state is OccurrenceState.AVAILABLE
+        assert unit.tasks.occurrence("home", old[2].occurrence_id).assignee_ids == ("child",)
