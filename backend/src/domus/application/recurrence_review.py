@@ -28,6 +28,7 @@ from domus.application.relative_attachment_review import (
 from domus.application.relative_lifecycle import occurrence_work_history
 from domus.application.relative_materialization import RelativeSource, adopt_initial, initial_source
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
+from domus.application.relative_recurrence_commands import resolve_initial
 from domus.application.relative_state_review import (
     RelativeSettings,
     RelativeSettingsPlan,
@@ -575,7 +576,7 @@ class RecurrenceReview:
 
         timing: AttachmentTiming | None = None
         destination: PlannedSlot | None = None
-        latest_commit = 0
+        latest_commit: int | None = None
         if isinstance(request.selection, AttachRelative | RescheduleSelection):
             previous = commands.replay(authority.command, payload)
             if previous is not None:
@@ -599,11 +600,24 @@ class RecurrenceReview:
                     self.planner.times, destination, source.slot.schedule.policy
                 )
 
+        elif isinstance(selection, FixedPatternChange):
+            with self.transactions.read() as unit:
+                previous = commands.replay_in(unit, authority.command, payload)
+                if previous is not None:
+                    return previous
+                self._reviewed_plan(unit, authority.command, request)
+                plan = fixed_pattern_plan(unit, authority.scope, selection)
+            rule = plan.schedule
+            start = resolve_initial(self.planner.times, rule.pattern.start, rule.policy)
+            latest_commit = future_until(self.planner.times, start, rule.policy)
+
         revision: RelativeSettingsPlan | None = None
 
         def apply(unit: UnitOfWork) -> Change:
             nonlocal revision
             saved_plan = self._reviewed_plan(unit, authority.command, request)
+            if latest_commit is not None and self.clock.now() >= latest_commit:
+                raise Conflict("recurrence_reschedule_in_past")
             if isinstance(selection, AttachRelative):
                 assert timing is not None
                 actor = authority.current(unit)
@@ -616,8 +630,6 @@ class RecurrenceReview:
                 outcome = attach_relative(unit, commands, authority.scope, selection, attachment)
             elif isinstance(selection, RescheduleSelection):
                 assert destination is not None
-                if self.clock.now() >= latest_commit:
-                    raise Conflict("recurrence_reschedule_in_past")
                 snapshot, task = self._reschedule_plan(unit, authority, selection, destination)
                 if snapshot.fingerprint != request.plan_fingerprint:
                     raise Conflict("recurrence_review_stale")

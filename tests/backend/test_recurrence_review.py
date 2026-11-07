@@ -1808,3 +1808,30 @@ def test_latest_date_only_deadline_requires_no_out_of_range_tomorrow():
         )
         == MAX_INSTANT_MS + 1
     )
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_prospective_pattern_apply_fences_a_start_that_passes_after_preview(tmp_path, timed):
+    from types import SimpleNamespace
+
+    from domus.application.relative_recurrence_commands import resolve_initial
+    from domus.application.reschedule_review import future_until
+
+    review, selection, _, _ = fixed_pattern_fixture(tmp_path, timed=timed)
+    with review.transactions.read() as unit:
+        rule = unit.recurrence.schedule("home", selection.schedule_id)
+        original = unit.recurrence.progress("home", selection.schedule_id)
+    times = review.planner.times
+    start = resolve_initial(times, selection.pattern.start, rule.policy)
+    deadline = future_until(times, start, rule.policy)
+    clock = SimpleNamespace(value=deadline - 1000)
+    review = replace(review, clock=SimpleNamespace(now=lambda: clock.value))
+    _, request = reviewed(review, selection)
+    clock.value = deadline
+    before = counts(review.transactions)
+    with pytest.raises(Conflict, match="recurrence_reschedule_in_past"):
+        review.apply("passed-start", request)
+    assert counts(review.transactions) == before
+    with review.transactions.read() as unit:
+        assert unit.recurrence.schedule("home", selection.schedule_id) == rule
+        assert unit.recurrence.progress("home", selection.schedule_id) == original
