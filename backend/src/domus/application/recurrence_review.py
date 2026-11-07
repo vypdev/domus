@@ -7,6 +7,11 @@ from enum import StrEnum
 
 from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_materialization import MaintenanceScope
+from domus.application.fixed_pattern_review import (
+    FixedPatternChange,
+    FixedPatternPlan,
+    fixed_pattern_plan,
+)
 from domus.application.fixed_skip_review import FixedSkip, FixedSkipPlan, fixed_skip_plan
 from domus.application.fixed_state_review import FixedStateChange, FixedStatePlan, fixed_state_plan
 from domus.application.identity_ports import CurrentHuman
@@ -86,6 +91,7 @@ type ReviewSelection = (
     | RelativeSettings
     | RescheduleSelection
     | FixedStateChange
+    | FixedPatternChange
 )
 
 
@@ -215,14 +221,16 @@ class RecurrenceReview:
     def _prepare(
         unit: UnitOfWork,
         authority: _ReviewAuthority,
-        selection: RelativeStateChange | FixedStateChange | FixedSkip,
-    ) -> tuple[RelativeStatePlan | FixedStatePlan | FixedSkipPlan, JsonDocument]:
+        selection: RelativeStateChange | FixedStateChange | FixedPatternChange | FixedSkip,
+    ) -> tuple[RelativeStatePlan | FixedStatePlan | FixedPatternPlan | FixedSkipPlan, JsonDocument]:
         actor = authority.current(unit)
-        plan: RelativeStatePlan | FixedStatePlan | FixedSkipPlan
+        plan: RelativeStatePlan | FixedStatePlan | FixedPatternPlan | FixedSkipPlan
         if isinstance(selection, RelativeStateChange):
             plan = state_plan(unit, authority.scope, selection)
         elif isinstance(selection, FixedStateChange):
             plan = fixed_state_plan(unit, authority.scope, selection)
+        elif isinstance(selection, FixedPatternChange):
+            plan = fixed_pattern_plan(unit, authority.scope, selection)
         else:
             plan = fixed_skip_plan(unit, authority.scope, selection)
         return plan, RecurrenceReview._snapshot(
@@ -300,7 +308,7 @@ class RecurrenceReview:
         self,
         authority: _ReviewAuthority,
         commands: AtomicCommands,
-        selection: RelativeStateChange | FixedStateChange | FixedSkip,
+        selection: RelativeStateChange | FixedStateChange | FixedPatternChange | FixedSkip,
         payload: JsonDocument,
     ) -> Receipt:
         previous = commands.replay(authority.command, payload)
@@ -311,7 +319,7 @@ class RecurrenceReview:
         effect: JsonObject
         if isinstance(plan, RelativeStatePlan):
             effect = {"backlog": plan.backlog(self.planner)}
-        elif isinstance(plan, FixedStatePlan):
+        elif isinstance(plan, FixedStatePlan | FixedPatternPlan):
             effect = {"backlog": plan.backlog(self.planner.times, self.clock.now())}
         else:
             plan.require_overdue(self.planner.times, self.clock.now())
@@ -344,7 +352,7 @@ class RecurrenceReview:
         unit: UnitOfWork,
         authority: _ReviewAuthority,
         commands: AtomicCommands,
-        selection: RelativeStateChange | FixedStateChange | FixedSkip,
+        selection: RelativeStateChange | FixedStateChange | FixedPatternChange | FixedSkip,
         saved: JsonObject,
     ) -> JsonObject:
         plan, snapshot = self._prepare(unit, authority, selection)
@@ -354,6 +362,17 @@ class RecurrenceReview:
             raise Conflict("recurrence_review_stale")
         if isinstance(selection, FixedSkip):
             return self._apply_skip(unit, authority, commands, selection)
+        if isinstance(selection, FixedPatternChange):
+            assert isinstance(plan, FixedPatternPlan)
+            unit.recurrence.save_schedule(plan.schedule, selection.schedule_revision)
+            unit.recurrence.save_progress(plan.progress, plan.progress.revision - 1)
+            return {
+                "kind": "fixed_pattern",
+                "schedule_id": plan.schedule.schedule_id,
+                "schedule_revision": plan.schedule.revision,
+                "pattern_revision": plan.schedule.pattern_revision,
+                "backlog": saved.get("backlog"),
+            }
         if isinstance(plan, FixedStatePlan):
             fixed = plan.schedule
             unit.recurrence.save_schedule(
@@ -461,7 +480,9 @@ class RecurrenceReview:
             return self._preview_reschedule(authority, commands, selection)
         if isinstance(selection, AttachRelative):
             return self._preview_attachment(authority, commands, selection)
-        if isinstance(selection, RelativeStateChange | FixedStateChange | FixedSkip):
+        if isinstance(
+            selection, RelativeStateChange | FixedStateChange | FixedPatternChange | FixedSkip
+        ):
             return self._preview_prepared(authority, commands, selection, payload)
 
         def apply(unit: UnitOfWork) -> Change:
@@ -544,7 +565,9 @@ class RecurrenceReview:
                     "visibility": updated.visibility.value,
                     "relative_progress": revision.progress.state_document().decode(),
                 }
-            elif isinstance(selection, RelativeStateChange | FixedStateChange | FixedSkip):
+            elif isinstance(
+                selection, RelativeStateChange | FixedStateChange | FixedPatternChange | FixedSkip
+            ):
                 outcome = self._apply_prepared(unit, authority, commands, selection, saved_plan)
             else:
                 plan = self._plan(unit, authority.scope, authority.current(unit), selection)

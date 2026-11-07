@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
+from domus.application.fixed_pattern_review import FixedPatternChange
 from domus.application.fixed_skip_review import FixedSkip
 from domus.application.fixed_state_review import FixedStateChange
 from domus.application.recurrence_review import ManualAdoption, ReviewedChange
@@ -13,6 +14,7 @@ from domus.application.relative_state_review import RelativeSettings, RelativeSt
 from domus.application.reschedule_review import RescheduleSelection
 from domus.domain.errors import InvalidInput
 from domus.domain.recurrence_records import ScheduleState
+from domus.domain.recurrence_rule_text import parse_fixed_pattern
 from domus.domain.recurrence_rules import NominalDate, NominalSlot
 from domus.domain.recurrence_time import FoldPolicy, NominalTime, RelativeInterval
 from domus.domain.relative_recurrence import SuccessorVisibility
@@ -201,6 +203,28 @@ class FixedStateBody(StrictModel):
 
 
 class ReviewedFixedStateBody(FixedStateBody):
+    preview_key: Identifier
+    plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+    def reviewed(self) -> ReviewedChange:
+        return ReviewedChange(self.selection(), self.preview_key, self.plan_fingerprint)
+
+
+class FixedPatternBody(StrictModel):
+    schedule_id: Identifier
+    schedule_revision: Revision
+    start: NominalBody
+    rrule: Annotated[str, Field(min_length=1, max_length=2048)]
+
+    def selection(self) -> FixedPatternChange:
+        return FixedPatternChange(
+            self.schedule_id,
+            self.schedule_revision,
+            parse_fixed_pattern(self.rrule, nominal(self.start)),
+        )
+
+
+class ReviewedFixedPatternBody(FixedPatternBody):
     preview_key: Identifier
     plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 

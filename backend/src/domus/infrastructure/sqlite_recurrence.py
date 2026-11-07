@@ -130,6 +130,23 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
             is not None
         )
 
+    def has_fixed_materialization_from(
+        self, household_id: str, schedule_id: str, from_nominal: str
+    ) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM recurrence_slots WHERE household_id=? AND schedule_id=? "
+                "AND nominal_value>=? UNION ALL SELECT 1 FROM retained_operations "
+                "WHERE household_id=? AND current=0 AND action='recurrence.materialize' "
+                "AND json_extract(document,'$.result.schedule_id')=? "
+                "AND json_extract(document,'$.result.nominal.local')>=? LIMIT 1",
+                (household_id, schedule_id, from_nominal, household_id, schedule_id, from_nominal),
+            ).fetchone()
+            is not None
+        )
+
     def occurrence_is_scheduled(self, household_id: str, occurrence_id: str) -> bool:
         validate_identifier(household_id)
         validate_identifier(occurrence_id)

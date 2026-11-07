@@ -15,6 +15,7 @@ from domus.entrypoints.household_http import (
     _receipt,
 )
 from domus.entrypoints.recurrence_dto import (
+    FixedPatternBody,
     FixedSkipBody,
     FixedStateBody,
     ManualAdoptionBody,
@@ -23,6 +24,7 @@ from domus.entrypoints.recurrence_dto import (
     RelativeStateBody,
     RescheduleBody,
     ReviewedAdoptionBody,
+    ReviewedFixedPatternBody,
     ReviewedFixedSkipBody,
     ReviewedFixedStateBody,
     ReviewedRelativeAttachmentBody,
@@ -145,6 +147,22 @@ def create_recurrence_review_router(context: Callable[[Request], RecurrenceRevie
     @router.post("/fixed-state/apply", response_model=ReceiptResponse, openapi_extra=write_contract)
     def apply_fixed_state(
         request: Request, body: ReviewedFixedStateBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).apply(_key(request), body.reviewed()))
+
+    @router.post(
+        "/fixed-pattern/preview", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def preview_fixed_pattern(
+        request: Request, body: FixedPatternBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).preview(_key(request), body.selection()))
+
+    @router.post(
+        "/fixed-pattern/apply", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def apply_fixed_pattern(
+        request: Request, body: ReviewedFixedPatternBody, query: Annotated[_EmptyQuery, Query()]
     ) -> ReceiptResponse:
         return _receipt(context(request).apply(_key(request), body.reviewed()))
 

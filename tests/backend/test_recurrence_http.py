@@ -226,6 +226,28 @@ def test_protected_overdue_fixed_skip_recovers_original_exception(api):
     )
     assert original.json() == result.json()
 
+    edit = {
+        "schedule_id": schedule_id,
+        "schedule_revision": 3,
+        "start": {"kind": "date", "local": "2090-01-01"},
+        "rrule": "FREQ=WEEKLY;COUNT=3",
+    }
+    preview = api.client.post(
+        f"{BASE}/fixed-pattern/preview", json=edit, headers=api.headers("edit-preview") | CONTEXT
+    )
+    assert preview.status_code == 200, preview.text
+    applied = api.client.post(
+        f"{BASE}/fixed-pattern/apply",
+        json=edit
+        | {
+            "preview_key": "edit-preview",
+            "plan_fingerprint": preview.json()["result"]["plan_fingerprint"],
+        },
+        headers=api.headers("edit-apply") | CONTEXT,
+    )
+    assert applied.status_code == 200, applied.text
+    assert applied.json()["result"]["pattern_revision"] == 2
+
 
 def test_protected_attachment_from_ordinary_task_uses_exact_wire_choice(api):
     api.user(USER, True)

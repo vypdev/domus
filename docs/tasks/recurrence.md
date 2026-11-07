@@ -102,3 +102,15 @@ and keeps the rule paused.
 
 Apply through `POST /fixed-state/apply` with the original selection, preview key, and
 fingerprint. The maintenance runner continues from the same cursor after resume.
+
+## Review a prospective fixed pattern
+
+Use `POST /fixed-pattern/preview` with the schedule ID and revision, a new nominal start, and
+the supported RRULE. Domus previews the new pattern for 60 local days and retains all issued
+work and explicit exceptions. The new start must be beyond existing original slot history
+and active rescheduled deadlines. A change that would replace issued work requires a separate
+replacement review.
+
+Apply through `POST /fixed-pattern/apply` with the original selection, preview key, and
+fingerprint. The new pattern gets an independent continuation. The old slots and receipts
+remain inspectable.

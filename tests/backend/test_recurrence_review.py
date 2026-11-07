@@ -1420,3 +1420,247 @@ def test_fixed_resume_rejects_untrusted_time_collision_and_oversized_preview(tmp
             service.preview("oversized-plan", resume)
     with pytest.raises(NotFound):
         service.original(ReviewAction.PREVIEW, "oversized-plan")
+
+
+def fixed_pattern_fixture(tmp_path, *, timed=False):
+    from datetime import date, datetime
+
+    from domus.application.fixed_pattern_review import FixedPatternChange
+    from domus.domain.recurrence_rules import NominalDate
+    from domus.domain.recurrence_time import NominalTime
+
+    service, selection, materializer, _ = fixed_skip_fixture(tmp_path, timed=timed)
+    with service.transactions.read() as unit:
+        rule = unit.recurrence.schedule("home", selection.schedule_id)
+    start = NominalTime(datetime(2026, 4, 4, 9)) if timed else NominalDate(date(2026, 4, 4))
+    pattern = replace(rule.pattern, start=start, interval=7, count=3)
+    return service, FixedPatternChange(rule.schedule_id, 1, pattern), selection, materializer
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_prospective_pattern_change_preserves_issued_work_and_restarts_after_its_frontier(
+    tmp_path, timed
+):
+    from datetime import timedelta
+
+    service, choice, original, materializer = fixed_pattern_fixture(tmp_path, timed=timed)
+    store = service.transactions
+    with store.read() as unit:
+        current = unit.recurrence.schedule("home", choice.schedule_id)
+    tasks = TaskCommands(store, service.actor, materializer.clock, materializer.identifiers)
+    tasks.create_occurrence("independent", CreateTaskOccurrence(current.definition_id))
+    preview, request = reviewed(service, choice)
+    plan = preview.result.decode()["plan"]
+    assert len(plan["backlog"]["prospective_slots"]) == 3
+    assert plan["snapshot"]["source"]["replaces_issued_work"] is False
+    receipt = service.apply("pattern", request)
+    assert service.apply("pattern", request) == receipt
+    with store.read() as unit:
+        rule = unit.recurrence.schedule("home", choice.schedule_id)
+        progress = unit.recurrence.progress("home", rule.schedule_id)
+        assert rule.pattern == choice.pattern and rule.pattern_revision == 2
+        assert progress.pristine and progress.matches_schedule(rule)
+        assert unit.recurrence.slot("home", original.slot_key).schedule.pattern_revision == 1
+    before = replace(choice.pattern.start, local=choice.pattern.start.local + timedelta(days=1))
+    first = materializer.step(choice.schedule_id, before)
+    assert first.status == "created" and first.occurrence_id != original.occurrence_id
+
+
+def test_prospective_pattern_rejects_issued_and_rescheduled_work_in_new_range(tmp_path):
+    from datetime import date
+
+    from domus.domain.recurrence_rules import NominalDate
+
+    service, choice, issued, _ = fixed_pattern_fixture(tmp_path)
+    occupied = replace(
+        choice, pattern=replace(choice.pattern, start=NominalDate(date(2026, 3, 29)))
+    )
+    with pytest.raises(Conflict, match="recurrence_pattern_requires_replacement"):
+        service.preview("issued", occupied)
+    from domus.application.reschedule_review import RescheduleSelection
+
+    move = RescheduleSelection(
+        issued.schedule_id,
+        1,
+        issued.slot_key,
+        issued.occurrence_id,
+        1,
+        NominalDate(date(2026, 4, 9)),
+        "Keep this reviewed exception",
+    )
+    _, request = reviewed(service, move, "move-preview")
+    service.apply("move", request)
+    with pytest.raises(Conflict, match="recurrence_pattern_requires_replacement"):
+        service.preview("exception", choice)
+
+
+def test_prospective_pattern_rejects_stale_or_unavailable_source(tmp_path, monkeypatch):
+    from domus.infrastructure.sqlite_recurrence import SQLiteRecurrences
+
+    service, choice, issued, _ = fixed_pattern_fixture(tmp_path)
+    store = service.transactions
+    with pytest.raises(InvalidInput):
+        replace(choice, pattern=None)
+    with pytest.raises(NotFound, match="recurrence_rule_missing"):
+        service.preview("missing", replace(choice, schedule_id="missing"))
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        service.preview("stale", replace(choice, schedule_revision=2))
+    with store.read() as unit:
+        rule = unit.recurrence.schedule("home", choice.schedule_id)
+        definition = unit.tasks.definition("home", rule.definition_id)
+        work = unit.tasks.occurrence("home", issued.occurrence_id)
+    with pytest.raises(Conflict, match="recurrence_state_change_unavailable"):
+        service.preview("same", replace(choice, pattern=rule.pattern))
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteRecurrences, "progress", lambda *_: None)
+        with pytest.raises(StorageFailure, match="invalid_recurrence_source"):
+            service.preview("unavailable", choice)
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteTasks, "occurrences", lambda *a, **kw: (work,) * 101)
+        with pytest.raises(Conflict, match="recurrence_review_too_large"):
+            service.preview("oversized", choice)
+    with store.write() as unit:
+        unit.tasks.save_definition(
+            replace(definition, state=DefinitionState.ARCHIVED, revision=2), 1
+        )
+    with pytest.raises(Conflict, match="recurrence_state_change_unavailable"):
+        service.preview("inactive", choice)
+
+
+def test_prospective_pattern_validates_start_and_preview_bounds(tmp_path, monkeypatch):
+    from datetime import date
+    from types import SimpleNamespace
+
+    from domus.application.fixed_recurrence import FixedRecurrencePlanner
+    from domus.domain.recurrence_rules import ByDay, Frequency, NominalDate, Weekday
+
+    service, choice, _, _ = fixed_pattern_fixture(tmp_path, timed=True)
+    times = type(service.planner.times)
+    with monkeypatch.context() as patch:
+        patch.setattr(times, "local_at", lambda *_: None)
+        with pytest.raises(IntegrationUnavailable, match="recurrence_time_source_invalid"):
+            service.preview("provider", choice)
+    later = replace(service, clock=type("Clock", (), {"now": lambda _: 2_000_000_000_000})())
+    with pytest.raises(Conflict, match="recurrence_reschedule_in_past"):
+        later.preview("past", choice)
+    unmatched = replace(
+        choice,
+        pattern=replace(choice.pattern, frequency=Frequency.WEEKLY, by_day=(ByDay(Weekday.MO),)),
+    )
+    with pytest.raises(InvalidInput, match="recurrence_start_mismatch"):
+        service.preview("mismatch", unmatched)
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            FixedRecurrencePlanner,
+            "check_start",
+            lambda *_: SimpleNamespace(
+                matches=False,
+                search_complete=False,
+            ),
+        )
+        with pytest.raises(IntegrationUnavailable, match="recurrence_start_unresolved"):
+            service.preview("unresolved", choice)
+    expand = FixedRecurrencePlanner.expand
+
+    def incomplete(planner, *args, **kwargs):
+        result = expand(planner, *args, **kwargs)
+        return replace(result, range_complete=False)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(FixedRecurrencePlanner, "expand", incomplete)
+        with pytest.raises(Conflict, match="recurrence_review_too_large"):
+            service.preview("incomplete", choice)
+
+    def collision(planner, *args, **kwargs):
+        result = expand(planner, *args, **kwargs)
+        return replace(result, slots=result.slots * 2)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(FixedRecurrencePlanner, "expand", collision)
+        with pytest.raises(Conflict, match="recurrence_reschedule_collision"):
+            service.preview("collision", choice)
+
+    from datetime import datetime
+
+    overflow = replace(
+        choice,
+        pattern=replace(
+            choice.pattern, start=replace(choice.pattern.start, local=datetime(9999, 12, 1, 9))
+        ),
+    )
+    with pytest.raises(Conflict, match="recurrence_review_too_large"):
+        service.preview("overflow", overflow)
+
+    wrong_kind = replace(
+        choice, pattern=replace(choice.pattern, start=NominalDate(date(2026, 4, 4)))
+    )
+    with pytest.raises(Conflict, match="recurrence_pattern_requires_replacement"):
+        service.preview("kind", wrong_kind)
+
+
+def test_fixed_pattern_review_refuses_corrupt_retained_deadline(tmp_path, monkeypatch):
+    from domus.application import fixed_pattern_review
+    from domus.application.reschedule_review import EffectiveDeadline
+
+    service, choice, _, _ = fixed_pattern_fixture(tmp_path)
+    monkeypatch.setattr(
+        fixed_pattern_review,
+        "effective_deadline",
+        lambda *_: EffectiveDeadline(
+            JsonDocument.from_value({"nominal": {}}),
+            None,
+            None,
+        ),
+    )
+    with pytest.raises(StorageFailure, match="invalid_recurrence_effect"):
+        service.preview("corrupt", choice)
+
+
+def test_fixed_pattern_review_blocks_restored_absent_future_materialization(tmp_path):
+    from datetime import date
+
+    from test_fixed_materialization import configured as configured_fixed
+
+    from domus.application.fixed_pattern_review import FixedPatternChange
+    from domus.domain.recurrence_rules import NominalDate
+
+    root, archive, target = (tmp_path / part for part in ("root", "archive", "target"))
+    root.mkdir(mode=0o700)
+    initial, store, actor, ids, schedule_id, before = configured_fixed(root)
+    identity_at(root, store.installation)
+    checkpoint = SQLiteSnapshots(store, archive, store.installation, Clock()).create("before-slot")
+    original = initial.step(schedule_id, before)
+    assert original.status == "created"
+    SQLiteRestorations(store, archive, target, store.installation, Clock(), checkpoint).prepare(
+        "restore"
+    )
+    assert SQLiteActivation(root, store.installation, Clock(), target).activate().state == "active"
+    restored = open_storage(root, "edge")
+    try:
+        database = restored.database
+        with database.read() as unit:
+            rule = unit.recurrence.schedule("home", schedule_id)
+            assert unit.recurrence.slot("home", original.receipt.command.key) is None
+            assert unit.recurrence.has_fixed_materialization_from("home", schedule_id, "2026-03-29")
+        review = RecurrenceReview(
+            database,
+            database.installation,
+            actor,
+            actor.current,
+            initial.clock,
+            ids,
+            RelativeRecurrencePlanner(initial.planner.times),
+        )
+        choice = FixedPatternChange(
+            schedule_id,
+            1,
+            replace(
+                rule.pattern,
+                start=NominalDate(date(2026, 3, 29)),
+                count=3,
+            ),
+        )
+        with pytest.raises(Conflict, match="recurrence_pattern_requires_replacement"):
+            review.preview("edit", choice)
+    finally:
+        restored.close()
