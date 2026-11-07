@@ -21,9 +21,11 @@ export interface ReviewScope {
 }
 export interface ReviewPreview {
   readonly fingerprint: string; readonly expiresAt: number;
-  readonly retained: number | null; readonly planned: number | null;
+  readonly retained: number | null; readonly planned: number | null; readonly cancelled: number | null;
   readonly previous: string | null; readonly destination: string | null;
   readonly createsFirst: boolean | null;
+  readonly retainedDates: readonly string[]; readonly cancelledDates: readonly string[];
+  readonly replacementSlots: readonly Readonly<{local: string; replaces: boolean}>[];
 }
 export interface ReviewReceipt {
   readonly operationId: string; readonly historical: boolean; readonly preview: ReviewPreview | null;

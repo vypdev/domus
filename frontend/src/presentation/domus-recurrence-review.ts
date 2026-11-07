@@ -51,7 +51,8 @@ export class DomusRecurrenceReview extends LitElement {
   }
   private form(target: ReviewTarget, kind: ReviewKind, disabled: boolean) {
     const schedule = target.schedule, relative = kind === 'attachment' || kind === 'relative-settings';
-    const nominal = kind === 'attachment' || kind === 'reschedule' || kind === 'fixed-pattern';
+    const pattern = kind === 'fixed-pattern' || kind === 'fixed-replacement';
+    const nominal = kind === 'attachment' || kind === 'reschedule' || pattern;
     const state = kind === 'state' || kind === 'fixed-state';
     const fieldsKey = JSON.stringify([target.occurrenceId, target.occurrenceRevision, schedule?.revision, kind]);
     return html`<form @submit=${(event: SubmitEvent) => this.submit(event, kind)}>
@@ -67,11 +68,14 @@ export class DomusRecurrenceReview extends LitElement {
         ${this.select('visibility', VISIBILITIES, schedule?.visibility ?? 'at_completion')}` : nothing}
       ${kind === 'attachment' ? html`<label>${this.text('zone')}<input name="zone" required maxlength="128" .value=${target.zone}></label>
         ${this.select('choice', ATTACHMENT_CHOICES, 'adopt')}${this.select('fold', FOLD_CHOICES, 'first_instant')}` : nothing}
-      ${kind === 'fixed-pattern' ? html`<label>${this.text('pattern')}<input name="pattern" required maxlength="2048"></label>` : nothing}
-      ${kind === 'reschedule' || kind === 'fixed-skip' ? html`<label>${this.text('reason')}<textarea name="reason" required maxlength="1000"></textarea></label>` : nothing}
+      ${pattern ? html`<label>${this.text('pattern')}<input name="pattern" required maxlength="2048"></label>` : nothing}
+      ${kind === 'reschedule' || kind === 'fixed-skip' || kind === 'fixed-replacement' ? html`<label>${this.text('reason')}<textarea name="reason" required maxlength="1000"></textarea></label>` : nothing}
       `)}
       <button type="submit" ?disabled=${disabled}>${this.text('preview')}</button>
     </form>`;
+  }
+  private dates(label: ReviewMessage, dates: readonly string[]) {
+    return dates.length ? html`<ul aria-label=${this.text(label)}>${dates.map(date => html`<li>${date}</li>`)}</ul>` : nothing;
   }
   private result(value: NonNullable<ReviewView['result']>, disabled: boolean) {
     const {record, receipt} = value, plan = receipt.preview;
@@ -86,7 +90,12 @@ export class DomusRecurrenceReview extends LitElement {
         ${'rrule' in body ? html`<p>${body.rrule}</p>` : nothing}
         ${'reason' in body ? html`<p>${body.reason}</p>` : nothing}
         ${plan.retained === null ? nothing : html`<p>${this.text('retained')} ${plan.retained}</p>`}
+        ${this.dates('retained', plan.retainedDates)}
+        ${plan.cancelled === null ? nothing : html`<p>${this.text('cancelled')} ${plan.cancelled}</p>`}
+        ${this.dates('cancelled', plan.cancelledDates)}
         ${plan.planned === null ? nothing : html`<p>${this.text('planned')} ${plan.planned}</p>`}
+        ${plan.replacementSlots.length ? html`<ul>${plan.replacementSlots.map(slot =>
+          html`<li>${slot.local} · ${this.text(slot.replaces ? 'replacesWork' : 'addsWork')}</li>`)}</ul>` : nothing}
         ${plan.previous === null ? nothing : html`<p>${this.text('previous')} ${plan.previous}</p>`}
         ${plan.destination === null ? nothing : html`<p>${this.text('destination')} ${plan.destination}</p>`}
         ${plan.createsFirst === null ? nothing : html`<p>${this.text(plan.createsFirst ? 'creates' : 'keeps')}</p>`}

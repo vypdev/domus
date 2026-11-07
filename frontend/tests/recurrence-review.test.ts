@@ -24,7 +24,7 @@ const intent: ReviewRecord = {key: 'original-key', command: {step: 'preview', se
   createdAt: 100, status: 'pending', operationId: null};
 const scope = {key: 'member-1', context, occurrenceId: work.occurrenceId, readOnly: false, serverTime: 100, expiresAt: 500_000};
 const plan: ReviewReceipt = {operationId: 'preview-op', historical: false,
-  preview: {fingerprint, expiresAt: 200, retained: 0, planned: 1, previous: null, destination: '2026-12-01', createsFirst: false}};
+  preview: {fingerprint, expiresAt: 200, retained: 0, planned: 1, cancelled:null, previous: null, destination: '2026-12-01', createsFirst: false,replacementSlots:[],retainedDates:[],cancelledDates:[]}};
 const storedEffect: ReviewReceipt = {operationId: 'apply-op', historical: false, preview: null};
 
 function storage() {
@@ -126,7 +126,7 @@ test.each(['native','standalone'] as const)('%s recurrence wire binds context an
   f.enqueue(targetWire); f.enqueue(token); f.enqueue(receipt(preview)); f.enqueue(receipt(preview, true));
   expect(await f.server.target(context, work.occurrenceId).result).toEqual(work);
   expect(await f.server.send(context, intent).result).toEqual({operationId:'original-op',historical:false,preview:{
-    fingerprint,expiresAt:200,retained:0,planned:1,previous:'2026-11-30',destination:'2026-12-01',createsFirst:true}});
+    fingerprint,expiresAt:200,retained:0,planned:1,cancelled:null,previous:'2026-11-30',destination:'2026-12-01',createsFirst:true,replacementSlots:[],retainedDates:[],cancelledDates:[]}});
   expect(await f.server.original(context,intent).result).toMatchObject({historical:true});
   const [path, request] = f.fetch.mock.calls[2];
   expect(path).toBe(f.applicationBase + 'api/v1/tasks/recurrence/reviews/attachment/preview');
@@ -148,7 +148,7 @@ test('receipt projection handles optional plans and distinguishes definite rejec
   f.enqueue({...targetWire, schedule:{...targetWire.schedule,interval_days:null,visibility:null}});
   expect(await f.server.target(context, work.occurrenceId).result).toMatchObject({schedule:{interval:null,visibility:null}});
   for (const value of [{...targetWire, occurrence_id:'foreign'}, {...targetWire,actions:null},
-    {...targetWire,actions:Array(9).fill('attachment')}, {...targetWire,actions:['attachment','attachment']}]) {
+    {...targetWire,actions:Array(REVIEW_KINDS.length + 1).fill('attachment')}, {...targetWire,actions:['attachment','attachment']}]) {
     f.enqueue(value); await expect(f.server.target(context, work.occurrenceId).result).rejects.toThrow();
   }
   f.enqueue(receipt({...preview,plan:{request:{kind:'attach_relative'}}}));
@@ -274,6 +274,7 @@ test('review component shows bounded impacts, closed actions, literal content an
   await select('relative-settings'); expect(get('interval').value).toBe('30');
   await select('fixed-state'); expect(root.textContent).toContain('Pause new generation');
   await select('fixed-pattern'); expect(get('pattern')).not.toBeNull(); expect(get('time').required).toBe(true);
+  await select('fixed-replacement'); expect(get('pattern')).not.toBeNull(); expect(get('reason')).not.toBeNull();
   await select('fixed-skip'); expect(get('reason')).not.toBeNull();
   await select('reschedule'); expect(get('reason')).not.toBeNull(); expect(get('date')).not.toBeNull();
   await update({target:{...work,schedule:{...work.schedule!,state:'paused',nominal:{kind:'date',local:'2026-12-01'}}}});
@@ -291,12 +292,21 @@ test('review component shows bounded impacts, closed actions, literal content an
   await update({records:[received],result:{record:{...received,command:{step:'preview',
     selection:reviewSelection({...work,schedule:{...work.schedule!,state:'paused'}},{...input,kind:'state'})}},receipt:plan}});
   expect(root.textContent).toContain('Resume generation');
-  for (const kind of ['attachment','fixed-state','reschedule','fixed-pattern'] as const) {
+  for (const kind of ['attachment','fixed-state','reschedule','fixed-pattern','fixed-replacement'] as const) {
     await update({records:[received],result:{record:{...received,command:{step:'preview',selection:reviewSelection(work,{...input,kind})}},
-      receipt:plan},notice:null});
+      receipt:kind === 'fixed-replacement' ? {...plan,preview:{...plan.preview!,cancelled:3,
+        retainedDates:['2026-11-30'],cancelledDates:['2026-12-01'],
+        replacementSlots:[{local:'2026-12-02',replaces:true},{local:'2026-12-03',replaces:false}]}} : plan},notice:null});
     expect(root.textContent).toContain('Existing work retained 0');
     expect(root.textContent).toContain('Upcoming slots in the review 1');
     expect(root.textContent).toContain('New local date or time 2026-12-01');
+    if (kind === 'fixed-replacement') {
+      expect(root.textContent).toContain('Original occurrences to cancel 3');
+      expect(root.querySelector('[aria-label="Existing work retained"]')!.textContent).toBe('2026-11-30');
+      expect(root.querySelector('[aria-label="Original occurrences to cancel"]')!.textContent).toBe('2026-12-01');
+      expect(root.textContent).toContain('2026-12-02 · Replaces existing work');
+      expect(root.textContent).toContain('2026-12-03 · Adds an occurrence');
+    }
     if (kind === 'reschedule') {
       expect(root.textContent).toContain(input.reason); expect(root.querySelector('img')).toBeNull();
     }
@@ -367,4 +377,23 @@ test('an original result arriving beyond its verified lease never becomes visibl
   f.at(100); f.server.target.mockReturnValueOnce({result:failure.promise,cancel:vi.fn()});
   const retired = c.open(); c.bind(null); failure.reject(new Error('late rejection')); await retired;
   expect(f.view()).toBeNull();
+});
+
+test('batch plan labels replacements and added dates from the actual reviewed projection', async () => {
+  const f = http();
+  const command: ReviewRecord = {...intent,command:{step:'preview',selection:reviewSelection(work,{...input,kind:'fixed-replacement'})}};
+  const result = {...preview,plan:{request:{kind:'fixed_replacement'},source:{cancelled_work:[{deadline:{nominal:{local:'2026-11-30'}}}],retained_work:[],
+    prospective_slots:[{planned:{nominal:{local:'2026-12-01'}},replaces:'work-a'},
+      {planned:{nominal:{local:'2026-12-02'}},replaces:null}]}}};
+  f.enqueue(receipt(result));
+  expect((await f.server.original(context,command).result).preview).toMatchObject({cancelled:1,planned:2,cancelledDates:['2026-11-30'],retainedDates:[],
+    replacementSlots:[{local:'2026-12-01',replaces:true},{local:'2026-12-02',replaces:false}]});
+  for (const prospective_slots of [null,Array(101).fill({}),[{planned:null,replaces:null}]]) {
+    f.enqueue(receipt({...result,plan:{...result.plan,source:{prospective_slots}}}));
+    await expect(f.server.original(context,command).result).rejects.toThrow();
+  }
+  for (const retained_work of [null,Array(201).fill({}),[{deadline:null}]]) {
+    f.enqueue(receipt({...result,plan:{...result.plan,source:{...result.plan.source,retained_work}}}));
+    await expect(f.server.original(context,command).result).rejects.toThrow();
+  }
 });

@@ -1734,7 +1734,13 @@ def test_review_discovery_covers_current_and_archived_tasks(tmp_path, monkeypatc
 def test_fixed_review_discovery_selects_only_its_current_occurrence_slot(tmp_path, timed):
     review, choice, _, _ = fixed_move(tmp_path, timed=timed)
     target = review.target(choice.occurrence_id)
-    assert target.actions == ("fixed-state", "fixed-pattern", "reschedule", "fixed-skip")
+    assert target.actions == (
+        "fixed-state",
+        "fixed-pattern",
+        "fixed-replacement",
+        "reschedule",
+        "fixed-skip",
+    )
     assert target.slot_key == choice.slot_key
     assert target.schedule.nominal_kind == ("time" if timed else "date")
     with review.transactions.read() as unit:
@@ -1743,4 +1749,62 @@ def test_fixed_review_discovery_selects_only_its_current_occurrence_slot(tmp_pat
     other = tasks.create_occurrence(
         "other", CreateTaskOccurrence(schedule.definition_id)
     ).result.decode()
-    assert review.target(other["occurrence_id"]).actions == ("fixed-state", "fixed-pattern")
+    assert review.target(other["occurrence_id"]).actions == (
+        "fixed-state",
+        "fixed-pattern",
+        "fixed-replacement",
+    )
+
+
+@pytest.mark.parametrize("timed", [False, True])
+def test_reschedule_rejects_a_destination_crossed_before_writer_admission(
+    tmp_path, monkeypatch, timed
+):
+    from types import SimpleNamespace
+
+    from domus.application.fixed_materialization import MaintenanceScope
+    from domus.application.reschedule_review import (
+        RescheduleSource,
+        future_until,
+        reschedule_source,
+    )
+
+    review, selection, _, _ = fixed_move(tmp_path, timed=timed)
+    with review.transactions.read() as unit:
+        source = reschedule_source(unit, MaintenanceScope(review.installation, "home"), selection)
+    times = review.planner.times
+    planned = source.prepare(times, selection, review.clock.now())
+    deadline = future_until(times, planned, source.slot.schedule.policy)
+    clock = SimpleNamespace(value=deadline - 1000)
+    review = replace(review, clock=SimpleNamespace(now=lambda: clock.value))
+    _, request = reviewed(review, selection)
+    prepare = RescheduleSource.prepare
+
+    def cross(self, times, request, now):
+        plan = prepare(self, times, request, now)
+        clock.value = future_until(times, plan, self.slot.schedule.policy)
+        return plan
+
+    monkeypatch.setattr(RescheduleSource, "prepare", cross)
+    before = counts(review.transactions)
+    with pytest.raises(Conflict, match="recurrence_reschedule_in_past"):
+        review.apply("expired-destination", request)
+    assert counts(review.transactions) == before
+
+
+def test_latest_date_only_deadline_requires_no_out_of_range_tomorrow():
+    from datetime import date
+
+    from domus.application.reschedule_review import future_until
+    from domus.domain.recurrence_planning import PlannedSlot
+    from domus.domain.recurrence_rules import NominalDate
+    from domus.domain.recurrence_time import MAX_INSTANT_MS, TimePolicy
+    from domus.infrastructure.recurrence_time import PinnedRecurrenceTime
+
+    times = PinnedRecurrenceTime()
+    assert (
+        future_until(
+            times, PlannedSlot(NominalDate(date.max), None), TimePolicy("UTC", times.data_identity)
+        )
+        == MAX_INSTANT_MS + 1
+    )

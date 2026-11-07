@@ -377,5 +377,31 @@
     "ci": "https://github.com/vypdev/domus/actions/runs/42319348811",
     "progressFailure": "https://github.com/vypdev/domus/runs/128241927837",
     "scope": "Exact-source protected calendar workspace evidence before the schedule review browser flow."
+  },
+  "scheduleReviewWorkspaceCheckpoint": {
+    "sourceCommit": "3bbec45a6f924527d6a00e93817c1aaf1523ce1f",
+    "backend": {
+      "passed": 4803,
+      "coverage": "100% globally and per file"
+    },
+    "frontend": {
+      "passed": 1536,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "browser": {
+      "perImageArchitecture": 46,
+      "deployments": [
+        "Ingress",
+        "standalone"
+      ],
+      "languages": [
+        "English",
+        "Spanish"
+      ]
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42324407640",
+    "progress": "https://github.com/vypdev/domus/runs/128258339350",
+    "review": "https://github.com/vypdev/domus/pull/29#discussion_r4499405585",
+    "scope": "Exact-source scheduling interface evidence. Browser flows drop a committed apply response and recover by original GET without a duplicate write. The later deadline fence and batch replacement have separate acceptance."
   }
 }

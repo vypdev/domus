@@ -152,6 +152,48 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
             is not None
         )
 
+    def fixed_slots_from(
+        self, household_id: str, schedule_id: str, nominal: str
+    ) -> tuple[ScheduledSlot, ...]:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        rows = self.connection.execute(
+            "SELECT * FROM recurrence_slots WHERE household_id=? AND schedule_id=? "
+            "AND nominal_value>=? ORDER BY nominal_value,slot_key LIMIT 101",
+            (household_id, schedule_id, nominal),
+        )
+        return tuple(cast(ScheduledSlot, self._slot(row)) for row in rows)
+
+    def has_absent_fixed_slot_from(self, household_id: str, schedule_id: str, nominal: str) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM retained_operations WHERE household_id=? AND current=0 "
+                "AND action='recurrence.materialize' "
+                "AND json_extract(document,'$.result.schedule_id')=? "
+                "AND json_extract(document,'$.result.nominal.local')>=? LIMIT 1",
+                (household_id, schedule_id, nominal),
+            ).fetchone()
+            is not None
+        )
+
+    def has_replaced_fixed_work(
+        self, household_id: str, schedule_id: str, occurrence_id: str
+    ) -> bool:
+        for identifier in (household_id, schedule_id, occurrence_id):
+            validate_identifier(identifier)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM receipts WHERE household_id=? AND action='recurrence.review.apply' "
+                "AND json_extract(result,'$.kind')='fixed_replacement' "
+                "AND json_extract(result,'$.schedule_id')=? AND EXISTS "
+                "(SELECT 1 FROM json_each(receipts.result,'$.cancelled') WHERE value=?) LIMIT 1",
+                (household_id, schedule_id, occurrence_id),
+            ).fetchone()
+            is not None
+        )
+
     def occurrence_is_scheduled(self, household_id: str, occurrence_id: str) -> bool:
         validate_identifier(household_id)
         validate_identifier(occurrence_id)

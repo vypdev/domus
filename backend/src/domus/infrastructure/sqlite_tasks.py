@@ -292,6 +292,22 @@ class SQLiteTasks(TaskRepository):
             expected_revision,
         )
 
+    def has_current_dependents(self, household_id: str, occurrence_id: str) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM task_occurrences AS work WHERE household_id=? "
+                "AND state NOT IN ('completed','cancelled','skipped') AND ("
+                "EXISTS (SELECT 1 FROM json_each(work.document,'$.prerequisite_ids') "
+                "WHERE value=?) OR EXISTS (SELECT 1 "
+                "FROM json_each(work.document,'$.required_subtask_ids') WHERE value=?)) "
+                "LIMIT 1",
+                (household_id, occurrence_id, occurrence_id),
+            ).fetchone()
+            is not None
+        )
+
     def occurrences(
         self,
         household_id: str,

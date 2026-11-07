@@ -35,11 +35,17 @@ class AtomicCommands:
         replay again in the writer transaction. No provider I/O holds its lock.
         """
         with self.transactions.read() as unit:
-            self.authorization.require(command, unit)
-            previous = unit.receipts.get(command)
-            if previous is not None and previous.payload_fingerprint != payload.fingerprint:
-                raise Conflict("idempotency_conflict")
-            return previous
+            return self.replay_in(unit, command, payload)
+
+    def replay_in(
+        self, unit: UnitOfWork, command: CommandKey, payload: JsonDocument
+    ) -> Receipt | None:
+        """Read original evidence in the same snapshot as any subsequent preparation facts."""
+        self.authorization.require(command, unit)
+        previous = unit.receipts.get(command)
+        if previous is not None and previous.payload_fingerprint != payload.fingerprint:
+            raise Conflict("idempotency_conflict")
+        return previous
 
     def execute(
         self,
@@ -62,11 +68,8 @@ class AtomicCommands:
         This does not own a connection or commit. The composing use case must keep any related
         cursor update in that same transaction, including an advance through retained proof.
         """
-        self.authorization.require(command, unit)
-        previous = unit.receipts.get(command)
+        previous = self.replay_in(unit, command, payload)
         if previous is not None:
-            if previous.payload_fingerprint != payload.fingerprint:
-                raise Conflict("idempotency_conflict")
             return previous
         change = apply(unit)
         operation_id, created_at = self.identifiers.new(), self.clock.now()

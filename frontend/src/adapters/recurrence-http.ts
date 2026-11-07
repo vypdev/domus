@@ -12,7 +12,7 @@ import {boolean, check, choice, fields, identifier, integer, responseRevision, t
 
 const BASE = 'tasks/recurrence/reviews/';
 const EFFECT = {attachment: 'attach_relative', adoption: 'adopt_manual', state: 'relative_state',
-  'relative-settings': 'relative_settings', 'fixed-state': 'fixed_state', 'fixed-pattern': 'fixed_pattern',
+  'relative-settings': 'relative_settings', 'fixed-state': 'fixed_state', 'fixed-pattern': 'fixed_pattern', 'fixed-replacement': 'fixed_replacement',
   reschedule: 'reschedule', 'fixed-skip': 'fixed_skip'} as const;
 
 function target(value: unknown, occurrenceId: string): ReviewTarget {
@@ -41,6 +41,23 @@ function size(value: unknown): number | null {
   if (value === undefined || value === null) return null;
   check(Array.isArray(value)); return value.length;
 }
+function replacements(value: unknown): NonNullable<ReviewReceipt['preview']>['replacementSlots'] {
+  if (value === undefined) return [];
+  check(Array.isArray(value) && value.length <= 100);
+  return Object.freeze(value.map(item => {
+    const slot = fields(item, ['planned','replaces'], []), date = local(slot.planned);
+    check(date !== null);
+    if (slot.replaces !== null) identifier(slot.replaces);
+    return Object.freeze({local: date, replaces: slot.replaces !== null});
+  }));
+}
+function affectedDates(value: unknown): readonly string[] {
+  check(Array.isArray(value) && value.length <= 200);
+  return Object.freeze(value.map(item => {
+    const date = local(object(item).deadline);
+    check(date !== null); return date;
+  }));
+}
 function receipt(value: unknown, request: ReviewRecord): ReviewReceipt {
   const root = fields(value, ['state','archived_by','operation_id','created_at','result','message','action_required'], []);
   const historical = choice(root.state, ['committed','historical']) === 'historical';
@@ -58,7 +75,10 @@ function receipt(value: unknown, request: ReviewRecord): ReviewReceipt {
   const backlog = plan.backlog === undefined ? {} : object(plan.backlog);
   return {operationId, historical, preview: {fingerprint, expiresAt: integer(result.expires_at, 0),
     retained: size(source.open_work_retained ?? source.retained_work ?? source.retained_occurrences),
-    planned: size(backlog.prospective_slots ?? backlog.pending_slots),
+    planned: size(backlog.prospective_slots ?? backlog.pending_slots ?? source.prospective_slots),
+    cancelled: size(source.cancelled_work), replacementSlots: replacements(source.prospective_slots),
+    retainedDates: command.selection.kind === 'fixed-replacement' ? affectedDates(source.retained_work) : [],
+    cancelledDates: command.selection.kind === 'fixed-replacement' ? affectedDates(source.cancelled_work) : [],
     previous: local(source.previous ?? source.original), destination: local(source.destination ?? source.initial ?? backlog.next_slot),
     createsFirst: source.creates_first_occurrence === undefined ? null : boolean(source.creates_first_occurrence)}};
 }

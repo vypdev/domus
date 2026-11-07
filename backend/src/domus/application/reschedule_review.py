@@ -1,7 +1,7 @@
 """Plan a one-off schedule exception while preserving the original slot and task."""
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, time, timedelta
 
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import UnitOfWork
@@ -16,7 +16,7 @@ from domus.domain.recurrence_membership import accepts_fixed_slot
 from domus.domain.recurrence_planning import PlannedSlot
 from domus.domain.recurrence_records import FixedSchedule, ScheduledSlot, ScheduleState
 from domus.domain.recurrence_rules import NominalDate, NominalSlot
-from domus.domain.recurrence_time import LocalInstant, NominalTime
+from domus.domain.recurrence_time import MAX_INSTANT_MS, LocalInstant, NominalTime, TimePolicy
 from domus.domain.relative_lifecycle import WorkHistory
 from domus.domain.relative_recurrence import RelativeSchedule, RelativeSlot
 from domus.domain.storage import JsonDocument, validate_identifier
@@ -134,6 +134,19 @@ class RescheduleSource:
         if not future:
             raise Conflict("recurrence_reschedule_in_past")
         return planned
+
+
+def future_until(times: RecurrenceTimes, planned: PlannedSlot, policy: TimePolicy) -> int:
+    """Resolve the last admissible boundary outside the transaction that commits the effect."""
+    if planned.resolved is not None:
+        return planned.resolved.instant_ms
+    assert isinstance(planned.nominal, NominalDate)
+    if planned.nominal.local == date.max:
+        return MAX_INSTANT_MS + 1
+    next_day = planned.nominal.local + timedelta(days=1)
+    boundary = resolve_initial(times, NominalTime(datetime.combine(next_day, time.min)), policy)
+    assert boundary.resolved is not None
+    return boundary.resolved.instant_ms
 
 
 def reschedule_source(

@@ -147,6 +147,8 @@ PUBLIC_CODES = frozenset(
         "invalid_calendar_cursor",
         "calendar_context_changed",
         "recurrence_pattern_requires_replacement",
+        "recurrence_replacement_assignments_need_review",
+        "recurrence_review_source_absent",
         "recurrence_start_mismatch",
         "recurrence_start_unresolved",
         "invalid_recurrence_rule",

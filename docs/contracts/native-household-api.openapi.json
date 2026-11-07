@@ -1319,6 +1319,62 @@
         "title": "FixedPatternBody",
         "type": "object"
       },
+      "FixedReplacementBody": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "rrule": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Rrule",
+            "type": "string"
+          },
+          "schedule_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "schedule_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Schedule Revision",
+            "type": "integer"
+          },
+          "start": {
+            "discriminator": {
+              "mapping": {
+                "date": "#/components/schemas/NominalDateBody",
+                "time": "#/components/schemas/NominalTimeBody"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NominalDateBody"
+              },
+              {
+                "$ref": "#/components/schemas/NominalTimeBody"
+              }
+            ],
+            "title": "Start"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "schedule_revision",
+          "start",
+          "rrule",
+          "reason"
+        ],
+        "title": "FixedReplacementBody",
+        "type": "object"
+      },
       "FixedSkipBody": {
         "additionalProperties": false,
         "properties": {
@@ -3206,6 +3262,7 @@
                 "fixed-state",
                 "relative-settings",
                 "fixed-pattern",
+                "fixed-replacement",
                 "reschedule",
                 "fixed-skip"
               ],
@@ -3377,6 +3434,74 @@
           "plan_fingerprint"
         ],
         "title": "ReviewedFixedPatternBody",
+        "type": "object"
+      },
+      "ReviewedFixedReplacementBody": {
+        "additionalProperties": false,
+        "properties": {
+          "plan_fingerprint": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Plan Fingerprint",
+            "type": "string"
+          },
+          "preview_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Preview Key",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "rrule": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Rrule",
+            "type": "string"
+          },
+          "schedule_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "schedule_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Schedule Revision",
+            "type": "integer"
+          },
+          "start": {
+            "discriminator": {
+              "mapping": {
+                "date": "#/components/schemas/NominalDateBody",
+                "time": "#/components/schemas/NominalTimeBody"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NominalDateBody"
+              },
+              {
+                "$ref": "#/components/schemas/NominalTimeBody"
+              }
+            ],
+            "title": "Start"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "schedule_revision",
+          "start",
+          "rrule",
+          "reason",
+          "preview_key",
+          "plan_fingerprint"
+        ],
+        "title": "ReviewedFixedReplacementBody",
         "type": "object"
       },
       "ReviewedFixedSkipBody": {
@@ -14976,6 +15101,362 @@
           }
         ],
         "summary": "Preview Fixed Pattern"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/fixed-replacement/apply": {
+      "post": {
+        "operationId": "apply_fixed_replacement_api_v1_tasks_recurrence_reviews_fixed_replacement_apply_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewedFixedReplacementBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Apply Fixed Replacement"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/fixed-replacement/preview": {
+      "post": {
+        "operationId": "preview_fixed_replacement_api_v1_tasks_recurrence_reviews_fixed_replacement_preview_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FixedReplacementBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Preview Fixed Replacement"
       }
     },
     "/api/v1/tasks/recurrence/reviews/fixed-skip/apply": {

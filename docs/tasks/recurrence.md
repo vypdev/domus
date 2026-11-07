@@ -130,3 +130,24 @@ replacement review.
 Apply through `POST /fixed-pattern/apply` with the original selection, preview key, and
 fingerprint. The new pattern gets an independent continuation. The old slots and receipts
 remain inspectable.
+
+
+## Replace future fixed work in a batch
+
+Select an occurrence from the fixed schedule and open **Replace future fixed work in a batch**.
+Supply the new local start, RRULE and reason. The preview lists retained work, occurrences
+that will be cancelled, and the dates of linked replacements and new pattern slots. The
+current rule must be active. The plan covers a bounded 60-day horizon starting on the
+requested local date. If affected work or a moved deadline falls beyond it, review a later
+start or resolve that work individually.
+
+The original occurrences remain in task history with the cancellation reason. Domus pairs
+matching nominal dates first, then pairs the remaining eligible work in chronological
+order. A replacement inherits compatible assignments. Started or completed work and
+previous individual changes remain visible. If a deadline collides with that retained
+work, a live dependency would be broken, or an assignment has no compatible destination,
+the batch is rejected so the manager can review the current facts.
+
+The rule revision, original cancellations, replacement work, new slots and continuation
+commit together. Use the original request to recover the linked result after a lost reply.
+A restored-away result remains historical.

@@ -20,6 +20,7 @@ ReviewKind = Literal[
     "fixed-state",
     "relative-settings",
     "fixed-pattern",
+    "fixed-replacement",
     "reschedule",
     "fixed-skip",
 ]
@@ -76,7 +77,7 @@ def review_target(
     fixed = unit.recurrence.schedule(scope.household_id, schedule_id)
     if fixed is not None:
         nominal = fixed.pattern.start
-        actions: tuple[ReviewKind, ...] = ("fixed-state", "fixed-pattern")
+        actions: tuple[ReviewKind, ...] = ("fixed-state", "fixed-pattern", "fixed-replacement")
         if slot_key is not None:
             actions += ("reschedule", "fixed-skip")
         return ReviewTarget(

@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
+from domus.application.fixed_batch_review import FixedReplacement
 from domus.application.fixed_pattern_review import FixedPatternChange
 from domus.application.fixed_skip_review import FixedSkip
 from domus.application.fixed_state_review import FixedStateChange
@@ -230,3 +231,21 @@ class ReviewedFixedPatternBody(FixedPatternBody):
 
     def reviewed(self) -> ReviewedChange:
         return ReviewedChange(self.selection(), self.preview_key, self.plan_fingerprint)
+
+
+class FixedReplacementBody(FixedPatternBody):
+    reason: Annotated[str, Field(min_length=1, max_length=1000)]
+
+    def replacement(self) -> FixedReplacement:
+        pattern = self.selection()
+        return FixedReplacement(
+            pattern.schedule_id, pattern.schedule_revision, pattern.pattern, self.reason
+        )
+
+
+class ReviewedFixedReplacementBody(FixedReplacementBody):
+    preview_key: Identifier
+    plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+    def reviewed(self) -> ReviewedChange:
+        return ReviewedChange(self.replacement(), self.preview_key, self.plan_fingerprint)

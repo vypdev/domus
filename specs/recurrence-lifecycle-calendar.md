@@ -365,6 +365,8 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `backend/src/domus/application/fixed_skip_review.py` | create |
 | `backend/src/domus/application/fixed_state_review.py` | create |
 | `backend/src/domus/application/fixed_pattern_review.py` | create |
+| `backend/src/domus/application/fixed_batch_review.py` | create |
+| `backend/src/domus/application/commands.py` | update |
 | `backend/src/domus/application/calendar_queries.py` | create |
 | `backend/src/domus/application/calendar_commands.py` | create |
 | `backend/src/domus/infrastructure/sqlite_relative_lifecycle.py` | create |
@@ -411,6 +413,7 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `tests/backend/test_mixed_recurrence.py` | create |
 | `tests/backend/test_recurrence_runtime.py` | update |
 | `tests/backend/test_recurrence_review.py` | create |
+| `tests/backend/test_fixed_batch_review.py` | create |
 | `tests/backend/test_calendar_values.py` | create |
 | `tests/backend/test_calendar_queries.py` | create |
 | `tests/backend/test_calendar_http.py` | create |

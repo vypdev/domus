@@ -6,12 +6,14 @@ from dataclasses import asdict, dataclass, replace
 from enum import StrEnum
 
 from domus.application.commands import AtomicCommands, Change
-from domus.application.fixed_materialization import MaintenanceScope
+from domus.application.fixed_batch_review import FixedReplacement, replacement_source
+from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
 from domus.application.fixed_pattern_review import (
     FixedPatternChange,
     FixedPatternPlan,
     fixed_pattern_plan,
 )
+from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.fixed_skip_review import FixedSkip, FixedSkipPlan, fixed_skip_plan
 from domus.application.fixed_state_review import FixedStateChange, FixedStatePlan, fixed_state_plan
 from domus.application.identity_ports import CurrentHuman
@@ -36,6 +38,7 @@ from domus.application.relative_state_review import (
 )
 from domus.application.reschedule_review import (
     RescheduleSelection,
+    future_until,
     reschedule_plan,
     reschedule_source,
 )
@@ -44,6 +47,7 @@ from domus.application.task_commands import reschedule_occurrence, transition_oc
 from domus.application.task_requests import RescheduleTask, TransitionTask
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
+from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_planning import PlannedSlot
 from domus.domain.recurrence_records import ScheduleState
 from domus.domain.relative_lifecycle import WorkHistory
@@ -93,6 +97,7 @@ type ReviewSelection = (
     | RescheduleSelection
     | FixedStateChange
     | FixedPatternChange
+    | FixedReplacement
 )
 
 
@@ -478,12 +483,67 @@ class RecurrenceReview:
             JsonDocument.from_value({"version": 1, "kind": action.value}),
         )
 
+    def _replace_fixed(
+        self,
+        authority: _ReviewAuthority,
+        commands: AtomicCommands,
+        selection: FixedReplacement,
+        reviewed: ReviewedChange | None = None,
+    ) -> Receipt:
+        payload = selection.document() if reviewed is None else reviewed.document()
+        scope = authority.scope
+        with self.transactions.read() as unit:
+            previous = commands.replay_in(unit, authority.command, payload)
+            if previous is not None:
+                return previous
+            actor = authority.current(unit)
+            if reviewed is not None:
+                self._reviewed_plan(unit, authority.command, reviewed)
+            source = replacement_source(unit, scope, selection)
+        planner = FixedRecurrencePlanner(CalendarNominalExpansion(), self.planner.times)
+        prepared = source.prepare(planner, self.clock.now())
+        try:
+            plan = self._snapshot(scope, actor, selection.document(), prepared.document())
+        except InvalidInput:
+            raise Conflict("recurrence_review_too_large") from None
+
+        def commit(unit: UnitOfWork) -> Change:
+            if (
+                authority.current(unit) != actor
+                or replacement_source(unit, scope, selection) != source
+            ):
+                raise Conflict("recurrence_review_stale")
+            if reviewed is None:
+                try:
+                    return self._preview_change(payload, plan)
+                except InvalidInput:
+                    raise Conflict("recurrence_review_too_large") from None
+            self._reviewed_plan(unit, authority.command, reviewed)
+            if plan.fingerprint != reviewed.plan_fingerprint:
+                raise Conflict("recurrence_review_stale")
+            if self.clock.now() >= prepared.future_until:
+                raise Conflict("recurrence_reschedule_in_past")
+            materializer = FixedMaintenance(
+                self.transactions, scope, planner, self.clock, self.identifiers
+            )
+            outcome = prepared.commit(
+                unit, materializer, commands, authority.command, authority.access, selection
+            )
+            result = JsonDocument.from_value(
+                {"version": 1, "plan_fingerprint": plan.fingerprint, **outcome}
+            )
+            return self._change(ReviewAction.APPLY, payload, result)
+
+        return commands.execute(authority.command, payload, commit)
+
     def preview(self, key: str, selection: ReviewSelection) -> Receipt:
         action = ReviewAction.PREVIEW
         authority = self._authority(self.actor.current(), action, key)
         commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
         payload = selection.document()
 
+        if isinstance(selection, FixedReplacement):
+            return self._replace_fixed(authority, commands, selection)
         if isinstance(selection, RescheduleSelection):
             return self._preview_reschedule(authority, commands, selection)
         if isinstance(selection, AttachRelative):
@@ -509,9 +569,13 @@ class RecurrenceReview:
         authority = self._authority(self.actor.current(), action, key)
         commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
         payload = request.document()
+        selection = request.selection
+        if isinstance(selection, FixedReplacement):
+            return self._replace_fixed(authority, commands, selection, request)
 
         timing: AttachmentTiming | None = None
         destination: PlannedSlot | None = None
+        latest_commit = 0
         if isinstance(request.selection, AttachRelative | RescheduleSelection):
             previous = commands.replay(authority.command, payload)
             if previous is not None:
@@ -531,13 +595,15 @@ class RecurrenceReview:
                 destination = source.prepare(
                     self.planner.times, request.selection, self.clock.now()
                 )
+                latest_commit = future_until(
+                    self.planner.times, destination, source.slot.schedule.policy
+                )
 
         revision: RelativeSettingsPlan | None = None
 
         def apply(unit: UnitOfWork) -> Change:
             nonlocal revision
             saved_plan = self._reviewed_plan(unit, authority.command, request)
-            selection = request.selection
             if isinstance(selection, AttachRelative):
                 assert timing is not None
                 actor = authority.current(unit)
@@ -550,6 +616,8 @@ class RecurrenceReview:
                 outcome = attach_relative(unit, commands, authority.scope, selection, attachment)
             elif isinstance(selection, RescheduleSelection):
                 assert destination is not None
+                if self.clock.now() >= latest_commit:
+                    raise Conflict("recurrence_reschedule_in_past")
                 snapshot, task = self._reschedule_plan(unit, authority, selection, destination)
                 if snapshot.fingerprint != request.plan_fingerprint:
                     raise Conflict("recurrence_review_stale")

@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled product bundle for the Overview, Tasks, Calendar and Household routes with scheduling preview and original-request recovery.",
+  "scope": "Compiled product bundle for the Overview, Tasks, Calendar and Household routes with scheduling preview, original-request recovery and fixed batch replacement.",
   "actualProductFiles": {
-    ".vite/manifest.json": "52b07af254516cf8f31fea4edd616ff8d12d9ad77f83613a52f31fde806fb276",
-    "assets/index-DDnh2X7I.js": "ef4001946e4f5deeabb79e52f991427b243adac6d5472260d7a03bc60104c915",
+    ".vite/manifest.json": "d2cc59739876afc18841a97075996b6fe07bee978080af5ecc5527622a8c3a86",
+    "assets/index-Dv-9xcH4.js": "95b4d65e7d1ec8e57eb42e80bd8361c1144805bbdcee40d96514d240fca70a1f",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "136c9690af7d5280ce99b2892fae058d5c4316bcf675ccdb8de05137a7ad888b"
+    "index.html": "eddbdf7ffc4944c4eea2940b46e6e441d35f07f8a83eebb36984f8d3f87165d6"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -58,6 +58,16 @@
       "assets/index-CmtVd76i.js": "5a2723a1c60c817282847f71c2136735663f1d67aa067e53bd1378508da338f2",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "index.html": "d77183fdf24bef34ce731dad62fc2a5ebccf227768626059ea63626359675301"
+    }
+  },
+  "preFixedBatchReplacement": {
+    "sourceCommit": "3bbec45a6f924527d6a00e93817c1aaf1523ce1f",
+    "scope": "Compiled product bundle with the first scheduling reviews and original-request recovery.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "52b07af254516cf8f31fea4edd616ff8d12d9ad77f83613a52f31fde806fb276",
+      "assets/index-DDnh2X7I.js": "ef4001946e4f5deeabb79e52f991427b243adac6d5472260d7a03bc60104c915",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "136c9690af7d5280ce99b2892fae058d5c4316bcf675ccdb8de05137a7ad888b"
     }
   }
 }
