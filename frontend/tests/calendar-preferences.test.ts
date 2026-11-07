@@ -162,7 +162,7 @@ test('Sunday updates the calendar grid and controls stay private to the bound sc
     widget.preference={value:monday,pending:false,busy:false,notice:null,readOnly:false};
     await widget.updateComplete;
     const root=widget.shadowRoot!;
-    const choice=root.querySelector('label select')!;
+    const choice=root.querySelector<HTMLSelectElement>('label select')!;
     expect(choice.value).toBe('monday');
     await vi.waitFor(()=>expect(root.querySelectorAll('.calendar-grid > li')).toHaveLength(36));
     choice.value='sunday'; choice.dispatchEvent(new Event('change'));
