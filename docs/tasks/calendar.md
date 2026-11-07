@@ -23,3 +23,19 @@ a daylight-saving adjustment. Other instants are presented in the household's ti
 Follow `next_cursor` with the original range, filters and page size. The cursor expires after
 five minutes and belongs to the verified principal and local authority context. A pending
 projection can return valid entries while additional recurrence sources still need processing.
+
+**My week starts on** selects Monday or Sunday for the current member. It changes week
+ranges and month column alignment. The default is Monday. Each member's choice has its
+own revision and is private, including when another member administers the household.
+If a save response is lost, use **Check original week-start change** before changing the
+preference again.
+
+The protected calendar also exposes `GET /api/v1/tasks/calendar/home-assistant` with
+the same date range, filters, page size and current task-read grant. Each event's
+`uid` is the calendar `entry_id`. A date-only event uses an ISO local date. Timed
+events carry the actual local offset, including for resolved daylight-saving transitions.
+The page retains the pending state and the source cursor. An unavailable source returns
+an error. External synchronization is disabled.
+
+The [Home Assistant integration design](../../specs/home-assistant-surface.md) covers
+registration of native calendar entities and the installation credential.

@@ -77,6 +77,9 @@ for (const mode of ['native', 'standalone'] as const) {
     await tasks.focus();
     await page.keyboard.press('Tab');
     await expect(calendar).toBeFocused();
+    expect((await request.post(origin + '/__fixture__/revision', {
+      data:{revision:'9007199254740993',calendar:true},
+    })).ok()).toBe(true);
     const reading = page.waitForResponse(response => response.url().startsWith(base + 'api/v1/tasks/calendar?'));
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(base + '#calendar');
@@ -84,6 +87,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(calendar).toHaveAttribute('aria-current', 'page');
     expect((await reading).ok()).toBe(true);
     await expect(calendarRegion.getByText('There are no matching entries in this range.')).toBeVisible();
+    await expect(calendarRegion.getByLabel('My week starts on')).toHaveValue('monday');
     await page.goBack();
     await expect(tasks).toHaveAttribute('aria-current', 'page');
     await page.goForward();
@@ -142,6 +146,35 @@ for (const mode of ['native', 'standalone'] as const) {
     await calendarRegion.getByRole('button', {name: 'Mostrar calendario'}).click();
     await expect(calendarRegion.getByText('Entradas que coinciden 0')).toBeVisible();
     await expect(calendarRegion.locator('.calendar-grid')).toHaveCount(0);
+
+    const pref = base + 'api/v1/tasks/calendar/preferences';
+    const choose = calendarRegion.getByLabel('Mi semana empieza el');
+    const recover = calendarRegion.getByRole('button', {name:'Consultar el cambio original de inicio de semana'});
+    await expect(choose).toBeEnabled();
+    let originalKey = '';
+    await page.route(pref, async route => {
+      if (route.request().method() !== 'PUT') {await route.continue(); return;}
+      originalKey = route.request().headers()['idempotency-key'];
+      expect(route.request().postData()).toBe('{"expected_revision":9007199254740993,"week_start":"sunday"}');
+      const committed = await route.fetch();
+      expect(committed.status()).toBe(200);
+      await route.abort('connectionclosed');
+    });
+    await choose.selectOption('sunday');
+    await expect(recover).toBeEnabled();
+    await expect(calendarRegion.getByRole('alert')).toContainText('El cambio está sin confirmar');
+    await page.reload();
+    const recovered = calendarRegion.getByRole('button', {name:'Check original week-start change'});
+    await expect(recovered).toBeEnabled();
+    const original = page.waitForResponse(response => response.url() === pref + '/requests/' + originalKey);
+    await recovered.click();
+    const originalResponse = await original;
+    expect(originalResponse.ok()).toBe(true);
+    expect(await originalResponse.text()).toContain('"revision":9007199254740994');
+    await expect(recovered).toHaveCount(0);
+    await expect(calendarRegion.getByLabel('My week starts on')).toHaveValue('sunday');
+    expect(writes).toEqual(['POST ' + base + 'api/v1/household', 'PUT ' + pref]);
+    await page.getByLabel('Language', {exact: true}).selectOption('es');
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

@@ -2,6 +2,8 @@
 import {TASK_PRIORITIES, TASK_STATES} from './tasks';
 import type {TaskPriority, TaskState} from './tasks';
 
+export const WEEK_STARTS = ['monday', 'sunday'] as const;
+export type WeekStart = typeof WEEK_STARTS[number];
 export const CALENDAR_MODES = ['month', 'week', 'day', 'agenda'] as const;
 export const CALENDAR_KINDS = ['planned', 'due', 'performed', 'approval'] as const;
 export const CALENDAR_TIMINGS = ['manual', 'fixed_calendar', 'completion_relative'] as const;
@@ -47,7 +49,11 @@ export function civilDate(value: unknown): value is string {
 
 function stamp(value: number): string {return new Date(value).toISOString().slice(0, 10);}
 
-export function calendarPeriod(mode: CalendarMode, anchor: string): CalendarPeriod {
+export function calendarWeekOffset(value: Date, weekStart: WeekStart): number {
+  return (value.getUTCDay() + (weekStart === 'monday' ? 6 : 0)) % 7;
+}
+
+export function calendarPeriod(mode: CalendarMode, anchor: string, weekStart: WeekStart = 'monday'): CalendarPeriod {
   const value = new Date(anchor + 'T00:00:00Z');
   const at = value.getTime();
   if (mode === 'month') {
@@ -55,8 +61,8 @@ export function calendarPeriod(mode: CalendarMode, anchor: string): CalendarPeri
       end: stamp(Date.UTC(value.getUTCFullYear(), value.getUTCMonth() + 1, 1))};
   }
   if (mode === 'week') {
-    const monday = at - (value.getUTCDay() + 6) % 7 * DAY;
-    return {start: stamp(Math.max(0, monday)), end: stamp(monday + 7 * DAY)};
+    const first = at - calendarWeekOffset(value, weekStart) * DAY;
+    return {start: stamp(Math.max(0, first)), end: stamp(first + 7 * DAY)};
   }
   return {start: anchor, end: stamp(at + (mode === 'day' ? 1 : 31) * DAY)};
 }

@@ -5,7 +5,7 @@ import {civilDate} from './calendar';
 import {taskIdentifier, taskText} from './tasks';
 
 export const REVIEW_KINDS = ['attachment', 'adoption', 'state', 'relative-settings', 'fixed-state',
-  'fixed-pattern', 'fixed-replacement', 'reschedule', 'fixed-skip'] as const;
+  'fixed-pattern', 'fixed-replacement', 'fixed-exclude', 'fixed-add', 'reschedule', 'fixed-skip'] as const;
 export const VISIBILITIES = ['at_completion', 'at_verification'] as const;
 export const ATTACHMENT_CHOICES = ['adopt', 'retain_manual'] as const;
 export const FOLD_CHOICES = ['first_instant', 'second_instant'] as const;
@@ -28,6 +28,7 @@ export type ReviewSelection =
   | Readonly<{kind: 'relative-settings'; body: ScheduleIdentity & RelativeSettings}>
   | Readonly<{kind: 'fixed-pattern'; body: ScheduleIdentity & Readonly<{start: Nominal; rrule: string}>}>
   | Readonly<{kind: 'fixed-replacement'; body: ScheduleIdentity & Readonly<{start: Nominal; rrule: string; reason: string}>}>
+  | Readonly<{kind: 'fixed-exclude' | 'fixed-add'; body: ScheduleIdentity & Readonly<{nominal: Nominal; reason: string}>}>
   | Readonly<{kind: 'fixed-skip'; body: SlotIdentity}>
   | Readonly<{kind: 'reschedule'; body: SlotIdentity & Readonly<{destination: Nominal}>}>;
 export type ReviewCommand =
@@ -112,6 +113,11 @@ function selection(value: unknown): ReviewSelection {
         ? Object.freeze({kind, body: Object.freeze({...pattern, reason: taskText(body.reason, 1000, true, true)})})
         : Object.freeze({kind, body: Object.freeze(pattern)});
     }
+    case 'fixed-exclude': case 'fixed-add': {
+      const body = fields(input.body, [...SCHEDULE,'nominal','reason']);
+      return Object.freeze({kind, body: Object.freeze({...schedule(body), nominal: nominal(body.nominal),
+        reason: taskText(body.reason, 1000, true, true)})});
+    }
     default: {
       const body = fields(input.body, kind === 'reschedule' ? [...SLOT,'destination'] : SLOT);
       const slot = {...schedule(body), ...work(body), slot_key: taskIdentifier(body.slot_key), reason: taskText(body.reason, 1000, true, true)};
@@ -157,6 +163,10 @@ export function reviewSelection(target: ReviewTarget, draft: ReviewDraft): Revie
   if (kind === 'fixed-pattern' || kind === 'fixed-replacement') {
     const pattern = {...schedule, start: local, rrule: draft.rrule};
     return selection({kind, body: kind === 'fixed-replacement' ? {...pattern, reason: draft.reason} : pattern});
+  }
+  if (kind === 'fixed-exclude' || kind === 'fixed-add') {
+    requireReview(local.kind === target.schedule.nominal.kind);
+    return selection({kind, body: {...schedule, nominal: local, reason: draft.reason}});
   }
   const slot = {...schedule,...work,slot_key: target.slotKey,reason: draft.reason};
   return selection({kind, body: kind === 'reschedule' ? {...slot, destination: local} : slot});

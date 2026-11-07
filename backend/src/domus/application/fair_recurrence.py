@@ -201,8 +201,10 @@ class FairFixedRunner:
         created = replayed = historical = scanned = 0
         attention: list[RuleAttention] = []
         stopped = deferred_periods = False
-        relative_slots = 0
-        while pending and created + replayed + historical + relative_slots < self.limits.max_slots:
+        relative_slots = excluded = 0
+        while pending and (
+            created + replayed + historical + relative_slots + excluded < self.limits.max_slots
+        ):
             if not should_continue():
                 stopped = True
                 break
@@ -270,6 +272,8 @@ class FairFixedRunner:
                 replayed += 1
             elif result.status == "historical_absent":
                 historical += 1
+            elif result.status == "excluded":
+                excluded += 1
             elif result.status in ("current", "paused", "retired", "definition_inactive"):
                 continue
             elif result.status != "scan" or (

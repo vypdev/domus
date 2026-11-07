@@ -37,7 +37,7 @@ function storage() {
 
 test('closed inputs support each review and preserve exact snapshot identifiers, revisions and literal reasons', () => {
   for (const kind of REVIEW_KINDS) {
-    const selected = reviewSelection(work, reviewDraft({...input, kind}));
+    const selected = reviewSelection(work, reviewDraft({...input, kind, time: '09:15'}));
     expect(selected.kind).toBe(kind);
     expect(reviewCommand({step:'preview', selection:selected}).selection).toEqual(selected);
     expect(reviewCommand({step:'apply', selection:selected, previewKey:'preview-key', fingerprint}).selection).toEqual(selected);
@@ -50,6 +50,7 @@ test('closed inputs support each review and preserve exact snapshot identifiers,
     {interval:'3.5'}, {interval:'36601'}, {interval:'NaN'}, {zone:''}]) {
     expect(() => reviewSelection(work, {...input,...change})).toThrow();
   }
+  expect(() => reviewSelection(work, {...input, kind:'fixed-exclude'})).toThrow();
   expect(() => reviewSelection({...work, actions:[]}, input)).toThrow();
   expect(() => reviewSelection({...work, schedule:null}, {...input,kind:'adoption'})).toThrow();
   for (const malformed of [null, [], 'draft', {...input, ignored:0}, {...input,date:null}, {...input, kind:'unknown'}])
@@ -275,6 +276,8 @@ test('review component shows bounded impacts, closed actions, literal content an
   await select('fixed-state'); expect(root.textContent).toContain('Pause new generation');
   await select('fixed-pattern'); expect(get('pattern')).not.toBeNull(); expect(get('time').required).toBe(true);
   await select('fixed-replacement'); expect(get('pattern')).not.toBeNull(); expect(get('reason')).not.toBeNull();
+  await select('fixed-exclude'); expect(get('reason')).not.toBeNull(); expect(get('date')).not.toBeNull();
+  await select('fixed-add'); expect(get('pattern')).toBeNull(); expect(get('time').required).toBe(true);
   await select('fixed-skip'); expect(get('reason')).not.toBeNull();
   await select('reschedule'); expect(get('reason')).not.toBeNull(); expect(get('date')).not.toBeNull();
   await update({target:{...work,schedule:{...work.schedule!,state:'paused',nominal:{kind:'date',local:'2026-12-01'}}}});
@@ -292,8 +295,8 @@ test('review component shows bounded impacts, closed actions, literal content an
   await update({records:[received],result:{record:{...received,command:{step:'preview',
     selection:reviewSelection({...work,schedule:{...work.schedule!,state:'paused'}},{...input,kind:'state'})}},receipt:plan}});
   expect(root.textContent).toContain('Resume generation');
-  for (const kind of ['attachment','fixed-state','reschedule','fixed-pattern','fixed-replacement'] as const) {
-    await update({records:[received],result:{record:{...received,command:{step:'preview',selection:reviewSelection(work,{...input,kind})}},
+  for (const kind of ['attachment','fixed-state','reschedule','fixed-pattern','fixed-replacement','fixed-exclude','fixed-add'] as const) {
+    await update({records:[received],result:{record:{...received,command:{step:'preview',selection:reviewSelection(work,{...input,kind,time:'09:15'})}},
       receipt:kind === 'fixed-replacement' ? {...plan,preview:{...plan.preview!,cancelled:3,
         retainedDates:['2026-11-30'],cancelledDates:['2026-12-01'],
         replacementSlots:[{local:'2026-12-02',replaces:true},{local:'2026-12-03',replaces:false}]}} : plan},notice:null});
@@ -396,4 +399,21 @@ test('batch plan labels replacements and added dates from the actual reviewed pr
     f.enqueue(receipt({...result,plan:{...result.plan,source:{...result.plan.source,retained_work}}}));
     await expect(f.server.original(context,command).result).rejects.toThrow();
   }
+});
+
+
+test.each(['fixed-exclude','fixed-add'] as const)('%s posts the typed exception and retains the exact original', async kind => {
+  const f = http('native');
+  const selection = reviewSelection(work, {...input, kind, time:'09:15'});
+  const request: ReviewRecord = {...intent, command:{step:'preview',selection}};
+  const original = {plan_fingerprint:fingerprint,expires_at:200,plan:{request:{kind:'fixed_exception'},source:{}}};
+  f.enqueue(token); f.enqueue(receipt(original)); f.enqueue(receipt(original,true));
+  expect((await f.server.send(context, request).result).preview?.fingerprint).toBe(fingerprint);
+  const [url, options] = f.fetch.mock.calls[1]!;
+  expect(String(url)).toContain('/fixed-exception/preview');
+  expect(String(options?.body)).toContain('"schedule_revision":9007199254740993');
+  expect(JSON.parse(String(options?.body))).toMatchObject({effect:kind === 'fixed-exclude' ? 'exclude' : 'add',
+    nominal:{kind:'time',local:'2026-12-01T09:15'},reason:input.reason});
+  expect((await f.server.original(context, request).result).historical).toBe(true);
+  expect(String(f.fetch.mock.calls[2]![0])).toContain('/requests/recurrence.review.preview/original-key');
 });

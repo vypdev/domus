@@ -15,6 +15,7 @@ from domus.domain.recurrence_records import (
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.relative_recurrence import RelativeSchedule
 from domus.domain.storage import Installation, validate_identifier
+from domus.infrastructure.sqlite_history import _record as retained_operation
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 from domus.infrastructure.sqlite_recurrence_records import (
     frontier_document,
@@ -135,6 +136,36 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
         validate_identifier(schedule_id)
         return schedule_id
 
+    def fixed_slots_at(
+        self, household_id: str, schedule_id: str, nominal: str
+    ) -> tuple[ScheduledSlot, ...]:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        rows = self.connection.execute(
+            "SELECT * FROM recurrence_slots WHERE household_id=? AND schedule_id=? "
+            "AND nominal_value=? ORDER BY slot_key LIMIT 101",
+            (household_id, schedule_id, nominal),
+        )
+        return tuple(cast(ScheduledSlot, self._slot(row)) for row in rows)
+
+    def has_historical_fixed_exception(
+        self, household_id: str, schedule_id: str, nominal: str
+    ) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        row = self.connection.execute(
+            "SELECT * FROM retained_operations WHERE household_id=? AND current=0 "
+            "AND action='recurrence.review.apply' "
+            "AND json_extract(document,'$.result.kind')='fixed_exception' "
+            "AND json_extract(document,'$.result.schedule_id')=? "
+            "AND json_extract(document,'$.result.exception.nominal.local')=? LIMIT 1",
+            (household_id, schedule_id, nominal),
+        ).fetchone()
+        if row is None:
+            return False
+        retained_operation(row)
+        return True
+
     def has_fixed_materialization_from(
         self, household_id: str, schedule_id: str, from_nominal: str
     ) -> bool:
@@ -170,9 +201,11 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
         return (
             self.connection.execute(
                 "SELECT 1 FROM retained_operations WHERE household_id=? AND current=0 "
-                "AND action='recurrence.materialize' "
+                "AND (action='recurrence.materialize' OR (action='recurrence.review.apply' "
+                "AND json_extract(document,'$.result.kind')='fixed_exception')) "
                 "AND json_extract(document,'$.result.schedule_id')=? "
-                "AND json_extract(document,'$.result.nominal.local')>=? LIMIT 1",
+                "AND coalesce(json_extract(document,'$.result.nominal.local'),"
+                "json_extract(document,'$.result.exception.nominal.local'))>=? LIMIT 1",
                 (household_id, schedule_id, nominal),
             ).fetchone()
             is not None
@@ -350,6 +383,7 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
             if (
                 value.definition_id != previous.definition_id
                 or value.created_at != previous.created_at
+                or any(item not in value.exceptions for item in previous.exceptions)
                 or value.pattern_revision != previous.pattern_revision + int(changed)
             ):
                 raise Conflict("recurrence_identity_conflict")

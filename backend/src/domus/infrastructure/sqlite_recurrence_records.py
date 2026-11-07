@@ -13,6 +13,8 @@ from domus.domain.recurrence_planning import (
     PlannedFixedSlot,
 )
 from domus.domain.recurrence_records import (
+    FixedException,
+    FixedExceptionKind,
     FixedProgress,
     FixedSchedule,
     ScheduledSlot,
@@ -166,10 +168,21 @@ def _schedule_value(value: FixedSchedule) -> JsonObject:
         "state": value.state.value,
         "revision": value.revision,
         "pattern_revision": value.pattern_revision,
+        **({"exceptions": [item.value() for item in value.exceptions]} if value.exceptions else {}),
     }
 
 
+def _exception(value: JsonValue) -> FixedException:
+    row = _object(value, ("kind", "nominal", "reason"))
+    return FixedException(
+        FixedExceptionKind(cast(str, row["kind"])),
+        _nominal(row["nominal"]),
+        cast(str, row["reason"]),
+    )
+
+
 def _schedule(value: JsonValue) -> FixedSchedule:
+    exceptions = type(value) is dict and "exceptions" in value
     row = _record(
         value,
         (
@@ -182,9 +195,10 @@ def _schedule(value: JsonValue) -> FixedSchedule:
             "state",
             "revision",
             "pattern_revision",
+            *(("exceptions",) if exceptions else ()),
         ),
     )
-    return FixedSchedule(
+    schedule = FixedSchedule(
         cast(str, row["schedule_id"]),
         cast(str, row["household_id"]),
         cast(str, row["definition_id"]),
@@ -194,7 +208,14 @@ def _schedule(value: JsonValue) -> FixedSchedule:
         ScheduleState(cast(str, row["state"])),
         cast(int, row["revision"]),
         cast(int, row["pattern_revision"]),
+        tuple(_exception(item) for item in _array(row["exceptions"])) if exceptions else (),
     )
+    if exceptions and (
+        not schedule.exceptions
+        or row["exceptions"] != [item.value() for item in schedule.exceptions]
+    ):
+        raise InvalidInput("noncanonical_recurrence_record")
+    return schedule
 
 
 def schedule_document(value: FixedSchedule) -> JsonDocument:
@@ -337,6 +358,7 @@ def slot_document(value: ScheduledSlot) -> JsonDocument:
             "schedule": _schedule_value(value.schedule),
             "occurrence_id": value.occurrence_id,
             "created_at": value.created_at,
+            **({"added": True} if value.added else {}),
             "planned": {
                 "nominal": _nominal_value(value.planned.nominal),
                 "resolved": None
@@ -348,7 +370,20 @@ def slot_document(value: ScheduledSlot) -> JsonDocument:
 
 
 def _slot(value: JsonValue) -> ScheduledSlot:
-    row = _record(value, ("installation", "schedule", "occurrence_id", "created_at", "planned"))
+    added = type(value) is dict and "added" in value
+    row = _record(
+        value,
+        (
+            "installation",
+            "schedule",
+            "occurrence_id",
+            "created_at",
+            "planned",
+            *(("added",) if added else ()),
+        ),
+    )
+    if added and row["added"] is not True:
+        raise InvalidInput("invalid_recurrence_record")
     installation = _object(row["installation"], ("instance_id", "channel"))
     planned = _object(row["planned"], ("nominal", "resolved"))
     return ScheduledSlot(
@@ -360,6 +395,7 @@ def _slot(value: JsonValue) -> ScheduledSlot:
         ),
         cast(str, row["occurrence_id"]),
         cast(int, row["created_at"]),
+        added,
     )
 
 

@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Query, Request
 from fastapi.params import Depends
 
+from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.task_commands import TaskCommands
@@ -92,6 +93,7 @@ class TaskHTTPContext:
     commands: TaskCommands
     recurrence_review: RecurrenceReview
     calendar: Callable[[], CalendarQueries]
+    calendar_commands: CalendarCommands
 
 
 def create_task_router(
@@ -489,5 +491,10 @@ def create_task_router(
     router.include_router(
         create_recurrence_review_router(lambda request: context(request).recurrence_review)
     )
-    router.include_router(create_calendar_router(lambda request: context(request).calendar()))
+    router.include_router(
+        create_calendar_router(
+            lambda request: context(request).calendar(),
+            lambda request: context(request).calendar_commands,
+        )
+    )
     return router

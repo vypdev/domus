@@ -229,9 +229,15 @@ class FixedMaintenance:
             else (None if progress.evidence is None else progress.evidence.time.last),
             batch.terminal,
         )
+        suppressed = planned is not None and (
+            rule.exception(planned.nominal) is not None
+            or unit.recurrence.has_historical_fixed_exception(
+                rule.household_id, rule.schedule_id, planned.nominal.local.isoformat()
+            )
+        )
         probe = (
             None
-            if planned is None
+            if planned is None or suppressed
             else ScheduledSlot(self.scope.installation, rule, planned, "pending", self.clock.now())
         )
         if probe is None:
@@ -270,7 +276,7 @@ class FixedMaintenance:
         def apply(unit: UnitOfWork) -> Change:
             nonlocal created
             created = True
-            if planned is None:
+            if probe is None:
                 result = JsonDocument.from_value(
                     {
                         "schedule_id": rule.schedule_id,
@@ -281,6 +287,7 @@ class FixedMaintenance:
                     }
                 )
             else:
+                assert planned is not None
                 work = source.definition.new_occurrence(
                     self.identifiers.new(),
                     self.clock.now(),
@@ -313,7 +320,7 @@ class FixedMaintenance:
         if receipt.result.decode().get("cursor_evidence") != time_evidence.document().decode():
             raise StorageFailure("invalid_recurrence_effect")
         occurrence_id = None
-        status = "scan"
+        status = "excluded" if suppressed else "scan"
         if probe is not None:
             data = receipt.result.decode()
             occurrence_id = data.get("occurrence_id")

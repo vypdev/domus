@@ -394,3 +394,40 @@ def test_recurrence_target_uses_the_current_rule_and_requires_manager_context(ap
         ).status_code
         == 403
     )
+
+
+def test_fixed_exception_wire_previews_applies_and_recovers_original(api):
+    from test_ha_calendar_projection import seed
+
+    api.user(USER, True)
+    schedule = seed(api, timed=False)
+    route = BASE + "/fixed-exception"
+    selection = {
+        "schedule_id": schedule,
+        "schedule_revision": 1,
+        "effect": "exclude",
+        "nominal": {"kind": "date", "local": "2026-03-29"},
+        "reason": "Holiday",
+    }
+    headers = api.headers("exception-preview") | CONTEXT
+    for invalid in (
+        selection | {"effect": "other"},
+        selection | {"nominal": {"kind": "date", "local": "2026-02-30"}},
+    ):
+        assert api.client.post(route + "/preview", json=invalid, headers=headers).status_code == 422
+    preview = api.client.post(route + "/preview", json=selection, headers=headers)
+    assert preview.status_code == 200, preview.text
+    plan = preview.json()["result"]
+    applied = api.client.post(
+        route + "/apply",
+        headers=api.headers("exception-apply") | CONTEXT,
+        json={
+            **selection,
+            "preview_key": "exception-preview",
+            "plan_fingerprint": plan["plan_fingerprint"],
+        },
+    )
+    assert applied.status_code == 200, applied.text
+    original = BASE + "/requests/recurrence.review.apply/exception-apply"
+    assert api.client.get(original, headers=CONTEXT).json() == applied.json()
+    assert len(plan["plan"]["source"]["cancelled_work"]) == 1

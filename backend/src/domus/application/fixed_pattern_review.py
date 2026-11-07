@@ -91,7 +91,9 @@ class FixedPatternPlan:
             raise Conflict("recurrence_reschedule_collision")
         return {
             "before": before.local.isoformat(),
-            "prospective_slots": [slot.value() for slot in batch.slots],
+            "prospective_slots": [
+                slot.value() for slot in batch.slots if rule.exception(slot.nominal) is None
+            ],
         }
 
 

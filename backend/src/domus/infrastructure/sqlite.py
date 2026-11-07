@@ -27,6 +27,10 @@ from domus.domain.storage import (
     validate_identifier,
 )
 from domus.infrastructure.sqlite_calendar import SQLiteCalendar
+from domus.infrastructure.sqlite_calendar_preferences import (
+    CALENDAR_PREFERENCE_STATEMENT,
+    SQLiteCalendarPreferences,
+)
 from domus.infrastructure.sqlite_history import HISTORY_STATEMENTS, SQLiteHistory
 from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
 from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS, PROFILE_TABLES
@@ -50,7 +54,7 @@ from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS, TASK_TABLES
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -107,6 +111,7 @@ SCHEMA_STATEMENTS = (
     *RECURRENCE_STATEMENTS,
     *PROFILE_STATEMENTS,
     *RELATIVE_LIFECYCLE_STATEMENTS,
+    CALENDAR_PREFERENCE_STATEMENT,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -116,7 +121,8 @@ TASK_SCHEMA_TABLES = HISTORY_TABLES | TASK_TABLES
 MATERIAL_SCHEMA_TABLES = TASK_SCHEMA_TABLES | MATERIAL_TABLES
 RECURRENCE_SCHEMA_TABLES = MATERIAL_SCHEMA_TABLES | RECURRENCE_TABLES
 PROFILE_SCHEMA_TABLES = RECURRENCE_SCHEMA_TABLES | PROFILE_TABLES
-TABLES = PROFILE_SCHEMA_TABLES | RELATIVE_LIFECYCLE_TABLES
+LIFECYCLE_SCHEMA_TABLES = PROFILE_SCHEMA_TABLES | RELATIVE_LIFECYCLE_TABLES
+TABLES = LIFECYCLE_SCHEMA_TABLES | {"calendar_preferences"}
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -142,6 +148,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(RECURRENCE_STATEMENTS if version >= 8 else ()),
             *(PROFILE_STATEMENTS if version >= 9 else ()),
             *(RELATIVE_LIFECYCLE_STATEMENTS if version >= 10 else ()),
+            *((CALENDAR_PREFERENCE_STATEMENT,) if version >= 11 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -301,6 +308,7 @@ class SQLiteUnit:
     def __init__(self, connection: sqlite3.Connection, installation: Installation) -> None:
         self.recurrence = SQLiteRecurrences(connection, installation)
         self.calendar = SQLiteCalendar(connection)
+        self.calendar_preferences = SQLiteCalendarPreferences(connection)
         self.households = SQLiteHouseholds(connection)
         self.receipts = SQLiteReceipts(connection)
         self.audit = SQLiteAudit(connection)
@@ -360,9 +368,7 @@ class SQLiteDatabase:
             }
             if version == 0 and application_id == 0 and not objects and allow_empty:
                 return 0
-            if version != SCHEMA_VERSION and not (
-                allow_previous and version in (1, 2, 3, 4, 5, 6, 7, 8, 9)
-            ):
+            if version != SCHEMA_VERSION and not (allow_previous and 1 <= version < SCHEMA_VERSION):
                 raise DatabaseRejected("unsupported_schema")
             expected_tables = {
                 1: BASE_TABLES,
@@ -374,6 +380,7 @@ class SQLiteDatabase:
                 7: MATERIAL_SCHEMA_TABLES,
                 8: RECURRENCE_SCHEMA_TABLES,
                 9: PROFILE_SCHEMA_TABLES,
+                10: LIFECYCLE_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -417,8 +424,8 @@ class SQLiteDatabase:
                     )
                     connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
-                elif version in (1, 2, 3, 4, 5, 6, 7, 8, 9):
-                    if version == 9 and _schema(connection) != _expected_schema(version):
+                elif version < SCHEMA_VERSION:
+                    if version >= 9 and _schema(connection) != _expected_schema(version):
                         raise DatabaseRejected("unrelated_database")
                     migration = (
                         *(IDENTITY_STATEMENTS if version == 1 else ()),
@@ -429,10 +436,15 @@ class SQLiteDatabase:
                         *(REVIEW_STATEMENTS if version < 7 else ()),
                         *(RECURRENCE_STATEMENTS if version < 8 else ()),
                         *(PROFILE_STATEMENTS if version < 9 else ()),
-                        *RELATIVE_LIFECYCLE_STATEMENTS,
+                        *(RELATIVE_LIFECYCLE_STATEMENTS if version < 10 else ()),
+                        CALENDAR_PREFERENCE_STATEMENT,
                     )
                     for statement in migration:
                         connection.execute(statement)
+                    connection.execute(
+                        "INSERT INTO calendar_preferences(household_id,member_id) "
+                        "SELECT household_id,member_id FROM members"
+                    )
                     if version < 6:
                         migrate_task_documents(connection)
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")

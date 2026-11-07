@@ -25,6 +25,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let memberId:string=originalAccess.member.member_id, preferenceLocale:'en'|'es'|null=null, preferenceRevision=1, preferencesReadable=true;
   const presentation=()=>({member_id:memberId,alias:null,revision:1});
   const preferences=()=>({member_id:memberId,locale:preferenceLocale,revision:preferenceRevision,routine_participation_summaries:true,notification_delivery:'unavailable'});
+  let weekStart='monday', weekRevision=1, weekOriginal:object|null=null;
   const fetch = vi.fn(async (path: string, init: RequestInit) => {
     const route = path.slice(wire.endpoint.applicationBase.length + 'api/v1/'.length);
     let raw: string;
@@ -35,6 +36,16 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
     else if (route === 'auth/logout') raw = JSON.stringify({state: 'logged_out', upstream_revoked: true,
       message: 'You are signed out of Domus.', action_required: 'Sign in to continue.'});
+    else if (route === 'tasks/calendar/preferences') {
+      if (init.method === 'PUT') {
+        weekStart = JSON.parse(String(init.body)).week_start; weekRevision++;
+        weekOriginal = {state:'committed',archived_by:null,operation_id:'week-op',created_at:100,
+          result:{week_start:weekStart,revision:weekRevision,member_id:memberId},message:'Saved.',action_required:'Review.'};
+        throw new Error('Committed response lost');
+      }
+      raw=JSON.stringify({week_start:weekStart,revision:weekRevision});
+    }
+    else if (route.startsWith('tasks/calendar/preferences/requests/')) raw=JSON.stringify(weekOriginal);
     else if (init.method==='PUT') {
       if(route!=='administration/preferences')throw new Error('This fixture supports preference mutations only');
       putRequests++;const body=JSON.parse(init.body as string);preferenceLocale=body.locale;preferenceRevision++;
@@ -388,6 +399,10 @@ test('calendar composition accepts bounded reads only on the verified route and 
   const query = {start:'2026-11-01',end:'2026-12-01',kind:'',timing:'',state:'',priority:'',category:'',own:true};
   expect(decodeCalendarIntent({type:'load',query})).toEqual({type:'load',query});
   expect(decodeCalendarIntent({type:'more'})).toEqual({type:'more'});
+  for (const day of ['monday','sunday']) expect(decodeCalendarIntent({type:'setWeekStart',weekStart:day})).toEqual({type:'setWeekStart',weekStart:day});
+  expect(decodeCalendarIntent({type:'setWeekStart',weekStart:'tuesday'})).toBeNull();
+  expect(decodeCalendarIntent({type:'recoverPreference'})).toEqual({type:'recoverPreference'});
+  expect(decodeCalendarIntent({type:'refreshPreference'})).toEqual({type:'refreshPreference'});
   for (const value of [{type:'load'}, {type:'load',query:{...query,member:'another'}}, {type:'more',query}, {type:'refresh'}, null]) {
     expect(decodeCalendarIntent(value)).toBeNull();
   }
@@ -408,6 +423,14 @@ test('calendar composition accepts bounded reads only on the verified route and 
   expect(calls()[1][0]).toContain('member_id=identity-1');
   sends({type:'more'});await vi.waitFor(()=>expect(app.calendar?.page?.cursor).toBe(null));
   expect(calls()[2][0]).toContain('cursor=next-page');
+  await vi.waitFor(()=>expect(app.calendarPreference?.value?.weekStart).toBe('monday'));
+  sends({type:'refreshPreference'});
+  await vi.waitFor(()=>expect(app.calendarPreference?.busy).toBe(false));
+  sends({type:'setWeekStart',weekStart:'sunday'});
+  await vi.waitFor(()=>expect(app.calendarPreference?.notice).toBe('preferenceUncertain'));
+  sends({type:'recoverPreference'});
+  await vi.waitFor(()=>expect(app.calendarPreference?.value?.weekStart).toBe('sunday'));
+  expect(app.calendarPreference?.pending).toBe(false);
   navigate('#tasks');expect(app.calendarScopeKey).toBeNull();expect(app.calendar?.page).toBeNull();
   sends({type:'more'});expect(calls()).toHaveLength(3);
 });

@@ -12,6 +12,11 @@ const en = {
   manual: 'Manual', fixed_calendar: 'Fixed calendar', completion_relative: 'After completion',
   approved: 'Approved', rejected: 'Rejected', none: 'No approval required', verificationPending: 'Pending approval',
   adjusted: 'Original local time',
+  weekStart: 'My week starts on', monday: 'Monday', sunday: 'Sunday',
+  recoverPreference: 'Check original week-start change', refreshPreference: 'Reload calendar preference',
+  preferenceUnavailable: 'Your calendar preference is unavailable.',
+  preferenceUncertain: 'The change is unconfirmed. Check the original request.',
+  preferenceRejected: 'The original change could not be confirmed. Review your current preference.',
 };
 const es: Record<keyof typeof en, string> = {
   title: 'Calendario', view: 'Vista del calendario', date: 'Fecha de referencia', kind: 'Tipo de entrada',
@@ -25,6 +30,11 @@ const es: Record<keyof typeof en, string> = {
   manual: 'Manual', fixed_calendar: 'Calendario fijo', completion_relative: 'Tras completar',
   approved: 'Aprobada', rejected: 'Rechazada', none: 'No requiere aprobación', verificationPending: 'Pendiente de aprobación',
   adjusted: 'Hora local original',
+  weekStart: 'Mi semana empieza el', monday: 'Lunes', sunday: 'Domingo',
+  recoverPreference: 'Consultar el cambio original de inicio de semana', refreshPreference: 'Recargar la preferencia del calendario',
+  preferenceUnavailable: 'Tu preferencia del calendario no está disponible.',
+  preferenceUncertain: 'El cambio está sin confirmar. Consulta la solicitud original.',
+  preferenceRejected: 'No se pudo confirmar el cambio original. Revisa tu preferencia actual.',
 };
 export type CalendarMessage = keyof typeof en;
 export function calendarMessage(key: CalendarMessage, locale: Language): string {

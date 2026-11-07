@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from typing import Protocol
 
+from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import Transactions
@@ -44,6 +45,7 @@ def task_contexts(
             lambda: CalendarQueries(
                 store, MaintenanceScope(installation, "home"), actor.read(), cursors, planner.times
             ),
+            CalendarCommands(store, actor, actor.read, clock, identifiers),
         )
 
     return context

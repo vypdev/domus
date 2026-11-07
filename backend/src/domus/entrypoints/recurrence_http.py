@@ -16,6 +16,7 @@ from domus.entrypoints.household_http import (
     _receipt,
 )
 from domus.entrypoints.recurrence_dto import (
+    FixedExceptionBody,
     FixedPatternBody,
     FixedReplacementBody,
     FixedSkipBody,
@@ -26,6 +27,7 @@ from domus.entrypoints.recurrence_dto import (
     RelativeStateBody,
     RescheduleBody,
     ReviewedAdoptionBody,
+    ReviewedFixedExceptionBody,
     ReviewedFixedPatternBody,
     ReviewedFixedReplacementBody,
     ReviewedFixedSkipBody,
@@ -188,6 +190,22 @@ def create_recurrence_review_router(context: Callable[[Request], RecurrenceRevie
     )
     def apply_fixed_replacement(
         request: Request, body: ReviewedFixedReplacementBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).apply(_key(request), body.reviewed()))
+
+    @router.post(
+        "/fixed-exception/preview", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def preview_fixed_exception(
+        request: Request, body: FixedExceptionBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).preview(_key(request), body.selection()))
+
+    @router.post(
+        "/fixed-exception/apply", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def apply_fixed_exception(
+        request: Request, body: ReviewedFixedExceptionBody, query: Annotated[_EmptyQuery, Query()]
     ) -> ReceiptResponse:
         return _receipt(context(request).apply(_key(request), body.reviewed()))
 

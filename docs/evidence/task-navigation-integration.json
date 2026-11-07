@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled product bundle for the Overview, Tasks, Calendar and Household routes with scheduling preview, original-request recovery and fixed batch replacement.",
+  "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with reviewed fixed exceptions and private calendar preferences.",
   "actualProductFiles": {
-    ".vite/manifest.json": "d2cc59739876afc18841a97075996b6fe07bee978080af5ecc5527622a8c3a86",
-    "assets/index-Dv-9xcH4.js": "95b4d65e7d1ec8e57eb42e80bd8361c1144805bbdcee40d96514d240fca70a1f",
+    ".vite/manifest.json": "4322c55c28a113e005722566b1d3c861fa3424fd25474aea9ffe227fb65e3829",
+    "assets/index-ByQ-22U-.js": "fef080be673b17bd31eb0c9122242f5bcaaf0d2fe76d81d8e3588e5add7d0361",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "eddbdf7ffc4944c4eea2940b46e6e441d35f07f8a83eebb36984f8d3f87165d6"
+    "index.html": "3752a9b10f653afe7b7b8e6101a96b26b6a485ff9530376a7d24a98c003630a7"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -69,5 +69,16 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "index.html": "136c9690af7d5280ce99b2892fae058d5c4316bcf675ccdb8de05137a7ad888b"
     }
+  },
+  "batchAndCutoffHistoricalValidation": {
+    "sourceCommit": "2a35e2a3bcfe98b58ddf184b6e781a1f8e3745d5",
+    "actualProductFiles": {
+      ".vite/manifest.json": "d2cc59739876afc18841a97075996b6fe07bee978080af5ecc5527622a8c3a86",
+      "assets/index-Dv-9xcH4.js": "95b4d65e7d1ec8e57eb42e80bd8361c1144805bbdcee40d96514d240fca70a1f",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "eddbdf7ffc4944c4eea2940b46e6e441d35f07f8a83eebb36984f8d3f87165d6"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42326875268",
+    "scope": "Historical asset bytes for the prior scheduling review and fixed batch replacement."
   }
 }

@@ -403,5 +403,30 @@
     "progress": "https://github.com/vypdev/domus/runs/128258339350",
     "review": "https://github.com/vypdev/domus/pull/29#discussion_r4499405585",
     "scope": "Exact-source scheduling interface evidence. Browser flows drop a committed apply response and recover by original GET without a duplicate write. The later deadline fence and batch replacement have separate acceptance."
+  },
+  "fixedBatchAndCutoffHistoricalCheckpoint": {
+    "sourceCommit": "2a35e2a3bcfe98b58ddf184b6e781a1f8e3745d5",
+    "backend": {
+      "passed": 4828,
+      "coverage": "100% globally and per file"
+    },
+    "frontend": {
+      "passed": 1537,
+      "coverage": "100% globally and per file on all four metrics"
+    },
+    "ci": "https://github.com/vypdev/domus/actions/runs/42326875268",
+    "copilotVerification": "https://github.com/vypdev/domus/runs/128264839973",
+    "scope": "Historical validation of batch replacement and the writer cutoff."
+  },
+  "exceptionAndCalendarAcceptancePaths": {
+    "sourceParent": "2a35e2a3bcfe98b58ddf184b6e781a1f8e3745d5",
+    "schema10FixtureSha256": "dc23b125821550920eda487685c353aed6485bf36d0d0a7f60902967397a8e83",
+    "schema9FixtureSha256": "e3c81ef1fa42e1ea302de60662c10e7231466ab32da1931ecde1e6d7a49213b7",
+    "exceptionCases": "tests/backend/test_fixed_exception_review.py",
+    "privatePreferenceCases": "tests/backend/test_calendar_preferences.py",
+    "browserRecovery": "frontend/tests/e2e/workspace-navigation.spec.ts",
+    "homeAssistantProjection": "tests/backend/test_ha_calendar_projection.py",
+    "nativeHomeAssistantRegistration": "specs/home-assistant-surface.md",
+    "scope": "Acceptance paths for this source change. Use check runs tied to the tested commit for execution evidence."
   }
 }

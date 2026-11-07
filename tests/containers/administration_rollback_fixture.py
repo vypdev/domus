@@ -104,7 +104,7 @@ def main():
     assert phase in ("initialize", "later", "refuse", "restored", "rollback")
     assert mode in ("native", "standalone") and delivery in ("pending", "acknowledged")
     assert os.getuid() == os.getgid() == 65532
-    assert SCHEMA_VERSION == (10 if phase in ("later", "restored") else 9)
+    assert SCHEMA_VERSION == (11 if phase in ("later", "restored") else 9)
     if phase == "refuse":
         saved = json.loads(RECORD.read_text())
         selected = ROOT / "generations" / saved["selected_generation"] / "domus.sqlite3"
@@ -114,9 +114,9 @@ def main():
         except DatabaseRejected as error:
             assert error.code == "unsupported_schema"
         else:
-            raise AssertionError("Schema 9 runtime accepted a schema 10 generation")
+            raise AssertionError("Schema 9 runtime accepted a schema 11 generation")
         assert hashlib.sha256(selected.read_bytes()).hexdigest() == digest
-        print(json.dumps({"refused_schema": 10, "database_sha256": digest}))
+        print(json.dumps({"refused_schema": 11, "database_sha256": digest}))
         return
     if phase == "rollback":
         before = Path("/data/snapshots/before")

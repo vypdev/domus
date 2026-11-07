@@ -52,7 +52,8 @@ export class DomusRecurrenceReview extends LitElement {
   private form(target: ReviewTarget, kind: ReviewKind, disabled: boolean) {
     const schedule = target.schedule, relative = kind === 'attachment' || kind === 'relative-settings';
     const pattern = kind === 'fixed-pattern' || kind === 'fixed-replacement';
-    const nominal = kind === 'attachment' || kind === 'reschedule' || pattern;
+    const exception = kind === 'fixed-exclude' || kind === 'fixed-add';
+    const nominal = kind === 'attachment' || kind === 'reschedule' || pattern || exception;
     const state = kind === 'state' || kind === 'fixed-state';
     const fieldsKey = JSON.stringify([target.occurrenceId, target.occurrenceRevision, schedule?.revision, kind]);
     return html`<form @submit=${(event: SubmitEvent) => this.submit(event, kind)}>
@@ -69,7 +70,7 @@ export class DomusRecurrenceReview extends LitElement {
       ${kind === 'attachment' ? html`<label>${this.text('zone')}<input name="zone" required maxlength="128" .value=${target.zone}></label>
         ${this.select('choice', ATTACHMENT_CHOICES, 'adopt')}${this.select('fold', FOLD_CHOICES, 'first_instant')}` : nothing}
       ${pattern ? html`<label>${this.text('pattern')}<input name="pattern" required maxlength="2048"></label>` : nothing}
-      ${kind === 'reschedule' || kind === 'fixed-skip' || kind === 'fixed-replacement' ? html`<label>${this.text('reason')}<textarea name="reason" required maxlength="1000"></textarea></label>` : nothing}
+      ${kind === 'reschedule' || kind === 'fixed-skip' || kind === 'fixed-replacement' || exception ? html`<label>${this.text('reason')}<textarea name="reason" required maxlength="1000"></textarea></label>` : nothing}
       `)}
       <button type="submit" ?disabled=${disabled}>${this.text('preview')}</button>
     </form>`;
@@ -88,6 +89,7 @@ export class DomusRecurrenceReview extends LitElement {
         ${'target' in body ? html`<p>${this.text(body.target === 'paused' ? 'pause' : 'resume')}</p>` : nothing}
         ${'interval_days' in body ? html`<p>${this.text('interval')} ${body.interval_days} · ${this.text(body.visibility)}</p>` : nothing}
         ${'rrule' in body ? html`<p>${body.rrule}</p>` : nothing}
+        ${'nominal' in body ? html`<p>${this.text('date')} ${body.nominal.local}</p>` : nothing}
         ${'reason' in body ? html`<p>${body.reason}</p>` : nothing}
         ${plan.retained === null ? nothing : html`<p>${this.text('retained')} ${plan.retained}</p>`}
         ${this.dates('retained', plan.retainedDates)}

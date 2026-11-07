@@ -5,6 +5,7 @@ from datetime import date
 from enum import StrEnum
 
 from domus.domain.errors import InvalidInput
+from domus.domain.identity import validate_revision
 from domus.domain.storage import JsonDocument, validate_identifier
 from domus.domain.task_values import OccurrenceState, Priority, validate_task_text
 
@@ -88,3 +89,23 @@ class CalendarCandidate:
     occurrence_id: str
     timing: CalendarTiming
     slot_key: str | None
+
+
+class WeekStart(StrEnum):
+    MONDAY = "monday"
+    SUNDAY = "sunday"
+
+
+@dataclass(frozen=True, slots=True)
+class CalendarPreference:
+    household_id: str
+    member_id: str
+    week_start: WeekStart = WeekStart.MONDAY
+    revision: int = 1
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.household_id)
+        validate_identifier(self.member_id)
+        validate_revision(self.revision)
+        if not isinstance(self.week_start, WeekStart):
+            raise InvalidInput("invalid_calendar_week_start")

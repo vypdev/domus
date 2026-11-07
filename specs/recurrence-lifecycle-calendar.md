@@ -305,7 +305,7 @@ Calendar display choices use a separate owner-private record and original-action
 
 Preserve schemas1..8 and their immutable fixtures. Capture and publish the genuine supported schema-9 fixture before adding durable inbox/closure/attention/plan data as actual schema 10. Do not edit a version number to reinterpret an unknown layout. Normal operations reject an old supported source until explicit atomic initialization; failed migration preserves original rows/version. Validate canonical tagged data and scope/generation/original-proof relations on direct reads and independent snapshot inspection.
 
-The genuine schema-9 input retains old recurrence and profile/privacy facts. Current schema-9 images must refuse schema 10 without mutation, and rollback selects the compatible complete image/database/generation pair. Restore keeps later original processing history, including closure, without authorizing absent work. Both actual architectures and persistent deployment lifetimes require current-source upgrade/refusal/rollback checks. Stable/Edge remain isolated; no automatic promotion or owner HA update is implied. The Edge.7 administration UI was separately installed and tested on the owner's HA; those observations do not certify recurrence, migration or calendar acceptance.
+The genuine schema-9 input retains old recurrence and profile/privacy facts. Current schema-9 images must refuse schema 10 without mutation, and rollback selects the compatible complete image/database/generation pair. Restore keeps later original processing history, including closure, without authorizing absent work. Schema 11 adds owner-private calendar preferences and gates the new exception document shape. Preserve the genuine schema-10 fixture, migrate its existing members to independent Monday preferences, and keep the schema-9 input immutable. Both actual architectures and persistent deployment lifetimes require current-source upgrade/refusal/rollback checks. Stable/Edge remain isolated; no automatic promotion or owner HA update is implied. The Edge.7 administration UI was separately installed and tested on the owner's HA; those observations do not certify recurrence, migration or calendar acceptance.
 
 ## 14. Testing strategy and numeric budget
 
@@ -366,9 +366,22 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `backend/src/domus/application/fixed_state_review.py` | create |
 | `backend/src/domus/application/fixed_pattern_review.py` | create |
 | `backend/src/domus/application/fixed_batch_review.py` | create |
+| `backend/src/domus/domain/recurrence_records.py` | update |
+| `backend/src/domus/application/fixed_exception_review.py` | create |
+| `backend/src/domus/infrastructure/sqlite_recurrence_records.py` | update |
+| `backend/src/domus/infrastructure/sqlite_recurrence.py` | update |
+| `tests/backend/test_fixed_exception_review.py` | create |
 | `backend/src/domus/application/commands.py` | update |
 | `backend/src/domus/application/calendar_queries.py` | create |
+| `backend/src/domus/application/ha_calendar_projection.py` | create |
+| `tests/backend/test_ha_calendar_projection.py` | create |
 | `backend/src/domus/application/calendar_commands.py` | create |
+| `backend/src/domus/infrastructure/sqlite_calendar_preferences.py` | create |
+| `backend/src/domus/infrastructure/sqlite_member_profiles.py` | update |
+| `frontend/src/composition/entry-page.ts` | update |
+| `tests/backend/test_calendar_preferences.py` | create |
+| `tests/browser/entry_server.py` | update |
+| `tests/fixtures/sqlite/v10.sql` | create |
 | `backend/src/domus/infrastructure/sqlite_relative_lifecycle.py` | create |
 | `backend/src/domus/infrastructure/sqlite_calendar.py` | create |
 | `backend/src/domus/entrypoints/recurrence_http.py` | create |
@@ -400,6 +413,10 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `frontend/vitest.config.ts` | update |
 | `frontend/src/domain/calendar.ts` | create |
 | `frontend/src/application/calendar-controller.ts` | create |
+| `frontend/src/application/calendar-preferences.ts` | create |
+| `frontend/src/adapters/calendar-preference-http.ts` | create |
+| `frontend/tests/calendar-preferences.test.ts` | create |
+| `frontend/src/presentation/domus-app.ts` | update |
 | `frontend/src/adapters/calendar-http.ts` | create |
 | `frontend/src/adapters/calendar-journal.ts` | create |
 | `frontend/src/presentation/domus-calendar.ts` | create |

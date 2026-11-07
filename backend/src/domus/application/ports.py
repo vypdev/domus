@@ -11,6 +11,7 @@ from domus.domain.calendar_values import (
     CalendarCandidate,
     CalendarFilters,
     CalendarPosition,
+    CalendarPreference,
     CalendarRange,
 )
 from domus.domain.identity import HouseholdPolicy, Member
@@ -82,7 +83,15 @@ class CalendarRepository(Protocol):
     def rules_pending(self, household_id: str) -> bool: ...
 
 
+class CalendarPreferences(Protocol):
+    def get(self, household_id: str, member_id: str) -> CalendarPreference: ...
+    def save(self, preference: CalendarPreference, expected_revision: int) -> None: ...
+
+
 class UnitOfWork(Protocol):
+    @property
+    def calendar_preferences(self) -> CalendarPreferences: ...
+
     @property
     def calendar(self) -> CalendarRepository: ...
 

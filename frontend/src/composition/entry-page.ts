@@ -4,9 +4,12 @@ import {BrowserEntropy, ServerClock} from '../adapters/browser-capabilities';
 import {RecurrenceReviewController} from '../application/recurrence-review-controller';
 import {reviewDraft} from '../domain/recurrence-review';
 import type {ReviewIntent} from '../presentation/domus-recurrence-review';
+import {HttpCalendarPreferences} from '../adapters/calendar-preference-http';
+import {CalendarSessionJournal} from '../adapters/calendar-journal';
+import {CalendarPreferenceController} from '../application/calendar-preferences';
 import {HttpCalendarServer} from '../adapters/calendar-http';
 import {CalendarController} from '../application/calendar-controller';
-import {calendarQuery, calendarToday} from '../domain/calendar';
+import {calendarQuery, calendarToday, WEEK_STARTS} from '../domain/calendar';
 import type {CalendarIntent} from '../presentation/domus-calendar';
 import {bootstrap} from '../adapters/bootstrap';
 import {check, fields, identifier} from '../adapters/http-values';
@@ -103,12 +106,19 @@ export function decodeTaskIntent(value: unknown): TaskIntent | null {
 
 export function decodeCalendarIntent(value: unknown): CalendarIntent | null {
   try {
-    const item = fields(value, ['type'], ['query']);
+    const item = fields(value, ['type'], ['query','weekStart']);
     if (item.type === 'load') {
       fields(value, ['type', 'query'], []); check(calendarQuery(item.query));
       return {type: 'load', query: item.query};
     }
-    fields(value, ['type'], []); check(item.type === 'more'); return {type: 'more'};
+    if (item.type === 'setWeekStart') {
+      const {weekStart} = fields(value, ['type','weekStart'], []);
+      check(weekStart === WEEK_STARTS[0] || weekStart === WEEK_STARTS[1]);
+      return {type:'setWeekStart',weekStart};
+    }
+    fields(value, ['type'], []);
+    check(item.type === 'more' || item.type === 'recoverPreference' || item.type === 'refreshPreference');
+    return {type:item.type};
   } catch {return null;}
 }
 
@@ -126,12 +136,13 @@ export function decodeReviewIntent(value: unknown): ReviewIntent | null {
 export function mountEntry(page: EntryPage): PageMount {
   const doc = page.document; mounts.get(doc)?.();
   const lifetime = new AbortController(), widget = new AbortController();
+  let calendarPreference: CalendarPreferenceController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); review?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -140,7 +151,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); review?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -167,15 +178,22 @@ export function mountEntry(page: EntryPage): PageMount {
     const calendarController = new CalendarController(new HttpCalendarServer(source.target, browser.transport),
       view => {element.calendar = view;});
     calendar = calendarController;
+    const preferences = new CalendarPreferenceController(new HttpCalendarPreferences(source.target,browser.transport),
+      new CalendarSessionJournal({getItem:key => browser.storage().getItem(key),
+        setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
+      new ServerClock(browser.elapsed), new BrowserEntropy(browser.random), view => {element.calendarPreference = view;});
+    calendarPreference = preferences;
     const syncCalendar = () => {
       const entry = element.view, tasks = element.tasks;
       if (element.workspaceDestination === 'calendar' && entry?.phase === 'ready' && entry.decision?.state === 'active'
           && entry.household && tasks?.phase === 'ready' && tasks.session && tasks.access && tasks.scopeKey) {
         element.calendarToday = calendarToday(tasks.session.serverTime, entry.household.timeZone);
         calendarController.bind({key: tasks.scopeKey, context: tasks.session.context, memberId: tasks.access.memberId});
+        preferences.bind({key:tasks.scopeKey,context:tasks.session.context,memberId:tasks.access.memberId,
+          serverTime:tasks.session.serverTime,expiresAt:tasks.session.expiresAt,readOnly:tasks.readOnly});
         element.calendarScopeKey = tasks.scopeKey;
       } else {
-        calendarController.bind(null); element.calendarScopeKey = null;
+        calendarController.bind(null); preferences.bind(null); element.calendarScopeKey = null;
       }
     };
     const reviews = new RecurrenceReviewController(new HttpRecurrenceServer(source.target, browser.transport),
@@ -289,6 +307,9 @@ export function mountEntry(page: EntryPage): PageMount {
       const intent = decodeCalendarIntent((event as CustomEvent<unknown>).detail);
       if (intent?.type === 'load') await calendarController.load(intent.query);
       if (intent?.type === 'more') await calendarController.more();
+      if (intent?.type === 'setWeekStart') await preferences.save(intent.weekStart);
+      if (intent?.type === 'recoverPreference') await preferences.recover();
+      if (intent?.type === 'refreshPreference') await preferences.refresh();
     }, {signal: widget.signal});
     element.addEventListener('domus-review-intent', async event => {
       if (event.target !== element) return;

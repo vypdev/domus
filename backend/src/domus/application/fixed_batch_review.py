@@ -22,7 +22,12 @@ from domus.domain.errors import (
 )
 from domus.domain.identity import MemberStatus, validate_revision
 from domus.domain.recurrence_planning import FixedBatch, FixedCursor, cursor_binding
-from domus.domain.recurrence_records import FixedProgress, FixedSchedule, ScheduleState
+from domus.domain.recurrence_records import (
+    FixedExceptionKind,
+    FixedProgress,
+    FixedSchedule,
+    ScheduleState,
+)
 from domus.domain.recurrence_rules import FixedPattern, NominalDate, NominalSlot
 from domus.domain.recurrence_time import LocalInstant, NominalTime
 from domus.domain.relative_lifecycle import WorkHistory
@@ -74,6 +79,7 @@ class AffectedWork:
     original: NominalSlot
     deadline: EffectiveDeadline
     previously_replaced: bool = False
+    excluded: bool = False
 
     def value(self) -> JsonObject:
         return {
@@ -84,6 +90,7 @@ class AffectedWork:
             "assignee_ids": list(self.work.assignee_ids),
             "deadline": self.deadline.document.decode(),
             "previously_replaced": self.previously_replaced,
+            "excluded": self.excluded,
         }
 
 
@@ -122,7 +129,9 @@ class ReplacementSource:
             if isinstance(before, NominalTime)
             else None
         )
-        blocking = tuple(item for item in self.retained if not item.previously_replaced)
+        blocking = tuple(
+            item for item in self.retained if not (item.previously_replaced or item.excluded)
+        )
         if any(item.original.local >= before.local for item in (*self.replaceable, *blocking)):
             raise Conflict("recurrence_review_too_large")
         for item in blocking:
@@ -160,9 +169,10 @@ class ReplacementSource:
                 break
         if not steps[-1].range_complete:
             raise Conflict("recurrence_review_too_large")
-        planned = tuple(step.slots[0] for step in steps if step.slots)
-        if not planned or planned[0].nominal != start:
+        nominal_slots = tuple(slot for step in steps for slot in step.slots)
+        if not nominal_slots or nominal_slots[0].nominal != start:
             raise InvalidInput("recurrence_start_mismatch")
+        planned = tuple(slot for slot in nominal_slots if rule.exception(slot.nominal) is None)
         instants = tuple(item.resolved.instant_ms for item in planned if item.resolved is not None)
         dates = {item.nominal for item in planned}
         if len(set(instants)) != len(instants) or any(
@@ -188,7 +198,7 @@ class ReplacementSource:
             before,
             tuple(steps),
             pairing,
-            future_until(planner.times, planned[0], rule.policy),
+            future_until(planner.times, nominal_slots[0], rule.policy),
         )
 
 
@@ -224,14 +234,22 @@ def replacement_source(
         if work is None:
             raise StorageFailure("invalid_recurrence_source")
         deadline = effective_deadline(unit, work, slot)
+        cancelled = work.state is OccurrenceState.CANCELLED
         previously_replaced = (
-            slot.schedule.pattern_revision < rule.pattern_revision
-            and work.state is OccurrenceState.CANCELLED
+            cancelled
+            and slot.schedule.pattern_revision < rule.pattern_revision
             and unit.recurrence.has_replaced_fixed_work(home, rule.schedule_id, work.occurrence_id)
         )
-        item = AffectedWork(work, slot.key, slot.planned.nominal, deadline, previously_replaced)
+        exception = rule.exception(slot.planned.nominal)
+        excluded = (
+            cancelled and exception is not None and exception.kind is FixedExceptionKind.EXCLUDE
+        )
+        item = AffectedWork(
+            work, slot.key, slot.planned.nominal, deadline, previously_replaced, excluded
+        )
         eligible = (
-            slot.schedule.pattern_revision == rule.pattern_revision
+            not slot.added
+            and slot.schedule.pattern_revision == rule.pattern_revision
             and work.state in (OccurrenceState.AVAILABLE, OccurrenceState.ASSIGNED)
             and deadline.document.decode() == slot.planned.value()
             and occurrence_work_history(unit, work) is WorkHistory.UNSTARTED
@@ -308,7 +326,12 @@ class PreparedReplacement:
                             "replaces": None if old is None else old.work.occurrence_id,
                         }
                         for planned, old in zip(
-                            (slot for step in self.steps for slot in step.slots),
+                            (
+                                slot
+                                for step in self.steps
+                                for slot in step.slots
+                                if rule.upcoming.exception(slot.nominal) is None
+                            ),
                             self.pairing,
                             strict=True,
                         )
@@ -345,10 +368,13 @@ class PreparedReplacement:
         additions: list[JsonValue] = []
         originals = iter(self.pairing)
         for batch in self.steps:
-            prior = next(originals) if batch.slots else None
+            expects_work = bool(batch.slots) and rule.exception(batch.slots[0].nominal) is None
+            prior = next(originals) if expects_work else None
             step = materializer.commit_reviewed_step(
                 unit, rule, batch, self.before, assignees=prior.work.assignee_ids if prior else ()
             )
+            if expects_work and step.occurrence_id is None:
+                raise Conflict("recurrence_review_stale")
             if step.occurrence_id is not None:
                 if prior is None:
                     additions.append(step.occurrence_id)

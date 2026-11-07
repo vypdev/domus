@@ -33,6 +33,11 @@ def initialize_member_profiles(connection: sqlite3.Connection, member: Member) -
         ),
     )
 
+    connection.execute(
+        "INSERT INTO calendar_preferences(household_id,member_id) VALUES (?,?)",
+        (member.household_id, member.member_id),
+    )
+
 
 def _row(
     connection: sqlite3.Connection,

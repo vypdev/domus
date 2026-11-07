@@ -151,3 +151,10 @@ the batch is rejected so the manager can review the current facts.
 The rule revision, original cancellations, replacement work, new slots and continuation
 commit together. Use the original request to recover the linked result after a lost reply.
 A restored-away result remains historical.
+
+For a fixed schedule, choose **Exclude a date from the fixed schedule** or **Add a date
+outside the fixed pattern** in **Review scheduling**. Use the schedule's date or time
+kind and enter a reason. Preview the date and the effect before applying. An exclusion
+suppresses the nominated rule slot and preserves its contribution to `COUNT`. An already
+issued slot can be cancelled only while the original work remains unstarted and unmoved.
+A date outside the pattern creates one independently identified occurrence and leaves the nominal count unchanged. Later pattern replacements retain these exception identities.

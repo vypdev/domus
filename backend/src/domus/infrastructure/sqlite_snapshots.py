@@ -153,6 +153,8 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
                     for member in members:
                         unit.presentations.get(row[0], member.member_id)
                         unit.preferences.get(row[0], member.member_id)
+                        if version >= 11:
+                            unit.calendar_preferences.get(row[0], member.member_id)
                 if version >= 5:
                     verify_task_records(
                         connection, row[0], members, policy, record_version=1 if version == 5 else 2

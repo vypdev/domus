@@ -1738,6 +1738,8 @@ def test_fixed_review_discovery_selects_only_its_current_occurrence_slot(tmp_pat
         "fixed-state",
         "fixed-pattern",
         "fixed-replacement",
+        "fixed-exclude",
+        "fixed-add",
         "reschedule",
         "fixed-skip",
     )
@@ -1753,6 +1755,8 @@ def test_fixed_review_discovery_selects_only_its_current_occurrence_slot(tmp_pat
         "fixed-state",
         "fixed-pattern",
         "fixed-replacement",
+        "fixed-exclude",
+        "fixed-add",
     )
 
 

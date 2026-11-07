@@ -13,7 +13,7 @@ import {boolean, check, choice, fields, identifier, integer, responseRevision, t
 const BASE = 'tasks/recurrence/reviews/';
 const EFFECT = {attachment: 'attach_relative', adoption: 'adopt_manual', state: 'relative_state',
   'relative-settings': 'relative_settings', 'fixed-state': 'fixed_state', 'fixed-pattern': 'fixed_pattern', 'fixed-replacement': 'fixed_replacement',
-  reschedule: 'reschedule', 'fixed-skip': 'fixed_skip'} as const;
+  'fixed-exclude': 'fixed_exception', 'fixed-add': 'fixed_exception', reschedule: 'reschedule', 'fixed-skip': 'fixed_skip'} as const;
 
 function target(value: unknown, occurrenceId: string): ReviewTarget {
   const item = fields(value, ['occurrence_id','occurrence_revision','definition_id','definition_revision','zone','schedule','slot_key','actions'], []);
@@ -85,6 +85,9 @@ function receipt(value: unknown, request: ReviewRecord): ReviewReceipt {
 function body(request: ReviewRecord): string {
   const command = reviewCommand(request.command);
   const values: Record<string, unknown> = {...command.selection.body};
+  if (command.selection.kind === 'fixed-exclude' || command.selection.kind === 'fixed-add') {
+    values.effect = command.selection.kind === 'fixed-exclude' ? 'exclude' : 'add';
+  }
   if (command.step === 'apply') Object.assign(values, {preview_key: command.previewKey, plan_fingerprint: command.fingerprint});
   return '{' + Object.entries(values).map(([key, value]) =>
     JSON.stringify(key) + ':' + (key.endsWith('_revision') ? value : JSON.stringify(value))).join(',') + '}';
@@ -106,7 +109,9 @@ export class HttpRecurrenceServer implements ReviewServer {
       const command = reviewCommand(request.command), key = identifier(request.key), payload = body(request);
       const token = csrf(await this.network.get('auth/csrf', context, signal));
       posted = true;
-      const response = await this.network.request(BASE + command.selection.kind + '/' + command.step, 'POST', context, payload, key, token, signal);
+      const kind = command.selection.kind;
+      const route = kind === 'fixed-exclude' || kind === 'fixed-add' ? 'fixed-exception' : kind;
+      const response = await this.network.request(BASE + route + '/' + command.step, 'POST', context, payload, key, token, signal);
       if (response.status === 200) return receipt(response.value, request);
       if ([401,403,409,422].includes(response.status)) {failure(response.value); rejection = true;}
       throw new Error('review_unavailable');
