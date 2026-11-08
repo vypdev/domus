@@ -461,5 +461,54 @@
     "unicodeCategoryCases": "frontend/tests/calendar-component.test.ts",
     "unicodeBrowserCase": "frontend/tests/e2e/workspace-navigation.spec.ts",
     "scope": "New regression assertions and runtime corrections. Check runs on the executing commit establish verification."
+  },
+  "outcomeIntegrityRefinement": {
+    "sourceParent": "476621ca1f15f883af8225e4f7712b3d507887f0",
+    "status": "local verification passed; current-head native CI, Review and progress qualification pending",
+    "review": "https://github.com/vypdev/domus/pull/29#discussion_r4507980583",
+    "cases": [
+      "recurrence-lifecycle-calendar-C37",
+      "recurrence-lifecycle-calendar-C38"
+    ],
+    "retainedIndependentCases": 18,
+    "currentIndependentMinimum": 20,
+    "retainedOwnerCases": 93,
+    "runtime": [
+      "backend/src/domus/domain/relative_lifecycle.py",
+      "backend/src/domus/infrastructure/sqlite_relative_lifecycle.py"
+    ],
+    "tests": [
+      "tests/backend/test_relative_lifecycle.py",
+      "tests/backend/test_relative_lifecycle_consumer.py"
+    ],
+    "red": {
+      "failed": 36,
+      "passed": 2,
+      "meaning": "Allowed but inconsistent receipt/outcome combinations passed validation, including actual SQLite replay and snapshot counterexamples."
+    },
+    "verifiedContract": [
+      "Generated, close and invalidation outcomes preserve the original receipt meaning and occurrence relationship.",
+      "Effect proof binds the original installation, household, schedule, definition, occurrence and cycle through the shared canonical cycle key.",
+      "Valid original statuses remain readable after restoration; historical absence never authorizes new work.",
+      "Corrupt persisted combinations fail closed, without automatic repair or new effects."
+    ],
+    "pending": [
+      "Exact-current-source CI on both real image architectures.",
+      "Current-head native Review and Commit with SDK 5168c951343dbb57161a3c278eaf0ea00bffd51d."
+    ],
+    "noSchemaChange": true,
+    "noOwnerHAModification": true,
+    "noReleaseOrMergeAuthorizationInferred": true,
+    "localVerification": {
+      "backendPassed": 4924,
+      "statements": 13248,
+      "branches": 3764,
+      "coverage": "100% globally and per authored module; independent backend-coverage inventory passed",
+      "strictTypes": "175 source files, no issues",
+      "architecture": "3 import contracts kept; 51 tests passed",
+      "format": "427 Python files checked",
+      "catalog": "canonical SDK main entrypoint generation/validation passed, source unchanged from published 3.10.12",
+      "documentation": "domus-check docs passed"
+    }
   }
 }

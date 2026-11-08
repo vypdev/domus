@@ -3,13 +3,42 @@
 import json
 from dataclasses import asdict, dataclass
 from enum import StrEnum
+from typing import cast
 
 from domus.domain.errors import InvalidInput
 from domus.domain.recurrence_records import MAINTENANCE_ACTOR
 from domus.domain.relative_recurrence import RelativeOperation, RelativeSchedule, RelativeSlot
-from domus.domain.storage import Installation, JsonDocument, Receipt, validate_identifier
+from domus.domain.storage import (
+    Installation,
+    JsonDocument,
+    JsonObject,
+    Receipt,
+    validate_identifier,
+)
+from domus.domain.task_events import TaskLifecycleEvent
 from domus.domain.task_values import OccurrenceState, VerificationState, validate_task_time
 from domus.domain.tasks import TaskCycle, TaskOccurrence
+
+
+def _cycle_key(
+    installation: Installation,
+    household_id: str,
+    schedule_id: str,
+    definition_id: str,
+    occurrence_id: str,
+    cycle_id: str,
+) -> str:
+    return JsonDocument.from_value(
+        {
+            "version": 1,
+            "installation": asdict(installation),
+            "household_id": household_id,
+            "schedule_id": schedule_id,
+            "definition_id": definition_id,
+            "occurrence_id": occurrence_id,
+            "cycle_id": cycle_id,
+        }
+    ).fingerprint
 
 
 class RelativeClosureKind(StrEnum):
@@ -106,17 +135,14 @@ class RelativeClosure:
             or cycle.household_id != schedule.household_id
         ):
             raise InvalidInput("invalid_relative_closure")
-        return JsonDocument.from_value(
-            {
-                "version": 1,
-                "installation": asdict(installation),
-                "household_id": schedule.household_id,
-                "schedule_id": schedule.schedule_id,
-                "definition_id": schedule.definition_id,
-                "occurrence_id": cycle.occurrence_id,
-                "cycle_id": cycle.cycle_id,
-            }
-        ).fingerprint
+        return _cycle_key(
+            installation,
+            schedule.household_id,
+            schedule.schedule_id,
+            schedule.definition_id,
+            cycle.occurrence_id,
+            cycle.cycle_id,
+        )
 
     @property
     def key(self) -> str:
@@ -253,6 +279,65 @@ class RelativeEventOutcome:
                 "recurrence.relative.close",
                 "recurrence.relative.invalidate",
             )
-            or self.receipt.result.decode().get("occurrence_id") != self.occurrence_id
+            or not self._matches_receipt()
         ):
             raise InvalidInput("invalid_relative_outcome")
+
+    def _matches_receipt(self) -> bool:
+        receipt = cast(Receipt, self.receipt)
+        result = receipt.result.decode()
+        if not isinstance(result, dict) or result.get("occurrence_id") != self.occurrence_id:
+            return False
+        historical_absence = self.status == "historical_absent" and receipt.historical
+        if receipt.command.action == "recurrence.relative.invalidate":
+            disposition = result.get("disposition")
+            return (
+                self.occurrence_id is not None
+                and disposition in ("cancel", "retained", "review", "absent")
+                and (self.status == disposition or historical_absence)
+                and result.get("closure_key") == receipt.command.key
+            )
+        proof = result.get("relative_closure")
+        if not isinstance(proof, dict):
+            return False
+        schedule = proof.get("schedule")
+        if not isinstance(schedule, dict) or schedule.get("schedule_id") != self.schedule_id:
+            return False
+        if receipt.command.action == "recurrence.materialize":
+            successor = proof.get("successor")
+            return (
+                self.occurrence_id is not None
+                and proof.get("kind") == "generated"
+                and (self.status == "generated" or historical_absence)
+                and result.get("schedule_id") == self.schedule_id
+                and result.get("slot_key") == receipt.command.key
+                and isinstance(successor, dict)
+                and successor.get("slot_key") == receipt.command.key
+                and successor.get("occurrence_id") == self.occurrence_id
+            )
+        return (
+            self.occurrence_id is None
+            and proof.get("kind") in ("rejected", "reopened", "historical_absent")
+            and self.status == proof["kind"]
+            and proof.get("key") == receipt.command.key
+        )
+
+    def matches_source(self, event: TaskLifecycleEvent, installation: Installation) -> bool:
+        """Bind an effect receipt to its original cycle, including restored absent mappings."""
+        if self.receipt is None:
+            return True
+        result = self.receipt.result.decode()
+        proof = result.get("relative_closure")
+        key = (
+            result.get("closure_key")
+            if self.receipt.command.action == "recurrence.relative.invalidate"
+            else cast(JsonObject, proof).get("key")
+        )
+        return key == _cycle_key(
+            installation,
+            event.cycle.household_id,
+            self.schedule_id,
+            event.definition_id,
+            event.cycle.occurrence_id,
+            event.cycle.cycle_id,
+        )

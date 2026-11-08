@@ -222,7 +222,9 @@ class SQLiteRelativeInbox:
         except sqlite3.IntegrityError:
             raise Conflict("relative_source_conflict") from None
 
-    def _outcome(self, row: sqlite3.Row) -> RelativeEventOutcome | None:
+    def _outcome(
+        self, row: sqlite3.Row, source: TaskSourceRecord | None = None
+    ) -> RelativeEventOutcome | None:
         if row["outcome_status"] is None:
             return None
         operation = row["outcome_operation_id"]
@@ -238,12 +240,16 @@ class SQLiteRelativeInbox:
         if operation is not None and receipt is None:
             raise StorageFailure("invalid_relative_outcome")
         try:
-            return RelativeEventOutcome(
+            outcome = RelativeEventOutcome(
                 row["outcome_status"],
                 row["outcome_schedule_id"],
                 receipt,
                 row["outcome_occurrence_id"],
             )
+            original = self._source(row) if source is None else source
+            if not outcome.matches_source(original.event(self.installation), self.installation):
+                raise InvalidInput("invalid_relative_outcome")
+            return outcome
         except InvalidInput:
             raise StorageFailure("invalid_relative_outcome") from None
 
@@ -269,6 +275,15 @@ class SQLiteRelativeInbox:
             household_id, MAINTENANCE_ACTOR, receipt.operation_id
         ):
             raise Conflict("relative_source_conflict")
+        row = self.connection.execute(
+            "SELECT * FROM recurrence_relative_inbox WHERE household_id=? AND event_key=?",
+            (household_id, event_key),
+        ).fetchone()
+        if row is None:
+            raise Conflict("relative_source_missing")
+        source = self._source(row)
+        if not outcome.matches_source(source.event(self.installation), self.installation):
+            raise Conflict("relative_source_conflict")
         if (
             self.connection.execute(
                 "UPDATE recurrence_relative_inbox SET outcome_status=?,outcome_schedule_id=?,"
@@ -289,5 +304,5 @@ class SQLiteRelativeInbox:
 
     def verify_relative_inbox(self) -> None:
         for row in self.connection.execute("SELECT * FROM recurrence_relative_inbox"):
-            self._source(row)
-            self._outcome(row)
+            source = self._source(row)
+            self._outcome(row, source)

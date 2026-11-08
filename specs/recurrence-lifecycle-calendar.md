@@ -170,6 +170,27 @@ Duplicate source identity returns the exact original outcome. Stale and out-of-o
 
 Recurrence closure is consumer-owned grant/effect proof, separate from human TaskCycle.closed_at, performance and approval facts. Later rejection/reopening remains processable to invalidate or flag the recorded successor while retaining the closed grant. Consuming a completion never fabricates closure or approval in the human task cycle.
 
+### 6.4 Original outcome integrity
+
+PR #29 review found that an allowed status could be paired with a different
+allowed receipt action. A deterministic counterexample at `476621ca` reconstructs
+`generated` with a valid reopened-cycle close receipt and no occurrence. This
+refinement of RCL-02, RCL-07 and RCL-08 MUST bind every effect-bearing inbox outcome
+to its original action, result, schedule, source cycle and installation. Generated
+work requires its materialization receipt and occurrence; close states match the
+original closure kind; invalidation matches its recorded disposition. Historical
+original statuses remain readable, and an explicit historical-absence result
+requires the corresponding original proof. It never authorizes recreating work.
+
+Pure domain validation owns action/result consistency and the shared cycle-key
+derivation. SQLite admission and reads bind that proof to the verified original
+source. Corruption MUST fail as `StorageFailure` before replay effects, and
+independent snapshot validation MUST reject the same bytes. No DDL, version
+relabeling, default, coercion or automatic repair is added. Valid replay, rollback,
+restoration and original receipt identity remain unchanged. The existing blocked
+storage UI and operator recovery guide apply; no control, configuration, permission,
+locale key or notification is introduced. Cases C37/C38 verify this refinement.
+
 ## 7. User-facing configuration
 
 | Input | Type | Recommended default | Allowed values/range | Scope/persistence |
@@ -309,18 +330,18 @@ The genuine schema-9 input retains old recurrence and profile/privacy facts. Cur
 
 ## 14. Testing strategy and numeric budget
 
-All 93 counted cases in the three unchanged owners and their integration aliases remain required. Published C01 through C18 remain required non-counted integration aliases as mapped above. The following 18 independently refined technical cases C19 through C36 replace no owning journey. These are prospective assertions, not passing results. One execution satisfying several obligations still counts as one execution.
+All 93 counted cases in the three unchanged owners and their integration aliases remain required. Published C01 through C18 remain required non-counted integration aliases as mapped above. The following 20 independently refined technical cases C19 through C38 replace no owning journey. C37/C38 add two justified outcome-integrity regressions to the original 18 refinements. Assertions alone are not passing results. One execution satisfying several obligations still counts as one execution.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
 | State/application/idempotency/races | 6 | Concrete independent refinements in the inventory below. |
 | Application use cases | 4 | Concrete independent refinements in the inventory below. |
 | Adapters/provider contracts | 2 | Concrete independent refinements in the inventory below. |
-| Domain/configuration/pure planning | 1 | Concrete independent refinements in the inventory below. |
-| Integration/security/migration | 3 | Concrete independent refinements in the inventory below. |
+| Domain/configuration/pure planning | 2 | Concrete independent refinements, including complete outcome/receipt consistency. |
+| Integration/security/migration | 4 | Concrete independent refinements, including corrupt outcome replay and snapshot rejection. |
 | Workflows, permissions, schemas, and setup | 1 | Concrete independent refinements in the inventory below. |
 | UI/UX/localization/sanitization | 1 | Concrete independent refinements in the inventory below. |
-| Total | 18 | Distinct refinement cases; repeated executions and published aliases do not add cases. |
+| Total | 20 | Distinct refinement cases; repeated executions and published aliases do not add cases. |
 
 | Case ID | Area | Requirements | Scenario |
 |---|---|---|---|
@@ -342,6 +363,8 @@ All 93 counted cases in the three unchanged owners and their integration aliases
 | recurrence-lifecycle-calendar-C34 | Integration/security/migration | RCL-08,RCL-02 | A compatible restored schema-10 generation retains later cycle closure/original proofs while its successor is absent; an actual schema-9 image refuses schema 10 and no edited header is treated as rollback. |
 | recurrence-lifecycle-calendar-C35 | UI/UX/localization/sanitization | RCL-09,RCL-06 | Actual EN/ES narrow-screen month-to-agenda keyboard navigation names planned/due/performed/approval times, retains inert reasons and shows incomplete processing independently of color. |
 | recurrence-lifecycle-calendar-C36 | Adapters/provider contracts | RCL-09,RCL-07 | Actual HA calendar retry preserves UIDs/offset policy and becomes unavailable on source failure; disabled external synchronization transmits no household records. |
+| recurrence-lifecycle-calendar-C37 | Domain/configuration/pure planning | RCL-02,RCL-07 | Complete original materialization, close and invalidation outcomes retain their exact receipt/status/schedule/occurrence/source relationships, including valid historical originals; inconsistent combinations never become domain outcomes. |
+| recurrence-lifecycle-calendar-C38 | Integration/security/migration | RCL-02,RCL-08 | Actual SQLite outcome rows with individually valid but mismatched status, action, schedule, disposition or source-cycle proof fail direct reads, replay and independent snapshot inspection without extra effects or byte repair. |
 
 Tests first, strict types, real independent SQLite writers, deterministic clocks/provider failures, crash/restore, actual HTTP, Storybook, compiled browser and actual image acceptance. Require 100% supported coverage globally and per authored module: all four frontend metrics, backend statements/branches, independent authored-source inventories, and every-PR CI Check. Do not infer semantic or human acceptance from test counts. Preserve existing timeout, retry, privacy and architecture gates, and necessary actual failure evidence.
 
@@ -562,6 +585,7 @@ Tests first, strict types, real independent SQLite writers, deterministic clocks
 | `docs/architecture.md` | update |
 | `docs/evidence/recurrence-execution.json` | update |
 | `docs/evidence/recurrence-rules.json` | update |
+| `docs/tasks/operator-recovery.md` | update |
 
 Operations are prospective and relative to the verified immutable base 8b1cbc110c389b9cdb6ecd11317c95abf2c4b0a9. The task-workspace integration and preview-packaging paths inherited from merged PR #28, including addon-edge/artifact.json, are updates against the Action-published synchronized head a954ce091d19f6350d64eec759670d5a1fadcfb5; all other original operations retain that immutable base. No managed remote branch was synchronized by a contributor. The shared navigation browser suite is an update against develop at 5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775. Each prospective path is checked against its stated actual base. Declare any additional actual implementation/test/integration paths before implementing them. Preserve the three retained owner documents byte-for-byte. The genuine supported schema-9 fixture must be published before further DDL; preserve released1..8fixtures.
 
@@ -588,16 +612,16 @@ Document normal paths, current authorization, configuration precedence, pending/
 | Requirement | Cases |
 |---|---|
 | RCL-01 | recurrence-lifecycle-calendar-C19, recurrence-lifecycle-calendar-C20 |
-| RCL-02 | recurrence-lifecycle-calendar-C21, recurrence-lifecycle-calendar-C22, recurrence-lifecycle-calendar-C23, recurrence-lifecycle-calendar-C26, recurrence-lifecycle-calendar-C34 |
+| RCL-02 | recurrence-lifecycle-calendar-C21, recurrence-lifecycle-calendar-C22, recurrence-lifecycle-calendar-C23, recurrence-lifecycle-calendar-C26, recurrence-lifecycle-calendar-C34, recurrence-lifecycle-calendar-C37, recurrence-lifecycle-calendar-C38 |
 | RCL-03 | recurrence-lifecycle-calendar-C23, recurrence-lifecycle-calendar-C24 |
 | RCL-04 | recurrence-lifecycle-calendar-C21, recurrence-lifecycle-calendar-C25, recurrence-lifecycle-calendar-C26, recurrence-lifecycle-calendar-C30 |
 | RCL-05 | recurrence-lifecycle-calendar-C20, recurrence-lifecycle-calendar-C27, recurrence-lifecycle-calendar-C28 |
 | RCL-06 | recurrence-lifecycle-calendar-C29, recurrence-lifecycle-calendar-C30, recurrence-lifecycle-calendar-C31, recurrence-lifecycle-calendar-C35 |
-| RCL-07 | recurrence-lifecycle-calendar-C22, recurrence-lifecycle-calendar-C27, recurrence-lifecycle-calendar-C31, recurrence-lifecycle-calendar-C32, recurrence-lifecycle-calendar-C36 |
-| RCL-08 | recurrence-lifecycle-calendar-C19, recurrence-lifecycle-calendar-C24, recurrence-lifecycle-calendar-C28, recurrence-lifecycle-calendar-C33, recurrence-lifecycle-calendar-C34 |
+| RCL-07 | recurrence-lifecycle-calendar-C22, recurrence-lifecycle-calendar-C27, recurrence-lifecycle-calendar-C31, recurrence-lifecycle-calendar-C32, recurrence-lifecycle-calendar-C36, recurrence-lifecycle-calendar-C37 |
+| RCL-08 | recurrence-lifecycle-calendar-C19, recurrence-lifecycle-calendar-C24, recurrence-lifecycle-calendar-C28, recurrence-lifecycle-calendar-C33, recurrence-lifecycle-calendar-C34, recurrence-lifecycle-calendar-C38 |
 | RCL-09 | recurrence-lifecycle-calendar-C32, recurrence-lifecycle-calendar-C35, recurrence-lifecycle-calendar-C36 |
 
-The table covers exactly the 18 independent refinements C19 through C36. The 93 retained owning cases and published integration aliases remain mandatory with their original mappings; they are not recounted here. Every requirement/case link must be reciprocal. Proposed inventories do not establish actual execution or acceptance.
+The table covers exactly the 20 independent refinements C19 through C38. The 93 retained owning cases and published integration aliases remain mandatory with their original mappings; they are not recounted here. Every requirement/case link must be reciprocal. C37 is implemented in `tests/backend/test_relative_lifecycle.py`; C38 in `tests/backend/test_relative_lifecycle_consumer.py`. The domain and SQLite paths already declared above own the correction; operator guidance is `docs/tasks/operator-recovery.md`. Proposed inventories do not establish actual execution or acceptance.
 
 ## 18. Implementation sequence
 

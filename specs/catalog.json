@@ -534,9 +534,9 @@
       "id": "recurrence-calendar",
       "title": "Recurrence engine and family calendar",
       "status": "proposed",
-      "scope": "A bounded scheduler turns task definitions into stable occurrences and a family calendar distinguishes planned start, deadline and actual completion.",
+      "scope": "A bounded scheduler turns task definitions into stable occurrences and a family calendar distinguishes planned start, deadline and actual completion. Original recurrence outcomes bind receipt status, action, result and source-cycle identity before replay and snapshot acceptance.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-11-08",
       "specs": [
         "specs/recurrence-calendar.md",
         "specs/recurrence-execution-foundation.md",
@@ -554,14 +554,18 @@
         "backend/src/domus/domain/recurrence_periods.py",
         "backend/src/domus/domain/nominal_recurrence.py",
         "backend/src/domus/domain/recurrence_planning.py",
-        "backend/src/domus/application/fixed_recurrence.py"
+        "backend/src/domus/application/fixed_recurrence.py",
+        "backend/src/domus/domain/relative_lifecycle.py",
+        "backend/src/domus/infrastructure/sqlite_relative_lifecycle.py"
       ],
       "tests": [
         "tests/backend/test_recurrence_time_values.py",
         "tests/backend/test_recurrence_time_adapter.py",
         "tests/backend/test_recurrence_rules.py",
         "tests/backend/test_nominal_recurrence.py",
-        "tests/backend/test_fixed_recurrence_planning.py"
+        "tests/backend/test_fixed_recurrence_planning.py",
+        "tests/backend/test_relative_lifecycle.py",
+        "tests/backend/test_relative_lifecycle_consumer.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -571,7 +575,9 @@
         "docs/contracts/home-assistant.md",
         "docs/architecture-recurrence.md",
         "docs/evidence/recurrence-execution.json",
-        "docs/evidence/recurrence-rules.json"
+        "docs/evidence/recurrence-rules.json",
+        "docs/evidence/recurrence-lifecycle-calendar.json",
+        "docs/tasks/operator-recovery.md"
       ],
       "readiness": {
         "state": "draft",

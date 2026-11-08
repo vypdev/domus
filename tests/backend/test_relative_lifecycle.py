@@ -11,6 +11,7 @@ from domus.domain.identity import Role
 from domus.domain.relative_lifecycle import (
     RelativeClosure,
     RelativeClosureKind,
+    RelativeEventOutcome,
     SuccessorDisposition,
     WorkHistory,
     successor_disposition,
@@ -18,6 +19,86 @@ from domus.domain.relative_lifecycle import (
 from domus.domain.relative_recurrence import RelativeOperation
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, RestorationProvenance
 from domus.domain.task_values import OccurrenceState, TaskPerformer, VerificationState
+
+
+@pytest.mark.parametrize(
+    "status,damage",
+    [
+        (s, d)
+        for s in ("generated", "reopened")
+        for d in ("status", "schedule", "shape", "kind", "historical")
+    ]
+    + [("generated", "occurrence"), ("generated", "slot")]
+    + [("cancel", d) for d in ("status", "kind", "key", "historical", "occurrence")],
+)
+def test_c37_outcome_preserves_original_receipt_meaning_and_rejects_mixed_valid_fields(
+    status, damage
+):
+    value = closure(
+        kind=RelativeClosureKind.REOPENED if status == "reopened" else RelativeClosureKind.GENERATED
+    )
+    occurrence = None if value.successor is None else value.successor.occurrence_id
+    body = {"version": 1, "relative_closure": value.document().decode()}
+    command = value.operation.command
+    if status == "generated":
+        body.update(
+            slot_key=value.successor.key,
+            occurrence_id=occurrence,
+            schedule_id=value.schedule.schedule_id,
+        )
+    if status == "cancel":
+        command = replace(command, action="recurrence.relative.invalidate", key=value.key)
+        body = {
+            "version": 1,
+            "closure_key": value.key,
+            "disposition": status,
+            "occurrence_id": occurrence,
+        }
+    receipt = Receipt(
+        command,
+        "a" * 64,
+        value.operation.operation_id,
+        JsonDocument.from_value(body),
+        value.recorded_at,
+    )
+    original = RelativeEventOutcome(status, value.schedule.schedule_id, receipt, occurrence)
+    historical = replace(receipt, restoration=RestorationProvenance("restored", False))
+    assert replace(original, receipt=historical).status == status
+    if status != "reopened":
+        assert (
+            RelativeEventOutcome(
+                "historical_absent", original.schedule_id, historical, occurrence
+            ).receipt
+            == historical
+        )
+    changed = {
+        "status": status,
+        "schedule_id": original.schedule_id,
+        "receipt": receipt,
+        "occurrence_id": occurrence,
+    }
+    if damage == "status":
+        changed["status"] = "reopened" if status == "generated" else "generated"
+    if damage == "schedule":
+        changed["schedule_id"] = "other"
+    if damage == "occurrence":
+        changed["occurrence_id"] = None
+    if damage == "historical":
+        changed["status"] = "historical_absent"
+    if damage == "shape":
+        body["relative_closure"] = None
+    if damage == "kind":
+        if status == "cancel":
+            body["disposition"] = "retained"
+        else:
+            body["relative_closure"]["kind"] = "rejected"
+    if damage == "slot":
+        body["slot_key"] = "other"
+    if damage == "key":
+        body["closure_key"] = "other"
+    changed["receipt"] = replace(receipt, result=JsonDocument.from_value(body))
+    with pytest.raises(InvalidInput, match="invalid_relative_outcome"):
+        RelativeEventOutcome(**changed)
 
 
 def closure(*, kind=RelativeClosureKind.GENERATED):

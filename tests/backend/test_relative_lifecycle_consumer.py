@@ -89,6 +89,90 @@ def completed(tmp_path, *, child=False, visibility=None):
     return store, schedule_id, bootstrap.occurrence_id, source, lifecycle, item.event, tasks, member
 
 
+@pytest.mark.parametrize("surface", ["read", "replay", "snapshot"])
+@pytest.mark.parametrize(
+    "damage",
+    [
+        "close_status",
+        "generated_status",
+        "schedule",
+        "invalidation_status",
+        "invalidation_disposition",
+        "invalidation_schedule",
+        "different_cycle",
+    ],
+)
+def test_c38_mismatched_persisted_outcome_fails_without_effects_or_repair(
+    tmp_path, surface, damage
+):
+    from test_sqlite_snapshots import Clock
+
+    from domus.application.task_requests import ReopenTask
+    from domus.domain.errors import DatabaseRejected, StorageFailure
+    from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
+
+    store, rule, oid, source, service, event, tasks, member = completed(tmp_path)
+    if damage == "close_status":
+        tasks.reopen("reopen", ReopenTask(oid, 2, event.cycle.cycle_id, "Repeat"))
+    original = service.consume(rule, event.event_key)
+    target = event
+    change, values = "outcome_status=?", ("generated" if damage == "close_status" else "reopened",)
+    if damage.startswith("invalidation"):
+        tasks.reopen("reopen", ReopenTask(oid, 2, event.cycle.cycle_id, "Repeat"))
+        (observed,) = source.ingest().items
+        target = observed.event
+        original = service.consume(rule, target.event_key)
+        assert original.status == "cancel"
+        values = ("generated" if damage == "invalidation_status" else "retained",)
+    if damage in ("schedule", "invalidation_schedule"):
+        change, values = "outcome_schedule_id=?", ("other",)
+    if damage == "different_cycle":
+        from domus.domain.errors import Conflict
+        from domus.domain.relative_lifecycle import RelativeEventOutcome
+
+        tasks.complete("next", CompleteTask(original.occurrence_id, 1, (member.member_id,), 91))
+        (observed,) = source.ingest().items
+        other = service.consume(rule, observed.event.event_key)
+        with store._connection() as connection:
+            connection.execute(
+                "UPDATE recurrence_relative_inbox SET outcome_status=NULL,"
+                "outcome_schedule_id=NULL,outcome_operation_id=NULL,outcome_occurrence_id=NULL "
+                "WHERE event_key=?",
+                (target.event_key,),
+            )
+        with store.write() as unit:
+            with pytest.raises(Conflict, match="relative_source_conflict"):
+                unit.recurrence.finish_relative_source(
+                    "home",
+                    target.event_key,
+                    RelativeEventOutcome("generated", rule, other.receipt, other.occurrence_id),
+                )
+            assert unit.recurrence.relative_source_outcome("home", target.event_key) is None
+        change, values = (
+            "outcome_status=?,outcome_schedule_id=?,outcome_operation_id=?,outcome_occurrence_id=?",
+            ("generated", rule, other.receipt.operation_id, other.occurrence_id),
+        )
+    with store._connection() as connection:
+        connection.execute(
+            "UPDATE recurrence_relative_inbox SET " + change + " WHERE event_key=?",
+            (*values, target.event_key),
+        )
+    before, bytes_before = counts(store), store.path.read_bytes()
+    if surface == "snapshot":
+        with pytest.raises(DatabaseRejected, match="invalid_snapshot_records"):
+            SQLiteSnapshots(store, tmp_path / "invalid", store.installation, Clock()).create(
+                "invalid"
+            )
+    else:
+        with pytest.raises(StorageFailure, match="invalid_relative_outcome"):
+            if surface == "read":
+                with store.read() as unit:
+                    unit.recurrence.relative_source_outcome("home", target.event_key)
+            else:
+                service.consume(rule, target.event_key)
+    assert counts(store) == before and store.path.read_bytes() == bytes_before
+
+
 def test_independent_writers_commit_one_original_and_one_successor(tmp_path):
     from concurrent.futures import ThreadPoolExecutor
 
@@ -584,7 +668,7 @@ def test_restore_of_later_completion_fences_an_absent_original_without_generatin
 
 
 def test_inbox_rejects_outcome_from_a_different_event_or_scope(tmp_path):
-    from domus.domain.errors import Conflict
+    from domus.domain.errors import Conflict, StorageFailure
     from domus.domain.relative_lifecycle import RelativeEventOutcome
 
     store, rule, _, _, service, event, _, _ = completed(tmp_path)
@@ -597,14 +681,22 @@ def test_inbox_rejects_outcome_from_a_different_event_or_scope(tmp_path):
                 event.event_key,
                 RelativeEventOutcome("generated", rule, generated.receipt, generated.occurrence_id),
             )
-        with pytest.raises(Conflict, match="relative_source_missing"):
-            unit.recurrence.finish_relative_source(
-                "home",
-                event.event_key,
-                RelativeEventOutcome("unrelated", rule),
-            )
+        for key in ("missing", event.event_key):
+            with pytest.raises(Conflict, match="relative_source_missing"):
+                unit.recurrence.finish_relative_source(
+                    "home",
+                    key,
+                    RelativeEventOutcome("unrelated", rule),
+                )
     with store._connection() as connection:
         connection.execute("UPDATE recurrence_relative_inbox SET outcome_schedule_id='other'")
+    with pytest.raises(StorageFailure, match="invalid_relative_outcome"):
+        service.consume(rule, event.event_key)
+    with store._connection() as connection:
+        connection.execute(
+            "UPDATE recurrence_relative_inbox SET outcome_status='unrelated',"
+            "outcome_operation_id=NULL,outcome_occurrence_id=NULL"
+        )
     with pytest.raises(Conflict, match="recurrence_source_changed"):
         service.consume(rule, event.event_key)
 
