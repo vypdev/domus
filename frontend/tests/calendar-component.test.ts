@@ -1,5 +1,6 @@
 import {afterEach, expect, test, vi} from 'vitest';
 import '../src/presentation/domus-calendar';
+import {DATE_MAX} from '../src/domain/calendar';
 import type {CalendarEntry} from '../src/domain/calendar';
 
 const planned: CalendarEntry = {id: 'planned:work', kind: 'planned', title: '<b>Set clocks</b>', day: '2026-11-01',
@@ -37,6 +38,10 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   select(0, ''); dateValue(''); submit();
   dateValue('9998-12-02'); submit();
   expect(listener).toHaveBeenCalledOnce();
+  select(0, 'month'); dateValue(DATE_MAX); submit();
+  expect(listener).toHaveBeenCalledTimes(2);
+  expect(listener).toHaveBeenLastCalledWith(expect.objectContaining({detail: {type: 'load', query: {
+    start: '9998-12-01', end: '9999-01-01', kind: '', timing: '', state: '', priority: '', category: '', own: false}}}));
   select(0, 'week'); select(1, 'approval'); select(2, 'manual'); select(3, 'completed'); select(4, 'high');
   const tag = form.querySelector<HTMLInputElement>('input[name=category]')!;
   tag.value = 'Hogar & más'; tag.dispatchEvent(new Event('input'));

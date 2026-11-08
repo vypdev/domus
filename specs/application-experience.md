@@ -477,3 +477,17 @@ The common implementation, API, adapters, catalog and publication remain with [h
   Other installed-resource hashes remain unchanged. Rollback restores the prior
   workflow pins with their matching digests; do not disable the protection test.
 - Readiness: current-head native Copilot and full CI qualification pending.
+
+
+### Exact browser recovery evidence (2026-11-08)
+
+The existing two native/standalone navigation cases retain all their assertions:
+exact original int64 PUT input and real committed-reply bytes, deliberately lost
+reply, reload, actual original-status GET, cleared pending state, selected value
+and exactly one write. Capture the real committed reply before dropping it;
+do not require later CDP access to a browser response whose resource was retired.
+No generated response, extra GET, retry, skip or production behavior change is
+introduced. Case counts stay unchanged. The reported last-selectable-month
+finding is contradicted by existing production predicates; existing domain and
+component boundary cases now explicitly assert the 9998-12-01 anchor and
+9999-01-01 exclusive end, plus every calendar mode and both week starts.

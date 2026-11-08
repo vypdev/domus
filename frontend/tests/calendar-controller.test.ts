@@ -1,7 +1,7 @@
 import {expect, test, vi} from 'vitest';
 import {CalendarController} from '../src/application/calendar-controller';
 import type {CalendarScope} from '../src/application/calendar-controller';
-import {calendarDays, calendarPeriod, calendarQuery, calendarToday, civilDate} from '../src/domain/calendar';
+import {CALENDAR_MODES, DATE_MAX, WEEK_STARTS, calendarDays, calendarPeriod, calendarQuery, calendarToday, civilDate} from '../src/domain/calendar';
 import type {CalendarEntry, CalendarPage, CalendarQuery} from '../src/domain/calendar';
 
 const query: CalendarQuery = {start: '2026-11-01', end: '2026-12-01', kind: '', timing: '', state: '', priority: '', category: '', own: false};
@@ -18,6 +18,14 @@ test('civil calendar boundaries use the household day across DST and constrain u
   expect(calendarPeriod('agenda', '2026-11-01')).toEqual({start: '2026-11-01', end: '2026-12-02'});
   expect(calendarDays(calendarPeriod('day', '2026-11-01'))).toEqual(['2026-11-01']);
   for (const value of [undefined, '', '1969-12-31', '2026-11-31', '2026-99-01']) expect(civilDate(value)).toBe(false);
+  // The selectable-anchor ceiling does not cap an exclusive period end.
+  expect(calendarPeriod('month', DATE_MAX)).toEqual({start: '9998-12-01', end: '9999-01-01'});
+  expect(civilDate('9999-01-01')).toBe(true);
+  for (const mode of CALENDAR_MODES) for (const weekStart of WEEK_STARTS) {
+    const period = calendarPeriod(mode, DATE_MAX, weekStart);
+    expect(calendarQuery({...query, ...period})).toBe(true);
+    expect(calendarDays(period).length).toBeGreaterThan(0);
+  }
   expect(calendarQuery(query)).toBe(true);
   expect(calendarQuery({...query, kind: 'due', timing: 'manual', state: 'available', priority: 'normal'})).toBe(true);
   for (const value of [null, 0, {...query, other: false}, {...query, start: ''}, {...query, end: ''},

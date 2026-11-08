@@ -154,3 +154,15 @@ independent complete-source audit and actual inward-dependency contracts. These 
 linked from [administration evidence](evidence/household-administration.json). Application/API privacy,
 schema 9 after recurrence schema 8, the separate journal and actual administration interface remain
 unimplemented; the unit count does not establish the 72 product journeys or packaged acceptance.
+
+
+The original-operation navigation journey records exact int64 revision bytes from
+the real committed PUT response at its existing interception boundary, before
+intentionally dropping that reply. It then reloads and uses the actual browser
+GET of the original request: status, cleared pending state, selected preference
+and absence of duplicate writes remain mandatory. This preserves the wire and
+recovery assertions without depending on Chromium retaining a consumed response
+body for later CDP inspection. No response is fabricated or retried, and the
+original recovery GET remains unintercepted. The amd64 run 42471380697 retained
+a 200 response marked `net::ERR_ABORTED`, a missing CDP body and an already
+recovered Sunday UI; its trace and screenshot remain separate diagnostic evidence.
