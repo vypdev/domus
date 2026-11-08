@@ -696,9 +696,9 @@
       "id": "application-experience",
       "title": "Responsive application, household dashboard and navigation",
       "status": "proposed",
-      "scope": "A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.",
+      "scope": "A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.; combined native/standalone browser CI uses a bounded complete-suite deadline with protected candidate workflow qualification",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-01",
+      "lastVerified": "2026-11-08",
       "specs": [
         "specs/application-experience.md",
         "specs/household-entry-interface.md"

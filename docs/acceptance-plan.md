@@ -39,7 +39,23 @@ unexpectedly skipped, failed or cancelled. Record the exact checked revision and
 
 PR code runs without publication credentials. Persistent self-hosted runner execution requires the repository's
 trusted-PR policy; a skipped untrusted-fork run is not passing evidence. Provision toolchains in the job
-that executes tests. The existing Copilot files remain unchanged.
+that executes tests. Installed Copilot resources remain protected by their exact-byte
+hash contract. During explicitly authorized SDK incident qualification, review the
+workflow semantic diff, pin its `uses` to the exact built SDK candidate and update
+only each reviewed workflow's expected hash in `tests/contracts/copilot-resource-hashes.json`.
+The current qualification pins Commit and Pull Request to the same candidate to
+exercise progress and review. Preserve all other hashes, checks, permissions, events and inputs. A candidate
+pin is qualification evidence only; it does not authorize a release or merge.
+
+The combined frontend entry suite currently contains 101 journeys over both
+native and standalone compositions. Its global Playwright deadline is 360 seconds,
+including fixture startup and teardown, inside the 15-minute CI job. Run
+42437023506 passed 98 journeys before the old 180-second global deadline
+interrupted the next case; this was suite exhaustion, not a preceding assertion
+failure. The new bounded budget retains all four files, one worker, zero retries,
+individual case limits, 30-second fixture startup and 5-second graceful shutdown.
+Require the complete current-head browser result and existing coverage gates;
+never treat interrupted or unrun cases as passing.
 
 ## Real environment evidence
 
