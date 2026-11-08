@@ -51,7 +51,7 @@ jobs:
       # Declare reviewed versions in .copilot/verification-prerequisites.json.
       # Optional trusted-main setup: VERIFICATION_SETUP=true and .github/actions/copilot-verification-setup/action.yml.
       # https://docs.page/vypdev/copilot/security-operations/operations/verification#repository-verification-prerequisites
-      - uses: vypdev/copilot@aeb01425e490744fb0d66ac1184bab1133b0c6ce # Candidate qualification: copilot issue 937
+      - uses: vypdev/copilot@b43855072e715c611b0b23189962a091b45b762c # Candidate qualification: copilot issue 937
         with:
           repository-locale: ${{ vars.REPOSITORY_LOCALE || 'en-US' }}
           issues-locale: ${{ vars.ISSUES_LOCALE || '' }}
