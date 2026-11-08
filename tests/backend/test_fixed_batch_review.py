@@ -1,7 +1,7 @@
 """Atomic reviewed replacement preserves the original history and transfers compatible work."""
 
 from dataclasses import replace
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import pytest
 from test_recurrence_creation import request, setup
@@ -553,7 +553,10 @@ def test_batch_does_not_open_a_new_generation_when_the_first_date_passes_before_
 
 
 @pytest.mark.parametrize("timed", [False, True])
-def test_replacement_cannot_recreate_historically_excluded_work(tmp_path, request, timed):
+@pytest.mark.parametrize("days_after_start", [0, 1], ids=["at-start", "after-start"])
+def test_replacement_cannot_recreate_historically_excluded_work(
+    tmp_path, request, timed, days_after_start
+):
     from test_activation_compatibility import identity_at
     from test_sqlite_snapshots import Clock
 
@@ -567,13 +570,20 @@ def test_replacement_cannot_recreate_historically_excluded_work(tmp_path, reques
     root = tmp_path / "runtime"
     root.mkdir(mode=0o700)
     review, _, choice, old = prepared(root, timed=timed)
+    if days_after_start:
+        # Include the later original nominal in the prospective pattern as well.
+        choice = replace(
+            choice, pattern=parse_fixed_pattern("FREQ=DAILY;COUNT=3", choice.pattern.start)
+        )
     store = review.transactions
     tasks = TaskCommands(store, review.actor, review.clock, review.identifiers)
     tasks.assign("assignment", AssignTask(old[2].occurrence_id, 1, ("child",)))
     identity_at(root, store.installation)
     archive, target = tmp_path / "archive", tmp_path / "target"
     checkpoint = SQLiteSnapshots(store, archive, store.installation, Clock()).create("before")
-    excluded = choice.pattern.start
+    excluded = type(choice.pattern.start)(
+        choice.pattern.start.local + timedelta(days=days_after_start)
+    )
     selection = FixedExceptionChange(
         choice.schedule_id,
         1,
@@ -592,6 +602,9 @@ def test_replacement_cannot_recreate_historically_excluded_work(tmp_path, reques
     assert review.original(ReviewAction.APPLY, "exclude").operation_id == original.operation_id
     with opened.database.read() as unit:
         assert unit.recurrence.schedule("home", choice.schedule_id).exceptions == ()
+        assert unit.recurrence.has_historical_fixed_exception(
+            "home", choice.schedule_id, excluded.local.isoformat()
+        )
     before = opened.database.path.read_bytes()
     before_counts = counts(opened.database)
     with pytest.raises(Conflict, match="recurrence_review_source_absent"):

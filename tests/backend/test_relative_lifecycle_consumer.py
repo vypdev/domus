@@ -100,6 +100,9 @@ def completed(tmp_path, *, child=False, visibility=None):
         "invalidation_disposition",
         "invalidation_schedule",
         "different_cycle",
+        "receipt_proof",
+        "missing_closure",
+        "invalidation_receipt",
     ],
 )
 def test_c38_mismatched_persisted_outcome_fails_without_effects_or_repair(
@@ -153,6 +156,29 @@ def test_c38_mismatched_persisted_outcome_fails_without_effects_or_repair(
             ("generated", rule, other.receipt.operation_id, other.occurrence_id),
         )
     with store._connection() as connection:
+        if damage == "receipt_proof":
+            body = original.receipt.result.decode()
+            body["relative_closure"]["recorded_at"] += 1
+            from domus.domain.storage import JsonDocument
+
+            connection.execute(
+                "UPDATE receipts SET result=? WHERE operation_id=?",
+                (JsonDocument.from_value(body).encoded, original.receipt.operation_id),
+            )
+            change, values = "outcome_status=?", (original.status,)
+        if damage == "missing_closure":
+            connection.execute("DELETE FROM recurrence_relative_closures")
+            change, values = "outcome_status=?", (original.status,)
+        if damage == "invalidation_receipt":
+            from domus.domain.storage import JsonDocument
+
+            body = original.receipt.result.decode()
+            body["occurrence_id"] = "foreign-successor"
+            connection.execute(
+                "UPDATE receipts SET result=? WHERE operation_id=?",
+                (JsonDocument.from_value(body).encoded, original.receipt.operation_id),
+            )
+            change, values = "outcome_occurrence_id=?", ("foreign-successor",)
         connection.execute(
             "UPDATE recurrence_relative_inbox SET " + change + " WHERE event_key=?",
             (*values, target.event_key),
@@ -164,7 +190,12 @@ def test_c38_mismatched_persisted_outcome_fails_without_effects_or_repair(
                 "invalid"
             )
     else:
-        with pytest.raises(StorageFailure, match="invalid_relative_outcome"):
+        reason = (
+            "invalid_relative_closure_record"
+            if damage == "receipt_proof"
+            else "invalid_relative_outcome"
+        )
+        with pytest.raises(StorageFailure, match=reason):
             if surface == "read":
                 with store.read() as unit:
                     unit.recurrence.relative_source_outcome("home", target.event_key)
@@ -437,6 +468,13 @@ def test_independent_snapshot_rejects_orphaned_or_corrupt_cycle_proof(tmp_path, 
     archive = tmp_path / "archive"
     snapshot = SQLiteSnapshots(store, archive, store.installation, Clock())
     with store._connection() as connection:
+        if damage in ("missing", "header"):
+            # A retained original can exist before any inbox acknowledgement. The independent
+            # closure inventory must still detect the orphan/header mismatch in that state.
+            connection.execute(
+                "UPDATE recurrence_relative_inbox SET outcome_status=NULL,"
+                "outcome_schedule_id=NULL,outcome_operation_id=NULL,outcome_occurrence_id=NULL"
+            )
         statement = {
             "missing": "DELETE FROM recurrence_relative_closures",
             "header": "UPDATE recurrence_relative_closures SET closure_key='incorrect'",

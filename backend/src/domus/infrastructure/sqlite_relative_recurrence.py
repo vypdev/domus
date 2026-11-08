@@ -6,9 +6,10 @@ from typing import cast
 
 from domus.domain.errors import Conflict, DomusError, InvalidInput, StorageFailure
 from domus.domain.recurrence_records import MAINTENANCE_ACTOR, ScheduleState
-from domus.domain.relative_lifecycle import RelativeClosure
+from domus.domain.relative_lifecycle import RelativeClosure, RelativeEventOutcome
 from domus.domain.relative_recurrence import RelativeProgress, RelativeSchedule, RelativeSlot
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
+from domus.domain.task_events import TaskSourceRecord
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 from domus.infrastructure.sqlite_recurrence_rows import (
     SQLiteRecurrenceRows,
@@ -85,6 +86,27 @@ def _slot_headers(value: RelativeSlot) -> dict[str, object]:
 
 @dataclass
 class SQLiteRelativeRecurrences(SQLiteRecurrenceRows, SQLiteRelativeInbox):
+    def _verify_outcome(self, outcome: RelativeEventOutcome, source: TaskSourceRecord) -> None:
+        super()._verify_outcome(outcome, source)
+        receipt = outcome.receipt
+        if receipt is None:
+            return
+        event = source.event(self.installation)
+        closure = self.relative_closure(
+            event.cycle.household_id, outcome.source_key(event, self.installation)
+        )
+        if closure is None:
+            raise InvalidInput("invalid_relative_outcome")
+        if receipt.command.action == "recurrence.relative.invalidate":
+            valid = (
+                closure.successor is not None
+                and closure.successor.occurrence_id == outcome.occurrence_id
+            )
+        else:
+            valid = closure.matches_receipt(receipt)
+        if not valid:
+            raise InvalidInput("invalid_relative_outcome")
+
     def _verify_closure(self, value: RelativeClosure) -> None:
         receipt = SQLiteReceipts(self.connection).get(value.operation.command)
         if value.installation != self.installation or not value.matches_receipt(receipt):

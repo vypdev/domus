@@ -464,7 +464,7 @@
   },
   "outcomeIntegrityRefinement": {
     "sourceParent": "476621ca1f15f883af8225e4f7712b3d507887f0",
-    "status": "local verification passed; current-head native CI, Review and progress qualification pending",
+    "status": "First outcome-integrity checkpoint; see completeOriginalProofRefinement for the subsequent validation scope.",
     "review": "https://github.com/vypdev/domus/pull/29#discussion_r4507980583",
     "cases": [
       "recurrence-lifecycle-calendar-C37",
@@ -492,10 +492,13 @@
       "Valid original statuses remain readable after restoration; historical absence never authorizes new work.",
       "Corrupt persisted combinations fail closed, without automatic repair or new effects."
     ],
-    "pending": [
-      "Exact-current-source CI on both real image architectures.",
-      "Current-head native Review and Commit with SDK 5168c951343dbb57161a3c278eaf0ea00bffd51d."
-    ],
+    "nativeCheckpoint": {
+      "head": "28f07ff3a286ece5820e1a548a47de6e124aaf52",
+      "commit": "https://github.com/vypdev/domus/actions/runs/42531311394",
+      "ci": "https://github.com/vypdev/domus/actions/runs/42531316204",
+      "review": "https://github.com/vypdev/domus/actions/runs/42531316189",
+      "result": "Commit verified 185 requirements in 6 batches, and CI passed both image architectures. Review confirmed the original finding fixed and reported two follow-up findings."
+    },
     "noSchemaChange": true,
     "noOwnerHAModification": true,
     "noReleaseOrMergeAuthorizationInferred": true,
@@ -509,6 +512,36 @@
       "format": "427 Python files checked",
       "catalog": "canonical SDK main entrypoint generation/validation passed, source unchanged from published 3.10.12",
       "documentation": "domus-check docs passed"
+    },
+    "completeOriginalProofRefinement": {
+      "sourceParent": "28f07ff3a286ece5820e1a548a47de6e124aaf52",
+      "status": "Local verification passed; remote qualification requires CI, Commit and Review receipts for the executing source revision.",
+      "counterexamples": "Replay accepted a changed original receipt or a missing closure, and invalidation could retain an unrelated successor.",
+      "red": {
+        "failed": 7,
+        "passed": 2
+      },
+      "focusedGreen": {
+        "passed": 227,
+        "finalBoundarySelectionPassed": 38
+      },
+      "localBackendVerification": {
+        "testsPassed": 4935,
+        "modules": 175,
+        "coveredStatements": 13269,
+        "coveredBranches": 3770,
+        "coverage": "100% globally and per authored module; independent backend-coverage inventory passed"
+      },
+      "historicalExclusionControl": {
+        "test": "tests/backend/test_fixed_batch_review.py",
+        "passed": 4,
+        "scope": "Actual SQLite restoration with date-only and timed exclusions at and after replacement start. Preview fails before and after restart, preserving stored bytes and assignments."
+      },
+      "runtimeOwner": "backend/src/domus/infrastructure/sqlite_relative_recurrence.py",
+      "contract": "Reuse the existing complete closure/original receipt/stored successor validator through the shared admission/read/snapshot verification hook. Preserve canonical cycle keys and valid historical outcomes.",
+      "newConfigurationOrSchema": false,
+      "newCountedCases": 0,
+      "case": "recurrence-lifecycle-calendar-C38 (additional required boundary rows)"
     }
   }
 }

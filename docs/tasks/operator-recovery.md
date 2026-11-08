@@ -63,7 +63,9 @@ credentials and raw canonical requests.
 
 A relative-recurrence inbox outcome must agree with its original receipt action,
 recorded result, schedule, occurrence and source cycle. A mismatched record blocks
-reads and replay with `invalid_relative_outcome`; snapshot inspection rejects the
+reads and replay with `invalid_relative_outcome` or the original closure's
+`invalid_relative_closure_record` diagnostic. The complete original closure,
+receipt and successor are checked together; snapshot inspection rejects the
 same inconsistent data. No successor, acknowledgment or compensating effect is
 created while that proof is invalid. Preserve the original bytes and operation
 references, stop the affected work and follow the compatible recovery procedure.

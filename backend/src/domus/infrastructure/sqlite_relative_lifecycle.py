@@ -247,8 +247,7 @@ class SQLiteRelativeInbox:
                 row["outcome_occurrence_id"],
             )
             original = self._source(row) if source is None else source
-            if not outcome.matches_source(original.event(self.installation), self.installation):
-                raise InvalidInput("invalid_relative_outcome")
+            self._verify_outcome(outcome, original)
             return outcome
         except InvalidInput:
             raise StorageFailure("invalid_relative_outcome") from None
@@ -282,8 +281,10 @@ class SQLiteRelativeInbox:
         if row is None:
             raise Conflict("relative_source_missing")
         source = self._source(row)
-        if not outcome.matches_source(source.event(self.installation), self.installation):
-            raise Conflict("relative_source_conflict")
+        try:
+            self._verify_outcome(outcome, source)
+        except InvalidInput:
+            raise Conflict("relative_source_conflict") from None
         if (
             self.connection.execute(
                 "UPDATE recurrence_relative_inbox SET outcome_status=?,outcome_schedule_id=?,"
@@ -306,3 +307,7 @@ class SQLiteRelativeInbox:
         for row in self.connection.execute("SELECT * FROM recurrence_relative_inbox"):
             source = self._source(row)
             self._outcome(row, source)
+
+    def _verify_outcome(self, outcome: RelativeEventOutcome, source: TaskSourceRecord) -> None:
+        if not outcome.matches_source(source.event(self.installation), self.installation):
+            raise InvalidInput("invalid_relative_outcome")

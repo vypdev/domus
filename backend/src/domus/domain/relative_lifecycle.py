@@ -333,7 +333,10 @@ class RelativeEventOutcome:
             if self.receipt.command.action == "recurrence.relative.invalidate"
             else cast(JsonObject, proof).get("key")
         )
-        return key == _cycle_key(
+        return key == self.source_key(event, installation)
+
+    def source_key(self, event: TaskLifecycleEvent, installation: Installation) -> str:
+        return _cycle_key(
             installation,
             event.cycle.household_id,
             self.schedule_id,

@@ -22,7 +22,7 @@ Configure and review a relative rule -> bounded maintenance observes and validat
 
 ### Review correction of the first native publication
 
-The first native publication at 91adfe902055cb2c5bb42ceeb57c2b7ab53fb635 succeeded and remains immutable history. It generated 18 broader cases that overlap the retained owners instead of preserving the supplied independent refinements. The published references remain required below as integration aliases; they are not 18 additional counted journeys. Sections 14 and 17 instead count the 18 explicit technical refinements C19 through C36. An execution satisfying several obligations remains one execution.
+The first native publication at 91adfe902055cb2c5bb42ceeb57c2b7ab53fb635 succeeded and remains immutable history. It generated 18 broader cases that overlap the retained owners instead of preserving the supplied independent refinements. The published references remain required below as integration aliases; they are not 18 additional counted journeys. Sections 14 and 17 count 20 explicit technical refinements C19 through C38: the original 18 refinements and two outcome-integrity cases. An execution satisfying several obligations remains one execution.
 
 | Published integration alias | Retained owning/refinement coverage | Counting |
 |---|---|---|
@@ -184,8 +184,15 @@ requires the corresponding original proof. It never authorizes recreating work.
 
 Pure domain validation owns action/result consistency and the shared cycle-key
 derivation. SQLite admission and reads bind that proof to the verified original
-source. Corruption MUST fail as `StorageFailure` before replay effects, and
-independent snapshot validation MUST reject the same bytes. No DDL, version
+source. Before returning or admitting an effect-bearing outcome, the concrete
+SQLite recurrence adapter MUST reuse its complete original-closure reader,
+including the matching original receipt and stored successor. A missing closure,
+changed receipt proof or unrelated invalidation target cannot be certified by
+checking the inbox row alone. The inbox's shared verification hook applies the
+same boundary to admission, reads and independent snapshots, with bounded keyed
+lookups and no extra provider capability. Corruption MUST fail as
+`StorageFailure` before replay effects, and independent snapshot validation
+MUST reject the same bytes. No DDL, version
 relabeling, default, coercion or automatic repair is added. Valid replay, rollback,
 restoration and original receipt identity remain unchanged. The existing blocked
 storage UI and operator recovery guide apply; no control, configuration, permission,
@@ -364,7 +371,7 @@ All 93 counted cases in the three unchanged owners and their integration aliases
 | recurrence-lifecycle-calendar-C35 | UI/UX/localization/sanitization | RCL-09,RCL-06 | Actual EN/ES narrow-screen month-to-agenda keyboard navigation names planned/due/performed/approval times, retains inert reasons and shows incomplete processing independently of color. |
 | recurrence-lifecycle-calendar-C36 | Adapters/provider contracts | RCL-09,RCL-07 | Actual HA calendar retry preserves UIDs/offset policy and becomes unavailable on source failure; disabled external synchronization transmits no household records. |
 | recurrence-lifecycle-calendar-C37 | Domain/configuration/pure planning | RCL-02,RCL-07 | Complete original materialization, close and invalidation outcomes retain their exact receipt/status/schedule/occurrence/source relationships, including valid historical originals; inconsistent combinations never become domain outcomes. |
-| recurrence-lifecycle-calendar-C38 | Integration/security/migration | RCL-02,RCL-08 | Actual SQLite outcome rows with individually valid but mismatched status, action, schedule, disposition or source-cycle proof fail direct reads, replay and independent snapshot inspection without extra effects or byte repair. |
+| recurrence-lifecycle-calendar-C38 | Integration/security/migration | RCL-02,RCL-08 | Actual SQLite outcome rows with individually valid but mismatched status, action, schedule, disposition or source-cycle proof, missing closure, changed original receipt proof or unrelated invalidation target fail direct reads, replay and independent snapshot inspection without extra effects or byte repair. |
 
 Tests first, strict types, real independent SQLite writers, deterministic clocks/provider failures, crash/restore, actual HTTP, Storybook, compiled browser and actual image acceptance. Require 100% supported coverage globally and per authored module: all four frontend metrics, backend statements/branches, independent authored-source inventories, and every-PR CI Check. Do not infer semantic or human acceptance from test counts. Preserve existing timeout, retry, privacy and architecture gates, and necessary actual failure evidence.
 
