@@ -19,6 +19,7 @@ MAX_EVENTS = 1_000
 MAX_PAGE_BYTES = 128 * 1024
 MAX_PAGES_PER_KIND = 10
 MAX_DAYS = 90
+_READ_TIMEOUT = 15
 _MIN_DATE = date(1970, 1, 1)
 _KINDS = ("planned", "due")
 _TOKEN = re.compile(r"([0-9a-f-]{36})\.(stable|edge)\.[0-9a-f]{64}")
@@ -236,7 +237,7 @@ class CalendarClient:
         events: dict[str | None, CalendarEvent] = {}
         pending = False
         try:
-            async with asyncio.timeout(15), self._lock:
+            async with asyncio.timeout(_READ_TIMEOUT), self._lock:
                 while first < last:
                     boundary = min(first + MAX_DAYS * _DAY, last)
                     for kind in _KINDS:

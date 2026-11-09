@@ -59,5 +59,7 @@ for Core 2026.10.4. CI runs the pinned Core image against both the private
 Supervisor-network listener and the standalone HTTPS composition of the exact
 candidate Domus image. The tests cover config flow, native range reads, event
 identity, credential isolation and rotation, unavailable results, and unload
-in disposable environments. This check does not change the historical owner
+in disposable environments. The CI artifacts record complete statement and
+branch coverage for every native integration module. This check does not change
+the historical owner
 preview evidence or qualify a new published Domus package.

@@ -6,7 +6,9 @@ import subprocess
 import time
 import uuid
 from pathlib import Path
+from shutil import copyfile
 
+import coverage
 import pytest
 
 
@@ -723,21 +725,47 @@ def _calendar_checked(result):
     return result.stdout
 
 
-def _calendar_core(*arguments):
+def _calendar_core(*arguments, report_directory=None):
     root = Path(__file__).resolve().parents[2]
+    instrumentation = ()
+    command = ("--entrypoint", "python", _CORE_IMAGE, "/calendar_smoke.py")
+    if report_directory is not None:
+        package = Path(coverage.__file__).resolve().parent
+        instrumentation = (
+            "--volume",
+            f"{package}:/coverage-lib/coverage:ro",
+            "--volume",
+            f"{report_directory}:/evidence",
+            "--env",
+            "PYTHONPATH=/coverage-lib",
+            "--env",
+            "COVERAGE_CORE=pytrace",
+            "--env",
+            "COVERAGE_FILE=/evidence/.coverage",
+            "--workdir",
+            "/config",
+        )
+        command = (
+            "--entrypoint",
+            "/bin/sh",
+            _CORE_IMAGE,
+            "-ec",
+            "python -m coverage run --rcfile=/dev/null --branch "
+            "--source=custom_components/domus_calendar /calendar_smoke.py && "
+            "python -m coverage json --rcfile=/dev/null --fail-under=100 "
+            "-o /evidence/coverage.json",
+        )
     return _calendar_checked(
         docker(
             "run",
             "--rm",
             *arguments,
+            *instrumentation,
             "--volume",
             f"{root / 'custom_components'}:/config/custom_components:ro",
             "--volume",
             f"{root / 'tests/ha/calendar_smoke.py'}:/calendar_smoke.py:ro",
-            "--entrypoint",
-            "python",
-            _CORE_IMAGE,
-            "/calendar_smoke.py",
+            *command,
         )
     )
 
@@ -850,11 +878,32 @@ def _ready_standalone_calendar(name):
     assert result.returncode == 0, result.stderr + docker("logs", name).stderr
 
 
-def test_calendar_core_read_lifecycle_and_configuration():
+def test_calendar_core_read_lifecycle_and_configuration(tmp_path):
     network = "domus-calendar-fixture-" + uuid.uuid4().hex
     _calendar_checked(docker("network", "create", "--internal", network))
     try:
-        result = _calendar_core("--network", network, "--add-host", "local-domus-edge:127.0.0.1")
+        result = _calendar_core(
+            "--network",
+            network,
+            "--add-host",
+            "local-domus-edge:127.0.0.1",
+            report_directory=tmp_path,
+        )
         assert "Home Assistant native calendar acceptance passed" in result
+        report_path = tmp_path / "coverage.json"
+        report = json.loads(report_path.read_text())
+        assert report["meta"]["branch_coverage"] is True
+        assert report["meta"]["version"] == coverage.__version__
+        root = Path(__file__).resolve().parents[2]
+        source = root / "custom_components/domus_calendar"
+        expected = {path.relative_to(root).as_posix() for path in source.rglob("*.py")}
+        assert expected and set(report["files"]) == expected
+        for name, file in report["files"].items():
+            assert not file["excluded_lines"], name
+            assert not file["missing_lines"] and not file["missing_branches"], name
+            assert file["summary"]["percent_covered"] == 100, name
+        assert report["totals"]["percent_covered"] == 100
+        if artifact := os.environ.get("DOMUS_CALENDAR_COVERAGE_OUT"):
+            copyfile(report_path, artifact)
     finally:
         _calendar_checked(docker("network", "rm", network))

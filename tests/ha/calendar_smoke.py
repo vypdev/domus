@@ -6,6 +6,7 @@ import tempfile
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 from aiohttp import web
 from homeassistant import bootstrap, loader
@@ -111,8 +112,9 @@ class Fixture:
         cursor = None
         values = []
         pending = self.mode in {"known_pending", "empty_pending"}
-        if self.mode == "malformed":
-            return web.Response(body=b'{"not_valid":', content_type="application/json")
+        if self.mode in {"malformed", "oversize"}:
+            raw = b'{"not_valid":' if self.mode == "malformed" else b" " * (128 * 1024 + 1)
+            return web.Response(body=raw, content_type="application/json")
         if self.mode == "fail_due" and kind == "due":
             return web.Response(status=503)
         if self.mode == "redirect":
@@ -135,6 +137,27 @@ class Fixture:
             count = 101
             cursor = "1" if self.mode == "loop" else str(offset)
             values = [fixture_event(kind, str(offset), self.day.isoformat(), all_day=True)]
+        if kind == "planned" and self.mode in {"not_object", "bad_event", "bad_date", "naive"}:
+            item = fixture_event(kind, "invalid", self.day.isoformat(), all_day=True)
+            if self.mode == "bad_event":
+                item["uid"] = ""
+            if self.mode == "bad_date":
+                item["start"] = self.day.strftime("%Y%m%d")
+            if self.mode == "naive":
+                item.update(all_day=False, start=f"{self.day.isoformat()}T10:00:00")
+            values = [None if self.mode == "not_object" else item]
+            count = 1
+        if kind == "planned" and self.mode in {"changed", "duplicate", "paged", "truncated"}:
+            second = "cursor" in request.query
+            item = "second" if second and self.mode != "duplicate" else "first"
+            values = [fixture_event(kind, item, self.day.isoformat(), all_day=True)]
+            count = 3 if second and self.mode == "changed" else 2
+            cursor = None if second or self.mode == "truncated" else "continue"
+        if self.mode == "over_total":
+            values = [fixture_event(kind, "at-bound", self.day.isoformat(), all_day=True)]
+            count = 1 if kind == "planned" else 1000
+        if self.mode == "wrong_identity":
+            instance = "wrong"
         return web.json_response(
             {
                 "instance_id": instance,
@@ -161,10 +184,22 @@ async def fixtures():
     try:
         await web.TCPSite(runner, "0.0.0.0", 8100).start()
         async with core() as hass:
-            invalid = await configure(hass, "http://localhost:8100", FIRST)
-            assert invalid["errors"] == {"url": "invalid_endpoint"}
-            denied = await configure(hass, NATIVE, ROTATED)
-            assert denied["errors"] == {"token": "invalid_auth"}
+            form = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+            assert form["type"] == "form" and form["step_id"] == "user"
+            for url in (
+                "http://localhost:8100",
+                " https://domus.fixture",
+                "https://user:password@domus.fixture",
+                "https://domus.fixture:bad",
+            ):
+                assert (await configure(hass, url, FIRST))["errors"] == {"url": "invalid_endpoint"}
+            nil = "00000000-0000-0000-0000-000000000000"
+            for token in ("wrong-shape", f"{nil}.edge.{'a' * 64}", ROTATED):
+                assert (await configure(hass, NATIVE, token))["errors"] == {"token": "invalid_auth"}
+            fixture.mode = "wrong_identity"
+            failed = await configure(hass, NATIVE, FIRST)
+            assert failed["errors"] == {"base": "cannot_connect"}
+            fixture.mode = "normal"
             first = await configure(hass, NATIVE, FIRST)
             assert first["type"] == "create_entry", first.get("errors")
             entry = first["result"]
@@ -209,16 +244,33 @@ async def fixtures():
             maximum = await native_events(hass, entity, begin, begin + timedelta(days=90))
             assert any(event["uid"] == "planned:all-day" for event in maximum)
 
+            fixture.mode = "paged"
+            paged = await native_events(hass, entity, begin, end)
+            assert [event["uid"] for event in paged] == ["planned:first", "planned:second"]
             for mode in (
                 "malformed",
+                "oversize",
+                "wrong_identity",
                 "fail_due",
                 "loop",
                 "exhausted",
                 "over_limit",
+                "over_total",
                 "empty_pending",
                 "redirect",
+                "not_object",
+                "bad_event",
+                "bad_date",
+                "naive",
+                "changed",
+                "duplicate",
+                "truncated",
             ):
                 fixture.mode = mode
+                with suppress_expected_unavailable():
+                    await events(hass, entity, begin, end)
+            fixture.mode = "normal"
+            with patch("custom_components.domus_calendar.client._READ_TIMEOUT", 0):
                 with suppress_expected_unavailable():
                     await events(hass, entity, begin, end)
             fixture.mode = "known_pending"
