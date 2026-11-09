@@ -27,6 +27,8 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
         "member_id": member_id,
         "can_create": True,
         "can_review_schedule": True,
+        "can_record_for_others": True,
+        "can_manage_points": True,
         "schedule_policy": {
             "zone": "UTC",
             "data_identity": PinnedRecurrenceTime().data_identity,

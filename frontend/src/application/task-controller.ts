@@ -4,6 +4,7 @@ import {isCategoryCommand, taskCommand, taskIdentifier} from '../domain/tasks';
 import type {TaskAccess, TaskCommand, TaskDetail, TaskMaterialUsage, TaskPage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
 import {EntryReadError} from './ports';
 import type {Revision} from '../domain/administration';
+import type {ReviewedAllocation} from '../domain/point-allocation';
 import type {Deployment} from '../domain/entry';
 import type {EntryClock, EntryEntropy, EntryRead, EntryServer, VerifiedEntrySession} from './ports';
 import type {TaskCommandResult, TaskJournalPort, TaskJournalScope, TaskRecord, TaskServer} from './task-ports';
@@ -195,12 +196,17 @@ export class TaskController {
     const work = this.state.detail;
     return work === null ? Promise.resolve() : this.execute({action: 'task.claim', occurrenceId: work.occurrenceId, payload: {expected_revision: work.revision}});
   }
-  complete(materialUsages: readonly TaskMaterialUsage[] | null): Promise<void> {
+  complete(materialUsages: readonly TaskMaterialUsage[] | null, reviewed?: ReviewedAllocation): Promise<void> {
     const work = this.state.detail, member = this.state.access?.memberId;
     if (work === null || member === undefined) return Promise.resolve();
+    if (reviewed !== undefined && (reviewed.occurrenceId !== work.occurrenceId || reviewed.revision !== work.revision)) {
+      this.update({notice: 'conflict'}); return Promise.resolve();
+    }
     let performedAt: string; try {performedAt = String(this.clock.now());} catch {this.update({notice: 'unavailable'}); return Promise.resolve();}
     return this.execute({action: 'task.complete', occurrenceId: work.occurrenceId, payload: {expected_revision: work.revision,
-      performer_ids: [member], performed_at: performedAt, material_usages: materialUsages}});
+      performer_ids: reviewed?.performerIds ?? [member], performed_at: performedAt, material_usages: materialUsages,
+      ...reviewed === undefined ? {} : {allocation_fingerprint: reviewed.fingerprint},
+      ...reviewed?.manualShares === undefined ? {} : {manual_shares: reviewed.manualShares}}});
   }
   verify(decision: 'approved' | 'rejected', reason: unknown): Promise<void> {
     const work = this.state.detail;

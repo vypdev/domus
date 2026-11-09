@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from domus.domain.errors import InvalidInput
+from domus.domain.identity import validate_revision
 from domus.domain.storage import validate_identifier
 from domus.domain.task_values import validate_task_ids
 
@@ -114,3 +115,54 @@ def allocate_points(
     if policy.mode is AllocationMode.FULL_PER_PARTICIPANT:
         return PointAllocation(tuple((member, base) for member in members), None)
     return _conserved(base, members, quantum, next_recipient)
+
+
+@dataclass(frozen=True, slots=True)
+class AllocationSetting:
+    policy: AllocationPolicy | None
+    revision: int
+
+    def __post_init__(self) -> None:
+        validate_revision(self.revision)
+        if self.policy is not None and not isinstance(self.policy, AllocationPolicy):
+            raise InvalidInput("invalid_points_policy")
+
+
+@dataclass(frozen=True, slots=True)
+class CompletionAllocation:
+    policy: AllocationPolicy
+    policy_revision: int
+    override_definition_id: str | None
+    base: int
+    previous_recipient: str | None
+    allocation: PointAllocation
+
+    def __post_init__(self) -> None:
+        if type(self.policy_revision) is not int or self.policy_revision != 0:
+            validate_revision(self.policy_revision)
+        if self.override_definition_id is not None:
+            validate_identifier(self.override_definition_id)
+        if not isinstance(self.policy, AllocationPolicy) or not isinstance(
+            self.allocation, PointAllocation
+        ):
+            raise InvalidInput("invalid_points_allocation")
+        if self.policy_revision == 0 and (
+            self.override_definition_id is not None
+            or self.policy != AllocationPolicy(precision=2 if self.base % 100 else 0)
+        ):
+            raise InvalidInput("invalid_points_allocation")
+        if (
+            self.previous_recipient is not None
+            and self.policy.mode is not AllocationMode.CONSERVE_TOTAL
+        ):
+            raise InvalidInput("invalid_points_allocation")
+        supplied = self.allocation.shares if self.policy.mode is AllocationMode.MANUAL else ()
+        expected = allocate_points(
+            self.policy,
+            self.base,
+            tuple(member for member, _ in self.allocation.shares),
+            next_recipient=self.previous_recipient,
+            manual_shares=supplied,
+        )
+        if self.allocation != expected:
+            raise InvalidInput("invalid_points_allocation")

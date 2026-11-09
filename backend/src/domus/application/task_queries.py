@@ -66,6 +66,8 @@ class TaskWorkspaceView:
     can_create: bool
     can_review_schedule: bool
     category_catalog: CategoryCatalog
+    can_record_for_others: bool
+    can_manage_points: bool
     schedule_policy: TimePolicy | None = None
 
 
@@ -526,6 +528,16 @@ class TaskQueries:
                 can_create,
                 can_review,
                 category_catalog(unit, TaskAccess(self.human), self.household_id),
+                _possible(
+                    lambda: TaskAccess(self.human).require(
+                        unit, self.household_id, Permission.TASKS_RECORD_FOR_OTHERS
+                    )
+                ),
+                _possible(
+                    lambda: HouseholdAccess(self.human).require(
+                        unit, self.household_id, Permission.POINTS_MANAGE
+                    )
+                ),
                 schedule_creation_policy(unit, self.household_id, self.schedule_data_identity)
                 if can_create and self.schedule_data_identity is not None
                 else None,

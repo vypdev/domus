@@ -7,6 +7,9 @@ import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
 import type {FamilyPeriod, FamilyView} from '../application/family-controller';
+import {displayPoints} from '../domain/point-allocation';
+import {allocationDetails} from './allocation-details';
+import type {ParticipantName} from './allocation-details';
 import {civilDate, DATE_MAX, DATE_MIN} from '../domain/calendar';
 import {familyMessage} from './family-messages';
 import type {FamilyMessage} from './family-messages';
@@ -16,7 +19,7 @@ export type FamilyIntent = {readonly type: 'refresh' | 'more'}
   | {readonly type: 'period'; readonly mode: FamilyPeriod; readonly anchor: string};
 
 export class DomusFamily extends LitElement {
-  static properties = {view: {attribute: false}, language: {attribute: false}, today: {attribute: false},
+  static properties = {names: {attribute: false}, view: {attribute: false}, language: {attribute: false}, today: {attribute: false},
     scopeKey: {attribute: false}, mode: {state: true}, anchor: {state: true}};
   static styles = css`
     :host {display:grid;gap:16px;--vyp-ha-surface:var(--surface);--vyp-ha-text:var(--text);
@@ -29,6 +32,7 @@ export class DomusFamily extends LitElement {
     ol {list-style:none;padding:0;margin:0 0 16px} li+li {border-block-start:1px solid var(--line);margin-block-start:12px;padding-block-start:12px}
     li p {margin:0 0 8px} h2 {margin:0} :focus-visible {outline:3px solid var(--accent);outline-offset:3px}
   `;
+  declare names: readonly ParticipantName[];
   declare view: FamilyView | null;
   declare language: Language;
   declare today: string;
@@ -37,7 +41,7 @@ export class DomusFamily extends LitElement {
   private declare anchor: string;
 
   constructor() {
-    super(); this.view = null; this.language = 'en'; this.today = DATE_MIN; this.scopeKey = null;
+    super(); this.names = []; this.view = null; this.language = 'en'; this.today = DATE_MIN; this.scopeKey = null;
     this.mode = 'week'; this.anchor = DATE_MIN;
   }
 
@@ -56,11 +60,8 @@ export class DomusFamily extends LitElement {
     if (civilDate(this.anchor)) this.intent({type: 'period', mode: this.mode, anchor: this.anchor});
   }
 
-  private points(minor: number): string {
-    const magnitude = BigInt(Math.abs(minor));
-    const whole = new Intl.NumberFormat(this.language).format(magnitude / 100n);
-    const fraction = (magnitude % 100n).toString().padStart(2, '0');
-    return (minor < 0 ? '−' : '') + whole + (this.language === 'es' ? ',' : '.') + fraction;
+  private points(minor: number, precision: 0 | 2 = 2): string {
+    return displayPoints(minor, this.language, precision);
   }
 
   protected render() {
@@ -103,6 +104,16 @@ export class DomusFamily extends LitElement {
               <small>(${report.tracked}/${report.completed} ${this.text('tracked')})</small>`}</dd>
         </dl>` : nothing}
       </vyp-ha-card>
+      ${report && report.pending.length > 0 ? html`<vyp-ha-card .state=${card('pendingWork')}>
+        ${report.pendingCount > report.pending.length
+          ? html`<p>${this.text('pendingShown')} (${report.pending.length}/${report.pendingCount})</p>` : nothing}
+        <ol>${report.pending.map(entry => html`<li>
+          <p><strong>${this.text(entry.state === 'verification' ? 'awaitingVerification' : 'awaitingPosting')}</strong>
+            · ${entry.title}</p><dl><dt>${this.text('workDate')}</dt><dd>${date(entry.performedAt)}</dd></dl>
+          <details><summary>${this.text('allocation')}</summary>
+            ${allocationDetails(entry.allocation, this.language, this.names, true)}</details>
+        </li>`)}</ol>
+      </vyp-ha-card>` : nothing}
       ${report ? html`<vyp-ha-card .state=${card('history')}>
         ${report.history.length === 0 ? html`<p>${this.text('empty')}</p>` : html`<ol>${report.history.map(entry => html`
           <li><p><strong>${this.text(entry.reverses === null ? 'award' : 'reversal')} ${this.points(entry.amount)}</strong>
@@ -111,7 +122,10 @@ export class DomusFamily extends LitElement {
             ${entry.verifiedAt === null ? nothing : html`<dt>${this.text('approved')}</dt><dd>${date(entry.verifiedAt)}</dd>`}
             <dt>${this.text('postingDate')}</dt><dd>${date(entry.postedAt)}</dd>
             ${entry.reverses === null ? nothing : html`<dt>${this.text('reversedEntry')}</dt><dd><code>${entry.reverses}</code></dd>`}
-          </dl></li>`)}</ol>`}
+          </dl><details>
+            <summary>${this.text('allocation')}</summary>
+${allocationDetails(entry.allocation, this.language, this.names)}
+          </details></li>`)}</ol>`}
         ${report.cursor === null ? nothing : html`<vyp-ha-button .state=${buttonState({label: this.text('more'), variant: 'outlined'})}
           ?disabled=${loading} @ha-press-request=${() => this.intent({type: 'more'})}></vyp-ha-button>`}
       </vyp-ha-card>` : nothing}

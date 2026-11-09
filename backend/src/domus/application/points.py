@@ -6,7 +6,12 @@ from dataclasses import dataclass
 from domus.application.ports import Clock, Transactions, UnitOfWork
 from domus.application.task_events import lifecycle_page
 from domus.domain.errors import Forbidden, StorageFailure
-from domus.domain.points import PointsPosting, conserve_points, points_source_fingerprint
+from domus.domain.points import (
+    PointsPosting,
+    conserve_points,
+    frozen_points,
+    points_source_fingerprint,
+)
 from domus.domain.storage import Installation, validate_identifier
 from domus.domain.task_events import TaskLifecycleEvent
 
@@ -58,7 +63,14 @@ class PointsConsumer:
             # Fence a completion that became closed or rejected before its first delivery.
             current = unit.tasks.cycle(scope, cycle)
             if current == event.cycle and unit.tasks.restored_cycle_closure(scope, cycle) is None:
-                posting = conserve_points(
-                    event, self.clock.now(), unit.points.next_recipient(scope, event.definition_id)
+                snapshot = unit.point_allocations.snapshot(scope, cycle)
+                posting = (
+                    conserve_points(
+                        event,
+                        self.clock.now(),
+                        unit.points.next_recipient(scope, event.definition_id),
+                    )
+                    if snapshot is None
+                    else frozen_points(event, self.clock.now(), snapshot)
                 )
         unit.points.add(event, fingerprint, posting)

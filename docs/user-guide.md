@@ -30,7 +30,7 @@ The current source increment adds a real task workspace. Published Edge.7 remain
 
 The workspace uses the server's current allowed actions. Read-only HA outage grace permits local queries until the original session deadline and blocks changes. A changed account or membership retires the previous private draft.
 
-This increment does not yet supply calendar or recurrence editors, multi-performer entry, point/reward accounting or the integrated supplies/automation/dashboard workflows. Real Inventory integration is still pending; the current task API cannot link nonempty material selections without an actual provider. Backend event recording is not proof that points, stock or downstream consumers were updated.
+This increment does not yet supply reward redemption or the integrated supplies/automation/dashboard workflows. Real Inventory integration is still pending; the current task API cannot link nonempty material selections without an actual provider. Backend event recording is not proof that points, stock or downstream consumers were updated.
 
 ## Daily work
 
@@ -88,7 +88,17 @@ linked to its original award and corrects the earned points in the work period.
 Family shows elapsed time for completions with a recorded start and identifies
 how many completions contributed to that estimate.
 
-An administrator configures collaborative allocation in the application. The default divides one conserved total, but the household may choose equal shares rounded down or up, two-decimal shares, full points for every performer, or authorized manual amounts. For a 10-point task with three performers, the selected policy can produce 3/3/4, 3/3/3, 4/4/4, 3.33/3.33/3.33 or 10/10/10. The preview and ledger explain the base value, policy, each share and actual total. Changing policy does not rewrite past awards; corrections and reopening compensate the amounts actually awarded.
+Administrators can change the household default under **Family → Points allocation**
+or set a **Task override** on a task. **Use household default** clears the override
+for future completions. Choose a conserved split, equal shares with an explicit
+rounding rule, full points for every participant, or administrator-entered manual
+shares. Choose whole points or two decimal places.
+
+Open **Preview points** in the task completion form. Select the participants who
+performed the work and check the base points, individual amounts, and actual total
+before recording it. The form asks for a new preview when the participants or
+amounts change. Family history retains the applied policy, its revision, and the
+actual amounts when you change settings or reopen a task.
 Rewards are optional and do not control access to normal household responsibilities.
 If reopening reverses points already spent, the balance can become negative. The history explains the deficit, earned points offset it, and new redemptions remain unavailable until the balance recovers and covers the reward cost. Delivered rewards remain delivered.
 If an approved reward has not been delivered and loses its backing points, it waits on a funding hold. Approval and reservation stay visible; delivery is blocked until sufficient credit exists or an authorized explicit resolution occurs. Recovering points does not itself mean the reward was physically delivered, and cancellation is an explicit action.

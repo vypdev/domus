@@ -1,10 +1,11 @@
 """Project private ledger and work facts from one authorized read transaction."""
 
 from dataclasses import dataclass
+from typing import Literal
 
 from domus.application.authorization import HouseholdAccess
 from domus.application.calendar_queries import calendar_boundary
-from domus.application.family_ports import FamilyLedgerEntry
+from domus.application.family_ports import FamilyAllocationEvidence, FamilyLedgerEntry
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import Transactions
 from domus.application.recurrence_ports import RecurrenceTimes
@@ -16,6 +17,17 @@ from domus.domain.points import conserved_shares
 from domus.domain.recurrence_time import TimePolicy
 from domus.domain.storage import JsonDocument
 from domus.domain.task_values import VerificationState
+
+PENDING_LIMIT = 4
+
+
+@dataclass(frozen=True, slots=True)
+class FamilyPendingAllocation:
+    cycle_id: str
+    title: str
+    performed_at: int
+    state: Literal["verification", "posting"]
+    allocation: FamilyAllocationEvidence
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,6 +42,8 @@ class FamilyReport:
     completed_count: int
     tracked_count: int
     elapsed_ms: int
+    pending_count: int
+    pending: tuple[FamilyPendingAllocation, ...]
     history: tuple[FamilyLedgerEntry, ...]
     next_cursor: str | None
 
@@ -76,7 +90,8 @@ class FamilyQueries:
                 if len(history) > limit
                 else None
             )
-            verification = posting = count = tracked = elapsed = 0
+            verification = posting = count = tracked = elapsed = pending_count = 0
+            pending: list[FamilyPendingAllocation] = []
             for work in unit.points.member_work(household_id, member_id, start, end):
                 cycle = work.cycle
                 count += 1
@@ -84,13 +99,30 @@ class FamilyQueries:
                     tracked += 1
                     elapsed += cycle.performed_at - work.started_at
                 if work.awaiting_credit:
-                    rotation = unit.points.next_recipient(household_id, work.definition_id)
-                    shares, _, _ = conserved_shares(cycle, rotation)
-                    amount = dict(shares)[member_id]
-                    if cycle.verification is VerificationState.PENDING:
+                    snapshot = unit.point_allocations.snapshot(household_id, cycle.cycle_id)
+                    if snapshot is None:
+                        rotation = unit.points.next_recipient(household_id, work.definition_id)
+                        shares, precision, _ = conserved_shares(cycle, rotation)
+                        allocation = FamilyAllocationEvidence.legacy(precision, shares)
+                    else:
+                        allocation = FamilyAllocationEvidence.from_snapshot(snapshot)
+                    amount = dict(allocation.shares)[member_id]
+                    awaiting_verification = cycle.verification is VerificationState.PENDING
+                    if awaiting_verification:
                         verification += amount
                     else:
                         posting += amount
+                    pending_count += 1
+                    if len(pending) < PENDING_LIMIT:
+                        pending.append(
+                            FamilyPendingAllocation(
+                                cycle.cycle_id,
+                                work.title,
+                                cycle.performed_at,
+                                "verification" if awaiting_verification else "posting",
+                                allocation,
+                            )
+                        )
             return FamilyReport(
                 period,
                 home.time_zone,
@@ -102,6 +134,8 @@ class FamilyQueries:
                 count,
                 tracked,
                 elapsed,
+                pending_count,
+                tuple(pending),
                 history[:limit],
                 next_cursor,
             )

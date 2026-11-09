@@ -111,3 +111,45 @@ def test_manual_shares_require_one_representable_amount_per_performer(shares):
 def test_manual_amounts_cannot_override_a_conserved_policy():
     with pytest.raises(InvalidInput, match="invalid_manual_shares"):
         allocate_points(AllocationPolicy(), 1000, MEMBERS, manual_shares=(("alex", 100),))
+
+
+def test_frozen_allocation_rejects_inconsistent_evidence():
+    from dataclasses import replace
+
+    from domus.domain.point_allocation import (
+        AllocationSetting,
+        CompletionAllocation,
+        PointAllocation,
+    )
+
+    conserved = AllocationPolicy()
+    split = allocate_points(conserved, 1000, MEMBERS)
+    stored = CompletionAllocation(conserved, 0, None, 1000, None, split)
+    with pytest.raises(InvalidInput, match="invalid_points_policy"):
+        AllocationSetting("not-a-policy", 1)
+    for changes in (
+        {"policy": "conserved"},
+        {"override_definition_id": "definition"},
+        {"allocation": PointAllocation(split.shares, "charlie")},
+    ):
+        with pytest.raises(InvalidInput, match="invalid_points_allocation"):
+            replace(stored, **changes)
+    with pytest.raises(InvalidInput, match="invalid_points_allocation"):
+        CompletionAllocation(
+            AllocationPolicy(AllocationMode.FULL_PER_PARTICIPANT), 1, None, 1000, "alex", split
+        )
+
+
+def test_completion_requires_a_valid_preview_token():
+    from domus.application.task_requests import CompleteTask
+
+    with pytest.raises(InvalidInput, match="invalid_allocation_preview"):
+        CompleteTask("task", 1, MEMBERS, 100, allocation_fingerprint="G" * 64)
+
+
+def test_exact_32_performer_upper_bound():
+    members = tuple(f"member-{index:02}" for index in range(32))
+    split = allocate_points(
+        AllocationPolicy(AllocationMode.FULL_PER_PARTICIPANT), 1_000_000, members
+    )
+    assert split.total == 32_000_000 and len(split.shares) == 32

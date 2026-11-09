@@ -352,3 +352,29 @@ test('classified task creation emits the selected category identity', async () =
   select.closest('form')!.dispatchEvent(new SubmitEvent('submit', {cancelable:true}));
   expect(f.intents).toEqual([{type:'create', title:'Classified draft', description:'', priority:'normal', categoryId:'garden'}]);
 });
+
+test('selected task requires a fresh review before its collaborative completion can be submitted', async () => {
+  const f = await mount(view({detail: work}));
+  f.element.participantNames = [{id: 'private-member-id', name: 'Owner'}, {id: 'peer', name: 'Helper'}];
+  const allocationScope = {key: 'verified', context, definitionId: work.definitionId, readOnly: false, canManage: true,
+    work: {occurrenceId: work.occurrenceId, revision, canComplete: true}};
+  f.element.allocation = {scope: allocationScope, settings: null, review: null, busy: false, pending: false, notice: null};
+  await f.element.updateComplete;
+  const preview = f.root.querySelector('domus-allocation-preview')!;
+  await preview.updateComplete;
+  const peer = preview.shadowRoot!.querySelectorAll<HTMLInputElement>('input')[1];
+  peer.checked = true; peer.dispatchEvent(new Event('change'));
+  await preview.updateComplete; await f.element.updateComplete;
+  expect(f.button('Mark done now').disabled).toBe(true);
+  const form = f.root.querySelector('#complete-form')!;
+  form.dispatchEvent(new Event('submit', {cancelable: true}));
+  expect(f.intents).toEqual([]);
+  const completion = {occurrenceId: work.occurrenceId, revision, performerIds: ['peer', 'private-member-id'], fingerprint: 'a'.repeat(64)};
+  f.element.allocation = {...f.element.allocation, review: {completion, evidence: {mode: 'conserve_total', precision: 0,
+    rounding: null, policyRevision: revision, taskOverride: false, base: 200, total: 200,
+    shares: [['peer', 100], ['private-member-id', 100]], fingerprint: completion.fingerprint}}};
+  await f.element.updateComplete; await preview.updateComplete; await f.element.updateComplete;
+  expect(f.button('Mark done now').disabled).toBe(false);
+  form.dispatchEvent(new Event('submit', {cancelable: true}));
+  expect(f.intents).toEqual([{type: 'complete', materialUsages: null, reviewed: completion}]);
+});

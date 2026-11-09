@@ -9,6 +9,7 @@ from domus.application.family_queries import FamilyQueries
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.inventory import InventorySettlement
+from domus.application.point_allocations import AllocationCommands, AllocationQueries
 from domus.application.ports import Transactions, UnitOfWork
 from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
@@ -82,6 +83,8 @@ def task_contexts(
             ),
             TaskCategoryCommands(store, actor, actor.read, clock, identifiers),
             lambda: FamilyQueries(store, scope, actor.read(), cursors, planner.times),
+            lambda: AllocationQueries(store, actor.read()),
+            AllocationCommands(store, actor, clock, identifiers),
         )
 
     return context

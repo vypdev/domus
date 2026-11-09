@@ -46,6 +46,9 @@ class TaskRequest:
                 else:
                     for item in value[field]:
                         item[quantity] = item[quantity]["value"]
+        for optional in ("manual_shares", "allocation_fingerprint"):
+            if optional in value and value[optional] is None:
+                del value[optional]
         return JsonDocument(json.dumps(value, ensure_ascii=False))
 
 
@@ -150,6 +153,8 @@ class CompleteTask(OccurrenceRequest):
     performer_ids: tuple[str, ...]
     performed_at: int
     material_usages: tuple[MaterialUsage, ...] | None = None
+    manual_shares: tuple[tuple[str, int], ...] | None = None
+    allocation_fingerprint: str | None = None
 
     def __post_init__(self) -> None:
         OccurrenceRequest.__post_init__(self)
@@ -157,6 +162,13 @@ class CompleteTask(OccurrenceRequest):
         if not self.performer_ids:
             raise InvalidInput("invalid_task_performer")
         validate_task_time(self.performed_at)
+        if self.manual_shares is not None:
+            validate_task_ids(tuple(member for member, _ in self.manual_shares))
+        token = self.allocation_fingerprint
+        if token is not None and (
+            len(token) != 64 or any(char not in "0123456789abcdef" for char in token)
+        ):
+            raise InvalidInput("invalid_allocation_preview")
         if self.material_usages is not None:
             validate_material_usage_values(self.material_usages)
 

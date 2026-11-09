@@ -205,9 +205,23 @@ class TransitionBody(OccurrenceBody):
     reason: str = Field(default="", max_length=1000)
 
 
+class ManualPointShare(StrictModel):
+    member_id: Identifier
+    amount_minor: int = Field(ge=0, le=1_000_000)
+
+
+ManualPointShares = Annotated[list[ManualPointShare], Field(min_length=1, max_length=32)]
+
+
+def manual_amounts(shares: list[ManualPointShare] | None) -> tuple[tuple[str, int], ...] | None:
+    return None if shares is None else tuple((row.member_id, row.amount_minor) for row in shares)
+
+
 class CompleteBody(OccurrenceBody):
     performer_ids: list[Identifier] = Field(min_length=1, max_length=32)
     performed_at: TaskTime
+    manual_shares: ManualPointShares | None = None
+    allocation_fingerprint: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     material_usages: list[MaterialUsageBody] | None = Field(default=None, max_length=32)
 
     def usages(self) -> tuple[MaterialUsage, ...] | None:

@@ -7,6 +7,7 @@ from typing import cast
 
 from domus.application.commands import AtomicCommands, Change
 from domus.application.identity_ports import CurrentHuman
+from domus.application.point_allocations import allocation_document, resolve_allocation
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.task_authorization import (
     TaskAccess,
@@ -197,6 +198,7 @@ class TaskCommands:
         transition_target: OccurrenceState | None = None,
         definition_id: str | None = None,
         needs_material_link: bool = False,
+        needs_points_management: bool = False,
         material_cycle_id: str | None = None,
         material_intent_id: str | None = None,
     ) -> Receipt:
@@ -213,6 +215,7 @@ class TaskCommands:
             transition_target=transition_target,
             definition_id=definition_id,
             needs_material_link=needs_material_link,
+            needs_points_management=needs_points_management,
             material_cycle_id=material_cycle_id,
             material_intent_id=material_intent_id,
         )
@@ -360,7 +363,24 @@ class TaskCommands:
                 recorded_at=self.clock.now(),
             )
             updated = work.complete(saved, requirements=requirements)
+            definition_id = work.definition_snapshot.definition_id
+            allocation = resolve_allocation(
+                unit,
+                self.household_id,
+                definition_id,
+                rules.point_value_minor,
+                request.performer_ids,
+                request.manual_shares,
+            )
+            if (
+                request.allocation_fingerprint is not None
+                and allocation_document(allocation).fingerprint != request.allocation_fingerprint
+            ):
+                raise Conflict("allocation_preview_changed")
             unit.tasks.save_cycle(saved, 0)
+            unit.point_allocations.freeze(
+                self.household_id, saved.cycle_id, definition_id, allocation
+            )
             unit.tasks.save_occurrence(updated, request.expected_revision)
             result = _cycle_result(updated, saved)
             if work.definition_snapshot.materials:
@@ -379,6 +399,7 @@ class TaskCommands:
             apply,
             occurrence_id=request.occurrence_id,
             performer_ids=request.performer_ids,
+            needs_points_management=request.manual_shares is not None,
         )
 
     def verify(self, key: str, request: VerifyTask) -> Receipt:

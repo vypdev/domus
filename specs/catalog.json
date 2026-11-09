@@ -612,7 +612,8 @@
       "entrypoints": [
         "backend/src/domus/composition/ingress.py",
         "backend/src/domus/composition/server.py",
-        "backend/src/domus/entrypoints/family_http.py"
+        "backend/src/domus/entrypoints/family_http.py",
+        "backend/src/domus/entrypoints/point_allocation_http.py"
       ],
       "code": [
         "backend/src/domus/domain/points.py",
@@ -624,13 +625,25 @@
         "frontend/src/application/family-controller.ts",
         "frontend/src/adapters/family-http.ts",
         "frontend/src/presentation/domus-family.ts",
-        "frontend/src/presentation/family-messages.ts"
+        "frontend/src/presentation/family-messages.ts",
+        "backend/src/domus/domain/point_allocation.py",
+        "backend/src/domus/application/point_allocations.py",
+        "backend/src/domus/application/point_allocation_ports.py",
+        "backend/src/domus/infrastructure/sqlite_point_allocations.py",
+        "frontend/src/application/allocation-controller.ts",
+        "frontend/src/adapters/allocation-http.ts",
+        "frontend/src/presentation/domus-allocation-settings.ts",
+        "frontend/src/presentation/domus-allocation-preview.ts"
       ],
       "tests": [
         "tests/backend/test_points_consumer.py",
         "tests/backend/test_family_http.py",
         "frontend/tests/family.test.ts",
-        "frontend/tests/e2e/workspace-navigation.spec.ts"
+        "frontend/tests/e2e/workspace-navigation.spec.ts",
+        "tests/backend/test_point_allocation.py",
+        "tests/backend/test_point_allocation_http.py",
+        "tests/backend/test_point_allocation_storage.py",
+        "frontend/tests/allocation.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -642,8 +655,8 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: PR #58 verifies the durable task lifecycle consumer, default conserved allocation, exact reversal, both deployment compositions, and SQLite migration and restoration. The protected Family read is exercised by both composed HTTP paths, an activated restore, and English and Spanish Chromium journeys.",
-        "blockingDecisions": "Configurable distribution, reward redemption and broader release acceptance remain open.",
+        "implementationEvidence": "partial: PR #58 verifies the durable Points consumer and exact reversal. PR #63 verifies the protected Family read model. The configured-allocation tests exercise exact arithmetic, permission and revision checks, frozen pending and posted shares, schema 17 migration, replay, restart, restoration, and localized Ingress and standalone preview and history.",
+        "blockingDecisions": "Reward redemption and complete Family acceptance remain open.",
         "copilotChangesAllowed": false
       }
     },

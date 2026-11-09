@@ -145,6 +145,31 @@ An identical key/payload returns its stored result. Same key/different payload i
 A transport timeout can leave outcome unknown; look up/replay the original key instead of using a new one.
 Schemas reject unknown mutation fields. Mutating a stale revision never overwrites newer household work.
 
+## Family allocation
+
+Ingress and standalone use the same protected Family routes. The current
+session selects the household and member. `GET /api/v1/family` returns the
+selected period, separate pending totals, up to four recent pending
+allocations, and a cursor for posted movements. Posted and pending entries
+include their retained allocation policy, revision, base, exact shares, and
+total. A reversal links to the original posting and leaves its allocation
+evidence intact.
+
+`GET /api/v1/family/allocation` reads settings. An optional `definition_id`
+selects a task override. `PUT /api/v1/family/allocation` uses current
+`points.manage` authority, the expected revision, and an idempotency key.
+A null policy clears a task override while retaining its revision. A missing
+setting has expected revision zero. An uncertain change can be recovered at
+`GET /api/v1/family/allocation/requests/{key}` by the original actor.
+
+`POST /api/v1/family/allocation/preview` checks the task revision and actual
+participants without writing a completion. It requires the same context and
+CSRF protection as the task form. Only actors with `points.manage` may supply
+manual amounts. The completion request can include the returned
+`allocation_fingerprint` to reject changes to the reviewed allocation. The
+server chooses and freezes the effective policy when it records the task cycle.
+All point amounts use integer minor units.
+
 ## Authorization and automation
 
 A proven HA human context resolves the linked active member role. An automation or missing human context

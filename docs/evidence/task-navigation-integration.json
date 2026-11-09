@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled Overview, Tasks, Calendar, Family and Household bundle with protected points, participation and signed history.",
+  "scope": "Compiled workspace bundle with protected points, participation, configured allocation, localized preview, and retained award shares.",
   "actualProductFiles": {
-    ".vite/manifest.json": "425e8640c47c220240cfed1a5b4a0692c10961f4bf8ea0de180980627ade4085",
+    ".vite/manifest.json": "bfad574ca5f99064093349b04cc9d2553cc23ef3f887d3aa44c229c857a6f247",
+    "assets/index-B36elxTA.js": "c0d9e184a2939f715d35b7a0deba72445106dbaff3faf0c2880b5927d1b94b8f",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DMtcabTC.js": "39dae8fec1185aec11da229b2f5aa1cc88ac3d164e7dc05bf21512f1a772e35f",
-    "index.html": "329fa4d4c765a4ea10f1e91b7651f6b2f34398ca1d513084cec4110e24fb0b66"
+    "index.html": "819da767ec81653ffa0aba824bf276e92ca35ff935cec700114c216dc7b87e11"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -181,6 +181,16 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "assets/index-Df8CxRN_.js": "4ea41833aac1f5dd47bc12a9602480b0cca3850c83dbbd48e788b7e706703d7b",
       "index.html": "a580b168b5a38ba0a5fb70425614b2200ed175a8a1c83f5045a3b3f01a24baf6"
+    }
+  },
+  "preConfiguredAllocation": {
+    "sourceCommit": "fda57bbe905956a56e30b90ff9d6e8200359dc9c",
+    "scope": "Compiled Overview, Tasks, Calendar, Family and Household bundle with protected points, participation and signed history.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "425e8640c47c220240cfed1a5b4a0692c10961f4bf8ea0de180980627ade4085",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DMtcabTC.js": "39dae8fec1185aec11da229b2f5aa1cc88ac3d164e7dc05bf21512f1a772e35f",
+      "index.html": "329fa4d4c765a4ea10f1e91b7651f6b2f34398ca1d513084cec4110e24fb0b66"
     }
   }
 }
