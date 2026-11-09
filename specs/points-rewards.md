@@ -1048,3 +1048,198 @@ This delta updates the immutable retained owner `specs/points-rewards.md` at sel
 The issue decisions carried into this delta are exact integer minor units at precision zero or two; an initially conserved household default; task override precedence with current-authority checks; stable member-ID remainder rotation; explicit equal-share rounding; full and manual shares; and a durable completion snapshot reused through approval, posting, retry, and reversal. The required Family explanation includes the actual total when a policy or rounding makes it differ from the base. These are proposed requirements, not evidence that the behavior is implemented or accepted.
 
 The selected root `package.json` declares pnpm 10.34.0 and Node 24.20.x, but no specification-validation or specification-generation script. `specs/README.md` names `pnpm run validate:specifications` and `pnpm run generate:specifications`; their script definitions and prerequisites are not established by that declaration. No validation invocation or result is claimed here. Publication must still produce the three observable outcomes stated in section 19.
+
+## Proposed change: Redeem Family rewards with reservations and funding holds
+
+- Status: Draft
+- Catalog capability: points-rewards
+
+### 1. Executive summary
+
+This delta completes the optional Family rewards increment: an authorized administrator can enable rewards and manage the catalog, and an active member can request an affordable reward using their own available points. Each request reserves its snapshotted cost; approval is retained; authorized physical delivery posts one debit and releases the reservation once. If a reversal removes backing before delivery, the reward remains approved and reserved in funding hold until backing recovers or an authorized cancellation occurs. The existing points, participation, and rewards contract and its cases remain in `specs/points-rewards.md`.
+
+### 2. Problem, current behavior, and evidence
+
+Members need to understand which points can be spent and what is happening to a reward request. Requests, approvals, fulfillment, cancellation, and reversals must serialize with Points postings so concurrent actions cannot spend reversed or already reserved credit. A full reversal may leave a negative balance; delivered rewards and their history remain intact, while an approved undelivered reward whose backing is insufficient is held without losing approval or reservation. Later earnings may restore funding but never trigger physical delivery automatically.
+
+This is a prospective addition to the Draft owner, not a claim about implemented reward behavior. The retained owner describes rewards as optional and records approval, cancellation, duplicate-safe redemption, factual negative balances, and funding holds as intended behavior; it also identifies the capability as lacking implementation evidence. See `specs/points-rewards.md` sections 1, 2, 4, and 6, and the shared funding-hold definition in `docs/glossary.md`. Issue #65 supplies the Family increment’s catalog, reservation, concurrency, recovery, and bilingual UX requirements. Implementation details and concrete verification invocations remain unverified here.
+
+### 3. Actors, surfaces, and terminology
+
+The actors are an authorized household administrator, who enables rewards and manages the optional catalog; an active household member, who reads their own balance and requests or cancels their own redemption; and an authorized reviewer or delivery actor, who performs only permitted transitions. Catalog management and administrative review do not grant access to another member’s private redemption details.
+
+Use the owner’s existing terms: posted balance is the ledger-derived balance; reserved points back approved or pending redemption obligations; available points are the amount eligible for another request after reservations and any deficit are accounted for. A redemption retains its original reward and cost snapshot. Funding hold means approval and reservation persist while insufficient backing blocks delivery. Fulfillment is the explicit authorized physical-delivery action and its single spending debit. These terms extend the retained points and ledger contract; they do not replace it.
+
+### 4. Goals, non-goals, and fixed invariants
+
+The delta’s goals are to make the optional catalog and every redemption transition subject to current authority, keep member reads scoped to that member, and preserve the immutable reward-cost snapshot; reserve, spend, cancel, reverse, and place rewards on hold atomically against the posted balance; preserve request results, audited transitions, reservations, and ledger evidence through replay, restart, and restore; and explain posted, reserved, available, and redemption states accessibly in English and Spanish. The six supplied redemption scenarios cover authorization and privacy, competing requests, approval and duplicate-safe delivery, cancellation, reversal races and funding holds, recovery after later earnings, and bilingual Family presentation.
+
+Non-goals are changes to Gateway, deployments, releases, or M3, and any change to the retained points-award, participation, or historical-ledger contracts. Rewards remain optional and must not gate ordinary task participation.
+
+Fixed invariants: only current authority may change the catalog or perform a transition; members may act on and inspect only their own redemptions. Admission and all balance-affecting transitions serialize with postings and reversals. An affordable request reserves its original cost exactly once; delivery posts one debit and releases that reservation once; cancellation releases an undelivered reservation once. Reversal preserves factual balances, including negative balances, and never erases delivered rewards or their spending history. Insufficient backing places an approved undelivered reward on hold with approval and reservation retained; delivery remains blocked until funded, and funding recovery does not deliver automatically. Retries and recovery preserve authoritative results without duplicate effects.
+
+| Requirement | Behavior |
+| --- | --- |
+| family-redemption-R1 | Current authority controls the optional catalog and each transition, with member-scoped reads and immutable reward cost. |
+| family-redemption-R2 | Reserve, spend, cancel, reverse, and hold atomically against the existing posted balance. |
+| family-redemption-R3 | Preserve request results, audited transitions, reservations, and ledger evidence through replay, restart, and restore. |
+| family-redemption-R4 | Explain available points and every redemption state accessibly in English and Spanish. |
+
+### 5. Current versus proposed product journey
+
+This update completes the Family rewards increment after #64. The existing points-rewards contract and cases in `specs/points-rewards.md` remain authoritative; this delta adds the reward lifecycle and its interaction with the existing posted Points balance.
+
+An administrator with current authority can enable the optional rewards catalog and manage its entries. An active member can view rewards and request one using only their own available points. The request records the reward and its cost at request time. Review retains the approval decision and reserved amount. Delivery is a separate, explicitly authorized action that records physical delivery and posts one spend debit. Cancellation of an undelivered request releases its reservation once. A full reversal that removes backing for an approved undelivered reward places it on funding hold while retaining its approval and reservation; later earnings can restore backing, but do not trigger delivery. A delivered reward and its spending history remain intact even if a later reversal makes the posted balance negative.
+
+Members can distinguish posted, reserved, and available points, and follow pending review, approval, funding hold, delivery, or cancellation. History identifies reward spending separately from points earned for work in the actual work period. Gateway, deployments, releases, and M3 remain outside this increment.
+
+### 6. Functional behavior and state model
+
+Use the existing posted Points balance as the authority for affordability and funding. For each member, available points are posted points less active reward reservations. Admission, posting or reversal, reservation changes, delivery, and cancellation must serialize through the same SQLite writer so competing requests cannot spend the same backing. A request succeeds only when its snapshotted reward cost is affordable; concurrent requests against the same credit must not create multiple affordable reservations. Catalog changes or later price edits do not change a request's recorded cost.
+
+Keep request identity and results, approval, reservation, lifecycle transitions, and ledger evidence durable and replay-safe. Approval retains the reservation. Delivery must atomically record delivery, post exactly one debit at the snapshotted cost, and release the reservation. Retrying delivery cannot duplicate the debit. Cancellation releases an undelivered reservation exactly once. A linked reversal that leaves an approved undelivered request without sufficient backing preserves approval and reservation in funding hold and blocks delivery. Subsequent earnings may restore funded approval without performing delivery. A reversal after delivery does not erase the delivery or its spending record. Restart and restore must preserve authoritative balances, historical receipts, and idempotent outcomes without duplicate effects.
+
+Enforce current authority for catalog administration and every review, delivery, and cancellation transition. Reject forged subjects and unauthorized actions without effects; reads of requests and balances are member-scoped. Do not expose another member's reward or points data. Verify these behaviors under competing requests, reversal races, delivery retries, restart, and restore, including that rejected operations leave state unchanged.
+
+### 7. User-facing configuration
+
+The member view presents posted, reserved, and available points as separate amounts and makes the affordability of each optional reward clear. Disable an unaffordable reward with an accessible explanation. Show the request lifecycle in plain language, including approval, funding hold and its shortfall, delivery, and cancellation; explain that restored backing does not itself cause delivery. Identify the spending entry separately from earned points and associate earnings with the actual work period.
+
+Provide equivalent, accessible explanations in English and Spanish. Verify the complete member experience in both deployments and both locales, including disabled rewards, the separate balance amounts, each lifecycle state and shortfall, and the reward spending entry. Preserve the established Family permissions and navigation in the retained owner.
+
+### 8. Clean Architecture design
+
+Extend the existing points-rewards design in `specs/points-rewards.md`; retain its owning contract, cases, and historical deltas. Integrate reward reservations and spend postings with the existing Points ledger and SQLite write serialization rather than introducing an independent balance authority. Persist the reward price snapshot, reservation, authorization decision, lifecycle state, idempotent request result, and linked ledger evidence so transitions remain auditable and recoverable.
+
+Keep catalog administration, member-scoped reads, review, delivery, and cancellation behind current authority checks. Model funding hold as an approved but undeliverable request whose reservation and approval remain recorded until backing is restored or an authorized cancellation releases it. Make delivery an explicit command after recovery; recovery itself must not deliver a physical reward. Make the debit and reservation release one atomic, retry-safe transition, and retain delivered history across later reversals.
+
+Acceptance covers current permissions, concurrent requests and reversals, retries, restart and restore, full coverage, both locales and deployments, and amd64 and ARM64. Publication must establish that the specification satisfies the required format, that internal and cross-document consistency is checked, and that reciprocal catalog ownership, paths, and evidence agree with the generated view. The concrete invocation and prerequisite for those publication checks remain unverified from the available source context; verify them against the selected immutable project before relying on any command.
+
+### 9. UI/UX and content contract
+
+#### 9.1 Redemption and balance views
+
+Extend the retained Points views with separate posted balance, active reservations, and available points (posted balance minus reservations). Show the reward’s current price and the immutable price snapshot on its request. A reward that is disabled or unaffordable remains visible with a plain-language reason and no request action. Do not imply that pending points are spendable.
+
+For every request, show one primary status, the completed facts, the next permitted action, and whether the member or an authorized administrator must act. Explain requested, approved, funding hold, delivered, and cancelled states in words; do not rely on color or icons. A funding hold identifies the shortfall, preserves the approved state and reservation, and says delivery must wait until backing is sufficient. Recovery of backing restores funded approval but does not deliver the reward. Delivery and cancellation each show the resulting reservation and ledger effect. Members see only their own request details and history.
+
+Use representative content such as: “Reward on hold — Your approved reward costs 30 points; 20 points are currently backed. Your request and reservation are saved. Delivery is paused until you have enough points available. View points activity.” For an affordable request, explain the cost and remaining available balance before submission. Show a clear confirmation after a successful request, delivery, or cancellation; a repeated request result must not appear as a second redemption.
+
+Explain a negative posted balance and later recovery without suggesting that an already delivered reward must be returned. Reward spending appears separately from earned points and is attributed to its actual posting period; earned summaries remain attributed to the work period. Keep amounts, labels, and accessible names consistent across balance, request, and history views.
+
+All redemption states and balance explanations are available in English and Spanish, with the retained English fallback behavior. Acceptance checks keyboard use, visible focus, screen-reader names and status announcements, non-color distinctions, contrast, responsive layouts, and light/dark themes on both deployments. Untrusted reward names and reasons render as inert text, never executable markup.
+
+#### 9.2 State changes and feedback
+
+Use one primary action per view: request an affordable reward, review a pending request, deliver a funded approved reward, or cancel when authorized. Explain denied or stale actions with their impact, cause, next action, and retained state. Duplicate submissions update the existing operation result. Routine notifications remain bounded to one per business transition; retries do not create extra notices.
+
+### 10. Failure, recovery, and cleanup
+
+#### 10.1 Redemption failure and recovery
+
+| Failure or transition | Retained facts and user impact | Recovery and cleanup |
+|---|---|---|
+| Invalid, unauthorized, or stale request | No new reservation or ledger effect; current request and balance remain authoritative. | Correct the input or obtain current authority, refresh the displayed state, and submit a deliberate operation. |
+| Competing requests or reversal | Admission is serialized against the posted balance. Only requests affordable at commit reserve points; rejected requests do not partially reserve. | Refresh available points and request again if sufficient. Never auto-replay with a new operation identity. |
+| Lost response or repeated delivery command | The committed request result, approval, reservation, or spend remains recorded. | Look up or retry the same operation. A delivery retry posts at most one debit and releases its reservation once. |
+| Reversal removes backing from an approved, undelivered reward | Approval, snapshotted price, and reservation remain; delivery is blocked and the shortfall is visible. | Later earnings may restore funded approval. Physical delivery still requires its explicit authorized command. An explicit authorized cancellation releases the reservation once and retains its reason and actor. |
+| Reversal after delivery | Delivered reward and spending history remain; the factual balance may be negative. | Preserve the linked reversal and explain the deficit. Block new unaffordable reservations; later earnings offset the deficit through ordinary balance arithmetic. |
+| Restart, retry, or restore | Durable receipts, transitions, reservations, and ledger evidence remain authoritative. | Resume from durable state and retry idempotently. Restore must not duplicate a debit, cancellation, or release. |
+
+Errors state the impact, safe cause, available action, and retained state. Recovery never silently cancels a held reward, removes a delivered reward, clamps a negative balance, or fabricates credit. Temporary resources and pending work are cleaned up only after durable state makes the outcome safe.
+
+### 11. Security, permissions, and privacy
+
+#### 11.1 Authorization and privacy for rewards
+
+The optional catalog is controlled by currently authorized administrators. Each catalog change and request transition rechecks current authority at commit; a prior role, selected member, person entity, or client-supplied subject does not establish permission. An active member may request and cancel only their own eligible reward. Review and physical delivery require the appropriate current administrator authority. Members cannot review, deliver, alter another member’s request, or change reward cost through request input.
+
+Every read is member-scoped. Reject forged subjects, cross-member identifiers, stale roles, unauthorized catalog changes, review, delivery, and cancellation without side effects. Validate all identifiers, amounts, and state transitions at the trusted boundary. Snapshot reward cost when requested; later catalog edits do not change an existing request’s price or reservation.
+
+Keep audit evidence for the actor, action, reason where required, request identity, price snapshot, and linked ledger effects. Logs, traces, exports, and browser artifacts omit credentials and unnecessary personal data. Do not expose another member’s request or balance through error messages, activity, or operational diagnostics.
+
+### 12. Observability and operational UX
+
+#### 12.1 Redemption status and operational evidence
+
+Members can inspect posted points, reserved points, available points, and each of their redemption states, including any funding shortfall and the next permitted action. Keep earned points, reward spending, and reversal evidence distinguishable in activity and attribute them to their actual work or posting periods as defined by the retained owner.
+
+Operators can correlate a request and its transitions with sanitized operation identity, actor, source event where applicable, aggregate revision, duration, and safe error code. Counters distinguish denied or invalid transitions, conflicts, unavailable storage, funding holds, completed deliveries, cancellations, and successful recovery. Diagnostics must not include raw credentials, unrestricted adapter payloads, or another member’s request details. Retries must not multiply durable activity entries or notifications; no telemetry leaves the installation by default.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+#### 13.1 Compatibility and release boundary
+
+This delta extends the immutable retained owner at `specs/points-rewards.md`; it preserves the existing Points contracts, cases, and historical deltas. Reward redemption is optional and disabled by default, so installations without an enabled catalog retain ordinary participation and points behavior. Existing posted balances remain the source for affordability; reservations are accounted for separately and must not rewrite historical earned entries.
+
+Implementation must provide a reviewed compatible migration for any new durable catalog, request, reservation, transition, receipt, or ledger-link state. Preserve existing identity, history, operation, and ledger records. Migration and restore acceptance must cover pending and approved undelivered requests, delivered rewards, cancellations, reversals, funding holds, and replay without duplicate effects. Unknown future schemas block writes rather than being reinterpreted; rollback requires a compatible image and database pair.
+
+Acceptance covers both Supervisor and standalone deployments, English and Spanish, and amd64 and ARM64. Keep Gateway, deployments, releases, and M3 outside this increment. Publication, merge, and deployment remain within the existing authorized maintainer lifecycle.
+
+### 14. Testing strategy and numeric budget
+
+Budget a minimum of six distinct acceptance cases for this delta: one security and privacy case, two state and concurrency cases, one adapter and persistence case, one integration and recovery case, and one UI and accessibility case. The budget follows the risks of current authorization, member-scoped data, competing requests, reversals, funding holds, retry, and durable state. The six cases below are the minimum inventory, not evidence of semantic completeness or executed acceptance. Exercise denied operations without side effects, atomic balance changes, idempotent retries, restart and restore, and persisted ledger links. Use deterministic concurrency and persistence fixtures where applicable; verify accessible English and Spanish content on both deployments and verification evidence for amd64 and ARM64. The immutable selected source establishes the existing owner and repository specification guidance, but the concrete validation invocation and prerequisites remain unverified; no command or passing result is claimed. Publication must establish the required format, internal and cross-document consistency, and agreement between reciprocal catalog ownership, paths, evidence, and generated view.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Security and privacy | 1 | Observable scenarios in the case inventory. |
+| State and concurrency | 2 | Observable scenarios in the case inventory. |
+| Adapters and persistence | 1 | Observable scenarios in the case inventory. |
+| Integration and recovery | 1 | Observable scenarios in the case inventory. |
+| UI and accessibility | 1 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| family-redemption-C01 | Security and privacy | family-redemption-R1 | A member can request and cancel their own reward. Unauthorized review, delivery, catalog changes, forged subjects and other-member reads are rejected without effects. |
+| family-redemption-C02 | State and concurrency | family-redemption-R1, family-redemption-R2 | Two requests competing for the same credit produce only one affordable reservation with its original reward price. |
+| family-redemption-C03 | Adapters and persistence | family-redemption-R2, family-redemption-R3 | Approval retains the reservation. Retry of physical delivery posts one debit and releases its reservation, and cancellation releases an undelivered reservation once. |
+| family-redemption-C04 | State and concurrency | family-redemption-R2, family-redemption-R3 | A linked reversal races admission and delivery. Approved undelivered rewards enter funding hold with approval and reservation retained. A delivered reward survives a factual negative balance. |
+| family-redemption-C05 | Integration and recovery | family-redemption-R2, family-redemption-R3 | Later earnings restore backing without delivery. Restart, retry, and restore preserve authoritative balances and historical receipts without duplicate effects. |
+| family-redemption-C06 | UI and accessibility | family-redemption-R4 | Family explains disabled rewards, separate balance amounts, lifecycle and shortfall, and the spending entry in both languages and both deployments. |
+
+### 15. Documentation and discoverability
+
+This delta extends the retained owner `specs/points-rewards.md`; its existing contract, cases, and historical deltas remain in force. Keep member guidance discoverable from the user guide and operator permission and recovery guidance in operations documentation. Explain the optional catalog, how members see posted, reserved, and available points, and the approval, funding-hold, delivery, and cancellation states in English and Spanish. Content must make clear that a hold blocks delivery until backing is sufficient, and that later earnings restore backing without triggering delivery. The selected source establishes the owner path but does not establish that these prospective documentation updates have been made.
+
+| Path | Change |
+| --- | --- |
+| specs/points-rewards.md | update |
+
+[specs/points-rewards.md](points-rewards.md)
+
+### 16. Acceptance scenarios
+
+Treat each of the following as an independent observable acceptance scenario; these are the supplied new case identities.
+
+- `family-redemption-C01` verifies that an active member can request and cancel their own reward; unauthorized review, delivery, catalog changes, forged subjects, and reads of another member’s data are rejected without effects.
+- `family-redemption-C02` verifies that two requests competing for the same credit produce only one affordable reservation, and that the reservation retains the reward’s original price.
+- `family-redemption-C03` verifies that approval retains the reservation, retrying physical delivery posts one debit and releases that reservation, and cancellation releases an undelivered reservation exactly once.
+- `family-redemption-C04` verifies a linked reversal racing with admission and delivery: an approved undelivered reward enters funding hold with approval and reservation retained, while a delivered reward remains recorded through a factual negative balance.
+- `family-redemption-C05` verifies that later earnings restore backing without delivering the reward, and restart, retry, and restore preserve authoritative balances and historical receipts without duplicate effects.
+- `family-redemption-C06` verifies that Family explains disabled rewards, separate balance amounts, lifecycle and shortfall, and the spending entry accessibly in English and Spanish on both deployments.
+
+Assert persisted state and side effects as well as visible results, including current authorization, reservation and ledger links, and exact-once release or debit. These scenarios define required acceptance; they do not claim tests have run.
+
+### 17. Requirements traceability
+
+`family-redemption-R1` maps to `family-redemption-C01` for current authority, member-scoped access, and own-request/cancellation behavior, and to `family-redemption-C02` for affordability and the immutable snapshotted reward cost. `family-redemption-R2` maps to `family-redemption-C02` for competing reservations, `family-redemption-C03` for delivery debit and cancellation release, and `family-redemption-C04` for reversal and funding-hold atomicity. `family-redemption-R3` maps to `family-redemption-C03` for retry-safe transitions, `family-redemption-C04` for retained approval and reservation during hold and preservation after delivery, and `family-redemption-C05` for recovery, replay, and durable receipts. `family-redemption-R4` maps to `family-redemption-C06` for accessible localized balances, disabled rewards, lifecycle, shortfall, and spending history. Each case maps only to requirements exercised by its stated behavior. This mapping establishes structural traceability, not semantic completeness or executed acceptance.
+
+| Requirement | Cases |
+|---|---|
+| family-redemption-R1 | family-redemption-C01, family-redemption-C02 |
+| family-redemption-R2 | family-redemption-C02, family-redemption-C03, family-redemption-C04, family-redemption-C05 |
+| family-redemption-R3 | family-redemption-C03, family-redemption-C04, family-redemption-C05 |
+| family-redemption-R4 | family-redemption-C06 |
+
+### 18. Implementation sequence
+
+Extend the immutable retained owner `specs/points-rewards.md` for the Family redemption increment after #64. Keep its existing contracts and case identities. Add the optional administrator-managed reward catalog and member-scoped request, review, delivery, and cancellation behavior. Snapshot reward cost at request time; serialize reservation and redemption transitions with existing Points postings and reversals. Retain approval and reservation when backing is removed, block delivery during funding hold, and allow later earnings to restore funded approval without implicitly delivering the reward. Delivery records one spend debit and releases the reservation once; cancellation releases an undelivered reservation once. Preserve delivered rewards and their spending history. Keep Gateway, deployments, releases, and M3 outside this delta.
+
+### 19. Definition of Done
+
+Completion requires the concrete behaviors represented by the retained owner cases and the six supplied redemption cases: current authority and member privacy govern catalog access and transitions; competing affordable requests serialize against posted balance and retain the original reward price; approval, delivery retries, and cancellation preserve one reservation and one debit or release as applicable; a linked reversal racing admission or delivery preserves approval and reservation under funding hold, while delivered history survives a factual negative balance; later earnings restore backing without delivery, and restart, retry, and restore preserve authoritative balances and historical receipts without duplicate effects; Family explains disabled rewards, posted/reserved/available amounts, lifecycle, shortfall, and spending history accessibly in English and Spanish across both deployments. Acceptance covers current permissions, concurrency, reversals, retries, restart, restore, full coverage, both locales and targets, and amd64 and ARM64. The specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. These publication outcomes are required independently of structural inventory counts; the concrete invocation or prerequisite for SDK consistency verification remains unverified.
+
+### 20. References and decisions
+
+Issue: https://github.com/vypdev/domus/issues/65. This delta applies to the immutable selected source revision `2e660f3fba255315316f6835a4b30cd6ee793629` and updates the registered owner `specs/points-rewards.md`; its retained contracts and cases remain authoritative. The issue specifies use of the Action-managed branch from `develop` after #64 merges and excludes Gateway, deployments, releases, and M3. No additional repository verification invocation is asserted here; any concrete invocation or prerequisite remains unverified.
