@@ -91,9 +91,11 @@ with TemporaryDirectory(prefix='domus-profile-image-') as directory:
         else:
             with store._connection() as connection:
                 for table, rows in original.items():
+                    expected = [(*row, 60) for row in rows] if table == 'households' else rows
                     assert [tuple(row) for row in connection.execute(
-                        'SELECT * FROM "' + table + '" ORDER BY rowid')] == rows
+                        'SELECT * FROM "' + table + '" ORDER BY rowid')] == expected
         with store.read() as unit:
+            assert unit.households.current().materialization_horizon_days == 60
             member = unit.members.by_user('home', human.current().ha_user_id)
             assert unit.presentations.get('home', member.member_id) == MemberPresentation(
                 member.member_id, 'home')
