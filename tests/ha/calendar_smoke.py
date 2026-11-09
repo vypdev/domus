@@ -1,6 +1,7 @@
 """Run native calendar acceptance in disposable Home Assistant Core 2026.10.4."""
 
 import asyncio
+import json
 import os
 import tempfile
 from contextlib import asynccontextmanager
@@ -330,35 +331,68 @@ class suppress_expected_unavailable:
 
 
 async def live():
-    """Use the exact candidate app images on an isolated network with trusted test TLS."""
+    """Read materialized work through Core from isolated owned installations."""
+    targets = json.loads(os.environ["DOMUS_CALENDAR_TARGETS"])
+    assert {target["label"] for target in targets} == {
+        "native edge",
+        "native stable",
+        "standalone edge",
+        "standalone stable",
+    }
     async with core() as hass:
+        session = async_get_clientsession(hass)
+        try:
+            async with session.get("https://untrusted.domus.fixture:8443"):
+                raise AssertionError("Core accepted a certificate for the wrong host")
+        except ClientConnectorCertificateError:
+            pass
         now = dt_util.now()
-        for mode in ("NATIVE", "STANDALONE"):
-            url, token = os.environ[f"DOMUS_{mode}_URL"], os.environ[f"DOMUS_{mode}_TOKEN"]
-            if mode == "STANDALONE":
-                wrong_host = url.replace("domus.fixture", "untrusted.domus.fixture")
-                session = async_get_clientsession(hass)
-                try:
-                    async with session.get(wrong_host):
-                        raise AssertionError("Core accepted a certificate for the wrong host")
-                except ClientConnectorCertificateError:
-                    pass
+        entries, identities = [], set()
+        for target in targets:
+            url, token, label = target["url"], target["token"], target["label"]
+            other_channel = "stable" if label.endswith(" edge") else "edge"
+            foreign = next(
+                value["token"]
+                for value in targets
+                if value["label"] == f"{label.split()[0]} {other_channel}"
+            )
+            async with session.get(
+                url + PATH, headers={"Authorization": f"Bearer {foreign}"}
+            ) as denied:
+                assert denied.status == 401
             result = await configure(hass, url, token)
             assert result["type"] == "create_entry", result.get("errors")
             entry = result["result"]
+            entries.append(entry)
+            assert entry.unique_id not in identities
+            identities.add(entry.unique_id)
             await hass.async_block_till_done()
             entity = entity_id(hass, entry)
-            (display,) = await events(hass, entity, now, now + timedelta(days=1))
-            (event,) = await native_events(hass, entity, now, now + timedelta(days=1))
-            assert event["uid"].startswith("due:")
-            assert display["summary"] == event["summary"] == "Packaged calendar fixture"
-            assert datetime.fromisoformat(event["end"]) - datetime.fromisoformat(
-                event["start"]
+            for _ in range(20):
+                display = await events(hass, entity, now, now + timedelta(days=3))
+                if any(item["summary"] == f"{label} plan" for item in display):
+                    break
+                await asyncio.sleep(0.1)
+            else:
+                raise AssertionError(f"{label} did not materialize the planned task")
+            native = await native_events(hass, entity, now, now + timedelta(days=3))
+            assert {item["summary"] for item in native} == {f"{label} deadline", f"{label} plan"}
+            assert {item["summary"] for item in display} == {f"{label} deadline", f"{label} plan"}
+            assert len(native) == len(display) == 3
+            due = next(item for item in native if item["summary"].endswith(" deadline"))
+            scheduled = [item for item in native if item["summary"].endswith(" plan")]
+            assert {item["uid"].split(":")[0] for item in scheduled} == {"planned", "due"}
+            assert all(item["all_day"] for item in scheduled)
+            assert due["uid"].startswith("due:") and not due["all_day"]
+            assert datetime.fromisoformat(due["end"]) - datetime.fromisoformat(
+                due["start"]
             ) == timedelta(minutes=1)
+        assert len({entity_id(hass, entry) for entry in entries}) == len(targets)
+        for entry in entries:
             assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 if __name__ == "__main__":
     assert __version__ == "2026.10.4", __version__
-    asyncio.run(live() if "DOMUS_NATIVE_URL" in os.environ else fixtures())
+    asyncio.run(live() if "DOMUS_CALENDAR_TARGETS" in os.environ else fixtures())
     print("Home Assistant native calendar acceptance passed")

@@ -1,0 +1,5 @@
+# Overlay for disposable Supervisor candidates built from the reviewed runtime.
+schema:
+  public_origins:
+    - url
+  ha_calendar_digest: str?
