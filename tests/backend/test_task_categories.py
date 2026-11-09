@@ -167,6 +167,20 @@ def test_protected_category_commands_preserve_exact_history_and_calendar_counts(
     )
     assert edited.status_code == 200, edited.text
     assert api.client.get(definition).json()["content"]["category_id"] == category_id
+    edited_with_category = api.client.put(
+        definition,
+        headers=api.headers("edit-with-current-category"),
+        json={
+            "expected_revision": 2,
+            "title": "Edited with the same category",
+            "state": "active",
+            "category_id": category_id,
+        },
+    )
+    assert edited_with_category.status_code == 200, edited_with_category.text
+    edited_definition = api.client.get(definition).json()
+    assert edited_definition["content"]["category_id"] == category_id
+    assert edited_definition["category_label"] == "Café <b>"
 
     archive = api.headers("archive") | CONTEXT
     archived = api.client.post(path + "/archive", json={"expected_revision": 2}, headers=archive)
@@ -187,11 +201,23 @@ def test_protected_category_commands_preserve_exact_history_and_calendar_counts(
         ).json()["code"]
         == "task_category_unavailable"
     )
+    archived_edit = api.client.put(
+        definition,
+        headers=api.headers("edit-with-archived-category"),
+        json={
+            "expected_revision": 3,
+            "title": "Explicitly selecting an archived category",
+            "state": "active",
+            "category_id": category_id,
+        },
+    )
+    assert archived_edit.status_code == 422
+    assert archived_edit.json()["code"] == "task_category_unavailable"
     cleared = api.client.put(
         definition,
         headers=api.headers("unclassify"),
         json={
-            "expected_revision": 2,
+            "expected_revision": 3,
             "title": "Changed title",
             "state": "active",
             "category_id": None,
@@ -209,7 +235,7 @@ def test_protected_category_commands_preserve_exact_history_and_calendar_counts(
         definition,
         headers=api.headers("reclassify"),
         json={
-            "expected_revision": 3,
+            "expected_revision": 4,
             "title": "Changed title",
             "state": "active",
             "category_id": reused_id,

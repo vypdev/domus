@@ -96,7 +96,7 @@ class TaskDefinition:
             content=content,
             category_label=(
                 self.category_label
-                if category_label is None and content.category_id == self.content.category_id
+                if content.category_id == self.content.category_id
                 else category_label
             ),
             materials=self.materials if materials is None else materials,

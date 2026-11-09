@@ -448,6 +448,8 @@ class TaskCommands:
             content = request.content
             label = None
             if content.category_id is not None:
+                # An explicit choice requires an active category. The definition
+                # keeps its captured label when the identity stays the same.
                 label = require_active_category(unit, self.household_id, content.category_id).label
             elif not request.clear_category:
                 content = replace(content, category_id=previous.content.category_id)
