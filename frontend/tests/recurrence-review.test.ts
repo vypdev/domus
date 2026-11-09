@@ -1,6 +1,8 @@
 import {afterEach, expect, test, vi} from 'vitest';
+import {ADMINISTRATION_JOURNAL_KEY, AdministrationSessionJournal} from '../src/adapters/administration-journal';
 import {HttpRecurrenceServer} from '../src/adapters/recurrence-http';
 import {RECURRENCE_JOURNAL_KEY, RecurrenceSessionJournal} from '../src/adapters/recurrence-journal';
+import {ENTRY_JOURNAL_KEY, SessionJournal} from '../src/adapters/session-journal';
 import {RecurrenceReviewController, ReviewRejected} from '../src/application/recurrence-review-controller';
 import type {ReviewRecord, ReviewReceipt, ReviewServer, ReviewView} from '../src/application/recurrence-review-controller';
 import {revisionValue} from '../src/domain/administration';
@@ -93,6 +95,24 @@ test('independent storage fences writes, checks bounds and expires original reco
   expect(() => journal.save(scope.key, 100, [])).toThrow();
   provider.setItem.mockImplementationOnce(() => {});
   expect(() => journal.open('new', 100)).toThrow();
+});
+
+test('recurrence intent bytes cannot become entry or administration operations', () => {
+  const {journal, provider, values} = storage();
+  journal.open(scope.key, 100);
+  journal.save(scope.key, 100, [intent]);
+  const recurrence = values.get(RECURRENCE_JOURNAL_KEY)!;
+  for (const [key, parser] of [
+    [ENTRY_JOURNAL_KEY, new SessionJournal(provider)],
+    [ADMINISTRATION_JOURNAL_KEY, new AdministrationSessionJournal(provider)],
+  ] as const) {
+    for (const wire of [recurrence, recurrence.replace('"recurrence"', key === ENTRY_JOURNAL_KEY ? '"entry"' : '"administration"')]) {
+      values.set(key, wire);
+      expect(() => parser.open(context, 100)).toThrow();
+      expect(values.get(key)).toBe(wire);
+    }
+  }
+  expect(journal.open(scope.key, 100)).toEqual([intent]);
 });
 
 function http(deployment: 'native' | 'standalone' = 'standalone') {

@@ -72,6 +72,9 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   expect(root.querySelector('.calendar-grid')).toBeNull();
   element.view = {status: 'unavailable', page: null}; await element.updateComplete;
   expect(root.querySelector('[role=alert]')!.textContent).toContain('No se pudo cargar');
+  expect(date.value).toBe('2026-11-01');
+  expect(selects.map(input => input.value)).toEqual(['agenda', 'approval', 'manual', 'completed', 'high']);
+  expect(tag.value).toBe('Hogar & más'); expect(own.checked).toBe(true);
   element.scopeKey = null; await element.updateComplete;
   expect(date.value).toBe('2026-11-03');
   expect(own.checked).toBe(false); expect(tag.value).toBe('');

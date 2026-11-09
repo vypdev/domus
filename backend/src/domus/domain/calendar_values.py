@@ -9,6 +9,8 @@ from domus.domain.identity import validate_revision
 from domus.domain.storage import JsonDocument, validate_identifier
 from domus.domain.task_values import OccurrenceState, Priority, validate_task_text
 
+MAX_CALENDAR_DAYS = 366
+
 
 class CalendarKind(StrEnum):
     PLANNED = "planned"
@@ -33,7 +35,7 @@ class CalendarRange:
             type(self.start) is not date
             or type(self.end) is not date
             or self.start.year < 1970
-            or not 1 <= (self.end - self.start).days <= 366
+            or not 1 <= (self.end - self.start).days <= MAX_CALENDAR_DAYS
         ):
             raise InvalidInput("invalid_calendar_range")
 
