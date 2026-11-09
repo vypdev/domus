@@ -29,6 +29,7 @@ export interface CalendarEntry {
   readonly nominal: string | null;
   readonly resolved: string | null;
   readonly verification: string | null;
+  readonly relativeReviewRequired: boolean;
 }
 export interface CalendarPage {
   readonly entries: readonly CalendarEntry[];

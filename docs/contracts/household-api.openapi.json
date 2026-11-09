@@ -473,6 +473,11 @@
           "priority": {
             "$ref": "#/components/schemas/Priority"
           },
+          "relative_review_required": {
+            "default": false,
+            "title": "Relative Review Required",
+            "type": "boolean"
+          },
           "resolved_local": {
             "anyOf": [
               {
