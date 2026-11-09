@@ -563,14 +563,14 @@ def test_apply_rejects_a_plan_that_disagrees_with_its_original_fingerprint(
     assert progress(review.transactions, choice.schedule_id).pristine
 
 
-def fixed_skip_fixture(tmp_path, *, timed=False):
+def fixed_skip_fixture(tmp_path, *, timed=False, opt_in=True, count=2):
     from datetime import UTC, datetime
 
     from test_fixed_materialization import configured as fixed
 
     from domus.application.fixed_skip_review import FixedSkip
 
-    service, store, actor, ids, rule_id, before = fixed(tmp_path, timed=timed, count=2)
+    service, store, actor, ids, rule_id, before = fixed(tmp_path, timed=timed, count=count)
     result = service.step(rule_id, before)
     planner = RelativeRecurrencePlanner(service.planner.times)
     now = int(datetime(2026, 3, 31, tzinfo=UTC).timestamp() * 1000)
@@ -579,6 +579,15 @@ def fixed_skip_fixture(tmp_path, *, timed=False):
     selection = FixedSkip(
         rule_id, 1, result.receipt.command.key, result.occurrence_id, 1, "Vacation"
     )
+    if opt_in:
+        from domus.domain.task_values import MissedOccurrencePolicy
+
+        with store.write() as unit:
+            definition = unit.recurrence.schedule("home", rule_id).definition_id
+            settings = unit.tasks.missed_occurrence_settings("home", definition)
+            unit.tasks.save_missed_occurrence_settings(
+                settings.revise(MissedOccurrencePolicy.SKIP_AFTER_REVIEW), settings.revision
+            )
     return review, selection, service, before
 
 
@@ -1740,6 +1749,7 @@ def test_fixed_review_discovery_selects_only_its_current_occurrence_slot(tmp_pat
         "fixed-replacement",
         "fixed-exclude",
         "fixed-add",
+        "fixed-missed-policy",
         "reschedule",
         "fixed-skip",
     )
@@ -1757,6 +1767,7 @@ def test_fixed_review_discovery_selects_only_its_current_occurrence_slot(tmp_pat
         "fixed-replacement",
         "fixed-exclude",
         "fixed-add",
+        "fixed-missed-policy",
     )
 
 

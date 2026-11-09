@@ -74,9 +74,22 @@ time and schedule policy. Pending verification, a closed cycle, manual work requ
 historical absent effects have separate backlog statuses. Resuming saves the rule state. The owned
 maintenance runner processes the backlog and preserves the due date even when it is overdue.
 
+## Choose how to handle overdue fixed work
+
+Fixed tasks default to **Keep overdue work visible**. Each missed occurrence remains
+pending on its original calendar anchor. To allow reviewed skips, select the task
+in **Tasks → Review scheduling**, choose **Change overdue work policy**, preview
+**Allow reviewed skips**, and apply the reviewed setting. The setting is stored
+with its own revision for that task definition. Saving it leaves all existing
+work visible.
+
+The API exposes this review under `POST /fixed-missed-policy/preview` and
+`POST /fixed-missed-policy/apply`. Send the current schedule and policy revisions.
+The policy revision is zero until the first change.
+
 ## Skip an overdue fixed slot
 
-Review a specific materialized fixed slot through `POST /fixed-skip/preview`. Supply the current
+With **Allow reviewed skips** enabled, review a specific materialized fixed slot through `POST /fixed-skip/preview`. Supply the current
 schedule and occurrence IDs and revisions, the original slot key, and a reason. A date-only slot
 becomes overdue after its nominal date in the slot's saved time zone. A timed slot becomes overdue
 after its saved due instant. Only available or assigned work with a proven unstarted history can

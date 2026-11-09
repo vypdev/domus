@@ -13,7 +13,7 @@ from domus.domain.recurrence_records import ScheduledSlot, ScheduleState
 from domus.domain.recurrence_time import LocalInstant
 from domus.domain.relative_lifecycle import WorkHistory
 from domus.domain.storage import JsonDocument, validate_identifier
-from domus.domain.task_values import OccurrenceState, validate_task_text
+from domus.domain.task_values import MissedOccurrencePolicy, OccurrenceState, validate_task_text
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,6 +83,9 @@ def fixed_skip_plan(
         or work.state not in (OccurrenceState.AVAILABLE, OccurrenceState.ASSIGNED)
     ):
         raise Conflict("recurrence_skip_incompatible")
+    settings = unit.tasks.missed_occurrence_settings(home, rule.definition_id)
+    if settings.policy is not MissedOccurrencePolicy.SKIP_AFTER_REVIEW:
+        raise Conflict("recurrence_skip_policy_required")
     deadline = effective_deadline(unit, work, slot)
     if (
         work.due_at != deadline.due_at
@@ -101,6 +104,7 @@ def fixed_skip_plan(
             {
                 "schedule_state": rule.state.value,
                 "pattern_revision": rule.pattern_revision,
+                "missed_policy_revision": settings.revision,
                 "slot_key": slot.key,
                 "nominal": slot.planned.value(),
                 "due_at": deadline.due_at,

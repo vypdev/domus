@@ -166,6 +166,8 @@ PUBLIC_CODES = frozenset(
         "recurrence_review_source_pending",
         "invalid_recurrence_settings",
         "recurrence_skip_incompatible",
+        "recurrence_skip_policy_required",
+        "invalid_missed_occurrence_settings",
         "recurrence_slot_not_overdue",
         "recurrence_time_source_invalid",
         "recurrence_state_change_unavailable",

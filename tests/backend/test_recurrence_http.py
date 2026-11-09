@@ -202,6 +202,40 @@ def test_protected_overdue_fixed_skip_recovers_original_exception(api):
         "occurrence_revision": 1,
         "reason": "<em>away</em>",
     }
+    target = f"{BASE}/targets/{step.occurrence_id}"
+    assert "fixed-skip" not in api.client.get(target, headers=CONTEXT).json()["actions"]
+    default = api.client.post(
+        f"{BASE}/fixed-skip/preview", json=choice, headers=api.headers("default-skip") | CONTEXT
+    )
+    assert (
+        default.status_code == 409 and default.json()["code"] == "recurrence_skip_policy_required"
+    )
+    policy = {
+        "schedule_id": schedule_id,
+        "schedule_revision": 3,
+        "policy_revision": 0,
+        "missed_occurrence_policy": "skip_after_review",
+    }
+    plan = api.client.post(
+        f"{BASE}/fixed-missed-policy/preview",
+        json=policy,
+        headers=api.headers("policy-preview") | CONTEXT,
+    )
+    assert plan.status_code == 200, plan.text
+    assert plan.json()["result"]["plan"]["source"]["previous_policy"] == "keep_visible"
+    applied = api.client.post(
+        f"{BASE}/fixed-missed-policy/apply",
+        json=policy
+        | {
+            "preview_key": "policy-preview",
+            "plan_fingerprint": plan.json()["result"]["plan_fingerprint"],
+        },
+        headers=api.headers("policy-apply") | CONTEXT,
+    )
+    assert applied.status_code == 200, applied.text
+    current = api.client.get(target, headers=CONTEXT).json()
+    assert current["schedule"]["missed_policy"] == {"policy": "skip_after_review", "revision": 1}
+    assert "fixed-skip" in current["actions"]
     preview = api.client.post(
         f"{BASE}/fixed-skip/preview",
         json=choice,

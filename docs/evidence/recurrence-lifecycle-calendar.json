@@ -584,5 +584,24 @@
       "frontend/tests/e2e/administration.spec.ts"
     ],
     "scope": "Current source acceptance paths for household defaults, one nominal slot, exact offsets, stale previews, original receipts and future-work protection. Execution evidence belongs to the check runs on the tested commit."
+  },
+  "missedOccurrencePolicyAcceptancePaths": {
+    "sourceParent": "138d580ceec89121aed515af87328d16a3e5df26",
+    "issue": "https://github.com/vypdev/domus/issues/36",
+    "schema": 14,
+    "owningCases": [
+      "recurrence-calendar-C29",
+      "recurrence-calendar-C30"
+    ],
+    "tests": [
+      "tests/backend/test_missed_occurrence_policy.py",
+      "tests/backend/test_recurrence_http.py",
+      "frontend/tests/recurrence-review.test.ts"
+    ],
+    "scope": "Current acceptance paths for keeping original missed slots, reviewed per-definition opt-in, exact replay and snapshot restoration. Execution evidence belongs to the check runs on the tested commit.",
+    "schema13Fixture": {
+      "path": "tests/fixtures/sqlite/v13.sql",
+      "sha256": "305bdd47e72cf23da143aba1e512812b465cc8c1b7ad9de1796e992ab179f36b"
+    }
   }
 }

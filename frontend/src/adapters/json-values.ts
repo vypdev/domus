@@ -111,6 +111,10 @@ export function responseRevision(value: unknown): Revision {
   try {return revisionValue(value.source);} catch {return invalid();}
 }
 
+export function responseNonnegativeRevision(value: unknown): Revision | '0' {
+  return value instanceof ExactInteger && value.source === '0' ? '0' : responseRevision(value);
+}
+
 export function responseInteger(value: unknown, minimum = 0): number {
   check(value instanceof ExactInteger);
   const integer = BigInt(value.source);

@@ -7,6 +7,7 @@ from pydantic import Field
 
 from domus.application.fixed_batch_review import FixedReplacement
 from domus.application.fixed_exception_review import FixedExceptionChange
+from domus.application.fixed_missed_policy import FixedMissedPolicy
 from domus.application.fixed_pattern_review import FixedPatternChange
 from domus.application.fixed_skip_review import FixedSkip
 from domus.application.fixed_state_review import FixedStateChange
@@ -20,7 +21,8 @@ from domus.domain.recurrence_rule_text import parse_fixed_pattern
 from domus.domain.recurrence_rules import NominalDate, NominalSlot
 from domus.domain.recurrence_time import FoldPolicy, NominalTime, RelativeInterval
 from domus.domain.relative_recurrence import SuccessorVisibility
-from domus.entrypoints.http_contract import StrictModel
+from domus.domain.task_values import MissedOccurrencePolicy
+from domus.entrypoints.http_contract import NonnegativeRevision, StrictModel
 from domus.entrypoints.task_dto import Identifier, Revision
 
 
@@ -83,6 +85,29 @@ class FixedSkipBody(StrictModel):
 
 
 class ReviewedFixedSkipBody(FixedSkipBody):
+    preview_key: Identifier
+    plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+    def reviewed(self) -> ReviewedChange:
+        return ReviewedChange(self.selection(), self.preview_key, self.plan_fingerprint)
+
+
+class FixedMissedPolicyBody(StrictModel):
+    schedule_id: Identifier
+    schedule_revision: Revision
+    policy_revision: NonnegativeRevision
+    missed_occurrence_policy: Literal["keep_visible", "skip_after_review"]
+
+    def selection(self) -> FixedMissedPolicy:
+        return FixedMissedPolicy(
+            self.schedule_id,
+            self.schedule_revision,
+            self.policy_revision,
+            MissedOccurrencePolicy(self.missed_occurrence_policy),
+        )
+
+
+class ReviewedFixedMissedPolicyBody(FixedMissedPolicyBody):
     preview_key: Identifier
     plan_fingerprint: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 

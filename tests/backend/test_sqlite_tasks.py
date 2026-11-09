@@ -29,7 +29,7 @@ from domus.infrastructure.sqlite import (
 from domus.infrastructure.sqlite_calendar_preferences import CALENDAR_PREFERENCE_STATEMENT
 from domus.infrastructure.sqlite_identity import SQLiteMembers
 from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS
-from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS
+from domus.infrastructure.sqlite_task_schema import MISSED_OCCURRENCE_STATEMENT, TASK_STATEMENTS
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
 type Store = tuple[sqlite3.Connection, SQLiteTasks, Path]
@@ -61,6 +61,7 @@ def store(tmp_path: Path) -> Iterator[Store]:
         CALENDAR_PREFERENCE_STATEMENT,
         HOUSEHOLD_HORIZON_STATEMENT,
         HOUSEHOLD_FOLD_STATEMENT,
+        MISSED_OCCURRENCE_STATEMENT,
     ):
         connection.execute(statement)
     connection.execute(
