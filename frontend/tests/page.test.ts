@@ -1,7 +1,10 @@
+import {ALLOCATION_JOURNAL_KEY} from '../src/adapters/allocation-journal';
 import {CALENDAR_JOURNAL_KEY} from '../src/adapters/calendar-journal';
 import {RECURRENCE_JOURNAL_KEY} from '../src/adapters/recurrence-journal';
 import {afterEach, expect, test, vi} from 'vitest';
 import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, decodeCalendarIntent, decodeReviewIntent, mountEntry} from '../src/composition/entry-page';
+import {AllocationController} from '../src/application/allocation-controller';
+import {revisionValue} from '../src/domain/administration';
 import {TaskController} from '../src/application/task-controller';
 import type {EntryPage} from '../src/composition/entry-page';
 import type {DomusApp} from '../src/presentation/domus-app';
@@ -15,7 +18,7 @@ afterEach(() => {
   for (const node of nodes.splice(0)) node.remove();
   document.querySelector('#domus-entry-error')?.remove();
 });
-function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'en', canReview = false) {
+function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'en', canReview = false, canManagePoints = false) {
   const wire = corpus[deployment], values = new Map<string, string>(), navigation: string[] = [];
   const root = document.createElement('div'); root.id = 'domus-entry'; document.body.append(root); nodes.push(root);
   const data = document.createElement('script'); data.id = 'domus-bootstrap'; data.type = 'application/json';
@@ -48,6 +51,11 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       raw=JSON.stringify({week_start:weekStart,revision:weekRevision});
     }
     else if (route.startsWith('tasks/calendar/preferences/requests/')) raw=JSON.stringify(weekOriginal);
+    else if (route === 'family/allocation' && init.method === 'PUT') {
+      const {definition_id, expected_revision, policy} = JSON.parse(String(init.body));
+      raw = JSON.stringify({state:'committed',archived_by:null,operation_id:'points-policy',created_at:100,
+        result:{definition_id,setting:{revision:expected_revision+1,policy}},message:'Saved.',action_required:'Review.'});
+    }
     else if (init.method==='PUT') {
       if(route!=='administration/preferences')throw new Error('This fixture supports preference mutations only');
       putRequests++;const body=JSON.parse(init.body as string);preferenceLocale=body.locale;preferenceRevision++;
@@ -59,12 +67,14 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='administration/capabilities') raw=JSON.stringify({state:'available',contract_version:2,household_id:'home',exact_revisions:'json-integer-int64',
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
-    else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview});
+    else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
+      can_manage_points:canManagePoints,can_record_for_others:canManagePoints});
+    else if (route === 'family/allocation' || route.startsWith('family/allocation?')) raw = JSON.stringify({household:null,override:null});
     else if (route.startsWith('family?')) {
       const query = new URLSearchParams(route.split('?')[1]);
       raw = JSON.stringify({period:{start:query.get('start'),end:query.get('end')},time_zone:'UTC',
         posted_minor:0,available_minor:0,earned_minor:0,pending_verification_minor:0,pending_posting_minor:0,
-        completed_count:0,tracked_count:0,elapsed_ms:0,history:[],next_cursor:query.has('cursor')?null:'family-next'});
+        completed_count:0,tracked_count:0,elapsed_ms:0,pending_count:0,pending:[],history:[],next_cursor:query.has('cursor')?null:'family-next'});
     }
     else if (route.startsWith('tasks/calendar?')) {
       const query=new URLSearchParams(route.split('?')[1]);
@@ -186,11 +196,13 @@ test('language is presentation-only, and navigation has only fixed reviewed dest
 });
 test('logout closes local access and keeps explicit deployment-specific reentry available', async () => {
   const f = fixture(), {app} = await f.open();
+  f.values.set(ALLOCATION_JOURNAL_KEY, 'private pending policy');
   f.values.set(CALENDAR_JOURNAL_KEY, 'private pending preference');
   f.values.set(RECURRENCE_JOURNAL_KEY, 'private pending schedule change');
   intent(app, {type: 'logout'});
   await vi.waitFor(() => {
     expect(app.view?.notice).toBe('signed_out');
+    expect(f.values.has(ALLOCATION_JOURNAL_KEY)).toBe(false);
     expect(f.values.has(CALENDAR_JOURNAL_KEY)).toBe(false);
     expect(f.values.has(RECURRENCE_JOURNAL_KEY)).toBe(false);
   });
@@ -331,6 +343,7 @@ test('the mounted task surface routes only owned semantic intents to its applica
   try {
     const child = document.createElement('span'); app.append(child); send({type: 'create', title: 'Other target', description: '', priority: 'normal'}, child);
     send({type: 'create', title: 'Forged actor', description: '', priority: 'normal', actor: 'other'}); await Promise.resolve(); expect(spies.create).not.toHaveBeenCalled();
+    const review = {occurrenceId:'work-1',revision:'1',performerIds:['identity-1','other'],fingerprint:'c'.repeat(64)};
     const cases: readonly [unknown, keyof typeof spies, readonly unknown[]][] = [
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined, undefined]],
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high',
@@ -340,7 +353,8 @@ test('the mounted task surface routes only owned semantic intents to its applica
       [{type:'renameCategory', categoryId:'garden', revision:'1', label:'Garden'}, 'renameCategory', ['garden', '1', 'Garden']],
       [{type:'archiveCategory', categoryId:'garden', revision:'1'}, 'archiveCategory', ['garden', '1']],
       [{type: 'more'}, 'more', []], [{type: 'select', occurrenceId: 'work-1'}, 'select', ['work-1']], [{type: 'claim'}, 'claim', []],
-      [{type: 'complete', materialUsages: null}, 'complete', [null]], [{type: 'verify', decision: 'approved', reason: ''}, 'verify', ['approved', '']],
+      [{type: 'complete', materialUsages: null}, 'complete', [null]],
+      [{type: 'complete', materialUsages: null, reviewed: review}, 'complete', [null, review]], [{type: 'verify', decision: 'approved', reason: ''}, 'verify', ['approved', '']],
       [{type: 'reopen', reason: 'Repeat'}, 'reopen', ['Repeat']], [{type: 'recover', key: 'original'}, 'recover', ['original']],
       [{type: 'dismiss', key: 'original'}, 'dismiss', ['original']], [{type: 'refresh'}, 'refresh', []],
     ];
@@ -510,4 +524,67 @@ test.each(['native','standalone'] as const)('Family fetches only for the verifie
   send({type:'refresh'}); await vi.waitFor(()=>expect(app.family?.report?.cursor).toBe('family-next'));
   navigate('#tasks');
   expect(app.familyScopeKey).toBeNull(); expect(app.family).toBeNull();
+});
+
+test('mounted allocation uses only current workspace and owned closed intents', async () => {
+  const f = fixture('standalone', 'en', false, true);
+  f.phase('active');
+  const base = f.page.location.href;
+  const navigate = (fragment: string) => {
+    f.page.location.href = base + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  const {app} = await f.open();
+  const events = (name: string, detail: unknown, target: EventTarget = app) =>
+    target.dispatchEvent(new CustomEvent(name, {detail, bubbles: true, composed: true}));
+  navigate('#family');
+  await vi.waitFor(() => expect(app.allocation?.settings).toEqual({household: null, override: null}));
+  const roster = app.administration!.roster!;
+  const unnamed = roster.members[0];
+  app.administration = {...app.administration!, roster: {...roster, members: [
+    {...unnamed, metadata: {...unnamed.metadata, name: null}},
+  ]}};
+  await app.updateComplete;
+  events('domus-allocation-settings', {type: 'save', policy: {mode: 'conserve_total', precision: 0, rounding: null}});
+  await vi.waitFor(() => expect(app.allocation?.notice).toBe('saved'));
+  const save = vi.spyOn(AllocationController.prototype, 'save').mockResolvedValue(undefined);
+  const recover = vi.spyOn(AllocationController.prototype, 'recover').mockResolvedValue(undefined);
+  const preview = vi.spyOn(AllocationController.prototype, 'preview').mockResolvedValue(undefined);
+  const policy = {mode: 'equal_share', precision: 2, rounding: 'floor'};
+  const name = 'domus-allocation-settings';
+  const unowned = document.createElement('span'); app.append(unowned);
+  try {
+    events(name, {type: 'save', policy}, unowned);
+    events(name, {type: 'save', policy, member: 'forged'});
+    events(name, {type: 'anything'});
+    events('domus-allocation-preview', {performerIds: ['owner']}, unowned);
+    events('domus-allocation-preview', {performerIds: ['owner'], context: 'forged'});
+    expect(save).not.toHaveBeenCalled();
+    expect(preview).not.toHaveBeenCalled();
+    events(name, {type: 'save', policy});
+    events(name, {type: 'save', policy: null});
+    expect(save.mock.calls).toEqual([[policy], [null]]);
+    events(name, {type: 'recover'}); expect(recover).toHaveBeenCalledOnce();
+    events(name, {type: 'refresh'});
+    const performerIds = ['identity-1', 'other'];
+    const manualShares = [{member_id: 'identity-1', amount_minor: 0}, {member_id: 'other', amount_minor: 100}];
+    events('domus-allocation-preview', {performerIds, manualShares});
+    events('domus-allocation-preview', {performerIds});
+    expect(preview.mock.calls).toEqual([[{performerIds, manualShares}], [{performerIds}]]);
+    const revision = revisionValue('1');
+    const reviewed = {performerIds, manualShares, occurrenceId: 'selected', revision, fingerprint: 'c'.repeat(64)};
+    expect(decodeTaskIntent({type: 'complete', materialUsages: null, reviewed})).toEqual({type: 'complete', materialUsages: null, reviewed});
+    expect(decodeTaskIntent({type: 'complete', materialUsages: null, reviewed: {...reviewed, manualShares: undefined}})).toBeNull();
+    const withoutManual = {performerIds, occurrenceId: 'selected', revision, fingerprint: 'c'.repeat(64)};
+    expect(decodeTaskIntent({type: 'complete', materialUsages: null, reviewed: withoutManual})).toMatchObject({reviewed: withoutManual});
+    app.tasks = {...app.tasks!, detail: {occurrenceId: 'selected', definitionId: 'definition', definitionRevision: revision,
+      title: 'Work', description: '', priority: 'normal', state: 'available', revision, assigneeIds: [], dueAt: null, currentCycleId: null,
+      allowedActions: ['complete'], cycle: null, materials: [], materialRecording: 'separate_recording', pendingMaterials: false,
+      dependencyReviewRequired: false}};
+    navigate('#tasks');
+    await vi.waitFor(() => expect(app.allocation?.scope.work?.occurrenceId).toBe('selected'));
+    expect(app.allocation?.scope.canManage).toBe(true);
+    navigate('#overview');
+    expect(app.allocation).toBeNull();
+  } finally {save.mockRestore(); recover.mockRestore(); preview.mockRestore();}
 });

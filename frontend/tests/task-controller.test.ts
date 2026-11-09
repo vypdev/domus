@@ -299,3 +299,21 @@ test('a task reader with no current category-management permission cannot write 
   expect(f.controller.view.notice).toBe('action_not_allowed');
   expect(f.server.send).not.toHaveBeenCalled();
 });
+
+test('reviewed completion rejects a different task revision and keeps manual shares under the original request', async () => {
+  const f = fixture();
+  await f.controller.refresh();
+  await f.controller.select('work-1');
+  const reviewed = {occurrenceId: 'work-1', revision, performerIds: ['member-1', 'other'],
+    manualShares: [{member_id: 'member-1', amount_minor: 0}, {member_id: 'other', amount_minor: 150}], fingerprint: 'a'.repeat(64)};
+  await f.controller.complete(null, {...reviewed, occurrenceId: 'elsewhere'});
+  await f.controller.complete(null, {...reviewed, revision: revisionValue('2')});
+  expect(f.controller.view.notice).toBe('conflict');
+  expect(f.server.send).not.toHaveBeenCalled();
+  f.server.send.mockResolvedValueOnce({kind: 'uncertain'});
+  await f.controller.complete(null, reviewed);
+  expect(f.server.send.mock.calls[0][0].command).toMatchObject({action: 'task.complete', payload: {
+    performer_ids: reviewed.performerIds, allocation_fingerprint: reviewed.fingerprint, manual_shares: reviewed.manualShares,
+  }});
+  expect(f.controller.view.records?.[0].stage).toBe('uncertain');
+});

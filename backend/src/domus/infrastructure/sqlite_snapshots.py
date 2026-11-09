@@ -42,6 +42,7 @@ from domus.infrastructure.sqlite_history import (
     verify_history,
 )
 from domus.infrastructure.sqlite_inventory import verify_inventory_records
+from domus.infrastructure.sqlite_point_allocations import verify_point_allocations
 from domus.infrastructure.sqlite_points import verify_points_records
 from domus.infrastructure.sqlite_recovery import _record as _recovery
 from domus.infrastructure.sqlite_recurrence_integrity import (
@@ -195,9 +196,11 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
         if version >= 10:
             verify_relative_lifecycle_records(connection, installation)
         if version >= 16:
-            verify_points_records(connection, installation)
+            verify_points_records(connection, installation, has_allocations=version >= 18)
         if version >= 17:
             verify_inventory_records(connection)
+        if version >= 18:
+            verify_point_allocations(connection)
     except DomusError as error:
         raise DatabaseRejected("invalid_snapshot_records") from error
 

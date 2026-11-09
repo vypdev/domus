@@ -1,6 +1,7 @@
 /** Read only the current member's Family report and retire it with its verified scope. */
 import {calendarPeriod} from '../domain/calendar';
 import type {CalendarPeriod} from '../domain/calendar';
+import type {AllocationEvidence} from '../domain/point-allocation';
 import type {JournalContext} from '../domain/journal';
 import {EntryReadError} from './ports';
 import type {EntryRead} from './ports';
@@ -14,6 +15,14 @@ export interface FamilyEntry {
   readonly verifiedAt: number | null;
   readonly postedAt: number;
   readonly reverses: string | null;
+  readonly allocation: AllocationEvidence;
+}
+export interface FamilyPendingEntry {
+  readonly id: string;
+  readonly title: string;
+  readonly performedAt: number;
+  readonly state: 'verification' | 'posting';
+  readonly allocation: AllocationEvidence;
 }
 export interface FamilyReport {
   readonly period: CalendarPeriod;
@@ -26,6 +35,8 @@ export interface FamilyReport {
   readonly completed: number;
   readonly tracked: number;
   readonly elapsed: number;
+  readonly pendingCount: number;
+  readonly pending: readonly FamilyPendingEntry[];
   readonly history: readonly FamilyEntry[];
   readonly cursor: string | null;
 }

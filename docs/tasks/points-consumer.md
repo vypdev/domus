@@ -45,8 +45,10 @@ report. The Points worker remains the writer of awards and linked reversals.
 
 The selected week or month reports actual work in the household zone. Approval
 and posting keep their own timestamps. Pending verification and pending posting
-show estimates from the current conserved split and rotation. Available points
-come from posted entries. Posted and available values coincide before reward
+use the frozen shares for new completions. Older pending cycles use their
+original conserved calculation. The report shows the four most recent pending
+allocations with their exact shares and stage. Pending totals cover all matching
+work in the selected period. Available points come from posted entries. Posted and available values coincide before reward
 reservations are introduced.
 
 Recorded completions remain visible after reopening. A reversal corrects the
@@ -61,3 +63,47 @@ month-end transition, cursor binding, and restart. The restore case checks an
 actual activated snapshot and suppresses duplicate postings. The
 [workspace browser journey](../../frontend/tests/e2e/workspace-navigation.spec.ts)
 covers localized history and the Points worker in the same protected workspace.
+
+## Configured allocation
+
+Household defaults and task-definition overrides are changed through the protected
+allocation settings routes. Current `points.manage` authority is required to
+read or change settings and to supply manual shares. A task override takes
+precedence. Clearing it preserves its revision while subsequent completions
+inherit the household default. For previously unconfigured households, the
+legacy conserved split still uses fractional precision when the base requires it.
+The initial explicit setting is a whole-point conserved split.
+
+The preview uses the current task revision, selected active members, exact
+minor units, and the same allocation engine as completion. The browser sends
+the reviewed fingerprint when recording work. The task detail carries whether
+completion requires manual shares or help from a points administrator. The
+completion form respects that fact before loading the administration editor. The
+completion transaction
+rejects a stale fingerprint and saves a new cycle and its allocation together.
+Conserved splits advance their position when the cycle is recorded. Approval,
+posting, retries, and reversals use the stored shares and do not advance it.
+History shows the original policy, rounding, revision, and award total.
+
+Schema 18 adds scoped settings and frozen allocations. An interrupted migration
+leaves schema 17 intact. Older cycles and ledger rows remain readable using
+their original conserved behavior. Checkpoint inspection validates stored policies,
+shares, source cycles, and the retained remainder sequence. Restore preserves
+the selected settings and allocations. A later settings request is recoverable
+as historical by its original key.
+
+[Allocation HTTP tests](../../tests/backend/test_point_allocation_http.py) exercise
+current authorization, configuration revisions, stale previews, pending approval,
+and linked reversals in both deployments. [Storage tests](../../tests/backend/test_point_allocation_storage.py)
+exercise a real [schema-17 database](../../tests/fixtures/sqlite/v17-allocation-source.sql),
+interrupted migration, simultaneous completion replay, restart, and corrupted
+evidence. The [Points restoration test](../../tests/backend/test_points_consumer.py)
+uses a real activated checkpoint with an existing configured award.
+
+| Issue #64 evidence | Observable case |
+| --- | --- |
+| `family-allocation-C01` | Pure exact allocation tests for conserved, equal, full, and manual shares, both precisions, the performer limit, and bounded values. |
+| `family-allocation-C02` | Both composed HTTP paths reject unauthorized settings and manual shares, inactive or duplicate participants, and injected policy. |
+| `family-allocation-C03` | The HTTP cycle keeps its frozen policy through override edits, approval, replay, and reversal. Clearing the override changes the next preview. |
+| `family-allocation-C04` | SQLite tests exercise concurrent completion replay, transaction rollback, restart, exact reversal, and restoration of prior policy and shares. |
+| `family-allocation-C05` | The compiled Chromium workspace checks the policy editor, localized exact preview, and posted history in Ingress and standalone. |

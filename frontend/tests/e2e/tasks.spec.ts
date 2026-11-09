@@ -291,6 +291,24 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
       await memberTasks.getByRole('button', {name: 'Claim task', exact: true}).click();
       await memberTasks.locator('summary').filter({hasText: 'Saved requests'}).click();
       await memberTasks.getByRole('button', {name: 'Dismiss saved request', exact: true}).click();
+
+      await page.getByRole('link', {name: 'Tasks', exact: true}).click();
+      await tasks.getByRole('button', {name: 'Refresh tasks', exact: true}).click();
+      await tasks.getByRole('button', {name: title, exact: true}).click();
+      const allocation = tasks.locator('domus-allocation-settings');
+      await allocation.getByRole('combobox', {name: 'Policy', exact: true}).selectOption('manual');
+      await allocation.getByRole('button', {name: 'Save policy', exact: true}).click();
+      await expect(allocation.getByText('Points policy saved.', {exact: true})).toBeVisible();
+      await memberTasks.getByRole('button', {name: 'Refresh tasks', exact: true}).click();
+      await expect(memberTasks.getByText(/Ask a points administrator to record this work/u)).toBeVisible();
+      await expect(memberTasks.getByRole('button', {name: 'Mark done now', exact: true})).toHaveCount(0);
+      await participant.getByLabel('Language', {exact: true}).selectOption('es');
+      await expect(memberTasks.getByText(/Pide a un administrador de puntos/u)).toBeVisible();
+      await participant.getByLabel('Idioma', {exact: true}).selectOption('en');
+      await allocation.getByRole('button', {name: 'Use household default', exact: true}).click();
+      await expect(allocation.getByText('This task uses the household default.', {exact: true})).toBeVisible();
+      await memberTasks.getByRole('button', {name: 'Refresh tasks', exact: true}).click();
+
       let completionWrites = 0;
       await participant.route(base(mode) + '/api/v1/tasks/occurrences/*/complete', async route => {
         completionWrites++; const upstream = await route.fetch({maxRetries: 0, maxRedirects: 0}); expect(upstream.status()).toBe(200);

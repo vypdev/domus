@@ -5,6 +5,7 @@ from typing import Protocol
 
 from domus.application.inventory_ports import InventoryRecords
 from domus.application.member_profile_ports import MemberPreferencesRepository, MemberPresentations
+from domus.application.point_allocation_ports import PointAllocations
 from domus.application.points_ports import PointsRepository
 from domus.application.recurrence_ports import RecurrenceRepository
 from domus.application.task_material_ports import TaskMaterialRepository
@@ -103,6 +104,9 @@ class UnitOfWork(Protocol):
 
     @property
     def points(self) -> PointsRepository: ...
+
+    @property
+    def point_allocations(self) -> PointAllocations: ...
 
     @property
     def calendar_preferences(self) -> CalendarPreferences: ...

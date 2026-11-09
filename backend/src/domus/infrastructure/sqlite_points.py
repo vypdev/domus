@@ -6,12 +6,19 @@ from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from typing import Any, cast
 
-from domus.application.family_ports import FamilyLedgerEntry, FamilyWork
+from domus.application.family_ports import FamilyAllocationEvidence, FamilyLedgerEntry, FamilyWork
 from domus.domain.errors import InvalidInput, StorageFailure
-from domus.domain.points import PointsPosting, conserve_points, points_source_fingerprint
+from domus.domain.points import (
+    LEGACY_POLICY,
+    PointsPosting,
+    conserve_points,
+    frozen_points,
+    points_source_fingerprint,
+)
 from domus.domain.restoration import RetainedOperation
 from domus.domain.storage import Installation, JsonDocument
 from domus.domain.task_events import TaskLifecycleEvent
+from domus.infrastructure.sqlite_point_allocations import SQLitePointAllocations
 from domus.infrastructure.sqlite_task_history import (
     RESTORED_AWARD_CLOSURE,
     SQLiteTaskHistory,
@@ -69,6 +76,7 @@ ORDER BY p.position DESC LIMIT :limit
 
 _MEMBER_WORK = f"""
 SELECT c.document, w.definition_id,
+    json_extract(w.document, '$.definition_snapshot.content.title') AS title,
     c.closed_at IS NULL AND json_extract(c.document, '$.verification')!='rejected'
     AND NOT EXISTS (
         SELECT 1 FROM points_task_receipts p
@@ -101,6 +109,7 @@ WHERE c.household_id=:household
         SELECT 1 FROM json_each(c.document, '$.performers') performer
         WHERE json_extract(performer.value, '$.member_id')=:member
     )
+ORDER BY json_extract(c.document, '$.performed_at') DESC, c.cycle_id DESC
 """
 
 
@@ -145,8 +154,14 @@ class SQLitePoints:
     ) -> str | None:
         row = self.connection.execute(
             "SELECT * FROM points_task_receipts WHERE household_id=? AND definition_id=? "
-            "AND effect=1 AND position<=? ORDER BY position DESC LIMIT 1",
-            (household_id, definition_id, 2**63 - 1 if before is None else before - 1),
+            "AND effect=1 AND position<=? AND COALESCE(json_extract(document,'$.policy_version'),"
+            "'conserve_total.v1')=? ORDER BY position DESC LIMIT 1",
+            (
+                household_id,
+                definition_id,
+                2**63 - 1 if before is None else before - 1,
+                LEGACY_POLICY,
+            ),
         ).fetchone()
         return None if row is None else _posting(row).next_recipient
 
@@ -176,11 +191,18 @@ class SQLitePoints:
         self, household_id: str, member_id: str, after: str | None, limit: int
     ) -> tuple[FamilyLedgerEntry, ...]:
         entries = []
+        snapshots = SQLitePointAllocations(self.connection)
         for row in self.connection.execute(
             _MEMBER_HISTORY,
             {"household": household_id, "member": member_id, "after": after, "limit": limit},
         ):
             posting = _posting(row)
+            snapshot = snapshots.snapshot(household_id, posting.cycle_id)
+            if snapshot is None:
+                shares = tuple((member, abs(amount)) for member, amount in posting.shares)
+                allocation = FamilyAllocationEvidence.legacy(posting.precision, shares)
+            else:
+                allocation = FamilyAllocationEvidence.from_snapshot(snapshot)
             entries.append(
                 FamilyLedgerEntry(
                     posting.event_id,
@@ -193,6 +215,7 @@ class SQLitePoints:
                     posting.posted_at,
                     posting.reverses,
                     posting.policy_version,
+                    allocation,
                 )
             )
         return tuple(entries)
@@ -207,6 +230,7 @@ class SQLitePoints:
             yield FamilyWork(
                 read_cycle(row["document"]),
                 row["definition_id"],
+                row["title"],
                 row["started_at"],
                 bool(row["awaiting_credit"]),
             )
@@ -229,9 +253,12 @@ class SQLitePoints:
         )
 
 
-def verify_points_records(connection: sqlite3.Connection, installation: Installation) -> None:
+def verify_points_records(
+    connection: sqlite3.Connection, installation: Installation, *, has_allocations: bool = False
+) -> None:
     history = SQLiteTaskHistory(connection)
     points = SQLitePoints(connection)
+    allocations = SQLitePointAllocations(connection) if has_allocations else None
     previous = 0
     for row in connection.execute("SELECT * FROM points_task_receipts ORDER BY position"):
         scope, position = row["household_id"], row["position"]
@@ -249,10 +276,19 @@ def verify_points_records(connection: sqlite3.Connection, installation: Installa
             raise StorageFailure("invalid_points_source")
         if row["effect"] == 1:
             award = _posting(row)
-            rotation = points.next_recipient(scope, event.definition_id, before=position)
-            if not event.points_eligible or award != conserve_points(
-                event, award.posted_at, rotation
-            ):
+            snapshot = (
+                None if allocations is None else allocations.snapshot(scope, event.cycle.cycle_id)
+            )
+            expected = (
+                conserve_points(
+                    event,
+                    award.posted_at,
+                    points.next_recipient(scope, event.definition_id, before=position),
+                )
+                if snapshot is None
+                else frozen_points(event, award.posted_at, snapshot)
+            )
+            if not event.points_eligible or award != expected:
                 raise StorageFailure("invalid_points_posting")
         elif row["effect"] == 2:
             reversal = _posting(row)

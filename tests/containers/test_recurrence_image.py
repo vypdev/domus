@@ -56,7 +56,7 @@ from domus.infrastructure.sqlite_recurrence_records import (
     schedule_document, read_schedule, progress_document, read_progress, slot_document, read_slot,
     frontier_document, read_frontier,
 )
-assert SCHEMA_VERSION == 17
+assert SCHEMA_VERSION == 18
 policy = TimePolicy('Europe/Madrid', TIMEZONE_DATA_IDENTITY)
 pattern = parse_fixed_pattern('FREQ=DAILY;COUNT=2', NominalTime(datetime(2026, 3, 29, 2, 30)))
 times = PinnedRecurrenceTime()

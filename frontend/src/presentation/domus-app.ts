@@ -10,6 +10,10 @@ import type {TaskView} from '../application/task-controller';
 import './domus-tasks';
 import './domus-calendar';
 import './domus-family';
+import './domus-allocation-settings';
+import type {AllocationView} from '../application/allocation-controller';
+import type {ParticipantName} from './allocation-details';
+import {familyMessage} from './family-messages';
 import type {FamilyView} from '../application/family-controller';
 import type {CalendarPreferenceView} from '../application/calendar-preferences';
 import './domus-recurrence-review';
@@ -33,7 +37,7 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
-  static properties = {family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
+  static properties = {allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
     workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
@@ -41,6 +45,7 @@ export class DomusApp extends LitElement {
   declare tasks: TaskView | null;
   declare calendar: CalendarView | null;
   declare family: FamilyView | null;
+  declare allocation: AllocationView | null;
   declare familyScopeKey: string | null;
   declare familyToday: string;
   declare recurrenceReview: ReviewView | null;
@@ -57,7 +62,7 @@ export class DomusApp extends LitElement {
   constructor() {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
     this.recurrenceReview = null; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
-    this.family = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
+    this.family = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
     this.workspaceDestination = null; this.nameDraft = ''; this.zoneDraft = '';
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
@@ -167,6 +172,12 @@ export class DomusApp extends LitElement {
     const workspace = this.hasWorkspace();
     const decision = view?.decision, state = decision?.state ?? 'unavailable';
     const taskWorkspace = workspace && this.workspaceDestination === 'tasks' && this.tasks?.phase === 'ready' && this.tasks.access !== null;
+    const names: readonly ParticipantName[] = this.administration?.roster?.members
+      .filter(row => row.member.status === 'active').map(row => ({id: row.member.memberId,
+        name: row.presentation.alias ?? row.metadata.name ?? row.member.memberId})) ?? [];
+    const ownId = this.tasks?.access?.memberId;
+    const own = names.find(person => person.id === ownId) ?? {id: ownId ?? '', name: familyMessage('you', this.language)};
+    const taskNames = this.tasks?.access?.canRecordForOthers ? [own, ...names.filter(person => person.id !== ownId)] : [own];
     const unresolved = view?.journal?.records.some(record => record.stage === 'prepared' || record.stage === 'uncertain') === true;
     return html`<main><header><div class="brand"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5">
       <path d="M8 23 24 9l16 14v16H8Z"/><path d="M19 39V25h10v14"/></svg><div><div class="wordmark">DOMUS</div><div class="tagline">${this.text('tagline')}</div></div></div>
@@ -199,7 +210,8 @@ export class DomusApp extends LitElement {
       </section>
       <section id="tasks" tabindex="-1" aria-label=${this.text('navigationTasks')}
         ?hidden=${!workspace || this.workspaceDestination !== 'tasks'}>
-        <domus-tasks .view=${this.tasks} .language=${this.language}
+        <domus-tasks .view=${this.tasks} .language=${this.language} .participantNames=${taskNames}
+          .allocation=${this.workspaceDestination === 'tasks' ? this.allocation : null}
           .retired=${closed || view?.notice === 'context_changed' || view?.phase === 'ready' && decision?.state !== 'active'}></domus-tasks>
         <domus-recurrence-review .view=${this.recurrenceReview} .language=${this.language}></domus-recurrence-review>
       </section>
@@ -211,7 +223,9 @@ export class DomusApp extends LitElement {
       <section id="family" tabindex="-1" aria-label=${this.text('navigationFamily')}
         ?hidden=${!workspace || this.workspaceDestination !== 'family'}>
         <domus-family .view=${this.family} .language=${this.language} .today=${this.familyToday}
-          .scopeKey=${this.familyScopeKey}></domus-family>
+          .scopeKey=${this.familyScopeKey} .names=${names}></domus-family>
+        <domus-allocation-settings .view=${this.workspaceDestination === 'family' ? this.allocation : null}
+          .language=${this.language}></domus-allocation-settings>
       </section>
       <div id="household" tabindex="-1" ?hidden=${!workspace || this.workspaceDestination !== 'household'} role=${workspace ? 'group' : nothing}
         aria-label=${workspace ? this.text('workspaceHousehold') : nothing}>

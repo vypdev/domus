@@ -759,3 +759,292 @@ This delta updates the immutable retained owner `specs/points-rewards.md` (selec
 Issue: https://github.com/vypdev/domus/issues/62. The selected source identifies `docs/tasks/points-consumer.md` as describing the existing ledger and schema. The repository README describes English and Spanish product support, Supervisor App/Ingress and standalone Container deployment targets, and the project’s shared HA-coherent presentation components. These facts inform the proposed UI scope; they do not establish that this Family projection or its acceptance has been implemented.
 
 Decisions carried by the issue: make this a read-only projection and workspace slice; retain Points as ledger owner; use task completion facts and household calendar rules; separate pending verification from approved work awaiting posting; and attribute late approval and later reversal to the original work period while preserving actual approval and posting times. Configurable allocation and reward redemption remain separate future work. Selected-source declarations do not establish implementation, passing verification, or publication.
+
+## Proposed change: Configure collaborative points allocation and retain award snapshots
+
+- Status: Draft
+- Catalog capability: points-rewards
+
+### 1. Executive summary
+
+This delta specifies household-controlled allocation defaults and authorized task-definition overrides for collaborative point awards. Before submission, performers can review the base value, effective policy and precision, named shares, and actual total in English or Spanish. Exact integer minor points, an immutable completion snapshot, and a single ledger transaction keep delayed approval, retries, and reopening tied to the original award. The immutable retained owner remains `specs/points-rewards.md` at revision `fda57bbe905956a56e30b90ff9d6e8200359dc9c`; this delta supplements its existing requirements, cases, and historical changes.
+
+### 2. Problem, current behavior, and evidence
+
+#### 2.1 Problem
+
+Collaborative work needs clear, reviewable allocation choices. Administrators need to decide how future completions divide points, while performers need to understand each share and why the awarded total may differ from the task's base value. Delayed approval, concurrent policy edits, retries, and reopening must not silently recalculate or duplicate an award.
+
+#### 2.2 Current behavior
+
+The selected source documents a prospective allocation capability and partial existing implementation evidence; it does not establish that the new configurable allocation behavior is implemented. The retained owner describes the existing Points worker as conserving the original task value and rotating remainders per task definition. The project README reports collaborative allocation as configurable product scope, while the owner’s implementation status records the default conserved allocation and exact reversal as partial evidence. These statements describe different scope and evidence levels; they do not establish that the requested allocation modes, authority checks, preview, or award snapshots are all installed.
+
+#### 2.3 Evidence
+
+The retained contract and existing points cases are in `specs/points-rewards.md`. The selected catalog registers the points-rewards capability and its evidence paths in `specs/catalog.json` and `specs/CATALOG.md`. The README describes overall project status and intended product scope in `README.md`. The HA contract records that ordinary completion callers cannot override policy and describes allocation result fields in `docs/contracts/home-assistant.md`. These documents provide context, not proof that all proposed behavior has passed implementation or acceptance checks. The issue and confirmed refinement define this delta’s requested decisions; no repository file outside the cited evidence is asserted to prove them.
+
+### 3. Actors, surfaces, and terminology
+
+The actors are household administrators who manage the default and task overrides, performers who review and submit collaborative work, and authorized verifiers who may approve it. The surfaces are the application’s allocation configuration, pre-submission preview, completion and approval flow, and Family history. Existing Home Assistant and standalone deployment surfaces remain in the owning contract’s scope.
+
+A household default is the policy used for future completions unless an authorized task-definition override applies. Clearing an override makes the current household default apply to future completions. A completion snapshot is the immutable record of the base, effective policy and revision, precision, performer set, exact shares, actual total, and deterministic remainder position. Minor points are integer units: precision zero represents whole points and precision two represents hundredths. A conserved split preserves the base total; equal shares apply the selected rounding rule without redistributing remainder; full shares give each participant the base; manual shares are explicit amounts.
+
+### 4. Goals, non-goals, and fixed invariants
+
+#### 4.1 Goals
+
+1. Let an actor with current `points.manage` authority set the household allocation default and an explicit task-definition override. The task override takes precedence; clearing it restores the current household default for future completions. Initial configuration defaults to conserved allocation at precision zero. Automatic fractional precision applies only to pre-configuration legacy behavior.
+2. Allocate exact integer minor points at precision zero or two. Conserved splits require a representable base, distribute leftover quanta among performers ordered by stable member ID, resume at or after the saved recipient and wrap as needed, and save the next recipient after the last extra share. Equal shares support explicitly selected floor, ceil, or half-up rounding without redistributing remainder. Full shares grant each participant the base and require representability. Manual shares are exact, with no rounding. Only conserved splits must total the base.
+3. Accept one to 32 distinct currently active performers under existing task-attribution checks. Manual allocation requires current `points.manage` authority and exactly one nonnegative, representable share per performer, including an explicit zero where intended, subject to the existing one-million-minor-point per-share bound. Ordinary completion payloads cannot select policy or inject manual amounts.
+4. Freeze the base, effective policy and revision, performer set, exact shares, actual total, and deterministic remainder position in the transaction recording a new completion cycle. Approval and ledger posting reuse that snapshot. Retries cannot allocate or rotate again. Reopening reverses exactly the posted shares once; closing an unposted cycle creates no debit. A genuine new cycle gets a fresh snapshot.
+5. Before collaborative submission, show the base value, effective policy and precision, named shares, and actual total in English and Spanish. Family history shows the retained applied policy and revision, original work period, pending verification or posting, and any linked reversal; it explains when policy or rounding changes the total. Later configuration changes affect future completions only.
+
+#### 4.2 Non-goals
+
+1. Reward redemption, which remains a separate increment.
+2. Changing the existing remainder rotation beyond the specified stable-member ordering and saved-recipient behavior.
+3. Changing the existing gateway or introducing an MCP server, mandatory cloud or AI dependencies, or changes to basic task participation.
+
+#### 4.3 Fixed invariants
+
+1. Existing authorization, attribution, ledger integrity, idempotency, and task lifecycle rules in the retained owner continue to apply. Policy edits require current management authority, and a member cannot choose policy through an ordinary completion request.
+2. Award facts use exact integer arithmetic. Invalid precision, unrepresentable values, unauthorized changes, or invalid performer sets leave policy and credit unchanged.
+3. Completion snapshot, approval, posting, retry, and reversal preserve the original shares and policy revision. A policy edit cannot change pending work; replay cannot create a second award or advance remainder rotation again; reopening reverses only what posted and only once.
+4. Preserve the owner's existing requirements and case identities, both historical deltas, and all approved new case identities and concrete assertions. Requirements must map only to cases that exercise them; each goal must have a concrete case. Publication constraints belong in the owning validation and invariant sections, not as product goals. The publication outcome must establish that the specification satisfies the required format, internal and cross-document consistency is checked, and reciprocal catalog ownership, paths, and evidence agree with the generated view. The concrete invocation or prerequisite for these checks remains unverified in this draft.
+
+| Requirement | Behavior |
+| --- | --- |
+| family-allocation-R1 | Apply validated revisioned household and authorized task allocation settings using exact integer arithmetic. |
+| family-allocation-R2 | Freeze the effective policy and shares with the completion and post or reverse exactly those shares through the existing ledger. |
+| family-allocation-R3 | Preview base value, policy, each share and actual total in English and Spanish before submission. |
+| SDD-I64-U2-R1 | Current points.manage authority is required to change the household allocation default and to set an explicit task-definition allocation override; an authorized task override takes precedence, and clearing it makes the current household default apply to future completions. The initial default is conserved, with automatic fractional precision applying only to pre-configuration legacy behavior. |
+| SDD-I64-U3-R1 | Use exact integer minor points with precision zero or two. |
+| SDD-I64-U3-R2 | Conserved splits require a representable base and rotate leftover quanta per task definition over stable member IDs, resuming at or after the saved recipient and wrapping if needed. |
+| SDD-I64-U3-R3 | Equal shares use explicitly selected floor, ceil or half-up with no redistribution of the remainder. |
+| SDD-I64-U3-R4 | Full shares grant the base to each participant and require representability. |
+| SDD-I64-U3-R5 | Manual shares are explicit exact amounts with no rounding. |
+| SDD-I64-U3-R6 | Only conserved splits must equal the base total. |
+| inventory-4-R1 | Require one to 32 distinct currently active performers under the existing task attribution checks. |
+| inventory-4-R2 | Manual amounts require points.manage authority and exactly one nonnegative representable share per performer, including an explicit zero where intended; apply the existing one-million-minor-point bound per share. |
+| inventory-4-R3 | Ordinary completion payloads cannot select a policy or inject manual amounts. |
+| SDD-I64-U5-R1 | When recording a new completion cycle, freeze the base and effective policy and revision, performer set, exact shares, actual total, and deterministic remainder position in the writer transaction. |
+| SDD-I64-U5-R2 | Approval and ledger posting reuse the frozen cycle snapshot, and retrying never reallocates shares or rotates the remainder position. |
+| SDD-I64-U5-R3 | Reopening reverses exactly what posted once and closes an unposted cycle without a debit; a genuine new cycle takes a fresh snapshot. |
+
+### 5. Current versus proposed product journey
+
+The retained owner at `specs/points-rewards.md` already defines auditable awards, completion-cycle snapshots, immutable ledger history, and a conserved allocation default. The selected source implements conserved integer allocation in `backend/src/domus/domain/points.py` and processes lifecycle events in `backend/src/domus/application/points.py`; those files do not establish the configurable policy set or household/task configuration described by this delta. This update adds that configuration and its durable award snapshot while keeping the retained verification, attribution, ledger, and reward contracts in force.
+
+For a future collaborative completion, the member sees the task’s base value and current effective allocation before submission. The effective policy is the authorized task-definition override when set, otherwise the current household default. The member reviews the named performers, exact shares, precision, rounding or remainder rule, and actual total. Ordinary completion input cannot choose a policy or supply manual amounts. Once accepted, the completion cycle retains the effective policy revision and calculated shares through verification, posting, retry, and any later reversal. Configuration changes apply only to future completions. In Family history, members can inspect the retained policy, revision, original work period, pending verification or posting state, actual shares and total, and any linked reversal.
+
+### 6. Functional behavior and state model
+
+Allocation uses integer minor points, with configured precision of zero or two decimal places. Configuration starts with a conserved household default at precision zero; fractional legacy behavior is limited to awards predating explicit configuration. At precision zero, a conserved split whose base cannot be represented is rejected with a precision-two option rather than silently rounded. The retained owner defines the ledger and source facts in `specs/points-rewards.md`; the current conserved calculation in `backend/src/domus/domain/points.py` is the selected implementation evidence for that existing mode, not evidence that the new modes are implemented.
+
+A conserved split sorts the distinct active performers by stable member ID, resumes at or after the saved next recipient, wraps when needed, and assigns leftover quanta from that position. It stores the next recipient after the last extra share. A zero-remainder split and a reversal do not move that position. Conserved shares equal the base. Equal shares apply the explicitly selected floor, ceiling, or half-up rule and do not redistribute the remainder, so the total may differ from the base. Full shares grant each participant the base and reject an unrepresentable base. Manual allocation requires current `points.manage` authority and exactly one explicit, nonnegative, representable amount for each performer; zero is valid when explicitly entered. Each share is bounded by one million minor points. Only conserved allocation requires the shares to sum to the base.
+
+The performer set contains one to 32 distinct, currently active performers and passes the existing task attribution checks. Current `points.manage` authority is required to change the household default, set or clear a task override, and submit manual shares. An override takes precedence; clearing it makes the current household default apply to future completions. Invalid configuration or performer data is rejected before credit or rotation state changes.
+
+In the writer transaction that records a new completion cycle, freeze the base value, effective policy and revision, precision, performer set, exact shares, actual total, and deterministic remainder position. Approval and posting reuse this snapshot. A policy edit while approval is pending cannot recalculate it; retries cannot allocate or rotate again. Reopening reverses exactly the shares actually posted, once, with linked entries. Closing an unposted cycle creates no debit; a genuine new completion cycle gets a fresh snapshot. These rules extend the owner's existing atomicity and append-only ledger invariants in `specs/points-rewards.md`.
+
+### 7. User-facing configuration
+
+The household settings surface lets an authorized administrator choose the default allocation mode, precision, and—when equal shares are selected—the rounding rule. It identifies the conserved default and explains that precision zero rejects fractional conserved bases. An authorized task editor can set an explicit allocation override or clear it to inherit the current household default. Manual amounts are available only to an actor with current `points.manage` authority. Unauthorized changes are denied without changing configuration or credit; contradictory or unrepresentable settings receive a field-level explanation and preserve the draft for correction.
+
+Before collaborative submission, show the base value, effective mode and precision, each performer’s name and exact share, and the actual total. Explain that conserved shares sum to the base, equal-share rounding can change the total without redistributing its remainder, full shares multiply the base by the performer count, and manual totals reflect the entered amounts. Present amounts in the selected precision without floating-point drift. Provide this preview and the Family history explanation in English and Spanish, with accessible labels and a non-color indication of pending verification or posting. Later configuration changes must not alter the history display of the applied policy or revision.
+
+### 8. Clean Architecture design
+
+Keep policy calculation as a pure domain responsibility: validate precision and representability, calculate exact shares for each supported mode, and return the next deterministic remainder position where applicable. Application commands authorize household-default changes, task overrides, and manual shares using current `points.manage` authority. Completion processing resolves override precedence and freezes the effective policy and resulting allocation with the new cycle in the same writer transaction that records the completion. Approval, posting, idempotent retry, and reversal consume that snapshot rather than recalculating from mutable configuration.
+
+Persistence must retain versioned household and task allocation settings and the award snapshot alongside the existing cycle and ledger evidence. Enforce one allocation per completion cycle and atomic writes for all shares and remainder advancement; failure must leave neither partial credit nor advanced rotation. Reopening links compensating entries to the original shares exactly once. Application queries project the retained policy, revision, performers, amounts, actual total, work period, posting status, and linked reversal for the Family view. Presentation renders these values and the pre-submission preview; adapters map persisted settings and snapshots without introducing business rules. Preserve the dependency direction and boundaries in the retained architecture contract at `specs/points-rewards.md`; the selected conserved-point calculation and consumer evidence are `backend/src/domus/domain/points.py` and `backend/src/domus/application/points.py`.
+
+### 9. UI/UX and content contract
+
+#### 9. UI/UX and content contract
+
+This delta extends the retained owner at `specs/points-rewards.md`; it does not replace its existing Points and history presentation contract. Before a collaborative completion is submitted, show the base value, effective household or task policy and precision, each named performer’s share, and the actual total. Explain any difference from the base in plain language, including the selected equal-share rounding rule or full-performer allocation. Use English and Spanish with the owner’s locale fallback and accessible text equivalents; values and status must not depend on color alone.
+
+In Family history, show the applied policy and revision, original work period, each performer’s exact share, actual total, whether verification or posting is pending, and any linked reversal. Later policy edits must not rewrite this record. Keep the normal action clear, make keyboard focus and labels usable, and keep names, amounts, and explanations readable on narrow screens. Acceptance includes both locales and deployment targets; the detailed observable presentation assertions remain in the retained owner’s case inventory.
+
+### 10. Failure, recovery, and cleanup
+
+#### 10. Failure, recovery, and cleanup
+
+Reject invalid settings, precision, performer sets, and manual amounts before changing policy or credit; retain entered values when safe so an authorized user can correct them. Explain the impact, cause, next action, and retained state. An unrepresentable base is rejected with the precision-two option explained where applicable. An authorization denial identifies the required points-management authority without disclosing protected household data.
+
+The completion transaction freezes the base, effective policy and revision, performer set, exact shares, total, and deterministic remainder position with the new cycle. Delayed verification, policy edits, retries, restart, and restore reuse that snapshot; retries must not allocate again or rotate the remainder position again. Reopening reverses exactly the shares actually posted, once, and links the reversal to the award. Closing a cycle with no posted award creates no debit. A genuinely new completion cycle takes a fresh snapshot. Recovery evidence must show one complete award or no award after a failed transaction, never a partial share set. The underlying allocation and lifecycle contract is retained in `specs/points-rewards.md`.
+
+### 11. Security, permissions, and privacy
+
+#### 11. Security, permissions, and privacy
+
+Require current `points.manage` authority to change the household default, set or clear an explicit task-definition override, and submit manual shares. Recheck authority at the write boundary. A task override takes precedence only for future completions; clearing it returns future completions to the current household default. Ordinary completion input cannot choose a policy or inject manual amounts.
+
+Accept only one to 32 distinct currently active performers that pass the existing task-attribution checks. Manual allocation requires exactly one nonnegative, representable amount per performer, including an explicit zero when intended, and enforces the existing one-million-minor-point per-share bound. Use exact integer minor units at precision zero or two. Keep identity and authorization separate from supplied member IDs; validate all input before effects. Do not expose credentials or unnecessary personal data in history, errors, or operational evidence. These controls refine the existing owner at `specs/points-rewards.md`.
+
+### 12. Observability and operational UX
+
+#### 12. Observability and operational UX
+
+Members can distinguish a saved completion awaiting verification, a verified completion awaiting posting, a posted award, and a reopened cycle with its linked reversal. Show the original work period and exact retained shares so a later policy change cannot make an earlier award ambiguous. For failed or denied actions, state whether policy, completion, and ledger facts were retained and identify the safe next action.
+
+Operational evidence should correlate a completion cycle with its frozen policy revision, award entries, and any reversal, while avoiding secrets and unnecessary personal data. Verification must exercise concurrent replay, policy changes during pending approval, restart and restore, and reopening; assert that each cycle has at most one allocation and one exact reversal. These are required acceptance outcomes, not claims that checks have been run.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+#### 13. Compatibility, migration, rollout, and rollback
+
+Preserve existing household settings, task definitions, historical awards, and in-flight completion behavior. The initial household allocation default is conserved; precision zero applies to an explicitly configured default, while automatic fractional precision remains limited to pre-configuration legacy behavior. Do not reinterpret historical awards when settings change. Pending work keeps its captured allocation through approval and retry; only future completions observe a changed default or task override.
+
+Define and verify any required persistence migration against existing and in-flight records before implementation. Cover both deployment targets, backup and restore, replay after restart, and rollback with a compatible data/schema version; block unsafe writes rather than silently reinterpret unknown allocation data. The selected source view establishes the existing owner at `specs/points-rewards.md`, but this delta does not establish a specific migration mechanism or invocation. Record the concrete migration prerequisite and rollback procedure as unresolved until evidenced and reviewed.
+
+### 14. Testing strategy and numeric budget
+
+The new appendix adds 22 distinct acceptance cases to the retained 44-case minimum, for a combined minimum of 66. Each case counts once; repeated runs do not increase the count. The cases cover permission and precedence for household defaults and task overrides; exact allocation precision and each supported split mode; active performer limits, manual-share validation and legacy behavior; and snapshots, retries, remainders, reversals, recovery, and localized previews. These are acceptance criteria, not evidence of implementation or execution. Existing owner cases and historical deltas remain in force.
+
+Acceptance checks must establish each stated observable result with state and side-effect assertions, including that denied or invalid operations do not alter policy, credit, or remainder state. Exercise concurrent changes and replay, pending approval, restart and restore, both deployment targets and locales, and both image architectures. Verify real authorization, allocation arithmetic, durable snapshots, and the links between awards and reversals. Do not infer semantic completeness from case or requirement counts.
+
+The selected source establishes the specification files but does not establish an available invocation for validation or product checks. The concrete invocation and prerequisites remain unverified; a declared check is not execution, a passing result, or acceptance.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Domain and configuration | 3 | Observable scenarios in the case inventory. |
+| Security and privacy | 1 | Observable scenarios in the case inventory. |
+| State and concurrency | 1 | Observable scenarios in the case inventory. |
+| Integration and recovery | 1 | Observable scenarios in the case inventory. |
+| UI and accessibility | 1 | Observable scenarios in the case inventory. |
+| Security and configuration | 1 | Observable scenarios in the case inventory. |
+| precision | 1 | Observable scenarios in the case inventory. |
+| conserved-split | 1 | Observable scenarios in the case inventory. |
+| equal-shares | 1 | Observable scenarios in the case inventory. |
+| full-shares | 1 | Observable scenarios in the case inventory. |
+| manual-shares | 1 | Observable scenarios in the case inventory. |
+| allocation-total | 1 | Observable scenarios in the case inventory. |
+| allocation | 1 | Observable scenarios in the case inventory. |
+| manual amounts | 1 | Observable scenarios in the case inventory. |
+| completion payload | 1 | Observable scenarios in the case inventory. |
+| completion snapshot | 1 | Observable scenarios in the case inventory. |
+| approval and posting | 1 | Observable scenarios in the case inventory. |
+| reopening posted cycle | 1 | Observable scenarios in the case inventory. |
+| reopening unposted cycle | 1 | Observable scenarios in the case inventory. |
+| new completion cycle | 1 | Observable scenarios in the case inventory. |
+| Total | 22 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| family-allocation-C01 | Domain and configuration | family-allocation-R1 | Conserved, equal, full and manual splits produce the specified exact totals and reject incompatible precision. |
+| family-allocation-C02 | Security and privacy | family-allocation-R1 | Unauthorized policy edits or manual shares and invalid performer sets leave policy and credit intact. |
+| family-allocation-C03 | State and concurrency | family-allocation-R1, family-allocation-R2 | Changing the policy while approval is pending leaves the snapshotted shares and version authoritative through approval and retry. |
+| family-allocation-C04 | Integration and recovery | family-allocation-R2 | Concurrent replay, restart, restore and reopening preserve one award and an exact linked reversal. |
+| family-allocation-C05 | UI and accessibility | family-allocation-R3 | The preview and Family history explain the exact values and retained policy in both languages and deployments. |
+| inventory2-C01 | Security and configuration | SDD-I64-U2-R1 | Given an actor without current points.manage authority, attempts to change either the household allocation default or an explicit task-definition override are denied. |
+| inventory2-C02 | Domain and configuration | SDD-I64-U2-R1 | Given an authorized explicit task-definition allocation override and a different household default, a future completion uses the task override; after the override is cleared, a future completion uses the current household default. |
+| inventory2-C03 | Domain and configuration | SDD-I64-U2-R1 | Given initial configuration, the household allocation default is conserved; automatic fractional precision applies to pre-configuration legacy behavior only. |
+| inventory3-C01 | precision | SDD-I64-U3-R1 | Award amounts use integer minor points with precision zero or two. |
+| inventory3-C02 | conserved-split | SDD-I64-U3-R2, SDD-I64-U3-R6 | A conserved split rejects an unrepresentable base; leftover quanta rotate over stable member IDs, resume at or after the saved recipient, and wrap as needed; resulting shares equal the base total. |
+| inventory3-C03 | equal-shares | SDD-I64-U3-R3 | Equal shares apply the explicitly selected floor, ceil, or half-up rule and leave the remainder undistributed. |
+| inventory3-C04 | full-shares | SDD-I64-U3-R4 | Each participant receives the full base, and an unrepresentable base is rejected. |
+| inventory3-C05 | manual-shares | SDD-I64-U3-R5 | Explicit manual amounts are awarded exactly without rounding. |
+| inventory3-C06 | allocation-total | SDD-I64-U3-R6 | A non-conserved allocation is permitted to differ from the base total. |
+| inventory4-C01 | allocation | inventory-4-R1 | Attribution accepts one and 32 distinct currently active performers; it rejects zero, more than 32, duplicate, or inactive performers under the existing task attribution checks. |
+| inventory4-C02 | manual amounts | inventory-4-R2 | Without points.manage authority, manual allocation is rejected. With authority, allocation requires exactly one nonnegative representable share per performer, accepts an explicit zero where intended, and rejects a share above one million minor points. |
+| inventory4-C03 | completion payload | inventory-4-R3 | An ordinary completion payload that selects a policy or injects manual amounts is rejected. |
+| inventory5-C01 | completion snapshot | SDD-I64-U5-R1 | Recording a new completion cycle stores the base and effective policy and revision, performer set, exact shares, actual total, and deterministic remainder position together in the writer transaction. |
+| inventory5-C02 | approval and posting | SDD-I64-U5-R2 | Approving and posting a completion cycle use its stored snapshot; retrying the operation leaves shares and remainder position unchanged. |
+| inventory5-C03 | reopening posted cycle | SDD-I64-U5-R3 | Reopening a cycle with a posted ledger entry reverses exactly that posted entry once. |
+| inventory5-C04 | reopening unposted cycle | SDD-I64-U5-R3 | Reopening a cycle with no posted ledger entry closes it without creating a debit. |
+| inventory5-C05 | new completion cycle | SDD-I64-U5-R1, SDD-I64-U5-R3 | A genuine new completion cycle captures a fresh snapshot rather than reusing the prior cycle's snapshot. |
+
+### 15. Documentation and discoverability
+
+This delta updates the existing owner at `specs/points-rewards.md`; retain its contract, case identities, and historical deltas. The host-generated file inventory is the navigation source for this update. Keep member-facing documentation discoverable from the user guide, and keep operator recovery and permission guidance in operations documentation. Documentation updates must explain the selected allocation, its exact preview and actual total, the retained award policy and revision, pending status, and any linked reversal in English and Spanish. The source view does not establish that these prospective documentation changes have been made.
+
+| Path | Change |
+| --- | --- |
+| specs/points-rewards.md | update |
+
+[specs/points-rewards.md](points-rewards.md)
+
+### 16. Acceptance scenarios
+
+Treat every case below as an independent observable acceptance scenario. Existing owning cases remain references in the retained owner; the following are the new appendix definitions.
+
+- `inventory2-C01` verifies that an actor without current `points.manage` authority cannot change either the household default or a task-definition override.
+- `inventory2-C02` verifies that an authorized task override takes precedence for future completions and that clearing it returns future completions to the current household default.
+- `inventory2-C03` verifies the initial conserved default and confines automatic fractional precision to pre-configuration legacy behavior.
+- `inventory3-C01` verifies integer minor-point arithmetic at precision zero or two.
+- `inventory3-C02` rejects an unrepresentable conserved base and verifies leftover rotation over stable member IDs, resumption at or after the saved recipient, wrapping, and equality of shares to the base total.
+- `inventory3-C03` verifies explicitly selected floor, ceil, or half-up equal shares, with no redistribution of the remainder.
+- `inventory3-C04` verifies that full shares give each participant the base and reject an unrepresentable base.
+- `inventory3-C05` verifies that manual shares are explicit exact amounts with no rounding.
+- `inventory3-C06` verifies that only conserved splits are required to equal the base total.
+- `inventory4-C01` verifies acceptance of one to 32 distinct currently active performers under existing task attribution checks, and rejection of invalid performer sets.
+- `inventory4-C02` verifies that manual allocation requires `points.manage`, exactly one nonnegative representable share per performer, explicit zero shares where intended, and the one-million-minor-point per-share bound; invalid input leaves credit unchanged.
+- `inventory4-C03` verifies that an ordinary completion payload cannot select an allocation policy or inject manual amounts.
+- `inventory5-C01` verifies that the writer transaction freezes the base, effective policy and revision, performer set, exact shares, actual total, and deterministic remainder position with a new completion cycle.
+- `inventory5-C02` verifies that approval and ledger posting reuse the frozen snapshot, and a retry neither reallocates nor rotates again.
+- `inventory5-C03` verifies that reopening reverses exactly the shares posted, once, and closes an unposted cycle without a debit.
+- `inventory5-C04` verifies that a genuine new cycle receives a fresh snapshot.
+- `inventory5-C05` verifies the pre-submission preview of base, effective policy and precision, named shares, and actual total in English and Spanish; Family history retains the applied policy and revision, work period, pending verification or posting, and linked reversal, and explains total differences.
+- `family-allocation-C01` verifies exact totals for conserved, equal, full, and manual splits and rejection of incompatible precision.
+- `family-allocation-C02` verifies that unauthorized policy edits or manual shares, and invalid performer sets, leave policy and credit intact.
+- `family-allocation-C03` verifies that changing policy while approval is pending does not replace the snapshotted shares and version through approval and retry.
+- `family-allocation-C04` verifies that concurrent replay, restart, restore, and reopening preserve one award and an exact linked reversal.
+- `family-allocation-C05` verifies that preview and Family history explain exact values and retained policy in both languages and both deployment targets.
+
+For every scenario, assert persisted state and side effects as well as the visible result. Exercise authorization with current authority, actual task attribution, races, retry, restart and restore. The scenarios specify required acceptance; they do not claim tests have run.
+
+### 17. Requirements traceability
+
+Map each requirement to only the scenarios that exercise it. The household policy and snapshot requirements are covered by `family-allocation-C01` through `family-allocation-C05`: exact policy outcomes, authorization and invalid-input safety, pending-approval snapshot stability, replay and reversal recovery, and user-visible explanation. The household default and override requirement maps to `inventory2-C01`, `inventory2-C02`, and `inventory2-C03` for authority, precedence and the initial/legacy defaults.
+
+Exact minor-unit precision maps to `inventory3-C01`; conserved rotation and total equality map to `inventory3-C02`; equal-share rounding maps to `inventory3-C03`; full shares map to `inventory3-C04`; exact manual shares map to `inventory3-C05`; and the conserved-only equality rule maps to `inventory3-C06`. Performer count and active attribution map to `inventory4-C01`; manual authority, representability and bounds map to `inventory4-C02`; and rejection of policy injection through ordinary completion maps to `inventory4-C03`.
+
+The durable completion snapshot maps to `inventory5-C01`; reuse through approval and retry maps to `inventory5-C02`; exact reversal and closure without debit map to `inventory5-C03`; a new cycle snapshot maps to `inventory5-C04`; and localized preview and retained history maps to `inventory5-C05`. Each listed scenario has at least one concrete behavior, and each scenario is assigned only to the requirement or requirements it exercises. This mapping establishes structural traceability, not semantic completeness or executed acceptance.
+
+| Requirement | Cases |
+|---|---|
+| family-allocation-R1 | family-allocation-C01, family-allocation-C02, family-allocation-C03 |
+| family-allocation-R2 | family-allocation-C03, family-allocation-C04 |
+| family-allocation-R3 | family-allocation-C05 |
+| SDD-I64-U2-R1 | inventory2-C01, inventory2-C02, inventory2-C03 |
+| SDD-I64-U3-R1 | inventory3-C01 |
+| SDD-I64-U3-R2 | inventory3-C02 |
+| SDD-I64-U3-R3 | inventory3-C03 |
+| SDD-I64-U3-R4 | inventory3-C04 |
+| SDD-I64-U3-R5 | inventory3-C05 |
+| SDD-I64-U3-R6 | inventory3-C02, inventory3-C06 |
+| inventory-4-R1 | inventory4-C01 |
+| inventory-4-R2 | inventory4-C02 |
+| inventory-4-R3 | inventory4-C03 |
+| SDD-I64-U5-R1 | inventory5-C01, inventory5-C05 |
+| SDD-I64-U5-R2 | inventory5-C02 |
+| SDD-I64-U5-R3 | inventory5-C03, inventory5-C04, inventory5-C05 |
+
+### 18. Implementation sequence
+
+1. Extend the immutable retained owner in `specs/points-rewards.md` with the household default and task-override precedence, exact allocation rules, performer and manual-share limits, and completion-cycle snapshot contract. Keep existing requirements and cases intact; existing owner cases remain references.
+2. Define and verify pure integer-minor-point allocation for precision zero or two: conserved splits with representable bases and stable-ID rotating remainder position; equal shares with explicit floor, ceil, or half-up and no redistribution; full shares with representable bases; and exact manual shares. Preserve the initial conserved default and pre-configuration legacy precision behavior.
+3. Implement current `points.manage` authorization for household defaults, task overrides, and manual shares. Validate one to 32 distinct active performers under existing attribution checks, and enforce the one-million-minor-point per-share limit. Ordinary completion input cannot choose policy or inject manual amounts.
+4. Persist the effective policy and revision, base, performer set, exact shares, actual total, and deterministic remainder position atomically with each new completion cycle. Approval and posting reuse that snapshot; retries do not allocate or rotate again. Reopening reverses posted shares exactly once and closes an unposted cycle without a debit. A genuine new cycle takes a fresh snapshot.
+5. Build the pre-submission preview and Family history states for English and Spanish. Show base, effective policy and precision, named shares, actual total, retained policy and revision, work period, verification or posting state, and any linked reversal; explain total differences from rounding or policy.
+6. Exercise the concrete allocation, authorization, override, snapshot, retry, concurrency, reopening, recovery, preview, and history behaviors in the supplied case inventory. Verify both deployment targets and image architectures, and complete the retained owner's applicable integration, documentation, security, accessibility, and migration work before publication.
+
+### 19. Definition of Done
+
+- [ ] Every retained owner requirement and each new allocation behavior has observable acceptance coverage; each requirement maps to cases that exercise it, and each case lists only requirements it exercises. Preserve the supplied new case identities and assertions. Counts and reciprocal mappings establish structural consistency, not semantic completeness or executed acceptance.
+- [ ] Current `points.manage` authority governs household defaults, explicit task-definition overrides, and manual shares. Task overrides take precedence for future completions; clearing an override uses the current household default. Ordinary completion input cannot choose policy or provide manual amounts.
+- [ ] Precision is zero or two using exact integer minor points. Conserved, equal, full, and manual allocation follow their stated arithmetic rules; performer validation and the per-share bound are enforced. The initial default remains conserved, with automatic fractional precision limited to pre-configuration legacy behavior.
+- [ ] Each new completion cycle atomically retains its effective policy revision, exact shares, actual total, performer set, and remainder position. Approval, posting, retries, policy edits, replay, restart, and restore preserve that snapshot without duplicate allocation or rotation. Reopening posts only the exact linked reversal when shares were posted, once; an unposted cycle closes without debit.
+- [ ] Before submission and in Family history, English and Spanish content exposes the required allocation and lifecycle facts accessibly on both deployment targets. Rounding and policies that change the total are explained. Both image architectures are covered by the required verification evidence.
+- [ ] The specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. These are observable publication outcomes. The selected declarations do not establish a concrete invocation and prerequisites for specification validation or generated-view consistency verification; those remain unverified. Generic maintainer acceptance, source-claim review, or structural counts do not satisfy these outcomes.
+- [ ] Required product validation covers permissions, invalid inputs, concurrency, retry, restart, restore, historical awards, reversals, both locales and deployment targets, and both image architectures. No declaration is treated as execution, a passing check, or acceptance without observed evidence.
+
+### 20. References and decisions
+
+This delta updates the immutable retained owner `specs/points-rewards.md` at selected revision `fda57bbe905956a56e30b90ff9d6e8200359dc9c`. It retains the existing contract, cases, and historical deltas; it adds the supplied collaborative allocation scope for issue https://github.com/vypdev/domus/issues/64. Reward redemption remains a separate increment.
+
+The issue decisions carried into this delta are exact integer minor units at precision zero or two; an initially conserved household default; task override precedence with current-authority checks; stable member-ID remainder rotation; explicit equal-share rounding; full and manual shares; and a durable completion snapshot reused through approval, posting, retry, and reversal. The required Family explanation includes the actual total when a policy or rounding makes it differ from the base. These are proposed requirements, not evidence that the behavior is implemented or accepted.
+
+The selected root `package.json` declares pnpm 10.34.0 and Node 24.20.x, but no specification-validation or specification-generation script. `specs/README.md` names `pnpm run validate:specifications` and `pnpm run generate:specifications`; their script definitions and prerequisites are not established by that declaration. No validation invocation or result is claimed here. Publication must still produce the three observable outcomes stated in section 19.

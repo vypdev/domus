@@ -357,6 +357,235 @@
         "title": "AliasRequest",
         "type": "object"
       },
+      "AllocationMode": {
+        "enum": [
+          "conserve_total",
+          "equal_share",
+          "full_per_participant",
+          "manual"
+        ],
+        "title": "AllocationMode",
+        "type": "string"
+      },
+      "AllocationPolicy": {
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/AllocationMode",
+            "default": "conserve_total"
+          },
+          "precision": {
+            "default": 0,
+            "title": "Precision",
+            "type": "integer"
+          },
+          "rounding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShareRounding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "AllocationPolicy",
+        "type": "object"
+      },
+      "AllocationPolicyBody": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/AllocationMode"
+          },
+          "precision": {
+            "title": "Precision",
+            "type": "integer"
+          },
+          "rounding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShareRounding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode",
+          "precision"
+        ],
+        "title": "AllocationPolicyBody",
+        "type": "object"
+      },
+      "AllocationPreview": {
+        "properties": {
+          "actual_total": {
+            "title": "Actual Total",
+            "type": "integer"
+          },
+          "allocation": {
+            "$ref": "#/components/schemas/FamilyAllocationEvidence"
+          },
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "allocation",
+          "actual_total",
+          "fingerprint"
+        ],
+        "title": "AllocationPreview",
+        "type": "object"
+      },
+      "AllocationPreviewBody": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "manual_shares": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ManualPointShare"
+                },
+                "maxItems": 32,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Shares"
+          },
+          "occurrence_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "performer_ids": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Performer Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "occurrence_id",
+          "expected_revision",
+          "performer_ids"
+        ],
+        "title": "AllocationPreviewBody",
+        "type": "object"
+      },
+      "AllocationSetting": {
+        "properties": {
+          "policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AllocationPolicy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "policy",
+          "revision"
+        ],
+        "title": "AllocationSetting",
+        "type": "object"
+      },
+      "AllocationSettingsView": {
+        "properties": {
+          "household": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AllocationSetting"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "override": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AllocationSetting"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "household",
+          "override"
+        ],
+        "title": "AllocationSettingsView",
+        "type": "object"
+      },
+      "AllocationUpdateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "definition_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition Id"
+          },
+          "expected_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AllocationPolicyBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "expected_revision",
+          "policy"
+        ],
+        "title": "AllocationUpdateBody",
+        "type": "object"
+      },
       "ArchiveCategoryBody": {
         "additionalProperties": false,
         "properties": {
@@ -823,12 +1052,40 @@
       "CompleteBody": {
         "additionalProperties": false,
         "properties": {
+          "allocation_fingerprint": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allocation Fingerprint"
+          },
           "expected_revision": {
             "format": "int64",
             "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
             "type": "integer"
+          },
+          "manual_shares": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ManualPointShare"
+                },
+                "maxItems": 32,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Shares"
           },
           "material_usages": {
             "anyOf": [
@@ -1493,8 +1750,77 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "FamilyAllocationEvidence": {
+        "properties": {
+          "base_minor": {
+            "title": "Base Minor",
+            "type": "integer"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/AllocationMode"
+          },
+          "policy_revision": {
+            "title": "Policy Revision",
+            "type": "integer"
+          },
+          "precision": {
+            "title": "Precision",
+            "type": "integer"
+          },
+          "rounding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShareRounding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shares": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Shares",
+            "type": "array"
+          },
+          "task_override": {
+            "title": "Task Override",
+            "type": "boolean"
+          },
+          "total_minor": {
+            "title": "Total Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mode",
+          "precision",
+          "rounding",
+          "policy_revision",
+          "task_override",
+          "base_minor",
+          "total_minor",
+          "shares"
+        ],
+        "title": "FamilyAllocationEvidence",
+        "type": "object"
+      },
       "FamilyLedgerEntry": {
         "properties": {
+          "allocation": {
+            "$ref": "#/components/schemas/FamilyAllocationEvidence"
+          },
           "amount_minor": {
             "title": "Amount Minor",
             "type": "integer"
@@ -1560,9 +1886,46 @@
           "verified_at",
           "posted_at",
           "reverses",
-          "policy_version"
+          "policy_version",
+          "allocation"
         ],
         "title": "FamilyLedgerEntry",
+        "type": "object"
+      },
+      "FamilyPendingAllocation": {
+        "properties": {
+          "allocation": {
+            "$ref": "#/components/schemas/FamilyAllocationEvidence"
+          },
+          "cycle_id": {
+            "title": "Cycle Id",
+            "type": "string"
+          },
+          "performed_at": {
+            "title": "Performed At",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "verification",
+              "posting"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cycle_id",
+          "title",
+          "performed_at",
+          "state",
+          "allocation"
+        ],
+        "title": "FamilyPendingAllocation",
         "type": "object"
       },
       "FamilyReport": {
@@ -1601,6 +1964,17 @@
             ],
             "title": "Next Cursor"
           },
+          "pending": {
+            "items": {
+              "$ref": "#/components/schemas/FamilyPendingAllocation"
+            },
+            "title": "Pending",
+            "type": "array"
+          },
+          "pending_count": {
+            "title": "Pending Count",
+            "type": "integer"
+          },
           "pending_posting_minor": {
             "title": "Pending Posting Minor",
             "type": "integer"
@@ -1636,6 +2010,8 @@
           "completed_count",
           "tracked_count",
           "elapsed_ms",
+          "pending_count",
+          "pending",
           "history",
           "next_cursor"
         ],
@@ -2268,6 +2644,28 @@
           "occurrence_revision"
         ],
         "title": "ManualAdoptionBody",
+        "type": "object"
+      },
+      "ManualPointShare": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_minor": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "member_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Member Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "member_id",
+          "amount_minor"
+        ],
+        "title": "ManualPointShare",
         "type": "object"
       },
       "MappingMode": {
@@ -5148,6 +5546,15 @@
         "title": "SetupRequest",
         "type": "object"
       },
+      "ShareRounding": {
+        "enum": [
+          "floor",
+          "ceil",
+          "half_up"
+        ],
+        "title": "ShareRounding",
+        "type": "string"
+      },
       "SourceState": {
         "enum": [
           "available",
@@ -5419,6 +5826,15 @@
             "title": "Allowed Actions",
             "type": "array"
           },
+          "completion_points": {
+            "enum": [
+              "automatic",
+              "manual",
+              "manager_required"
+            ],
+            "title": "Completion Points",
+            "type": "string"
+          },
           "consumer_delivery": {
             "default": "unconfirmed",
             "title": "Consumer Delivery",
@@ -5477,7 +5893,8 @@
           "task_policy_revision",
           "requirements",
           "cycle",
-          "allowed_actions"
+          "allowed_actions",
+          "completion_points"
         ],
         "title": "TaskDetail",
         "type": "object"
@@ -6191,6 +6608,14 @@
             "title": "Can Create",
             "type": "boolean"
           },
+          "can_manage_points": {
+            "title": "Can Manage Points",
+            "type": "boolean"
+          },
+          "can_record_for_others": {
+            "title": "Can Record For Others",
+            "type": "boolean"
+          },
           "can_review_schedule": {
             "title": "Can Review Schedule",
             "type": "boolean"
@@ -6222,7 +6647,9 @@
           "member_id",
           "can_create",
           "can_review_schedule",
-          "category_catalog"
+          "category_catalog",
+          "can_record_for_others",
+          "can_manage_points"
         ],
         "title": "TaskWorkspaceView",
         "type": "object"
@@ -8723,6 +9150,651 @@
           }
         ],
         "summary": "Family"
+      }
+    },
+    "/api/v1/family/allocation": {
+      "get": {
+        "operationId": "settings_api_v1_family_allocation_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "definition_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Definition Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Settings"
+      },
+      "put": {
+        "operationId": "configure_api_v1_family_allocation_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocationUpdateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Configure"
+      }
+    },
+    "/api/v1/family/allocation/preview": {
+      "post": {
+        "operationId": "preview_api_v1_family_allocation_preview_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocationPreviewBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Preview"
+      }
+    },
+    "/api/v1/family/allocation/requests/{key}": {
+      "get": {
+        "operationId": "original_api_v1_family_allocation_requests__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Original"
       }
     },
     "/api/v1/household": {

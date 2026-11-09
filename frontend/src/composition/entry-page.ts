@@ -1,3 +1,10 @@
+import {HttpAllocationServer} from '../adapters/allocation-http';
+import {ALLOCATION_JOURNAL_KEY, AllocationSessionJournal} from '../adapters/allocation-journal';
+import {allocationPolicy} from '../adapters/allocation-values';
+import {AllocationController} from '../application/allocation-controller';
+import {allocationFingerprint, allocationPerformers, manualPointShares} from '../domain/point-allocation';
+import type {AllocationInput, ReviewedAllocation} from '../domain/point-allocation';
+import type {AllocationSettingsIntent} from '../presentation/domus-allocation-settings';
 import {HttpFamilyServer} from '../adapters/family-http';
 import {FamilyController} from '../application/family-controller';
 import {civilDate} from '../domain/calendar';
@@ -78,9 +85,23 @@ export function decodeAdministrationIntent(value:unknown):AdministrationIntent|n
 }
 
 /** Task events contain business inputs only, never a principal, URL, context or raw transport request. */
+function allocationInput(value: unknown): AllocationInput {
+  const item = fields(value, ['performerIds'], ['manualShares']);
+  const performerIds = allocationPerformers(item.performerIds, identifier);
+  return {performerIds, ...Object.hasOwn(item, 'manualShares') ? {manualShares: manualPointShares(item.manualShares, performerIds)} : {}};
+}
+
+function reviewedAllocation(value: unknown): ReviewedAllocation {
+  const item = fields(value, ['performerIds','occurrenceId','revision','fingerprint'], ['manualShares']);
+  return {...allocationInput({performerIds: item.performerIds,
+    ...Object.hasOwn(item, 'manualShares') ? {manualShares: item.manualShares} : {}}),
+    occurrenceId: identifier(item.occurrenceId), revision: revisionValue(item.revision),
+    fingerprint: allocationFingerprint(item.fingerprint)};
+}
+
 export function decodeTaskIntent(value: unknown): TaskIntent | null {
   try {
-    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision']);
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed']);
     const type = item.type;
     if (type === 'create') {
       fields(value, ['type', 'title', 'description', 'priority'], ['schedule', 'categoryId']);
@@ -102,13 +123,13 @@ export function decodeTaskIntent(value: unknown): TaskIntent | null {
       return {type, categoryId, revision, label: item.label};
     }
     if (type === 'complete') {
-      fields(value, ['type', 'materialUsages'], []);
+      fields(value, ['type', 'materialUsages'], ['reviewed']);
       check(item.materialUsages === null || Array.isArray(item.materialUsages) && item.materialUsages.length <= 32);
       const materialUsages = item.materialUsages === null ? null : Object.freeze((item.materialUsages as unknown[]).map(raw => {
         const usage = fields(raw, ['line_id', 'quantity'], []);
         return Object.freeze({line_id: identifier(usage.line_id), quantity: taskQuantity(usage.quantity)});
       }));
-      return {type, materialUsages};
+      return {type, materialUsages, ...Object.hasOwn(item, 'reviewed') ? {reviewed: reviewedAllocation(item.reviewed)} : {}};
     }
     if (type === 'verify' || type === 'reopen') {
       fields(value, type === 'verify' ? ['type', 'decision', 'reason'] : ['type', 'reason'], []);
@@ -156,12 +177,13 @@ export function mountEntry(page: EntryPage): PageMount {
   const lifetime = new AbortController(), widget = new AbortController();
   let calendarPreference: CalendarPreferenceController | null = null;
   let family: FamilyController | null = null;
+  let allocation: AllocationController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -170,7 +192,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -252,16 +274,60 @@ export function mountEntry(page: EntryPage): PageMount {
           occurrenceId: tasks.detail?.occurrenceId ?? null});
       } else reviews.bind(null);
     };
+    const allocations = new AllocationController(new HttpAllocationServer(source.target, browser.transport),
+      new AllocationSessionJournal({getItem: key => browser.storage().getItem(key),
+        setItem: (key, value) => browser.storage().setItem(key, value), removeItem: key => browser.storage().removeItem(key)}),
+      new BrowserEntropy(browser.random), view => {element.allocation = view;});
+    allocation = allocations;
+    const syncAllocation = () => {
+      const entry = element.view, tasks = element.tasks, destination = element.workspaceDestination;
+      if (entry?.phase !== 'ready' || entry.decision?.state !== 'active' || tasks?.phase !== 'ready'
+          || !tasks.session || !tasks.scopeKey || !tasks.access) {allocations.bind(null); return;}
+      const canManage = tasks.access.canManagePoints === true;
+      const detail = tasks.detail;
+      if (destination === 'family' && canManage) {
+        allocations.bind({key: tasks.scopeKey, context: tasks.session.context, definitionId: null,
+          work: null, readOnly: tasks.readOnly, canManage});
+      } else if (destination === 'tasks' && detail !== null) {
+        allocations.bind({key: tasks.scopeKey, context: tasks.session.context, definitionId: detail.definitionId,
+          work: {occurrenceId: detail.occurrenceId, revision: detail.revision,
+            canComplete: detail.allowedActions.includes('complete'), requiresManual: detail.completionPoints === 'manual'},
+          readOnly: tasks.readOnly, canManage});
+      } else allocations.bind(null);
+    };
+    element.addEventListener('domus-allocation-settings', async event => {
+      if (event.target !== element) return;
+      const value = (event as CustomEvent<unknown>).detail;
+      let intent: AllocationSettingsIntent;
+      try {
+        const item = fields(value, ['type'], ['policy']);
+        if (item.type === 'save') {
+          fields(value, ['type','policy'], []);
+          intent = {type: 'save', policy: item.policy === null ? null : allocationPolicy(item.policy)};
+        } else {
+          fields(value, ['type'], []); check(item.type === 'refresh' || item.type === 'recover'); intent = {type: item.type};
+        }
+      } catch {return;}
+      if (intent.type === 'save') await allocations.save(intent.policy);
+      if (intent.type === 'recover') await allocations.recover();
+      if (intent.type === 'refresh') await allocations.refresh();
+    }, {signal: widget.signal});
+    element.addEventListener('domus-allocation-preview', async event => {
+      if (event.target !== element) return;
+      let input: AllocationInput;
+      try {input = allocationInput((event as CustomEvent<unknown>).detail);} catch {return;}
+      await allocations.preview(input);
+    }, {signal: widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : null;
-      syncCalendar(); syncReview(); syncFamily();
+      syncCalendar(); syncReview(); syncFamily(); syncAllocation();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
@@ -310,6 +376,7 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'logout': {
             const signOut = active.logout();
             const storage = browser.storage();
+            storage.removeItem(ALLOCATION_JOURNAL_KEY);
             storage.removeItem(CALENDAR_JOURNAL_KEY);
             storage.removeItem(RECURRENCE_JOURNAL_KEY);
             await signOut;
@@ -345,7 +412,9 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'renameCategory': await active.taskWork(controller => controller.renameCategory(intent.categoryId, intent.revision, intent.label)); break;
           case 'archiveCategory': await active.taskWork(controller => controller.archiveCategory(intent.categoryId, intent.revision)); break;
           case 'claim': await active.taskWork(controller => controller.claim()); break;
-          case 'complete': await active.taskWork(controller => controller.complete(intent.materialUsages)); break;
+          case 'complete':
+            await active.taskWork(controller => controller.complete(intent.materialUsages, ...intent.reviewed === undefined ? [] : [intent.reviewed]));
+            break;
           case 'verify': await active.taskWork(controller => controller.verify(intent.decision, intent.reason)); break;
           case 'reopen': await active.taskWork(controller => controller.reopen(intent.reason)); break;
           case 'recover': await active.taskWork(controller => controller.recover(intent.key)); break;

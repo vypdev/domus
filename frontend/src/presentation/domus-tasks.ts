@@ -5,19 +5,25 @@ import type {TaskView} from '../application/task-controller';
 import type {TaskRecord} from '../application/task-ports';
 import {categoryLabel, hasTaskText, taskQuantity, taskScheduleDraft, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
 import type {Revision} from '../domain/administration';
-import type {TaskCategory, TaskMaterialUsage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
+import type {TaskCategory, TaskDetail, TaskMaterialUsage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
 import {language} from './messages';
 import type {Language} from './messages';
 import {taskInstant, taskMessage} from './task-messages';
 import type {TaskMessageKey} from './task-messages';
 import {styles} from './styles';
+import type {AllocationView} from '../application/allocation-controller';
+import {requiresManualAllocation} from '../domain/point-allocation';
+import type {ReviewedAllocation} from '../domain/point-allocation';
+import type {ParticipantName} from './allocation-details';
+import './domus-allocation-preview';
+import './domus-allocation-settings';
 export type TaskIntent = Readonly<{type: 'refresh' | 'more' | 'claim'}>
   | Readonly<{type: 'select'; occurrenceId: string}>
   | Readonly<{type: 'create'; title: string; description: string; priority: TaskPriority; categoryId?: string; schedule?: TaskScheduleDraft}>
   | Readonly<{type: 'createCategory'; label: string}>
   | Readonly<{type: 'renameCategory'; categoryId: string; revision: Revision; label: string}>
   | Readonly<{type: 'archiveCategory'; categoryId: string; revision: Revision}>
-  | Readonly<{type: 'complete'; materialUsages: readonly TaskMaterialUsage[] | null}>
+  | Readonly<{type: 'complete'; materialUsages: readonly TaskMaterialUsage[] | null; reviewed?: ReviewedAllocation}>
   | Readonly<{type: 'verify'; decision: 'approved' | 'rejected'; reason: string}>
   | Readonly<{type: 'reopen'; reason: string}>
   | Readonly<{type: 'recover' | 'dismiss'; key: string}>;
@@ -36,7 +42,7 @@ function quantityInput(value: string, precision: number): string | null {
 }
 /** Render only verified task facts; emitted intents never select an actor or grant a permission. */
 export class DomusTasks extends LitElement {
-  static properties = {view: {attribute: false}, retired: {attribute: false}, language: {attribute: false}, titleDraft: {state: true}, descriptionDraft: {state: true},
+  static properties = {allocation: {attribute: false}, participantNames: {attribute: false}, view: {attribute: false}, retired: {attribute: false}, language: {attribute: false}, titleDraft: {state: true}, descriptionDraft: {state: true},
     categoryDraft: {state: true}, categoryName: {state: true}, categoryEdit: {state: true}, manageOpen: {state: true},
     titleRequired: {state: true}, priorityDraft: {state: true}, reasonDraft: {state: true}, quantities: {state: true}, quantityError: {state: true}, createOpen: {state: true},
     scheduleKind: {state: true}, scheduleError: {state: true}, scheduleInput: {state: true}};
@@ -48,6 +54,8 @@ export class DomusTasks extends LitElement {
     .task-link {border:0;border-radius:8px;padding:4px 0;text-align:start;font-weight:700}.task-meta {display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:.875rem}
     .description {white-space:pre-wrap}.task-fields {margin-top:24px}.material {display:grid;gap:6px;margin-bottom:12px}.request {margin-top:16px}
     @media(min-width:800px) {.task-layout {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.task-layout.single {grid-template-columns:1fr}}`];
+  declare allocation: AllocationView | null;
+  declare participantNames: readonly ParticipantName[];
   declare view: TaskView | null;
   declare retired: boolean;
   declare language: Language;
@@ -72,7 +80,7 @@ export class DomusTasks extends LitElement {
   private submittedDraft: string | null = null;
   private lastForm: 'create' | 'review' | 'category' = 'create';
   private focusDetail = false;
-  constructor() {super(); this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = '';
+  constructor() {super(); this.allocation = null; this.participantNames = []; this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = '';
     this.priorityDraft = 'normal'; this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS;
     this.createOpen = false; this.reasonDraft = ''; this.quantities = {}; this.quantityError = null;
     this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.manageOpen = false;}
@@ -253,8 +261,22 @@ export class DomusTasks extends LitElement {
       </form>
     </details>`;
   }
+  private allocationFor(work: TaskDetail): AllocationView | null {
+    const allocation = this.allocation, selected = allocation?.scope.work;
+    return selected?.occurrenceId === work.occurrenceId && selected.revision === work.revision ? allocation : null;
+  }
+  private completionReview(work: TaskDetail, allocation: AllocationView | null) {
+    const preview = allocation === null ? null : this.renderRoot.querySelector('domus-allocation-preview');
+    const reviewed = preview?.reviewed;
+    const manual = requiresManualAllocation(allocation?.settings, work.completionPoints === 'manual');
+    const blocked = allocation?.busy === true || (manual || preview?.needsReview === true) && reviewed === undefined;
+    return {reviewed, blocked};
+  }
   private complete(): void {
-    const work = this.view!.detail!; let materialUsages: readonly TaskMaterialUsage[] | null = null;
+    const work = this.view!.detail!;
+    const {reviewed, blocked} = this.completionReview(work, this.allocationFor(work));
+    if (blocked) return;
+    let materialUsages: readonly TaskMaterialUsage[] | null = null;
     if (work.materialRecording === 'review_on_completion' && work.materials.length > 0) {
       const usages: TaskMaterialUsage[] = [];
       for (const material of work.materials) {
@@ -264,10 +286,12 @@ export class DomusTasks extends LitElement {
       }
       materialUsages = Object.freeze(usages);
     }
-    this.quantityError = null; this.intent({type: 'complete', materialUsages});
+    this.quantityError = null; this.intent({type: 'complete', materialUsages, ...reviewed === undefined ? {} : {reviewed}});
   }
   private workDetail() {
     const work = this.view!.detail!;
+    const allocation = this.allocationFor(work);
+    const allocationBlocked = this.completionReview(work, allocation).blocked;
     return html`<section class="card" aria-labelledby="selected-task-title"><h3 id="selected-task-title" tabindex="-1">${work.title}</h3>
       <p><span class="badge">${this.text(`state_${work.state}`)}</span><span class="badge">${this.text(`priority_${work.priority}`)}</span></p>
       ${work.categoryLabel ? html`<p>${this.text('category')} ${work.categoryLabel}</p>` : nothing}
@@ -278,6 +302,7 @@ export class DomusTasks extends LitElement {
       ${work.dependencyReviewRequired ? html`<p class="note warning" role="status">${this.text('dependencyReview')}</p>` : nothing}
       ${work.pendingMaterials ? html`<p class="note warning" role="status">${this.text('pendingMaterials')}</p>` : nothing}
       ${work.allowedActions.includes('claim') ? html`<div class="actions"><button ?disabled=${this.blocked} @click=${() => this.intent({type: 'claim'})}>${this.text('claim')}</button></div>` : nothing}
+      ${work.completionPoints === 'manager_required' ? html`<p class="note" role="status">${this.text('manualPointsManager')}</p>` : nothing}
       ${work.allowedActions.includes('complete') ? html`<form id="complete-form" class="task-fields" novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.complete();}}>
         <p>${this.text('completionHelp')}</p>${work.materials.length ? work.materialRecording === 'review_on_completion' ? html`<fieldset><legend>${this.text('materials')}</legend>
           <p class="help">${this.text('quantityHelp')}</p>${work.materials.map((material, index) => html`<div class="material"><label for=${'material-' + index}>${material.label || this.text('quantity')}</label>
@@ -287,7 +312,11 @@ export class DomusTasks extends LitElement {
             <small>${material.precision === 0 ? this.text('wholeQuantity') : this.text('decimalPlaces') + ': ' + material.precision}</small></div>`)}
           <small id="quantity-help">${this.text('quantityHelp')}</small>${this.quantityError ? html`<p id="quantity-error" class="error" role="alert">${this.text('quantityInvalid')}</p>` : nothing}</fieldset>`
           : html`<p class="help">${this.text('separateMaterials')}</p>` : nothing}
-        <button class="primary" type="submit" ?disabled=${this.blocked}>${this.text('complete')}</button></form>` : nothing}
+        ${allocation === null ? nothing : html`<domus-allocation-preview .view=${allocation} .language=${this.language}
+          .ownId=${this.view!.access!.memberId} .names=${this.participantNames} .disabled=${this.blocked}
+          @domus-allocation-draft=${() => this.requestUpdate()}></domus-allocation-preview>`}
+        <button class="primary" type="submit" ?disabled=${this.blocked || allocationBlocked}>${this.text('complete')}</button></form>` : nothing}
+      <domus-allocation-settings .view=${allocation} .language=${this.language}></domus-allocation-settings>
       ${work.allowedActions.some(action => ['approve', 'reject', 'reopen'].includes(action)) ? html`<section class="task-fields" aria-labelledby="review-title"><h3 id="review-title">${this.text('review')}</h3>
         <div class="field"><label for="task-reason">${this.text('reason')}</label><textarea id="task-reason" maxlength=${TASK_TEXT_LIMITS.reason * 2} aria-invalid=${Array.from(this.reasonDraft).length > TASK_TEXT_LIMITS.reason ? 'true' : 'false'} .value=${live(this.reasonDraft)}
           ?disabled=${this.view!.busy} aria-describedby="task-reason-help" @input=${(event: InputEvent) => {this.reasonDraft = (event.target as HTMLTextAreaElement).value;}}></textarea>

@@ -10,6 +10,7 @@ from fastapi.params import Depends
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.family_queries import FamilyQueries
+from domus.application.point_allocations import AllocationCommands, AllocationQueries
 from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.relative_recurrence_commands import RelativeRecurrenceCommands
@@ -75,6 +76,7 @@ from domus.entrypoints.task_dto import (
     TransitionBody,
     UpdateDefinitionBody,
     VerifyBody,
+    manual_amounts,
 )
 from domus.entrypoints.task_response import (
     TaskDefinition,
@@ -104,6 +106,8 @@ class TaskHTTPContext:
     relative_creation: RelativeRecurrenceCommands
     category_commands: TaskCategoryCommands
     family: Callable[[], FamilyQueries]
+    allocation: Callable[[], AllocationQueries]
+    allocation_commands: AllocationCommands
 
 
 def create_task_router(
@@ -336,6 +340,8 @@ def create_task_router(
                     tuple(body.performer_ids),
                     body.performed_at,
                     body.usages(),
+                    manual_amounts(body.manual_shares),
+                    body.allocation_fingerprint,
                 ),
             )
         )

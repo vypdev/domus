@@ -254,6 +254,32 @@ for (const mode of ['native', 'standalone'] as const) {
     await familyRegion.screenshot({path: info.outputPath('family-en-reversal.png')});
     await page.getByLabel('Language', {exact: true}).selectOption('es');
 
+    const settings = familyRegion.locator('domus-allocation-settings');
+    await settings.getByRole('combobox', {name: 'Política', exact: true}).selectOption('equal_share');
+    await settings.getByRole('combobox', {name: 'Redondeo', exact: true}).selectOption('ceil');
+    await settings.getByRole('button', {name: 'Guardar política', exact: true}).click();
+    await expect(settings.getByText('Política de puntos guardada.', {exact: true})).toBeVisible();
+    await tabs.getByRole('link', {name: 'Tareas', exact: true}).click();
+    await tasksRegion.getByRole('button', {name: 'Actualizar tareas', exact: true}).click();
+    await tasksRegion.getByRole('button', {name: 'Water plants', exact: true}).click();
+    const points = tasksRegion.locator('domus-allocation-preview');
+    await points.locator('summary').click();
+    await points.getByRole('button', {name: 'Previsualizar puntos', exact: true}).click();
+    await expect(points.getByText('Total efectivo', {exact: true})).toBeVisible();
+    await expect(points.getByText('2,25', {exact: true})).toBeVisible();
+    await expect(points.getByText(/respecto al valor base/u)).toBeVisible();
+    await page.getByLabel('Idioma', {exact: true}).selectOption('en');
+    await expect(points.getByText('Actual total', {exact: true})).toBeVisible();
+    await expect(points.getByText('2.25', {exact: true})).toBeVisible();
+    await tasksRegion.getByRole('button', {name: 'Mark done now', exact: true}).click();
+    await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(300);
+    await family.click();
+    const details = familyRegion.locator('ol li').first().locator('summary');
+    await details.click();
+    await expect(familyRegion.getByText(/Equal shares.*Round up.*Policy revision 1/su)).toBeVisible();
+    await page.getByLabel('Language', {exact: true}).selectOption('es');
+    await expect(familyRegion.getByText(/Cuotas iguales.*Hacia arriba.*Revisión de la política 1/su)).toBeVisible();
+
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});
     await expect(end).toBeVisible();

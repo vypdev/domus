@@ -284,3 +284,13 @@ test('category commands preserve exact revision, original label and action durin
     await expect(f.server.original({...original, operationId: null}, context).result).rejects.toThrow('invalid_response');
   }
 });
+
+test('task detail decodes the current completion allocation affordance before settings are read', async () => {
+  const f = fixture();
+  for (const completion_points of ['manual', 'manager_required'] as const) {
+    f.transport.mockResolvedValueOnce(reply({...detail(), completion_points}));
+    expect(await f.server.detail('work-1', 'home', context).result).toMatchObject({completionPoints: completion_points});
+  }
+  f.transport.mockResolvedValueOnce(reply({...detail(), completion_points: 'other'}));
+  await expect(f.server.detail('work-1', 'home', context).result).rejects.toThrow('invalid_response');
+});

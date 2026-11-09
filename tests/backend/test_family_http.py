@@ -105,6 +105,11 @@ def test_actual_work_period_retains_pending_award_reversal_and_effort_after_rest
     assert pending["completed_count"] == pending["tracked_count"] == 1
     assert pending["elapsed_ms"] == 30 * 60_000
     assert pending["pending_verification_minor"] == 125
+    (pending_work,) = pending["pending"]
+    assert pending["pending_count"] == 1
+    assert pending_work["state"] == "verification"
+    assert pending_work["cycle_id"] == cycle and pending_work["performed_at"] == work_time
+    assert pending_work["allocation"]["shares"] == [["child", 125]]
     assert pending["pending_posting_minor"] == pending["available_minor"] == 0
     assert report(NEXT_WEEK)["completed_count"] == 0
 
@@ -114,6 +119,7 @@ def test_actual_work_period_retains_pending_award_reversal_and_effort_after_rest
     )
     waiting = report(MONTH)
     assert waiting["pending_posting_minor"] == 125
+    assert waiting["pending"] == [pending_work | {"state": "posting"}]
     assert waiting["pending_verification_minor"] == waiting["available_minor"] == 0
     verified_at = clock.value
     clock.value = timestamp(31, 22, 7)
@@ -122,7 +128,8 @@ def test_actual_work_period_retains_pending_award_reversal_and_effort_after_rest
     assert restarted.tick(lambda: True) == 0
     posted = report()
     assert posted["posted_minor"] == posted["available_minor"] == posted["earned_minor"] == 125
-    assert posted["pending_posting_minor"] == 0
+    assert posted["pending_posting_minor"] == posted["pending_count"] == 0
+    assert posted["pending"] == []
     assert report(MONTH)["earned_minor"] == 125
     assert report(NEXT_WEEK)["earned_minor"] == 0
     (award,) = posted["history"]
@@ -137,6 +144,16 @@ def test_actual_work_period_retains_pending_award_reversal_and_effort_after_rest
         "posted_at": clock.value,
         "reverses": None,
         "policy_version": "conserve_total.v1",
+        "allocation": {
+            "mode": "conserve_total",
+            "precision": 2,
+            "rounding": None,
+            "policy_revision": 0,
+            "task_override": False,
+            "base_minor": 125,
+            "total_minor": 125,
+            "shares": [["child", 125]],
+        },
     }
     api.user(USER, True)
     other = api.client.get(ROUTE, params=WEEK, headers=CONTEXT).json()

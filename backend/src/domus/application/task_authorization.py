@@ -216,6 +216,7 @@ class TaskCommandAuthorization:
     transition_target: OccurrenceState | None = None
     definition_id: str | None = None
     needs_material_link: bool = False
+    needs_points_management: bool = False
     material_cycle_id: str | None = None
     material_intent_id: str | None = None
 
@@ -280,6 +281,10 @@ class TaskCommandAuthorization:
             HouseholdAccess(self.access.human).require(
                 unit, self.household_id, Permission.INVENTORY_MANAGE
             )
+        if self.needs_points_management:
+            HouseholdAccess(self.access.human).require(
+                unit, self.household_id, Permission.POINTS_MANAGE
+            )
         if self.needs_configuration:
             self.access.require(unit, self.household_id, Permission.TASKS_CONFIGURE)
 
@@ -309,7 +314,7 @@ def _request_shape(request: JsonObject, kind: type[TaskRequest]) -> bool:
         if kind is UpdateTaskDefinition
         else {"materials"}
         if kind is CreateTask
-        else {"material_usages"}
+        else {"material_usages", "manual_shares", "allocation_fingerprint"}
         if kind is CompleteTask
         else set()
     )
@@ -392,6 +397,7 @@ def recorded_authorization(
         performer_ids=performer_ids,
         transition_target=target,
         needs_material_link="materials" in request,
+        needs_points_management="manual_shares" in request,
         material_cycle_id=cast(str, request["cycle_id"])
         if action == "task.material.settle"
         else None,

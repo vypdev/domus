@@ -2,6 +2,8 @@
 import {revisionValue} from './administration';
 import type {Revision} from './administration';
 import {civilDate} from './civil-date';
+import {allocationFingerprint, allocationPerformers, manualPointShares} from './point-allocation';
+import type {ManualShare} from './point-allocation';
 
 export const TASK_TEXT_LIMITS = Object.freeze({title: 160, description: 4000, reason: 1000});
 
@@ -63,7 +65,8 @@ export type TaskCommand = CategoryCommand |
   Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority; category_id?: string; schedule?: TaskSchedule}>}>
   | Readonly<{action: 'task.claim'; occurrenceId: string; payload: Readonly<{expected_revision: Revision}>}>
   | Readonly<{action: 'task.complete'; occurrenceId: string; payload: Readonly<{expected_revision: Revision;
-    performer_ids: readonly string[]; performed_at: string; material_usages: readonly TaskMaterialUsage[] | null}>}>
+    performer_ids: readonly string[]; performed_at: string; material_usages: readonly TaskMaterialUsage[] | null;
+    allocation_fingerprint?: string; manual_shares?: readonly ManualShare[]}>}>
   | Readonly<{action: 'task.verify'; occurrenceId: string; payload: Readonly<{expected_revision: Revision;
     cycle_id: string; decision: 'approved' | 'rejected'; reason: string}>}>
   | Readonly<{action: 'task.reopen'; occurrenceId: string; payload: Readonly<{expected_revision: Revision; cycle_id: string; reason: string}>}>;
@@ -146,12 +149,16 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
       return Object.freeze({action, occurrenceId, payload: Object.freeze({expected_revision: revisionValue(body.expected_revision)})});
     }
     if (action === 'task.complete') {
-      const body = fields(item.payload, ['expected_revision', 'performer_ids', 'performed_at', 'material_usages']);
-      requireValue(Array.isArray(body.performer_ids) && body.performer_ids.length >= 1 && body.performer_ids.length <= 32);
-      const performers = body.performer_ids.map(taskIdentifier);
-      requireValue(new Set(performers).size === performers.length);
+      requireValue(typeof item.payload === 'object' && item.payload !== null);
+      const base = item.payload;
+      const hasFingerprint = Object.hasOwn(base, 'allocation_fingerprint'), hasManual = Object.hasOwn(base, 'manual_shares');
+      const body = fields(base, ['expected_revision', 'performer_ids', 'performed_at', 'material_usages',
+        ...hasFingerprint ? ['allocation_fingerprint'] : [], ...hasManual ? ['manual_shares'] : []]);
+      const performer_ids = allocationPerformers(body.performer_ids, taskIdentifier);
       return Object.freeze({action, occurrenceId, payload: Object.freeze({expected_revision: revisionValue(body.expected_revision),
-        performer_ids: Object.freeze(performers), performed_at: taskTime(body.performed_at), material_usages: usages(body.material_usages)})});
+        performer_ids, performed_at: taskTime(body.performed_at), material_usages: usages(body.material_usages),
+        ...hasFingerprint ? {allocation_fingerprint: allocationFingerprint(body.allocation_fingerprint)} : {},
+        ...hasManual ? {manual_shares: manualPointShares(body.manual_shares, performer_ids)} : {}})});
     }
     if (action === 'task.verify' || action === 'task.reopen') {
       const body = fields(item.payload, action === 'task.verify'
@@ -180,6 +187,7 @@ export interface TaskCycleSummary {
 }
 export interface TaskDetail extends TaskSummary {
   readonly description: string; readonly priority: TaskPriority; readonly allowedActions: readonly string[];
+  readonly completionPoints?: 'automatic' | 'manual' | 'manager_required';
   readonly cycle: TaskCycleSummary | null; readonly materials: readonly TaskMaterial[];
   readonly materialRecording: 'review_on_completion' | 'separate_recording';
   readonly dependencyReviewRequired: boolean;
@@ -189,6 +197,7 @@ export interface TaskCategory {readonly id: string; readonly label: string; read
 export interface TaskCategoryCatalog {readonly categories: readonly TaskCategory[]; readonly canManage: boolean;}
 export interface TaskAccess {
   readonly householdId: string; readonly memberId: string; readonly canCreate: boolean; readonly canReviewSchedule: boolean;
+  readonly canRecordForOthers?: boolean; readonly canManagePoints?: boolean;
   readonly schedulePolicy?: TaskSchedulePolicy;
   readonly categoryCatalog?: TaskCategoryCatalog;
 }

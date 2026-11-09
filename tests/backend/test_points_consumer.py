@@ -23,6 +23,7 @@ from test_task_runtime import api as api
 from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
 from domus.application.fixed_missed_policy import FixedMissedPolicy
 from domus.application.fixed_skip_review import FixedSkip
+from domus.application.point_allocations import AllocationCommands, AllocationQueries
 from domus.application.points import PointsConsumer
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.recurrence_sources import RecurrenceSourceObservations
@@ -37,6 +38,7 @@ from domus.application.task_requests import (
     VerifyTask,
 )
 from domus.domain.errors import Conflict, Forbidden, StorageFailure
+from domus.domain.point_allocation import AllocationMode, AllocationPolicy
 from domus.domain.recurrence_rule_text import parse_fixed_pattern
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.storage import Installation
@@ -335,16 +337,23 @@ def test_migration_imports_genuine_schema_15_without_precredit_or_partial_ddl(
 def test_checkpoint_restore_preserves_award_and_does_not_replay_historical_reversal(tmp_path):
     root = tmp_path / "source"
     root.mkdir(mode=0o700)
-    tasks, store, _, _ = fixture(root)
+    tasks, store, actor, ids = fixture(root)
     identity_at(root, store.installation)
     _, oid = resource(tasks.create("work", task_value(CreateTask(TaskContent("Work")), 200)))
+    configuration = AllocationCommands(store, actor, Clock(), ids)
+    full = AllocationPolicy(AllocationMode.FULL_PER_PARTICIPANT)
+    configuration.configure("full", None, full, 0)
     done = tasks.complete("perform", CompleteTask(oid, 1, (adult_id(store, tasks),), 90))
     points = consumer(store)
     assert points.tick(running) == 1
     cid = cycle_of(done)
     original = points.ledger("home", cid)
+    with store.read() as unit:
+        frozen = unit.point_allocations.snapshot("home", cid)
+        assert frozen.policy == full and frozen.policy_revision == 1
     archive, prepared = tmp_path / "archive", tmp_path / "prepared"
     snapshot = SQLiteSnapshots(store, archive, store.installation, Clock()).create("posted")
+    later = configuration.configure("later", None, AllocationPolicy(), 1)
     tasks.reopen("reopen", ReopenTask(oid, 2, cid, "Reopen after checkpoint"))
     assert points.tick(running) == 1 and len(points.ledger("home", cid)) == 2
     SQLiteRestorations(store, archive, prepared, store.installation, Clock(), snapshot).prepare(
@@ -358,6 +367,11 @@ def test_checkpoint_restore_preserves_award_and_does_not_replay_historical_rever
         restored = consumer(selected.database)
         assert restored.ledger("home", cid) == original
         assert restored.tick(running) == 0
+        with selected.database.read() as unit:
+            assert unit.point_allocations.snapshot("home", cid) == frozen
+            assert unit.point_allocations.setting("home", None).policy == full
+        old = AllocationQueries(selected.database, actor.current()).original("later")
+        assert old.historical and old.operation_id == later.operation_id
     finally:
         selected.close()
 
