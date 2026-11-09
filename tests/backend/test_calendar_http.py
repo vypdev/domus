@@ -87,3 +87,53 @@ def test_owner_calendar_preferences_are_private_and_recover_exact_int64(api):
     other = {"X-Domus-Context": CONTEXT["X-Domus-Context"].replace(USER, "b" * 32)}
     assert api.client.get(original, headers=other).status_code == 404
     assert api.client.get(route, headers=other).json() == {"week_start": "monday", "revision": 1}
+
+
+def test_calendar_outage_honors_current_permissions_and_original_read_deadline(api):
+    from dataclasses import replace
+    from datetime import UTC, datetime
+
+    from test_recurrence_http import BASE as REVIEW_BASE
+
+    from domus.domain.errors import IdentityUnavailable
+    from domus.domain.identity import MemberStatus
+
+    api.user(USER, True)
+    choice = seed_manual(api)
+    with api.store.read() as unit:
+        work = unit.tasks.occurrence("home", choice["occurrence_id"])
+        definition = work.definition_snapshot.definition_id
+    due_at = int(datetime(2026, 12, 12, 14, tzinfo=UTC).timestamp() * 1000)
+    added = api.client.post(
+        f"/api/v1/tasks/definitions/{definition}/occurrences",
+        json={"expected_revision": 0, "due_at": due_at},
+        headers=api.headers("add-due"),
+    )
+    assert added.status_code == 200, added.text
+    headers = api.headers("outage-preview") | CONTEXT
+    params = {"start": "2026-12-12", "end": "2026-12-13", "kind": "due"}
+    first = api.client.get(BASE, params=params, headers=CONTEXT)
+    assert first.status_code == 200 and first.json()["count"] == 1
+    assert first.json()["entries"][0]["instant_ms"] == due_at
+    with api.store.read() as unit:
+        owner = unit.members.by_user("home", USER)
+        events = unit.outbox.pending()
+
+    api.source.error = IdentityUnavailable("ha_unavailable")
+    api.clock.value += 3_599_999
+    assert api.client.get(BASE, params=params, headers=CONTEXT).json() == first.json()
+    blocked = api.client.post(f"{REVIEW_BASE}/adoption/preview", json=choice, headers=headers)
+    assert blocked.status_code == 503
+    with api.store.write() as unit:
+        suspended = replace(owner, status=MemberStatus.SUSPENDED, revision=owner.revision + 1)
+        unit.members.save(suspended, owner.revision)
+    revoked = api.client.get(BASE, params=params, headers=CONTEXT)
+    assert revoked.status_code == 403 and "Clean the filter" not in revoked.text
+    with api.store.write() as unit:
+        unit.members.save(replace(owner, revision=suspended.revision + 1), suspended.revision)
+    api.clock.value += 1
+    expired = api.client.get(BASE, params=params, headers=CONTEXT)
+    assert expired.status_code in (401, 503) and "Clean the filter" not in expired.text
+    with api.store.read() as unit:
+        assert unit.outbox.pending() == events
+        assert unit.tasks.occurrence("home", work.occurrence_id) == work

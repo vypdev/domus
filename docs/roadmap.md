@@ -19,11 +19,14 @@ Tests, user documentation and recovery accompany each usable workflow.
 
 ## Current state
 
-With PR #29 still under development:
+With the recurrence and calendar implementation in develop:
 
 - M0: the specification foundation and decisions are recorded. Contracts continue to evolve with implementation evidence.
 - M1: HA identity/session, SQLite, recovery foundations, architecture checks and CI are implemented. Full standalone/Ingress, upgrade/restore and Stable production acceptance remains open.
-- M2 includes task creation, claiming, completion, review and reopening, previously exercised with English/Spanish and persisted task/preferences in the owner's Edge.9 through Ingress. PR #29 wires fixed and relative maintenance, durable cycle closure and successor generation/invalidation, reviewed schedule adoption and changes, protected calendar views, explicit exclusions/additions and private week-start preferences. Its authorized HA event projection shares calendar identities. Current source checks and historical installed observations are recorded separately in the [recurrence evidence](evidence/recurrence-lifecycle-calendar.json). Full task editors, configurable point distribution, complete participation/reward flows and owner acceptance of this increment remain open.
+- M2 includes task creation, claiming, completion, review and reopening, previously exercised with English/Spanish and persisted task/preferences in the owner's Edge.9 through Ingress. PR #29 wires fixed and relative maintenance, durable cycle closure and successor generation/invalidation, reviewed schedule adoption and changes, protected calendar views, explicit exclusions/additions and private week-start preferences. Its authorized HA event projection shares calendar identities. Current source checks and historical installed observations are recorded separately in the [recurrence evidence](evidence/recurrence-lifecycle-calendar.json). PRs #33, #35, #37 and #39
+add household timing controls and the read-only native calendar. The
+[case qualification audit](evidence/recurrence-calendar-qualification.md) tracks the remaining
+implementation, verification and packaging gates. Full task editors, configurable point distribution, complete participation/reward flows and owner acceptance of this increment remain open.
 - M3: task-material foundations exist. Integrated product, stock, shopping, receipt, barcode and optional online lookup workflows remain open.
 - M4: the shared automation engine, both editors and Domus-owned HA entities/services remain open. The existing gateway is already integrated; its MCP/business behavior is outside this work.
 - M5: complete cross-domain overview/acceptance, both deployment journeys and Stable release acceptance remain open. Foundational UI reuse is scheduled in M2, not deferred to this final milestone.
@@ -106,10 +109,11 @@ catalog covers normal/loading/disabled/error/empty/dialog states and both themes
 journeys must preserve current commands, drafts and original recovery in both consumers. Package
 publication, consumer adoption, compiled-image acceptance and required human UX are separate evidence.
 
-PR #29 / issue #23 retains all recurrence/calendar obligations: all 93 counted retained cases and
-18 refinements remain required. The genuine schema-9 fixture and pure closure policy do not prove
-the durable consumer or calendar is implemented. Household administration's remaining acceptance
-inventory also remains required after its checkpoint merge. Issue #30 does not close or replace these.
+Issue #23 retains all 93 counted owning cases, 21 lifecycle refinements and their published aliases.
+The native calendar companion defines seven additional cases. See the
+[qualification audit](evidence/recurrence-calendar-qualification.md) for the current evidence and
+open gates. Household administration's acceptance inventory also remains required after its
+checkpoint merge.
 
 The Action owns managed remote branches and native SDD publication. Normal contributor commits use
 its admitted ref; package/release/deployment work follows each owning repository's authorized flow.

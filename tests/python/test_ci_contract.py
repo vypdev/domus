@@ -398,3 +398,44 @@ def test_native_calendar_has_required_coverage_and_an_independent_adapter_bounda
                 "starlette",
                 "uvicorn",
             }, source
+
+
+def test_recurrence_qualification_preserves_every_case_and_alias() -> None:
+    audit = (ROOT / "docs/evidence/recurrence-calendar-qualification.md").read_text()
+    rows = re.findall(r"(?m)^\| ([a-z-]+-C\d{2}) \| (Witness|Partial|Gap) \| (.+) \|$", audit)
+    observed = {case for case, _, _ in rows}
+    assert len(rows) == len(observed) == 121
+    owners = {
+        "recurrence-calendar": ("recurrence-calendar", 1, 37),
+        "recurrence-execution-foundation": ("recurrence-execution", 1, 52),
+        "recurrence-storage-continuation": ("recurrence-storage", 1, 4),
+        "recurrence-lifecycle-calendar": ("recurrence-lifecycle-calendar", 19, 39),
+        "home-assistant-calendar": ("domus-native-calendar", 1, 7),
+    }
+    expected = set()
+    aliases = {}
+    for document, (prefix, first, last) in owners.items():
+        text = (ROOT / "specs" / f"{document}.md").read_text()
+        case_ids = {f"{prefix}-C{index:02}" for index in range(first, last + 1)}
+        assert all(f"| {case_id} |" in text for case_id in case_ids)
+        expected.update(case_ids)
+        for alias, targets in re.findall(
+            rf"(?m)^\| ({document}-C\d{{2}}) \| ([^|]+?) \| [^|]*alias[^|]*\|", text
+        ):
+            aliases[alias] = targets
+    assert observed == expected
+    retained = dict(re.findall(r"(?m)^\| ([a-z-]+-C\d{2}) \| ([^|]+?) \|$", audit))
+    assert retained == aliases and len(aliases) == 22
+    for case, status, evidence in rows:
+        references = re.findall(r"`((?:frontend/)?tests/[^ `]+)`", evidence)
+        assert references, case
+        for reference in references:
+            path, _, name = reference.partition("::")
+            assert (ROOT / path).is_file(), (case, path)
+            if name:
+                assert re.search(rf"(?m)^def {re.escape(name)}\(", (ROOT / path).read_text()), (
+                    case,
+                    name,
+                )
+        if status != "Witness":
+            assert evidence.rsplit("`", 1)[1].strip(), case

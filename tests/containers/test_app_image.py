@@ -10,6 +10,7 @@ from shutil import copyfile
 
 import coverage
 import pytest
+import yaml
 
 
 def docker(*arguments: str) -> subprocess.CompletedProcess[str]:
@@ -648,72 +649,6 @@ def test_packaged_process_death_blocks_start_and_resumes_the_exact_transition(
     stopped(name)
 
 
-_CALENDAR_FIXTURE = """import hashlib, os, sys
-from datetime import UTC, datetime, timedelta
-from pathlib import Path
-
-import uvicorn
-from domus.application.fixed_materialization import MaintenanceScope
-from domus.application.household_commands import HouseholdCommands, SetupHousehold
-from domus.application.recurrence_sources import RecurrenceSourceObservations
-from domus.application.task_commands import TaskCommands
-from domus.application.task_requests import CreateTask, CreateTaskOccurrence
-from domus.composition.server import create_runtime
-from domus.domain.identity import HumanIdentity
-from domus.domain.storage import Installation
-from domus.domain.task_values import TaskContent
-from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock, TimeZoneCatalog
-from domus.infrastructure.sqlite import SQLiteDatabase
-
-class Actor:
-    def current(self):
-        return HumanIdentity("calendar-fixture-admin", True, True, False)
-
-class Directory:
-    def get(self, _identifier):
-        raise AssertionError("The calendar fixture does not query a human directory")
-
-mode, instance = sys.argv[1:]
-channel = "edge" if mode == "native" else "stable"
-installation = Installation(instance, channel)
-path = Path("/tmp/domus-calendar-fixture.sqlite3")
-store = SQLiteDatabase(path, installation)
-store.initialize()
-clock, identifiers, actor = SystemClock(), SecureIdentifiers(), Actor()
-HouseholdCommands(store, actor, Directory(), TimeZoneCatalog(), clock, identifiers).setup(
-    "fixture-household", SetupHousehold("Calendar fixture", "UTC"),
-)
-tasks = TaskCommands(store, actor, clock, identifiers)
-created = tasks.create("fixture-task", CreateTask(TaskContent("Packaged calendar fixture")))
-due_at = int((datetime.now(UTC) + timedelta(hours=1)).timestamp() * 1000)
-tasks.create_occurrence(
-    "fixture-due", CreateTaskOccurrence(created.result.decode()["definition_id"], due_at=due_at)
-)
-RecurrenceSourceObservations(store, MaintenanceScope(installation, "home")).ingest()
-digest = hashlib.sha256(f"{instance}.{channel}.{'d' * 64}".encode()).hexdigest()
-if mode == "native":
-    launcher = "/app/.venv/bin/domus-ingress"
-    os.environ.update(
-        SUPERVISOR_TOKEN="disposable-supervisor-token", DOMUS_HA_CALENDAR_DIGEST=digest,
-    )
-    os.execv(launcher, [
-        launcher, "--channel", channel, "--database", str(path), "--instance-id", instance,
-        "--public-origin", "http://homeassistant.local:8123",
-    ])
-else:
-    runtime = create_runtime(
-        "https://ha.fixture", "https://domus.fixture:8443", instance, channel,
-        database=path, ha_calendar_digest=digest,
-    )
-    try:
-        uvicorn.run(
-            runtime.app, host="0.0.0.0", port=8443, proxy_headers=False, access_log=False,
-            ssl_certfile="/tls/cert.pem", ssl_keyfile="/tls/key.pem",
-        )
-    finally:
-        runtime.close()
-"""
-
 _CORE_IMAGE = (
     "ghcr.io/home-assistant/home-assistant:2026.10.4"
     "@sha256:23f4dfbb69ce76315dbc4de7915504f1c2dcecd7ca2648113a493a385972e133"
@@ -770,8 +705,32 @@ def _calendar_core(*arguments, report_directory=None):
     )
 
 
+def _supervisor_candidate(channel, target):
+    root = Path(__file__).resolve().parents[2]
+    base = yaml.safe_load((root / "addon-edge/config.yaml").read_text())
+    overlay = yaml.safe_load(
+        (root / "tests/fixtures/current-app/supervisor-calendar-options.yaml").read_text()
+    )
+    slug = "domus_edge" if channel == "edge" else "domus"
+    config = {
+        **base,
+        **overlay,
+        "name": f"Domus qualification {channel}",
+        "panel_title": f"Domus qualification {channel}",
+        "slug": slug,
+        "version": "0.0.0-qualification.1",
+        "options": {"public_origins": ["http://homeassistant.local:8123"]},
+    }
+    assert config["ports"] == {} and config["ingress_port"] == 8099
+    assert config["schema"]["ha_calendar_digest"] == "str?"
+    assert "ha_calendar_digest" not in config["options"]
+    target.write_text(json.dumps(config))
+
+
 def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
-    """Use the native private listener and standalone HTTPS, with no host port mapping."""
+    """Exercise the real packaged launcher and persistent runtime in all four modes."""
+    standalone_hosts = ("edge.domus.fixture", "stable.domus.fixture")
+    names_in_certificate = ",".join(f"DNS:{host}" for host in standalone_hosts)
     openssl = subprocess.run(
         [
             "openssl",
@@ -785,7 +744,7 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
             "-subj",
             "/CN=domus.fixture",
             "-addext",
-            "subjectAltName=DNS:domus.fixture",
+            f"subjectAltName={names_in_certificate}",
             "-keyout",
             str(tmp_path / "key.pem"),
             "-out",
@@ -799,46 +758,74 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
     assert openssl.returncode == 0, openssl.stderr
     network = "domus-calendar-" + uuid.uuid4().hex
     _calendar_checked(docker("network", "create", "--internal", network))
-    names = []
+    fixture = Path(__file__).with_name("calendar_runtime.py")
+    names, targets = [], []
     try:
-        for mode, alias in (("native", "local-domus-edge"), ("standalone", "domus.fixture")):
-            instance = str(uuid.uuid4())
-            channel = "edge" if mode == "native" else "stable"
-            url = (
-                "http://local-domus-edge:8100" if mode == "native" else "https://domus.fixture:8443"
+        for channel in ("edge", "stable"):
+            candidate_image = (
+                os.environ.get("DOMUS_TEST_STABLE_IMAGE", image) if channel == "stable" else image
             )
-            name = network + "-" + mode
-            names.append(name)
-            extra_alias = () if mode == "native" else ("--network-alias", "untrusted.domus.fixture")
-            _calendar_checked(
-                docker(
-                    "run",
-                    "-d",
-                    "--name",
-                    name,
-                    "--network",
-                    network,
-                    "--network-alias",
-                    alias,
-                    *extra_alias,
-                    "--volume",
-                    f"{tmp_path}:/tls:ro",
-                    "--entrypoint",
-                    "/app/.venv/bin/python",
-                    image,
-                    "-c",
-                    _CALENDAR_FIXTURE,
-                    mode,
-                    instance,
+            for mode in ("native", "standalone"):
+                if mode == "native":
+                    host = "local-domus-edge" if channel == "edge" else "local-domus"
+                    url = f"http://{host}:8100"
+                else:
+                    host = f"{channel}.domus.fixture"
+                    url = f"https://{host}:8443"
+                name = f"{network}-{mode}-{channel}"
+                names.append(name)
+                config = tmp_path / f"config-{channel}.json"
+                _supervisor_candidate(channel, config)
+                extra_alias = (
+                    ("--network-alias", "untrusted.domus.fixture")
+                    if mode == "standalone" and channel == "edge"
+                    else ()
                 )
-            )
-            token = f"{instance}.{channel}.{'d' * 64}"
-            if mode == "native":
-                ready(name)
-                native = (f"DOMUS_NATIVE_URL={url}", f"DOMUS_NATIVE_TOKEN={token}")
-            else:
-                standalone = (f"DOMUS_STANDALONE_URL={url}", f"DOMUS_STANDALONE_TOKEN={token}")
-                _ready_standalone_calendar(name)
+                _calendar_checked(
+                    docker(
+                        "run",
+                        "-d",
+                        "--name",
+                        name,
+                        "--network",
+                        network,
+                        "--network-alias",
+                        host,
+                        *extra_alias,
+                        "--volume",
+                        f"{tmp_path}:/tls:ro",
+                        "--volume",
+                        f"{fixture}:/calendar_runtime.py:ro",
+                        "--entrypoint",
+                        "/app/.venv/bin/python",
+                        candidate_image,
+                        "/calendar_runtime.py",
+                        mode,
+                        channel,
+                        host,
+                        f"/tls/{config.name}",
+                    )
+                )
+                if mode == "native":
+                    ready(name)
+                else:
+                    _ready_standalone_calendar(name, host)
+                marker = json.loads(
+                    _calendar_checked(
+                        docker(
+                            "exec",
+                            "--user",
+                            "65532:65532",
+                            name,
+                            "cat",
+                            "/data/domus/installation.json",
+                        )
+                    )
+                )
+                assert marker["channel"] == channel
+                assert not _calendar_checked(docker("port", name)).strip()
+                token = f"{marker['instance_id']}.{channel}.{'d' * 64}"
+                targets.append({"url": url, "token": token, "label": f"{mode} {channel}"})
         probe = _calendar_core(
             "--network",
             network,
@@ -850,13 +837,7 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
             "--env",
             "SSL_CERT_FILE=/tls/ca.pem",
             "--env",
-            native[0],
-            "--env",
-            native[1],
-            "--env",
-            standalone[0],
-            "--env",
-            standalone[1],
+            f"DOMUS_CALENDAR_TARGETS={json.dumps(targets)}",
         )
         assert "Home Assistant native calendar acceptance passed" in probe
     finally:
@@ -865,12 +846,12 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
         _calendar_checked(docker("network", "rm", network))
 
 
-def _ready_standalone_calendar(name):
+def _ready_standalone_calendar(name, host):
     deadline = time.monotonic() + 20
     command = (
         "import ssl,urllib.error,urllib.request; "
         "ctx=ssl.create_default_context(cafile='/tls/cert.pem'); "
-        "request=urllib.request.Request('https://domus.fixture:8443/api/v1/ha/calendar'); "
+        f"request=urllib.request.Request('https://{host}:8443/api/v1/ha/calendar'); "
         "\ntry: urllib.request.urlopen(request, context=ctx, timeout=1)"
         "\nexcept urllib.error.HTTPError as error: assert error.code == 401"
         "\nelse: raise AssertionError('The dedicated calendar accepted an anonymous read')"
