@@ -149,3 +149,13 @@ preferences and task evidence. A DDL failure preserves the original schema-12 by
 Schema 14 adds a task-scoped settings table with its own revisions and a checked
 policy. Existing definitions default to keeping overdue work visible. The
 schema-13 fixture retains non-default household timing and a configured horizon.
+
+The [schema-14 fixture](../../tests/fixtures/sqlite/v14.sql) was exported from
+Domus source commit `449dc04c17a9c41d949d74cd341bf1e943a2fba9` after normal
+household setup and task creation on Edge. Fixed maintenance materialized a
+March 2026 Europe/Madrid occurrence whose original time falls in a clock gap.
+The export also contains a manual task with the free-text tag `Garden`. It
+preserves the task definitions, occurrence snapshots, fixed slot, original
+command receipts, audit and outbox. The SQL export includes the source database's
+application ID and schema version. Its SHA-256 is
+`acbd5cca8b4ad2177c9ab0fb448efd3502db352081607da1674ce3e39c3acb9a`.
