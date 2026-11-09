@@ -871,10 +871,12 @@
             "type": "integer"
           },
           "label": {
+            "description": "Raw label before normalization. After trimming Unicode whitespace and applying NFC, it must contain 1 to 80 Unicode code points. Control characters and unpaired surrogates are rejected.",
             "maxLength": 256,
             "minLength": 1,
             "title": "Label",
-            "type": "string"
+            "type": "string",
+            "x-domus-normalized-max-length": 80
           }
         },
         "required": [
@@ -3655,10 +3657,12 @@
             "type": "integer"
           },
           "label": {
+            "description": "Raw label before normalization. After trimming Unicode whitespace and applying NFC, it must contain 1 to 80 Unicode code points. Control characters and unpaired surrogates are rejected.",
             "maxLength": 256,
             "minLength": 1,
             "title": "Label",
-            "type": "string"
+            "type": "string",
+            "x-domus-normalized-max-length": 80
           }
         },
         "required": [

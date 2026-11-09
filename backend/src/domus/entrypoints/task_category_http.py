@@ -11,6 +11,7 @@ from domus.application.task_category_commands import (
     CategoryCatalog,
     TaskCategoryCommands,
 )
+from domus.domain.task_categories import MAX_RAW_TASK_CATEGORY_LABEL, MAX_TASK_CATEGORY_LABEL
 from domus.entrypoints.household_http import (
     ReceiptResponse,
     _EmptyQuery,
@@ -22,7 +23,19 @@ from domus.entrypoints.http_contract import StrictModel
 from domus.entrypoints.recurrence_http import _require_context
 from domus.entrypoints.task_dto import Identifier, Revision
 
-CategoryLabel = Annotated[str, Field(min_length=1, max_length=256)]
+CategoryLabel = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=MAX_RAW_TASK_CATEGORY_LABEL,
+        description=(
+            "Raw label before normalization. After trimming Unicode whitespace and applying "
+            f"NFC, it must contain 1 to {MAX_TASK_CATEGORY_LABEL} Unicode code points. "
+            "Control characters and unpaired surrogates are rejected."
+        ),
+        json_schema_extra={"x-domus-normalized-max-length": MAX_TASK_CATEGORY_LABEL},
+    ),
+]
 
 
 class CreateCategoryBody(StrictModel):

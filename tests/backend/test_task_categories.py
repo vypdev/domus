@@ -481,3 +481,28 @@ def test_protected_scheduled_creation_assigns_active_category_and_recovers_origi
     )
     assert original.json()["operation_id"] == created.json()["operation_id"]
     assert api.client.get(TASKS + "/occurrences").json()["items"] == []
+
+
+def test_category_label_contract_distinguishes_raw_input_and_normalized_length(api):
+    schemas = api.client.get("/api/v1/openapi.json").json()["components"]["schemas"]
+    for name in ("CreateCategoryBody", "RenameCategoryBody"):
+        label = schemas[name]["properties"]["label"]
+        assert label["maxLength"] == 256
+        assert label["x-domus-normalized-max-length"] == 80
+        assert "1 to 80 Unicode code points" in label["description"]
+
+    api.user(USER, True)
+    raw = "  " + "e\u0301" * 80 + "  "
+    assert len(raw) == 164
+    headers = api.headers("raw-label") | CONTEXT
+    created = api.client.post(CATEGORIES, json={"label": raw}, headers=headers)
+    assert created.status_code == 200, created.text
+    assert created.json()["result"]["label"] == "é" * 80
+    assert (
+        api.client.post(CATEGORIES, json={"label": raw}, headers=headers).json() == created.json()
+    )
+    rejected = api.client.post(
+        CATEGORIES, json={"label": raw + "é"}, headers=api.headers("over-bound") | CONTEXT
+    )
+    assert rejected.status_code == 422
+    assert rejected.json()["code"] == "invalid_task_category_label"

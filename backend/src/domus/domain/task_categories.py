@@ -11,12 +11,13 @@ from domus.domain.task_values import next_task_revision
 
 MAX_ACTIVE_TASK_CATEGORIES = 100
 MAX_TASK_CATEGORY_LABEL = 80
+MAX_RAW_TASK_CATEGORY_LABEL = 256
 
 
 def category_label(value: str) -> str:
     if (
         not isinstance(value, str)
-        or len(value) > 256
+        or len(value) > MAX_RAW_TASK_CATEGORY_LABEL
         or any(category(character) in ("Cc", "Cs") for character in value)
     ):
         raise InvalidInput("invalid_task_category_label")
