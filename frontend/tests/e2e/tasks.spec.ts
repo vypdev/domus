@@ -99,6 +99,33 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
     const retained = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json();
     expect(retained.items.filter((item: {title: string}) => item.title === manual)).toHaveLength(1);
 
+    if (spanish) await page.getByLabel('Language', {exact: true}).selectOption('es');
+    const plannedTitle = tasks.getByLabel(spanish ? 'Título' : 'Title', {exact: true});
+    if (!await plannedTitle.isVisible())
+      await tasks.getByRole('heading', {name: spanish ? 'Nueva tarea' : 'New task', exact: true}).click();
+    await plannedTitle.fill('Recurring inspection');
+    const kind = spanish ? 'relative' : 'fixed';
+    await tasks.getByLabel(spanish ? 'Programación' : 'Scheduling', {exact: true}).selectOption(kind);
+    await tasks.getByLabel(spanish ? 'Primera fecha' : 'First date', {exact: true}).fill(localDate);
+    if (spanish) {
+      await tasks.getByLabel('Días locales entre tareas', {exact: true}).fill('18');
+      await tasks.getByLabel('Generar la siguiente tarea', {exact: true}).selectOption('at_verification');
+    } else {
+      await tasks.getByLabel('Recurrence rule', {exact: true}).fill('FREQ=DAILY;COUNT=2');
+    }
+    let creations = 0;
+    await page.route(base(mode) + '/api/v1/tasks/recurrence/creation/' + kind, async route => {
+      creations++;
+      const committed = await route.fetch({maxRetries: 0, maxRedirects: 0});
+      expect(committed.status()).toBe(200);
+      await route.abort('connectionreset');
+    });
+    await tasks.getByRole('button', {name: spanish ? 'Crear tarea' : 'Create task', exact: true}).click();
+    await expect(tasks.getByRole('heading', {name: spanish ? 'Resultado sin confirmar' : 'Result not confirmed', exact: true})).toBeVisible();
+    await page.reload();
+    await tasks.getByRole('button', {name: 'Check saved request', exact: true}).first().click();
+    await expect(tasks.getByText('The schedule was saved. Its first task will appear when recurrence processing runs.', {exact: true})).toBeVisible();
+    expect(creations).toBe(1);
   });
   test('a restricted member claims and performs work; an adult approves and reopens its retained cycle', async ({page, context, browser, request}) => {
     const tasks = await open(page, context, mode), title = 'Kitchen responsibility';

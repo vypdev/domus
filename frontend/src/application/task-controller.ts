@@ -1,7 +1,7 @@
 /** Task workflows coordinate current identity, durable original intents and server-owned actions. */
 import {JournalError} from '../domain/journal';
 import {taskCommand, taskIdentifier} from '../domain/tasks';
-import type {TaskAccess, TaskCommand, TaskDetail, TaskMaterialUsage, TaskPage, TaskPriority} from '../domain/tasks';
+import type {TaskAccess, TaskCommand, TaskDetail, TaskMaterialUsage, TaskPage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
 import {EntryReadError} from './ports';
 import type {Deployment} from '../domain/entry';
 import type {EntryClock, EntryEntropy, EntryRead, EntryServer, VerifiedEntrySession} from './ports';
@@ -152,8 +152,9 @@ export class TaskController {
       if (outcome.kind === 'receipt') await this.facts(generation, outcome.occurrenceId);
     });
   }
-  create(title: unknown, description: unknown, priority: TaskPriority): Promise<void> {
-    return this.execute({action: 'task.create', payload: {expected_revision: 0, title, description, priority}});
+  create(title: unknown, description: unknown, priority: TaskPriority, draft?: TaskScheduleDraft): Promise<void> {
+    const schedule = draft === undefined ? {} : {schedule: {draft, policy: this.state.access?.schedulePolicy}};
+    return this.execute({action: 'task.create', payload: {expected_revision: 0, title, description, priority, ...schedule}});
   }
   claim(): Promise<void> {
     const work = this.state.detail;
