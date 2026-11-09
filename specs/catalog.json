@@ -677,18 +677,26 @@
       ],
       "workflows": [],
       "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "code": [
+        "backend/src/domus/domain/inventory.py",
+        "backend/src/domus/application/inventory.py",
+        "backend/src/domus/infrastructure/sqlite_inventory.py"
+      ],
+      "tests": [
+        "tests/backend/test_inventory_recurrence.py",
+        "tests/fixtures/sqlite/v16-inventory-source.sql"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/evidence/recurrence-calendar-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
+        "implementationEvidence": "partial",
         "blockingDecisions": "Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner confirmed barcode scope, adjustable material recording and pending regularization rather than negative stock for task material shortfalls on 2026-10-29. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
         "copilotChangesAllowed": false
       }

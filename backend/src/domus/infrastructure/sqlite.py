@@ -37,6 +37,11 @@ from domus.infrastructure.sqlite_calendar_preferences import (
 )
 from domus.infrastructure.sqlite_history import HISTORY_STATEMENTS, SQLiteHistory
 from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
+from domus.infrastructure.sqlite_inventory import (
+    INVENTORY_STATEMENTS,
+    INVENTORY_TABLES,
+    SQLiteInventory,
+)
 from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS, PROFILE_TABLES
 from domus.infrastructure.sqlite_member_profiles import SQLitePreferences, SQLitePresentations
 from domus.infrastructure.sqlite_points import POINTS_STATEMENTS, POINTS_TABLE, SQLitePoints
@@ -69,7 +74,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 16
+SCHEMA_VERSION = 17
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -142,6 +147,7 @@ SCHEMA_STATEMENTS = (
     MISSED_OCCURRENCE_STATEMENT,
     *CATEGORY_STATEMENTS,
     *POINTS_STATEMENTS,
+    *INVENTORY_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -155,7 +161,8 @@ LIFECYCLE_SCHEMA_TABLES = PROFILE_SCHEMA_TABLES | RELATIVE_LIFECYCLE_TABLES
 CALENDAR_SCHEMA_TABLES = LIFECYCLE_SCHEMA_TABLES | {"calendar_preferences"}
 MISSED_SCHEMA_TABLES = CALENDAR_SCHEMA_TABLES | {MISSED_OCCURRENCE_TABLE}
 CATEGORY_SCHEMA_TABLES = MISSED_SCHEMA_TABLES | {CATEGORY_TABLE}
-TABLES = CATEGORY_SCHEMA_TABLES | {POINTS_TABLE}
+POINTS_SCHEMA_TABLES = CATEGORY_SCHEMA_TABLES | {POINTS_TABLE}
+TABLES = POINTS_SCHEMA_TABLES | INVENTORY_TABLES
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -187,6 +194,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *((MISSED_OCCURRENCE_STATEMENT,) if version >= 14 else ()),
             *(CATEGORY_STATEMENTS if version >= 15 else ()),
             *(POINTS_STATEMENTS if version >= 16 else ()),
+            *(INVENTORY_STATEMENTS if version >= 17 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -382,6 +390,7 @@ class SQLiteUnit:
         self.task_materials = SQLiteTaskMaterials(connection)
         self.task_categories = SQLiteTaskCategories(connection)
         self.points = SQLitePoints(connection)
+        self.inventory = SQLiteInventory(connection)
 
 
 class SQLiteDatabase:
@@ -448,6 +457,7 @@ class SQLiteDatabase:
                 13: CALENDAR_SCHEMA_TABLES,
                 14: MISSED_SCHEMA_TABLES,
                 15: CATEGORY_SCHEMA_TABLES,
+                16: POINTS_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -509,7 +519,8 @@ class SQLiteDatabase:
                         *((HOUSEHOLD_FOLD_STATEMENT,) if version < 13 else ()),
                         *((MISSED_OCCURRENCE_STATEMENT,) if version < 14 else ()),
                         *(CATEGORY_STATEMENTS if version < 15 else ()),
-                        *POINTS_STATEMENTS,
+                        *(POINTS_STATEMENTS if version < 16 else ()),
+                        *INVENTORY_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)

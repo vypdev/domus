@@ -42,7 +42,7 @@ from domus.infrastructure.application_runtime import SecureIdentifiers, SystemCl
 from domus.infrastructure.sqlite import SQLiteDatabase, SCHEMA_VERSION
 from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
 
-assert SCHEMA_VERSION == 16
+assert SCHEMA_VERSION == 17
 class Human:
     user_id = 'fictional_profile_ha_user'
     def current(self):
@@ -110,7 +110,7 @@ with TemporaryDirectory(prefix='domus-profile-image-') as directory:
             unit.preferences.save(private, 1)
         checkpoint = SQLiteSnapshots(store, Path(directory) / 'snapshot', storage.installation,
             clock).create('profile-checkpoint')
-        assert checkpoint.schema_version == 16
+        assert checkpoint.schema_version == 17
         assert len(tuple((Path(directory) / 'snapshot').iterdir())) == 3
     finally:
         runtime.close()
@@ -427,7 +427,7 @@ if phase == 'refuse':
         raise AssertionError('Old application accepted an unsupported schema')
     assert path.read_bytes() == original
 else:
-    assert SCHEMA_VERSION == (14 if phase == 'old' else 16)
+    assert SCHEMA_VERSION == (14 if phase == 'old' else 17)
     active = runtime()
     try:
         assert active.storage is not None

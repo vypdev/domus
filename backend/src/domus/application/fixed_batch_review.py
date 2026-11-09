@@ -1,6 +1,6 @@
 """Prepare and atomically replace eligible future fixed obligations."""
 
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
 from datetime import timedelta
 from functools import partial
 
@@ -21,6 +21,7 @@ from domus.domain.errors import (
     StorageFailure,
 )
 from domus.domain.identity import MemberStatus, validate_revision
+from domus.domain.inventory import InventoryEffect
 from domus.domain.recurrence_planning import FixedBatch, FixedCursor, cursor_binding
 from domus.domain.recurrence_records import (
     FixedExceptionKind,
@@ -104,6 +105,7 @@ class ReplacementSource:
     definition: TaskDefinition
     replaceable: tuple[AffectedWork, ...]
     retained: tuple[AffectedWork, ...]
+    effects: tuple[InventoryEffect, ...]
 
     def prepare(self, planner: FixedRecurrencePlanner, now: int) -> PreparedReplacement:
         rule = self.upcoming
@@ -319,7 +321,10 @@ def replacement_source(
         revision=rule.revision + 1,
         pattern_revision=rule.pattern_revision + 1,
     )
-    return ReplacementSource(rule, upcoming, progress, definition, tuple(replaced), tuple(retained))
+    effects = unit.inventory.effects(home, tuple(item.work.occurrence_id for item in replaced))
+    return ReplacementSource(
+        rule, upcoming, progress, definition, tuple(replaced), tuple(retained), effects
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -345,6 +350,20 @@ class PreparedReplacement:
                     "before": self.before.local.isoformat(),
                     "retained_work": [item.value() for item in rule.retained],
                     "cancelled_work": [item.value() for item in rule.replaceable],
+                    **(
+                        {
+                            "inventory_effects": [
+                                {
+                                    **asdict(effect),
+                                    "kind": effect.kind.value,
+                                    "remaining": str(effect.remaining),
+                                }
+                                for effect in rule.effects
+                            ]
+                        }
+                        if rule.effects
+                        else {}
+                    ),
                     "prospective_slots": [
                         {
                             "planned": planned.value(),
@@ -389,7 +408,7 @@ class PreparedReplacement:
             ),
             progress.revision,
         )
-        replacements: JsonObject = {}
+        replacements: dict[str, str] = {}
         additions: list[JsonValue] = []
         originals = iter(self.pairing)
         for batch in self.steps:
@@ -427,12 +446,40 @@ class PreparedReplacement:
                 transition.document(),
                 partial(transition_occurrence, household_id=home, request=transition),
             )
+        moved, retained = self._transfer_effects(unit, replacements)
         return {
             "kind": "fixed_replacement",
             "schedule_id": rule.schedule_id,
             "schedule_revision": rule.revision,
             "pattern_revision": rule.pattern_revision,
-            "replacements": replacements,
+            "replacements": dict[str, JsonValue](replacements),
             "cancelled": [item.work.occurrence_id for item in self.source.replaceable],
             "added": additions,
+            **(
+                {"inventory_transferred": moved, "inventory_retained": retained}
+                if moved or retained
+                else {}
+            ),
         }
+
+    def _transfer_effects(
+        self, unit: UnitOfWork, replacements: dict[str, str]
+    ) -> tuple[list[JsonValue], list[JsonValue]]:
+        # New occurrences are materialized from this exact reviewed definition.
+        materials = {
+            (line.line_id, line.binding.reference_id) for line in self.source.definition.materials
+        }
+        moved: list[JsonValue] = []
+        retained: list[JsonValue] = []
+        for effect in self.source.effects:
+            assert effect.occurrence_id is not None
+            replacement = replacements.get(effect.occurrence_id)
+            if replacement is None or (effect.line_id, effect.reference_id) not in materials:
+                retained.append(effect.effect_id)
+                continue
+            unit.inventory.update_effect(
+                replace(effect, occurrence_id=replacement, revision=effect.revision + 1),
+                effect.revision,
+            )
+            moved.append({"id": effect.effect_id, "from": effect.occurrence_id, "to": replacement})
+        return moved, retained

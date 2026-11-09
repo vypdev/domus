@@ -101,7 +101,13 @@ def _quantity(value: JsonValue) -> MaterialQuantity | None:
     return None if value is None else MaterialQuantity(cast(str, value))
 
 
-def _posting(value: JsonValue) -> MaterialPosting | None:
+def posting_value(value: MaterialPosting) -> JsonObject:
+    row = asdict(value)
+    row["quantity"] = value.quantity.value
+    return cast(JsonObject, row)
+
+
+def read_posting(value: JsonValue) -> MaterialPosting | None:
     if value is None:
         return None
     row = _object(value, _POSTING)
@@ -136,7 +142,7 @@ def material_document(value: MaterialIntent) -> JsonDocument:
         quantity=None if value.quantity is None else value.quantity.value,
     )
     if value.posting is not None:
-        row["posting"]["quantity"] = value.posting.quantity.value
+        row["posting"] = posting_value(value.posting)
     return JsonDocument.from_value(row)
 
 
@@ -164,7 +170,7 @@ def read_material(encoded: str) -> MaterialIntent:
             if row["pending_reason"] is None
             else MaterialPendingReason(cast(str, row["pending_reason"])),
             cast(str, row["reason"]),
-            _posting(row["posting"]),
+            read_posting(row["posting"]),
             cast(int, row["effect_revision"]),
             cast(int, row["revision"]),
         )

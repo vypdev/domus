@@ -1,7 +1,6 @@
 """Actual native and standalone task routes use bounded material inputs and live scoped reads."""
 
 from dataclasses import replace
-from functools import partial
 
 import pytest
 from test_task_http import PREFIX, checked, create
@@ -17,9 +16,12 @@ from domus.domain.task_material_values import MaterialPendingReason
 def inventory(api, tmp_path, monkeypatch):
     value = Inventory(tmp_path / "fixture-http-inventory.sqlite3")
     value.bindings["binding"] = replace(value.bindings["binding"], precision=2)
-    monkeypatch.setattr(
-        tasks, "TaskCommands", partial(tasks.TaskCommands, inventory_factory=value.factory)
-    )
+    command_factory = tasks.TaskCommands
+
+    def commands(*args, **kwargs):
+        return command_factory(*args, **(kwargs | {"inventory_factory": value.factory}))
+
+    monkeypatch.setattr(tasks, "TaskCommands", commands)
     return value
 
 
