@@ -429,3 +429,21 @@ test('HADB-03: missing current household proof retires private drafts and makes 
   f.element.view=current;await f.element.updateComplete;expect(f.root.querySelector('form')).toBeNull();
   await f.click('Edit preferences');expect(f.input('Saved language').value).toBe('es');expect(f.intents).toEqual([]);
 });
+
+test('C39: the household editor reviews and submits the bounded horizon in both languages',async()=>{
+  const current=view();
+  const f=await mount({...current,household:{...current.household!,materializationHorizonDays:60}});
+  await f.click('Edit household');
+  const label='Recurrence horizon (days)';
+  expect(f.input(label).value).toBe('60');
+  await f.change(label,'6');await f.click('Review changes');
+  expect(f.root.querySelector('[role=alert]')).not.toBeNull();
+  expect(f.intents).toEqual([]);
+  await f.change(label,'14');await f.click('Review changes');
+  expect(f.text()).toContain('Recurrence horizon (days)14');
+  await f.click('Save changes');
+  expect(f.intents).toEqual([{type:'submit',command:{action:'household.update',
+    payload:{expected_revision:'7',name:'Household',time_zone:'UTC',materialization_horizon_days:14}}}]);
+  f.element.language='es';await f.element.updateComplete;
+  expect(f.text()).toContain('Horizonte de recurrencia (días)');
+});

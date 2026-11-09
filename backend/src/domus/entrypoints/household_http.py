@@ -26,7 +26,14 @@ from domus.domain.identity import (
     ProfileRule,
     Role,
 )
-from domus.domain.storage import JsonDocument, JsonValue, Receipt
+from domus.domain.storage import (
+    DEFAULT_MATERIALIZATION_HORIZON_DAYS,
+    MAX_MATERIALIZATION_HORIZON_DAYS,
+    MIN_MATERIALIZATION_HORIZON_DAYS,
+    JsonDocument,
+    JsonValue,
+    Receipt,
+)
 from domus.entrypoints.http_contract import PositiveRevision, StrictModel
 
 
@@ -85,6 +92,12 @@ class HouseholdUpdateRequest(StrictModel):
     expected_revision: PositiveRevision
     name: str = Field(min_length=1, max_length=160)
     time_zone: str = Field(min_length=1, max_length=128)
+    materialization_horizon_days: int = Field(
+        default_factory=lambda: DEFAULT_MATERIALIZATION_HORIZON_DAYS,
+        ge=MIN_MATERIALIZATION_HORIZON_DAYS,
+        le=MAX_MATERIALIZATION_HORIZON_DAYS,
+        description="Local days. Omission preserves the saved household value.",
+    )
 
 
 class EnrollmentRequest(StrictModel):
@@ -129,6 +142,9 @@ class HouseholdResponse(StrictModel):
     name: str
     time_zone: str
     revision: int
+    materialization_horizon_days: int = Field(
+        ge=MIN_MATERIALIZATION_HORIZON_DAYS, le=MAX_MATERIALIZATION_HORIZON_DAYS
+    )
 
 
 class MemberResponse(StrictModel):
@@ -348,7 +364,15 @@ def create_household_router(
         request: Request, body: HouseholdUpdateRequest, query: Annotated[_EmptyQuery, Query()]
     ) -> ReceiptResponse:
         result = context(request).household.update(
-            _key(request), body.name, body.time_zone, body.expected_revision
+            _key(request),
+            body.name,
+            body.time_zone,
+            body.expected_revision,
+            materialization_horizon_days=(
+                body.materialization_horizon_days
+                if "materialization_horizon_days" in body.model_fields_set
+                else None
+            ),
         )
         return _receipt(result)
 

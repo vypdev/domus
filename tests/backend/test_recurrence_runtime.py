@@ -347,3 +347,91 @@ def test_both_owned_lifetimes_resume_a_relative_cycle_after_bootstrap(api, monke
             assert successor.source.cycle.cycle_id == original.result.decode()["cycle"]["cycle_id"]
     finally:
         runtime.close()
+
+
+def test_saved_household_horizon_limits_next_worker_run_in_both_compositions(api):
+    from datetime import UTC, datetime, timedelta
+
+    from domus.domain.recurrence_rules import NominalDate
+
+    human = (
+        api.source.people[api.client.headers["X-Remote-User-Id"]]
+        if api.mode == "native"
+        else api.source.human
+    )
+
+    class Actor:
+        def current(self):
+            return human
+
+    creator = RecurrenceCommands(
+        api.store,
+        Actor(),
+        SystemClock(),
+        SecureIdentifiers(),
+        FixedRecurrencePlanner(CalendarNominalExpansion(), PinnedRecurrenceTime()),
+    )
+    today = datetime.fromtimestamp(SystemClock().now() / 1000, UTC).date()
+    value = request()
+    pattern = replace(value.pattern, start=NominalDate(today + timedelta(days=20)), count=1)
+    rule_id = creator.create_fixed("future", replace(value, pattern=pattern)).result.decode()[
+        "schedule_id"
+    ]
+
+    endpoint = "/api/v1/household"
+    assert api.client.get(endpoint).json()["materialization_horizon_days"] == 60
+    original = {"expected_revision": 1, "name": "Home", "time_zone": "UTC"}
+    invalid = (6, 367, 14.5, "14", True, None)
+    for candidate in invalid:
+        reply = api.client.put(
+            endpoint,
+            json={**original, "materialization_horizon_days": candidate},
+            headers=api.headers("invalid-horizon"),
+        )
+        assert reply.status_code == 422
+    payload = {**original, "materialization_horizon_days": 14}
+    first = api.client.put(endpoint, json=payload, headers=api.headers("short-horizon"))
+    assert first.status_code == 200, first.text
+
+    worker = api.runtime.recurrence
+    assert worker._tick(lambda: True).created == 0
+    with api.store.read() as unit:
+        assert unit.recurrence.slots("home", rule_id) == ()
+
+    legacy = {**original, "name": "Updated home", "expected_revision": 2}
+    response = api.client.put(endpoint, json=legacy, headers=api.headers("legacy"))
+    assert response.status_code == 200, response.text
+    assert api.client.get(endpoint).json()["materialization_horizon_days"] == 14
+    retry = api.client.put(endpoint, json=legacy, headers=api.headers("legacy"))
+    assert retry.json() == response.json()
+
+    wide = {**legacy, "expected_revision": 3, "materialization_horizon_days": 366}
+    response = api.client.put(endpoint, json=wide, headers=api.headers("wide-horizon"))
+    assert response.status_code == 200, response.text
+    assert worker._tick(lambda: True).created == 1
+    with SQLiteDatabase(api.store.path, api.store.installation).read() as unit:
+        assert unit.households.current().materialization_horizon_days == 366
+        issued = unit.recurrence.slots("home", rule_id)
+        assert len(issued) == 1
+
+    replay = api.client.put(endpoint, json=payload, headers=api.headers("short-horizon"))
+    assert replay.json() == first.json()
+    lookup = api.client.get("/api/v1/administration/requests/household.update/short-horizon")
+    assert lookup.json()["operation_id"] == first.json()["operation_id"]
+    for key, body in (
+        ("short-horizon", {**payload, "materialization_horizon_days": 7}),
+        ("stale", payload),
+    ):
+        assert api.client.put(endpoint, json=body, headers=api.headers(key)).status_code == 409
+    assert api.client.get(endpoint).json()["materialization_horizon_days"] == 366
+    narrowed = {**wide, "expected_revision": 4, "materialization_horizon_days": 7}
+    response = api.client.put(endpoint, json=narrowed, headers=api.headers("narrow-again"))
+    assert response.status_code == 200, response.text
+    assert worker._tick(lambda: True).created == 0
+    with api.store.read() as unit:
+        assert unit.recurrence.slots("home", rule_id) == issued
+
+    api.user("b" * 32)
+    assert (
+        api.client.put(endpoint, json=wide, headers=api.headers("unauthorized")).status_code == 403
+    )

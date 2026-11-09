@@ -1,5 +1,13 @@
 # Review a manual task for relative recurrence
 
+## Set the household materialization horizon
+
+In **Household → Edit household**, enter a **Recurrence horizon (days)** from 7 to 366.
+Review the value before saving. Domus starts at 60 local days. Each maintenance run
+takes the current setting at startup and uses it to look ahead for fixed calendar
+work. Issued occurrences remain visible. Completion-relative successors still use the
+recorded completion and their configured visibility policy.
+
 ## Review scheduling from Tasks
 
 Select a task in **Tasks**, then open **Review scheduling**. Domus loads the current rule and

@@ -29,6 +29,7 @@ export interface HouseholdFacts {
   readonly name: string;
   readonly timeZone: string;
   readonly revision: Revision;
+  readonly materializationHorizonDays?: number;
 }
 export type ReadFault = 'authentication_required' | 'forbidden' | 'unavailable' | 'invalid_response';
 export class EntryReadError extends Error {

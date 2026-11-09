@@ -13,6 +13,10 @@ from domus.domain.errors import InvalidInput
 type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
 type JsonObject = dict[str, JsonValue]
 
+MIN_MATERIALIZATION_HORIZON_DAYS = 7
+DEFAULT_MATERIALIZATION_HORIZON_DAYS = 60
+MAX_MATERIALIZATION_HORIZON_DAYS = 366
+
 
 def validate_identifier(value: str) -> None:
     if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}", value):
@@ -127,6 +131,7 @@ class Household:
     name: str
     time_zone: str
     revision: int
+    materialization_horizon_days: int = DEFAULT_MATERIALIZATION_HORIZON_DAYS
 
     def __post_init__(self) -> None:
         validate_identifier(self.household_id)
@@ -142,6 +147,10 @@ class Household:
             or type(self.revision) is not int
             or self.revision < 1
             or self.revision > 2**63 - 1
+            or type(self.materialization_horizon_days) is not int
+            or not MIN_MATERIALIZATION_HORIZON_DAYS
+            <= self.materialization_horizon_days
+            <= MAX_MATERIALIZATION_HORIZON_DAYS
         ):
             raise InvalidInput("invalid_household")
         try:

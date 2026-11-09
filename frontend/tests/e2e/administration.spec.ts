@@ -58,11 +58,18 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     await widget.getByRole('button',{name:'Editar preferencias',exact:true}).click();await expect(widget.getByLabel('Idioma guardado',{exact:true})).toHaveValue('es');
     await expect(widget.getByRole('checkbox',{name:'Resúmenes habituales de participación',exact:true})).not.toBeChecked();
   });
-  test('HADW-04: actual household form saves the exact name/timezone once and reload reads the persisted revision',async({page,context,request})=>{
+  test('HADW-04: actual household form saves name, timezone and horizon once and reload reads the persisted values',async({page,context,request})=>{
     const widget=await create(page,context,mode);await widget.getByRole('button',{name:'Edit household',exact:true}).click();
-    await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Cedar House');await widget.getByRole('textbox',{name:'New timezone',exact:true}).fill('Europe/Madrid');await save(widget);
-    expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({name:'Cedar House',time_zone:'Europe/Madrid',revision:2});
-    expect((await statistics(request,mode)).counts.receipts).toBe(2);await page.reload();await expect(page.getByText('Cedar House',{exact:true})).toBeVisible();
+    await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Cedar House');
+    await widget.getByRole('textbox',{name:'New timezone',exact:true}).fill('Europe/Madrid');
+    const horizon=widget.getByRole('spinbutton',{name:'Recurrence horizon (days)',exact:true});
+    await expect(horizon).toHaveValue('60');await horizon.fill('14');await save(widget);
+    expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({
+      name:'Cedar House',time_zone:'Europe/Madrid',revision:2,materialization_horizon_days:14,
+    });
+    expect((await statistics(request,mode)).counts.receipts).toBe(2);await page.reload();
+    await expect(page.getByText('Cedar House',{exact:true})).toBeVisible();
+    await widget.getByRole('button',{name:'Edit household',exact:true}).click();await expect(horizon).toHaveValue('14');
   });
   test('household-workspace-C78: an actual administration write preserves a revision above 2^53 through HTTP and SQLite',async({page,context,request})=>{
     const widget=await create(page,context,mode),before=await statistics(request,mode),writes:{key:string;body:string|null}[]=[];
@@ -74,7 +81,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     await widget.getByRole('button',{name:'Edit household',exact:true}).click();
     await expect(widget.getByRole('region',{name:'Household settings',exact:true})).toContainText('9007199254740993');
     await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Exact revision house');await save(widget);
-    expect(writes).toHaveLength(1);expect(writes[0].body).toBe('{"expected_revision":9007199254740993,"name":"Exact revision house","time_zone":"UTC"}');
+    expect(writes).toHaveLength(1);expect(writes[0].body).toBe('{"expected_revision":9007199254740993,"name":"Exact revision house","time_zone":"UTC","materialization_horizon_days":60}');
     // Assert raw wire integers: JSON.parse would coerce the original revision to an unsafe Number.
     const persisted=await page.request.get(base(mode)+'/api/v1/household');expect(persisted.status()).toBe(200);
     expect(await persisted.text()).toMatch(/"revision":\s*9007199254740994(?=[,}])/u);

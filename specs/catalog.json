@@ -557,7 +557,10 @@
         "backend/src/domus/application/fixed_recurrence.py",
         "backend/src/domus/domain/relative_lifecycle.py",
         "backend/src/domus/infrastructure/sqlite_relative_lifecycle.py",
-        "backend/src/domus/infrastructure/sqlite_relative_recurrence.py"
+        "backend/src/domus/infrastructure/sqlite_relative_recurrence.py",
+        "backend/src/domus/application/household_commands.py",
+        "backend/src/domus/composition/recurrence.py",
+        "frontend/src/presentation/domus-administration.ts"
       ],
       "tests": [
         "tests/backend/test_recurrence_time_values.py",
@@ -567,7 +570,11 @@
         "tests/backend/test_fixed_recurrence_planning.py",
         "tests/backend/test_fixed_batch_review.py",
         "tests/backend/test_relative_lifecycle.py",
-        "tests/backend/test_relative_lifecycle_consumer.py"
+        "tests/backend/test_relative_lifecycle_consumer.py",
+        "tests/backend/test_recurrence_lifecycle_migration.py",
+        "tests/backend/test_recurrence_runtime.py",
+        "tests/fixtures/sqlite/v11.sql",
+        "frontend/tests/e2e/catalog.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",

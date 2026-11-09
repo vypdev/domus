@@ -145,3 +145,9 @@ def test_invalid_household_does_not_become_persistent_state(
 ) -> None:
     with pytest.raises(InvalidInput, match="invalid_household"):
         Household("home", name, time_zone, revision)
+
+
+@pytest.mark.parametrize("days", [True, 14.0, 6, 367])
+def test_household_requires_bounded_integer_materialization_horizon(days):
+    with pytest.raises(InvalidInput, match="invalid_household"):
+        Household("home", "Home", "UTC", 1, days)

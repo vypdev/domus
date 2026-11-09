@@ -42,7 +42,7 @@ from domus.infrastructure.application_runtime import SecureIdentifiers, SystemCl
 from domus.infrastructure.sqlite import SQLiteDatabase, SCHEMA_VERSION
 from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
 
-assert SCHEMA_VERSION == 11
+assert SCHEMA_VERSION == 12
 class Human:
     user_id = 'fictional_profile_ha_user'
     def current(self):
@@ -106,7 +106,7 @@ with TemporaryDirectory(prefix='domus-profile-image-') as directory:
             unit.preferences.save(private, 1)
         checkpoint = SQLiteSnapshots(store, Path(directory) / 'snapshot', storage.installation,
             clock).create('profile-checkpoint')
-        assert checkpoint.schema_version == 11
+        assert checkpoint.schema_version == 12
         assert len(tuple((Path(directory) / 'snapshot').iterdir())) == 3
     finally:
         runtime.close()
@@ -359,7 +359,7 @@ def test_actual_compatible_application_data_and_generation_rollback(
     assert restored["ui"] == later["ui"]
     assert restored["generation_id"] == later["selected_generation"]
     assert restored["state"] == before["state"]
-    assert restored["schema"] == refusal["refused_schema"] == 11
+    assert restored["schema"] == refusal["refused_schema"] == 12
     assert restored["original_operations_preserved"] is True
     assert rolled_back["ui"] == before["ui"]
     assert rolled_back["state"] == before["state"]

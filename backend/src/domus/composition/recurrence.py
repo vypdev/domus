@@ -6,7 +6,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.concurrency import run_in_threadpool
 
-from domus.application.fair_recurrence import FairFixedRunner, FixedRun, RelativeRunServices
+from domus.application.fair_recurrence import (
+    FairFixedRunner,
+    FixedRun,
+    RelativeRunServices,
+    RunLimits,
+)
 from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.ports import Transactions
@@ -42,6 +47,7 @@ def recurrence_worker(store: Transactions, installation: Installation) -> Recurr
             FixedMaintenance(store, scope, planner, clock, identifiers),
             times,
             clock,
+            limits=RunLimits(horizon_days=household.materialization_horizon_days),
             relative=RelativeRunServices(
                 RelativeMaintenance(store, scope, times, clock, identifiers),
                 RecurrenceSourceObservations(store, scope),

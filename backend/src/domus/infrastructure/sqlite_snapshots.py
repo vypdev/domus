@@ -21,10 +21,17 @@ from domus.domain.errors import (
 )
 from domus.domain.recovery import RecoveryRequest
 from domus.domain.snapshots import Snapshot
-from domus.domain.storage import CommandKey, Installation, JsonDocument, validate_identifier
+from domus.domain.storage import (
+    DEFAULT_MATERIALIZATION_HORIZON_DAYS,
+    CommandKey,
+    Installation,
+    JsonDocument,
+    validate_identifier,
+)
 from domus.infrastructure.owned_storage import _file, _identity, _write_identity
 from domus.infrastructure.sqlite import (
     SQLiteDatabase,
+    SQLiteHouseholds,
     SQLiteUnit,
     _expected_schema,
     _schema,
@@ -106,7 +113,14 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
     if connection.execute("PRAGMA foreign_key_check").fetchone() is not None:
         raise DatabaseRejected("invalid_snapshot_database")
     identities = connection.execute("SELECT singleton FROM installation").fetchall()
-    households = connection.execute("SELECT household_id,singleton FROM households").fetchall()
+    horizon = (
+        "materialization_horizon_days"
+        if version >= 12
+        else f"{DEFAULT_MATERIALIZATION_HORIZON_DAYS} AS materialization_horizon_days"
+    )
+    households = connection.execute(
+        f"SELECT household_id,singleton,name,time_zone,revision,{horizon} FROM households"
+    ).fetchall()
     if (
         len(identities) != 1
         or identities[0][0] != 1
@@ -145,7 +159,7 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
                     )
         unit = SQLiteUnit(connection, installation)
         for row in households:
-            unit.households.get(row[0])
+            SQLiteHouseholds._record(row)
             if version >= 2:
                 members = unit.members.list(row[0])
                 policy = unit.policies.get(row[0])

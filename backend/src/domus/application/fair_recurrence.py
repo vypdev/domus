@@ -25,6 +25,11 @@ from domus.domain.recurrence_records import FixedSchedule, ScheduleState
 from domus.domain.recurrence_rules import NominalDate, NominalSlot
 from domus.domain.recurrence_time import RelativeInterval
 from domus.domain.relative_recurrence import RelativeSchedule
+from domus.domain.storage import (
+    DEFAULT_MATERIALIZATION_HORIZON_DAYS,
+    MAX_MATERIALIZATION_HORIZON_DAYS,
+    MIN_MATERIALIZATION_HORIZON_DAYS,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,7 +37,7 @@ class RunLimits:
     max_definitions: int = 50
     max_slots: int = 1000
     max_periods: int = 4096
-    horizon_days: int = 60
+    horizon_days: int = DEFAULT_MATERIALIZATION_HORIZON_DAYS
     max_sources: int = 4096
 
     def __post_init__(self) -> None:
@@ -40,7 +45,11 @@ class RunLimits:
             (self.max_definitions, 1, 50),
             (self.max_slots, 1, 1000),
             (self.max_periods, 1, 64000),
-            (self.horizon_days, 7, 366),
+            (
+                self.horizon_days,
+                MIN_MATERIALIZATION_HORIZON_DAYS,
+                MAX_MATERIALIZATION_HORIZON_DAYS,
+            ),
             (self.max_sources, 1, 64000),
         ):
             if type(value) is not int or not lower <= value <= upper:

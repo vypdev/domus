@@ -287,3 +287,52 @@ test('the built task workspace fits a narrow viewport in both color schemes', as
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   }
 });
+
+for (const example of [
+  {
+    story: 'pending-processing', view: 'Calendar view', apply: 'Show calendar',
+    kinds: ['Planned', 'Due', 'Performed', 'Approval'],
+    pending: 'Recurrence processing is pending. More entries may appear.',
+  },
+  {
+    story: 'spanish', view: 'Vista del calendario', apply: 'Mostrar calendario',
+    kinds: ['Previsto', 'Vencimiento', 'Realizado', 'Aprobación'],
+    pending: 'Hay recurrencias pendientes de procesar. Pueden aparecer más entradas.',
+  },
+] as const) {
+  test(`C35: the ${example.story} calendar supports keyboard navigation to a populated agenda`, async ({page}) => {
+    await page.setViewportSize({width: 320, height: 720});
+    await page.goto(origin + '/iframe.html?id=domus-calendar--' + example.story + '&viewMode=story');
+    const calendar = page.locator('domus-calendar');
+    const view = calendar.getByRole('combobox', {name: example.view, exact: true});
+    const submit = calendar.getByRole('button', {name: example.apply, exact: true});
+    await expect(view).toHaveValue('month');
+    await expect(calendar.locator('.calendar-grid')).toBeVisible();
+    await expect(calendar.getByRole('status').filter({hasText: example.pending})).toBeVisible();
+
+    await page.keyboard.press('Tab');
+    await expect(view).toBeFocused();
+    await page.keyboard.press('a');
+    await expect(view).toHaveValue('agenda');
+    for (let i = 0; i < 14 && !await submit.evaluate(button => button.matches(':focus')); i++) {
+      await page.keyboard.press('Tab');
+    }
+    await expect(submit).toBeFocused();
+    await page.keyboard.press('Enter');
+
+    await expect(calendar.locator('.calendar-grid')).toHaveCount(0);
+    const agenda = calendar.locator('.calendar-entries');
+    const task = agenda.getByRole('listitem').filter({hasText: 'Check the kitchen filter'});
+    await expect(task).toHaveCount(4);
+    for (const [index, time] of ['08:30', null, '09:15', '10:45'].entries()) {
+      const entry = task.filter({hasText: example.kinds[index]});
+      await expect(entry).toHaveCount(1);
+      if (time === null) await expect(entry.locator('time')).toHaveCount(0);
+      else await expect(entry.locator('time')).toHaveText(time);
+    }
+    await expect(agenda.getByText('<img src=x onerror=alert(1)>', {exact: true})).toBeVisible();
+    await expect(calendar.locator('img')).toHaveCount(0);
+    await expect(calendar.getByRole('status').filter({hasText: example.pending})).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+}

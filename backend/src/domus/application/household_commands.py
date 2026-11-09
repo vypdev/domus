@@ -1,6 +1,6 @@
 """Explicit household setup and own enrollment commit through the durable command boundary."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import cast
 
 from domus.application.authorization import HouseholdAccess, MembershipAuthorization
@@ -19,7 +19,15 @@ from domus.domain.identity import (
     Role,
     validate_revision,
 )
-from domus.domain.storage import CommandKey, Household, JsonDocument, Receipt, validate_identifier
+from domus.domain.storage import (
+    DEFAULT_MATERIALIZATION_HORIZON_DAYS,
+    CommandKey,
+    Household,
+    JsonDocument,
+    JsonObject,
+    Receipt,
+    validate_identifier,
+)
 
 
 def _initial_revision(value: int) -> None:
@@ -219,18 +227,35 @@ class HouseholdCommands:
 
         return self._initial(human, command.action).execute(command, payload, apply)
 
-    def update(self, key: str, name: str, time_zone: str, expected_revision: int) -> Receipt:
+    def update(
+        self,
+        key: str,
+        name: str,
+        time_zone: str,
+        expected_revision: int,
+        *,
+        materialization_horizon_days: int | None = None,
+    ) -> Receipt:
         validate_revision(expected_revision)
-        proposed = Household(self.household_id, name, time_zone, expected_revision + 1)
+        proposed = Household(
+            self.household_id,
+            name,
+            time_zone,
+            expected_revision + 1,
+            DEFAULT_MATERIALIZATION_HORIZON_DAYS
+            if materialization_horizon_days is None
+            else materialization_horizon_days,
+        )
         human = self.actor.current()
         command = CommandKey(self.household_id, human.ha_user_id, "household.update", key)
-        payload = JsonDocument.from_value(
-            {
-                "name": proposed.name,
-                "time_zone": proposed.time_zone,
-                "expected_revision": expected_revision,
-            }
-        )
+        request: JsonObject = {
+            "name": proposed.name,
+            "time_zone": proposed.time_zone,
+            "expected_revision": expected_revision,
+        }
+        if materialization_horizon_days is not None:
+            request["materialization_horizon_days"] = materialization_horizon_days
+        payload = JsonDocument.from_value(request)
         authority = MembershipAuthorization(
             HouseholdAccess(human), command.action, Permission.HOUSEHOLD_MANAGE
         )
@@ -241,7 +266,13 @@ class HouseholdCommands:
         self.time_zones.require(proposed.time_zone)
 
         def apply(unit: UnitOfWork) -> Change:
-            unit.households.save(proposed, expected_revision)
+            current = unit.households.get(self.household_id)
+            saved = proposed
+            if materialization_horizon_days is None and current is not None:
+                saved = replace(
+                    proposed, materialization_horizon_days=current.materialization_horizon_days
+                )
+            unit.households.save(saved, expected_revision)
             result = JsonDocument.from_value(
                 {"household_id": proposed.household_id, "revision": proposed.revision}
             )

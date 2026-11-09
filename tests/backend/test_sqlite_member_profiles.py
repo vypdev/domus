@@ -40,8 +40,11 @@ def frozen(tmp_path, version=8):
 
 def facts(path, tables):
     with closing(sqlite3.connect(path)) as connection:
+        originals = {"households": "household_id,singleton,name,time_zone,revision"}
         return {
-            table: connection.execute(f'SELECT * FROM "{table}" ORDER BY rowid').fetchall()
+            table: connection.execute(
+                f'SELECT {originals.get(table, "*")} FROM "{table}" ORDER BY rowid'
+            ).fetchall()
             for table in tables
         }
 
@@ -299,7 +302,7 @@ def test_real_historical_input_upgrade_preserves_every_original_table_and_adds_d
                     current.household_id, current.member_id
                 ) == MemberPreferences(current.member_id, current.household_id)
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 11
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 12
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 
@@ -347,7 +350,7 @@ def test_snapshot_independently_preserves_both_profiles_without_changing_member_
     archive = tmp_path / "snapshot"
     snapshots = SQLiteSnapshots(store, archive, store.installation, Clock())
     checkpoint = snapshots.create("original")
-    assert checkpoint.schema_version == 11 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 12 and snapshots.inspect() == checkpoint
     with SQLiteDatabase(archive / "domus.sqlite3", store.installation).read() as unit:
         assert unit.presentations.get("home", "member_1") == public
         assert unit.preferences.get("home", "member_1") == private
