@@ -1,6 +1,6 @@
 # Points consumer for task lifecycle events
 
-This implementation note accompanies the [Points owner specification](points-rewards.md)
+This implementation note accompanies the [Points owner specification](../../specs/points-rewards.md)
 and [issue #56](https://github.com/vypdev/domus/issues/56).
 
 Ingress and standalone each run a local Points worker against the existing installation
@@ -25,11 +25,11 @@ A split with no remainder and a reversal leave the position unchanged.
 Schema 16 adds the Points receipt table and its indexes. The migration creates
 no credits. Startup processes eligible live events and records pending ones without
 awarding them. Checkpoint inspection validates the original source and recomputes
-each award and linked reversal. The [schema-15 fixture](../tests/fixtures/sqlite/v15-points-source.sql)
+each award and linked reversal. The [schema-15 fixture](../../tests/fixtures/sqlite/v15-points-source.sql)
 was captured from develop `870ab5437a510ae419961bf695706021d2efd56d` with two original
 task completions. Its SHA-256 is `49522d9ca92a55dbe6a751c768ab17250c93010a7ceb6fce4dc6331d2c4f5e45`.
 
-[Consumer tests](../tests/backend/test_points_consumer.py) cover the schema fixture,
+[Consumer tests](../../tests/backend/test_points_consumer.py) cover the schema fixture,
 the real recurrence and Points interaction, worker composition, concurrency,
 rollback, restart, and restoration. The combined Inventory assertions retain
 their original acceptance identities in [issue #23](https://github.com/vypdev/domus/issues/23).

@@ -14,7 +14,7 @@ debt or convert unknown historic intent into a design decision.
 | `household-identity` | Proposed | Each participating person uses their own Home Assistant account. Domus associates that verified user with one household member and applies explicit backend permissions independently of an optional person entity. | [Household members&#44; Home Assistant identity and permissions](./household-identity.md) + 4 companion | 222 paths · 2026-11-02 |
 | `household-tasks` | Proposed | Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence. | [Task definitions&#44; occurrences and household execution](./household-tasks.md) + 2 companion | 32 paths · 2026-11-01 |
 | `recurrence-calendar` | Proposed | A bounded scheduler turns task definitions into stable occurrences and a family calendar distinguishes planned start, deadline and actual completion. Original recurrence outcomes bind receipt status, action, result and source-cycle identity before replay and snapshot acceptance. | [Recurrence engine and family calendar](./recurrence-calendar.md) + 3 companion | 37 paths · 2026-11-09 |
-| `points-rewards` | Proposed | Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation. | [Auditable points&#44; participation and optional rewards](./points-rewards.md) | 5 paths · 2026-11-01 |
+| `points-rewards` | Proposed | Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation. | [Auditable points&#44; participation and optional rewards](./points-rewards.md) | 14 paths · 2026-11-09 |
 | `shopping-management` | Proposed | Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts. | [Shared shopping demand&#44; purchases and receipt](./shopping-management.md) | 5 paths · 2026-10-29 |
 | `household-inventory` | Proposed | The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger. | [Product catalog&#44; pantry stock and replenishment](./household-inventory.md) | 5 paths · 2026-10-31 |
 | `home-assistant-surface` | Proposed | Domus exposes its household capabilities as native Home Assistant entities, services and events. The already integrated HA MCP consumes these surfaces; no gateway work or second MCP is included. | [Home Assistant entities&#44; services and integration](./home-assistant-surface.md) + 1 companion | 5 paths · 2026-10-29 |
@@ -71,13 +71,13 @@ debt or convert unknown historic intent into a design decision.
 ### `points-rewards` — Auditable points&#44; participation and optional rewards
 
 - Owner: Domus maintainers (review assignment pending)
-- Last verified: 2026-11-01
+- Last verified: 2026-11-09
 - Specifications: [`specs/points-rewards.md`](./points-rewards.md)
-- Workflows: Not applicable for this capability.
-- Entrypoints: Not yet implemented (proposed capability).
-- Core code: Not yet implemented (proposed capability).
-- Tests: Not yet implemented (proposed capability).
-- User documentation: [`docs/product-vision.md`](../docs/product-vision.md) · [`docs/architecture.md`](../docs/architecture.md) · [`docs/operations.md`](../docs/operations.md) · [`docs/user-guide.md`](../docs/user-guide.md) · [`docs/contracts/home-assistant.md`](../docs/contracts/home-assistant.md)
+- Workflows: [`.github/workflows/ci_check.yml`](../.github/workflows/ci_check.yml)
+- Entrypoints: [`backend/src/domus/composition/ingress.py`](../backend/src/domus/composition/ingress.py) · [`backend/src/domus/composition/server.py`](../backend/src/domus/composition/server.py)
+- Core code: [`backend/src/domus/domain/points.py`](../backend/src/domus/domain/points.py) · [`backend/src/domus/application/points.py`](../backend/src/domus/application/points.py) · [`backend/src/domus/application/points_ports.py`](../backend/src/domus/application/points_ports.py) · [`backend/src/domus/infrastructure/sqlite_points.py`](../backend/src/domus/infrastructure/sqlite_points.py)
+- Tests: [`tests/backend/test_points_consumer.py`](../tests/backend/test_points_consumer.py)
+- User documentation: [`docs/product-vision.md`](../docs/product-vision.md) · [`docs/architecture.md`](../docs/architecture.md) · [`docs/operations.md`](../docs/operations.md) · [`docs/user-guide.md`](../docs/user-guide.md) · [`docs/contracts/home-assistant.md`](../docs/contracts/home-assistant.md) · [`docs/tasks/points-consumer.md`](../docs/tasks/points-consumer.md)
 
 ### `shopping-management` — Shared shopping demand&#44; purchases and receipt
 
