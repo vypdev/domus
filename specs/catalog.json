@@ -602,25 +602,38 @@
       "status": "proposed",
       "scope": "Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-01",
+      "lastVerified": "2026-11-09",
       "specs": [
         "specs/points-rewards.md"
       ],
-      "workflows": [],
-      "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
+      "entrypoints": [
+        "backend/src/domus/composition/ingress.py",
+        "backend/src/domus/composition/server.py"
+      ],
+      "code": [
+        "backend/src/domus/domain/points.py",
+        "backend/src/domus/application/points.py",
+        "backend/src/domus/application/points_ports.py",
+        "backend/src/domus/infrastructure/sqlite_points.py"
+      ],
+      "tests": [
+        "tests/backend/test_points_consumer.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/tasks/points-consumer.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
-        "blockingDecisions": "A35 confirms same-task conserved-remainder rotation by default. Exact tie-break/participant-set behavior, durable ledger/reversal/reward contracts, child-facing UX, real consumers and deployment evidence remain required.",
+        "implementationEvidence": "partial: PR #58 verifies the durable task lifecycle consumer, default conserved allocation, exact reversal, both deployment compositions, and SQLite migration and restoration.",
+        "blockingDecisions": "Configurable distribution, complete Family experience, reward redemption and broader release acceptance remain open.",
         "copilotChangesAllowed": false
       }
     },
