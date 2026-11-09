@@ -480,7 +480,8 @@
       "lastVerified": "2026-11-01",
       "specs": [
         "specs/household-tasks.md",
-        "specs/task-execution-foundation.md"
+        "specs/task-execution-foundation.md",
+        "specs/household-task-categories.md"
       ],
       "workflows": [
         ".github/workflows/ci_check.yml"
