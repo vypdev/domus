@@ -809,6 +809,7 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
             )
             name = network + "-" + mode
             names.append(name)
+            extra_alias = () if mode == "native" else ("--network-alias", "untrusted.domus.fixture")
             _calendar_checked(
                 docker(
                     "run",
@@ -819,6 +820,7 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
                     network,
                     "--network-alias",
                     alias,
+                    *extra_alias,
                     "--volume",
                     f"{tmp_path}:/tls:ro",
                     "--entrypoint",
@@ -842,8 +844,11 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
             network,
             "--volume",
             f"{tmp_path / 'cert.pem'}:/tls/ca.pem:ro",
+            # Core's aiohttp context reads REQUESTS_CA_BUNDLE. OpenSSL gets the same test CA.
             "--env",
             "REQUESTS_CA_BUNDLE=/tls/ca.pem",
+            "--env",
+            "SSL_CERT_FILE=/tls/ca.pem",
             "--env",
             native[0],
             "--env",

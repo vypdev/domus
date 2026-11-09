@@ -8,12 +8,13 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
-from aiohttp import web
+from aiohttp import ClientConnectorCertificateError, web
 from homeassistant import bootstrap, loader
 from homeassistant.components.calendar import DATA_COMPONENT
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util import dt as dt_util
 
@@ -333,9 +334,16 @@ async def live():
     async with core() as hass:
         now = dt_util.now()
         for mode in ("NATIVE", "STANDALONE"):
-            result = await configure(
-                hass, os.environ[f"DOMUS_{mode}_URL"], os.environ[f"DOMUS_{mode}_TOKEN"]
-            )
+            url, token = os.environ[f"DOMUS_{mode}_URL"], os.environ[f"DOMUS_{mode}_TOKEN"]
+            if mode == "STANDALONE":
+                wrong_host = url.replace("domus.fixture", "untrusted.domus.fixture")
+                session = async_get_clientsession(hass)
+                try:
+                    async with session.get(wrong_host):
+                        raise AssertionError("Core accepted a certificate for the wrong host")
+                except ClientConnectorCertificateError:
+                    pass
+            result = await configure(hass, url, token)
             assert result["type"] == "create_entry", result.get("errors")
             entry = result["result"]
             await hass.async_block_till_done()
