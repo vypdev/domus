@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled Overview, Tasks, Calendar and Household bundle with authorized task categories, captured historical labels and the active category filter.",
+  "scope": "Compiled Overview, Tasks, Calendar and Household bundle with authorized task categories, captured historical labels, legacy calendar tags and the active category filter.",
   "actualProductFiles": {
-    ".vite/manifest.json": "d01982ad2cbe82cec18242111d9dbff7674e6ab55d516bafe5586097c6c0b61c",
+    ".vite/manifest.json": "f0cd4db654621e1cf92b0a353562aac8f4dd4ec9c0aec1be9412b06814264535",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-H8-kq_NQ.js": "7a81e695974be328057468e0d31326a36a4b6cfe3e92b813f1c935952cd690f0",
-    "index.html": "d95027836ee2dcdc995dfa07dd197d38f770d361ae428228b9d92a611220fba7"
+    "assets/index-C-R7DqCo.js": "fabc9dc0ff292905606e4e893e94ea740fccea96f9ebee575778a819f3b5e1c0",
+    "index.html": "1ff147399df312b5261278b1eb2dc3372e3be06a5217f7090e2299ad6c044c32"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
