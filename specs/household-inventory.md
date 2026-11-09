@@ -326,3 +326,130 @@ These are internal implementation steps within the first integrated release; the
 Primary sources: [Copilot standard](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/README.md), [original template](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/_template.md), and the linked [reference investigation](../docs/reference-investigation.md).
 
 Confirmed owner choices and unresolved proposals are separated in [decisions](../docs/decisions.md). [Issue #2](https://github.com/vypdev/domus/issues/2) tracks the documentation foundation. The [adoption note](../docs/copilot-adoption.md) records the current catalog evidence limitation. Optional future depth remains explicitly deferred in the product vision; the gateway's installation and MCP internals are outside Domus scope.
+
+## Inventory effects for reviewed recurring work
+
+- Status: Draft
+- Owners: Domus maintainers and the Household Inventory capability
+- Scope: Inventory persistence and task integration needed to verify the three remaining cross-domain recurrence obligations
+- Source baseline: develop at 9b2495922c57a7fddef7c75885fd22acd6a7bd9a
+- Related work: https://github.com/vypdev/domus/issues/57 and https://github.com/vypdev/domus/issues/23
+
+### 1. Executive summary
+
+Give scheduled task material reservations, task-generated replenishment demand and physical movements a production Inventory owner. An accepted fixed recurrence replacement moves only compatible unfulfilled effects linked to the affected work. A task can record real material use. Reopening and independent recurrence invalidation preserve movements from retained work. Original command recovery and restored state preserve each decision once.
+
+### 2. Problem, current behavior, and evidence
+
+The selected baseline has task-owned material intents, scoped posting authority and a transaction-local Inventory port in `backend/src/domus/application/task_material_ports.py`. Production task composition in `backend/src/domus/composition/tasks.py` has no concrete Inventory port. Existing recurrence tests observe work, schedule and review state. The Points consumer from https://github.com/vypdev/domus/pull/58 provides real award and reversal observations. Inventory must provide its own positive reservation, demand and movement controls. This delta adds prospective behavior to `specs/household-inventory.md`.
+
+### 3. Actors, surfaces, and terminology
+
+An authorized household Inventory manager records a material reference and stock and establishes the reservation and demand needed by a task. Existing task material permission rules govern actual posting. A household scheduler uses the existing reviewed replacement command. The original work and its replacement are linked through the accepted operation. A reservation affects availability, demand records a replenishment need, and a movement affects physical stock.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| inventory-recurrence-R1 | A reviewed fixed replacement binds the eligible Inventory effects to the review and transfers each compatible unfulfilled task reservation or demand to its exact linked replacement, with durable provenance and unchanged physical stock. |
+| inventory-recurrence-R2 | Authorized task material posting appends an exact original-source movement in the real household ledger. Reopening and recurrence invalidation preserve material effects belonging to retained downstream work. |
+| inventory-recurrence-R3 | The authoritative receipts, reservations, demands, movements and retained review state preserve household and source identity across contention, rollback, retry, restart, schema migration and compatible restoration. |
+
+Retain immutable physical history and stable source identities. Keep the wider Inventory catalog, shopping UI, external lookups, Gateway and release work with their owning milestones.
+
+### 5. Current versus proposed product journey
+
+An Inventory manager establishes the material, stock and open effects. The scheduler previews a replacement, confirms the same reviewed state and sees the existing linked batch receipt. Recovery uses the original command key. When an authorized member performs work and records actual material use, the ledger records the physical movement. Reopening source work leaves retained successors and their movements visible to the owning services.
+
+### 6. Functional behavior and state model
+
+Bind reviewed replacement to the exact current source effect identities and state. Move only compatible unfulfilled, slot-linked task effects to the matching replacement under the same transaction. Preserve original identity and provenance and keep manual extras outside the replacement. Incompatible effects remain with their source for review. A stale preview cannot silently apply new effects. Cancellation and planning do not change physical stock.
+
+Resolve material references in the household. Record actual consumption using exact quantities and stable task, cycle, line and source-operation identity. Preserve prior movement history. Insufficient stock uses existing pending regularization behavior. An explicit authorized correction links to its original posting. Recurrence invalidation is independent of correction and preserves completed or started work with its existing movements, reservations and demand. Points reverses only the actual award belonging to the reopened source cycle.
+
+### 7. User-facing configuration
+
+Use the existing household roles, task material policy and reviewed recurrence commands. Keep the existing browser settings, material unit values and completion rules. This slice adds no member configuration or new public task response contract.
+
+### 8. Clean Architecture design
+
+Inventory domain policy owns stock quantities, effect compatibility and linked movement rules. Inventory application services enforce authority and coordinate semantic persistence. Recurrence consumes a transaction-local interface to preview and apply reviewed effects. Task material settlement consumes its existing Inventory port. SQLite implements durable identities and shared transactions. Composition binds both deployment modes to the same implementation. Reuse the existing household permission checks and immutable task material values.
+
+### 9. UI/UX and content contract
+
+Use the existing reviewed plan, recovery, material status and retained work surfaces. Keep their English and Spanish behavior and keyboard access. The real Inventory controls are verified through scoped application calls. Broader Inventory presentation remains outside this increment.
+
+### 10. Failure, recovery, and cleanup
+
+The batch command, affected work, Inventory effects and durable receipt commit together. A write failure leaves the prior state and permits original-key retry. A lost response recovers the committed result. Independent SQLite writers serialize before a competing start or invalidation can create conflicting effects. Review retention and restoration preserve actual stock history and prohibit synthetic compensation.
+
+### 11. Security, permissions, and privacy
+
+Scope every effect, reference and movement to the household. Require existing Inventory permission for administrator commands and the existing task-scoped material authority for posting. Preserve actor and original source identity. Keep unrelated work and manual demand outside a scheduler's affected set.
+
+### 12. Observability and operational UX
+
+Integration tests observe exact old and new linked identities, operation receipt, real ledger movement identity and balance, and the existing retained-work review. Record exact test and check revisions in evidence. Keep historical qualification separate from executions on the new change.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+If migration is needed, start from the actual schema 16 SQLite database and preserve its fixture. Its independently captured SQL has SHA-256 032954fc9be4ca2f96359c34df1e6e2a23e5562a481ddbc8fbcb9dcbbeebeb8b. Keep historical task, Points, household and recurrence records readable. Prove migration and rollback with the real fixture and restore through the supported snapshot flow. Use the same production composition in Ingress and standalone.
+
+### 14. Testing strategy and numeric budget
+
+Minimum 4 distinct cases in this delta. The existing recurrence and Inventory acceptance inventories retain their definitions and counts.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Integration and recovery | 2 | Observable scenarios in the case inventory. |
+| State and concurrency | 1 | Observable scenarios in the case inventory. |
+| Adapters and persistence | 1 | Observable scenarios in the case inventory. |
+| Total | 4 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| inventory-recurrence-C01 | Integration and recovery | inventory-recurrence-R1, inventory-recurrence-R3 | Given a fixed recurrence batch with real open task reservations and demand, a manual extra and observable physical stock, accept the reviewed replacement, lose the response and recover by its original key after restart. Observe each exact linked transfer once, unchanged physical stock and manual demand, and no extra transfer on recovery. |
+| inventory-recurrence-C02 | Integration and recovery | inventory-recurrence-R2, inventory-recurrence-R3 | Given real Points awards and actual material consumption on downstream work, reopen the source cycle. Observe one Points reversal linked to the source award, unchanged downstream award, unchanged movement identity and balance, and no stock return. |
+| inventory-recurrence-C03 | State and concurrency | inventory-recurrence-R1, inventory-recurrence-R2, inventory-recurrence-R3 | Given independently connected SQLite writers and downstream work that starts before invalidation, preserve work with its actual Inventory effects and at most one retained review. Roll back a deliberately failed reviewed transfer, reject stale review state, and restore a compatible snapshot without duplicate effects or synthetic compensation. |
+| inventory-recurrence-C04 | Adapters and persistence | inventory-recurrence-R2, inventory-recurrence-R3 | Given the preserved schema 16 fixture, migrate and verify existing Points and task records. Run an authorized positive material posting through both deployment compositions, observe its exact persisted movement, and verify that insufficient stock and cross-household access do not create movements. |
+
+### 15. Documentation and discoverability
+
+Record the owner delta and implementation evidence with the retained contracts. Keep planned file navigation derived from the following inventory.
+
+[specs/household-inventory.md](household-inventory.md) · [specs/catalog.json](catalog.json) · [docs/evidence/recurrence-calendar-qualification.md](../docs/evidence/recurrence-calendar-qualification.md) · [backend/src/domus/application/fixed\_batch\_review.py](../backend/src/domus/application/fixed_batch_review.py) · [backend/src/domus/application/recurrence\_review.py](../backend/src/domus/application/recurrence_review.py) · [backend/src/domus/composition/tasks.py](../backend/src/domus/composition/tasks.py) · [backend/src/domus/infrastructure/sqlite.py](../backend/src/domus/infrastructure/sqlite.py) · [tests/fixtures/sqlite/v16-inventory-source.sql](../tests/fixtures/sqlite/v16-inventory-source.sql)
+
+| Path | Change |
+|---|---|
+| specs/household-inventory.md | update |
+| specs/catalog.json | update |
+| docs/evidence/recurrence-calendar-qualification.md | update |
+| backend/src/domus/application/fixed_batch_review.py | update |
+| backend/src/domus/application/recurrence_review.py | update |
+| backend/src/domus/composition/tasks.py | update |
+| backend/src/domus/infrastructure/sqlite.py | update |
+| tests/fixtures/sqlite/v16-inventory-source.sql | create |
+
+### 16. Acceptance scenarios
+
+Use the actual persisted effects in the four case rows and exercise the linked retained recurrence scenarios from the parent issue. Distinguish a positive ledger witness from an asserted absence. Check both actual container architectures and browser compositions in CI for the reviewed revision.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| inventory-recurrence-R1 | inventory-recurrence-C01, inventory-recurrence-C03 |
+| inventory-recurrence-R2 | inventory-recurrence-C02, inventory-recurrence-C03, inventory-recurrence-C04 |
+| inventory-recurrence-R3 | inventory-recurrence-C01, inventory-recurrence-C02, inventory-recurrence-C03, inventory-recurrence-C04 |
+
+### 18. Implementation sequence
+
+Preserve the selected fixture. Implement the minimal transaction-local Inventory domain, commands and SQLite mapping. Wire normal task posting and reviewed batch application. Add compound assertions for exact identity, permission, rollback, concurrency, receipt recovery and restoration. Record checked evidence after execution.
+
+### 19. Definition of Done
+
+All new case rows have actual persisted positive controls and pass on the same reviewed revision. The parent recurrence obligations can cite exact runs. Both compositions, English and Spanish, full global and per-file coverage, amd64 and ARM64, Copilot Verification and Bugbot pass. Catalog publication and runtime acceptance have separate evidence.
+
+### 20. References and decisions
+
+The Inventory owner is `specs/household-inventory.md`. The retained recurrence contracts are `specs/recurrence-calendar.md`, `specs/recurrence-execution-foundation.md` and `specs/recurrence-lifecycle-calendar.md`. Keep existing cases with their owners. The Points consumer in https://github.com/vypdev/domus/pull/58 supplies the authoritative award and reversal witness. This draft records planned behavior.
