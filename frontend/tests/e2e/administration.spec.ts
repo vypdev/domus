@@ -96,7 +96,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     let release!:()=>void,arrived!:()=>void,count=0;
     const gate=new Promise<void>(resolve=>{release=resolve;}),ready=new Promise<void>(resolve=>{arrived=resolve;});
     const writes:{index:number;key:string;body:string|null;status:number;code:string|null}[]=[],lookups:string[]=[];
-    const pages=[page,other],names=['Independent house A','Independent house B'];
+    const pages=[page,other],names=['Independent house A','Independent house B'],horizons=[14,31];
     try{
       if(mode==='native')await peer.addCookies([{name:'ingress_session',value:(actors==='same_account'?'d':'e').repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
       else if(actors==='different_accounts')expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:'c'.repeat(32)}})).ok()).toBe(true);
@@ -119,6 +119,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
         });
         await widgets[index].getByRole('button',{name:'Edit household',exact:true}).click();
         await widgets[index].getByRole('textbox',{name:'New household name',exact:true}).fill(names[index]);
+        await widgets[index].getByRole('spinbutton',{name:'Recurrence horizon (days)',exact:true}).fill(String(horizons[index]));
         await widgets[index].getByRole('button',{name:'Review changes',exact:true}).click();
       }
       await Promise.all(widgets.map(candidate=>candidate.getByRole('button',{name:'Save changes',exact:true}).click()));
@@ -127,15 +128,20 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       expect(winner).toBeDefined();expect(loser).toBeDefined();expect([409,503]).toContain(loser.status);
       if(loser.status===503)expect(loser.code).toBe('storage_busy');else expect(loser.code).toBe('revision_conflict');
       expect(new Set(writes.map(item=>item.key)).size).toBe(2);
-      for(const write of writes)expect(JSON.parse(write.body!)).toEqual({expected_revision:1,name:names[write.index],time_zone:'UTC'});
+      for(const write of writes)expect(JSON.parse(write.body!)).toEqual({
+        expected_revision:1,name:names[write.index],time_zone:'UTC',materialization_horizon_days:horizons[write.index],
+      });
       await expect(widgets[winner.index].getByRole('heading',{name:'Outcome not confirmed',exact:true})).toBeVisible();
       await expect(widgets[loser.index].getByRole('heading',{name:'Change not accepted',exact:true})).toBeVisible();
       expect(lookups).toEqual([]);const committed=await statistics(request,mode);
       for(const table of ['receipts','audit','outbox'])expect(committed.counts[table],table).toBe(before.counts[table]+1);
       expect(committed.counts.members).toBe(before.counts.members);
-      expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({name:names[winner.index],revision:2});
+      expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({
+        name:names[winner.index],revision:2,materialization_horizon_days:horizons[winner.index],
+      });
       const original=await pages[winner.index].evaluate(key=>JSON.parse(sessionStorage.getItem(key)!).records[0],journalKey);
-      expect(original).toMatchObject({key:winner.key,stage:'uncertain',payload:{expected_revision:'1',name:names[winner.index]}});
+      expect(original).toMatchObject({key:winner.key,stage:'uncertain',
+        payload:{expected_revision:'1',name:names[winner.index],materialization_horizon_days:horizons[winner.index]}});
       await pages[winner.index].reload();const restored=pages[winner.index].locator('domus-administration');
       await expect(restored.getByRole('button',{name:'Check original request',exact:true})).toBeEnabled();expect(count).toBe(2);expect(lookups).toEqual([]);
       await restored.getByRole('button',{name:'Check original request',exact:true}).click();

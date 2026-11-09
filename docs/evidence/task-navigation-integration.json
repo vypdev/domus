@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with reviewed fixed exceptions and private calendar preferences.",
+  "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with reviewed fixed exceptions, private calendar preferences and the configurable household horizon.",
   "actualProductFiles": {
-    ".vite/manifest.json": "107eb37b2efdd3f7e4c5621344c0fbe03393f4c32bc0a6816411dc45bde10e17",
-    "assets/index-OJd2I-B6.js": "2519e225914cab03e52e32551016a329db7e6b25b8a5f659bab1ec3c2f095359",
+    ".vite/manifest.json": "4b36a7ed502b888603caafb32af726ff4f7a821212b4cc5e6f64c17fa8e4e0d4",
+    "assets/index-B2ZLMc3l.js": "4f9e4aa3471715b13983bc7d23d889762b91226766c11d2961e61bdba2c362e5",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "81269fd15dd7252ffda670b3fd14a1f16273333b406ceb0869e1901e5dcf3884"
+    "index.html": "bfe31ba193e701031ebae75f740d3ba3f35f3b373e8d1cb7fa3ebe4915a54fbf"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -102,5 +102,15 @@
     },
     "ci": "https://github.com/vypdev/domus/actions/runs/42334330547",
     "scope": "Historical green CI checkpoint before resume-preview and Unicode category refinements."
+  },
+  "preHouseholdHorizon": {
+    "sourceCommit": "baf2515c0c7ac5c73bfc873dd244b95a24da8b42",
+    "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with reviewed fixed exceptions and private calendar preferences.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "107eb37b2efdd3f7e4c5621344c0fbe03393f4c32bc0a6816411dc45bde10e17",
+      "assets/index-OJd2I-B6.js": "2519e225914cab03e52e32551016a329db7e6b25b8a5f659bab1ec3c2f095359",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "81269fd15dd7252ffda670b3fd14a1f16273333b406ceb0869e1901e5dcf3884"
+    }
   }
 }
