@@ -180,6 +180,40 @@ class FixedMaintenance:
         before: NominalSlot,
         should_continue: Callable[[], bool],
     ) -> FixedStep:
+        if not should_continue():
+            return FixedStep(
+                "stopped",
+                source.schedule.schedule_id,
+                source.progress.cursor,
+                False,
+                batch.periods_scanned,
+            )
+        with self.transactions.write() as unit:
+            return self._commit_in_unit(unit, source, batch, before, should_continue)
+
+    def commit_reviewed_step(
+        self,
+        unit: UnitOfWork,
+        schedule: FixedSchedule,
+        batch: FixedBatch,
+        before: NominalSlot,
+        *,
+        assignees: tuple[str, ...] = (),
+    ) -> FixedStep:
+        source = self._source(unit, schedule.schedule_id)
+        if source.schedule != schedule or len(batch.slots) > 1:
+            raise Conflict("recurrence_source_changed")
+        return self._commit_in_unit(unit, source, batch, before, lambda: True, assignees)
+
+    def _commit_in_unit(
+        self,
+        unit: UnitOfWork,
+        source: _Source,
+        batch: FixedBatch,
+        before: NominalSlot,
+        should_continue: Callable[[], bool],
+        assignees: tuple[str, ...] = (),
+    ) -> FixedStep:
         rule, progress = source.schedule, source.progress
         if not should_continue():
             return FixedStep(
@@ -195,9 +229,15 @@ class FixedMaintenance:
             else (None if progress.evidence is None else progress.evidence.time.last),
             batch.terminal,
         )
+        suppressed = planned is not None and (
+            rule.exception(planned.nominal) is not None
+            or unit.recurrence.has_historical_fixed_exception(
+                rule.household_id, rule.schedule_id, planned.nominal.local.isoformat()
+            )
+        )
         probe = (
             None
-            if planned is None
+            if planned is None or suppressed
             else ScheduledSlot(self.scope.installation, rule, planned, "pending", self.clock.now())
         )
         if probe is None:
@@ -236,7 +276,7 @@ class FixedMaintenance:
         def apply(unit: UnitOfWork) -> Change:
             nonlocal created
             created = True
-            if planned is None:
+            if probe is None:
                 result = JsonDocument.from_value(
                     {
                         "schedule_id": rule.schedule_id,
@@ -247,9 +287,11 @@ class FixedMaintenance:
                     }
                 )
             else:
+                assert planned is not None
                 work = source.definition.new_occurrence(
                     self.identifiers.new(),
                     self.clock.now(),
+                    assignees=assignees,
                     due_at=None if planned.resolved is None else planned.resolved.instant_ms,
                 )
                 slot = ScheduledSlot(
@@ -274,50 +316,45 @@ class FixedMaintenance:
                 JsonDocument.from_value({"version": 1, "kind": command.action, **result.decode()}),
             )
 
-        with self.transactions.write() as unit:
-            if not should_continue():
-                return FixedStep(
-                    "stopped", rule.schedule_id, progress.cursor, False, batch.periods_scanned
-                )
-            receipt = commands.in_unit(unit, command, payload, apply)
-            if receipt.result.decode().get("cursor_evidence") != time_evidence.document().decode():
-                raise StorageFailure("invalid_recurrence_effect")
-            occurrence_id = None
-            status = "scan"
-            if probe is not None:
-                data = receipt.result.decode()
-                occurrence_id = data.get("occurrence_id")
-                try:
-                    validate_identifier(cast(str, occurrence_id))
-                    if data.get("slot_key") != probe.key:
-                        raise InvalidInput("invalid_recurrence_effect")
-                except InvalidInput:
-                    raise StorageFailure("invalid_recurrence_effect") from None
-                saved = unit.recurrence.slot(rule.household_id, probe.key)
-                if receipt.historical:
-                    if saved is not None:
-                        raise StorageFailure("invalid_recurrence_effect")
-                    status = "historical_absent"
-                else:
-                    if (
-                        saved is None
-                        or saved.occurrence_id != occurrence_id
-                        or not saved.consistent_with(rule)
-                        or saved.planned != planned
-                    ):
-                        raise StorageFailure("invalid_recurrence_effect")
-                    status = "created" if created else "replayed"
-            unit.recurrence.save_progress(
-                replace(
-                    progress,
-                    cursor=batch.cursor,
-                    revision=progress.revision + 1,
-                    last_run_at=self.clock.now(),
-                    range_complete=batch.range_complete,
-                    evidence=CursorEvidence(time_evidence, receipt.command, receipt.operation_id),
-                ),
-                progress.revision,
-            )
+        receipt = commands.in_unit(unit, command, payload, apply)
+        if receipt.result.decode().get("cursor_evidence") != time_evidence.document().decode():
+            raise StorageFailure("invalid_recurrence_effect")
+        occurrence_id = None
+        status = "excluded" if suppressed else "scan"
+        if probe is not None:
+            data = receipt.result.decode()
+            occurrence_id = data.get("occurrence_id")
+            try:
+                validate_identifier(cast(str, occurrence_id))
+                if data.get("slot_key") != probe.key:
+                    raise InvalidInput("invalid_recurrence_effect")
+            except InvalidInput:
+                raise StorageFailure("invalid_recurrence_effect") from None
+            saved = unit.recurrence.slot(rule.household_id, probe.key)
+            if receipt.historical:
+                if saved is not None:
+                    raise StorageFailure("invalid_recurrence_effect")
+                status = "historical_absent"
+            else:
+                if (
+                    saved is None
+                    or saved.occurrence_id != occurrence_id
+                    or not saved.consistent_with(rule)
+                    or saved.planned != planned
+                ):
+                    raise StorageFailure("invalid_recurrence_effect")
+                status = "created" if created else "replayed"
+        unit.recurrence.save_progress(
+            replace(
+                progress,
+                cursor=batch.cursor,
+                revision=progress.revision + 1,
+                last_run_at=self.clock.now(),
+                range_complete=batch.range_complete,
+                evidence=CursorEvidence(time_evidence, receipt.command, receipt.operation_id),
+            ),
+            progress.revision,
+        )
         return FixedStep(
             status,
             rule.schedule_id,

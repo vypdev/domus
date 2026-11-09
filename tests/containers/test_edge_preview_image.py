@@ -79,7 +79,7 @@ print(json.dumps({"pythonFiles":python,"uiFiles":ui}))
 
 def test_pinned_edge_native_launcher_authority_storage_and_restart(edge_preview, data_volume):
     app_tests.test_real_nonroot_listener_rejects_forgery_and_retains_storage_and_replay_on_restart(
-        edge_preview, data_volume
+        edge_preview, data_volume, expected_schema=9
     )
 
 
@@ -93,4 +93,4 @@ def test_pinned_edge_standalone_listener_serves_the_exact_private_bundle(
 def test_pinned_edge_upgrades_actual_edge_five_and_preserves_original_history(
     edge_preview, previous_image, data_volume
 ):
-    upgrade_cycle(edge_preview, previous_image, data_volume, 7)
+    upgrade_cycle(edge_preview, previous_image, data_volume, 7, expected_schema=9)

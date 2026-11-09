@@ -1,6 +1,7 @@
 # Task storage migration and compatibility
 
-The development source uses SQLite schema 8 for fixed recurrence storage. The installed immutable
+The relative lifecycle development source uses SQLite schema 10. The historical schema 8 and 9
+checkpoints retain their original evidence below. The installed immutable
 Edge.5 package uses schema 7; retained Edge.3 remains the separately pinned M1 schema-4 package.
 Current source tests do not upgrade those installations or establish a released package upgrade.
 Keep the exact application/data pair and installation/channel identity.
@@ -118,3 +119,18 @@ They are distinct from image/cross-architecture adoption, real consumer ledgers 
 the owner's HA, which remain required before integrated release claims. No automatic backup schedule
 or retention policy is introduced. The [operator guide](operator-recovery.md) covers current task
 outcomes, original-command recovery and pending material/consumer states.
+
+
+## Relative lifecycle storage in schema 10
+
+The [genuine schema-9 fixture](../../tests/fixtures/sqlite/v9.sql) is the pre-migration input.
+Initialization validates the exact schema-9 layout before adding the inbox and closure ledger.
+Existing task, recurrence, profile and operation rows retain their values. A failed migration
+rolls back the schema and preserves the source bytes. Ordinary transactions on schema 9 require
+explicit initialization.
+
+Keep the complete application and database generation pair for rollback. A schema-9 application
+rejects a schema-10 generation. An application that supports schema 10 can restore an older
+compatible checkpoint into a new generation and retain original operation and cycle proofs. A
+successor that is absent from the selected state stays absent, even when its original closure
+remains recoverable.

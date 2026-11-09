@@ -398,3 +398,121 @@ historically processed creation returns original evidence without recreating its
 definition/rule or event delivery. This is distinct from the still-required relative materializer,
 source inbox/closure/eligibility/invalidation, reviewed attachment and mixed-rule runtime. See
 [relative creation evidence](evidence/recurrence-relative-creation.json) for measured scope and limits.
+
+
+## Cycle-closure policy before durable integration
+
+The pure RelativeClosure policy records one original consumer grant or terminal fence per source
+cycle. Its identity spans rule generations and later approval/reopening while preserving the exact
+installation, channel, household, rule, definition and source occurrence/cycle. Original successor
+and completion snapshots remain immutable. This consumer proof does not close or approve the human
+TaskCycle, authorize maintenance or create an obligation by construction.
+
+A later rejection or reopening may cancel only derived work proven never to have started. Existing
+cancelled/skipped work is retained; started/completed work or unknown history requires review.
+Retained processing proof cannot recreate an absent successor. Closure chronology includes rule
+creation and the observed human decision; zero is a valid timestamp.
+
+The 61 pure-policy tests and full backend campaign are recorded in
+[lifecycle evidence](evidence/recurrence-lifecycle-calendar.json). Durable inbox/closure storage,
+atomic source revalidation and successor effects, schema-10 compatibility, mixed execution and
+calendar/UI integration remain required. The current runtime runner does not yet consume this policy.
+
+
+## Bounded current and historical source observations
+
+RecurrenceSourceObservations now reads original task completion, verification and reopening facts
+through a composition-owned MaintenanceScope and the semantic task source port. SQLite orders one
+bounded union of live and retained-absent operations by their stable position. No lookahead is fetched
+or discarded. A requested page contains at most 100 facts; an exact full page remains incomplete,
+and an empty scan still consumes one unit of the independent source currency.
+
+Original receipt, audit, event and decoded cycle evidence remain distinct from current work. Actual
+restore tests retain historical approvals/reopenings without changing a live pending cycle and
+observe a restored-away completion whose live cycle no longer exists. Transport acknowledgement
+does not hide facts. Current application reads validate immutable request/result shape and reject
+malformed, foreign or unordered evidence without writing progress or allocating identifiers.
+
+This is a read boundary for the future durable consumer. Historical facts cannot grant new work;
+the successor writer still needs atomic live revalidation, inbox/closure and invalidation/attention
+persistence. Schema 9, original task event behavior and the three retained recurrence owners stay
+unchanged. See [lifecycle evidence](evidence/recurrence-lifecycle-calendar.json) for measured scope.
+
+## Atomic initial relative work
+
+The application [initial relative step](../backend/src/domus/application/relative_materialization.py)
+now materializes one initial obligation for an active, pristine relative rule. The composition-owned
+maintenance scope and the exact current rule, definition and progress are rechecked inside the
+writer. One real task occurrence, immutable relative slot, original receipt, audit, outbox and
+compare-and-swap continuation commit together. Date-only work preserves its date without inventing
+a UTC due time. This technical action never completes human work or awards points.
+
+An original receipt is checked before requesting timezone-provider work or allocating new effect
+identifiers. Restart returns current continuation. A retained original can reconcile pristine
+continuation after restoration; absent effects stay absent and are not re-created. Canonical
+result fields and the saved slot must agree with the original proof. Existing manual work requires
+explicit review, and racing source changes abort without partial writes.
+
+[The 51 focused cases](../tests/backend/test_relative_materialization.py) use actual SQLite for
+rollback, restoration, independent writers, scope and source races, lifetime stops and integrity
+failures. The complete backend campaign passes 4,552 cases with 100% statement and branch coverage
+globally and per module; all five import contracts and 51 architecture cases pass. See the
+[updated lifecycle evidence](evidence/recurrence-lifecycle-calendar.json).
+
+This is a source-level application service. It is not yet wired into the mixed maintenance runner,
+an API or the installed Edge image. Reviewed manual adoption, successor materialization, durable
+cycle closure, shared fairness and protected calendar acceptance remain required. Schema stays 9.
+
+## Closed relative lifecycle storage values
+
+The [closure codec](../backend/src/domus/infrastructure/sqlite_relative_lifecycle.py) encodes the
+complete original installation, rule, human cycle, technical operation and optional successor
+snapshot. It reuses the existing closed rule/slot/cycle decoders and reconstructs the immutable
+closure. Unsupported versions, missing or unknown fields, duplicate keys, noncanonical storage
+bytes and contradictory source/command/successor relationships fail without defaults or repair.
+Date-only successors keep their original nominal date; no instant is invented.
+
+The [64 codec cases](../tests/backend/test_sqlite_relative_lifecycle.py) cover generated timed and
+date-only work, rejected/reopened/historical absence, original receipt matching, and nested corruption
+in canonical fixtures. The complete current backend campaign passes 4,616 tests across 155 modules,
+with 100% supported statement/branch coverage globally and per module, strict types and architecture
+checks. [Lifecycle evidence](evidence/recurrence-lifecycle-calendar.json) records the exact scope.
+
+This codec prepares storage values; it does not read a database original or grant consumer authority.
+The repository must independently check original proof and row scope when its schema-10 closure
+table is implemented. Durable inbox/closure writes, successor generation, maintenance wiring and
+calendar acceptance remain pending. Schema stays 9.
+
+## Durable relative cycle reconciliation
+
+Schema 10 adds the relative source inbox and the per-cycle closure ledger. The inbox holds an
+installation-scoped reference to the original task operation and its exact position. Admission
+persists a bounded page in one writer. Completed rows retain the original outcome and reference
+its existing receipt when the outcome changed work. The scan continuation is independent of whether
+earlier rows are ready to produce a successor.
+
+A cycle step rechecks the original event, current cycle, rule, definition and progress in the same
+SQLite writer. An eligible completion creates a successor using the actual-work time and the pinned
+time policy. The task, slot, original receipt, audit, outbox, closure, progress and inbox outcome
+commit together. A late approval uses the original performance time. Rejection or reopening
+cancels a proven unstarted successor and records why. Existing work with evidence of a start, or
+with incomplete history, retains its facts and has a durable review outcome.
+
+Compatible restoration carries later cycle closures into the restored generation with their retained
+operation proofs. A successor absent from the selected checkpoint stays absent. The original
+operation remains recoverable with historical provenance.
+
+## Shared maintenance in owned runtimes
+
+Ingress and standalone use the same maintenance runner. It selects fixed and relative schedules
+in a single bounded order and records each admitted schedule in the shared durable frontier. Both
+types spend the same slot budget. A separate source intake budget persists bounded original
+positions and keeps the run pending when more events remain. Exhausting the fixed period budget
+still allows already selected relative rules to take a turn.
+
+A relative turn produces the initial obligation or consumes one routed source. Source routing is
+bound to the actual occurrence and schedule mapping. Rejection and reopening take precedence
+within a relative rule so that a paused rule can still invalidate or flag prior derived work.
+An unconfirmed source scan leaves its continuation available for the next poll and permits other
+selected work to continue. Reviewed schedule commands and protected calendar projections remain
+outside this increment.

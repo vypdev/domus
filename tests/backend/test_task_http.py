@@ -17,6 +17,15 @@ def create(api, key="create", **values):
 def test_title_only_create_detail_history_and_own_operation_replay(api):
     receipt = create(api)
     result = receipt["result"]
+    workspace = api.client.get(PREFIX + "/access")
+    assert workspace.status_code == 200, workspace.text
+    member_id = api.client.get("/api/v1/authorization").json()["member"]["member_id"]
+    assert workspace.json() == {
+        "household_id": "home",
+        "member_id": member_id,
+        "can_create": True,
+        "can_review_schedule": True,
+    }
     assert result["state"] == "available" and result["revision"] == 1
     assert create(api) == receipt
     definitions = api.client.get(PREFIX + "/definitions").json()["items"]
@@ -28,6 +37,16 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
     own = api.client.get(PREFIX + "/operations/" + receipt["operation_id"])
     assert own.status_code == 200 and own.json()["result"] == result
     assert own.json()["delivery"] == "pending"
+    original = api.client.get(PREFIX + "/requests/task.create/create")
+    assert original.status_code == 200, original.text
+    assert original.json() == {**own.json(), "action": "task.create", "command_key": "create"}
+    with api.store.write() as unit:
+        unit.outbox.acknowledge(receipt["operation_id"])
+    delivered = api.client.get(PREFIX + "/requests/task.create/create")
+    assert delivered.status_code == 200 and delivered.json()["delivery"] == "delivered"
+    assert api.client.get(PREFIX + "/requests/task.create/missing").status_code == 404
+    assert api.client.get(PREFIX + "/requests/household.update/create").status_code == 422
+    assert api.client.get(PREFIX + "/requests/task.create/create?actor_id=other").status_code == 422
     history = api.client.get(PREFIX + "/occurrences/" + result["occurrence_id"] + "/history")
     assert history.status_code == 200 and len(history.json()["items"]) == 1
     assert "ha_user_id" not in history.text and "payload_fingerprint" not in history.text
@@ -505,6 +524,13 @@ def test_offline_activation_preserves_historical_receipt_in_both_http_compositio
         value = restored.json()
         assert value["state"] == "historical" and value["delivery"] == "suppressed"
         assert value["result"] == completed["result"] and value["archived_by"] == "restore-http"
+        original = client.get(PREFIX + "/requests/task.complete/historical-work")
+        assert original.status_code == 200, original.text
+        assert original.json() == {
+            **value,
+            "action": "task.complete",
+            "command_key": "historical-work",
+        }
         assert client.get(PREFIX + "/occurrences/" + oid).json()["cycle"] is None
         csrf = client.get("/api/v1/auth/csrf").json()["csrf_token"]
         replay = client.post(

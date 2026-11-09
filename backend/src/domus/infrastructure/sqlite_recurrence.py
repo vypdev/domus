@@ -13,7 +13,9 @@ from domus.domain.recurrence_records import (
     ScheduleState,
 )
 from domus.domain.recurrence_rules import NominalDate
+from domus.domain.relative_recurrence import RelativeSchedule
 from domus.domain.storage import Installation, validate_identifier
+from domus.infrastructure.sqlite_history import _record as retained_operation
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 from domus.infrastructure.sqlite_recurrence_records import (
     frontier_document,
@@ -117,6 +119,152 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
     connection: sqlite3.Connection
     installation: Installation
 
+    def has_current_schedule(self, household_id: str, definition_id: str) -> bool:
+        return self.current_schedule_id(household_id, definition_id) is not None
+
+    def current_schedule_id(self, household_id: str, definition_id: str) -> str | None:
+        validate_identifier(household_id)
+        validate_identifier(definition_id)
+        row = self.connection.execute(
+            "SELECT schedule_id FROM recurrence_rules WHERE household_id=? AND definition_id=? "
+            "AND state!='retired'",
+            (household_id, definition_id),
+        ).fetchone()
+        if row is None:
+            return None
+        schedule_id: str = row["schedule_id"]
+        validate_identifier(schedule_id)
+        return schedule_id
+
+    def fixed_slots_at(
+        self, household_id: str, schedule_id: str, nominal: str
+    ) -> tuple[ScheduledSlot, ...]:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        rows = self.connection.execute(
+            "SELECT * FROM recurrence_slots WHERE household_id=? AND schedule_id=? "
+            "AND nominal_value=? ORDER BY slot_key LIMIT 101",
+            (household_id, schedule_id, nominal),
+        )
+        return tuple(cast(ScheduledSlot, self._slot(row)) for row in rows)
+
+    def has_historical_fixed_exception(
+        self, household_id: str, schedule_id: str, nominal: str
+    ) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        row = self.connection.execute(
+            "SELECT * FROM retained_operations WHERE household_id=? AND current=0 "
+            "AND action='recurrence.review.apply' "
+            "AND json_extract(document,'$.result.kind')='fixed_exception' "
+            "AND json_extract(document,'$.result.schedule_id')=? "
+            "AND json_extract(document,'$.result.exception.nominal.local')=? LIMIT 1",
+            (household_id, schedule_id, nominal),
+        ).fetchone()
+        if row is None:
+            return False
+        retained_operation(row)
+        return True
+
+    def has_fixed_materialization_from(
+        self, household_id: str, schedule_id: str, from_nominal: str
+    ) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM recurrence_slots WHERE household_id=? AND schedule_id=? "
+                "AND nominal_value>=? UNION ALL SELECT 1 FROM retained_operations "
+                "WHERE household_id=? AND current=0 AND action='recurrence.materialize' "
+                "AND json_extract(document,'$.result.schedule_id')=? "
+                "AND json_extract(document,'$.result.nominal.local')>=? LIMIT 1",
+                (household_id, schedule_id, from_nominal, household_id, schedule_id, from_nominal),
+            ).fetchone()
+            is not None
+        )
+
+    def fixed_slots_from(
+        self, household_id: str, schedule_id: str, nominal: str
+    ) -> tuple[ScheduledSlot, ...]:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        rows = self.connection.execute(
+            "SELECT * FROM recurrence_slots WHERE household_id=? AND schedule_id=? "
+            "AND nominal_value>=? ORDER BY nominal_value,slot_key LIMIT 101",
+            (household_id, schedule_id, nominal),
+        )
+        return tuple(cast(ScheduledSlot, self._slot(row)) for row in rows)
+
+    def has_absent_fixed_slot_from(self, household_id: str, schedule_id: str, nominal: str) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(schedule_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM retained_operations WHERE household_id=? AND current=0 "
+                "AND (action='recurrence.materialize' OR (action='recurrence.review.apply' "
+                "AND json_extract(document,'$.result.kind')='fixed_exception')) "
+                "AND json_extract(document,'$.result.schedule_id')=? "
+                "AND coalesce(json_extract(document,'$.result.nominal.local'),"
+                "json_extract(document,'$.result.exception.nominal.local'))>=? LIMIT 1",
+                (household_id, schedule_id, nominal),
+            ).fetchone()
+            is not None
+        )
+
+    def has_replaced_fixed_work(
+        self, household_id: str, schedule_id: str, occurrence_id: str
+    ) -> bool:
+        for identifier in (household_id, schedule_id, occurrence_id):
+            validate_identifier(identifier)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM receipts WHERE household_id=? AND action='recurrence.review.apply' "
+                "AND json_extract(result,'$.kind')='fixed_replacement' "
+                "AND json_extract(result,'$.schedule_id')=? AND EXISTS "
+                "(SELECT 1 FROM json_each(receipts.result,'$.cancelled') WHERE value=?) LIMIT 1",
+                (household_id, schedule_id, occurrence_id),
+            ).fetchone()
+            is not None
+        )
+
+    def occurrence_is_scheduled(self, household_id: str, occurrence_id: str) -> bool:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM recurrence_slots WHERE household_id=? AND occurrence_id=? "
+                "UNION ALL SELECT 1 FROM recurrence_relative_slots "
+                "WHERE household_id=? AND occurrence_id=? LIMIT 1",
+                (household_id, occurrence_id, household_id, occurrence_id),
+            ).fetchone()
+            is not None
+        )
+
+    def maintenance_schedules(
+        self, household_id: str, *, limit: int, after: str | None = None
+    ) -> tuple[FixedSchedule | RelativeSchedule, ...]:
+        where, parameters = _page(household_id, limit, after, "schedule_id")
+        where.append(
+            "(state='active' OR (timing_kind='completion_relative' AND EXISTS "
+            "(SELECT 1 FROM recurrence_relative_inbox AS i WHERE i.household_id=r.household_id "
+            "AND i.source_schedule_id=r.schedule_id AND i.outcome_status IS NULL)))"
+        )
+        selected: list[FixedSchedule | RelativeSchedule] = []
+        for row in self.connection.execute(
+            "SELECT schedule_id,timing_kind FROM recurrence_rules AS r WHERE "
+            + " AND ".join(where)
+            + " ORDER BY schedule_id LIMIT ?",
+            (*parameters, limit),
+        ):
+            load = (
+                self.schedule if row["timing_kind"] == "fixed_calendar" else self.relative_schedule
+            )
+            record = load(household_id, row["schedule_id"])
+            if record is None:
+                raise StorageFailure("invalid_recurrence_record")
+            selected.append(record)
+        return tuple(selected)
+
     def frontier(self, household_id: str) -> RecurrenceFrontier | None:
         validate_identifier(household_id)
         return _model(
@@ -200,6 +348,18 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
             ).fetchone()
         )
 
+    def fixed_slot_for_occurrence(
+        self, household_id: str, occurrence_id: str
+    ) -> ScheduledSlot | None:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        return self._slot(
+            self.connection.execute(
+                "SELECT * FROM recurrence_slots WHERE household_id=? AND occurrence_id=?",
+                (household_id, occurrence_id),
+            ).fetchone()
+        )
+
     def _slot(self, row: sqlite3.Row | None) -> ScheduledSlot | None:
         value = _model(row, read_slot, slot_headers)
         if value is not None and value.installation != self.installation:
@@ -223,6 +383,7 @@ class SQLiteRecurrences(SQLiteRelativeRecurrences):
             if (
                 value.definition_id != previous.definition_id
                 or value.created_at != previous.created_at
+                or any(item not in value.exceptions for item in previous.exceptions)
                 or value.pattern_revision != previous.pattern_revision + int(changed)
             ):
                 raise Conflict("recurrence_identity_conflict")

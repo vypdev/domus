@@ -452,3 +452,42 @@ All listed cases and existing gates pass. Every authored frontend runtime file a
 ### 20. References and decisions
 
 The common implementation, API, adapters, catalog and publication remain with [ha-ui issue 7](https://github.com/vypdev/ha-ui/issues/7). Domus owns the consumer and household experience. Gateway remains deferred. The Action appends this proposed change to the existing application-experience specification and preserves the existing content.
+
+
+## Operational acceptance clarification: combined browser budget
+
+- Date: 2026-11-08; scope: CI execution only, product acceptance unchanged.
+- Evidence: Domus CI run 42437023506 passed 98 entry journeys and interrupted
+  the next at its 180-second global deadline, leaving three unfinished/unrun.
+- Contract: `frontend/playwright.entry.config.ts` MUST execute the entire current
+  101-case native/standalone suite within a bounded 360-second global deadline,
+  including two fixture startups and cleanup, inside the 15-minute CI job.
+  Preserve all four selected files, one worker, zero retries, individual case
+  limits, 30-second startup and 5-second graceful shutdown. No partial run passes.
+- Architecture/configuration: the test runner owns this fixed suite budget;
+  application transports, authorization and runtime configuration are unchanged.
+- Verification: execute all 101 existing browser journeys; no new product case
+  is counted. Preserve the existing Python CI contract and all coverage gates.
+  Record exact candidate/head and complete CI result. Local fixture evidence
+  cannot replace actual-image or human HA acceptance.
+- Operations: see the reviewed candidate pin/hash procedure in
+  `docs/acceptance-plan.md`. A candidate SDK workflow edit MUST preserve its
+  events, inputs and permissions and update only the corresponding reviewed protected digests. Commit and Pull Request
+  use the same candidate; all other installed-resource hashes remain unchanged.
+  Other installed-resource hashes remain unchanged. Rollback restores the prior
+  workflow pins with their matching digests; do not disable the protection test.
+- Readiness: current-head native Copilot and full CI qualification pending.
+
+
+### Exact browser recovery evidence (2026-11-08)
+
+The existing two native/standalone navigation cases retain all their assertions:
+exact original int64 PUT input and real committed-reply bytes, deliberately lost
+reply, reload, actual original-status GET, cleared pending state, selected value
+and exactly one write. Capture the real committed reply before dropping it;
+do not require later CDP access to a browser response whose resource was retired.
+No generated response, extra GET, retry, skip or production behavior change is
+introduced. Case counts stay unchanged. The reported last-selectable-month
+finding is contradicted by existing production predicates; existing domain and
+component boundary cases now explicitly assert the 9998-12-01 anchor and
+9999-01-01 exclusive end, plus every calendar mode and both week starts.

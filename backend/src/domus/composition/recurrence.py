@@ -6,10 +6,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.concurrency import run_in_threadpool
 
-from domus.application.fair_recurrence import FairFixedRunner, FixedRun
+from domus.application.fair_recurrence import FairFixedRunner, FixedRun, RelativeRunServices
 from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.ports import Transactions
+from domus.application.recurrence_sources import RecurrenceSourceObservations
+from domus.application.relative_lifecycle import RelativeLifecycle
+from domus.application.relative_materialization import RelativeMaintenance
+from domus.application.relative_recurrence import RelativeRecurrencePlanner
 from domus.domain.errors import Forbidden
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.storage import Installation
@@ -38,6 +42,13 @@ def recurrence_worker(store: Transactions, installation: Installation) -> Recurr
             FixedMaintenance(store, scope, planner, clock, identifiers),
             times,
             clock,
+            relative=RelativeRunServices(
+                RelativeMaintenance(store, scope, times, clock, identifiers),
+                RecurrenceSourceObservations(store, scope),
+                RelativeLifecycle(
+                    store, scope, RelativeRecurrencePlanner(times), clock, identifiers
+                ),
+            ),
         ).tick(should_continue=should_continue)
 
     return RecurrenceWorker(tick)

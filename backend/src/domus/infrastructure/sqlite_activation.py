@@ -38,6 +38,7 @@ from domus.infrastructure.owned_storage import (
 from domus.infrastructure.restore_source import BoundFrontier
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_history import SQLiteHistory, last_committed_at
+from domus.infrastructure.sqlite_recurrence_integrity import restore_relative_closures
 from domus.infrastructure.sqlite_restoration import (
     SQLiteRestorations,
     _read_document,
@@ -284,6 +285,16 @@ class SQLiteActivation:
                     try:
                         with _directory(location, private=True) as input_dir:
                             SQLiteHistory(connection).install(_read_operations(input_dir, budget))
+                        if rollback.schema_version >= 10:
+                            source = (
+                                self.root
+                                / "activations"
+                                / identifier
+                                / "source-checkpoint"
+                                / "domus.sqlite3"
+                            )
+                            with _connection(source, budget, readonly=True) as checkpoint:
+                                restore_relative_closures(connection, checkpoint, self.installation)
                         connection.execute("COMMIT")
                     except BaseException:
                         connection.execute("ROLLBACK")

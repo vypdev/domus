@@ -51,10 +51,12 @@ Directory names will follow these boundaries, but no fake source files are creat
 ## Selected stack and trade-offs
 
 The owner selected Python/FastAPI, SQLite and Lit/TypeScript/Vite on 2026-10-29 after reviewing Gateway and Symphonia. Domus owns HA-coherent presentation components, a Storybook catalog and Playwright browser contracts. Components contain presentation behavior; API clients, authorization and domain orchestration remain outside them. Neither gateway code nor private HA bundles become runtime dependencies.
-The entry and household administration navigation uses the public
+Domus and Gateway share the dashboard-style tab bar through an independently versioned
+presentation library. Domus owns its information architecture and household workflows. The
+Overview, Tasks and Household navigation uses the public
 [@vypdev/ha-ui 0.1.0-next.1](https://www.npmjs.com/package/@vypdev/ha-ui/v/0.1.0-next.1)
 package. The lockfile pins the exact artifact and reuses the application's Lit runtime. Domus
-composition maps the two known browser fragments and presentation renders the shared bar.
+composition maps the three known browser fragments and presentation renders the shared bar.
 Permissions and household operations remain under the existing controllers. The compiled
 distribution retains the package and third-party license notices.
 

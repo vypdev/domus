@@ -210,3 +210,18 @@ delivery. Current task cycle/source results explicitly retain `consumer_delivery
 Existing valid sessions may read local tasks during temporary HA unavailability, subject to current
 local permissions and the original session expiry. Changes remain blocked until HA can reverify the
 actor. Explicit HA rejection removes access instead of opening an outage grace period.
+
+
+## Task workspace access and original recovery
+
+GET `/api/v1/tasks/access` requires current task-read authority and returns only the canonical `household_id`, current `member_id` and server-derived `can_create` affordance. It does not widen the separate household-administration permission scope and never accepts a client-selected principal. Task detail continues to supply current `allowed_actions`.
+
+GET `/api/v1/tasks/requests/{action}/{key}` recovers the caller's original workspace request when its response and operation ID were lost. Supported actions are `task.create`, `task.claim`, `task.complete`, `task.verify` and `task.reopen`. Current task-read, exact own actor/action/key scope and recorded original command authority are checked before disclosure. This task-specific recovery does not require the separate operations.read browsing grant; the operation-by-ID query retains that grant. The response binds `action`, `command_key` and `operation_id`, and distinguishes pending/delivered current event evidence from suppressed historical evidence. A historical receipt does not recreate an absent task effect.
+
+The UI retains at most eight originals and 65,536 UTF-8 bytes for one hour in its own `tasks` journal namespace, separated by installation, channel, HA subject, household and canonical membership. It stores no credentials. A write is prepared only after storage is confirmed. Lost replies are recovered by GET; the UI does not automatically resend a POST, mint a replacement key or evict unresolved work. Clock rollback, corrupt storage, an unconfirmed write or an external storage change blocks new effects while preserving the original bytes. Expired records are pruned without refreshing identity or renewing the session deadline.
+
+Task forms enforce the same Unicode code-point limits as their command inputs: 160 for a title, 4,000 for a description and 1,000 for a review reason. An overlong draft stays visible with its field marked invalid and submission disabled until corrected. The native UTF-16 maxlength capacity permits astral characters without treating them as two business characters.
+
+The task list uses bounded page navigation, not an accumulating feed. Next page replaces the displayed page with the next at-most-25 items using its opaque cursor; Refresh tasks returns to the first page. Every navigation rechecks current identity, household/member scope and local task grants. Earlier pages are not cached or appended, so an arbitrarily large household list cannot become an unbounded private browser collection.
+
+Reject and reopen stay disabled until a nonblank reason is entered. Approval remains available without a reason; all three actions still enforce the shared 1,000-code-point maximum.

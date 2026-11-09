@@ -1,5 +1,9 @@
 import {EntryController} from '../application/entry-controller';
 import type {EntryView} from '../application/entry-controller';
+import {TaskController} from '../application/task-controller';
+import type {TaskView} from '../application/task-controller';
+import {TaskSessionJournal} from '../adapters/task-journal';
+import {HttpTaskServer} from '../adapters/task-http';
 import {HouseholdController} from '../application/household-controller';
 import {AdministrationController} from '../application/administration-controller';
 import type {AdministrationView} from '../application/administration-controller';
@@ -39,7 +43,7 @@ export class EntryRuntime {
   private timerEpoch = 0;
   private cancelTimer: (() => void) | null = null;
   constructor(target: EntryEndpoint, private readonly browser: EntryBrowser,
-    private readonly changed: (view: EntryView, administration: AdministrationView | null) => void,
+    private readonly changed: (view: EntryView, administration: AdministrationView | null, tasks: TaskView | null) => void,
     private readonly failed: () => void = () => {}) {
     this.target = endpoint(target); this.navigation = new BrowserNavigation(this.target, path => browser.navigate(path));
     this.current = this.compose();
@@ -53,12 +57,15 @@ export class EntryRuntime {
     const entropy = new BrowserEntropy(bytes => this.browser.random(bytes));
     const entry = new EntryController(this.target.deployment, server, new SessionJournal(storage), clock, entropy);
     return {clock, controller: new HouseholdController(entry, () => new AdministrationController(this.target.deployment,
-      server, new HttpAdministrationServer(this.target, this.browser.transport), new AdministrationSessionJournal(storage), clock, entropy))};
+      server, new HttpAdministrationServer(this.target, this.browser.transport), new AdministrationSessionJournal(storage), clock, entropy), () => new TaskController(this.target.deployment,
+      server, new HttpTaskServer(this.target, this.browser.transport), new TaskSessionJournal(storage), clock, entropy))};
   }
   get view(): EntryView {return this.current.controller.view;}
   get administration(): AdministrationView | null {return this.current.controller.administration;}
+  get tasks(): TaskView | null {return this.current.controller.tasks;}
+  taskWork(work: (controller: TaskController) => Promise<void>): Promise<void> {return this.perform(controller => controller.taskWork(work));}
   private publish(): void {
-    try {this.changed(this.view, this.administration);} catch {/* A renderer failure cannot change authority or interrupt resource cleanup. */}
+    try {this.changed(this.view, this.administration, this.tasks);} catch {/* A renderer failure cannot change authority or interrupt resource cleanup. */}
   }
   private stopTimer(): void {
     this.timerEpoch++; const cancel = this.cancelTimer; this.cancelTimer = null;

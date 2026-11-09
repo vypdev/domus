@@ -7,6 +7,13 @@ from domus.application.member_profile_ports import MemberPreferencesRepository, 
 from domus.application.recurrence_ports import RecurrenceRepository
 from domus.application.task_material_ports import TaskMaterialRepository
 from domus.application.task_ports import TaskRepository
+from domus.domain.calendar_values import (
+    CalendarCandidate,
+    CalendarFilters,
+    CalendarPosition,
+    CalendarPreference,
+    CalendarRange,
+)
 from domus.domain.identity import HouseholdPolicy, Member
 from domus.domain.recovery import RecoveryRequest
 from domus.domain.storage import AuditEntry, CommandKey, Household, OutboxEvent, Receipt
@@ -62,7 +69,32 @@ class Outbox(Protocol):
     def delivered(self, event_id: str) -> bool | None: ...
 
 
+class CalendarRepository(Protocol):
+    def page(
+        self,
+        household_id: str,
+        period: CalendarRange,
+        filters: CalendarFilters,
+        from_ms: int,
+        until_ms: int,
+        limit: int,
+        after: CalendarPosition | None,
+    ) -> tuple[int, tuple[CalendarCandidate, ...]]: ...
+    def rules_pending(self, household_id: str) -> bool: ...
+
+
+class CalendarPreferences(Protocol):
+    def get(self, household_id: str, member_id: str) -> CalendarPreference: ...
+    def save(self, preference: CalendarPreference, expected_revision: int) -> None: ...
+
+
 class UnitOfWork(Protocol):
+    @property
+    def calendar_preferences(self) -> CalendarPreferences: ...
+
+    @property
+    def calendar(self) -> CalendarRepository: ...
+
     @property
     def presentations(self) -> MemberPresentations: ...
 

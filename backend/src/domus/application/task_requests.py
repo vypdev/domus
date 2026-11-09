@@ -78,6 +78,35 @@ class OccurrenceRequest(TaskRequest):
 
 
 @dataclass(frozen=True, slots=True)
+class RescheduleTask(OccurrenceRequest):
+    slot_key: str
+    destination: JsonDocument
+    due_at: int | None
+    reason: str
+
+    def __post_init__(self) -> None:
+        OccurrenceRequest.__post_init__(self)
+        validate_identifier(self.slot_key)
+        if not isinstance(self.destination, JsonDocument):
+            raise InvalidInput("invalid_recurrence_reschedule")
+        if self.due_at is not None:
+            validate_task_time(self.due_at)
+        validate_task_text(self.reason, 1000, required=True, multiline=True)
+
+    def document(self) -> JsonDocument:
+        return JsonDocument.from_value(
+            {
+                "occurrence_id": self.occurrence_id,
+                "expected_revision": self.expected_revision,
+                "slot_key": self.slot_key,
+                "destination": self.destination.decode(),
+                "due_at": self.due_at,
+                "reason": self.reason,
+            }
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class AssignTask(OccurrenceRequest):
     assignee_ids: tuple[str, ...]
 

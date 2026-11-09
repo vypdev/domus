@@ -257,3 +257,33 @@ test(`household-admin-C57: maximum Unicode roster remains readable and keeps its
     {type:'submit',command:{action:'member.presentation.update',memberId,payload:{expected_revision:'11',alias:replacement}}}]);
   expect(errors).toEqual([]);expect(foreign).toEqual([]);expect(mutations).toEqual([]);
 });
+
+
+for (const example of ['available', 'loading', 'empty', 'pending-approval', 'read-only', 'spanish']) {
+  test(`built task ${example} supports both languages without contacting an API`, async ({page}) => {
+    const errors: string[] = [], foreign: string[] = [], api: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.route('**/*', async route => {
+      const address = new URL(route.request().url()); if (address.pathname.includes('/api/')) api.push(address.href);
+      if (address.origin !== origin) {foreign.push(address.href); await route.abort();} else await route.continue();
+    });
+    for (const locale of ['en', 'es']) {
+      await page.goto(origin + '/iframe.html?id=domus-tasks--' + example + '&viewMode=story&args=' + encodeURIComponent('language:' + locale));
+      const widget = page.locator('domus-tasks'); await expect(widget.getByRole('heading', {name: locale === 'es' ? 'Tareas' : 'Tasks', exact: true})).toBeVisible();
+      await expect(widget).toHaveAttribute('lang', locale);
+      if (example === 'pending-approval') await expect(widget.getByText(locale === 'es' ? 'Pendiente de aprobación' : 'Pending approval', {exact: true})).toBeVisible();
+      if (example === 'read-only') {await widget.locator('.new-task > summary').click();
+        await expect(widget.getByRole('button', {name: locale === 'es' ? 'Crear tarea' : 'Create task', exact: true})).toBeDisabled();}
+    }
+    expect(errors).toEqual([]); expect(foreign).toEqual([]); expect(api).toEqual([]);
+  });
+}
+test('the built task workspace fits a narrow viewport in both color schemes', async ({page}) => {
+  await page.setViewportSize({width: 360, height: 800});
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({colorScheme, reducedMotion: 'reduce'});
+    await page.goto(origin + '/iframe.html?id=domus-tasks--pending-approval&viewMode=story&args=language:es');
+    const widget = page.locator('domus-tasks'); await expect(widget.getByRole('button', {name: 'Aprobar', exact: true})).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+  }
+});

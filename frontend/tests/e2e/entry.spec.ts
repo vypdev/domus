@@ -12,12 +12,13 @@ const stats = async (request: APIRequestContext, mode: Mode) =>
 async function open(page: Page, context: BrowserContext, mode: Mode, signIn = true, ingressCookie = 'f'.repeat(128)) {
   if (mode === 'native') await context.addCookies([{name: 'ingress_session', value: ingressCookie,
     domain: '127.0.0.1', path: '/', httpOnly: true, sameSite: 'Strict'}]);
-  const response = await page.goto(base(mode) + '/');
+  const response = await page.goto(base(mode) + (signIn ? '/#household' : '/'));
   expect(response?.status()).toBe(200);
   if (mode === 'standalone' && signIn) {
     await page.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
     await expect(page.getByRole('heading', {name: 'Fictional Home Assistant'})).toBeVisible();
     await page.getByRole('link', {name: 'Continue as fixture user'}).click();
+    await page.goto(page.url().split('#')[0] + '#household');
   }
   if (signIn) await expect(page.getByRole('heading', {name: 'Set up your household', exact: true})).toBeVisible();
   return response!;
@@ -139,7 +140,7 @@ for (const mode of modes) test.describe(mode, () => {
     if (mode === 'native') await context.addCookies([{name: 'ingress_session', value: 'f'.repeat(128),
       domain: '127.0.0.1', path: '/', httpOnly: true, sameSite: 'Strict'}]);
     await page.route('**/assets/*.js', route => route.abort('failed'));
-    await page.goto(base(mode) + '/');
+    await page.goto(base(mode) + '/#household');
     await expect(page.getByText('Loading Domus. If this view does not open, reload it from your Domus installation.', {exact: true})).toBeVisible();
     await expect(page.getByRole('heading', {name: 'Set up your household', exact: true})).toHaveCount(0);
     expect((await stats(request, mode)).counts.households).toBe(0);

@@ -6,8 +6,10 @@ from dataclasses import dataclass
 
 from domus.domain.errors import InvalidInput, StorageFailure
 from domus.domain.restoration import OperationEvidence, RetainedOperation
-from domus.domain.storage import validate_identifier
+from domus.domain.storage import JsonDocument, validate_identifier
+from domus.domain.task_events import TaskSourceRecord
 from domus.infrastructure.sqlite_history import SQLiteHistory, _evidence, _record, _same
+from domus.infrastructure.sqlite_task_records import read_cycle
 
 _CURRENT = (
     "SELECT r.*,a.detail AS audit_detail,o.payload AS event_payload,o.position,o.delivered,"
@@ -20,9 +22,51 @@ _CURRENT = (
 )
 
 
+def task_source_record(retained: RetainedOperation) -> TaskSourceRecord:
+    raw = retained.evidence.receipt.result.decode().get("cycle")
+    if not isinstance(raw, dict):
+        raise StorageFailure("invalid_recurrence_source")
+    cycle = read_cycle(JsonDocument.from_value({"version": 1, **raw}).encoded)
+    return TaskSourceRecord(retained, cycle)
+
+
 @dataclass
 class SQLiteTaskHistory:
     connection: sqlite3.Connection
+
+    def lifecycle_sources(
+        self, household_id: str, *, limit: int = 100, after: int = 0
+    ) -> tuple[TaskSourceRecord, ...]:
+        validate_identifier(household_id)
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise InvalidInput("invalid_page_size")
+        if type(after) is not int or not 0 <= after <= 2**63 - 1:
+            raise InvalidInput("invalid_task_position")
+        candidates = self.connection.execute(
+            "SELECT r.actor_id,r.operation_id,o.position,1 AS current FROM receipts r "
+            "JOIN outbox o ON o.event_id=r.operation_id "
+            "WHERE r.household_id=? AND r.action IN ('task.complete','task.verify','task.reopen') "
+            "AND o.position>? UNION ALL "
+            "SELECT actor_id,operation_id,position,0 AS current FROM retained_operations "
+            "WHERE household_id=? AND current=0 "
+            "AND action IN ('task.complete','task.verify','task.reopen') AND position>? "
+            "ORDER BY position LIMIT ?",
+            (household_id, after, household_id, after, limit),
+        ).fetchall()
+        result = []
+        previous = after
+        for row in candidates:
+            retained = self.operation(household_id, row["actor_id"], row["operation_id"])
+            if (
+                retained is None
+                or retained.current != bool(row["current"])
+                or retained.evidence.position != row["position"]
+                or row["position"] <= previous
+            ):
+                raise StorageFailure("invalid_recurrence_source")
+            result.append(task_source_record(retained))
+            previous = row["position"]
+        return tuple(result)
 
     def lifecycle_events(
         self, household_id: str, *, limit: int = 25, after: int = 0
@@ -111,6 +155,16 @@ class SQLiteTaskHistory:
         if len({row.evidence.position for row in rows}) != len(rows):
             raise StorageFailure("invalid_retained_projection")
         return rows[:limit]
+
+    def latest_reschedule(self, household_id: str, occurrence_id: str) -> RetainedOperation | None:
+        validate_identifier(household_id)
+        validate_identifier(occurrence_id)
+        row = self.connection.execute(
+            _CURRENT + "WHERE r.household_id=? AND r.action='task.recurrence.reschedule' "
+            "AND json_extract(o.payload,'$.occurrence_id')=? ORDER BY o.position DESC LIMIT 1",
+            (household_id, occurrence_id),
+        ).fetchone()
+        return None if row is None else self._live(row)
 
     def operation(
         self, household_id: str, actor_id: str, operation_id: str

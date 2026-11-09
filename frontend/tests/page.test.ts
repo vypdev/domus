@@ -1,5 +1,8 @@
+import {CALENDAR_JOURNAL_KEY} from '../src/adapters/calendar-journal';
+import {RECURRENCE_JOURNAL_KEY} from '../src/adapters/recurrence-journal';
 import {afterEach, expect, test, vi} from 'vitest';
-import {decodeIntent, decodeAdministrationIntent, mountEntry} from '../src/composition/entry-page';
+import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, decodeCalendarIntent, decodeReviewIntent, mountEntry} from '../src/composition/entry-page';
+import {TaskController} from '../src/application/task-controller';
 import type {EntryPage} from '../src/composition/entry-page';
 import type {DomusApp} from '../src/presentation/domus-app';
 import type {DomusAdministration} from '../src/presentation/domus-administration';
@@ -12,7 +15,7 @@ afterEach(() => {
   for (const node of nodes.splice(0)) node.remove();
   document.querySelector('#domus-entry-error')?.remove();
 });
-function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'en') {
+function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'en', canReview = false) {
   const wire = corpus[deployment], values = new Map<string, string>(), navigation: string[] = [];
   const root = document.createElement('div'); root.id = 'domus-entry'; document.body.append(root); nodes.push(root);
   const data = document.createElement('script'); data.id = 'domus-bootstrap'; data.type = 'application/json';
@@ -24,6 +27,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let memberId:string=originalAccess.member.member_id, preferenceLocale:'en'|'es'|null=null, preferenceRevision=1, preferencesReadable=true;
   const presentation=()=>({member_id:memberId,alias:null,revision:1});
   const preferences=()=>({member_id:memberId,locale:preferenceLocale,revision:preferenceRevision,routine_participation_summaries:true,notification_delivery:'unavailable'});
+  let weekStart='monday', weekRevision=1, weekOriginal:object|null=null;
   const fetch = vi.fn(async (path: string, init: RequestInit) => {
     const route = path.slice(wire.endpoint.applicationBase.length + 'api/v1/'.length);
     let raw: string;
@@ -34,6 +38,16 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
     else if (route === 'auth/logout') raw = JSON.stringify({state: 'logged_out', upstream_revoked: true,
       message: 'You are signed out of Domus.', action_required: 'Sign in to continue.'});
+    else if (route === 'tasks/calendar/preferences') {
+      if (init.method === 'PUT') {
+        weekStart = JSON.parse(String(init.body)).week_start; weekRevision++;
+        weekOriginal = {state:'committed',archived_by:null,operation_id:'week-op',created_at:100,
+          result:{week_start:weekStart,revision:weekRevision,member_id:memberId},message:'Saved.',action_required:'Review.'};
+        throw new Error('Committed response lost');
+      }
+      raw=JSON.stringify({week_start:weekStart,revision:weekRevision});
+    }
+    else if (route.startsWith('tasks/calendar/preferences/requests/')) raw=JSON.stringify(weekOriginal);
     else if (init.method==='PUT') {
       if(route!=='administration/preferences')throw new Error('This fixture supports preference mutations only');
       putRequests++;const body=JSON.parse(init.body as string);preferenceLocale=body.locale;preferenceRevision++;
@@ -45,6 +59,13 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='administration/capabilities') raw=JSON.stringify({state:'available',contract_version:2,household_id:'home',exact_revisions:'json-integer-int64',
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
+    else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview});
+    else if (route.startsWith('tasks/calendar?')) {
+      const query=new URLSearchParams(route.split('?')[1]);
+      raw=JSON.stringify({period:{start:query.get('start'),end:query.get('end')},time_zone:'UTC',
+        entries:[],count:0,next_cursor:query.has('cursor')?null:'next-page',pending:false});
+    }
+    else if (route.startsWith('tasks/occurrences?')) raw=JSON.stringify({items:[],next_cursor:null});
     else if (route==='administration/preferences') raw=JSON.stringify(preferences());
     else if (route==='administration/roster') raw=JSON.stringify({directory_state:'available',members:[{
       member:{...originalAccess.member,member_id:memberId},presentation:presentation(),metadata:{state:'available',name:'Verified owner',avatar_state:'unavailable'}}]});
@@ -158,8 +179,15 @@ test('language is presentation-only, and navigation has only fixed reviewed dest
   expect(f.navigation).toEqual(['/api/v1/auth/start','/']);
 });
 test('logout closes local access and keeps explicit deployment-specific reentry available', async () => {
-  const f = fixture(), {app} = await f.open(); intent(app, {type: 'logout'});
-  await vi.waitFor(() => {expect(app.view?.notice).toBe('signed_out');});
+  const f = fixture(), {app} = await f.open();
+  f.values.set(CALENDAR_JOURNAL_KEY, 'private pending preference');
+  f.values.set(RECURRENCE_JOURNAL_KEY, 'private pending schedule change');
+  intent(app, {type: 'logout'});
+  await vi.waitFor(() => {
+    expect(app.view?.notice).toBe('signed_out');
+    expect(f.values.has(CALENDAR_JOURNAL_KEY)).toBe(false);
+    expect(f.values.has(RECURRENCE_JOURNAL_KEY)).toBe(false);
+  });
   expect(f.values.has(ENTRY_JOURNAL_KEY)).toBe(false); intent(app, {type: 'sign_in'});
   expect(f.navigation).toEqual(['/api/v1/auth/start']);
 });
@@ -263,6 +291,55 @@ test('household-browser-C18: a signed-out language choice has no identity or mut
   const count=f.fetch.mock.calls.length;intent(app,{type:'language',language:'es'});expect(app.language).toBe('es');expect(f.fetch).toHaveBeenCalledTimes(count);expect(f.putRequests()).toBe(0);
 });
 
+
+test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
+  {type: 'create', title: 'Task', description: '', priority: 'normal', householdId: 'forged'},
+  {type: 'create', title: 1, description: '', priority: 'normal'}, {type: 'create', title: 'Task', description: '', priority: 'future'},
+  {type: 'complete', materialUsages: true}, {type: 'complete', materialUsages: [{line_id: 'line', quantity: '1.0'}]},
+  {type: 'verify', decision: 'pending', reason: 'A'}, {type: 'reopen', reason: 1}, {type: 'select', occurrenceId: '../other'},
+  {type: 'recover', key: ''}])('task event %# cannot select a principal, route or arbitrary command', value => {
+    expect(decodeTaskIntent(value)).toBeNull();
+});
+test('closed task events preserve semantic user inputs and exact material quantities', () => {
+  const inputs = [{type: 'refresh'}, {type: 'more'}, {type: 'claim'}, {type: 'select', occurrenceId: 'work-1'},
+    {type: 'create', title: '  Clean 🧹  ', description: '', priority: 'high'}, {type: 'complete', materialUsages: null},
+    {type: 'complete', materialUsages: [{line_id: 'line-1', quantity: '3.333333'}]},
+    {type: 'verify', decision: 'approved', reason: ''}, {type: 'verify', decision: 'rejected', reason: 'Not done'},
+    {type: 'reopen', reason: 'Repeat'}, {type: 'recover', key: 'original'}, {type: 'dismiss', key: 'original'}];
+  for (const value of inputs) expect(decodeTaskIntent(value)).toEqual(value);
+});
+test('the mounted task surface routes only owned semantic intents to its application controller', async () => {
+  const f = fixture(); f.phase('active'); const {app} = await f.open(); expect(app.tasks?.access?.memberId).toBe('identity-1');
+  const spies = {create: vi.spyOn(TaskController.prototype, 'create').mockResolvedValue(undefined),
+    more: vi.spyOn(TaskController.prototype, 'more').mockResolvedValue(undefined), select: vi.spyOn(TaskController.prototype, 'select').mockResolvedValue(undefined),
+    claim: vi.spyOn(TaskController.prototype, 'claim').mockResolvedValue(undefined), complete: vi.spyOn(TaskController.prototype, 'complete').mockResolvedValue(undefined),
+    verify: vi.spyOn(TaskController.prototype, 'verify').mockResolvedValue(undefined), reopen: vi.spyOn(TaskController.prototype, 'reopen').mockResolvedValue(undefined),
+    recover: vi.spyOn(TaskController.prototype, 'recover').mockResolvedValue(undefined), dismiss: vi.spyOn(TaskController.prototype, 'dismiss').mockResolvedValue(undefined),
+    refresh: vi.spyOn(TaskController.prototype, 'refresh').mockResolvedValue(undefined)};
+  const send = (detail: unknown, target: EventTarget = app) => target.dispatchEvent(new CustomEvent('domus-task-intent', {detail, bubbles: true, composed: true}));
+  try {
+    const child = document.createElement('span'); app.append(child); send({type: 'create', title: 'Other target', description: '', priority: 'normal'}, child);
+    send({type: 'create', title: 'Forged actor', description: '', priority: 'normal', actor: 'other'}); await Promise.resolve(); expect(spies.create).not.toHaveBeenCalled();
+    const cases: readonly [unknown, keyof typeof spies, readonly unknown[]][] = [
+      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high']],
+      [{type: 'more'}, 'more', []], [{type: 'select', occurrenceId: 'work-1'}, 'select', ['work-1']], [{type: 'claim'}, 'claim', []],
+      [{type: 'complete', materialUsages: null}, 'complete', [null]], [{type: 'verify', decision: 'approved', reason: ''}, 'verify', ['approved', '']],
+      [{type: 'reopen', reason: 'Repeat'}, 'reopen', ['Repeat']], [{type: 'recover', key: 'original'}, 'recover', ['original']],
+      [{type: 'dismiss', key: 'original'}, 'dismiss', ['original']], [{type: 'refresh'}, 'refresh', []],
+    ];
+    for (const [detail, method, args] of cases) {send(detail); await vi.waitFor(() => expect(app.view?.busy).toBe(false)); expect(spies[method]).toHaveBeenCalledWith(...args);}
+    expect(f.putRequests()).toBe(0); expect(f.postRequests()).toBe(0);
+  } finally {for (const spy of Object.values(spies)) spy.mockRestore();}
+});
+test('an unexpected task delegation failure closes the runtime and shows the bounded failure view', async () => {
+  const f = fixture(); f.phase('active'); const {app} = await f.open();
+  const spy = vi.spyOn(TaskController.prototype, 'create').mockRejectedValue(Error('private delegation fault'));
+  try {app.dispatchEvent(new CustomEvent('domus-task-intent', {detail: {type: 'create', title: 'Clean', description: '', priority: 'normal'}}));
+    await vi.waitFor(() => expect(document.querySelector('#domus-entry-error')).not.toBeNull());
+    expect(document.querySelector('#domus-entry-error')!.textContent).not.toContain('private delegation fault');
+  } finally {spy.mockRestore();}
+});
+
 test('workspace fragments preserve the mounted administration and stop after disposal', async () => {
   const f = fixture('native');
   const base = f.page.location.href;
@@ -295,6 +372,10 @@ test('workspace fragments preserve the mounted administration and stop after dis
   await app.updateComplete;
   expect(tabs().state.selected).toBe('overview');
   expect(app.shadowRoot!.activeElement?.id).toBe('overview');
+  route('#tasks');
+  await app.updateComplete;
+  expect(tabs().state.selected).toBe('tasks');
+  expect(app.shadowRoot!.activeElement?.id).toBe('tasks');
   route('#household%2Fprivate');
   await app.updateComplete;
   expect(tabs().state.selected).toBe('overview');
@@ -321,4 +402,69 @@ test('unverified and retired views do not expose the household destination', asy
   app.view = {...app.view!, notice: 'context_changed'};
   await app.updateComplete;
   expect(tabs()).toBeNull();
+});
+
+test('calendar composition accepts bounded reads only on the verified route and clears them on navigation', async () => {
+  const query = {start:'2026-11-01',end:'2026-12-01',kind:'',timing:'',state:'',priority:'',category:'',own:true};
+  expect(decodeCalendarIntent({type:'load',query})).toEqual({type:'load',query});
+  expect(decodeCalendarIntent({type:'more'})).toEqual({type:'more'});
+  for (const day of ['monday','sunday']) expect(decodeCalendarIntent({type:'setWeekStart',weekStart:day})).toEqual({type:'setWeekStart',weekStart:day});
+  expect(decodeCalendarIntent({type:'setWeekStart',weekStart:'tuesday'})).toBeNull();
+  expect(decodeCalendarIntent({type:'recoverPreference'})).toEqual({type:'recoverPreference'});
+  expect(decodeCalendarIntent({type:'refreshPreference'})).toEqual({type:'refreshPreference'});
+  for (const value of [{type:'load'}, {type:'load',query:{...query,member:'another'}}, {type:'more',query}, {type:'refresh'}, null]) {
+    expect(decodeCalendarIntent(value)).toBeNull();
+  }
+  const f=fixture();f.phase('active');const {app}=await f.open();
+  const sends=(detail:unknown,target:EventTarget=app)=>target.dispatchEvent(new CustomEvent('domus-calendar-intent',{detail,bubbles:true,composed:true}));
+  const calls=()=>f.fetch.mock.calls.filter(([path])=>path.includes('/tasks/calendar?'));
+  sends({type:'load',query});expect(calls()).toHaveLength(0);
+  const navigate=(fragment:string)=>{
+    f.page.location.href=f.page.location.href.split('#')[0]+fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  navigate('#calendar');
+  await vi.waitFor(()=>expect(app.calendar?.status).toBe('ready'));
+  expect(calls()).toHaveLength(1);
+  sends({type:'load',query},app.querySelector('span')??app.appendChild(document.createElement('span')));
+  sends({type:'invalid'});expect(calls()).toHaveLength(1);
+  sends({type:'load',query});await vi.waitFor(()=>expect(app.calendar?.page?.cursor).toBe('next-page'));
+  expect(calls()[1][0]).toContain('member_id=identity-1');
+  sends({type:'more'});await vi.waitFor(()=>expect(app.calendar?.page?.cursor).toBe(null));
+  expect(calls()[2][0]).toContain('cursor=next-page');
+  await vi.waitFor(()=>expect(app.calendarPreference?.value?.weekStart).toBe('monday'));
+  sends({type:'refreshPreference'});
+  await vi.waitFor(()=>expect(app.calendarPreference?.busy).toBe(false));
+  sends({type:'setWeekStart',weekStart:'sunday'});
+  await vi.waitFor(()=>expect(app.calendarPreference?.notice).toBe('preferenceUncertain'));
+  sends({type:'recoverPreference'});
+  await vi.waitFor(()=>expect(app.calendarPreference?.value?.weekStart).toBe('sunday'));
+  expect(app.calendarPreference?.pending).toBe(false);
+  navigate('#tasks');expect(app.calendarScopeKey).toBeNull();expect(app.calendar?.page).toBeNull();
+  sends({type:'more'});expect(calls()).toHaveLength(3);
+});
+
+test('review composition accepts only closed events in the current task manager workspace', async () => {
+  const draft = {kind:'attachment',date:'2026-12-01',time:'',zone:'UTC',interval:'30',
+    visibility:'at_completion',choice:'adopt',fold:'first_instant',reason:'',rrule:''};
+  expect(decodeReviewIntent({type:'preview',draft})).toEqual({type:'preview',draft});
+  for (const value of [null,{type:'preview'}, {type:'preview',draft:{...draft, actor:'forged'}},
+    {type:'open',key:'original'}, {type:'recover',key:'../x'}, {type:'resend'}]) {
+    expect(decodeReviewIntent(value)).toBeNull();
+  }
+  const f=fixture('standalone','en',true); f.phase('active'); const {app}=await f.open();
+  const navigate=(fragment:string)=>{
+    f.page.location.href=f.page.location.href.split('#')[0]+fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  const send=(detail:unknown,target:EventTarget=app)=>target.dispatchEvent(new CustomEvent('domus-review-intent',{detail,bubbles:true,composed:true}));
+  send({type:'open'}); expect(app.recurrenceReview).toBeNull();
+  navigate('#tasks'); expect(app.recurrenceReview?.open).toBe(false);
+  const nested=app.appendChild(document.createElement('span'));
+  send({type:'open'},nested); send({type:'resend'}); expect(app.recurrenceReview?.open).toBe(false);
+  send({type:'open'}); expect(app.recurrenceReview?.open).toBe(true);
+  send({type:'preview',draft}); send({type:'apply'}); send({type:'recover',key:'saved'}); send({type:'forget',key:'saved'});
+  expect(f.fetch.mock.calls.some(([path])=>path.includes('recurrence/reviews'))).toBe(false);
+  send({type:'close'}); expect(app.recurrenceReview?.open).toBe(false);
+  navigate('#household'); expect(app.recurrenceReview).toBeNull();
 });

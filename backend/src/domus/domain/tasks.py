@@ -374,6 +374,11 @@ class TaskOccurrence:
             self, state=state, state_reason=reason, revision=next_task_revision(self.revision)
         )
 
+    def reschedule(self, due_at: int | None) -> Self:
+        if self.state not in (OccurrenceState.AVAILABLE, OccurrenceState.ASSIGNED):
+            raise Conflict("task_transition_conflict")
+        return replace(self, due_at=due_at, revision=next_task_revision(self.revision))
+
     def dependencies(self, prerequisites: tuple[str, ...], subtasks: tuple[str, ...]) -> Self:
         if self.state in (
             OccurrenceState.COMPLETED,
