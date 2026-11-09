@@ -163,6 +163,8 @@ def test_reviewed_batch_recovers_original_stock_reservations_and_demand(tmp_path
     extra = _commit(inventory, "manual", EffectKind.DEMAND, "1")
     original_effects = {key: _effect(store, key) for key in (reservation, demand, extra)}
     original_stock = _stock(store)
+    with store.read() as unit:
+        assert unit.inventory.effects("home", ()) == ()
     preview, change = reviewed(review, selection)
     assert {
         row["effect_id"] for row in preview.result.decode()["plan"]["source"]["inventory_effects"]
@@ -528,15 +530,19 @@ def test_manager_commands_cannot_overbook_or_create_unbound_effects(tmp_path):
     linked = tasks.create(
         "with-materials", CreateTask(TaskContent("Wash"), materials=MATERIALS)
     ).result.decode()["occurrence_id"]
-    _commit(inventory, "hold", EffectKind.RESERVATION, "1", linked)
+    reservation = _commit(inventory, "hold", EffectKind.RESERVATION, "1", linked)
     with pytest.raises(Conflict, match="inventory_insufficient_stock"):
         _commit(inventory, "too-much", EffectKind.RESERVATION, "999999999999.999999", linked)
     actor.human = HumanIdentity("ha_child", False, True, False)
     with pytest.raises(Forbidden, match="permission_denied"):
         _commit(inventory, "restricted", EffectKind.DEMAND, "1")
     with store.read() as unit:
-        assert unit.inventory.effects("home", ()) == ()
-        assert unit.inventory.effect("foreign", "missing") is None
+        assert unit.inventory.effect("foreign", reservation) is None
+    with closing(sqlite3.connect(store.path)) as connection:
+        effects = connection.execute(
+            "SELECT effect_id,occurrence_id,kind,remaining FROM inventory_effects"
+        ).fetchall()
+    assert effects == [(reservation, linked, EffectKind.RESERVATION.value, 1_000_000)]
 
 
 def _separate_material(tmp_path):
