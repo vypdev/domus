@@ -128,6 +128,9 @@ class SQLiteTasks(TaskRepository):
             household_id, limit=limit, after=after
         )
 
+    def restored_cycle_closure(self, household_id: str, cycle_id: str) -> TaskSourceRecord | None:
+        return SQLiteTaskHistory(self.connection).restored_cycle_closure(household_id, cycle_id)
+
     def review_evidence(
         self,
         household_id: str,

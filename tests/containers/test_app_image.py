@@ -129,7 +129,7 @@ def data_volume(image: str):
 def test_real_nonroot_listener_rejects_forgery_and_retains_storage_and_replay_on_restart(
     image: str,
     data_volume: str,
-    expected_schema: int = 15,
+    expected_schema: int = 16,
 ) -> None:
     name = "domus-persistent-test-" + uuid.uuid4().hex
     try:
@@ -535,7 +535,7 @@ def test_packaged_console_restore_restart_and_latest_history_rollback(
         )
     )
     assert activated["state"] == "active"
-    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 15
+    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 16
     assert docker("start", name).returncode == 0
     ready(name, standalone=mode == "standalone")
     active = successful(packaged_fixture(image, volume, "active", delivery))

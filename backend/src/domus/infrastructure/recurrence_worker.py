@@ -9,23 +9,24 @@ from domus.application.fair_recurrence import FixedRun
 from domus.domain.errors import DomusError, Forbidden
 
 
-class RecurrenceWorker:
+class MaintenanceWorker[T]:
     def __init__(
-        self, tick: Callable[[Callable[[], bool]], FixedRun], *, interval: float = 5.0
+        self, tick: Callable[[Callable[[], bool]], T], name: str, *, interval: float = 5.0
     ) -> None:
         if (
             type(interval) not in (int, float)
             or not math.isfinite(interval)
             or not 0 < interval <= 60
         ):
-            raise ValueError("invalid_recurrence_poll_interval")
+            raise ValueError(f"invalid_{name}_poll_interval")
         self._tick = tick
+        self._name = name
         self._interval = interval
         self._stop = Event()
         self._lock = Lock()
         self._thread: Thread | None = None
         self._closed = False
-        self._last_run: FixedRun | None = None
+        self._last_run: T | None = None
         self._last_failure: str | None = None
 
     @property
@@ -34,7 +35,7 @@ class RecurrenceWorker:
             return self._thread is not None and self._thread.is_alive()
 
     @property
-    def last_run(self) -> FixedRun | None:
+    def last_run(self) -> T | None:
         with self._lock:
             return self._last_run
 
@@ -46,10 +47,10 @@ class RecurrenceWorker:
     def start(self) -> None:
         with self._lock:
             if self._closed:
-                raise RuntimeError("recurrence_worker_closed")
+                raise RuntimeError(f"{self._name}_worker_closed")
             if self._thread is not None:
                 return
-            thread = Thread(target=self._run, name="domus-recurrence", daemon=False)
+            thread = Thread(target=self._run, name=f"domus-{self._name}", daemon=False)
             thread.start()
             self._thread = thread
 
@@ -72,14 +73,14 @@ class RecurrenceWorker:
                 code = (
                     "scope_denied"
                     if isinstance(error, Forbidden)
-                    else "recurrence_unavailable"
+                    else f"{self._name}_unavailable"
                     if isinstance(error, DomusError)
                     else "result_unconfirmed"
                 )
                 with self._lock:
                     self._last_run, self._last_failure = None, code
-                logging.getLogger("domus.recurrence").warning(
-                    "recurrence_run_unconfirmed code=%s", code
+                logging.getLogger(f"domus.{self._name}").warning(
+                    "%s_run_unconfirmed code=%s", self._name, code
                 )
                 if isinstance(error, Forbidden):
                     return
@@ -88,3 +89,10 @@ class RecurrenceWorker:
                     self._last_run, self._last_failure = result, None
             if self._stop.wait(self._interval):
                 return
+
+
+class RecurrenceWorker(MaintenanceWorker[FixedRun]):
+    def __init__(
+        self, tick: Callable[[Callable[[], bool]], FixedRun], *, interval: float = 5.0
+    ) -> None:
+        super().__init__(tick, "recurrence", interval=interval)

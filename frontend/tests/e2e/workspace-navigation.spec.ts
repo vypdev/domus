@@ -169,13 +169,21 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.reload();
     const recovered = calendarRegion.getByRole('button', {name:'Check original week-start change'});
     await expect(recovered).toBeEnabled();
-    const original = page.waitForResponse(response => response.url() === pref + '/requests/' + originalKey);
+    const originalReads: string[] = [];
+    await page.route(pref + '/requests/' + originalKey, async route => {
+      expect(route.request().method()).toBe('GET');
+      // Retain upstream bytes before Chromium can discard its response body.
+      const response = await route.fetch({maxRetries: 0, maxRedirects: 0});
+      expect(response.status()).toBe(200);
+      const body = await response.body();
+      originalReads.push(body.toString('utf8'));
+      await route.fulfill({response, body});
+    });
     await recovered.click();
-    const originalResponse = await original;
-    expect(originalResponse.ok()).toBe(true);
-    expect(await originalResponse.text()).toContain('"revision":9007199254740994');
     await expect(recovered).toHaveCount(0);
     await expect(calendarRegion.getByLabel('My week starts on')).toHaveValue('sunday');
+    expect(originalReads).toHaveLength(1);
+    expect(originalReads[0]).toContain('"revision":9007199254740994');
     expect(writes).toEqual(['POST ' + base + 'api/v1/household', 'PUT ' + pref]);
     await page.getByLabel('Language', {exact: true}).selectOption('es');
 

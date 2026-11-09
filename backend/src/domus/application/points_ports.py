@@ -1,0 +1,16 @@
+"""Transaction-local Points persistence for the trusted task lifecycle consumer."""
+
+from typing import Protocol
+
+from domus.domain.points import PointsPosting
+from domus.domain.task_events import TaskLifecycleEvent
+
+
+class PointsRepository(Protocol):
+    def position(self, household_id: str) -> int: ...
+    def processed(self, household_id: str, event_id: str) -> str | None: ...
+    def next_recipient(self, household_id: str, definition_id: str) -> str | None: ...
+    def ledger(self, household_id: str, cycle_id: str) -> tuple[PointsPosting, ...]: ...
+    def add(
+        self, event: TaskLifecycleEvent, fingerprint: str, posting: PointsPosting | None
+    ) -> None: ...

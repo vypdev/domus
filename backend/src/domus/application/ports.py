@@ -4,6 +4,7 @@ from contextlib import AbstractContextManager
 from typing import Protocol
 
 from domus.application.member_profile_ports import MemberPreferencesRepository, MemberPresentations
+from domus.application.points_ports import PointsRepository
 from domus.application.recurrence_ports import RecurrenceRepository
 from domus.application.task_material_ports import TaskMaterialRepository
 from domus.application.task_ports import TaskRepository
@@ -96,6 +97,9 @@ class TaskCategories(Protocol):
 
 
 class UnitOfWork(Protocol):
+    @property
+    def points(self) -> PointsRepository: ...
+
     @property
     def calendar_preferences(self) -> CalendarPreferences: ...
 
