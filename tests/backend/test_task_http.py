@@ -3,6 +3,8 @@
 import pytest
 from test_task_runtime import api as api
 
+from domus.infrastructure.recurrence_time import PinnedRecurrenceTime
+
 PREFIX = "/api/v1/tasks"
 
 
@@ -25,6 +27,12 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
         "member_id": member_id,
         "can_create": True,
         "can_review_schedule": True,
+        "schedule_policy": {
+            "zone": "UTC",
+            "data_identity": PinnedRecurrenceTime().data_identity,
+            "repeated_time": "first_instant",
+            "revision": 1,
+        },
     }
     assert result["state"] == "available" and result["revision"] == 1
     assert create(api) == receipt

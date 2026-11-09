@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled Overview, Tasks, Calendar and Household bundle with distinct calendar counts and durable recurrence review attention.",
+  "scope": "Compiled Overview, Tasks, Calendar and Household bundle with protected fixed and completion-relative task creation and original-request recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "d7f4e0b1b0080f1d14b1291c65fa64d7debd80252942c718171ee42e8890e613",
+    ".vite/manifest.json": "09d29d036602e2aa2de366899964ff9fa15a96f903eb066bf1c88f42cddaa652",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-H5c1FAeT.js": "da7a37e9394c00c73cf7b03a949758608c82e97e6adc1883086d7c5346b9185f",
-    "index.html": "bfb21a1ff963e4c9c4d877ca83c071c9979fb23936ed58aa1e4bfe6995fbd177"
+    "assets/index-X_uWPsJI.js": "045f6e415ff86b8f9c8d43c936befeceab1dc4d96536a9d8e8bb72da15d836e0",
+    "index.html": "c34aeab5d04ce2ce399e718c6c56bacedbec22382d241c7faeee6d04439a4b40"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -151,6 +151,16 @@
       "assets/index-BgVYnY7C.js": "1f0de30db26ea4fe3cc88a81156a2b68513138ea92ac3bd512b2a328ed2f0c63",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "index.html": "4c3bb3233a6d32f8c197315b6b8e5e71255b27032a9875edb819d4addecd3653"
+    }
+  },
+  "preScheduledTaskCreation": {
+    "sourceCommit": "ed2634d1727e9f19663bedaa1cf677fd875f3287",
+    "scope": "Compiled Overview, Tasks, Calendar and Household bundle with distinct calendar counts and durable recurrence review attention.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "d7f4e0b1b0080f1d14b1291c65fa64d7debd80252942c718171ee42e8890e613",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-H5c1FAeT.js": "da7a37e9394c00c73cf7b03a949758608c82e97e6adc1883086d7c5346b9185f",
+      "index.html": "bfb21a1ff963e4c9c4d877ca83c071c9979fb23936ed58aa1e4bfe6995fbd177"
     }
   }
 }

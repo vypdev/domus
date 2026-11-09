@@ -4,7 +4,7 @@ import {TaskSessionJournal} from '../src/adapters/task-journal';
 import {JournalError} from '../src/domain/journal';
 import {revisionValue} from '../src/domain/administration';
 import {EntryReadError} from '../src/application/ports';
-import type {TaskDetail, TaskReceipt} from '../src/domain/tasks';
+import type {TaskAccess, TaskDetail, TaskReceipt, TaskScheduleDraft} from '../src/domain/tasks';
 import type {VerifiedEntrySession} from '../src/application/ports';
 import type {TaskServer} from '../src/application/task-ports';
 const context = {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel: 'edge' as const, subject: 'a'.repeat(32)};
@@ -19,7 +19,7 @@ function fixture() {
   const storage = new Map<string, string>();
   const session = {context, deployment: 'native' as const, access: 'full' as 'full' | 'read_only', serverTime: now, expiresAt: 100000, householdApiAvailable: true};
   const identity = {session: vi.fn(() => read<VerifiedEntrySession | null>(session))};
-  const server = {access: vi.fn(() => read({householdId: 'home', memberId: 'member-1', canCreate: true, canReviewSchedule: true})),
+  const server = {access: vi.fn(() => read<TaskAccess>({householdId: 'home', memberId: 'member-1', canCreate: true, canReviewSchedule: true})),
     list: vi.fn(() => read({items: [detail], nextCursor: null as string | null})), detail: vi.fn(() => read(detail)),
     original: vi.fn(() => read(saved)), send: vi.fn<TaskServer['send']>(async () => saved)};
   const journal = new TaskSessionJournal({getItem: key => storage.get(key) ?? null, setItem: (key, value) => {storage.set(key, value);}, removeItem: key => {storage.delete(key);}});
@@ -42,6 +42,28 @@ test('lost task replies block a second new key and recover by read without resen
   expect(f.controller.view.notice).toBe('previous_request_unresolved');
   await f.controller.recover('key-1'); expect(f.server.original).toHaveBeenCalledTimes(1);
   expect(f.server.send).toHaveBeenCalledTimes(1); expect(f.controller.view.outcome).toEqual(saved);
+});
+test('scheduled task creation binds the verified household policy and keeps a lost reply under its original key', async () => {
+  const f = fixture();
+  const draft: TaskScheduleDraft = {kind: 'relative', start: {kind: 'date', local: '2027-01-02'},
+    interval_days: 18, visibility: 'at_verification'};
+  await f.controller.create('Inspect', '', 'normal', draft);
+  await f.controller.refresh();
+  await f.controller.create('Inspect', '', 'normal', draft);
+  expect(f.controller.view.notice).toBe('invalid_input');
+  expect(f.server.send).not.toHaveBeenCalled();
+  const policy = {zone: 'Europe/Madrid', data_identity: 'tzdata:2026.6/iana:2026f', repeated_time: 'second_instant' as const, revision};
+  f.server.access.mockReturnValue(read({...f.controller.view.access!, schedulePolicy: policy}));
+  await f.controller.refresh();
+  f.server.send.mockResolvedValueOnce({kind: 'uncertain'});
+  await f.controller.create('Inspect', '', 'normal', draft);
+  const request = f.server.send.mock.calls[0][0];
+  expect(request).toMatchObject({key: 'key-1', command: {payload: {schedule: {draft, policy}}}});
+  f.server.original.mockReturnValue(read({...saved, state: 'active', occurrenceId: null}));
+  await f.controller.recover('key-1');
+  expect(f.server.original).toHaveBeenCalledWith({...request, operationId: null}, context);
+  expect(f.server.send).toHaveBeenCalledOnce();
+  expect(f.controller.view.outcome).toMatchObject({kind: 'receipt', state: 'active', occurrenceId: null});
 });
 test('self completion uses the freshly verified member and actual server-anchored time', async () => {
   const f = fixture(); await f.controller.refresh(); await f.controller.select('work-1');

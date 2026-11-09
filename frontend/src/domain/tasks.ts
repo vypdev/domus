@@ -1,6 +1,7 @@
 /** Pure task intents preserve original user data; validation never grants authority. */
 import {revisionValue} from './administration';
 import type {Revision} from './administration';
+import {civilDate} from './civil-date';
 
 export const TASK_TEXT_LIMITS = Object.freeze({title: 160, description: 4000, reason: 1000});
 
@@ -33,8 +34,19 @@ export const TASK_STATES = ['draft', 'available', 'assigned', 'in_progress', 'bl
 export type TaskState = typeof TASK_STATES[number];
 export const TASK_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
 export type TaskPriority = typeof TASK_PRIORITIES[number];
+type ScheduledStart = Readonly<{kind: 'date' | 'time'; local: string}>;
+export type TaskScheduleDraft =
+  Readonly<{kind: 'fixed'; start: ScheduledStart; rrule: string}>
+  | Readonly<{kind: 'relative'; start: ScheduledStart; interval_days: number; visibility: 'at_completion' | 'at_verification'}>;
+export interface TaskSchedulePolicy {
+  readonly zone: string;
+  readonly data_identity: string;
+  readonly repeated_time: 'first_instant' | 'second_instant';
+  readonly revision: Revision;
+}
+type TaskSchedule = Readonly<{draft: TaskScheduleDraft; policy: TaskSchedulePolicy}>;
 export type TaskCommand =
-  Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority}>}>
+  Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority; schedule?: TaskSchedule}>}>
   | Readonly<{action: 'task.claim'; occurrenceId: string; payload: Readonly<{expected_revision: Revision}>}>
   | Readonly<{action: 'task.complete'; occurrenceId: string; payload: Readonly<{expected_revision: Revision;
     performer_ids: readonly string[]; performed_at: string; material_usages: readonly TaskMaterialUsage[] | null}>}>
@@ -49,6 +61,27 @@ function fields(value: unknown, keys: readonly string[]): Fields {
 }
 function choice<T extends string>(value: unknown, options: readonly T[]): T {
   requireValue(typeof value === 'string' && options.includes(value as T)); return value as T;
+}
+export function taskSchedulePolicy(value: unknown): TaskSchedulePolicy {
+  const body = fields(value, ['zone', 'data_identity', 'repeated_time', 'revision']);
+  const {zone, data_identity} = body;
+  requireValue(typeof zone === 'string' && /^[A-Za-z0-9_+/-]{1,128}$/u.test(zone));
+  requireValue(typeof data_identity === 'string' && /^[A-Za-z0-9:/_.-]{1,128}$/u.test(data_identity));
+  return Object.freeze({zone, data_identity, repeated_time: choice(body.repeated_time, ['first_instant', 'second_instant']),
+    revision: revisionValue(body.revision)});
+}
+export function taskScheduleDraft(value: unknown): TaskScheduleDraft {
+  const kind = choice((value as Fields)?.kind, ['fixed','relative']);
+  const body = fields(value, kind === 'fixed' ? ['kind','start','rrule'] : ['kind','start','interval_days','visibility']);
+  const date = fields(body.start, ['kind','local']);
+  const startKind = choice(date.kind, ['date','time']), local = date.local;
+  requireValue(typeof local === 'string' && (startKind === 'date' ? civilDate(local)
+    : civilDate(local.slice(0, 10)) && /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/u.test(local)));
+  const start = Object.freeze({kind: startKind, local});
+  if (kind === 'fixed') return Object.freeze({kind, start, rrule: taskText(body.rrule, 2048, true)});
+  const interval = body.interval_days;
+  requireValue(typeof interval === 'number' && Number.isInteger(interval) && interval >= 1 && interval <= 36600);
+  return Object.freeze({kind, start, interval_days: interval, visibility: choice(body.visibility, ['at_completion','at_verification'])});
 }
 function usages(value: unknown): readonly TaskMaterialUsage[] | null {
   if (value === null) return null;
@@ -67,11 +100,15 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
     const action = (value as Fields).action;
     const item = fields(value, action === 'task.create' ? ['action', 'payload'] : ['action', 'occurrenceId', 'payload']);
     if (action === 'task.create') {
-      const body = fields(item.payload, ['expected_revision', 'title', 'description', 'priority']);
+      const hasSchedule = typeof item.payload === 'object' && item.payload !== null && Object.hasOwn(item.payload, 'schedule');
+      const body = fields(item.payload, ['expected_revision', 'title', 'description', 'priority', ...hasSchedule ? ['schedule'] : []]);
       requireValue(body.expected_revision === 0);
+      const schedule = hasSchedule ? fields(body.schedule, ['draft', 'policy']) : null;
       return Object.freeze({action, payload: Object.freeze({expected_revision: 0,
         title: taskText(body.title, TASK_TEXT_LIMITS.title, true), description: taskText(body.description, TASK_TEXT_LIMITS.description, false, true),
-        priority: choice(body.priority, TASK_PRIORITIES)})});
+        priority: choice(body.priority, TASK_PRIORITIES), ...schedule === null ? {} : {
+          schedule: Object.freeze({draft: taskScheduleDraft(schedule.draft), policy: taskSchedulePolicy(schedule.policy)})
+        }})});
     }
     const occurrenceId = taskIdentifier(item.occurrenceId);
     if (action === 'task.claim') {
@@ -120,10 +157,11 @@ export interface TaskDetail extends TaskSummary {
 }
 export interface TaskAccess {
   readonly householdId: string; readonly memberId: string; readonly canCreate: boolean; readonly canReviewSchedule: boolean;
+  readonly schedulePolicy?: TaskSchedulePolicy;
 }
 export interface TaskReceipt {
   readonly kind: 'receipt'; readonly stage: 'committed' | 'historical'; readonly operationId: string;
-  readonly action: TaskCommand['action']; readonly occurrenceId: string; readonly revision: Revision;
-  readonly state: TaskState; readonly cycle: TaskCycleSummary | null;
+  readonly action: TaskCommand['action']; readonly occurrenceId: string | null; readonly revision: Revision;
+  readonly state: TaskState | 'active'; readonly cycle: TaskCycleSummary | null;
   readonly archivedBy: string | null;
 }

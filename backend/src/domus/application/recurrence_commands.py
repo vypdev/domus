@@ -8,6 +8,7 @@ from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
+from domus.application.schedule_creation_policy import require_schedule_creation_policy
 from domus.application.task_authorization import TaskAccess, TaskCommandAuthorization
 from domus.application.task_creation import TaskCreation
 from domus.application.task_material_ports import TaskInventory
@@ -58,6 +59,7 @@ class RecurrenceCommands:
     planner: FixedRecurrencePlanner
     household_id: str = "home"
     inventory_factory: Callable[[UnitOfWork], TaskInventory] | None = None
+    bind_household_policy: bool = False
 
     def __post_init__(self) -> None:
         validate_identifier(self.household_id)
@@ -88,6 +90,10 @@ class RecurrenceCommands:
             raise InvalidInput("recurrence_start_mismatch")
 
         def apply(unit: UnitOfWork) -> Change:
+            if self.bind_household_policy:
+                require_schedule_creation_policy(
+                    unit, self.household_id, self.planner.times.data_identity, request.policy
+                )
             item = TaskCreation(self.clock, self.identifiers, self.inventory_factory).definition(
                 unit, access, self.household_id, request.task
             )
