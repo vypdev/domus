@@ -30,13 +30,13 @@ The current source increment adds a real task workspace. Published Edge.7 remain
 
 The workspace uses the server's current allowed actions. Read-only HA outage grace permits local queries until the original session deadline and blocks changes. A changed account or membership retires the previous private draft.
 
-This increment does not yet supply reward redemption or the integrated supplies/automation/dashboard workflows. Real Inventory integration is still pending; the current task API cannot link nonempty material selections without an actual provider. Backend event recording is not proof that points, stock or downstream consumers were updated.
+The Points and Inventory consumers record their own effects. Check Family for posted points and the task material outcome for posted stock movements or pending regularization. Reward redemption and the integrated supplies, automation, and dashboard workflows remain planned.
 
 ## Daily work
 
 The development task API is documented in [task execution](tasks/execution.md), with
 [operation/recovery guidance](tasks/operator-recovery.md) and [migration limits](tasks/migration.md).
-The current workspace covers the flows above. The remaining paragraphs describe the complete intended release; real Points/Inventory effects and the other task editors remain pending.
+The following sections combine current task workflows with the intended release scope.
 
 Create a task with only a title, then optionally set category, priority, duration, assignment, materials,
 schedule, recurrence and verification. Claim available work or inspect assignments.

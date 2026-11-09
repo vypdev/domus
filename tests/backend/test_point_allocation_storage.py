@@ -145,7 +145,8 @@ def test_concurrent_replay_freezes_once_and_reopened_pending_work_uses_fresh_pol
         ),
         (
             "UPDATE point_completion_allocations SET document=json_set("
-            "document,'$.base',0,'$.allocation.shares',json('[[\"child\",0],[\"other\",0]]'))",
+            "document,'$.base',0,'$.allocation.next_recipient',NULL,"
+            "'$.allocation.shares',json('[[\"child\",0],[\"other\",0]]'))",
             "invalid_points_allocation",
         ),
         (
