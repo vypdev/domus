@@ -532,7 +532,7 @@ def test_packaged_console_restore_restart_and_latest_history_rollback(
         )
     )
     assert activated["state"] == "active"
-    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 12
+    assert activated["activation"]["rollback_snapshot"]["schema_version"] == 13
     assert docker("start", name).returncode == 0
     ready(name, standalone=mode == "standalone")
     active = successful(packaged_fixture(image, volume, "active", delivery))

@@ -18,6 +18,7 @@ from domus.domain.errors import (
     StorageBusy,
     StorageFailure,
 )
+from domus.domain.fold_policy import FoldPolicy
 from domus.domain.storage import (
     DEFAULT_MATERIALIZATION_HORIZON_DAYS,
     MAX_MATERIALIZATION_HORIZON_DAYS,
@@ -57,7 +58,7 @@ from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS, TASK_TABLES
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -109,6 +110,10 @@ HOUSEHOLD_HORIZON_STATEMENT = (
     "CHECK(typeof(materialization_horizon_days)='integer' AND materialization_horizon_days "
     f"BETWEEN {MIN_MATERIALIZATION_HORIZON_DAYS} AND {MAX_MATERIALIZATION_HORIZON_DAYS})"
 )
+HOUSEHOLD_FOLD_STATEMENT = (
+    "ALTER TABLE households ADD COLUMN repeated_time TEXT NOT NULL DEFAULT 'first_instant' "
+    "CHECK(repeated_time IN ('first_instant','second_instant'))"
+)
 SCHEMA_STATEMENTS = (
     *BASE_STATEMENTS,
     *IDENTITY_STATEMENTS,
@@ -122,6 +127,7 @@ SCHEMA_STATEMENTS = (
     *RELATIVE_LIFECYCLE_STATEMENTS,
     CALENDAR_PREFERENCE_STATEMENT,
     HOUSEHOLD_HORIZON_STATEMENT,
+    HOUSEHOLD_FOLD_STATEMENT,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -160,6 +166,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(RELATIVE_LIFECYCLE_STATEMENTS if version >= 10 else ()),
             *((CALENDAR_PREFERENCE_STATEMENT,) if version >= 11 else ()),
             *((HOUSEHOLD_HORIZON_STATEMENT,) if version >= 12 else ()),
+            *((HOUSEHOLD_FOLD_STATEMENT,) if version >= 13 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -175,7 +182,8 @@ def _storage_error(error: sqlite3.Error) -> DomusError:
 
 
 _HOUSEHOLD_SELECT = (
-    "SELECT household_id,name,time_zone,revision,materialization_horizon_days FROM households"
+    "SELECT household_id,name,time_zone,revision,materialization_horizon_days,repeated_time "
+    "FROM households"
 )
 
 
@@ -203,8 +211,9 @@ class SQLiteHouseholds:
                 row["time_zone"],
                 row["revision"],
                 row["materialization_horizon_days"],
+                FoldPolicy(row["repeated_time"]),
             )
-        except InvalidInput:
+        except InvalidInput, ValueError:
             raise StorageFailure("invalid_identity_record") from None
 
     def save(self, household: Household, expected_revision: int) -> None:
@@ -214,13 +223,14 @@ class SQLiteHouseholds:
             try:
                 self.connection.execute(
                     "INSERT INTO households(household_id,name,time_zone,revision,"
-                    "materialization_horizon_days) VALUES (?,?,?,?,?)",
+                    "materialization_horizon_days,repeated_time) VALUES (?,?,?,?,?,?)",
                     (
                         household.household_id,
                         household.name,
                         household.time_zone,
                         household.revision,
                         household.materialization_horizon_days,
+                        household.repeated_time.value,
                     ),
                 )
             except sqlite3.IntegrityError:
@@ -228,13 +238,14 @@ class SQLiteHouseholds:
         else:
             updated = self.connection.execute(
                 "UPDATE households SET name=?,time_zone=?,revision=?,"
-                "materialization_horizon_days=? "
+                "materialization_horizon_days=?,repeated_time=? "
                 "WHERE household_id=? AND revision=?",
                 (
                     household.name,
                     household.time_zone,
                     household.revision,
                     household.materialization_horizon_days,
+                    household.repeated_time.value,
                     household.household_id,
                     expected_revision,
                 ),
@@ -467,7 +478,8 @@ class SQLiteDatabase:
                         *(PROFILE_STATEMENTS if version < 9 else ()),
                         *(RELATIVE_LIFECYCLE_STATEMENTS if version < 10 else ()),
                         *((CALENDAR_PREFERENCE_STATEMENT,) if version < 11 else ()),
-                        HOUSEHOLD_HORIZON_STATEMENT,
+                        *((HOUSEHOLD_HORIZON_STATEMENT,) if version < 12 else ()),
+                        HOUSEHOLD_FOLD_STATEMENT,
                     )
                     for statement in migration:
                         connection.execute(statement)

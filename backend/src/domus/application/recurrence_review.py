@@ -280,10 +280,12 @@ class RecurrenceReview:
         self, authority: _ReviewAuthority, commands: AtomicCommands, selection: AttachRelative
     ) -> Receipt:
         payload = selection.document()
-        previous = commands.replay(authority.command, payload)
-        if previous is not None:
-            return previous
-        timing = selection.prepare(self.planner.times)
+        with self.transactions.read() as unit:
+            previous = commands.replay_in(unit, authority.command, payload)
+            if previous is not None:
+                return previous
+            fold = selection.fold(unit, authority.scope)
+        timing = selection.prepare(self.planner.times, fold)
 
         def commit(unit: UnitOfWork) -> Change:
             actor = authority.current(unit)
@@ -642,28 +644,25 @@ class RecurrenceReview:
         timing: AttachmentTiming | None = None
         destination: PlannedSlot | None = None
         latest_commit: int | None = None
-        if isinstance(request.selection, AttachRelative | RescheduleSelection):
-            previous = commands.replay(authority.command, payload)
-            if previous is not None:
-                return previous
+        if isinstance(selection, AttachRelative):
             with self.transactions.read() as unit:
-                authority.require(authority.command, unit)
+                previous = commands.replay_in(unit, authority.command, payload)
+                if previous is not None:
+                    return previous
                 self._reviewed_plan(unit, authority.command, request)
-                source = (
-                    reschedule_source(unit, authority.scope, request.selection)
-                    if isinstance(request.selection, RescheduleSelection)
-                    else None
-                )
-            if isinstance(request.selection, AttachRelative):
-                timing = request.selection.prepare(self.planner.times)
-            else:
-                assert source is not None
-                destination = source.prepare(
-                    self.planner.times, request.selection, self.clock.now()
-                )
-                latest_commit = future_until(
-                    self.planner.times, destination, source.slot.schedule.policy
-                )
+                fold = selection.fold(unit, authority.scope)
+            timing = selection.prepare(self.planner.times, fold)
+        elif isinstance(selection, RescheduleSelection):
+            with self.transactions.read() as unit:
+                previous = commands.replay_in(unit, authority.command, payload)
+                if previous is not None:
+                    return previous
+                self._reviewed_plan(unit, authority.command, request)
+                source = reschedule_source(unit, authority.scope, selection)
+            destination = source.prepare(self.planner.times, selection, self.clock.now())
+            latest_commit = future_until(
+                self.planner.times, destination, source.slot.schedule.policy
+            )
 
         elif isinstance(selection, FixedPatternChange):
             with self.transactions.read() as unit:

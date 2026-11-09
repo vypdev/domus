@@ -1410,6 +1410,11 @@
               }
             ],
             "title": "Start"
+          },
+          "use_household_fold": {
+            "default": false,
+            "title": "Use Household Fold",
+            "type": "boolean"
           }
         },
         "required": [
@@ -1465,6 +1470,11 @@
               }
             ],
             "title": "Start"
+          },
+          "use_household_fold": {
+            "default": false,
+            "title": "Use Household Fold",
+            "type": "boolean"
           }
         },
         "required": [
@@ -1660,6 +1670,14 @@
             "title": "Name",
             "type": "string"
           },
+          "repeated_time": {
+            "enum": [
+              "first_instant",
+              "second_instant"
+            ],
+            "title": "Repeated Time",
+            "type": "string"
+          },
           "revision": {
             "title": "Revision",
             "type": "integer"
@@ -1674,7 +1692,8 @@
           "name",
           "time_zone",
           "revision",
-          "materialization_horizon_days"
+          "materialization_horizon_days",
+          "repeated_time"
         ],
         "title": "HouseholdResponse",
         "type": "object"
@@ -1700,6 +1719,15 @@
             "maxLength": 160,
             "minLength": 1,
             "title": "Name",
+            "type": "string"
+          },
+          "repeated_time": {
+            "description": "Appearance of a repeated local time. Omission preserves the household value.",
+            "enum": [
+              "first_instant",
+              "second_instant"
+            ],
+            "title": "Repeated Time",
             "type": "string"
           },
           "time_zone": {
@@ -3150,7 +3178,8 @@
             "default": "first_instant",
             "enum": [
               "first_instant",
-              "second_instant"
+              "second_instant",
+              "household"
             ],
             "title": "Repeated Time",
             "type": "string"
@@ -3204,6 +3233,11 @@
             "minimum": 1.0,
             "title": "Schedule Revision",
             "type": "integer"
+          },
+          "use_household_fold": {
+            "default": false,
+            "title": "Use Household Fold",
+            "type": "boolean"
           },
           "visibility": {
             "enum": [
@@ -3668,6 +3702,11 @@
               }
             ],
             "title": "Start"
+          },
+          "use_household_fold": {
+            "default": false,
+            "title": "Use Household Fold",
+            "type": "boolean"
           }
         },
         "required": [
@@ -3735,6 +3774,11 @@
               }
             ],
             "title": "Start"
+          },
+          "use_household_fold": {
+            "default": false,
+            "title": "Use Household Fold",
+            "type": "boolean"
           }
         },
         "required": [
@@ -3928,7 +3972,8 @@
             "default": "first_instant",
             "enum": [
               "first_instant",
-              "second_instant"
+              "second_instant",
+              "household"
             ],
             "title": "Repeated Time",
             "type": "string"
@@ -3994,6 +4039,11 @@
             "minimum": 1.0,
             "title": "Schedule Revision",
             "type": "integer"
+          },
+          "use_household_fold": {
+            "default": false,
+            "title": "Use Household Fold",
+            "type": "boolean"
           },
           "visibility": {
             "enum": [

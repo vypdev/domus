@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Literal
 
 from domus.application.commands import AtomicCommands
 from domus.application.fixed_materialization import MaintenanceScope
@@ -45,7 +46,7 @@ class AttachRelative:
     initial: NominalSlot
     interval: RelativeInterval
     zone: str
-    repeated_time: FoldPolicy
+    repeated_time: FoldPolicy | Literal["household"]
     visibility: SuccessorVisibility
     choice: AttachmentChoice
 
@@ -62,7 +63,11 @@ class AttachRelative:
         ):
             raise InvalidInput("invalid_recurrence_attachment")
         # Validate submitted policy fields without consulting the provider.
-        TimePolicy(self.zone, "pending", self.repeated_time)
+        TimePolicy(
+            self.zone,
+            "pending",
+            FoldPolicy.FIRST if self.repeated_time == "household" else self.repeated_time,
+        )
 
     def document(self) -> JsonDocument:
         return JsonDocument.from_value(
@@ -79,14 +84,19 @@ class AttachRelative:
                 },
                 "interval_days": self.interval.days,
                 "zone": self.zone,
-                "repeated_time": self.repeated_time.value,
+                "repeated_time": str(self.repeated_time),
                 "visibility": self.visibility.value,
                 "choice": self.choice.value,
             }
         )
 
-    def prepare(self, times: RecurrenceTimes) -> AttachmentTiming:
-        policy = TimePolicy(self.zone, times.data_identity, self.repeated_time)
+    def fold(self, unit: UnitOfWork, scope: MaintenanceScope) -> FoldPolicy:
+        if self.repeated_time == "household":
+            return scope.require(unit).repeated_time
+        return self.repeated_time
+
+    def prepare(self, times: RecurrenceTimes, fold: FoldPolicy) -> AttachmentTiming:
+        policy = TimePolicy(self.zone, times.data_identity, fold)
         return AttachmentTiming(policy, resolve_initial(times, self.initial, policy))
 
 
@@ -123,6 +133,8 @@ def attachment_plan(
     selection: AttachRelative,
     timing: AttachmentTiming,
 ) -> AttachmentPlan:
+    if timing.policy.repeated_time is not selection.fold(unit, scope):
+        raise Conflict("recurrence_review_stale")
     home = scope.household_id
     definition = unit.tasks.definition(home, selection.definition_id)
     work = unit.tasks.occurrence(home, selection.occurrence_id)
@@ -170,6 +182,11 @@ def attachment_plan(
                 "initial": timing.initial.value(),
                 "due_at": timing.due_at,
                 "time_data_identity": timing.policy.data_identity,
+                **(
+                    {"repeated_time": timing.policy.repeated_time.value}
+                    if selection.repeated_time == "household"
+                    else {}
+                ),
                 "creates_first_occurrence": selection.choice is AttachmentChoice.RETAIN,
             }
         ),

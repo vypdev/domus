@@ -54,9 +54,11 @@ class MaintenanceScope:
             raise Forbidden("maintenance_scope_denied")
         return household
 
-    def require(self, unit: UnitOfWork) -> None:
-        if self.household(unit) is None:
+    def require(self, unit: UnitOfWork) -> Household:
+        household = self.household(unit)
+        if household is None:
             raise Forbidden("maintenance_scope_denied")
+        return household
 
 
 @dataclass(frozen=True, slots=True)

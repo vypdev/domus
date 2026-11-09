@@ -57,7 +57,7 @@ def test_supported_schema9_keeps_fixed_work_pristine_relative_progress_and_priva
         assert private.routine_participation_summaries is False and private.revision == 2
     assert facts(store.path, tables) == original
     with restarted._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 13
     with restarted.read() as unit:
         assert unit.recurrence.relative_inbox_after("home") == 0
 
@@ -81,7 +81,7 @@ def test_independent_snapshot_inspection_after_migration_preserves_every_origina
         store, archive, store.installation, SimpleNamespace(now=lambda: 1800000000000)
     )
     checkpoint = snapshots.create("source-nine")
-    assert checkpoint.schema_version == 12 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 13 and snapshots.inspect() == checkpoint
     assert facts(archive / "domus.sqlite3", tables) == original
     assert store.path.read_bytes() == before
 
@@ -136,7 +136,7 @@ def test_genuine_schema11_horizon_migration_preserves_private_preferences_and_hi
         preference = unit.calendar_preferences.get("home", member.member_id)
         assert preference.week_start is WeekStart.SUNDAY and preference.revision == 2
     with restarted._connection() as connection:
-        assert _verify_database(connection, restarted, previous=False) == 12
+        assert _verify_database(connection, restarted, previous=False) == 13
     assert facts(store.path, tables) == before
 
 
@@ -167,3 +167,33 @@ def test_corrupt_persisted_horizon_blocks_reads_and_snapshot_inspection(tmp_path
     with store._connection() as connection, pytest.raises(DatabaseRejected):
         _verify_database(connection, store, previous=False)
     assert store.path.read_bytes() == before
+
+
+def test_schema12_fold_migration_preserves_horizon_and_rolls_back_failed_ddl(tmp_path, monkeypatch):
+    from domus.domain.fold_policy import FoldPolicy
+    from domus.infrastructure import sqlite as adapter
+    from domus.infrastructure.sqlite_snapshots import _verify_database
+
+    assert hashlib.sha256((FIXTURES / "v12.sql").read_bytes()).hexdigest() == (
+        "b2dffe33b6d0ef7a84ab3120f5868e14d8196fafefacb0b37dc036bfcdc07073"
+    )
+    store = frozen(tmp_path, 12)
+    with store._connection() as connection:
+        connection.execute("UPDATE households SET materialization_horizon_days=31")
+        assert _verify_database(connection, store, previous=True) == 12
+    before = store.path.read_bytes()
+    with monkeypatch.context() as patch:
+        patch.setattr(adapter, "HOUSEHOLD_FOLD_STATEMENT", "ALTER TABLE missing ADD COLUMN fold")
+        with pytest.raises(StorageFailure, match="storage_failure"):
+            store.initialize(require_existing=True)
+    assert store.path.read_bytes() == before
+    store.initialize(require_existing=True)
+    with store.read() as unit:
+        home = unit.households.current()
+        assert home.repeated_time is FoldPolicy.FIRST
+        assert home.materialization_horizon_days == 31
+    with store._connection() as connection:
+        connection.execute("PRAGMA ignore_check_constraints=ON")
+        connection.execute("UPDATE households SET repeated_time='unknown'")
+    with store.read() as unit, pytest.raises(StorageFailure, match="invalid_identity_record"):
+        unit.households.current()

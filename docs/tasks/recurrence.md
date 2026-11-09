@@ -8,6 +8,21 @@ takes the current setting at startup and uses it to look ahead for fixed calenda
 work. Issued occurrences remain visible. Completion-relative successors still use the
 recorded completion and their configured visibility policy.
 
+## Choose an appearance for repeated local times
+
+In **Household → Edit household**, set **Repeated local time** to **First appearance**
+or **Second appearance**. The first appearance is the initial household default.
+A repeated wall time produces one nominal slot. A scheduling preview shows the
+selected appearance and the resolved UTC offset for ambiguous slots.
+
+New task attachments default to **Use household preference** and snapshot the
+resulting choice in the rule. For an existing rule, select **Use household
+preference** in the scheduling review to adopt the saved setting. A fixed review
+can change the pattern after the issued frontier or replace eligible future work
+within a reviewed batch. A relative review retains the issued initial obligation
+and applies the choice to future successors. Started and completed work retains
+its original instant and policy.
+
 ## Review scheduling from Tasks
 
 Select a task in **Tasks**, then open **Review scheduling**. Domus loads the current rule and

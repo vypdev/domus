@@ -2,6 +2,9 @@
 import {AdministrationError, aliasValue, isMaterializationHorizonDays, preferenceValues, revisionValue} from './administration';
 import type {OwnPreferenceValues, Revision} from './administration';
 
+import {FOLD_CHOICES} from './recurrence-review';
+import type {FoldPolicy} from './recurrence-review';
+
 export const MEMBER_ROLES = ['administrator', 'adult', 'restricted', 'viewer'] as const;
 export const MEMBER_STATUSES = ['pending', 'active', 'suspended', 'archived'] as const;
 export const MAPPING_MODES = ['all_ha_administrators', 'setup_administrator', 'selected_ha_user'] as const;
@@ -11,7 +14,7 @@ export type MemberStatus = 'pending' | 'active' | 'suspended' | 'archived';
 export interface PermissionDecision {readonly permission: string; readonly allow: boolean;}
 export interface ProfileDecision extends PermissionDecision {readonly role: MemberRole;}
 export type AdministrationCommand =
-  Readonly<{action: 'household.update'; payload: Readonly<{expected_revision: Revision; name: string; time_zone: string; materialization_horizon_days?: number}>}>
+  Readonly<{action: 'household.update'; payload: Readonly<{expected_revision: Revision; name: string; time_zone: string; materialization_horizon_days?: number; repeated_time?: FoldPolicy}>}>
   | Readonly<{action: 'member.update'; memberId: string; payload: Readonly<{expected_revision: Revision;
     role: MemberRole; status: MemberStatus; exceptions: readonly PermissionDecision[]}>}>
   | Readonly<{action: 'policy.update'; payload: Readonly<{expected_revision: Revision;
@@ -67,13 +70,14 @@ export function administrationCommand(value: unknown): AdministrationCommand {
     let body: Fields;
     switch (action) {
       case 'household.update': {
-        body = fields(item.payload, ['expected_revision', 'name', 'time_zone'], ['materialization_horizon_days']);
+        body = fields(item.payload, ['expected_revision', 'name', 'time_zone'], ['materialization_horizon_days','repeated_time']);
         const household = {expected_revision: revisionValue(body.expected_revision), name: text(body.name, 160),
           time_zone: text(body.time_zone, 128)};
-        if (!Object.hasOwn(body, 'materialization_horizon_days')) return Object.freeze({action, payload: Object.freeze(household)});
         const horizon = body.materialization_horizon_days;
+        const repeatedTime = Object.hasOwn(body, 'repeated_time') ? {repeated_time: choice(body.repeated_time, FOLD_CHOICES)} : {};
+        if (!Object.hasOwn(body, 'materialization_horizon_days')) return Object.freeze({action, payload: Object.freeze({...household, ...repeatedTime})});
         requireValue(isMaterializationHorizonDays(horizon));
-        return Object.freeze({action, payload: Object.freeze({...household, materialization_horizon_days: horizon})});
+        return Object.freeze({action, payload: Object.freeze({...household, ...repeatedTime, materialization_horizon_days: horizon})});
       }
       case 'member.update':
         body = fields(item.payload, ['expected_revision', 'role', 'status', 'exceptions']);

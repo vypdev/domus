@@ -1839,3 +1839,145 @@ def test_prospective_pattern_apply_fences_a_start_that_passes_after_preview(tmp_
     with review.transactions.read() as unit:
         assert unit.recurrence.schedule("home", selection.schedule_id) == rule
         assert unit.recurrence.progress("home", selection.schedule_id) == original
+
+
+def set_fold(store, fold):
+    with store.write() as unit:
+        home = unit.households.current()
+        unit.households.save(
+            replace(home, repeated_time=fold, revision=home.revision + 1), home.revision
+        )
+
+
+def test_attachment_snapshots_household_fold_and_replays_after_preference_changes(tmp_path):
+    from datetime import datetime
+
+    from domus.domain.recurrence_time import FoldPolicy, NominalTime
+
+    review, _, selection = attachment_fixture(tmp_path, timed=True, retain=True)
+    store = review.transactions
+    choice = replace(
+        selection, repeated_time="household", initial=NominalTime(datetime(2026, 10, 25, 2, 30))
+    )
+    first, stale = reviewed(review, choice, "first")
+    first_plan = first.result.decode()["plan"]["source"]
+    assert first_plan["repeated_time"] == "first_instant"
+    assert first_plan["initial"]["resolved"]["offset_seconds"] == 7200
+    set_fold(store, FoldPolicy.SECOND)
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        review.apply("stale", stale)
+    second, request = reviewed(review, choice, "second")
+    second_plan = second.result.decode()["plan"]["source"]
+    assert second_plan["repeated_time"] == "second_instant"
+    assert second_plan["initial"]["resolved"]["offset_seconds"] == 3600
+    assert second_plan["due_at"] - first_plan["due_at"] == 3_600_000
+    applied = review.apply("attach-household", request)
+    set_fold(store, FoldPolicy.FIRST)
+    restarted = replace(review, transactions=SQLiteDatabase(store.path, store.installation))
+    assert restarted.preview("second", choice) == second
+    assert restarted.apply("attach-household", request) == applied
+    with store.read() as unit:
+        schedule_id = applied.result.decode()["schedule_id"]
+        rule = unit.recurrence.relative_schedule("home", schedule_id)
+        (slot,) = unit.recurrence.relative_slots("home", schedule_id)
+        assert rule.policy.repeated_time is FoldPolicy.SECOND
+        assert slot.planned.resolved.instant_ms == second_plan["due_at"]
+
+
+def test_attachment_rejects_fold_changed_during_external_resolution(tmp_path, monkeypatch):
+    from domus.domain.recurrence_time import FoldPolicy
+
+    review, _, choice = attachment_fixture(tmp_path, timed=True, retain=True)
+    times = type(review.planner.times)
+    resolve = times.resolve
+
+    def concurrent(self, *args):
+        set_fold(review.transactions, FoldPolicy.SECOND)
+        return resolve(self, *args)
+
+    monkeypatch.setattr(times, "resolve", concurrent)
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        review.preview("changed-during-preview", replace(choice, repeated_time="household"))
+
+
+def test_relative_fold_change_protects_issued_initial_and_new_successor(tmp_path):
+    from datetime import UTC, datetime
+
+    from domus.application.recurrence_sources import RecurrenceSourceObservations
+    from domus.application.relative_lifecycle import RelativeLifecycle
+    from domus.application.relative_state_review import RelativeSettings
+    from domus.application.task_requests import CompleteTask
+    from domus.domain.recurrence_time import FoldPolicy, RelativeInterval
+
+    initial, store, actor, ids, schedule_id, tasks = configured(tmp_path, timed=True)
+    service = review_service(initial, store, actor, ids)
+    choice = RelativeSettings(
+        schedule_id, 1, RelativeInterval(30), SuccessorVisibility.AT_COMPLETION, True
+    )
+    set_fold(store, FoldPolicy.SECOND)
+    with pytest.raises(Conflict, match="recurrence_review_source_pending"):
+        service.preview("pristine", choice)
+    initial_work = initial.initial(schedule_id)
+    with store.read() as unit:
+        (before,) = unit.recurrence.relative_slots("home", schedule_id)
+        member = unit.members.by_user("home", actor.human.ha_user_id)
+    rule = before.schedule
+    with pytest.raises(InvalidInput, match="invalid_relative_schedule"):
+        replace(rule, policy=replace(rule.policy, repeated_time=FoldPolicy.SECOND))
+    with pytest.raises(InvalidInput, match="invalid_relative_schedule"):
+        replace(rule, revision=2, pattern_revision=2, policy=replace(rule.policy, zone="UTC"))
+    preview, request = reviewed(service, choice)
+    assert preview.result.decode()["plan"]["source"]["repeated_time"] == "second_instant"
+    applied = service.apply("apply", request)
+    set_fold(store, FoldPolicy.FIRST)
+    assert service.apply("apply", request) == applied
+    performed = int(datetime(2026, 9, 25, 0, 30, tzinfo=UTC).timestamp() * 1000)
+
+    class WorkClock:
+        def now(self):
+            return performed
+
+    tasks = replace(tasks, clock=WorkClock())
+    tasks.complete(
+        "work", CompleteTask(initial_work.occurrence_id, 1, (member.member_id,), performed)
+    )
+    (event,) = RecurrenceSourceObservations(store, initial.scope).ingest().items
+    lifecycle = RelativeLifecycle(store, initial.scope, service.planner, WorkClock(), ids)
+    successor = lifecycle.consume(schedule_id, event.event.event_key)
+    assert successor.status == "generated"
+    with store.read() as unit:
+        old = unit.recurrence.relative_slot_for_occurrence("home", initial_work.occurrence_id)
+        assert old == before
+        slot = unit.recurrence.relative_slot_for_occurrence("home", successor.occurrence_id)
+        assert slot.planned.nominal.local == datetime(2026, 10, 25, 2, 30)
+        assert slot.planned.resolved.offset_seconds == 3600
+        assert slot.schedule.policy.repeated_time is FoldPolicy.SECOND
+    snapshot = SQLiteSnapshots(store, tmp_path / "fold-checkpoint", store.installation, WorkClock())
+    checkpoint = snapshot.create("reviewed-fold")
+    assert snapshot.inspect() == checkpoint
+
+
+def test_prospective_fixed_fold_snapshots_policy_beyond_issued_work(tmp_path):
+    from datetime import datetime
+
+    from domus.domain.recurrence_time import FoldPolicy, NominalTime
+
+    review, choice, issued, maintenance = fixed_pattern_fixture(tmp_path, timed=True)
+    store = review.transactions
+    set_fold(store, FoldPolicy.SECOND)
+    start = NominalTime(datetime(2026, 10, 25, 2, 30))
+    change = replace(choice, pattern=replace(choice.pattern, start=start), use_household_fold=True)
+    preview, command = reviewed(review, change)
+    plan = preview.result.decode()["plan"]
+    assert plan["snapshot"]["source"]["repeated_time"] == "second_instant"
+    review.apply("set-fold", command)
+    before = NominalTime(datetime(2026, 10, 26))
+    generated = maintenance.step(choice.schedule_id, before)
+    assert generated.status == "created"
+    assert maintenance.step(choice.schedule_id, before).occurrence_id is None
+    with store.read() as unit:
+        old = unit.recurrence.slot("home", issued.slot_key)
+        new = unit.recurrence.slot("home", generated.receipt.command.key)
+        assert old.schedule.policy.repeated_time is FoldPolicy.FIRST
+        assert new.planned.nominal == start
+        assert new.planned.resolved.offset_seconds == 3600

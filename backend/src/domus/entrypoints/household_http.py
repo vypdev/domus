@@ -17,6 +17,7 @@ from domus.application.member_commands import MemberCommands, UpdateMember
 from domus.application.policy_commands import PolicyCommands, UpdatePolicy
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.domain.errors import DomusError, InvalidInput
+from domus.domain.fold_policy import FoldPolicy
 from domus.domain.identity import (
     AdministratorMapping,
     MappingMode,
@@ -98,6 +99,10 @@ class HouseholdUpdateRequest(StrictModel):
         le=MAX_MATERIALIZATION_HORIZON_DAYS,
         description="Local days. Omission preserves the saved household value.",
     )
+    repeated_time: Literal["first_instant", "second_instant"] = Field(
+        default_factory=lambda: "first_instant",
+        description="Appearance of a repeated local time. Omission preserves the household value.",
+    )
 
 
 class EnrollmentRequest(StrictModel):
@@ -145,6 +150,8 @@ class HouseholdResponse(StrictModel):
     materialization_horizon_days: int = Field(
         ge=MIN_MATERIALIZATION_HORIZON_DAYS, le=MAX_MATERIALIZATION_HORIZON_DAYS
     )
+
+    repeated_time: Literal["first_instant", "second_instant"]
 
 
 class MemberResponse(StrictModel):
@@ -372,6 +379,9 @@ def create_household_router(
                 body.materialization_horizon_days
                 if "materialization_horizon_days" in body.model_fields_set
                 else None
+            ),
+            repeated_time=(
+                FoldPolicy(body.repeated_time) if "repeated_time" in body.model_fields_set else None
             ),
         )
         return _receipt(result)
