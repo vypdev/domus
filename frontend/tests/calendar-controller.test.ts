@@ -49,9 +49,9 @@ test('calendar cancels superseded reads, clears prior members and paginates unde
   const stale = controller.load(query);
   const read = controller.load(query);
   expect(calls[0].cancel).toHaveBeenCalledOnce();
-  calls[0].resolve({entries: [row], count: 1, cursor: null, pending: false}); await stale;
+  calls[0].resolve({entries: [row], count: 1, occurrenceCount: 1, cursor: null, pending: false}); await stale;
   expect(publish).toHaveBeenLastCalledWith({status: 'loading', page: null});
-  const page = {entries: [row], count: 2, cursor: 'cursor-1', pending: true};
+  const page = {entries: [row], count: 2, occurrenceCount: 2, cursor: 'cursor-1', pending: true};
   calls[1].resolve(page); await read;
   expect(publish).toHaveBeenLastCalledWith({status: 'ready', page});
   const more = controller.more();
@@ -59,8 +59,8 @@ test('calendar cancels superseded reads, clears prior members and paginates unde
   await controller.more();
   const next = {...row, title: 'Updated'};
   const other = {...row, id: 'due:two', kind: 'due' as const};
-  calls[2].resolve({entries: [next, other], count: 2, cursor: null, pending: false}); await more;
-  expect(publish).toHaveBeenLastCalledWith({status: 'ready', page: {entries: [next, other], count: 2, cursor: null, pending: false}});
+  calls[2].resolve({entries: [next, other], count: 2, occurrenceCount: 2, cursor: null, pending: false}); await more;
+  expect(publish).toHaveBeenLastCalledWith({status: 'ready', page: {entries: [next, other], count: 2, occurrenceCount: 2, cursor: null, pending: false}});
   await controller.more(); expect(calls).toHaveLength(3);
   const fail = controller.load(query);
   calls[3].reject(new Error('current error')); await fail;

@@ -33,6 +33,7 @@ export interface CalendarEntry {
 export interface CalendarPage {
   readonly entries: readonly CalendarEntry[];
   readonly count: number;
+  readonly occurrenceCount: number;
   readonly cursor: string | null;
   readonly pending: boolean;
 }

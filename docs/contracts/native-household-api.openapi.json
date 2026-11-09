@@ -588,6 +588,10 @@
             ],
             "title": "Next Cursor"
           },
+          "occurrence_count": {
+            "title": "Occurrence Count",
+            "type": "integer"
+          },
           "pending": {
             "title": "Pending",
             "type": "boolean"
@@ -605,6 +609,7 @@
           "time_zone",
           "entries",
           "count",
+          "occurrence_count",
           "next_cursor",
           "pending"
         ],

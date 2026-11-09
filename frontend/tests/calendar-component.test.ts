@@ -7,7 +7,7 @@ const planned: CalendarEntry = {id: 'planned:work', kind: 'planned', title: '<b>
   time: null, zone: null, nominal: null, resolved: null, verification: null};
 const approval: CalendarEntry = {...planned, id: 'approval:cycle', kind: 'approval', title: 'Clock review',
   time: '09:30:00', zone: 'Europe/Madrid', nominal: '2026-11-01T08:30', resolved: '2026-11-01T09:30', verification: 'pending'};
-const empty = {entries: [], count: 0, cursor: null, pending: false};
+const empty = {entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false};
 const nodes: HTMLElement[] = [];
 afterEach(() => {for (const node of nodes.splice(0)) node.remove();});
 
@@ -52,10 +52,11 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
     start: '2026-10-26', end: '2026-11-02', kind: 'approval', timing: 'manual', state: 'completed',
     priority: 'high', category: 'Hogar & más', own: true}}}));
   element.view = {status: 'ready', page: {entries: [approval, planned, {...planned, id: 'planned:other', title: 'Wash clocks'}, {...approval, id: 'approval:other',
-    title: 'Verified', verification: 'approved', nominal: approval.resolved}], count: 4, cursor: 'more', pending: true}};
+    title: 'Verified', verification: 'approved', nominal: approval.resolved}], count: 4, occurrenceCount: 2, cursor: 'more', pending: true}};
   await element.updateComplete;
   expect(root.querySelectorAll('.calendar-grid > li')).toHaveLength(7);
   expect(root.textContent).toContain('Recurrence processing is pending.');
+  expect(root.textContent).toContain('Matching entries 4. Matching tasks 2');
   const entries = [...root.querySelectorAll('.calendar-entries li')];
   expect(entries.map(item => item.querySelector('strong')!.textContent)).toEqual(['<b>Set clocks</b>', 'Wash clocks', 'Clock review', 'Verified']);
   expect(entries[0].querySelector('time, b')).toBeNull();
@@ -66,6 +67,7 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   expect(listener).toHaveBeenLastCalledWith(expect.objectContaining({detail: {type: 'more'}}));
   element.language = 'es'; select(0, 'agenda'); submit(); await element.updateComplete;
   expect(root.textContent).toContain('Vista del calendario');
+  expect(root.textContent).toContain('Entradas que coinciden 4. Tareas que coinciden 2');
   expect(root.querySelector('h3')!.textContent).toContain('2026');
   expect(root.querySelector('.calendar-grid')).toBeNull();
   element.view = {status: 'unavailable', page: null}; await element.updateComplete;

@@ -18,6 +18,7 @@ def test_calendar_http_requires_current_context_and_closed_range(api):
         "time_zone": "UTC",
         "entries": [],
         "count": 0,
+        "occurrence_count": 0,
         "next_cursor": None,
         "pending": True,
     }

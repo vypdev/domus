@@ -134,7 +134,20 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
         expected_revision:1,name:names[write.index],time_zone:'UTC',materialization_horizon_days:horizons[write.index],repeated_time:folds[write.index],
       });
       await expect(widgets[winner.index].getByRole('heading',{name:'Outcome not confirmed',exact:true})).toBeVisible();
-      await expect(widgets[loser.index].getByRole('heading',{name:'Change not accepted',exact:true})).toBeVisible();
+      const rejected=widgets[loser.index].getByRole('heading',{name:'Change not accepted',exact:true});
+      const unavailable=widgets[loser.index].getByRole('status')
+        .filter({has:pages[loser.index].getByRole('heading',{name:'Household administration',level:2,exact:true})})
+        .getByText('The requested information is unavailable. Refresh or check the original request again.',{exact:true});
+      await expect(rejected.or(unavailable)).toBeVisible();
+      const losingRecord=await pages[loser.index].evaluate(
+        ({storage,key})=>JSON.parse(sessionStorage.getItem(storage)!).records.find((record:{key:string})=>record.key===key),
+        {storage:journalKey,key:loser.key});
+      expect(losingRecord).toMatchObject({key:loser.key,stage:'rejected',operationId:null});
+      if(await unavailable.isVisible()){
+        // A follow-up authorization read can also contend with the winning transaction.
+        await widgets[loser.index].getByRole('button',{name:'Refresh administration',exact:true}).click();
+        await expect(widgets[loser.index].getByRole('button',{name:'Edit household',exact:true})).toBeEnabled();
+      }
       expect(lookups).toEqual([]);const committed=await statistics(request,mode);
       for(const table of ['receipts','audit','outbox'])expect(committed.counts[table],table).toBe(before.counts[table]+1);
       expect(committed.counts.members).toBe(before.counts.members);
