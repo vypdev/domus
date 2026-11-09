@@ -466,3 +466,41 @@ def test_fixed_exception_wire_previews_applies_and_recovers_original(api):
     original = BASE + "/requests/recurrence.review.apply/exception-apply"
     assert api.client.get(original, headers=CONTEXT).json() == applied.json()
     assert len(plan["plan"]["source"]["cancelled_work"]) == 1
+
+
+def test_current_ha_rejection_fences_review_and_original_recovery_until_fresh_proof(api):
+    from domus.domain.errors import IdentityRejected, IdentityUnavailable
+
+    api.user(USER, True)
+    choice = seed_manual(api)
+    preview_url, apply_url = f"{BASE}/adoption/preview", f"{BASE}/adoption/apply"
+    preview_headers = api.headers("original-preview") | CONTEXT
+    preview = api.client.post(preview_url, json=choice, headers=preview_headers)
+    assert preview.status_code == 200
+    reviewed = choice | {
+        "preview_key": "original-preview",
+        "plan_fingerprint": preview.json()["result"]["plan_fingerprint"],
+    }
+    apply_headers = api.headers("original-apply") | CONTEXT
+    applied = api.client.post(apply_url, json=reviewed, headers=apply_headers)
+    assert applied.status_code == 200
+    original = f"{BASE}/requests/recurrence.review.apply/original-apply"
+    original_bytes = api.store.path.read_bytes()
+    api.source.error = IdentityRejected("ha_subject_rejected")
+    assert api.client.post(preview_url, json=choice, headers=preview_headers).status_code == 401
+    assert api.client.post(apply_url, json=reviewed, headers=apply_headers).status_code == 401
+    assert api.client.get(original, headers=CONTEXT).status_code == 401
+    api.source.error = IdentityUnavailable("ha_unavailable")
+    assert api.client.get(original, headers=CONTEXT).status_code in (401, 503)
+    assert api.store.path.read_bytes() == original_bytes
+
+    api.source.error = None
+    api.user(USER, True)
+    assert api.client.get(original, headers=CONTEXT).json() == applied.json()
+    assert (
+        api.client.post(
+            apply_url, json=reviewed, headers=api.headers("original-apply") | CONTEXT
+        ).json()
+        == applied.json()
+    )
+    assert api.store.path.read_bytes() == original_bytes

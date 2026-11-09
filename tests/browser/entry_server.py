@@ -16,7 +16,9 @@ import secrets
 import sqlite3
 import tempfile
 from contextlib import ExitStack
+from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlencode
 
@@ -24,11 +26,34 @@ import uvicorn
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 
+from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
+from domus.application.fixed_recurrence import FixedRecurrencePlanner
+from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
+from domus.application.task_commands import TaskCommands
+from domus.application.task_requests import (
+    AssignTask,
+    CompleteTask,
+    CreateTask,
+    TransitionTask,
+    VerifyTask,
+)
 from domus.composition import admin, ingress, server
 from domus.domain.errors import Forbidden, IdentityRejected, IdentityUnavailable
 from domus.domain.identity import HumanIdentity
+from domus.domain.nominal_recurrence import CalendarNominalExpansion
+from domus.domain.recurrence_rule_text import parse_fixed_pattern
+from domus.domain.recurrence_time import NominalTime, TimePolicy
+from domus.domain.task_values import (
+    OccurrenceState,
+    TaskContent,
+    TaskOverrides,
+    VerificationMode,
+    VerificationState,
+)
+from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock
 from domus.infrastructure.ha_config import HAEndpoint
 from domus.infrastructure.ha_http import OAuthTokens
+from domus.infrastructure.recurrence_time import PinnedRecurrenceTime
 
 PREFIX = "/api/hassio_ingress/fixture_domus_supervisor_1234567890"
 
@@ -219,6 +244,72 @@ class Fixture:
             finally:
                 self.start()
 
+    def seed_calendar_review(self) -> dict:
+        storage = self.runtime.storage
+        assert storage is not None
+        database, installation = storage.database, storage.installation
+        actor = SimpleNamespace(current=lambda: self.ha.person("a" * 32))
+        identifiers = SecureIdentifiers()
+        clock = SystemClock()
+        times = PinnedRecurrenceTime()
+        planner = FixedRecurrencePlanner(CalendarNominalExpansion(), times)
+        with database.read() as unit:
+            member = unit.members.by_user("home", "a" * 32)
+            household = unit.households.current()
+            assert member is not None and household is not None
+        today = datetime.now(UTC).date()
+        first = datetime.combine(today - timedelta(days=2), time(7, 0))
+        final = first + timedelta(days=4)
+        title = "Fictional calendar work <img src=x onerror=alert(1)>"
+        schedule = (
+            RecurrenceCommands(database, actor, clock, identifiers, planner)
+            .create_fixed(
+                "calendar-fixture-rule",
+                CreateFixedTask(
+                    CreateTask(
+                        TaskContent(title),
+                        overrides=TaskOverrides(verification=VerificationMode.ADULT),
+                    ),
+                    parse_fixed_pattern("FREQ=DAILY;COUNT=5", NominalTime(first)),
+                    TimePolicy(household.time_zone, times.data_identity),
+                ),
+            )
+            .result.decode()["schedule_id"]
+        )
+        maintenance = FixedMaintenance(
+            database, MaintenanceScope(installation, "home"), planner, clock, identifiers
+        )
+        horizon = NominalTime(final + timedelta(days=1))
+        steps = [maintenance.step(schedule, horizon) for _ in range(5)]
+        assert all(step.status == "created" for step in steps), [step.status for step in steps]
+        work = [step.occurrence_id for step in steps]
+        commands = TaskCommands(database, actor, clock, identifiers)
+        completed = commands.complete(
+            "calendar-fixture-complete",
+            CompleteTask(work[0], 1, (member.member_id,), clock.now() - 60_000),
+        ).result.decode()
+        commands.verify(
+            "calendar-fixture-approval",
+            VerifyTask(
+                work[0],
+                2,
+                completed["cycle"]["cycle_id"],
+                VerificationState.APPROVED,
+            ),
+        )
+        commands.assign("calendar-fixture-assigned", AssignTask(work[3], 1, (member.member_id,)))
+        commands.transition(
+            "calendar-fixture-start", TransitionTask(work[3], 2, OccurrenceState.IN_PROGRESS)
+        )
+        return {
+            "title": title,
+            "completed": work[0],
+            "started": work[3],
+            "future": work[4],
+            "first": first.date().isoformat(),
+            "new_date": final.date().isoformat(),
+        }
+
     def stats(self) -> dict:
         with sqlite3.connect(f"file:{self.database}?mode=ro", uri=True) as connection:
             counts = {
@@ -257,6 +348,8 @@ class Fixture:
             assert set(values) <= {"channel"}
             self.reset(values.get("channel", "edge"))
             response = JSONResponse(self.stats())
+        elif path == "/__fixture__/calendar-review" and request.method == "POST":
+            response = JSONResponse(self.seed_calendar_review())
         elif path == "/__fixture__/operator" and request.method == "POST":
             values = await request.json()
             assert set(values) == {"action"}
