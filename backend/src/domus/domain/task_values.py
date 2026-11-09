@@ -1,6 +1,6 @@
 """Immutable task inputs and policy values; construction does not prove authority."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 
 from domus.domain.errors import Conflict, InvalidInput
@@ -13,6 +13,35 @@ class DefinitionState(StrEnum):
     ACTIVE = "active"
     PAUSED = "paused"
     ARCHIVED = "archived"
+
+
+class MissedOccurrencePolicy(StrEnum):
+    KEEP_VISIBLE = "keep_visible"
+    SKIP_AFTER_REVIEW = "skip_after_review"
+
+
+@dataclass(frozen=True, slots=True)
+class MissedOccurrenceSettings:
+    household_id: str
+    definition_id: str
+    policy: MissedOccurrencePolicy = MissedOccurrencePolicy.KEEP_VISIBLE
+    revision: int = 0
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.household_id)
+        validate_identifier(self.definition_id)
+        if (
+            not isinstance(self.policy, MissedOccurrencePolicy)
+            or type(self.revision) is not int
+            or not 0 <= self.revision <= 2**63 - 1
+            or (self.revision == 0 and self.policy is not MissedOccurrencePolicy.KEEP_VISIBLE)
+        ):
+            raise InvalidInput("invalid_missed_occurrence_settings")
+
+    def revise(self, policy: MissedOccurrencePolicy) -> MissedOccurrenceSettings:
+        if policy is self.policy:
+            raise Conflict("task_unchanged")
+        return replace(self, policy=policy, revision=self.revision + 1)
 
 
 class OccurrenceState(StrEnum):

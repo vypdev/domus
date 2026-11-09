@@ -14,6 +14,7 @@ from domus.application.fixed_exception_review import (
     exception_timing,
 )
 from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
+from domus.application.fixed_missed_policy import FixedMissedPolicy, missed_policy_plan
 from domus.application.fixed_pattern_review import (
     FixedPatternChange,
     FixedPatternPlan,
@@ -101,6 +102,7 @@ type ReviewSelection = (
     | AttachRelative
     | RelativeStateChange
     | FixedSkip
+    | FixedMissedPolicy
     | RelativeSettings
     | RescheduleSelection
     | FixedStateChange
@@ -621,7 +623,10 @@ class RecurrenceReview:
 
         def apply(unit: UnitOfWork) -> Change:
             actor = authority.current(unit)
-            if isinstance(selection, RelativeSettings):
+            if isinstance(selection, FixedMissedPolicy):
+                _, settings = missed_policy_plan(unit, authority.scope, selection)
+                snapshot = self._snapshot(authority.scope, actor, payload, settings)
+            elif isinstance(selection, RelativeSettings):
                 plan = settings_plan(unit, authority.scope, selection)
                 snapshot = self._snapshot(authority.scope, actor, payload, plan.snapshot)
             else:
@@ -698,6 +703,21 @@ class RecurrenceReview:
                 if snapshot.fingerprint != request.plan_fingerprint:
                     raise Conflict("recurrence_review_stale")
                 outcome = self._apply_reschedule(unit, authority, commands, selection, task)
+            elif isinstance(selection, FixedMissedPolicy):
+                actor = authority.current(unit)
+                updated_policy, settings = missed_policy_plan(unit, authority.scope, selection)
+                snapshot = self._snapshot(authority.scope, actor, selection.document(), settings)
+                if snapshot.fingerprint != request.plan_fingerprint:
+                    raise Conflict("recurrence_review_stale")
+                unit.tasks.save_missed_occurrence_settings(
+                    updated_policy, selection.policy_revision
+                )
+                outcome = {
+                    "kind": "fixed_missed_policy",
+                    "definition_id": updated_policy.definition_id,
+                    "missed_occurrence_policy": updated_policy.policy.value,
+                    "policy_revision": updated_policy.revision,
+                }
             elif isinstance(selection, RelativeSettings):
                 actor = authority.current(unit)
                 revision = settings_plan(unit, authority.scope, selection)

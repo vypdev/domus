@@ -7,7 +7,7 @@ from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import JsonDocument
 from domus.domain.task_events import TaskSourceRecord
 from domus.domain.task_reviews import DependencyReviewState
-from domus.domain.task_values import DefinitionState, OccurrenceState
+from domus.domain.task_values import DefinitionState, MissedOccurrenceSettings, OccurrenceState
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
 
 
@@ -58,6 +58,12 @@ class TaskRepository(Protocol):
     def save_policy(self, value: HouseholdTaskPolicy, expected_revision: int) -> None: ...
     def definition(self, household_id: str, definition_id: str) -> TaskDefinition | None: ...
     def save_definition(self, value: TaskDefinition, expected_revision: int) -> None: ...
+    def missed_occurrence_settings(
+        self, household_id: str, definition_id: str
+    ) -> MissedOccurrenceSettings: ...
+    def save_missed_occurrence_settings(
+        self, value: MissedOccurrenceSettings, expected_revision: int
+    ) -> None: ...
     def definitions(
         self,
         household_id: str,

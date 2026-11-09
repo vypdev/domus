@@ -15,7 +15,7 @@ const revision = revisionValue('9007199254740993');
 const fingerprint = 'a'.repeat(64);
 const work: ReviewTarget = {occurrenceId: 'occurrence', definitionId: 'definition', occurrenceRevision: revision,
   definitionRevision: revision, zone: 'Europe/Madrid', schedule: {id: 'schedule', revision, state: 'active',
-    nominal: {kind: 'time', local: '2026-12-01T09:15:00'}, zone: 'Europe/Madrid', interval: 30, visibility: 'at_completion'},
+    nominal: {kind: 'time', local: '2026-12-01T09:15:00'}, zone: 'Europe/Madrid', interval: 30, visibility: 'at_completion', missedPolicy:{policy:'keep_visible',revision:'0'}},
   slotKey: 'slot', actions: REVIEW_KINDS};
 const input: ReviewDraft = {kind: 'attachment', date: '2026-12-01', time: '', zone: 'Europe/Madrid', interval: '3',
   visibility: 'at_completion', choice: 'adopt', fold: 'first_instant', reason: '<img src=x>', rrule: 'FREQ=MONTHLY'};
@@ -37,7 +37,7 @@ function storage() {
 
 test('closed inputs support each review and preserve exact snapshot identifiers, revisions and literal reasons', () => {
   for (const kind of REVIEW_KINDS) {
-    const selected = reviewSelection(work, reviewDraft({...input, kind, time: '09:15'}));
+    const selected = reviewSelection(work, reviewDraft({...input, kind, time: '09:15', missedPolicy:'skip_after_review'}));
     expect(selected.kind).toBe(kind);
     expect(reviewCommand({step:'preview', selection:selected}).selection).toEqual(selected);
     expect(reviewCommand({step:'apply', selection:selected, previewKey:'preview-key', fingerprint}).selection).toEqual(selected);
@@ -111,7 +111,7 @@ function http(deployment: 'native' | 'standalone' = 'standalone') {
 }
 const targetWire = {occurrence_id:'occurrence', occurrence_revision:'$revision', definition_id:'definition',definition_revision:'$revision',
   zone:'Europe/Madrid', schedule:{schedule_id:'schedule',revision:'$revision',state:'active',nominal_kind:'time',
-    local:'2026-12-01T09:15:00',zone:'Europe/Madrid',interval_days:30,visibility:'at_completion'},slot_key:'slot',actions:REVIEW_KINDS};
+    local:'2026-12-01T09:15:00',zone:'Europe/Madrid',interval_days:30,visibility:'at_completion',missed_policy:{policy:'keep_visible',revision:0}},slot_key:'slot',actions:REVIEW_KINDS};
 function receipt(result: unknown, historical = false) {
   return {state: historical ? 'historical' : 'committed', archived_by: historical ? 'restored' : null,
     operation_id:'original-op', created_at:100, result, message:'Saved.', action_required:'Review.'};
@@ -468,4 +468,51 @@ test('preview announces the repeated appearance and its exact offset in Spanish'
   await widget.updateComplete;
   expect(widget.shadowRoot?.textContent).toContain('Segunda aparición · UTC+01:00');
   expect(widget.shadowRoot?.textContent).toContain('Primera aparición · UTC−01:01:01');
+});
+
+test('missed policy uses exact scoped revisions and stays explicit in the request journal', async () => {
+  const draft = {...input, kind:'fixed-missed-policy' as const, missedPolicy:'skip_after_review' as const};
+  const selected = reviewSelection(work, reviewDraft(draft));
+  expect(selected.body).toEqual({schedule_id:'schedule',schedule_revision:revision,
+    policy_revision:'0',missed_occurrence_policy:'skip_after_review'});
+  expect(reviewCommand({step:'preview', selection:selected}).selection).toEqual(selected);
+  expect(() => reviewDraft({...draft,missedPolicy:'automatic'})).toThrow();
+  expect(() => reviewSelection({...work,schedule:{...work.schedule!,missedPolicy:undefined}}, draft)).toThrow();
+  const f = http();
+  f.enqueue({...targetWire,schedule:{...targetWire.schedule,missed_policy:{policy:'skip_after_review',revision:'$revision'}}});
+  const scoped = await f.server.target(context, work.occurrenceId).result;
+  expect(scoped.schedule?.missedPolicy?.revision).toBe(revision);
+  const original = reviewSelection(scoped, {...draft,missedPolicy:'keep_visible'});
+  f.enqueue(token); f.enqueue(receipt({...preview,plan:{request:{kind:'fixed_missed_policy'}}}));
+  await f.server.send(context, {...intent,command:{step:'preview',selection:original}}).result;
+  expect(f.fetch.mock.calls[2][1].body).toContain('"policy_revision":' + revision);
+  f.enqueue({...targetWire,schedule:{...targetWire.schedule,missed_policy:null}});
+  await expect(f.server.target(context, work.occurrenceId).result).rejects.toThrow();
+  f.enqueue({...targetWire,actions:['fixed-state'],schedule:{...targetWire.schedule,missed_policy:null}});
+  expect((await f.server.target(context, work.occurrenceId).result).schedule?.missedPolicy).toBeUndefined();
+});
+
+test('the policy editor requires a preview and states the effect in Spanish', async () => {
+  const widget = document.createElement('domus-recurrence-review'), dispatch = vi.fn();
+  widget.language = 'es';
+  const target = {...work,actions:['fixed-missed-policy'] as const};
+  widget.view = {open:true,busy:false,readOnly:false,selected:true,target,records:[],notice:null,result:null};
+  widget.addEventListener('domus-review-intent', dispatch);
+  document.body.append(widget); mounted.push(widget);
+  await widget.updateComplete;
+  const root = widget.shadowRoot!;
+  const control = root.querySelector<HTMLSelectElement>('[name="missedPolicy"]')!;
+  expect(control.value).toBe('keep_visible');
+  control.value = 'skip_after_review';
+  root.querySelector('form')!.dispatchEvent(new Event('submit',{cancelable:true}));
+  expect(dispatch).toHaveBeenLastCalledWith(expect.objectContaining({detail:{type:'preview',
+    draft:expect.objectContaining({kind:'fixed-missed-policy',missedPolicy:'skip_after_review'})}}));
+  const selection = reviewSelection(work,{...input,kind:'fixed-missed-policy',missedPolicy:'skip_after_review'});
+  widget.view = {...widget.view!,result:{record:{...intent,command:{step:'preview',selection}},receipt:plan}};
+  await widget.updateComplete;
+  expect(root.textContent).toContain('Permitir omitir tras revisar');
+  expect(root.textContent).toContain('Las tareas vencidas siguen visibles');
+  widget.view = {...widget.view!,result:null,target:{...target,schedule:{...work.schedule!,missedPolicy:undefined}}};
+  await widget.updateComplete;
+  expect(root.querySelector<HTMLSelectElement>('[name="missedPolicy"]')?.value).toBe('keep_visible');
 });

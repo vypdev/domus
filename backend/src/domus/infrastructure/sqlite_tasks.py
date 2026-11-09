@@ -11,7 +11,13 @@ from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import validate_identifier
 from domus.domain.task_events import TaskSourceRecord
 from domus.domain.task_reviews import DependencyReviewState
-from domus.domain.task_values import DefinitionState, OccurrenceState, VerificationState
+from domus.domain.task_values import (
+    DefinitionState,
+    MissedOccurrencePolicy,
+    MissedOccurrenceSettings,
+    OccurrenceState,
+    VerificationState,
+)
 from domus.domain.tasks import HouseholdTaskPolicy, TaskCycle, TaskDefinition, TaskOccurrence
 from domus.infrastructure.sqlite_task_history import SQLiteTaskHistory
 from domus.infrastructure.sqlite_task_records import (
@@ -25,6 +31,7 @@ from domus.infrastructure.sqlite_task_records import (
     read_policy,
 )
 from domus.infrastructure.sqlite_task_reviews import SQLiteTaskReviews
+from domus.infrastructure.sqlite_task_schema import MISSED_OCCURRENCE_TABLE
 
 
 def _policy_headers(value: HouseholdTaskPolicy) -> dict[str, object]:
@@ -162,7 +169,7 @@ class SQLiteTasks(TaskRepository):
         table: str,
         identity: dict[str, str],
         headers: dict[str, object],
-        document: str,
+        document: str | None,
         revision: int,
         expected_revision: int,
     ) -> None:
@@ -170,7 +177,7 @@ class SQLiteTasks(TaskRepository):
             raise InvalidInput("invalid_revision")
         if revision != expected_revision + 1:
             raise Conflict("revision_conflict")
-        values = {**headers, "document": document}
+        values = headers if document is None else {**headers, "document": document}
         if expected_revision == 0:
             try:
                 self.connection.execute(
@@ -229,6 +236,38 @@ class SQLiteTasks(TaskRepository):
             {"household_id": value.household_id, "definition_id": value.definition_id},
             _definition_headers(value),
             definition_document(value).encoded,
+            value.revision,
+            expected_revision,
+        )
+
+    def missed_occurrence_settings(
+        self, household_id: str, definition_id: str
+    ) -> MissedOccurrenceSettings:
+        validate_identifier(household_id)
+        validate_identifier(definition_id)
+        row = self.connection.execute(
+            "SELECT policy,revision FROM task_missed_occurrence_settings "
+            "WHERE household_id=? AND definition_id=?",
+            (household_id, definition_id),
+        ).fetchone()
+        if row is None:
+            return MissedOccurrenceSettings(household_id, definition_id)
+        try:
+            return MissedOccurrenceSettings(
+                household_id, definition_id, MissedOccurrencePolicy(row["policy"]), row["revision"]
+            )
+        except InvalidInput, ValueError:
+            raise StorageFailure("invalid_task_record") from None
+
+    def save_missed_occurrence_settings(
+        self, value: MissedOccurrenceSettings, expected_revision: int
+    ) -> None:
+        identity = {"household_id": value.household_id, "definition_id": value.definition_id}
+        self._write(
+            MISSED_OCCURRENCE_TABLE,
+            identity,
+            {**identity, "policy": value.policy.value, "revision": value.revision},
+            None,
             value.revision,
             expected_revision,
         )

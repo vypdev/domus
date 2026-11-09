@@ -1,6 +1,6 @@
 # Task storage migration and compatibility
 
-Current development source uses SQLite schema 13. The historical schema 8 and 9
+Current development source uses SQLite schema 14. The historical schema 8 and 9
 checkpoints retain their original evidence below. The installed immutable
 Edge.5 package uses schema 7; retained Edge.3 remains the separately pinned M1 schema-4 package.
 Current source tests do not upgrade those installations or establish a released package upgrade.
@@ -18,8 +18,9 @@ Keep the exact application/data pair and installation/channel identity.
 | 11 | Owner-private calendar preferences | Other private settings and original outcomes remain intact |
 | 12 | Household materialization horizon | Existing households start at 60 local days; issued work and original receipts are retained |
 | 13 | Household repeated-time preference | Existing households use the first appearance. Historical rule and occurrence policies are unchanged |
+| 14 | Per-definition overdue recurrence settings | Existing fixed tasks retain all overdue occurrences. Existing receipts and task rows remain intact |
 
-Initialization accepts an empty owned destination or supported versions 1–12, verifies the application
+Initialization accepts an empty owned destination or supported versions 1–13, verifies the application
 marker and installation/channel, then repeats inspection inside the bounded writer transaction.
 Additive DDL, any required legacy-document upgrade and user_version advancement share that transaction.
 An unsupported future version, mismatched identity or unrelated database is rejected. Normal runtime
@@ -144,3 +145,7 @@ Schema 13 adds a checked column to the existing household row. The frozen schema
 input retains the schema and records produced by the previous runtime from the
 schema-11 checkpoint. The migration preserves the configured horizon, private
 preferences and task evidence. A DDL failure preserves the original schema-12 bytes.
+
+Schema 14 adds a task-scoped settings table with its own revisions and a checked
+policy. Existing definitions default to keeping overdue work visible. The
+schema-13 fixture retains non-default household timing and a configured horizon.

@@ -2,30 +2,35 @@
 import {ReviewRejected} from '../application/recurrence-review-controller';
 import type {ReviewReceipt, ReviewRecord, ReviewServer} from '../application/recurrence-review-controller';
 import type {JournalContext} from '../domain/journal';
-import {FOLD_CHOICES, REVIEW_KINDS, VISIBILITIES, reviewCommand, reviewFingerprint} from '../domain/recurrence-review';
+import {FOLD_CHOICES, MISSED_POLICIES, REVIEW_KINDS, VISIBILITIES, reviewCommand, reviewFingerprint} from '../domain/recurrence-review';
 import type {ReviewTarget} from '../domain/recurrence-review';
 import {BoundedHTTP} from './http-transport';
 import type {FetchTransport} from './http-transport';
 import {csrf, failure} from './http-values';
 import type {EntryEndpoint} from './http-values';
-import {boolean, check, choice, fields, identifier, integer, responseRevision, text} from './json-values';
+import {boolean, check, choice, fields, identifier, integer, responseNonnegativeRevision, responseRevision, text} from './json-values';
 
 const BASE = 'tasks/recurrence/reviews/';
 const EFFECT = {attachment: 'attach_relative', adoption: 'adopt_manual', state: 'relative_state',
   'relative-settings': 'relative_settings', 'fixed-state': 'fixed_state', 'fixed-pattern': 'fixed_pattern', 'fixed-replacement': 'fixed_replacement',
-  'fixed-exclude': 'fixed_exception', 'fixed-add': 'fixed_exception', reschedule: 'reschedule', 'fixed-skip': 'fixed_skip'} as const;
+  'fixed-exclude': 'fixed_exception', 'fixed-add': 'fixed_exception', 'fixed-missed-policy': 'fixed_missed_policy', reschedule: 'reschedule', 'fixed-skip': 'fixed_skip'} as const;
 
 function target(value: unknown, occurrenceId: string): ReviewTarget {
   const item = fields(value, ['occurrence_id','occurrence_revision','definition_id','definition_revision','zone','schedule','slot_key','actions'], []);
   check(item.occurrence_id === occurrenceId && Array.isArray(item.actions) && item.actions.length <= REVIEW_KINDS.length);
   const actions = item.actions.map(action => choice(action, REVIEW_KINDS));
   check(new Set(actions).size === actions.length);
-  const raw = item.schedule === null ? null : fields(item.schedule, ['schedule_id','revision','state','nominal_kind','local','zone','interval_days','visibility'], []);
+  const raw = item.schedule === null ? null : fields(item.schedule, ['schedule_id','revision','state','nominal_kind','local','zone','interval_days','visibility'], ['missed_policy']);
+  const policy = raw?.missed_policy;
+  const missed = policy == null ? null : fields(policy, ['policy','revision'], []);
+  check(!actions.includes('fixed-missed-policy') || missed !== null);
   const schedule = raw === null ? null : Object.freeze({id: identifier(raw.schedule_id), revision: responseRevision(raw.revision),
     state: choice(raw.state, ['active','paused','retired'] as const),
     nominal: Object.freeze({kind: choice(raw.nominal_kind, ['date','time'] as const), local: text(raw.local, 32)}),
     zone: text(raw.zone, 128), interval: raw.interval_days === null ? null : integer(raw.interval_days, 1),
-    visibility: raw.visibility === null ? null : choice(raw.visibility, VISIBILITIES)});
+    visibility: raw.visibility === null ? null : choice(raw.visibility, VISIBILITIES),
+    ...(missed === null ? {} : {missedPolicy: Object.freeze({policy: choice(missed.policy, MISSED_POLICIES),
+      revision: responseNonnegativeRevision(missed.revision)})})});
   return Object.freeze({occurrenceId, occurrenceRevision: responseRevision(item.occurrence_revision),
     definitionId: identifier(item.definition_id), definitionRevision: responseRevision(item.definition_revision),
     zone: text(item.zone, 128), schedule, slotKey: item.slot_key === null ? null : identifier(item.slot_key), actions: Object.freeze(actions)});

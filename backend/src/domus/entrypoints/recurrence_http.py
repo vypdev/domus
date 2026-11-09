@@ -17,6 +17,7 @@ from domus.entrypoints.household_http import (
 )
 from domus.entrypoints.recurrence_dto import (
     FixedExceptionBody,
+    FixedMissedPolicyBody,
     FixedPatternBody,
     FixedReplacementBody,
     FixedSkipBody,
@@ -28,6 +29,7 @@ from domus.entrypoints.recurrence_dto import (
     RescheduleBody,
     ReviewedAdoptionBody,
     ReviewedFixedExceptionBody,
+    ReviewedFixedMissedPolicyBody,
     ReviewedFixedPatternBody,
     ReviewedFixedReplacementBody,
     ReviewedFixedSkipBody,
@@ -98,6 +100,24 @@ def create_recurrence_review_router(context: Callable[[Request], RecurrenceRevie
     @router.post("/fixed-skip/apply", response_model=ReceiptResponse, openapi_extra=write_contract)
     def apply_fixed_skip(
         request: Request, body: ReviewedFixedSkipBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).apply(_key(request), body.reviewed()))
+
+    @router.post(
+        "/fixed-missed-policy/preview", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def preview_missed_policy(
+        request: Request, body: FixedMissedPolicyBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).preview(_key(request), body.selection()))
+
+    @router.post(
+        "/fixed-missed-policy/apply", response_model=ReceiptResponse, openapi_extra=write_contract
+    )
+    def apply_missed_policy(
+        request: Request,
+        body: ReviewedFixedMissedPolicyBody,
+        query: Annotated[_EmptyQuery, Query()],
     ) -> ReceiptResponse:
         return _receipt(context(request).apply(_key(request), body.reviewed()))
 

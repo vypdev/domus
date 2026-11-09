@@ -11,7 +11,7 @@ from domus.domain.identity import HumanIdentity, Permission
 from domus.domain.recurrence_records import ScheduleState
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.relative_recurrence import SuccessorVisibility
-from domus.domain.task_values import DefinitionState
+from domus.domain.task_values import DefinitionState, MissedOccurrencePolicy
 
 ReviewKind = Literal[
     "adoption",
@@ -25,7 +25,14 @@ ReviewKind = Literal[
     "fixed-add",
     "reschedule",
     "fixed-skip",
+    "fixed-missed-policy",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class MissedPolicyView:
+    policy: MissedOccurrencePolicy
+    revision: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +45,7 @@ class ReviewSchedule:
     zone: str
     interval_days: int | None = None
     visibility: SuccessorVisibility | None = None
+    missed_policy: MissedPolicyView | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,15 +87,19 @@ def review_target(
     fixed = unit.recurrence.schedule(scope.household_id, schedule_id)
     if fixed is not None:
         nominal = fixed.pattern.start
+        settings = unit.tasks.missed_occurrence_settings(scope.household_id, definition_id)
         actions: tuple[ReviewKind, ...] = (
             "fixed-state",
             "fixed-pattern",
             "fixed-replacement",
             "fixed-exclude",
             "fixed-add",
+            "fixed-missed-policy",
         )
         if slot_key is not None:
-            actions += ("reschedule", "fixed-skip")
+            actions += ("reschedule",)
+            if settings.policy is MissedOccurrencePolicy.SKIP_AFTER_REVIEW:
+                actions += ("fixed-skip",)
         return ReviewTarget(
             *common,
             ReviewSchedule(
@@ -97,6 +109,7 @@ def review_target(
                 "date" if isinstance(nominal, NominalDate) else "time",
                 nominal.local.isoformat(),
                 fixed.policy.zone,
+                missed_policy=MissedPolicyView(settings.policy, settings.revision),
             ),
             slot_key,
             actions,

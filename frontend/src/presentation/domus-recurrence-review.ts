@@ -2,7 +2,7 @@ import {LitElement, html, nothing} from 'lit';
 import {keyed} from 'lit/directives/keyed.js';
 import type {PropertyValues} from 'lit';
 import type {ReviewView} from '../application/recurrence-review-controller';
-import {ATTACHMENT_CHOICES, ATTACHMENT_FOLDS, REVIEW_FOLDS, VISIBILITIES} from '../domain/recurrence-review';
+import {ATTACHMENT_CHOICES, ATTACHMENT_FOLDS, MISSED_POLICIES, REVIEW_FOLDS, VISIBILITIES} from '../domain/recurrence-review';
 import type {ReviewDraft, ReviewKind, ReviewTarget} from '../domain/recurrence-review';
 import {reviewMessage} from './recurrence-messages';
 import type {ReviewMessage} from './recurrence-messages';
@@ -47,6 +47,7 @@ export class DomusRecurrenceReview extends LitElement {
       visibility: (value('visibility') || 'at_completion') as ReviewDraft['visibility'],
       choice: (value('choice') || 'adopt') as ReviewDraft['choice'],
       fold: (value('fold') || 'keep_fold') as ReviewDraft['fold'], reason: value('reason'), rrule: value('pattern'),
+      ...(kind === 'fixed-missed-policy' ? {missedPolicy: value('missedPolicy') as ReviewDraft['missedPolicy']} : {}),
     }});
   }
   private form(target: ReviewTarget, kind: ReviewKind, disabled: boolean) {
@@ -70,6 +71,9 @@ export class DomusRecurrenceReview extends LitElement {
       ${kind === 'attachment' ? html`<label>${this.text('zone')}<input name="zone" required maxlength="128" .value=${target.zone}></label>
         ${this.select('choice', ATTACHMENT_CHOICES, 'adopt')}${this.select('fold', ATTACHMENT_FOLDS, 'household')}` : nothing}
       ${kind === 'relative-settings' || pattern ? this.select('fold', REVIEW_FOLDS, 'keep_fold') : nothing}
+      ${kind === 'fixed-missed-policy' ? html`
+        ${this.select('missedPolicy', MISSED_POLICIES, target.schedule?.missedPolicy?.policy ?? 'keep_visible')}
+        <p>${this.text('missedPolicyHelp')}</p>` : nothing}
       ${pattern ? html`<label>${this.text('pattern')}<input name="pattern" required maxlength="2048"></label>` : nothing}
       ${kind === 'reschedule' || kind === 'fixed-skip' || kind === 'fixed-replacement' || exception ? html`<label>${this.text('reason')}<textarea name="reason" required maxlength="1000"></textarea></label>` : nothing}
       `)}
@@ -99,6 +103,8 @@ export class DomusRecurrenceReview extends LitElement {
         ${plan.repeatedSlots === undefined ? nothing : html`<ul aria-label=${this.text('fold')}>
           ${plan.repeatedSlots.map(slot => html`<li>${slot.local} · ${this.text(slot.fold)} · ${this.offset(slot.offset)}</li>`)}
         </ul>`}
+        ${'missed_occurrence_policy' in body ? html`<p>${this.text(body.missed_occurrence_policy)}</p>
+          <p>${this.text('missedPolicyHelp')}</p>` : nothing}
         ${'rrule' in body ? html`<p>${body.rrule}</p>` : nothing}
         ${'nominal' in body ? html`<p>${this.text('date')} ${body.nominal.local}</p>` : nothing}
         ${'reason' in body ? html`<p>${body.reason}</p>` : nothing}

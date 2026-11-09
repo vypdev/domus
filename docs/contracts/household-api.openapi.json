@@ -1372,6 +1372,46 @@
         "title": "FixedExceptionBody",
         "type": "object"
       },
+      "FixedMissedPolicyBody": {
+        "additionalProperties": false,
+        "properties": {
+          "missed_occurrence_policy": {
+            "enum": [
+              "keep_visible",
+              "skip_after_review"
+            ],
+            "title": "Missed Occurrence Policy",
+            "type": "string"
+          },
+          "policy_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 0.0,
+            "title": "Policy Revision",
+            "type": "integer"
+          },
+          "schedule_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "schedule_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Schedule Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "schedule_revision",
+          "policy_revision",
+          "missed_occurrence_policy"
+        ],
+        "title": "FixedMissedPolicyBody",
+        "type": "object"
+      },
       "FixedPatternBody": {
         "additionalProperties": false,
         "properties": {
@@ -2349,6 +2389,31 @@
           "members"
         ],
         "title": "MembersResponse",
+        "type": "object"
+      },
+      "MissedOccurrencePolicy": {
+        "enum": [
+          "keep_visible",
+          "skip_after_review"
+        ],
+        "title": "MissedOccurrencePolicy",
+        "type": "string"
+      },
+      "MissedPolicyView": {
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/MissedOccurrencePolicy"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "policy",
+          "revision"
+        ],
+        "title": "MissedPolicyView",
         "type": "object"
       },
       "NominalDateBody": {
@@ -3413,6 +3478,16 @@
             "title": "Local",
             "type": "string"
           },
+          "missed_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MissedPolicyView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "nominal_kind": {
             "enum": [
               "date",
@@ -3473,7 +3548,8 @@
                 "fixed-exclude",
                 "fixed-add",
                 "reschedule",
-                "fixed-skip"
+                "fixed-skip",
+                "fixed-missed-policy"
               ],
               "type": "string"
             },
@@ -3652,6 +3728,58 @@
           "plan_fingerprint"
         ],
         "title": "ReviewedFixedExceptionBody",
+        "type": "object"
+      },
+      "ReviewedFixedMissedPolicyBody": {
+        "additionalProperties": false,
+        "properties": {
+          "missed_occurrence_policy": {
+            "enum": [
+              "keep_visible",
+              "skip_after_review"
+            ],
+            "title": "Missed Occurrence Policy",
+            "type": "string"
+          },
+          "plan_fingerprint": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Plan Fingerprint",
+            "type": "string"
+          },
+          "policy_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 0.0,
+            "title": "Policy Revision",
+            "type": "integer"
+          },
+          "preview_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Preview Key",
+            "type": "string"
+          },
+          "schedule_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Schedule Id",
+            "type": "string"
+          },
+          "schedule_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Schedule Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schedule_id",
+          "schedule_revision",
+          "policy_revision",
+          "missed_occurrence_policy",
+          "preview_key",
+          "plan_fingerprint"
+        ],
+        "title": "ReviewedFixedMissedPolicyBody",
         "type": "object"
       },
       "ReviewedFixedPatternBody": {
@@ -16551,6 +16679,362 @@
           }
         ],
         "summary": "Preview Fixed Exception"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/fixed-missed-policy/apply": {
+      "post": {
+        "operationId": "apply_missed_policy_api_v1_tasks_recurrence_reviews_fixed_missed_policy_apply_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewedFixedMissedPolicyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Apply Missed Policy"
+      }
+    },
+    "/api/v1/tasks/recurrence/reviews/fixed-missed-policy/preview": {
+      "post": {
+        "operationId": "preview_missed_policy_api_v1_tasks_recurrence_reviews_fixed_missed_policy_preview_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FixedMissedPolicyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Preview Missed Policy"
       }
     },
     "/api/v1/tasks/recurrence/reviews/fixed-pattern/apply": {

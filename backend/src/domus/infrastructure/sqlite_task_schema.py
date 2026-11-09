@@ -1,5 +1,16 @@
 """Task table constraints preserve scoped snapshots and both sides of an active cycle."""
 
+MISSED_OCCURRENCE_TABLE = "task_missed_occurrence_settings"
+MISSED_OCCURRENCE_STATEMENT = (
+    "CREATE TABLE task_missed_occurrence_settings(household_id TEXT NOT NULL, "
+    "definition_id TEXT NOT NULL, "
+    "policy TEXT NOT NULL CHECK(policy IN ('keep_visible','skip_after_review')), "
+    "revision INTEGER NOT NULL CHECK(typeof(revision)='integer' AND revision>=1), "
+    "PRIMARY KEY(household_id,definition_id), "
+    "FOREIGN KEY(household_id,definition_id) "
+    "REFERENCES task_definitions(household_id,definition_id))"
+)
+
 TASK_TABLES = {"task_policy", "task_definitions", "task_occurrences", "task_cycles"}
 TASK_STATEMENTS = (
     "CREATE UNIQUE INDEX task_member_scope ON members(household_id,member_id)",

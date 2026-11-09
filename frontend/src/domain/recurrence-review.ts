@@ -5,13 +5,16 @@ import {civilDate} from './calendar';
 import {taskIdentifier, taskText} from './tasks';
 
 export const REVIEW_KINDS = ['attachment', 'adoption', 'state', 'relative-settings', 'fixed-state',
-  'fixed-pattern', 'fixed-replacement', 'fixed-exclude', 'fixed-add', 'reschedule', 'fixed-skip'] as const;
+  'fixed-pattern', 'fixed-replacement', 'fixed-exclude', 'fixed-add', 'reschedule', 'fixed-skip', 'fixed-missed-policy'] as const;
 export const VISIBILITIES = ['at_completion', 'at_verification'] as const;
 export const ATTACHMENT_CHOICES = ['adopt', 'retain_manual'] as const;
 export const FOLD_CHOICES = ['first_instant', 'second_instant'] as const;
 export const ATTACHMENT_FOLDS = ['household', ...FOLD_CHOICES] as const;
 export const REVIEW_FOLDS = ['keep_fold', 'household'] as const;
 export type FoldPolicy = typeof FOLD_CHOICES[number];
+export const MISSED_POLICIES = ['keep_visible', 'skip_after_review'] as const;
+type MissedPolicy = typeof MISSED_POLICIES[number];
+export type PolicyRevision = Revision | '0';
 export type ReviewKind = typeof REVIEW_KINDS[number];
 export type Visibility = typeof VISIBILITIES[number];
 export type ReviewStep = 'preview' | 'apply';
@@ -34,6 +37,9 @@ export type ReviewSelection =
   | Readonly<{kind: 'fixed-replacement'; body: ScheduleIdentity & ReviewedFold & Readonly<{start: Nominal; rrule: string; reason: string}>}>
   | Readonly<{kind: 'fixed-exclude' | 'fixed-add'; body: ScheduleIdentity & Readonly<{nominal: Nominal; reason: string}>}>
   | Readonly<{kind: 'fixed-skip'; body: SlotIdentity}>
+  | Readonly<{kind: 'fixed-missed-policy'; body: ScheduleIdentity & Readonly<{
+    policy_revision: PolicyRevision; missed_occurrence_policy: MissedPolicy;
+  }>}>
   | Readonly<{kind: 'reschedule'; body: SlotIdentity & Readonly<{destination: Nominal}>}>;
 export type ReviewCommand =
   | Readonly<{step: 'preview'; selection: ReviewSelection}>
@@ -42,6 +48,7 @@ export interface ReviewSchedule {
   readonly id: string; readonly revision: Revision; readonly state: 'active' | 'paused' | 'retired';
   readonly nominal: Nominal; readonly zone: string;
   readonly interval: number | null; readonly visibility: Visibility | null;
+  readonly missedPolicy?: Readonly<{policy: MissedPolicy; revision: PolicyRevision}>;
 }
 export interface ReviewTarget {
   readonly occurrenceId: string; readonly occurrenceRevision: Revision;
@@ -52,6 +59,7 @@ export interface ReviewDraft {
   readonly kind: ReviewKind; readonly date: string; readonly time: string; readonly zone: string;
   readonly interval: string; readonly visibility: Visibility; readonly choice: typeof ATTACHMENT_CHOICES[number];
   readonly fold: typeof ATTACHMENT_FOLDS[number] | 'keep_fold'; readonly reason: string; readonly rrule: string;
+  readonly missedPolicy?: MissedPolicy;
 }
 
 type Fields = Record<string, unknown>;
@@ -129,6 +137,12 @@ function selection(value: unknown): ReviewSelection {
       return Object.freeze({kind, body: Object.freeze({...schedule(body), nominal: nominal(body.nominal),
         reason: taskText(body.reason, 1000, true, true)})});
     }
+    case 'fixed-missed-policy': {
+      const body = fields(input.body, [...SCHEDULE,'policy_revision','missed_occurrence_policy']);
+      const revision = body.policy_revision === '0' ? '0' : revisionValue(body.policy_revision);
+      return Object.freeze({kind, body: Object.freeze({...schedule(body), policy_revision: revision,
+        missed_occurrence_policy: option(body.missed_occurrence_policy, MISSED_POLICIES)})});
+    }
     default: {
       const body = fields(input.body, kind === 'reschedule' ? [...SLOT,'destination'] : SLOT);
       const slot = {...schedule(body), ...work(body), slot_key: taskIdentifier(body.slot_key), reason: taskText(body.reason, 1000, true, true)};
@@ -151,9 +165,10 @@ export function reviewCommand(value: unknown): ReviewCommand {
 }
 
 export function reviewDraft(value: unknown): ReviewDraft {
-  const input = fields(value, ['kind','date','time','zone','interval','visibility','choice','fold','reason','rrule']);
+  const input = fields(value, ['kind','date','time','zone','interval','visibility','choice','fold','reason','rrule'], ['missedPolicy']);
   for (const key of ['date','time','zone','interval','reason','rrule']) requireReview(typeof input[key] === 'string');
   option(input.kind, REVIEW_KINDS); option(input.visibility, VISIBILITIES); option(input.choice, ATTACHMENT_CHOICES); option(input.fold, [...ATTACHMENT_FOLDS, 'keep_fold']);
+  if (Object.hasOwn(input, 'missedPolicy')) option(input.missedPolicy, MISSED_POLICIES);
   return Object.freeze(input as unknown as ReviewDraft);
 }
 
@@ -167,6 +182,11 @@ export function reviewSelection(target: ReviewTarget, draft: ReviewDraft): Revie
     definition_revision: target.definitionRevision, initial: local, zone: draft.zone, repeated_time: draft.fold, choice: draft.choice}});
   requireReview(target.schedule !== null);
   const schedule = {schedule_id: target.schedule.id, schedule_revision: target.schedule.revision};
+  if (kind === 'fixed-missed-policy') {
+    requireReview(target.schedule.missedPolicy !== undefined);
+    return selection({kind, body: {...schedule, policy_revision: target.schedule.missedPolicy.revision,
+      missed_occurrence_policy: draft.missedPolicy}});
+  }
   if (kind === 'adoption') return selection({kind, body: {...schedule,...work}});
   if (kind === 'state' || kind === 'fixed-state') return selection({kind, body: {...schedule,
     target: target.schedule.state === 'active' ? 'paused' : 'active'}});
