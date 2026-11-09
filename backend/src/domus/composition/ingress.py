@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import socket
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -16,12 +17,14 @@ from domus.application.member_commands import MemberCommands
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.task_events import TaskEventSource
+from domus.composition.ha_calendar import attach_ha_calendar
 from domus.composition.household_administration import administration_services
 from domus.composition.recurrence import bind_lifespan, recurrence_worker
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.entry_context import EntryHTTPContext
+from domus.entrypoints.ha_calendar_http import CALENDAR_DIGEST_ENV, CALENDAR_PORT
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.ingress_http import create_ingress_app
 from domus.entrypoints.native_http import NativeHTTPContext, create_native_app
@@ -57,13 +60,18 @@ class NativeRuntime:
 
 
 def create_owned_runtime(
-    token: str, channel: str, data_directory: Path, public_origins: tuple[str, ...]
+    token: str,
+    channel: str,
+    data_directory: Path,
+    public_origins: tuple[str, ...],
+    *,
+    ha_calendar_digest: str | None = None,
 ) -> NativeRuntime:
     origins = PublicOrigins(public_origins).values
     identity = SupervisorIdentity(HomeAssistantWebSocket(HAEndpoint.supervisor()), token)
     storage = open_storage(data_directory, channel)
     try:
-        runtime = _compose_business(identity, storage.database, origins)
+        runtime = _compose_business(identity, storage.database, origins, ha_calendar_digest)
         runtime.storage = storage
         return runtime
     except BaseException:
@@ -77,6 +85,8 @@ def create_business_runtime(
     database: Path,
     instance_id: str,
     public_origins: tuple[str, ...],
+    *,
+    ha_calendar_digest: str | None = None,
 ) -> NativeRuntime:
     installation = Installation(instance_id, channel)
     origins = PublicOrigins(public_origins).values
@@ -84,11 +94,14 @@ def create_business_runtime(
     reject_owned_database(database)
     store = SQLiteDatabase(database, installation)
     store.initialize()
-    return _compose_business(identity, store, origins)
+    return _compose_business(identity, store, origins, ha_calendar_digest)
 
 
 def _compose_business(
-    identity: SupervisorIdentity, store: SQLiteDatabase, origins: tuple[str, ...]
+    identity: SupervisorIdentity,
+    store: SQLiteDatabase,
+    origins: tuple[str, ...],
+    ha_calendar_digest: str | None,
 ) -> NativeRuntime:
     clock, entropy = MonotonicClock(), SecureEntropy()
     sessions = IngressSessions(
@@ -138,6 +151,7 @@ def _compose_business(
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
         ui_binding=ui_binding,
     )
+    attach_ha_calendar(app, store, ha_calendar_digest)
     worker = recurrence_worker(store, store.installation)
     bind_lifespan(app, worker)
     return NativeRuntime(
@@ -151,6 +165,26 @@ def create_runtime(token: str, channel: str) -> FastAPI:
     return create_ingress_app(identity.prove, channel, correlation=lambda: "cor_" + entropy.new())
 
 
+def _serve_calendar(app: FastAPI) -> None:
+    config = uvicorn.Config(
+        app,
+        proxy_headers=False,
+        forwarded_allow_ips="",
+        access_log=False,
+        server_header=False,
+        log_level="warning",
+        limit_concurrency=64,
+        timeout_keep_alive=5,
+        timeout_graceful_shutdown=10,
+        h11_max_incomplete_event_size=65_536,
+    )
+    with (
+        socket.create_server(("0.0.0.0", 8099)) as ingress,
+        socket.create_server(("0.0.0.0", CALENDAR_PORT)) as calendar,
+    ):
+        uvicorn.Server(config).run(sockets=[ingress, calendar])
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run Domus behind private Home Assistant Ingress.")
     parser.add_argument("--channel", required=True, choices=("stable", "edge"))
@@ -161,24 +195,34 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--public-origin", action="append", default=[])
     args = parser.parse_args(argv)
     token = os.environ.pop("SUPERVISOR_TOKEN", "")
+    digest = os.environ.pop(CALENDAR_DIGEST_ENV, None)
     runtime = None
     try:
         if args.data_directory is not None:
             if args.instance_id or not args.public_origin:
                 raise InvalidInput("invalid_persistent_configuration")
             runtime = create_owned_runtime(
-                token, args.channel, args.data_directory, tuple(args.public_origin)
+                token,
+                args.channel,
+                args.data_directory,
+                tuple(args.public_origin),
+                ha_calendar_digest=digest,
             )
             app = runtime.app
         elif args.database is not None:
             if not args.instance_id or not args.public_origin:
                 raise InvalidInput("invalid_persistent_configuration")
             runtime = create_business_runtime(
-                token, args.channel, args.database, args.instance_id, tuple(args.public_origin)
+                token,
+                args.channel,
+                args.database,
+                args.instance_id,
+                tuple(args.public_origin),
+                ha_calendar_digest=digest,
             )
             app = runtime.app
         else:
-            if args.instance_id or args.public_origin:
+            if args.instance_id or args.public_origin or digest is not None:
                 raise InvalidInput("invalid_persistent_configuration")
             app = create_runtime(token, args.channel)
     except DomusError:
@@ -189,21 +233,24 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     try:
-        uvicorn.run(
-            app,
-            host="0.0.0.0",
-            port=8099,
-            workers=1,
-            proxy_headers=False,
-            forwarded_allow_ips="",
-            access_log=False,
-            server_header=False,
-            log_level="warning",
-            limit_concurrency=64,
-            timeout_keep_alive=5,
-            timeout_graceful_shutdown=10,
-            h11_max_incomplete_event_size=65_536,
-        )
+        if digest is not None:
+            _serve_calendar(app)
+        else:
+            uvicorn.run(
+                app,
+                host="0.0.0.0",
+                port=8099,
+                workers=1,
+                proxy_headers=False,
+                forwarded_allow_ips="",
+                access_log=False,
+                server_header=False,
+                log_level="warning",
+                limit_concurrency=64,
+                timeout_keep_alive=5,
+                timeout_graceful_shutdown=10,
+                h11_max_incomplete_event_size=65_536,
+            )
     finally:
         if runtime is not None:
             runtime.close()

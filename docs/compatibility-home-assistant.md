@@ -51,3 +51,15 @@ Core schema. Those fixtures alone cannot promote a matrix row. The
 cookie/session HTTP fixtures. A live test exchanged one delegated grant, but did not establish a
 working browser session return. Shutdown confirmed revocation of that owned grant. Native preview
 acceptance does not establish standalone acceptance or general support for these versions.
+
+## Native Domus Calendar qualification
+
+The [native calendar](tasks/ha-calendar.md) has a separate acceptance contract
+for Core 2026.10.4. CI runs the pinned Core image against both the private
+Supervisor-network listener and the standalone HTTPS composition of the exact
+candidate Domus image. The tests cover config flow, native range reads, event
+identity, credential isolation and rotation, unavailable results, and unload
+in disposable environments. The CI artifacts record complete statement and
+branch coverage for every native integration module. This check does not change
+the historical owner
+preview evidence or qualify a new published Domus package.

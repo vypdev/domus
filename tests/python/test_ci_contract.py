@@ -1,5 +1,6 @@
 """Enforce the every-PR workflow contract and immutable installed resources."""
 
+import ast
 import hashlib
 import json
 import re
@@ -141,9 +142,13 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
             continue
         suffix = Path(relative).suffix
         if suffix == ".py":
-            assert relative.startswith(("tooling/domus_tooling/", "backend/src/domus/")), (
-                f"Register {relative} in its own tested coverage/architecture gate before adding it"
-            )
+            assert relative.startswith(
+                (
+                    "tooling/domus_tooling/",
+                    "backend/src/domus/",
+                    "custom_components/domus_calendar/",
+                )
+            ), f"Register {relative} in its own tested coverage/architecture gate before adding it"
         elif suffix in {".js", ".mjs", ".cjs", ".jsx", ".ts", ".mts", ".cts", ".tsx"}:
             assert (
                 relative in declared_node_configuration
@@ -360,3 +365,36 @@ def test_actual_image_fixture_retirement_is_checked_even_after_browser_failure()
     )
     assert cleanup.get("if") == "${{ always() }}"
     assert "continue-on-error" not in cleanup
+
+
+def test_native_calendar_has_required_coverage_and_an_independent_adapter_boundary() -> None:
+    jobs = workflow()["jobs"]
+    container = jobs["containers"]
+    assert "containers" in jobs["aggregate"]["needs"]
+    assert "continue-on-error" not in container
+    verification = next(
+        step
+        for step in container["steps"]
+        if step.get("run") == "uv run pytest tests/containers --no-cov"
+    )
+    assert "if" not in verification and "continue-on-error" not in verification
+    assert verification["env"]["DOMUS_CALENDAR_COVERAGE_OUT"] == "coverage-ha-calendar.json"
+    sources = sorted((ROOT / "custom_components/domus_calendar").rglob("*.py"))
+    assert sources
+    for source in sources:
+        for node in ast.walk(ast.parse(source.read_text())):
+            names = (
+                [name.name for name in node.names]
+                if isinstance(node, ast.Import)
+                else [node.module or ""]
+                if isinstance(node, ast.ImportFrom) and node.level == 0
+                else []
+            )
+            assert not {name.split(".")[0] for name in names} & {
+                "domus",
+                "fastapi",
+                "sqlite3",
+                "sqlalchemy",
+                "starlette",
+                "uvicorn",
+            }, source

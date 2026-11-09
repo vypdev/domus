@@ -269,9 +269,13 @@ jobs:
         run: >-
           docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
           -t domus-app-installed tests/fixtures/edge3-app
+      - name: Pull the immutable Core reference for native calendar acceptance
+        run: >-
+          docker pull ghcr.io/home-assistant/home-assistant:2026.10.4@sha256:23f4dfbb69ce76315dbc4de7915504f1c2dcecd7ca2648113a493a385972e133
       - name: Verify the real image, listener and cleanup
         env:
           DOMUS_TEST_IMAGE: domus-app-ci
+          DOMUS_CALENDAR_COVERAGE_OUT: coverage-ha-calendar.json
           DOMUS_TEST_SOURCE_COMMIT: ${{ github.sha }}
           DOMUS_PREVIOUS_IMAGE: domus-app-previous
           DOMUS_UPGRADE_IMAGE: domus-app-installed
@@ -280,6 +284,13 @@ jobs:
           DOMUS_SCHEMA8_IMAGE: domus-app-schema8
           DOMUS_SCHEMA9_IMAGE: domus-app-schema9
         run: uv run pytest tests/containers --no-cov
+      - name: Retain native calendar coverage
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-calendar-coverage-${{ matrix.arch }}-${{ github.sha }}
+          path: coverage-ha-calendar.json
+          if-no-files-found: error
+          retention-days: 7
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .node-version

@@ -39,3 +39,6 @@ an error. External synchronization is disabled.
 
 The [Home Assistant integration design](../../specs/home-assistant-surface.md) covers
 registration of native calendar entities and the installation credential.
+
+For a read-only calendar entity in Home Assistant, see
+[Connect the native Home Assistant calendar](ha-calendar.md).

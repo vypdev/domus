@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Domus Calendar",
+        "description": "Use the Domus HTTPS origin or its private Home Assistant app address. Enter the calendar bearer configured for that installation.",
+        "data": {"url": "Domus address", "token": "Calendar bearer"}
+      },
+      "reconfigure": {
+        "title": "Reconnect Domus Calendar",
+        "description": "Enter the address and bearer for the same Domus installation.",
+        "data": {"url": "Domus address", "token": "Calendar bearer"}
+      }
+    },
+    "error": {
+      "cannot_connect": "Domus Calendar could not be reached. Check the address and try again.",
+      "invalid_auth": "Domus did not accept this calendar bearer.",
+      "invalid_endpoint": "Use an HTTPS origin or the private Home Assistant app address."
+    },
+    "abort": {
+      "already_configured": "This Domus installation is already connected.",
+      "wrong_source": "Reconnect to the same Domus installation and channel.",
+      "reconfigure_successful": "Domus Calendar was reconnected."
+    }
+  },
+  "exceptions": {
+    "calendar_unavailable": {"message": "Domus could not return a complete calendar for this range."}
+  },
+  "entity": {
+    "calendar": {
+      "schedule": {
+        "name": "Domus Schedule",
+        "state_attributes": {"projection_pending": {"name": "Projection pending"}}
+      }
+    }
+  }
+}

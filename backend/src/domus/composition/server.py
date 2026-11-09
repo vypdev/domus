@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -12,6 +13,7 @@ from fastapi import FastAPI
 from domus.application.authentication import Authentication
 from domus.application.sessions import SessionGuard
 from domus.application.task_events import TaskEventSource
+from domus.composition.ha_calendar import attach_ha_calendar
 from domus.composition.household import standalone_context
 from domus.composition.household_administration import administration_services
 from domus.composition.recurrence import bind_lifespan, recurrence_worker
@@ -20,6 +22,7 @@ from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.administration_http import AdministrationHTTPContext
 from domus.entrypoints.entry_context import EntryHTTPContext
+from domus.entrypoints.ha_calendar_http import CALENDAR_DIGEST_ENV
 from domus.entrypoints.http import HTTPSettings, create_app
 from domus.entrypoints.task_http import TaskHTTPContext
 from domus.entrypoints.ui_bundle import load_bundle
@@ -61,11 +64,12 @@ def create_owned_runtime(
     data_directory: Path,
     *,
     development_http: bool = False,
+    ha_calendar_digest: str | None = None,
 ) -> AuthenticationRuntime:
     config = OAuthConfiguration(HAEndpoint(ha_origin), public_origin, development_http)
     storage = open_storage(data_directory, channel)
     try:
-        runtime = _compose(config, storage.installation, storage.database)
+        runtime = _compose(config, storage.installation, storage.database, ha_calendar_digest)
         runtime.storage = storage
         return runtime
     except BaseException:
@@ -80,6 +84,7 @@ def create_runtime(
     channel: str,
     *,
     development_http: bool = False,
+    ha_calendar_digest: str | None = None,
     database: Path | None = None,
 ) -> AuthenticationRuntime:
     installation = Installation(instance_id, channel)
@@ -89,11 +94,14 @@ def create_runtime(
         reject_owned_database(database)
         store = SQLiteDatabase(database, installation)
         store.initialize()
-    return _compose(config, installation, store)
+    return _compose(config, installation, store, ha_calendar_digest)
 
 
 def _compose(
-    config: OAuthConfiguration, installation: Installation, store: SQLiteDatabase | None
+    config: OAuthConfiguration,
+    installation: Installation,
+    store: SQLiteDatabase | None,
+    ha_calendar_digest: str | None,
 ) -> AuthenticationRuntime:
     clock, entropy = MonotonicClock(), SecureEntropy()
     identity = StandaloneIdentity(
@@ -136,6 +144,7 @@ def _compose(
         task_context=tasks,
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
     )
+    attach_ha_calendar(app, store, ha_calendar_digest, public_origin=config.public_origin)
     worker = None
     if store is not None:
         worker = recurrence_worker(store, installation)
@@ -174,6 +183,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.channel,
                 args.data_directory,
                 development_http=args.development_http,
+                ha_calendar_digest=os.environ.get(CALENDAR_DIGEST_ENV),
             )
         else:
             if not args.instance_id:
@@ -184,6 +194,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.instance_id,
                 args.channel,
                 development_http=args.development_http,
+                ha_calendar_digest=os.environ.get(CALENDAR_DIGEST_ENV),
                 database=args.database,
             )
     except DomusError as error:

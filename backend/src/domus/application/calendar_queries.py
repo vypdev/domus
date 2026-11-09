@@ -28,7 +28,7 @@ from domus.domain.errors import (
 from domus.domain.identity import HumanIdentity, Permission
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.recurrence_time import LocalInstant, NominalTime, TimePolicy
-from domus.domain.storage import Household, JsonDocument
+from domus.domain.storage import Household, Installation, JsonDocument
 from domus.domain.task_values import OccurrenceState, Priority, VerificationState
 
 
@@ -68,14 +68,18 @@ class CalendarPage:
 class CalendarQueries:
     transactions: Transactions
     scope: MaintenanceScope
-    human: HumanIdentity
+    human: HumanIdentity | Installation
     cursors: TaskCursors
     times: RecurrenceTimes
 
-    def _read(self, unit: UnitOfWork) -> tuple[Household, TaskActor]:
+    def _read(self, unit: UnitOfWork) -> tuple[Household, TaskActor | None]:
         home = self.scope.household(unit)
         if home is None:
             raise Forbidden("permission_denied")
+        if isinstance(self.human, Installation):
+            if self.human != self.scope.installation:
+                raise Forbidden("permission_denied")
+            return home, None
         actor = TaskAccess(self.human).require(unit, self.scope.household_id, Permission.TASKS_READ)
         return home, actor
 
@@ -87,26 +91,33 @@ class CalendarQueries:
     def _binding(
         self,
         home: Household,
-        actor: TaskActor,
+        actor: TaskActor | None,
         period: CalendarRange,
         filters: CalendarFilters,
         limit: int,
         kind: CalendarKind,
     ) -> JsonDocument:
         installation = self.scope.installation
-        return JsonDocument.from_value(
-            {
-                "version": 1,
+        if isinstance(self.human, HumanIdentity):
+            assert actor is not None
+            subject = {
                 "query": "calendar",
-                "instance": installation.instance_id,
-                "channel": installation.channel,
-                "household": home.household_id,
-                "household_revision": home.revision,
                 "actor": self.human.ha_user_id,
                 "membership_revision": actor.member.revision,
                 "member_id": actor.member.member_id,
                 "role": actor.role.value,
                 "policy_revision": actor.identity_policy_revision,
+            }
+        else:
+            subject = {"query": "ha-calendar"}
+        return JsonDocument.from_value(
+            {
+                **subject,
+                "version": 1,
+                "instance": installation.instance_id,
+                "channel": installation.channel,
+                "household": home.household_id,
+                "household_revision": home.revision,
                 "limit": limit,
                 "start": period.start.isoformat(),
                 "end": period.end.isoformat(),
@@ -218,6 +229,12 @@ class CalendarQueries:
         limit: int = 25,
         cursor: str | None = None,
     ) -> CalendarPage:
+        if isinstance(self.human, Installation) and (
+            filters.kind not in (CalendarKind.PLANNED, CalendarKind.DUE)
+            or filters != CalendarFilters(filters.kind)
+            or (period.end - period.start).days > 90
+        ):
+            raise Forbidden("permission_denied")
         if type(limit) is not int or not 1 <= limit <= 100:
             raise InvalidInput("invalid_page_size")
         with self.transactions.read() as unit:

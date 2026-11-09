@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar el calendario de Domus",
+        "description": "Usa el origen HTTPS de Domus o la dirección privada de su aplicación de Home Assistant. Introduce el token de calendario de esa instalación.",
+        "data": {"url": "Dirección de Domus", "token": "Token de calendario"}
+      },
+      "reconfigure": {
+        "title": "Volver a conectar el calendario de Domus",
+        "description": "Introduce la dirección y el token de la misma instalación de Domus.",
+        "data": {"url": "Dirección de Domus", "token": "Token de calendario"}
+      }
+    },
+    "error": {
+      "cannot_connect": "No se pudo conectar al calendario de Domus. Comprueba la dirección e inténtalo de nuevo.",
+      "invalid_auth": "Domus no ha aceptado este token de calendario.",
+      "invalid_endpoint": "Usa un origen HTTPS o la dirección privada de la aplicación de Home Assistant."
+    },
+    "abort": {
+      "already_configured": "Esta instalación de Domus ya está conectada.",
+      "wrong_source": "Vuelve a conectar con la misma instalación y el mismo canal de Domus.",
+      "reconfigure_successful": "Se ha vuelto a conectar el calendario de Domus."
+    }
+  },
+  "exceptions": {
+    "calendar_unavailable": {"message": "Domus no pudo devolver un calendario completo para este intervalo."}
+  },
+  "entity": {
+    "calendar": {
+      "schedule": {
+        "name": "Agenda de Domus",
+        "state_attributes": {"projection_pending": {"name": "Proyección pendiente"}}
+      }
+    }
+  }
+}
