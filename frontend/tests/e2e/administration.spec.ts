@@ -135,7 +135,9 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       });
       await expect(widgets[winner.index].getByRole('heading',{name:'Outcome not confirmed',exact:true})).toBeVisible();
       const rejected=widgets[loser.index].getByRole('heading',{name:'Change not accepted',exact:true});
-      const unavailable=widgets[loser.index].getByText('The requested information is unavailable. Refresh or check the original request again.',{exact:true});
+      const unavailable=widgets[loser.index].getByRole('status')
+        .filter({has:pages[loser.index].getByRole('heading',{name:'Household administration',level:2,exact:true})})
+        .getByText('The requested information is unavailable. Refresh or check the original request again.',{exact:true});
       await expect(rejected.or(unavailable)).toBeVisible();
       const losingRecord=await pages[loser.index].evaluate(
         ({storage,key})=>JSON.parse(sessionStorage.getItem(storage)!).records.find((record:{key:string})=>record.key===key),
