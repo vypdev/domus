@@ -81,6 +81,7 @@ export class DomusCalendar extends LitElement {
       ${item.time === null ? nothing : html`<time>${item.time}</time> ${item.zone}`}
       ${item.verification === null ? nothing : this.text(item.verification === 'pending' ? 'verificationPending' : item.verification as CalendarMessage)}
       ${item.nominal !== null && item.nominal !== item.resolved ? html`<small>${this.text('adjusted')} ${item.nominal}</small>` : nothing}
+      ${item.relativeReviewRequired ? html`<small>${this.text('relativeReviewRequired')}</small>` : nothing}
     </li>`;
   }
 

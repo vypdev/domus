@@ -293,11 +293,13 @@ for (const example of [
     story: 'pending-processing', view: 'Calendar view', apply: 'Show calendar',
     kinds: ['Planned', 'Due', 'Performed', 'Approval'],
     pending: 'Recurrence processing is pending. More entries may appear.',
+    review: 'Review recurrence. The source task changed.',
   },
   {
     story: 'spanish', view: 'Vista del calendario', apply: 'Mostrar calendario',
     kinds: ['Previsto', 'Vencimiento', 'Realizado', 'Aprobación'],
     pending: 'Hay recurrencias pendientes de procesar. Pueden aparecer más entradas.',
+    review: 'Revisa la recurrencia. La tarea de origen cambió.',
   },
 ] as const) {
   test(`C35: the ${example.story} calendar supports keyboard navigation to a populated agenda`, async ({page}) => {
@@ -324,6 +326,7 @@ for (const example of [
     const agenda = calendar.locator('.calendar-entries');
     const task = agenda.getByRole('listitem').filter({hasText: 'Check the kitchen filter'});
     await expect(task).toHaveCount(4);
+    await expect(task.filter({hasText: example.review})).toHaveCount(1);
     for (const [index, time] of ['08:30', null, '09:15', '10:45'].entries()) {
       const entry = task.filter({hasText: example.kinds[index]});
       await expect(entry).toHaveCount(1);

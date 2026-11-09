@@ -4,9 +4,9 @@ import {DATE_MAX} from '../src/domain/calendar';
 import type {CalendarEntry} from '../src/domain/calendar';
 
 const planned: CalendarEntry = {id: 'planned:work', kind: 'planned', title: '<b>Set clocks</b>', day: '2026-11-01',
-  time: null, zone: null, nominal: null, resolved: null, verification: null};
+  time: null, zone: null, nominal: null, resolved: null, verification: null, relativeReviewRequired: true};
 const approval: CalendarEntry = {...planned, id: 'approval:cycle', kind: 'approval', title: 'Clock review',
-  time: '09:30:00', zone: 'Europe/Madrid', nominal: '2026-11-01T08:30', resolved: '2026-11-01T09:30', verification: 'pending'};
+  time: '09:30:00', zone: 'Europe/Madrid', nominal: '2026-11-01T08:30', resolved: '2026-11-01T09:30', verification: 'pending', relativeReviewRequired: false};
 const empty = {entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false};
 const nodes: HTMLElement[] = [];
 afterEach(() => {for (const node of nodes.splice(0)) node.remove();});
@@ -60,7 +60,9 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   const entries = [...root.querySelectorAll('.calendar-entries li')];
   expect(entries.map(item => item.querySelector('strong')!.textContent)).toEqual(['<b>Set clocks</b>', 'Wash clocks', 'Clock review', 'Verified']);
   expect(entries[0].querySelector('time, b')).toBeNull();
+  expect(entries[0].textContent).toContain('Review recurrence. The source task changed.');
   expect(entries[2].textContent).toContain('Pending approval');
+  expect(entries[2].textContent).not.toContain('Review recurrence');
   expect(entries[2].textContent).toContain('Original local time');
   expect(entries[3].textContent).toContain('Approved');
   root.querySelector<HTMLButtonElement>('button[type=button]')!.click();
@@ -68,6 +70,7 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   element.language = 'es'; select(0, 'agenda'); submit(); await element.updateComplete;
   expect(root.textContent).toContain('Vista del calendario');
   expect(root.textContent).toContain('Entradas que coinciden 4. Tareas que coinciden 2');
+  expect(root.textContent).toContain('Revisa la recurrencia. La tarea de origen cambió.');
   expect(root.querySelector('h3')!.textContent).toContain('2026');
   expect(root.querySelector('.calendar-grid')).toBeNull();
   element.view = {status: 'unavailable', page: null}; await element.updateComplete;
