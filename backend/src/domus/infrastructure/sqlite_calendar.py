@@ -100,7 +100,7 @@ class SQLiteCalendar:
         until_ms: int,
         limit: int,
         after: CalendarPosition | None,
-    ) -> tuple[int, tuple[CalendarCandidate, ...]]:
+    ) -> tuple[int, int, tuple[CalendarCandidate, ...]]:
         parameters = {
             "home": household_id,
             "start": period.start.isoformat(),
@@ -112,9 +112,9 @@ class SQLiteCalendar:
             "after_id": None if after is None else after.source_id,
             **filters.document().decode(),
         }
-        count = self.connection.execute(
-            _SCOPE + "SELECT count(*) FROM visible", parameters
-        ).fetchone()[0]
+        count, occurrence_count = self.connection.execute(
+            _SCOPE + "SELECT count(*), count(DISTINCT occurrence_id) FROM visible", parameters
+        ).fetchone()
         rows = self.connection.execute(
             _SCOPE + "SELECT * FROM visible WHERE :after_kind IS NULL "
             "OR (kind,source_id)>(:after_kind,:after_id) ORDER BY kind,source_id LIMIT :limit",
@@ -134,7 +134,7 @@ class SQLiteCalendar:
             raise StorageFailure("invalid_calendar_projection") from None
         if len({item.position for item in candidates}) != len(candidates):
             raise StorageFailure("invalid_calendar_projection")
-        return count, candidates
+        return count, occurrence_count, candidates
 
     def rules_pending(self, household_id: str) -> bool:
         return (

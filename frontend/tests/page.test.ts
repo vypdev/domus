@@ -63,7 +63,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route.startsWith('tasks/calendar?')) {
       const query=new URLSearchParams(route.split('?')[1]);
       raw=JSON.stringify({period:{start:query.get('start'),end:query.get('end')},time_zone:'UTC',
-        entries:[],count:0,next_cursor:query.has('cursor')?null:'next-page',pending:false});
+        entries:[],count:0,occurrence_count:0,next_cursor:query.has('cursor')?null:'next-page',pending:false});
     }
     else if (route.startsWith('tasks/occurrences?')) raw=JSON.stringify({items:[],next_cursor:null});
     else if (route==='administration/preferences') raw=JSON.stringify(preferences());

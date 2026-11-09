@@ -47,6 +47,7 @@ def test_date_only_slots_keep_original_and_effective_dates_through_move(tmp_path
     first = calendar.page(period, filters, limit=1)
     second = calendar.page(period, filters, limit=1, cursor=first.next_cursor)
     assert first.count == second.count == 2
+    assert first.occurrence_count == second.occurrence_count == 1
     assert first.pending and second.next_cursor is None
     (due,), (planned,) = first.entries, second.entries
     assert due.kind is CalendarKind.DUE and due.local_date == date(2026, 4, 2)
@@ -240,7 +241,7 @@ def test_sqlite_calendar_refuses_malformed_or_duplicate_selected_keys(duplicate)
 
     class Selected(list):
         def fetchone(self):
-            return (len(self),)
+            return len(self), 1
 
     connection = SimpleNamespace(execute=lambda *_: Selected((row, row)))
     adapter = SQLiteCalendar(connection)
@@ -254,3 +255,46 @@ def test_sqlite_calendar_refuses_malformed_or_duplicate_selected_keys(duplicate)
             25,
             None,
         )
+
+
+def test_distinct_task_count_preserves_both_completion_cycle_identities(tmp_path):
+    from domus.application.task_requests import ReopenTask
+
+    tasks, store, actor, _ = fixture(tmp_path)
+    created = tasks.create("two-cycles", CreateTask(TaskContent("Repeat work"))).result.decode()
+    occurrence = tasks.create_occurrence(
+        "deadline", CreateTaskOccurrence(created["definition_id"], due_at=40)
+    ).result.decode()["occurrence_id"]
+    first = tasks.complete("first", CompleteTask(occurrence, 1, ("child",), 60)).result.decode()
+    first_cycle = first["cycle"]["cycle_id"]
+    tasks.verify(
+        "first-approval", VerifyTask(occurrence, 2, first_cycle, VerificationState.APPROVED)
+    )
+    tasks.reopen("repeat", ReopenTask(occurrence, 3, first_cycle, "Do it again"))
+    second = tasks.complete("second", CompleteTask(occurrence, 4, ("other",), 70)).result.decode()
+    second_cycle = second["cycle"]["cycle_id"]
+    tasks.verify(
+        "second-approval", VerifyTask(occurrence, 5, second_cycle, VerificationState.APPROVED)
+    )
+
+    calendar = query(store, actor, tasks.clock)
+    period = CalendarRange(date(1970, 1, 1), date(1970, 1, 2))
+    complete = calendar.page(period, CalendarFilters())
+    assert (complete.count, complete.occurrence_count) == (5, 1)
+    assert {entry.entry_id for entry in complete.entries} == {
+        f"due:{occurrence}",
+        f"performed:{first_cycle}",
+        f"performed:{second_cycle}",
+        f"approval:{first_cycle}",
+        f"approval:{second_cycle}",
+    }
+    after = None
+    observed = []
+    while True:
+        page = calendar.page(period, CalendarFilters(), limit=2, cursor=after)
+        assert (page.count, page.occurrence_count) == (5, 1)
+        observed.extend(page.entries)
+        after = page.next_cursor
+        if after is None:
+            break
+    assert tuple(observed) == complete.entries

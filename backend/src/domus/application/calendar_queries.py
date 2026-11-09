@@ -60,6 +60,7 @@ class CalendarPage:
     time_zone: str
     entries: tuple[CalendarEntry, ...]
     count: int
+    occurrence_count: int
     next_cursor: str | None
     pending: bool
 
@@ -259,7 +260,7 @@ class CalendarQueries:
                     raise InvalidInput("invalid_calendar_cursor") from None
                 binding = self._binding(home, actor, period, filters, limit, kind)
                 after = CalendarPosition(kind, self.cursors.decode(binding, token))
-            count, candidates = unit.calendar.page(
+            count, occurrence_count, candidates = unit.calendar.page(
                 home.household_id,
                 period,
                 filters,
@@ -292,6 +293,7 @@ class CalendarQueries:
             policy.zone,
             tuple(self._localize(item, policy) for item in entries),
             count,
+            occurrence_count,
             next_cursor,
             pending,
         )

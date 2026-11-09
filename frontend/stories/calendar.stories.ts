@@ -14,7 +14,7 @@ const entries: readonly CalendarEntry[] = [
   {...task, id: 'approval:filter', kind: 'approval', time: '10:45', zone: 'Europe/Madrid', verification: 'approved'},
   {...task, id: 'due:untrusted', kind: 'due', title: '<img src=x onerror=alert(1)>'},
 ];
-const view: CalendarView = {status: 'ready', page: {entries, count: entries.length, cursor: null, pending: true}};
+const view: CalendarView = {status: 'ready', page: {entries, count: entries.length, occurrenceCount: entries.length, cursor: null, pending: true}};
 
 type Arguments = {language: Language};
 const meta: Meta<Arguments> = {

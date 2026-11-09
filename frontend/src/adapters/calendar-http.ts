@@ -32,14 +32,16 @@ function entry(value: unknown): CalendarEntry {
 }
 
 function page(value: unknown, expected: CalendarQuery): CalendarPage {
-  const row = fields(value, ['period','time_zone','entries','count','next_cursor','pending'], []);
+  const row = fields(value, ['period','time_zone','entries','count','occurrence_count','next_cursor','pending'], []);
   const range = fields(row.period, ['start','end'], []);
   check(range.start === expected.start && range.end === expected.end);
   text(row.time_zone, 128);
   check(Array.isArray(row.entries) && row.entries.length <= 25);
   const entries = row.entries.map(entry), count = integer(row.count, 0);
+  const occurrenceCount = integer(row.occurrence_count, count === 0 ? 0 : 1);
+  check(occurrenceCount <= count);
   check(count >= entries.length && new Set(entries.map(item => item.id)).size === entries.length);
-  return Object.freeze({entries: Object.freeze(entries), count, pending: boolean(row.pending),
+  return Object.freeze({entries: Object.freeze(entries), count, occurrenceCount, pending: boolean(row.pending),
     cursor: optional(row.next_cursor, raw => text(raw, 512))});
 }
 
