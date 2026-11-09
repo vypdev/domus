@@ -4,22 +4,27 @@ import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from dataclasses import replace
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from threading import Barrier, Event
+from types import SimpleNamespace
 
 import pytest
 from test_activation_compatibility import identity_at
 from test_household_commands import Clock
 from test_recurrence_creation import request as fixed_request
 from test_recurrence_creation import setup as fixed_setup
+from test_recurrence_review import reviewed
 from test_relative_recurrence_creation import request as relative_request
 from test_relative_recurrence_creation import setup as relative_setup
 from test_task_commands import fixture, resource
 from test_task_runtime import api as api
 
 from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
+from domus.application.fixed_missed_policy import FixedMissedPolicy
+from domus.application.fixed_skip_review import FixedSkip
 from domus.application.points import PointsConsumer
+from domus.application.recurrence_review import RecurrenceReview
 from domus.application.recurrence_sources import RecurrenceSourceObservations
 from domus.application.relative_lifecycle import RelativeLifecycle
 from domus.application.relative_materialization import RelativeMaintenance
@@ -31,11 +36,16 @@ from domus.application.task_requests import (
     ReopenTask,
     VerifyTask,
 )
-from domus.domain.errors import Forbidden, StorageFailure
+from domus.domain.errors import Conflict, Forbidden, StorageFailure
 from domus.domain.recurrence_rule_text import parse_fixed_pattern
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.storage import Installation
-from domus.domain.task_values import TaskContent, TaskOverrides, VerificationState
+from domus.domain.task_values import (
+    MissedOccurrencePolicy,
+    TaskContent,
+    TaskOverrides,
+    VerificationState,
+)
 from domus.infrastructure import sqlite as storage
 from domus.infrastructure.owned_storage import open_storage
 from domus.infrastructure.sqlite import SQLiteDatabase
@@ -126,7 +136,7 @@ def test_pending_relative_work_advances_once_before_approval_posts_points(tmp_pa
 def test_weekly_missed_slots_stay_on_anchor_and_never_earn_points(tmp_path):
     root = tmp_path / "source"
     root.mkdir(mode=0o700)
-    setup, tasks, store, _, ids = fixed_setup(root)
+    setup, tasks, store, actor, ids = fixed_setup(root)
     identity_at(root, store.installation)
     start = date(2026, 3, 30)
     selected = fixed_request()
@@ -139,8 +149,11 @@ def test_weekly_missed_slots_stay_on_anchor_and_never_earn_points(tmp_path):
             pattern=parse_fixed_pattern("FREQ=WEEKLY;COUNT=5", NominalDate(start)),
         ),
     ).result.decode()["schedule_id"]
+    missed_clock = SimpleNamespace(
+        now=lambda: int(datetime(2026, 4, 23, tzinfo=UTC).timestamp() * 1000)
+    )
     maintenance = FixedMaintenance(
-        store, MaintenanceScope(store.installation, "home"), setup.planner, Clock(), ids
+        store, MaintenanceScope(store.installation, "home"), setup.planner, missed_clock, ids
     )
     cutoff = NominalDate(start + timedelta(days=29))
     slots = [maintenance.step(schedule, cutoff) for _ in range(5)]
@@ -153,32 +166,69 @@ def test_weekly_missed_slots_stay_on_anchor_and_never_earn_points(tmp_path):
             work = unit.tasks.occurrence("home", step.occurrence_id)
             assert work.state.value == "available" and work.current_cycle_id is None
         assert unit.points.position("home") == 0
-    points = consumer(store)
+    review = RecurrenceReview(
+        store,
+        store.installation,
+        actor,
+        actor.current,
+        missed_clock,
+        ids,
+        RelativeRecurrencePlanner(setup.planner.times),
+    )
+    skipped, future = slots[0], slots[-1]
+    skip = FixedSkip(
+        schedule, 1, skipped.receipt.command.key, skipped.occurrence_id, 1, "Missed work"
+    )
+    with pytest.raises(Conflict, match="recurrence_skip_policy_required"):
+        review.preview("keep-missed", skip)
+    _, policy_change = reviewed(
+        review,
+        FixedMissedPolicy(schedule, 1, 0, MissedOccurrencePolicy.SKIP_AFTER_REVIEW),
+        "review-explicit-skip-policy",
+    )
+    review.apply("enable-explicit-skip", policy_change)
+    with pytest.raises(Conflict, match="recurrence_slot_not_overdue"):
+        review.preview(
+            "future-not-missed",
+            replace(skip, slot_key=future.receipt.command.key, occurrence_id=future.occurrence_id),
+        )
+    _, reviewed_skip = reviewed(review, skip, "review-overdue-skip")
+    skipped_result = review.apply("skip-overdue", reviewed_skip)
+    assert skipped_result.result.decode()["work"]["state"] == "skipped"
+    restarted = replace(review, transactions=SQLiteDatabase(store.path, store.installation))
+    assert restarted.apply("skip-overdue", reviewed_skip) == skipped_result
+    points = PointsConsumer(store, store.installation, missed_clock)
     assert points.tick(running) == 0
     archive, prepared = tmp_path / "archive", tmp_path / "prepared"
-    snapshot = SQLiteSnapshots(store, archive, store.installation, Clock()).create("missed")
-    later = tasks.complete(
-        "later", CompleteTask(slots[-1].occurrence_id, 1, (adult_id(store, tasks),), 90)
+    snapshot = SQLiteSnapshots(store, archive, store.installation, missed_clock).create("missed")
+    later_clock = SimpleNamespace(
+        now=lambda: int(datetime(2026, 4, 27, 12, tzinfo=UTC).timestamp() * 1000)
     )
+    later = replace(tasks, clock=later_clock).complete(
+        "later", CompleteTask(future.occurrence_id, 1, (adult_id(store, tasks),), later_clock.now())
+    )
+    points = replace(points, clock=later_clock)
     assert points.tick(running) == 1
     assert points.ledger("home", cycle_of(later))[0].shares[0][1] == 200
     with closing(sqlite3.connect(store.path)) as connection:
         assert connection.execute("SELECT count(*) FROM points_task_receipts").fetchone() == (1,)
     assert points.tick(running) == 0
-    SQLiteRestorations(store, archive, prepared, store.installation, Clock(), snapshot).prepare(
+    SQLiteRestorations(store, archive, prepared, store.installation, later_clock, snapshot).prepare(
         "restore"
     )
     assert (
-        SQLiteActivation(root, store.installation, Clock(), prepared).activate().state == "active"
+        SQLiteActivation(root, store.installation, later_clock, prepared).activate().state
+        == "active"
     )
     selected = open_storage(root, "edge")
     try:
         assert consumer(selected.database).tick(running) == 0
         with selected.database.read() as unit:
             assert unit.points.position("home") == 0
-            for step in slots[:4]:
+            for index, step in enumerate(slots[:4]):
                 work = unit.tasks.occurrence("home", step.occurrence_id)
-                assert work.state.value == "available" and work.current_cycle_id is None
+                assert work.state.value == ("skipped" if index == 0 else "available")
+                assert work.current_cycle_id is None
     finally:
         selected.close()
 
