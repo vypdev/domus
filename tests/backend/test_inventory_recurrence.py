@@ -333,16 +333,25 @@ def test_source_reopening_keeps_completed_successor_and_real_stock_after_restore
 
 
 def test_started_work_wins_independent_invalidation_and_preserves_inventory(tmp_path, monkeypatch):
+    root = tmp_path / "source"
+    root.mkdir(mode=0o700)
     store, inventory, tasks, source, lifecycle, rule, parent, first, successor, member = _relative(
-        tmp_path
+        root
     )
+    identity_at(root, store.installation)
+    points = consumer(store)
+    cycle = cycle_of(first)
+    assert points.tick(running) == 1
+    (award,) = points.ledger("home", cycle)
     reserved = _commit(inventory, "hold", EffectKind.RESERVATION, "2", successor)
     demand = _commit(inventory, "demand", EffectKind.DEMAND, "3", successor)
     expected = [_effect(store, key) for key in (reserved, demand)]
     stock = _stock(store)
     assert stock[:2] == (9_750_000, 2_000_000)
     tasks.assign("assign", AssignTask(successor, 1, (member,)))
-    tasks.reopen("reopen", ReopenTask(parent, 2, cycle_of(first), "Review original work"))
+    reopened = tasks.reopen("reopen", ReopenTask(parent, 2, cycle, "Review original work"))
+    assert points.tick(running) == 1
+    expected_points = (award, award.reverse(reopened.operation_id, 100))
     (reopening,) = source.ingest().items
     started, racing = Event(), Event()
     save = SQLiteTasks.save_occurrence
@@ -376,12 +385,38 @@ def test_started_work_wins_independent_invalidation_and_preserves_inventory(tmp_
         result.status == "review" and invalidator.consume(rule, reopening.event.event_key) == result
     )
     with store.read() as unit:
+        points_position = unit.points.position("home")
         assert unit.tasks.occurrence("home", successor).state is OccurrenceState.IN_PROGRESS
         assert (
             sum(item.event_id == result.receipt.operation_id for item in unit.outbox.pending()) == 1
         )
     assert [_effect(store, key) for key in (reserved, demand)] == expected
     assert _stock(store) == stock
+    assert points.tick(running) == 0
+    assert points.ledger("home", cycle) == expected_points
+    snapshot = SQLiteSnapshots(store, tmp_path / "archive", store.installation, Clock()).create(
+        "started-and-reviewed"
+    )
+    with _restore(store, root, tmp_path, snapshot) as restored:
+        database = restored.database
+        assert (
+            replace(lifecycle, transactions=database).consume(rule, reopening.event.event_key)
+            == result
+        )
+        assert _stock(database) == stock
+        assert [_effect(database, key) for key in (reserved, demand)] == expected
+        ledger = consumer(database)
+        assert ledger.tick(running) == 0 and ledger.ledger("home", cycle) == expected_points
+        with database.read() as unit:
+            assert unit.tasks.occurrence("home", successor).state is OccurrenceState.IN_PROGRESS
+            assert unit.points.position("home") == points_position
+            assert (
+                sum(
+                    entry.operation_id == result.receipt.operation_id
+                    for entry in unit.audit.entries("home")
+                )
+                == 1
+            )
 
 
 def test_genuine_schema_16_inventory_migration_preserves_points_and_is_atomic(
