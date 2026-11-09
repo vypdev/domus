@@ -19,6 +19,9 @@ from domus.domain.errors import (
     StorageFailure,
 )
 from domus.domain.storage import (
+    DEFAULT_MATERIALIZATION_HORIZON_DAYS,
+    MAX_MATERIALIZATION_HORIZON_DAYS,
+    MIN_MATERIALIZATION_HORIZON_DAYS,
     AuditEntry,
     Household,
     Installation,
@@ -54,7 +57,7 @@ from domus.infrastructure.sqlite_task_reviews import REVIEW_STATEMENTS
 from domus.infrastructure.sqlite_task_schema import TASK_STATEMENTS, TASK_TABLES
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -100,6 +103,12 @@ RECOVERY_STATEMENTS = (
     "created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, detail TEXT NOT NULL)",
     "CREATE INDEX recovery_pending ON recovery_requests(household_id,state,expires_at)",
 )
+HOUSEHOLD_HORIZON_STATEMENT = (
+    "ALTER TABLE households ADD COLUMN materialization_horizon_days INTEGER NOT NULL "
+    f"DEFAULT {DEFAULT_MATERIALIZATION_HORIZON_DAYS} "
+    "CHECK(typeof(materialization_horizon_days)='integer' AND materialization_horizon_days "
+    f"BETWEEN {MIN_MATERIALIZATION_HORIZON_DAYS} AND {MAX_MATERIALIZATION_HORIZON_DAYS})"
+)
 SCHEMA_STATEMENTS = (
     *BASE_STATEMENTS,
     *IDENTITY_STATEMENTS,
@@ -112,6 +121,7 @@ SCHEMA_STATEMENTS = (
     *PROFILE_STATEMENTS,
     *RELATIVE_LIFECYCLE_STATEMENTS,
     CALENDAR_PREFERENCE_STATEMENT,
+    HOUSEHOLD_HORIZON_STATEMENT,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -149,6 +159,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(PROFILE_STATEMENTS if version >= 9 else ()),
             *(RELATIVE_LIFECYCLE_STATEMENTS if version >= 10 else ()),
             *((CALENDAR_PREFERENCE_STATEMENT,) if version >= 11 else ()),
+            *((HOUSEHOLD_HORIZON_STATEMENT,) if version >= 12 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -163,24 +174,38 @@ def _storage_error(error: sqlite3.Error) -> DomusError:
     return StorageFailure("storage_failure")
 
 
+_HOUSEHOLD_SELECT = (
+    "SELECT household_id,name,time_zone,revision,materialization_horizon_days FROM households"
+)
+
+
 @dataclass
 class SQLiteHouseholds:
     connection: sqlite3.Connection
 
     def get(self, household_id: str) -> Household | None:
         row = self.connection.execute(
-            "SELECT * FROM households WHERE household_id=?", (household_id,)
+            _HOUSEHOLD_SELECT + " WHERE household_id=?", (household_id,)
         ).fetchone()
         return self._record(row)
 
     def current(self) -> Household | None:
-        return self._record(self.connection.execute("SELECT * FROM households").fetchone())
+        return self._record(self.connection.execute(_HOUSEHOLD_SELECT).fetchone())
 
     @staticmethod
     def _record(row: sqlite3.Row | None) -> Household | None:
         if row is None:
             return None
-        return Household(row["household_id"], row["name"], row["time_zone"], row["revision"])
+        try:
+            return Household(
+                row["household_id"],
+                row["name"],
+                row["time_zone"],
+                row["revision"],
+                row["materialization_horizon_days"],
+            )
+        except InvalidInput:
+            raise StorageFailure("invalid_identity_record") from None
 
     def save(self, household: Household, expected_revision: int) -> None:
         if household.revision != expected_revision + 1:
@@ -188,24 +213,28 @@ class SQLiteHouseholds:
         if expected_revision == 0:
             try:
                 self.connection.execute(
-                    "INSERT INTO households(household_id,name,time_zone,revision) VALUES (?,?,?,?)",
+                    "INSERT INTO households(household_id,name,time_zone,revision,"
+                    "materialization_horizon_days) VALUES (?,?,?,?,?)",
                     (
                         household.household_id,
                         household.name,
                         household.time_zone,
                         household.revision,
+                        household.materialization_horizon_days,
                     ),
                 )
             except sqlite3.IntegrityError:
                 raise Conflict("household_exists") from None
         else:
             updated = self.connection.execute(
-                "UPDATE households SET name=?,time_zone=?,revision=? "
+                "UPDATE households SET name=?,time_zone=?,revision=?,"
+                "materialization_horizon_days=? "
                 "WHERE household_id=? AND revision=?",
                 (
                     household.name,
                     household.time_zone,
                     household.revision,
+                    household.materialization_horizon_days,
                     household.household_id,
                     expected_revision,
                 ),
@@ -437,14 +466,16 @@ class SQLiteDatabase:
                         *(RECURRENCE_STATEMENTS if version < 8 else ()),
                         *(PROFILE_STATEMENTS if version < 9 else ()),
                         *(RELATIVE_LIFECYCLE_STATEMENTS if version < 10 else ()),
-                        CALENDAR_PREFERENCE_STATEMENT,
+                        *((CALENDAR_PREFERENCE_STATEMENT,) if version < 11 else ()),
+                        HOUSEHOLD_HORIZON_STATEMENT,
                     )
                     for statement in migration:
                         connection.execute(statement)
-                    connection.execute(
-                        "INSERT INTO calendar_preferences(household_id,member_id) "
-                        "SELECT household_id,member_id FROM members"
-                    )
+                    if version < 11:
+                        connection.execute(
+                            "INSERT INTO calendar_preferences(household_id,member_id) "
+                            "SELECT household_id,member_id FROM members"
+                        )
                     if version < 6:
                         migrate_task_documents(connection)
                     connection.execute(f"PRAGMA user_version={SCHEMA_VERSION}")

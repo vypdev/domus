@@ -1650,6 +1650,12 @@
             "title": "Household Id",
             "type": "string"
           },
+          "materialization_horizon_days": {
+            "maximum": 366,
+            "minimum": 7,
+            "title": "Materialization Horizon Days",
+            "type": "integer"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -1667,7 +1673,8 @@
           "household_id",
           "name",
           "time_zone",
-          "revision"
+          "revision",
+          "materialization_horizon_days"
         ],
         "title": "HouseholdResponse",
         "type": "object"
@@ -1680,6 +1687,13 @@
             "maximum": 9223372036854775807,
             "minimum": 1.0,
             "title": "Expected Revision",
+            "type": "integer"
+          },
+          "materialization_horizon_days": {
+            "description": "Local days. Omission preserves the saved household value.",
+            "maximum": 366,
+            "minimum": 7,
+            "title": "Materialization Horizon Days",
             "type": "integer"
           },
           "name": {

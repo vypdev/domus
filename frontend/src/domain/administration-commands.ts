@@ -1,5 +1,5 @@
 /** Closed original intents; validation never supplies a principal or a permission grant. */
-import {AdministrationError, aliasValue, preferenceValues, revisionValue} from './administration';
+import {AdministrationError, aliasValue, isMaterializationHorizonDays, preferenceValues, revisionValue} from './administration';
 import type {OwnPreferenceValues, Revision} from './administration';
 
 export const MEMBER_ROLES = ['administrator', 'adult', 'restricted', 'viewer'] as const;
@@ -11,7 +11,7 @@ export type MemberStatus = 'pending' | 'active' | 'suspended' | 'archived';
 export interface PermissionDecision {readonly permission: string; readonly allow: boolean;}
 export interface ProfileDecision extends PermissionDecision {readonly role: MemberRole;}
 export type AdministrationCommand =
-  Readonly<{action: 'household.update'; payload: Readonly<{expected_revision: Revision; name: string; time_zone: string}>}>
+  Readonly<{action: 'household.update'; payload: Readonly<{expected_revision: Revision; name: string; time_zone: string; materialization_horizon_days?: number}>}>
   | Readonly<{action: 'member.update'; memberId: string; payload: Readonly<{expected_revision: Revision;
     role: MemberRole; status: MemberStatus; exceptions: readonly PermissionDecision[]}>}>
   | Readonly<{action: 'policy.update'; payload: Readonly<{expected_revision: Revision;
@@ -28,9 +28,10 @@ type Fields = Record<string, unknown>;
 function requireValue(condition: unknown): asserts condition {
   if (!condition) throw new AdministrationError('invalid_command');
 }
-function fields(value: unknown, keys: readonly string[]): Fields {
+function fields(value: unknown, keys: readonly string[], optional: readonly string[] = []): Fields {
   requireValue(typeof value === 'object' && value !== null && !Array.isArray(value));
-  requireValue(Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key)));
+  requireValue(keys.every(key => Object.hasOwn(value, key))
+    && Object.keys(value).every(key => keys.includes(key) || optional.includes(key)));
   return value as Fields;
 }
 function choice<T extends string>(value: unknown, choices: readonly T[]): T {
@@ -65,10 +66,15 @@ export function administrationCommand(value: unknown): AdministrationCommand {
     const memberId = targeted ? identifier(item.memberId) : null;
     let body: Fields;
     switch (action) {
-      case 'household.update':
-        body = fields(item.payload, ['expected_revision', 'name', 'time_zone']);
-        return Object.freeze({action, payload: Object.freeze({expected_revision: revisionValue(body.expected_revision),
-          name: text(body.name, 160), time_zone: text(body.time_zone, 128)})});
+      case 'household.update': {
+        body = fields(item.payload, ['expected_revision', 'name', 'time_zone'], ['materialization_horizon_days']);
+        const household = {expected_revision: revisionValue(body.expected_revision), name: text(body.name, 160),
+          time_zone: text(body.time_zone, 128)};
+        if (!Object.hasOwn(body, 'materialization_horizon_days')) return Object.freeze({action, payload: Object.freeze(household)});
+        const horizon = body.materialization_horizon_days;
+        requireValue(isMaterializationHorizonDays(horizon));
+        return Object.freeze({action, payload: Object.freeze({...household, materialization_horizon_days: horizon})});
+      }
       case 'member.update':
         body = fields(item.payload, ['expected_revision', 'role', 'status', 'exceptions']);
         return Object.freeze({action, memberId: memberId as string, payload: Object.freeze({

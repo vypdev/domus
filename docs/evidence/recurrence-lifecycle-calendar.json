@@ -543,5 +543,22 @@
       "newCountedCases": 0,
       "case": "recurrence-lifecycle-calendar-C38 (additional required boundary rows)"
     }
+  },
+  "householdHorizonAcceptancePaths": {
+    "sourceParent": "baf2515c0c7ac5c73bfc873dd244b95a24da8b42",
+    "issue": "https://github.com/vypdev/domus/issues/32",
+    "schema": 12,
+    "genuineSchema11": {
+      "path": "tests/fixtures/sqlite/v11.sql",
+      "sha256": "52ab8c4a91322eaf9f56b547f20a4ca51f7a93426e6969dbc9f037d71d6fbe02",
+      "source": "Captured with the merged schema-11 SQLite runtime and an existing non-default private calendar preference before new DDL."
+    },
+    "horizonCases": [
+      "tests/backend/test_recurrence_runtime.py",
+      "tests/backend/test_recurrence_lifecycle_migration.py",
+      "frontend/tests/e2e/administration.spec.ts"
+    ],
+    "mobileCalendarCatalog": "frontend/tests/e2e/catalog.spec.ts",
+    "scope": "C39 verifies the horizon and schema compatibility. The C35 catalog fixture verifies the rendered keyboard and localization behavior with fictional entries. Refer to the check runs on the tested commit for execution evidence."
   }
 }

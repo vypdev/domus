@@ -60,12 +60,17 @@ def console(*arguments):
 
 
 def state(store):
+    # The horizon has separate assertions across upgrade, historical replay and restore.
+    original_columns = {"households": "household_id,singleton,name,time_zone,revision"}
     with store._connection() as connection:
         assert connection.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
         return {
             table: [
-                list(row) for row in connection.execute(f'SELECT * FROM "{table}" ORDER BY rowid')
+                list(row)
+                for row in connection.execute(
+                    f'SELECT {original_columns.get(table, "*")} FROM "{table}" ORDER BY rowid'
+                )
             ]
             for table in TABLES
         }
@@ -104,7 +109,7 @@ def main():
     assert phase in ("initialize", "later", "refuse", "restored", "rollback")
     assert mode in ("native", "standalone") and delivery in ("pending", "acknowledged")
     assert os.getuid() == os.getgid() == 65532
-    assert SCHEMA_VERSION == (11 if phase in ("later", "restored") else 9)
+    assert SCHEMA_VERSION == (12 if phase in ("later", "restored") else 9)
     if phase == "refuse":
         saved = json.loads(RECORD.read_text())
         selected = ROOT / "generations" / saved["selected_generation"] / "domus.sqlite3"
@@ -114,9 +119,9 @@ def main():
         except DatabaseRejected as error:
             assert error.code == "unsupported_schema"
         else:
-            raise AssertionError("Schema 9 runtime accepted a schema 11 generation")
+            raise AssertionError("Schema 9 runtime accepted a schema 12 generation")
         assert hashlib.sha256(selected.read_bytes()).hexdigest() == digest
-        print(json.dumps({"refused_schema": 11, "database_sha256": digest}))
+        print(json.dumps({"refused_schema": 12, "database_sha256": digest}))
         return
     if phase == "rollback":
         before = Path("/data/snapshots/before")
@@ -168,22 +173,30 @@ def main():
             member_id = record["member_id"]
             if phase == "later":
                 assert state(store) == record["initial_state"]
+                with store.read() as unit:
+                    assert unit.households.current().materialization_horizon_days == 60
                 alias = profiles.update_alias(
                     "after-alias", AliasUpdate(member_id, 2, "After upgrade")
                 )
                 private = profiles.update_preferences(
                     "after-prefs", PreferencesUpdate(1, MemberLocale.SPANISH, False)
                 )
-                assert not alias.historical and not private.historical
+                horizon = household.update(
+                    "after-horizon", "Rollback household", "UTC", 1, materialization_horizon_days=14
+                )
+                assert not alias.historical and not private.historical and not horizon.historical
+                with store.read() as unit:
+                    assert unit.households.current().materialization_horizon_days == 14
                 if delivery == "acknowledged":
                     with store.write() as unit:
                         assert unit.outbox.acknowledge(alias.operation_id)
                 record.update(
                     after_alias_operation=alias.operation_id,
                     after_preferences_operation=private.operation_id,
+                    after_horizon_operation=horizon.operation_id,
                     original_proofs=proofs(store),
                 )
-                assert len(record["original_proofs"]) == 4
+                assert len(record["original_proofs"]) == 5
             else:
                 assert runtime.storage.generation_id == record["selected_generation"]
                 assert (
@@ -193,7 +206,11 @@ def main():
                 assert state(store) == record["initial_state"]
                 original = proofs(store)
                 assert original.keys() == record["original_proofs"].keys()
-                later_ids = {record["after_alias_operation"], record["after_preferences_operation"]}
+                later_ids = {
+                    record["after_alias_operation"],
+                    record["after_preferences_operation"],
+                    record["after_horizon_operation"],
+                }
                 for operation_id, prior in record["original_proofs"].items():
                     current = dict(original[operation_id])
                     assert current.pop("current") is (operation_id not in later_ids)
@@ -212,7 +229,15 @@ def main():
                 private = profiles.update_preferences(
                     "after-prefs", PreferencesUpdate(1, MemberLocale.SPANISH, False)
                 )
+                horizon = household.update(
+                    "after-horizon", "Rollback household", "UTC", 1, materialization_horizon_days=14
+                )
                 initial = household.setup("setup", SetupHousehold("Rollback household", "UTC"))
+                assert (
+                    horizon.historical and horizon.operation_id == record["after_horizon_operation"]
+                )
+                with store.read() as unit:
+                    assert unit.households.current().materialization_horizon_days == 60
                 assert alias.historical and alias.operation_id == record["after_alias_operation"]
                 assert (
                     private.historical

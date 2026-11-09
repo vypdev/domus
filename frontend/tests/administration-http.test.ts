@@ -1,6 +1,8 @@
 import {afterEach, expect, test, vi} from 'vitest';
 import {HttpAdministrationServer} from '../src/adapters/administration-http';
 import {administrationJSON, responseRevision, ROSTER_MAX_BYTES} from '../src/adapters/json-values';
+import {administrationCommandBody} from '../src/adapters/administration-json';
+import {household} from '../src/adapters/http-values';
 import {BoundedHTTP, HTTP_TIMEOUT_MS} from '../src/adapters/http-transport';
 import {administrationCommand} from '../src/domain/administration-commands';
 import type {JournalContext} from '../src/domain/journal';
@@ -281,4 +283,22 @@ test('operation-ID lookup requires a captured valid ID and rejects a replacement
   const {notification_delivery: _notification, ...legacy} = receipt(4);
   f.transport.mockResolvedValueOnce(reply({...legacy, operation_id: 'replacement', delivery: 'delivered'}));
   await expect(f.server.operation({key: 'original-key', command, operationId: 'op-1'}, context).result).rejects.toThrow('invalid_response');
+});
+
+test('C39: household wire facts and original intents admit only bounded integer horizons',()=>{
+  const fact={household_id:'home',name:'Home',time_zone:'UTC',revision:'$revision'};
+  const original={expected_revision:REV,name:'Home',time_zone:'UTC'};
+  for(const value of [7,14,366]) {
+    expect(household(administrationJSON(encode({...fact,materialization_horizon_days:value})))).toMatchObject({
+      revision:REV,materializationHorizonDays:value,
+    });
+    const command=administrationCommand({action:'household.update',payload:{...original,materialization_horizon_days:value}});
+    expect(administrationCommandBody(command)).toBe(
+      '{"expected_revision":'+REV+',"name":"Home","time_zone":"UTC","materialization_horizon_days":'+value+'}',
+    );
+  }
+  for(const value of [6,367,14.5,'14',null,true]) {
+    expect(()=>household(administrationJSON(encode({...fact,materialization_horizon_days:value})))).toThrow('invalid_response');
+    expect(()=>administrationCommand({action:'household.update',payload:{...original,materialization_horizon_days:value}})).toThrow('invalid_command');
+  }
 });

@@ -1,6 +1,6 @@
 # Task storage migration and compatibility
 
-The relative lifecycle development source uses SQLite schema 10. The historical schema 8 and 9
+Current development source uses SQLite schema 12. The historical schema 8 and 9
 checkpoints retain their original evidence below. The installed immutable
 Edge.5 package uses schema 7; retained Edge.3 remains the separately pinned M1 schema-4 package.
 Current source tests do not upgrade those installations or establish a released package upgrade.
@@ -13,8 +13,12 @@ Keep the exact application/data pair and installation/channel identity.
 | 6 | Frozen material bindings, usage intents, strict codecs and compare-and-set guards | Legacy task/request evidence remains readable; original hashes/receipts stay unchanged |
 | 7 | Three causal-evidence indexes on the existing outbox | No business table, task row, receipt or event is rewritten |
 | 8 | Scoped recurrence rules, matching durable progress, immutable nominal slots and a fair-selection frontier | Original task, receipt, audit, outbox and historical records remain authoritative |
+| 9 | Independent member presentation and preferences | Existing member identity and receipts remain intact |
+| 10 | Durable relative lifecycle and reviewed scheduling | Existing recurrence and profile facts are retained |
+| 11 | Owner-private calendar preferences | Other private settings and original outcomes remain intact |
+| 12 | Household materialization horizon | Existing households start at 60 local days; issued work and original receipts are retained |
 
-Initialization accepts an empty owned destination or supported versions 1–7, verifies the application
+Initialization accepts an empty owned destination or supported versions 1–11, verifies the application
 marker and installation/channel, then repeats inspection inside the bounded writer transaction.
 Additive DDL, any required legacy-document upgrade and user_version advancement share that transaction.
 An unsupported future version, mismatched identity or unrelated database is rejected. Normal runtime

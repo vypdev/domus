@@ -14,6 +14,13 @@ export class AdministrationError extends Error {
   }
 }
 
+export const MIN_MATERIALIZATION_HORIZON_DAYS = 7;
+export const MAX_MATERIALIZATION_HORIZON_DAYS = 366;
+export function isMaterializationHorizonDays(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value)
+    && value >= MIN_MATERIALIZATION_HORIZON_DAYS && value <= MAX_MATERIALIZATION_HORIZON_DAYS;
+}
+
 const MAX_REVISION = 9_223_372_036_854_775_807n;
 
 /** Decimal text is the browser value, independently of the integer HTTP representation. */

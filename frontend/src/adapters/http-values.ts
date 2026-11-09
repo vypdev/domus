@@ -1,4 +1,5 @@
 import type {EntryOperation, EntryReceipt, HouseholdFacts, VerifiedEntrySession} from '../application/ports';
+import {isMaterializationHorizonDays} from '../domain/administration';
 import {setupPayload} from '../domain/entry';
 import type {Authorization, Deployment} from '../domain/entry';
 import type {JournalCommand, JournalContext} from '../domain/journal';
@@ -78,11 +79,15 @@ export function authorization(value: unknown, expected: JournalContext): Authori
   return Object.freeze({state, setupAllowed, enrollmentAllowed, permissions: Object.freeze(permissions)});
 }
 export function household(value: unknown): HouseholdFacts {
-  const item = fields(value, ['household_id', 'name', 'time_zone', 'revision'], []);
+  const item = fields(value, ['household_id', 'name', 'time_zone', 'revision'], ['materialization_horizon_days']);
   const name = text(item.name, 160), timeZone = text(item.time_zone, 128);
   // Read compatibility preserves existing DEL/C1 values; new setup uses its stronger input policy.
   check(name.replace(/^\p{White_Space}+|\p{White_Space}+$/gu, '').length > 0 && !/[\u0000-\u001F]/u.test(name + timeZone));
-  return Object.freeze({householdId: identifier(item.household_id), name, timeZone, revision: responseRevision(item.revision)});
+  const home = {householdId: identifier(item.household_id), name, timeZone, revision: responseRevision(item.revision)};
+  if (!Object.hasOwn(item, 'materialization_horizon_days')) return Object.freeze(home);
+  const horizon = integer(item.materialization_horizon_days, 0);
+  check(isMaterializationHorizonDays(horizon));
+  return Object.freeze({...home, materializationHorizonDays: horizon});
 }
 export function command(value: JournalCommand & Readonly<{key: string}>): JournalCommand & Readonly<{key: string}> {
   const item = fields(value, ['action', 'payload', 'key'], []), key = identifier(item.key);
