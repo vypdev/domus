@@ -1,5 +1,6 @@
 """Allowlisted domain failure classification is shared by HTTP deployment adapters."""
 
+from domus.domain.calendar_values import MAX_CALENDAR_DAYS
 from domus.domain.errors import (
     Conflict,
     DomusError,
@@ -10,6 +11,10 @@ from domus.domain.errors import (
     NotFound,
     StorageBusy,
     Unauthenticated,
+)
+
+CALENDAR_RANGE_GUIDANCE = (
+    f"Choose valid calendar dates up to {MAX_CALENDAR_DAYS} days apart. The end date is exclusive."
 )
 
 PUBLIC_CODES = frozenset(

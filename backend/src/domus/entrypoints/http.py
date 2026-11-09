@@ -34,7 +34,7 @@ from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryContextResponse, EntryHTTPContext
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
-from domus.entrypoints.http_errors import classify
+from domus.entrypoints.http_errors import CALENDAR_RANGE_GUIDANCE, classify
 from domus.entrypoints.openapi import DomusAPI
 from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
 from domus.entrypoints.ui_bundle import UIBundle
@@ -95,6 +95,20 @@ _SECURITY_HEADERS = {
 
 def _error(status: int, code: str, correlation: str) -> JSONResponse:
     restart_login = code in ("invalid_login_attempt", "login_attempt_expired")
+    if code == "invalid_calendar_range":
+        action = CALENDAR_RANGE_GUIDANCE
+    elif restart_login:
+        action = (
+            "Start a new sign-in at /api/v1/auth/start and complete it within five minutes. "
+            "Existing household records are retained."
+        )
+    elif status == 500:
+        action = (
+            "For a household change, retry the same payload and Idempotency-Key or check "
+            "its operation ID. Do not start a replacement command."
+        )
+    else:
+        action = "Review the request or sign in again. Existing household records are retained."
     return JSONResponse(
         {
             "state": "blocked",
@@ -108,20 +122,7 @@ def _error(status: int, code: str, correlation: str) -> JSONResponse:
                     else "The request was not accepted. No household change was made."
                 )
             ),
-            "action_required": (
-                "Start a new sign-in at /api/v1/auth/start and complete it within five minutes. "
-                "Existing household records are retained."
-                if restart_login
-                else (
-                    "For a household change, retry the same payload and Idempotency-Key or check "
-                    "its operation ID. Do not start a replacement command."
-                    if status == 500
-                    else (
-                        "Review the request or sign in again. "
-                        "Existing household records are retained."
-                    )
-                )
-            ),
+            "action_required": action,
             "correlation_id": correlation,
         },
         status_code=status,

@@ -6,10 +6,10 @@ import type {Language} from '../src/presentation/messages';
 import '../src/presentation/domus-calendar';
 
 const day = '2026-11-01';
-const task = {title: 'Check the kitchen filter', day, time: null, zone: null, nominal: null, resolved: null, verification: null};
+const task = {title: 'Check the kitchen filter', day, time: null, zone: null, nominal: null, resolved: null, verification: null, relativeReviewRequired: false};
 const entries: readonly CalendarEntry[] = [
   {...task, id: 'planned:filter', kind: 'planned', time: '08:30', zone: 'Europe/Madrid'},
-  {...task, id: 'due:filter', kind: 'due'},
+  {...task, id: 'due:filter', kind: 'due', relativeReviewRequired: true},
   {...task, id: 'performed:filter', kind: 'performed', time: '09:15', zone: 'Europe/Madrid'},
   {...task, id: 'approval:filter', kind: 'approval', time: '10:45', zone: 'Europe/Madrid', verification: 'approved'},
   {...task, id: 'due:untrusted', kind: 'due', title: '<img src=x onerror=alert(1)>'},

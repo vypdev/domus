@@ -7,7 +7,7 @@ import type {CalendarEntry, CalendarPage, CalendarQuery} from '../src/domain/cal
 const query: CalendarQuery = {start: '2026-11-01', end: '2026-12-01', kind: '', timing: '', state: '', priority: '', category: '', own: false};
 const scope: CalendarScope = {key: 'one', memberId: 'member', context: {installationId: 'installation', channel: 'edge', subject: 'subject'}};
 const row: CalendarEntry = {id: 'planned:one', kind: 'planned', title: 'Original', day: query.start, time: null, zone: null,
-  nominal: null, resolved: null, verification: null};
+  nominal: null, resolved: null, verification: null, relativeReviewRequired: false};
 
 test('civil calendar boundaries use the household day across DST and constrain untrusted intent', () => {
   expect(calendarToday(Date.UTC(2026, 10, 1, 1), 'America/New_York')).toBe('2026-10-31');
