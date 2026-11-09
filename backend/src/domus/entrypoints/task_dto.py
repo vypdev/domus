@@ -85,10 +85,16 @@ class MaterialUsageBody(StrictModel):
         return MaterialUsage(self.line_id, MaterialQuantity(self.quantity))
 
 
-class ContentBody(StrictModel):
+class TaskTextBody(StrictModel):
     title: str = Field(min_length=1, max_length=160)
     description: str = Field(default="", max_length=4000)
     priority: Priority = Field(default=Priority.NORMAL, strict=False)
+
+    def content(self) -> TaskContent:
+        return TaskContent(self.title, self.description, self.priority)
+
+
+class ContentBody(TaskTextBody):
     tags: list[Annotated[str, Field(min_length=1, max_length=64)]] = Field(
         default_factory=list, max_length=16
     )

@@ -9,7 +9,9 @@ from fastapi.params import Depends
 
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
+from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
+from domus.application.relative_recurrence_commands import RelativeRecurrenceCommands
 from domus.application.task_commands import TaskCommands
 from domus.application.task_queries import (
     DefinitionSummary,
@@ -49,6 +51,7 @@ from domus.entrypoints.household_http import (
     _receipt,
 )
 from domus.entrypoints.recurrence_http import create_recurrence_review_router
+from domus.entrypoints.schedule_creation_http import create_schedule_creation_router
 from domus.entrypoints.task_dto import (
     AssignmentBody,
     CompleteBody,
@@ -94,6 +97,8 @@ class TaskHTTPContext:
     recurrence_review: RecurrenceReview
     calendar: Callable[[], CalendarQueries]
     calendar_commands: CalendarCommands
+    fixed_creation: RecurrenceCommands
+    relative_creation: RelativeRecurrenceCommands
 
 
 def create_task_router(
@@ -490,6 +495,13 @@ def create_task_router(
 
     router.include_router(
         create_recurrence_review_router(lambda request: context(request).recurrence_review)
+    )
+    router.include_router(
+        create_schedule_creation_router(
+            lambda request: context(request).fixed_creation,
+            lambda request: context(request).relative_creation,
+            lambda request: context(request).queries(),
+        )
     )
     router.include_router(
         create_calendar_router(

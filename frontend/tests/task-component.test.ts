@@ -33,6 +33,32 @@ test('usable task creation preserves literal input and emits one semantic intent
   expect(f.intents).toEqual([{type: 'create', title: '  Clean 🧹  ', description: 'Wipe then dry', priority: 'normal'}]);
   expect(f.text()).not.toContain('private-home-id'); expect(f.text()).not.toContain('private-member-id');
 });
+test.each([['en','fixed'],['es','relative']] as const)('scheduled task form in %s preserves invalid input and emits a %s draft', async (locale, kind) => {
+  const access = {...view().access!, schedulePolicy: {zone: 'Europe/Madrid', data_identity: 'tzdata:2026.6/iana:2026f',
+    repeated_time: 'first_instant' as const, revision}};
+  const f = await mount(view({access}), locale);
+  await f.input('task-title', 'Check the filter');
+  const schedule = f.root.querySelector<HTMLSelectElement>('#task-schedule')!;
+  schedule.value = kind; schedule.dispatchEvent(new Event('change')); await f.element.updateComplete;
+  const form = f.root.querySelector('form')!;
+  const submit = () => form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  submit(); await f.element.updateComplete;
+  expect(f.root.querySelector('fieldset [role=alert]')).not.toBeNull();
+  expect(f.intents).toEqual([]);
+  const fill = (name: string, value: string) => {form.querySelector<HTMLInputElement>(`[name="${name}"]`)!.value = value;};
+  fill('schedule-date', '2027-01-02');
+  if (kind === 'fixed') {fill('schedule-time', '08:30'); fill('schedule-rule', 'FREQ=WEEKLY');}
+  else {fill('schedule-interval', '18'); fill('schedule-visibility', 'at_verification');}
+  submit(); await f.element.updateComplete;
+  const start = kind === 'fixed' ? {kind: 'time', local: '2027-01-02T08:30'} : {kind: 'date', local: '2027-01-02'};
+  expect(f.intents).toEqual([{type: 'create', title: 'Check the filter', description: '', priority: 'normal',
+    schedule: {kind, start, ...kind === 'fixed' ? {rrule: 'FREQ=WEEKLY'} : {interval_days: 18, visibility: 'at_verification'}}}]);
+  f.element.view = view({access, outcome: {kind: 'receipt', stage: 'committed', action: 'task.create', operationId: 'scheduled',
+    occurrenceId: null, revision, state: 'active', cycle: null, archivedBy: null}});
+  await f.element.updateComplete;
+  expect(schedule.value).toBe('manual');
+  expect(f.text()).toContain(locale === 'en' ? 'The schedule was saved.' : 'Se ha guardado la programación.');
+});
 test.each([['en', '', 'Enter a title.'], ['es', '   ', 'Introduce un título.']] as const)(
   'creation rejects a missing title locally in %s and preserves the other fields', async (locale, title, message) => {
     const f = await mount(view(), locale); f.root.querySelector<HTMLDetailsElement>('details.new-task')!.open = true;
