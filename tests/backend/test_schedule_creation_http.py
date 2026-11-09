@@ -6,10 +6,27 @@ import pytest
 from test_recurrence_http import CONTEXT, USER
 from test_task_runtime import api as api
 
-from domus.domain.identity import Member, MemberStatus, Role
+from domus.application.schedule_creation_policy import schedule_creation_policy
+from domus.application.task_queries import TaskQueries
+from domus.domain.errors import Forbidden
+from domus.domain.identity import HumanIdentity, Member, MemberStatus, Role
+from domus.infrastructure.task_cursor import TaskCursor
 
 TASKS = "/api/v1/tasks"
 CREATION = TASKS + "/recurrence/creation"
+
+
+def test_scheduled_creation_service_rejects_foreign_policy_and_noncreation_action(api):
+    with api.store.read() as unit, pytest.raises(Forbidden):
+        schedule_creation_policy(unit, "outside", "tzdata:fixture")
+    query = TaskQueries(
+        api.store,
+        HumanIdentity(USER, True, True, False),
+        TaskCursor(api.clock, b"k" * 32),
+        api.store.installation,
+    )
+    with pytest.raises(Forbidden):
+        query.original_schedule("task.create", "legacy-request")
 
 
 @pytest.mark.parametrize("kind", ["fixed", "relative"])
@@ -59,6 +76,9 @@ def test_atomic_scheduled_creation_and_original_recovery(api, kind):
         "command_key": key,
         "delivery": "pending",
     }
+    with api.store.write() as unit:
+        assert unit.outbox.acknowledge(receipt["operation_id"])
+    assert api.client.get(original, headers=CONTEXT).json()["delivery"] == "delivered"
     changed = payload | {"task": {"title": "Different inspection"}}
     assert api.client.post(path, json=changed, headers=headers).status_code == 409
     assert len(api.client.get(TASKS + "/definitions").json()["items"]) == 1
