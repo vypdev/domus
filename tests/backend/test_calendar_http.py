@@ -41,7 +41,6 @@ def test_calendar_http_requires_current_context_and_closed_range(api):
         "period": {"start": "2026-12-01", "end": "2027-01-01"},
         "time_zone": "UTC",
         "entries": [],
-        "categories": [],
         "count": 0,
         "occurrence_count": 0,
         "next_cursor": None,

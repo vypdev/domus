@@ -5,6 +5,7 @@ import type {CalendarView} from '../application/calendar-controller';
 import {CALENDAR_KINDS, CALENDAR_MODES, CALENDAR_TIMINGS, DATE_MAX, DATE_MIN, calendarDays, calendarPeriod, calendarQuery, calendarWeekOffset, civilDate, WEEK_STARTS} from '../domain/calendar';
 import type {CalendarEntry, CalendarMode, CalendarPeriod, CalendarQuery, WeekStart} from '../domain/calendar';
 import {TASK_PRIORITIES, TASK_STATES} from '../domain/tasks';
+import type {TaskCategory} from '../domain/tasks';
 import {calendarMessage} from './calendar-messages';
 import type {CalendarMessage} from './calendar-messages';
 import type {Language} from './messages';
@@ -15,7 +16,7 @@ export type CalendarIntent = {readonly type: 'load'; readonly query: CalendarQue
   | {readonly type: 'setWeekStart'; readonly weekStart: WeekStart};
 
 export class DomusCalendar extends LitElement {
-  static properties = {preference: {attribute:false}, view: {attribute: false}, language: {attribute: false}, scopeKey: {attribute: false},
+  static properties = {preference: {attribute:false}, categories: {attribute:false}, view: {attribute: false}, language: {attribute: false}, scopeKey: {attribute: false},
     today: {attribute: false}, anchor: {state: true}, mode: {state: true}, filters: {state: true},
     shownMode: {state: true}, shownRange: {state: true}};
   static styles = [styles, css`
@@ -25,6 +26,7 @@ export class DomusCalendar extends LitElement {
     .grid-scroll{overflow:auto}.calendar-grid li{border:1px solid var(--line);padding:8px;overflow-wrap:anywhere}
     .calendar-entries{padding-inline-start:20px;overflow-wrap:anywhere}
   `];
+  declare categories: readonly TaskCategory[] | undefined;
   declare preference: CalendarPreferenceView | null;
   declare view: CalendarView | null;
   declare language: Language;
@@ -132,7 +134,7 @@ export class DomusCalendar extends LitElement {
 
   protected render() {
     const view = this.view, page = this.shownRange === null ? null : view?.page;
-    const labels = new Map(page?.categories?.map(category => [category.id, category.label]));
+    const labels = new Map(this.categories?.map(category => [category.id, category.label]));
     if (this.filters.category && !labels.has(this.filters.category))
       labels.set(this.filters.category, this.text('categoryUnavailable'));
     return html`<section class="card" aria-labelledby="calendar-title" aria-busy=${view?.status === 'loading'}>

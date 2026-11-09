@@ -13,7 +13,7 @@ const planned = {entry_id: 'planned:work', kind: 'planned', timing: 'completion_
 const approval = {...planned, entry_id: 'approval:cycle', kind: 'approval', timing: 'manual', member_ids: ['member'],
   schedule_id: null, slot_key: null, local_time: '09:00:00', instant_ms: 1793523600000, time_zone: 'Europe/Madrid',
   nominal_local: '2026-11-01T08:00', resolved_local: '2026-11-01T09:00', verification: 'approved', relative_review_required: false};
-const result = {period, categories: [{category_id:'house:1', label:'Home'}], time_zone: 'Europe/Madrid', entries: [planned, approval], count: 2, occurrence_count: 1, next_cursor: null, pending: false};
+const result = {period, time_zone: 'Europe/Madrid', entries: [planned, approval], count: 2, occurrence_count: 1, next_cursor: null, pending: false};
 
 function fixture(deployment: 'native' | 'standalone', body: unknown) {
   const target = {deployment, applicationBase: deployment === 'native' ? '/api/hassio_ingress/' + 'b'.repeat(43) + '/' : '/',
@@ -28,7 +28,7 @@ function fixture(deployment: 'native' | 'standalone', body: unknown) {
 test.each(['native','standalone'] as const)('%s calendar uses the protected same-origin GET and retains date-only and approval distinctions', async mode => {
   const f = fixture(mode, result);
   const page = await f.server.read(context, 'member', query, null).result;
-  expect(page).toEqual({categories: [{id:'house:1', label:'Home'}], entries: [
+  expect(page).toEqual({entries: [
     {id: 'planned:work', kind: 'planned', title: '<b>Set clocks</b>', day: '2026-11-01', categoryLabel: 'Home', time: null, zone: null, nominal: null, resolved: null, verification: null, relativeReviewRequired: true},
     {id: 'approval:cycle', kind: 'approval', title: '<b>Set clocks</b>', day: '2026-11-01', categoryLabel: 'Home', time: '09:00:00', zone: 'Europe/Madrid',
       nominal: '2026-11-01T08:00', resolved: '2026-11-01T09:00', verification: 'approved', relativeReviewRequired: false}], count: 2, occurrenceCount: 1, cursor: null, pending: false});
@@ -51,8 +51,6 @@ test('every filter and opaque cursor is URL-encoded and additional reads require
 
 test('malformed calendar pages cannot enter the component', async () => {
   for (const body of [{...result, period: {...period, start: period.end}}, {...result, period: {...period, end: period.start}},
-    {...result, categories: {}}, {...result, categories: [{category_id:'house:1'}]},
-    {...result, categories: [{category_id:'house:1', label:'Home'}, {category_id:'house:1', label:'Duplicate'}]},
     {...result, entries: null}, {...result, entries: Array(26).fill(planned)}, {...result, count: 1},
     {...result, occurrence_count: 0}, {...result, occurrence_count: 3},
     {...result, entries: [planned, planned]}, ...[
@@ -64,14 +62,14 @@ test('malformed calendar pages cannot enter the component', async () => {
 });
 
 test('an empty range has zero entries and zero distinct tasks', async () => {
-  const empty = {...result, categories: [], entries: [], count: 0, occurrence_count: 0};
+  const empty = {...result, entries: [], count: 0, occurrence_count: 0};
   const resultPage = await fixture('standalone', empty).server.read(context, 'member', query, null).result;
-  expect(resultPage).toEqual({categories: [], entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false});
+  expect(resultPage).toEqual({entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false});
   await expect(fixture('standalone', {...empty, occurrence_count: 1}).server.read(context, 'member', query, null).result).rejects.toThrow();
 });
 
 test('an unclassified entry has no captured category label', async () => {
   const uncategorized = {...planned, category_id:null, categories:[]};
-  const f = fixture('standalone', {...result, entries:[uncategorized], categories:[]});
+  const f = fixture('standalone', {...result, entries:[uncategorized]});
   expect((await f.server.read(context, 'member', query, null).result).entries[0].categoryLabel).toBeNull();
 });

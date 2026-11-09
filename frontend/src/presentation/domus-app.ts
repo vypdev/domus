@@ -198,7 +198,7 @@ export class DomusApp extends LitElement {
       <section id="calendar" tabindex="-1" aria-label=${this.text('navigationCalendar')}
         ?hidden=${!workspace || this.workspaceDestination !== 'calendar'}>
         <domus-calendar .preference=${this.calendarPreference} .view=${this.calendar} .language=${this.language} .today=${this.calendarToday}
-          .scopeKey=${this.calendarScopeKey}></domus-calendar>
+          .scopeKey=${this.calendarScopeKey} .categories=${this.tasks?.access?.categoryCatalog?.categories}></domus-calendar>
       </section>
       <div id="household" tabindex="-1" ?hidden=${!workspace || this.workspaceDestination !== 'household'} role=${workspace ? 'group' : nothing}
         aria-label=${workspace ? this.text('workspaceHousehold') : nothing}>

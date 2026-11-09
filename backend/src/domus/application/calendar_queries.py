@@ -64,12 +64,6 @@ class CalendarEntry:
 
 
 @dataclass(frozen=True, slots=True)
-class CalendarCategory:
-    category_id: str
-    label: str
-
-
-@dataclass(frozen=True, slots=True)
 class CalendarPage:
     period: CalendarRange
     time_zone: str
@@ -78,7 +72,6 @@ class CalendarPage:
     occurrence_count: int
     next_cursor: str | None
     pending: bool
-    categories: tuple[CalendarCategory, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -284,14 +277,6 @@ class CalendarQueries:
                 raise Forbidden("permission_denied")
             if filters.category is not None:
                 require_active_category(unit, home.household_id, filters.category)
-            categories = (
-                ()
-                if actor is None
-                else tuple(
-                    CalendarCategory(item.category_id, item.label)
-                    for item in unit.task_categories.active(home.household_id)
-                )
-            )
             after = None
             if cursor is not None:
                 try:
@@ -337,5 +322,4 @@ class CalendarQueries:
             occurrence_count,
             next_cursor,
             pending,
-            categories,
         )

@@ -38,7 +38,7 @@ function entry(value: unknown): CalendarEntry {
 }
 
 function page(value: unknown, expected: CalendarQuery): CalendarPage {
-  const row = fields(value, ['period','time_zone','entries','count','occurrence_count','next_cursor','pending'], ['categories']);
+  const row = fields(value, ['period','time_zone','entries','count','occurrence_count','next_cursor','pending'], []);
   const range = fields(row.period, ['start','end'], []);
   check(range.start === expected.start && range.end === expected.end);
   text(row.time_zone, 128);
@@ -47,14 +47,7 @@ function page(value: unknown, expected: CalendarQuery): CalendarPage {
   const occurrenceCount = integer(row.occurrence_count, count === 0 ? 0 : 1);
   check(occurrenceCount <= count);
   check(count >= entries.length && new Set(entries.map(item => item.id)).size === entries.length);
-  const choices = row.categories ?? [];
-  check(Array.isArray(choices) && choices.length <= 100);
-  const categories = choices.map(value => {
-    const category = fields(value, ['category_id', 'label'], []);
-    return Object.freeze({id: identifier(category.category_id), label: text(category.label, 80)});
-  });
-  check(new Set(categories.map(category => category.id)).size === categories.length);
-  return Object.freeze({categories: Object.freeze(categories), entries: Object.freeze(entries), count, occurrenceCount, pending: boolean(row.pending),
+  return Object.freeze({entries: Object.freeze(entries), count, occurrenceCount, pending: boolean(row.pending),
     cursor: optional(row.next_cursor, raw => text(raw, 512))});
 }
 

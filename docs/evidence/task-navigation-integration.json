@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled Overview, Tasks, Calendar and Household bundle with protected fixed and completion-relative task creation and original-request recovery.",
+  "scope": "Compiled Overview, Tasks, Calendar and Household bundle with authorized task categories, captured historical labels and the active category filter.",
   "actualProductFiles": {
-    ".vite/manifest.json": "09d29d036602e2aa2de366899964ff9fa15a96f903eb066bf1c88f42cddaa652",
+    ".vite/manifest.json": "d01982ad2cbe82cec18242111d9dbff7674e6ab55d516bafe5586097c6c0b61c",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-X_uWPsJI.js": "045f6e415ff86b8f9c8d43c936befeceab1dc4d96536a9d8e8bb72da15d836e0",
-    "index.html": "c34aeab5d04ce2ce399e718c6c56bacedbec22382d241c7faeee6d04439a4b40"
+    "assets/index-H8-kq_NQ.js": "7a81e695974be328057468e0d31326a36a4b6cfe3e92b813f1c935952cd690f0",
+    "index.html": "d95027836ee2dcdc995dfa07dd197d38f770d361ae428228b9d92a611220fba7"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -161,6 +161,16 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "assets/index-H5c1FAeT.js": "da7a37e9394c00c73cf7b03a949758608c82e97e6adc1883086d7c5346b9185f",
       "index.html": "bfb21a1ff963e4c9c4d877ca83c071c9979fb23936ed58aa1e4bfe6995fbd177"
+    }
+  },
+  "preTaskCategories": {
+    "sourceCommit": "8a244fc9a464ea41b39d0dcd4edde64310728cb2",
+    "scope": "Compiled Overview, Tasks, Calendar and Household bundle with protected fixed and completion-relative task creation and original-request recovery.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "09d29d036602e2aa2de366899964ff9fa15a96f903eb066bf1c88f42cddaa652",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-X_uWPsJI.js": "045f6e415ff86b8f9c8d43c936befeceab1dc4d96536a9d8e8bb72da15d836e0",
+      "index.html": "c34aeab5d04ce2ce399e718c6c56bacedbec22382d241c7faeee6d04439a4b40"
     }
   }
 }

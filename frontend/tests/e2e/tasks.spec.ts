@@ -25,6 +25,100 @@ async function saveAdministration(widget: Locator) {
   await expect(widget.getByRole('heading', {name: 'Original request processed', exact: true})).toBeVisible();
   await widget.getByRole('button', {name: 'Close editor', exact: true}).click();
 }
+for (const mode of ['native', 'standalone'] as const) {
+  for (const locale of ['en', 'es'] as const) {
+    test(`category recovery, filter and stale draft in ${mode} ${locale}`, async ({page, context, request}) => {
+      expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
+      const tasks = await open(page, context, mode);
+      const t = (english: string, spanish: string) => locale === 'en' ? english : spanish;
+      const language = page.getByLabel('Language', {exact: true});
+      if (locale === 'es') await language.selectOption('es');
+      await page.setViewportSize({width: 320, height: 720});
+      const manager = tasks.getByRole('heading', {name: t('Task categories', 'Categorías de tareas'), exact: true});
+      const categoryName = tasks.getByRole('textbox', {name: t('Category name', 'Nombre de la categoría')});
+      const expand = async () => {if (!await categoryName.isVisible()) await manager.click();};
+      await manager.locator('..').focus();
+      await page.keyboard.press('Enter');
+      await expect(categoryName).toBeVisible();
+      const label = '<b>Garden 🌿</b>', updated = 'Garden renamed';
+      await categoryName.fill(label);
+      let creates = 0;
+      let originalKey = '';
+      await page.route(base(mode) + '/api/v1/tasks/categories', async route => {
+        expect(route.request().method()).toBe('POST');
+        creates++;
+        originalKey = route.request().headers()['idempotency-key'];
+        const committed = await route.fetch({maxRetries: 0, maxRedirects: 0});
+        expect(committed.status()).toBe(200);
+        await route.abort('connectionreset');
+      });
+      await tasks.getByRole('button', {name: t('Create category', 'Crear categoría'), exact: true}).click();
+      await expect(tasks.getByRole('heading', {name: t('Result not confirmed', 'Resultado sin confirmar')})).toBeVisible();
+      const original = page.waitForResponse(response => response.url().endsWith('/task.category.create/' + originalKey));
+      await tasks.getByRole('button', {name: t('Check saved request', 'Comprobar solicitud guardada'), exact: true}).first().click();
+      expect((await original).ok()).toBe(true);
+      expect(creates).toBe(1);
+      const choice = tasks.getByRole('combobox', {name: t('Category', 'Categoría'), exact: true});
+      await expect(choice).toBeVisible();
+      const categoryId = await choice.locator('option', {hasText: label}).getAttribute('value');
+      expect(categoryId).toBeTruthy();
+      expect(categoryId).not.toBe(label);
+      await expect(choice.locator('option').first()).toHaveText(t('Unclassified', 'Sin categoría'));
+      await choice.selectOption(categoryId!);
+      const title = tasks.getByRole('textbox', {name: t('Title', 'Título'), exact: true});
+      await title.fill('Classified work');
+      await tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}).click();
+      await expect(tasks.getByRole('heading', {name: 'Classified work', exact: true})).toBeVisible();
+      await expect(tasks.getByText(t('Category ', 'Categoría ') + label, {exact: true})).toBeVisible();
+      await expect(tasks.locator('b')).toHaveCount(0);
+      await tasks.getByRole('button', {name: t('Mark done now', 'Marcar como hecha ahora'), exact: true}).click();
+      await expect(tasks.getByText(t('No approval required', 'No necesita aprobación'), {exact: true})).toBeVisible();
+
+      await expand();
+      const edit = tasks.getByRole('combobox', {name: t('Category to edit', 'Categoría que editar')});
+      await edit.selectOption(categoryId!);
+      await categoryName.fill(updated);
+      await tasks.getByRole('button', {name: t('Rename category', 'Renombrar categoría'), exact: true}).click();
+      await expect(tasks.locator('#manage-task-category option', {hasText: updated})).toHaveCount(1);
+      await page.getByRole('link', {name: t('Calendar', 'Calendario'), exact: true}).click();
+      const calendar = page.locator('domus-calendar');
+      const filter = calendar.getByRole('combobox', {name: t('Category', 'Categoría'), exact: true});
+      await filter.selectOption(categoryId!);
+      const filtered = page.waitForResponse(response => new URL(response.url()).searchParams.get('category') === categoryId);
+      await calendar.getByRole('button', {name: t('Show calendar', 'Mostrar calendario'), exact: true}).click();
+      expect((await filtered).ok()).toBe(true);
+      await expect(calendar.getByText(t('Matching entries 1. Matching tasks 1', 'Entradas que coinciden 1. Tareas que coinciden 1'))).toBeVisible();
+      await expect(calendar.getByText(t('Category ', 'Categoría ') + label, {exact: true})).toBeVisible();
+
+      await page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true}).click();
+      if (!await title.isVisible()) await tasks.getByRole('heading', {name: t('New task', 'Nueva tarea'), exact: true}).click();
+      await title.fill('Keep this title');
+      const description = tasks.getByRole('textbox', {name: t('Description', 'Descripción')});
+      await description.fill('Keep this description');
+      await tasks.getByRole('combobox', {name:t('Scheduling', 'Programación'), exact:true}).selectOption('fixed');
+      const scheduleDate = tasks.getByLabel(t('First date', 'Primera fecha'), {exact:true});
+      const scheduleRule = tasks.getByLabel(t('Recurrence rule', 'Regla de recurrencia'), {exact:true});
+      const localDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+      await scheduleDate.fill(localDate);
+      await scheduleRule.fill('FREQ=WEEKLY');
+      await choice.selectOption(categoryId!);
+      await expand();
+      await edit.selectOption(categoryId!);
+      await tasks.getByRole('button', {name: t('Archive category', 'Archivar categoría'), exact: true}).click();
+      await expect(choice).toHaveAttribute('aria-invalid', 'true');
+      await expect(title).toHaveValue('Keep this title');
+      await expect(description).toHaveValue('Keep this description');
+      await expect(scheduleDate).toHaveValue(localDate);
+      await expect(scheduleRule).toHaveValue('FREQ=WEEKLY');
+      await expect(tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true})).toBeDisabled();
+      await choice.selectOption('');
+      await tasks.getByRole('combobox', {name:t('Scheduling', 'Programación'), exact:true}).selectOption('manual');
+      await tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}).click();
+      await expect(tasks.getByRole('heading', {name: 'Keep this title', exact: true})).toBeVisible();
+    });
+  }
+}
+
 for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + mode, () => {
   test.beforeEach(async ({request}) => {
     if (process.env.DOMUS_BROWSER_IMAGE) {
@@ -257,98 +351,3 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
     expect(actual.items[0].title).toBe('One original task');
   });
 });
-
-for (const mode of ['native', 'standalone'] as const) {
-  for (const locale of ['en', 'es'] as const) {
-    test(`category recovery, filter and stale draft in ${mode} ${locale}`, async ({page, context, request}) => {
-      expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
-      const tasks = await open(page, context, mode);
-      const t = (english: string, spanish: string) => locale === 'en' ? english : spanish;
-      const language = page.getByLabel('Language', {exact: true});
-      if (locale === 'es') await language.selectOption('es');
-      await page.setViewportSize({width: 320, height: 720});
-      const manager = tasks.getByRole('heading', {name: t('Task categories', 'Categorías de tareas'), exact: true});
-      const categoryName = tasks.getByRole('textbox', {name: t('Category name', 'Nombre de la categoría')});
-      const expand = async () => {if (!await categoryName.isVisible()) await manager.click();};
-      await manager.locator('..').focus();
-      await page.keyboard.press('Enter');
-      await expect(categoryName).toBeVisible();
-      const label = '<b>Garden 🌿</b>', updated = 'Garden renamed';
-      await categoryName.fill(label);
-      let creates = 0;
-      let originalKey = '';
-      await page.route(base(mode) + '/api/v1/tasks/categories', async route => {
-        expect(route.request().method()).toBe('POST');
-        creates++;
-        originalKey = route.request().headers()['idempotency-key'];
-        const committed = await route.fetch({maxRetries: 0, maxRedirects: 0});
-        expect(committed.status()).toBe(200);
-        await route.abort('connectionreset');
-      });
-      await tasks.getByRole('button', {name: t('Create category', 'Crear categoría'), exact: true}).click();
-      await expect(tasks.getByRole('heading', {name: t('Result not confirmed', 'Resultado sin confirmar')})).toBeVisible();
-      const original = page.waitForResponse(response => response.url().endsWith('/task.category.create/' + originalKey));
-      await tasks.getByRole('button', {name: t('Check saved request', 'Comprobar solicitud guardada'), exact: true}).first().click();
-      expect((await original).ok()).toBe(true);
-      expect(creates).toBe(1);
-      const choice = tasks.getByRole('combobox', {name: t('Category', 'Categoría'), exact: true});
-      await expect(choice).toBeVisible();
-      const categoryId = await choice.locator('option', {hasText: label}).getAttribute('value');
-      expect(categoryId).toBeTruthy();
-      expect(categoryId).not.toBe(label);
-      await expect(choice.locator('option').first()).toHaveText(t('Unclassified', 'Sin categoría'));
-      await choice.selectOption(categoryId!);
-      const title = tasks.getByRole('textbox', {name: t('Title', 'Título'), exact: true});
-      await title.fill('Classified work');
-      await tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}).click();
-      await expect(tasks.getByRole('heading', {name: 'Classified work', exact: true})).toBeVisible();
-      await expect(tasks.getByText(t('Category ', 'Categoría ') + label, {exact: true})).toBeVisible();
-      await expect(tasks.locator('b')).toHaveCount(0);
-      await tasks.getByRole('button', {name: t('Mark done now', 'Marcar como hecha ahora'), exact: true}).click();
-      await expect(tasks.getByText(t('No approval required', 'No necesita aprobación'), {exact: true})).toBeVisible();
-
-      await expand();
-      const edit = tasks.getByRole('combobox', {name: t('Category to edit', 'Categoría que editar')});
-      await edit.selectOption(categoryId!);
-      await categoryName.fill(updated);
-      await tasks.getByRole('button', {name: t('Rename category', 'Renombrar categoría'), exact: true}).click();
-      await expand();
-      await expect(edit.locator('option', {hasText: updated})).toHaveCount(1);
-      await page.getByRole('link', {name: t('Calendar', 'Calendario'), exact: true}).click();
-      const calendar = page.locator('domus-calendar');
-      const filter = calendar.getByRole('combobox', {name: t('Category', 'Categoría'), exact: true});
-      await filter.selectOption(categoryId!);
-      const filtered = page.waitForResponse(response => new URL(response.url()).searchParams.get('category') === categoryId);
-      await calendar.getByRole('button', {name: t('Show calendar', 'Mostrar calendario'), exact: true}).click();
-      expect((await filtered).ok()).toBe(true);
-      await expect(calendar.getByText(t('Matching entries 1. Matching tasks 1', 'Entradas que coinciden 1. Tareas que coinciden 1'))).toBeVisible();
-      await expect(calendar.getByText(t('Category ', 'Categoría ') + label, {exact: true})).toBeVisible();
-
-      await page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true}).click();
-      if (!await title.isVisible()) await tasks.getByRole('heading', {name: t('New task', 'Nueva tarea'), exact: true}).click();
-      await title.fill('Keep this title');
-      const description = tasks.getByRole('textbox', {name: t('Description', 'Descripción')});
-      await description.fill('Keep this description');
-      await tasks.getByRole('combobox', {name:t('Scheduling', 'Programación'), exact:true}).selectOption('fixed');
-      const scheduleDate = tasks.getByLabel(t('First date', 'Primera fecha'), {exact:true});
-      const scheduleRule = tasks.getByLabel(t('Recurrence rule', 'Regla de recurrencia'), {exact:true});
-      const localDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
-      await scheduleDate.fill(localDate);
-      await scheduleRule.fill('FREQ=WEEKLY');
-      await choice.selectOption(categoryId!);
-      await expand();
-      await edit.selectOption(categoryId!);
-      await tasks.getByRole('button', {name: t('Archive category', 'Archivar categoría'), exact: true}).click();
-      await expect(choice).toHaveAttribute('aria-invalid', 'true');
-      await expect(title).toHaveValue('Keep this title');
-      await expect(description).toHaveValue('Keep this description');
-      await expect(scheduleDate).toHaveValue(localDate);
-      await expect(scheduleRule).toHaveValue('FREQ=WEEKLY');
-      await expect(tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true})).toBeDisabled();
-      await choice.selectOption('');
-      await tasks.getByRole('combobox', {name:t('Scheduling', 'Programación'), exact:true}).selectOption('manual');
-      await tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}).click();
-      await expect(tasks.getByRole('heading', {name: 'Keep this title', exact: true})).toBeVisible();
-    });
-  }
-}

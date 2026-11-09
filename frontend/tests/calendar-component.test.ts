@@ -1,14 +1,16 @@
 import {afterEach, expect, test, vi} from 'vitest';
 import '../src/presentation/domus-calendar';
 import {DATE_MAX} from '../src/domain/calendar';
+import {revisionValue} from '../src/domain/administration';
 import type {CalendarEntry} from '../src/domain/calendar';
 
 const planned: CalendarEntry = {id: 'planned:work', kind: 'planned', title: '<b>Set clocks</b>', day: '2026-11-01',
   time: null, zone: null, nominal: null, resolved: null, verification: null, relativeReviewRequired: true};
 const approval: CalendarEntry = {...planned, id: 'approval:cycle', kind: 'approval', title: 'Clock review',
   time: '09:30:00', zone: 'Europe/Madrid', nominal: '2026-11-01T08:30', resolved: '2026-11-01T09:30', verification: 'pending', relativeReviewRequired: false};
-const category = {id: 'category-home', label: 'Hogar & más'};
-const empty = {categories: [category], entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false};
+const revision = revisionValue('1');
+const category = {id: 'category-home', label: 'Hogar & más', revision};
+const empty = {entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false};
 const nodes: HTMLElement[] = [];
 afterEach(() => {for (const node of nodes.splice(0)) node.remove();});
 
@@ -27,6 +29,7 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   element.view = {status: 'loading', page: null}; await element.updateComplete;
   expect(root.textContent).toContain('Loading calendar.');
   expect(form.querySelector('button')!.disabled).toBe(true);
+  element.categories = [category];
   element.view = {status: 'ready', page: empty}; await element.updateComplete;
   expect(root.textContent).toContain('There are no matching entries');
   expect(root.querySelectorAll('.calendar-grid > li')).toHaveLength(36);
@@ -52,7 +55,7 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   expect(listener).toHaveBeenLastCalledWith(expect.objectContaining({detail: {type: 'load', query: {
     start: '2026-10-26', end: '2026-11-02', kind: 'approval', timing: 'manual', state: 'completed',
     priority: 'high', category: category.id, own: true}}}));
-  element.view = {status: 'ready', page: {categories: [category], entries: [approval, planned, {...planned, id: 'planned:other', title: 'Wash clocks'}, {...approval, id: 'approval:other',
+  element.view = {status: 'ready', page: {entries: [approval, planned, {...planned, id: 'planned:other', title: 'Wash clocks'}, {...approval, id: 'approval:other',
     title: 'Verified', verification: 'approved', nominal: approval.resolved}], count: 4, occurrenceCount: 2, cursor: 'more', pending: true}};
   await element.updateComplete;
   expect(root.querySelectorAll('.calendar-grid > li')).toHaveLength(7);
@@ -77,8 +80,8 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   element.view = {status: 'unavailable', page: null}; await element.updateComplete;
   expect(root.querySelector('[role=alert]')!.textContent).toContain('No se pudo cargar');
   expect(date.value).toBe('2026-11-01');
-  expect(selects.map(input => input.value)).toEqual(['agenda', 'approval', 'manual', 'completed', 'high']);
-  expect(tag.value).toBe('Hogar & más'); expect(own.checked).toBe(true);
+  expect(selects.map(input => input.value)).toEqual(['agenda', 'approval', 'manual', 'completed', 'high', category.id]);
+  expect(tag.value).toBe(category.id); expect(own.checked).toBe(true);
   element.scopeKey = null; await element.updateComplete;
   expect(date.value).toBe('2026-11-03');
   expect(own.checked).toBe(false); expect(tag.value).toBe('');
@@ -91,7 +94,8 @@ test('category filters send an active identity while displaying an inert localiz
   document.body.append(element); nodes.push(element);
   element.today = '2026-11-01'; element.scopeKey = 'first-member'; await element.updateComplete;
   const label = '<b>Hogar 🌿</b>';
-  element.view = {status: 'ready', page: {...empty, categories: [{id:'garden:1', label}],
+  element.categories = [{id:'garden:1', label, revision}];
+  element.view = {status: 'ready', page: {...empty,
     entries: [{...planned, categoryLabel: label}], count: 1, occurrenceCount: 1}};
   await element.updateComplete;
   const root = element.shadowRoot!, select = root.querySelectorAll('select')[5];
@@ -102,14 +106,15 @@ test('category filters send an active identity while displaying an inert localiz
   root.querySelector('form')!.dispatchEvent(new Event('submit', {cancelable:true}));
   expect(sent.mock.calls.at(-1)?.[0].detail.query.category).toBe('garden:1');
   const count = sent.mock.calls.length;
-  element.view = {status:'ready', page:{...empty, categories:[{id:'forged/id', label}]}};
+  element.categories = [{id:'forged/id', label, revision}];
+  element.view = {status:'ready', page:empty};
   await element.updateComplete;
   select.value = 'forged/id'; select.dispatchEvent(new Event('change'));
   root.querySelector('form')!.dispatchEvent(new Event('submit', {cancelable:true}));
   expect(sent).toHaveBeenCalledTimes(count);
-  element.language = 'es'; element.view = {status: 'unavailable', page: null}; await element.updateComplete;
+  element.categories = []; element.language = 'es'; element.view = {status: 'unavailable', page: null}; await element.updateComplete;
   expect(select.selectedOptions[0].textContent).toBe('Categoría no disponible');
-  element.scopeKey = 'second-member'; await element.updateComplete;
+  element.categories = undefined; element.scopeKey = 'second-member'; await element.updateComplete;
   expect(select.value).toBe('');
   expect(select.options).toHaveLength(1);
 });

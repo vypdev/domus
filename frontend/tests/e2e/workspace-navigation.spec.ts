@@ -146,7 +146,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await calendarRegion.getByRole('button', {name: 'Mostrar calendario'}).click();
     await expect(calendarRegion.getByText('Entradas que coinciden 0. Tareas que coinciden 0')).toBeVisible();
     await expect(calendarRegion.locator('.calendar-grid')).toHaveCount(0);
-    await expect(calendarRegion.getByLabel('Categoría', {exact:true})).toHaveValue('');
+    await expect(calendarRegion.getByRole('combobox', {name:'Categoría', exact:true})).toHaveValue('');
 
     const pref = base + 'api/v1/tasks/calendar/preferences';
     const choose = calendarRegion.getByLabel('Mi semana empieza el');

@@ -34,14 +34,12 @@ export interface CalendarEntry {
   readonly relativeReviewRequired: boolean;
   readonly categoryLabel?: string | null;
 }
-export interface CalendarCategory {readonly id: string; readonly label: string;}
 export interface CalendarPage {
   readonly entries: readonly CalendarEntry[];
   readonly count: number;
   readonly occurrenceCount: number;
   readonly cursor: string | null;
   readonly pending: boolean;
-  readonly categories?: readonly CalendarCategory[];
 }
 
 const DAY = 86_400_000;

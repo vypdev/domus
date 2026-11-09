@@ -412,7 +412,7 @@ phase, mode = sys.argv[1:]
 root = Path('/data/domus')
 path = root / 'domus.sqlite3'
 def runtime():
-    return (ingress.create_owned_runtime('fixture-supervisor', 'edge', root)
+    return (ingress.create_owned_runtime('fixture-supervisor', 'edge', root, ('http://ha.local:8123',))
             if mode == 'native' else
             server.create_owned_runtime('http://127.0.0.1:8123', 'http://127.0.0.1:8099',
                                         'edge', root, development_http=True))

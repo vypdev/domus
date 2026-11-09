@@ -15,7 +15,8 @@ household member. The page and both counts use the same filters. Member filters 
 performers for actual work, and the verifier for an approval.
 
 In **Tasks**, task administrators can create, rename and archive household categories.
-Use a name of 1–80 characters. Active names are unique after trimming, Unicode
+Use a name of 1–80 characters. A household can keep up to 100 active categories.
+Active names are unique after trimming, Unicode
 normalization and case folding. If the result is uncertain, choose **Check saved
 request** to retrieve the original result before starting another change.
 

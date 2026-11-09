@@ -415,24 +415,6 @@
         "title": "CSRFResponse",
         "type": "object"
       },
-      "CalendarCategory": {
-        "properties": {
-          "category_id": {
-            "title": "Category Id",
-            "type": "string"
-          },
-          "label": {
-            "title": "Label",
-            "type": "string"
-          }
-        },
-        "required": [
-          "category_id",
-          "label"
-        ],
-        "title": "CalendarCategory",
-        "type": "object"
-      },
       "CalendarEntry": {
         "properties": {
           "categories": {
@@ -617,14 +599,6 @@
       },
       "CalendarPage": {
         "properties": {
-          "categories": {
-            "default": [],
-            "items": {
-              "$ref": "#/components/schemas/CalendarCategory"
-            },
-            "title": "Categories",
-            "type": "array"
-          },
           "count": {
             "title": "Count",
             "type": "integer"
@@ -5974,6 +5948,18 @@
       "TaskTextBody": {
         "additionalProperties": false,
         "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
           "description": {
             "default": "",
             "maxLength": 4000,

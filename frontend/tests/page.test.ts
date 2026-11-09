@@ -326,7 +326,7 @@ test('the mounted task surface routes only owned semantic intents to its applica
     const child = document.createElement('span'); app.append(child); send({type: 'create', title: 'Other target', description: '', priority: 'normal'}, child);
     send({type: 'create', title: 'Forged actor', description: '', priority: 'normal', actor: 'other'}); await Promise.resolve(); expect(spies.create).not.toHaveBeenCalled();
     const cases: readonly [unknown, keyof typeof spies, readonly unknown[]][] = [
-      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined]],
+      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined, undefined]],
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high',
         schedule: {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}},
       'create', ['Clean', 'Wipe', 'high', {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}, undefined]],
