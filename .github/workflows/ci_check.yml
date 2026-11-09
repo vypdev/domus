@@ -269,6 +269,9 @@ jobs:
         run: >-
           docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
           -t domus-app-installed tests/fixtures/edge3-app
+      - name: Pull the immutable Core reference for native calendar acceptance
+        run: >-
+          docker pull ghcr.io/home-assistant/home-assistant:2026.10.4@sha256:23f4dfbb69ce76315dbc4de7915504f1c2dcecd7ca2648113a493a385972e133
       - name: Verify the real image, listener and cleanup
         env:
           DOMUS_TEST_IMAGE: domus-app-ci
