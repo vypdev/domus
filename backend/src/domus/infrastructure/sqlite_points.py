@@ -10,7 +10,11 @@ from domus.domain.points import PointsPosting, conserve_points, points_source_fi
 from domus.domain.restoration import RetainedOperation
 from domus.domain.storage import Installation, JsonDocument
 from domus.domain.task_events import TaskLifecycleEvent
-from domus.infrastructure.sqlite_task_history import SQLiteTaskHistory, task_source_record
+from domus.infrastructure.sqlite_task_history import (
+    RESTORED_AWARD_CLOSURE,
+    SQLiteTaskHistory,
+    task_source_record,
+)
 
 POINTS_TABLE = "points_task_receipts"
 POINTS_STATEMENTS = (
@@ -29,6 +33,9 @@ POINTS_STATEMENTS = (
     "ON points_task_receipts(household_id,cycle_id,effect) WHERE effect>0",
     "CREATE INDEX points_definition_rotation "
     "ON points_task_receipts(household_id,definition_id,position) WHERE effect=1",
+    "CREATE INDEX points_restored_award_closure ON retained_operations("
+    "household_id,json_extract(document,'$.event_payload.cycle.cycle_id'),position) "
+    f"WHERE {RESTORED_AWARD_CLOSURE}",
 )
 
 
@@ -73,8 +80,8 @@ class SQLitePoints:
     ) -> str | None:
         row = self.connection.execute(
             "SELECT * FROM points_task_receipts WHERE household_id=? AND definition_id=? "
-            "AND effect=1 AND (? IS NULL OR position<?) ORDER BY position DESC LIMIT 1",
-            (household_id, definition_id, before, before),
+            "AND effect=1 AND position<=? ORDER BY position DESC LIMIT 1",
+            (household_id, definition_id, 2**63 - 1 if before is None else before - 1),
         ).fetchone()
         return None if row is None else _posting(row).next_recipient
 

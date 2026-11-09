@@ -11,6 +11,10 @@ from domus.domain.task_events import TaskSourceRecord
 from domus.infrastructure.sqlite_history import SQLiteHistory, _evidence, _record, _same
 from domus.infrastructure.sqlite_task_records import read_cycle
 
+RESTORED_AWARD_CLOSURE = (
+    "current=0 AND (action='task.reopen' OR (action='task.verify' AND "
+    "json_extract(document,'$.event_payload.cycle.verification')='rejected'))"
+)
 _CURRENT = (
     "SELECT r.*,a.detail AS audit_detail,o.payload AS event_payload,o.position,o.delivered,"
     "a.household_id AS review_audit_household,a.actor_id AS review_audit_actor,"
@@ -88,11 +92,9 @@ class SQLiteTaskHistory:
 
     def restored_cycle_closure(self, household_id: str, cycle_id: str) -> TaskSourceRecord | None:
         row = self.connection.execute(
-            "SELECT * FROM retained_operations WHERE household_id=? AND current=0 "
+            "SELECT * FROM retained_operations WHERE household_id=? "
             "AND json_extract(document,'$.event_payload.cycle.cycle_id')=? "
-            "AND (action='task.reopen' OR (action='task.verify' AND "
-            "json_extract(document,'$.event_payload.cycle.verification')='rejected')) "
-            "ORDER BY position LIMIT 1",
+            f"AND {RESTORED_AWARD_CLOSURE} ORDER BY position LIMIT 1",
             (household_id, cycle_id),
         ).fetchone()
         return None if row is None else task_source_record(_record(row))
