@@ -57,6 +57,9 @@ def test_original_schema6_migration_preserves_rows_and_projects_existing_cause(t
             "task_missed_occurrence_settings",
             "task_categories",
             "points_task_receipts",
+            "inventory_materials",
+            "inventory_effects",
+            "inventory_movements",
         }
         assert set(upgraded) == set(original) | added | {
             "member_presentations",

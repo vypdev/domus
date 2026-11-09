@@ -136,7 +136,7 @@ def test_genuine_schema11_horizon_migration_preserves_private_preferences_and_hi
         preference = unit.calendar_preferences.get("home", member.member_id)
         assert preference.week_start is WeekStart.SUNDAY and preference.revision == 2
     with restarted._connection() as connection:
-        assert _verify_database(connection, restarted, previous=False) == 16
+        assert _verify_database(connection, restarted, previous=False) == 17
     assert facts(store.path, tables) == before
 
 
