@@ -3,10 +3,11 @@
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from functools import partial
-from typing import cast
+from typing import Literal, cast
 
 from domus.application.authorization import HouseholdAccess
 from domus.application.household_queries import OperationView
+from domus.application.point_allocations import effective_allocation
 from domus.application.ports import Transactions, UnitOfWork
 from domus.application.schedule_creation_policy import schedule_creation_policy
 from domus.application.task_authorization import (
@@ -28,6 +29,7 @@ from domus.application.task_ports import TaskCursors
 from domus.application.task_reviews import DependencyReviewView, review_cycle, review_items
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
+from domus.domain.point_allocation import AllocationMode
 from domus.domain.recurrence_time import TimePolicy
 from domus.domain.restoration import RetainedOperation
 from domus.domain.storage import (
@@ -101,6 +103,9 @@ class OccurrenceSummary:
     current_cycle_id: str | None
 
 
+CompletionPoints = Literal["automatic", "manual", "manager_required"]
+
+
 @dataclass(frozen=True, slots=True)
 class TaskDetail:
     work: TaskOccurrence
@@ -109,6 +114,7 @@ class TaskDetail:
     requirements: tuple[TaskRequirement, ...]
     cycle: TaskCycle | None
     allowed_actions: tuple[str, ...]
+    completion_points: CompletionPoints
     consumer_delivery: str = "unconfirmed"
     materials: tuple[MaterialOutcome, ...] = ()
     dependency_reviews: TaskPage[DependencyReviewView] = TaskPage((), None)
@@ -328,13 +334,33 @@ class TaskQueries:
                 if cycle is None
                 else self._reviews(unit, work, cycle, state=DependencyReviewState.PENDING)
             )
+            actions = self._actions(unit, actor, work, rules, requirements, cycle)
+            completion_points: CompletionPoints = "automatic"
+            if "complete" in actions:
+                allocation, _, _ = effective_allocation(
+                    unit,
+                    self.household_id,
+                    work.definition_snapshot.definition_id,
+                    rules.point_value_minor,
+                )
+                if allocation.mode is AllocationMode.MANUAL:
+                    if _possible(
+                        lambda: HouseholdAccess(self.human).require(
+                            unit, self.household_id, Permission.POINTS_MANAGE
+                        )
+                    ):
+                        completion_points = "manual"
+                    else:
+                        actions = tuple(action for action in actions if action != "complete")
+                        completion_points = "manager_required"
             return TaskDetail(
                 work,
                 rules,
                 revision,
                 requirements,
                 cycle,
-                self._actions(unit, actor, work, rules, requirements, cycle),
+                actions,
+                completion_points,
                 materials=()
                 if cycle is None
                 else tuple(material_outcome(value) for value in cycle_materials(unit, work, cycle)),

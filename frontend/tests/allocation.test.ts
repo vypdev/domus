@@ -7,7 +7,7 @@ import {AllocationController} from '../src/application/allocation-controller';
 import type {AllocationRequest, AllocationScope, AllocationServer, AllocationView} from '../src/application/allocation-controller';
 import type {EntryRead} from '../src/application/ports';
 import {revisionValue} from '../src/domain/administration';
-import {allocationFingerprint, allocationPerformers, displayPoints, manualPointShares, minorPoints} from '../src/domain/point-allocation';
+import {allocationFingerprint, allocationPerformers, displayPoints, manualPointShares, minorPoints, requiresManualAllocation} from '../src/domain/point-allocation';
 import type {AllocationPolicy} from '../src/domain/point-allocation';
 import '../src/presentation/domus-allocation-preview';
 import '../src/presentation/domus-allocation-settings';
@@ -49,6 +49,15 @@ function transport(replies: readonly (readonly [number, unknown])[], deployment:
   });
   return {server: new HttpAllocationServer(endpoint, fetch), fetch};
 }
+
+test('manual mode uses verified completion facts before settings arrive and current override precedence afterward', () => {
+  const manual = {policy: {mode: 'manual', precision: 2, rounding: null} as const, revision};
+  expect(requiresManualAllocation(null, true)).toBe(true);
+  expect(requiresManualAllocation(undefined, false)).toBe(false);
+  expect(requiresManualAllocation({household: manual, override: null}, false)).toBe(true);
+  expect(requiresManualAllocation({household: manual, override: {policy: conserved, revision}}, true)).toBe(false);
+  expect(requiresManualAllocation({household: null, override: {policy: null, revision}}, true)).toBe(false);
+});
 
 test('exact policy and participant facts reject unknown, inconsistent and out-of-range values', () => {
   expect(minorPoints('1,5')).toBe(150);

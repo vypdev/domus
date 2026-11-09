@@ -5,13 +5,14 @@ import type {TaskView} from '../application/task-controller';
 import type {TaskRecord} from '../application/task-ports';
 import {categoryLabel, hasTaskText, taskQuantity, taskScheduleDraft, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
 import type {Revision} from '../domain/administration';
-import type {TaskCategory, TaskMaterialUsage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
+import type {TaskCategory, TaskDetail, TaskMaterialUsage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
 import {language} from './messages';
 import type {Language} from './messages';
 import {taskInstant, taskMessage} from './task-messages';
 import type {TaskMessageKey} from './task-messages';
 import {styles} from './styles';
 import type {AllocationView} from '../application/allocation-controller';
+import {requiresManualAllocation} from '../domain/point-allocation';
 import type {ReviewedAllocation} from '../domain/point-allocation';
 import type {ParticipantName} from './allocation-details';
 import './domus-allocation-preview';
@@ -260,11 +261,22 @@ export class DomusTasks extends LitElement {
       </form>
     </details>`;
   }
-  private complete(): void {
-    const preview = this.renderRoot.querySelector('domus-allocation-preview');
+  private allocationFor(work: TaskDetail): AllocationView | null {
+    const allocation = this.allocation, selected = allocation?.scope.work;
+    return selected?.occurrenceId === work.occurrenceId && selected.revision === work.revision ? allocation : null;
+  }
+  private completionReview(work: TaskDetail, allocation: AllocationView | null) {
+    const preview = allocation === null ? null : this.renderRoot.querySelector('domus-allocation-preview');
     const reviewed = preview?.reviewed;
-    if (preview?.needsReview && reviewed === undefined) return;
-    const work = this.view!.detail!; let materialUsages: readonly TaskMaterialUsage[] | null = null;
+    const manual = requiresManualAllocation(allocation?.settings, work.completionPoints === 'manual');
+    const blocked = allocation?.busy === true || (manual || preview?.needsReview === true) && reviewed === undefined;
+    return {reviewed, blocked};
+  }
+  private complete(): void {
+    const work = this.view!.detail!;
+    const {reviewed, blocked} = this.completionReview(work, this.allocationFor(work));
+    if (blocked) return;
+    let materialUsages: readonly TaskMaterialUsage[] | null = null;
     if (work.materialRecording === 'review_on_completion' && work.materials.length > 0) {
       const usages: TaskMaterialUsage[] = [];
       for (const material of work.materials) {
@@ -278,9 +290,8 @@ export class DomusTasks extends LitElement {
   }
   private workDetail() {
     const work = this.view!.detail!;
-    const preview = this.renderRoot.querySelector('domus-allocation-preview');
-    const allocationBlocked = preview?.needsReview === true && preview.reviewed === undefined;
-    const allocation = this.allocation?.scope.work?.occurrenceId === work.occurrenceId ? this.allocation : null;
+    const allocation = this.allocationFor(work);
+    const allocationBlocked = this.completionReview(work, allocation).blocked;
     return html`<section class="card" aria-labelledby="selected-task-title"><h3 id="selected-task-title" tabindex="-1">${work.title}</h3>
       <p><span class="badge">${this.text(`state_${work.state}`)}</span><span class="badge">${this.text(`priority_${work.priority}`)}</span></p>
       ${work.categoryLabel ? html`<p>${this.text('category')} ${work.categoryLabel}</p>` : nothing}
@@ -291,6 +302,7 @@ export class DomusTasks extends LitElement {
       ${work.dependencyReviewRequired ? html`<p class="note warning" role="status">${this.text('dependencyReview')}</p>` : nothing}
       ${work.pendingMaterials ? html`<p class="note warning" role="status">${this.text('pendingMaterials')}</p>` : nothing}
       ${work.allowedActions.includes('claim') ? html`<div class="actions"><button ?disabled=${this.blocked} @click=${() => this.intent({type: 'claim'})}>${this.text('claim')}</button></div>` : nothing}
+      ${work.completionPoints === 'manager_required' ? html`<p class="note" role="status">${this.text('manualPointsManager')}</p>` : nothing}
       ${work.allowedActions.includes('complete') ? html`<form id="complete-form" class="task-fields" novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.complete();}}>
         <p>${this.text('completionHelp')}</p>${work.materials.length ? work.materialRecording === 'review_on_completion' ? html`<fieldset><legend>${this.text('materials')}</legend>
           <p class="help">${this.text('quantityHelp')}</p>${work.materials.map((material, index) => html`<div class="material"><label for=${'material-' + index}>${material.label || this.text('quantity')}</label>

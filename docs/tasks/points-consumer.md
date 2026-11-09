@@ -76,7 +76,10 @@ The initial explicit setting is a whole-point conserved split.
 
 The preview uses the current task revision, selected active members, exact
 minor units, and the same allocation engine as completion. The browser sends
-the reviewed fingerprint when recording work. The completion transaction
+the reviewed fingerprint when recording work. The task detail carries whether
+completion requires manual shares or help from a points administrator. The
+completion form respects that fact before loading the administration editor. The
+completion transaction
 rejects a stale fingerprint and saves a new cycle and its allocation together.
 Conserved splits advance their position when the cycle is recorded. Approval,
 posting, retries, and reversals use the stored shares and do not advance it.

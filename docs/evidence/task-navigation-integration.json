@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled workspace bundle with protected points, participation, configured allocation, localized preview, and retained award shares.",
   "actualProductFiles": {
-    ".vite/manifest.json": "bfad574ca5f99064093349b04cc9d2553cc23ef3f887d3aa44c229c857a6f247",
-    "assets/index-B36elxTA.js": "c0d9e184a2939f715d35b7a0deba72445106dbaff3faf0c2880b5927d1b94b8f",
+    ".vite/manifest.json": "0bbe105f2760976e27ac037f3c8b37e49f75fa2eb81c1039f8b313c1dcea0c26",
+    "assets/index-BPzVTX1t.js": "40498ec072aa21c97687d300888ae0e5dab059f75e21a2429a75e14678aa118f",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "819da767ec81653ffa0aba824bf276e92ca35ff935cec700114c216dc7b87e11"
+    "index.html": "99e357067f1f663098c6560e139eddd1af434ae901edfb0f995148785567407a"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

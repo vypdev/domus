@@ -5826,6 +5826,15 @@
             "title": "Allowed Actions",
             "type": "array"
           },
+          "completion_points": {
+            "enum": [
+              "automatic",
+              "manual",
+              "manager_required"
+            ],
+            "title": "Completion Points",
+            "type": "string"
+          },
           "consumer_delivery": {
             "default": "unconfirmed",
             "title": "Consumer Delivery",
@@ -5884,7 +5893,8 @@
           "task_policy_revision",
           "requirements",
           "cycle",
-          "allowed_actions"
+          "allowed_actions",
+          "completion_points"
         ],
         "title": "TaskDetail",
         "type": "object"

@@ -378,3 +378,45 @@ test('selected task requires a fresh review before its collaborative completion 
   form.dispatchEvent(new Event('submit', {cancelable: true}));
   expect(f.intents).toEqual([{type: 'complete', materialUsages: null, reviewed: completion}]);
 });
+
+test('manual points wait for explicit reviewed amounts even before administrative settings load', async () => {
+  const detail = {...work, completionPoints: 'manual' as const};
+  const f = await mount(view({detail}));
+  const submit = () => f.root.querySelector('#complete-form')!.dispatchEvent(new Event('submit', {cancelable: true}));
+  expect(f.button('Mark done now').disabled).toBe(true);
+  submit();
+  expect(f.intents).toEqual([]);
+  const scope = {key: 'verified', context, definitionId: work.definitionId, readOnly: false, canManage: true,
+    work: {occurrenceId: work.occurrenceId, revision, canComplete: true, requiresManual: true}};
+  f.element.participantNames = [{id: 'private-member-id', name: 'Owner'}];
+  f.element.allocation = {scope, settings: null, busy: true, review: null, pending: false, notice: null};
+  await f.element.updateComplete;
+  const widget = f.root.querySelector('domus-allocation-preview')!;
+  await widget.updateComplete;
+  expect(widget.shadowRoot!.querySelector<HTMLInputElement>('input[type=text]')?.disabled).not.toBe(true);
+  expect(widget.shadowRoot!.querySelector('fieldset')!.disabled).toBe(true);
+  expect(f.button('Mark done now').disabled).toBe(true);
+  f.element.allocation = {...f.element.allocation, busy: false};
+  await f.element.updateComplete; await widget.updateComplete;
+  expect(f.button('Mark done now').disabled).toBe(true);
+  const input = widget.shadowRoot!.querySelector<HTMLInputElement>('input[type=text]')!;
+  input.value = '1.25'; input.dispatchEvent(new Event('input')); await widget.updateComplete;
+  const completion = {occurrenceId: work.occurrenceId, revision, performerIds: ['private-member-id'], fingerprint: 'a'.repeat(64),
+    manualShares: [{member_id: 'private-member-id', amount_minor: 125}]};
+  f.element.allocation = {...f.element.allocation, review: {completion, evidence: {mode: 'manual', precision: 2,
+    rounding: null, policyRevision: revision, taskOverride: false, base: 200, total: 125,
+    shares: [['private-member-id', 125]], fingerprint: completion.fingerprint}}};
+  await f.element.updateComplete; await widget.updateComplete; await f.element.updateComplete;
+  expect(f.button('Mark done now').disabled).toBe(false);
+  submit();
+  expect(f.intents).toEqual([{type: 'complete', materialUsages: null, reviewed: completion}]);
+  f.element.allocation = {...f.element.allocation, scope: {...scope, work: {...scope.work, revision: revisionValue('2')}}};
+  await f.element.updateComplete;
+  expect(f.button('Mark done now').disabled).toBe(true);
+});
+
+test.each(['en', 'es'] as const)('manual allocation gives a non-manager a localized next action in %s', async locale => {
+  const f = await mount(view({detail: {...work, allowedActions: ['claim'], completionPoints: 'manager_required'}}), locale);
+  expect(f.root.querySelector('#complete-form')).toBeNull();
+  expect(f.text()).toContain(locale === 'en' ? 'Ask a points administrator to record this work' : 'Pide a un administrador de puntos que registre el trabajo');
+});

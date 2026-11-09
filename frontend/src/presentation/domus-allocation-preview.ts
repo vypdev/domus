@@ -3,7 +3,7 @@ import type {PropertyValues} from 'lit';
 import {registerButton} from '@vypdev/ha-ui/button';
 import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import type {AllocationView} from '../application/allocation-controller';
-import {minorPoints} from '../domain/point-allocation';
+import {minorPoints, requiresManualAllocation} from '../domain/point-allocation';
 import type {AllocationInput, ManualShare, ReviewedAllocation} from '../domain/point-allocation';
 import {allocationDetails} from './allocation-details';
 import type {ParticipantName} from './allocation-details';
@@ -56,8 +56,7 @@ export class DomusAllocationPreview extends LitElement {
   }
 
   private get manual(): boolean {
-    const settings = this.view?.settings;
-    return (settings?.override?.policy ?? settings?.household?.policy)?.mode === 'manual';
+    return requiresManualAllocation(this.view?.settings, this.view?.scope.work?.requiresManual === true);
   }
 
   get needsReview(): boolean {

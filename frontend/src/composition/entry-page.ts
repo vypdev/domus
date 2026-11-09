@@ -290,7 +290,8 @@ export function mountEntry(page: EntryPage): PageMount {
           work: null, readOnly: tasks.readOnly, canManage});
       } else if (destination === 'tasks' && detail !== null) {
         allocations.bind({key: tasks.scopeKey, context: tasks.session.context, definitionId: detail.definitionId,
-          work: {occurrenceId: detail.occurrenceId, revision: detail.revision, canComplete: detail.allowedActions.includes('complete')},
+          work: {occurrenceId: detail.occurrenceId, revision: detail.revision,
+            canComplete: detail.allowedActions.includes('complete'), requiresManual: detail.completionPoints === 'manual'},
           readOnly: tasks.readOnly, canManage});
       } else allocations.bind(null);
     };

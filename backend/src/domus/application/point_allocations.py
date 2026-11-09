@@ -24,6 +24,19 @@ from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_ide
 ALLOCATION_ACTION = "points.allocation.update"
 
 
+def effective_allocation(
+    unit: UnitOfWork, home: str, definition_id: str, base: int
+) -> tuple[AllocationPolicy, int, str | None]:
+    override = unit.point_allocations.setting(home, definition_id)
+    if override is not None and override.policy is not None:
+        return override.policy, override.revision, definition_id
+    default = unit.point_allocations.setting(home, None)
+    if default is None:
+        return AllocationPolicy(precision=2 if base % 100 else 0), 0, None
+    assert default.policy is not None
+    return default.policy, default.revision, None
+
+
 def resolve_allocation(
     unit: UnitOfWork,
     home: str,
@@ -32,15 +45,7 @@ def resolve_allocation(
     performers: tuple[str, ...],
     manual_shares: tuple[tuple[str, int], ...] | None,
 ) -> CompletionAllocation:
-    override = unit.point_allocations.setting(home, definition_id)
-    scoped = override is not None and override.policy is not None
-    setting = override if scoped else unit.point_allocations.setting(home, None)
-    if setting is None:
-        policy = AllocationPolicy(precision=2 if base % 100 else 0)
-        revision = 0
-    else:
-        assert setting.policy is not None
-        policy, revision = setting.policy, setting.revision
+    policy, revision, override = effective_allocation(unit, home, definition_id, base)
     previous = None
     if policy.mode is AllocationMode.CONSERVE_TOTAL:
         last = unit.point_allocations.last_conserved(home, definition_id)
@@ -56,9 +61,7 @@ def resolve_allocation(
         next_recipient=previous,
         manual_shares=manual_shares or (),
     )
-    return CompletionAllocation(
-        policy, revision, definition_id if scoped else None, base, previous, shares
-    )
+    return CompletionAllocation(policy, revision, override, base, previous, shares)
 
 
 def allocation_document(snapshot: CompletionAllocation) -> JsonDocument:

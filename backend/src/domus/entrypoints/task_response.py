@@ -6,8 +6,8 @@ from typing import Annotated
 from pydantic import Field
 
 from domus.application.task_material_views import MaterialOutcome
+from domus.application.task_queries import CompletionPoints, TaskPage
 from domus.application.task_queries import TaskDetail as Detail
-from domus.application.task_queries import TaskPage
 from domus.application.task_reviews import DependencyReviewView
 from domus.domain.task_material_values import MaterialBinding
 from domus.domain.task_values import (
@@ -69,6 +69,7 @@ class TaskDetail:
     requirements: tuple[TaskRequirement, ...]
     cycle: TaskCycle | None
     allowed_actions: tuple[str, ...]
+    completion_points: CompletionPoints
     consumer_delivery: str = "unconfirmed"
     materials: tuple[MaterialOutcome, ...] = ()
     dependency_reviews: TaskPage[DependencyReviewView] = TaskPage((), None)
@@ -115,6 +116,7 @@ def detail_response(value: Detail) -> TaskDetail:
         value.requirements,
         value.cycle,
         value.allowed_actions,
+        value.completion_points,
         value.consumer_delivery,
         value.materials,
         value.dependency_reviews,

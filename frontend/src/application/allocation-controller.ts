@@ -8,6 +8,7 @@ export interface AllocationWork {
   readonly occurrenceId: string;
   readonly revision: Revision;
   readonly canComplete: boolean;
+  readonly requiresManual?: boolean;
 }
 export interface AllocationScope {
   readonly key: string;
@@ -63,6 +64,7 @@ export class AllocationController {
     if (previous?.key === scope?.key && previous?.definitionId === scope?.definitionId
         && previous?.work?.occurrenceId === scope?.work?.occurrenceId && previous?.work?.revision === scope?.work?.revision
         && previous?.work?.canComplete === scope?.work?.canComplete
+        && previous?.work?.requiresManual === scope?.work?.requiresManual
         && previous?.canManage === scope?.canManage && previous?.readOnly === scope?.readOnly) return;
     this.owned?.cancel(); this.owned = null; this.request = null;
     this.state = scope === null ? null : {...INITIAL, scope};

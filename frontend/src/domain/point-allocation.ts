@@ -33,6 +33,10 @@ export function displayPoints(minor: number, language: 'en' | 'es', precision: 0
 export type PolicyRevision = Revision | '0';
 export interface PolicySetting {readonly policy: AllocationPolicy | null; readonly revision: Revision;}
 export interface AllocationSettings {readonly household: PolicySetting | null; readonly override: PolicySetting | null;}
+export function requiresManualAllocation(settings: AllocationSettings | null | undefined, fallback: boolean): boolean {
+  return settings == null ? fallback : (settings.override?.policy ?? settings.household?.policy)?.mode === 'manual';
+}
+
 export interface AllocationInput {
   readonly performerIds: readonly string[];
   readonly manualShares?: readonly ManualShare[];

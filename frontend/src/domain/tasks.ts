@@ -187,6 +187,7 @@ export interface TaskCycleSummary {
 }
 export interface TaskDetail extends TaskSummary {
   readonly description: string; readonly priority: TaskPriority; readonly allowedActions: readonly string[];
+  readonly completionPoints?: 'automatic' | 'manual' | 'manager_required';
   readonly cycle: TaskCycleSummary | null; readonly materials: readonly TaskMaterial[];
   readonly materialRecording: 'review_on_completion' | 'separate_recording';
   readonly dependencyReviewRequired: boolean;

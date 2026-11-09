@@ -137,6 +137,11 @@ def test_manual_amounts_require_current_points_authority(api):
     configure = api.client.put(ALLOCATION, json=update, headers=api.headers("manual") | CONTEXT)
     assert configure.status_code == 200, configure.text
     occurrence = record["occurrence_id"]
+    detail_url = TASKS + "/occurrences/" + occurrence
+    managed = api.client.get(detail_url, headers=CONTEXT)
+    assert managed.status_code == 200
+    assert managed.json()["completion_points"] == "manual"
+    assert "complete" in managed.json()["allowed_actions"]
     amounts = [{"member_id": "child", "amount_minor": 125}]
     completion = {
         "expected_revision": record["revision"],
@@ -145,6 +150,17 @@ def test_manual_amounts_require_current_points_authority(api):
     }
     preview = ALLOCATION + "/preview"
     api.user(CHILD)
+    claim = api.client.post(
+        detail_url + "/claim",
+        json={"expected_revision": record["revision"]},
+        headers=api.headers("claim") | CHILD_CONTEXT,
+    )
+    assert claim.status_code == 200, claim.text
+    completion["expected_revision"] = claim.json()["result"]["revision"]
+    restricted = api.client.get(detail_url, headers=CHILD_CONTEXT)
+    assert restricted.status_code == 200
+    assert restricted.json()["completion_points"] == "manager_required"
+    assert "complete" not in restricted.json()["allowed_actions"]
     denied = api.client.put(ALLOCATION, json=update, headers=api.headers("edit") | CHILD_CONTEXT)
     assert denied.status_code == 403
     assert api.client.get(ALLOCATION, headers=CHILD_CONTEXT).status_code == 403

@@ -45,7 +45,7 @@ const actions = ['claim', 'complete', 'approve', 'reject', 'reopen', 'assign', '
   ...TASK_STATES.map(state => 'transition:' + state)];
 export function taskDetail(value: unknown, occurrenceId: string, householdId: string): TaskDetail {
   const item = fields(value, ['work', 'rules', 'task_policy_revision', 'requirements', 'cycle', 'allowed_actions', 'consumer_delivery',
-    'materials', 'dependency_reviews', 'dependency_review_required'], []);
+    'materials', 'dependency_reviews', 'dependency_review_required'], ['completion_points']);
   check(item.consumer_delivery === 'unconfirmed');
   const work = fields(item.work, ['occurrence_id', 'household_id', 'definition_snapshot', 'created_at', 'state', 'revision',
     'assignee_ids', 'prerequisite_ids', 'required_subtask_ids', 'due_at', 'current_cycle_id', 'current_cycle_revision', 'state_reason'], []);
@@ -84,6 +84,7 @@ export function taskDetail(value: unknown, occurrenceId: string, householdId: st
   check(base.currentCycleId === null || current?.cycleId === base.currentCycleId);
   return Object.freeze({...base, description: literal(content.description, 4000, false, true), priority: choice(content.priority, TASK_PRIORITIES),
     allowedActions: Object.freeze(allowedActions), cycle: current, materials: Object.freeze(materials),
+    ...item.completion_points === undefined ? {} : {completionPoints: choice(item.completion_points, ['automatic','manual','manager_required'] as const)},
     materialRecording: choice(rules.material_recording, ['review_on_completion', 'separate_recording']),
     dependencyReviewRequired: boolean(item.dependency_review_required), pendingMaterials, categoryLabel: displayCategory});
 }
