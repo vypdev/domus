@@ -14,11 +14,13 @@ A **Gap** records missing product behavior. Shared tests and aliases do not add
 executions. Check the run on the tested revision before treating a witness as
 executed. Owner acceptance and distribution qualification are separate gates.
 
-The concrete product gaps are the active household category reference, the
-calendar's distinct-occurrence count, and visible calendar attention for
-preserved downstream work. The corresponding retained cases below stay open.
-Independent combined journeys and owner review also remain outstanding. The
-Points and Inventory consumers own their respective cross-domain acceptance.
+The audited baseline lacked the active household category reference, the
+calendar's distinct-occurrence count, and visible attention for preserved
+downstream work. The witnesses below cover the subsequent changes. The
+[category evidence](task-category-qualification.md) tracks the category
+implementation separately. Owner review and the combined ledger journeys
+remain pending. The Points and Inventory consumers own their respective
+cross-domain acceptance.
 
 
 ## Calendar owner
