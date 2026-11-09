@@ -337,3 +337,55 @@ def test_batch_review_binds_excluded_moved_and_concurrently_started_work(tmp_pat
             unit.tasks.occurrence("home", replaceable.occurrence_id).state
             is OccurrenceState.CANCELLED
         )
+
+
+def test_review_rejects_distinct_apia_nominals_with_the_same_resolved_instant(tmp_path):
+    from datetime import datetime
+
+    from test_recurrence_creation import request, setup
+
+    from domus.application.fixed_batch_review import FixedReplacement
+    from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
+    from domus.application.recurrence_review import ReviewAction
+    from domus.application.relative_recurrence import RelativeRecurrencePlanner
+    from domus.domain.errors import Conflict, NotFound
+    from domus.domain.recurrence_rule_text import parse_fixed_pattern
+    from domus.domain.recurrence_time import NominalTime, TimePolicy
+
+    creator, _, store, actor, identifiers = setup(tmp_path)
+    times = creator.planner.times
+    policy = TimePolicy("Pacific/Apia", times.data_identity)
+    missing, existing = (NominalTime(datetime(2011, 12, day)) for day in (30, 31))
+    assert times.resolve(missing, policy).instant_ms == times.resolve(existing, policy).instant_ms
+    fixed = replace(
+        request(timed=True),
+        pattern=parse_fixed_pattern("FREQ=DAILY;COUNT=1", existing),
+        policy=policy,
+    )
+    rule = creator.create_fixed("apia-fixed", fixed).result.decode()["schedule_id"]
+    maintenance = FixedMaintenance(
+        store,
+        MaintenanceScope(store.installation, "home"),
+        creator.planner,
+        creator.clock,
+        identifiers,
+    )
+    assert maintenance.step(rule, NominalTime(datetime(2012, 1, 1))).status == "created"
+    review = RecurrenceReview(
+        store,
+        store.installation,
+        actor,
+        actor.current,
+        creator.clock,
+        identifiers,
+        RelativeRecurrencePlanner(times),
+    )
+    before = store.path.read_bytes()
+    selection = FixedReplacement(
+        rule, 1, parse_fixed_pattern("FREQ=DAILY;COUNT=2", missing), "Review local-date collision"
+    )
+    with pytest.raises(Conflict, match="recurrence_reschedule_collision"):
+        review.preview("collision", selection)
+    with pytest.raises(NotFound):
+        review.original(ReviewAction.PREVIEW, "collision")
+    assert store.path.read_bytes() == before

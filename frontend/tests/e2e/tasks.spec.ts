@@ -323,10 +323,13 @@ for (const mode of ['native', 'standalone'] as const) {
       await review.getByRole('button', {name: t('Apply reviewed change', 'Aplicar cambio revisado'), exact: true}).click();
       await expect(review.getByRole('alert')).toContainText(t('The result is unconfirmed', 'El resultado no está confirmado'));
       await page.reload();
+      await expect(review.getByRole('button', {name: 'Check original schedule request', exact: true}).last()).toBeVisible();
+      if (locale === 'es') await page.getByLabel('Language', {exact: true}).selectOption('es');
+      await expect(page.locator('html')).toHaveAttribute('lang', locale);
       const recovered = page.waitForResponse(item => item.request().method() === 'GET' && item.url().endsWith('/' + originalKey));
-      await review.getByRole('button', {name: 'Check original schedule request', exact: true}).last().click();
+      await review.getByRole('button', {name: t('Check original schedule request', 'Consultar solicitud de programación original'), exact: true}).last().click();
       expect((await recovered).ok()).toBe(true);
-      await expect(review.getByRole('heading', {name: 'Schedule change saved', exact: true})).toBeVisible();
+      await expect(review.getByRole('heading', {name: t('Schedule change saved', 'Cambio de programación guardado'), exact: true})).toBeVisible();
       expect(applies).toBe(1);
       const after = (await (await page.request.get(endpoint)).json()).items;
       expect(after).toEqual(expect.arrayContaining([

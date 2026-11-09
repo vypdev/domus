@@ -70,3 +70,17 @@ def test_actual_noncanonical_storage_is_not_repaired_by_read_or_checkpoint(tmp_p
     with pytest.raises(DatabaseRejected, match="invalid_snapshot_records"):
         SQLiteSnapshots(store, tmp_path / "checkpoint", store.installation, Clock()).create("bad")
     assert store.path.read_bytes() == source
+
+
+def test_exact_canonical_utf8_document_cutoff_is_inclusive():
+    from domus.domain.errors import InvalidInput
+    from domus.domain.storage import JsonDocument
+
+    prefix, suffix = '{"data":"🌿', '"}'
+    remaining = 65_536 - len((prefix + suffix).encode("utf-8"))
+    exact = prefix + "a" * remaining + suffix
+    document = JsonDocument(exact)
+    assert len(document.encoded.encode("utf-8")) == 65_536
+    assert document.encoded == exact and document.decode()["data"] == "🌿" + "a" * remaining
+    with pytest.raises(InvalidInput, match="invalid_document"):
+        JsonDocument(prefix + "a" * (remaining + 1) + suffix)
