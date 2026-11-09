@@ -159,7 +159,7 @@ export class DomusCalendar extends LitElement {
       </form>
       ${view?.status === 'loading' ? html`<p role="status">${this.text('loading')}</p>` : nothing}
       ${view?.status === 'unavailable' ? html`<p role="alert">${this.text('unavailable')}</p>` : nothing}
-      ${page ? html`<p role="status">${this.text('total')} ${page.count}</p>
+      ${page ? html`<p role="status">${this.text('total')} ${page.count}. ${this.text('occurrences')} ${page.occurrenceCount}</p>
         ${page.pending ? html`<p role="status">${this.text('pending')}</p>` : nothing}
         ${page.entries.length === 0 && !page.pending ? html`<p>${this.text('empty')}</p>` : nothing}
         ${this.dates(page.entries)}

@@ -144,7 +144,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(calendarRegion.getByText('No hay entradas que coincidan en este intervalo.')).toBeVisible();
     await calendarRegion.getByLabel('Vista del calendario').selectOption('agenda');
     await calendarRegion.getByRole('button', {name: 'Mostrar calendario'}).click();
-    await expect(calendarRegion.getByText('Entradas que coinciden 0')).toBeVisible();
+    await expect(calendarRegion.getByText('Entradas que coinciden 0. Tareas que coinciden 0')).toBeVisible();
     await expect(calendarRegion.locator('.calendar-grid')).toHaveCount(0);
     const unicodeCategory = '🌿'.repeat(64);
     await calendarRegion.getByLabel('Etiqueta de categoría', {exact:true}).fill(unicodeCategory);
