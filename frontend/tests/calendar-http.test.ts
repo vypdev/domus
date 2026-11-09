@@ -1,5 +1,6 @@
 import {expect, test, vi} from 'vitest';
 import {HttpCalendarServer} from '../src/adapters/calendar-http';
+import {CalendarCategoryUnavailable} from '../src/application/calendar-controller';
 import type {CalendarQuery} from '../src/domain/calendar';
 import type {JournalContext} from '../src/domain/journal';
 
@@ -7,7 +8,7 @@ const context: JournalContext = {installationId: '01234567-89ab-cdef-0123-456789
 const period = {start: '2026-11-01', end: '2026-12-01'};
 const query: CalendarQuery = {...period, kind: '', timing: '', state: '', priority: '', category: '', own: false};
 const planned = {entry_id: 'planned:work', kind: 'planned', timing: 'completion_relative', occurrence_id: 'work',
-  title: '<b>Set clocks</b>', state: 'available', priority: 'normal', categories: ['Home'], member_ids: [],
+  title: '<b>Set clocks</b>', state: 'available', priority: 'normal', categories: ['Legacy tag'], category_id: 'house:1', category_label: 'Home', member_ids: [],
   schedule_id: 'rule', slot_key: 'slot', local_date: '2026-11-01', local_time: null, instant_ms: null, time_zone: null,
   nominal_local: null, resolved_local: null, verification: null, relative_review_required: true};
 const approval = {...planned, entry_id: 'approval:cycle', kind: 'approval', timing: 'manual', member_ids: ['member'],
@@ -15,11 +16,11 @@ const approval = {...planned, entry_id: 'approval:cycle', kind: 'approval', timi
   nominal_local: '2026-11-01T08:00', resolved_local: '2026-11-01T09:00', verification: 'approved', relative_review_required: false};
 const result = {period, time_zone: 'Europe/Madrid', entries: [planned, approval], count: 2, occurrence_count: 1, next_cursor: null, pending: false};
 
-function fixture(deployment: 'native' | 'standalone', body: unknown) {
+function fixture(deployment: 'native' | 'standalone', body: unknown, status = 200) {
   const target = {deployment, applicationBase: deployment === 'native' ? '/api/hassio_ingress/' + 'b'.repeat(43) + '/' : '/',
     origin: 'https://domus.example'};
   const fetch = vi.fn(async (path: string, _init: RequestInit) => {
-    const response = new Response(JSON.stringify(body), {headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
+    const response = new Response(JSON.stringify(body), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
     Object.defineProperty(response, 'url', {value: target.origin + path}); return response;
   });
   return {target, fetch, server: new HttpCalendarServer(target, fetch)};
@@ -29,8 +30,8 @@ test.each(['native','standalone'] as const)('%s calendar uses the protected same
   const f = fixture(mode, result);
   const page = await f.server.read(context, 'member', query, null).result;
   expect(page).toEqual({entries: [
-    {id: 'planned:work', kind: 'planned', title: '<b>Set clocks</b>', day: '2026-11-01', time: null, zone: null, nominal: null, resolved: null, verification: null, relativeReviewRequired: true},
-    {id: 'approval:cycle', kind: 'approval', title: '<b>Set clocks</b>', day: '2026-11-01', time: '09:00:00', zone: 'Europe/Madrid',
+    {id: 'planned:work', kind: 'planned', title: '<b>Set clocks</b>', day: '2026-11-01', categoryLabel: 'Home', time: null, zone: null, nominal: null, resolved: null, verification: null, relativeReviewRequired: true},
+    {id: 'approval:cycle', kind: 'approval', title: '<b>Set clocks</b>', day: '2026-11-01', categoryLabel: 'Home', time: '09:00:00', zone: 'Europe/Madrid',
       nominal: '2026-11-01T08:00', resolved: '2026-11-01T09:00', verification: 'approved', relativeReviewRequired: false}], count: 2, occurrenceCount: 1, cursor: null, pending: false});
   expect(Object.isFrozen(page.entries)).toBe(true);
   const [path, init] = f.fetch.mock.calls[0];
@@ -40,11 +41,11 @@ test.each(['native','standalone'] as const)('%s calendar uses the protected same
 
 test('every filter and opaque cursor is URL-encoded and additional reads require the original range', async () => {
   const f = fixture('standalone', {...result, pending: true, next_cursor: 'opaque/+?'});
-  const filtered: CalendarQuery = {...query, kind: 'approval', timing: 'manual', state: 'completed', priority: 'high', category: 'Hogar & más', own: true};
+  const filtered: CalendarQuery = {...query, kind: 'approval', timing: 'manual', state: 'completed', priority: 'high', category: 'house:1', own: true};
   expect(await f.server.read(context, 'member-1', filtered, 'source/+?').result).toMatchObject({cursor: 'opaque/+?', pending: true});
   const [path] = f.fetch.mock.calls[0];
   expect(Object.fromEntries(new URL(path, f.target.origin).searchParams)).toEqual({...period, limit: '25', kind: 'approval', timing: 'manual',
-    state: 'completed', priority: 'high', category: 'Hogar & más', member_id: 'member-1', cursor: 'source/+?'});
+    state: 'completed', priority: 'high', category: 'house:1', member_id: 'member-1', cursor: 'source/+?'});
   await expect(f.server.read(context, 'member', {...query, end: query.start}, null).result).rejects.toThrow();
   expect(f.fetch).toHaveBeenCalledOnce();
 });
@@ -54,7 +55,8 @@ test('malformed calendar pages cannot enter the component', async () => {
     {...result, entries: null}, {...result, entries: Array(26).fill(planned)}, {...result, count: 1},
     {...result, occurrence_count: 0}, {...result, occurrence_count: 3},
     {...result, entries: [planned, planned]}, ...[
-      {entry_id: 'approval:work'}, {categories: null}, {categories: Array(17).fill('x')}, {member_ids: null},
+      {entry_id: 'approval:work'}, {category_id: null}, {category_id: 'invalid/id'}, {category_label: null}, {category_label: 'x'.repeat(81)},
+      {categories: null}, {categories: Array(17).fill('x')}, {categories: ['x'.repeat(65)]}, {member_ids: null},
       {member_ids: Array(101).fill('member')}, {local_date: '2026-11-31'}, {verification: 'other'}, {relative_review_required: 'true'},
     ].map(delta => ({...result, entries: [{...planned, ...delta}]}))]) {
     await expect(fixture('standalone', body).server.read(context, 'member', query, null).result).rejects.toThrow();
@@ -66,4 +68,30 @@ test('an empty range has zero entries and zero distinct tasks', async () => {
   const resultPage = await fixture('standalone', empty).server.read(context, 'member', query, null).result;
   expect(resultPage).toEqual({entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false});
   await expect(fixture('standalone', {...empty, occurrence_count: 1}).server.read(context, 'member', query, null).result).rejects.toThrow();
+});
+
+test('unclassified and older calendar entries never use tags as a category label', async () => {
+  const older = {...planned, category_id: undefined, category_label: undefined};
+  const unclassified = {...planned, category_id: null, category_label: null};
+  for (const entry of [unclassified, older]) {
+    const f = fixture('standalone', {...result, entries:[entry]});
+    expect((await f.server.read(context, 'member', query, null).result).entries[0].categoryLabel).toBeNull();
+  }
+});
+
+test('only an authenticated-shape 422 for the selected category reports an unavailable category', async () => {
+  const blocked = {state: 'blocked', code: 'task_category_unavailable', message: 'Choose a current category.',
+    action_required: 'review', correlation_id: 'cor_calendar'};
+  const filtered = {...query, category: 'house:1'};
+  await expect(fixture('standalone', blocked, 422).server.read(context, 'member', filtered, null).result)
+    .rejects.toBeInstanceOf(CalendarCategoryUnavailable);
+  for (const [body, status, selected] of [
+    [{...blocked, code: 'invalid_calendar_range'}, 422, filtered],
+    [blocked, 422, query],
+    [blocked, 403, filtered],
+    [{code: blocked.code}, 422, filtered],
+  ] as const) {
+    await expect(fixture('standalone', body, status).server.read(context, 'member', selected, null).result)
+      .rejects.not.toBeInstanceOf(CalendarCategoryUnavailable);
+  }
 });

@@ -5,7 +5,9 @@ import io
 import json
 import os
 import shutil
+import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
 
 import domus
@@ -109,19 +111,26 @@ def main():
     assert phase in ("initialize", "later", "refuse", "restored", "rollback")
     assert mode in ("native", "standalone") and delivery in ("pending", "acknowledged")
     assert os.getuid() == os.getgid() == 65532
-    assert SCHEMA_VERSION == (14 if phase in ("later", "restored") else 9)
+    assert SCHEMA_VERSION == (15 if phase in ("later", "restored") else 9)
     if phase == "refuse":
         saved = json.loads(RECORD.read_text())
         selected = ROOT / "generations" / saved["selected_generation"] / "domus.sqlite3"
         digest = hashlib.sha256(selected.read_bytes()).hexdigest()
+        with closing(
+            sqlite3.connect(selected.as_uri() + "?mode=ro&immutable=1", uri=True)
+        ) as connection:
+            version = connection.execute("PRAGMA user_version").fetchone()[0]
+        assert version > SCHEMA_VERSION
         try:
             runtime_at(mode, ROOT)
         except DatabaseRejected as error:
             assert error.code == "unsupported_schema"
         else:
-            raise AssertionError("Schema 9 runtime accepted a schema 14 generation")
+            raise AssertionError(
+                f"Schema {SCHEMA_VERSION} runtime accepted a schema {version} generation"
+            )
         assert hashlib.sha256(selected.read_bytes()).hexdigest() == digest
-        print(json.dumps({"refused_schema": 14, "database_sha256": digest}))
+        print(json.dumps({"refused_schema": version, "database_sha256": digest}))
         return
     if phase == "rollback":
         before = Path("/data/snapshots/before")

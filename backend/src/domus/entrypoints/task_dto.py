@@ -89,9 +89,12 @@ class TaskTextBody(StrictModel):
     title: str = Field(min_length=1, max_length=160)
     description: str = Field(default="", max_length=4000)
     priority: Priority = Field(default=Priority.NORMAL, strict=False)
+    category_id: Identifier | None = None
 
     def content(self) -> TaskContent:
-        return TaskContent(self.title, self.description, self.priority)
+        return TaskContent(
+            self.title, self.description, self.priority, category_id=self.category_id
+        )
 
 
 class ContentBody(TaskTextBody):
@@ -101,7 +104,9 @@ class ContentBody(TaskTextBody):
     materials: list[MaterialSelectionBody] | None = Field(default=None, max_length=32)
 
     def content(self) -> TaskContent:
-        return TaskContent(self.title, self.description, self.priority, tuple(self.tags))
+        return TaskContent(
+            self.title, self.description, self.priority, tuple(self.tags), self.category_id
+        )
 
     def selections(self) -> tuple[MaterialSelection, ...] | None:
         return None if self.materials is None else tuple(value.domain() for value in self.materials)

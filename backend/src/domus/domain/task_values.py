@@ -135,6 +135,7 @@ class TaskContent:
     description: str = ""
     priority: Priority = Priority.NORMAL
     tags: tuple[str, ...] = ()
+    category_id: str | None = None
 
     def __post_init__(self) -> None:
         validate_task_text(self.title, 160, required=True)
@@ -147,6 +148,8 @@ class TaskContent:
             validate_task_text(tag, 64, required=True)
         if len(set(self.tags)) != len(self.tags):
             raise InvalidInput("invalid_task_tags")
+        if self.category_id is not None:
+            validate_identifier(self.category_id)
 
 
 @dataclass(frozen=True, slots=True)

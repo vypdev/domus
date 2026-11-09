@@ -172,7 +172,14 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
                             unit.calendar_preferences.get(row[0], member.member_id)
                 if version >= 5:
                     verify_task_records(
-                        connection, row[0], members, policy, record_version=1 if version == 5 else 2
+                        connection,
+                        row[0],
+                        members,
+                        policy,
+                        record_version=1 if version == 5 else 2,
+                        category_ids=unit.task_categories.verified_ids(row[0])
+                        if version >= 15
+                        else frozenset(),
                     )
         if version >= 3:
             for row in connection.execute("SELECT * FROM recovery_requests"):

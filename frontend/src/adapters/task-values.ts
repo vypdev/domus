@@ -1,7 +1,7 @@
 /** Project the task wire contract into immutable UI facts, preserving exact integers. */
 import {nextRevision} from '../domain/administration';
-import {taskCommand, taskIdentifier, taskQuantity, taskText, TASK_PRIORITIES, TASK_STATES} from '../domain/tasks';
-import type {TaskCommand, TaskCycleSummary, TaskDetail, TaskPage, TaskReceipt, TaskSummary} from '../domain/tasks';
+import {categoryLabel, isCategoryCommand, taskCommand, taskIdentifier, taskQuantity, taskText, TASK_PRIORITIES, TASK_STATES} from '../domain/tasks';
+import type {TaskCategoryCatalog, TaskCommand, TaskCycleSummary, TaskDetail, TaskPage, TaskReceipt, TaskSummary} from '../domain/tasks';
 import type {TaskOriginal, TaskRequest} from '../application/task-ports';
 import {boolean, check, choice, fields, identifier, invalid, responseInteger, responseRevision, text} from './json-values';
 
@@ -50,9 +50,12 @@ export function taskDetail(value: unknown, occurrenceId: string, householdId: st
   const work = fields(item.work, ['occurrence_id', 'household_id', 'definition_snapshot', 'created_at', 'state', 'revision',
     'assignee_ids', 'prerequisite_ids', 'required_subtask_ids', 'due_at', 'current_cycle_id', 'current_cycle_revision', 'state_reason'], []);
   check(identifier(work.occurrence_id) === occurrenceId && identifier(work.household_id) === householdId);
-  const definition = fields(work.definition_snapshot, ['definition_id', 'household_id', 'content', 'created_at', 'overrides', 'state', 'revision', 'materials'], []);
+  const definition = fields(work.definition_snapshot, ['definition_id', 'household_id', 'content', 'created_at', 'overrides', 'state', 'revision', 'materials'], ['category_label']);
   check(identifier(definition.household_id) === householdId);
-  const content = fields(definition.content, ['title', 'description', 'priority', 'tags'], []);
+  const content = fields(definition.content, ['title', 'description', 'priority', 'tags'], ['category_id']);
+  const categoryId = nullableId(content.category_id ?? null), capturedLabel = definition.category_label ?? null;
+  check((categoryId === null) === (capturedLabel === null));
+  const displayCategory = capturedLabel === null ? null : literal(capturedLabel, 80);
   const rules = fields(item.rules, ['claim_allowed', 'eligible_roles', 'verification', 'adult_performer_may_approve',
     'task_scoped_material_consumption', 'material_recording', 'point_value_minor', 'dependency_gate'], []);
   const base = summary({occurrence_id: work.occurrence_id, definition_id: definition.definition_id, definition_revision: definition.revision,
@@ -82,22 +85,50 @@ export function taskDetail(value: unknown, occurrenceId: string, householdId: st
   return Object.freeze({...base, description: literal(content.description, 4000, false, true), priority: choice(content.priority, TASK_PRIORITIES),
     allowedActions: Object.freeze(allowedActions), cycle: current, materials: Object.freeze(materials),
     materialRecording: choice(rules.material_recording, ['review_on_completion', 'separate_recording']),
-    dependencyReviewRequired: boolean(item.dependency_review_required), pendingMaterials});
+    dependencyReviewRequired: boolean(item.dependency_review_required), pendingMaterials, categoryLabel: displayCategory});
+}
+function category(value: unknown) {
+  const row = fields(value, ['category_id', 'household_id', 'label', 'revision', 'archived'], []);
+  const label = literal(row.label, 80);
+  check(label === categoryLabel(label));
+  return Object.freeze({id: identifier(row.category_id), householdId: identifier(row.household_id),
+    label, revision: responseRevision(row.revision), archived: boolean(row.archived)});
+}
+export function taskCategoryCatalog(value: unknown, householdId: string): TaskCategoryCatalog {
+  const item = fields(value, ['categories', 'can_manage'], []);
+  check(Array.isArray(item.categories) && item.categories.length <= 100);
+  const categories = item.categories.map(raw => {
+    const {householdId: home, archived, ...selected} = category(raw);
+    check(!archived && home === householdId); return Object.freeze(selected);
+  });
+  check(new Set(categories.map(item => item.id)).size === categories.length);
+  return Object.freeze({categories: Object.freeze(categories), canManage: boolean(item.can_manage)});
 }
 export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal, lookup: boolean): TaskReceipt {
+  const command = request.command, categoryCommand = isCategoryCommand(command);
   const item = fields(value, ['state', 'archived_by', 'operation_id', 'created_at', 'result', 'message', 'action_required',
-    ...lookup ? ['action', 'command_key', 'delivery'] : []], []);
+    ...lookup ? ['action', 'command_key', ...categoryCommand ? [] : ['delivery']] : []], []);
   text(item.message, 2048); text(item.action_required, 4096); taskTimestamp(item.created_at);
   const stage = choice(item.state, ['committed', 'historical']), archivedBy = nullableId(item.archived_by), operationId = identifier(item.operation_id);
-  const command = request.command;
   const schedule = command.action === 'task.create' ? command.payload.schedule : undefined;
   check(stage !== 'historical' || archivedBy !== null);
   if (lookup) {
     const action = schedule === undefined ? command.action : 'recurrence.' + schedule.draft.kind + '.create';
     check(item.action === action && item.command_key === request.key);
     const known = (request as TaskOriginal).operationId; check(known === null || known === operationId);
-    const delivery = choice(item.delivery, ['pending', 'delivered', 'suppressed']);
-    check(stage === 'historical' ? delivery === 'suppressed' : delivery !== 'suppressed');
+    if (!categoryCommand) {
+      const delivery = choice(item.delivery, ['pending', 'delivered', 'suppressed']);
+      check(stage === 'historical' ? delivery === 'suppressed' : delivery !== 'suppressed');
+    }
+  }
+  if (categoryCommand) {
+    const selected = category(item.result);
+    check(selected.revision === (command.action === 'task.category.create' ? '1' : nextRevision(command.payload.expected_revision)));
+    check(command.action === 'task.category.create' || command.categoryId === selected.id);
+    check(selected.archived === (command.action === 'task.category.archive'));
+    if (command.action !== 'task.category.archive') check(selected.label === categoryLabel(command.payload.label));
+    return Object.freeze({kind: 'receipt', stage, action: command.action, operationId,
+      occurrenceId: null, revision: selected.revision, state: selected.archived ? 'archived' : 'active', cycle: null, archivedBy});
   }
   if (schedule !== undefined) {
     const result = fields(item.result, ['schedule_id', 'definition_id', 'revision', 'pattern_revision',
@@ -135,10 +166,10 @@ export function taskCommandBody(value: TaskCommand): string {
     return '{"expected_revision":' + expected_revision + ',"performed_at":' + performed_at + ',' + JSON.stringify(rest).slice(1);
   }
   if (command.action === 'task.create' && command.payload.schedule !== undefined) {
-    const {title, description, priority, schedule} = command.payload;
+    const {title, description, priority, category_id, schedule} = command.payload;
     const {kind: _, ...draft} = schedule.draft;
     const {revision, ...policy} = schedule.policy;
-    const fields = JSON.stringify({task: {title, description, priority}, ...draft, policy});
+    const fields = JSON.stringify({task: {title, description, priority, category_id}, ...draft, policy});
     return fields.slice(0, -2) + ',"revision":' + revision + '}}';
   }
   const {expected_revision, ...rest} = command.payload;

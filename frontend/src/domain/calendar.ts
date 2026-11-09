@@ -32,6 +32,7 @@ export interface CalendarEntry {
   readonly resolved: string | null;
   readonly verification: string | null;
   readonly relativeReviewRequired: boolean;
+  readonly categoryLabel?: string | null;
 }
 export interface CalendarPage {
   readonly entries: readonly CalendarEntry[];
@@ -78,7 +79,7 @@ export function calendarQuery(value: unknown): value is CalendarQuery {
     && (entry.timing === '' || CALENDAR_TIMINGS.includes(entry.timing))
     && (entry.state === '' || TASK_STATES.includes(entry.state))
     && (entry.priority === '' || TASK_PRIORITIES.includes(entry.priority))
-    && typeof entry.category === 'string' && Array.from(entry.category).length <= 64
+    && typeof entry.category === 'string' && /^(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,127})?$/u.test(entry.category)
     && typeof entry.own === 'boolean';
 }
 

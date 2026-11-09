@@ -1,6 +1,7 @@
 /** The calendar retires private results whenever its verified scope changes. */
 import type {CalendarPage, CalendarQuery} from '../domain/calendar';
 import type {JournalContext} from '../domain/journal';
+import {EntryReadError} from './ports';
 import type {EntryRead} from './ports';
 
 export interface CalendarScope {
@@ -9,11 +10,15 @@ export interface CalendarScope {
   readonly memberId: string;
 }
 export interface CalendarView {
-  readonly status: 'idle' | 'loading' | 'ready' | 'unavailable';
+  readonly status: 'idle' | 'loading' | 'ready' | 'unavailable' | 'category_unavailable';
   readonly page: CalendarPage | null;
 }
 export interface CalendarServer {
   read(context: JournalContext, memberId: string, query: CalendarQuery, cursor: string | null): EntryRead<CalendarPage>;
+}
+
+export class CalendarCategoryUnavailable extends EntryReadError {
+  constructor() {super('invalid_response');}
 }
 
 export class CalendarController {
@@ -54,8 +59,12 @@ export class CalendarController {
       const entries = previous === null ? result.entries :
         [...new Map([...previous.entries, ...result.entries].map(item => [item.id, item])).values()];
       this.set({status: 'ready', page: {...result, entries}});
-    } catch {
-      if (this.pending === pending) this.set({status: 'unavailable', page: previous});
+    } catch (error) {
+      if (this.pending === pending) {
+        this.set(error instanceof CalendarCategoryUnavailable
+          ? {status: 'category_unavailable', page: null}
+          : {status: 'unavailable', page: previous});
+      }
     } finally {
       if (this.pending === pending) this.pending = null;
     }

@@ -258,3 +258,44 @@ test('Next page replaces one bounded page and Refresh tasks returns to the first
   await f.controller.refresh(); expect(f.controller.view.page?.items.map(item => item.occurrenceId)).toEqual(['work-first']);
   expect(f.server.list.mock.calls.at(-1)).toEqual([context, null]); expect(f.identity.session).toHaveBeenCalledTimes(3);
 });
+
+test('category writes share the original journal and refresh only the still-current household', async () => {
+  const f = fixture(), category = {id:'garden', label:'Garden', revision};
+  const access = {householdId:'home', memberId:'member-1', canCreate:true, canReviewSchedule:true,
+    categoryCatalog:{canManage:true, categories:[category]}};
+  const categoryReceipt = {...saved, action:'task.category.create' as const, occurrenceId:null, state:'active' as const};
+  f.server.access.mockImplementation(() => read(access));
+  await f.controller.refresh();
+  await f.controller.create('Draft', '', 'normal', undefined, 'foreign');
+  expect(f.controller.view.notice).toBe('category_unavailable');
+  expect(f.server.send).not.toHaveBeenCalled();
+  await f.controller.renameCategory('garden', revisionValue('2'), 'Kitchen');
+  expect(f.controller.view.notice).toBe('conflict');
+  await f.controller.select('work-1');
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.createCategory('Garden');
+  expect(f.controller.view.records?.[0].stage).toBe('uncertain');
+  f.server.original.mockReturnValueOnce(read(categoryReceipt));
+  await f.controller.recover('key-1');
+  expect(f.controller.view.outcome).toEqual(categoryReceipt);
+  expect(f.server.send).toHaveBeenCalledTimes(1);
+  f.server.send.mockResolvedValueOnce({...categoryReceipt, action:'task.category.rename'});
+  await f.controller.renameCategory('garden', revision, 'Kitchen');
+  expect(f.controller.view.access?.categoryCatalog?.canManage).toBe(true);
+  await f.controller.create('Classified', '', 'normal', undefined, 'garden');
+  expect(f.server.send.mock.calls.at(-1)?.[0].command.payload).toMatchObject({category_id:'garden'});
+  f.server.access.mockReturnValueOnce(read(access)).mockReturnValueOnce(read({...access, memberId:'other'}));
+  f.server.send.mockResolvedValueOnce({...categoryReceipt, action:'task.category.archive', state:'archived'});
+  await f.controller.archiveCategory('garden', revision);
+  expect(f.controller.view.notice).toBe('context_changed');
+  expect(f.controller.view.records).toBeNull();
+  expect(f.controller.view.outcome).toBeNull();
+});
+
+test('a task reader with no current category-management permission cannot write a category', async () => {
+  const f = fixture();
+  await f.controller.refresh();
+  await f.controller.createCategory('Garden');
+  expect(f.controller.view.notice).toBe('action_not_allowed');
+  expect(f.server.send).not.toHaveBeenCalled();
+});

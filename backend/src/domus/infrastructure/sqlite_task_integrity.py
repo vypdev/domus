@@ -29,6 +29,7 @@ def verify_task_records(
     identity_policy: HouseholdPolicy | None,
     *,
     record_version: int = 2,
+    category_ids: frozenset[str] = frozenset(),
 ) -> None:
     repository = SQLiteTasks(connection, record_version=record_version)
     policy = repository.policy(household_id)
@@ -44,6 +45,12 @@ def verify_task_records(
         lambda after: repository.cycles(household_id, limit=101, after=after),
         lambda value: value.cycle_id,
     )
+    for item in tuple(definitions.values()) + tuple(
+        work.definition_snapshot for work in occurrences.values()
+    ):
+        reference = item.content.category_id
+        if reference is not None and reference not in category_ids:
+            raise StorageFailure("invalid_task_category_record")
     if policy is None:
         if definitions or occurrences or cycles:
             raise StorageFailure("invalid_task_references")

@@ -3,8 +3,9 @@ import {live} from 'lit/directives/live.js';
 import type {PropertyValues} from 'lit';
 import type {TaskView} from '../application/task-controller';
 import type {TaskRecord} from '../application/task-ports';
-import {hasTaskText, taskQuantity, taskScheduleDraft, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
-import type {TaskMaterialUsage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
+import {categoryLabel, hasTaskText, taskQuantity, taskScheduleDraft, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
+import type {Revision} from '../domain/administration';
+import type {TaskCategory, TaskMaterialUsage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
 import {language} from './messages';
 import type {Language} from './messages';
 import {taskInstant, taskMessage} from './task-messages';
@@ -12,11 +13,19 @@ import type {TaskMessageKey} from './task-messages';
 import {styles} from './styles';
 export type TaskIntent = Readonly<{type: 'refresh' | 'more' | 'claim'}>
   | Readonly<{type: 'select'; occurrenceId: string}>
-  | Readonly<{type: 'create'; title: string; description: string; priority: TaskPriority; schedule?: TaskScheduleDraft}>
+  | Readonly<{type: 'create'; title: string; description: string; priority: TaskPriority; categoryId?: string; schedule?: TaskScheduleDraft}>
+  | Readonly<{type: 'createCategory'; label: string}>
+  | Readonly<{type: 'renameCategory'; categoryId: string; revision: Revision; label: string}>
+  | Readonly<{type: 'archiveCategory'; categoryId: string; revision: Revision}>
   | Readonly<{type: 'complete'; materialUsages: readonly TaskMaterialUsage[] | null}>
   | Readonly<{type: 'verify'; decision: 'approved' | 'rejected'; reason: string}>
   | Readonly<{type: 'reopen'; reason: string}>
   | Readonly<{type: 'recover' | 'dismiss'; key: string}>;
+const EMPTY_SCHEDULE_FIELDS = Object.freeze({date: '', time: '', rule: '', interval: '30', visibility: 'at_completion'});
+type ScheduleFields = {[Field in keyof typeof EMPTY_SCHEDULE_FIELDS]: string};
+function validCategoryLabel(value: string): boolean {
+  try {categoryLabel(value); return true;} catch {return false;}
+}
 function quantityInput(value: string, precision: number): string | null {
   const trimmed = value.trim();
   if (trimmed.length > 64 || !/^[0-9]+(?:[.,][0-9]+)?$/u.test(trimmed)) return null;
@@ -28,8 +37,9 @@ function quantityInput(value: string, precision: number): string | null {
 /** Render only verified task facts; emitted intents never select an actor or grant a permission. */
 export class DomusTasks extends LitElement {
   static properties = {view: {attribute: false}, retired: {attribute: false}, language: {attribute: false}, titleDraft: {state: true}, descriptionDraft: {state: true},
+    categoryDraft: {state: true}, categoryName: {state: true}, categoryEdit: {state: true}, manageOpen: {state: true},
     titleRequired: {state: true}, priorityDraft: {state: true}, reasonDraft: {state: true}, quantities: {state: true}, quantityError: {state: true}, createOpen: {state: true},
-    scheduleKind: {state: true}, scheduleError: {state: true}};
+    scheduleKind: {state: true}, scheduleError: {state: true}, scheduleInput: {state: true}};
   static styles = [styles, css`:host {min-height:0;background:transparent;overflow-wrap:anywhere}.task-header {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
     .task-header h2 {font-size:1.6rem;margin:0} .task-layout {display:grid;gap:20px}.task-layout .card {margin:0}
     .task-layout>div {display:grid;gap:20px;align-content:start} .new-task summary h3 {display:inline} .new-task form {margin-top:20px}
@@ -42,6 +52,12 @@ export class DomusTasks extends LitElement {
   declare retired: boolean;
   declare language: Language;
   private declare titleDraft: string;
+  private declare categoryDraft: string;
+  private declare categoryName: string;
+  private declare categoryEdit: TaskCategory | null;
+  private declare manageOpen: boolean;
+  private declare scheduleInput: ScheduleFields;
+  private submittedCategory: Readonly<{action: 'task.category.create' | 'task.category.rename' | 'task.category.archive'; label: string}> | null = null;
   private declare titleRequired: boolean;
   private declare createOpen: boolean;
   private declare descriptionDraft: string;
@@ -54,21 +70,27 @@ export class DomusTasks extends LitElement {
   private draftScope: string | null = null;
   private detailKey: string | null = null;
   private submittedDraft: string | null = null;
-  private lastForm: 'create' | 'review' = 'create';
+  private lastForm: 'create' | 'review' | 'category' = 'create';
   private focusDetail = false;
   constructor() {super(); this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = '';
-    this.priorityDraft = 'normal'; this.scheduleKind = 'manual'; this.scheduleError = false;
-    this.createOpen = false; this.reasonDraft = ''; this.quantities = {}; this.quantityError = null;}
+    this.priorityDraft = 'normal'; this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS;
+    this.createOpen = false; this.reasonDraft = ''; this.quantities = {}; this.quantityError = null;
+    this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.manageOpen = false;}
   private text(key: TaskMessageKey): string {return taskMessage(key, this.language);}
   private get blocked(): boolean {return this.view?.busy !== false || this.view.readOnly || this.view.records === null
     || this.view.records.some(record => record.stage === 'prepared' || record.stage === 'uncertain');}
-  private reset(): void {this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.reasonDraft = '';
-    this.scheduleKind = 'manual'; this.scheduleError = false; this.quantities = {}; this.quantityError = null;
-    this.detailKey = null; this.focusDetail = false; this.submittedDraft = null; this.draftScope = null;}
+  private get staleCategory(): boolean {
+    return this.categoryDraft !== '' && !this.view?.access?.categoryCatalog?.categories.some(item => item.id === this.categoryDraft);
+  }
+  private reset(): void {
+    this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.submittedCategory = null; this.manageOpen = false;
+    this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.reasonDraft = '';
+    this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS; this.quantities = {}; this.quantityError = null; this.detailKey = null; this.focusDetail = false; this.submittedDraft = null; this.draftScope = null;}
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('retired') && this.retired) this.reset();
     if (!changed.has('view')) return;
-    if (this.view?.notice === 'invalid_input' && this.lastForm === 'create') this.createOpen = true;
+    if (this.view?.notice === 'category_unavailable' || this.view?.notice === 'invalid_input' && this.lastForm === 'create')
+      this.createOpen = true;
     const next = this.view?.scopeKey;
     if (this.view?.phase === 'closed' || this.view?.notice === 'authentication_required' || this.view?.notice === 'forbidden'
       || next != null && this.draftScope !== null && next !== this.draftScope) this.reset();
@@ -76,23 +98,30 @@ export class DomusTasks extends LitElement {
     const detail = this.view?.detail, key = detail ? JSON.stringify([next, detail.occurrenceId, detail.revision]) : null;
     if (key !== null && key !== this.detailKey) {this.focusDetail = this.view?.phase === 'ready'; this.detailKey = key; this.reasonDraft = ''; this.quantityError = null;
       this.quantities = Object.fromEntries(detail!.materials.map(item => [item.lineId, item.plannedQuantity]));}
-    if (this.view?.outcome?.kind === 'receipt' && this.view.outcome.stage === 'committed' && this.view.outcome.action === 'task.create'
-        && this.submittedDraft === JSON.stringify([this.titleDraft, this.descriptionDraft, this.priorityDraft])) {
-      this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.submittedDraft = null;
-      this.scheduleKind = 'manual'; this.scheduleError = false;
+    const outcome = this.view?.outcome;
+    if (outcome?.kind === 'receipt' && outcome.stage === 'committed' && outcome.action === this.submittedCategory?.action
+        && this.categoryName === this.submittedCategory.label) {
+      this.categoryName = ''; this.categoryEdit = null; this.submittedCategory = null;
+    }
+    if (outcome?.kind === 'receipt' && outcome.stage === 'committed' && outcome.action === 'task.create'
+        && this.submittedDraft === JSON.stringify([this.titleDraft, this.descriptionDraft, this.priorityDraft, this.categoryDraft])) {
+      this.categoryDraft = ''; this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.submittedDraft = null;
+      this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS;
     }
   }
   protected updated(changed: PropertyValues): void {
     this.lang = language(this.language, 'en');
     if (this.focusDetail) {this.focusDetail = false; this.shadowRoot?.querySelector<HTMLElement>('#selected-task-title')?.focus();}
     if (changed.has('view') && this.view?.notice === 'invalid_input')
-      this.shadowRoot?.querySelector<HTMLElement>(this.lastForm === 'create' ? '#task-title' : '#task-reason')?.focus();
+      this.shadowRoot?.querySelector<HTMLElement>(this.lastForm === 'create' ? '#task-title' : this.lastForm === 'category' ? '#task-category-label' : '#task-reason')?.focus();
+    if (changed.has('view') && this.view?.notice === 'category_unavailable')
+      this.renderRoot.querySelector<HTMLSelectElement>('#task-category')?.focus();
     if (changed.has('quantityError') && this.quantityError) this.shadowRoot?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.reset();}
   private intent(detail: TaskIntent): void {
     if (this.retired || this.view?.phase !== 'ready' || this.view.busy) return;
-    if (['create', 'claim', 'complete', 'verify', 'reopen'].includes(detail.type) && this.blocked) return;
+    if (['create', 'createCategory', 'renameCategory', 'archiveCategory', 'claim', 'complete', 'verify', 'reopen'].includes(detail.type) && this.blocked) return;
     this.dispatchEvent(new CustomEvent<TaskIntent>('domus-task-intent', {detail: Object.freeze(detail), bubbles: true, composed: true}));
   }
   private scheduleDraft(form: HTMLFormElement): TaskScheduleDraft | undefined {
@@ -102,6 +131,9 @@ export class DomusTasks extends LitElement {
     return taskScheduleDraft(this.scheduleKind === 'fixed'
       ? {kind: 'fixed', start, rrule: data.get('schedule-rule')}
       : {kind: 'relative', start, interval_days: Number(data.get('schedule-interval')), visibility: data.get('schedule-visibility')});
+  }
+  private rememberSchedule(field: keyof ScheduleFields, event: Event): void {
+    this.scheduleInput = {...this.scheduleInput, [field]: (event.target as HTMLInputElement | HTMLSelectElement).value};
   }
   private scheduleFields() {
     const policy = this.view!.access!.schedulePolicy;
@@ -114,15 +146,20 @@ export class DomusTasks extends LitElement {
       ${this.scheduleKind === 'manual' ? nothing : html`<fieldset ?disabled=${this.view!.busy}>
         <legend>${this.text('scheduleDetails')}</legend>
         <p>${this.text('scheduleZone')} ${policy.zone}</p>
-        <label>${this.text('scheduleDate')} <input type="date" min="1970-01-01" max="9999-12-31" name="schedule-date" required></label>
-        <label>${this.text('scheduleTime')} <input type="time" name="schedule-time"></label>
+        <label>${this.text('scheduleDate')} <input type="date" min="1970-01-01" max="9999-12-31" name="schedule-date" .value=${live(this.scheduleInput.date)}
+          @input=${(event: Event) => this.rememberSchedule('date', event)} required></label>
+        <label>${this.text('scheduleTime')} <input type="time" name="schedule-time" .value=${live(this.scheduleInput.time)}
+          @input=${(event: Event) => this.rememberSchedule('time', event)}></label>
         ${this.scheduleKind === 'fixed' ? html`
-          <label>${this.text('scheduleRule')} <input type="text" name="schedule-rule" placeholder="FREQ=WEEKLY" maxlength="2048" required></label>` : html`
-          <label>${this.text('scheduleInterval')} <input type="number" name="schedule-interval" min="1" max="36600" value="30" required></label>
+          <label>${this.text('scheduleRule')} <input type="text" name="schedule-rule" .value=${live(this.scheduleInput.rule)}
+          @input=${(event: Event) => this.rememberSchedule('rule', event)} placeholder="FREQ=WEEKLY" maxlength="2048" required></label>` : html`
+          <label>${this.text('scheduleInterval')} <input type="number" name="schedule-interval" .value=${live(this.scheduleInput.interval)}
+          @input=${(event: Event) => this.rememberSchedule('interval', event)} min="1" max="36600" required></label>
           <label for="task-schedule-visibility">${this.text('scheduleVisibility')}</label>
-          <select id="task-schedule-visibility" name="schedule-visibility">
-            <option value="at_completion">${this.text('scheduleCompletion')}</option>
-            <option value="at_verification">${this.text('scheduleApproval')}</option>
+          <select id="task-schedule-visibility" name="schedule-visibility"
+            @change=${(event: Event) => this.rememberSchedule('visibility', event)}>
+            <option value="at_completion" .selected=${this.scheduleInput.visibility === 'at_completion'}>${this.text('scheduleCompletion')}</option>
+            <option value="at_verification" .selected=${this.scheduleInput.visibility === 'at_verification'}>${this.text('scheduleApproval')}</option>
           </select>`}
         ${this.scheduleError ? html`<p role="alert">${this.text('scheduleInvalid')}</p>` : nothing}
       </fieldset>`}`;
@@ -136,16 +173,16 @@ export class DomusTasks extends LitElement {
       @toggle=${(event: Event) => {const target = event.target as HTMLDetailsElement; if (target.isConnected) this.createOpen = target.open;}}><summary><h3 id="new-task-title">${this.text('newTask')}</h3></summary>
       <form novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.lastForm = 'create';
         this.titleRequired = !hasTaskText(this.titleDraft);
-        if (this.titleRequired || titleTooLong || descriptionInvalid) {
-          this.shadowRoot?.querySelector<HTMLElement>(this.titleRequired || titleTooLong ? '#task-title' : '#task-description')?.focus(); return;
+        if (this.titleRequired || titleTooLong || descriptionInvalid || this.staleCategory) {
+          this.shadowRoot?.querySelector<HTMLElement>(this.titleRequired || titleTooLong ? '#task-title' : descriptionInvalid ? '#task-description' : '#task-category')?.focus(); return;
         }
         let schedule: TaskScheduleDraft | undefined;
         try {schedule = this.scheduleDraft(event.currentTarget as HTMLFormElement);}
         catch {this.scheduleError = true; return;}
         this.scheduleError = false;
-        this.submittedDraft = JSON.stringify([this.titleDraft, this.descriptionDraft, this.priorityDraft]);
+        this.submittedDraft = JSON.stringify([this.titleDraft, this.descriptionDraft, this.priorityDraft, this.categoryDraft]);
         this.intent({type: 'create', title: this.titleDraft, description: this.descriptionDraft, priority: this.priorityDraft,
-          ...schedule === undefined ? {} : {schedule}});}}>
+          ...this.categoryDraft ? {categoryId: this.categoryDraft} : {}, ...schedule === undefined ? {} : {schedule}});}}>
         <div class="field"><label for="task-title">${this.text('taskTitle')}</label><input id="task-title" type="text" required maxlength=${TASK_TEXT_LIMITS.title * 2} aria-invalid=${titleMissing || titleTooLong ? 'true' : 'false'} autocomplete="off"
           .value=${live(this.titleDraft)} ?disabled=${this.view!.busy} aria-describedby="task-title-help"
           @input=${(event: InputEvent) => {this.titleDraft = (event.target as HTMLInputElement).value;}}><small id="task-title-help" aria-live="polite">${titleMissing ? this.text('titleRequired') : titleTooLong ? this.text('textTooLong') + ': ' + TASK_TEXT_LIMITS.title : this.text('titleHelp')}</small></div>
@@ -156,8 +193,65 @@ export class DomusTasks extends LitElement {
           @change=${(event: Event) => {this.priorityDraft = (event.target as HTMLSelectElement).value as TaskPriority;}}>
           ${TASK_PRIORITIES.map(priority => html`<option value=${priority} .selected=${this.priorityDraft === priority}>${this.text(`priority_${priority}`)}</option>`)}</select></div>
         ${this.scheduleFields()}
-        <button type="submit" class="primary" ?disabled=${this.blocked || titleTooLong || descriptionInvalid}>${this.text('create')}</button>
+        ${this.view?.access?.categoryCatalog ? this.categorySelector() : nothing}
+        <button type="submit" class="primary" ?disabled=${this.blocked || titleTooLong || descriptionInvalid || this.staleCategory}>${this.text('create')}</button>
       </form></details>`;
+  }
+  private categorySelector() {
+    const categories = this.view!.access!.categoryCatalog!.categories;
+    return html`<div class="field"><label for="task-category">${this.text('category')}</label>
+      <select id="task-category" ?disabled=${this.view!.busy} aria-invalid=${this.staleCategory} aria-describedby="task-category-help"
+        @change=${(event: Event) => {this.categoryDraft = (event.target as HTMLSelectElement).value;}}>
+        <option value="" .selected=${this.categoryDraft === ''}>${this.text('unclassified')}</option>
+        ${this.staleCategory ? html`<option value=${this.categoryDraft} selected disabled>${this.text('notice_category_unavailable')}</option>` : nothing}
+        ${categories.map(item => html`<option value=${item.id} .selected=${item.id === this.categoryDraft}>${item.label}</option>`)}
+      </select><small id="task-category-help" aria-live="polite">${this.text(this.staleCategory ? 'notice_category_unavailable' : 'categoryHelp')}</small></div>`;
+  }
+  private manageCategories() {
+    const categories = this.view!.access!.categoryCatalog!.categories, selected = this.categoryEdit;
+    const current = categories.find(item => item.id === selected?.id);
+    const stale = selected !== null && selected.revision !== current?.revision;
+    const valid = validCategoryLabel(this.categoryName);
+    return html`<details class="card new-task" ?open=${this.manageOpen}
+      @toggle=${(event: Event) => {const target = event.target as HTMLDetailsElement; if (target.isConnected) this.manageOpen = target.open;}}>
+      <summary><h3>${this.text('categories')}</h3></summary>
+      <form @submit=${(event: SubmitEvent) => {
+        event.preventDefault();
+        if (!valid || stale) return;
+        this.lastForm = 'category';
+        this.submittedCategory = {action: selected ? 'task.category.rename' : 'task.category.create', label: this.categoryName};
+        this.intent(selected ? {type: 'renameCategory', categoryId: selected.id, revision: selected.revision, label: this.categoryName}
+          : {type: 'createCategory', label: this.categoryName});
+      }}>
+        <div class="field"><label for="manage-task-category">${this.text('manageCategory')}</label>
+          <select id="manage-task-category" ?disabled=${this.view!.busy}
+            @change=${(event: Event) => {
+              const id = (event.target as HTMLSelectElement).value;
+              this.categoryEdit = categories.find(item => item.id === id) ?? null;
+              this.categoryName = this.categoryEdit?.label ?? '';
+            }}>
+            <option value="" .selected=${selected === null}>${this.text('newCategory')}</option>
+            ${selected !== null && current === undefined ? html`<option value=${selected.id} selected disabled>${selected.label}</option>` : nothing}
+            ${categories.map(item => html`<option value=${item.id} .selected=${item.id === selected?.id}>${item.label}</option>`)}
+          </select>
+        </div>
+        <div class="field"><label for="task-category-label">${this.text('categoryName')}</label>
+          <input id="task-category-label" type="text" required maxlength="512" autocomplete="off"
+            .value=${live(this.categoryName)} ?disabled=${this.view!.busy} aria-invalid=${this.categoryName.length > 0 && !valid}
+            aria-describedby="category-name-help" @input=${(event: InputEvent) => {this.categoryName = (event.target as HTMLInputElement).value;}}>
+          <small id="category-name-help">${this.text('categoryNameHelp')}</small>
+        </div>
+        ${stale ? html`<p role="alert">${this.text('categoryChanged')}</p>
+          ${current ? html`<button type="button" @click=${() => {this.categoryEdit = current;}}>${this.text('reloadCategory')}</button>` : nothing}` : nothing}
+        <div class="actions">
+          <button type="submit" ?disabled=${this.blocked || stale || !valid}>${this.text(selected ? 'renameCategory' : 'newCategory')}</button>
+          ${selected ? html`<button type="button" ?disabled=${this.blocked || stale} @click=${() => {
+            this.submittedCategory = {action: 'task.category.archive', label: this.categoryName};
+            this.intent({type: 'archiveCategory', categoryId: selected.id, revision: selected.revision});
+          }}>${this.text('archiveCategory')}</button>` : nothing}
+        </div>
+      </form>
+    </details>`;
   }
   private complete(): void {
     const work = this.view!.detail!; let materialUsages: readonly TaskMaterialUsage[] | null = null;
@@ -176,6 +270,7 @@ export class DomusTasks extends LitElement {
     const work = this.view!.detail!;
     return html`<section class="card" aria-labelledby="selected-task-title"><h3 id="selected-task-title" tabindex="-1">${work.title}</h3>
       <p><span class="badge">${this.text(`state_${work.state}`)}</span><span class="badge">${this.text(`priority_${work.priority}`)}</span></p>
+      ${work.categoryLabel ? html`<p>${this.text('category')} ${work.categoryLabel}</p>` : nothing}
       ${work.description ? html`<p class="description">${work.description}</p>` : nothing}
       <p class="help">${this.text('due')}: ${taskInstant(work.dueAt, this.language)}</p>
       ${work.cycle ? html`<p class="note" role="status"><strong>${this.text(`verification_${work.cycle.verification}`)}</strong><br>
@@ -230,6 +325,7 @@ export class DomusTasks extends LitElement {
         ${unresolved.length ? html`<section class="note warning" aria-label=${this.text('requests')}><p>${this.text('uncertainBody')}</p>${unresolved.map(record => this.request(record))}</section>` : nothing}
         <div class=${view.detail ? 'task-layout' : 'task-layout single'}>
           <div>${view.access!.canCreate ? this.createForm() : nothing}
+            ${view.access!.categoryCatalog?.canManage ? this.manageCategories() : nothing}
             <section class="card" aria-labelledby="task-list-title"><h3 id="task-list-title">${this.text('list')}</h3>
               ${view.page?.items.length ? html`<ul class="task-list">${view.page.items.map(item => html`<li><button type="button" class="task-link" ?disabled=${view.busy}
                 aria-pressed=${item.occurrenceId === view.detail?.occurrenceId ? 'true' : 'false'} @click=${() => this.intent({type: 'select', occurrenceId: item.occurrenceId})}>${item.title}</button>

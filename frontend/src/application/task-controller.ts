@@ -1,15 +1,16 @@
 /** Task workflows coordinate current identity, durable original intents and server-owned actions. */
 import {JournalError} from '../domain/journal';
-import {taskCommand, taskIdentifier} from '../domain/tasks';
+import {isCategoryCommand, taskCommand, taskIdentifier} from '../domain/tasks';
 import type {TaskAccess, TaskCommand, TaskDetail, TaskMaterialUsage, TaskPage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
 import {EntryReadError} from './ports';
+import type {Revision} from '../domain/administration';
 import type {Deployment} from '../domain/entry';
 import type {EntryClock, EntryEntropy, EntryRead, EntryServer, VerifiedEntrySession} from './ports';
 import type {TaskCommandResult, TaskJournalPort, TaskJournalScope, TaskRecord, TaskServer} from './task-ports';
 
 export type TaskNotice = 'authentication_required' | 'forbidden' | 'unavailable' | 'invalid_response'
   | 'invalid_input' | 'conflict' | 'read_only' | 'journal_unavailable' | 'context_changed'
-  | 'journal_capacity' | 'previous_request_unresolved' | 'action_not_allowed' | 'request_changed' | 'request_unavailable';
+  | 'category_unavailable' | 'journal_capacity' | 'previous_request_unresolved' | 'action_not_allowed' | 'request_changed' | 'request_unavailable';
 interface State {
   readonly phase: 'idle' | 'loading' | 'ready' | 'closed';
   readonly session: VerifiedEntrySession | null; readonly access: TaskAccess | null;
@@ -113,7 +114,19 @@ export class TaskController {
     });
   }
   private accepted(command: TaskCommand): boolean {
-    if (command.action === 'task.create') return this.state.access!.canCreate;
+    const access = this.state.access!;
+    if (command.action === 'task.create') {
+      if (command.payload.category_id !== undefined && !access.categoryCatalog?.categories.some(item => item.id === command.payload.category_id))
+        {this.update({notice: 'category_unavailable'}); return false;}
+      return access.canCreate;
+    }
+    if (isCategoryCommand(command)) {
+      if (!access.categoryCatalog?.canManage) return false;
+      if (command.action === 'task.category.create') return true;
+      const current = access.categoryCatalog.categories.find(item => item.id === command.categoryId);
+      if (current?.revision !== command.payload.expected_revision) {this.update({notice: 'conflict'}); return false;}
+      return true;
+    }
     const detail = this.state.detail!;
     if (detail.occurrenceId !== command.occurrenceId) return false;
     if (detail.revision !== command.payload.expected_revision) {this.update({notice: 'conflict'}); return false;}
@@ -134,8 +147,8 @@ export class TaskController {
       if (this.state.scopeKey !== prior.scopeKey) {this.update({notice: 'context_changed'}); return;}
       this.update({page: prior.page});
       if (this.state.readOnly) {this.update({notice: 'read_only'}); return;}
-      if (command.action !== 'task.create') this.update({detail: await this.read(this.server.detail(command.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation)});
-      if (!this.accepted(command)) {if (this.state.notice !== 'conflict') this.update({notice: 'action_not_allowed'}); return;}
+      if ('occurrenceId' in command) this.update({detail: await this.read(this.server.detail(command.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation)});
+      if (!this.accepted(command)) {if (this.state.notice !== 'conflict' && this.state.notice !== 'category_unavailable') this.update({notice: 'action_not_allowed'}); return;}
       if (this.state.records === null) {this.update({notice: 'journal_unavailable'}); return;}
       if (this.state.records.some(item => item.stage === 'prepared' || item.stage === 'uncertain')) {this.update({notice: 'previous_request_unresolved'}); return;}
       let key: string;
@@ -149,12 +162,34 @@ export class TaskController {
         this.state = Object.freeze({...blank('ready'), notice: outcome.reason}); return;
       }
       if (this.clock.now() >= this.state.session!.expiresAt) throw new EntryReadError('authentication_required');
-      if (outcome.kind === 'receipt') await this.facts(generation, outcome.occurrenceId);
+      if (outcome.kind === 'receipt') await this.receiptFacts(command, outcome.occurrenceId, prior, generation);
     });
   }
-  create(title: unknown, description: unknown, priority: TaskPriority, draft?: TaskScheduleDraft): Promise<void> {
+  private async receiptFacts(command: TaskCommand, occurrence: string | null, prior: State, generation: number): Promise<void> {
+    if (isCategoryCommand(command)) {
+      const current = await this.read(this.server.access(this.state.session!.context), generation);
+      if (scopeKey(scope(this.state.session!, current)) !== prior.scopeKey) {
+        this.journal.detach(); this.state = Object.freeze({...blank('ready'), notice: 'context_changed'}); return;
+      }
+      this.update({access: Object.freeze({...current})});
+      await this.facts(generation, prior.detail?.occurrenceId ?? null);
+      return;
+    }
+    await this.facts(generation, occurrence);
+  }
+  create(title: unknown, description: unknown, priority: TaskPriority, draft?: TaskScheduleDraft, categoryId?: string): Promise<void> {
     const schedule = draft === undefined ? {} : {schedule: {draft, policy: this.state.access?.schedulePolicy}};
-    return this.execute({action: 'task.create', payload: {expected_revision: 0, title, description, priority, ...schedule}});
+    return this.execute({action: 'task.create', payload: {expected_revision: 0, title, description, priority, ...schedule,
+      ...categoryId === undefined ? {} : {category_id: categoryId}}});
+  }
+  createCategory(label: string): Promise<void> {
+    return this.execute({action: 'task.category.create', payload: {expected_revision: 0, label}});
+  }
+  renameCategory(categoryId: string, revision: Revision, label: string): Promise<void> {
+    return this.execute({action: 'task.category.rename', categoryId, payload: {expected_revision: revision, label}});
+  }
+  archiveCategory(categoryId: string, revision: Revision): Promise<void> {
+    return this.execute({action: 'task.category.archive', categoryId, payload: {expected_revision: revision}});
   }
   claim(): Promise<void> {
     const work = this.state.detail;
@@ -186,7 +221,7 @@ export class TaskController {
       if (current === undefined || JSON.stringify(current) !== JSON.stringify(original)) {this.update({notice: 'request_changed'}); return;}
       this.update({page: prior.page});
       const outcome = await this.read(this.server.original({key, command: current.command, operationId: current.operationId}, this.state.session!.context), generation);
-      this.save(key, outcome); await this.facts(generation, outcome.occurrenceId);
+      this.save(key, outcome); await this.receiptFacts(current.command, outcome.occurrenceId, prior, generation);
     });
   }
   dismiss(key: string): Promise<void> {

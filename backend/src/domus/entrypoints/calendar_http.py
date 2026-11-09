@@ -42,7 +42,7 @@ class CalendarQuery(PageQuery):
     state: OccurrenceState | None = Field(default=None, strict=False)
     priority: Priority | None = Field(default=None, strict=False)
     member_id: Identifier | None = None
-    category: str | None = Field(default=None, min_length=1, max_length=64)
+    category: Identifier | None = None
 
     def period(self) -> CalendarRange:
         try:

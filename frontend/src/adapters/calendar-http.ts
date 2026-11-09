@@ -3,10 +3,12 @@ import {CALENDAR_KINDS, CALENDAR_TIMINGS, calendarQuery, civilDate} from '../dom
 import type {CalendarEntry, CalendarPage, CalendarQuery} from '../domain/calendar';
 import {TASK_PRIORITIES, TASK_STATES} from '../domain/tasks';
 import type {JournalContext} from '../domain/journal';
+import {CalendarCategoryUnavailable} from '../application/calendar-controller';
 import type {CalendarServer} from '../application/calendar-controller';
-import {BoundedHTTP} from './http-transport';
+import {BoundedHTTP, readFailure} from './http-transport';
 import type {FetchTransport} from './http-transport';
 import type {EntryEndpoint} from './http-values';
+import {failure} from './http-values';
 import {boolean, check, choice, fields, identifier, integer, text} from './json-values';
 
 function optional<T>(value: unknown, decode: (raw: unknown) => T): T | null {
@@ -16,11 +18,14 @@ function optional<T>(value: unknown, decode: (raw: unknown) => T): T | null {
 function entry(value: unknown): CalendarEntry {
   const row = fields(value, ['entry_id','kind','timing','occurrence_id','title','state','priority','categories',
     'member_ids','schedule_id','slot_key','local_date','local_time','instant_ms','time_zone','nominal_local',
-    'resolved_local','verification','relative_review_required'], []);
+    'resolved_local','verification','relative_review_required'], ['category_id', 'category_label']);
   const kind = choice(row.kind, CALENDAR_KINDS), id = text(row.entry_id, 140);
   check(id.startsWith(kind + ':')); identifier(id.slice(kind.length + 1)); identifier(row.occurrence_id);
   choice(row.timing, CALENDAR_TIMINGS); choice(row.state, TASK_STATES); choice(row.priority, TASK_PRIORITIES);
   check(Array.isArray(row.categories) && row.categories.length <= 16 && Array.isArray(row.member_ids) && row.member_ids.length <= 100);
+  const categoryId = optional(row.category_id ?? null, identifier);
+  const categoryLabel = optional(row.category_label ?? null, raw => text(raw, 80));
+  check((categoryId === null) === (categoryLabel === null));
   row.categories.forEach(tag => text(tag, 64)); row.member_ids.forEach(identifier);
   optional(row.schedule_id, identifier); optional(row.slot_key, identifier);
   check(civilDate(row.local_date));
@@ -28,7 +33,7 @@ function entry(value: unknown): CalendarEntry {
   return Object.freeze({id, kind, title: text(row.title, 160), day: row.local_date,
     time: optional(row.local_time, raw => text(raw, 16)), zone: optional(row.time_zone, raw => text(raw, 128)),
     nominal: optional(row.nominal_local, raw => text(raw, 28)), resolved: optional(row.resolved_local, raw => text(raw, 28)),
-    verification: optional(row.verification, raw => choice(raw, ['none','pending','approved','rejected'] as const)),
+    categoryLabel, verification: optional(row.verification, raw => choice(raw, ['none','pending','approved','rejected'] as const)),
     relativeReviewRequired: boolean(row.relative_review_required)});
 }
 
@@ -58,8 +63,13 @@ export class HttpCalendarServer implements CalendarServer {
       }
       if (value.own) query.set('member_id', identifier(member));
       if (cursor !== null) query.set('cursor', text(cursor, 512));
-      const result = await this.network.get('tasks/calendar?' + query.toString(), expected, signal);
-      return page(result, value);
+      const response = await this.network.request('tasks/calendar?' + query.toString(), 'GET', expected, null, null, null, signal);
+      if (response.status === 422 && value.category !== '') {
+        failure(response.value);
+        if ((response.value as {code: string}).code === 'task_category_unavailable') throw new CalendarCategoryUnavailable();
+      }
+      if (response.status !== 200) readFailure(response.status, response.value);
+      return page(response.value, value);
     });
   }
 }

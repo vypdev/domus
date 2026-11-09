@@ -7,7 +7,7 @@ from enum import StrEnum
 from domus.domain.errors import InvalidInput
 from domus.domain.identity import validate_revision
 from domus.domain.storage import JsonDocument, validate_identifier
-from domus.domain.task_values import OccurrenceState, Priority, validate_task_text
+from domus.domain.task_values import OccurrenceState, Priority
 
 MAX_CALENDAR_DAYS = 366
 
@@ -61,7 +61,7 @@ class CalendarFilters:
         if self.member_id is not None:
             validate_identifier(self.member_id)
         if self.category is not None:
-            validate_task_text(self.category, 64, required=True, multiline=False)
+            validate_identifier(self.category)
 
     def document(self) -> JsonDocument:
         return JsonDocument.from_value(

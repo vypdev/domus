@@ -42,7 +42,7 @@ from domus.infrastructure.application_runtime import SecureIdentifiers, SystemCl
 from domus.infrastructure.sqlite import SQLiteDatabase, SCHEMA_VERSION
 from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
 
-assert SCHEMA_VERSION == 14
+assert SCHEMA_VERSION == 15
 class Human:
     user_id = 'fictional_profile_ha_user'
     def current(self):
@@ -110,7 +110,7 @@ with TemporaryDirectory(prefix='domus-profile-image-') as directory:
             unit.preferences.save(private, 1)
         checkpoint = SQLiteSnapshots(store, Path(directory) / 'snapshot', storage.installation,
             clock).create('profile-checkpoint')
-        assert checkpoint.schema_version == 14
+        assert checkpoint.schema_version == 15
         assert len(tuple((Path(directory) / 'snapshot').iterdir())) == 3
     finally:
         runtime.close()
@@ -363,8 +363,96 @@ def test_actual_compatible_application_data_and_generation_rollback(
     assert restored["ui"] == later["ui"]
     assert restored["generation_id"] == later["selected_generation"]
     assert restored["state"] == before["state"]
-    assert restored["schema"] == refusal["refused_schema"] == 14
+    assert restored["schema"] == refusal["refused_schema"] == 15
     assert restored["original_operations_preserved"] is True
     assert rolled_back["ui"] == before["ui"]
     assert rolled_back["state"] == before["state"]
     assert rolled_back["schema"] == before["schema"] == 9
+
+
+@pytest.mark.parametrize("mode", ["native", "standalone"])
+def test_genuine_schema14_image_refuses_the_upgraded_category_database(image, data_volume, mode):
+    previous = os.environ.get("DOMUS_SCHEMA14_IMAGE")
+    assert previous, "Set DOMUS_SCHEMA14_IMAGE to the immutable pre-category image"
+    inspected = []
+    for reference, expected in (
+        (previous, "449dc04c17a9c41d949d74cd341bf1e943a2fba9"),
+        (image, os.environ["DOMUS_TEST_SOURCE_COMMIT"]),
+    ):
+        result = docker("image", "inspect", reference)
+        assert result.returncode == 0, result.stderr
+        value = json.loads(result.stdout)[0]
+        assert value["Config"]["Labels"]["org.opencontainers.image.revision"] == expected
+        inspected.append(value)
+    assert inspected[0]["Architecture"] == inspected[1]["Architecture"]
+    previous_id, current_id = (value["Id"] for value in inspected)
+
+    prepared = docker(
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--volume",
+        data_volume + ":/data",
+        "--entrypoint",
+        "/app/.venv/bin/python",
+        current_id,
+        "-c",
+        "import os; from pathlib import Path; "
+        "p=Path('/data/domus'); p.mkdir(mode=0o700); os.chown(p,65532,65532)",
+    )
+    assert prepared.returncode == 0, prepared.stderr
+    script = """
+import sys
+from pathlib import Path
+from domus.composition import ingress, server
+from domus.domain.errors import DatabaseRejected
+from domus.infrastructure.sqlite import SCHEMA_VERSION
+phase, mode = sys.argv[1:]
+root = Path('/data/domus')
+path = root / 'domus.sqlite3'
+def runtime():
+    return (ingress.create_owned_runtime('fixture-supervisor', 'edge', root, ('http://ha.local:8123',))
+            if mode == 'native' else
+            server.create_owned_runtime('http://127.0.0.1:8123', 'http://127.0.0.1:8099',
+                                        'edge', root, development_http=True))
+if phase == 'refuse':
+    assert SCHEMA_VERSION == 14
+    original = path.read_bytes()
+    try:
+        runtime()
+    except DatabaseRejected as exc:
+        assert str(exc) == 'unsupported_schema'
+    else:
+        raise AssertionError('Old application accepted an unsupported schema')
+    assert path.read_bytes() == original
+else:
+    assert SCHEMA_VERSION == (14 if phase == 'old' else 15)
+    active = runtime()
+    try:
+        assert active.storage is not None
+        with active.storage.database.read() as unit:
+            if phase == 'new':
+                assert unit.task_categories.active('home') == ()
+    finally:
+        active.close()
+"""
+    for phase, identifier in (("old", previous_id), ("new", current_id), ("refuse", previous_id)):
+        result = docker(
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--user",
+            "65532:65532",
+            "--volume",
+            data_volume + ":/data",
+            "--entrypoint",
+            "/app/.venv/bin/python",
+            identifier,
+            "-c",
+            script,
+            phase,
+            mode,
+        )
+        assert result.returncode == 0, f"{phase}: {result.stdout}\n{result.stderr}"

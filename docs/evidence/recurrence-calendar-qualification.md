@@ -14,11 +14,13 @@ A **Gap** records missing product behavior. Shared tests and aliases do not add
 executions. Check the run on the tested revision before treating a witness as
 executed. Owner acceptance and distribution qualification are separate gates.
 
-The concrete product gaps are the active household category reference, the
-calendar's distinct-occurrence count, and visible calendar attention for
-preserved downstream work. The corresponding retained cases below stay open.
-Independent combined journeys and owner review also remain outstanding. The
-Points and Inventory consumers own their respective cross-domain acceptance.
+The audited baseline lacked the active household category reference, the
+calendar's distinct-occurrence count, and visible attention for preserved
+downstream work. The witnesses below cover the subsequent changes. The
+[category evidence](task-category-qualification.md) tracks the category
+implementation separately. Owner review and the combined ledger journeys
+remain pending. The Points and Inventory consumers own their respective
+cross-domain acceptance.
 
 
 ## Calendar owner
@@ -47,7 +49,7 @@ See the [owning specification](../../specs/recurrence-calendar.md).
 | recurrence-calendar-C18 | Witness | `frontend/tests/calendar-component.test.ts`, `tests/backend/test_calendar_queries.py::test_date_only_slots_keep_original_and_effective_dates_through_move` |
 | recurrence-calendar-C19 | Witness | `tests/backend/test_calendar_boundaries.py::test_late_completion_keeps_saturday_anchor_and_member_filters_distinguish_history`. Both compositions authorize the current member before returning its assigned facts, and mask them after suspension or for a foreign filter identity. |
 | recurrence-calendar-C20 | Witness | `tests/backend/test_calendar_boundaries.py::test_excessive_calendar_range_returns_the_actual_supported_limit`, `frontend/tests/calendar-component.test.ts`. The HTTP response names the accepted 366-day bound. The component preserves the submitted date and filters after a rejected read. |
-| recurrence-calendar-C21 | Gap | `tests/backend/test_calendar_queries.py::test_combined_filters_count_actual_performers_independently_of_assignees`. The current category predicate matches free-text tags. The contract calls for household category references. |
+| recurrence-calendar-C21 | Witness | `tests/backend/test_task_categories.py::test_protected_category_commands_preserve_exact_history_and_calendar_counts`, `frontend/tests/e2e/tasks.spec.ts` (category recovery, filter and stale draft). The authorized browser selector sends an exact active household identity and keeps its historical label on issued work. |
 | recurrence-calendar-C22 | Witness | `tests/backend/test_ha_calendar_projection.py::test_ha_projection_keeps_uids_offsets_and_date_only_markers_through_retry`, `tests/ha/calendar_smoke.py` |
 | recurrence-calendar-C23 | Witness | `tests/ha/calendar_smoke.py` |
 | recurrence-calendar-C24 | Partial | `tests/containers/test_app_image.py::test_calendar_core_uses_both_exact_packaged_compositions`, `tests/backend/test_ha_calendar_installation.py`. Internal-only networking and the disabled sync contract are covered. Retain an owner configuration check at installation. |
@@ -75,7 +77,7 @@ See the [owning specification](../../specs/recurrence-execution-foundation.md).
 | recurrence-execution-C02 | Witness | `tests/backend/test_recurrence_rules.py::test_raw_rule_rejects_duplicates_unsupported_parts_malformed_dates_and_unbounded_numbers` |
 | recurrence-execution-C03 | Witness | `tests/backend/test_recurrence_cursor_integrity.py::test_actual_bounded_progress_remains_valid_through_empty_periods_count_until_and_exhaustion`, `tests/backend/test_fixed_exception_review.py::test_exclusion_consumes_a_counted_nominal_and_addition_has_own_proof` |
 | recurrence-execution-C04 | Witness | `tests/backend/test_recurrence_rules.py::test_raw_rule_rejects_duplicates_unsupported_parts_malformed_dates_and_unbounded_numbers`, `tests/backend/test_schedule_creation_http.py::test_atomic_scheduled_creation_and_original_recovery`. Both protected compositions reject unsupported rule parts and out-of-bounds intervals before any task or rule is written. |
-| recurrence-execution-C05 | Gap | `tests/backend/test_calendar_queries.py::test_combined_filters_count_actual_performers_independently_of_assignees`. Task content uses tags and has no category reference to validate against the active household catalog. |
+| recurrence-execution-C05 | Witness | `tests/backend/test_task_categories.py::test_protected_category_commands_preserve_exact_history_and_calendar_counts`, `tests/backend/test_task_categories.py::test_protected_scheduled_creation_assigns_active_category_and_recovers_original`. Both protected compositions validate exact active identities for ordinary, fixed and relative creation. Existing tags retain independent meanings. |
 | recurrence-execution-C06 | Witness | `tests/backend/test_schedule_creation_http.py::test_atomic_scheduled_creation_and_original_recovery`, `tests/backend/test_task_http.py::test_title_only_create_detail_history_and_own_operation_replay`, `frontend/tests/e2e/tasks.spec.ts`. Both scheduled creation modes preserve the manual title-only path, defer first materialization and recover a lost browser response without a duplicate. |
 | recurrence-execution-C07 | Witness | `tests/backend/test_recurrence_review.py::test_manual_adoption_binds_exact_existing_work_and_replays_after_restart`, `tests/backend/test_recurrence_review.py::test_attach_unconfigured_definition_preserves_manual_work_and_recovers_original` |
 | recurrence-execution-C08 | Witness | `tests/backend/test_nominal_recurrence.py::test_interval_and_week_start_keep_phase_across_december_and_empty_periods`, `tests/backend/test_recurrence_rules.py::test_explicit_defaults_and_canonical_selector_order_preserve_original_anchor` |
@@ -109,7 +111,7 @@ See the [owning specification](../../specs/recurrence-execution-foundation.md).
 | recurrence-execution-C36 | Witness | `tests/backend/test_fixed_batch_review.py::test_batch_replacement_snapshots_household_fold_and_rejects_changed_preference`, `tests/backend/test_fixed_batch_review.py::test_fold_replacement_cannot_cancel_first_appearance_once_due` |
 | recurrence-execution-C37 | Witness | `tests/backend/test_calendar_queries.py::test_date_only_slots_keep_original_and_effective_dates_through_move`, `frontend/tests/calendar-component.test.ts` |
 | recurrence-execution-C38 | Witness | `tests/backend/test_calendar_http.py::test_calendar_http_requires_current_context_and_closed_range`, `tests/backend/test_calendar_queries.py::test_date_only_slots_keep_original_and_effective_dates_through_move`, `tests/backend/test_ha_calendar_installation.py::test_calendar_bearer_is_only_for_its_scoped_read_and_rotates` |
-| recurrence-execution-C39 | Gap | `tests/backend/test_calendar_queries.py::test_combined_filters_count_actual_performers_independently_of_assignees`. The calendar has one event-row count. It lacks a distinct-occurrence count and a genuine category predicate. |
+| recurrence-execution-C39 | Witness | `tests/backend/test_task_categories.py::test_protected_category_commands_preserve_exact_history_and_calendar_counts`, `tests/backend/test_calendar_queries.py::test_distinct_task_count_preserves_both_completion_cycle_identities`. Active category, timing, state, priority and member share the same filtered page and both complete-range counts. |
 | recurrence-execution-C40 | Witness | `tests/backend/test_calendar_boundaries.py::test_late_completion_keeps_saturday_anchor_and_member_filters_distinguish_history`. Actual planned and due assignees, Monday performance and verifier facts remain separate in both protected compositions. |
 | recurrence-execution-C41 | Witness | `tests/backend/test_calendar_queries.py::test_distinct_task_count_preserves_both_completion_cycle_identities` (PR #44, source `42155d163d81f9025c260d2e47957663df2ae73c`), `tests/backend/test_ha_calendar_projection.py::test_ha_projection_keeps_uids_offsets_and_date_only_markers_through_retry`. Two completed cycles keep distinct performed and approval entry IDs for one occurrence. |
 | recurrence-execution-C42 | Witness | `tests/backend/test_calendar_http.py::test_calendar_outage_honors_current_permissions_and_original_read_deadline` |
@@ -151,7 +153,7 @@ See the [owning specification](../../specs/recurrence-lifecycle-calendar.md).
 | recurrence-lifecycle-calendar-C26 | Witness | `tests/backend/test_fair_recurrence.py::test_repeated_restart_after_every_first_step_cannot_starve_the_other_ninety_eight_rules`, `tests/backend/test_mixed_recurrence.py::test_unavailable_source_scan_leaves_fixed_and_relative_initial_work_fair` |
 | recurrence-lifecycle-calendar-C27 | Witness | `tests/backend/test_recurrence_qualification.py::test_batch_review_binds_excluded_moved_and_concurrently_started_work`, `frontend/tests/e2e/tasks.spec.ts` (protected calendar and fixed batch review). Independent SQLite writers invalidate the stale plan; exact recovery preserves the accepted command and work history. |
 | recurrence-lifecycle-calendar-C28 | Witness | `tests/backend/test_fixed_batch_review.py::test_complete_plan_byte_bounds_and_mismatched_write_snapshot_fail_closed` |
-| recurrence-lifecycle-calendar-C29 | Gap | `tests/backend/test_calendar_queries.py::test_combined_filters_count_actual_performers_independently_of_assignees`. Current category labels come from tags. Audit the combined category-reference and distinct-occurrence query after that contract is implemented. |
+| recurrence-lifecycle-calendar-C29 | Witness | `tests/backend/test_task_categories.py::test_protected_category_commands_preserve_exact_history_and_calendar_counts`, `tests/backend/test_calendar_queries.py::test_combined_filters_count_actual_performers_independently_of_assignees`. Active category and other filters paginate through the same predicate. Due assignments and actual performers preserve their own meanings. |
 | recurrence-lifecycle-calendar-C30 | Witness | `tests/backend/test_recurrence_qualification.py::test_calendar_stays_pending_when_the_watermark_has_passed_unresolved_work` |
 | recurrence-lifecycle-calendar-C31 | Witness | `tests/backend/test_calendar_http.py::test_owner_calendar_preferences_are_private_and_recover_exact_int64`, `tests/backend/test_calendar_boundaries.py::test_an_outage_lease_does_not_authorize_another_members_cursor`. Both compositions reject another administrator’s private result or cursor. Outage reads leave SQLite bytes unchanged and the original lease expires on time. |
 | recurrence-lifecycle-calendar-C32 | Witness | `frontend/tests/e2e/workspace-navigation.spec.ts`, `frontend/tests/recurrence-review.test.ts`. The exact browser mutation and original response preserve the SQLite revision above 2^53. Both unrelated journals reject recurrence bytes, including a forged namespace. |

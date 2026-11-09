@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import cast
 
 from domus.application.commands import AtomicCommands, Change
@@ -12,6 +12,7 @@ from domus.application.task_authorization import (
     TaskAccess,
     TaskCommandAuthorization,
 )
+from domus.application.task_category_commands import require_active_category
 from domus.application.task_creation import TaskCreation
 from domus.application.task_facts import (
     current_cycle,
@@ -444,8 +445,16 @@ class TaskCommands:
                 if request.materials is None
                 else self._materials(unit, access).link(request.materials, previous.materials)
             )
+            content = request.content
+            label = None
+            if content.category_id is not None:
+                # An explicit choice requires an active category. The definition
+                # keeps its captured label when the identity stays the same.
+                label = require_active_category(unit, self.household_id, content.category_id).label
+            elif not request.clear_category:
+                content = replace(content, category_id=previous.content.category_id)
             updated = previous.revise(
-                request.content, overrides, request.state, materials=materials
+                content, overrides, request.state, materials=materials, category_label=label
             )
             unit.tasks.save_definition(updated, request.expected_revision)
             result = definition_result(updated)

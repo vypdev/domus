@@ -48,6 +48,11 @@ from domus.infrastructure.sqlite_recurrence_schema import (
     RELATIVE_LIFECYCLE_STATEMENTS,
     RELATIVE_LIFECYCLE_TABLES,
 )
+from domus.infrastructure.sqlite_task_categories import (
+    CATEGORY_STATEMENTS,
+    CATEGORY_TABLE,
+    SQLiteTaskCategories,
+)
 from domus.infrastructure.sqlite_task_material_schema import (
     MATERIAL_STATEMENTS,
     MATERIAL_TABLES,
@@ -63,7 +68,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -134,6 +139,7 @@ SCHEMA_STATEMENTS = (
     HOUSEHOLD_HORIZON_STATEMENT,
     HOUSEHOLD_FOLD_STATEMENT,
     MISSED_OCCURRENCE_STATEMENT,
+    *CATEGORY_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -145,7 +151,8 @@ RECURRENCE_SCHEMA_TABLES = MATERIAL_SCHEMA_TABLES | RECURRENCE_TABLES
 PROFILE_SCHEMA_TABLES = RECURRENCE_SCHEMA_TABLES | PROFILE_TABLES
 LIFECYCLE_SCHEMA_TABLES = PROFILE_SCHEMA_TABLES | RELATIVE_LIFECYCLE_TABLES
 CALENDAR_SCHEMA_TABLES = LIFECYCLE_SCHEMA_TABLES | {"calendar_preferences"}
-TABLES = CALENDAR_SCHEMA_TABLES | {MISSED_OCCURRENCE_TABLE}
+MISSED_SCHEMA_TABLES = CALENDAR_SCHEMA_TABLES | {MISSED_OCCURRENCE_TABLE}
+TABLES = MISSED_SCHEMA_TABLES | {CATEGORY_TABLE}
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -175,6 +182,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *((HOUSEHOLD_HORIZON_STATEMENT,) if version >= 12 else ()),
             *((HOUSEHOLD_FOLD_STATEMENT,) if version >= 13 else ()),
             *((MISSED_OCCURRENCE_STATEMENT,) if version >= 14 else ()),
+            *(CATEGORY_STATEMENTS if version >= 15 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -368,6 +376,7 @@ class SQLiteUnit:
         self.recoveries = SQLiteRecoveries(connection)
         self.tasks = SQLiteTasks(connection)
         self.task_materials = SQLiteTaskMaterials(connection)
+        self.task_categories = SQLiteTaskCategories(connection)
 
 
 class SQLiteDatabase:
@@ -432,6 +441,7 @@ class SQLiteDatabase:
                 11: CALENDAR_SCHEMA_TABLES,
                 12: CALENDAR_SCHEMA_TABLES,
                 13: CALENDAR_SCHEMA_TABLES,
+                14: MISSED_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -491,7 +501,8 @@ class SQLiteDatabase:
                         *((CALENDAR_PREFERENCE_STATEMENT,) if version < 11 else ()),
                         *((HOUSEHOLD_HORIZON_STATEMENT,) if version < 12 else ()),
                         *((HOUSEHOLD_FOLD_STATEMENT,) if version < 13 else ()),
-                        MISSED_OCCURRENCE_STATEMENT,
+                        *((MISSED_OCCURRENCE_STATEMENT,) if version < 14 else ()),
+                        *CATEGORY_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from domus.application.ports import Clock, Identifiers, UnitOfWork
 from domus.application.task_authorization import TaskAccess, TaskMaterialAccess
+from domus.application.task_category_commands import require_active_category
 from domus.application.task_material_commands import TaskMaterialCommands
 from domus.application.task_material_ports import MissingTaskInventory, TaskInventory
 from domus.application.task_requests import CreateTask
@@ -41,6 +42,11 @@ class TaskCreation:
     def definition(
         self, unit: UnitOfWork, access: TaskAccess, household_id: str, request: CreateTask
     ) -> TaskDefinition:
+        category = (
+            None
+            if request.content.category_id is None
+            else require_active_category(unit, household_id, request.content.category_id)
+        )
         if unit.tasks.policy(household_id) is None:
             unit.tasks.save_policy(HouseholdTaskPolicy(household_id, TaskRules()), 0)
         materials = (
@@ -56,6 +62,7 @@ class TaskCreation:
             request.overrides,
             request.state,
             materials=materials,
+            category_label=None if category is None else category.label,
         )
         unit.tasks.save_definition(item, 0)
         return item

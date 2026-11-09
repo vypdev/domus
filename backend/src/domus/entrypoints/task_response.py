@@ -41,6 +41,7 @@ class TaskDefinition:
     state: DefinitionState = DefinitionState.ACTIVE
     revision: int = 1
     materials: tuple[MaterialLine, ...] = ()
+    category_label: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,6 +88,7 @@ def definition_response(value: Definition) -> TaskDefinition:
             MaterialLine(line.line_id, line.binding, line.planned_quantity.value)
             for line in value.materials
         ),
+        value.category_label,
     )
 
 

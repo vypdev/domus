@@ -12,7 +12,7 @@ from domus.application.recurrence_review import ReviewAction
 from domus.domain.errors import Conflict, InvalidInput, NotFound, StorageFailure
 from domus.domain.recurrence_records import ScheduleState
 from domus.domain.task_values import MissedOccurrencePolicy, MissedOccurrenceSettings
-from domus.infrastructure.sqlite import SCHEMA_VERSION, SQLiteDatabase, SQLiteReceipts
+from domus.infrastructure.sqlite import SQLiteDatabase, SQLiteReceipts
 from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots, _verify_database
 
 KEEP = MissedOccurrencePolicy.KEEP_VISIBLE
@@ -150,7 +150,7 @@ def test_policy_state_guards_and_corrupt_persistence(tmp_path, monkeypatch):
 def test_previous_schema_keeps_original_rows_and_defaults_to_visible(tmp_path, monkeypatch):
     from domus.infrastructure import sqlite as adapter
 
-    previous = SCHEMA_VERSION - 1
+    previous = 13
     store = frozen(tmp_path, previous)
     with store._connection() as connection:
         assert _verify_database(connection, store, previous=True) == previous

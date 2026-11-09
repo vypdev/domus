@@ -17,6 +17,7 @@ from domus.domain.calendar_values import (
 from domus.domain.identity import HouseholdPolicy, Member
 from domus.domain.recovery import RecoveryRequest
 from domus.domain.storage import AuditEntry, CommandKey, Household, OutboxEvent, Receipt
+from domus.domain.task_categories import TaskCategory
 
 
 class Households(Protocol):
@@ -88,6 +89,12 @@ class CalendarPreferences(Protocol):
     def save(self, preference: CalendarPreference, expected_revision: int) -> None: ...
 
 
+class TaskCategories(Protocol):
+    def active(self, household_id: str) -> tuple[TaskCategory, ...]: ...
+    def get(self, household_id: str, category_id: str) -> TaskCategory | None: ...
+    def save(self, category: TaskCategory, expected_revision: int) -> None: ...
+
+
 class UnitOfWork(Protocol):
     @property
     def calendar_preferences(self) -> CalendarPreferences: ...
@@ -106,6 +113,9 @@ class UnitOfWork(Protocol):
 
     @property
     def task_materials(self) -> TaskMaterialRepository: ...
+
+    @property
+    def task_categories(self) -> TaskCategories: ...
 
     @property
     def tasks(self) -> TaskRepository: ...

@@ -33,6 +33,10 @@ class TaskRequest:
     def document(self) -> JsonDocument:
         # Tuples and string enums become JSON arrays and exact enum values.
         value = asdict(self)
+        if "content" in value and value["content"]["category_id"] is None:
+            del value["content"]["category_id"]
+        if value.get("clear_category") is False:
+            del value["clear_category"]
         if value.get("quantity") is not None:
             value["quantity"] = value["quantity"]["value"]
         for field, quantity in (("materials", "planned_quantity"), ("material_usages", "quantity")):
@@ -264,6 +268,7 @@ class UpdateTaskDefinition(TaskRequest):
     state: DefinitionState
     overrides: TaskOverrides | None = None
     materials: tuple[MaterialSelection, ...] | None = None
+    clear_category: bool = False
 
     def __post_init__(self) -> None:
         validate_identifier(self.definition_id)
@@ -272,6 +277,8 @@ class UpdateTaskDefinition(TaskRequest):
             not isinstance(self.content, TaskContent)
             or not isinstance(self.state, DefinitionState)
             or (self.overrides is not None and not isinstance(self.overrides, TaskOverrides))
+            or type(self.clear_category) is not bool
+            or (self.clear_category and self.content.category_id is not None)
         ):
             raise InvalidInput("invalid_task_definition")
         if self.materials is not None:

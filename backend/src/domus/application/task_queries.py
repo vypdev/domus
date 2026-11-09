@@ -16,6 +16,7 @@ from domus.application.task_authorization import (
     recorded_authorization,
     recorded_request,
 )
+from domus.application.task_category_commands import CategoryCatalog, category_catalog
 from domus.application.task_facts import (
     current_cycle,
     cycle_materials,
@@ -64,6 +65,7 @@ class TaskWorkspaceView:
     member_id: str
     can_create: bool
     can_review_schedule: bool
+    category_catalog: CategoryCatalog
     schedule_policy: TimePolicy | None = None
 
 
@@ -523,6 +525,7 @@ class TaskQueries:
                 actor.member.member_id,
                 can_create,
                 can_review,
+                category_catalog(unit, TaskAccess(self.human), self.household_id),
                 schedule_creation_policy(unit, self.household_id, self.schedule_data_identity)
                 if can_create and self.schedule_data_identity is not None
                 else None,

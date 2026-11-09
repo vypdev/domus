@@ -69,10 +69,8 @@ visible AS (
       AND (:state IS NULL OR w.state=:state)
       AND (:priority IS NULL
            OR json_extract(w.document,'$.definition_snapshot.content.priority')=:priority)
-      AND (:category IS NULL OR EXISTS (
-          SELECT 1 FROM json_each(w.document,'$.definition_snapshot.content.tags') t
-          WHERE t.value=:category
-      ))
+      AND (:category IS NULL
+           OR json_extract(w.document,'$.definition_snapshot.content.category_id')=:category)
       AND (:member_id IS NULL OR
           (f.kind='approval' AND f.verifier=:member_id) OR
           (f.kind='performed' AND EXISTS (

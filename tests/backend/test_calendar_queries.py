@@ -10,6 +10,7 @@ from test_task_commands import fixture
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.recurrence_sources import RecurrenceSourceObservations
+from domus.application.task_category_commands import TaskCategoryCommands
 from domus.application.task_requests import (
     CompleteTask,
     CreateTask,
@@ -70,9 +71,17 @@ def test_date_only_slots_keep_original_and_effective_dates_through_move(tmp_path
 
 
 def test_combined_filters_count_actual_performers_independently_of_assignees(tmp_path):
-    tasks, store, actor, _ = fixture(tmp_path)
+    tasks, store, actor, identifiers = fixture(tmp_path)
+    catalog = TaskCategoryCommands(store, actor, actor.current, tasks.clock, identifiers)
+    garden = catalog.create("garden-category", "Garden").result.decode()["category_id"]
+    other = catalog.create("other-category", "Other").result.decode()["category_id"]
     result = tasks.create(
-        "manual", CreateTask(TaskContent("Filter", priority=Priority.HIGH, tags=("garden",)))
+        "manual",
+        CreateTask(
+            TaskContent(
+                "Filter", priority=Priority.HIGH, tags=("independent-tag",), category_id=garden
+            )
+        ),
     )
     resource = result.result.decode()
     work = tasks.create_occurrence(
@@ -94,7 +103,7 @@ def test_combined_filters_count_actual_performers_independently_of_assignees(tmp
         timing=CalendarTiming.MANUAL,
         state=OccurrenceState.COMPLETED,
         priority=Priority.HIGH,
-        category="garden",
+        category=garden,
     )
     (due,) = calendar.page(period, replace(filters, member_id="child")).entries
     (performed,) = calendar.page(period, replace(filters, member_id="other")).entries
@@ -110,7 +119,7 @@ def test_combined_filters_count_actual_performers_independently_of_assignees(tmp
     assert calendar.page(period, filters).pending
     RecurrenceSourceObservations(store, calendar.scope).ingest()
     assert not calendar.page(period, filters).pending
-    assert calendar.page(period, replace(filters, category="other")).count == 0
+    assert calendar.page(period, replace(filters, category=other)).count == 0
 
 
 def test_timed_planned_fact_keeps_nominal_and_gap_adjusted_time(tmp_path):
