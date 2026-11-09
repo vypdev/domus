@@ -440,9 +440,9 @@ test('recurrence receipt reads both UTC appearances and keeps exact and date-onl
     return f.server.original(context,intent).result;
   };
   await expect(get([slot('fold_second',3600),slot('exact',7200),{nominal:{local},resolved:null},
-    {planned:slot('fold_first',7200)}])).resolves.toMatchObject({preview:{repeatedTime:'second_instant',
-      repeatedSlots:[{local,offset:3600,fold:'second_instant'},{local,offset:7200,fold:'first_instant'}]}});
-  for (const invalid of [slot('fold_first',86400), {resolved:{resolution:'fold_second',offset_seconds:0}}]) {
+    {planned:slot('fold_first',-14400)}])).resolves.toMatchObject({preview:{repeatedTime:'second_instant',
+      repeatedSlots:[{local,offset:3600,fold:'second_instant'},{local,offset:-14400,fold:'first_instant'}]}});
+  for (const invalid of [slot('fold_first',86400),slot('fold_first',-86400), {resolved:{resolution:'fold_second',offset_seconds:0}}]) {
     await expect(get([invalid])).rejects.toThrow();
   }
   await expect(get(Array(101).fill(slot('exact',0)))).rejects.toThrow();

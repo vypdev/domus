@@ -58,7 +58,7 @@ function repeatedSlots(values: unknown): NonNullable<NonNullable<ReviewReceipt['
     if (slot.resolved === undefined || slot.resolved === null) return [];
     const resolved = object(slot.resolved);
     if (resolved.resolution !== 'fold_first' && resolved.resolution !== 'fold_second') return [];
-    const date = local(slot), offset = integer(resolved.offset_seconds, -86400);
+    const date = local(slot), offset = integer(resolved.offset_seconds, -86399);
     check(date !== null && offset < 86400);
     return [Object.freeze({local: date, offset,
       fold: resolved.resolution === 'fold_first' ? 'first_instant' as const : 'second_instant' as const})];
