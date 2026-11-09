@@ -1,13 +1,13 @@
 """Actual native and standalone task routes use bounded material inputs and live scoped reads."""
 
 from dataclasses import replace
-from functools import partial
 
 import pytest
 from test_task_http import PREFIX, checked, create
 from test_task_material_commands import Inventory
 from test_task_runtime import api as api
 
+from domus.application.task_material_ports import MissingTaskInventory
 from domus.composition import tasks
 from domus.domain.identity import Permission, PermissionRule
 from domus.domain.task_material_values import MaterialPendingReason
@@ -17,9 +17,12 @@ from domus.domain.task_material_values import MaterialPendingReason
 def inventory(api, tmp_path, monkeypatch):
     value = Inventory(tmp_path / "fixture-http-inventory.sqlite3")
     value.bindings["binding"] = replace(value.bindings["binding"], precision=2)
-    monkeypatch.setattr(
-        tasks, "TaskCommands", partial(tasks.TaskCommands, inventory_factory=value.factory)
-    )
+    command_factory = tasks.TaskCommands
+
+    def commands(*args, **kwargs):
+        return command_factory(*args, **(kwargs | {"inventory_factory": value.factory}))
+
+    monkeypatch.setattr(tasks, "TaskCommands", commands)
     return value
 
 
@@ -164,13 +167,21 @@ def test_selection_identity_precision_and_bounds_cannot_be_forged(api, inventory
         assert not unit.tasks.definitions("home") and unit.tasks.policy("home") is None
 
 
-def test_unavailable_inventory_linking_is_explicit_and_atomic(api):
+@pytest.mark.parametrize(
+    ("available", "status", "code"),
+    [(False, 503, "inventory_unavailable"), (True, 422, "invalid_material_reference")],
+)
+def test_unresolved_inventory_linking_is_explicit_and_atomic(
+    api, monkeypatch, available, status, code
+):
+    if not available:
+        monkeypatch.setattr(tasks, "InventorySettlement", lambda *_: MissingTaskInventory())
     response = api.client.post(
         PREFIX + "/definitions",
         json={"title": "Work", "materials": [selection()]},
         headers=api.headers("unavailable"),
     )
-    assert response.status_code == 503 and response.json()["code"] == "inventory_unavailable"
+    assert response.status_code == status and response.json()["code"] == code
     with api.store.read() as unit:
         assert not unit.tasks.definitions("home") and unit.tasks.policy("home") is None
 

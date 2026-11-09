@@ -7,7 +7,8 @@ from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
-from domus.application.ports import Transactions
+from domus.application.inventory import InventorySettlement
+from domus.application.ports import Transactions, UnitOfWork
 from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
@@ -42,6 +43,9 @@ def task_contexts(
     planner = RelativeRecurrencePlanner(PinnedRecurrenceTime())
     cursors = TaskCursor(clock, SecureEntropy().new().encode("ascii"))
 
+    def inventory(unit: UnitOfWork) -> InventorySettlement:
+        return InventorySettlement(unit.inventory, clock, identifiers)
+
     def context(actor: TaskSession) -> TaskHTTPContext:
         return TaskHTTPContext(
             lambda: TaskQueries(
@@ -51,7 +55,7 @@ def task_contexts(
                 installation,
                 schedule_data_identity=planner.times.data_identity,
             ),
-            TaskCommands(store, actor, clock, identifiers),
+            TaskCommands(store, actor, clock, identifiers, inventory_factory=inventory),
             RecurrenceReview(store, installation, actor, actor.read, clock, identifiers, planner),
             lambda: CalendarQueries(
                 store, MaintenanceScope(installation, "home"), actor.read(), cursors, planner.times
@@ -63,6 +67,7 @@ def task_contexts(
                 clock,
                 identifiers,
                 FixedRecurrencePlanner(CalendarNominalExpansion(), planner.times),
+                inventory_factory=inventory,
                 bind_household_policy=True,
             ),
             RelativeRecurrenceCommands(
@@ -71,6 +76,7 @@ def task_contexts(
                 clock,
                 identifiers,
                 planner.times,
+                inventory_factory=inventory,
                 bind_household_policy=True,
             ),
             TaskCategoryCommands(store, actor, actor.read, clock, identifiers),

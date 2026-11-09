@@ -3,6 +3,7 @@
 from contextlib import AbstractContextManager
 from typing import Protocol
 
+from domus.application.inventory_ports import InventoryRecords
 from domus.application.member_profile_ports import MemberPreferencesRepository, MemberPresentations
 from domus.application.points_ports import PointsRepository
 from domus.application.recurrence_ports import RecurrenceRepository
@@ -97,6 +98,9 @@ class TaskCategories(Protocol):
 
 
 class UnitOfWork(Protocol):
+    @property
+    def inventory(self) -> InventoryRecords: ...
+
     @property
     def points(self) -> PointsRepository: ...
 

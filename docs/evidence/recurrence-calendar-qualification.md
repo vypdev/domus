@@ -243,3 +243,30 @@ The default CI test uses the checked-out image and invokes each channel with
 its actual entrypoint on an independent private directory. Stable and Edge in
 this test are scoped installations. Distribution and live Supervisor acceptance
 require their own evidence.
+
+## Points and Inventory follow-up for issue 23
+
+The qualification tables above preserve the state of the original review. The
+following witnesses cover the six cross-domain assertions left open at that
+revision. The existing cases, refinement counts and integration aliases remain
+with their owning specifications.
+
+- `recurrence-calendar-C27` — `test_points_consumer.py::test_pending_relative_work_advances_once_before_approval_posts_points` observes one successor and no allocation while approval is pending, then one real allocation after approval.
+- `recurrence-calendar-C29` — `test_points_consumer.py::test_weekly_missed_slots_stay_on_anchor_and_never_earn_points` observes missed weekly work, one eligible positive control and the persisted result after restoration.
+- `recurrence-execution-C24` — `test_points_consumer.py::test_pending_relative_work_advances_once_before_approval_posts_points` exercises the default successor policy and a durable receipt with no premature allocation.
+- `recurrence-calendar-C33` — `test_inventory_recurrence.py::test_reviewed_batch_recovers_original_stock_reservations_and_demand` exercises an actual reservation, task demand and manual extra. The original key recovers the accepted transfer once after restart and restoration. Physical stock and manual demand stay unchanged.
+- `recurrence-execution-C27` — `test_inventory_recurrence.py::test_source_reopening_keeps_completed_successor_and_real_stock_after_restore` records real consumption and Points on the completed successor. Reopening reverses the original Points award once and preserves the successor's movement, balance, remaining reservation and award across restoration.
+- `recurrence-lifecycle-calendar-C24` — `test_inventory_recurrence.py::test_started_work_wins_independent_invalidation_and_preserves_inventory` uses independent SQLite writers and asserts one retained review with unchanged real reservation, demand and ledger. Restoration preserves the same review and the exact Points award and source reversal. The failed reviewed-transfer test covers rollback.
+
+The first three rows use the reviewed Points head
+`e0753b675439e64671783581362bb06c9c0c30fb`.
+[Points PR](https://github.com/vypdev/domus/pull/58) ·
+[Exact CI run](https://github.com/vypdev/domus/actions/runs/42658034090)
+
+The final three rows use the [Inventory follow-up](https://github.com/vypdev/domus/issues/57)
+and the [published Inventory delta](../../specs/household-inventory.md).
+The SQLite adapter also exercises the genuine schema 16 fixture, atomic
+schema 17 migration, transaction rollback after stock append, exact linked
+correction, and production task HTTP settlement in Ingress and standalone.
+The follow-up PR carries the current commit's check results. The wider Inventory
+catalog and replenishment workflows retain their separate readiness gates.
