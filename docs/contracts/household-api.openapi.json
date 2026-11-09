@@ -1493,6 +1493,155 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "FamilyLedgerEntry": {
+        "properties": {
+          "amount_minor": {
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "cycle_id": {
+            "title": "Cycle Id",
+            "type": "string"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "occurrence_id": {
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "performed_at": {
+            "title": "Performed At",
+            "type": "integer"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "posted_at": {
+            "title": "Posted At",
+            "type": "integer"
+          },
+          "reverses": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverses"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "event_id",
+          "cycle_id",
+          "occurrence_id",
+          "title",
+          "amount_minor",
+          "performed_at",
+          "verified_at",
+          "posted_at",
+          "reverses",
+          "policy_version"
+        ],
+        "title": "FamilyLedgerEntry",
+        "type": "object"
+      },
+      "FamilyReport": {
+        "properties": {
+          "available_minor": {
+            "title": "Available Minor",
+            "type": "integer"
+          },
+          "completed_count": {
+            "title": "Completed Count",
+            "type": "integer"
+          },
+          "earned_minor": {
+            "title": "Earned Minor",
+            "type": "integer"
+          },
+          "elapsed_ms": {
+            "title": "Elapsed Ms",
+            "type": "integer"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/FamilyLedgerEntry"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "pending_posting_minor": {
+            "title": "Pending Posting Minor",
+            "type": "integer"
+          },
+          "pending_verification_minor": {
+            "title": "Pending Verification Minor",
+            "type": "integer"
+          },
+          "period": {
+            "$ref": "#/components/schemas/CalendarRange"
+          },
+          "posted_minor": {
+            "title": "Posted Minor",
+            "type": "integer"
+          },
+          "time_zone": {
+            "title": "Time Zone",
+            "type": "string"
+          },
+          "tracked_count": {
+            "title": "Tracked Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "period",
+          "time_zone",
+          "posted_minor",
+          "available_minor",
+          "earned_minor",
+          "pending_verification_minor",
+          "pending_posting_minor",
+          "completed_count",
+          "tracked_count",
+          "elapsed_ms",
+          "history",
+          "next_cursor"
+        ],
+        "title": "FamilyReport",
+        "type": "object"
+      },
       "FixedExceptionBody": {
         "additionalProperties": false,
         "properties": {
@@ -8380,6 +8529,200 @@
           }
         ],
         "summary": "Access"
+      }
+    },
+    "/api/v1/family": {
+      "get": {
+        "operationId": "family_api_v1_family_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "Start",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "title": "End",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Family"
       }
     },
     "/api/v1/household": {

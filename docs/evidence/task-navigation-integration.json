@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled Overview, Tasks, Calendar and Household bundle with authorized task categories, captured historical labels, legacy calendar tags and recovery from an archived calendar filter.",
+  "scope": "Compiled Overview, Tasks, Calendar, Family and Household bundle with protected points, participation and signed history.",
   "actualProductFiles": {
-    ".vite/manifest.json": "48be667a64fc204433edecbe42b9877683e82ecbf899a23ec1697a098b23e8cc",
+    ".vite/manifest.json": "425e8640c47c220240cfed1a5b4a0692c10961f4bf8ea0de180980627ade4085",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-Df8CxRN_.js": "4ea41833aac1f5dd47bc12a9602480b0cca3850c83dbbd48e788b7e706703d7b",
-    "index.html": "a580b168b5a38ba0a5fb70425614b2200ed175a8a1c83f5045a3b3f01a24baf6"
+    "assets/index-DMtcabTC.js": "39dae8fec1185aec11da229b2f5aa1cc88ac3d164e7dc05bf21512f1a772e35f",
+    "index.html": "329fa4d4c765a4ea10f1e91b7651f6b2f34398ca1d513084cec4110e24fb0b66"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -171,6 +171,16 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "assets/index-X_uWPsJI.js": "045f6e415ff86b8f9c8d43c936befeceab1dc4d96536a9d8e8bb72da15d836e0",
       "index.html": "c34aeab5d04ce2ce399e718c6c56bacedbec22382d241c7faeee6d04439a4b40"
+    }
+  },
+  "preProtectedFamily": {
+    "sourceCommit": "a9c029064c196ad686df5191492c50b0c6a4cff7",
+    "scope": "Compiled Overview, Tasks, Calendar and Household bundle with authorized task categories, captured historical labels, legacy calendar tags and recovery from an archived calendar filter.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "48be667a64fc204433edecbe42b9877683e82ecbf899a23ec1697a098b23e8cc",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-Df8CxRN_.js": "4ea41833aac1f5dd47bc12a9602480b0cca3850c83dbbd48e788b7e706703d7b",
+      "index.html": "a580b168b5a38ba0a5fb70425614b2200ed175a8a1c83f5045a3b3f01a24baf6"
     }
   }
 }

@@ -77,8 +77,17 @@ Free-text groceries need no tracked product.
 
 ## Participation
 
-Family shows assignments, completed work, estimated effort and point history.
-Work performed on Sunday belongs to Sunday's household week even if approved Monday. While approval is pending, its points are not spendable; approval updates the original week's earned total and credits the current balance. History shows work, approval and posting times separately. Weekly earned points are distinct from your remaining balance after rewards.
+Open Family to see your balance, point history and recorded work. Select a week or
+month using a date in that period. The household time zone determines where the
+work belongs. Sunday work stays in Sunday's week if it is approved on Monday.
+The report separates estimated points awaiting verification and points awaiting
+posting. Points become available when posted.
+
+History shows the work, approval and posting times separately. A reversal stays
+linked to its original award and corrects the earned points in the work period.
+Family shows elapsed time for completions with a recorded start and identifies
+how many completions contributed to that estimate.
+
 An administrator configures collaborative allocation in the application. The default divides one conserved total, but the household may choose equal shares rounded down or up, two-decimal shares, full points for every performer, or authorized manual amounts. For a 10-point task with three performers, the selected policy can produce 3/3/4, 3/3/3, 4/4/4, 3.33/3.33/3.33 or 10/10/10. The preview and ledger explain the base value, policy, each share and actual total. Changing policy does not rewrite past awards; corrections and reopening compensate the amounts actually awarded.
 Rewards are optional and do not control access to normal household responsibilities.
 If reopening reverses points already spent, the balance can become negative. The history explains the deficit, earned points offset it, and new redemptions remain unavailable until the balance recovers and covers the reward cost. Delivered rewards remain delivered.

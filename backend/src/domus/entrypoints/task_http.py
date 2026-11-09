@@ -9,6 +9,7 @@ from fastapi.params import Depends
 
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
+from domus.application.family_queries import FamilyQueries
 from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.relative_recurrence_commands import RelativeRecurrenceCommands
@@ -102,6 +103,7 @@ class TaskHTTPContext:
     fixed_creation: RecurrenceCommands
     relative_creation: RelativeRecurrenceCommands
     category_commands: TaskCategoryCommands
+    family: Callable[[], FamilyQueries]
 
 
 def create_task_router(

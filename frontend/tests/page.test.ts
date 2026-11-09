@@ -60,6 +60,12 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview});
+    else if (route.startsWith('family?')) {
+      const query = new URLSearchParams(route.split('?')[1]);
+      raw = JSON.stringify({period:{start:query.get('start'),end:query.get('end')},time_zone:'UTC',
+        posted_minor:0,available_minor:0,earned_minor:0,pending_verification_minor:0,pending_posting_minor:0,
+        completed_count:0,tracked_count:0,elapsed_ms:0,history:[],next_cursor:query.has('cursor')?null:'family-next'});
+    }
     else if (route.startsWith('tasks/calendar?')) {
       const query=new URLSearchParams(route.split('?')[1]);
       raw=JSON.stringify({period:{start:query.get('start'),end:query.get('end')},time_zone:'UTC',
@@ -478,4 +484,30 @@ test('review composition accepts only closed events in the current task manager 
   expect(f.fetch.mock.calls.some(([path])=>path.includes('recurrence/reviews'))).toBe(false);
   send({type:'close'}); expect(app.recurrenceReview?.open).toBe(false);
   navigate('#household'); expect(app.recurrenceReview).toBeNull();
+});
+
+test.each(['native','standalone'] as const)('Family fetches only for the verified %s workspace and retires on navigation',async mode=>{
+  const f=fixture(mode); f.phase('active'); const {app}=await f.open();
+  const calls=()=>f.fetch.mock.calls.filter(([path])=>path.includes('/api/v1/family?'));
+  const navigate=(fragment:string)=>{
+    f.page.location.href=f.page.location.href.split('#')[0]+fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  const send=(detail:unknown)=>app.dispatchEvent(new CustomEvent('domus-family-intent',{detail}));
+  expect(calls()).toHaveLength(0);
+  navigate('#family');
+  await vi.waitFor(()=>expect(app.family?.state).toBe('ready'));
+  expect(calls()).toHaveLength(1);
+  send(null); send({type:'period',mode:'day',anchor:'2026-05-31'});
+  send({type:'period',mode:'week',anchor:'2026-02-30'});
+  expect(calls()).toHaveLength(1);
+  send({type:'period',mode:'month',anchor:'2026-05-31'});
+  await vi.waitFor(()=>expect(app.family?.report?.period).toEqual({start:'2026-05-01',end:'2026-06-01'}));
+  send({type:'period',mode:'week',anchor:'2026-05-31'});
+  await vi.waitFor(()=>expect(app.family?.report?.period).toEqual({start:'2026-05-25',end:'2026-06-01'}));
+  send({type:'more'}); await vi.waitFor(()=>expect(app.family?.report?.cursor).toBe(null));
+  expect(calls().at(-1)?.[0]).toContain('cursor=family-next');
+  send({type:'refresh'}); await vi.waitFor(()=>expect(app.family?.report?.cursor).toBe('family-next'));
+  navigate('#tasks');
+  expect(app.familyScopeKey).toBeNull(); expect(app.family).toBeNull();
 });

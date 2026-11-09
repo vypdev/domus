@@ -33,3 +33,31 @@ task completions. Its SHA-256 is `49522d9ca92a55dbe6a751c768ab17250c93010a7ceb6f
 the real recurrence and Points interaction, worker composition, concurrency,
 rollback, restart, and restoration. The combined Inventory assertions retain
 their original acceptance identities in [issue #23](https://github.com/vypdev/domus/issues/23).
+
+
+## Family read model
+
+The protected `GET /api/v1/family` endpoint uses the same context assertion and
+current household permissions on Ingress and standalone. The server selects the
+member from the verified session. The response includes signed history in posting
+order and a cursor bound to the member, their current authority, and the requested
+report. The Points worker remains the writer of awards and linked reversals.
+
+The selected week or month reports actual work in the household zone. Approval
+and posting keep their own timestamps. Pending verification and pending posting
+show estimates from the current conserved split and rotation. Available points
+come from posted entries. Posted and available values coincide before reward
+reservations are introduced.
+
+Recorded completions remain visible after reopening. A reversal corrects the
+original period's earned points without erasing the work or posting history.
+Elapsed time is measured from the last recorded transition into progress before
+completion in the same occurrence cycle. It estimates the elapsed interval and
+may include pauses. Family identifies how many completions have a recorded start.
+
+[Family HTTP tests](../../tests/backend/test_family_http.py) use both deployment
+compositions, real SQLite and the Points worker for scoped reads, the Sunday and
+month-end transition, cursor binding, and restart. The restore case checks an
+actual activated snapshot and suppresses duplicate postings. The
+[workspace browser journey](../../frontend/tests/e2e/workspace-navigation.spec.ts)
+covers localized history and the Points worker in the same protected workspace.

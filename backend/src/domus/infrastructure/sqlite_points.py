@@ -2,9 +2,11 @@
 
 import json
 import sqlite3
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from typing import Any, cast
 
+from domus.application.family_ports import FamilyLedgerEntry, FamilyWork
 from domus.domain.errors import InvalidInput, StorageFailure
 from domus.domain.points import PointsPosting, conserve_points, points_source_fingerprint
 from domus.domain.restoration import RetainedOperation
@@ -15,6 +17,7 @@ from domus.infrastructure.sqlite_task_history import (
     SQLiteTaskHistory,
     task_source_record,
 )
+from domus.infrastructure.sqlite_task_records import read_cycle
 
 POINTS_TABLE = "points_task_receipts"
 POINTS_STATEMENTS = (
@@ -37,6 +40,68 @@ POINTS_STATEMENTS = (
     "household_id,json_extract(document,'$.event_payload.cycle.cycle_id'),position) "
     f"WHERE {RESTORED_AWARD_CLOSURE}",
 )
+
+
+_MEMBER_SHARES = """
+FROM points_task_receipts p
+JOIN json_each(p.document, '$.shares') share
+WHERE p.household_id=:household AND p.effect>0
+    AND json_extract(share.value, '$[0]')=:member
+"""
+
+_MEMBER_HISTORY = """
+SELECT p.*, c.occurrence_id, json_extract(c.document, '$.verified_at') AS verified_at,
+    json_extract(w.document, '$.definition_snapshot.content.title') AS title
+FROM points_task_receipts p
+JOIN task_cycles c ON c.household_id=p.household_id AND c.cycle_id=p.cycle_id
+JOIN task_occurrences w ON w.household_id=c.household_id AND w.occurrence_id=c.occurrence_id
+WHERE p.household_id=:household AND p.effect>0
+    AND EXISTS (
+        SELECT 1 FROM json_each(p.document, '$.shares') share
+        WHERE json_extract(share.value, '$[0]')=:member
+    )
+    AND (:after IS NULL OR p.position < (
+        SELECT position FROM points_task_receipts
+        WHERE household_id=:household AND event_id=:after
+    ))
+ORDER BY p.position DESC LIMIT :limit
+"""
+
+_MEMBER_WORK = f"""
+SELECT c.document, w.definition_id,
+    c.closed_at IS NULL AND json_extract(c.document, '$.verification')!='rejected'
+    AND NOT EXISTS (
+        SELECT 1 FROM points_task_receipts p
+        WHERE p.household_id=c.household_id AND p.cycle_id=c.cycle_id AND p.effect=1
+    ) AND NOT EXISTS (
+        SELECT 1 FROM retained_operations
+        WHERE household_id=c.household_id
+            AND json_extract(document, '$.event_payload.cycle.cycle_id')=c.cycle_id
+            AND {RESTORED_AWARD_CLOSURE}
+    ) AS awaiting_credit,
+    (
+        SELECT MAX(progress.created_at) FROM outbox progress
+        WHERE progress.household_id=c.household_id AND progress.event_type='task.transition'
+            AND json_extract(progress.payload, '$.occurrence_id')=c.occurrence_id
+            AND json_extract(progress.payload, '$.state')='in_progress'
+            AND progress.created_at <= json_extract(c.document, '$.performed_at')
+            AND progress.created_at > COALESCE((
+                SELECT MAX(prior.closed_at) FROM task_cycles prior
+                WHERE prior.household_id=c.household_id AND prior.occurrence_id=c.occurrence_id
+                    AND prior.cycle_id!=c.cycle_id
+                    AND prior.closed_at <= json_extract(c.document, '$.recorded_at')
+            ), -1)
+    ) AS started_at
+FROM task_cycles c
+JOIN task_occurrences w ON w.household_id=c.household_id AND w.occurrence_id=c.occurrence_id
+WHERE c.household_id=:household
+    AND json_extract(c.document, '$.performed_at')>=:start
+    AND json_extract(c.document, '$.performed_at')<:end
+    AND EXISTS (
+        SELECT 1 FROM json_each(c.document, '$.performers') performer
+        WHERE json_extract(performer.value, '$.member_id')=:member
+    )
+"""
 
 
 def _posting(row: sqlite3.Row) -> PointsPosting:
@@ -94,6 +159,57 @@ class SQLitePoints:
                 (household_id, cycle_id),
             )
         )
+
+    def member_totals(
+        self, household_id: str, member_id: str, start: int, end: int
+    ) -> tuple[int, int]:
+        row = self.connection.execute(
+            "SELECT COALESCE(SUM(json_extract(share.value, '$[1]')),0), "
+            "COALESCE(SUM(CASE WHEN json_extract(p.document,'$.performed_at')>=:start "
+            "AND json_extract(p.document,'$.performed_at')<:end "
+            "THEN json_extract(share.value, '$[1]') ELSE 0 END),0) " + _MEMBER_SHARES,
+            {"household": household_id, "member": member_id, "start": start, "end": end},
+        ).fetchone()
+        return int(row[0]), int(row[1])
+
+    def member_history(
+        self, household_id: str, member_id: str, after: str | None, limit: int
+    ) -> tuple[FamilyLedgerEntry, ...]:
+        entries = []
+        for row in self.connection.execute(
+            _MEMBER_HISTORY,
+            {"household": household_id, "member": member_id, "after": after, "limit": limit},
+        ):
+            posting = _posting(row)
+            entries.append(
+                FamilyLedgerEntry(
+                    posting.event_id,
+                    posting.cycle_id,
+                    row["occurrence_id"],
+                    row["title"],
+                    dict(posting.shares)[member_id],
+                    posting.performed_at,
+                    row["verified_at"],
+                    posting.posted_at,
+                    posting.reverses,
+                    posting.policy_version,
+                )
+            )
+        return tuple(entries)
+
+    def member_work(
+        self, household_id: str, member_id: str, start: int, end: int
+    ) -> Iterable[FamilyWork]:
+        for row in self.connection.execute(
+            _MEMBER_WORK,
+            {"household": household_id, "member": member_id, "start": start, "end": end},
+        ):
+            yield FamilyWork(
+                read_cycle(row["document"]),
+                row["definition_id"],
+                row["started_at"],
+                bool(row["awaiting_credit"]),
+            )
 
     def add(
         self, event: TaskLifecycleEvent, fingerprint: str, posting: PointsPosting | None

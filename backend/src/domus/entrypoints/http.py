@@ -32,6 +32,7 @@ from domus.entrypoints.administration_http import (
 )
 from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryContextResponse, EntryHTTPContext
+from domus.entrypoints.family_http import create_family_router
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
 from domus.entrypoints.http_errors import CALENDAR_RANGE_GUIDANCE, classify
@@ -433,5 +434,8 @@ def create_app(
             return task_factory(cast(str, _cookie(request.scope, settings.session_cookie)))
 
         app.include_router(create_task_router(tasks, security=session_security))
+        app.include_router(
+            create_family_router(lambda request: tasks(request).family(), security=session_security)
+        )
     attach_ui(app, ui_bundle, "standalone", lambda request: None)
     return app

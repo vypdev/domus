@@ -8,6 +8,7 @@ from domus.domain.errors import InvalidInput
 from domus.domain.storage import JsonDocument, validate_identifier
 from domus.domain.task_events import TaskLifecycleEvent
 from domus.domain.task_values import validate_task_ids, validate_task_time
+from domus.domain.tasks import TaskCycle
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,11 +70,11 @@ class PointsPosting:
         )
 
 
-def conserve_points(
-    event: TaskLifecycleEvent, posted_at: int, next_recipient: str | None
-) -> PointsPosting:
-    members = sorted(performer.member_id for performer in event.cycle.performers)
-    value = event.cycle.rules.point_value_minor
+def conserved_shares(
+    cycle: TaskCycle, next_recipient: str | None
+) -> tuple[tuple[tuple[str, int], ...], int, str | None]:
+    members = sorted(performer.member_id for performer in cycle.performers)
+    value = cycle.rules.point_value_minor
     quantum = 1 if value % 100 else 100
     share, remainder = divmod(value // quantum, len(members))
     start = bisect_left(members, next_recipient or "")
@@ -81,6 +82,17 @@ def conserve_points(
         (member, (share + int((index - start) % len(members) < remainder)) * quantum)
         for index, member in enumerate(members)
     )
+    return (
+        shares,
+        2 if quantum == 1 else 0,
+        (members[(start + remainder) % len(members)] if remainder else next_recipient),
+    )
+
+
+def conserve_points(
+    event: TaskLifecycleEvent, posted_at: int, next_recipient: str | None
+) -> PointsPosting:
+    shares, precision, following = conserved_shares(event.cycle, next_recipient)
     return PointsPosting(
         event.event_id,
         event.cycle.cycle_id,
@@ -88,8 +100,8 @@ def conserve_points(
         shares,
         event.cycle.performed_at,
         posted_at,
-        2 if quantum == 1 else 0,
-        members[(start + remainder) % len(members)] if remainder else next_recipient,
+        precision,
+        following,
     )
 
 

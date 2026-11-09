@@ -41,6 +41,8 @@ for (const mode of ['native', 'standalone'] as const) {
     const overview = tabs.getByRole('link', {name: 'Overview', exact: true});
     const tasks = tabs.getByRole('link', {name: 'Tasks', exact: true});
     const calendar = tabs.getByRole('link', {name: 'Calendar', exact: true});
+    const family = tabs.getByRole('link', {name: 'Family', exact: true});
+    const familyRegion = page.locator('domus-app #family');
     const household = tabs.getByRole('link', {name: 'Household', exact: true});
     const overviewRegion = page.locator('domus-app #overview');
     const tasksRegion = page.locator('domus-app #tasks');
@@ -52,6 +54,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(overview).toHaveAttribute('href', '#overview');
     await expect(tasks).toHaveAttribute('href', '#tasks');
     await expect(calendar).toHaveAttribute('href', '#calendar');
+    await expect(family).toHaveAttribute('href', '#family');
     await expect(household).toHaveAttribute('href', '#household');
     await expect(household).toHaveCSS('height', '56px');
     await overview.click();
@@ -93,6 +96,18 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.goForward();
     await expect(calendar).toHaveAttribute('aria-current', 'page');
     await calendar.focus();
+    await page.keyboard.press('Tab');
+    await expect(family).toBeFocused();
+    const familyRead = page.waitForResponse(response => response.url().startsWith(base + 'api/v1/family?'));
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(base + '#family');
+    await expect(familyRegion).toBeFocused();
+    await expect(family).toHaveAttribute('aria-current', 'page');
+    const firstFamily = await familyRead;
+    expect(firstFamily.ok()).toBe(true);
+    await expect(familyRegion.getByText('Available balance', {exact: true})).toBeVisible();
+    await expect(familyRegion.getByText('There are no points movements yet.')).toBeVisible();
+    await family.focus();
     await page.keyboard.press('Tab');
     await expect(household).toBeFocused();
     await expect(household.locator('[part=content]')).toHaveCSS('outline-style', 'solid');
@@ -185,6 +200,58 @@ for (const mode of ['native', 'standalone'] as const) {
     expect(originalReads).toHaveLength(1);
     expect(originalReads[0]).toContain('"revision":9007199254740994');
     expect(writes).toEqual(['POST ' + base + 'api/v1/household', 'PUT ' + pref]);
+    await page.getByLabel('Language', {exact: true}).selectOption('es');
+
+    // Use the compiled application's current session and the real Points worker.
+    const contextHeader = (await firstFamily.request().allHeaders())['x-domus-context'];
+    expect(contextHeader).toBeTruthy();
+    const access = await page.request.get(base + 'api/v1/tasks/access');
+    expect(access.ok()).toBe(true);
+    const member = (await access.json()).member_id;
+    const csrf = await page.request.get(base + 'api/v1/auth/csrf');
+    expect(csrf.ok()).toBe(true);
+    const token = (await csrf.json()).csrf_token;
+    const post = async (suffix: string, key: string, data: object) => {
+      const response = await page.request.post(base + 'api/v1/tasks/' + suffix, {data, headers: {
+        Origin: origin, 'X-Domus-Context': contextHeader, 'X-CSRF-Token': token, 'Idempotency-Key': key,
+      }});
+      expect(response.ok(), await response.text()).toBe(true);
+      return (await response.json()).result;
+    };
+    const seeded = await post('definitions', 'family-work', {
+      title: 'Water plants', overrides: {point_value_minor: 225},
+    });
+    const done = await post('occurrences/' + seeded.occurrence_id + '/complete', 'family-completed', {
+      expected_revision: seeded.revision, performer_ids: [member], performed_at: Date.now() - 500,
+    });
+    const ledger = async () => {
+      const result = await page.request.get(firstFamily.url(), {headers: {'X-Domus-Context': contextHeader}});
+      expect(result.ok(), await result.text()).toBe(true);
+      return result.json();
+    };
+    await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(225);
+    const familia = tabs.getByRole('link', {name: 'Familia', exact: true});
+    await familia.click();
+    await expect(familyRegion.getByText('Saldo disponible', {exact: true})).toBeVisible();
+    await expect(familyRegion.getByText('Premio 2,25', {exact: true})).toBeVisible();
+    await expect(familyRegion.getByText('Puntos estimados pendientes de verificación')).toBeVisible();
+    await expect(familyRegion.getByText('Puntos estimados pendientes de registro')).toBeVisible();
+    await familyRegion.getByRole('combobox', {name: 'Período', exact: true}).selectOption('month');
+    const monthly = page.waitForResponse(response => response.url().startsWith(base + 'api/v1/family?'));
+    await familyRegion.getByRole('button', {name: 'Mostrar participación'}).click();
+    expect((await monthly).ok()).toBe(true);
+    await expect(familyRegion.getByText(/UTC/u)).toBeVisible();
+    await post('occurrences/' + seeded.occurrence_id + '/reopen', 'family-reopened', {
+      expected_revision: done.revision, cycle_id: done.cycle.cycle_id, reason: 'Check the original work',
+    });
+    await expect.poll(async () => (await ledger()).history.length, {timeout: 15_000}).toBe(2);
+    await familyRegion.getByRole('button', {name: 'Actualizar'}).click();
+    await expect(familyRegion.getByText('Reversión −2,25', {exact: true})).toBeVisible();
+    await expect(familyRegion.getByText('Premio original', {exact: true})).toBeVisible();
+    await familyRegion.screenshot({path: info.outputPath('family-es-reversal.png')});
+    await page.getByLabel('Idioma', {exact: true}).selectOption('en');
+    await expect(familyRegion.getByText('Reversal −2.25', {exact: true})).toBeVisible();
+    await familyRegion.screenshot({path: info.outputPath('family-en-reversal.png')});
     await page.getByLabel('Language', {exact: true}).selectOption('es');
 
     await tabs.evaluate(element => {element.style.width = '125px';});

@@ -1,5 +1,5 @@
 const english = Object.freeze({
-  navigationTasks: 'Tasks', navigationCalendar: 'Calendar', navigationHousehold: 'Household',
+  navigationTasks: 'Tasks', navigationCalendar: 'Calendar', navigationFamily: 'Family', navigationHousehold: 'Household',
   tagline: 'Your household, together', language: 'Language', english: 'English', spanish: 'Español',
   workspaceNavigation: 'Household navigation', workspaceOverview: 'Overview', workspaceHousehold: 'Household',
   workspaceScrollStart: 'Scroll to start', workspaceScrollEnd: 'Scroll to end',
@@ -59,7 +59,7 @@ const english = Object.freeze({
 export type MessageKey = keyof typeof english;
 export type Language = 'en' | 'es';
 const spanish: Readonly<Record<MessageKey, string>> = Object.freeze({
-  navigationTasks: 'Tareas', navigationCalendar: 'Calendario', navigationHousehold: 'Hogar',
+  navigationTasks: 'Tareas', navigationCalendar: 'Calendario', navigationFamily: 'Familia', navigationHousehold: 'Hogar',
   tagline: 'Tu hogar, en equipo', language: 'Idioma', english: 'English', spanish: 'Español',
   workspaceNavigation: 'Navegación del hogar', workspaceOverview: 'Inicio', workspaceHousehold: 'Hogar',
   workspaceScrollStart: 'Desplazar al inicio', workspaceScrollEnd: 'Desplazar al final',
