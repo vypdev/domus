@@ -363,7 +363,7 @@ def test_actual_compatible_application_data_and_generation_rollback(
     assert restored["ui"] == later["ui"]
     assert restored["generation_id"] == later["selected_generation"]
     assert restored["state"] == before["state"]
-    assert restored["schema"] == refusal["refused_schema"] == 16
+    assert restored["schema"] == refusal["refused_schema"] == 17
     assert restored["original_operations_preserved"] is True
     assert rolled_back["ui"] == before["ui"]
     assert rolled_back["state"] == before["state"]
