@@ -230,3 +230,83 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
     expect(actual.items[0].title).toBe('One original task');
   });
 });
+
+for (const mode of ['native', 'standalone'] as const) {
+  for (const locale of ['en', 'es'] as const) {
+    test(`protected calendar and fixed batch review use actual stored work in ${mode} ${locale}`, async ({page, context, request}) => {
+      expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
+      const tasks = await open(page, context, mode);
+      const response = await request.post(origin(mode) + '/__fixture__/calendar-review');
+      expect(response.status()).toBe(200);
+      const {title, completed, started, future, first, new_date: newDate} = await response.json();
+      const t = (english: string, spanish: string) => locale === 'en' ? english : spanish;
+      if (locale === 'es') await page.getByLabel('Language', {exact: true}).selectOption('es');
+      await page.setViewportSize({width: 320, height: 720});
+      const tab = page.getByRole('link', {name: t('Calendar', 'Calendario'), exact: true});
+      await tab.focus();
+      await page.keyboard.press('Enter');
+      const calendar = page.locator('domus-calendar');
+      await expect(calendar.locator('.calendar-grid')).toBeVisible();
+      await expect(page.locator('domus-app #calendar')).toBeFocused();
+      const view = calendar.getByRole('combobox', {name: t('Calendar view', 'Vista del calendario')});
+      await view.focus();
+      await view.press('a');
+      await expect(view).toHaveValue('agenda');
+      await calendar.getByLabel(t('Reference date', 'Fecha de referencia')).fill(first);
+      const show = calendar.getByRole('button', {name: t('Show calendar', 'Mostrar calendario')});
+      await show.focus();
+      await page.keyboard.press('Enter');
+      await expect(calendar.locator('.calendar-grid')).toHaveCount(0);
+      const rows = calendar.locator('.calendar-entries li').filter({hasText: title});
+      for (const kind of [t('Planned', 'Previsto'), t('Due', 'Vencimiento'), t('Performed', 'Realizado'), t('Approval', 'Aprobación')])
+        await expect(rows.filter({hasText: kind}).first().locator('time')).toBeVisible();
+      await expect(calendar.getByRole('status').filter({hasText: t('Recurrence processing is pending.', 'Hay recurrencias pendientes de procesar.')})).toBeVisible();
+      await expect(calendar.locator('img,script')).toHaveCount(0);
+
+      await page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true}).click();
+      await tasks.getByRole('button', {name: t('Refresh tasks', 'Actualizar tareas')}).click();
+      const endpoint = base(mode) + '/api/v1/tasks/occurrences';
+      const before = (await (await page.request.get(endpoint)).json()).items;
+      const candidates = before.filter((item: {title: string}) => item.title === title);
+      const candidateIndex = candidates.findIndex((item: {occurrence_id: string}) => item.occurrence_id === future);
+      expect(candidateIndex).toBeGreaterThanOrEqual(0);
+      await tasks.getByRole('button', {name: title, exact: true}).nth(candidateIndex).click();
+      const review = page.locator('domus-recurrence-review');
+      await review.getByRole('button', {name: t('Review scheduling', 'Revisar programación'), exact: true}).click();
+      await review.getByRole('combobox').first().selectOption('fixed-replacement');
+      await review.getByLabel(t('Local date', 'Fecha local')).fill(newDate);
+      await review.locator('input[name=time]').fill('07:00');
+      await review.locator('input[name=pattern]').fill('FREQ=DAILY;COUNT=1');
+      const reason = '<img src=x onerror=alert(1)> reviewed reason';
+      await review.locator('textarea[name=reason]').fill(reason);
+      await review.getByRole('button', {name: t('Preview schedule change', 'Previsualizar cambio de programación'), exact: true}).click();
+      await expect(review.getByText(reason, {exact: true})).toBeVisible();
+      await expect(review.locator('img,script')).toHaveCount(0);
+      const retained = review.getByRole('list', {name: t('Existing work retained', 'Trabajo existente que se conserva')});
+      await expect(retained.getByRole('listitem')).not.toHaveCount(0);
+      let applies = 0;
+      let originalKey = '';
+      await page.route(base(mode) + '/api/v1/tasks/recurrence/reviews/fixed-replacement/apply', async route => {
+        applies++;
+        originalKey = route.request().headers()['idempotency-key'];
+        const committed = await route.fetch({maxRetries: 0, maxRedirects: 0});
+        expect(committed.status()).toBe(200);
+        await route.abort('connectionreset');
+      });
+      await review.getByRole('button', {name: t('Apply reviewed change', 'Aplicar cambio revisado'), exact: true}).click();
+      await expect(review.getByRole('alert')).toContainText(t('The result is unconfirmed', 'El resultado no está confirmado'));
+      await page.reload();
+      const recovered = page.waitForResponse(item => item.request().method() === 'GET' && item.url().endsWith('/' + originalKey));
+      await review.getByRole('button', {name: 'Check original schedule request', exact: true}).last().click();
+      expect((await recovered).ok()).toBe(true);
+      await expect(review.getByRole('heading', {name: 'Schedule change saved', exact: true})).toBeVisible();
+      expect(applies).toBe(1);
+      const after = (await (await page.request.get(endpoint)).json()).items;
+      expect(after).toEqual(expect.arrayContaining([
+        expect.objectContaining({occurrence_id: completed, state: 'completed'}),
+        expect.objectContaining({occurrence_id: started, state: 'in_progress'}),
+        expect.objectContaining({occurrence_id: future, state: 'cancelled'}),
+      ]));
+    });
+  }
+}

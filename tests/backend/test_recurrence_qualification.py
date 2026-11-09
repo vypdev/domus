@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import date
 from threading import Event
 
+import pytest
 from test_activation_compatibility import identity_at
 from test_mixed_recurrence import mixed
 from test_recurrence_review import reviewed
@@ -215,3 +216,124 @@ def test_delayed_approval_after_a_reviewed_rule_edit_and_restore_cannot_grant_ag
             assert len(unit.recurrence.relative_slots("home", rule)) == 2
     finally:
         restored.close()
+
+
+def test_batch_review_binds_excluded_moved_and_concurrently_started_work(tmp_path):
+    from test_fixed_exception_review import nominal, selection
+    from test_recurrence_creation import request, setup
+
+    from domus.application.fixed_batch_review import FixedReplacement
+    from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
+    from domus.application.recurrence_review import ReviewAction
+    from domus.application.relative_recurrence import RelativeRecurrencePlanner
+    from domus.application.reschedule_review import RescheduleSelection
+    from domus.application.task_commands import TaskCommands
+    from domus.domain.errors import Conflict, NotFound
+    from domus.domain.recurrence_records import FixedExceptionKind
+    from domus.domain.recurrence_rule_text import parse_fixed_pattern
+    from domus.domain.recurrence_rules import NominalDate
+
+    creator, tasks, store, actor, identifiers = setup(tmp_path)
+    created = creator.create_fixed(
+        "original-fixed",
+        replace(request(), pattern=parse_fixed_pattern("FREQ=DAILY;COUNT=4", nominal(27))),
+    )
+    rule = created.result.decode()["schedule_id"]
+    maintenance = FixedMaintenance(
+        store,
+        MaintenanceScope(store.installation, "home"),
+        creator.planner,
+        creator.clock,
+        identifiers,
+    )
+    moved, started, excluded, replaceable = [maintenance.step(rule, nominal(31)) for _ in range(4)]
+    assert all(step.status == "created" for step in (moved, started, excluded, replaceable))
+    review = RecurrenceReview(
+        store,
+        store.installation,
+        actor,
+        actor.current,
+        creator.clock,
+        identifiers,
+        RelativeRecurrencePlanner(creator.planner.times),
+    )
+    destination = NominalDate(date(2026, 4, 1))
+    _, move = reviewed(
+        review,
+        RescheduleSelection(
+            rule,
+            1,
+            moved.receipt.command.key,
+            moved.occurrence_id,
+            1,
+            destination,
+            "Individual move",
+        ),
+        "preview-move",
+    )
+    review.apply("apply-move", move)
+    with store.read() as unit:
+        original_moved = unit.tasks.occurrence("home", moved.occurrence_id)
+    _, exclusion = reviewed(
+        review, selection(rule, 1, FixedExceptionKind.EXCLUDE, 29), "preview-exclusion"
+    )
+    review.apply("apply-exclusion", exclusion)
+    tasks.assign("assign-before-preview", AssignTask(started.occurrence_id, 1, ("child",)))
+    replacement = FixedReplacement(
+        rule,
+        2,
+        parse_fixed_pattern("FREQ=DAILY;COUNT=2", nominal(29)),
+        "Review remaining work",
+    )
+    first, stale = reviewed(review, replacement, "before-start")
+    plan = first.result.decode()["plan"]["source"]
+    assert {entry["occurrence_id"] for entry in plan["retained_work"]} == {
+        moved.occurrence_id,
+        started.occurrence_id,
+        excluded.occurrence_id,
+    }
+
+    independent = SQLiteDatabase(store.path, store.installation)
+    TaskCommands(independent, actor, creator.clock, identifiers).transition(
+        "start-after-preview", TransitionTask(started.occurrence_id, 2, OccurrenceState.IN_PROGRESS)
+    )
+    after_start = counts(store)
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        review.apply("stale-batch", stale)
+    with pytest.raises(NotFound):
+        review.original(ReviewAction.APPLY, "stale-batch")
+    assert counts(store) == after_start
+
+    latest, accepted = reviewed(review, replacement, "after-start")
+    plan = latest.result.decode()["plan"]["source"]
+    assert {entry["occurrence_id"] for entry in plan["retained_work"]} == {
+        moved.occurrence_id,
+        started.occurrence_id,
+        excluded.occurrence_id,
+    }
+    assert [entry["occurrence_id"] for entry in plan["cancelled_work"]] == [
+        replaceable.occurrence_id
+    ]
+    committed = review.apply("accepted-batch", accepted)
+    after_commit = counts(store)
+    recovered = replace(review, transactions=independent)
+    assert recovered.original(ReviewAction.APPLY, "accepted-batch") == committed
+    assert recovered.apply("accepted-batch", accepted) == committed
+    with pytest.raises(Conflict):
+        recovered.apply("accepted-batch", stale)
+    assert counts(store) == after_commit
+    with independent.read() as unit:
+        retained_move = unit.tasks.occurrence("home", moved.occurrence_id)
+        assert retained_move == original_moved
+        assert retained_move.state is OccurrenceState.AVAILABLE
+        assert (
+            unit.tasks.occurrence("home", started.occurrence_id).state
+            is OccurrenceState.IN_PROGRESS
+        )
+        assert (
+            unit.tasks.occurrence("home", excluded.occurrence_id).state is OccurrenceState.CANCELLED
+        )
+        assert (
+            unit.tasks.occurrence("home", replaceable.occurrence_id).state
+            is OccurrenceState.CANCELLED
+        )
