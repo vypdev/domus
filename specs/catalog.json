@@ -611,16 +611,26 @@
       ],
       "entrypoints": [
         "backend/src/domus/composition/ingress.py",
-        "backend/src/domus/composition/server.py"
+        "backend/src/domus/composition/server.py",
+        "backend/src/domus/entrypoints/family_http.py"
       ],
       "code": [
         "backend/src/domus/domain/points.py",
         "backend/src/domus/application/points.py",
         "backend/src/domus/application/points_ports.py",
-        "backend/src/domus/infrastructure/sqlite_points.py"
+        "backend/src/domus/infrastructure/sqlite_points.py",
+        "backend/src/domus/application/family_queries.py",
+        "backend/src/domus/application/family_ports.py",
+        "frontend/src/application/family-controller.ts",
+        "frontend/src/adapters/family-http.ts",
+        "frontend/src/presentation/domus-family.ts",
+        "frontend/src/presentation/family-messages.ts"
       ],
       "tests": [
-        "tests/backend/test_points_consumer.py"
+        "tests/backend/test_points_consumer.py",
+        "tests/backend/test_family_http.py",
+        "frontend/tests/family.test.ts",
+        "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -632,8 +642,8 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: PR #58 verifies the durable task lifecycle consumer, default conserved allocation, exact reversal, both deployment compositions, and SQLite migration and restoration.",
-        "blockingDecisions": "Configurable distribution, complete Family experience, reward redemption and broader release acceptance remain open.",
+        "implementationEvidence": "partial: PR #58 verifies the durable task lifecycle consumer, default conserved allocation, exact reversal, both deployment compositions, and SQLite migration and restoration. The protected Family read is exercised by both composed HTTP paths, an activated restore, and English and Spanish Chromium journeys.",
+        "blockingDecisions": "Configurable distribution, reward redemption and broader release acceptance remain open.",
         "copilotChangesAllowed": false
       }
     },

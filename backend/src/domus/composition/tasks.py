@@ -5,6 +5,7 @@ from typing import Protocol
 
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
+from domus.application.family_queries import FamilyQueries
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.inventory import InventorySettlement
@@ -46,6 +47,8 @@ def task_contexts(
     def inventory(unit: UnitOfWork) -> InventorySettlement:
         return InventorySettlement(unit.inventory, clock, identifiers)
 
+    scope = MaintenanceScope(installation, "home")
+
     def context(actor: TaskSession) -> TaskHTTPContext:
         return TaskHTTPContext(
             lambda: TaskQueries(
@@ -57,9 +60,7 @@ def task_contexts(
             ),
             TaskCommands(store, actor, clock, identifiers, inventory_factory=inventory),
             RecurrenceReview(store, installation, actor, actor.read, clock, identifiers, planner),
-            lambda: CalendarQueries(
-                store, MaintenanceScope(installation, "home"), actor.read(), cursors, planner.times
-            ),
+            lambda: CalendarQueries(store, scope, actor.read(), cursors, planner.times),
             CalendarCommands(store, actor, actor.read, clock, identifiers),
             RecurrenceCommands(
                 store,
@@ -80,6 +81,7 @@ def task_contexts(
                 bind_household_policy=True,
             ),
             TaskCategoryCommands(store, actor, actor.read, clock, identifiers),
+            lambda: FamilyQueries(store, scope, actor.read(), cursors, planner.times),
         )
 
     return context

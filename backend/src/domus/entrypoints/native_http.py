@@ -21,6 +21,7 @@ from domus.entrypoints.administration_http import (
 )
 from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryHTTPContext
+from domus.entrypoints.family_http import create_family_router
 from domus.entrypoints.household_http import HouseholdHTTPContext, create_household_router
 from domus.entrypoints.http import CSRFResponse, SessionResponse
 from domus.entrypoints.http_contract import ErrorResponse, StrictModel
@@ -95,7 +96,11 @@ class _NativeBoundary(BoundedHTTP):
 
     def _allowed(self, scope: Scope) -> None:
         query = scope.get("query_string", b"")
-        if query and scope["method"] == "GET" and scope["path"].startswith("/api/v1/tasks/"):
+        if (
+            query
+            and scope["method"] == "GET"
+            and (scope["path"].startswith("/api/v1/tasks/") or scope["path"] == "/api/v1/family")
+        ):
             if len(query) > 8192:
                 raise InvalidInput("invalid_request")
             pairs = parse_qsl(query.decode("latin1"), keep_blank_values=True)
@@ -225,6 +230,11 @@ def create_native_app(
     )
     if task_context is not None:
         app.include_router(create_task_router(task_context, security=Depends(security)))
+        app.include_router(
+            create_family_router(
+                lambda request: task_context(request).family(), security=Depends(security)
+            )
+        )
     if administration_context is not None:
         app.include_router(
             create_administration_router(administration_context, security=Depends(security))

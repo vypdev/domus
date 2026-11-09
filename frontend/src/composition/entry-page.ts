@@ -1,3 +1,7 @@
+import {HttpFamilyServer} from '../adapters/family-http';
+import {FamilyController} from '../application/family-controller';
+import {civilDate} from '../domain/calendar';
+import type {FamilyIntent} from '../presentation/domus-family';
 import {HttpRecurrenceServer} from '../adapters/recurrence-http';
 import {RECURRENCE_JOURNAL_KEY, RecurrenceSessionJournal} from '../adapters/recurrence-journal';
 import {BrowserEntropy, ServerClock} from '../adapters/browser-capabilities';
@@ -151,12 +155,13 @@ export function mountEntry(page: EntryPage): PageMount {
   const doc = page.document; mounts.get(doc)?.();
   const lifetime = new AbortController(), widget = new AbortController();
   let calendarPreference: CalendarPreferenceController | null = null;
+  let family: FamilyController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -165,7 +170,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -210,6 +215,28 @@ export function mountEntry(page: EntryPage): PageMount {
         calendarController.bind(null); preferences.bind(null); element.calendarScopeKey = null;
       }
     };
+    const familyController = new FamilyController(new HttpFamilyServer(source.target, browser.transport),
+      view => {element.family = view;});
+    family = familyController;
+    const syncFamily = () => {
+      const entry = element.view, tasks = element.tasks;
+      if (element.workspaceDestination === 'family' && entry?.phase === 'ready' && entry.decision?.state === 'active'
+          && entry.household && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey) {
+        const today = calendarToday(tasks.session.serverTime, entry.household.timeZone);
+        const key = JSON.stringify([tasks.scopeKey, entry.household.revision]);
+        element.familyToday = today; element.familyScopeKey = key;
+        familyController.bind({key, today, context: tasks.session.context});
+      } else {
+        familyController.bind(null); element.familyScopeKey = null;
+      }
+    };
+    element.addEventListener('domus-family-intent', async event => {
+      const intent = (event as CustomEvent<FamilyIntent>).detail;
+      if (intent?.type === 'refresh') await familyController.refresh();
+      if (intent?.type === 'more') await familyController.more();
+      if (intent?.type === 'period' && (intent.mode === 'week' || intent.mode === 'month') && civilDate(intent.anchor))
+        await familyController.select(intent.mode, intent.anchor);
+    }, {signal: widget.signal});
     const reviews = new RecurrenceReviewController(new HttpRecurrenceServer(source.target, browser.transport),
       new RecurrenceSessionJournal({getItem: key => browser.storage().getItem(key),
         setItem: (key, value) => browser.storage().setItem(key, value)}), new ServerClock(browser.elapsed), new BrowserEntropy(browser.random),
@@ -228,13 +255,13 @@ export function mountEntry(page: EntryPage): PageMount {
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
-        : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : null;
-      syncCalendar(); syncReview();
+        : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : null;
+      syncCalendar(); syncReview(); syncFamily();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;

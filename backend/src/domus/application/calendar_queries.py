@@ -75,6 +75,12 @@ class CalendarPage:
     pending: bool
 
 
+def calendar_boundary(day: date, times: RecurrenceTimes, policy: TimePolicy) -> int:
+    resolved = resolve_initial(times, NominalTime(datetime.combine(day, time.min)), policy)
+    assert resolved.resolved is not None
+    return resolved.resolved.instant_ms
+
+
 @dataclass(frozen=True, slots=True)
 class CalendarQueries:
     transactions: Transactions
@@ -93,11 +99,6 @@ class CalendarQueries:
             return home, None
         actor = TaskAccess(self.human).require(unit, self.scope.household_id, Permission.TASKS_READ)
         return home, actor
-
-    def _boundary(self, day: date, policy: TimePolicy) -> int:
-        value = resolve_initial(self.times, NominalTime(datetime.combine(day, time.min)), policy)
-        assert value.resolved is not None
-        return value.resolved.instant_ms
 
     def _binding(
         self,
@@ -266,7 +267,8 @@ class CalendarQueries:
         with self.transactions.read() as unit:
             home, _ = self._read(unit)
         policy = TimePolicy(home.time_zone, self.times.data_identity)
-        start, end = self._boundary(period.start, policy), self._boundary(period.end, policy)
+        start = calendar_boundary(period.start, self.times, policy)
+        end = calendar_boundary(period.end, self.times, policy)
         with self.transactions.read() as unit:
             current, actor = self._read(unit)
             if current != home:

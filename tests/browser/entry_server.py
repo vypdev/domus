@@ -214,6 +214,10 @@ class Fixture:
             )
         assert self.runtime.storage is not None
         self.database = self.runtime.storage.database.path
+        # The fixture's wrapper serves HTTP directly; production starts this worker in lifespan.
+        points = self.runtime.points_worker
+        assert points is not None
+        points.start()
 
     def console(self, *arguments: str) -> dict:
         output, errors = io.StringIO(), io.StringIO()
