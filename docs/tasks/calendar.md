@@ -42,3 +42,7 @@ registration of native calendar entities and the installation credential.
 
 For a read-only calendar entity in Home Assistant, see
 [Connect the native Home Assistant calendar](ha-calendar.md).
+
+The matching entry count includes each planned, due, performed or approval
+entry. The matching task count includes each distinct occurrence once. Both
+counts cover the complete filtered range across all pages.

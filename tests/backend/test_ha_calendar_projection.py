@@ -118,7 +118,30 @@ def test_projection_rejects_inconsistent_temporal_facts(facts):
                 "Europe/Madrid",
                 (replace(entry, **facts),),
                 1,
+                1,
                 None,
                 False,
             )
         )
+
+
+def test_calendar_reports_distinct_occurrences_across_filtered_pages(api):
+    api.user(USER, True)
+    seed(api, timed=False)
+    params = {"start": "2026-03-29", "end": "2026-03-30", "limit": 1}
+    first = api.client.get(BASE, params=params, headers=CONTEXT)
+    assert first.status_code == 200, first.text
+    page = first.json()
+    assert (page["count"], page["occurrence_count"]) == (2, 1)
+    second = api.client.get(BASE, params=params | {"cursor": page["next_cursor"]}, headers=CONTEXT)
+    assert second.status_code == 200, second.text
+    more = second.json()
+    assert (more["count"], more["occurrence_count"], more["next_cursor"]) == (2, 1, None)
+    (left,), (right,) = page["entries"], more["entries"]
+    assert left["occurrence_id"] == right["occurrence_id"]
+    assert {left["kind"], right["kind"]} == {"planned", "due"}
+    selected = api.client.get(BASE, params=params | {"kind": "planned"}, headers=CONTEXT)
+    assert selected.status_code == 200, selected.text
+    assert (selected.json()["count"], selected.json()["occurrence_count"]) == (1, 1)
+    external = api.client.get(BASE + "/home-assistant", params=params, headers=CONTEXT).json()
+    assert external["count"] == 2 and "occurrence_count" not in external
