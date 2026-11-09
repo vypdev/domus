@@ -687,7 +687,8 @@
       "owner": "Domus maintainers (review assignment pending)",
       "lastVerified": "2026-10-29",
       "specs": [
-        "specs/home-assistant-surface.md"
+        "specs/home-assistant-surface.md",
+        "specs/home-assistant-calendar.md"
       ],
       "workflows": [],
       "entrypoints": [],
