@@ -2,7 +2,7 @@ import {defineConfig} from '@playwright/test';
 
 export default defineConfig({
   testDir: 'tests/e2e', testMatch: ['entry.spec.ts','administration.spec.ts','tasks.spec.ts','workspace-navigation.spec.ts'], forbidOnly: true, retries: 0, workers: 1,
-  // All 101 native/standalone journeys plus two fixture startups and cleanup share this bounded budget.
+  // All 105 native/standalone journeys plus two fixture startups and cleanup share this bounded budget.
   globalTimeout: 360_000, outputDir: 'test-results/entry-artifacts',
   reporter: [['list'], ['json', {outputFile: 'test-results/entry-results.json'}]],
   // Playwright normally disables BFCache. Exercise the real production page lifecycle instead.
