@@ -179,6 +179,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await recovered.click();
     const originalResponse = await original;
     expect(originalResponse.ok()).toBe(true);
+    expect(await originalResponse.text()).toContain('"revision":9007199254740994');
     await expect(recovered).toHaveCount(0);
     await expect(calendarRegion.getByLabel('My week starts on')).toHaveValue('sunday');
     expect(writes).toEqual(['POST ' + base + 'api/v1/household', 'PUT ' + pref]);

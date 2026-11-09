@@ -8,6 +8,7 @@ from typing import cast
 from domus.application.authorization import HouseholdAccess
 from domus.application.household_queries import OperationView
 from domus.application.ports import Transactions, UnitOfWork
+from domus.application.schedule_creation_policy import schedule_creation_policy
 from domus.application.task_authorization import (
     TaskAccess,
     TaskActor,
@@ -26,6 +27,7 @@ from domus.application.task_ports import TaskCursors
 from domus.application.task_reviews import DependencyReviewView, review_cycle, review_items
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
+from domus.domain.recurrence_time import TimePolicy
 from domus.domain.restoration import RetainedOperation
 from domus.domain.storage import (
     CommandKey,
@@ -62,6 +64,7 @@ class TaskWorkspaceView:
     member_id: str
     can_create: bool
     can_review_schedule: bool
+    schedule_policy: TimePolicy | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -165,6 +168,7 @@ class TaskQueries:
     cursors: TaskCursors
     installation: Installation
     household_id: str = "home"
+    schedule_data_identity: str | None = None
 
     def __post_init__(self) -> None:
         validate_identifier(self.household_id)
@@ -515,7 +519,13 @@ class TaskQueries:
                 )
             )
             return TaskWorkspaceView(
-                self.household_id, actor.member.member_id, can_create, can_review
+                self.household_id,
+                actor.member.member_id,
+                can_create,
+                can_review,
+                schedule_creation_policy(unit, self.household_id, self.schedule_data_identity)
+                if can_create and self.schedule_data_identity is not None
+                else None,
             )
 
     def _operation_access(self, unit: UnitOfWork) -> None:
@@ -564,6 +574,18 @@ class TaskQueries:
             if receipt is None:
                 raise NotFound("operation_missing")
             return self._operation_view(unit, receipt.operation_id)
+
+    def original_schedule(self, action: str, key: str) -> OperationView:
+        if action not in ("recurrence.fixed.create", "recurrence.relative.create"):
+            raise Forbidden("permission_denied")
+        command = CommandKey(self.household_id, self.human.ha_user_id, action, key)
+        with self.transactions.read() as unit:
+            self._operation_access(unit)
+            TaskAccess(self.human).require(unit, self.household_id, Permission.TASKS_CREATE)
+            receipt = unit.receipts.get(command)
+            if receipt is None:
+                raise NotFound("operation_missing")
+            return OperationView(receipt, unit.outbox.delivered(receipt.operation_id) is True)
 
     def _actions(
         self,

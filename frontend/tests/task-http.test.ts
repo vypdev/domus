@@ -50,6 +50,36 @@ function fixture(mode: 'native' | 'standalone' = 'standalone') {
 }
 afterEach(() => vi.useRealTimers());
 
+test.each(['fixed', 'relative'] as const)('scheduled %s task uses exact policy and recovers the original operation', async kind => {
+  const f = fixture();
+  const rawPolicy = {zone: 'Europe/Madrid', data_identity: 'tzdata:2026.6/iana:2026f',
+    repeated_time: 'second_instant', revision: '$revision'};
+  f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: true, schedule_policy: rawPolicy}));
+  const access = await f.server.access(context).result;
+  expect(access.schedulePolicy?.revision).toBe(REV);
+  const start = kind === 'fixed' ? {kind: 'time', local: '2027-01-02T09:30'} : {kind: 'date', local: '2027-01-02'};
+  const rule = kind === 'fixed' ? {rrule: 'FREQ=WEEKLY;BYDAY=SA'} : {interval_days: 17, visibility: 'at_verification'};
+  const command = taskCommand({action: 'task.create', payload: {expected_revision: 0, title: 'Inspect filter', description: '', priority: 'normal',
+    schedule: {draft: {kind, start, ...rule}, policy: access.schedulePolicy}}})!;
+  const request = {key: 'scheduled-request', command};
+  const raw = {state: 'committed', archived_by: null, operation_id: 'scheduled-op', created_at: 100,
+    message: 'Saved.', action_required: 'Review.', result: {definition_id: 'definition-1', schedule_id: 'rule-1',
+      revision: 1, pattern_revision: 1, processing: 'pending', state: 'active', first_occurrence_id: null}};
+  f.transport.mockResolvedValueOnce(reply({csrf_token: 'a'.repeat(64)})).mockResolvedValueOnce(reply(raw));
+  expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', occurrenceId: null, state: 'active'});
+  const [path, init] = f.transport.mock.calls[2];
+  expect(path).toBe('/api/v1/tasks/recurrence/creation/' + kind);
+  expect(init.body).toBe(encode({task: {title: 'Inspect filter', description: '', priority: 'normal'}, start, ...rule, policy: rawPolicy}));
+  f.transport.mockResolvedValueOnce(reply({...raw, action: 'recurrence.' + kind + '.create', command_key: request.key, delivery: 'pending'}));
+  expect(await f.server.original({...request, operationId: null}, context).result).toMatchObject({operationId: 'scheduled-op'});
+  expect(f.transport.mock.calls.at(-1)?.[0]).toBe('/api/v1/tasks/recurrence/creation/requests/recurrence.' + kind + '.create/' + request.key);
+  for (const change of [{revision: 2}, {pattern_revision: 2}, {state: 'paused'}, {processing: 'current'}, {first_occurrence_id: 'invented'}]) {
+    f.transport.mockResolvedValueOnce(reply({...raw, result: {...raw.result, ...change},
+      action: 'recurrence.' + kind + '.create', command_key: request.key, delivery: 'pending'}));
+    await expect(f.server.original({...request, operationId: null}, context).result).rejects.toThrow();
+  }
+});
+
 for (const mode of ['native', 'standalone'] as const) {
   test(`${mode}: list/detail project literal text and exact values, with server-owned allowed actions`, async () => {
     const f = fixture(mode); f.transport.mockResolvedValueOnce(reply({items: [summary()], next_cursor: 'cursor/+?'})).mockResolvedValueOnce(reply(detail()));

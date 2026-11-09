@@ -473,6 +473,11 @@
           "priority": {
             "$ref": "#/components/schemas/Priority"
           },
+          "relative_review_required": {
+            "default": false,
+            "title": "Relative Review Required",
+            "type": "boolean"
+          },
           "resolved_local": {
             "anyOf": [
               {
@@ -1608,6 +1613,57 @@
         "title": "FixedStateBody",
         "type": "object"
       },
+      "FixedTaskBody": {
+        "additionalProperties": false,
+        "properties": {
+          "policy": {
+            "$ref": "#/components/schemas/ScheduleCreationPolicyBody"
+          },
+          "rrule": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Rrule",
+            "type": "string"
+          },
+          "start": {
+            "discriminator": {
+              "mapping": {
+                "date": "#/components/schemas/NominalDateBody",
+                "time": "#/components/schemas/NominalTimeBody"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NominalDateBody"
+              },
+              {
+                "$ref": "#/components/schemas/NominalTimeBody"
+              }
+            ],
+            "title": "Start"
+          },
+          "task": {
+            "$ref": "#/components/schemas/TaskTextBody"
+          }
+        },
+        "required": [
+          "task",
+          "start",
+          "policy",
+          "rrule"
+        ],
+        "title": "FixedTaskBody",
+        "type": "object"
+      },
+      "FoldPolicy": {
+        "enum": [
+          "first_instant",
+          "second_instant"
+        ],
+        "title": "FoldPolicy",
+        "type": "string"
+      },
       "HACalendarEvent": {
         "properties": {
           "all_day": {
@@ -1700,8 +1756,8 @@
             "type": "string"
           },
           "materialization_horizon_days": {
-            "maximum": 366,
-            "minimum": 7,
+            "maximum": 366.0,
+            "minimum": 7.0,
             "title": "Materialization Horizon Days",
             "type": "integer"
           },
@@ -1749,8 +1805,8 @@
           },
           "materialization_horizon_days": {
             "description": "Local days. Omission preserves the saved household value.",
-            "maximum": 366,
-            "minimum": 7,
+            "maximum": 366.0,
+            "minimum": 7.0,
             "title": "Materialization Horizon Days",
             "type": "integer"
           },
@@ -3380,6 +3436,58 @@
         "title": "RelativeStateBody",
         "type": "object"
       },
+      "RelativeTaskBody": {
+        "additionalProperties": false,
+        "properties": {
+          "interval_days": {
+            "maximum": 36600.0,
+            "minimum": 1.0,
+            "title": "Interval Days",
+            "type": "integer"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/ScheduleCreationPolicyBody"
+          },
+          "start": {
+            "discriminator": {
+              "mapping": {
+                "date": "#/components/schemas/NominalDateBody",
+                "time": "#/components/schemas/NominalTimeBody"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NominalDateBody"
+              },
+              {
+                "$ref": "#/components/schemas/NominalTimeBody"
+              }
+            ],
+            "title": "Start"
+          },
+          "task": {
+            "$ref": "#/components/schemas/TaskTextBody"
+          },
+          "visibility": {
+            "default": "at_completion",
+            "enum": [
+              "at_completion",
+              "at_verification"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task",
+          "start",
+          "policy",
+          "interval_days"
+        ],
+        "title": "RelativeTaskBody",
+        "type": "object"
+      },
       "ReopenBody": {
         "additionalProperties": false,
         "properties": {
@@ -4482,6 +4590,46 @@
         "title": "RulesBody",
         "type": "object"
       },
+      "ScheduleCreationPolicyBody": {
+        "additionalProperties": false,
+        "properties": {
+          "data_identity": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Data Identity",
+            "type": "string"
+          },
+          "repeated_time": {
+            "enum": [
+              "first_instant",
+              "second_instant"
+            ],
+            "title": "Repeated Time",
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "zone": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zone",
+          "data_identity",
+          "repeated_time",
+          "revision"
+        ],
+        "title": "ScheduleCreationPolicyBody",
+        "type": "object"
+      },
       "ScheduleState": {
         "enum": [
           "active",
@@ -4490,6 +4638,87 @@
         ],
         "title": "ScheduleState",
         "type": "string"
+      },
+      "ScheduledTaskOriginalResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "recurrence.fixed.create",
+              "recurrence.relative.create"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "action_required": {
+            "default": "Keep the operation ID. If the response was lost, retry the same payload and key.",
+            "title": "Action Required",
+            "type": "string"
+          },
+          "archived_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived By"
+          },
+          "command_key": {
+            "title": "Command Key",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "delivery": {
+            "enum": [
+              "pending",
+              "delivered",
+              "suppressed"
+            ],
+            "title": "Delivery",
+            "type": "string"
+          },
+          "message": {
+            "default": "The household change was saved. Event delivery is tracked separately.",
+            "title": "Message",
+            "type": "string"
+          },
+          "operation_id": {
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "result": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Result",
+            "type": "object"
+          },
+          "state": {
+            "default": "committed",
+            "enum": [
+              "committed",
+              "historical"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "operation_id",
+          "result",
+          "created_at",
+          "delivery",
+          "action",
+          "command_key"
+        ],
+        "title": "ScheduledTaskOriginalResponse",
+        "type": "object"
       },
       "SetupRequest": {
         "additionalProperties": false,
@@ -5481,6 +5710,32 @@
         "title": "TaskRules",
         "type": "object"
       },
+      "TaskTextBody": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Description",
+            "type": "string"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority",
+            "default": "normal"
+          },
+          "title": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "TaskTextBody",
+        "type": "object"
+      },
       "TaskWorkspaceView": {
         "properties": {
           "can_create": {
@@ -5498,6 +5753,16 @@
           "member_id": {
             "title": "Member Id",
             "type": "string"
+          },
+          "schedule_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimePolicy"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -5507,6 +5772,33 @@
           "can_review_schedule"
         ],
         "title": "TaskWorkspaceView",
+        "type": "object"
+      },
+      "TimePolicy": {
+        "properties": {
+          "data_identity": {
+            "title": "Data Identity",
+            "type": "string"
+          },
+          "repeated_time": {
+            "$ref": "#/components/schemas/FoldPolicy",
+            "default": "first_instant"
+          },
+          "revision": {
+            "default": 1,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "zone": {
+            "title": "Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zone",
+          "data_identity"
+        ],
+        "title": "TimePolicy",
         "type": "object"
       },
       "TransitionBody": {
@@ -15257,6 +15549,529 @@
           }
         ],
         "summary": "Update Policy"
+      }
+    },
+    "/api/v1/tasks/recurrence/creation/fixed": {
+      "post": {
+        "operationId": "create_fixed_api_v1_tasks_recurrence_creation_fixed_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FixedTaskBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Create Fixed"
+      }
+    },
+    "/api/v1/tasks/recurrence/creation/relative": {
+      "post": {
+        "operationId": "create_relative_api_v1_tasks_recurrence_creation_relative_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelativeTaskBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Create Relative"
+      }
+    },
+    "/api/v1/tasks/recurrence/creation/requests/{action}/{key}": {
+      "get": {
+        "operationId": "original_api_v1_tasks_recurrence_creation_requests__action___key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "enum": [
+                "recurrence.fixed.create",
+                "recurrence.relative.create"
+              ],
+              "title": "Action",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledTaskOriginalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Original"
       }
     },
     "/api/v1/tasks/recurrence/reviews/adoption/apply": {

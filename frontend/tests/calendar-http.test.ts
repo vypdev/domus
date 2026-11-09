@@ -9,10 +9,10 @@ const query: CalendarQuery = {...period, kind: '', timing: '', state: '', priori
 const planned = {entry_id: 'planned:work', kind: 'planned', timing: 'completion_relative', occurrence_id: 'work',
   title: '<b>Set clocks</b>', state: 'available', priority: 'normal', categories: ['Home'], member_ids: [],
   schedule_id: 'rule', slot_key: 'slot', local_date: '2026-11-01', local_time: null, instant_ms: null, time_zone: null,
-  nominal_local: null, resolved_local: null, verification: null};
+  nominal_local: null, resolved_local: null, verification: null, relative_review_required: true};
 const approval = {...planned, entry_id: 'approval:cycle', kind: 'approval', timing: 'manual', member_ids: ['member'],
   schedule_id: null, slot_key: null, local_time: '09:00:00', instant_ms: 1793523600000, time_zone: 'Europe/Madrid',
-  nominal_local: '2026-11-01T08:00', resolved_local: '2026-11-01T09:00', verification: 'approved'};
+  nominal_local: '2026-11-01T08:00', resolved_local: '2026-11-01T09:00', verification: 'approved', relative_review_required: false};
 const result = {period, time_zone: 'Europe/Madrid', entries: [planned, approval], count: 2, occurrence_count: 1, next_cursor: null, pending: false};
 
 function fixture(deployment: 'native' | 'standalone', body: unknown) {
@@ -29,9 +29,9 @@ test.each(['native','standalone'] as const)('%s calendar uses the protected same
   const f = fixture(mode, result);
   const page = await f.server.read(context, 'member', query, null).result;
   expect(page).toEqual({entries: [
-    {id: 'planned:work', kind: 'planned', title: '<b>Set clocks</b>', day: '2026-11-01', time: null, zone: null, nominal: null, resolved: null, verification: null},
+    {id: 'planned:work', kind: 'planned', title: '<b>Set clocks</b>', day: '2026-11-01', time: null, zone: null, nominal: null, resolved: null, verification: null, relativeReviewRequired: true},
     {id: 'approval:cycle', kind: 'approval', title: '<b>Set clocks</b>', day: '2026-11-01', time: '09:00:00', zone: 'Europe/Madrid',
-      nominal: '2026-11-01T08:00', resolved: '2026-11-01T09:00', verification: 'approved'}], count: 2, occurrenceCount: 1, cursor: null, pending: false});
+      nominal: '2026-11-01T08:00', resolved: '2026-11-01T09:00', verification: 'approved', relativeReviewRequired: false}], count: 2, occurrenceCount: 1, cursor: null, pending: false});
   expect(Object.isFrozen(page.entries)).toBe(true);
   const [path, init] = f.fetch.mock.calls[0];
   expect(path).toBe(f.target.applicationBase + 'api/v1/tasks/calendar?start=2026-11-01&end=2026-12-01&limit=25');
@@ -55,7 +55,7 @@ test('malformed calendar pages cannot enter the component', async () => {
     {...result, occurrence_count: 0}, {...result, occurrence_count: 3},
     {...result, entries: [planned, planned]}, ...[
       {entry_id: 'approval:work'}, {categories: null}, {categories: Array(17).fill('x')}, {member_ids: null},
-      {member_ids: Array(101).fill('member')}, {local_date: '2026-11-31'}, {verification: 'other'},
+      {member_ids: Array(101).fill('member')}, {local_date: '2026-11-31'}, {verification: 'other'}, {relative_review_required: 'true'},
     ].map(delta => ({...result, entries: [{...planned, ...delta}]}))]) {
     await expect(fixture('standalone', body).server.read(context, 'member', query, null).result).rejects.toThrow();
   }

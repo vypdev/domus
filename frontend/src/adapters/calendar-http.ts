@@ -16,7 +16,7 @@ function optional<T>(value: unknown, decode: (raw: unknown) => T): T | null {
 function entry(value: unknown): CalendarEntry {
   const row = fields(value, ['entry_id','kind','timing','occurrence_id','title','state','priority','categories',
     'member_ids','schedule_id','slot_key','local_date','local_time','instant_ms','time_zone','nominal_local',
-    'resolved_local','verification'], []);
+    'resolved_local','verification','relative_review_required'], []);
   const kind = choice(row.kind, CALENDAR_KINDS), id = text(row.entry_id, 140);
   check(id.startsWith(kind + ':')); identifier(id.slice(kind.length + 1)); identifier(row.occurrence_id);
   choice(row.timing, CALENDAR_TIMINGS); choice(row.state, TASK_STATES); choice(row.priority, TASK_PRIORITIES);
@@ -28,7 +28,8 @@ function entry(value: unknown): CalendarEntry {
   return Object.freeze({id, kind, title: text(row.title, 160), day: row.local_date,
     time: optional(row.local_time, raw => text(raw, 16)), zone: optional(row.time_zone, raw => text(raw, 128)),
     nominal: optional(row.nominal_local, raw => text(raw, 28)), resolved: optional(row.resolved_local, raw => text(raw, 28)),
-    verification: optional(row.verification, raw => choice(raw, ['none','pending','approved','rejected'] as const))});
+    verification: optional(row.verification, raw => choice(raw, ['none','pending','approved','rejected'] as const)),
+    relativeReviewRequired: boolean(row.relative_review_required)});
 }
 
 function page(value: unknown, expected: CalendarQuery): CalendarPage {

@@ -1,4 +1,6 @@
 /** Calendar modes and range arithmetic operate on civil dates, independent of host time. */
+import {civilDate} from './civil-date';
+export {civilDate, DATE_MIN} from './civil-date';
 import {TASK_PRIORITIES, TASK_STATES} from './tasks';
 import type {TaskPriority, TaskState} from './tasks';
 
@@ -29,6 +31,7 @@ export interface CalendarEntry {
   readonly nominal: string | null;
   readonly resolved: string | null;
   readonly verification: string | null;
+  readonly relativeReviewRequired: boolean;
 }
 export interface CalendarPage {
   readonly entries: readonly CalendarEntry[];
@@ -39,14 +42,7 @@ export interface CalendarPage {
 }
 
 const DAY = 86_400_000;
-export const DATE_MIN = '1970-01-01';
 export const DATE_MAX = '9998-12-01';
-
-export function civilDate(value: unknown): value is string {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value) || value < DATE_MIN) return false;
-  const parsed = Date.parse(value + 'T00:00:00Z');
-  return Number.isFinite(parsed) && new Date(parsed).toISOString().slice(0, 10) === value;
-}
 
 function stamp(value: number): string {return new Date(value).toISOString().slice(0, 10);}
 

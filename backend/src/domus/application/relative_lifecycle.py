@@ -51,6 +51,23 @@ def occurrence_work_history(unit: UnitOfWork, work: TaskOccurrence) -> WorkHisto
     return WorkHistory.UNKNOWN
 
 
+def relative_invalidation_command(household_id: str, closure_key: str) -> CommandKey:
+    return CommandKey(
+        household_id, MAINTENANCE_ACTOR, "recurrence.relative.invalidate", closure_key
+    )
+
+
+def recorded_invalidation(receipt: Receipt, closure_key: str, occurrence_id: str) -> str:
+    result = receipt.result.decode()
+    if (
+        result.get("closure_key") != closure_key
+        or result.get("occurrence_id") != occurrence_id
+        or result.get("disposition") not in ("cancel", "retained", "review", "absent")
+    ):
+        raise StorageFailure("invalid_relative_closure_record")
+    return cast(str, result["disposition"])
+
+
 @dataclass(frozen=True, slots=True)
 class _CycleAuthority:
     scope: MaintenanceScope
@@ -291,9 +308,7 @@ class RelativeLifecycle:
         if original.historical:
             return RelativeStep("historical_absent", rule.schedule_id, original, slot.occurrence_id)
         payload = self._payload(closure.key, event)
-        command = CommandKey(
-            rule.household_id, MAINTENANCE_ACTOR, "recurrence.relative.invalidate", closure.key
-        )
+        command = relative_invalidation_command(rule.household_id, closure.key)
         invalidation = unit.receipts.get(command)
         if invalidation is not None:
             return self._invalidation_step(closure, invalidation)
@@ -349,13 +364,7 @@ class RelativeLifecycle:
 
     @staticmethod
     def _invalidation_step(closure: RelativeClosure, receipt: Receipt) -> RelativeStep:
-        result = receipt.result.decode()
         slot = cast(RelativeSlot, closure.successor)
-        if (
-            result.get("closure_key") != closure.key
-            or result.get("occurrence_id") != slot.occurrence_id
-            or result.get("disposition") not in ("cancel", "retained", "review", "absent")
-        ):
-            raise StorageFailure("invalid_relative_closure_record")
-        status = "historical_absent" if receipt.historical else cast(str, result["disposition"])
+        disposition = recorded_invalidation(receipt, closure.key, slot.occurrence_id)
+        status = "historical_absent" if receipt.historical else disposition
         return RelativeStep(status, closure.schedule.schedule_id, receipt, slot.occurrence_id)
