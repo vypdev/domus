@@ -7,7 +7,7 @@ const context: JournalContext = {installationId: '01234567-89ab-cdef-0123-456789
 const period = {start: '2026-11-01', end: '2026-12-01'};
 const query: CalendarQuery = {...period, kind: '', timing: '', state: '', priority: '', category: '', own: false};
 const planned = {entry_id: 'planned:work', kind: 'planned', timing: 'completion_relative', occurrence_id: 'work',
-  title: '<b>Set clocks</b>', state: 'available', priority: 'normal', categories: ['Home'], category_id: 'house:1', member_ids: [],
+  title: '<b>Set clocks</b>', state: 'available', priority: 'normal', categories: ['Legacy tag'], category_id: 'house:1', category_label: 'Home', member_ids: [],
   schedule_id: 'rule', slot_key: 'slot', local_date: '2026-11-01', local_time: null, instant_ms: null, time_zone: null,
   nominal_local: null, resolved_local: null, verification: null, relative_review_required: true};
 const approval = {...planned, entry_id: 'approval:cycle', kind: 'approval', timing: 'manual', member_ids: ['member'],
@@ -54,7 +54,8 @@ test('malformed calendar pages cannot enter the component', async () => {
     {...result, entries: null}, {...result, entries: Array(26).fill(planned)}, {...result, count: 1},
     {...result, occurrence_count: 0}, {...result, occurrence_count: 3},
     {...result, entries: [planned, planned]}, ...[
-      {entry_id: 'approval:work'}, {category_id: null}, {categories: null}, {categories: Array(17).fill('x')}, {member_ids: null},
+      {entry_id: 'approval:work'}, {category_id: null}, {category_id: 'invalid/id'}, {category_label: null}, {category_label: 'x'.repeat(81)},
+      {categories: null}, {categories: Array(17).fill('x')}, {categories: ['x'.repeat(65)]}, {member_ids: null},
       {member_ids: Array(101).fill('member')}, {local_date: '2026-11-31'}, {verification: 'other'}, {relative_review_required: 'true'},
     ].map(delta => ({...result, entries: [{...planned, ...delta}]}))]) {
     await expect(fixture('standalone', body).server.read(context, 'member', query, null).result).rejects.toThrow();
@@ -68,8 +69,11 @@ test('an empty range has zero entries and zero distinct tasks', async () => {
   await expect(fixture('standalone', {...empty, occurrence_count: 1}).server.read(context, 'member', query, null).result).rejects.toThrow();
 });
 
-test('an unclassified entry has no captured category label', async () => {
-  const uncategorized = {...planned, category_id:null, categories:[]};
-  const f = fixture('standalone', {...result, entries:[uncategorized]});
-  expect((await f.server.read(context, 'member', query, null).result).entries[0].categoryLabel).toBeNull();
+test('unclassified and older calendar entries never use tags as a category label', async () => {
+  const older = {...planned, category_id: undefined, category_label: undefined};
+  const unclassified = {...planned, category_id: null, category_label: null};
+  for (const entry of [unclassified, older]) {
+    const f = fixture('standalone', {...result, entries:[entry]});
+    expect((await f.server.read(context, 'member', query, null).result).entries[0].categoryLabel).toBeNull();
+  }
 });

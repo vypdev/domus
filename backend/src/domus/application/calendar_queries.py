@@ -61,6 +61,7 @@ class CalendarEntry:
     verification: VerificationState | None = None
     relative_review_required: bool = False
     category_id: str | None = None
+    category_label: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,7 +167,6 @@ class CalendarQueries:
             raise StorageFailure("invalid_calendar_projection")
         position = candidate.position
         content = work.definition_snapshot.content
-        label = work.definition_snapshot.category_label
         slot = self._slot(unit, candidate)
         entry = CalendarEntry(
             f"{position.kind.value}:{position.source_id}",
@@ -176,7 +176,7 @@ class CalendarQueries:
             content.title,
             work.state,
             content.priority,
-            () if label is None else (label,),
+            content.tags,
             work.assignee_ids,
             None if slot is None else slot.schedule.schedule_id,
             candidate.slot_key,
@@ -184,6 +184,7 @@ class CalendarQueries:
                 isinstance(self.human, HumanIdentity) and self._relative_review_required(unit, slot)
             ),
             category_id=content.category_id,
+            category_label=work.definition_snapshot.category_label,
         )
         if position.kind is CalendarKind.PLANNED:
             if slot is None:

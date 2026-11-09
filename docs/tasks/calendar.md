@@ -28,9 +28,11 @@ an active category or **Unclassified**. The title, description and schedule draf
 in the form. If a category edit conflicts, review the current revision before saving
 the draft again.
 
-The API category filter accepts the active category ID. An archived or foreign ID
-fails before any filtered entries or counts are disclosed. The native Home Assistant
-entity keeps its reduced projection.
+The API category filter accepts the active category ID. The protected response includes
+the captured `category_id` and `category_label` alongside the existing `categories`
+array of task tags. Unclassified entries have a null category ID and label. An archived or
+foreign filter ID fails before any filtered entries or counts are disclosed. The native
+Home Assistant entity keeps its reduced projection.
 
 The entries distinguish original planned time, the effective due date, performed time and
 approval time. Date-only entries have a local date and no instant or time of day. If a

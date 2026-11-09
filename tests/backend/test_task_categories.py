@@ -134,12 +134,35 @@ def test_protected_category_commands_preserve_exact_history_and_calendar_counts(
     first = read.json()
     assert first["count"] == first["occurrence_count"] == 2 and first["next_cursor"]
     assert first["entries"][0]["category_id"] == category_id
-    assert first["entries"][0]["categories"] == ["Café <b>"]
+    assert first["entries"][0]["categories"] == ["Garden"]
+    assert first["entries"][0]["category_label"] == "Café <b>"
     second = api.client.get(
         CALENDAR, params=params | {"cursor": first["next_cursor"]}, headers=CONTEXT
     ).json()
     assert second["count"] == second["occurrence_count"] == 2 and second["next_cursor"] is None
     assert first["entries"][0]["entry_id"] != second["entries"][0]["entry_id"]
+    unclassified = api.client.post(
+        TASKS + "/definitions",
+        headers=api.headers("tag-only"),
+        json={"title": "Tag-only work", "tags": ["Garden"]},
+    )
+    assert unclassified.status_code == 200, unclassified.text
+    unclassified_id = unclassified.json()["result"]["definition_id"]
+    unclassified_due = api.client.post(
+        TASKS + f"/definitions/{unclassified_id}/occurrences",
+        headers=api.headers("tag-only-due"),
+        json={"due_at": 3},
+    )
+    assert unclassified_due.status_code == 200, unclassified_due.text
+    all_entries = api.client.get(
+        CALENDAR, params={"start": params["start"], "end": params["end"]}, headers=CONTEXT
+    )
+    assert all_entries.status_code == 200, all_entries.text
+    (tag_only,) = [row for row in all_entries.json()["entries"] if row["title"] == "Tag-only work"]
+    assert tag_only["categories"] == ["Garden"]
+    assert tag_only["category_id"] is tag_only["category_label"] is None
+    filtered = api.client.get(CALENDAR, params=params, headers=CONTEXT).json()
+    assert filtered["count"] == filtered["occurrence_count"] == 2
     assert (
         api.client.get(
             CALENDAR, params=params | {"category": "Garden"}, headers=CONTEXT
