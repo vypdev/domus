@@ -5,7 +5,9 @@ import io
 import json
 import os
 import shutil
+import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
 
 import domus
@@ -114,14 +116,21 @@ def main():
         saved = json.loads(RECORD.read_text())
         selected = ROOT / "generations" / saved["selected_generation"] / "domus.sqlite3"
         digest = hashlib.sha256(selected.read_bytes()).hexdigest()
+        with closing(
+            sqlite3.connect(selected.as_uri() + "?mode=ro&immutable=1", uri=True)
+        ) as connection:
+            version = connection.execute("PRAGMA user_version").fetchone()[0]
+        assert version > SCHEMA_VERSION
         try:
             runtime_at(mode, ROOT)
         except DatabaseRejected as error:
             assert error.code == "unsupported_schema"
         else:
-            raise AssertionError("Schema 9 runtime accepted a schema 14 generation")
+            raise AssertionError(
+                f"Schema {SCHEMA_VERSION} runtime accepted a schema {version} generation"
+            )
         assert hashlib.sha256(selected.read_bytes()).hexdigest() == digest
-        print(json.dumps({"refused_schema": 14, "database_sha256": digest}))
+        print(json.dumps({"refused_schema": version, "database_sha256": digest}))
         return
     if phase == "rollback":
         before = Path("/data/snapshots/before")

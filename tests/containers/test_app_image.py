@@ -129,7 +129,7 @@ def data_volume(image: str):
 def test_real_nonroot_listener_rejects_forgery_and_retains_storage_and_replay_on_restart(
     image: str,
     data_volume: str,
-    expected_schema: int = 14,
+    expected_schema: int = 15,
 ) -> None:
     name = "domus-persistent-test-" + uuid.uuid4().hex
     try:
