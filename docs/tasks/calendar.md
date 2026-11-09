@@ -34,6 +34,9 @@ array of task tags. Unclassified entries have a null category ID and label. An a
 foreign filter ID fails before any filtered entries or counts are disclosed. The native
 Home Assistant entity keeps its reduced projection.
 
+If the selected calendar category becomes unavailable, choose an active category or clear
+the category filter before loading results again. Your other calendar filters stay selected.
+
 The entries distinguish original planned time, the effective due date, performed time and
 approval time. Date-only entries have a local date and no instant or time of day. If a
 task was rescheduled, its original plan and effective deadline can appear on different days.

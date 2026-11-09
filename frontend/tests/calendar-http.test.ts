@@ -1,5 +1,6 @@
 import {expect, test, vi} from 'vitest';
 import {HttpCalendarServer} from '../src/adapters/calendar-http';
+import {CalendarCategoryUnavailable} from '../src/application/calendar-controller';
 import type {CalendarQuery} from '../src/domain/calendar';
 import type {JournalContext} from '../src/domain/journal';
 
@@ -15,11 +16,11 @@ const approval = {...planned, entry_id: 'approval:cycle', kind: 'approval', timi
   nominal_local: '2026-11-01T08:00', resolved_local: '2026-11-01T09:00', verification: 'approved', relative_review_required: false};
 const result = {period, time_zone: 'Europe/Madrid', entries: [planned, approval], count: 2, occurrence_count: 1, next_cursor: null, pending: false};
 
-function fixture(deployment: 'native' | 'standalone', body: unknown) {
+function fixture(deployment: 'native' | 'standalone', body: unknown, status = 200) {
   const target = {deployment, applicationBase: deployment === 'native' ? '/api/hassio_ingress/' + 'b'.repeat(43) + '/' : '/',
     origin: 'https://domus.example'};
   const fetch = vi.fn(async (path: string, _init: RequestInit) => {
-    const response = new Response(JSON.stringify(body), {headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
+    const response = new Response(JSON.stringify(body), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
     Object.defineProperty(response, 'url', {value: target.origin + path}); return response;
   });
   return {target, fetch, server: new HttpCalendarServer(target, fetch)};
@@ -75,5 +76,22 @@ test('unclassified and older calendar entries never use tags as a category label
   for (const entry of [unclassified, older]) {
     const f = fixture('standalone', {...result, entries:[entry]});
     expect((await f.server.read(context, 'member', query, null).result).entries[0].categoryLabel).toBeNull();
+  }
+});
+
+test('only an authenticated-shape 422 for the selected category reports an unavailable category', async () => {
+  const blocked = {state: 'blocked', code: 'task_category_unavailable', message: 'Choose a current category.',
+    action_required: 'review', correlation_id: 'cor_calendar'};
+  const filtered = {...query, category: 'house:1'};
+  await expect(fixture('standalone', blocked, 422).server.read(context, 'member', filtered, null).result)
+    .rejects.toBeInstanceOf(CalendarCategoryUnavailable);
+  for (const [body, status, selected] of [
+    [{...blocked, code: 'invalid_calendar_range'}, 422, filtered],
+    [blocked, 422, query],
+    [blocked, 403, filtered],
+    [{code: blocked.code}, 422, filtered],
+  ] as const) {
+    await expect(fixture('standalone', body, status).server.read(context, 'member', selected, null).result)
+      .rejects.not.toBeInstanceOf(CalendarCategoryUnavailable);
   }
 });

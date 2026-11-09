@@ -3,10 +3,12 @@ import {CALENDAR_KINDS, CALENDAR_TIMINGS, calendarQuery, civilDate} from '../dom
 import type {CalendarEntry, CalendarPage, CalendarQuery} from '../domain/calendar';
 import {TASK_PRIORITIES, TASK_STATES} from '../domain/tasks';
 import type {JournalContext} from '../domain/journal';
+import {CalendarCategoryUnavailable} from '../application/calendar-controller';
 import type {CalendarServer} from '../application/calendar-controller';
-import {BoundedHTTP} from './http-transport';
+import {BoundedHTTP, readFailure} from './http-transport';
 import type {FetchTransport} from './http-transport';
 import type {EntryEndpoint} from './http-values';
+import {failure} from './http-values';
 import {boolean, check, choice, fields, identifier, integer, text} from './json-values';
 
 function optional<T>(value: unknown, decode: (raw: unknown) => T): T | null {
@@ -61,8 +63,13 @@ export class HttpCalendarServer implements CalendarServer {
       }
       if (value.own) query.set('member_id', identifier(member));
       if (cursor !== null) query.set('cursor', text(cursor, 512));
-      const result = await this.network.get('tasks/calendar?' + query.toString(), expected, signal);
-      return page(result, value);
+      const response = await this.network.request('tasks/calendar?' + query.toString(), 'GET', expected, null, null, null, signal);
+      if (response.status === 422 && value.category !== '') {
+        failure(response.value);
+        if ((response.value as {code: string}).code === 'task_category_unavailable') throw new CalendarCategoryUnavailable();
+      }
+      if (response.status !== 200) readFailure(response.status, response.value);
+      return page(response.value, value);
     });
   }
 }

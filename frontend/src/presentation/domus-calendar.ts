@@ -18,7 +18,7 @@ export type CalendarIntent = {readonly type: 'load'; readonly query: CalendarQue
 export class DomusCalendar extends LitElement {
   static properties = {preference: {attribute:false}, categories: {attribute:false}, view: {attribute: false}, language: {attribute: false}, scopeKey: {attribute: false},
     today: {attribute: false}, anchor: {state: true}, mode: {state: true}, filters: {state: true},
-    shownMode: {state: true}, shownRange: {state: true}};
+    shownMode: {state: true}, shownRange: {state: true}, shownCategory: {state: true}};
   static styles = [styles, css`
     .filters{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
     .filters .field{margin:0}.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));
@@ -37,17 +37,23 @@ export class DomusCalendar extends LitElement {
   private declare filters: Omit<CalendarQuery, 'start' | 'end'>;
   private declare shownMode: CalendarMode;
   private declare shownRange: CalendarPeriod | null;
+  private declare shownCategory: string;
+  private readonly unavailableCategories = new Set<string>();
 
   constructor() {
     super(); this.preference = null; this.view = null; this.language = 'en'; this.scopeKey = null; this.today = DATE_MIN;
-    this.anchor = DATE_MIN; this.mode = 'month'; this.shownMode = 'month'; this.shownRange = null;
+    this.anchor = DATE_MIN; this.mode = 'month'; this.shownMode = 'month'; this.shownRange = null; this.shownCategory = '';
     this.filters = {kind: '', timing: '', state: '', priority: '', category: '', own: false};
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('scopeKey')) {
-      this.anchor = this.today; this.mode = 'month'; this.shownRange = null;
+      this.anchor = this.today; this.mode = 'month'; this.shownRange = null; this.shownCategory = '';
       this.filters = {kind: '', timing: '', state: '', priority: '', category: '', own: false};
+      this.unavailableCategories.clear();
+    }
+    if (changed.has('view') && this.view?.status === 'category_unavailable') {
+      this.unavailableCategories.add(this.shownCategory);
     }
   }
   protected updated(changed: PropertyValues<this>): void {
@@ -65,12 +71,16 @@ export class DomusCalendar extends LitElement {
     this.dispatchEvent(new CustomEvent<CalendarIntent>('domus-calendar-intent',
       {detail: Object.freeze(detail), bubbles: true, composed: true}));
   }
+  private categoryIsUnavailable(category: string): boolean {
+    return category !== '' && (this.unavailableCategories.has(category)
+      || !this.categories?.some(item => item.id === category));
+  }
   private submit(): void {
     if (this.scopeKey === null || !civilDate(this.anchor) || this.anchor > DATE_MAX) return;
     const range = calendarPeriod(this.mode, this.anchor, this.weekStart);
     const query = {...range,...this.filters};
-    if (!calendarQuery(query)) return;
-    this.shownMode = this.mode; this.shownRange = range;
+    if (!calendarQuery(query) || this.categoryIsUnavailable(query.category)) return;
+    this.shownMode = this.mode; this.shownRange = range; this.shownCategory = query.category;
     this.intent({type: 'load', query});
   }
 
@@ -85,11 +95,13 @@ export class DomusCalendar extends LitElement {
   }
 
   private select<T extends string>(label: CalendarMessage, value: T | '', options: readonly T[],
-    caption: (option: T) => string, change: (value: T | '') => void, all = true) {
+    caption: (option: T) => string, change: (value: T | '') => void, all = true, unavailable?: T) {
     return html`<label>${this.text(label)}<select .value=${value}
+      aria-invalid=${unavailable === undefined ? nothing : 'true'}
+      aria-describedby=${unavailable === undefined ? nothing : 'calendar-category-error'}
       @change=${(event: Event) => change((event.target as HTMLSelectElement).value as T | '')}>
       ${all ? html`<option value="">${this.text('any')}</option>` : nothing}
-      ${options.map(option => html`<option value=${option} .selected=${value === option}>${caption(option)}</option>`)}
+      ${options.map(option => html`<option value=${option} .selected=${value === option} ?disabled=${option === unavailable}>${caption(option)}</option>`)}
     </select></label>`;
   }
 
@@ -133,10 +145,12 @@ export class DomusCalendar extends LitElement {
   }
 
   protected render() {
-    const view = this.view, page = this.shownRange === null ? null : view?.page;
-    const labels = new Map(this.categories?.map(category => [category.id, category.label]));
-    if (this.filters.category && !labels.has(this.filters.category))
-      labels.set(this.filters.category, this.text('categoryUnavailable'));
+    const view = this.view, staleResult = this.categoryIsUnavailable(this.shownCategory);
+    const page = this.shownRange === null || staleResult ? null : view?.page;
+    const labels = new Map(this.categories?.filter(category => !this.unavailableCategories.has(category.id))
+      .map(category => [category.id, category.label]));
+    const staleCategory = this.categoryIsUnavailable(this.filters.category) ? this.filters.category : undefined;
+    if (staleCategory !== undefined) labels.set(staleCategory, this.text('categoryUnavailable'));
     return html`<section class="card" aria-labelledby="calendar-title" aria-busy=${view?.status === 'loading'}>
       <h2 id="calendar-title">${this.text('title')}</h2>
       ${this.preferences()}
@@ -150,11 +164,12 @@ export class DomusCalendar extends LitElement {
           ${this.select('status', this.filters.state, TASK_STATES, state => taskMessage(`state_${state}`, this.language), state => {this.filters = {...this.filters, state};})}
           ${this.select('priority', this.filters.priority, TASK_PRIORITIES, priority => taskMessage(`priority_${priority}`, this.language), priority => {this.filters = {...this.filters, priority};})}
           ${this.select('category', this.filters.category, [...labels.keys()], category => labels.get(category)!,
-            category => {this.filters = {...this.filters, category};})}
+            category => {this.filters = {...this.filters, category};}, true, staleCategory)}
           <label><input type="checkbox" .checked=${this.filters.own}
             @change=${(event: Event) => {this.filters = {...this.filters, own: (event.target as HTMLInputElement).checked};}}>${this.text('mine')}</label>
         </div>
-        <button type="submit" ?disabled=${this.scopeKey === null || view?.status === 'loading'}>${this.text('apply')}</button>
+        ${staleCategory !== undefined || staleResult ? html`<p id="calendar-category-error" role="alert">${this.text('chooseAvailableCategory')}</p>` : nothing}
+        <button type="submit" ?disabled=${this.scopeKey === null || view?.status === 'loading' || staleCategory !== undefined}>${this.text('apply')}</button>
       </form>
       ${view?.status === 'loading' ? html`<p role="status">${this.text('loading')}</p>` : nothing}
       ${view?.status === 'unavailable' ? html`<p role="alert">${this.text('unavailable')}</p>` : nothing}

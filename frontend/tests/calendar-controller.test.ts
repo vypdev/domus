@@ -1,5 +1,5 @@
 import {expect, test, vi} from 'vitest';
-import {CalendarController} from '../src/application/calendar-controller';
+import {CalendarCategoryUnavailable, CalendarController} from '../src/application/calendar-controller';
 import type {CalendarScope} from '../src/application/calendar-controller';
 import {CALENDAR_MODES, DATE_MAX, WEEK_STARTS, calendarDays, calendarPeriod, calendarQuery, calendarToday, civilDate} from '../src/domain/calendar';
 import type {CalendarEntry, CalendarPage, CalendarQuery} from '../src/domain/calendar';
@@ -71,4 +71,20 @@ test('calendar cancels superseded reads, clears prior members and paginates unde
   expect(calls[4].cancel).toHaveBeenCalledOnce();
   expect(publish).toHaveBeenLastCalledWith({status: 'idle', page: null});
   controller.bind(null);
+});
+
+test('a revoked calendar category retires the previous page and cursor', async () => {
+  const read = vi.fn(() => ({cancel: vi.fn(), result: Promise.resolve({entries: [row], count: 2,
+    occurrenceCount: 2, cursor: 'cursor-1', pending: false})}));
+  const publish = vi.fn();
+  const controller = new CalendarController({read}, publish);
+  controller.bind(scope);
+  await controller.load({...query, category: 'archived'});
+  read.mockImplementationOnce(() => ({cancel: vi.fn(), result: Promise.reject(new CalendarCategoryUnavailable())}));
+  await controller.more();
+  expect(publish).toHaveBeenLastCalledWith({status: 'category_unavailable', page: null});
+  await controller.more();
+  expect(read).toHaveBeenCalledTimes(2);
+  await controller.load(query);
+  expect(publish).toHaveBeenLastCalledWith(expect.objectContaining({status: 'ready'}));
 });

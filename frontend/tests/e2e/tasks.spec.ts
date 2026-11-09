@@ -58,6 +58,7 @@ for (const mode of ['native', 'standalone'] as const) {
       await tasks.getByRole('button', {name: t('Check saved request', 'Comprobar solicitud guardada'), exact: true}).first().click();
       expect((await original).ok()).toBe(true);
       expect(creates).toBe(1);
+      await page.unroute(base(mode) + '/api/v1/tasks/categories');
       const choice = tasks.getByRole('combobox', {name: t('Category', 'Categoría'), exact: true});
       await expect(choice).toBeVisible();
       const categoryId = await choice.locator('option', {hasText: label}).getAttribute('value');
@@ -104,7 +105,9 @@ for (const mode of ['native', 'standalone'] as const) {
       await choice.selectOption(categoryId!);
       await expand();
       await edit.selectOption(categoryId!);
+      const originalArchive = page.waitForRequest(request => request.url().endsWith('/' + categoryId + '/archive'));
       await tasks.getByRole('button', {name: t('Archive category', 'Archivar categoría'), exact: true}).click();
+      const authorization = await (await originalArchive).allHeaders();
       await expect(choice).toHaveAttribute('aria-invalid', 'true');
       await expect(title).toHaveValue('Keep this title');
       await expect(description).toHaveValue('Keep this description');
@@ -115,6 +118,36 @@ for (const mode of ['native', 'standalone'] as const) {
       await tasks.getByRole('combobox', {name:t('Scheduling', 'Programación'), exact:true}).selectOption('manual');
       await tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}).click();
       await expect(tasks.getByRole('heading', {name: 'Keep this title', exact: true})).toBeVisible();
+      await expand();
+      await edit.selectOption('');
+      await categoryName.fill('Concurrent archive');
+      await tasks.getByRole('button', {name: t('Create category', 'Crear categoría'), exact: true}).click();
+      const activeCategory = tasks.locator('#manage-task-category option', {hasText: 'Concurrent archive'});
+      await expect(activeCategory).toHaveCount(1);
+      const activeId = (await activeCategory.getAttribute('value'))!;
+      await page.getByRole('link', {name: t('Calendar', 'Calendario'), exact: true}).click();
+      const show = calendar.getByRole('button', {name: t('Show calendar', 'Mostrar calendario'), exact: true});
+      await filter.selectOption(activeId);
+      const archive = await page.request.post(base(mode) + '/api/v1/tasks/categories/' + activeId + '/archive', {
+        headers: {'X-Domus-Context': authorization['x-domus-context'], 'X-CSRF-Token': authorization['x-csrf-token'],
+          'Idempotency-Key': 'concurrent-calendar-category-archive', Origin: origin(mode)},
+        data: {expected_revision: 1},
+      });
+      expect(archive.status()).toBe(200);
+      await show.click();
+      await expect(filter).toHaveAttribute('aria-invalid', 'true');
+      await expect(calendar.getByRole('alert')).toHaveText(t('Choose an active category or clear the filter.',
+        'Elige una categoría activa o quita el filtro.'));
+      await expect(show).toBeDisabled();
+      await filter.selectOption('');
+      const allEntries = page.waitForResponse(response => {
+        const url = new URL(response.url());
+        return url.pathname.endsWith('/api/v1/tasks/calendar') && !url.searchParams.has('category');
+      });
+      await show.click();
+      expect((await allEntries).ok()).toBe(true);
+      await expect(filter.locator('option').filter({hasText: 'Concurrent archive'})).toHaveCount(0);
+      await expect(calendar.getByText(t('Category ', 'Categoría ') + label, {exact: true})).toBeVisible();
     });
   }
 }
