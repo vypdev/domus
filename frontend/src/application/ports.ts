@@ -1,3 +1,4 @@
+import type {FoldPolicy} from '../domain/recurrence-review';
 import type {Revision} from '../domain/administration';
 import type {Journal, JournalCommand, JournalContext, RequestStage} from '../domain/journal';
 import type {Authorization, Deployment, EntrySession} from '../domain/entry';
@@ -30,6 +31,7 @@ export interface HouseholdFacts {
   readonly timeZone: string;
   readonly revision: Revision;
   readonly materializationHorizonDays?: number;
+  readonly repeatedTime?: FoldPolicy;
 }
 export type ReadFault = 'authentication_required' | 'forbidden' | 'unavailable' | 'invalid_response';
 export class EntryReadError extends Error {

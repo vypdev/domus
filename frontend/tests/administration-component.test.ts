@@ -447,3 +447,17 @@ test('C39: the household editor reviews and submits the bounded horizon in both 
   f.element.language='es';await f.element.updateComplete;
   expect(f.text()).toContain('Horizonte de recurrencia (días)');
 });
+
+test('household reviews the chosen repeated appearance before saving',async()=>{
+  const home=view().household!;
+  const f=await mount(view({household:{...home,repeatedTime:'first_instant'}}));
+  await f.click('Edit household');
+  expect(f.input('Repeated local time').value).toBe('first_instant');
+  await f.change('Repeated local time','second_instant');
+  await f.click('Review changes');
+  expect(f.text()).toContain('Second appearance');
+  expect(f.intents).toEqual([]);
+  await f.click('Save changes');
+  expect(f.intents).toMatchObject([{type:'submit',command:{action:'household.update',
+    payload:{expected_revision:'7',repeated_time:'second_instant'}}}]);
+});

@@ -2,7 +2,7 @@
 import {ReviewRejected} from '../application/recurrence-review-controller';
 import type {ReviewReceipt, ReviewRecord, ReviewServer} from '../application/recurrence-review-controller';
 import type {JournalContext} from '../domain/journal';
-import {REVIEW_KINDS, VISIBILITIES, reviewCommand, reviewFingerprint} from '../domain/recurrence-review';
+import {FOLD_CHOICES, REVIEW_KINDS, VISIBILITIES, reviewCommand, reviewFingerprint} from '../domain/recurrence-review';
 import type {ReviewTarget} from '../domain/recurrence-review';
 import {BoundedHTTP} from './http-transport';
 import type {FetchTransport} from './http-transport';
@@ -51,6 +51,19 @@ function replacements(value: unknown): NonNullable<ReviewReceipt['preview']>['re
     return Object.freeze({local: date, replaces: slot.replaces !== null});
   }));
 }
+function repeatedSlots(values: unknown): NonNullable<NonNullable<ReviewReceipt['preview']>['repeatedSlots']> {
+  check(Array.isArray(values) && values.length <= 100);
+  return Object.freeze(values.flatMap(value => {
+    const item = object(value), slot = object(item.planned ?? item);
+    if (slot.resolved === undefined || slot.resolved === null) return [];
+    const resolved = object(slot.resolved);
+    if (resolved.resolution !== 'fold_first' && resolved.resolution !== 'fold_second') return [];
+    const date = local(slot), offset = integer(resolved.offset_seconds, -86399);
+    check(date !== null && offset < 86400);
+    return [Object.freeze({local: date, offset,
+      fold: resolved.resolution === 'fold_first' ? 'first_instant' as const : 'second_instant' as const})];
+  }));
+}
 function affectedDates(value: unknown): readonly string[] {
   check(Array.isArray(value) && value.length <= 200);
   return Object.freeze(value.map(item => {
@@ -73,7 +86,11 @@ function receipt(value: unknown, request: ReviewRecord): ReviewReceipt {
   const payload = object(snapshot.request), source = snapshot.source === undefined ? snapshot : object(snapshot.source);
   check(payload.kind === kind);
   const backlog = plan.backlog === undefined ? {} : object(plan.backlog);
+  const folds = repeatedSlots(source.prospective_slots ?? backlog.prospective_slots ??
+    (source.initial === undefined ? [] : [source.initial]));
   return {operationId, historical, preview: {fingerprint, expiresAt: integer(result.expires_at, 0),
+    ...(source.repeated_time === undefined ? {} : {repeatedTime: choice(source.repeated_time, FOLD_CHOICES)}),
+    ...(folds.length ? {repeatedSlots: folds} : {}),
     retained: size(source.open_work_retained ?? source.retained_work ?? source.retained_occurrences),
     planned: size(backlog.prospective_slots ?? backlog.pending_slots ?? source.prospective_slots),
     cancelled: size(source.cancelled_work), replacementSlots: replacements(source.prospective_slots),

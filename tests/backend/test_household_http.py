@@ -465,3 +465,29 @@ def test_response_failure_after_commit_preserves_uncertainty_and_same_key_recove
     assert recovered.status_code == 200 and recovered.json()["result"]["state"] == "configured"
     with store.read() as unit:
         assert len(unit.audit.entries("home")) == len(unit.outbox.pending()) == 1
+
+
+def test_household_repeated_time_is_revisioned_and_omission_preserves_saved_choice(tmp_path):
+    client, _, _, _, _, _ = fixture(tmp_path)
+    login(client)
+    setup(client)
+    endpoint = "/api/v1/household"
+    assert client.get(endpoint).json()["repeated_time"] == "first_instant"
+    legacy = {"name": "Home", "time_zone": "UTC", "expected_revision": 1}
+    headers = write_headers(client, "preference")
+    for bad in (None, "invalid", True):
+        invalid = client.put(endpoint, json={**legacy, "repeated_time": bad}, headers=headers)
+        assert invalid.status_code == 422
+    selection = {**legacy, "repeated_time": "second_instant"}
+    result = client.put(endpoint, json=selection, headers=headers)
+    assert result.status_code == 200
+    assert client.get(endpoint).json()["repeated_time"] == "second_instant"
+    assert client.put(endpoint, json=selection, headers=headers).json() == result.json()
+    renamed = client.put(
+        endpoint,
+        json={**legacy, "name": "Renamed", "expected_revision": 2},
+        headers=write_headers(client, "legacy-client"),
+    )
+    assert renamed.status_code == 200
+    assert client.get(endpoint).json()["repeated_time"] == "second_instant"
+    assert client.put(endpoint, json=selection, headers=headers).json() == result.json()

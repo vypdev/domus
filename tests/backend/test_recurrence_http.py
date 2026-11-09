@@ -266,6 +266,7 @@ def test_protected_attachment_from_ordinary_task_uses_exact_wire_choice(api):
         "initial": {"kind": "date", "local": "2026-12-31"},
         "interval_days": 30,
         "zone": "UTC",
+        "repeated_time": "household",
         "choice": "adopt",
     }
     headers = api.headers("attachment-preview") | CONTEXT

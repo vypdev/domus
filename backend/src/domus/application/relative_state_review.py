@@ -165,12 +165,15 @@ class RelativeSettings:
     schedule_revision: int
     interval: RelativeInterval
     visibility: SuccessorVisibility
+    use_household_fold: bool = False
 
     def __post_init__(self) -> None:
         validate_identifier(self.schedule_id)
         validate_revision(self.schedule_revision)
-        if not isinstance(self.interval, RelativeInterval) or not isinstance(
-            self.visibility, SuccessorVisibility
+        if (
+            not isinstance(self.interval, RelativeInterval)
+            or not isinstance(self.visibility, SuccessorVisibility)
+            or type(self.use_household_fold) is not bool
         ):
             raise InvalidInput("invalid_recurrence_settings")
 
@@ -179,6 +182,7 @@ class RelativeSettings:
             {
                 "version": 1,
                 "kind": "relative_settings",
+                **({"use_household_fold": True} if self.use_household_fold else {}),
                 "schedule_id": self.schedule_id,
                 "schedule_revision": self.schedule_revision,
                 "interval_days": self.interval.days,
@@ -211,10 +215,21 @@ def settings_plan(
     rule, progress = source.schedule, source.progress
     if rule.revision != request.schedule_revision:
         raise Conflict("recurrence_review_stale")
+    policy = (
+        replace(rule.policy, repeated_time=scope.require(unit).repeated_time)
+        if request.use_household_fold
+        else rule.policy
+    )
+    if policy != rule.policy and progress.pristine and rule.initial.resolved is not None:
+        raise Conflict("recurrence_review_source_pending")
     if (
         rule.state is ScheduleState.RETIRED
         or source.definition.state is not DefinitionState.ACTIVE
-        or (rule.interval == request.interval and rule.visibility is request.visibility)
+        or (
+            rule.interval == request.interval
+            and rule.visibility is request.visibility
+            and rule.policy == policy
+        )
     ):
         raise Conflict("recurrence_state_change_unavailable")
     current = _source_plan(unit, scope, source, ScheduleState.ACTIVE)
@@ -226,6 +241,7 @@ def settings_plan(
         rule,
         interval=request.interval,
         visibility=request.visibility,
+        policy=policy,
         revision=rule.revision + 1,
         pattern_revision=rule.pattern_revision + 1,
     )
@@ -242,6 +258,7 @@ def settings_plan(
             "previous_visibility": rule.visibility.value,
             "retained_initial": rule.initial.value(),
             "applies_to": "future_successors",
+            **({"repeated_time": policy.repeated_time.value} if request.use_household_fold else {}),
         }
     )
     return RelativeSettingsPlan(updated, next_progress, snapshot)

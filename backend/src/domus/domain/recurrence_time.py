@@ -6,15 +6,11 @@ from datetime import datetime
 from enum import StrEnum
 
 from domus.domain.errors import InvalidInput
+from domus.domain.fold_policy import FoldPolicy as FoldPolicy
 from domus.domain.identity import validate_revision
 
 MAX_INSTANT_MS = 253_402_300_799_999
 _EPOCH = datetime(1970, 1, 1)
-
-
-class FoldPolicy(StrEnum):
-    FIRST = "first_instant"
-    SECOND = "second_instant"
 
 
 class TimeResolution(StrEnum):

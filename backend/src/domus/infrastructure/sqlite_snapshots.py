@@ -118,8 +118,9 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
         if version >= 12
         else f"{DEFAULT_MATERIALIZATION_HORIZON_DAYS} AS materialization_horizon_days"
     )
+    fold = "repeated_time" if version >= 13 else "'first_instant' AS repeated_time"
     households = connection.execute(
-        f"SELECT household_id,singleton,name,time_zone,revision,{horizon} FROM households"
+        f"SELECT household_id,singleton,name,time_zone,revision,{horizon},{fold} FROM households"
     ).fetchall()
     if (
         len(identities) != 1

@@ -8,6 +8,7 @@ from domus.application.commands import AtomicCommands, Change
 from domus.application.identity_ports import CurrentHuman, HumanDirectory
 from domus.application.ports import Clock, Identifiers, TimeZones, Transactions, UnitOfWork
 from domus.domain.errors import Conflict, Forbidden, InvalidInput
+from domus.domain.fold_policy import FoldPolicy
 from domus.domain.identity import (
     AdministratorMapping,
     HouseholdPolicy,
@@ -235,6 +236,7 @@ class HouseholdCommands:
         expected_revision: int,
         *,
         materialization_horizon_days: int | None = None,
+        repeated_time: FoldPolicy | None = None,
     ) -> Receipt:
         validate_revision(expected_revision)
         proposed = Household(
@@ -245,6 +247,7 @@ class HouseholdCommands:
             DEFAULT_MATERIALIZATION_HORIZON_DAYS
             if materialization_horizon_days is None
             else materialization_horizon_days,
+            FoldPolicy.FIRST if repeated_time is None else repeated_time,
         )
         human = self.actor.current()
         command = CommandKey(self.household_id, human.ha_user_id, "household.update", key)
@@ -255,6 +258,8 @@ class HouseholdCommands:
         }
         if materialization_horizon_days is not None:
             request["materialization_horizon_days"] = materialization_horizon_days
+        if repeated_time is not None:
+            request["repeated_time"] = proposed.repeated_time.value
         payload = JsonDocument.from_value(request)
         authority = MembershipAuthorization(
             HouseholdAccess(human), command.action, Permission.HOUSEHOLD_MANAGE
@@ -272,6 +277,8 @@ class HouseholdCommands:
                 saved = replace(
                     proposed, materialization_horizon_days=current.materialization_horizon_days
                 )
+            if repeated_time is None and current is not None:
+                saved = replace(saved, repeated_time=current.repeated_time)
             unit.households.save(saved, expected_revision)
             result = JsonDocument.from_value(
                 {"household_id": proposed.household_id, "revision": proposed.revision}

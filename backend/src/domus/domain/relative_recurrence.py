@@ -2,7 +2,7 @@
 
 import json
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import timedelta
 from enum import StrEnum
 
@@ -68,9 +68,18 @@ class RelativeSchedule:
             or not isinstance(self.visibility, SuccessorVisibility)
             or not isinstance(self.state, ScheduleState)
             or self.pattern_revision > self.revision
-            or (self.initial.resolved is not None and self.initial.resolved.policy != self.policy)
         ):
             raise InvalidInput("invalid_relative_schedule")
+
+        # A reviewed fold change applies to successors. The issued initial instant
+        # and its original policy remain the anchor recorded in earlier proof.
+        if self.initial.resolved is not None:
+            initial_policy = self.initial.resolved.policy
+            if initial_policy != self.policy and (
+                self.pattern_revision == 1
+                or replace(initial_policy, repeated_time=self.policy.repeated_time) != self.policy
+            ):
+                raise InvalidInput("invalid_relative_schedule")
 
     def same_timing(self, other: RelativeSchedule) -> bool:
         return (self.initial, self.interval, self.policy, self.visibility) == (

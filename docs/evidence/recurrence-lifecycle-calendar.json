@@ -560,5 +560,29 @@
     ],
     "mobileCalendarCatalog": "frontend/tests/e2e/catalog.spec.ts",
     "scope": "C39 verifies the horizon and schema compatibility. The C35 catalog fixture verifies the rendered keyboard and localization behavior with fictional entries. Refer to the check runs on the tested commit for execution evidence."
+  },
+  "householdRepeatedTimeAcceptancePaths": {
+    "sourceParent": "0113ba0c099195baa379f25fb2d4631c588dff0c",
+    "issue": "https://github.com/vypdev/domus/issues/34",
+    "schema": 13,
+    "schema12Fixture": {
+      "path": "tests/fixtures/sqlite/v12.sql",
+      "sha256": "b2dffe33b6d0ef7a84ab3120f5868e14d8196fafefacb0b37dc036bfcdc07073"
+    },
+    "owningCases": [
+      "recurrence-calendar-C11",
+      "recurrence-calendar-C35",
+      "recurrence-calendar-C36",
+      "recurrence-calendar-C37"
+    ],
+    "tests": [
+      "tests/backend/test_household_http.py",
+      "tests/backend/test_recurrence_lifecycle_migration.py",
+      "tests/backend/test_recurrence_review.py",
+      "tests/backend/test_fixed_batch_review.py",
+      "frontend/tests/recurrence-review.test.ts",
+      "frontend/tests/e2e/administration.spec.ts"
+    ],
+    "scope": "Current source acceptance paths for household defaults, one nominal slot, exact offsets, stale previews, original receipts and future-work protection. Execution evidence belongs to the check runs on the tested commit."
   }
 }

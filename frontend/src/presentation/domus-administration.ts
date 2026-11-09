@@ -7,6 +7,7 @@ import {MAX_MATERIALIZATION_HORIZON_DAYS, MIN_MATERIALIZATION_HORIZON_DAYS} from
 import {administrationCommand,MEMBER_ROLES,MEMBER_STATUSES,MAPPING_MODES,ORDINARY_PERMISSIONS} from '../domain/administration-commands';
 import type {AdministrationCommand,MemberRole,PermissionDecision,ProfileDecision} from '../domain/administration-commands';
 import type {AdministrationAction,PublicPresentation,RosterMember} from '../domain/administration-views';
+import {FOLD_CHOICES} from '../domain/recurrence-review';
 import {administrationMessage} from './administration-messages';
 import {instant} from './messages';
 import type {Language} from './messages';
@@ -102,6 +103,7 @@ export class DomusAdministration extends LitElement {
         const home=view.household;if(home===null)return;
         payload={expected_revision:home.revision,name:home.name,time_zone:home.timeZone};
         if(home.materializationHorizonDays!==undefined)payload.materialization_horizon_days=home.materializationHorizonDays;
+        if(home.repeatedTime!==undefined)payload.repeated_time=home.repeatedTime;
         first='name';break;
       }
       case 'member.preferences.update':{
@@ -214,7 +216,9 @@ export class DomusAdministration extends LitElement {
   private fields(draft:Draft) {
     switch(draft.action){
       case 'household.update':return html`${this.field(draft,'name','name')}${this.field(draft,'time_zone','zone')}<p class="help">${this.t('zoneHelp')}</p>
-        ${Object.hasOwn(draft.payload,'materialization_horizon_days')?this.field(draft,'materialization_horizon_days','materializationHorizon'):nothing}`;
+        ${Object.hasOwn(draft.payload,'materialization_horizon_days')?this.field(draft,'materialization_horizon_days','materializationHorizon'):nothing}
+        ${Object.hasOwn(draft.payload,'repeated_time')?html`${this.select(draft,'repeated_time','repeatedTime',FOLD_CHOICES.map(value=>({value,label:this.t(value)})))}
+          <p class="help">${this.t('repeatedTimeHelp')}</p>`:nothing}`;
       case 'member.presentation.update':return html`${this.checkbox(draft,'clearAlias','useHA')}${this.field(draft,'alias','alias',draft.clearAlias)}`;
       case 'member.preferences.update':return html`${this.select(draft,'locale','savedLanguage',[
         {value:'',label:this.t('browserLanguage')},{value:'en',label:this.t('english')},{value:'es',label:this.t('spanish')}])}
@@ -253,7 +257,8 @@ export class DomusAdministration extends LitElement {
   private summary(command:AdministrationCommand) {
     switch(command.action){
       case 'household.update':return html`<dl><dt>${this.t('name')}</dt><dd>${command.payload.name}</dd><dt>${this.t('zone')}</dt><dd>${command.payload.time_zone}</dd>
-        ${command.payload.materialization_horizon_days===undefined?nothing:html`<dt>${this.t('materializationHorizon')}</dt><dd>${command.payload.materialization_horizon_days}</dd>`}</dl>`;
+        ${command.payload.materialization_horizon_days===undefined?nothing:html`<dt>${this.t('materializationHorizon')}</dt><dd>${command.payload.materialization_horizon_days}</dd>`}
+        ${command.payload.repeated_time===undefined?nothing:html`<dt>${this.t('repeatedTime')}</dt><dd>${this.t(command.payload.repeated_time)}</dd>`}</dl>`;
       case 'member.presentation.update':return html`<p>${this.t('alias')}: ${command.payload.alias??this.t('useHA')}</p>`;
       case 'member.preferences.update':return html`<p>${this.t('savedLanguage')}: ${this.t(command.payload.locale==='en'?'english':command.payload.locale==='es'?'spanish':'browserLanguage')}</p>
         <p>${this.t('summaries')}: ${this.t(command.payload.routine_participation_summaries?'allow':'deny')}</p><p class="help">${this.t('delivery')}</p>`;
