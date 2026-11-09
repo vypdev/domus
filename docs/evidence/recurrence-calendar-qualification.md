@@ -32,7 +32,7 @@ See the [owning specification](../../specs/recurrence-calendar.md).
 | recurrence-calendar-C03 | Witness | `tests/backend/test_recurrence_rules.py::test_raw_rule_rejects_duplicates_unsupported_parts_malformed_dates_and_unbounded_numbers` |
 | recurrence-calendar-C04 | Witness | `tests/backend/test_relative_recurrence_planning.py::test_approval_days_later_keeps_the_actual_performed_local_day_and_original_source` |
 | recurrence-calendar-C05 | Witness | `tests/backend/test_relative_lifecycle_consumer.py::test_reopening_only_cancels_proven_unstarted_work` |
-| recurrence-calendar-C06 | Partial | `tests/backend/test_relative_lifecycle_consumer.py::test_reopening_only_cancels_proven_unstarted_work`, `tests/backend/test_calendar_queries.py`. The started successor and review marker are preserved in storage. The calendar surface does not expose that review marker. |
+| recurrence-calendar-C06 | Witness | `tests/backend/test_calendar_http.py::test_calendar_marks_a_retained_successor_after_source_reopening`, `frontend/tests/e2e/catalog.spec.ts`. The original attention receipt survives restart. Both protected compositions show the retained work with unchanged entry identities, and the compiled calendar renders the warning in both languages. |
 | recurrence-calendar-C07 | Witness | `tests/backend/test_fixed_materialization.py::test_actual_independent_step_writers_have_one_complete_winner` |
 | recurrence-calendar-C08 | Witness | `tests/backend/test_fair_recurrence.py::test_repeated_restart_after_every_first_step_cannot_starve_the_other_ninety_eight_rules` |
 | recurrence-calendar-C09 | Witness | `tests/backend/test_fair_recurrence.py::test_actual_global_thousand_slot_limit_retains_the_next_obligation_for_another_tick` |

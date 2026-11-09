@@ -6,6 +6,10 @@ from datetime import date, datetime, time
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import Transactions, UnitOfWork
 from domus.application.recurrence_ports import RecurrenceTimes
+from domus.application.relative_lifecycle import (
+    recorded_invalidation,
+    relative_invalidation_command,
+)
 from domus.application.relative_recurrence_commands import resolve_initial
 from domus.application.reschedule_review import ScheduledWork, effective_deadline
 from domus.application.task_authorization import TaskAccess, TaskActor
@@ -28,6 +32,8 @@ from domus.domain.errors import (
 from domus.domain.identity import HumanIdentity, Permission
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.recurrence_time import LocalInstant, NominalTime, TimePolicy
+from domus.domain.relative_lifecycle import RelativeClosure
+from domus.domain.relative_recurrence import RelativeSlot
 from domus.domain.storage import Household, Installation, JsonDocument
 from domus.domain.task_values import OccurrenceState, Priority, VerificationState
 
@@ -52,6 +58,7 @@ class CalendarEntry:
     nominal_local: str | None = None
     resolved_local: str | None = None
     verification: VerificationState | None = None
+    relative_review_required: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,6 +147,16 @@ class CalendarQueries:
             raise StorageFailure("invalid_calendar_projection")
         return slot
 
+    def _relative_review_required(self, unit: UnitOfWork, slot: ScheduledWork | None) -> bool:
+        if not isinstance(slot, RelativeSlot) or slot.source is None:
+            return False
+        key = RelativeClosure.cycle_key(slot.schedule, slot.source.cycle, slot.installation)
+        receipt = unit.receipts.get(relative_invalidation_command(slot.schedule.household_id, key))
+        return (
+            receipt is not None
+            and recorded_invalidation(receipt, key, slot.occurrence_id) == "review"
+        )
+
     def _entry(self, unit: UnitOfWork, candidate: CalendarCandidate) -> CalendarEntry:
         home = self.scope.household_id
         work = unit.tasks.occurrence(home, candidate.occurrence_id)
@@ -160,6 +177,9 @@ class CalendarQueries:
             work.assignee_ids,
             None if slot is None else slot.schedule.schedule_id,
             candidate.slot_key,
+            relative_review_required=(
+                isinstance(self.human, HumanIdentity) and self._relative_review_required(unit, slot)
+            ),
         )
         if position.kind is CalendarKind.PLANNED:
             if slot is None:
