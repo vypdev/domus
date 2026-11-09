@@ -158,7 +158,7 @@ test('Sunday updates the calendar grid and controls stay private to the bound sc
   document.body.append(widget);
   try {
     widget.today='2026-11-01'; widget.scopeKey=scope.key;
-    widget.view={status:'ready',page:{entries:[],count:0,cursor:null,pending:false}};
+    widget.view={status:'ready',page:{entries:[],count:0, occurrenceCount:0,cursor:null,pending:false}};
     widget.preference={value:monday,pending:false,busy:false,notice:null,readOnly:false};
     await widget.updateComplete;
     const root=widget.shadowRoot!;

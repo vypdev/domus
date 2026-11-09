@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with the household repeated-time preference and reviewed per-task overdue recurrence policy.",
+  "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with distinct calendar occurrence and event counts.",
   "actualProductFiles": {
-    ".vite/manifest.json": "8c305963b1ac04ced04018e22957c9b5e68fa69b07a19a88cf657d356dda3ab1",
-    "assets/index-BrE0TIaO.js": "e566bfe7d8423ac229978926bb1e977c4b0808cfa0852e44140fb6a431f21d81",
+    ".vite/manifest.json": "0b3dd8c79d196cfe2d369267488abfb2e23f201a074064706829566ba32373e2",
+    "assets/index-BgVYnY7C.js": "1f0de30db26ea4fe3cc88a81156a2b68513138ea92ac3bd512b2a328ed2f0c63",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "43e2f15e7550b01db4528a92a87a97e1f40350792d69f02c952f2d4950832fc4"
+    "index.html": "4c3bb3233a6d32f8c197315b6b8e5e71255b27032a9875edb819d4addecd3653"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -131,6 +131,16 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "assets/index-ykC8y3N_.js": "9d1bf75d2fde4a14b6c81908df06fc89dd43695c7121ef3743aadb8f827b6e64",
       "index.html": "1ec913514bd65b2fb35ad7fa96b4b7cb07bd38874f8a82fb59f02b21d97cf305"
+    }
+  },
+  "preCalendarOccurrenceCount": {
+    "sourceCommit": "449dc04c17a9c41d949d74cd341bf1e943a2fba9",
+    "scope": "Compiled product bundle for Overview, Tasks, Calendar and Household with the household repeated-time preference and reviewed per-task overdue recurrence policy.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "8c305963b1ac04ced04018e22957c9b5e68fa69b07a19a88cf657d356dda3ab1",
+      "assets/index-BrE0TIaO.js": "e566bfe7d8423ac229978926bb1e977c4b0808cfa0852e44140fb6a431f21d81",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "43e2f15e7550b01db4528a92a87a97e1f40350792d69f02c952f2d4950832fc4"
     }
   }
 }
