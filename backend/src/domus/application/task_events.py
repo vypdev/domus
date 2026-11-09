@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol, cast
 
-from domus.application.ports import Transactions
+from domus.application.ports import Transactions, UnitOfWork
 from domus.application.task_authorization import recorded_request
 from domus.domain.errors import InvalidInput, NotFound, StorageFailure
 from domus.domain.storage import Installation, validate_identifier
@@ -41,25 +41,31 @@ class TaskEventFeed:
         with self.transactions.read() as unit:
             if unit.households.get(self.household_id) is None:
                 raise NotFound("household_missing")
-            rows = unit.tasks.lifecycle_events(self.household_id, limit=limit + 1, after=after)
-            items = []
-            for row in rows:
-                recorded_request(row)
-                try:
-                    raw = row.receipt.result.decode().get("cycle")
-                    if not isinstance(raw, dict):
-                        raise InvalidInput("invalid_task_event")
-                    cycle_id = cast(str, raw.get("cycle_id"))
-                    validate_identifier(cycle_id)
-                    cycle = unit.tasks.cycle(self.household_id, cycle_id)
-                    if cycle is None:
-                        raise InvalidInput("invalid_task_event")
-                    work = unit.tasks.occurrence(self.household_id, cycle.occurrence_id)
-                    if work is None:
-                        raise InvalidInput("invalid_task_event")
-                    items.append(lifecycle_event(row, work, cycle, self.installation))
-                except InvalidInput, TypeError, ValueError:
-                    raise StorageFailure("invalid_task_event") from None
-            return TaskEventPage(
-                tuple(items[:limit]), items[limit - 1].position if len(items) > limit else None
-            )
+            return lifecycle_page(unit, self.installation, self.household_id, limit, after)
+
+
+def lifecycle_page(
+    unit: UnitOfWork, installation: Installation, household_id: str, limit: int, after: int
+) -> TaskEventPage:
+    rows = unit.tasks.lifecycle_events(household_id, limit=limit + 1, after=after)
+    items = []
+    for row in rows:
+        recorded_request(row)
+        try:
+            raw = row.receipt.result.decode().get("cycle")
+            if not isinstance(raw, dict):
+                raise InvalidInput("invalid_task_event")
+            cycle_id = cast(str, raw.get("cycle_id"))
+            validate_identifier(cycle_id)
+            cycle = unit.tasks.cycle(household_id, cycle_id)
+            if cycle is None:
+                raise InvalidInput("invalid_task_event")
+            work = unit.tasks.occurrence(household_id, cycle.occurrence_id)
+            if work is None:
+                raise InvalidInput("invalid_task_event")
+            items.append(lifecycle_event(row, work, cycle, installation))
+        except InvalidInput, TypeError, ValueError:
+            raise StorageFailure("invalid_task_event") from None
+    return TaskEventPage(
+        tuple(items[:limit]), items[limit - 1].position if len(items) > limit else None
+    )

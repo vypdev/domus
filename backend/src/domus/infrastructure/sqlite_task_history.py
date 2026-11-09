@@ -86,6 +86,17 @@ class SQLiteTaskHistory:
             )
         )
 
+    def restored_cycle_closure(self, household_id: str, cycle_id: str) -> TaskSourceRecord | None:
+        row = self.connection.execute(
+            "SELECT * FROM retained_operations WHERE household_id=? AND current=0 "
+            "AND json_extract(document,'$.event_payload.cycle.cycle_id')=? "
+            "AND (action='task.reopen' OR (action='task.verify' AND "
+            "json_extract(document,'$.event_payload.cycle.verification')='rejected')) "
+            "ORDER BY position LIMIT 1",
+            (household_id, cycle_id),
+        ).fetchone()
+        return None if row is None else task_source_record(_record(row))
+
     def _live(self, row: sqlite3.Row) -> RetainedOperation:
         if tuple(
             row[name]

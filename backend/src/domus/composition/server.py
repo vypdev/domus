@@ -11,6 +11,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from domus.application.authentication import Authentication
+from domus.application.points import PointsConsumer
 from domus.application.sessions import SessionGuard
 from domus.application.task_events import TaskEventSource
 from domus.composition.ha_calendar import attach_ha_calendar
@@ -33,7 +34,7 @@ from domus.infrastructure.ha_http import HomeAssistantOAuth
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.memory_attempts import MemoryLoginAttempts
 from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
-from domus.infrastructure.recurrence_worker import RecurrenceWorker
+from domus.infrastructure.recurrence_worker import MaintenanceWorker, RecurrenceWorker
 from domus.infrastructure.session_access import SessionActor, SessionMemberProfiles
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.standalone_sessions import StandaloneIdentity
@@ -47,7 +48,12 @@ class AuthenticationRuntime:
     task_events: TaskEventSource | None = field(default=None, repr=False)
     recurrence: RecurrenceWorker | None = field(default=None, repr=False)
 
+    points: PointsConsumer | None = field(default=None, repr=False)
+    points_worker: MaintenanceWorker[int] | None = field(default=None, repr=False)
+
     def close(self) -> tuple[int, int]:
+        if self.points_worker is not None:
+            self.points_worker.close()
         if self.recurrence is not None:
             self.recurrence.close()
         try:
@@ -145,11 +151,21 @@ def _compose(
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
     )
     attach_ha_calendar(app, store, ha_calendar_digest, public_origin=config.public_origin)
-    worker = None
+    worker = points = points_worker = None
     if store is not None:
         worker = recurrence_worker(store, installation)
         bind_lifespan(app, worker)
-    return AuthenticationRuntime(app, identity, task_events=events, recurrence=worker)
+        points = PointsConsumer(store, installation, SystemClock())
+        points_worker = MaintenanceWorker(points.tick, "points")
+        bind_lifespan(app, points_worker)
+    return AuthenticationRuntime(
+        app,
+        identity,
+        task_events=events,
+        recurrence=worker,
+        points=points,
+        points_worker=points_worker,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -14,6 +14,7 @@ from fastapi import FastAPI, Request
 from domus.application.household_commands import HouseholdCommands
 from domus.application.household_queries import HouseholdQueries
 from domus.application.member_commands import MemberCommands
+from domus.application.points import PointsConsumer
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.task_events import TaskEventSource
@@ -38,7 +39,7 @@ from domus.infrastructure.ha_member_profiles import NativeMemberProfiles
 from domus.infrastructure.ha_websocket import HomeAssistantWebSocket
 from domus.infrastructure.ingress_sessions import IngressRequest, IngressSessions
 from domus.infrastructure.owned_storage import OwnedStorage, open_storage, reject_owned_database
-from domus.infrastructure.recurrence_worker import RecurrenceWorker
+from domus.infrastructure.recurrence_worker import MaintenanceWorker, RecurrenceWorker
 from domus.infrastructure.sqlite import SQLiteDatabase
 
 
@@ -47,10 +48,13 @@ class NativeRuntime:
     app: FastAPI
     sessions: IngressSessions = field(repr=False)
     recurrence: RecurrenceWorker = field(repr=False)
+    points: PointsConsumer = field(repr=False)
+    points_worker: MaintenanceWorker[int] = field(repr=False)
     storage: OwnedStorage | None = field(default=None, repr=False)
     task_events: TaskEventSource | None = field(default=None, repr=False)
 
     def close(self) -> None:
+        self.points_worker.close()
         self.recurrence.close()
         try:
             self.sessions.close()
@@ -154,8 +158,16 @@ def _compose_business(
     attach_ha_calendar(app, store, ha_calendar_digest)
     worker = recurrence_worker(store, store.installation)
     bind_lifespan(app, worker)
+    points = PointsConsumer(store, store.installation, utc)
+    points_worker = MaintenanceWorker(points.tick, "points")
+    bind_lifespan(app, points_worker)
     return NativeRuntime(
-        app, sessions, worker, task_events=task_event_source(store, store.installation)
+        app,
+        sessions,
+        worker,
+        points,
+        points_worker,
+        task_events=task_event_source(store, store.installation),
     )
 
 

@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
+from typing import Protocol
 
 from fastapi import FastAPI
 from starlette.concurrency import run_in_threadpool
@@ -60,7 +61,12 @@ def recurrence_worker(store: Transactions, installation: Installation) -> Recurr
     return RecurrenceWorker(tick)
 
 
-def bind_lifespan(app: FastAPI, worker: RecurrenceWorker) -> None:
+class BackgroundWorker(Protocol):
+    def start(self) -> None: ...
+    def close(self) -> None: ...
+
+
+def bind_lifespan(app: FastAPI, worker: BackgroundWorker) -> None:
     previous = app.router.lifespan_context
 
     @asynccontextmanager

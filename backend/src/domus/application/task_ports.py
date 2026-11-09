@@ -33,6 +33,10 @@ class TaskRepository(Protocol):
         self, household_id: str, *, limit: int = 25, after: int = 0
     ) -> tuple[OperationEvidence, ...]: ...
 
+    def restored_cycle_closure(
+        self, household_id: str, cycle_id: str
+    ) -> TaskSourceRecord | None: ...
+
     def review_evidence(
         self,
         household_id: str,
