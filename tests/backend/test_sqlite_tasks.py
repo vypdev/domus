@@ -22,6 +22,7 @@ from domus.domain.task_values import (
 from domus.domain.tasks import HouseholdTaskPolicy
 from domus.infrastructure.sqlite import (
     BASE_STATEMENTS,
+    HOUSEHOLD_FOLD_STATEMENT,
     HOUSEHOLD_HORIZON_STATEMENT,
     IDENTITY_STATEMENTS,
 )
@@ -59,6 +60,7 @@ def store(tmp_path: Path) -> Iterator[Store]:
         *PROFILE_STATEMENTS,
         CALENDAR_PREFERENCE_STATEMENT,
         HOUSEHOLD_HORIZON_STATEMENT,
+        HOUSEHOLD_FOLD_STATEMENT,
     ):
         connection.execute(statement)
     connection.execute(

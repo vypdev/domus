@@ -51,11 +51,12 @@ class FixedReplacement:
     schedule_revision: int
     pattern: FixedPattern
     reason: str
+    use_household_fold: bool = False
 
     def __post_init__(self) -> None:
         validate_identifier(self.schedule_id)
         validate_revision(self.schedule_revision)
-        if not isinstance(self.pattern, FixedPattern):
+        if not isinstance(self.pattern, FixedPattern) or type(self.use_household_fold) is not bool:
             raise InvalidInput("invalid_recurrence_pattern")
         validate_task_text(self.reason, 1000, required=True, multiline=True)
 
@@ -64,6 +65,7 @@ class FixedReplacement:
             {
                 "version": 1,
                 "kind": "fixed_replacement",
+                **({"use_household_fold": True} if self.use_household_fold else {}),
                 "schedule_id": self.schedule_id,
                 "schedule_revision": self.schedule_revision,
                 "pattern": self.pattern.document().decode(),
@@ -193,13 +195,23 @@ class ReplacementSource:
         )
         if any(item.work.assignee_ids for item in unmatched):
             raise Conflict("recurrence_replacement_assignments_need_review")
-        return PreparedReplacement(
-            self,
-            before,
-            tuple(steps),
-            pairing,
-            future_until(planner.times, nominal_slots[0], rule.policy),
+        boundary = future_until(planner.times, nominal_slots[0], rule.policy)
+        # The old first appearance can elapse while the proposed second is still ahead.
+        # Fence the original deadlines as well as the proposed start at apply time.
+        boundary = min(
+            boundary,
+            min(
+                (
+                    item.deadline.due_at
+                    for item in self.replaceable
+                    if item.deadline.due_at is not None
+                ),
+                default=boundary,
+            ),
         )
+        if now >= boundary:
+            raise Conflict("recurrence_reschedule_in_past")
+        return PreparedReplacement(self, before, tuple(steps), pairing, boundary)
 
 
 def replacement_source(
@@ -211,7 +223,14 @@ def replacement_source(
         raise NotFound("recurrence_rule_missing")
     if rule.revision != request.schedule_revision:
         raise Conflict("recurrence_review_stale")
-    if rule.state is not ScheduleState.ACTIVE or rule.pattern == request.pattern:
+    policy = (
+        replace(rule.policy, repeated_time=scope.require(unit).repeated_time)
+        if request.use_household_fold
+        else rule.policy
+    )
+    if rule.state is not ScheduleState.ACTIVE or (
+        rule.pattern == request.pattern and rule.policy == policy
+    ):
         raise Conflict("recurrence_state_change_unavailable")
     start = request.pattern.start
     if type(start) is not type(rule.pattern.start):
@@ -296,6 +315,7 @@ def replacement_source(
     upcoming = replace(
         rule,
         pattern=request.pattern,
+        policy=policy,
         revision=rule.revision + 1,
         pattern_revision=rule.pattern_revision + 1,
     )
@@ -316,6 +336,11 @@ class PreparedReplacement:
             return JsonDocument.from_value(
                 {
                     "previous_progress_revision": rule.progress.revision,
+                    **(
+                        {"repeated_time": rule.upcoming.policy.repeated_time.value}
+                        if rule.current.policy != rule.upcoming.policy
+                        else {}
+                    ),
                     "definition_revision": rule.definition.revision,
                     "before": self.before.local.isoformat(),
                     "retained_work": [item.value() for item in rule.retained],

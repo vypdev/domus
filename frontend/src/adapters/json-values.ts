@@ -17,7 +17,7 @@ export function text(value: unknown, maximum: number): string {
     && !/[\uD800-\uDFFF]/u.test(value)); return value;
 }
 export function integer(value: unknown, minimum: number): number {
-  const decoded = responseInteger(value); check(decoded >= minimum); return decoded;
+  return responseInteger(value, minimum);
 }
 export function boolean(value: unknown): boolean {check(typeof value === 'boolean'); return value;}
 export function choice<T extends string>(value: unknown, options: readonly T[]): T {
@@ -111,9 +111,9 @@ export function responseRevision(value: unknown): Revision {
   try {return revisionValue(value.source);} catch {return invalid();}
 }
 
-export function responseInteger(value: unknown): number {
+export function responseInteger(value: unknown, minimum = 0): number {
   check(value instanceof ExactInteger);
   const integer = BigInt(value.source);
-  check(integer >= 0n && integer <= BigInt(Number.MAX_SAFE_INTEGER));
+  check(integer >= BigInt(minimum) && integer <= BigInt(Number.MAX_SAFE_INTEGER));
   return Number(integer);
 }

@@ -624,3 +624,75 @@ def test_replacement_cannot_recreate_historically_excluded_work(
         restored_work = unit.tasks.occurrence("home", old[1].occurrence_id)
         assert restored_work.state is OccurrenceState.AVAILABLE
         assert unit.tasks.occurrence("home", old[2].occurrence_id).assignee_ids == ("child",)
+
+
+def test_batch_replacement_snapshots_household_fold_and_rejects_changed_preference(tmp_path):
+    from test_recurrence_review import set_fold
+
+    from domus.domain.recurrence_time import FoldPolicy
+
+    review, _, choice, old = prepared(tmp_path, timed=True)
+    store = review.transactions
+    set_fold(store, FoldPolicy.SECOND)
+    choice = replace(choice, use_household_fold=True)
+    preview, stale = reviewed(review, choice, "second")
+    assert preview.result.decode()["plan"]["source"]["repeated_time"] == "second_instant"
+    set_fold(store, FoldPolicy.FIRST)
+    with pytest.raises(Conflict, match="recurrence_review_stale"):
+        review.apply("stale", stale)
+    set_fold(store, FoldPolicy.SECOND)
+    receipt = review.apply("apply", stale)
+    with store.read() as unit:
+        original = unit.recurrence.slot("home", old[1].receipt.command.key)
+        assert original.schedule.policy.repeated_time is FoldPolicy.FIRST
+        new = receipt.result.decode()["replacements"][original.occurrence_id]
+        replacement = unit.recurrence.fixed_slot_for_occurrence("home", new)
+        assert replacement.schedule.policy.repeated_time is FoldPolicy.SECOND
+
+
+def test_fold_replacement_cannot_cancel_first_appearance_once_due(tmp_path):
+    from datetime import UTC
+
+    from test_recurrence_review import set_fold
+
+    from domus.domain.recurrence_time import FoldPolicy
+
+    start = NominalTime(datetime(2026, 10, 25, 2, 30))
+    creator, _, store, actor, ids = setup(tmp_path)
+    pattern = parse_fixed_pattern("FREQ=DAILY;COUNT=1", start)
+    chosen = request(timed=True)
+    created = creator.create_fixed("autumn", replace(chosen, pattern=pattern)).result.decode()
+    schedule = created["schedule_id"]
+    scope = MaintenanceScope(store.installation, "home")
+    maintenance = FixedMaintenance(store, scope, creator.planner, creator.clock, ids)
+    issued = maintenance.step(schedule, NominalTime(datetime(2026, 10, 26)))
+    set_fold(store, FoldPolicy.SECOND)
+    deadline = int(datetime(2026, 10, 25, 0, 30, tzinfo=UTC).timestamp() * 1000)
+
+    class Clock:
+        time = deadline - 1000
+
+        def now(self):
+            return self.time
+
+    clock = Clock()
+    review = RecurrenceReview(
+        store,
+        store.installation,
+        actor,
+        actor.current,
+        clock,
+        ids,
+        RelativeRecurrencePlanner(creator.planner.times),
+    )
+    choice = FixedReplacement(schedule, 1, pattern, "Use the second appearance", True)
+    _, approved = reviewed(review, choice)
+    clock.time = deadline
+    with pytest.raises(Conflict, match="recurrence_reschedule_in_past"):
+        review.apply("late", approved)
+    with pytest.raises(Conflict, match="recurrence_reschedule_in_past"):
+        review.preview("late-preview", choice)
+    with store.read() as unit:
+        assert (
+            unit.tasks.occurrence("home", issued.occurrence_id).state is OccurrenceState.AVAILABLE
+        )

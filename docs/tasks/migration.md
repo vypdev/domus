@@ -1,6 +1,6 @@
 # Task storage migration and compatibility
 
-Current development source uses SQLite schema 12. The historical schema 8 and 9
+Current development source uses SQLite schema 13. The historical schema 8 and 9
 checkpoints retain their original evidence below. The installed immutable
 Edge.5 package uses schema 7; retained Edge.3 remains the separately pinned M1 schema-4 package.
 Current source tests do not upgrade those installations or establish a released package upgrade.
@@ -17,8 +17,9 @@ Keep the exact application/data pair and installation/channel identity.
 | 10 | Durable relative lifecycle and reviewed scheduling | Existing recurrence and profile facts are retained |
 | 11 | Owner-private calendar preferences | Other private settings and original outcomes remain intact |
 | 12 | Household materialization horizon | Existing households start at 60 local days; issued work and original receipts are retained |
+| 13 | Household repeated-time preference | Existing households use the first appearance. Historical rule and occurrence policies are unchanged |
 
-Initialization accepts an empty owned destination or supported versions 1–11, verifies the application
+Initialization accepts an empty owned destination or supported versions 1–12, verifies the application
 marker and installation/channel, then repeats inspection inside the bounded writer transaction.
 Additive DDL, any required legacy-document upgrade and user_version advancement share that transaction.
 An unsupported future version, mismatched identity or unrelated database is rejected. Normal runtime
@@ -138,3 +139,8 @@ rejects a schema-10 generation. An application that supports schema 10 can resto
 compatible checkpoint into a new generation and retain original operation and cycle proofs. A
 successor that is absent from the selected state stays absent, even when its original closure
 remains recoverable.
+
+Schema 13 adds a checked column to the existing household row. The frozen schema-12
+input retains the schema and records produced by the previous runtime from the
+schema-11 checkpoint. The migration preserves the configured horizon, private
+preferences and task evidence. A DDL failure preserves the original schema-12 bytes.

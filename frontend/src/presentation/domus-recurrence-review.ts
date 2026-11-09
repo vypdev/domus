@@ -2,7 +2,7 @@ import {LitElement, html, nothing} from 'lit';
 import {keyed} from 'lit/directives/keyed.js';
 import type {PropertyValues} from 'lit';
 import type {ReviewView} from '../application/recurrence-review-controller';
-import {ATTACHMENT_CHOICES, FOLD_CHOICES, VISIBILITIES} from '../domain/recurrence-review';
+import {ATTACHMENT_CHOICES, ATTACHMENT_FOLDS, REVIEW_FOLDS, VISIBILITIES} from '../domain/recurrence-review';
 import type {ReviewDraft, ReviewKind, ReviewTarget} from '../domain/recurrence-review';
 import {reviewMessage} from './recurrence-messages';
 import type {ReviewMessage} from './recurrence-messages';
@@ -46,7 +46,7 @@ export class DomusRecurrenceReview extends LitElement {
       kind, date: value('date'), time: value('time'), zone: value('zone'), interval: value('interval'),
       visibility: (value('visibility') || 'at_completion') as ReviewDraft['visibility'],
       choice: (value('choice') || 'adopt') as ReviewDraft['choice'],
-      fold: (value('fold') || 'first_instant') as ReviewDraft['fold'], reason: value('reason'), rrule: value('pattern'),
+      fold: (value('fold') || 'keep_fold') as ReviewDraft['fold'], reason: value('reason'), rrule: value('pattern'),
     }});
   }
   private form(target: ReviewTarget, kind: ReviewKind, disabled: boolean) {
@@ -68,7 +68,8 @@ export class DomusRecurrenceReview extends LitElement {
       ${relative ? html`<label>${this.text('interval')}<input type="number" min="1" max="36600" name="interval" required .value=${String(schedule?.interval ?? 30)}></label>
         ${this.select('visibility', VISIBILITIES, schedule?.visibility ?? 'at_completion')}` : nothing}
       ${kind === 'attachment' ? html`<label>${this.text('zone')}<input name="zone" required maxlength="128" .value=${target.zone}></label>
-        ${this.select('choice', ATTACHMENT_CHOICES, 'adopt')}${this.select('fold', FOLD_CHOICES, 'first_instant')}` : nothing}
+        ${this.select('choice', ATTACHMENT_CHOICES, 'adopt')}${this.select('fold', ATTACHMENT_FOLDS, 'household')}` : nothing}
+      ${kind === 'relative-settings' || pattern ? this.select('fold', REVIEW_FOLDS, 'keep_fold') : nothing}
       ${pattern ? html`<label>${this.text('pattern')}<input name="pattern" required maxlength="2048"></label>` : nothing}
       ${kind === 'reschedule' || kind === 'fixed-skip' || kind === 'fixed-replacement' || exception ? html`<label>${this.text('reason')}<textarea name="reason" required maxlength="1000"></textarea></label>` : nothing}
       `)}
@@ -77,6 +78,12 @@ export class DomusRecurrenceReview extends LitElement {
   }
   private dates(label: ReviewMessage, dates: readonly string[]) {
     return dates.length ? html`<ul aria-label=${this.text(label)}>${dates.map(date => html`<li>${date}</li>`)}</ul>` : nothing;
+  }
+  private offset(seconds: number): string {
+    const value = Math.abs(seconds);
+    const parts = [Math.floor(value / 3600), Math.floor(value % 3600 / 60)];
+    if (value % 60) parts.push(value % 60);
+    return 'UTC' + (seconds < 0 ? '−' : '+') + parts.map(part => String(part).padStart(2, '0')).join(':');
   }
   private result(value: NonNullable<ReviewView['result']>, disabled: boolean) {
     const {record, receipt} = value, plan = receipt.preview;
@@ -88,6 +95,10 @@ export class DomusRecurrenceReview extends LitElement {
       ${plan !== null && !receipt.historical ? html`
         ${'target' in body ? html`<p>${this.text(body.target === 'paused' ? 'pause' : 'resume')}</p>` : nothing}
         ${'interval_days' in body ? html`<p>${this.text('interval')} ${body.interval_days} · ${this.text(body.visibility)}</p>` : nothing}
+        ${plan.repeatedTime === undefined ? nothing : html`<p>${this.text('fold')} · ${this.text(plan.repeatedTime)}</p>`}
+        ${plan.repeatedSlots === undefined ? nothing : html`<ul aria-label=${this.text('fold')}>
+          ${plan.repeatedSlots.map(slot => html`<li>${slot.local} · ${this.text(slot.fold)} · ${this.offset(slot.offset)}</li>`)}
+        </ul>`}
         ${'rrule' in body ? html`<p>${body.rrule}</p>` : nothing}
         ${'nominal' in body ? html`<p>${this.text('date')} ${body.nominal.local}</p>` : nothing}
         ${'reason' in body ? html`<p>${body.reason}</p>` : nothing}

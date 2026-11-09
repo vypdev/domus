@@ -270,7 +270,7 @@ test('review component shows bounded impacts, closed actions, literal content an
   get('date').value = input.date; get('interval').value = '7';
   root.querySelector('form')!.dispatchEvent(new Event('submit',{cancelable:true}));
   expect(dispatch).toHaveBeenLastCalledWith(expect.objectContaining({detail:{type:'preview',draft:{...input,
-    interval:'7',reason:'',rrule:''}}}));
+    interval:'7',fold:'household',reason:'',rrule:''}}}));
   await update({target:work});
   await select('relative-settings'); expect(get('interval').value).toBe('30');
   await select('fixed-state'); expect(root.textContent).toContain('Pause new generation');
@@ -286,7 +286,7 @@ test('review component shows bounded impacts, closed actions, literal content an
   await select('adoption'); expect(get('reason')).toBeNull();
   root.querySelector('form')!.dispatchEvent(new Event('submit',{cancelable:true}));
   expect(dispatch).toHaveBeenLastCalledWith(expect.objectContaining({detail:{type:'preview',
-    draft:expect.objectContaining({kind:'adoption',visibility:'at_completion',choice:'adopt',fold:'first_instant'})}}));
+    draft:expect.objectContaining({kind:'adoption',visibility:'at_completion',choice:'adopt',fold:'keep_fold'})}}));
   await update({records:[intent],notice:'uncertain'});
   expect(root.querySelector('details')!.open).toBe(true);
   buttons('Check original schedule request').click();
@@ -416,4 +416,56 @@ test.each(['fixed-exclude','fixed-add'] as const)('%s posts the typed exception 
     nominal:{kind:'time',local:'2026-12-01T09:15'},reason:input.reason});
   expect((await f.server.original(context, request).result).historical).toBe(true);
   expect(String(f.fetch.mock.calls[2]![0])).toContain('/requests/recurrence.review.preview/original-key');
+});
+
+
+test('the household fold remains explicit in recovered review payloads', () => {
+  expect(reviewSelection(work, {...input, fold:'household'}).body).toMatchObject({repeated_time:'household'});
+  for (const kind of ['relative-settings','fixed-pattern','fixed-replacement'] as const) {
+    const draft = {...input, kind, time:'02:30', fold:'household' as const};
+    const selected = reviewSelection(work, draft);
+    expect(selected.body).toMatchObject({use_household_fold:true});
+    expect(reviewCommand({step:'preview',selection:selected}).selection).toEqual(selected);
+    expect(() => reviewCommand({step:'preview',selection:{...selected,body:{...selected.body,use_household_fold:false}}})).toThrow();
+    expect(reviewSelection(work, {...draft,fold:'keep_fold'}).body).not.toHaveProperty('use_household_fold');
+  }
+});
+
+test('recurrence receipt reads both UTC appearances and keeps exact and date-only slots separate', async () => {
+  const f = http(), local = '2026-10-25T02:30';
+  const slot = (resolution: string, offset_seconds: number) => ({nominal:{local}, resolved:{resolution, offset_seconds}});
+  const get = (prospective_slots: unknown) => {
+    f.enqueue(receipt({...preview,plan:{request:{kind:'attach_relative'},
+      source:{repeated_time:'second_instant'},backlog:{prospective_slots}}}));
+    return f.server.original(context,intent).result;
+  };
+  await expect(get([slot('fold_second',3600),slot('exact',7200),{nominal:{local},resolved:null},
+    {planned:slot('fold_first',-14400)}])).resolves.toMatchObject({preview:{repeatedTime:'second_instant',
+      repeatedSlots:[{local,offset:3600,fold:'second_instant'},{local,offset:-14400,fold:'first_instant'}]}});
+  for (const invalid of [slot('fold_first',86400),slot('fold_first',-86400), {resolved:{resolution:'fold_second',offset_seconds:0}}]) {
+    await expect(get([invalid])).rejects.toThrow();
+  }
+  await expect(get(Array(101).fill(slot('exact',0)))).rejects.toThrow();
+  f.enqueue(receipt({...preview,plan:{request:{kind:'attach_relative'},
+    source:{prospective_slots:[{planned:slot('fold_second',3600),replaces:null}]}}}));
+  await expect(f.server.original(context,intent).result).resolves.toMatchObject({preview:{
+    repeatedSlots:[{local,offset:3600,fold:'second_instant'}]}});
+  f.enqueue(receipt({...preview,plan:{request:{kind:'attach_relative'},
+    source:{initial:slot('fold_second',3600)}}}));
+  await expect(f.server.original(context,intent).result).resolves.toMatchObject({preview:{
+    repeatedSlots:[{local,offset:3600,fold:'second_instant'}]}});
+
+});
+
+test('preview announces the repeated appearance and its exact offset in Spanish', async () => {
+  const widget = document.createElement('domus-recurrence-review');
+  widget.language = 'es';
+  widget.view = {open:true,busy:false,readOnly:false,selected:true,target:work,records:[],notice:null,
+    result:{record:intent,receipt:{...plan,preview:{...plan.preview!,repeatedTime:'second_instant',
+      repeatedSlots:[{local:'2026-10-25T02:30',offset:3600,fold:'second_instant'},
+        {local:'1900-11-04T02:30',offset:-3661,fold:'first_instant'}]}}}};
+  document.body.append(widget); mounted.push(widget);
+  await widget.updateComplete;
+  expect(widget.shadowRoot?.textContent).toContain('Segunda aparición · UTC+01:00');
+  expect(widget.shadowRoot?.textContent).toContain('Primera aparición · UTC−01:01:01');
 });

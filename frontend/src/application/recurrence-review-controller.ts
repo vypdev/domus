@@ -24,6 +24,8 @@ export interface ReviewPreview {
   readonly retained: number | null; readonly planned: number | null; readonly cancelled: number | null;
   readonly previous: string | null; readonly destination: string | null;
   readonly createsFirst: boolean | null;
+  readonly repeatedTime?: import('../domain/recurrence-review').FoldPolicy;
+  readonly repeatedSlots?: readonly Readonly<{local: string; offset: number; fold: import('../domain/recurrence-review').FoldPolicy}>[];
   readonly retainedDates: readonly string[]; readonly cancelledDates: readonly string[];
   readonly replacementSlots: readonly Readonly<{local: string; replaces: boolean}>[];
 }

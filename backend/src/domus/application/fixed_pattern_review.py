@@ -31,11 +31,12 @@ class FixedPatternChange:
     schedule_id: str
     schedule_revision: int
     pattern: FixedPattern
+    use_household_fold: bool = False
 
     def __post_init__(self) -> None:
         validate_identifier(self.schedule_id)
         validate_revision(self.schedule_revision)
-        if not isinstance(self.pattern, FixedPattern):
+        if not isinstance(self.pattern, FixedPattern) or type(self.use_household_fold) is not bool:
             raise InvalidInput("invalid_recurrence_pattern")
 
     def document(self) -> JsonDocument:
@@ -43,6 +44,7 @@ class FixedPatternChange:
             {
                 "version": 1,
                 "kind": "fixed_pattern",
+                **({"use_household_fold": True} if self.use_household_fold else {}),
                 "schedule_id": self.schedule_id,
                 "schedule_revision": self.schedule_revision,
                 "pattern": self.pattern.document().decode(),
@@ -108,7 +110,14 @@ def fixed_pattern_plan(
         raise NotFound("recurrence_rule_missing")
     if rule.revision != request.schedule_revision:
         raise Conflict("recurrence_review_stale")
-    if rule.state is ScheduleState.RETIRED or rule.pattern == request.pattern:
+    policy = (
+        replace(rule.policy, repeated_time=scope.require(unit).repeated_time)
+        if request.use_household_fold
+        else rule.policy
+    )
+    if rule.state is ScheduleState.RETIRED or (
+        rule.pattern == request.pattern and rule.policy == policy
+    ):
         raise Conflict("recurrence_state_change_unavailable")
     progress = unit.recurrence.progress(home, rule.schedule_id)
     definition = unit.tasks.definition(home, rule.definition_id)
@@ -141,6 +150,7 @@ def fixed_pattern_plan(
     updated = replace(
         rule,
         pattern=request.pattern,
+        policy=policy,
         revision=rule.revision + 1,
         pattern_revision=rule.pattern_revision + 1,
     )
@@ -162,6 +172,11 @@ def fixed_pattern_plan(
                 "definition_revision": definition.revision,
                 "retained_work": retained,
                 "replaces_issued_work": False,
+                **(
+                    {"repeated_time": policy.repeated_time.value}
+                    if request.use_household_fold
+                    else {}
+                ),
             }
         ),
     )

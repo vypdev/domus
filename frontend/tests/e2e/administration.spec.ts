@@ -81,7 +81,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     await widget.getByRole('button',{name:'Edit household',exact:true}).click();
     await expect(widget.getByRole('region',{name:'Household settings',exact:true})).toContainText('9007199254740993');
     await widget.getByRole('textbox',{name:'New household name',exact:true}).fill('Exact revision house');await save(widget);
-    expect(writes).toHaveLength(1);expect(writes[0].body).toBe('{"expected_revision":9007199254740993,"name":"Exact revision house","time_zone":"UTC","materialization_horizon_days":60}');
+    expect(writes).toHaveLength(1);expect(writes[0].body).toBe('{"expected_revision":9007199254740993,"name":"Exact revision house","time_zone":"UTC","repeated_time":"first_instant","materialization_horizon_days":60}');
     // Assert raw wire integers: JSON.parse would coerce the original revision to an unsafe Number.
     const persisted=await page.request.get(base(mode)+'/api/v1/household');expect(persisted.status()).toBe(200);
     expect(await persisted.text()).toMatch(/"revision":\s*9007199254740994(?=[,}])/u);
@@ -97,6 +97,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     const gate=new Promise<void>(resolve=>{release=resolve;}),ready=new Promise<void>(resolve=>{arrived=resolve;});
     const writes:{index:number;key:string;body:string|null;status:number;code:string|null}[]=[],lookups:string[]=[];
     const pages=[page,other],names=['Independent house A','Independent house B'],horizons=[14,31];
+    const folds=['second_instant','first_instant'];
     try{
       if(mode==='native')await peer.addCookies([{name:'ingress_session',value:(actors==='same_account'?'d':'e').repeat(128),domain:'127.0.0.1',path:'/',httpOnly:true,sameSite:'Strict'}]);
       else if(actors==='different_accounts')expect((await request.post(origin(mode)+'/__fixture__/identity',{data:{subject:'c'.repeat(32)}})).ok()).toBe(true);
@@ -120,6 +121,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
         await widgets[index].getByRole('button',{name:'Edit household',exact:true}).click();
         await widgets[index].getByRole('textbox',{name:'New household name',exact:true}).fill(names[index]);
         await widgets[index].getByRole('spinbutton',{name:'Recurrence horizon (days)',exact:true}).fill(String(horizons[index]));
+        await widgets[index].getByRole('combobox',{name:'Repeated local time',exact:true}).selectOption(folds[index]);
         await widgets[index].getByRole('button',{name:'Review changes',exact:true}).click();
       }
       await Promise.all(widgets.map(candidate=>candidate.getByRole('button',{name:'Save changes',exact:true}).click()));
@@ -129,7 +131,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       if(loser.status===503)expect(loser.code).toBe('storage_busy');else expect(loser.code).toBe('revision_conflict');
       expect(new Set(writes.map(item=>item.key)).size).toBe(2);
       for(const write of writes)expect(JSON.parse(write.body!)).toEqual({
-        expected_revision:1,name:names[write.index],time_zone:'UTC',materialization_horizon_days:horizons[write.index],
+        expected_revision:1,name:names[write.index],time_zone:'UTC',materialization_horizon_days:horizons[write.index],repeated_time:folds[write.index],
       });
       await expect(widgets[winner.index].getByRole('heading',{name:'Outcome not confirmed',exact:true})).toBeVisible();
       await expect(widgets[loser.index].getByRole('heading',{name:'Change not accepted',exact:true})).toBeVisible();
@@ -137,7 +139,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       for(const table of ['receipts','audit','outbox'])expect(committed.counts[table],table).toBe(before.counts[table]+1);
       expect(committed.counts.members).toBe(before.counts.members);
       expect(await(await page.request.get(base(mode)+'/api/v1/household')).json()).toMatchObject({
-        name:names[winner.index],revision:2,materialization_horizon_days:horizons[winner.index],
+        name:names[winner.index],revision:2,materialization_horizon_days:horizons[winner.index],repeated_time:folds[winner.index],
       });
       const original=await pages[winner.index].evaluate(key=>JSON.parse(sessionStorage.getItem(key)!).records[0],journalKey);
       expect(original).toMatchObject({key:winner.key,stage:'uncertain',

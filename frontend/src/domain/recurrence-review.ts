@@ -9,6 +9,9 @@ export const REVIEW_KINDS = ['attachment', 'adoption', 'state', 'relative-settin
 export const VISIBILITIES = ['at_completion', 'at_verification'] as const;
 export const ATTACHMENT_CHOICES = ['adopt', 'retain_manual'] as const;
 export const FOLD_CHOICES = ['first_instant', 'second_instant'] as const;
+export const ATTACHMENT_FOLDS = ['household', ...FOLD_CHOICES] as const;
+export const REVIEW_FOLDS = ['keep_fold', 'household'] as const;
+export type FoldPolicy = typeof FOLD_CHOICES[number];
 export type ReviewKind = typeof REVIEW_KINDS[number];
 export type Visibility = typeof VISIBILITIES[number];
 export type ReviewStep = 'preview' | 'apply';
@@ -18,16 +21,17 @@ type ScheduleIdentity = Readonly<{schedule_id: string; schedule_revision: Revisi
 type WorkIdentity = Readonly<{occurrence_id: string; occurrence_revision: Revision}>;
 type SlotIdentity = ScheduleIdentity & WorkIdentity & Readonly<{slot_key: string; reason: string}>;
 type RelativeSettings = Readonly<{interval_days: number; visibility: Visibility}>;
+type ReviewedFold = Readonly<{use_household_fold?: true}>;
 export type ReviewSelection =
   | Readonly<{kind: 'attachment'; body: WorkIdentity & RelativeSettings & Readonly<{
     definition_id: string; definition_revision: Revision; initial: Nominal; zone: string;
-    repeated_time: typeof FOLD_CHOICES[number]; choice: typeof ATTACHMENT_CHOICES[number];
+    repeated_time: typeof ATTACHMENT_FOLDS[number]; choice: typeof ATTACHMENT_CHOICES[number];
   }>}>
   | Readonly<{kind: 'adoption'; body: ScheduleIdentity & WorkIdentity}>
   | Readonly<{kind: 'state' | 'fixed-state'; body: ScheduleIdentity & Readonly<{target: 'active' | 'paused'}>}>
-  | Readonly<{kind: 'relative-settings'; body: ScheduleIdentity & RelativeSettings}>
-  | Readonly<{kind: 'fixed-pattern'; body: ScheduleIdentity & Readonly<{start: Nominal; rrule: string}>}>
-  | Readonly<{kind: 'fixed-replacement'; body: ScheduleIdentity & Readonly<{start: Nominal; rrule: string; reason: string}>}>
+  | Readonly<{kind: 'relative-settings'; body: ScheduleIdentity & RelativeSettings & ReviewedFold}>
+  | Readonly<{kind: 'fixed-pattern'; body: ScheduleIdentity & ReviewedFold & Readonly<{start: Nominal; rrule: string}>}>
+  | Readonly<{kind: 'fixed-replacement'; body: ScheduleIdentity & ReviewedFold & Readonly<{start: Nominal; rrule: string; reason: string}>}>
   | Readonly<{kind: 'fixed-exclude' | 'fixed-add'; body: ScheduleIdentity & Readonly<{nominal: Nominal; reason: string}>}>
   | Readonly<{kind: 'fixed-skip'; body: SlotIdentity}>
   | Readonly<{kind: 'reschedule'; body: SlotIdentity & Readonly<{destination: Nominal}>}>;
@@ -47,15 +51,22 @@ export interface ReviewTarget {
 export interface ReviewDraft {
   readonly kind: ReviewKind; readonly date: string; readonly time: string; readonly zone: string;
   readonly interval: string; readonly visibility: Visibility; readonly choice: typeof ATTACHMENT_CHOICES[number];
-  readonly fold: typeof FOLD_CHOICES[number]; readonly reason: string; readonly rrule: string;
+  readonly fold: typeof ATTACHMENT_FOLDS[number] | 'keep_fold'; readonly reason: string; readonly rrule: string;
 }
 
 type Fields = Record<string, unknown>;
 function requireReview(condition: unknown): asserts condition {if (!condition) throw new Error('invalid_review_input');}
-function fields(value: unknown, keys: readonly string[]): Fields {
+function fields(value: unknown, keys: readonly string[], optional: readonly string[] = []): Fields {
   requireReview(typeof value === 'object' && value !== null && !Array.isArray(value)
-    && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key)));
+    && keys.every(key => Object.hasOwn(value, key))
+    && Object.keys(value).every(key => keys.includes(key) || optional.includes(key)));
   return value as Fields;
+}
+const FOLD_OVERRIDE = ['use_household_fold'] as const;
+function reviewedFold(body: Fields): ReviewedFold {
+  if (!Object.hasOwn(body, 'use_household_fold')) return {};
+  requireReview(body.use_household_fold === true);
+  return {use_household_fold: true};
 }
 function option<T extends string>(value: unknown, options: readonly T[]): T {
   requireReview(options.includes(value as T)); return value as T;
@@ -92,7 +103,7 @@ function selection(value: unknown): ReviewSelection {
       return Object.freeze({kind, body: Object.freeze({...work(body), ...relative(body),
         definition_id: taskIdentifier(body.definition_id), definition_revision: revisionValue(body.definition_revision),
         initial: nominal(body.initial), zone: taskText(body.zone, 128, true),
-        repeated_time: option(body.repeated_time, FOLD_CHOICES), choice: option(body.choice, ATTACHMENT_CHOICES)})});
+        repeated_time: option(body.repeated_time, ATTACHMENT_FOLDS), choice: option(body.choice, ATTACHMENT_CHOICES)})});
     }
     case 'adoption': {
       const body = fields(input.body, [...SCHEDULE,...WORK]);
@@ -103,12 +114,12 @@ function selection(value: unknown): ReviewSelection {
       return Object.freeze({kind, body: Object.freeze({...schedule(body), target: option(body.target, ['active','paused'] as const)})});
     }
     case 'relative-settings': {
-      const body = fields(input.body, [...SCHEDULE,...RELATIVE]);
-      return Object.freeze({kind, body: Object.freeze({...schedule(body), ...relative(body)})});
+      const body = fields(input.body, [...SCHEDULE,...RELATIVE], FOLD_OVERRIDE);
+      return Object.freeze({kind, body: Object.freeze({...schedule(body), ...relative(body), ...reviewedFold(body)})});
     }
     case 'fixed-pattern': case 'fixed-replacement': {
-      const body = fields(input.body, kind === 'fixed-replacement' ? [...SCHEDULE,'start','rrule','reason'] : [...SCHEDULE,'start','rrule']);
-      const pattern = {...schedule(body), start: nominal(body.start), rrule: taskText(body.rrule, 2048, true)};
+      const body = fields(input.body, kind === 'fixed-replacement' ? [...SCHEDULE,'start','rrule','reason'] : [...SCHEDULE,'start','rrule'], FOLD_OVERRIDE);
+      const pattern = {...schedule(body), ...reviewedFold(body), start: nominal(body.start), rrule: taskText(body.rrule, 2048, true)};
       return kind === 'fixed-replacement'
         ? Object.freeze({kind, body: Object.freeze({...pattern, reason: taskText(body.reason, 1000, true, true)})})
         : Object.freeze({kind, body: Object.freeze(pattern)});
@@ -142,7 +153,7 @@ export function reviewCommand(value: unknown): ReviewCommand {
 export function reviewDraft(value: unknown): ReviewDraft {
   const input = fields(value, ['kind','date','time','zone','interval','visibility','choice','fold','reason','rrule']);
   for (const key of ['date','time','zone','interval','reason','rrule']) requireReview(typeof input[key] === 'string');
-  option(input.kind, REVIEW_KINDS); option(input.visibility, VISIBILITIES); option(input.choice, ATTACHMENT_CHOICES); option(input.fold, FOLD_CHOICES);
+  option(input.kind, REVIEW_KINDS); option(input.visibility, VISIBILITIES); option(input.choice, ATTACHMENT_CHOICES); option(input.fold, [...ATTACHMENT_FOLDS, 'keep_fold']);
   return Object.freeze(input as unknown as ReviewDraft);
 }
 
@@ -159,9 +170,10 @@ export function reviewSelection(target: ReviewTarget, draft: ReviewDraft): Revie
   if (kind === 'adoption') return selection({kind, body: {...schedule,...work}});
   if (kind === 'state' || kind === 'fixed-state') return selection({kind, body: {...schedule,
     target: target.schedule.state === 'active' ? 'paused' : 'active'}});
-  if (kind === 'relative-settings') return selection({kind, body: {...schedule,...relative}});
+  const fold = draft.fold === 'household' ? {use_household_fold: true} : {};
+  if (kind === 'relative-settings') return selection({kind, body: {...schedule,...relative,...fold}});
   if (kind === 'fixed-pattern' || kind === 'fixed-replacement') {
-    const pattern = {...schedule, start: local, rrule: draft.rrule};
+    const pattern = {...schedule, ...fold, start: local, rrule: draft.rrule};
     return selection({kind, body: kind === 'fixed-replacement' ? {...pattern, reason: draft.reason} : pattern});
   }
   if (kind === 'fixed-exclude' || kind === 'fixed-add') {

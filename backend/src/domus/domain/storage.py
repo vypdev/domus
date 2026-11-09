@@ -9,6 +9,7 @@ from typing import Self, cast
 from uuid import UUID
 
 from domus.domain.errors import InvalidInput
+from domus.domain.fold_policy import FoldPolicy
 
 type JsonValue = None | bool | int | float | str | list[JsonValue] | dict[str, JsonValue]
 type JsonObject = dict[str, JsonValue]
@@ -132,6 +133,7 @@ class Household:
     time_zone: str
     revision: int
     materialization_horizon_days: int = DEFAULT_MATERIALIZATION_HORIZON_DAYS
+    repeated_time: FoldPolicy = FoldPolicy.FIRST
 
     def __post_init__(self) -> None:
         validate_identifier(self.household_id)
@@ -151,6 +153,7 @@ class Household:
             or not MIN_MATERIALIZATION_HORIZON_DAYS
             <= self.materialization_horizon_days
             <= MAX_MATERIALIZATION_HORIZON_DAYS
+            or not isinstance(self.repeated_time, FoldPolicy)
         ):
             raise InvalidInput("invalid_household")
         try:

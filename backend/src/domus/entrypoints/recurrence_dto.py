@@ -120,7 +120,7 @@ class RelativeAttachmentBody(StrictModel):
     initial: NominalBody
     interval_days: Annotated[int, Field(ge=1, le=36600)]
     zone: Annotated[str, Field(min_length=1, max_length=128)]
-    repeated_time: Literal["first_instant", "second_instant"] = "first_instant"
+    repeated_time: Literal["first_instant", "second_instant", "household"] = "first_instant"
     visibility: Literal["at_completion", "at_verification"] = "at_completion"
     choice: Literal["adopt", "retain_manual"]
 
@@ -133,7 +133,7 @@ class RelativeAttachmentBody(StrictModel):
             nominal(self.initial),
             RelativeInterval(self.interval_days),
             self.zone,
-            FoldPolicy(self.repeated_time),
+            "household" if self.repeated_time == "household" else FoldPolicy(self.repeated_time),
             SuccessorVisibility(self.visibility),
             AttachmentChoice(self.choice),
         )
@@ -152,6 +152,7 @@ class RelativeSettingsBody(StrictModel):
     schedule_revision: Revision
     interval_days: Annotated[int, Field(ge=1, le=36600)]
     visibility: Literal["at_completion", "at_verification"]
+    use_household_fold: bool = False
 
     def selection(self) -> RelativeSettings:
         return RelativeSettings(
@@ -159,6 +160,7 @@ class RelativeSettingsBody(StrictModel):
             self.schedule_revision,
             RelativeInterval(self.interval_days),
             SuccessorVisibility(self.visibility),
+            self.use_household_fold,
         )
 
 
@@ -217,12 +219,14 @@ class FixedPatternBody(StrictModel):
     schedule_revision: Revision
     start: NominalBody
     rrule: Annotated[str, Field(min_length=1, max_length=2048)]
+    use_household_fold: bool = False
 
     def selection(self) -> FixedPatternChange:
         return FixedPatternChange(
             self.schedule_id,
             self.schedule_revision,
             parse_fixed_pattern(self.rrule, nominal(self.start)),
+            self.use_household_fold,
         )
 
 
@@ -240,7 +244,11 @@ class FixedReplacementBody(FixedPatternBody):
     def replacement(self) -> FixedReplacement:
         pattern = self.selection()
         return FixedReplacement(
-            pattern.schedule_id, pattern.schedule_revision, pattern.pattern, self.reason
+            pattern.schedule_id,
+            pattern.schedule_revision,
+            pattern.pattern,
+            self.reason,
+            pattern.use_household_fold,
         )
 
 

@@ -1,5 +1,6 @@
 import type {EntryOperation, EntryReceipt, HouseholdFacts, VerifiedEntrySession} from '../application/ports';
 import {isMaterializationHorizonDays} from '../domain/administration';
+import {FOLD_CHOICES} from '../domain/recurrence-review';
 import {setupPayload} from '../domain/entry';
 import type {Authorization, Deployment} from '../domain/entry';
 import type {JournalCommand, JournalContext} from '../domain/journal';
@@ -79,11 +80,12 @@ export function authorization(value: unknown, expected: JournalContext): Authori
   return Object.freeze({state, setupAllowed, enrollmentAllowed, permissions: Object.freeze(permissions)});
 }
 export function household(value: unknown): HouseholdFacts {
-  const item = fields(value, ['household_id', 'name', 'time_zone', 'revision'], ['materialization_horizon_days']);
+  const item = fields(value, ['household_id', 'name', 'time_zone', 'revision'], ['materialization_horizon_days','repeated_time']);
   const name = text(item.name, 160), timeZone = text(item.time_zone, 128);
   // Read compatibility preserves existing DEL/C1 values; new setup uses its stronger input policy.
   check(name.replace(/^\p{White_Space}+|\p{White_Space}+$/gu, '').length > 0 && !/[\u0000-\u001F]/u.test(name + timeZone));
-  const home = {householdId: identifier(item.household_id), name, timeZone, revision: responseRevision(item.revision)};
+  const home = {householdId: identifier(item.household_id), name, timeZone, revision: responseRevision(item.revision),
+    ...(Object.hasOwn(item, 'repeated_time') ? {repeatedTime: choice(item.repeated_time, FOLD_CHOICES)} : {})};
   if (!Object.hasOwn(item, 'materialization_horizon_days')) return Object.freeze(home);
   const horizon = integer(item.materialization_horizon_days, 0);
   check(isMaterializationHorizonDays(horizon));
