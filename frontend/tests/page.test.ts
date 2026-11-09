@@ -297,11 +297,13 @@ test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
   {type: 'create', title: 1, description: '', priority: 'normal'}, {type: 'create', title: 'Task', description: '', priority: 'future'},
   {type: 'complete', materialUsages: true}, {type: 'complete', materialUsages: [{line_id: 'line', quantity: '1.0'}]},
   {type: 'verify', decision: 'pending', reason: 'A'}, {type: 'reopen', reason: 1}, {type: 'select', occurrenceId: '../other'},
-  {type: 'recover', key: ''}])('task event %# cannot select a principal, route or arbitrary command', value => {
+  {type: 'recover', key: ''}, {type:'createCategory', label:2}, {type:'renameCategory', categoryId:'garden', revision:'1', label:2}])('task event %# cannot select a principal, route or arbitrary command', value => {
     expect(decodeTaskIntent(value)).toBeNull();
 });
 test('closed task events preserve semantic user inputs and exact material quantities', () => {
-  const inputs = [{type: 'refresh'}, {type: 'more'}, {type: 'claim'}, {type: 'select', occurrenceId: 'work-1'},
+  const inputs = [{type:'createCategory', label:'Garden'}, {type:'renameCategory', categoryId:'garden', revision:'9007199254740993', label:'Garden'},
+    {type:'archiveCategory', categoryId:'garden', revision:'9007199254740993'},
+    {type:'create', title:'Clean', description:'', priority:'normal', categoryId:'garden'}, {type: 'refresh'}, {type: 'more'}, {type: 'claim'}, {type: 'select', occurrenceId: 'work-1'},
     {type: 'create', title: '  Clean 🧹  ', description: '', priority: 'high'}, {type: 'complete', materialUsages: null},
     {type: 'complete', materialUsages: [{line_id: 'line-1', quantity: '3.333333'}]},
     {type: 'verify', decision: 'approved', reason: ''}, {type: 'verify', decision: 'rejected', reason: 'Not done'},
@@ -311,6 +313,9 @@ test('closed task events preserve semantic user inputs and exact material quanti
 test('the mounted task surface routes only owned semantic intents to its application controller', async () => {
   const f = fixture(); f.phase('active'); const {app} = await f.open(); expect(app.tasks?.access?.memberId).toBe('identity-1');
   const spies = {create: vi.spyOn(TaskController.prototype, 'create').mockResolvedValue(undefined),
+    createCategory: vi.spyOn(TaskController.prototype, 'createCategory').mockResolvedValue(undefined),
+    renameCategory: vi.spyOn(TaskController.prototype, 'renameCategory').mockResolvedValue(undefined),
+    archiveCategory: vi.spyOn(TaskController.prototype, 'archiveCategory').mockResolvedValue(undefined),
     more: vi.spyOn(TaskController.prototype, 'more').mockResolvedValue(undefined), select: vi.spyOn(TaskController.prototype, 'select').mockResolvedValue(undefined),
     claim: vi.spyOn(TaskController.prototype, 'claim').mockResolvedValue(undefined), complete: vi.spyOn(TaskController.prototype, 'complete').mockResolvedValue(undefined),
     verify: vi.spyOn(TaskController.prototype, 'verify').mockResolvedValue(undefined), reopen: vi.spyOn(TaskController.prototype, 'reopen').mockResolvedValue(undefined),
@@ -324,7 +329,10 @@ test('the mounted task surface routes only owned semantic intents to its applica
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined]],
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high',
         schedule: {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}},
-      'create', ['Clean', 'Wipe', 'high', {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}]],
+      'create', ['Clean', 'Wipe', 'high', {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}, undefined]],
+      [{type:'createCategory', label:'Garden'}, 'createCategory', ['Garden']],
+      [{type:'renameCategory', categoryId:'garden', revision:'1', label:'Garden'}, 'renameCategory', ['garden', '1', 'Garden']],
+      [{type:'archiveCategory', categoryId:'garden', revision:'1'}, 'archiveCategory', ['garden', '1']],
       [{type: 'more'}, 'more', []], [{type: 'select', occurrenceId: 'work-1'}, 'select', ['work-1']], [{type: 'claim'}, 'claim', []],
       [{type: 'complete', materialUsages: null}, 'complete', [null]], [{type: 'verify', decision: 'approved', reason: ''}, 'verify', ['approved', '']],
       [{type: 'reopen', reason: 'Repeat'}, 'reopen', ['Repeat']], [{type: 'recover', key: 'original'}, 'recover', ['original']],

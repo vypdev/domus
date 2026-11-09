@@ -80,3 +80,17 @@ test('rejection requires a real reason while an unknown targeted action never be
   expect(taskCommand({action: 'task.verify', occurrenceId: 'work-1', payload: {expected_revision: '1', cycle_id: 'cycle-1', decision: 'rejected', reason: ''}})).toBeUndefined();
   expect(taskCommand({action: 'task.verify', occurrenceId: 'work-1', payload: {expected_revision: '1', cycle_id: 'cycle-1', decision: 'rejected', reason: 'Not performed'}})).toBeDefined();
 });
+
+test('category intents accept only bounded inert labels and exact IDs and revisions', () => {
+  const body = {action: 'task.category.create', payload: {expected_revision: 0, label: '  Cafe\u0301 <b>  '}};
+  expect(taskCommand(body)).toEqual(body);
+  for (const label of [null, '', ' ', '\u0085', '\uD800', 'x'.repeat(257), '🌿'.repeat(81)])
+    expect(taskCommand({...body, payload: {...body.payload, label}})).toBeUndefined();
+  for (const value of [{...body, categoryId: 'injected'}, {...body, payload: {...body.payload, expected_revision: 1}},
+    {action: 'task.category.archive', categoryId: 'garden', payload: {expected_revision: '1', label: 'extra'}},
+    {action: 'task.category.rename', categoryId: '../garden', payload: {expected_revision: '9007199254740993', label: 'Garden'}},
+    {action: 'task.category.archive', categoryId: 'garden', payload: {expected_revision: 9007199254740992}}])
+    expect(taskCommand(value)).toBeUndefined();
+  const categorized = {action: 'task.create', payload: {expected_revision: 0, title: 'Clean', description: '', priority: 'normal', category_id: 'garden'}};
+  expect(taskCommand(categorized)).toEqual(categorized);
+});

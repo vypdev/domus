@@ -6,6 +6,7 @@ from typing import Self
 from domus.domain.errors import Conflict, Forbidden, InvalidInput
 from domus.domain.identity import validate_revision
 from domus.domain.storage import validate_identifier
+from domus.domain.task_categories import category_label
 from domus.domain.task_material_values import MaterialLine, validate_material_lines
 from domus.domain.task_policy import (
     can_approve,
@@ -61,6 +62,7 @@ class TaskDefinition:
     state: DefinitionState = DefinitionState.ACTIVE
     revision: int = 1
     materials: tuple[MaterialLine, ...] = ()
+    category_label: str | None = None
 
     def __post_init__(self) -> None:
         validate_material_lines(self.materials, self.household_id)
@@ -74,6 +76,11 @@ class TaskDefinition:
             or not isinstance(self.state, DefinitionState)
         ):
             raise InvalidInput("invalid_task_definition")
+        if (self.content.category_id is None) != (self.category_label is None) or (
+            self.category_label is not None
+            and category_label(self.category_label) != self.category_label
+        ):
+            raise InvalidInput("invalid_task_category")
 
     def revise(
         self,
@@ -82,10 +89,16 @@ class TaskDefinition:
         state: DefinitionState,
         *,
         materials: tuple[MaterialLine, ...] | None = None,
+        category_label: str | None = None,
     ) -> Self:
         candidate = replace(
             self,
             content=content,
+            category_label=(
+                self.category_label
+                if category_label is None and content.category_id == self.content.category_id
+                else category_label
+            ),
             materials=self.materials if materials is None else materials,
             overrides=overrides,
             state=state,
@@ -93,11 +106,12 @@ class TaskDefinition:
         )
         if self.state is DefinitionState.ARCHIVED:
             raise Conflict("task_transition_conflict")
-        if (content, overrides, state, candidate.materials) == (
+        if (content, overrides, state, candidate.materials, candidate.category_label) == (
             self.content,
             self.overrides,
             self.state,
             self.materials,
+            self.category_label,
         ):
             raise Conflict("task_unchanged")
         if state is not self.state:

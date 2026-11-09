@@ -10,9 +10,26 @@ For API clients, send the verified `X-Domus-Context` when requesting `GET /api/v
 current local task-read authority and the existing session boundary.
 
 Supply `start` and `end` as local ISO dates. The half-open range can cover one to 366 days.
-Filter by entry kind, task timing, status, priority, category tag or household member. The
-count and page use the same filters. Member filters use assignees for planned and due work,
+Filter by entry kind, task timing, status, priority, an active household category or
+household member. The page and both counts use the same filters. Member filters use assignees for planned and due work,
 performers for actual work, and the verifier for an approval.
+
+In **Tasks**, task administrators can create, rename and archive household categories.
+Use a name of 1–80 characters. Active names are unique after trimming, Unicode
+normalization and case folding. If the result is uncertain, choose **Check saved
+request** to retrieve the original result before starting another change.
+
+Choose an active **Category** when creating an ordinary or scheduled task, or keep
+**Unclassified**. Existing tags remain independent. Renaming or archiving changes the
+available choices. Existing task and calendar entries keep the category label captured
+with that work. If a category becomes unavailable while you are writing a task, select
+an active category or **Unclassified**. The title, description and schedule draft stay
+in the form. If a category edit conflicts, review the current revision before saving
+the draft again.
+
+The API category filter accepts the active category ID. An archived or foreign ID
+fails before any filtered entries or counts are disclosed. The native Home Assistant
+entity keeps its reduced projection.
 
 The entries distinguish original planned time, the effective due date, performed time and
 approval time. Date-only entries have a local date and no instant or time of day. If a

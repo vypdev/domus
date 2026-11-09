@@ -64,6 +64,9 @@ def definition_result(value: TaskDefinition) -> JsonDocument:
     """Bounded command evidence uses reference facts; queries retain full binding snapshots."""
     result = asdict(value)
     del result["materials"]
+    if value.category_label is None:
+        del result["category_label"]
+        del result["content"]["category_id"]
     if value.materials:
         result["materials"] = [
             {

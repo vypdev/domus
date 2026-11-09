@@ -19,6 +19,7 @@ import {EntryRuntime} from './entry-runtime';
 import type {EntryBrowser} from './entry-runtime';
 import {language, message} from '../presentation/messages';
 import type {DomusApp, EntryIntent} from '../presentation/domus-app';
+import {revisionValue} from '../domain/administration';
 import type {TaskIntent} from '../presentation/domus-tasks';
 import {taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
 import type {TaskPriority} from '../domain/tasks';
@@ -75,14 +76,26 @@ export function decodeAdministrationIntent(value:unknown):AdministrationIntent|n
 /** Task events contain business inputs only, never a principal, URL, context or raw transport request. */
 export function decodeTaskIntent(value: unknown): TaskIntent | null {
   try {
-    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key']);
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision']);
     const type = item.type;
     if (type === 'create') {
-      fields(value, ['type', 'title', 'description', 'priority'], ['schedule']);
+      fields(value, ['type', 'title', 'description', 'priority'], ['schedule', 'categoryId']);
       check(typeof item.title === 'string' && typeof item.description === 'string' && typeof item.priority === 'string'
         && TASK_PRIORITIES.includes(item.priority as TaskPriority));
       return {type, title: item.title, description: item.description, priority: item.priority as TaskPriority,
-        ...Object.hasOwn(item, 'schedule') ? {schedule: taskScheduleDraft(item.schedule)} : {}};
+        ...Object.hasOwn(item, 'schedule') ? {schedule: taskScheduleDraft(item.schedule)} : {},
+        ...Object.hasOwn(item, 'categoryId') ? {categoryId: identifier(item.categoryId)} : {}};
+    }
+    if (type === 'createCategory') {
+      fields(value, ['type', 'label'], []); check(typeof item.label === 'string');
+      return {type, label: item.label};
+    }
+    if (type === 'renameCategory' || type === 'archiveCategory') {
+      fields(value, ['type', 'categoryId', 'revision', ...type === 'renameCategory' ? ['label'] : []], []);
+      const categoryId = identifier(item.categoryId), revision = revisionValue(item.revision);
+      if (type === 'archiveCategory') return {type, categoryId, revision};
+      check(typeof item.label === 'string');
+      return {type, categoryId, revision, label: item.label};
     }
     if (type === 'complete') {
       fields(value, ['type', 'materialUsages'], []);
@@ -300,7 +313,10 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'refresh': await active.refresh(); break;
           case 'more': await active.taskWork(controller => controller.more()); break;
           case 'select': await active.taskWork(controller => controller.select(intent.occurrenceId)); break;
-          case 'create': await active.taskWork(controller => controller.create(intent.title, intent.description, intent.priority, intent.schedule)); break;
+          case 'create': await active.taskWork(controller => controller.create(intent.title, intent.description, intent.priority, intent.schedule, intent.categoryId)); break;
+          case 'createCategory': await active.taskWork(controller => controller.createCategory(intent.label)); break;
+          case 'renameCategory': await active.taskWork(controller => controller.renameCategory(intent.categoryId, intent.revision, intent.label)); break;
+          case 'archiveCategory': await active.taskWork(controller => controller.archiveCategory(intent.categoryId, intent.revision)); break;
           case 'claim': await active.taskWork(controller => controller.claim()); break;
           case 'complete': await active.taskWork(controller => controller.complete(intent.materialUsages)); break;
           case 'verify': await active.taskWork(controller => controller.verify(intent.decision, intent.reason)); break;

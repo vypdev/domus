@@ -13,6 +13,7 @@ from domus.application.relative_lifecycle import (
 from domus.application.relative_recurrence_commands import resolve_initial
 from domus.application.reschedule_review import ScheduledWork, effective_deadline
 from domus.application.task_authorization import TaskAccess, TaskActor
+from domus.application.task_category_commands import require_active_category
 from domus.application.task_ports import TaskCursors
 from domus.domain.calendar_values import (
     CalendarCandidate,
@@ -59,6 +60,13 @@ class CalendarEntry:
     resolved_local: str | None = None
     verification: VerificationState | None = None
     relative_review_required: bool = False
+    category_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CalendarCategory:
+    category_id: str
+    label: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +78,7 @@ class CalendarPage:
     occurrence_count: int
     next_cursor: str | None
     pending: bool
+    categories: tuple[CalendarCategory, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,6 +173,7 @@ class CalendarQueries:
             raise StorageFailure("invalid_calendar_projection")
         position = candidate.position
         content = work.definition_snapshot.content
+        label = work.definition_snapshot.category_label
         slot = self._slot(unit, candidate)
         entry = CalendarEntry(
             f"{position.kind.value}:{position.source_id}",
@@ -173,13 +183,14 @@ class CalendarQueries:
             content.title,
             work.state,
             content.priority,
-            content.tags,
+            () if label is None else (label,),
             work.assignee_ids,
             None if slot is None else slot.schedule.schedule_id,
             candidate.slot_key,
             relative_review_required=(
                 isinstance(self.human, HumanIdentity) and self._relative_review_required(unit, slot)
             ),
+            category_id=content.category_id,
         )
         if position.kind is CalendarKind.PLANNED:
             if slot is None:
@@ -271,6 +282,16 @@ class CalendarQueries:
                 and unit.members.get(home.household_id, filters.member_id) is None
             ):
                 raise Forbidden("permission_denied")
+            if filters.category is not None:
+                require_active_category(unit, home.household_id, filters.category)
+            categories = (
+                ()
+                if actor is None
+                else tuple(
+                    CalendarCategory(item.category_id, item.label)
+                    for item in unit.task_categories.active(home.household_id)
+                )
+            )
             after = None
             if cursor is not None:
                 try:
@@ -316,4 +337,5 @@ class CalendarQueries:
             occurrence_count,
             next_cursor,
             pending,
+            categories,
         )

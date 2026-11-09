@@ -1,6 +1,6 @@
 # Task storage migration and compatibility
 
-Current development source uses SQLite schema 14. The historical schema 8 and 9
+Current development source uses SQLite schema 15. The historical schema 8 and 9
 checkpoints retain their original evidence below. The installed immutable
 Edge.5 package uses schema 7; retained Edge.3 remains the separately pinned M1 schema-4 package.
 Current source tests do not upgrade those installations or establish a released package upgrade.
@@ -159,3 +159,17 @@ preserves the task definitions, occurrence snapshots, fixed slot, original
 command receipts, audit and outbox. The SQL export includes the source database's
 application ID and schema version. Its SHA-256 is
 `acbd5cca8b4ad2177c9ab0fb448efd3502db352081607da1674ce3e39c3acb9a`.
+
+### Household task categories
+
+The explicit schema-14 to schema-15 upgrade adds the category table and its active
+name index in one SQLite transaction. Existing tasks stay unclassified, including
+those with tags. Original definitions, occurrences, snapshots and receipts retain
+their stored bytes. Keep the genuine schema-14 fixture and its provenance above
+for compatibility checks.
+
+Create a verified checkpoint before upgrading. A compatible restore preserves the
+category state in that checkpoint and retains later original operation receipts as
+historical evidence. If the running application rejects schema 15, use a compatible
+image and the verified checkpoint. Keep database headers and production snapshots
+unchanged.

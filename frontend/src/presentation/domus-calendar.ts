@@ -49,16 +49,12 @@ export class DomusCalendar extends LitElement {
     }
   }
   protected updated(changed: PropertyValues<this>): void {
-    this.categoryValidity(this.renderRoot.querySelector<HTMLInputElement>('input[name=category]')!);
     const before = changed.get('preference')?.value?.weekStart ?? 'monday';
     if (this.scopeKey !== null && (changed.has('scopeKey') ||
         changed.has('preference') && this.shownMode === 'week' && before !== this.weekStart)) this.submit();
   }
 
   private get weekStart(): WeekStart {return this.preference?.value?.weekStart ?? 'monday';}
-  private categoryValidity(input: HTMLInputElement): void {
-    input.setCustomValidity(Array.from(input.value).length > 64 ? this.text('categoryLimit') : '');
-  }
   private text(key: CalendarMessage): string {return calendarMessage(key, this.language);}
   private dayLabel(value: string): string {
     return new Intl.DateTimeFormat(this.language, {dateStyle: 'medium', timeZone: 'UTC'}).format(new Date(value));
@@ -78,6 +74,7 @@ export class DomusCalendar extends LitElement {
 
   private renderEntry(item: CalendarEntry) {
     return html`<li><strong>${item.title}</strong> · ${this.text(item.kind)}
+      ${item.categoryLabel ? html`<small>${this.text('category')} ${item.categoryLabel}</small>` : nothing}
       ${item.time === null ? nothing : html`<time>${item.time}</time> ${item.zone}`}
       ${item.verification === null ? nothing : this.text(item.verification === 'pending' ? 'verificationPending' : item.verification as CalendarMessage)}
       ${item.nominal !== null && item.nominal !== item.resolved ? html`<small>${this.text('adjusted')} ${item.nominal}</small>` : nothing}
@@ -135,6 +132,9 @@ export class DomusCalendar extends LitElement {
 
   protected render() {
     const view = this.view, page = this.shownRange === null ? null : view?.page;
+    const labels = new Map(page?.categories?.map(category => [category.id, category.label]));
+    if (this.filters.category && !labels.has(this.filters.category))
+      labels.set(this.filters.category, this.text('categoryUnavailable'));
     return html`<section class="card" aria-labelledby="calendar-title" aria-busy=${view?.status === 'loading'}>
       <h2 id="calendar-title">${this.text('title')}</h2>
       ${this.preferences()}
@@ -147,12 +147,8 @@ export class DomusCalendar extends LitElement {
           ${this.select('timing', this.filters.timing, CALENDAR_TIMINGS, timing => this.text(timing), timing => {this.filters = {...this.filters, timing};})}
           ${this.select('status', this.filters.state, TASK_STATES, state => taskMessage(`state_${state}`, this.language), state => {this.filters = {...this.filters, state};})}
           ${this.select('priority', this.filters.priority, TASK_PRIORITIES, priority => taskMessage(`priority_${priority}`, this.language), priority => {this.filters = {...this.filters, priority};})}
-          <label>${this.text('category')}<input name="category" .value=${this.filters.category}
-            @input=${(event: Event) => {
-              const input = event.target as HTMLInputElement, category = input.value;
-              this.categoryValidity(input);
-              this.filters = {...this.filters, category};
-            }}></label>
+          ${this.select('category', this.filters.category, [...labels.keys()], category => labels.get(category)!,
+            category => {this.filters = {...this.filters, category};})}
           <label><input type="checkbox" .checked=${this.filters.own}
             @change=${(event: Event) => {this.filters = {...this.filters, own: (event.target as HTMLInputElement).checked};}}>${this.text('mine')}</label>
         </div>

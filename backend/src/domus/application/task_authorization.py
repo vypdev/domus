@@ -198,6 +198,9 @@ _GLOBAL_PERMISSIONS = {
     "recurrence.fixed.create": Permission.TASKS_CREATE,
     "recurrence.relative.create": Permission.TASKS_CREATE,
     "task.policy.update": Permission.TASKS_CONFIGURE,
+    "task.category.create": Permission.TASKS_CONFIGURE,
+    "task.category.rename": Permission.TASKS_CONFIGURE,
+    "task.category.archive": Permission.TASKS_CONFIGURE,
 }
 _DEFINITION_ACTIONS = frozenset({"task.definition.update", "task.occurrence.create"})
 
@@ -302,8 +305,10 @@ _RECORDED: dict[str, tuple[type[TaskRequest], str]] = {
 def _request_shape(request: JsonObject, kind: type[TaskRequest]) -> bool:
     names = {item.name for item in fields(kind)}
     optional = (
-        {"materials"}
-        if kind in (CreateTask, UpdateTaskDefinition)
+        {"materials", "clear_category"}
+        if kind is UpdateTaskDefinition
+        else {"materials"}
+        if kind is CreateTask
         else {"material_usages"}
         if kind is CompleteTask
         else set()

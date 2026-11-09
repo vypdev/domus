@@ -45,7 +45,11 @@ test.each([['en','fixed'],['es','relative']] as const)('scheduled task form in %
   submit(); await f.element.updateComplete;
   expect(f.root.querySelector('fieldset [role=alert]')).not.toBeNull();
   expect(f.intents).toEqual([]);
-  const fill = (name: string, value: string) => {form.querySelector<HTMLInputElement>(`[name="${name}"]`)!.value = value;};
+  const fill = (name: string, value: string) => {
+    const input = form.querySelector<HTMLInputElement>(`[name="${name}"]`)!;
+    input.value = value;
+    input.dispatchEvent(new Event(name === 'schedule-visibility' ? 'change' : 'input', {bubbles:true}));
+  };
   fill('schedule-date', '2027-01-02');
   if (kind === 'fixed') {fill('schedule-time', '08:30'); fill('schedule-rule', 'FREQ=WEEKLY');}
   else {fill('schedule-interval', '18'); fill('schedule-visibility', 'at_verification');}
@@ -264,4 +268,87 @@ test.each(['en', 'es'] as const)('required review reasons prevent impossible act
   for (const label of labels.slice(1)) {expect(f.button(label).disabled).toBe(false); f.button(label).click();}
   expect(f.intents.slice(1)).toEqual([{type: 'verify', decision: 'rejected', reason: '  Correct the completion  '},
     {type: 'reopen', reason: '  Correct the completion  '}]);
+});
+
+test('category management keeps exact revision and drafts across a stale catalog and authorized recovery', async () => {
+  const category = {id:'garden', label:'<b>Garden</b>', revision};
+  const access = view().access!;
+  const editable = {...access, categoryCatalog:{canManage:true, categories:[category]}};
+  const state = (patch: Partial<TaskView> = {}) => view({access:editable, ...patch});
+  const f = await mount(state({detail:{...work, categoryLabel:category.label}}));
+  expect(f.text()).toContain(category.label);
+  expect(f.root.querySelector('b')).toBeNull();
+  const choose = (id: string, value: string) => {
+    const select = f.root.querySelector<HTMLSelectElement>('#' + id)!;
+    select.value = value;
+    select.dispatchEvent(new Event('change', {bubbles:true}));
+  };
+  const submit = (form: HTMLFormElement) => form.dispatchEvent(new SubmitEvent('submit',{cancelable:true}));
+  const manager = f.root.querySelector<HTMLSelectElement>('#manage-task-category')!.closest('form')!;
+  const details = manager.closest('details')!;
+  details.open = true;
+  details.dispatchEvent(new Event('toggle'));
+  expect(f.button('Create category').disabled).toBe(true);
+  submit(manager);
+  expect(f.intents).toEqual([]);
+  await f.input('task-category-label', 'bad\u007f');
+  expect(f.root.querySelector('#task-category-label')?.getAttribute('aria-invalid')).toBe('true');
+  await f.input('task-category-label', 'A new category');
+  submit(manager);
+  expect(f.intents.at(-1)).toEqual({type:'createCategory', label:'A new category'});
+  const saved = {kind:'receipt' as const, stage:'committed' as const, action:'task.category.create' as const, operationId:'op-category',
+    occurrenceId:null, revision, state:'active' as const, cycle:null, archivedBy:null};
+  f.element.view = state({outcome:saved});
+  await f.element.updateComplete;
+  expect(f.root.querySelector<HTMLInputElement>('#task-category-label')?.value).toBe('');
+  choose('manage-task-category', category.id);
+  choose('task-category', category.id);
+  await f.input('task-title', 'Task draft');
+  await f.input('task-description', 'Keep this');
+  await f.input('task-category-label', 'Rename draft');
+  submit(manager);
+  expect(f.intents.at(-1)).toEqual({type:'renameCategory', categoryId:'garden', revision:'1', label:'Rename draft'});
+  f.button('Archive category').click();
+  expect(f.intents.at(-1)).toEqual({type:'archiveCategory', categoryId:'garden', revision:'1'});
+  const updated = {...category, label:'Garden renamed', revision:revisionValue('2')};
+  f.element.view = state({notice:'conflict', access:{...editable, categoryCatalog:{canManage:true, categories:[updated]}}});
+  await f.element.updateComplete;
+  expect(f.button('Rename category').disabled).toBe(true);
+  expect(f.root.querySelector<HTMLInputElement>('#task-category-label')?.value).toBe('Rename draft');
+  f.button('Review current category').click();
+  await f.element.updateComplete;
+  submit(manager);
+  expect(f.intents.at(-1)).toEqual({type:'renameCategory', categoryId:'garden', revision:'2', label:'Rename draft'});
+  f.element.view = state({notice:'invalid_input'});
+  await f.element.updateComplete;
+  expect(f.root.activeElement?.id).toBe('task-category-label');
+  f.element.view = state({notice:'category_unavailable', access:{...editable, categoryCatalog:{canManage:true, categories:[]}}});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('#task-category')?.getAttribute('aria-invalid')).toBe('true');
+  expect(f.root.querySelector<HTMLInputElement>('#task-title')?.value).toBe('Task draft');
+  expect(f.root.querySelector<HTMLInputElement>('#task-description')?.value).toBe('Keep this');
+  expect(f.root.activeElement?.id).toBe('task-category');
+  expect(f.button('Create task').disabled).toBe(true);
+  submit(f.root.querySelector('#task-title')!.closest('form')!);
+  expect(f.intents.at(-1)?.type).toBe('renameCategory');
+  choose('manage-task-category', '');
+  choose('task-category', '');
+  await f.element.updateComplete;
+  expect(f.button('Create task').disabled).toBe(false);
+  f.element.view = state({scopeKey:'other', access:{...editable, categoryCatalog:{canManage:false, categories:[]}}});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('#manage-task-category')).toBeNull();
+  expect(f.root.querySelector<HTMLInputElement>('#task-title')?.value).toBe('');
+});
+
+test('classified task creation emits the selected category identity', async () => {
+  const access = {...view().access!, categoryCatalog:{canManage:false, categories:[{id:'garden', label:'Garden', revision}]}};
+  const f = await mount(view({access}));
+  await f.input('task-title', 'Classified draft');
+  const select = f.root.querySelector<HTMLSelectElement>('#task-category')!;
+  select.value = 'garden';
+  select.dispatchEvent(new Event('change', {bubbles:true}));
+  await f.element.updateComplete;
+  select.closest('form')!.dispatchEvent(new SubmitEvent('submit', {cancelable:true}));
+  expect(f.intents).toEqual([{type:'create', title:'Classified draft', description:'', priority:'normal', categoryId:'garden'}]);
 });

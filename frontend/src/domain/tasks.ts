@@ -45,8 +45,22 @@ export interface TaskSchedulePolicy {
   readonly revision: Revision;
 }
 type TaskSchedule = Readonly<{draft: TaskScheduleDraft; policy: TaskSchedulePolicy}>;
-export type TaskCommand =
-  Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority; schedule?: TaskSchedule}>}>
+export const CATEGORY_ACTIONS = ['task.category.create', 'task.category.rename', 'task.category.archive'] as const;
+export type CategoryCommand =
+  Readonly<{action: 'task.category.create'; payload: Readonly<{expected_revision: 0; label: string}>}>
+  | Readonly<{action: 'task.category.rename'; categoryId: string; payload: Readonly<{expected_revision: Revision; label: string}>}>
+  | Readonly<{action: 'task.category.archive'; categoryId: string; payload: Readonly<{expected_revision: Revision}>}>;
+export function isCategoryCommand(command: TaskCommand): command is CategoryCommand {
+  return CATEGORY_ACTIONS.includes(command.action as CategoryCommand['action']);
+}
+export function categoryLabel(value: unknown): string {
+  requireValue(typeof value === 'string' && Array.from(value).length <= 256 && !/[\p{Cc}\p{Cs}]/u.test(value));
+  const label = value.replace(/^\p{White_Space}+|\p{White_Space}+$/gu, '').normalize('NFC');
+  requireValue(label.length > 0 && Array.from(label).length <= 80);
+  return label;
+}
+export type TaskCommand = CategoryCommand |
+  Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority; category_id?: string; schedule?: TaskSchedule}>}>
   | Readonly<{action: 'task.claim'; occurrenceId: string; payload: Readonly<{expected_revision: Revision}>}>
   | Readonly<{action: 'task.complete'; occurrenceId: string; payload: Readonly<{expected_revision: Revision;
     performer_ids: readonly string[]; performed_at: string; material_usages: readonly TaskMaterialUsage[] | null}>}>
@@ -98,15 +112,31 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
   try {
     requireValue(typeof value === 'object' && value !== null && !Array.isArray(value));
     const action = (value as Fields).action;
+    if (action === 'task.category.create' || action === 'task.category.rename' || action === 'task.category.archive') {
+      const item = fields(value, action === 'task.category.create' ? ['action', 'payload'] : ['action', 'categoryId', 'payload']);
+      const body = fields(item.payload, action === 'task.category.archive' ? ['expected_revision'] : ['expected_revision', 'label']);
+      if (action === 'task.category.archive') return Object.freeze({action, categoryId: taskIdentifier(item.categoryId),
+        payload: Object.freeze({expected_revision: revisionValue(body.expected_revision)})});
+      categoryLabel(body.label);
+      const label = body.label as string;
+      if (action === 'task.category.create') {
+        requireValue(body.expected_revision === 0);
+        return Object.freeze({action, payload: Object.freeze({expected_revision: 0, label})});
+      }
+      return Object.freeze({action, categoryId: taskIdentifier(item.categoryId),
+        payload: Object.freeze({expected_revision: revisionValue(body.expected_revision), label})});
+    }
     const item = fields(value, action === 'task.create' ? ['action', 'payload'] : ['action', 'occurrenceId', 'payload']);
     if (action === 'task.create') {
       const hasSchedule = typeof item.payload === 'object' && item.payload !== null && Object.hasOwn(item.payload, 'schedule');
-      const body = fields(item.payload, ['expected_revision', 'title', 'description', 'priority', ...hasSchedule ? ['schedule'] : []]);
+      const hasCategory = typeof item.payload === 'object' && item.payload !== null && Object.hasOwn(item.payload, 'category_id');
+      const body = fields(item.payload, ['expected_revision', 'title', 'description', 'priority', ...hasSchedule ? ['schedule'] : [], ...hasCategory ? ['category_id'] : []]);
       requireValue(body.expected_revision === 0);
       const schedule = hasSchedule ? fields(body.schedule, ['draft', 'policy']) : null;
       return Object.freeze({action, payload: Object.freeze({expected_revision: 0,
         title: taskText(body.title, TASK_TEXT_LIMITS.title, true), description: taskText(body.description, TASK_TEXT_LIMITS.description, false, true),
-        priority: choice(body.priority, TASK_PRIORITIES), ...schedule === null ? {} : {
+        priority: choice(body.priority, TASK_PRIORITIES),
+        ...hasCategory ? {category_id: taskIdentifier(body.category_id)} : {}, ...schedule === null ? {} : {
           schedule: Object.freeze({draft: taskScheduleDraft(schedule.draft), policy: taskSchedulePolicy(schedule.policy)})
         }})});
     }
@@ -153,15 +183,18 @@ export interface TaskDetail extends TaskSummary {
   readonly cycle: TaskCycleSummary | null; readonly materials: readonly TaskMaterial[];
   readonly materialRecording: 'review_on_completion' | 'separate_recording';
   readonly dependencyReviewRequired: boolean;
-  readonly pendingMaterials: boolean;
+  readonly pendingMaterials: boolean; readonly categoryLabel?: string | null;
 }
+export interface TaskCategory {readonly id: string; readonly label: string; readonly revision: Revision;}
+export interface TaskCategoryCatalog {readonly categories: readonly TaskCategory[]; readonly canManage: boolean;}
 export interface TaskAccess {
   readonly householdId: string; readonly memberId: string; readonly canCreate: boolean; readonly canReviewSchedule: boolean;
   readonly schedulePolicy?: TaskSchedulePolicy;
+  readonly categoryCatalog?: TaskCategoryCatalog;
 }
 export interface TaskReceipt {
   readonly kind: 'receipt'; readonly stage: 'committed' | 'historical'; readonly operationId: string;
   readonly action: TaskCommand['action']; readonly occurrenceId: string | null; readonly revision: Revision;
-  readonly state: TaskState | 'active'; readonly cycle: TaskCycleSummary | null;
+  readonly state: TaskState | 'active' | 'archived'; readonly cycle: TaskCycleSummary | null;
   readonly archivedBy: string | null;
 }

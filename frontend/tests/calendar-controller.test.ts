@@ -30,7 +30,7 @@ test('civil calendar boundaries use the household day across DST and constrain u
   expect(calendarQuery({...query, kind: 'due', timing: 'manual', state: 'available', priority: 'normal'})).toBe(true);
   for (const value of [null, 0, {...query, other: false}, {...query, start: ''}, {...query, end: ''},
     {...query, end: query.start}, {...query, end: '2028-11-01'}, {...query, kind: 'other'}, {...query, timing: 'other'},
-    {...query, state: 'other'}, {...query, priority: 'other'}, {...query, category: false}, {...query, category: 'x'.repeat(65)},
+    {...query, state: 'other'}, {...query, priority: 'other'}, {...query, category: false}, {...query, category: 'x'.repeat(129)},
     {...query, own: 1}]) expect(calendarQuery(value)).toBe(false);
 });
 

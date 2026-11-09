@@ -122,7 +122,13 @@ def _definition_value(value: TaskDefinition) -> JsonObject:
             "description": value.content.description,
             "priority": value.content.priority.value,
             "tags": list(value.content.tags),
+            **(
+                {"category_id": value.content.category_id}
+                if value.content.category_id is not None
+                else {}
+            ),
         },
+        **({"category_label": value.category_label} if value.category_label is not None else {}),
         "created_at": value.created_at,
         "overrides": _rule_value(value.overrides),
         "state": value.state.value,
@@ -131,6 +137,7 @@ def _definition_value(value: TaskDefinition) -> JsonObject:
 
 
 def _definition(value: JsonValue, version: int = 2) -> TaskDefinition:
+    classified = version == 2 and isinstance(value, dict) and "category_label" in value
     row = _record(
         value,
         (
@@ -142,10 +149,18 @@ def _definition(value: JsonValue, version: int = 2) -> TaskDefinition:
             "overrides",
             "state",
             "revision",
+            *(("category_label",) if classified else ()),
         ),
         version,
     )
-    content = _object(row["content"], ("title", "description", "priority", "tags"))
+    content = _object(
+        row["content"],
+        ("title", "description", "priority", "tags", *(("category_id",) if classified else ())),
+    )
+    if classified and (
+        type(content["category_id"]) is not str or type(row["category_label"]) is not str
+    ):
+        raise InvalidInput("invalid_task_record")
     return TaskDefinition(
         cast(str, row["definition_id"]),
         cast(str, row["household_id"]),
@@ -154,12 +169,14 @@ def _definition(value: JsonValue, version: int = 2) -> TaskDefinition:
             cast(str, content["description"]),
             Priority(cast(str, content["priority"])),
             _strings(content["tags"]),
+            cast(str | None, content.get("category_id")),
         ),
         cast(int, row["created_at"]),
         _overrides(row["overrides"]),
         DefinitionState(cast(str, row["state"])),
         cast(int, row["revision"]),
         () if version == 1 else tuple(read_line(item) for item in _array(row["materials"])),
+        cast(str | None, row.get("category_label")),
     )
 
 

@@ -12,6 +12,7 @@ from domus.application.calendar_queries import CalendarQueries
 from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.relative_recurrence_commands import RelativeRecurrenceCommands
+from domus.application.task_category_commands import TaskCategoryCommands
 from domus.application.task_commands import TaskCommands
 from domus.application.task_queries import (
     DefinitionSummary,
@@ -52,6 +53,7 @@ from domus.entrypoints.household_http import (
 )
 from domus.entrypoints.recurrence_http import create_recurrence_review_router
 from domus.entrypoints.schedule_creation_http import create_schedule_creation_router
+from domus.entrypoints.task_category_http import create_task_category_router
 from domus.entrypoints.task_dto import (
     AssignmentBody,
     CompleteBody,
@@ -99,6 +101,7 @@ class TaskHTTPContext:
     calendar_commands: CalendarCommands
     fixed_creation: RecurrenceCommands
     relative_creation: RelativeRecurrenceCommands
+    category_commands: TaskCategoryCommands
 
 
 def create_task_router(
@@ -182,6 +185,8 @@ def create_task_router(
                     body.state,
                     None if body.overrides is None else body.overrides.domain(),
                     body.selections(),
+                    clear_category="category_id" in body.model_fields_set
+                    and body.category_id is None,
                 ),
             )
         )
@@ -502,6 +507,9 @@ def create_task_router(
             lambda request: context(request).relative_creation,
             lambda request: context(request).queries(),
         )
+    )
+    router.include_router(
+        create_task_category_router(lambda request: context(request).category_commands)
     )
     router.include_router(
         create_calendar_router(

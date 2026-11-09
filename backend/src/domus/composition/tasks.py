@@ -12,6 +12,7 @@ from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
 from domus.application.relative_recurrence_commands import RelativeRecurrenceCommands
+from domus.application.task_category_commands import TaskCategoryCommands
 from domus.application.task_commands import TaskCommands
 from domus.application.task_events import TaskEventFeed, TaskEventSource
 from domus.application.task_queries import TaskQueries
@@ -72,6 +73,7 @@ def task_contexts(
                 planner.times,
                 bind_household_policy=True,
             ),
+            TaskCategoryCommands(store, actor, actor.read, clock, identifiers),
         )
 
     return context

@@ -7,7 +7,8 @@ const planned: CalendarEntry = {id: 'planned:work', kind: 'planned', title: '<b>
   time: null, zone: null, nominal: null, resolved: null, verification: null, relativeReviewRequired: true};
 const approval: CalendarEntry = {...planned, id: 'approval:cycle', kind: 'approval', title: 'Clock review',
   time: '09:30:00', zone: 'Europe/Madrid', nominal: '2026-11-01T08:30', resolved: '2026-11-01T09:30', verification: 'pending', relativeReviewRequired: false};
-const empty = {entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false};
+const category = {id: 'category-home', label: 'Hogar & más'};
+const empty = {categories: [category], entries: [], count: 0, occurrenceCount: 0, cursor: null, pending: false};
 const nodes: HTMLElement[] = [];
 afterEach(() => {for (const node of nodes.splice(0)) node.remove();});
 
@@ -43,15 +44,15 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
   expect(listener).toHaveBeenLastCalledWith(expect.objectContaining({detail: {type: 'load', query: {
     start: '9998-12-01', end: '9999-01-01', kind: '', timing: '', state: '', priority: '', category: '', own: false}}}));
   select(0, 'week'); select(1, 'approval'); select(2, 'manual'); select(3, 'completed'); select(4, 'high');
-  const tag = form.querySelector<HTMLInputElement>('input[name=category]')!;
-  tag.value = 'Hogar & más'; tag.dispatchEvent(new Event('input'));
+  const tag = selects[5];
+  select(5, category.id);
   const own = form.querySelector<HTMLInputElement>('input[type=checkbox]')!;
   own.checked = true; own.dispatchEvent(new Event('change'));
   dateValue('2026-11-01'); submit();
   expect(listener).toHaveBeenLastCalledWith(expect.objectContaining({detail: {type: 'load', query: {
     start: '2026-10-26', end: '2026-11-02', kind: 'approval', timing: 'manual', state: 'completed',
-    priority: 'high', category: 'Hogar & más', own: true}}}));
-  element.view = {status: 'ready', page: {entries: [approval, planned, {...planned, id: 'planned:other', title: 'Wash clocks'}, {...approval, id: 'approval:other',
+    priority: 'high', category: category.id, own: true}}}));
+  element.view = {status: 'ready', page: {categories: [category], entries: [approval, planned, {...planned, id: 'planned:other', title: 'Wash clocks'}, {...approval, id: 'approval:other',
     title: 'Verified', verification: 'approved', nominal: approval.resolved}], count: 4, occurrenceCount: 2, cursor: 'more', pending: true}};
   await element.updateComplete;
   expect(root.querySelectorAll('.calendar-grid > li')).toHaveLength(7);
@@ -84,31 +85,31 @@ test('calendar owns its range, filters and scope and distinguishes literal date-
 });
 
 
-test('category filters preserve up to 64 Unicode code points and reject oversized drafts', async () => {
+test('category filters send an active identity while displaying an inert localized choice', async () => {
   const element = document.createElement('domus-calendar'), sent = vi.fn();
-  element.addEventListener('domus-calendar-intent',sent);
+  element.addEventListener('domus-calendar-intent', sent);
   document.body.append(element); nodes.push(element);
-  element.today='2026-11-01'; element.scopeKey='unicode-member'; await element.updateComplete;
-  const root=element.shadowRoot!, input=root.querySelector<HTMLInputElement>('input[name=category]')!;
-  const form=root.querySelector('form')!;
-  expect(input.hasAttribute('maxlength')).toBe(false);
-  for (const language of ['en','es'] as const) {
-    element.language=language; await element.updateComplete;
-    input.value='🌿'.repeat(64); input.dispatchEvent(new Event('input'));
-    expect(input.validity.valid).toBe(true);
-    form.dispatchEvent(new Event('submit',{cancelable:true}));
-    expect(sent.mock.calls.at(-1)?.[0].detail.query.category).toBe('🌿'.repeat(64));
-    const count=sent.mock.calls.length;
-    input.value='🌿'.repeat(65); input.dispatchEvent(new Event('input'));
-    expect(input.validity.customError).toBe(true);
-    expect(input.validationMessage).toContain('64');
-    form.dispatchEvent(new Event('submit',{cancelable:true}));
-    expect(sent).toHaveBeenCalledTimes(count);
-    expect(input.value).toBe('🌿'.repeat(65));
-  }
-  element.language='en'; await element.updateComplete;
-  expect(input.validationMessage).toBe('Use at most 64 characters for the category.');
-  element.scopeKey='other-member'; await element.updateComplete;
-  expect(input.value).toBe('');
-  expect(input.validity.valid).toBe(true);
+  element.today = '2026-11-01'; element.scopeKey = 'first-member'; await element.updateComplete;
+  const label = '<b>Hogar 🌿</b>';
+  element.view = {status: 'ready', page: {...empty, categories: [{id:'garden:1', label}],
+    entries: [{...planned, categoryLabel: label}], count: 1, occurrenceCount: 1}};
+  await element.updateComplete;
+  const root = element.shadowRoot!, select = root.querySelectorAll('select')[5];
+  expect(select.options[1].textContent).toBe(label);
+  expect(root.querySelector('b')).toBeNull();
+  expect(root.querySelector('.calendar-entries small')?.textContent).toContain(label);
+  select.value = 'garden:1'; select.dispatchEvent(new Event('change'));
+  root.querySelector('form')!.dispatchEvent(new Event('submit', {cancelable:true}));
+  expect(sent.mock.calls.at(-1)?.[0].detail.query.category).toBe('garden:1');
+  const count = sent.mock.calls.length;
+  element.view = {status:'ready', page:{...empty, categories:[{id:'forged/id', label}]}};
+  await element.updateComplete;
+  select.value = 'forged/id'; select.dispatchEvent(new Event('change'));
+  root.querySelector('form')!.dispatchEvent(new Event('submit', {cancelable:true}));
+  expect(sent).toHaveBeenCalledTimes(count);
+  element.language = 'es'; element.view = {status: 'unavailable', page: null}; await element.updateComplete;
+  expect(select.selectedOptions[0].textContent).toBe('Categoría no disponible');
+  element.scopeKey = 'second-member'; await element.updateComplete;
+  expect(select.value).toBe('');
+  expect(select.options).toHaveLength(1);
 });

@@ -2,6 +2,7 @@
 import {EntryReadError} from '../application/ports';
 import type {TaskCommandResult, TaskOriginal, TaskRequest, TaskServer} from '../application/task-ports';
 import type {JournalContext} from '../domain/journal';
+import {isCategoryCommand} from '../domain/tasks';
 import type {TaskCommand} from '../domain/tasks';
 import {taskSchedulePolicy} from '../domain/tasks';
 import {BoundedHTTP, reason} from './http-transport';
@@ -9,10 +10,15 @@ import type {FetchTransport} from './http-transport';
 import type {EntryEndpoint} from './http-values';
 import {assertion, csrf, failure} from './http-values';
 import {boolean, check, fields, identifier, responseRevision} from './json-values';
-import {taskCommandBody, taskDetail, taskPage, taskReceipt, taskRequest} from './task-values';
+import {taskCategoryCatalog, taskCommandBody, taskDetail, taskPage, taskReceipt, taskRequest} from './task-values';
 function route(command: TaskCommand): string {
   if (command.action === 'task.create') return command.payload.schedule === undefined
     ? 'tasks/definitions' : 'tasks/recurrence/creation/' + command.payload.schedule.draft.kind;
+  if (isCategoryCommand(command)) {
+    if (command.action === 'task.category.create') return 'tasks/categories';
+    const item = 'tasks/categories/' + command.categoryId;
+    return command.action === 'task.category.archive' ? item + '/archive' : item;
+  }
   const action = command.action.slice(5);
   return 'tasks/occurrences/' + command.occurrenceId + '/' + action;
 }
@@ -21,9 +27,11 @@ export class HttpTaskServer implements TaskServer {
   constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
   access(expected: JournalContext) {
     return this.network.owned(async signal => {
-      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'], ['can_review_schedule','schedule_policy']);
+      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'], ['can_review_schedule','schedule_policy','category_catalog']);
       const policy = access.schedule_policy == null ? null : fields(access.schedule_policy, ['zone','data_identity','repeated_time','revision'], []);
-      return Object.freeze({householdId: identifier(access.household_id), memberId: identifier(access.member_id), canCreate: boolean(access.can_create),
+      const householdId = identifier(access.household_id);
+      const catalog = access.category_catalog === undefined ? {} : {categoryCatalog: taskCategoryCatalog(access.category_catalog, householdId)};
+      return Object.freeze({...catalog, householdId, memberId: identifier(access.member_id), canCreate: boolean(access.can_create),
         canReviewSchedule: access.can_review_schedule === undefined ? false : boolean(access.can_review_schedule),
         ...policy === null ? {} : {schedulePolicy: taskSchedulePolicy({...policy, revision: responseRevision(policy.revision)})}});
     });
@@ -45,7 +53,8 @@ export class HttpTaskServer implements TaskServer {
     return this.network.owned(async signal => {
       const input = taskRequest(value, true);
       const schedule = input.command.action === 'task.create' ? input.command.payload.schedule : undefined;
-      const request = schedule === undefined ? 'tasks/requests/' + input.command.action
+      const request = schedule === undefined
+        ? (isCategoryCommand(input.command) ? 'tasks/categories/requests/' : 'tasks/requests/') + input.command.action
         : 'tasks/recurrence/creation/requests/recurrence.' + schedule.draft.kind + '.create';
       return taskReceipt(await this.network.get(request + '/' + input.key, expected, signal), input, true);
     });
@@ -63,7 +72,8 @@ export class HttpTaskServer implements TaskServer {
         const body = taskCommandBody(input.command);
         if (signal.aborted) throw new EntryReadError('unavailable');
         posted = true;
-        const reply = await this.network.request(route(input.command), 'POST', expected, body, input.key, token, signal);
+        const method = input.command.action === 'task.category.rename' ? 'PUT' : 'POST';
+        const reply = await this.network.request(route(input.command), method, expected, body, input.key, token, signal);
         if (reply.status === 200) return taskReceipt(reply.value, input, false);
         if ([401,403,409,422,503].includes(reply.status)) return Object.freeze({kind: 'rejected' as const,
           reason: reason(reply.status), correlationId: failure(reply.value)});

@@ -33,6 +33,7 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
             "repeated_time": "first_instant",
             "revision": 1,
         },
+        "category_catalog": {"categories": [], "can_manage": True},
     }
     assert result["state"] == "available" and result["revision"] == 1
     assert create(api) == receipt

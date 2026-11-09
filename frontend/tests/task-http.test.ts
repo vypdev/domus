@@ -239,3 +239,48 @@ test('material unit precision comes from the server and incompatible planned amo
     else await expect(f.server.detail('work-1', 'home', context).result).rejects.toThrow('invalid_response');
   }
 });
+
+test('category catalog and historical task snapshots are verified against the current household', async () => {
+  const f = fixture();
+  const category = {category_id: 'garden', household_id: 'home', label: 'Café <b>', revision: '$revision', archived: false};
+  const base = {household_id: 'home', member_id: 'member-1', can_create: true};
+  f.transport.mockResolvedValueOnce(reply({...base, category_catalog: {categories: [category], can_manage: true}}));
+  expect((await f.server.access(context).result).categoryCatalog).toEqual({
+    categories: [{id: 'garden', label: 'Café <b>', revision: REV}], canManage: true,
+  });
+  for (const categories of [null, [category, category], [{...category, household_id: 'foreign'}],
+    [{...category, archived: true}], [{...category, label: ' Cafe\u0301 '}], Array(101).fill(category)]) {
+    f.transport.mockResolvedValueOnce(reply({...base, category_catalog: {categories, can_manage: true}}));
+    await expect(f.server.access(context).result).rejects.toThrow('invalid_response');
+  }
+  const raw = detail(), snapshot = raw.work.definition_snapshot;
+  f.transport.mockResolvedValueOnce(reply({...raw, work: {...raw.work,
+    definition_snapshot: {...snapshot, category_label: category.label, content: {...snapshot.content, category_id: 'garden'}}}}));
+  expect((await f.server.detail('work-1', 'home', context).result).categoryLabel).toBe(category.label);
+  f.transport.mockResolvedValueOnce(reply({...raw, work: {...raw.work, definition_snapshot: {...snapshot, category_label: category.label}}}));
+  await expect(f.server.detail('work-1', 'home', context).result).rejects.toThrow('invalid_response');
+});
+
+test('category commands preserve exact revision, original label and action during lost reply recovery', async () => {
+  for (const kind of ['create', 'rename', 'archive'] as const) {
+    const action = 'task.category.' + kind, archive = kind === 'archive';
+    const command = taskCommand({action, ...kind === 'create' ? {} : {categoryId: 'garden'}, payload: {
+      expected_revision: kind === 'create' ? 0 : REV, ...archive ? {} : {label: '  Cafe\u0301 <b>  '},
+    }})!;
+    const f = fixture(), original = {key: 'category-key', command};
+    const category = {category_id: 'garden', household_id: 'home', label: 'Café <b>', revision: kind === 'create' ? 1 : '$next', archived: archive};
+    const committed = {...receipt(0), result: category};
+    f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)})).mockResolvedValueOnce(reply(committed));
+    expect(await f.server.send(original, context)).toMatchObject({action, occurrenceId: null, state: archive ? 'archived' : 'active'});
+    const [url, init] = f.transport.mock.calls[1];
+    expect(url).toBe('/api/v1/tasks/categories' + (kind === 'create' ? '' : archive ? '/garden/archive' : '/garden'));
+    expect(init.method).toBe(kind === 'rename' ? 'PUT' : 'POST');
+    expect(String(init.body)).toContain('"expected_revision":' + (kind === 'create' ? 0 : REV));
+    if (!archive) expect(JSON.parse(String(init.body)).label).toBe('  Cafe\u0301 <b>  ');
+    f.transport.mockResolvedValueOnce(reply({...committed, state: 'historical', archived_by: 'restored', action, command_key: original.key}));
+    expect(await f.server.original({...original, operationId: 'op-1'}, context).result).toMatchObject({stage: 'historical', archivedBy: 'restored'});
+    expect(f.transport.mock.calls[2][0]).toBe('/api/v1/tasks/categories/requests/' + action + '/category-key');
+    f.transport.mockResolvedValueOnce(reply({...committed, action, command_key: 'different-key'}));
+    await expect(f.server.original({...original, operationId: null}, context).result).rejects.toThrow('invalid_response');
+  }
+});
