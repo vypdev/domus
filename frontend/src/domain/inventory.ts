@@ -6,7 +6,8 @@ import type {Revision} from './administration';
 export const BASE_UNITS = ['piece', 'gram', 'millilitre'] as const;
 export type BaseUnit = typeof BASE_UNITS[number];
 export type ReplenishmentRevision = Revision | '0';
-export type ShoppingAction = 'shopping.purchase' | 'shopping.receive' | 'shopping.post-receipt';
+export type ShoppingAction = 'shopping.purchase' | 'shopping.receive' | 'shopping.post-receipt'
+  | 'shopping.add-extra' | 'shopping.clear-extra';
 
 export type InventoryCommand =
   | Readonly<{action: 'inventory.register-product'; name: string; base_unit: BaseUnit}>
@@ -16,8 +17,10 @@ export type InventoryCommand =
   | Readonly<{action: 'inventory.configure-replenishment'; product_id: string; minimum: string;
     target: string; expected_revision: ReplenishmentRevision}>
   | Readonly<{action: 'shopping.purchase'; product_id: string | null; name: string | null; quantity: string}>
+  | Readonly<{action: 'shopping.add-extra'; product_id: string | null; name: string | null; quantity: string}>
   | Readonly<{action: 'shopping.receive'; purchase_id: string; quantity: string; expected_revision: Revision}>
-  | Readonly<{action: 'shopping.post-receipt'; purchase_id: string; receipt_id: string}>;
+  | Readonly<{action: 'shopping.post-receipt'; purchase_id: string; receipt_id: string}>
+  | Readonly<{action: 'shopping.clear-extra'; extra_id: string}>;
 
 export const MOVEMENT_KINDS = ['intake', 'task_consumption', 'task_correction', 'adjustment', 'intake_correction'] as const;
 export type MovementKind = typeof MOVEMENT_KINDS[number];
@@ -46,6 +49,7 @@ export interface MovementHistory {
 
 export interface ProductStock {
   readonly id: string;
+  readonly referenceId: string;
   readonly name: string;
   readonly unit: BaseUnit;
   readonly recorded: string;
@@ -67,6 +71,7 @@ export interface Replenishment {
 export interface InventoryReport {
   readonly mayManage: boolean;
   readonly mayShop: boolean;
+  readonly mayRequest: boolean;
   readonly products: readonly ProductStock[];
   readonly cursor: string | null;
 }
@@ -103,6 +108,50 @@ export interface Purchases {
 export interface PurchaseReceipts {
   readonly purchase: Purchase;
   readonly items: readonly PhysicalReceipt[];
+  readonly cursor: string | null;
+}
+
+export interface ExtraAttribution {
+  readonly memberId: string;
+  readonly authorAlias: string | null;
+  readonly createdAt: string;
+}
+
+export interface ShoppingItem {
+  readonly productId: string | null;
+  readonly extraId: string | null;
+  readonly name: string;
+  readonly unit: BaseUnit;
+  readonly pantry: string;
+  readonly tasks: string;
+  readonly manual: string;
+  readonly total: string;
+  readonly attribution: ExtraAttribution | null;
+}
+
+export interface ShoppingList {
+  readonly items: readonly ShoppingItem[];
+  readonly cursor: string | null;
+}
+
+export const SHOPPING_SOURCE_KINDS = ['pantry','task','extra'] as const;
+export interface ShoppingSource {
+  readonly id: string;
+  readonly kind: typeof SHOPPING_SOURCE_KINDS[number];
+  readonly originId: string;
+  readonly lineId: string | null;
+  readonly name: string;
+  readonly quantity: string;
+  readonly reserved: string;
+  readonly stock: string;
+  readonly incoming: string;
+  readonly toBuy: string;
+  readonly attribution: ExtraAttribution | null;
+}
+
+export interface ShoppingSources {
+  readonly item: ShoppingItem;
+  readonly items: readonly ShoppingSource[];
   readonly cursor: string | null;
 }
 
@@ -148,7 +197,8 @@ export function inventoryCommand(value: unknown): InventoryCommand {
     return {action, product_id: taskIdentifier(record.product_id), minimum: taskQuantity(record.minimum),
       target: taskQuantity(record.target), expected_revision: replenishmentRevision(record.expected_revision)};
   }
-  if (action === 'shopping.purchase' && hasFields(record, ['action','product_id','name','quantity'])) {
+  if ((action === 'shopping.purchase' || action === 'shopping.add-extra')
+      && hasFields(record, ['action','product_id','name','quantity'])) {
     const product_id = record.product_id === null ? null : taskIdentifier(record.product_id);
     const name = record.name === null ? null : taskText(record.name, 160, true);
     if ((product_id === null) !== (name === null))
@@ -161,6 +211,8 @@ export function inventoryCommand(value: unknown): InventoryCommand {
   if (action === 'shopping.post-receipt' && hasFields(record, ['action','purchase_id','receipt_id'])) {
     return {action, purchase_id:taskIdentifier(record.purchase_id), receipt_id:taskIdentifier(record.receipt_id)};
   }
+  if (action === 'shopping.clear-extra' && hasFields(record, ['action','extra_id']))
+    return {action, extra_id:taskIdentifier(record.extra_id)};
   throw new Error('invalid_inventory_command');
 }
 

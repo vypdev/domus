@@ -40,6 +40,7 @@ def test_catalog_is_scoped_bounded_and_writes_require_current_grants(api):
         "location_id": "pantry",
         "may_manage": True,
         "may_shop": True,
+        "may_request": True,
         "products": [],
         "next_cursor": None,
     }
@@ -152,10 +153,14 @@ def test_exact_stock_capacity_rejects_partial_posting_and_forced_binding(
         post(api, "overflow", "intake", **payload, quantity=amount).json()["code"]
         == "inventory_stock_capacity"
     )
-    assert get(api).json()["products"] == [
+    products = get(api).json()["products"]
+    with api.store.read() as unit:
+        reference = unit.inventory.product("home", product_id).reference_id
+    assert products == [
         {
             **payload,
             "name": "Cleaning product",
+            "reference_id": reference,
             "base_unit": base_unit,
             "recorded": maximum,
             "reserved": "0",

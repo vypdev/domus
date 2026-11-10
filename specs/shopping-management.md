@@ -426,3 +426,141 @@ Require CI and Bugbot green for the same PR commit. Copilot Verification must pa
 ### 20. References and decisions
 
 This slice qualifies the purchase and receipt parts of shopping-management-C10, shopping-management-C11, shopping-management-C12, shopping-management-C13, shopping-management-C14, shopping-management-C15, shopping-management-C18, shopping-management-C19 and shopping-management-C21.
+
+## Shared shopping list from Pantry, Tasks and manual extras
+
+- Status: Draft
+- Owners: Domus maintainers and Shopping Management
+- Scope: One household shopping list with exact source attribution and independent manual extras
+- Source baseline: develop at d8840e4acd61425622f2dc7f571ef0adc9092687
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+Add a shared list in the protected Shopping area. For each Pantry product, show the exact quantity to buy from Pantry replenishment, uncovered task materials and manual extras. Preserve each source and keep untracked manual items distinct.
+
+### 2. Problem, current behavior, and evidence
+
+Develop records Pantry policies, outstanding tracked purchases, partial receipts and task material plans. It offers no shared view of the quantities the household still needs. Extend specs/shopping-management.md for one shared list.
+
+### 3. Actors, surfaces, and terminology
+
+A household reader can browse the list. A member with shopping.request can add an extra. A shopping manager can clear an extra. Task source details are visible only when the member can read Tasks. Incoming supply is the unposted amount of a tracked purchase, including units still due and physical receipts awaiting Pantry posting.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| shared-shopping-R1 | Show one protected household list with exact per-product quantities and paginated provenance from Pantry, open task material plans and manual extras. Use product and base-unit identity for tracked grouping. |
+| shared-shopping-R2 | Use current Pantry availability, match a reservation only to its task and material line, and apply compatible incoming supply once to the automatic need. Distinct uncovered task material sources add to that need. |
+| shared-shopping-R3 | Persist manual extras as independent requests. Support an exact tracked product amount or an untracked named item in whole pieces. Preserve attribution and allow explicit clearing with a durable original operation. |
+| shared-shopping-R4 | Protect reads, writes and recovery with current permissions. Verify concurrency, restart, snapshot restoration, and migration from schema 23. Qualify both deployment targets, both locales and both image architectures. |
+
+Multiple lists, optional overlap for manual requests, purchase allocation to individual sources, pricing, sessions, and package conversions are separate increments.
+
+### 5. Current versus proposed product journey
+
+Open the shared Shopping list from Inventory. See the quantities contributed by Pantry, Tasks and extras, then expand the source details for a product. Add an extra using an existing product or a free-text name. A manager explicitly clears a finished or unwanted extra.
+
+### 6. Functional behavior and state model
+
+Use one read snapshot for stock, reservations, open task occurrences, manual requests and purchases. Read task material plans only for open non-draft occurrences and compatible server-owned bindings. For a line with a recorded task demand, use that remaining quantity instead of its planned quantity. Apply its matching reservation first and allocate unreserved physical availability across the remaining task quantities in stable source order. Preserve pending consumption as a separate task fact.
+
+Take the existing Pantry minimum and target need before incoming supply. Add the uncovered task material amounts. Allocate compatible incoming supply once, first to Pantry, then to task shortages in stable source order. Manual extras add after automatic coverage and persist until explicitly cleared. Do not group by text or use incompatible units. The shared list groups tracked products by their stable ID and retains independent free-text extras. A task that is already covered by a matching reservation cannot add that amount again to the purchase total.
+
+### 7. User-facing configuration
+
+The list uses existing Pantry base units. An extra has a positive exact amount, and untracked extras use whole pieces. No list setup is required.
+
+### 8. Clean Architecture design
+
+Keep quantity allocation in pure domain logic. Read task plans, reservations and shopping records through existing transaction-scoped ports and bounded queries. Persist manual extras through the shopping repository and use the existing protected command and original receipt flow. Presentation renders source facts supplied by the server using the shared HA UI.
+
+### 9. UI/UX and content contract
+
+Show the consolidated quantity, the three origin totals and named task and manual source details. Use accessible bilingual controls and pagination for list and source reads. Show manual add and clear controls only for current permitted actors. The pending command journal recovers a lost response without issuing another write.
+
+### 10. Failure, recovery, and cleanup
+
+Reject malformed and foreign items without changing the list. Concurrent clear requests leave one accepted transition and repeated keys recover the original result. Changes to stock, reservations and purchases recompute the automatic sources without deleting manual requests. Restoration distinguishes historical receipts from current effects.
+
+### 11. Security, permissions, and privacy
+
+Require household.read for the list, tasks.read for task projections, shopping.request for adding and shopping.manage for clearing extras. Apply current authority to original command recovery. Derive actor, household and product binding from the server context. Retain session, origin and CSRF checks.
+
+### 12. Observability and operational UX
+
+Expose request provenance and per-source coverage in the protected workspace. Use the original operation journal for successful writes and existing safe error mapping for rejected writes.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Migrate a representative schema 23 database to the next version and preserve task reservations, Pantry policies, purchase records, pending and posted receipts and existing operations. Verify migration rollback and activated snapshot restoration with durable extras.
+
+### 14. Testing strategy and numeric budget
+
+Minimum nine distinct cases in this increment.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Consolidation | 3 | Observable scenarios in the case inventory. |
+| Task provenance | 1 | Observable scenarios in the case inventory. |
+| Manual lifecycle | 1 | Observable scenarios in the case inventory. |
+| Authorization | 1 | Observable scenarios in the case inventory. |
+| Compatibility | 1 | Observable scenarios in the case inventory. |
+| Recovery | 1 | Observable scenarios in the case inventory. |
+| Workspace | 1 | Observable scenarios in the case inventory. |
+| Total | 9 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| shared-shopping-C01 | Consolidation | shared-shopping-R1, shared-shopping-R2 | Pantry needs four after a task reservation already covers its material. An additional manual request of two yields six to buy with separate sources. |
+| shared-shopping-C02 | Consolidation | shared-shopping-R2 | Independent task shortages add after available stock has been allocated once. Compatible incoming supply covers Pantry and task shortage once. |
+| shared-shopping-C03 | Consolidation | shared-shopping-R1, shared-shopping-R2, shared-shopping-R3 | An untracked request and a tracked product with the same label remain separate. Fractional pieces and foreign products are rejected. |
+| shared-shopping-C04 | Task provenance | shared-shopping-R1, shared-shopping-R2 | Active task plans and recorded demand use stable material identities. Closed work and pending consumption produce no new task demand. |
+| shared-shopping-C05 | Manual lifecycle | shared-shopping-R3, shared-shopping-R4 | Add and clear an attributed extra. Compare competing clears, same-key replay, changed-payload conflict and absence of automatic clearing when the policy or purchase changes. |
+| shared-shopping-C06 | Authorization | shared-shopping-R4 | A restricted requester adds an extra and a manager clears it. A viewer cannot write. Revoked grants, invalid CSRF and cursors scoped to other actors or products are rejected. |
+| shared-shopping-C07 | Compatibility | shared-shopping-R4 | Representative schema 23 upgrades with prior ledger, task, purchase and receipt data intact. An interrupted migration rolls back. |
+| shared-shopping-C08 | Recovery | shared-shopping-R3, shared-shopping-R4 | Restart and activated restore preserve manual sources and distinguish current and historical original commands. |
+| shared-shopping-C09 | Workspace | shared-shopping-R1, shared-shopping-R4 | English and Spanish journeys inspect the sources, add and clear an extra and recover the original write in Ingress and standalone on both actual image architectures. |
+
+### 15. Documentation and discoverability
+
+[specs/shopping-management.md](shopping-management.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/shared-shopping-list-qualification.md](../docs/evidence/shared-shopping-list-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/application/inventory\_queries.py](../backend/src/domus/application/inventory_queries.py) · [backend/src/domus/infrastructure/sqlite\_shopping.py](../backend/src/domus/infrastructure/sqlite_shopping.py) · [frontend/src/presentation/domus-shopping.ts](../frontend/src/presentation/domus-shopping.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/shopping-management.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/shared-shopping-list-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/application/inventory_queries.py | update |
+| backend/src/domus/infrastructure/sqlite_shopping.py | update |
+| frontend/src/presentation/domus-shopping.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Run and link the listed cases, exact-head CI and both real-image browser results.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| shared-shopping-R1 | shared-shopping-C01, shared-shopping-C03, shared-shopping-C04, shared-shopping-C09 |
+| shared-shopping-R2 | shared-shopping-C01, shared-shopping-C02, shared-shopping-C03, shared-shopping-C04 |
+| shared-shopping-R3 | shared-shopping-C03, shared-shopping-C05, shared-shopping-C08 |
+| shared-shopping-R4 | shared-shopping-C05, shared-shopping-C06, shared-shopping-C07, shared-shopping-C08, shared-shopping-C09 |
+
+### 18. Implementation sequence
+
+Persist manual extras, project and paginate exact needs and sources, then integrate Shopping and validate migration and recovery.
+
+### 19. Definition of Done
+
+Keep 100 percent coverage globally and per authored file. Require CI and Bugbot green on the same PR commit. Copilot Verification passes or has an exclusively upstream defect documented with its report. Releases and deployments require separate authorization.
+
+### 20. References and decisions
+
+Qualifies shopping-management-C04, shopping-management-C05, shopping-management-C06, shopping-management-C07, shopping-management-C08, and the reservation and supply coverage portions of shopping-management-C09.

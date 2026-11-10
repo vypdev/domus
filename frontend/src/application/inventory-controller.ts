@@ -1,6 +1,6 @@
 /** Manage only current household scope and the original unresolved stock command. */
 import {inventoryCommand} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, PurchaseReceipts, Purchases, ShoppingAction} from '../domain/inventory';
+import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, PurchaseReceipts, Purchases, ShoppingAction, ShoppingList, ShoppingSources} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import type {EntryEntropy, EntryRead} from './ports';
 
@@ -11,7 +11,7 @@ export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'i
   'inventory_correction_requires_intake', 'inventory_intake_corrected', 'invalid_replenishment_bounds',
   'invalid_revision', 'revision_conflict', 'invalid_shopping_item', 'shopping_purchase_open',
   'shopping_purchase_missing', 'shopping_receipt_missing', 'shopping_receipt_exceeds_purchase',
-  'shopping_receipt_untracked', 'shopping_receipt_posted'] as const;
+  'shopping_receipt_untracked', 'shopping_receipt_posted', 'shopping_extra_missing', 'shopping_extra_cleared'] as const;
 export type InventoryError = typeof INVENTORY_ERRORS[number] | 'rejected';
 
 export interface InventoryScope {readonly key: string; readonly context: JournalContext; readonly readOnly: boolean;}
@@ -28,6 +28,8 @@ export interface InventoryServer {
   history(scope: InventoryScope, productId: string, cursor: string | null): EntryRead<MovementHistory>;
   purchases(scope: InventoryScope, cursor: string | null): EntryRead<Purchases>;
   purchaseReceipts(scope: InventoryScope, purchaseId: string, cursor: string | null): EntryRead<PurchaseReceipts>;
+  shoppingList(scope: InventoryScope, cursor: string | null): EntryRead<ShoppingList>;
+  shoppingSources(scope: InventoryScope, productId: string, cursor: string | null): EntryRead<ShoppingSources>;
   send(scope: InventoryScope, request: InventoryRequest): EntryRead<InventoryResult>;
   original(scope: InventoryScope, request: InventoryRequest): EntryRead<InventoryResult | null>;
 }
@@ -42,6 +44,8 @@ export interface InventoryState {
   readonly history: MovementHistory | null;
   readonly purchases?: Purchases | null;
   readonly purchaseReceipts?: PurchaseReceipts | null;
+  readonly shoppingList?: ShoppingList | null;
+  readonly shoppingSources?: ShoppingSources | null;
   readonly pending: boolean;
   readonly busy: boolean;
   readonly result: InventoryResult | null;
@@ -49,7 +53,10 @@ export interface InventoryState {
 }
 
 function mayWrite(report: InventoryReport | null, action: InventoryCommand['action']): boolean {
-  return (action === 'shopping.purchase' || action === 'shopping.receive' ? report?.mayShop : report?.mayManage) === true;
+  if (action === 'shopping.add-extra') return report?.mayRequest === true;
+  if (action === 'shopping.purchase' || action === 'shopping.receive' || action === 'shopping.clear-extra')
+    return report?.mayShop === true;
+  return report?.mayManage === true;
 }
 
 export class InventoryController {
@@ -85,6 +92,10 @@ export class InventoryController {
       await this.showPurchases();
     if (state?.purchaseReceipts && this.view?.scope === state.scope && this.view.purchaseReceipts)
       await this.showPurchaseReceipts(state.purchaseReceipts.purchase.id);
+    if (state?.shoppingList && this.view?.scope === state.scope && this.view.shoppingList)
+      await this.showShoppingList();
+    if (state?.shoppingSources && this.view?.scope === state.scope && this.view.shoppingSources)
+      await this.showShoppingSources(state.shoppingSources.item.productId!);
   }
 
   async showHistory(productId: string): Promise<void> {await this.loadHistory(productId, null);}
@@ -117,6 +128,35 @@ export class InventoryController {
   async morePurchaseReceipts(): Promise<void> {
     const page = this.view?.purchaseReceipts;
     if (page?.cursor) await this.loadPurchaseReceipts(page.purchase.id, page.cursor);
+  }
+
+  async showShoppingList(more = false): Promise<void> {
+    const state = this.view;
+    if (state === null || state.report === null || this.owned !== null) return;
+    const cursor = more ? state.shoppingList?.cursor : null;
+    if (more && !cursor) return;
+    const loaded = await this.run(this.server.shoppingList(state.scope, cursor!), page => {
+      this.set({shoppingList:more ? {...page, items:[...state.shoppingList!.items, ...page.items]} : page,
+        notice:state.pending ? state.notice : null});
+    }, 'unavailable');
+    if (!loaded && this.view?.scope === state.scope) this.set({shoppingList:null, shoppingSources:null});
+  }
+
+  async showShoppingSources(productId: string, more = false): Promise<void> {
+    const state = this.view;
+    if (state === null || state.shoppingList == null || this.owned !== null) return;
+    const cursor = more ? state.shoppingSources?.cursor : null;
+    if (more && !cursor) return;
+    const loaded = await this.run(this.server.shoppingSources(state.scope, productId, cursor!), page => {
+      this.set({shoppingSources:more ? {...page, items:[...state.shoppingSources!.items, ...page.items]} : page,
+        notice:state.pending ? state.notice : null});
+    }, 'unavailable');
+    if (!loaded && this.view?.scope === state.scope) this.set({shoppingSources:null});
+  }
+
+  async moreShoppingSources(): Promise<void> {
+    const productId = this.view?.shoppingSources?.item.productId;
+    if (productId) await this.showShoppingSources(productId, true);
   }
 
   async submit(value: unknown): Promise<void> {
@@ -158,7 +198,8 @@ export class InventoryController {
         notice: state.pending ? state.notice : null});
     }, 'unavailable');
     if (!loaded && this.view?.scope === state.scope)
-      this.set({report:null, history:null, purchases:null, purchaseReceipts:null});
+      this.set({report:null, history:null, purchases:null, purchaseReceipts:null,
+        shoppingList:null, shoppingSources:null});
   }
 
   private async loadPurchases(cursor: string | null): Promise<void> {

@@ -241,6 +241,20 @@ class SQLiteInventory:
             )
         )
 
+    def effects_for_references(
+        self, home: str, references: tuple[str, ...]
+    ) -> tuple[InventoryEffect, ...]:
+        placeholders = ",".join("?" for _ in references)
+        return tuple(
+            _effect(row)
+            for row in self.connection.execute(
+                "SELECT * FROM inventory_effects WHERE household_id=? "
+                f"AND occurrence_id IS NOT NULL AND reference_id IN ({placeholders}) "
+                "AND (kind='demand' OR remaining>0)",
+                (home, *references),
+            )
+        )
+
     def add_effect(self, value: InventoryEffect) -> None:
         self.connection.execute(
             "INSERT INTO inventory_effects VALUES (?,?,?,?,?,?,?,?,?)", astuple(value)

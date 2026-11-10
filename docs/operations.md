@@ -78,6 +78,26 @@ target minus availability when below the minimum, and zero otherwise. These
 reads create no movements or task effects. Restocking leaves any pending task
 consumption available for separate review in Tasks.
 
+## Shared shopping list
+
+Schema 24 adds household-scoped manual extra records to schema 23. It preserves
+the Pantry ledger, replenishment policies, task reservations, purchases,
+physical receipts and original operations. A manager's clear stores the member
+and time in the original record. Snapshot verification checks each extra's
+product binding, base unit and quantity precision.
+
+List and source reads use one transaction. Apply each task's own reservation,
+then allocate unreserved stock once in occurrence and material-line ID order.
+Compatible incoming purchases cover Pantry first and then uncovered task
+materials. Manual extras add independently. Only current task readers receive
+Task sources or quantities. Add and clear use current `shopping.request` and
+`shopping.manage` respectively, including original receipt recovery.
+
+An original receipt may be historical after restore. If an extra is active
+again in the restored list, a manager can clear it with a new request after
+reviewing that state. Replaying the historical clear returns its archived
+receipt.
+
 ## Shopping purchases and receipts
 
 Schema 23 adds household-scoped purchase and physical receipt tables to schema

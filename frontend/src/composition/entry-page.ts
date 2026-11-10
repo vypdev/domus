@@ -185,11 +185,12 @@ export function decodeInventoryIntent(value: unknown): InventoryIntent | null {
   try {
     const {type} = fields(value, ['type'], ['command', 'productId', 'purchaseId']);
     if (type === 'submit') return {type, command: inventoryCommand(fields(value, ['type','command'], []).command)};
-    if (type === 'history') return {type, productId: identifier(fields(value, ['type','productId'], []).productId)};
+    if (type === 'history' || type === 'shopping-sources') return {type, productId: identifier(fields(value, ['type','productId'], []).productId)};
     if (type === 'purchase-receipts') return {type, purchaseId: identifier(fields(value, ['type','purchaseId'], []).purchaseId)};
     fields(value, ['type'], []);
     check(type === 'refresh' || type === 'more' || type === 'recover' || type === 'more-history' || type === 'close-history'
-      || type === 'purchases' || type === 'more-purchases' || type === 'more-purchase-receipts');
+      || type === 'purchases' || type === 'more-purchases' || type === 'more-purchase-receipts'
+      || type === 'shopping-list' || type === 'more-shopping-list' || type === 'more-shopping-sources');
     return {type};
   } catch {return null;}
 }
@@ -396,6 +397,10 @@ export function mountEntry(page: EntryPage): PageMount {
       if (intent?.type === 'more-purchases') await inventoryController.morePurchases();
       if (intent?.type === 'purchase-receipts') await inventoryController.showPurchaseReceipts(intent.purchaseId);
       if (intent?.type === 'more-purchase-receipts') await inventoryController.morePurchaseReceipts();
+      if (intent?.type === 'shopping-list') await inventoryController.showShoppingList();
+      if (intent?.type === 'more-shopping-list') await inventoryController.showShoppingList(true);
+      if (intent?.type === 'shopping-sources') await inventoryController.showShoppingSources(intent.productId);
+      if (intent?.type === 'more-shopping-sources') await inventoryController.moreShoppingSources();
       if (intent?.type === 'submit') await inventoryController.submit(intent.command);
     }, {signal:widget.signal});
     const syncWorkspace = () => {

@@ -93,6 +93,56 @@
         ],
         "type": "string"
       },
+      "AddExtraBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "shopping.add-extra",
+            "title": "Action",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "quantity": {
+            "maxLength": 19,
+            "minLength": 1,
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Quantity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "product_id",
+          "name",
+          "quantity"
+        ],
+        "title": "AddExtraBody",
+        "type": "object"
+      },
       "AdjustmentBody": {
         "additionalProperties": false,
         "properties": {
@@ -1010,7 +1060,9 @@
           "inventory.configure-replenishment",
           "shopping.purchase",
           "shopping.receive",
-          "shopping.post-receipt"
+          "shopping.post-receipt",
+          "shopping.add-extra",
+          "shopping.clear-extra"
         ],
         "title": "CatalogAction",
         "type": "string"
@@ -1057,6 +1109,10 @@
             "title": "Recorded",
             "type": "string"
           },
+          "reference_id": {
+            "title": "Reference Id",
+            "type": "string"
+          },
           "replenishment": {
             "$ref": "#/components/schemas/ReplenishmentView"
           },
@@ -1071,6 +1127,7 @@
         },
         "required": [
           "product_id",
+          "reference_id",
           "name",
           "base_unit",
           "recorded",
@@ -1174,6 +1231,27 @@
           "command_key"
         ],
         "title": "CategoryOriginalResponse",
+        "type": "object"
+      },
+      "ClearExtraBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "shopping.clear-extra",
+            "title": "Action",
+            "type": "string"
+          },
+          "extra_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Extra Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "extra_id"
+        ],
+        "title": "ClearExtraBody",
         "type": "object"
       },
       "CompleteBody": {
@@ -1869,6 +1947,36 @@
           "correlation_id"
         ],
         "title": "ErrorResponse",
+        "type": "object"
+      },
+      "ExtraAttribution": {
+        "properties": {
+          "author_alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Alias"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "member_id",
+          "author_alias",
+          "created_at"
+        ],
+        "title": "ExtraAttribution",
         "type": "object"
       },
       "FamilyAllocationEvidence": {
@@ -2757,6 +2865,10 @@
             "title": "May Manage",
             "type": "boolean"
           },
+          "may_request": {
+            "title": "May Request",
+            "type": "boolean"
+          },
           "may_shop": {
             "title": "May Shop",
             "type": "boolean"
@@ -2784,6 +2896,7 @@
           "location_id",
           "may_manage",
           "may_shop",
+          "may_request",
           "products",
           "next_cursor"
         ],
@@ -3614,6 +3727,15 @@
         ],
         "title": "NativeSessionResponse",
         "type": "object"
+      },
+      "NeedKind": {
+        "enum": [
+          "pantry",
+          "task",
+          "extra"
+        ],
+        "title": "NeedKind",
+        "type": "string"
       },
       "NominalDateBody": {
         "additionalProperties": false,
@@ -6789,6 +6911,212 @@
         ],
         "title": "ShareRounding",
         "type": "string"
+      },
+      "ShoppingListItem": {
+        "properties": {
+          "attribution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtraAttribution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "base_unit": {
+            "$ref": "#/components/schemas/BaseUnit"
+          },
+          "extra_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra Id"
+          },
+          "manual": {
+            "title": "Manual",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pantry": {
+            "title": "Pantry",
+            "type": "string"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "tasks": {
+            "title": "Tasks",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "extra_id",
+          "name",
+          "base_unit",
+          "pantry",
+          "tasks",
+          "manual",
+          "total"
+        ],
+        "title": "ShoppingListItem",
+        "type": "object"
+      },
+      "ShoppingListView": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ShoppingListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ShoppingListView",
+        "type": "object"
+      },
+      "ShoppingSourceView": {
+        "properties": {
+          "attribution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtraAttribution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "incoming": {
+            "title": "Incoming",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/NeedKind"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "origin_id": {
+            "title": "Origin Id",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "reserved": {
+            "title": "Reserved",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "stock": {
+            "title": "Stock",
+            "type": "string"
+          },
+          "to_buy": {
+            "title": "To Buy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "kind",
+          "origin_id",
+          "line_id",
+          "name",
+          "quantity",
+          "reserved",
+          "stock",
+          "incoming",
+          "to_buy",
+          "attribution"
+        ],
+        "title": "ShoppingSourceView",
+        "type": "object"
+      },
+      "ShoppingSourcesView": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/ShoppingListItem"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ShoppingSourceView"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "item",
+          "sources",
+          "next_cursor"
+        ],
+        "title": "ShoppingSourcesView",
+        "type": "object"
       },
       "SourceState": {
         "enum": [
@@ -11843,6 +12171,8 @@
                     "inventory.correct-intake": "#/components/schemas/IntakeCorrectionBody",
                     "inventory.intake": "#/components/schemas/IntakeBody",
                     "inventory.register-product": "#/components/schemas/ProductBody",
+                    "shopping.add-extra": "#/components/schemas/AddExtraBody",
+                    "shopping.clear-extra": "#/components/schemas/ClearExtraBody",
                     "shopping.post-receipt": "#/components/schemas/PostReceiptBody",
                     "shopping.purchase": "#/components/schemas/PurchaseBody",
                     "shopping.receive": "#/components/schemas/ReceivePurchaseBody"
@@ -11873,6 +12203,12 @@
                   },
                   {
                     "$ref": "#/components/schemas/PostReceiptBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddExtraBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ClearExtraBody"
                   }
                 ],
                 "title": "Body"
@@ -12713,6 +13049,364 @@
           }
         ],
         "summary": "Original"
+      }
+    },
+    "/api/v1/inventory/shopping-list": {
+      "get": {
+        "operationId": "shopping_list_api_v1_inventory_shopping_list_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingListView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Shopping List"
+      }
+    },
+    "/api/v1/inventory/shopping-list/{product_id}/sources": {
+      "get": {
+        "operationId": "shopping_sources_api_v1_inventory_shopping_list__product_id__sources_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Product Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShoppingSourcesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Shopping Sources"
       }
     },
     "/api/v1/members": {

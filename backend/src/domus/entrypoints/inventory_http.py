@@ -14,6 +14,7 @@ from domus.application.inventory_queries import (
     PhysicalReceiptsView,
     PurchasesView,
 )
+from domus.application.shopping_list import ShoppingListView, ShoppingSourcesView
 from domus.domain.inventory import MAX_STOCK_REASON, BaseUnit
 from domus.domain.task_material_values import MaterialQuantity
 from domus.entrypoints.household_http import (
@@ -90,6 +91,18 @@ class PostReceiptBody(StrictModel):
     receipt_id: Identifier
 
 
+class AddExtraBody(StrictModel):
+    action: Literal["shopping.add-extra"]
+    product_id: Identifier | None
+    name: Annotated[str, Field(min_length=1, max_length=160)] | None
+    quantity: Quantity
+
+
+class ClearExtraBody(StrictModel):
+    action: Literal["shopping.clear-extra"]
+    extra_id: Identifier
+
+
 CatalogBody = Annotated[
     ProductBody
     | IntakeBody
@@ -98,7 +111,9 @@ CatalogBody = Annotated[
     | ReplenishmentBody
     | PurchaseBody
     | ReceivePurchaseBody
-    | PostReceiptBody,
+    | PostReceiptBody
+    | AddExtraBody
+    | ClearExtraBody,
     Field(discriminator="action"),
 ]
 
@@ -136,6 +151,20 @@ def create_inventory_router(
             context(request)
             .inventory()
             .physical_receipts(purchase_id, limit=query.limit, cursor=query.cursor)
+        )
+
+    @router.get("/shopping-list", response_model=ShoppingListView)
+    def shopping_list(request: Request, query: Annotated[PageQuery, Query()]) -> ShoppingListView:
+        return context(request).inventory().shopping_list(limit=query.limit, cursor=query.cursor)
+
+    @router.get("/shopping-list/{product_id}/sources", response_model=ShoppingSourcesView)
+    def shopping_sources(
+        request: Request, product_id: Identifier, query: Annotated[PageQuery, Query()]
+    ) -> ShoppingSourcesView:
+        return (
+            context(request)
+            .inventory()
+            .shopping_sources(product_id, limit=query.limit, cursor=query.cursor)
         )
 
     @router.post(
@@ -176,6 +205,12 @@ def create_inventory_router(
             receipt = inventory.receive_purchase(
                 key, body.purchase_id, MaterialQuantity(body.quantity), int(body.expected_revision)
             )
+        elif isinstance(body, AddExtraBody):
+            receipt = inventory.add_extra(
+                key, body.product_id, body.name, MaterialQuantity(body.quantity)
+            )
+        elif isinstance(body, ClearExtraBody):
+            receipt = inventory.clear_extra(key, body.extra_id)
         else:
             receipt = inventory.post_purchase_receipt(key, body.purchase_id, body.receipt_id)
         return _receipt(receipt)

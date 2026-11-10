@@ -108,6 +108,7 @@ class _NativeBoundary(BoundedHTTP):
                         "/api/v1/tasks/",
                         "/api/v1/inventory/products/",
                         "/api/v1/inventory/purchases/",
+                        "/api/v1/inventory/shopping-list/",
                     )
                 )
                 or scope["path"]
@@ -117,6 +118,7 @@ class _NativeBoundary(BoundedHTTP):
                     "/api/v1/family/rewards",
                     "/api/v1/inventory",
                     "/api/v1/inventory/purchases",
+                    "/api/v1/inventory/shopping-list",
                 )
             )
         ):

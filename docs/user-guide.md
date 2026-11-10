@@ -123,6 +123,22 @@ zero to turn replenishment off. If another edit wins first, review the current
 values and reopen the editor. If the reply is lost, choose **Recover original
 request**.
 
+### Shared shopping list
+
+In **Inventory**, choose **Show shared shopping list** in the Shopping card.
+Each Pantry product shows the amount to buy and the contribution from Pantry,
+Tasks and manual extras. Choose **Show shopping sources** to see the Task
+material plans, matched reservations, available stock and incoming purchases
+that affect the total. Task information appears for members who can read Tasks.
+
+With shopping request access, add a Pantry product in its base unit or enter a
+name and a whole number of pieces. Free-text requests stay separate even when
+their names match a Pantry product. A shopping manager can clear an untracked
+extra from the list or a tracked extra from its source details. Changes to
+stock, reservations and purchases recalculate automatic needs. Extras stay on
+the list until a manager clears them. Use **Recover original request** if an
+add or clear response is lost.
+
 ### Shopping and physical receipts
 
 In **Inventory**, choose **Show purchases** in the Shopping card. With shopping
@@ -146,9 +162,8 @@ request.
 ### Subsequent supplies workflows
 
 Add products independently from package formats and locations. Receive physical quantities into their base unit.
-Record consumption explicitly. Shopping will combine attributable needs from Pantry replenishment and task materials.
+Record consumption explicitly in Tasks.
 Scan a barcode with the camera or enter it manually. Domus searches local products first. If an administrator configures Internet product lookup, you may retrieve a candidate and review its source before importing it. External unavailability does not block local search or manual creation.
-Manual additional requests remain additional unless you choose overlapping intent.
 
 ## Participation
 
