@@ -1,9 +1,10 @@
+import {INVENTORY_JOURNAL_KEY} from '../src/adapters/inventory-journal';
 import {REWARD_JOURNAL_KEY} from '../src/adapters/reward-journal';
 import {ALLOCATION_JOURNAL_KEY} from '../src/adapters/allocation-journal';
 import {CALENDAR_JOURNAL_KEY} from '../src/adapters/calendar-journal';
 import {RECURRENCE_JOURNAL_KEY} from '../src/adapters/recurrence-journal';
 import {afterEach, expect, test, vi} from 'vitest';
-import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, decodeCalendarIntent, decodeReviewIntent, mountEntry} from '../src/composition/entry-page';
+import {decodeIntent, decodeAdministrationIntent, decodeTaskIntent, decodeCalendarIntent, decodeReviewIntent, decodeInventoryIntent, mountEntry} from '../src/composition/entry-page';
 import {AllocationController} from '../src/application/allocation-controller';
 import {revisionValue} from '../src/domain/administration';
 import {TaskController} from '../src/application/task-controller';
@@ -76,6 +77,13 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       raw = JSON.stringify({state:'committed',archived_by:null,operation_id:'reward-policy',created_at:100,
         result:{enabled:payload.enabled,revision:payload.expected_revision+1},message:'Saved.',action_required:'Review.'});
     }
+    else if (route === 'inventory/commands' && init.method === 'POST') {
+      const {name, base_unit} = JSON.parse(String(init.body));
+      raw = JSON.stringify({state:'committed',archived_by:null,operation_id:'product-operation',created_at:100,
+        result:{product_id:'product',name,base_unit},message:'Saved.',action_required:'Review.'});
+    }
+    else if (route.startsWith('inventory?')) raw = JSON.stringify({location_id:'pantry', may_manage:true, products:[],
+      next_cursor:route.includes('cursor=')?null:'inventory-next'});
     else if (route.startsWith('family/rewards?')) raw = JSON.stringify({
       enabled:false,revision:0,may_manage:canManagePoints,balance:{posted_minor:0,reserved_minor:0},
       catalog:[],requests:[],next_cursor:null,
@@ -630,4 +638,35 @@ test('mounted rewards accept only owned semantic intents and retire on navigatio
   expect(f.values.has(REWARD_JOURNAL_KEY)).toBe(false);
   navigate('#overview');
   expect(app.rewards).toBeNull();
+});
+
+
+test('Inventory owns the current protected destination and accepts only closed user intents', async () => {
+  const f = fixture(); f.phase('active'); const {app} = await f.open();
+  const navigate = (fragment: string) => {
+    f.page.location.href = f.page.location.href.split('#')[0] + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  const emit = (detail: unknown, target: EventTarget = app) =>
+    target.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail,bubbles:true,composed:true}));
+  const reads = () => f.fetch.mock.calls.filter(([path]) => path.includes('/api/v1/inventory?'));
+  expect(reads()).toHaveLength(0);
+  navigate('#inventory');
+  await vi.waitFor(() => expect(app.inventory?.report?.cursor).toBe('inventory-next'));
+  expect(reads()).toHaveLength(1);
+  const nested = app.appendChild(document.createElement('span'));
+  emit({type:'refresh'}, nested);
+  emit({type:'arbitrary'}); emit({type:'refresh', command:{}});
+  expect(reads()).toHaveLength(1);
+  emit({type:'more'});
+  await vi.waitFor(() => expect(app.inventory?.report?.cursor).toBe(null));
+  emit({type:'refresh'});
+  await vi.waitFor(() => expect(app.inventory?.report?.cursor).toBe('inventory-next'));
+  emit({type:'recover'});
+  emit({type:'submit', command:{action:'inventory.register-product',name:'Salt',base_unit:'gram'}});
+  await vi.waitFor(() => expect(app.inventory?.result).toMatchObject({kind:'committed', productId:'product'}));
+  expect(f.values.has(INVENTORY_JOURNAL_KEY)).toBe(false);
+  expect(decodeInventoryIntent({type:'submit',command:{action:'inventory.intake',product_id:'product',quantity:'1',location:'foreign'}})).toBeNull();
+  navigate('#tasks');
+  expect(app.inventory).toBeNull();
 });

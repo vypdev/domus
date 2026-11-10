@@ -692,3 +692,11 @@ The issue source is [#68](https://github.com/vypdev/domus/issues/68). The reques
 The selected root `package.json` identifies pnpm as the package manager. Its scripts do not provide the two specification commands named in the standard; no equivalent format-and-catalog verification invocation was established from the inspected declarations. Their concrete invocation and prerequisites remain unverified. Do not claim a check passed from its declaration alone.
 
 The added decisions are the supplied fixed product constraints: supported units and exact quantity limits; one household-scoped `pantry` default; atomic catalog-and-binding registration; server-selected intake binding; and upgrade compatibility without automatic reclassification. Broader owner decisions remain as recorded in the retained document.
+
+### Inventory catalog implementation evidence
+
+Schema 20 adds the catalog while keeping existing task material bindings and
+ledger identities. The current protected routes use the same Inventory writer
+in both deployments. See the [catalog qualification](../docs/evidence/inventory-catalog-qualification.md)
+for the twelve cases and the verification gates. The wider inventory capability
+remains a draft while its remaining workflows are developed.

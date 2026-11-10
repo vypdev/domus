@@ -4,7 +4,7 @@ const ingress = '/api/hassio_ingress/fixture_domus_supervisor_1234567890';
 
 for (const mode of ['native', 'standalone'] as const) {
   test(`shared workspace navigation in ${mode}`, async ({page, context, request}, info) => {
-    test.setTimeout(50_000);
+    test.setTimeout(75_000);
     const origin = `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;
     const base = origin + (mode === 'native' ? ingress : '') + '/';
     if (process.env.DOMUS_BROWSER_IMAGE) {
@@ -44,6 +44,8 @@ for (const mode of ['native', 'standalone'] as const) {
     const calendar = tabs.getByRole('link', {name: 'Calendar', exact: true});
     const family = tabs.getByRole('link', {name: 'Family', exact: true});
     const familyRegion = page.locator('domus-app #family');
+    const inventory = tabs.getByRole('link', {name: 'Inventory', exact: true});
+    const stock = page.locator('domus-app #inventory');
     const household = tabs.getByRole('link', {name: 'Household', exact: true});
     const overviewRegion = page.locator('domus-app #overview');
     const tasksRegion = page.locator('domus-app #tasks');
@@ -56,6 +58,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(tasks).toHaveAttribute('href', '#tasks');
     await expect(calendar).toHaveAttribute('href', '#calendar');
     await expect(family).toHaveAttribute('href', '#family');
+    await expect(inventory).toHaveAttribute('href', '#inventory');
     await expect(household).toHaveAttribute('href', '#household');
     await expect(household).toHaveCSS('height', '56px');
     await overview.click();
@@ -111,6 +114,12 @@ for (const mode of ['native', 'standalone'] as const) {
     const rewards = familyRegion.locator('domus-rewards');
     await expect(rewards.getByText('Rewards are disabled for this household.')).toBeVisible();
     await family.focus();
+    await page.keyboard.press('Tab');
+    await expect(inventory).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(stock).toBeFocused();
+    await expect(stock.getByText('There are no registered products.')).toBeVisible();
+    await inventory.focus();
     await page.keyboard.press('Tab');
     await expect(household).toBeFocused();
     await expect(household.locator('[part=content]')).toHaveCSS('outline-style', 'solid');
@@ -341,6 +350,53 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.getByLabel('Language', {exact: true}).selectOption('es');
     await expect(familyRegion.getByText('Gastado en este período 2,00')).toBeVisible();
     await expect(rewards.locator('li').filter({hasText: 'Gasto registrado'})).toBeVisible();
+
+    await tabs.getByRole('link', {name: 'Inventario', exact: true}).click();
+    await expect(stock).toBeFocused();
+    await expect(stock.getByText('No hay productos registrados.')).toBeVisible();
+    await stock.getByRole('textbox', {name: 'Nombre del producto'}).fill('Pantry oil');
+    await stock.getByRole('combobox', {name: 'Unidad base'}).selectOption('millilitre');
+    await stock.getByRole('button', {name: 'Registrar producto'}).click();
+    const oil = stock.getByRole('article', {name: 'Pantry oil'});
+    await expect(oil.getByText('Stock disponible')).toBeVisible();
+    await oil.getByRole('button', {name: 'Registrar entrada de stock'}).click();
+    await oil.getByRole('textbox', {name: 'Cantidad que se añadirá'}).fill('0');
+    await oil.getByRole('button', {name: 'Revisar entrada'}).click();
+    await expect(oil.getByRole('alert')).toContainText('Introduce una cantidad');
+    await oil.getByRole('textbox', {name: 'Cantidad que se añadirá'}).fill('1,250001');
+    await oil.getByRole('button', {name: 'Revisar entrada'}).click();
+    await expect(oil.getByText('Pantry oil · 1,250001 mililitros.', {exact:false})).toBeVisible();
+    const inventoryCommands = base + 'api/v1/inventory/commands';
+    let intakeKey: string | undefined;
+    await page.route(inventoryCommands, async route => {
+      intakeKey = route.request().headers()['idempotency-key'];
+      const committed = await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(committed.status()).toBe(200);
+      expect((await committed.json()).result.quantity).toBe('1.250001');
+      await route.abort('connectionclosed');
+    });
+    await oil.getByRole('button', {name: 'Confirmar entrada'}).click();
+    await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
+    await page.unroute(inventoryCommands);
+    await page.reload();
+    await expect(page).toHaveURL(base + '#inventory');
+    await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption('es');
+    expect(intakeKey).toBeTruthy();
+    const originalIntake = page.waitForResponse(base + 'api/v1/inventory/requests/inventory.intake/' + intakeKey);
+    await stock.getByRole('button', {name: 'Recuperar la solicitud original'}).click();
+    expect((await originalIntake).ok()).toBe(true);
+    await expect(stock.getByText('Stock registrado en la despensa. 1,250001 mililitros')).toBeVisible();
+    await expect(oil.locator('dd')).toHaveText(['1,250001', '0', '1,250001']);
+    await stock.getByRole('link', {name: 'Ver producto'}).click();
+    await expect(oil).toBeFocused();
+    await stock.getByText('Detalles del comprobante').click();
+    await expect(stock.getByText('Movimiento de stock', {exact:false})).toBeVisible();
+    await stock.screenshot({path:info.outputPath('inventory-es-intake.png')});
+    await page.getByLabel('Idioma', {exact:true}).selectOption('en');
+    await expect(stock.getByText('Stock recorded in Pantry. 1.250001 millilitres')).toBeVisible();
+    await expect(oil.locator('dd')).toHaveText(['1.250001', '0', '1.250001']);
+    await stock.screenshot({path:info.outputPath('inventory-en-intake.png')});
+    await page.getByLabel('Language', {exact:true}).selectOption('es');
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

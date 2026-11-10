@@ -68,6 +68,27 @@ Changing recurrence shows a preview of future changes. Only executions that have
 
 ## Supplies and shopping
 
+### Inventory catalog and Pantry intake
+
+Open **Inventory** to browse your household's registered products. Pantry shows
+the recorded stock, the part reserved for work and the amount available after
+reservations. Use **Show more products** when the current page is full.
+
+If your household grants inventory management, enter a product name and select
+pieces, grams or millilitres under **Register product**. The base unit stays fixed.
+For opening stock or later additions, choose **Record stock intake** on the
+product, enter the amount in its base unit and review the amount before choosing
+**Confirm intake**. Pieces require a whole number. Grams and millilitres allow
+up to six decimal places, using a decimal point or comma.
+
+The result shows the amount recorded and its receipt details. If the result is
+unconfirmed, choose **Recover original request** in the same tab. The original
+key prevents a second stock entry, including after reload. A historical receipt
+can be viewed after restoring a backup. Check the current recorded stock before
+making another request.
+
+### Subsequent supplies workflows
+
 Add products independently from package formats and locations. Receive physical quantities into their base unit.
 Record consumption explicitly. A low-stock policy or missing task material creates an attributable shopping demand.
 Scan a barcode with the camera or enter it manually. Domus searches local products first. If an administrator configures Internet product lookup, you may retrieve a candidate and review its source before importing it. External unavailability does not block local search or manual creation.

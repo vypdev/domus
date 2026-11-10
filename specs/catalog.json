@@ -708,20 +708,28 @@
       "status": "proposed",
       "scope": "The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-31",
+      "lastVerified": "2026-11-10",
       "specs": [
         "specs/household-inventory.md"
       ],
       "workflows": [],
-      "entrypoints": [],
+      "entrypoints": [
+        "backend/src/domus/entrypoints/inventory_http.py"
+      ],
       "code": [
         "backend/src/domus/domain/inventory.py",
         "backend/src/domus/application/inventory.py",
-        "backend/src/domus/infrastructure/sqlite_inventory.py"
+        "backend/src/domus/infrastructure/sqlite_inventory.py",
+        "backend/src/domus/application/inventory_queries.py",
+        "frontend/src/presentation/domus-inventory.ts"
       ],
       "tests": [
         "tests/backend/test_inventory_recurrence.py",
-        "tests/fixtures/sqlite/v16-inventory-source.sql"
+        "tests/fixtures/sqlite/v16-inventory-source.sql",
+        "tests/backend/test_inventory_catalog_http.py",
+        "tests/backend/test_inventory_catalog_storage.py",
+        "tests/fixtures/sqlite/v19-inventory-catalog-source.sql",
+        "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -729,12 +737,13 @@
         "docs/operations.md",
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
-        "docs/evidence/recurrence-calendar-qualification.md"
+        "docs/evidence/recurrence-calendar-qualification.md",
+        "docs/evidence/inventory-catalog-qualification.md"
       ],
       "readiness": {
         "state": "draft",
         "implementationEvidence": "partial",
-        "blockingDecisions": "Unit/package policy; reservation/replenishment review; barcode library/device evidence; external lookup provider feasibility, terms and response contract. The owner confirmed barcode scope, adjustable material recording and pending regularization rather than negative stock for task material shortfalls on 2026-10-29. Adult participation approval and narrow task-material defaults are owner-confirmed; their domain implementation remains pending.",
+        "blockingDecisions": "Package conversions; reservation and replenishment review; barcode library and device evidence; external lookup provider feasibility, terms and response contract. The base-unit and Pantry policies are defined for catalog registration and basic intake. Task-linked consumption, pending regularization and movement history retain their existing authority.",
         "copilotChangesAllowed": false
       }
     },

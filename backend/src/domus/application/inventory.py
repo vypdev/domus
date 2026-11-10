@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, replace
+from enum import StrEnum
 from typing import cast
 
 from domus.application.authorization import HouseholdAccess, MembershipAuthorization
@@ -10,10 +11,12 @@ from domus.application.identity_ports import CurrentHuman
 from domus.application.inventory_ports import InventoryRecords
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.task_material_ports import InventoryMaterialResult, MaterialPostingRequest
-from domus.domain.errors import Conflict, InvalidInput, StorageFailure
-from domus.domain.identity import Permission
+from domus.domain.errors import Conflict, InvalidInput, NotFound, StorageFailure
+from domus.domain.identity import HumanIdentity, Permission
 from domus.domain.inventory import (
     MAX_STOCK_UNITS,
+    BaseUnit,
+    CatalogProduct,
     EffectKind,
     InventoryEffect,
     StockMovement,
@@ -26,6 +29,7 @@ from domus.domain.task_material_values import (
     MaterialQuantity,
 )
 from domus.domain.task_materials import MaterialPosting
+from domus.domain.task_values import validate_task_text
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,9 +118,14 @@ class InventorySettlement:
         return InventoryMaterialResult(posting=posted)
 
 
+class CatalogAction(StrEnum):
+    REGISTER = "inventory.register-product"
+    INTAKE = "inventory.intake"
+
+
 @dataclass(frozen=True, slots=True)
 class InventoryCommands:
-    """Internal Inventory manager operations used by the task integration."""
+    """Catalog and task integration use the same scoped physical ledger."""
 
     transactions: Transactions
     actor: CurrentHuman
@@ -159,24 +168,85 @@ class InventoryCommands:
                 stock.add_material(binding)
             elif current != binding:
                 raise Conflict("inventory_binding_changed")
-            received = stock_units(quantity)
-            balance = stock.balance(home, reference) + received
-            if balance > MAX_STOCK_UNITS:
-                raise Conflict("inventory_stock_capacity")
-            movement = StockMovement(
-                home,
-                reference,
-                self.identifiers.new(),
-                JsonDocument.from_value(asdict(command)).fingerprint,
-                member,
-                received,
-                self.clock.now(),
-                "receipt",
-            )
-            stock.append(movement, balance)
+            movement = self._receive_stock(stock, binding, quantity, member, command)
             return JsonDocument.from_value({"movement_id": movement.movement_id})
 
         return self._execute("inventory.receive", key, payload, apply)
+
+    def _receive_stock(
+        self,
+        stock: InventoryRecords,
+        binding: MaterialBinding,
+        quantity: MaterialQuantity,
+        member: str,
+        command: CommandKey,
+    ) -> StockMovement:
+        home, reference = binding.household_id, binding.reference_id
+        received = stock_units(quantity)
+        balance = stock.balance(home, reference) + received
+        if balance > MAX_STOCK_UNITS:
+            raise Conflict("inventory_stock_capacity")
+        movement = StockMovement(
+            home,
+            reference,
+            self.identifiers.new(),
+            JsonDocument.from_value(asdict(command)).fingerprint,
+            member,
+            received,
+            self.clock.now(),
+            "receipt",
+        )
+        stock.append(movement, balance)
+        return movement
+
+    def register(self, key: str, name: str, base_unit: BaseUnit) -> Receipt:
+        validate_task_text(name, 160, required=True)
+        if not isinstance(base_unit, BaseUnit):
+            raise InvalidInput("invalid_inventory_unit")
+        payload = JsonDocument.from_value({"name": name, "base_unit": base_unit.value})
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            product = CatalogProduct(
+                self.identifiers.new(), self.identifiers.new(), name, base_unit
+            )
+            unit.inventory.add_material(product.binding(self.household_id))
+            unit.inventory.add_product(self.household_id, product)
+            return JsonDocument.from_value({"product_id": product.product_id, **payload.decode()})
+
+        return self._execute(CatalogAction.REGISTER.value, key, payload, apply)
+
+    def intake(self, key: str, product_id: str, quantity: MaterialQuantity) -> Receipt:
+        if quantity.is_zero:
+            raise InvalidInput("invalid_inventory_receipt")
+        payload = JsonDocument.from_value({"product_id": product_id, "quantity": quantity.value})
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            stock = unit.inventory
+            product = stock.product(self.household_id, product_id)
+            if product is None:
+                raise NotFound("inventory_product_missing")
+            binding = product.binding(self.household_id)
+            binding.require_quantity(quantity)
+            movement = self._receive_stock(stock, binding, quantity, member, command)
+            return JsonDocument.from_value(
+                {
+                    "product_id": product.product_id,
+                    "movement_id": movement.movement_id,
+                    "base_unit": product.base_unit.value,
+                    "quantity": quantity.value,
+                }
+            )
+
+        return self._execute(CatalogAction.INTAKE.value, key, payload, apply)
+
+    def original(self, action: CatalogAction, key: str, human: HumanIdentity) -> Receipt:
+        with self.transactions.read() as unit:
+            home = self.household_id
+            HouseholdAccess(human).require(unit, home, Permission.INVENTORY_MANAGE)
+            receipt = unit.receipts.get(CommandKey(home, human.ha_user_id, action.value, key))
+            if receipt is None:
+                raise NotFound("operation_missing")
+            return receipt
 
     def commit_effect(
         self,

@@ -11,6 +11,8 @@ import './domus-tasks';
 import './domus-calendar';
 import './domus-family';
 import './domus-rewards';
+import './domus-inventory';
+import type {InventoryState} from '../application/inventory-controller';
 import type {RewardsView} from '../application/rewards-controller';
 import './domus-allocation-settings';
 import type {AllocationView} from '../application/allocation-controller';
@@ -30,7 +32,7 @@ import {instant, language, message} from './messages';
 import type {Language, MessageKey} from './messages';
 import {styles} from './styles';
 
-export type WorkspaceDestination = 'overview' | 'tasks' | 'calendar' | 'family' | 'household';
+export type WorkspaceDestination = 'overview' | 'tasks' | 'calendar' | 'family' | 'inventory' | 'household';
 
 export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'logout' | 'sign_in' | 'reopen'}>
   | Readonly<{type: 'setup'; name: string; timeZone: string}>
@@ -39,7 +41,7 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
-  static properties = {rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
+  static properties = {inventory: {attribute:false}, rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
     workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
@@ -48,6 +50,7 @@ export class DomusApp extends LitElement {
   declare calendar: CalendarView | null;
   declare family: FamilyView | null;
   declare rewards: RewardsView | null;
+  declare inventory: InventoryState | null;
   declare allocation: AllocationView | null;
   declare familyScopeKey: string | null;
   declare familyToday: string;
@@ -65,7 +68,7 @@ export class DomusApp extends LitElement {
   constructor() {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
     this.recurrenceReview = null; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
-    this.family = null; this.rewards = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
+    this.family = null; this.rewards = null; this.inventory = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
     this.workspaceDestination = null; this.nameDraft = ''; this.zoneDraft = '';
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
@@ -120,6 +123,8 @@ export class DomusApp extends LitElement {
           iconPath: 'M3 5h18v16H3zM3 10h18M7 2v5M17 2v5'},
         {id: 'family', href: '#family', label: this.text('navigationFamily'),
           iconPath: 'M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-2a6 6 0 0 1 12 0v2zM16 5a4 4 0 0 1 0 8M16 15a6 6 0 0 1 6 6'},
+        {id: 'inventory', href: '#inventory', label: this.text('navigationInventory'),
+          iconPath: 'M3 7h18v14H3zM3 7l2-4h14l2 4M9 11h6'},
         {id: 'household', href: '#household', label: this.text('workspaceHousehold'),
           iconPath: 'M3 11l9-8 9 8v10h-6v-7H9v7H3z'},
       ],
@@ -231,6 +236,12 @@ export class DomusApp extends LitElement {
           .language=${this.language}></domus-allocation-settings>
         <domus-rewards .view=${this.rewards} .language=${this.language}
           .zone=${view?.household?.timeZone ?? 'UTC'}></domus-rewards>
+      </section>
+      <section id="inventory" tabindex="-1" aria-label=${this.text('navigationInventory')}
+        ?hidden=${!workspace || this.workspaceDestination !== 'inventory'}>
+        ${workspace && this.workspaceDestination === 'inventory' && decision?.householdReadable === false
+          ? html`<p role="status">${this.text('notice_forbidden')}</p>` : nothing}
+        <domus-inventory .view=${this.inventory} .language=${this.language}></domus-inventory>
       </section>
       <div id="household" tabindex="-1" ?hidden=${!workspace || this.workspaceDestination !== 'household'} role=${workspace ? 'group' : nothing}
         aria-label=${workspace ? this.text('workspaceHousehold') : nothing}>

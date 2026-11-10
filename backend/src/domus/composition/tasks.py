@@ -8,7 +8,8 @@ from domus.application.calendar_queries import CalendarQueries
 from domus.application.family_queries import FamilyQueries
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
-from domus.application.inventory import InventorySettlement
+from domus.application.inventory import InventoryCommands, InventorySettlement
+from domus.application.inventory_queries import InventoryQueries
 from domus.application.point_allocations import AllocationCommands, AllocationQueries
 from domus.application.ports import Transactions, UnitOfWork
 from domus.application.recurrence_commands import RecurrenceCommands
@@ -54,6 +55,7 @@ def task_contexts(
 
     def context(actor: TaskSession) -> TaskHTTPContext:
         rewards = RewardCommands(store, actor, clock, identifiers)
+        catalog = InventoryCommands(store, actor, clock, identifiers)
         return TaskHTTPContext(
             lambda: TaskQueries(
                 store,
@@ -91,6 +93,9 @@ def task_contexts(
             lambda: RewardQueries(store, scope, actor.read(), cursors),
             rewards,
             lambda action, key: rewards.original(action, key, actor.read()),
+            lambda: InventoryQueries(store, scope, actor.read(), cursors),
+            catalog,
+            lambda action, key: catalog.original(action, key, actor.read()),
         )
 
     return context
