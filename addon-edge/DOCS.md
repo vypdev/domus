@@ -1,5 +1,14 @@
 # Installation and operation
 
+Edge 0.0.0-edge.10 packages the immutable runtime declared in
+[artifact.json](artifact.json). It upgrades supported owned databases to
+schema 30 and exposes storage locations and balanced stock transfers in
+Inventory. Retain a compatible image and data backup before upgrading.
+A separate Supervisor repository source creates an independent app and data
+directory. Check the source, installed version and app slug before using
+a preview.
+
+
 Install Domus Edge from the reviewed Domus development repository. In Configuration, set
 public_origins to the URLs used to open HA, for example http://homeassistant.local:8123. Enter one to
 four distinct origins without paths, credentials, queries or fragments, then start and select Open Web UI.
@@ -65,7 +74,7 @@ retaining later original-operation evidence. A verified compatible application/d
 binary rollback. Old Edge.5 and earlier images refuse schema 9 without changing its files; choosing
 an earlier household snapshot does not make a schema-9 generation readable by those images.
 
-The [artifact declaration](artifact.json) fixes the reviewed source/archive and all 151 Python/four UI
+The Edge.9 artifact declaration fixed the reviewed source/archive and all 151 Python/four UI
 file fingerprints. Application CI builds the actual pinned installer image on amd64 and aarch64,
 checks those bytes, exercises its native restart/authority boundary and standalone UI, and runs
 the installed Edge.5 upgrade/replay/restore cycle. The separate current-source image retains its

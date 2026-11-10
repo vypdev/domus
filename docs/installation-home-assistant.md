@@ -9,7 +9,17 @@ published. Source, package and adoption evidence are recorded in
 [task workspace evidence](evidence/task-workspace.json). Historical receipts below retain their
 original Edge.1–3 observations and do not describe the current installation.
 
-## Current preview and update path
+## Edge.10 candidate
+
+The storage-location candidate uses the same Supervisor repository flow
+with the [managed issue branch](https://github.com/vypdev/domus/issues/88).
+The [artifact declaration](../addon-edge/artifact.json) pins the source
+commit, archive and installed files. Check that Supervisor reports
+`0.0.0-edge.10` before testing. Its schema is 30. When using a separate
+repository source, keep existing preview data in its original app and
+use a disposable household in the candidate.
+
+## Edge.9 installation and update history
 
 The current Edge.9 repository source, verified in Supervisor and tracked in PR #29, is:
 

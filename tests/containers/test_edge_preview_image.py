@@ -74,12 +74,14 @@ print(json.dumps({"pythonFiles":python,"uiFiles":ui}))
     actual = json.loads(probe.stdout)
     assert actual["pythonFiles"] == edge_artifact["pythonFiles"]
     assert actual["uiFiles"] == edge_artifact["uiFiles"]
-    assert len(actual["pythonFiles"]) == 151 and len(actual["uiFiles"]) == 4
+    assert len(actual["pythonFiles"]) == 215 and len(actual["uiFiles"]) == 4
 
 
-def test_pinned_edge_native_launcher_authority_storage_and_restart(edge_preview, data_volume):
+def test_pinned_edge_native_launcher_authority_storage_and_restart(
+    edge_preview, edge_artifact, data_volume
+):
     app_tests.test_real_nonroot_listener_rejects_forgery_and_retains_storage_and_replay_on_restart(
-        edge_preview, data_volume, expected_schema=9
+        edge_preview, data_volume, expected_schema=edge_artifact["storageSchema"]
     )
 
 
@@ -91,6 +93,8 @@ def test_pinned_edge_standalone_listener_serves_the_exact_private_bundle(
 
 @pytest.mark.parametrize("previous_image", ["edge5"], indirect=True)
 def test_pinned_edge_upgrades_actual_edge_five_and_preserves_original_history(
-    edge_preview, previous_image, data_volume
+    edge_preview, edge_artifact, previous_image, data_volume
 ):
-    upgrade_cycle(edge_preview, previous_image, data_volume, 7, expected_schema=9)
+    upgrade_cycle(
+        edge_preview, previous_image, data_volume, 7, expected_schema=edge_artifact["storageSchema"]
+    )

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.10
+
+- Qualify storage locations, exact stock transfers and per-location balances.
+- Pin the reviewed runtime and compiled UI for the schema 30 preview.
+- Use a compatible pre-upgrade image and data checkpoint for rollback.
+
 ## 0.0.0-edge.9
 
 - Recover the caller's original task action using its current recorded task authority, even when
