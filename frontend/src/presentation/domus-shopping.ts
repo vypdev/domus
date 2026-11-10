@@ -21,6 +21,13 @@ export type ShoppingIntent = {readonly type: 'purchases' | 'more-purchases' | 'm
   | {readonly type: 'purchase-session'; readonly sessionId: string}
   | {readonly type: 'submit'; readonly command: InventoryCommand};
 
+const RECEIPT_ACTIONS = {
+  'shopping.void-receipt': {summary:'voidReceipt', confirm:'confirmVoid', amount:'voidAmount', form:'receipt-void-form'},
+  'shopping.correct-posted-receipt': {summary:'correctPostedReceipt', confirm:'confirmPostedCorrection',
+    amount:'postedCorrectionAmount', form:'posted-receipt-correction-form'},
+  'shopping.return-receipt': {summary:'returnReceipt', confirm:'confirmReturn', amount:'returnAmount', form:'receipt-return-form'},
+} as const;
+
 export class DomusShopping extends LitElement {
   static properties = {view:{attribute:false}, language:{attribute:false}, selected:{state:true},
     purchaseError:{state:true}, arrivalError:{state:true}, cancelError:{state:true}, receiptError:{state:true}};
@@ -182,28 +189,28 @@ export class DomusShopping extends LitElement {
     </details>`;
   }
 
-  private receiptCorrectionForm(entry: PhysicalReceipt, purchase: Purchase, blocked: boolean) {
-    const posted = entry.movementId !== null;
-    const action = posted ? 'shopping.correct-posted-receipt' : 'shopping.void-receipt';
-    const invalid = this.receiptError === entry.id;
-    const errorId = 'receipt-reason-' + entry.id;
-    return html`<details><summary>${this.text(posted ? 'correctPostedReceipt' : 'voidReceipt')}</summary>
-      <form class=${posted ? 'posted-receipt-correction-form' : 'receipt-void-form'} novalidate @submit=${(event: SubmitEvent) => {
+  private receiptActionForm(entry: PhysicalReceipt, purchase: Purchase, blocked: boolean,
+    action: keyof typeof RECEIPT_ACTIONS) {
+    const labels = RECEIPT_ACTIONS[action];
+    const errorId = labels.form + '-' + entry.id;
+    const invalid = this.receiptError === errorId;
+    return html`<details><summary>${this.text(labels.summary)}</summary>
+      <form class=${labels.form} novalidate @submit=${(event: SubmitEvent) => {
         event.preventDefault();
         if (blocked) return;
         const fields = new FormData(event.currentTarget as HTMLFormElement);
         let reason: string;
         try {reason = taskText(fields.get('reason'), STOCK_REASON_LIMIT, true);}
-        catch {this.receiptError = entry.id; return;}
+        catch {this.receiptError = errorId; return;}
         this.receiptError = null;
         this.intent({type:'submit', command:{action, purchase_id:purchase.id,
           receipt_id:entry.id, reason, expected_revision:purchase.revision}});
       }}>
-        <p>${this.text(posted ? 'postedCorrectionAmount' : 'voidAmount')} · <strong>${this.amount(entry.quantity, purchase.unit)}</strong></p>
+        <p>${this.text(labels.amount)} · <strong>${this.amount(entry.quantity, purchase.unit)}</strong></p>
         <label>${this.text('reason')}<input name="reason" required maxlength=${STOCK_REASON_LIMIT} ?disabled=${blocked}
           aria-invalid=${invalid} aria-describedby=${invalid ? errorId : nothing}></label>
         ${invalid ? html`<p role="alert" id=${errorId}>${this.text('invalid_inventory_reason')}</p>` : nothing}
-        ${this.button(posted ? 'confirmPostedCorrection' : 'confirmVoid', blocked)}
+        ${this.button(labels.confirm, blocked)}
       </form>
     </details>`;
   }
@@ -212,10 +219,11 @@ export class DomusShopping extends LitElement {
     const tracked = purchase.productId !== null;
     const pending = tracked && entry.movementId === null && entry.voided === null;
     const correction = entry.correction;
-    const canCorrectPosting = tracked && entry.movementId !== null && correction === null && mayPost;
-    const status = correction !== null ? correction.legacy ? 'legacyReceiptReversal' : 'postedReceiptCorrected'
+    const returned = entry.returned;
+    const canCorrectPosting = tracked && entry.movementId !== null && correction === null && returned === null && mayPost;
+    const status = returned !== null ? 'receiptReturned' : correction !== null ? correction.legacy ? 'legacyReceiptReversal' : 'postedReceiptCorrected'
       : entry.voided !== null ? 'voidedReceipt' : pending ? 'awaitingPosting' : tracked ? 'posted' : 'untrackedReceived';
-    const annotation = correction ?? entry.voided;
+    const annotation = returned ?? correction ?? entry.voided;
     return html`<li>
       <p><strong>${this.amount(entry.quantity, purchase.unit)}</strong> ·
         ${entry.authorAlias ?? entry.memberId} · ${instant(Number(entry.createdAt), this.language)}</p>
@@ -226,9 +234,13 @@ export class DomusShopping extends LitElement {
       <details><summary>${this.text('receipt')}</summary><code>${entry.id}</code>
         ${entry.movementId === null ? nothing : html`<p>${this.text('movement')} <code>${entry.movementId}</code></p>`}
         ${correction === null ? nothing : html`<p>${this.text('correctedBy')} <code>${correction.movementId}</code></p>`}
+        ${returned === null ? nothing : html`<p>${this.text('returnLink')} <code>${returned.movementId}</code></p>`}
       </details>
       ${mayShop && purchase.cancelled === '0' && (pending || canCorrectPosting)
-        ? this.receiptCorrectionForm(entry, purchase, blocked) : nothing}
+        ? html`${this.receiptActionForm(entry, purchase, blocked,
+          pending ? 'shopping.void-receipt' : 'shopping.correct-posted-receipt')}
+          ${canCorrectPosting && purchase.remaining === '0' && purchase.pendingStock === '0'
+            ? this.receiptActionForm(entry, purchase, blocked, 'shopping.return-receipt') : nothing}` : nothing}
       ${pending && mayPost ? this.button('postToPantry', blocked,
         {type:'submit',command:{action:'shopping.post-receipt',purchase_id:purchase.id,receipt_id:entry.id}}) : nothing}
     </li>`;

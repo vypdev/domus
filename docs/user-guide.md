@@ -208,6 +208,22 @@ request**.
 A previous reversal made directly in Inventory is labeled separately in
 receipt history. Its original operation remains available for recovery.
 
+### Recording a physical return
+
+With both shopping and inventory management access, open **Show physical
+receipts** for a fully received and posted purchase item. On the receipt,
+choose **Record physical return**, review the full quantity, enter a reason
+and confirm.
+
+Shopping keeps the original purchased and received amounts and shows the
+return reason, author and time. Pantry records the exact withdrawal with a
+link to the original intake. The shared list uses the resulting stock when
+calculating replenishment.
+
+Review active reservations if a return is rejected. A receipt already
+corrected or returned has its history available for review. Choose **Recover
+original request** when a return response is lost.
+
 ### Cancelling an outstanding purchase balance
 
 With shopping management access, open **Show physical receipts** for the

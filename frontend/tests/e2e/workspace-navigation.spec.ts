@@ -627,14 +627,18 @@ for (const mode of ['native', 'standalone'] as const) {
     await inventoryWrite('session-flour-policy', {action:'inventory.configure-replenishment',product_id:flour.product_id,
       minimum:'3',target:'3',expected_revision:'0'});
     await inventoryWrite('session-lemons', {action:'shopping.add-extra',product_id:null,name:'Session lemons',quantity:'2'});
+    const rice = await inventoryWrite('session-rice', {action:'inventory.register-product',name:'Session rice',base_unit:'gram'});
+    await inventoryWrite('session-rice-policy', {action:'inventory.configure-replenishment',product_id:rice.product_id,
+      minimum:'2',target:'2',expected_revision:'0'});
     await stock.getByRole('button', {name:'Actualizar inventario'}).click();
-    for (const name of ['Session flour','Session lemons']) {
+    for (const name of ['Session flour','Session lemons','Session rice']) {
       const item = shared.getByRole('listitem').filter({has:page.getByText(name,{exact:true})});
       await item.getByRole('button', {name:'Añadir a la sesión de compra'}).click();
     }
     const draftSession = shared.getByRole('form', {name:'Revisar sesión de compra'});
     await draftSession.getByRole('textbox', {name:'Session flour · gramos'}).fill('2,000001');
     await draftSession.getByRole('textbox', {name:'Session lemons · unidades'}).fill('1');
+    await draftSession.getByRole('textbox', {name:'Session rice · gramos'}).fill('2');
     let sessionKey = '';
     let sessionId = '';
     await page.route(inventoryCommands, async route => {
@@ -643,7 +647,7 @@ for (const mode of ['native', 'standalone'] as const) {
       expect(committed.status()).toBe(200);
       const {result} = await committed.json();
       sessionId = result.session_id;
-      expect(result.purchase_ids).toHaveLength(2);
+      expect(result.purchase_ids).toHaveLength(3);
       await route.abort('connectionclosed');
     });
     await draftSession.getByRole('button', {name:'Registrar sesión de compra'}).click();
@@ -694,7 +698,7 @@ for (const mode of ['native', 'standalone'] as const) {
     const flourStock = stock.getByRole('article',{name:'Session flour',exact:true});
     await flourStock.getByRole('button',{name:'Show movement history'}).click();
     const flourHistory = stock.getByRole('region',{name:'Movement history · Session flour'});
-    await expect(flourHistory.getByText('Correct this receipt in Shopping.',{exact:true})).toBeVisible();
+    await expect(flourHistory.getByText('Review this receipt in Shopping.',{exact:true})).toBeVisible();
     await expect(flourHistory.getByRole('button',{name:'Reverse this intake'})).toHaveCount(0);
     await flourHistory.getByRole('button',{name:'Close movement history'}).click();
 
@@ -727,6 +731,31 @@ for (const mode of ['native', 'standalone'] as const) {
     await shared.getByRole('button', {name:'Show shared shopping list'}).click();
     const listedFlour = shared.getByRole('listitem').filter({has:page.getByText('Session flour',{exact:true})});
     await expect(listedFlour.locator('dd').first()).toHaveText('1.75 grams');
+    const riceItem = session.getByRole('listitem').filter({hasText:'Session rice'});
+    await riceItem.getByRole('button',{name:'Show physical receipts'}).click();
+    const riceReceipts = shopping.getByRole('region',{name:'Physical receipts · Session rice'});
+    await riceReceipts.getByRole('textbox',{name:'Quantity received'}).fill('2');
+    await riceReceipts.getByRole('button',{name:'Record physical receipt'}).click();
+    await riceReceipts.getByRole('button',{name:'Post to Pantry'}).click();
+    await expect(riceItem.locator('dd')).toHaveText(['2 grams','2 grams','0 grams','0 grams']);
+    await riceReceipts.getByText('Record physical return',{exact:true}).click();
+    const returnForm = riceReceipts.locator('.receipt-return-form');
+    await expect(returnForm).toContainText('2 grams');
+    await returnForm.getByRole('textbox',{name:'Reason'}).fill('Sent the rice back');
+    await returnForm.getByRole('button',{name:'Confirm physical return'}).click();
+    await expect(stock.getByText('Physical return recorded.',{exact:true})).toBeVisible();
+    await expect(riceItem.locator('dd')).toHaveText(['2 grams','2 grams','0 grams','0 grams']);
+    await expect(riceReceipts.getByText('Returned from Pantry.',{exact:true})).toBeVisible();
+    await expect(riceReceipts.locator('.receipt-return-form')).toHaveCount(0);
+    const listedRice = shared.getByRole('listitem').filter({has:page.getByText('Session rice',{exact:true})});
+    await expect(listedRice.locator('dd').first()).toHaveText('2 grams');
+    const riceStock = stock.getByRole('article',{name:'Session rice',exact:true});
+    await riceStock.getByRole('button',{name:'Show movement history'}).click();
+    const riceHistory = stock.getByRole('region',{name:'Movement history · Session rice'});
+    await expect(riceHistory.getByText('-2 grams',{exact:true})).toBeVisible();
+    await expect(riceHistory.getByText('Sent the rice back',{exact:true})).toBeVisible();
+    await expect(riceHistory.getByText(/Shopping return/u)).toBeVisible();
+    await riceHistory.getByRole('button',{name:'Close movement history'}).click();
     await page.getByLabel('Language',{exact:true}).selectOption('es');
     const sessionHistory = shopping.getByRole('region', {name:'Sesiones de compra',exact:true});
     await sessionHistory.getByRole('button', {name:'Mostrar sesiones de compra'}).click();
@@ -746,6 +775,15 @@ for (const mode of ['native', 'standalone'] as const) {
     const flourHistoryEs = stock.getByRole('region',{name:'Historial de movimientos · Session flour'});
     await expect(flourHistoryEs.getByText('-1,500001 gramos',{exact:true})).toBeVisible();
     await flourHistoryEs.getByRole('button',{name:'Cerrar historial de movimientos'}).click();
+    await sessionEs.getByRole('listitem').filter({hasText:'Session rice'}).getByRole('button',{name:'Mostrar recepciones físicas'}).click();
+    const riceReceiptsEs = shopping.getByRole('region',{name:'Recepciones físicas · Session rice'});
+    await expect(riceReceiptsEs.getByText('Devuelto desde Despensa.',{exact:true})).toBeVisible();
+    await expect(riceReceiptsEs.getByText('Sent the rice back',{exact:true})).toBeVisible();
+    await riceStock.getByRole('button',{name:'Mostrar historial de movimientos'}).click();
+    const riceHistoryEs = stock.getByRole('region',{name:'Historial de movimientos · Session rice'});
+    await expect(riceHistoryEs.getByText('-2 gramos',{exact:true})).toBeVisible();
+    await expect(riceHistoryEs.getByText(/Devolución de compra/u)).toBeVisible();
+    await riceHistoryEs.getByRole('button',{name:'Cerrar historial de movimientos'}).click();
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

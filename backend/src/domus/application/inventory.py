@@ -149,6 +149,7 @@ class CatalogAction(StrEnum):
     CANCEL_BALANCE = "shopping.cancel-balance"
     VOID_RECEIPT = "shopping.void-receipt"
     CORRECT_POSTED_RECEIPT = "shopping.correct-posted-receipt"
+    RETURN_RECEIPT = "shopping.return-receipt"
 
 
 def _permission(action: str) -> Permission:
@@ -172,7 +173,7 @@ def _catalog_authorization(access: HouseholdAccess, action: str) -> MembershipAu
         action,
         _permission(action),
         additional_permission=Permission.SHOPPING_MANAGE
-        if action == CatalogAction.CORRECT_POSTED_RECEIPT
+        if action in (CatalogAction.CORRECT_POSTED_RECEIPT, CatalogAction.RETURN_RECEIPT)
         else None,
     )
 
@@ -433,6 +434,7 @@ class InventoryCommands:
         kind: MovementKind,
         *,
         corrects: str | None = None,
+        source_key: str | None = None,
     ) -> JsonDocument:
         home, reference = self.household_id, product.reference_id
         balance = stock.balance(home, reference) + delta
@@ -444,7 +446,7 @@ class InventoryCommands:
             home,
             reference,
             self.identifiers.new(),
-            JsonDocument.from_value(asdict(command)).fingerprint,
+            source_key or JsonDocument.from_value(asdict(command)).fingerprint,
             member,
             delta,
             self.clock.now(),
@@ -731,6 +733,31 @@ class InventoryCommands:
     def correct_posted_receipt(
         self, key: str, purchase_id: str, receipt_id: str, reason: str, expected_revision: int
     ) -> Receipt:
+        return self._change_posted_receipt(
+            CatalogAction.CORRECT_POSTED_RECEIPT,
+            key,
+            purchase_id,
+            receipt_id,
+            reason,
+            expected_revision,
+        )
+
+    def return_posted_receipt(
+        self, key: str, purchase_id: str, receipt_id: str, reason: str, expected_revision: int
+    ) -> Receipt:
+        return self._change_posted_receipt(
+            CatalogAction.RETURN_RECEIPT, key, purchase_id, receipt_id, reason, expected_revision
+        )
+
+    def _change_posted_receipt(
+        self,
+        action: CatalogAction,
+        key: str,
+        purchase_id: str,
+        receipt_id: str,
+        reason: str,
+        expected_revision: int,
+    ) -> Receipt:
         validate_revision(expected_revision)
         validate_stock_reason(reason)
         payload = JsonDocument.from_value(
@@ -748,15 +775,24 @@ class InventoryCommands:
             product_id, receipt = self._tracked_receipt(unit, purchase, receipt_id)
             if receipt.movement_id is None:
                 raise Conflict("shopping_receipt_not_posted")
+            if unit.shopping.receipt_return(home, receipt_id) is not None:
+                raise Conflict("shopping_receipt_returned")
             product = self._product(stock, product_id)
             original = self._intake_to_correct(stock, product, receipt.movement_id)
             if original.delta != receipt.quantity:
                 raise StorageFailure("invalid_shopping_records")
-            changed = purchase.correct_posted_receipt(receipt.quantity, expected_revision)
-            if purchase.settled == purchase.purchased and unit.shopping.outstanding(
-                home, product_id
-            ):
-                raise Conflict("shopping_purchase_open")
+            if action is CatalogAction.RETURN_RECEIPT:
+                changed = purchase.return_receipt(expected_revision)
+                kind, corrects, source = MovementKind.ADJUSTMENT, None, receipt.return_source
+                link = unit.shopping.link_receipt_return
+            else:
+                changed = purchase.correct_posted_receipt(receipt.quantity, expected_revision)
+                if purchase.settled == purchase.purchased and unit.shopping.outstanding(
+                    home, product_id
+                ):
+                    raise Conflict("shopping_purchase_open")
+                kind, corrects, source = MovementKind.INTAKE_CORRECTION, original.movement_id, None
+                link = unit.shopping.link_receipt_correction
             movement = self._change_stock(
                 stock,
                 product,
@@ -764,23 +800,24 @@ class InventoryCommands:
                 command,
                 -receipt.quantity,
                 reason,
-                MovementKind.INTAKE_CORRECTION,
-                corrects=original.movement_id,
+                kind,
+                corrects=corrects,
+                source_key=source,
             )
-            correction = cast(str, movement.decode()["movement_id"])
-            unit.shopping.link_receipt_correction(home, receipt_id, correction)
+            movement_id = cast(str, movement.decode()["movement_id"])
+            link(home, receipt_id, movement_id)
             unit.shopping.update_purchase(home, changed)
             return JsonDocument.from_value(
                 {
                     "purchase_id": purchase_id,
                     "receipt_id": receipt_id,
                     "quantity": stock_quantity(receipt.quantity),
-                    "movement_id": correction,
+                    "movement_id": movement_id,
                     "revision": str(changed.revision),
                 }
             )
 
-        return self._execute(CatalogAction.CORRECT_POSTED_RECEIPT.value, key, payload, apply)
+        return self._execute(action.value, key, payload, apply)
 
     def post_purchase_receipt(self, key: str, purchase_id: str, receipt_id: str) -> Receipt:
         payload = JsonDocument.from_value({"purchase_id": purchase_id, "receipt_id": receipt_id})

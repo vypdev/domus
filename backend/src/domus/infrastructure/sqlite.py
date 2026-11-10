@@ -70,6 +70,8 @@ from domus.infrastructure.sqlite_shopping import (
     SHOPPING_EXTRA_STATEMENTS,
     SHOPPING_RECEIPT_CORRECTION_STATEMENTS,
     SHOPPING_RECEIPT_CORRECTION_TABLE,
+    SHOPPING_RECEIPT_RETURN_STATEMENTS,
+    SHOPPING_RECEIPT_RETURN_TABLE,
     SHOPPING_RECEIPT_VOID_STATEMENTS,
     SHOPPING_RECEIPT_VOID_TABLE,
     SHOPPING_SESSION_STATEMENTS,
@@ -98,7 +100,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 28
+SCHEMA_VERSION = 29
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -183,6 +185,7 @@ SCHEMA_STATEMENTS = (
     *SHOPPING_CANCELLATION_STATEMENTS,
     *SHOPPING_RECEIPT_VOID_STATEMENTS,
     *SHOPPING_RECEIPT_CORRECTION_STATEMENTS,
+    *SHOPPING_RECEIPT_RETURN_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -207,7 +210,8 @@ SHOPPING_LIST_SCHEMA_TABLES = PURCHASE_SCHEMA_TABLES | {"shopping_extras"}
 SESSION_SCHEMA_TABLES = SHOPPING_LIST_SCHEMA_TABLES | SHOPPING_SESSION_TABLES
 CANCELLATION_SCHEMA_TABLES = SESSION_SCHEMA_TABLES | {SHOPPING_CANCELLATION_TABLE}
 VOID_SCHEMA_TABLES = CANCELLATION_SCHEMA_TABLES | {SHOPPING_RECEIPT_VOID_TABLE}
-TABLES = VOID_SCHEMA_TABLES | {SHOPPING_RECEIPT_CORRECTION_TABLE}
+CORRECTION_SCHEMA_TABLES = VOID_SCHEMA_TABLES | {SHOPPING_RECEIPT_CORRECTION_TABLE}
+TABLES = CORRECTION_SCHEMA_TABLES | {SHOPPING_RECEIPT_RETURN_TABLE}
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -251,6 +255,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(SHOPPING_CANCELLATION_STATEMENTS if version >= 26 else ()),
             *(SHOPPING_RECEIPT_VOID_STATEMENTS if version >= 27 else ()),
             *(SHOPPING_RECEIPT_CORRECTION_STATEMENTS if version >= 28 else ()),
+            *(SHOPPING_RECEIPT_RETURN_STATEMENTS if version >= 29 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -528,6 +533,7 @@ class SQLiteDatabase:
                 25: SESSION_SCHEMA_TABLES,
                 26: CANCELLATION_SCHEMA_TABLES,
                 27: VOID_SCHEMA_TABLES,
+                28: CORRECTION_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -601,7 +607,8 @@ class SQLiteDatabase:
                         *(SHOPPING_SESSION_STATEMENTS if version < 25 else ()),
                         *(SHOPPING_CANCELLATION_STATEMENTS if version < 26 else ()),
                         *(SHOPPING_RECEIPT_VOID_STATEMENTS if version < 27 else ()),
-                        *SHOPPING_RECEIPT_CORRECTION_STATEMENTS,
+                        *(SHOPPING_RECEIPT_CORRECTION_STATEMENTS if version < 28 else ()),
+                        *SHOPPING_RECEIPT_RETURN_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)

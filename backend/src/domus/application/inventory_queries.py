@@ -67,6 +67,7 @@ class MovementView:
     corrects: str | None
     corrected_by: str | None
     shopping_receipt: bool
+    return_of: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,6 +141,15 @@ class PostedReceiptCorrectionView:
 
 
 @dataclass(frozen=True, slots=True)
+class ReceiptReturnView:
+    movement_id: str
+    reason: str
+    member_id: str
+    author_alias: str | None
+    created_at: str
+
+
+@dataclass(frozen=True, slots=True)
 class PhysicalReceiptView:
     receipt_id: str
     quantity: str
@@ -149,6 +159,7 @@ class PhysicalReceiptView:
     movement_id: str | None
     voided: PhysicalReceiptVoidView | None
     correction: PostedReceiptCorrectionView | None
+    returned: ReceiptReturnView | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,6 +198,19 @@ def _posted_correction_view(
         author.alias,
         str(movement.created_at),
         unit.shopping.receipt_correction(home, receipt.receipt_id) != correction_id,
+    )
+
+
+def _receipt_return_view(unit: UnitOfWork, home: str, receipt_id: str) -> ReceiptReturnView | None:
+    movement_id = unit.shopping.receipt_return(home, receipt_id)
+    if movement_id is None:
+        return None
+    movement = unit.inventory.movement_by_id(home, movement_id)
+    assert movement is not None
+    author = unit.presentations.get(home, movement.member_id)
+    assert author is not None
+    return ReceiptReturnView(
+        movement_id, movement.reason, movement.member_id, author.alias, str(movement.created_at)
     )
 
 
@@ -346,6 +370,9 @@ class InventoryQueries:
                         entry.corrected_by,
                         movement.kind is MovementKind.INTAKE
                         and unit.shopping.is_receipt_movement(home, movement.movement_id),
+                        unit.shopping.return_of(home, movement.movement_id)
+                        if movement.kind is MovementKind.ADJUSTMENT
+                        else None,
                     )
                 )
             return MovementHistory(
@@ -434,6 +461,7 @@ class InventoryQueries:
                         receipt.movement_id,
                         voided,
                         _posted_correction_view(unit, home, receipt),
+                        _receipt_return_view(unit, home, receipt.receipt_id),
                     )
                 )
             cancellation = unit.shopping.cancellation(home, purchase_id)

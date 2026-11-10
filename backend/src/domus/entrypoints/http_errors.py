@@ -189,6 +189,8 @@ PUBLIC_CODES = frozenset(
         "shopping_receipt_balance_cancelled",
         "shopping_receipt_not_posted",
         "shopping_receipt_requires_linked_correction",
+        "shopping_receipt_returned",
+        "shopping_purchase_not_settled",
         "recurrence_rule_missing",
         "recurrence_adoption_incompatible",
         "recurrence_attachment_already_scheduled",
