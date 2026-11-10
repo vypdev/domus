@@ -30,6 +30,7 @@ from domus.domain.shopping import (
     MAX_SESSION_ITEMS,
     MIN_SESSION_ITEMS,
     Purchase,
+    PurchaseCancellation,
     PurchaseReceipt,
     PurchaseSession,
     SessionSelection,
@@ -144,6 +145,7 @@ class CatalogAction(StrEnum):
     ADD_EXTRA = "shopping.add-extra"
     CLEAR_EXTRA = "shopping.clear-extra"
     RECORD_SESSION = "shopping.record-session"
+    CANCEL_BALANCE = "shopping.cancel-balance"
 
 
 def _permission(action: str) -> Permission:
@@ -154,6 +156,7 @@ def _permission(action: str) -> Permission:
         CatalogAction.RECEIVE_PURCHASE,
         CatalogAction.CLEAR_EXTRA,
         CatalogAction.RECORD_SESSION,
+        CatalogAction.CANCEL_BALANCE,
     ):
         return Permission.SHOPPING_MANAGE
     return Permission.INVENTORY_MANAGE
@@ -613,6 +616,38 @@ class InventoryCommands:
             return JsonDocument.from_value({"purchase_id": purchase_id, "receipt_id": receipt_id})
 
         return self._execute(CatalogAction.RECEIVE_PURCHASE.value, key, payload, apply)
+
+    def cancel_purchase_balance(
+        self, key: str, purchase_id: str, reason: str, expected_revision: int
+    ) -> Receipt:
+        validate_revision(expected_revision)
+        validate_stock_reason(reason)
+        payload = JsonDocument.from_value(
+            {
+                "purchase_id": purchase_id,
+                "reason": reason,
+                "expected_revision": str(expected_revision),
+            }
+        )
+
+        def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
+            purchase = self._purchase(unit, purchase_id).cancel_balance(expected_revision)
+            unit.shopping.update_purchase(self.household_id, purchase)
+            unit.shopping.add_cancellation(
+                self.household_id,
+                PurchaseCancellation(
+                    purchase_id, purchase.cancelled, reason, member, self.clock.now()
+                ),
+            )
+            return JsonDocument.from_value(
+                {
+                    "purchase_id": purchase_id,
+                    "cancelled": stock_quantity(purchase.cancelled),
+                    "revision": str(purchase.revision),
+                }
+            )
+
+        return self._execute(CatalogAction.CANCEL_BALANCE.value, key, payload, apply)
 
     def post_purchase_receipt(self, key: str, purchase_id: str, receipt_id: str) -> Receipt:
         payload = JsonDocument.from_value({"purchase_id": purchase_id, "receipt_id": receipt_id})

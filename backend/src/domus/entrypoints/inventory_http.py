@@ -120,6 +120,13 @@ class PurchaseSessionBody(StrictModel):
     ]
 
 
+class CancelPurchaseBalanceBody(StrictModel):
+    action: Literal["shopping.cancel-balance"]
+    purchase_id: Identifier
+    reason: StockReason
+    expected_revision: str = Field(pattern=r"^[1-9][0-9]{0,18}$")
+
+
 CatalogBody = Annotated[
     ProductBody
     | IntakeBody
@@ -131,7 +138,8 @@ CatalogBody = Annotated[
     | PostReceiptBody
     | AddExtraBody
     | ClearExtraBody
-    | PurchaseSessionBody,
+    | PurchaseSessionBody
+    | CancelPurchaseBalanceBody,
     Field(discriminator="action"),
 ]
 
@@ -252,6 +260,10 @@ def create_inventory_router(
                     )
                     for item in body.items
                 ),
+            )
+        elif isinstance(body, CancelPurchaseBalanceBody):
+            receipt = inventory.cancel_purchase_balance(
+                key, body.purchase_id, body.reason, int(body.expected_revision)
             )
         else:
             receipt = inventory.post_purchase_receipt(key, body.purchase_id, body.receipt_id)

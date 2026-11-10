@@ -37,10 +37,11 @@ class Purchase:
     revision: int
     member_id: str
     created_at: int
+    cancelled: int = 0
 
     @property
     def remaining(self) -> int:
-        return self.purchased - self.received
+        return self.purchased - self.received - self.cancelled
 
     @property
     def pending(self) -> int:
@@ -58,8 +59,24 @@ class Purchase:
             revision=self.revision + 1,
         )
 
+    def cancel_balance(self, expected_revision: int) -> Purchase:
+        if self.revision != expected_revision:
+            raise Conflict("revision_conflict")
+        if not self.remaining:
+            raise Conflict("shopping_balance_closed")
+        return replace(self, cancelled=self.remaining, revision=self.revision + 1)
+
     def post(self, quantity: int) -> Purchase:
         return replace(self, settled=self.settled + quantity, revision=self.revision + 1)
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseCancellation:
+    purchase_id: str
+    quantity: int
+    reason: str
+    member_id: str
+    created_at: int
 
 
 @dataclass(frozen=True, slots=True)

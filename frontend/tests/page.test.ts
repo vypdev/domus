@@ -88,8 +88,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     });
     else if (route.startsWith('inventory/purchases/purchase/receipts?')) raw = JSON.stringify({
       purchase:{purchase_id:'purchase',product_id:null,name:'Apples',base_unit:'piece',purchased:'2',
-        received:'0',remaining:'2',pending_stock:'0',revision:'1',member_id:'member',author_alias:null,created_at:'100'},
-      receipts:[], next_cursor:route.includes('cursor=')?null:'older-receipts',
+        received:'0',remaining:'2',pending_stock:'0',cancelled:'0',revision:'1',member_id:'member',author_alias:null,created_at:'100'},
+      receipts:[], cancellation:null, next_cursor:route.includes('cursor=')?null:'older-receipts',
     });
     else if (route.startsWith('inventory/purchases?')) raw = JSON.stringify({
       purchases:[], next_cursor:route.includes('cursor=')?null:'older-purchases',
@@ -100,7 +100,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route === 'inventory/purchase-sessions/session') {
       const session = {session_id:'session',member_id:'member',author_alias:null,created_at:'100'};
       const item = {purchase_id:'a',product_id:null,name:'Apples',base_unit:'piece',purchased:'2',
-        received:'0',remaining:'2',pending_stock:'0',revision:'1',member_id:'member',author_alias:null,created_at:'100'};
+        received:'0',remaining:'2',pending_stock:'0',cancelled:'0',revision:'1',member_id:'member',author_alias:null,created_at:'100'};
       raw = JSON.stringify({session,items:[item,{...item,purchase_id:'b',name:'Bread'}]});
     }
     else if (route.startsWith('inventory/shopping-list/product/sources?')) raw = JSON.stringify({

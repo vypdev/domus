@@ -134,6 +134,25 @@ the restored physical receipt is pending, review the current record before
 starting a new posting. A normal Inventory correction remains a separate
 ledger fact linked to its original movement.
 
+## Purchase balance cancellation
+
+Schema 26 adds one attributed cancellation per purchase item. Migration from
+schema 25 preserves existing sessions, purchases, physical receipts, Pantry
+movements and operation receipts. Snapshot verification reconciles the
+cancellation with the item's balance and revision.
+
+Current `shopping.manage` is required to cancel or recover an original
+cancellation. The command checks the expected item revision and computes the
+exact unreceived amount in the write transaction. The item revision, attributed
+reason and original operation receipt commit together. A competing arrival or
+cancellation must reload the item's current state.
+
+Only received quantities awaiting Pantry posting remain incoming after a
+cancellation. A tracked product can have another purchase once any pending
+receipts on the original item are posted. After an activated restore, a
+historical cancellation receipt describes the original command. Review the
+restored balance before starting a new cancellation.
+
 ## Family rewards
 
 Rewards start disabled. A current points administrator can enable new requests,

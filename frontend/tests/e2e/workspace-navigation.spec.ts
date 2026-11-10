@@ -624,7 +624,8 @@ for (const mode of ['native', 'standalone'] as const) {
       return (await response.json()).result;
     };
     const flour = await inventoryWrite('session-flour', {action:'inventory.register-product',name:'Session flour',base_unit:'gram'});
-    await inventoryWrite('session-flour-extra', {action:'shopping.add-extra',product_id:flour.product_id,name:null,quantity:'3'});
+    await inventoryWrite('session-flour-policy', {action:'inventory.configure-replenishment',product_id:flour.product_id,
+      minimum:'3',target:'3',expected_revision:'0'});
     await inventoryWrite('session-lemons', {action:'shopping.add-extra',product_id:null,name:'Session lemons',quantity:'2'});
     await stock.getByRole('button', {name:'Actualizar inventario'}).click();
     for (const name of ['Session flour','Session lemons']) {
@@ -649,12 +650,20 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
     await page.unroute(inventoryCommands);
     await reopenInventory('en');
-    const originalSession = page.waitForResponse(base + 'api/v1/inventory/requests/shopping.record-session/' + sessionKey);
+    const originalSession = base + 'api/v1/inventory/requests/shopping.record-session/' + sessionKey;
+    const recoveredSessionIds: string[] = [];
+    await page.route(originalSession, async route => {
+      expect(route.request().method()).toBe('GET');
+      const response = await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(response.status()).toBe(200);
+      const body = await response.body();
+      recoveredSessionIds.push(JSON.parse(body.toString('utf8')).result.session_id);
+      await route.fulfill({response,body});
+    });
     await stock.getByRole('button', {name:'Recover original request'}).click();
-    const recoveredSession = await originalSession;
-    expect(recoveredSession.ok()).toBe(true);
-    expect((await recoveredSession.json()).result.session_id).toBe(sessionId);
     await expect(stock.getByText('Purchase session recorded.', {exact:true})).toBeVisible();
+    expect(recoveredSessionIds).toEqual([sessionId]);
+    await page.unroute(originalSession);
     await shopping.getByRole('button', {name:'Show recorded session'}).click();
     const session = shopping.getByRole('region', {name:/^Session items · /u});
     await expect(session.getByRole('heading')).toBeFocused();
@@ -666,13 +675,30 @@ for (const mode of ['native', 'standalone'] as const) {
     await flourReceipts.getByRole('textbox', {name:'Quantity received'}).fill('1.25');
     await flourReceipts.getByRole('button', {name:'Record physical receipt'}).click();
     await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.25 grams','0.750001 grams','1.25 grams']);
+    await flourReceipts.getByText('Cancel outstanding balance',{exact:true}).click();
+    await expect(flourReceipts.locator('#cancel-form')).toContainText('0.750001 grams');
+    await flourReceipts.getByRole('textbox', {name:'Reason'}).fill('Supplier cancelled the rest');
+    await flourReceipts.getByRole('button', {name:'Confirm cancellation'}).click();
+    await expect(stock.getByText('Outstanding balance cancelled.',{exact:true})).toBeVisible();
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.25 grams','0 grams','1.25 grams','0.750001 grams']);
+    await expect(flourReceipts.getByText('Supplier cancelled the rest',{exact:true})).toBeVisible();
+    await expect(flourReceipts.getByRole('button', {name:'Record physical receipt'})).toHaveCount(0);
     await flourReceipts.getByRole('button', {name:'Post to Pantry'}).click();
-    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.25 grams','0.750001 grams','0 grams']);
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.25 grams','0 grams','0 grams','0.750001 grams']);
+    await shared.getByRole('button', {name:'Show shared shopping list'}).click();
+    const listedFlour = shared.getByRole('listitem').filter({has:page.getByText('Session flour',{exact:true})});
+    await expect(listedFlour.locator('dd').first()).toHaveText('1.75 grams');
     await page.getByLabel('Language',{exact:true}).selectOption('es');
     const sessionHistory = shopping.getByRole('region', {name:'Sesiones de compra',exact:true});
     await sessionHistory.getByRole('button', {name:'Mostrar sesiones de compra'}).click();
     await sessionHistory.getByRole('button', {name:'Mostrar artículos de la sesión'}).click();
-    await expect(shopping.getByRole('region', {name:/^Artículos de la sesión · /u}).getByText('0,750001 gramos',{exact:true})).toBeVisible();
+    const sessionEs = shopping.getByRole('region', {name:/^Artículos de la sesión · /u});
+    const flourEs = sessionEs.getByRole('listitem').filter({hasText:'Session flour'});
+    await expect(flourEs.getByText('0,750001 gramos',{exact:true})).toBeVisible();
+    await flourEs.getByRole('button', {name:'Mostrar recepciones físicas'}).click();
+    const receiptsEs = shopping.getByRole('region', {name:'Recepciones físicas · Session flour'});
+    await expect(receiptsEs.getByText('Cancelación del saldo',{exact:true})).toBeVisible();
+    await expect(receiptsEs.getByText('Supplier cancelled the rest',{exact:true})).toBeVisible();
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

@@ -5,7 +5,7 @@ import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import {registerCard} from '@vypdev/ha-ui/card';
 import {cardState} from '@vypdev/ha-ui/card-contracts';
 import type {InventoryState} from '../application/inventory-controller';
-import {intakeQuantity, stockUnits} from '../domain/inventory';
+import {STOCK_REASON_LIMIT, intakeQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, InventoryCommand, PhysicalReceipt, ProductStock, Purchase, PurchaseReceipts, PurchaseSession} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage} from './inventory-messages';
@@ -22,7 +22,7 @@ export type ShoppingIntent = {readonly type: 'purchases' | 'more-purchases' | 'm
 
 export class DomusShopping extends LitElement {
   static properties = {view:{attribute:false}, language:{attribute:false}, selected:{state:true},
-    purchaseError:{state:true}, arrivalError:{state:true}};
+    purchaseError:{state:true}, arrivalError:{state:true}, cancelError:{state:true}};
 
   static styles = css`
     .shopping, form, label, li {display:grid;gap:8px}
@@ -40,6 +40,7 @@ export class DomusShopping extends LitElement {
   declare language: Language;
   private declare selected: string;
   private declare purchaseError: 'invalidName' | 'invalidQuantity' | null;
+  private declare cancelError: boolean;
   private declare arrivalError: 'invalidQuantity' | 'shopping_receipt_exceeds_purchase' | null;
 
   constructor() {
@@ -47,6 +48,7 @@ export class DomusShopping extends LitElement {
     this.selected = '';
     this.purchaseError = null;
     this.arrivalError = null;
+    this.cancelError = false;
   }
 
   protected updated(changed: PropertyValues<this>): void {
@@ -56,8 +58,12 @@ export class DomusShopping extends LitElement {
       this.renderRoot.querySelector<HTMLElement>('#purchase-session-title')?.focus();
     if (purchaseReceipts && purchaseReceipts.purchase.id !== previous?.purchaseReceipts?.purchase.id) {
       this.arrivalError = null;
+      this.cancelError = false;
       this.renderRoot.querySelector<HTMLElement>('#purchase-receipts-title')?.focus();
       this.renderRoot.querySelector<HTMLFormElement>('#arrival-form')?.reset();
+      this.renderRoot.querySelector<HTMLFormElement>('#cancel-form')?.reset();
+      const confirmation = this.renderRoot.querySelector<HTMLDetailsElement>('#cancel-confirmation');
+      if (confirmation) confirmation.open = false;
     }
     if (result?.kind === 'committed' && result !== previous?.result) {
       if (result.shoppingAction === 'shopping.purchase') {
@@ -121,7 +127,9 @@ export class DomusShopping extends LitElement {
 
   private facts(purchase: Purchase) {
     return html`<dl>${(['purchased', 'received', 'remaining', 'pendingStock'] as const).map(key =>
-      html`<dt>${this.text(key)}</dt><dd>${this.amount(purchase[key], purchase.unit)}</dd>`)}</dl>
+      html`<dt>${this.text(key)}</dt><dd>${this.amount(purchase[key], purchase.unit)}</dd>`)}
+      ${purchase.cancelled === '0' ? nothing : html`<dt>${this.text('cancelled')}</dt>
+        <dd>${this.amount(purchase.cancelled, purchase.unit)}</dd>`}</dl>
       <p>${purchase.authorAlias ?? purchase.memberId} · ${instant(Number(purchase.createdAt), this.language)}</p>`;
   }
 
@@ -148,6 +156,28 @@ export class DomusShopping extends LitElement {
     </form>`;
   }
 
+  private cancellationForm(purchase: Purchase, blocked: boolean) {
+    return html`<details id="cancel-confirmation"><summary>${this.text('cancelBalance')}</summary>
+      <form id="cancel-form" novalidate @submit=${(event: SubmitEvent) => {
+        event.preventDefault();
+        if (blocked) return;
+        const fields = new FormData(event.currentTarget as HTMLFormElement);
+        let reason: string;
+        try {reason = taskText(fields.get('reason'), STOCK_REASON_LIMIT, true);}
+        catch {this.cancelError = true; return;}
+        this.cancelError = false;
+        this.intent({type:'submit', command:{action:'shopping.cancel-balance', purchase_id:purchase.id,
+          reason, expected_revision:purchase.revision}});
+      }}>
+        <p>${this.text('cancellationAmount')} · <strong>${this.amount(purchase.remaining, purchase.unit)}</strong></p>
+        <label>${this.text('reason')}<input name="reason" required maxlength=${STOCK_REASON_LIMIT} ?disabled=${blocked}
+          aria-invalid=${this.cancelError} aria-describedby=${this.cancelError ? 'cancel-error' : nothing}></label>
+        ${this.cancelError ? html`<p role="alert" id="cancel-error">${this.text('invalid_inventory_reason')}</p>` : nothing}
+        ${this.button('confirmCancellation', blocked)}
+      </form>
+    </details>`;
+  }
+
   private physicalReceipt(entry: PhysicalReceipt, purchase: Purchase, mayPost: boolean, blocked: boolean) {
     const tracked = purchase.productId !== null;
     return html`<li>
@@ -163,11 +193,17 @@ export class DomusShopping extends LitElement {
   }
 
   private detail(page: PurchaseReceipts, mayShop: boolean, mayPost: boolean, blocked: boolean, busy: boolean) {
-    const {purchase, items, cursor} = page;
+    const {purchase, items, cursor, cancellation} = page;
     return html`<section class="shopping" aria-labelledby="purchase-receipts-title">
       <h4 id="purchase-receipts-title" tabindex="-1">${this.text('physicalReceipts')} · ${purchase.name}</h4>
       ${this.facts(purchase)}
-      ${mayShop && purchase.remaining !== '0' ? this.arrivalForm(purchase, blocked) : nothing}
+      ${mayShop && purchase.remaining !== '0'
+        ? html`${this.arrivalForm(purchase, blocked)}${this.cancellationForm(purchase, blocked)}` : nothing}
+      ${cancellation === null ? nothing : html`<div class="shopping">
+        <h5>${this.text('balanceCancellation')}</h5>
+        <p>${cancellation.authorAlias ?? cancellation.memberId} · ${instant(Number(cancellation.createdAt), this.language)}</p>
+        <dl><dt>${this.text('reason')}</dt><dd>${cancellation.reason}</dd></dl>
+      </div>`}
       ${items.length === 0 ? html`<p>${this.text('emptyReceipts')}</p>`
         : html`<ol>${items.map(entry => this.physicalReceipt(entry, purchase, mayPost, blocked))}</ol>`}
       ${cursor === null ? nothing : this.button('olderReceipts', busy, {type:'more-purchase-receipts'})}

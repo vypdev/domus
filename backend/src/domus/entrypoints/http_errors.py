@@ -176,6 +176,7 @@ PUBLIC_CODES = frozenset(
         "invalid_shopping_item",
         "invalid_shopping_session",
         "shopping_session_missing",
+        "shopping_balance_closed",
         "shopping_extra_missing",
         "shopping_extra_cleared",
         "shopping_purchase_open",

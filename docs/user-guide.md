@@ -151,7 +151,8 @@ the selection before saving the session again.
 Choose **Show purchase sessions** to browse trips by shopper and time. Open a
 session to see the amount purchased, received, still due and awaiting Pantry
 posting for each item. Use **Show physical receipts** on an item to record an
-arrival or post it to Pantry with the required access. Manage manual extras
+arrival, cancel the outstanding balance, or post a receipt to Pantry with the
+required access. Manage manual extras
 using their existing clear controls.
 
 If the session response is lost, choose **Recover original request** and then
@@ -176,6 +177,19 @@ If Pantry cannot accept the full receipt, make space and post that saved receipt
 again. If a response is lost, choose **Recover original request**. After a
 snapshot restoration, check the current receipt and stock before making a new
 request.
+
+### Cancelling an outstanding purchase balance
+
+With shopping management access, open **Show physical receipts** for the
+purchase item. Choose **Cancel outstanding balance**, review the exact quantity
+to cancel, enter a reason, and choose **Confirm cancellation**.
+
+The item keeps its purchased quantity and receipt history. Its details show
+the cancelled quantity, reason, shopper and time. Inventory managers can still
+post any physical receipts that were already recorded. Cancelling the balance
+removes that quantity from incoming supply so unmet Pantry and Task demand
+can return to the shared list. If the response is lost, choose **Recover
+original request**.
 
 ### Subsequent supplies workflows
 

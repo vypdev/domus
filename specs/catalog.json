@@ -703,6 +703,8 @@
         "tests/backend/test_shopping_storage.py",
         "tests/backend/test_shared_shopping.py",
         "tests/backend/test_purchase_sessions.py",
+        "tests/backend/test_purchase_balance.py",
+        "tests/fixtures/sqlite/v25-purchase-balance-source.sql",
         "tests/fixtures/sqlite/v24-purchase-session-source.sql",
         "tests/fixtures/sqlite/v23-shared-shopping-source.sql",
         "tests/fixtures/sqlite/v22-shopping-source.sql",
@@ -717,11 +719,12 @@
         "docs/contracts/home-assistant.md",
         "docs/evidence/shopping-receipts-qualification.md",
         "docs/evidence/shared-shopping-list-qualification.md",
-        "docs/evidence/purchase-session-qualification.md"
+        "docs/evidence/purchase-session-qualification.md",
+        "docs/evidence/purchase-balance-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply.",
         "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and refunds have separate acceptance.",
         "copilotChangesAllowed": false
       }

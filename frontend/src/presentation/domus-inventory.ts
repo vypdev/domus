@@ -36,6 +36,7 @@ const MOVEMENT_SAVED = {
 const SHOPPING_SAVED = {
   'shopping.purchase': 'purchaseSaved',
   'shopping.receive': 'arrivalSaved',
+  'shopping.cancel-balance': 'cancelSaved',
   'shopping.post-receipt': 'stockPosted',
   'shopping.add-extra': 'extraAdded',
   'shopping.clear-extra': 'extraCleared',
