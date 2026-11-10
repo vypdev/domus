@@ -73,6 +73,10 @@ class Purchase:
             raise Conflict("shopping_receipt_balance_cancelled")
         return replace(self, received=self.received - quantity, revision=self.revision + 1)
 
+    def correct_posted_receipt(self, quantity: int, expected_revision: int) -> Purchase:
+        reopened = self.void_receipt(quantity, expected_revision)
+        return replace(reopened, settled=self.settled - quantity)
+
     def post(self, quantity: int) -> Purchase:
         return replace(self, settled=self.settled + quantity, revision=self.revision + 1)
 

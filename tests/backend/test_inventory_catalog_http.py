@@ -284,6 +284,7 @@ def test_product_history_is_protected_and_pages_across_later_appends(api, monkey
         "task_occurrence_id": None,
         "corrects": None,
         "corrected_by": None,
+        "shopping_receipt": False,
     }
     cursor = page["next_cursor"]
     assert cursor

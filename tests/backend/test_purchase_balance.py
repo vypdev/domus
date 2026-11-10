@@ -290,7 +290,7 @@ def test_v25_migration_and_activated_restore_of_cancelled_balances(tmp_path, mon
         tracked, free = (row[3] for row in existing["shopping_session_items"])
         assert {row[-1] is None for row in existing["shopping_receipts"]} == {True, False}
         db.row_factory = sqlite3.Row
-        verify_shopping_records(db, has_cancellations=False, has_voids=False)
+        verify_shopping_records(db, version=25)
     path.chmod(0o600)
     store = SQLiteDatabase(path, installation)
     baseline = path.read_bytes()
@@ -305,7 +305,7 @@ def test_v25_migration_and_activated_restore_of_cancelled_balances(tmp_path, mon
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (27,)
+        assert db.execute("PRAGMA user_version").fetchone() == (28,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
             actual = db.execute("SELECT * FROM " + table).fetchall()

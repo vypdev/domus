@@ -56,6 +56,7 @@ class MembershipAuthorization:
     permission: Permission
     subject_member_id: str | None = None
     assigned_to: tuple[str, ...] = ()
+    additional_permission: Permission | None = None
 
     def require(self, command: CommandKey, unit: UnitOfWork) -> None:
         if command.actor_id != self.access.human.ha_user_id or command.action != self.action:
@@ -67,3 +68,11 @@ class MembershipAuthorization:
             subject_member_id=self.subject_member_id,
             assigned_to=self.assigned_to,
         )
+        if self.additional_permission is not None:
+            self.access.require(
+                unit,
+                command.household_id,
+                self.additional_permission,
+                subject_member_id=self.subject_member_id,
+                assigned_to=self.assigned_to,
+            )

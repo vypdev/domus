@@ -190,6 +190,24 @@ receipt** to enter the amount that actually arrived. An inventory manager can
 then post the new receipt to Pantry. If the void response is lost, choose
 **Recover original request**.
 
+### Correcting a receipt already posted to Pantry
+
+With both shopping and inventory management access, open **Show physical
+receipts** on a tracked purchase with its balance still active. Choose
+**Correct posted receipt**, review the full quantity, enter a reason and
+confirm. The correction records a linked negative Pantry movement and
+returns the same quantity to **Still due**. You can then record and post the
+actual arrival.
+
+The receipt history shows both movement identifiers, the reason, author and
+time. Inventory shows the original entry and its compensating movement.
+Review active reservations and any other open purchase for the product if a
+correction is rejected. If the response is lost, choose **Recover original
+request**.
+
+A previous reversal made directly in Inventory is labeled separately in
+receipt history. Its original operation remains available for recovery.
+
 ### Cancelling an outstanding purchase balance
 
 With shopping management access, open **Show physical receipts** for the

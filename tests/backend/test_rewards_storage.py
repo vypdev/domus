@@ -204,7 +204,7 @@ def test_real_schema18_migrates_without_creating_reservations(tmp_path, monkeypa
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone() == (27,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (28,)
         assert (
             connection.execute("SELECT * FROM points_task_receipts ORDER BY position").fetchall()
             == prior

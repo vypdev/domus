@@ -17,7 +17,7 @@ from domus.application.task_ports import TaskCursors
 from domus.domain.errors import NotFound
 from domus.domain.identity import HumanIdentity, Permission, allows, effective_role
 from domus.domain.inventory import PANTRY, BaseUnit, MovementKind, stock_quantity
-from domus.domain.shopping import Purchase, PurchaseSession
+from domus.domain.shopping import Purchase, PurchaseReceipt, PurchaseSession
 from domus.domain.storage import JsonDocument
 
 
@@ -66,6 +66,7 @@ class MovementView:
     task_occurrence_id: str | None
     corrects: str | None
     corrected_by: str | None
+    shopping_receipt: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,6 +130,16 @@ class PhysicalReceiptVoidView:
 
 
 @dataclass(frozen=True, slots=True)
+class PostedReceiptCorrectionView:
+    movement_id: str
+    reason: str
+    member_id: str
+    author_alias: str | None
+    created_at: str
+    legacy: bool
+
+
+@dataclass(frozen=True, slots=True)
 class PhysicalReceiptView:
     receipt_id: str
     quantity: str
@@ -137,6 +148,7 @@ class PhysicalReceiptView:
     created_at: str
     movement_id: str | None
     voided: PhysicalReceiptVoidView | None
+    correction: PostedReceiptCorrectionView | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,6 +166,28 @@ class PhysicalReceiptsView:
     receipts: tuple[PhysicalReceiptView, ...]
     next_cursor: str | None
     cancellation: PurchaseCancellationView | None
+
+
+def _posted_correction_view(
+    unit: UnitOfWork, home: str, receipt: PurchaseReceipt
+) -> PostedReceiptCorrectionView | None:
+    if receipt.movement_id is None:
+        return None
+    correction_id = unit.inventory.correction_id(home, receipt.movement_id)
+    if correction_id is None:
+        return None
+    movement = unit.inventory.movement_by_id(home, correction_id)
+    assert movement is not None
+    author = unit.presentations.get(home, movement.member_id)
+    assert author is not None
+    return PostedReceiptCorrectionView(
+        correction_id,
+        movement.reason,
+        movement.member_id,
+        author.alias,
+        str(movement.created_at),
+        unit.shopping.receipt_correction(home, receipt.receipt_id) != correction_id,
+    )
 
 
 def _purchase_view(unit: UnitOfWork, home: str, purchase: Purchase) -> PurchaseView:
@@ -310,6 +344,8 @@ class InventoryQueries:
                         None if movement.posting is None else movement.posting.occurrence_id,
                         movement.corrects,
                         entry.corrected_by,
+                        movement.kind is MovementKind.INTAKE
+                        and unit.shopping.is_receipt_movement(home, movement.movement_id),
                     )
                 )
             return MovementHistory(
@@ -397,6 +433,7 @@ class InventoryQueries:
                         str(receipt.created_at),
                         receipt.movement_id,
                         voided,
+                        _posted_correction_view(unit, home, receipt),
                     )
                 )
             cancellation = unit.shopping.cancellation(home, purchase_id)

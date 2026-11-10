@@ -22,12 +22,12 @@ const committed = {kind:'committed', operationId:'operation', productId:'product
 const adjust = {action:'inventory.adjust', product_id:'product', quantity:'-0.000001', reason:'Counted one less'} as const;
 const reverse = {action:'inventory.correct-intake', product_id:'product', movement_id:'movement', reason:'Duplicate'} as const;
 const wireMovement = {movement_id:'movement', kind:'intake', quantity:'1.250001', member_id:'member', author_alias:null,
-  created_at:'100', reason:null, task_occurrence_id:null, corrects:null, corrected_by:null};
+  created_at:'100', reason:null, task_occurrence_id:null, corrects:null, corrected_by:null, shopping_receipt:false};
 const wireHistory = {product_id:'product', product_name:'Olive oil', base_unit:'millilitre',
   movements:[wireMovement], next_cursor:'older'};
 const history: MovementHistory = {productId:'product', productName:'Olive oil', unit:'millilitre', cursor:'older',
   movements:[{id:'movement', kind:'intake', quantity:'1.250001', memberId:'member', authorAlias:null, createdAt:'100',
-    reason:null, occurrenceId:null, corrects:null, correctedBy:null}]};
+    reason:null, occurrenceId:null, corrects:null, correctedBy:null, shoppingReceipt:false}]};
 const emptyPolicy = {source_id:'product', minimum:'0', target:'0', revision:'0', needed:'0'} as const;
 const policy = {action:'inventory.configure-replenishment', product_id:'product', minimum:'1.250001',
   target:'2.000001', expected_revision:'0'} as const;
@@ -39,13 +39,13 @@ const wirePurchase = {purchase_id:'purchase', product_id:'product', name:'Olive 
   purchased:'6.000001', received:'4.000001', remaining:'2', pending_stock:'4.000001', cancelled:'0', revision:'2',
   member_id:'member', author_alias:'Shopper', created_at:'100'};
 const wireArrival = {receipt_id:'arrival', quantity:'4.000001', member_id:'member', author_alias:null,
-  created_at:'101', movement_id:null, voided:null};
+  created_at:'101', movement_id:null, voided:null, correction:null};
 const purchase: Purchase = {id:'purchase', productId:'product', name:'Olive oil', unit:'millilitre',
   purchased:'6.000001', received:'4.000001', remaining:'2', pendingStock:'4.000001', cancelled:'0',
   revision:arrive.expected_revision, memberId:'member', authorAlias:'Shopper', createdAt:'100'};
 const purchases: Purchases = {items:[purchase],cursor:'older'};
 const purchaseReceipts: PurchaseReceipts = {purchase,items:[{
-  id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null, voided:null,
+  id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null, voided:null, correction:null,
 }],cancellation:null,cursor:'older'};
 const savedPolicy = {product_id:'product', minimum:policy.minimum, target:policy.target, revision:'1'};
 const wireProduct = {...savedProduct, reference_id:'reference', recorded:'999999999999.999999', reserved:'0.000001',
@@ -1476,4 +1476,101 @@ test('only a pending tracked receipt can be voided with a reason, and its histor
   expect(root.textContent).toContain('Recepción física anulada.');
   await assign({...open,purchaseReceipts:{...history,items:[{...history.items[0],voided:{...corrected,authorAlias:null}}]}});
   expect(shop.textContent).toContain('shopper');
+});
+
+const correctPosted = {...voidReceipt, action:'shopping.correct-posted-receipt', expected_revision:revisionValue('3')} as const;
+const postedResult = {...voidResult, movement_id:'compensation', revision:'4'};
+const wirePostedCorrection = {...wireVoid, movement_id:'compensation', legacy:false};
+
+test('posted receipt history and original correction receipts preserve both movement identities', async () => {
+  expect(inventoryCommand(correctPosted)).toEqual(correctPosted);
+  const original = {...request,command:correctPosted};
+  const local = journal();
+  local.journal.save(original);
+  expect(local.journal.open(scope.key)).toEqual(original);
+  const {server,fetch} = http([[200,csrf],[200,receipt(postedResult)],[200,receipt(postedResult,'historical')]]);
+  expect(await server.send(scope,original).result).toMatchObject({kind:'committed',shoppingAction:correctPosted.action});
+  expect(await server.original(scope,original).result).toMatchObject({kind:'historical',shoppingAction:correctPosted.action});
+  expect(fetch.mock.calls[2][0]).toContain('inventory/requests/shopping.correct-posted-receipt/original');
+  await expect(http([[200,receipt({...postedResult,movement_id:'?'})]]).server.original(scope,original).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+  const corrected = {...wirePurchase,received:'0',remaining:'6.000001',pending_stock:'0',revision:'4'};
+  const arrival = {...wireArrival,movement_id:'original',correction:wirePostedCorrection};
+  const detail = {purchase:corrected,receipts:[arrival],cancellation:null,next_cursor:null};
+  expect(await http([[200,detail]]).server.purchaseReceipts(scope,'purchase',null).result).toMatchObject({
+    items:[{id:'arrival',movementId:'original',
+      correction:{movementId:'compensation',authorAlias:'Marta',legacy:false}}],
+  });
+  const legacy = {...detail,receipts:[{...arrival,correction:{...wirePostedCorrection,legacy:true}}]};
+  expect((await http([[200,legacy]]).server.purchaseReceipts(scope,'purchase',null).result).items[0].correction?.legacy)
+    .toBe(true);
+  for (const invalid of [
+    {...detail,receipts:[{...arrival,movement_id:null}]},
+    {...detail,receipts:[{...arrival,movement_id:'compensation'}]},
+    {...detail,purchase:{...corrected,product_id:null,base_unit:'piece',purchased:'6',remaining:'6'}},
+  ]) await expect(http([[200,invalid]]).server.purchaseReceipts(scope,'purchase',null).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+});
+
+test('the posted correction requires both current grants and refreshes receipt history', async () => {
+  const f = controller(), app = f.controller;
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  for (const grants of [{mayManage:false,mayShop:true},{mayManage:true,mayShop:false}]) {
+    f.load.mockReturnValueOnce(read({...report,...grants}));
+    await app.refresh();
+    await app.submit(correctPosted);
+    expect(f.send).not.toHaveBeenCalled();
+  }
+  await app.refresh();
+  await app.showPurchases();
+  await app.showPurchaseReceipts('purchase');
+  await app.submit(correctPosted);
+  expect(f.send.mock.lastCall?.[1].command).toEqual(correctPosted);
+  expect(f.arrivals).toHaveBeenCalledTimes(2);
+});
+
+test('posted receipt correction uses the shared reason form and keeps both history links', async () => {
+  const {node,root,events,submit} = component();
+  const posted = {...purchaseReceipts,purchase:{...purchase,revision:correctPosted.expected_revision,pendingStock:'0'},
+    items:[{...purchaseReceipts.items[0],movementId:'original'}]};
+  const stockHistory = {...history,movements:[{...history.movements[0],shoppingReceipt:true}]};
+  const open = {...initial,report,purchaseReceipts:posted,history:stockHistory};
+  node.view = open;
+  await node.updateComplete;
+  const element = root.querySelector('domus-shopping')!;
+  const shop = element.shadowRoot!;
+  const assign = async (state:InventoryState) => {
+    node.view = state;
+    await node.updateComplete;
+    await element.updateComplete;
+  };
+  expect(root.textContent).toContain('Correct this receipt in Shopping.');
+  expect([...root.querySelectorAll('vyp-ha-button')].map(button => button.state.label)).not.toContain('Reverse this intake');
+  await assign({...open,report:{...report,mayManage:false}});
+  expect(shop.querySelector('.posted-receipt-correction-form')).toBeNull();
+  await assign({...open,report:{...report,mayShop:false}});
+  expect(shop.querySelector('.posted-receipt-correction-form')).toBeNull();
+  await assign(open);
+  const form = shop.querySelector<HTMLFormElement>('.posted-receipt-correction-form')!;
+  expect(form.textContent).toContain('Quantity to reverse');
+  expect(form.textContent).toContain('4.000001 millilitres');
+  form.querySelector('input')!.value = correctPosted.reason;
+  submit(form);
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:correctPosted});
+  const correction = {movementId:'compensation',reason:correctPosted.reason,memberId:'shopper',
+    authorAlias:'Marta',createdAt:'102',legacy:false};
+  const corrected = {...posted,items:[{...posted.items[0],correction}]};
+  await assign({...open,purchaseReceipts:corrected,result:{kind:'committed',operationId:'correct',
+    productId:null,movement:null,shoppingAction:correctPosted.action}});
+  expect(shop.querySelector('.posted-receipt-correction-form')).toBeNull();
+  expect(shop.textContent).toContain('Corrected after Pantry posting.');
+  expect(shop.textContent).toContain(correctPosted.reason);
+  expect(shop.textContent).toContain('Marta');
+  expect(shop.textContent).toContain('original');
+  expect(shop.textContent).toContain('compensation');
+  expect(root.textContent).toContain('Posted receipt corrected.');
+  await assign({...open,purchaseReceipts:{...corrected,items:[{...corrected.items[0],correction:{...correction,legacy:true}}]}});
+  expect(shop.textContent).toContain('Pantry entry reversed separately.');
+  expect(shop.querySelector('.posted-receipt-correction-form')).toBeNull();
 });
