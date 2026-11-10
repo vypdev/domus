@@ -15,6 +15,8 @@ from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.relative_recurrence import RelativeRecurrencePlanner
 from domus.application.relative_recurrence_commands import RelativeRecurrenceCommands
+from domus.application.reward_commands import RewardCommands
+from domus.application.reward_queries import RewardQueries
 from domus.application.task_category_commands import TaskCategoryCommands
 from domus.application.task_commands import TaskCommands
 from domus.application.task_events import TaskEventFeed, TaskEventSource
@@ -51,6 +53,7 @@ def task_contexts(
     scope = MaintenanceScope(installation, "home")
 
     def context(actor: TaskSession) -> TaskHTTPContext:
+        rewards = RewardCommands(store, actor, clock, identifiers)
         return TaskHTTPContext(
             lambda: TaskQueries(
                 store,
@@ -85,6 +88,9 @@ def task_contexts(
             lambda: FamilyQueries(store, scope, actor.read(), cursors, planner.times),
             lambda: AllocationQueries(store, actor.read()),
             AllocationCommands(store, actor, clock, identifiers),
+            lambda: RewardQueries(store, scope, actor.read(), cursors),
+            rewards,
+            lambda action, key: rewards.original(action, key, actor.read()),
         )
 
     return context

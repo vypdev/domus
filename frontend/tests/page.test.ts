@@ -1,3 +1,4 @@
+import {REWARD_JOURNAL_KEY} from '../src/adapters/reward-journal';
 import {ALLOCATION_JOURNAL_KEY} from '../src/adapters/allocation-journal';
 import {CALENDAR_JOURNAL_KEY} from '../src/adapters/calendar-journal';
 import {RECURRENCE_JOURNAL_KEY} from '../src/adapters/recurrence-journal';
@@ -70,10 +71,19 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
       can_manage_points:canManagePoints,can_record_for_others:canManagePoints});
     else if (route === 'family/allocation' || route.startsWith('family/allocation?')) raw = JSON.stringify({household:null,override:null});
+    else if (route === 'family/rewards/commands' && init.method === 'POST') {
+      const payload = JSON.parse(String(init.body));
+      raw = JSON.stringify({state:'committed',archived_by:null,operation_id:'reward-policy',created_at:100,
+        result:{enabled:payload.enabled,revision:payload.expected_revision+1},message:'Saved.',action_required:'Review.'});
+    }
+    else if (route.startsWith('family/rewards?')) raw = JSON.stringify({
+      enabled:false,revision:0,may_manage:canManagePoints,balance:{posted_minor:0,reserved_minor:0},
+      catalog:[],requests:[],next_cursor:null,
+    });
     else if (route.startsWith('family?')) {
       const query = new URLSearchParams(route.split('?')[1]);
       raw = JSON.stringify({period:{start:query.get('start'),end:query.get('end')},time_zone:'UTC',
-        posted_minor:0,available_minor:0,earned_minor:0,pending_verification_minor:0,pending_posting_minor:0,
+        posted_minor:0,available_minor:0,reserved_minor:0,spent_in_period_minor:0,spending_count:0,spending:[],earned_minor:0,pending_verification_minor:0,pending_posting_minor:0,
         completed_count:0,tracked_count:0,elapsed_ms:0,pending_count:0,pending:[],history:[],next_cursor:query.has('cursor')?null:'family-next'});
     }
     else if (route.startsWith('tasks/calendar?')) {
@@ -196,12 +206,14 @@ test('language is presentation-only, and navigation has only fixed reviewed dest
 });
 test('logout closes local access and keeps explicit deployment-specific reentry available', async () => {
   const f = fixture(), {app} = await f.open();
+  f.values.set(REWARD_JOURNAL_KEY, 'private pending reward');
   f.values.set(ALLOCATION_JOURNAL_KEY, 'private pending policy');
   f.values.set(CALENDAR_JOURNAL_KEY, 'private pending preference');
   f.values.set(RECURRENCE_JOURNAL_KEY, 'private pending schedule change');
   intent(app, {type: 'logout'});
   await vi.waitFor(() => {
     expect(app.view?.notice).toBe('signed_out');
+    expect(f.values.has(REWARD_JOURNAL_KEY)).toBe(false);
     expect(f.values.has(ALLOCATION_JOURNAL_KEY)).toBe(false);
     expect(f.values.has(CALENDAR_JOURNAL_KEY)).toBe(false);
     expect(f.values.has(RECURRENCE_JOURNAL_KEY)).toBe(false);
@@ -587,4 +599,35 @@ test('mounted allocation uses only current workspace and owned closed intents', 
     navigate('#overview');
     expect(app.allocation).toBeNull();
   } finally {save.mockRestore(); recover.mockRestore(); preview.mockRestore();}
+});
+
+test('mounted rewards accept only owned semantic intents and retire on navigation', async () => {
+  const f = fixture('native', 'en', false, true);
+  f.phase('active');
+  const base = f.page.location.href;
+  const navigate = (fragment: string) => {
+    f.page.location.href = base + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  const {app} = await f.open();
+  const send = (detail: unknown, target: EventTarget = app) =>
+    target.dispatchEvent(new CustomEvent('domus-rewards-intent', {detail, bubbles: true, composed: true}));
+  navigate('#family');
+  await vi.waitFor(() => expect(app.rewards?.report?.mayManage).toBe(true));
+  const attempts = () => f.fetch.mock.calls.filter(([path]) => path.includes('/family/rewards/commands')).length;
+  const command = {action: 'reward.configure', enabled: true, expected_revision: '0'};
+  const unowned = document.createElement('span'); app.append(unowned);
+  send({type: 'submit', command}, unowned);
+  send({type: 'submit', command, actor: 'forged'});
+  send({type: 'anything'});
+  send({type: 'refresh', command});
+  expect(attempts()).toBe(0);
+  send({type: 'more'}); send({type: 'recover'}); send({type: 'refresh'});
+  await vi.waitFor(() => expect(app.rewards?.busy).toBe(false));
+  send({type: 'submit', command});
+  await vi.waitFor(() => expect(app.rewards?.result).toEqual({kind: 'committed', stage: null}));
+  expect(attempts()).toBe(1);
+  expect(f.values.has(REWARD_JOURNAL_KEY)).toBe(false);
+  navigate('#overview');
+  expect(app.rewards).toBeNull();
 });

@@ -30,7 +30,7 @@ The current source increment adds a real task workspace. Published Edge.7 remain
 
 The workspace uses the server's current allowed actions. Read-only HA outage grace permits local queries until the original session deadline and blocks changes. A changed account or membership retires the previous private draft.
 
-The Points and Inventory consumers record their own effects. Check Family for posted points and the task material outcome for posted stock movements or pending regularization. Reward redemption and the integrated supplies, automation, and dashboard workflows remain planned.
+The Points and Inventory consumers record their own effects. Check Family for posted points and the task material outcome for posted stock movements or pending regularization. Use Family to review contributions and request optional rewards.
 
 ## Daily work
 
@@ -100,8 +100,27 @@ before recording it. The form asks for a new preview when the participants or
 amounts change. Family history retains the applied policy, its revision, and the
 actual amounts when you change settings or reopen a task.
 Rewards are optional and do not control access to normal household responsibilities.
-If reopening reverses points already spent, the balance can become negative. The history explains the deficit, earned points offset it, and new redemptions remain unavailable until the balance recovers and covers the reward cost. Delivered rewards remain delivered.
-If an approved reward has not been delivered and loses its backing points, it waits on a funding hold. Approval and reservation stay visible; delivery is blocked until sufficient credit exists or an authorized explicit resolution occurs. Recovering points does not itself mean the reward was physically delivered, and cancellation is an explicit action.
+### Rewards
+
+In **Family → Rewards**, check the catalog and the available balance. Select an
+eligible reward and review its cost and remaining available points before
+confirming. The request reserves its original cost. Posted points, active
+reservations, and available points are shown separately.
+
+Share the request code with a points administrator for review and delivery.
+Administrators can enable rewards, manage catalog eligibility and prices, and use
+a shared code to approve a request or record physical delivery. The request
+history stays in the requesting member's workspace. Cancelling an open request
+requires a reason and releases its reservation.
+
+An approved reward may enter funding hold after a reversal. Family shows the
+remaining shortfall, retained approval, and reservation. New earned points can
+restore backing. The administrator records physical delivery as a separate action.
+Delivery records one spending entry and releases the reservation. Spending is
+shown in its posting period, while earned points belong to the work period.
+
+A reversal can leave a negative posted balance after delivery. The delivered
+reward remains recorded, and later earned points cover the deficit.
 
 ## Clear state and recovery
 

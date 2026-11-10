@@ -57,7 +57,7 @@ def test_schema14_category_ddl_rolls_back_to_the_exact_original_bytes(tmp_path, 
         assert definition.content.tags == ("Garden",)
         assert definition.content.category_id is None and definition.category_label is None
     with closing(sqlite3.connect(path)) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone() == (18,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (19,)
 
 
 def test_protected_category_commands_preserve_exact_history_and_calendar_counts(api):

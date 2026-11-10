@@ -48,8 +48,8 @@ and posting keep their own timestamps. Pending verification and pending posting
 use the frozen shares for new completions. Older pending cycles use their
 original conserved calculation. The report shows the four most recent pending
 allocations with their exact shares and stage. Pending totals cover all matching
-work in the selected period. Available points come from posted entries. Posted and available values coincide before reward
-reservations are introduced.
+work in the selected period. Posted balance combines the task ledger and reward
+spending. Available points are posted balance less active reward reservations.
 
 Recorded completions remain visible after reopening. A reversal corrects the
 original period's earned points without erasing the work or posting history.

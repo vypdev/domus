@@ -175,6 +175,13 @@ class SQLitePoints:
             )
         )
 
+    def member_balance(self, household_id: str, member_id: str) -> int:
+        row = self.connection.execute(
+            "SELECT COALESCE(SUM(json_extract(share.value, '$[1]')),0) " + _MEMBER_SHARES,
+            {"household": household_id, "member": member_id},
+        ).fetchone()
+        return int(row[0])
+
     def member_totals(
         self, household_id: str, member_id: str, start: int, end: int
     ) -> tuple[int, int]:

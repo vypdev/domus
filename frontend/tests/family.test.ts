@@ -14,6 +14,7 @@ const award = {event_id: 'award', cycle_id: 'cycle', occurrence_id: 'work', titl
     task_override: false, base_minor: 125, total_minor: 125, shares: [['member', 125]]}};
 const reversal = {...award, event_id: 'reversal', amount_minor: -125, reverses: 'award', posted_at: 1_780_800_000_000};
 const wire = {period, time_zone: 'Europe/Madrid', posted_minor: 0, available_minor: 0, earned_minor: 0,
+  reserved_minor: 0, spent_in_period_minor: 0, spending_count: 0, spending: [],
   pending_verification_minor: 200, pending_posting_minor: 100, completed_count: 2, tracked_count: 1,
   elapsed_ms: 1_800_000, pending_count: 2, pending: [
     {cycle_id: 'waiting', title: 'Clean yard', performed_at: award.performed_at, state: 'verification', allocation: award.allocation},
@@ -167,4 +168,27 @@ test('the bounded pending list marks when additional work contributes to its tot
   node.scopeKey = 'member'; node.view = {state: 'ready', report};
   await node.updateComplete;
   expect(node.shadowRoot!.textContent).toContain('Recent completions shown out of all pending work (4/5)');
+});
+
+test('Family distinguishes a negative posted balance, active reservations and spending in the selected period', async () => {
+  const node = document.createElement('domus-family'); document.body.append(node);
+  const spending = Array.from({length: 4}, (_, index) => ({
+    redemption_id: 'spend-' + index, title: 'Movie', cost_minor: 200, posted_at: award.posted_at,
+  }));
+  const result = {...wire, posted_minor: -200, reserved_minor: 100, available_minor: -300, spending, spending_count: 5, spent_in_period_minor: 1000};
+  const report = await server(result).http.read(context, period, null).result;
+  node.scopeKey = 'member'; node.view = {state: 'ready', report}; await node.updateComplete;
+  expect(node.shadowRoot!.textContent).toContain('Reserved for rewards');
+  expect(node.shadowRoot!.textContent).toContain('negative posted balance');
+  expect(node.shadowRoot!.textContent).toContain('Spent in this period 10.00');
+  expect(node.shadowRoot!.textContent).toContain('Recent spending entries shown (4/5)');
+  expect(node.shadowRoot!.textContent).toContain('−2.00 · Movie');
+  const one = await server({...result, spending: spending.slice(0, 1), spending_count: 1, spent_in_period_minor: 200}).http.read(context, period, null).result;
+  node.view = {state: 'ready', report: one}; await node.updateComplete;
+  expect(node.shadowRoot!.textContent).not.toContain('Recent spending entries shown');
+  for (const invalid of [
+    {...result, spending: false}, {...result, spending: [...spending, spending[0]]},
+    {...result, spending_count: 3}, {...result, spending: Array(4).fill(spending[0])},
+    {...result, spent_in_period_minor: 800}, {...result, spending_count: 4, spent_in_period_minor: 1000},
+  ]) await expect(server(invalid).http.read(context, period, null).result).rejects.toMatchObject({code: 'invalid_response'});
 });

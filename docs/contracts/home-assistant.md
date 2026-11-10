@@ -170,6 +170,26 @@ manual amounts. The completion request can include the returned
 server chooses and freezes the effective policy when it records the task cycle.
 All point amounts use integer minor units.
 
+## Family rewards
+
+`GET /api/v1/family/rewards` returns the current member's reward catalog, own
+requests, and bounded cursor. The verified context selects the member. The
+request schema has no member selector. The Family report gives posted, reserved,
+and available balances and distinguishes reward spending in the posting period
+from points earned in the work period.
+
+`POST /api/v1/family/rewards/commands` accepts closed configuration, offer,
+request, approval, delivery, and cancellation shapes. Current `points.manage`
+authority is required for configuration, offers, approval, and delivery.
+Approval and delivery use a member-shared redemption code and return only the
+record identifier, stage, and revision. Members request and cancel their own
+redemptions. Prices and reservations are resolved by Domus.
+
+A lost response is recoverable through
+`GET /api/v1/family/rewards/requests/{action}/{key}` by the original actor
+under current authority. Commands use the same context, CSRF, and idempotency
+requirements on both deployment targets.
+
 ## Authorization and automation
 
 A proven HA human context resolves the linked active member role. An automation or missing human context

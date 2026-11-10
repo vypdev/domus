@@ -29,6 +29,28 @@ Administrator mapping defaults to all_ha_administrators; setup_administrator and
 
 Reopening a prerequisite preserves already-completed downstream work and points and raises dependency_attention. Approved unfulfilled redemptions without backing enter funding_hold with approval/reservation retained; delivery cannot proceed until funding is sufficient or an explicit authorized resolution occurs. Disabling a rule fences new admissions and subsequent steps while recording the result of already-started atomic commands. Restart/re-enable does not silently resume its cancelled queue or waits.
 
+## Family rewards
+
+Rewards start disabled. A current points administrator can enable new requests,
+set offer prices and eligible household roles, and approve or record physical
+delivery using a code shared by the requesting member. Existing requests retain
+their prices through catalog edits. Disabling rewards pauses new requests while
+existing requests remain available for their authorized transitions. The request
+history and balances are scoped to the requesting member.
+
+A hold retains the approval and reservation. Confirm the current state before
+recording delivery. Cancellation releases an open reservation and retains the
+actor and reason. After a lost response, use **Check reward request** to read the
+original result or retry the same key. A historical result after restoration
+describes the original operation. Review the current request and balance before
+starting another change.
+
+Schema 19 adds reward settings, offers, redemptions, funding changes, and the
+append-only reward spending records. The migration preserves existing Points
+postings. Snapshot inspection verifies funding sources, delivered spending, and
+backing. Restore a compatible image and database pair for rollback. See the
+[Family qualification](evidence/family-qualification.md) for recovery and image evidence.
+
 ## Recovery
 
 | Symptom | Retained fact | Next action |

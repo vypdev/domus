@@ -10,6 +10,8 @@ import type {TaskView} from '../application/task-controller';
 import './domus-tasks';
 import './domus-calendar';
 import './domus-family';
+import './domus-rewards';
+import type {RewardsView} from '../application/rewards-controller';
 import './domus-allocation-settings';
 import type {AllocationView} from '../application/allocation-controller';
 import type {ParticipantName} from './allocation-details';
@@ -37,7 +39,7 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
-  static properties = {allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
+  static properties = {rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
     workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
@@ -45,6 +47,7 @@ export class DomusApp extends LitElement {
   declare tasks: TaskView | null;
   declare calendar: CalendarView | null;
   declare family: FamilyView | null;
+  declare rewards: RewardsView | null;
   declare allocation: AllocationView | null;
   declare familyScopeKey: string | null;
   declare familyToday: string;
@@ -62,7 +65,7 @@ export class DomusApp extends LitElement {
   constructor() {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
     this.recurrenceReview = null; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
-    this.family = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
+    this.family = null; this.rewards = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
     this.workspaceDestination = null; this.nameDraft = ''; this.zoneDraft = '';
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
@@ -226,6 +229,8 @@ export class DomusApp extends LitElement {
           .scopeKey=${this.familyScopeKey} .names=${names}></domus-family>
         <domus-allocation-settings .view=${this.workspaceDestination === 'family' ? this.allocation : null}
           .language=${this.language}></domus-allocation-settings>
+        <domus-rewards .view=${this.rewards} .language=${this.language}
+          .zone=${view?.household?.timeZone ?? 'UTC'}></domus-rewards>
       </section>
       <div id="household" tabindex="-1" ?hidden=${!workspace || this.workspaceDestination !== 'household'} role=${workspace ? 'group' : nothing}
         aria-label=${workspace ? this.text('workspaceHousehold') : nothing}>

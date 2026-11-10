@@ -1,5 +1,7 @@
 const en = {
   title: 'Family', balance: 'Your points', posted: 'Posted balance', available: 'Available balance',
+  reserved: 'Reserved for rewards', spending: 'Reward spending', spendingTotal: 'Spent in this period',
+  spendingShown: 'Recent spending entries shown', negative: 'Task reversals can leave a negative posted balance. Later earned points cover the deficit.',
   participation: 'Your participation', week: 'Week', month: 'Month', period: 'Period', workDate: 'Work date',
   apply: 'Show participation', earned: 'Earned points in this period', completed: 'Recorded completions',
   verification: 'Estimated points awaiting verification', posting: 'Estimated points awaiting posting',
@@ -31,6 +33,8 @@ const en = {
 } as const;
 const es: Record<keyof typeof en, string> = {
   title: 'Familia', balance: 'Tus puntos', posted: 'Saldo registrado', available: 'Saldo disponible',
+  reserved: 'Reservado para recompensas', spending: 'Gasto en recompensas', spendingTotal: 'Gastado en este período',
+  spendingShown: 'Movimientos de gasto recientes mostrados', negative: 'Las reversiones pueden dejar un saldo registrado negativo. Los puntos ganados después cubren el déficit.',
   participation: 'Tu participación', week: 'Semana', month: 'Mes', period: 'Período', workDate: 'Fecha del trabajo',
   apply: 'Mostrar participación', earned: 'Puntos ganados en este período', completed: 'Tareas realizadas registradas',
   verification: 'Puntos estimados pendientes de verificación', posting: 'Puntos estimados pendientes de registro',

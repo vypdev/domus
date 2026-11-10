@@ -92,7 +92,8 @@ export class DomusFamily extends LitElement {
         <vyp-ha-card .state=${card('balance')}><dl>
           <dt>${this.text('available')}</dt><dd>${this.points(report.available)}</dd>
           <dt>${this.text('posted')}</dt><dd>${this.points(report.posted)}</dd>
-        </dl></vyp-ha-card>` : nothing}
+          <dt>${this.text('reserved')}</dt><dd>${this.points(report.reserved)}</dd>
+        </dl>${report.posted < 0 ? html`<p>${this.text('negative')}</p>` : nothing}</vyp-ha-card>` : nothing}
       <vyp-ha-card .state=${card('participation')}>${form}
         ${report ? html`<p>${day(Date.parse(report.period.start))} – ${day(Date.parse(report.period.end) - 86_400_000)} · ${report.zone}</p><dl>
           <dt>${this.text('earned')}</dt><dd>${this.points(report.earned)}</dd>
@@ -128,6 +129,13 @@ ${allocationDetails(entry.allocation, this.language, this.names)}
           </details></li>`)}</ol>`}
         ${report.cursor === null ? nothing : html`<vyp-ha-button .state=${buttonState({label: this.text('more'), variant: 'outlined'})}
           ?disabled=${loading} @ha-press-request=${() => this.intent({type: 'more'})}></vyp-ha-button>`}
+      </vyp-ha-card>` : nothing}
+      ${report && report.spendingCount > 0 ? html`<vyp-ha-card .state=${card('spending')}>
+        <p>${this.text('spendingTotal')} ${this.points(report.spentInPeriod)}</p>
+        ${report.spendingCount > report.spending.length
+          ? html`<p>${this.text('spendingShown')} (${report.spending.length}/${report.spendingCount})</p>` : nothing}
+        <ol>${report.spending.map(entry => html`<li><strong>${this.points(-entry.cost)} · ${entry.title}</strong>
+          <p>${this.text('postingDate')} ${date(entry.postedAt)} · <code>${entry.redemptionId}</code></p></li>`)}</ol>
       </vyp-ha-card>` : nothing}
       <div>${retry}</div>`;
   }

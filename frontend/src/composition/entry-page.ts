@@ -1,3 +1,8 @@
+import {HttpRewardsServer} from '../adapters/reward-http';
+import {REWARD_JOURNAL_KEY, RewardsSessionJournal} from '../adapters/reward-journal';
+import {RewardsController} from '../application/rewards-controller';
+import {rewardCommand} from '../domain/rewards';
+import type {RewardsIntent} from '../presentation/domus-rewards';
 import {HttpAllocationServer} from '../adapters/allocation-http';
 import {ALLOCATION_JOURNAL_KEY, AllocationSessionJournal} from '../adapters/allocation-journal';
 import {allocationPolicy} from '../adapters/allocation-values';
@@ -177,13 +182,14 @@ export function mountEntry(page: EntryPage): PageMount {
   const lifetime = new AbortController(), widget = new AbortController();
   let calendarPreference: CalendarPreferenceController | null = null;
   let family: FamilyController | null = null;
+  let rewards: RewardsController | null = null;
   let allocation: AllocationController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -192,7 +198,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -240,16 +246,42 @@ export function mountEntry(page: EntryPage): PageMount {
     const familyController = new FamilyController(new HttpFamilyServer(source.target, browser.transport),
       view => {element.family = view;});
     family = familyController;
+    const rewardsController = new RewardsController(new HttpRewardsServer(source.target, browser.transport),
+      new RewardsSessionJournal({getItem: key => browser.storage().getItem(key),
+        setItem: (key, value) => browser.storage().setItem(key, value), removeItem: key => browser.storage().removeItem(key)}),
+      new BrowserEntropy(browser.random), view => {element.rewards = view;}, () => familyController.refresh());
+    rewards = rewardsController;
+    element.addEventListener('domus-rewards-intent', async event => {
+      if (event.target !== element) return;
+      let intent: RewardsIntent;
+      try {
+        const raw = (event as CustomEvent<unknown>).detail;
+        const item = fields(raw, ['type'], ['command']);
+        if (item.type === 'submit') {
+          fields(raw, ['type','command'], []);
+          intent = {type: 'submit', command: rewardCommand(item.command)};
+        } else {
+          fields(raw, ['type'], []);
+          check(item.type === 'refresh' || item.type === 'more' || item.type === 'recover');
+          intent = {type: item.type};
+        }
+      } catch {return;}
+      if (intent.type === 'refresh') await rewardsController.refresh();
+      if (intent.type === 'more') await rewardsController.more();
+      if (intent.type === 'recover') await rewardsController.recover();
+      if (intent.type === 'submit') await rewardsController.submit(intent.command);
+    }, {signal: widget.signal});
     const syncFamily = () => {
       const entry = element.view, tasks = element.tasks;
       if (element.workspaceDestination === 'family' && entry?.phase === 'ready' && entry.decision?.state === 'active'
-          && entry.household && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey) {
+          && entry.household && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey && tasks.access) {
         const today = calendarToday(tasks.session.serverTime, entry.household.timeZone);
         const key = JSON.stringify([tasks.scopeKey, entry.household.revision]);
         element.familyToday = today; element.familyScopeKey = key;
         familyController.bind({key, today, context: tasks.session.context});
+        rewardsController.bind({key, context: tasks.session.context, memberId: tasks.access.memberId, readOnly: tasks.readOnly});
       } else {
-        familyController.bind(null); element.familyScopeKey = null;
+        familyController.bind(null); rewardsController.bind(null); element.familyScopeKey = null;
       }
     };
     element.addEventListener('domus-family-intent', async event => {
@@ -377,6 +409,7 @@ export function mountEntry(page: EntryPage): PageMount {
             const signOut = active.logout();
             const storage = browser.storage();
             storage.removeItem(ALLOCATION_JOURNAL_KEY);
+            storage.removeItem(REWARD_JOURNAL_KEY);
             storage.removeItem(CALENDAR_JOURNAL_KEY);
             storage.removeItem(RECURRENCE_JOURNAL_KEY);
             await signOut;

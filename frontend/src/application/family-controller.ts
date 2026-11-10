@@ -24,11 +24,21 @@ export interface FamilyPendingEntry {
   readonly state: 'verification' | 'posting';
   readonly allocation: AllocationEvidence;
 }
+export interface FamilySpending {
+  readonly redemptionId: string;
+  readonly title: string;
+  readonly cost: number;
+  readonly postedAt: number;
+}
 export interface FamilyReport {
   readonly period: CalendarPeriod;
   readonly zone: string;
   readonly posted: number;
   readonly available: number;
+  readonly reserved: number;
+  readonly spentInPeriod: number;
+  readonly spendingCount: number;
+  readonly spending: readonly FamilySpending[];
   readonly earned: number;
   readonly pendingVerification: number;
   readonly pendingPosting: number;
