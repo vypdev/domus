@@ -114,9 +114,16 @@ function purchaseReceipts(value: unknown, purchaseId: string): PurchaseReceipts 
   const selected = purchase(row.purchase);
   check(selected.id === purchaseId && Array.isArray(row.receipts) && row.receipts.length <= 25);
   const items = row.receipts.map(value => {
-    const entry = fields(value, ['receipt_id','quantity','member_id','author_alias','created_at','movement_id'], []);
+    const entry = fields(value, ['receipt_id','quantity','member_id','author_alias','created_at','movement_id','voided'], []);
+    const movementId = nullableId(entry.movement_id);
+    let voided = null;
+    if (entry.voided !== null) {
+      check(selected.productId !== null && movementId === null);
+      const correction = fields(entry.voided, ['reason','member_id','author_alias','created_at'], []);
+      voided = {reason:text(correction.reason, STOCK_REASON_LIMIT), ...attribution(correction)};
+    }
     return {id:identifier(entry.receipt_id), quantity:positiveQuantity(entry.quantity), ...attribution(entry),
-      movementId:nullableId(entry.movement_id)};
+      movementId, voided};
   });
   check(new Set(items.map(item => item.id)).size === items.length);
   const balance = cancellation(row.cancellation);
@@ -232,6 +239,13 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
       check(result.receipt_id === command.receipt_id);
       identifier(result.movement_id);
     }
+    return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
+  }
+  if (command.action === 'shopping.void-receipt') {
+    const result = fields(row.result, ['purchase_id','receipt_id','quantity','revision'], []);
+    check(result.purchase_id === command.purchase_id && result.receipt_id === command.receipt_id);
+    check(taskQuantity(result.quantity) !== '0');
+    check(BigInt(revisionValue(result.revision)) === BigInt(command.expected_revision) + 1n);
     return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
   }
   if (command.action === 'shopping.cancel-balance') {

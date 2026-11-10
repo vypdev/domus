@@ -672,6 +672,20 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(session.getByText('Session lemons',{exact:true})).toBeVisible();
     await flourItem.getByRole('button', {name:'Show physical receipts'}).click();
     const flourReceipts = shopping.getByRole('region', {name:'Physical receipts · Session flour'});
+    await flourReceipts.getByRole('textbox', {name:'Quantity received'}).fill('1.5');
+    await flourReceipts.getByRole('button', {name:'Record physical receipt'}).click();
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.5 grams','0.500001 grams','1.5 grams']);
+    const mistaken = flourReceipts.getByRole('listitem').filter({has:page.getByText('1.5 grams',{exact:true})});
+    await mistaken.getByText('Void receipt',{exact:true}).click();
+    const confirmation = mistaken.locator('.receipt-void-form');
+    await expect(confirmation).toContainText('Quantity to void');
+    await expect(confirmation).toContainText('1.5 grams');
+    await confirmation.getByRole('textbox', {name:'Reason'}).fill('Counted a bag twice');
+    await confirmation.getByRole('button', {name:'Confirm receipt void'}).click();
+    await expect(stock.getByText('Physical receipt voided.',{exact:true})).toBeVisible();
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','0 grams','2.000001 grams','0 grams']);
+    await expect(mistaken.getByText('Counted a bag twice',{exact:true})).toBeVisible();
+    await expect(mistaken.getByRole('button', {name:'Post to Pantry'})).toHaveCount(0);
     await flourReceipts.getByRole('textbox', {name:'Quantity received'}).fill('1.25');
     await flourReceipts.getByRole('button', {name:'Record physical receipt'}).click();
     await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.25 grams','0.750001 grams','1.25 grams']);
@@ -699,6 +713,8 @@ for (const mode of ['native', 'standalone'] as const) {
     const receiptsEs = shopping.getByRole('region', {name:'Recepciones físicas · Session flour'});
     await expect(receiptsEs.getByText('Cancelación del saldo',{exact:true})).toBeVisible();
     await expect(receiptsEs.getByText('Supplier cancelled the rest',{exact:true})).toBeVisible();
+    await expect(receiptsEs.getByText('Anulada antes de contabilizar en Despensa.',{exact:true})).toBeVisible();
+    await expect(receiptsEs.getByText('Counted a bag twice',{exact:true})).toBeVisible();
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

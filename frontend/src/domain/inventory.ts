@@ -7,7 +7,7 @@ export const BASE_UNITS = ['piece', 'gram', 'millilitre'] as const;
 export type BaseUnit = typeof BASE_UNITS[number];
 export type ReplenishmentRevision = Revision | '0';
 export type ShoppingAction = 'shopping.purchase' | 'shopping.receive' | 'shopping.post-receipt'
-  | 'shopping.cancel-balance' | 'shopping.add-extra' | 'shopping.clear-extra' | 'shopping.record-session';
+  | 'shopping.void-receipt' | 'shopping.cancel-balance' | 'shopping.add-extra' | 'shopping.clear-extra' | 'shopping.record-session';
 
 export const MIN_SESSION_ITEMS = 2;
 export const MAX_SESSION_ITEMS = 16;
@@ -29,6 +29,8 @@ export type InventoryCommand =
   | Readonly<{action: 'shopping.add-extra'; product_id: string | null; name: string | null; quantity: string}>
   | Readonly<{action: 'shopping.receive'; purchase_id: string; quantity: string; expected_revision: Revision}>
   | Readonly<{action: 'shopping.cancel-balance'; purchase_id: string; reason: string; expected_revision: Revision}>
+  | Readonly<{action: 'shopping.void-receipt'; purchase_id: string; receipt_id: string; reason: string;
+    expected_revision: Revision}>
   | Readonly<{action: 'shopping.post-receipt'; purchase_id: string; receipt_id: string}>
   | Readonly<{action: 'shopping.clear-extra'; extra_id: string}>
   | Readonly<{action: 'shopping.record-session'; items: readonly SessionSelection[]}>;
@@ -103,6 +105,10 @@ export interface Purchase {
   readonly createdAt: string;
 }
 
+export interface PhysicalReceiptVoid extends ExtraAttribution {
+  readonly reason: string;
+}
+
 export interface PhysicalReceipt {
   readonly id: string;
   readonly quantity: string;
@@ -110,6 +116,7 @@ export interface PhysicalReceipt {
   readonly authorAlias: string | null;
   readonly createdAt: string;
   readonly movementId: string | null;
+  readonly voided: PhysicalReceiptVoid | null;
 }
 
 export interface Purchases {
@@ -253,6 +260,10 @@ export function inventoryCommand(value: unknown): InventoryCommand {
   if (action === 'shopping.cancel-balance' && hasFields(record, ['action','purchase_id','reason','expected_revision'])) {
     return {action, purchase_id:taskIdentifier(record.purchase_id), reason:taskText(record.reason, STOCK_REASON_LIMIT, true),
       expected_revision:revisionValue(record.expected_revision)};
+  }
+  if (action === 'shopping.void-receipt' && hasFields(record, ['action','purchase_id','receipt_id','reason','expected_revision'])) {
+    return {action, purchase_id:taskIdentifier(record.purchase_id), receipt_id:taskIdentifier(record.receipt_id),
+      reason:taskText(record.reason, STOCK_REASON_LIMIT, true), expected_revision:revisionValue(record.expected_revision)};
   }
   if (action === 'shopping.post-receipt' && hasFields(record, ['action','purchase_id','receipt_id'])) {
     return {action, purchase_id:taskIdentifier(record.purchase_id), receipt_id:taskIdentifier(record.receipt_id)};

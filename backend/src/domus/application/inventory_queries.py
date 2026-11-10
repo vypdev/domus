@@ -121,6 +121,14 @@ class PurchaseSessionDetail:
 
 
 @dataclass(frozen=True, slots=True)
+class PhysicalReceiptVoidView:
+    reason: str
+    member_id: str
+    author_alias: str | None
+    created_at: str
+
+
+@dataclass(frozen=True, slots=True)
 class PhysicalReceiptView:
     receipt_id: str
     quantity: str
@@ -128,6 +136,7 @@ class PhysicalReceiptView:
     author_alias: str | None
     created_at: str
     movement_id: str | None
+    voided: PhysicalReceiptVoidView | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -366,6 +375,17 @@ class InventoryQueries:
             )
             page: list[PhysicalReceiptView] = []
             for _, receipt in rows[:limit]:
+                correction = unit.shopping.receipt_void(home, receipt.receipt_id)
+                voided = None
+                if correction is not None:
+                    member = unit.presentations.get(home, correction.member_id)
+                    assert member is not None
+                    voided = PhysicalReceiptVoidView(
+                        correction.reason,
+                        correction.member_id,
+                        member.alias,
+                        str(correction.created_at),
+                    )
                 author = unit.presentations.get(home, receipt.member_id)
                 assert author is not None
                 page.append(
@@ -376,6 +396,7 @@ class InventoryQueries:
                         author.alias,
                         str(receipt.created_at),
                         receipt.movement_id,
+                        voided,
                     )
                 )
             cancellation = unit.shopping.cancellation(home, purchase_id)

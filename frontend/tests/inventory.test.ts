@@ -39,13 +39,13 @@ const wirePurchase = {purchase_id:'purchase', product_id:'product', name:'Olive 
   purchased:'6.000001', received:'4.000001', remaining:'2', pending_stock:'4.000001', cancelled:'0', revision:'2',
   member_id:'member', author_alias:'Shopper', created_at:'100'};
 const wireArrival = {receipt_id:'arrival', quantity:'4.000001', member_id:'member', author_alias:null,
-  created_at:'101', movement_id:null};
+  created_at:'101', movement_id:null, voided:null};
 const purchase: Purchase = {id:'purchase', productId:'product', name:'Olive oil', unit:'millilitre',
   purchased:'6.000001', received:'4.000001', remaining:'2', pendingStock:'4.000001', cancelled:'0',
   revision:arrive.expected_revision, memberId:'member', authorAlias:'Shopper', createdAt:'100'};
 const purchases: Purchases = {items:[purchase],cursor:'older'};
 const purchaseReceipts: PurchaseReceipts = {purchase,items:[{
-  id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null,
+  id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null, voided:null,
 }],cancellation:null,cursor:'older'};
 const savedPolicy = {product_id:'product', minimum:policy.minimum, target:policy.target, revision:'1'};
 const wireProduct = {...savedProduct, reference_id:'reference', recorded:'999999999999.999999', reserved:'0.000001',
@@ -1371,5 +1371,109 @@ test('purchase details confirm the exact remaining amount, require a reason, and
   expect(shop.textContent).toContain('Marta');
   expect(root.textContent).toContain('Saldo pendiente cancelado.');
   await assign({...open,purchaseReceipts:{...closed,cancellation:{...cancellation,authorAlias:null}}});
+  expect(shop.textContent).toContain('shopper');
+});
+
+const voidReceipt = {action:'shopping.void-receipt', purchase_id:'purchase', receipt_id:'arrival',
+  reason:'Only three units arrived', expected_revision:arrive.expected_revision} as const;
+const wireVoid = {reason:voidReceipt.reason,member_id:'shopper',author_alias:'Marta',created_at:'102'};
+const voidResult = {purchase_id:'purchase',receipt_id:'arrival',quantity:'4.000001',revision:'3'};
+
+test('the void command and original response bind the exact receipt, amount and purchase revision', async () => {
+  expect(inventoryCommand(voidReceipt)).toEqual(voidReceipt);
+  for (const malformed of [{...voidReceipt,quantity:'4'},{...voidReceipt,reason:' '},
+    {...voidReceipt,receipt_id:' '},{...voidReceipt,expected_revision:'0'}]) {
+    expect(() => inventoryCommand(malformed)).toThrow();
+  }
+  const original = {...request,command:voidReceipt};
+  const local = journal();
+  local.journal.save(original);
+  expect(local.journal.open(scope.key)).toEqual(original);
+  const {server,fetch} = http([[200,csrf],[200,receipt(voidResult)],[200,receipt(voidResult,'historical')]]);
+  expect(await server.send(scope,original).result).toMatchObject({kind:'committed',shoppingAction:voidReceipt.action});
+  expect(await server.original(scope,original).result).toMatchObject({kind:'historical',shoppingAction:voidReceipt.action});
+  expect(fetch.mock.calls[2][0]).toContain('inventory/requests/shopping.void-receipt/original');
+  for (const invalid of [{...voidResult,purchase_id:'foreign'},{...voidResult,receipt_id:'foreign'},
+    {...voidResult,quantity:'0'},{...voidResult,revision:'4'}]) {
+    await expect(http([[200,receipt(invalid)]]).server.original(scope,original).result)
+      .rejects.toMatchObject({code:'invalid_response'});
+  }
+  const corrected = {...wirePurchase,received:'0',remaining:'6.000001',pending_stock:'0',revision:'3'};
+  const arrival = {...wireArrival,voided:wireVoid};
+  const detail = {purchase:corrected,receipts:[arrival],cancellation:null,next_cursor:null};
+  expect(await http([[200,detail]]).server.purchaseReceipts(scope,'purchase',null).result).toMatchObject({
+    purchase:{received:'0',remaining:'6.000001',pendingStock:'0'},
+    items:[{id:'arrival',quantity:'4.000001',movementId:null,voided:{reason:voidReceipt.reason,authorAlias:'Marta'}}],
+  });
+  for (const invalid of [{...detail,receipts:[{...arrival,movement_id:'posted'}]},
+    {...detail,purchase:{...corrected,product_id:null,base_unit:'piece',purchased:'6',remaining:'6'}}]) {
+    await expect(http([[200,invalid]]).server.purchaseReceipts(scope,'purchase',null).result)
+      .rejects.toMatchObject({code:'invalid_response'});
+  }
+});
+
+test('voiding uses current shopping authority and refreshes the original receipt list', async () => {
+  const f = controller(), app = f.controller;
+  f.load.mockReturnValueOnce(read({...report,mayShop:false}));
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await app.submit(voidReceipt);
+  expect(f.send).not.toHaveBeenCalled();
+  f.load.mockReturnValue(read({...report,mayManage:false}));
+  await app.refresh();
+  await app.showPurchases();
+  await app.showPurchaseReceipts('purchase');
+  await app.submit(voidReceipt);
+  expect(f.send.mock.lastCall?.[1].command).toEqual(voidReceipt);
+  expect(f.arrivals).toHaveBeenCalledTimes(2);
+});
+
+test('only a pending tracked receipt can be voided with a reason, and its history remains visible', async () => {
+  const {node,root,events,submit} = component();
+  const open = {...initial,report,purchaseReceipts};
+  node.view = open;
+  await node.updateComplete;
+  const element = root.querySelector('domus-shopping')!;
+  const shop = element.shadowRoot!;
+  const assign = async (state:InventoryState) => {
+    node.view = state;
+    await node.updateComplete;
+    await element.updateComplete;
+  };
+  await assign(open);
+  const form = shop.querySelector<HTMLFormElement>('.receipt-void-form')!;
+  const reason = form.querySelector('input')!;
+  expect(form.textContent).toContain('4.000001 millilitres');
+  submit(form);
+  await element.updateComplete;
+  expect(form.querySelector('[role=alert]')?.textContent).toContain('Enter a reason');
+  expect(events).not.toHaveBeenCalled();
+  reason.value = voidReceipt.reason;
+  await assign({...open,pending:true});
+  submit(form);
+  expect(events).not.toHaveBeenCalled();
+  await assign(open);
+  submit(form);
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:voidReceipt});
+  await assign({...open,report:{...report,mayShop:false}});
+  expect(shop.querySelector('.receipt-void-form')).toBeNull();
+  const closed = {...purchaseReceipts,purchase:{...purchase,remaining:'0',cancelled:'2'}};
+  await assign({...open,purchaseReceipts:closed});
+  expect(shop.querySelector('.receipt-void-form')).toBeNull();
+  expect([...shop.querySelectorAll('vyp-ha-button')].map(button => button.state.label)).toContain('Post to Pantry');
+
+  node.language = 'es';
+  const corrected = {reason:voidReceipt.reason,memberId:'shopper',authorAlias:'Marta',createdAt:'102'};
+  const history = {...purchaseReceipts,purchase:{...purchase,received:'0',pendingStock:'0',remaining:'6.000001'},
+    items:[{...purchaseReceipts.items[0],voided:corrected}]};
+  await assign({...open,purchaseReceipts:history,result:{kind:'committed',operationId:'void',
+    productId:null,movement:null,shoppingAction:voidReceipt.action}});
+  expect(shop.querySelector('.receipt-void-form')).toBeNull();
+  expect(shop.textContent).toContain('Anulada antes de contabilizar en Despensa.');
+  expect(shop.textContent).toContain(voidReceipt.reason);
+  expect(shop.textContent).toContain('Marta');
+  expect([...shop.querySelectorAll('vyp-ha-button')].map(button => button.state.label)).not.toContain('Contabilizar en Despensa');
+  expect(root.textContent).toContain('Recepción física anulada.');
+  await assign({...open,purchaseReceipts:{...history,items:[{...history.items[0],voided:{...corrected,authorAlias:null}}]}});
   expect(shop.textContent).toContain('shopper');
 });

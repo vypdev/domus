@@ -32,6 +32,7 @@ from domus.domain.shopping import (
     Purchase,
     PurchaseCancellation,
     PurchaseReceipt,
+    PurchaseReceiptVoid,
     PurchaseSession,
     SessionSelection,
 )
@@ -146,6 +147,7 @@ class CatalogAction(StrEnum):
     CLEAR_EXTRA = "shopping.clear-extra"
     RECORD_SESSION = "shopping.record-session"
     CANCEL_BALANCE = "shopping.cancel-balance"
+    VOID_RECEIPT = "shopping.void-receipt"
 
 
 def _permission(action: str) -> Permission:
@@ -157,6 +159,7 @@ def _permission(action: str) -> Permission:
         CatalogAction.CLEAR_EXTRA,
         CatalogAction.RECORD_SESSION,
         CatalogAction.CANCEL_BALANCE,
+        CatalogAction.VOID_RECEIPT,
     ):
         return Permission.SHOPPING_MANAGE
     return Permission.INVENTORY_MANAGE
@@ -649,20 +652,63 @@ class InventoryCommands:
 
         return self._execute(CatalogAction.CANCEL_BALANCE.value, key, payload, apply)
 
+    def _pending_receipt(
+        self, unit: UnitOfWork, purchase: Purchase, receipt_id: str
+    ) -> tuple[str, PurchaseReceipt]:
+        home = self.household_id
+        receipt = unit.shopping.receipt(home, receipt_id)
+        if receipt is None or receipt.purchase_id != purchase.purchase_id:
+            raise NotFound("shopping_receipt_missing")
+        if purchase.product_id is None:
+            raise InvalidInput("shopping_receipt_untracked")
+        if receipt.movement_id is not None:
+            raise Conflict("shopping_receipt_posted")
+        if unit.shopping.receipt_void(home, receipt_id) is not None:
+            raise Conflict("shopping_receipt_voided")
+        return purchase.product_id, receipt
+
+    def void_purchase_receipt(
+        self, key: str, purchase_id: str, receipt_id: str, reason: str, expected_revision: int
+    ) -> Receipt:
+        validate_revision(expected_revision)
+        validate_stock_reason(reason)
+        payload = JsonDocument.from_value(
+            {
+                "purchase_id": purchase_id,
+                "receipt_id": receipt_id,
+                "reason": reason,
+                "expected_revision": str(expected_revision),
+            }
+        )
+
+        def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
+            home = self.household_id
+            purchase = self._purchase(unit, purchase_id)
+            _, receipt = self._pending_receipt(unit, purchase, receipt_id)
+            changed = purchase.void_receipt(receipt.quantity, expected_revision)
+            unit.shopping.update_purchase(home, changed)
+            unit.shopping.add_receipt_void(
+                home, PurchaseReceiptVoid(receipt_id, reason, member, self.clock.now())
+            )
+            return JsonDocument.from_value(
+                {
+                    "purchase_id": purchase_id,
+                    "receipt_id": receipt_id,
+                    "quantity": stock_quantity(receipt.quantity),
+                    "revision": str(changed.revision),
+                }
+            )
+
+        return self._execute(CatalogAction.VOID_RECEIPT.value, key, payload, apply)
+
     def post_purchase_receipt(self, key: str, purchase_id: str, receipt_id: str) -> Receipt:
         payload = JsonDocument.from_value({"purchase_id": purchase_id, "receipt_id": receipt_id})
 
         def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
             home = self.household_id
             purchase = self._purchase(unit, purchase_id)
-            receipt = unit.shopping.receipt(home, receipt_id)
-            if receipt is None or receipt.purchase_id != purchase_id:
-                raise NotFound("shopping_receipt_missing")
-            if purchase.product_id is None:
-                raise InvalidInput("shopping_receipt_untracked")
-            if receipt.movement_id is not None:
-                raise Conflict("shopping_receipt_posted")
-            product = self._product(unit.inventory, purchase.product_id)
+            product_id, receipt = self._pending_receipt(unit, purchase, receipt_id)
+            product = self._product(unit.inventory, product_id)
             movement = self._receive_stock(
                 unit.inventory,
                 product.binding(home),

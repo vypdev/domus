@@ -178,6 +178,18 @@ again. If a response is lost, choose **Recover original request**. After a
 snapshot restoration, check the current receipt and stock before making a new
 request.
 
+### Voiding a physical receipt
+
+With shopping management access, open **Show physical receipts** on a tracked
+purchase with its balance still active. On the mistaken receipt, choose
+**Void receipt**, review the quantity, enter a reason and confirm.
+
+The original receipt stays in history with the reason, shopper and time of
+the void. Its quantity returns to **Still due**. Use **Record physical
+receipt** to enter the amount that actually arrived. An inventory manager can
+then post the new receipt to Pantry. If the void response is lost, choose
+**Recover original request**.
+
 ### Cancelling an outstanding purchase balance
 
 With shopping management access, open **Show physical receipts** for the

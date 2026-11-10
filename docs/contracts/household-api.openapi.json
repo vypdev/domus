@@ -1098,7 +1098,8 @@
           "shopping.add-extra",
           "shopping.clear-extra",
           "shopping.record-session",
-          "shopping.cancel-balance"
+          "shopping.cancel-balance",
+          "shopping.void-receipt"
         ],
         "title": "CatalogAction",
         "type": "string"
@@ -4144,6 +4145,16 @@
           "receipt_id": {
             "title": "Receipt Id",
             "type": "string"
+          },
+          "voided": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhysicalReceiptVoidView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -4152,9 +4163,45 @@
           "member_id",
           "author_alias",
           "created_at",
-          "movement_id"
+          "movement_id",
+          "voided"
         ],
         "title": "PhysicalReceiptView",
+        "type": "object"
+      },
+      "PhysicalReceiptVoidView": {
+        "properties": {
+          "author_alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Alias"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "member_id",
+          "author_alias",
+          "created_at"
+        ],
+        "title": "PhysicalReceiptVoidView",
         "type": "object"
       },
       "PhysicalReceiptsView": {
@@ -8688,6 +8735,46 @@
         "title": "VerifyBody",
         "type": "object"
       },
+      "VoidReceiptBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "shopping.void-receipt",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "title": "Expected Revision",
+            "type": "string"
+          },
+          "purchase_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Purchase Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "receipt_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Receipt Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "purchase_id",
+          "receipt_id",
+          "reason",
+          "expected_revision"
+        ],
+        "title": "VoidReceiptBody",
+        "type": "object"
+      },
       "WeekStart": {
         "enum": [
           "monday",
@@ -12932,7 +13019,8 @@
                     "shopping.post-receipt": "#/components/schemas/PostReceiptBody",
                     "shopping.purchase": "#/components/schemas/PurchaseBody",
                     "shopping.receive": "#/components/schemas/ReceivePurchaseBody",
-                    "shopping.record-session": "#/components/schemas/PurchaseSessionBody"
+                    "shopping.record-session": "#/components/schemas/PurchaseSessionBody",
+                    "shopping.void-receipt": "#/components/schemas/VoidReceiptBody"
                   },
                   "propertyName": "action"
                 },
@@ -12972,6 +13060,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/CancelPurchaseBalanceBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/VoidReceiptBody"
                   }
                 ],
                 "title": "Body"

@@ -218,7 +218,9 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
         if version >= 22:
             verify_replenishment(connection)
         if version >= 23:
-            verify_shopping_records(connection, has_cancellations=version >= 26)
+            verify_shopping_records(
+                connection, has_cancellations=version >= 26, has_voids=version >= 27
+            )
         if version >= 24:
             verify_shopping_extras(connection)
         if version >= 25:
