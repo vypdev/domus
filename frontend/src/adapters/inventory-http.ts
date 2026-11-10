@@ -1,9 +1,9 @@
 /** Bounded same-origin Inventory reads and exact original-command recovery. */
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
-import {BASE_UNITS, inventoryCommand, stockUnits} from '../domain/inventory';
-import type {InventoryCommand, InventoryReport, ProductStock} from '../domain/inventory';
-import {taskQuantity} from '../domain/tasks';
+import {BASE_UNITS, MOVEMENT_KINDS, STOCK_REASON_LIMIT, inventoryCommand, signedQuantity, stockUnits} from '../domain/inventory';
+import type {InventoryCommand, InventoryReport, MovementHistory, ProductStock, StockMovement} from '../domain/inventory';
+import {taskQuantity, taskTime} from '../domain/tasks';
 import {BoundedHTTP} from './http-transport';
 import type {FetchTransport} from './http-transport';
 import {csrf, failure} from './http-values';
@@ -29,6 +29,28 @@ function report(value: unknown): InventoryReport {
   return {mayManage: boolean(row.may_manage), products, cursor: row.next_cursor === null ? null : text(row.next_cursor, 512)};
 }
 
+function nullableId(value: unknown): string | null {return value === null ? null : identifier(value);}
+
+function movement(value: unknown): StockMovement {
+  const row = fields(value, ['movement_id','quantity','kind','member_id','author_alias','created_at',
+    'reason','task_occurrence_id','corrects','corrected_by'], []);
+  return {
+    id: identifier(row.movement_id), quantity: signedQuantity(row.quantity), kind: choice(row.kind, MOVEMENT_KINDS),
+    memberId: identifier(row.member_id), authorAlias: row.author_alias === null ? null : text(row.author_alias, 80),
+    createdAt: taskTime(row.created_at), reason: row.reason === null ? null : text(row.reason, STOCK_REASON_LIMIT),
+    occurrenceId: nullableId(row.task_occurrence_id), corrects: nullableId(row.corrects), correctedBy: nullableId(row.corrected_by),
+  };
+}
+
+function history(value: unknown, productId: string): MovementHistory {
+  const row = fields(value, ['product_id','product_name','base_unit','movements','next_cursor'], []);
+  check(row.product_id === productId && Array.isArray(row.movements) && row.movements.length <= 25);
+  const movements = row.movements.map(movement);
+  check(new Set(movements.map(item => item.id)).size === movements.length);
+  return {productId, productName: text(row.product_name, 160), unit: choice(row.base_unit, BASE_UNITS),
+    movements, cursor: row.next_cursor === null ? null : text(row.next_cursor, 512)};
+}
+
 function receipt(value: unknown, command: InventoryCommand): InventoryResult {
   const row = fields(value, ['state','archived_by','operation_id','created_at','result','message','action_required'], []);
   const kind = choice(row.state, ['committed','historical'] as const);
@@ -38,13 +60,21 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
   if (command.action === 'inventory.register-product') {
     const result = fields(row.result, ['product_id','name','base_unit'], []);
     check(result.name === command.name && result.base_unit === command.base_unit);
-    return {kind, operationId, productId: identifier(result.product_id), intake: null};
+    return {kind, operationId, productId: identifier(result.product_id), movement: null};
   }
-  const result = fields(row.result, ['product_id','movement_id','base_unit','quantity'], []);
-  const unit = choice(result.base_unit, BASE_UNITS);
-  check(result.product_id === command.product_id && result.quantity === command.quantity);
+  const action = command.action;
+  const result = fields(row.result, ['product_id','movement_id','base_unit','quantity'],
+    action === 'inventory.intake' ? [] : ['corrects']);
+  const unit = choice(result.base_unit, BASE_UNITS), quantity = signedQuantity(result.quantity);
+  check(result.product_id === command.product_id);
+  if (action === 'inventory.correct-intake') {
+    check(result.corrects === command.movement_id && quantity.startsWith('-'));
+  } else {
+    check(result.quantity === command.quantity);
+    if (action === 'inventory.adjust') check(result.corrects === null);
+  }
   return {kind, operationId, productId: command.product_id,
-    intake: {movementId: identifier(result.movement_id), unit, quantity: command.quantity}};
+    movement: {movementId: identifier(result.movement_id), unit, quantity, action}};
 }
 
 function fault(value: unknown): InventoryError {
@@ -62,6 +92,15 @@ export class HttpInventoryServer implements InventoryServer {
       const query = new URLSearchParams({limit: '25'});
       if (cursor !== null) query.set('cursor', text(cursor, 512));
       return report(await this.network.get(BASE + '?' + query.toString(), scope.context, signal));
+    });
+  }
+
+  history(scope: InventoryScope, productId: string, cursor: string | null) {
+    return this.network.owned(async signal => {
+      const query = new URLSearchParams({limit: '25'});
+      if (cursor !== null) query.set('cursor', text(cursor, 512));
+      const route = BASE + '/products/' + identifier(productId) + '/movements?' + query.toString();
+      return history(await this.network.get(route, scope.context, signal), productId);
     });
   }
 

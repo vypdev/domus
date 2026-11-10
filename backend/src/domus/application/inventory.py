@@ -19,8 +19,11 @@ from domus.domain.inventory import (
     CatalogProduct,
     EffectKind,
     InventoryEffect,
+    MovementKind,
     StockMovement,
+    stock_quantity,
     stock_units,
+    validate_stock_reason,
 )
 from domus.domain.storage import CommandKey, JsonDocument, Receipt
 from domus.domain.task_material_values import (
@@ -110,6 +113,7 @@ class InventorySettlement:
                 -used,
                 posted.posted_at,
                 intent.reason,
+                MovementKind.TASK_CONSUMPTION if corrects is None else MovementKind.TASK_CORRECTION,
                 posted,
                 corrects,
             ),
@@ -121,6 +125,8 @@ class InventorySettlement:
 class CatalogAction(StrEnum):
     REGISTER = "inventory.register-product"
     INTAKE = "inventory.intake"
+    ADJUST = "inventory.adjust"
+    CORRECT_INTAKE = "inventory.correct-intake"
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,6 +201,7 @@ class InventoryCommands:
             received,
             self.clock.now(),
             "receipt",
+            MovementKind.INTAKE,
         )
         stock.append(movement, balance)
         return movement
@@ -222,9 +229,7 @@ class InventoryCommands:
 
         def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
             stock = unit.inventory
-            product = stock.product(self.household_id, product_id)
-            if product is None:
-                raise NotFound("inventory_product_missing")
+            product = self._product(stock, product_id)
             binding = product.binding(self.household_id)
             binding.require_quantity(quantity)
             movement = self._receive_stock(stock, binding, quantity, member, command)
@@ -238,6 +243,104 @@ class InventoryCommands:
             )
 
         return self._execute(CatalogAction.INTAKE.value, key, payload, apply)
+
+    def adjust(self, key: str, product_id: str, quantity: str, reason: str) -> Receipt:
+        validate_stock_reason(reason)
+        magnitude = MaterialQuantity(quantity.removeprefix("-"))
+        if magnitude.is_zero:
+            raise InvalidInput("invalid_material_quantity")
+        delta = stock_units(magnitude)
+        if quantity.startswith("-"):
+            delta = -delta
+        payload = JsonDocument.from_value(
+            {"product_id": product_id, "quantity": quantity, "reason": reason}
+        )
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            stock = unit.inventory
+            product = self._product(stock, product_id)
+            product.binding(self.household_id).require_quantity(magnitude)
+            return self._change_stock(
+                stock, product, member, command, delta, reason, MovementKind.ADJUSTMENT
+            )
+
+        return self._execute(CatalogAction.ADJUST.value, key, payload, apply)
+
+    def correct_intake(self, key: str, product_id: str, movement_id: str, reason: str) -> Receipt:
+        validate_stock_reason(reason)
+        payload = JsonDocument.from_value(
+            {"product_id": product_id, "movement_id": movement_id, "reason": reason}
+        )
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            home, stock = self.household_id, unit.inventory
+            product = self._product(stock, product_id)
+            original = stock.movement_by_id(home, movement_id)
+            if original is None or original.reference_id != product.reference_id:
+                raise NotFound("inventory_movement_missing")
+            if original.kind is not MovementKind.INTAKE:
+                raise InvalidInput("inventory_correction_requires_intake")
+            if stock.correction_id(home, movement_id) is not None:
+                raise Conflict("inventory_intake_corrected")
+            return self._change_stock(
+                stock,
+                product,
+                member,
+                command,
+                -original.delta,
+                reason,
+                MovementKind.INTAKE_CORRECTION,
+                corrects=original.movement_id,
+            )
+
+        return self._execute(CatalogAction.CORRECT_INTAKE.value, key, payload, apply)
+
+    def _product(self, stock: InventoryRecords, product_id: str) -> CatalogProduct:
+        product = stock.product(self.household_id, product_id)
+        if product is None:
+            raise NotFound("inventory_product_missing")
+        return product
+
+    def _change_stock(
+        self,
+        stock: InventoryRecords,
+        product: CatalogProduct,
+        member: str,
+        command: CommandKey,
+        delta: int,
+        reason: str,
+        kind: MovementKind,
+        *,
+        corrects: str | None = None,
+    ) -> JsonDocument:
+        home, reference = self.household_id, product.reference_id
+        balance = stock.balance(home, reference) + delta
+        if balance < stock.reserved(home, reference):
+            raise Conflict("inventory_insufficient_stock")
+        if balance > MAX_STOCK_UNITS:
+            raise Conflict("inventory_stock_capacity")
+        movement = StockMovement(
+            home,
+            reference,
+            self.identifiers.new(),
+            JsonDocument.from_value(asdict(command)).fingerprint,
+            member,
+            delta,
+            self.clock.now(),
+            reason,
+            kind,
+            corrects=corrects,
+        )
+        stock.append(movement, balance)
+        return JsonDocument.from_value(
+            {
+                "product_id": product.product_id,
+                "movement_id": movement.movement_id,
+                "base_unit": product.base_unit.value,
+                "quantity": stock_quantity(delta),
+                "corrects": corrects,
+            }
+        )
 
     def original(self, action: CatalogAction, key: str, human: HumanIdentity) -> Receipt:
         with self.transactions.read() as unit:

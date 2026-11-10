@@ -401,7 +401,68 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(stock.getByText('Stock recorded in Pantry. 1.250001 millilitres')).toBeVisible();
     await expect(oil.locator('dd')).toHaveText(['1.250001', '0', '1.250001']);
     await stock.screenshot({path:info.outputPath('inventory-en-intake.png')});
+    await oil.getByRole('button', {name:'Show movement history'}).click();
+    const history = stock.getByRole('region', {name:'Movement history · Pantry oil'});
+    await expect(history).toBeFocused();
+    await expect(history.getByText('+1.250001 millilitres')).toBeVisible();
+    await expect(history.getByText('Author')).toBeVisible();
+    await expect(history.getByText('Date')).toBeVisible();
+
     await page.getByLabel('Language', {exact:true}).selectOption('es');
+    const historial = stock.getByRole('region', {name:'Historial de movimientos · Pantry oil'});
+    await expect(historial.getByText('+1,250001 mililitros')).toBeVisible();
+    await historial.getByRole('button', {name:'Revertir esta entrada'}).click();
+    await expect(historial.getByRole('textbox', {name:'Motivo'})).toBeFocused();
+    await historial.getByRole('button', {name:'Confirmar reversión de entrada'}).click();
+    await expect(historial.getByRole('alert')).toContainText('Introduce un motivo');
+    await historial.getByRole('textbox', {name:'Motivo'}).fill('Entrada duplicada');
+    let correctionKey = '';
+    let originalMovement = '';
+    let compensatingMovement = '';
+    await page.route(inventoryCommands, async route => {
+      correctionKey = route.request().headers()['idempotency-key'];
+      const committed = await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(committed.status()).toBe(200);
+      const {result} = await committed.json();
+      expect(result.quantity).toBe('-1.250001');
+      originalMovement = result.corrects;
+      compensatingMovement = result.movement_id;
+      await route.abort('connectionclosed');
+    });
+    await historial.getByRole('button', {name:'Confirmar reversión de entrada'}).click();
+    await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
+    await page.unroute(inventoryCommands);
+    await page.reload();
+    await expect(page).toHaveURL(base + '#inventory');
+    await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption('en');
+    const originalCorrection = page.waitForResponse(
+      base + 'api/v1/inventory/requests/inventory.correct-intake/' + correctionKey,
+    );
+    await stock.getByRole('button', {name:'Recover original request'}).click();
+    expect((await originalCorrection).ok()).toBe(true);
+    await expect(stock.getByText('Intake reversed. -1.250001 millilitres')).toBeVisible();
+    await expect(oil.locator('dd')).toHaveText(['0', '0', '0']);
+    await oil.getByRole('button', {name:'Show movement history'}).click();
+    const compensation = history.getByRole('listitem').filter({hasText:'Intake correction'});
+    const original = history.getByRole('listitem').filter({hasText:'Stock intake'});
+    await expect(compensation).toContainText('-1.250001 millilitres');
+    await expect(compensation).toContainText('Entrada duplicada');
+    await expect(original).toContainText('+1.250001 millilitres');
+    await expect(original.getByRole('button', {name:'Reverse this intake'})).toHaveCount(0);
+    await compensation.getByText('Movement details').click();
+    await expect(compensation.getByText('Original movement ' + originalMovement)).toBeVisible();
+    await original.getByText('Movement details').click();
+    await expect(original.getByText('Compensating movement ' + compensatingMovement)).toBeVisible();
+
+    await history.getByRole('button', {name:'Adjust stock'}).click();
+    await history.getByRole('textbox', {name:'Signed adjustment quantity'}).fill('+2.000001');
+    await history.getByRole('textbox', {name:'Reason'}).fill('Physical count');
+    await history.getByRole('button', {name:'Save adjustment'}).click();
+    await expect(oil.locator('dd')).toHaveText(['2.000001', '0', '2.000001']);
+    await expect(history.getByText('+2.000001 millilitres')).toBeVisible();
+    await page.getByLabel('Language', {exact:true}).selectOption('es');
+    await expect(historial.getByText('+2,000001 mililitros')).toBeVisible();
+    await expect(historial.getByText('Ajuste manual')).toBeVisible();
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

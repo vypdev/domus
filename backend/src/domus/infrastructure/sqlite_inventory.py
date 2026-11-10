@@ -4,6 +4,7 @@ import sqlite3
 from dataclasses import astuple, dataclass
 from typing import cast
 
+from domus.application.inventory_ports import LedgerEntry
 from domus.domain.errors import Conflict, StorageFailure
 from domus.domain.inventory import (
     MAX_STOCK_UNITS,
@@ -11,8 +12,10 @@ from domus.domain.inventory import (
     CatalogProduct,
     EffectKind,
     InventoryEffect,
+    MovementKind,
     StockMovement,
     stock_units,
+    validate_stock_reason,
 )
 from domus.domain.storage import JsonDocument, validate_identifier
 from domus.domain.task_material_values import MaterialBinding
@@ -60,6 +63,29 @@ INVENTORY_STATEMENTS = (
 )
 
 
+MOVEMENT_HISTORY_STATEMENTS = (
+    "ALTER TABLE inventory_movements RENAME TO inventory_movements_v20",
+    INVENTORY_STATEMENTS[-1]
+    .replace(
+        "reason TEXT NOT NULL, posting TEXT, corrects TEXT,",
+        "reason TEXT NOT NULL, posting TEXT, corrects TEXT, kind TEXT NOT NULL,",
+    )
+    .replace(
+        "CHECK((posting IS NOT NULL) OR (delta>0 AND corrects IS NULL))",
+        "CHECK((kind='intake' AND posting IS NULL AND corrects IS NULL AND delta>0) OR "
+        "(kind='adjustment' AND posting IS NULL AND corrects IS NULL) OR "
+        "(kind='intake_correction' AND posting IS NULL AND corrects IS NOT NULL AND delta<0) OR "
+        "(kind='task_consumption' AND posting IS NOT NULL AND corrects IS NULL AND delta<0) OR "
+        "(kind='task_correction' AND posting IS NOT NULL AND corrects IS NOT NULL))",
+    ),
+    "INSERT INTO inventory_movements SELECT *, CASE WHEN posting IS NULL THEN 'intake' "
+    "WHEN corrects IS NULL THEN 'task_consumption' ELSE 'task_correction' END "
+    "FROM inventory_movements_v20 ORDER BY position",
+    "DROP TABLE inventory_movements_v20",
+    "CREATE INDEX inventory_history ON inventory_movements(household_id,reference_id,position)",
+)
+
+
 CATALOG_TABLES = {"inventory_products"}
 CATALOG_STATEMENTS = (
     "CREATE TABLE inventory_products(household_id TEXT NOT NULL, product_id TEXT NOT NULL, "
@@ -92,7 +118,13 @@ def _effect(row: sqlite3.Row) -> InventoryEffect:
 
 
 def _movement(row: sqlite3.Row) -> StockMovement:
-    posting = row["posting"]
+    posting, corrects = row["posting"], row["corrects"]
+    if "kind" in row.keys():
+        kind = MovementKind(row["kind"])
+    elif posting is None:
+        kind = MovementKind.INTAKE
+    else:
+        kind = MovementKind.TASK_CONSUMPTION if corrects is None else MovementKind.TASK_CORRECTION
     return StockMovement(
         row["household_id"],
         row["reference_id"],
@@ -102,8 +134,9 @@ def _movement(row: sqlite3.Row) -> StockMovement:
         row["delta"],
         row["created_at"],
         row["reason"],
+        kind,
         None if posting is None else read_posting(JsonDocument(posting).decode()),
-        row["corrects"],
+        corrects,
     )
 
 
@@ -221,13 +254,35 @@ class SQLiteInventory:
             movement_id,
         )
 
+    def correction_id(self, home: str, original_id: str) -> str | None:
+        row = self.connection.execute(
+            "SELECT movement_id FROM inventory_movements WHERE household_id=? AND corrects=?",
+            (home, original_id),
+        ).fetchone()
+        return None if row is None else cast(str, row["movement_id"])
+
+    def history(
+        self, home: str, reference: str, through: int, limit: int
+    ) -> tuple[LedgerEntry, ...]:
+        return tuple(
+            LedgerEntry(row["position"], _movement(row), row["corrected_by"])
+            for row in self.connection.execute(
+                "SELECT m.*, c.movement_id AS corrected_by FROM inventory_movements m "
+                "LEFT JOIN inventory_movements c ON c.household_id=m.household_id "
+                "AND c.corrects=m.movement_id WHERE m.household_id=? AND m.reference_id=? "
+                "AND m.position<=? ORDER BY m.position DESC LIMIT ?",
+                (home, reference, through, limit),
+            )
+        )
+
     def append(self, value: StockMovement, balance: int) -> None:
         posting = (
             None if value.posting is None else JsonDocument.from_value(posting_value(value.posting))
         )
         self.connection.execute(
             "INSERT INTO inventory_movements(household_id,reference_id,movement_id,source_key,"
-            "member_id,delta,created_at,reason,posting,corrects) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "member_id,delta,created_at,reason,posting,corrects,kind) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             (
                 value.household_id,
                 value.reference_id,
@@ -239,6 +294,7 @@ class SQLiteInventory:
                 value.reason,
                 None if posting is None else posting.encoded,
                 value.corrects,
+                value.kind,
             ),
         )
         self.connection.execute(
@@ -277,6 +333,16 @@ def verify_inventory_records(connection: sqlite3.Connection) -> None:
                     raise StorageFailure("invalid_inventory_movement")
                 prior_units = stock_units(prior.posting.quantity)
             if movement.delta != prior_units - stock_units(posting.quantity):
+                raise StorageFailure("invalid_inventory_movement")
+        if movement.kind in (MovementKind.ADJUSTMENT, MovementKind.INTAKE_CORRECTION):
+            validate_stock_reason(movement.reason)
+        if movement.kind is MovementKind.INTAKE_CORRECTION:
+            original = stock.movement_by_id(movement.household_id, cast(str, movement.corrects))
+            if (
+                original is None
+                or original.kind is not MovementKind.INTAKE
+                or movement.delta != -original.delta
+            ):
                 raise StorageFailure("invalid_inventory_movement")
         if not 0 <= balance <= MAX_STOCK_UNITS:
             raise StorageFailure("invalid_inventory_balance")

@@ -42,6 +42,7 @@ from domus.infrastructure.sqlite_inventory import (
     CATALOG_TABLES,
     INVENTORY_STATEMENTS,
     INVENTORY_TABLES,
+    MOVEMENT_HISTORY_STATEMENTS,
     SQLiteInventory,
 )
 from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS, PROFILE_TABLES
@@ -82,7 +83,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 20
+SCHEMA_VERSION = 21
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -159,6 +160,7 @@ SCHEMA_STATEMENTS = (
     *ALLOCATION_STATEMENTS,
     *REWARD_STATEMENTS,
     *CATALOG_STATEMENTS,
+    *MOVEMENT_HISTORY_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -212,6 +214,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(ALLOCATION_STATEMENTS if version >= 18 else ()),
             *(REWARD_STATEMENTS if version >= 19 else ()),
             *(CATALOG_STATEMENTS if version >= 20 else ()),
+            *(MOVEMENT_HISTORY_STATEMENTS if version >= 21 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -545,7 +548,8 @@ class SQLiteDatabase:
                         *(INVENTORY_STATEMENTS if version < 17 else ()),
                         *(ALLOCATION_STATEMENTS if version < 18 else ()),
                         *(REWARD_STATEMENTS if version < 19 else ()),
-                        *CATALOG_STATEMENTS,
+                        *(CATALOG_STATEMENTS if version < 20 else ()),
+                        *MOVEMENT_HISTORY_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)

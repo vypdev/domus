@@ -11,6 +11,7 @@ from domus.domain.task_values import validate_task_text
 
 MAX_STOCK_UNITS = 10**18 - 1
 PANTRY = "pantry"
+MAX_STOCK_REASON = 240
 
 
 class BaseUnit(StrEnum):
@@ -51,13 +52,30 @@ class CatalogProduct:
 
 
 def stock_quantity(units: int) -> str:
-    whole, fraction = divmod(units, 1_000_000)
-    return f"{whole}.{fraction:06}".rstrip("0") if fraction else str(whole)
+    sign = "-" if units < 0 else ""
+    whole, fraction = divmod(abs(units), 1_000_000)
+    magnitude = f"{whole}.{fraction:06}".rstrip("0") if fraction else str(whole)
+    return sign + magnitude
 
 
 def stock_units(quantity: MaterialQuantity) -> int:
     whole, _, fraction = quantity.value.partition(".")
     return int(whole) * 1_000_000 + int(fraction.ljust(6, "0"))
+
+
+def validate_stock_reason(reason: str) -> None:
+    try:
+        validate_task_text(reason, MAX_STOCK_REASON, required=True)
+    except InvalidInput:
+        raise InvalidInput("invalid_inventory_reason") from None
+
+
+class MovementKind(StrEnum):
+    INTAKE = "intake"
+    TASK_CONSUMPTION = "task_consumption"
+    TASK_CORRECTION = "task_correction"
+    ADJUSTMENT = "adjustment"
+    INTAKE_CORRECTION = "intake_correction"
 
 
 class EffectKind(StrEnum):
@@ -88,5 +106,6 @@ class StockMovement:
     delta: int
     created_at: int
     reason: str
+    kind: MovementKind
     posting: MaterialPosting | None = None
     corrects: str | None = None

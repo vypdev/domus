@@ -1,22 +1,26 @@
 /** Manage only current household scope and the original unresolved stock command. */
 import {inventoryCommand} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, InventoryReport} from '../domain/inventory';
+import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import type {EntryEntropy, EntryRead} from './ports';
 
 export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'invalid_request',
   'invalid_task_text', 'invalid_inventory_unit', 'invalid_inventory_receipt', 'invalid_material_quantity',
-  'invalid_material_precision', 'inventory_product_missing', 'inventory_stock_capacity'] as const;
+  'invalid_material_precision', 'inventory_product_missing', 'inventory_stock_capacity',
+  'invalid_inventory_reason', 'inventory_insufficient_stock', 'inventory_movement_missing',
+  'inventory_correction_requires_intake', 'inventory_intake_corrected'] as const;
 export type InventoryError = typeof INVENTORY_ERRORS[number] | 'rejected';
 
 export interface InventoryScope {readonly key: string; readonly context: JournalContext; readonly readOnly: boolean;}
 export interface InventoryRequest {readonly key: string; readonly scope: string; readonly command: InventoryCommand;}
 export type InventoryResult = Readonly<{
   kind: 'committed' | 'historical'; operationId: string; productId: string;
-  intake: Readonly<{movementId: string; quantity: string; unit: BaseUnit}> | null;
+  movement: Readonly<{movementId: string; quantity: string; unit: BaseUnit;
+    action: 'inventory.intake' | 'inventory.adjust' | 'inventory.correct-intake'}> | null;
 }> | Readonly<{kind: 'rejected'; reason: InventoryError; command: InventoryCommand}>;
 export interface InventoryServer {
   read(scope: InventoryScope, cursor: string | null): EntryRead<InventoryReport>;
+  history(scope: InventoryScope, productId: string, cursor: string | null): EntryRead<MovementHistory>;
   send(scope: InventoryScope, request: InventoryRequest): EntryRead<InventoryResult>;
   original(scope: InventoryScope, request: InventoryRequest): EntryRead<InventoryResult | null>;
 }
@@ -28,6 +32,7 @@ export interface InventoryJournal {
 export interface InventoryState {
   readonly scope: InventoryScope;
   readonly report: InventoryReport | null;
+  readonly history: MovementHistory | null;
   readonly pending: boolean;
   readonly busy: boolean;
   readonly result: InventoryResult | null;
@@ -48,7 +53,7 @@ export class InventoryController {
     this.owned?.cancel();
     this.owned = null;
     this.request = null;
-    this.view = scope === null ? null : {scope, report: null, pending: false, busy: false, result: null, notice: null};
+    this.view = scope === null ? null : {scope, report: null, history: null, pending: false, busy: false, result: null, notice: null};
     this.publish(this.view);
     if (scope === null) return;
     try {
@@ -58,7 +63,23 @@ export class InventoryController {
     void this.refresh();
   }
 
-  async refresh(): Promise<void> {await this.load(null);}
+  async refresh(): Promise<void> {
+    const state = this.view;
+    await this.load(null);
+    if (state?.history && this.view?.scope === state.scope && this.view.history)
+      await this.showHistory(state.history.productId);
+  }
+
+  async showHistory(productId: string): Promise<void> {await this.loadHistory(productId, null);}
+
+  async moreHistory(): Promise<void> {
+    const history = this.view?.history;
+    if (history?.cursor) await this.loadHistory(history.productId, history.cursor);
+  }
+
+  closeHistory(): void {
+    if (this.view && this.owned === null) this.set({history: null});
+  }
 
   async more(): Promise<void> {
     const cursor = this.view?.report?.cursor;
@@ -101,7 +122,17 @@ export class InventoryController {
       this.set({report: cursor === null ? page : {...page, products: [...state.report!.products, ...page.products]},
         notice: state.pending ? state.notice : null});
     }, 'unavailable');
-    if (!loaded && this.view?.scope === state.scope) this.set({report: null});
+    if (!loaded && this.view?.scope === state.scope) this.set({report: null, history: null});
+  }
+
+  private async loadHistory(productId: string, cursor: string | null): Promise<void> {
+    const state = this.view;
+    if (state === null || state.report === null || this.owned !== null) return;
+    const loaded = await this.run(this.server.history(state.scope, productId, cursor), page => {
+      const history = cursor === null ? page : {...page, movements: [...state.history!.movements, ...page.movements]};
+      this.set({history, notice: state.pending ? state.notice : null});
+    }, 'unavailable');
+    if (!loaded && this.view?.scope === state.scope) this.set({history: null});
   }
 
   private async send(scope: InventoryScope, request: InventoryRequest): Promise<void> {

@@ -29,7 +29,7 @@ Administrator mapping defaults to all_ha_administrators; setup_administrator and
 
 Reopening a prerequisite preserves already-completed downstream work and points and raises dependency_attention. Approved unfulfilled redemptions without backing enter funding_hold with approval/reservation retained; delivery cannot proceed until funding is sufficient or an explicit authorized resolution occurs. Disabling a rule fences new admissions and subsequent steps while recording the result of already-started atomic commands. Restart/re-enable does not silently resume its cancelled queue or waits.
 
-## Inventory catalog and stock intake
+## Inventory catalog and movement history
 
 The protected Inventory workspace uses the current household session. Reads
 require household access, and registration and intake require a current
@@ -46,6 +46,20 @@ original Pantry binding and that stock reconciles with movements and reservation
 Restore activation keeps the original request identity and distinguishes effects
 present in the current database from historical receipts. Downgrade requires a
 compatible database and image pair.
+
+Schema 21 adds movement kinds and a product history index to the same ledger.
+It preserves movement positions, IDs, links, balances, reservations, and
+operation receipts from schema 20. It classifies historical rows using their
+existing posting and correction references. Upgrade runs in one SQLite
+transaction. A compatible restore verifies exact ledger balance and linked
+compensation before activating the generation.
+
+The history requires current household read access. Pagination is newest append
+first with a signed cursor scoped to the product, current member, authorization
+context and page size. Adjustments and intake reversals require
+`inventory.manage` and a reason. The writer checks the projected balance and
+active reservations before appending a movement and committing its original
+receipt. A unique correction link allows one full reversal per intake.
 
 ## Family rewards
 

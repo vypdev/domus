@@ -82,6 +82,10 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       raw = JSON.stringify({state:'committed',archived_by:null,operation_id:'product-operation',created_at:100,
         result:{product_id:'product',name,base_unit},message:'Saved.',action_required:'Review.'});
     }
+    else if (route.startsWith('inventory/products/product/movements?')) raw = JSON.stringify({
+      product_id:'product', product_name:'Salt', base_unit:'gram', movements:[],
+      next_cursor:route.includes('cursor=')?null:'older',
+    });
     else if (route.startsWith('inventory?')) raw = JSON.stringify({location_id:'pantry', may_manage:true, products:[],
       next_cursor:route.includes('cursor=')?null:'inventory-next'});
     else if (route.startsWith('family/rewards?')) raw = JSON.stringify({
@@ -666,6 +670,13 @@ test('Inventory owns the current protected destination and accepts only closed u
   emit({type:'submit', command:{action:'inventory.register-product',name:'Salt',base_unit:'gram'}});
   await vi.waitFor(() => expect(app.inventory?.result).toMatchObject({kind:'committed', productId:'product'}));
   expect(f.values.has(INVENTORY_JOURNAL_KEY)).toBe(false);
+  await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
+  emit({type:'history',productId:'product'});
+  await vi.waitFor(() => expect(app.inventory?.history?.cursor).toBe('older'));
+  emit({type:'more-history'});
+  await vi.waitFor(() => expect(app.inventory?.history?.cursor).toBeNull());
+  emit({type:'close-history'});
+  expect(app.inventory?.history).toBeNull();
   expect(decodeInventoryIntent({type:'submit',command:{action:'inventory.intake',product_id:'product',quantity:'1',location:'foreign'}})).toBeNull();
   navigate('#tasks');
   expect(app.inventory).toBeNull();
