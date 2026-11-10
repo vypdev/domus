@@ -1117,3 +1117,140 @@ Keep 100 percent coverage globally and per authored file. Require CI, both actua
 ### 20. References and decisions
 
 Qualifies the posted receipt correction in shopping-management-C17 after issue #82.
+
+## Return a physical receipt posted to Pantry
+
+- Status: Draft
+- Owners: Domus maintainers and Shopping Management
+- Scope: Record one full physical return from a closed tracked purchase item
+- Source baseline: develop at 3e60abdc2ac044bcb0f48e99e4a43f9a6d95dfac
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+Record the physical return of a tracked receipt on a closed purchase. Shopping shows the original receipt and its attributed return. Pantry shows the linked stock withdrawal.
+
+### 2. Problem, current behavior, and evidence
+
+A supplier return removes goods that arrived and were posted correctly. The receipt correction is for a posting error and returns quantity to the amount still due. The physical return needs its own record while the purchase remains closed.
+
+### 3. Actors, surfaces, and terminology
+
+Household readers see receipts and returns. A member with shopping.manage and inventory.manage can record the physical return. A closed purchase item in this increment has its full purchased quantity received and posted with no outstanding-balance cancellation.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| receipt-return-R1 | Return one whole tracked, posted and valid receipt of a fully received and settled purchase item. Require both current grants, a reason and the current purchase revision. |
+| receipt-return-R2 | Commit a linked withdrawal, receipt return, new revision and original operation receipt atomically. Validate available stock and active reservations. |
+| receipt-return-R3 | A return and any correction of the same receipt are mutually exclusive. Preserve the closed purchase and original history. Recalculate demand using current stock. |
+| receipt-return-R4 | Preserve current authorization, exact retry recovery, legacy data, restart and restoration. Show the reason, author, time and linked withdrawal in both workspaces. |
+
+Partial returns, financial refunds, supplier integrations and undoing a physical return have separate acceptance.
+
+### 5. Current versus proposed product journey
+
+From physical receipt history, choose to record the return, review the original amount, enter a reason and confirm. Shopping shows the receipt and return. Pantry history shows a distinct return with its link to the original intake.
+
+### 6. Functional behavior and state model
+
+Resolve the purchase and receipt in the current household. Require a tracked posting and a completely received and posted purchase item with no balance cancellation. Check the expected revision and require a nonblank reason of at most 240 characters. Derive the exact return amount from the persisted receipt. A previously corrected receipt, a historical Inventory-only reversal or an existing return makes the request ineligible.
+
+Append the exact negative Pantry movement and link it to the receipt. Advance the purchase revision once and preserve all original purchase amounts and its closed state. Other receipts and existing reservations retain their identities. Existing replenishment and shared list projections use the resulting stock. An independent open purchase for the same product does not block a return from the closed purchase.
+
+### 7. User-facing configuration
+
+Use existing base units, roles and purchase revisions. No household setting is needed.
+
+### 8. Clean Architecture design
+
+Reuse the ledger writer, stock floor checks, transaction-scoped ports and original operation journal. Persist an attributed return through its linked stock movement. Keep return and correction eligibility in the same transaction.
+
+### 9. UI/UX and content contract
+
+Show the exact quantity before confirmation. The purchase detail shows the return reason, author, time and movement link. The movement history distinguishes the withdrawal from a stock correction. Localize the action and recovery in both Ingress and standalone.
+
+### 10. Failure, recovery, and cleanup
+
+An invalid, stale or rejected return changes no business state. Only one competing return or correction can commit. A repeated key returns the original operation. A changed payload conflicts. Restoration can make an earlier operation historical.
+
+### 11. Security, permissions, and privacy
+
+Require household.read for history and both current grants for mutation and recovery. Apply the existing verified context, origin and CSRF checks.
+
+### 12. Observability and operational UX
+
+Retain the original posting, exact stock withdrawal, reason and actor. Use existing safe rejection and original request recovery controls. Explain when a receipt is ineligible or the stock is reserved.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Upgrade representative schema 28 data with purchases, a session, posted and pending receipts, a linked correction, a previous void and a historical reversal. Verify migration rollback, restart, and current and historical return receipts after activated restore.
+
+### 14. Testing strategy and numeric budget
+
+Minimum eight distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| State and UI | 1 | Observable scenarios in the case inventory. |
+| Inventory projection | 1 | Observable scenarios in the case inventory. |
+| Concurrency | 1 | Observable scenarios in the case inventory. |
+| Recovery | 1 | Observable scenarios in the case inventory. |
+| Authorization | 1 | Observable scenarios in the case inventory. |
+| Rejection | 1 | Observable scenarios in the case inventory. |
+| Compatibility | 1 | Observable scenarios in the case inventory. |
+| Workspace | 1 | Observable scenarios in the case inventory. |
+| Total | 8 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| receipt-return-C01 | State and UI | receipt-return-R1, receipt-return-R3 | Return an exact fractional receipt, retain its original posting and closed purchase amounts, and show the attributed return. |
+| receipt-return-C02 | Inventory projection | receipt-return-R2, receipt-return-R3 | Record the exact withdrawal and recompute demand while respecting active reservations and an independent open purchase. |
+| receipt-return-C03 | Concurrency | receipt-return-R2, receipt-return-R3 | Race two returns, identical keys, and a return against a correction. Verify one withdrawal. |
+| receipt-return-C04 | Recovery | receipt-return-R2, receipt-return-R4 | Recover the original receipt after repeat, restart and activated restore, and reject a changed payload. |
+| receipt-return-C05 | Authorization | receipt-return-R1, receipt-return-R4 | Reject missing or revoked grants, missing CSRF and foreign receipt identities. |
+| receipt-return-C06 | Rejection | receipt-return-R1, receipt-return-R2, receipt-return-R3 | Reject stale, pending, untracked, open, canceled, corrected and returned receipts. A write failure rolls back the stock withdrawal. |
+| receipt-return-C07 | Compatibility | receipt-return-R2, receipt-return-R4 | Migrate schema 28 data, preserve earlier evidence, roll back an interrupted upgrade and reject an inconsistent return link in a snapshot. |
+| receipt-return-C08 | Workspace | receipt-return-R1, receipt-return-R3, receipt-return-R4 | Return a receipt from a closed session item and verify Shopping and Pantry in both locales and deployment modes on both image architectures. |
+
+### 15. Documentation and discoverability
+
+[specs/shopping-management.md](shopping-management.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/physical-receipt-return-qualification.md](../docs/evidence/physical-receipt-return-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/infrastructure/sqlite\_shopping.py](../backend/src/domus/infrastructure/sqlite_shopping.py) · [frontend/src/presentation/domus-shopping.ts](../frontend/src/presentation/domus-shopping.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/shopping-management.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/physical-receipt-return-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/infrastructure/sqlite_shopping.py | update |
+| frontend/src/presentation/domus-shopping.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Return four units from a closed purchase of four, verify the signed linked withdrawal and the resulting purchase need, then recover the original return receipt. Race a correction and return for the same receipt and verify stock is withdrawn once.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| receipt-return-R1 | receipt-return-C01, receipt-return-C05, receipt-return-C06, receipt-return-C08 |
+| receipt-return-R2 | receipt-return-C02, receipt-return-C03, receipt-return-C04, receipt-return-C06, receipt-return-C07 |
+| receipt-return-R3 | receipt-return-C01, receipt-return-C02, receipt-return-C03, receipt-return-C06, receipt-return-C08 |
+| receipt-return-R4 | receipt-return-C04, receipt-return-C05, receipt-return-C07, receipt-return-C08 |
+
+### 18. Implementation sequence
+
+Add the return link and guarded transaction, expose the attributed histories, and qualify migration, recovery and the bilingual workspace.
+
+### 19. Definition of Done
+
+Keep 100 percent coverage globally and per authored file. Require CI, both actual image architectures, Copilot Verification and Bugbot on the same commit. Preserve installed Copilot resources. Releases and deployments require separate authorization.
+
+### 20. References and decisions
+
+Extends the purchase history and receipt invariants in shopping-management-R4, shopping-management-R5 and shopping-management-R6 after issue #84.
