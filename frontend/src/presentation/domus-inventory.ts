@@ -39,6 +39,7 @@ const SHOPPING_SAVED = {
   'shopping.post-receipt': 'stockPosted',
   'shopping.add-extra': 'extraAdded',
   'shopping.clear-extra': 'extraCleared',
+  'shopping.record-session': 'sessionSaved',
 } as const;
 
 interface PolicyEditor {

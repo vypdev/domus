@@ -7,7 +7,16 @@ export const BASE_UNITS = ['piece', 'gram', 'millilitre'] as const;
 export type BaseUnit = typeof BASE_UNITS[number];
 export type ReplenishmentRevision = Revision | '0';
 export type ShoppingAction = 'shopping.purchase' | 'shopping.receive' | 'shopping.post-receipt'
-  | 'shopping.add-extra' | 'shopping.clear-extra';
+  | 'shopping.add-extra' | 'shopping.clear-extra' | 'shopping.record-session';
+
+export const MIN_SESSION_ITEMS = 2;
+export const MAX_SESSION_ITEMS = 16;
+
+export interface SessionSelection {
+  readonly product_id: string | null;
+  readonly extra_id: string | null;
+  readonly quantity: string;
+}
 
 export type InventoryCommand =
   | Readonly<{action: 'inventory.register-product'; name: string; base_unit: BaseUnit}>
@@ -20,7 +29,8 @@ export type InventoryCommand =
   | Readonly<{action: 'shopping.add-extra'; product_id: string | null; name: string | null; quantity: string}>
   | Readonly<{action: 'shopping.receive'; purchase_id: string; quantity: string; expected_revision: Revision}>
   | Readonly<{action: 'shopping.post-receipt'; purchase_id: string; receipt_id: string}>
-  | Readonly<{action: 'shopping.clear-extra'; extra_id: string}>;
+  | Readonly<{action: 'shopping.clear-extra'; extra_id: string}>
+  | Readonly<{action: 'shopping.record-session'; items: readonly SessionSelection[]}>;
 
 export const MOVEMENT_KINDS = ['intake', 'task_consumption', 'task_correction', 'adjustment', 'intake_correction'] as const;
 export type MovementKind = typeof MOVEMENT_KINDS[number];
@@ -117,6 +127,20 @@ export interface ExtraAttribution {
   readonly createdAt: string;
 }
 
+export interface PurchaseSession extends ExtraAttribution {
+  readonly id: string;
+}
+
+export interface PurchaseSessions {
+  readonly items: readonly PurchaseSession[];
+  readonly cursor: string | null;
+}
+
+export interface PurchaseSessionDetail {
+  readonly session: PurchaseSession;
+  readonly items: readonly Purchase[];
+}
+
 export interface ShoppingItem {
   readonly productId: string | null;
   readonly extraId: string | null;
@@ -163,6 +187,16 @@ export function positiveQuantity(value: unknown): string {
   const quantity = taskQuantity(value);
   if (quantity === '0') throw new Error('invalid_inventory_quantity');
   return quantity;
+}
+
+function sessionSelection(value: unknown): SessionSelection {
+  if (value === null || typeof value !== 'object' || Array.isArray(value))
+    throw new Error('invalid_inventory_command');
+  const item = value as Record<string, unknown>;
+  if (!hasFields(item, ['product_id','extra_id','quantity']) || (item.product_id === null) === (item.extra_id === null))
+    throw new Error('invalid_inventory_command');
+  return {product_id:item.product_id === null ? null : taskIdentifier(item.product_id),
+    extra_id:item.extra_id === null ? null : taskIdentifier(item.extra_id), quantity:positiveQuantity(item.quantity)};
 }
 
 export function inventoryCommand(value: unknown): InventoryCommand {
@@ -213,6 +247,12 @@ export function inventoryCommand(value: unknown): InventoryCommand {
   }
   if (action === 'shopping.clear-extra' && hasFields(record, ['action','extra_id']))
     return {action, extra_id:taskIdentifier(record.extra_id)};
+  if (action === 'shopping.record-session' && hasFields(record, ['action','items']) && Array.isArray(record.items)
+      && record.items.length >= MIN_SESSION_ITEMS && record.items.length <= MAX_SESSION_ITEMS) {
+    const items = record.items.map(sessionSelection);
+    if (new Set(items.map(item => JSON.stringify([item.product_id,item.extra_id]))).size === items.length)
+      return {action, items};
+  }
   throw new Error('invalid_inventory_command');
 }
 

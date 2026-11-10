@@ -98,6 +98,21 @@ again in the restored list, a manager can clear it with a new request after
 reviewing that state. Replaying the historical clear returns its archived
 receipt.
 
+## Purchase sessions
+
+Schema 25 adds session headers and ordered links to existing purchase rows.
+Migration from schema 24 keeps individual purchase and receipt history, the
+Pantry ledger and shared-list extras. The session and every item commit with one
+original operation receipt. A failure during recording rolls back the entire
+trip. Snapshot checks verify the item count and the session's actor and time
+against its items.
+
+Recording and original-command recovery require current `shopping.manage`.
+Session history and details require `household.read`. Each item's physical
+receipts and Pantry postings continue as independent operations. A restored
+historical session receipt preserves its original identifiers. Review the
+current history before recording a new trip.
+
 ## Shopping purchases and receipts
 
 Schema 23 adds household-scoped purchase and physical receipt tables to schema

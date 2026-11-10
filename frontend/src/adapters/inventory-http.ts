@@ -1,8 +1,8 @@
 /** Bounded same-origin Inventory reads and exact original-command recovery. */
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
-import {BASE_UNITS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, ProductStock, Purchase, Purchases, PurchaseReceipts, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement} from '../domain/inventory';
+import {BASE_UNITS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
+import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, ProductStock, Purchase, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement} from '../domain/inventory';
 import {revisionValue} from '../domain/administration';
 import {taskQuantity, taskTime} from '../domain/tasks';
 import {BoundedHTTP} from './http-transport';
@@ -114,6 +114,30 @@ function purchaseReceipts(value: unknown, purchaseId: string): PurchaseReceipts 
   return {purchase:selected, items, cursor:cursorValue(row.next_cursor)};
 }
 
+function purchaseSession(value: unknown): PurchaseSession {
+  const row = fields(value, ['session_id','member_id','author_alias','created_at'], []);
+  return {id:identifier(row.session_id), ...attribution(row)};
+}
+
+function purchaseSessions(value: unknown): PurchaseSessions {
+  const row = fields(value, ['sessions','next_cursor'], []);
+  check(Array.isArray(row.sessions) && row.sessions.length <= 25);
+  const items = row.sessions.map(purchaseSession);
+  check(new Set(items.map(item => item.id)).size === items.length);
+  return {items, cursor:cursorValue(row.next_cursor)};
+}
+
+function purchaseSessionDetail(value: unknown, id: string): PurchaseSessionDetail {
+  const row = fields(value, ['session','items'], []);
+  const session = purchaseSession(row.session);
+  check(session.id === id && Array.isArray(row.items)
+    && row.items.length >= MIN_SESSION_ITEMS && row.items.length <= MAX_SESSION_ITEMS);
+  const items = row.items.map(purchase);
+  check(new Set(items.map(item => item.id)).size === items.length);
+  check(items.every(item => item.memberId === session.memberId && item.createdAt === session.createdAt));
+  return {session, items};
+}
+
 function shoppingAmount(value: unknown, unit: BaseUnit): string {
   const amount = text(value, 39);
   check(/^(0|[1-9][0-9]{0,31})(?:\.[0-9]{0,5}[1-9])?$/u.test(amount));
@@ -200,6 +224,13 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
     }
     return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
   }
+  if (command.action === 'shopping.record-session') {
+    const result = fields(row.result, ['session_id','purchase_ids'], []);
+    check(Array.isArray(result.purchase_ids) && result.purchase_ids.length === command.items.length);
+    check(new Set(result.purchase_ids.map(identifier)).size === command.items.length);
+    return {kind, operationId, productId:null, movement:null, shoppingAction:command.action,
+      sessionId:identifier(result.session_id)};
+  }
   if (command.action === 'shopping.add-extra' || command.action === 'shopping.clear-extra') {
     const extra = identifier(fields(row.result, ['extra_id'], []).extra_id);
     if (command.action === 'shopping.clear-extra') check(extra === command.extra_id);
@@ -259,6 +290,19 @@ export class HttpInventoryServer implements InventoryServer {
     return this.network.owned(async signal => {
       const route = BASE + '/purchases/' + identifier(purchaseId) + '/receipts' + pageQuery(cursor);
       return purchaseReceipts(await this.network.get(route, scope.context, signal), purchaseId);
+    });
+  }
+
+  purchaseSessions(scope: InventoryScope, cursor: string | null) {
+    return this.network.owned(async signal => {
+      return purchaseSessions(await this.network.get(BASE + '/purchase-sessions' + pageQuery(cursor), scope.context, signal));
+    });
+  }
+
+  purchaseSession(scope: InventoryScope, sessionId: string) {
+    return this.network.owned(async signal => {
+      const route = BASE + '/purchase-sessions/' + identifier(sessionId);
+      return purchaseSessionDetail(await this.network.get(route, scope.context, signal), sessionId);
     });
   }
 

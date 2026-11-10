@@ -12,10 +12,13 @@ from domus.application.inventory_queries import (
     InventoryView,
     MovementHistory,
     PhysicalReceiptsView,
+    PurchaseSessionDetail,
+    PurchaseSessionsView,
     PurchasesView,
 )
 from domus.application.shopping_list import ShoppingListView, ShoppingSourcesView
 from domus.domain.inventory import MAX_STOCK_REASON, BaseUnit
+from domus.domain.shopping import MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, SessionSelection
 from domus.domain.task_material_values import MaterialQuantity
 from domus.entrypoints.household_http import (
     ReceiptResponse,
@@ -103,6 +106,20 @@ class ClearExtraBody(StrictModel):
     extra_id: Identifier
 
 
+class SessionSelectionBody(StrictModel):
+    product_id: Identifier | None
+    extra_id: Identifier | None
+    quantity: Quantity
+
+
+class PurchaseSessionBody(StrictModel):
+    action: Literal["shopping.record-session"]
+    items: Annotated[
+        list[SessionSelectionBody],
+        Field(min_length=MIN_SESSION_ITEMS, max_length=MAX_SESSION_ITEMS),
+    ]
+
+
 CatalogBody = Annotated[
     ProductBody
     | IntakeBody
@@ -113,7 +130,8 @@ CatalogBody = Annotated[
     | ReceivePurchaseBody
     | PostReceiptBody
     | AddExtraBody
-    | ClearExtraBody,
+    | ClearExtraBody
+    | PurchaseSessionBody,
     Field(discriminator="action"),
 ]
 
@@ -142,6 +160,20 @@ def create_inventory_router(
     @router.get("/purchases", response_model=PurchasesView)
     def purchases(request: Request, query: Annotated[PageQuery, Query()]) -> PurchasesView:
         return context(request).inventory().purchases(limit=query.limit, cursor=query.cursor)
+
+    @router.get("/purchase-sessions", response_model=PurchaseSessionsView)
+    def purchase_sessions(
+        request: Request, query: Annotated[PageQuery, Query()]
+    ) -> PurchaseSessionsView:
+        return (
+            context(request).inventory().purchase_sessions(limit=query.limit, cursor=query.cursor)
+        )
+
+    @router.get("/purchase-sessions/{session_id}", response_model=PurchaseSessionDetail)
+    def purchase_session(
+        request: Request, session_id: Identifier, query: Annotated[_EmptyQuery, Query()]
+    ) -> PurchaseSessionDetail:
+        return context(request).inventory().purchase_session(session_id)
 
     @router.get("/purchases/{purchase_id}/receipts", response_model=PhysicalReceiptsView)
     def physical_receipts(
@@ -211,6 +243,16 @@ def create_inventory_router(
             )
         elif isinstance(body, ClearExtraBody):
             receipt = inventory.clear_extra(key, body.extra_id)
+        elif isinstance(body, PurchaseSessionBody):
+            receipt = inventory.record_purchase_session(
+                key,
+                tuple(
+                    SessionSelection(
+                        item.product_id, item.extra_id, MaterialQuantity(item.quantity)
+                    )
+                    for item in body.items
+                ),
+            )
         else:
             receipt = inventory.post_purchase_receipt(key, body.purchase_id, body.receipt_id)
         return _receipt(receipt)

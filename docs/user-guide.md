@@ -139,6 +139,24 @@ stock, reservations and purchases recalculate automatic needs. Extras stay on
 the list until a manager clears them. Use **Recover original request** if an
 add or clear response is lost.
 
+### Purchase sessions
+
+In the shared shopping list, a shopping manager can choose **Add to purchase
+session** on two to sixteen different items. Review the quantities you actually
+bought and choose **Record purchase session**. Tracked quantities use each
+product's base unit. Untracked extras use whole pieces. If any selected
+tracked product already has an open purchase, review that purchase and adjust
+the selection before saving the session again.
+
+Choose **Show purchase sessions** to browse trips by shopper and time. Open a
+session to see the amount purchased, received, still due and awaiting Pantry
+posting for each item. Use **Show physical receipts** on an item to record an
+arrival or post it to Pantry with the required access. Manage manual extras
+using their existing clear controls.
+
+If the session response is lost, choose **Recover original request** and then
+**Show recorded session** to open the saved trip.
+
 ### Shopping and physical receipts
 
 In **Inventory**, choose **Show purchases** in the Shopping card. With shopping

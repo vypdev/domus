@@ -43,7 +43,7 @@ from domus.infrastructure.sqlite import SCHEMA_VERSION
 
 MODE = sys.argv[1]
 ORIGIN = 'https://domus.fixture'
-assert SCHEMA_VERSION == 24
+assert SCHEMA_VERSION == 25
 
 class FixtureHuman:
     def current(self):

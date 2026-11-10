@@ -6,7 +6,7 @@ import type {InventoryRequest, InventoryResult, InventoryScope, InventoryState} 
 import type {EntryRead} from '../src/application/ports';
 import {adjustmentQuantity, intakeQuantity, inventoryCommand} from '../src/domain/inventory';
 import {revisionValue} from '../src/domain/administration';
-import type {InventoryReport, MovementHistory, Purchase, PurchaseReceipts, Purchases} from '../src/domain/inventory';
+import type {InventoryReport, MovementHistory, Purchase, PurchaseReceipts, Purchases, PurchaseSessions, PurchaseSessionDetail} from '../src/domain/inventory';
 import '../src/presentation/domus-inventory';
 import corpus from './fixtures/entry-wire.json';
 
@@ -284,7 +284,7 @@ function controller() {
   const buys = vi.fn((_scope: InventoryScope, _cursor: string|null): EntryRead<Purchases> => read(purchases));
   const arrivals = vi.fn((_scope: InventoryScope, _id:string, _cursor: string|null): EntryRead<PurchaseReceipts> => read(purchaseReceipts));
   const controller = new InventoryController({read:load,history:movements,purchases:buys,purchaseReceipts:arrivals,
-    shoppingList:() => lost(),shoppingSources:() => lost(),send,original},
+    purchaseSessions:() => lost(),purchaseSession:() => lost(),shoppingList:() => lost(),shoppingSources:() => lost(),send,original},
     local.journal,{requestKey:() => request.key},publish);
   const current = () => publish.mock.lastCall?.[0];
   return {...local, controller, load, movements, buys, arrivals, send, original, current};
@@ -943,7 +943,8 @@ test('shared Shopping loads pages only in scope and recovers requests with their
   const send = vi.fn((_scope:InventoryScope,_request:InventoryRequest):EntryRead<InventoryResult> => lost());
   const original = vi.fn((_scope:InventoryScope,_request:InventoryRequest):EntryRead<InventoryResult|null> => read(null));
   const app = new InventoryController({read:load,history:() => lost(),purchases:() => lost(),
-    purchaseReceipts:() => lost(),shoppingList:list,shoppingSources:sources,send,original},
+    purchaseReceipts:() => lost(),purchaseSessions:() => lost(),purchaseSession:() => lost(),
+    shoppingList:list,shoppingSources:sources,send,original},
     local.journal,{requestKey:() => 'extra-operation'},publish);
   const state = () => publish.mock.lastCall?.[0];
   await app.showShoppingList(); await app.showShoppingSources('product'); await app.moreShoppingSources();
@@ -1067,4 +1068,202 @@ test('shared Shopping renders bilingual per-source totals and controls for autho
   expect(panel.textContent).toContain('Tareas · Make dinner');
   expect(panel.querySelector('form')).toBeNull();
   expect(buttons('Retirar extra manual')).toHaveLength(0);
+});
+
+const sessionItem = {product_id:'product',extra_id:null,quantity:'2.000001'} as const;
+const sessionExtra = {product_id:null,extra_id:'free',quantity:'1'} as const;
+const recordSession = {action:'shopping.record-session',items:[sessionItem,sessionExtra]} as const;
+const wireSession = {session_id:'session',member_id:'member',author_alias:'Shopper',created_at:'100'};
+const sessionPage = {sessions:[wireSession],next_cursor:'older-sessions'};
+const freePurchase = {...wirePurchase,purchase_id:'other-purchase',product_id:null,base_unit:'piece',
+  name:'Lemons',purchased:'1',received:'1',remaining:'0',pending_stock:'0'};
+const wireSessionDetail = {session:wireSession,items:[wirePurchase,freePurchase]};
+const sessionReceipt = {session_id:'session',purchase_ids:['purchase','other-purchase']};
+const sessionSaved = {kind:'committed',operationId:'operation',productId:null,movement:null,
+  shoppingAction:recordSession.action,sessionId:'session'} as const;
+
+test('purchase sessions admit distinct bounded selections and validate attributed history and original receipts', async () => {
+  expect(inventoryCommand(recordSession)).toEqual(recordSession);
+  for (const bad of [
+    {...recordSession,wrong:true}, {...recordSession,items:{}}, {...recordSession,items:[sessionItem]},
+    {...recordSession,items:Array(17).fill(sessionItem)}, {...recordSession,items:[sessionItem,sessionItem]},
+    ...[null,[],1,{...sessionExtra,name:'forged'}, {...sessionExtra,product_id:'both'},
+      {...sessionExtra,extra_id:null}, {...sessionExtra,quantity:'0'}]
+      .map(item => ({...recordSession,items:[sessionItem,item]})),
+  ]) expect(() => inventoryCommand(bad)).toThrow();
+
+  const {server,fetch} = http([[200,sessionPage],[200,wireSessionDetail],[200,csrf],
+    [200,receipt(sessionReceipt)],[200,receipt(sessionReceipt,'historical')]],'native');
+  expect(await server.purchaseSessions(scope,'previous').result).toMatchObject({
+    items:[{id:'session',authorAlias:'Shopper',createdAt:'100'}],cursor:'older-sessions',
+  });
+  expect(await server.purchaseSession(scope,'session').result).toMatchObject({
+    session:{id:'session'},items:[{id:'purchase',pendingStock:'4.000001'},{id:'other-purchase',pendingStock:'0'}],
+  });
+  expect(fetch.mock.calls[0][0]).toMatch(/inventory\/purchase-sessions\?limit=25&cursor=previous$/u);
+  expect(fetch.mock.calls[1][0]).toMatch(/inventory\/purchase-sessions\/session$/u);
+  expect(await server.send(scope,{...request,command:recordSession}).result).toEqual(sessionSaved);
+  expect(await server.original(scope,{...request,command:recordSession}).result).toEqual({...sessionSaved,kind:'historical'});
+
+  for (const invalid of [null,Array(26).fill(wireSession),[wireSession,wireSession]]) {
+    const response = {...sessionPage,sessions:invalid};
+    await expect(http([[200,response]]).server.purchaseSessions(scope,null).result).rejects.toThrow();
+  }
+  for (const invalid of [
+    {...wireSessionDetail,session:{...wireSession,session_id:'different'}},
+    ...[{},[wirePurchase],Array(17).fill(wirePurchase),[wirePurchase,wirePurchase],
+      [wirePurchase,{...freePurchase,created_at:'101'}],[wirePurchase,{...freePurchase,member_id:'foreign'}]]
+      .map(items => ({...wireSessionDetail,items})),
+  ]) await expect(http([[200,invalid]]).server.purchaseSession(scope,'session').result).rejects.toThrow();
+
+  for (const purchase_ids of [null,['purchase'],['purchase','purchase'],['purchase','../foreign']]) {
+    const {server} = http([[200,csrf],[200,receipt({...sessionReceipt,purchase_ids})]]);
+    await expect(server.send(scope,{...request,command:recordSession}).result).rejects.toThrow();
+  }
+});
+
+test('session history stays in scope and opens independent per-item receipts after an original recovery', async () => {
+  const adapter = http([[200,sessionPage],[200,wireSessionDetail]]).server;
+  const history = await adapter.purchaseSessions(scope,null).result;
+  const detail = await adapter.purchaseSession(scope,'session').result;
+  const local = journal(), publish = vi.fn<(state:InventoryState|null) => void>();
+  const load = vi.fn(():EntryRead<InventoryReport> => read(report));
+  const sessions = vi.fn((_scope:InventoryScope,_cursor:string|null):EntryRead<PurchaseSessions> => read(history));
+  const session = vi.fn((_scope:InventoryScope,_id:string):EntryRead<PurchaseSessionDetail> => read(detail));
+  const arrivals = vi.fn((_scope:InventoryScope,_id:string,_cursor:string|null) => read(purchaseReceipts));
+  const send = vi.fn((_scope:InventoryScope,_request:InventoryRequest):EntryRead<InventoryResult> => lost());
+  const original = vi.fn((_scope:InventoryScope,_request:InventoryRequest) => read(sessionSaved));
+  const app = new InventoryController({read:load,history:() => lost(),purchases:() => lost(),
+    purchaseReceipts:arrivals,purchaseSessions:sessions,purchaseSession:session,shoppingList:() => lost(),
+    shoppingSources:() => lost(),send,original},local.journal,{requestKey:() => 'session-operation'},publish);
+  const state = () => publish.mock.lastCall?.[0];
+  await app.showPurchaseSessions(); await app.showPurchaseSession('session');
+  app.bind(scope);
+  await Promise.all([app.showPurchaseSessions(),app.showPurchaseSession('session')]);
+  await vi.waitFor(() => expect(state()?.busy).toBe(false));
+  await app.showPurchaseSessions(true);
+  expect(sessions).not.toHaveBeenCalled(); expect(session).not.toHaveBeenCalled();
+  await app.showPurchaseSessions();
+  sessions.mockReturnValueOnce(read({items:[],cursor:null}));
+  await app.showPurchaseSessions(true); await app.showPurchaseSessions(true);
+  expect(sessions).toHaveBeenLastCalledWith(scope,'older-sessions');
+  expect(state()?.purchaseSessions?.items).toEqual(history.items);
+  await app.showPurchaseSession('session');
+  await app.showPurchaseReceipts('purchase');
+  expect(arrivals).toHaveBeenLastCalledWith(scope,'purchase',null);
+
+  load.mockReturnValueOnce(read({...report,mayShop:false}));
+  await app.refresh(); await app.submit(recordSession);
+  expect(send).not.toHaveBeenCalled();
+  await app.refresh(); await app.submit(recordSession);
+  expect(local.journal.open(scope.key)?.command).toEqual(recordSession);
+  await app.showPurchaseSessions(); await app.showPurchaseSession('session');
+  await app.recover();
+  expect(state()).toMatchObject({result:sessionSaved,pending:false});
+
+  sessions.mockReturnValueOnce(lost());
+  await app.showPurchaseSessions();
+  expect(state()?.purchaseSessions).toBeNull();
+  session.mockReturnValueOnce(lost());
+  await app.showPurchaseSession('session');
+  expect(state()?.purchaseSession).toBeNull();
+  sessions.mockReturnValueOnce(lost());
+  const pendingList = app.showPurchaseSessions();
+  app.bind(null);
+  await pendingList;
+  app.bind(scope);
+  await vi.waitFor(() => expect(state()?.busy).toBe(false));
+  session.mockReturnValueOnce(lost());
+  const pendingDetail = app.showPurchaseSession('session');
+  app.bind(null);
+  await pendingDetail;
+  expect(state()).toBeNull();
+});
+
+test('a manager reviews exact session quantities, retains a rejected draft and opens grouped receipts', async () => {
+  const {shoppingList} = await shoppingPages();
+  const wireHistory = {sessions:[wireSession,{...wireSession,session_id:'other',author_alias:null}],next_cursor:'older'};
+  const adapter = http([[200,wireHistory],[200,wireSessionDetail]]).server;
+  const history = await adapter.purchaseSessions(scope,null).result;
+  const detail = await adapter.purchaseSession(scope,'session').result;
+  const {node,root,events,submit} = component();
+  const open = {...initial,report,shoppingList};
+  node.view = open;
+  await node.updateComplete;
+  const shopping = root.querySelector('domus-shopping')!;
+  await shopping.updateComplete;
+  const list = shopping.shadowRoot!.querySelector('domus-shopping-list')!;
+  await list.updateComplete;
+  const panel = list.shadowRoot!, card = shopping.shadowRoot!;
+  const button = (container:ShadowRoot,label:string,index=0) =>
+    [...container.querySelectorAll('vyp-ha-button')].filter(element => element.state.label === label)[index]!;
+  const press = (container:ShadowRoot,label:string,index=0) => button(container,label,index).dispatchEvent(new Event('ha-press-request'));
+  const command = () => events.mock.lastCall?.[0].detail;
+  const assign = async (state:InventoryState) => {
+    node.view=state; await node.updateComplete; await shopping.updateComplete; await list.updateComplete;
+  };
+  press(card,'Show purchase sessions');
+  expect(command()).toEqual({type:'purchase-sessions'});
+  await assign({...open,purchaseSessions:{items:[],cursor:null}});
+  expect(card.textContent).toContain('There are no purchase sessions recorded.');
+  const draft = () => panel.querySelector<HTMLFormElement>('#purchase-session-form')!;
+  const quantities = () => [...draft().querySelectorAll<HTMLInputElement>('input')];
+  press(panel,'Add to purchase session');
+  await list.updateComplete;
+  expect(button(panel,'Record purchase session').disabled).toBe(true);
+  events.mockClear(); submit(draft());
+  expect(events).not.toHaveBeenCalled();
+  press(panel,'Add to purchase session'); // A duplicate request can arrive before its disabled state is rendered.
+  press(panel,'Add to purchase session',1);
+  await list.updateComplete;
+  expect(quantities().map(input => input.value)).toEqual(['6.000002','1']);
+  const enter = (index:number,value:string) => {
+    const input = quantities()[index];
+    input.value=value;
+    input.dispatchEvent(new Event('input'));
+  };
+  enter(1,'0.5'); await list.updateComplete;
+  submit(draft()); await list.updateComplete;
+  expect(quantities()[1].getAttribute('aria-invalid')).toBe('true');
+  press(panel,'Remove from session',1);
+  await list.updateComplete;
+  expect(quantities()).toHaveLength(1);
+  press(panel,'Add to purchase session',1);
+  await list.updateComplete;
+  enter(0,'2,000001'); await list.updateComplete;
+  submit(draft()); await list.updateComplete;
+  expect(command()).toEqual({type:'submit',command:recordSession});
+  await assign({...open,pending:true});
+  events.mockClear(); submit(draft());
+  expect(events).not.toHaveBeenCalled();
+  await assign({...open,result:{kind:'rejected',reason:'shopping_purchase_open',command:recordSession}});
+  expect(quantities()[0].value).toBe('2,000001');
+  await assign({...open,result:sessionSaved,purchaseSessions:history});
+  await list.updateComplete;
+  expect(panel.querySelector('#purchase-session-form')).toBeNull();
+  expect(root.textContent).toContain('Purchase session recorded.');
+  press(card,'Show recorded session');
+  expect(command()).toEqual({type:'purchase-session',sessionId:'session'});
+  press(card,'Show session items');
+  expect(command()).toEqual({type:'purchase-session',sessionId:'session'});
+  press(card,'Show older sessions');
+  expect(command()).toEqual({type:'more-purchase-sessions'});
+  await assign({...open,purchaseSessions:history,purchaseSession:detail,purchaseReceipts});
+  expect(card.textContent).toContain('Shopper ·');
+  expect(card.textContent).toContain('member ·');
+  expect(card.textContent).toContain('4.000001 millilitres');
+  press(card,'Show physical receipts');
+  expect(command()).toEqual({type:'purchase-receipts',purchaseId:'purchase'});
+  node.language='es';
+  await assign({...open,purchaseSessions:history,purchaseSession:detail});
+  expect(card.textContent).toContain('Artículos de la sesión');
+
+  const lots = {items:Array.from({length:17},(_,index) => ({...shoppingList.items[0],productId:'p'+index})),cursor:null};
+  await assign({...open,shoppingList:lots});
+  for (let index=0;index<16;index++) press(panel,'Añadir a la sesión de compra',index);
+  await list.updateComplete;
+  expect(quantities()).toHaveLength(16);
+  expect(button(panel,'Añadir a la sesión de compra',16).disabled).toBe(true);
+  await assign({...open,scope:{...scope,readOnly:true}});
+  expect(panel.querySelector('#purchase-session-form')).toBeNull();
 });

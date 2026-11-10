@@ -564,3 +564,141 @@ Keep 100 percent coverage globally and per authored file. Require CI and Bugbot 
 ### 20. References and decisions
 
 Qualifies shopping-management-C04, shopping-management-C05, shopping-management-C06, shopping-management-C07, shopping-management-C08, and the reservation and supply coverage portions of shopping-management-C09.
+
+## Multi-item purchase sessions from the shared shopping list
+
+- Status: Draft
+- Owners: Domus maintainers and Shopping Management
+- Scope: Record a single shopping trip from shared list rows and receive each item independently
+- Source baseline: develop at ed41596eaf4ccfcef3b60222e6ff47338cf21b6e
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+A shopping manager can select several rows from the shared Shopping list, enter what was actually bought, and save one purchase session. The session preserves shopper, time, items and each item's existing receipt progress.
+
+### 2. Problem, current behavior, and evidence
+
+The shared list consolidates Pantry replenishment, uncovered Task materials and manual extras. Existing purchase commands record one item and already support physical receipts and separate Pantry posting. A multi-item trip currently needs several independent writes and has no grouped history.
+
+### 3. Actors, surfaces, and terminology
+
+A household reader can browse protected session history. A shopping manager records a session and physical arrivals. An inventory manager posts tracked physical receipts to Pantry. A purchase session groups purchase items made in one trip.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| purchase-session-R1 | A manager selects two to sixteen shared list rows, reviews positive exact amounts in their respective base units, and records one session. |
+| purchase-session-R2 | Save the session and every purchase item with one operation receipt. Enforce one open purchase per tracked product even across concurrent sessions and individual purchases. |
+| purchase-session-R3 | Provide protected, paginated session history and bounded detail with shopper, time, quantities bought, received, still due and awaiting Pantry posting. Reuse per-item arrival and posting. |
+| purchase-session-R4 | Recover the original committed or historical operation with current permissions. Preserve existing purchases, receipt facts and extras through schema 24 migration, restart and activated restoration. |
+
+Pricing, stores, refunds, receipt images, persistent carts, multiple lists, purchase allocation to individual demand sources, package conversions and external ordering are separate increments.
+
+### 5. Current versus proposed product journey
+
+Select rows from the shared list, edit their proposed amounts, and record the trip. Open the session to see every item and its current quantities. Open an item's existing receipt view to record a partial arrival and post a tracked receipt to Pantry.
+
+### 6. Functional behavior and state model
+
+The selection identifies a tracked product or active untracked extra by stable ID. The server resolves labels and units and accepts exact quantities actually bought, which may differ from the recommendation. An untracked extra is measured in whole pieces. Reject a duplicated selection, missing or cleared untracked extra, unknown product, invalid quantity or already open tracked purchase. No partial session or purchase is visible after rejection. Manual extra requests retain their independent lifecycle.
+
+A session is immutable as a grouping and has its own ID, actor and time. Its purchase items retain their existing IDs, current revision and physical receipt lifecycle. A tracked receipt is posted separately through the ledger. A recorded trip creates incoming tracked supply under the existing rule.
+
+### 7. User-facing configuration
+
+No settings are needed. A session has two to sixteen distinct selected rows. Quantities use the selected product's immutable base unit.
+
+### 8. Clean Architecture design
+
+Use the existing protected inventory command boundary, transaction-scoped Shopping port and operation journal. Add a session grouping that points at existing purchase records. Read histories through household-scoped application queries. Use the existing protected workspace and shared HA UI controls.
+
+### 9. UI/UX and content contract
+
+Expose selection and review controls in the shared list to current shopping managers. Retain entered quantities after rejection. Show accessible English and Spanish session history and grouped detail. Each item links to its current physical receipts and the original-command recovery remains available after reload.
+
+### 10. Failure, recovery, and cleanup
+
+A losing concurrent session or invalid item rolls back every write. Same-key replay returns the original session and item identities. Changed payload conflicts. Restoration distinguishes the original historical receipt from effects in the restored database. A failed receipt posting retains the physical arrival.
+
+### 11. Security, permissions, and privacy
+
+Require household.read for reads, shopping.manage for recording and recovering the session, and existing current grants for receiving and posting. Resolve actor, household and list identities server-side. Keep session, origin and CSRF checks and bind pagination to the actor and current scope.
+
+### 12. Observability and operational UX
+
+The history shows attributed session and item facts. Existing original operation receipts and safe error states support retry and recovery.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Upgrade a representative schema 24 database with existing individual purchases, pending and posted receipts, Pantry effects and manual extras. Verify interrupted migration rollback and activated snapshot recovery. Earlier individual purchases remain individually accessible.
+
+### 14. Testing strategy and numeric budget
+
+Minimum eight distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Workspace | 1 | Observable scenarios in the case inventory. |
+| State and concurrency | 1 | Observable scenarios in the case inventory. |
+| State and recovery | 1 | Observable scenarios in the case inventory. |
+| Input and security | 1 | Observable scenarios in the case inventory. |
+| Receipt lifecycle | 1 | Observable scenarios in the case inventory. |
+| Query and permissions | 1 | Observable scenarios in the case inventory. |
+| Compatibility and recovery | 1 | Observable scenarios in the case inventory. |
+| Image workspace | 1 | Observable scenarios in the case inventory. |
+| Total | 8 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| purchase-session-C01 | Workspace | purchase-session-R1, purchase-session-R3 | Select tracked and untracked rows, edit exact quantities, and view one attributed session and its ordered items. |
+| purchase-session-C02 | State and concurrency | purchase-session-R2 | Race two sessions or an individual purchase for the same tracked product. The losing batch leaves no purchase, session or operation receipt. |
+| purchase-session-C03 | State and recovery | purchase-session-R2, purchase-session-R4 | Replay identical keys, reject changed payloads and recover the original IDs after a lost response. |
+| purchase-session-C04 | Input and security | purchase-session-R1, purchase-session-R2, purchase-session-R4 | Reject foreign or cleared items, duplicate selections, invalid exact amounts and missing grants without changing accepted business facts. |
+| purchase-session-C05 | Receipt lifecycle | purchase-session-R3 | Receive part of a tracked item and all of an untracked item. Post the tracked receipt once. Show separately the bought, received, due and pending stock amounts. |
+| purchase-session-C06 | Query and permissions | purchase-session-R3, purchase-session-R4 | Page history, reject a foreign cursor, deny unauthorized writes and recover only with current grants. |
+| purchase-session-C07 | Compatibility and recovery | purchase-session-R4 | Upgrade representative schema 24 data, roll back an interrupted migration, restart and activate an earlier snapshot that preserves current and historical operations. |
+| purchase-session-C08 | Image workspace | purchase-session-R1, purchase-session-R3, purchase-session-R4 | Exercise list selection, lost session response, history and per-item partial receiving in English and Spanish in both deployments and both actual image architectures. |
+
+### 15. Documentation and discoverability
+
+[specs/shopping-management.md](shopping-management.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/purchase-session-qualification.md](../docs/evidence/purchase-session-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/application/inventory\_queries.py](../backend/src/domus/application/inventory_queries.py) · [backend/src/domus/infrastructure/sqlite\_shopping.py](../backend/src/domus/infrastructure/sqlite_shopping.py) · [frontend/src/presentation/domus-shopping.ts](../frontend/src/presentation/domus-shopping.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/shopping-management.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/purchase-session-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/application/inventory_queries.py | update |
+| backend/src/domus/infrastructure/sqlite_shopping.py | update |
+| frontend/src/presentation/domus-shopping.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Record and recover a two-item trip and partially receive one item. Compare current Pantry supply, per-item receipts and purchase session history through restart and activated restore. Link CI and both image jobs.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| purchase-session-R1 | purchase-session-C01, purchase-session-C04, purchase-session-C08 |
+| purchase-session-R2 | purchase-session-C02, purchase-session-C03, purchase-session-C04 |
+| purchase-session-R3 | purchase-session-C01, purchase-session-C05, purchase-session-C06, purchase-session-C08 |
+| purchase-session-R4 | purchase-session-C03, purchase-session-C04, purchase-session-C06, purchase-session-C07, purchase-session-C08 |
+
+### 18. Implementation sequence
+
+Persist the session grouping, connect the transactional command and protected history, then implement the list selection and receipt journey.
+
+### 19. Definition of Done
+
+Keep 100 percent coverage globally and per authored file. Require CI and Bugbot on the same commit. Copilot Verification passes or an exclusively upstream defect is documented. Releases and deployments require separate authorization.
+
+### 20. References and decisions
+
+Qualifies shopping-management-C16 and shopping-management-C18. Rechecks shopping-management-C10 through shopping-management-C15, shopping-management-C19 and shopping-management-C21 for the grouped flow.

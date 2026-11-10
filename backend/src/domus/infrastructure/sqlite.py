@@ -66,6 +66,8 @@ from domus.infrastructure.sqlite_recurrence_schema import (
 from domus.infrastructure.sqlite_rewards import REWARD_STATEMENTS, REWARD_TABLES, SQLiteRewards
 from domus.infrastructure.sqlite_shopping import (
     SHOPPING_EXTRA_STATEMENTS,
+    SHOPPING_SESSION_STATEMENTS,
+    SHOPPING_SESSION_TABLES,
     SHOPPING_STATEMENTS,
     SHOPPING_TABLES,
     SQLiteShopping,
@@ -90,7 +92,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 24
+SCHEMA_VERSION = 25
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -171,6 +173,7 @@ SCHEMA_STATEMENTS = (
     REPLENISHMENT_STATEMENT,
     *SHOPPING_STATEMENTS,
     *SHOPPING_EXTRA_STATEMENTS,
+    *SHOPPING_SESSION_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -191,7 +194,8 @@ REWARD_SCHEMA_TABLES = ALLOCATION_SCHEMA_TABLES | REWARD_TABLES
 CATALOG_SCHEMA_TABLES = REWARD_SCHEMA_TABLES | CATALOG_TABLES
 REPLENISHMENT_SCHEMA_TABLES = CATALOG_SCHEMA_TABLES | {"inventory_replenishment"}
 PURCHASE_SCHEMA_TABLES = REPLENISHMENT_SCHEMA_TABLES | SHOPPING_TABLES
-TABLES = PURCHASE_SCHEMA_TABLES | {"shopping_extras"}
+SHOPPING_LIST_SCHEMA_TABLES = PURCHASE_SCHEMA_TABLES | {"shopping_extras"}
+TABLES = SHOPPING_LIST_SCHEMA_TABLES | SHOPPING_SESSION_TABLES
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -231,6 +235,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *((REPLENISHMENT_STATEMENT,) if version >= 22 else ()),
             *(SHOPPING_STATEMENTS if version >= 23 else ()),
             *(SHOPPING_EXTRA_STATEMENTS if version >= 24 else ()),
+            *(SHOPPING_SESSION_STATEMENTS if version >= 25 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -504,6 +509,7 @@ class SQLiteDatabase:
                 21: CATALOG_SCHEMA_TABLES,
                 22: REPLENISHMENT_SCHEMA_TABLES,
                 23: PURCHASE_SCHEMA_TABLES,
+                24: SHOPPING_LIST_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -573,7 +579,8 @@ class SQLiteDatabase:
                         *(MOVEMENT_HISTORY_STATEMENTS if version < 21 else ()),
                         *((REPLENISHMENT_STATEMENT,) if version < 22 else ()),
                         *(SHOPPING_STATEMENTS if version < 23 else ()),
-                        *SHOPPING_EXTRA_STATEMENTS,
+                        *(SHOPPING_EXTRA_STATEMENTS if version < 24 else ()),
+                        *SHOPPING_SESSION_STATEMENTS,
                     )
                     for statement in migration:
                         connection.execute(statement)

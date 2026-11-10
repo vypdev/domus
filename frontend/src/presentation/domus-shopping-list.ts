@@ -1,10 +1,11 @@
 import {LitElement, css, html, nothing} from 'lit';
 import type {PropertyValues} from 'lit';
+import {repeat} from 'lit/directives/repeat.js';
 import {registerButton} from '@vypdev/ha-ui/button';
 import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import type {InventoryState} from '../application/inventory-controller';
-import {intakeQuantity} from '../domain/inventory';
-import type {BaseUnit, ExtraAttribution, InventoryCommand, ShoppingItem, ShoppingSource} from '../domain/inventory';
+import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, intakeQuantity} from '../domain/inventory';
+import type {BaseUnit, ExtraAttribution, InventoryCommand, SessionSelection, ShoppingItem, ShoppingSource} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
@@ -17,8 +18,19 @@ export type ShoppingListIntent = {readonly type: 'shopping-list' | 'more-shoppin
 
 const SOURCE_LABELS = {pantry:'pantrySource', task:'taskSource', extra:'manualSource'} as const;
 
+interface SessionDraft {
+  readonly key: string;
+  readonly item: ShoppingItem;
+  readonly quantity: string;
+}
+
+function itemKey(item: ShoppingItem): string {
+  return item.productId === null ? 'extra:' + item.extraId : 'product:' + item.productId;
+}
+
 export class DomusShoppingList extends LitElement {
-  static properties = {view:{attribute:false}, language:{attribute:false}, selected:{state:true}, error:{state:true}};
+  static properties = {view:{attribute:false}, language:{attribute:false}, selected:{state:true}, error:{state:true},
+    sessionDraft:{state:true}, sessionError:{state:true}};
 
   static styles = css`
     section, form, label, li {display:grid;gap:8px}
@@ -37,11 +49,15 @@ export class DomusShoppingList extends LitElement {
   declare language: Language;
   private declare selected: string;
   private declare error: 'invalidName' | 'invalidQuantity' | null;
+  private declare sessionDraft: readonly SessionDraft[];
+  private declare sessionError: string | null;
 
   constructor() {
     super();
     this.selected = '';
     this.error = null;
+    this.sessionDraft = [];
+    this.sessionError = null;
   }
 
   protected updated(changed: PropertyValues<this>): void {
@@ -49,6 +65,10 @@ export class DomusShoppingList extends LitElement {
     const previous = changed.get('view'), {result, shoppingSources} = this.view;
     if (shoppingSources && shoppingSources.item.productId !== previous?.shoppingSources?.item.productId)
       this.renderRoot.querySelector<HTMLElement>('#shopping-sources-title')?.focus();
+    if (result?.kind === 'committed' && result.shoppingAction === 'shopping.record-session' && result !== previous?.result) {
+      this.sessionDraft = [];
+      this.sessionError = null;
+    }
     if (result?.kind === 'committed' && result.shoppingAction === 'shopping.add-extra' && result !== previous?.result) {
       this.selected = '';
       this.error = null;
@@ -66,10 +86,10 @@ export class DomusShoppingList extends LitElement {
     this.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail, bubbles:true, composed:true}));
   }
 
-  private button(key: InventoryMessage, blocked: boolean, detail?: ShoppingListIntent) {
+  private button(key: InventoryMessage, blocked: boolean, detail?: ShoppingListIntent | (() => void)) {
     return html`<vyp-ha-button type=${detail ? 'button' : 'submit'}
       .state=${buttonState({label:this.text(key), variant:detail ? 'outlined' : 'primary'})} ?disabled=${blocked}
-      @ha-press-request=${detail ? () => this.intent(detail) : nothing}></vyp-ha-button>`;
+      @ha-press-request=${typeof detail === 'function' ? detail : detail ? () => this.intent(detail) : nothing}></vyp-ha-button>`;
   }
 
   private extraForm(blocked: boolean) {
@@ -107,6 +127,51 @@ export class DomusShoppingList extends LitElement {
     </form>`;
   }
 
+  private canSelect(key: string): boolean {
+    return this.sessionDraft.length < MAX_SESSION_ITEMS && this.sessionDraft.every(draft => draft.key !== key);
+  }
+
+  private addToSession(item: ShoppingItem): void {
+    const key = itemKey(item);
+    if (!this.canSelect(key)) return;
+    this.sessionDraft = [...this.sessionDraft, {key,item,quantity:item.total}];
+  }
+
+  private submitSession(event: SubmitEvent, blocked: boolean): void {
+    event.preventDefault();
+    if (blocked || this.sessionDraft.length < MIN_SESSION_ITEMS) return;
+    const items: SessionSelection[] = [];
+    for (const {key, item, quantity: entered} of this.sessionDraft) {
+      const quantity = intakeQuantity(entered, item.unit);
+      if (quantity === null) {this.sessionError = key; return;}
+      items.push({product_id:item.productId, extra_id:item.extraId, quantity});
+    }
+    this.sessionError = null;
+    this.intent({type:'submit',command:{action:'shopping.record-session',items}});
+  }
+
+  private sessionForm(blocked: boolean) {
+    return html`<form id="purchase-session-form" aria-labelledby="purchase-session-form-title" novalidate
+      @submit=${(event: SubmitEvent) => this.submitSession(event, blocked)}>
+      <h5 id="purchase-session-form-title">${this.text('recordSession')}</h5>
+      <p>${this.text('sessionItemLimit')}</p>
+      ${repeat(this.sessionDraft, draft => draft.key, ({key,item,quantity}) => html`<div>
+        <label>${item.name} · ${this.text(item.unit)}<input name="quantity" inputmode="decimal"
+          .value=${quantity} ?disabled=${blocked} maxlength="20" aria-invalid=${this.sessionError === key}
+          aria-describedby="purchase-session-error" @input=${(event: Event) => {
+            const value = (event.target as HTMLInputElement).value;
+            this.sessionDraft = this.sessionDraft.map(draft => draft.key === key ? {...draft,quantity:value} : draft);
+          }}></label>
+        ${this.button('removeFromSession', blocked, () => {
+          this.sessionDraft = this.sessionDraft.filter(draft => draft.key !== key);
+          this.sessionError = null;
+        })}
+      </div>`)}
+      <span id="purchase-session-error" role="alert">${this.sessionError === null ? nothing : this.text('invalidQuantity')}</span>
+      ${this.button('saveSession', blocked || this.sessionDraft.length < MIN_SESSION_ITEMS)}
+    </form>`;
+  }
+
   private author(value: ExtraAttribution | null) {
     if (value === null) return nothing;
     return html`<p>${value.authorAlias ?? value.memberId} · ${instant(Number(value.createdAt), this.language)}</p>`;
@@ -127,6 +192,7 @@ export class DomusShoppingList extends LitElement {
         <dt>${this.text('manualSource')}</dt><dd>${amount(item.manual)}</dd>
       </dl>
       ${this.author(item.attribution)}
+      ${mayClear ? this.button('addToSession', blocked || !this.canSelect(itemKey(item)), () => this.addToSession(item)) : nothing}
       ${item.productId !== null
         ? this.button('showSources', this.view.busy, {type:'shopping-sources', productId:item.productId})
         : mayClear ? this.clearButton(item.extraId!, blocked) : nothing}
@@ -160,6 +226,7 @@ export class DomusShoppingList extends LitElement {
         ${shoppingList.items.length === 0 ? html`<p>${this.text('emptyShoppingList')}</p>`
           : html`<ol>${shoppingList.items.map(item => this.item(item, mayClear, blocked))}</ol>`}
         ${shoppingList.cursor === null ? nothing : this.button('moreShoppingList', busy, {type:'more-shopping-list'})}
+        ${mayClear && this.sessionDraft.length > 0 ? this.sessionForm(blocked) : nothing}
         ${shoppingSources == null ? nothing : html`<section aria-labelledby="shopping-sources-title">
           <h5 id="shopping-sources-title" tabindex="-1">${this.text('showSources')} · ${shoppingSources.item.name}</h5>
           ${shoppingSources.items.length === 0 ? html`<p>${this.text('emptySources')}</p>`

@@ -26,7 +26,14 @@ from domus.domain.inventory import (
     stock_units,
     validate_stock_reason,
 )
-from domus.domain.shopping import Purchase, PurchaseReceipt
+from domus.domain.shopping import (
+    MAX_SESSION_ITEMS,
+    MIN_SESSION_ITEMS,
+    Purchase,
+    PurchaseReceipt,
+    PurchaseSession,
+    SessionSelection,
+)
 from domus.domain.shopping_needs import ShoppingExtra
 from domus.domain.storage import CommandKey, JsonDocument, Receipt
 from domus.domain.task_material_values import (
@@ -136,6 +143,7 @@ class CatalogAction(StrEnum):
     POST_RECEIPT = "shopping.post-receipt"
     ADD_EXTRA = "shopping.add-extra"
     CLEAR_EXTRA = "shopping.clear-extra"
+    RECORD_SESSION = "shopping.record-session"
 
 
 def _permission(action: str) -> Permission:
@@ -145,6 +153,7 @@ def _permission(action: str) -> Permission:
         CatalogAction.PURCHASE,
         CatalogAction.RECEIVE_PURCHASE,
         CatalogAction.CLEAR_EXTRA,
+        CatalogAction.RECORD_SESSION,
     ):
         return Permission.SHOPPING_MANAGE
     return Permission.INVENTORY_MANAGE
@@ -437,41 +446,99 @@ class InventoryCommands:
                 raise NotFound("operation_missing")
             return receipt
 
+    def _record_purchase(
+        self,
+        unit: UnitOfWork,
+        member: str,
+        created_at: int,
+        product_id: str | None,
+        name: str | None,
+        quantity: MaterialQuantity,
+    ) -> str:
+        home = self.household_id
+        if product_id is not None:
+            product = self._product(unit.inventory, product_id)
+            label, base_unit = product.name, product.base_unit
+            if unit.shopping.outstanding(home, product_id):
+                raise Conflict("shopping_purchase_open")
+        else:
+            assert name is not None
+            label, base_unit = name, BaseUnit.PIECE
+        purchased = _shopping_quantity(quantity, base_unit)
+        purchase_id = self.identifiers.new()
+        unit.shopping.add_purchase(
+            home,
+            Purchase(
+                purchase_id,
+                product_id,
+                label,
+                base_unit,
+                purchased,
+                0,
+                0,
+                1,
+                member,
+                created_at,
+            ),
+        )
+        return purchase_id
+
     def purchase(
         self, key: str, product_id: str | None, name: str | None, quantity: MaterialQuantity
     ) -> Receipt:
         payload = _shopping_item(product_id, name, quantity)
 
         def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
-            home = self.household_id
-            if product_id is not None:
-                product = self._product(unit.inventory, product_id)
-                label, base_unit = product.name, product.base_unit
-                if unit.shopping.outstanding(home, product_id):
-                    raise Conflict("shopping_purchase_open")
-            else:
-                assert name is not None
-                label, base_unit = name, BaseUnit.PIECE
-            purchased = _shopping_quantity(quantity, base_unit)
-            purchase_id = self.identifiers.new()
-            unit.shopping.add_purchase(
-                home,
-                Purchase(
-                    purchase_id,
-                    product_id,
-                    label,
-                    base_unit,
-                    purchased,
-                    0,
-                    0,
-                    1,
-                    member,
-                    self.clock.now(),
-                ),
+            purchase_id = self._record_purchase(
+                unit, member, self.clock.now(), product_id, name, quantity
             )
             return JsonDocument.from_value({"purchase_id": purchase_id})
 
         return self._execute(CatalogAction.PURCHASE.value, key, payload, apply)
+
+    def record_purchase_session(self, key: str, items: tuple[SessionSelection, ...]) -> Receipt:
+        selected = {(item.product_id, item.extra_id) for item in items}
+        if not MIN_SESSION_ITEMS <= len(items) <= MAX_SESSION_ITEMS or len(selected) != len(items):
+            raise InvalidInput("invalid_shopping_session")
+        if any((product is None) == (extra is None) for product, extra in selected):
+            raise InvalidInput("invalid_shopping_item")
+        payload = JsonDocument.from_value(
+            {
+                "items": [
+                    {
+                        "product_id": item.product_id,
+                        "extra_id": item.extra_id,
+                        "quantity": item.quantity.value,
+                    }
+                    for item in items
+                ]
+            }
+        )
+
+        def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
+            home = self.household_id
+            session = PurchaseSession(self.identifiers.new(), member, self.clock.now())
+            purchase_ids = []
+            for item in items:
+                name = None
+                if item.extra_id is not None:
+                    extra = unit.shopping.extra(home, item.extra_id)
+                    if extra is None or extra.product_id is not None:
+                        raise NotFound("shopping_extra_missing")
+                    if extra.cleared_at is not None:
+                        raise Conflict("shopping_extra_cleared")
+                    name = extra.name
+                purchase_ids.append(
+                    self._record_purchase(
+                        unit, member, session.created_at, item.product_id, name, item.quantity
+                    )
+                )
+            unit.shopping.add_session(home, session, tuple(purchase_ids))
+            return JsonDocument.from_value(
+                {"session_id": session.session_id, "purchase_ids": purchase_ids}
+            )
+
+        return self._execute(CatalogAction.RECORD_SESSION.value, key, payload, apply)
 
     def add_extra(
         self, key: str, product_id: str | None, name: str | None, quantity: MaterialQuantity

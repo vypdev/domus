@@ -54,7 +54,11 @@ from domus.infrastructure.sqlite_recurrence_integrity import (
     verify_relative_lifecycle_records,
 )
 from domus.infrastructure.sqlite_rewards import verify_reward_records
-from domus.infrastructure.sqlite_shopping import verify_shopping_extras, verify_shopping_records
+from domus.infrastructure.sqlite_shopping import (
+    verify_shopping_extras,
+    verify_shopping_records,
+    verify_shopping_sessions,
+)
 from domus.infrastructure.sqlite_task_integrity import verify_task_records
 
 _DATABASE = "domus.sqlite3"
@@ -217,6 +221,8 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
             verify_shopping_records(connection)
         if version >= 24:
             verify_shopping_extras(connection)
+        if version >= 25:
+            verify_shopping_sessions(connection)
     except DomusError as error:
         raise DatabaseRejected("invalid_snapshot_records") from error
 

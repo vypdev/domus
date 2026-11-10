@@ -118,6 +118,7 @@ class _NativeBoundary(BoundedHTTP):
                     "/api/v1/family/rewards",
                     "/api/v1/inventory",
                     "/api/v1/inventory/purchases",
+                    "/api/v1/inventory/purchase-sessions",
                     "/api/v1/inventory/shopping-list",
                 )
             )
