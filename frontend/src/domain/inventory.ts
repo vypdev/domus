@@ -7,7 +7,7 @@ export const BASE_UNITS = ['piece', 'gram', 'millilitre'] as const;
 export type BaseUnit = typeof BASE_UNITS[number];
 export type ReplenishmentRevision = Revision | '0';
 export type ShoppingAction = 'shopping.purchase' | 'shopping.receive' | 'shopping.post-receipt'
-  | 'shopping.add-extra' | 'shopping.clear-extra' | 'shopping.record-session';
+  | 'shopping.cancel-balance' | 'shopping.add-extra' | 'shopping.clear-extra' | 'shopping.record-session';
 
 export const MIN_SESSION_ITEMS = 2;
 export const MAX_SESSION_ITEMS = 16;
@@ -28,6 +28,7 @@ export type InventoryCommand =
   | Readonly<{action: 'shopping.purchase'; product_id: string | null; name: string | null; quantity: string}>
   | Readonly<{action: 'shopping.add-extra'; product_id: string | null; name: string | null; quantity: string}>
   | Readonly<{action: 'shopping.receive'; purchase_id: string; quantity: string; expected_revision: Revision}>
+  | Readonly<{action: 'shopping.cancel-balance'; purchase_id: string; reason: string; expected_revision: Revision}>
   | Readonly<{action: 'shopping.post-receipt'; purchase_id: string; receipt_id: string}>
   | Readonly<{action: 'shopping.clear-extra'; extra_id: string}>
   | Readonly<{action: 'shopping.record-session'; items: readonly SessionSelection[]}>;
@@ -95,6 +96,7 @@ export interface Purchase {
   readonly received: string;
   readonly remaining: string;
   readonly pendingStock: string;
+  readonly cancelled: string;
   readonly revision: Revision;
   readonly memberId: string;
   readonly authorAlias: string | null;
@@ -115,9 +117,15 @@ export interface Purchases {
   readonly cursor: string | null;
 }
 
+export interface PurchaseCancellation extends ExtraAttribution {
+  readonly quantity: string;
+  readonly reason: string;
+}
+
 export interface PurchaseReceipts {
   readonly purchase: Purchase;
   readonly items: readonly PhysicalReceipt[];
+  readonly cancellation: PurchaseCancellation | null;
   readonly cursor: string | null;
 }
 
@@ -240,6 +248,10 @@ export function inventoryCommand(value: unknown): InventoryCommand {
   }
   if (action === 'shopping.receive' && hasFields(record, ['action','purchase_id','quantity','expected_revision'])) {
     return {action, purchase_id:taskIdentifier(record.purchase_id), quantity:positiveQuantity(record.quantity),
+      expected_revision:revisionValue(record.expected_revision)};
+  }
+  if (action === 'shopping.cancel-balance' && hasFields(record, ['action','purchase_id','reason','expected_revision'])) {
+    return {action, purchase_id:taskIdentifier(record.purchase_id), reason:taskText(record.reason, STOCK_REASON_LIMIT, true),
       expected_revision:revisionValue(record.expected_revision)};
   }
   if (action === 'shopping.post-receipt' && hasFields(record, ['action','purchase_id','receipt_id'])) {

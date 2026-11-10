@@ -1051,6 +1051,40 @@
         "title": "CalendarTiming",
         "type": "string"
       },
+      "CancelPurchaseBalanceBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "shopping.cancel-balance",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "title": "Expected Revision",
+            "type": "string"
+          },
+          "purchase_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Purchase Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "purchase_id",
+          "reason",
+          "expected_revision"
+        ],
+        "title": "CancelPurchaseBalanceBody",
+        "type": "object"
+      },
       "CatalogAction": {
         "enum": [
           "inventory.register-product",
@@ -1063,7 +1097,8 @@
           "shopping.post-receipt",
           "shopping.add-extra",
           "shopping.clear-extra",
-          "shopping.record-session"
+          "shopping.record-session",
+          "shopping.cancel-balance"
         ],
         "title": "CatalogAction",
         "type": "string"
@@ -4124,6 +4159,16 @@
       },
       "PhysicalReceiptsView": {
         "properties": {
+          "cancellation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PurchaseCancellationView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "next_cursor": {
             "anyOf": [
               {
@@ -4149,7 +4194,8 @@
         "required": [
           "purchase",
           "receipts",
-          "next_cursor"
+          "next_cursor",
+          "cancellation"
         ],
         "title": "PhysicalReceiptsView",
         "type": "object"
@@ -4493,6 +4539,46 @@
         "title": "PurchaseBody",
         "type": "object"
       },
+      "PurchaseCancellationView": {
+        "properties": {
+          "author_alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Alias"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quantity",
+          "reason",
+          "member_id",
+          "author_alias",
+          "created_at"
+        ],
+        "title": "PurchaseCancellationView",
+        "type": "object"
+      },
       "PurchaseSessionBody": {
         "additionalProperties": false,
         "properties": {
@@ -4617,6 +4703,10 @@
           "base_unit": {
             "$ref": "#/components/schemas/BaseUnit"
           },
+          "cancelled": {
+            "title": "Cancelled",
+            "type": "string"
+          },
           "created_at": {
             "title": "Created At",
             "type": "string"
@@ -4674,6 +4764,7 @@
           "received",
           "remaining",
           "pending_stock",
+          "cancelled",
           "revision",
           "member_id",
           "author_alias",
@@ -12836,6 +12927,7 @@
                     "inventory.intake": "#/components/schemas/IntakeBody",
                     "inventory.register-product": "#/components/schemas/ProductBody",
                     "shopping.add-extra": "#/components/schemas/AddExtraBody",
+                    "shopping.cancel-balance": "#/components/schemas/CancelPurchaseBalanceBody",
                     "shopping.clear-extra": "#/components/schemas/ClearExtraBody",
                     "shopping.post-receipt": "#/components/schemas/PostReceiptBody",
                     "shopping.purchase": "#/components/schemas/PurchaseBody",
@@ -12877,6 +12969,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/PurchaseSessionBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CancelPurchaseBalanceBody"
                   }
                 ],
                 "title": "Body"

@@ -36,17 +36,17 @@ const arrive = {action:'shopping.receive', purchase_id:'purchase', quantity:'4.0
   expected_revision:revisionValue('2')} as const;
 const postReceipt = {action:'shopping.post-receipt', purchase_id:'purchase', receipt_id:'arrival'} as const;
 const wirePurchase = {purchase_id:'purchase', product_id:'product', name:'Olive oil', base_unit:'millilitre',
-  purchased:'6.000001', received:'4.000001', remaining:'2', pending_stock:'4.000001', revision:'2',
+  purchased:'6.000001', received:'4.000001', remaining:'2', pending_stock:'4.000001', cancelled:'0', revision:'2',
   member_id:'member', author_alias:'Shopper', created_at:'100'};
 const wireArrival = {receipt_id:'arrival', quantity:'4.000001', member_id:'member', author_alias:null,
   created_at:'101', movement_id:null};
 const purchase: Purchase = {id:'purchase', productId:'product', name:'Olive oil', unit:'millilitre',
-  purchased:'6.000001', received:'4.000001', remaining:'2', pendingStock:'4.000001',
+  purchased:'6.000001', received:'4.000001', remaining:'2', pendingStock:'4.000001', cancelled:'0',
   revision:arrive.expected_revision, memberId:'member', authorAlias:'Shopper', createdAt:'100'};
 const purchases: Purchases = {items:[purchase],cursor:'older'};
 const purchaseReceipts: PurchaseReceipts = {purchase,items:[{
   id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null,
-}],cursor:'older'};
+}],cancellation:null,cursor:'older'};
 const savedPolicy = {product_id:'product', minimum:policy.minimum, target:policy.target, revision:'1'};
 const wireProduct = {...savedProduct, reference_id:'reference', recorded:'999999999999.999999', reserved:'0.000001',
   available:'999999999999.999998', replenishment:emptyPolicy, outstanding_purchase:'0', shopping_needed:'0'};
@@ -221,7 +221,7 @@ test('protected shopping pages and Pantry supply have exact bounded responses', 
   const free = {...wirePurchase, product_id:null, name:'Apples', base_unit:'piece',
     purchased:'2', received:'2', remaining:'0', pending_stock:'0'};
   const page = {purchases:[wirePurchase],next_cursor:'older'};
-  const details = {purchase:wirePurchase,receipts:[wireArrival],next_cursor:'older'};
+  const details = {purchase:wirePurchase,receipts:[wireArrival],cancellation:null,next_cursor:'older'};
   const {server,fetch} = http([
     [200,page], [200,{...page,purchases:[free],next_cursor:null}], [200,details],
     [200,{...details,receipts:[{...wireArrival,movement_id:'movement'}],next_cursor:null}],
@@ -546,7 +546,7 @@ test('Shopping distinguishes tracked stock posting from an untracked receipt and
   expect(root.textContent).toContain('Recepción física registrada.');
   const free = {...purchase, id:'free',productId:null,unit:'piece' as const,received:'2',remaining:'0',
     pendingStock:'0',authorAlias:null};
-  await assign({...shopping,scope:{...scope,readOnly:true},purchaseReceipts:{purchase:free,items:purchaseReceipts.items,cursor:null}});
+  await assign({...shopping,scope:{...scope,readOnly:true},purchaseReceipts:{purchase:free,items:purchaseReceipts.items,cancellation:null,cursor:null}});
   expect(shop.querySelector('form')).toBeNull();
   expect(shop.textContent).toContain('Artículo sin seguimiento recibido.');
 });
@@ -1266,4 +1266,110 @@ test('a manager reviews exact session quantities, retains a rejected draft and o
   expect(button(panel,'Añadir a la sesión de compra',16).disabled).toBe(true);
   await assign({...open,scope:{...scope,readOnly:true}});
   expect(panel.querySelector('#purchase-session-form')).toBeNull();
+});
+
+const cancelBalance = {action:'shopping.cancel-balance',purchase_id:'purchase',
+  reason:'Supplier cancelled the rest',expected_revision:arrive.expected_revision} as const;
+const wireCancellation = {quantity:'2',reason:cancelBalance.reason,
+  member_id:'shopper',author_alias:'Marta',created_at:'102'};
+const cancelledReceipt = {purchase_id:'purchase',cancelled:'2',revision:'3'};
+
+test('balance cancellation uses a revisioned command and validates its original receipt and history', async () => {
+  expect(inventoryCommand(cancelBalance)).toEqual(cancelBalance);
+  for (const malformed of [{...cancelBalance,quantity:'2'},{...cancelBalance,reason:'  '},
+    {...cancelBalance,expected_revision:'0'}]) {
+    expect(() => inventoryCommand(malformed)).toThrow();
+  }
+  const original = {...request,command:cancelBalance};
+  const local = journal();
+  local.journal.save(original);
+  expect(local.journal.open(scope.key)).toEqual(original);
+  const {server,fetch} = http([[200,csrf],[200,receipt(cancelledReceipt)],[200,receipt(cancelledReceipt,'historical')]]);
+  expect(await server.send(scope,original).result).toMatchObject({kind:'committed',shoppingAction:cancelBalance.action});
+  expect(await server.original(scope,original).result).toMatchObject({kind:'historical',shoppingAction:cancelBalance.action});
+  expect(fetch.mock.calls[2][0]).toContain('inventory/requests/shopping.cancel-balance/original');
+  for (const invalid of [{...cancelledReceipt,purchase_id:'other'},{...cancelledReceipt,cancelled:'0'},
+    {...cancelledReceipt,revision:'4'}]) {
+    await expect(http([[200,receipt(invalid)]]).server.original(scope,original).result)
+      .rejects.toMatchObject({code:'invalid_response'});
+  }
+  const closed = {...wirePurchase,remaining:'0',cancelled:'2',revision:'3'};
+  const detail = {purchase:closed,receipts:[wireArrival],cancellation:wireCancellation,next_cursor:null};
+  expect(await http([[200,detail]]).server.purchaseReceipts(scope,'purchase',null).result).toMatchObject({
+    purchase:{cancelled:'2',remaining:'0',pendingStock:'4.000001'},
+    cancellation:{quantity:'2',reason:cancelBalance.reason,memberId:'shopper',authorAlias:'Marta'},
+    items:[{id:'arrival'}],
+  });
+  for (const invalid of [{...detail,cancellation:null},
+    {...detail,cancellation:{...wireCancellation,quantity:'1'}},
+    {...detail,purchase:{...closed,purchased:'7.000001',remaining:'1'}}]) {
+    await expect(http([[200,invalid]]).server.purchaseReceipts(scope,'purchase',null).result)
+      .rejects.toMatchObject({code:'invalid_response'});
+  }
+});
+
+test('only a shopper can cancel and the purchase and receipt views reload after commitment', async () => {
+  const f = controller(), app = f.controller;
+  f.load.mockReturnValueOnce(read({...report,mayShop:false}));
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await app.submit(cancelBalance);
+  expect(f.send).not.toHaveBeenCalled();
+  f.load.mockReturnValue(read({...report,mayManage:false}));
+  await app.refresh();
+  await app.showPurchases();
+  await app.showPurchaseReceipts('purchase');
+  await app.submit(cancelBalance);
+  expect(f.send.mock.lastCall?.[1].command).toEqual(cancelBalance);
+  expect(f.buys).toHaveBeenCalledTimes(2);
+  expect(f.arrivals).toHaveBeenCalledTimes(2);
+});
+
+test('purchase details confirm the exact remaining amount, require a reason, and show the attributed cancellation', async () => {
+  const {node,root,events,submit} = component();
+  const open = {...initial,report:{...report,mayManage:false},purchaseReceipts};
+  node.view = open;
+  await node.updateComplete;
+  const element = root.querySelector('domus-shopping')!;
+  const shop = element.shadowRoot!;
+  const assign = async (state:InventoryState) => {
+    node.view = state;
+    await node.updateComplete;
+    await element.updateComplete;
+  };
+  await assign(open);
+  const form = shop.querySelector<HTMLFormElement>('#cancel-form')!;
+  const disclosure = shop.querySelector<HTMLDetailsElement>('#cancel-confirmation')!;
+  const reason = form.querySelector('input')!;
+  disclosure.open = true;
+  expect(form.textContent).toContain('2 millilitres');
+  submit(form);
+  await element.updateComplete;
+  expect(form.querySelector('[role=alert]')?.textContent).toContain('Enter a reason');
+  expect(events).not.toHaveBeenCalled();
+  reason.value = cancelBalance.reason;
+  await assign({...open,pending:true});
+  submit(form);
+  expect(events).not.toHaveBeenCalled();
+  await assign(open);
+  submit(form);
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:cancelBalance});
+  expect(disclosure.open).toBe(true);
+  await assign({...open,purchaseReceipts:{...purchaseReceipts,purchase:{...purchase,id:'other'}}});
+  expect(disclosure.open).toBe(false);
+  expect(reason.value).toBe('');
+  await assign({...open,report:{...report,mayShop:false}});
+  expect(shop.querySelector('#cancel-form')).toBeNull();
+  node.language = 'es';
+  const cancellation = {quantity:'2',reason:cancelBalance.reason,memberId:'shopper',authorAlias:'Marta',createdAt:'102'};
+  const closed = {...purchaseReceipts,purchase:{...purchase,remaining:'0',cancelled:'2'},cancellation};
+  await assign({...open,purchaseReceipts:closed,result:{kind:'committed',operationId:'cancel',
+    productId:null,movement:null,shoppingAction:cancelBalance.action}});
+  expect(shop.querySelector('#cancel-form')).toBeNull();
+  expect(shop.textContent).toContain('Cancelado');
+  expect(shop.textContent).toContain(cancelBalance.reason);
+  expect(shop.textContent).toContain('Marta');
+  expect(root.textContent).toContain('Saldo pendiente cancelado.');
+  await assign({...open,purchaseReceipts:{...closed,cancellation:{...cancellation,authorAlias:null}}});
+  expect(shop.textContent).toContain('shopper');
 });

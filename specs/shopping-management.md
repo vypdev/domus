@@ -702,3 +702,140 @@ Keep 100 percent coverage globally and per authored file. Require CI and Bugbot 
 ### 20. References and decisions
 
 Qualifies shopping-management-C16 and shopping-management-C18. Rechecks shopping-management-C10 through shopping-management-C15, shopping-management-C19 and shopping-management-C21 for the grouped flow.
+
+## Cancel the unreceived balance of a purchased item
+
+- Status: Draft
+- Owners: Domus maintainers and Shopping Management
+- Scope: Close the unreceived balance of a single purchase item
+- Source baseline: develop at c604e25d295217ef0653e47daa90b39a9b3a353b
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+A shopping manager can close a purchase item's entire unreceived balance when the units will no longer arrive. The cancellation has its own reason, actor, time and original operation receipt. The item remains visible in purchases or its session.
+
+### 2. Problem, current behavior, and evidence
+
+An undelivered amount currently counts as incoming supply indefinitely and can block a replacement purchase. In the standalone recovery test, Playwright sometimes loses the response body while checking the recovered session identity.
+
+### 3. Actors, surfaces, and terminology
+
+A household reader can inspect purchase progress and the cancellation. A member with shopping.manage can close the balance. Inventory managers still post already received tracked items through the existing posting flow.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| purchase-balance-R1 | Close the full positive unreceived balance once, with a reason and the current item revision, from the item detail used by purchases and sessions. |
+| purchase-balance-R2 | Commit one attributed cancellation and one operation receipt atomically. A racing arrival or a competing cancellation cannot reuse the balance. Same-key replay returns the original result. |
+| purchase-balance-R3 | Preserve the original purchased amount, physical receipts and Pantry posting. Remove the canceled amount from incoming supply and recompute remaining need. Only received units awaiting posting still count as incoming after cancellation. |
+| purchase-balance-R4 | Protect commands, reads and recovery with current permissions. Verify legacy data, restart, snapshot restoration and schema 25 migration. Stabilize the compiled standalone purchase-session recovery test. |
+
+Refunds, returns, payments, cancellation of a whole session, editable purchase quantities and additional demand controls are separate increments.
+
+### 5. Current versus proposed product journey
+
+Open a purchase item or open its physical receipt detail from a session. Review the amount still due, enter a reason, and close the remaining balance. History shows the purchased, received, pending posting and canceled amounts. A replacement tracked purchase becomes available once the original item has no remaining supply.
+
+### 6. Functional behavior and state model
+
+If six units were bought and four received, the amount canceled is exactly two. Calculate it from the persisted item inside the transaction after checking the expected revision and current permission. Require a nonblank reason of at most 240 characters. A successful operation increases the item revision and links the cancellation to the purchase. There is one cancellation per item. Future arrivals for the closed item are rejected. Previously recorded physical receipts remain eligible for their normal Pantry posting.
+
+Effective incoming for a tracked item is purchased minus settled minus canceled. An item is open only while that quantity is positive. The original purchased amount, receipts, existing stock movements, extras and reservations retain their identities.
+
+### 7. User-facing configuration
+
+Use existing shopping permissions and purchase units. There is no new household setting.
+
+### 8. Clean Architecture design
+
+Use the purchase aggregate for balance and revision rules. The authorized command uses the existing Shopping port, transactional adapter and operation journal. The item detail uses the existing protected workspace and shared controls. Add a linked cancellation record and keep the invariant for one open purchase per tracked product in SQLite.
+
+### 9. UI/UX and content contract
+
+Show the exact quantity to cancel before confirmation, require the reason and display canceled quantity, actor, time and reason afterward. Reuse the same detail for individual items and session items. Keep current localized receipt and recovery interactions in both deployment modes.
+
+### 10. Failure, recovery, and cleanup
+
+Invalid reason, stale revision, no balance, unavailable item and denied permissions leave no mutation. A retry of the original command returns the existing receipt. Restore distinguishes historical operations from effects present in the activated snapshot. Stabilize the Playwright session recovery assertion by capturing the original response before delivering it to the browser.
+
+### 11. Security, permissions, and privacy
+
+Require household.read for purchase queries and current shopping.manage for cancellation and recovery. Use the existing session, origin and CSRF checks. Resolve household, purchase identity and actor at the command boundary.
+
+### 12. Observability and operational UX
+
+Show attributed cancellation history and reuse the safe operation recovery and conflict messages. Recompute the shared list from current authorized sources.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Upgrade representative schema 25 data with a purchase session, prior purchases, posted and unposted physical receipts, Pantry effects and manual extras. Existing purchases start with zero canceled. Verify interrupted migration rollback and activated restore with both historical and current receipts.
+
+### 14. Testing strategy and numeric budget
+
+Minimum eight distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| State and UI | 1 | Observable scenarios in the case inventory. |
+| Inventory projection | 1 | Observable scenarios in the case inventory. |
+| State and concurrency | 1 | Observable scenarios in the case inventory. |
+| Recovery | 1 | Observable scenarios in the case inventory. |
+| Authorization | 1 | Observable scenarios in the case inventory. |
+| Compatibility | 1 | Observable scenarios in the case inventory. |
+| Workspace | 1 | Observable scenarios in the case inventory. |
+| Browser recovery | 1 | Observable scenarios in the case inventory. |
+| Total | 8 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| purchase-balance-C01 | State and UI | purchase-balance-R1, purchase-balance-R3 | Cancel two of six after four were received. Preserve all original quantities and show attributed history in item and session detail. |
+| purchase-balance-C02 | Inventory projection | purchase-balance-R3 | The canceled amount ceases to count as incoming. Received pending stock still counts until posted. A later tracked purchase can open once the original is settled. |
+| purchase-balance-C03 | State and concurrency | purchase-balance-R2 | Race an arrival against cancellation and race two cancellations. Only the winning mutation commits and balance stays valid. |
+| purchase-balance-C04 | Recovery | purchase-balance-R2, purchase-balance-R4 | Replay the original key, reject changed payload and recover original and historical results after restart and activated restore. |
+| purchase-balance-C05 | Authorization | purchase-balance-R1, purchase-balance-R4 | Reject invalid reasons, foreign purchases, stale revisions, no remaining balance, denied or revoked grants and missing CSRF. |
+| purchase-balance-C06 | Compatibility | purchase-balance-R4 | Migrate the schema 25 fixture, verify rollback on failure and preserve prior sessions, receipts and stock facts. |
+| purchase-balance-C07 | Workspace | purchase-balance-R1, purchase-balance-R3, purchase-balance-R4 | Cancel from the session item detail and verify the balance, reason, history and replenishment in English and Spanish and both actual image architectures. |
+| purchase-balance-C08 | Browser recovery | purchase-balance-R4 | The session recovery test checks the original session ID from a response captured before browser navigation or refresh. Verify standalone and Ingress. |
+
+### 15. Documentation and discoverability
+
+[specs/shopping-management.md](shopping-management.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/purchase-balance-qualification.md](../docs/evidence/purchase-balance-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/infrastructure/sqlite\_shopping.py](../backend/src/domus/infrastructure/sqlite_shopping.py) · [frontend/src/presentation/domus-shopping.ts](../frontend/src/presentation/domus-shopping.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/shopping-management.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/purchase-balance-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/infrastructure/sqlite_shopping.py | update |
+| frontend/src/presentation/domus-shopping.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Cancel an unreceived amount while retaining a pending physical receipt. Confirm exact incoming supply before and after its Pantry posting. Race independent connections and recover the original cancellation.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| purchase-balance-R1 | purchase-balance-C01, purchase-balance-C05, purchase-balance-C07 |
+| purchase-balance-R2 | purchase-balance-C03, purchase-balance-C04 |
+| purchase-balance-R3 | purchase-balance-C01, purchase-balance-C02, purchase-balance-C07 |
+| purchase-balance-R4 | purchase-balance-C04, purchase-balance-C05, purchase-balance-C06, purchase-balance-C07, purchase-balance-C08 |
+
+### 18. Implementation sequence
+
+Add the linked cancellation and guarded command, update the item and supply projections, then add the bilingual control and stable browser checks.
+
+### 19. Definition of Done
+
+Keep 100 percent coverage globally and per authored file. Require CI, both actual image architectures and Bugbot on the same commit. Keep the existing Copilot workflow and verification evidence. Releases and deployments require separate authorization.
+
+### 20. References and decisions
+
+Qualifies the linked quantity-correction portion of shopping-management-C17 and exercises original-operation, receipt and shopping-demand invariants.

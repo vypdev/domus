@@ -87,6 +87,7 @@ class PurchaseView:
     received: str
     remaining: str
     pending_stock: str
+    cancelled: str
     revision: str
     member_id: str
     author_alias: str | None
@@ -130,10 +131,20 @@ class PhysicalReceiptView:
 
 
 @dataclass(frozen=True, slots=True)
+class PurchaseCancellationView:
+    quantity: str
+    reason: str
+    member_id: str
+    author_alias: str | None
+    created_at: str
+
+
+@dataclass(frozen=True, slots=True)
 class PhysicalReceiptsView:
     purchase: PurchaseView
     receipts: tuple[PhysicalReceiptView, ...]
     next_cursor: str | None
+    cancellation: PurchaseCancellationView | None
 
 
 def _purchase_view(unit: UnitOfWork, home: str, purchase: Purchase) -> PurchaseView:
@@ -148,6 +159,7 @@ def _purchase_view(unit: UnitOfWork, home: str, purchase: Purchase) -> PurchaseV
         stock_quantity(purchase.received),
         stock_quantity(purchase.remaining),
         stock_quantity(purchase.pending),
+        stock_quantity(purchase.cancelled),
         str(purchase.revision),
         purchase.member_id,
         author.alias,
@@ -366,8 +378,20 @@ class InventoryQueries:
                         receipt.movement_id,
                     )
                 )
+            cancellation = unit.shopping.cancellation(home, purchase_id)
+            closed = None
+            if cancellation is not None:
+                author = unit.presentations.get(home, cancellation.member_id)
+                assert author is not None
+                closed = PurchaseCancellationView(
+                    stock_quantity(cancellation.quantity),
+                    cancellation.reason,
+                    cancellation.member_id,
+                    author.alias,
+                    str(cancellation.created_at),
+                )
             return PhysicalReceiptsView(
-                _purchase_view(unit, home, purchase), tuple(page), next_cursor
+                _purchase_view(unit, home, purchase), tuple(page), next_cursor, closed
             )
 
     def shopping_list(self, *, limit: int, cursor: str | None) -> ShoppingListView:

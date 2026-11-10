@@ -4,11 +4,12 @@ import sqlite3
 from dataclasses import astuple, dataclass
 
 from domus.domain.errors import StorageFailure
-from domus.domain.inventory import MAX_STOCK_UNITS, BaseUnit, MovementKind
+from domus.domain.inventory import MAX_STOCK_UNITS, BaseUnit, MovementKind, validate_stock_reason
 from domus.domain.shopping import (
     MAX_SESSION_ITEMS,
     MIN_SESSION_ITEMS,
     Purchase,
+    PurchaseCancellation,
     PurchaseReceipt,
     PurchaseSession,
 )
@@ -80,6 +81,23 @@ SHOPPING_SESSION_STATEMENTS = (
 )
 
 
+SHOPPING_CANCELLATION_TABLE = "shopping_cancellations"
+SHOPPING_CANCELLATION_STATEMENTS = (
+    "ALTER TABLE shopping_purchases ADD COLUMN cancelled INTEGER NOT NULL DEFAULT 0 "
+    "CHECK(cancelled>=0 AND (cancelled=0 OR cancelled=purchased-received))",
+    "DROP INDEX shopping_open_pantry",
+    "CREATE UNIQUE INDEX shopping_open_pantry ON shopping_purchases(household_id,product_id) "
+    "WHERE product_id IS NOT NULL AND settled+cancelled<purchased",
+    "CREATE TABLE shopping_cancellations(household_id TEXT NOT NULL, purchase_id TEXT NOT NULL, "
+    f"quantity INTEGER NOT NULL CHECK(quantity BETWEEN 1 AND {MAX_STOCK_UNITS}), "
+    "reason TEXT NOT NULL, member_id TEXT NOT NULL, "
+    "created_at INTEGER NOT NULL CHECK(created_at>=0), PRIMARY KEY(household_id,purchase_id), "
+    "FOREIGN KEY(household_id,purchase_id) "
+    "REFERENCES shopping_purchases(household_id,purchase_id), "
+    "FOREIGN KEY(household_id,member_id) REFERENCES members(household_id,member_id)) STRICT",
+)
+
+
 def _session(row: sqlite3.Row) -> PurchaseSession:
     return PurchaseSession(row["session_id"], row["member_id"], row["created_at"])
 
@@ -110,6 +128,7 @@ def _purchase(row: sqlite3.Row) -> Purchase:
         row["revision"],
         row["member_id"],
         row["created_at"],
+        row["cancelled"] if "cancelled" in row.keys() else 0,
     )
 
 
@@ -191,23 +210,44 @@ class SQLiteShopping:
 
     def outstanding(self, home: str, product_id: str) -> int:
         row = self.connection.execute(
-            "SELECT purchased-settled FROM shopping_purchases WHERE household_id=? "
-            "AND product_id=? AND settled<purchased",
+            "SELECT purchased-settled-cancelled FROM shopping_purchases WHERE household_id=? "
+            "AND product_id=? AND settled+cancelled<purchased",
             (home, product_id),
         ).fetchone()
         return 0 if row is None else int(row[0])
 
     def add_purchase(self, home: str, purchase: Purchase) -> None:
         self.connection.execute(
-            "INSERT INTO shopping_purchases VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO shopping_purchases VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?)",
             (home, *astuple(purchase)),
         )
 
     def update_purchase(self, home: str, purchase: Purchase) -> None:
         self.connection.execute(
-            "UPDATE shopping_purchases SET received=?,settled=?,revision=? "
+            "UPDATE shopping_purchases SET received=?,settled=?,revision=?,cancelled=? "
             "WHERE household_id=? AND purchase_id=?",
-            (purchase.received, purchase.settled, purchase.revision, home, purchase.purchase_id),
+            (
+                purchase.received,
+                purchase.settled,
+                purchase.revision,
+                purchase.cancelled,
+                home,
+                purchase.purchase_id,
+            ),
+        )
+
+    def cancellation(self, home: str, purchase_id: str) -> PurchaseCancellation | None:
+        row = self.connection.execute(
+            "SELECT purchase_id,quantity,reason,member_id,created_at FROM shopping_cancellations "
+            "WHERE household_id=? AND purchase_id=?",
+            (home, purchase_id),
+        ).fetchone()
+        return None if row is None else PurchaseCancellation(*row)
+
+    def add_cancellation(self, home: str, cancellation: PurchaseCancellation) -> None:
+        self.connection.execute(
+            "INSERT INTO shopping_cancellations VALUES (?,?,?,?,?,?)",
+            (home, *astuple(cancellation)),
         )
 
     def receipt(self, home: str, receipt_id: str) -> PurchaseReceipt | None:
@@ -321,8 +361,11 @@ def verify_shopping_extras(connection: sqlite3.Connection) -> None:
                 raise StorageFailure("invalid_shopping_records")
 
 
-def verify_shopping_records(connection: sqlite3.Connection) -> None:
+def verify_shopping_records(
+    connection: sqlite3.Connection, *, has_cancellations: bool = True
+) -> None:
     stock = SQLiteInventory(connection)
+    shopping = SQLiteShopping(connection)
     for row in connection.execute("SELECT * FROM shopping_purchases"):
         purchase, home = _purchase(row), row["household_id"]
         validate_identifier(purchase.purchase_id)
@@ -362,9 +405,19 @@ def verify_shopping_records(connection: sqlite3.Connection) -> None:
                 revision += 1
         if product is None:
             settled = received
-        if (received, settled, revision) != (
+        cancellation = (
+            shopping.cancellation(home, purchase.purchase_id) if has_cancellations else None
+        )
+        cancelled = 0
+        if cancellation is not None:
+            validate_stock_reason(cancellation.reason)
+            validate_task_time(cancellation.created_at)
+            cancelled = cancellation.quantity
+            revision += 1
+        if (received, settled, revision, cancelled) != (
             purchase.received,
             purchase.settled,
             purchase.revision,
+            purchase.cancelled,
         ):
             raise StorageFailure("invalid_shopping_records")

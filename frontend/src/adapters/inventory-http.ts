@@ -2,7 +2,7 @@
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
 import {BASE_UNITS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, ProductStock, Purchase, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement} from '../domain/inventory';
+import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement} from '../domain/inventory';
 import {revisionValue} from '../domain/administration';
 import {taskQuantity, taskTime} from '../domain/tasks';
 import {BoundedHTTP} from './http-transport';
@@ -81,16 +81,18 @@ function history(value: unknown, productId: string): MovementHistory {
 
 function purchase(value: unknown): Purchase {
   const row = fields(value, ['purchase_id','product_id','name','base_unit','purchased','received','remaining',
-    'pending_stock','revision','member_id','author_alias','created_at'], []);
+    'pending_stock','cancelled','revision','member_id','author_alias','created_at'], []);
   const productId = nullableId(row.product_id), unit = choice(row.base_unit, BASE_UNITS);
   const purchased = positiveQuantity(row.purchased), received = taskQuantity(row.received);
   const remaining = taskQuantity(row.remaining), pendingStock = taskQuantity(row.pending_stock);
-  check(stockUnits(purchased) === stockUnits(received) + stockUnits(remaining));
+  const cancelled = taskQuantity(row.cancelled);
+  check(stockUnits(purchased) === stockUnits(received) + stockUnits(remaining) + stockUnits(cancelled));
+  check(cancelled === '0' || remaining === '0');
   check(stockUnits(pendingStock) <= stockUnits(received));
   check(productId !== null || (unit === 'piece' && pendingStock === '0'));
-  check(unit !== 'piece' || [purchased, received, remaining, pendingStock].every(amount => !amount.includes('.')));
+  check(unit !== 'piece' || [purchased, received, remaining, pendingStock, cancelled].every(amount => !amount.includes('.')));
   return {id:identifier(row.purchase_id), productId, name:text(row.name, 160), unit, purchased, received, remaining,
-    pendingStock, revision:revisionValue(row.revision), ...attribution(row)};
+    pendingStock, cancelled, revision:revisionValue(row.revision), ...attribution(row)};
 }
 
 function purchases(value: unknown): Purchases {
@@ -101,8 +103,14 @@ function purchases(value: unknown): Purchases {
   return {items, cursor:cursorValue(row.next_cursor)};
 }
 
+function cancellation(value: unknown): PurchaseCancellation | null {
+  if (value === null) return null;
+  const row = fields(value, ['quantity','reason','member_id','author_alias','created_at'], []);
+  return {quantity:positiveQuantity(row.quantity), reason:text(row.reason, STOCK_REASON_LIMIT), ...attribution(row)};
+}
+
 function purchaseReceipts(value: unknown, purchaseId: string): PurchaseReceipts {
-  const row = fields(value, ['purchase','receipts','next_cursor'], []);
+  const row = fields(value, ['purchase','receipts','cancellation','next_cursor'], []);
   const selected = purchase(row.purchase);
   check(selected.id === purchaseId && Array.isArray(row.receipts) && row.receipts.length <= 25);
   const items = row.receipts.map(value => {
@@ -111,7 +119,9 @@ function purchaseReceipts(value: unknown, purchaseId: string): PurchaseReceipts 
       movementId:nullableId(entry.movement_id)};
   });
   check(new Set(items.map(item => item.id)).size === items.length);
-  return {purchase:selected, items, cursor:cursorValue(row.next_cursor)};
+  const balance = cancellation(row.cancellation);
+  check((balance?.quantity ?? '0') === selected.cancelled);
+  return {purchase:selected, items, cancellation:balance, cursor:cursorValue(row.next_cursor)};
 }
 
 function purchaseSession(value: unknown): PurchaseSession {
@@ -222,6 +232,13 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
       check(result.receipt_id === command.receipt_id);
       identifier(result.movement_id);
     }
+    return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
+  }
+  if (command.action === 'shopping.cancel-balance') {
+    const result = fields(row.result, ['purchase_id','cancelled','revision'], []);
+    check(result.purchase_id === command.purchase_id);
+    check(taskQuantity(result.cancelled) !== '0');
+    check(BigInt(revisionValue(result.revision)) === BigInt(command.expected_revision) + 1n);
     return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
   }
   if (command.action === 'shopping.record-session') {

@@ -11,7 +11,7 @@ export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'i
   'inventory_correction_requires_intake', 'inventory_intake_corrected', 'invalid_replenishment_bounds',
   'invalid_revision', 'revision_conflict', 'invalid_shopping_item', 'shopping_purchase_open',
   'shopping_purchase_missing', 'shopping_receipt_missing', 'shopping_receipt_exceeds_purchase',
-  'shopping_receipt_untracked', 'shopping_receipt_posted', 'shopping_extra_missing', 'shopping_extra_cleared',
+  'shopping_balance_closed', 'shopping_receipt_untracked', 'shopping_receipt_posted', 'shopping_extra_missing', 'shopping_extra_cleared',
   'invalid_shopping_session', 'shopping_session_missing'] as const;
 export type InventoryError = typeof INVENTORY_ERRORS[number] | 'rejected';
 
@@ -61,7 +61,7 @@ export interface InventoryState {
 function mayWrite(report: InventoryReport | null, action: InventoryCommand['action']): boolean {
   if (action === 'shopping.add-extra') return report?.mayRequest === true;
   if (action === 'shopping.purchase' || action === 'shopping.receive' || action === 'shopping.clear-extra'
-    || action === 'shopping.record-session')
+    || action === 'shopping.record-session' || action === 'shopping.cancel-balance')
     return report?.mayShop === true;
   return report?.mayManage === true;
 }
