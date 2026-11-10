@@ -13,6 +13,15 @@ from domus.domain.storage import JsonDocument
 
 
 @dataclass(frozen=True, slots=True)
+class ReplenishmentView:
+    source_id: str
+    minimum: str
+    target: str
+    revision: str
+    needed: str
+
+
+@dataclass(frozen=True, slots=True)
 class CatalogStock:
     product_id: str
     name: str
@@ -20,6 +29,7 @@ class CatalogStock:
     recorded: str
     reserved: str
     available: str
+    replenishment: ReplenishmentView
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,6 +110,8 @@ class InventoryQueries:
             for product in products[:limit]:
                 recorded = stock.balance(home, product.reference_id)
                 reserved = stock.reserved(home, product.reference_id)
+                available = recorded - reserved
+                policy = stock.replenishment(home, product.product_id)
                 page.append(
                     CatalogStock(
                         product.product_id,
@@ -107,7 +119,14 @@ class InventoryQueries:
                         product.base_unit,
                         stock_quantity(recorded),
                         stock_quantity(reserved),
-                        stock_quantity(recorded - reserved),
+                        stock_quantity(available),
+                        ReplenishmentView(
+                            product.product_id,
+                            stock_quantity(policy.minimum),
+                            stock_quantity(policy.target),
+                            str(policy.revision),
+                            stock_quantity(policy.needed(available)),
+                        ),
                     )
                 )
             return InventoryView(PANTRY, may_manage, tuple(page), next_cursor)

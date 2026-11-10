@@ -1006,7 +1006,8 @@
           "inventory.register-product",
           "inventory.intake",
           "inventory.adjust",
-          "inventory.correct-intake"
+          "inventory.correct-intake",
+          "inventory.configure-replenishment"
         ],
         "title": "CatalogAction",
         "type": "string"
@@ -1049,6 +1050,9 @@
             "title": "Recorded",
             "type": "string"
           },
+          "replenishment": {
+            "$ref": "#/components/schemas/ReplenishmentView"
+          },
           "reserved": {
             "title": "Reserved",
             "type": "string"
@@ -1060,7 +1064,8 @@
           "base_unit",
           "recorded",
           "reserved",
-          "available"
+          "available",
+          "replenishment"
         ],
         "title": "CatalogStock",
         "type": "object"
@@ -4735,6 +4740,82 @@
           "reason"
         ],
         "title": "ReopenBody",
+        "type": "object"
+      },
+      "ReplenishmentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.configure-replenishment",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "pattern": "^(?:0|[1-9][0-9]{0,18})$",
+            "title": "Expected Revision",
+            "type": "string"
+          },
+          "minimum": {
+            "maxLength": 19,
+            "minLength": 1,
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Minimum",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "target": {
+            "maxLength": 19,
+            "minLength": 1,
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "product_id",
+          "minimum",
+          "target",
+          "expected_revision"
+        ],
+        "title": "ReplenishmentBody",
+        "type": "object"
+      },
+      "ReplenishmentView": {
+        "properties": {
+          "minimum": {
+            "title": "Minimum",
+            "type": "string"
+          },
+          "needed": {
+            "title": "Needed",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "minimum",
+          "target",
+          "revision",
+          "needed"
+        ],
+        "title": "ReplenishmentView",
         "type": "object"
       },
       "RescheduleBody": {
@@ -11947,6 +12028,7 @@
                 "discriminator": {
                   "mapping": {
                     "inventory.adjust": "#/components/schemas/AdjustmentBody",
+                    "inventory.configure-replenishment": "#/components/schemas/ReplenishmentBody",
                     "inventory.correct-intake": "#/components/schemas/IntakeCorrectionBody",
                     "inventory.intake": "#/components/schemas/IntakeBody",
                     "inventory.register-product": "#/components/schemas/ProductBody"
@@ -11965,6 +12047,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/IntakeCorrectionBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReplenishmentBody"
                   }
                 ],
                 "title": "Body"

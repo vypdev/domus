@@ -57,8 +57,17 @@ class IntakeCorrectionBody(StrictModel):
     reason: StockReason
 
 
+class ReplenishmentBody(StrictModel):
+    action: Literal["inventory.configure-replenishment"]
+    product_id: Identifier
+    minimum: Quantity
+    target: Quantity
+    expected_revision: str = Field(pattern=r"^(?:0|[1-9][0-9]{0,18})$")
+
+
 CatalogBody = Annotated[
-    ProductBody | IntakeBody | AdjustmentBody | IntakeCorrectionBody, Field(discriminator="action")
+    ProductBody | IntakeBody | AdjustmentBody | IntakeCorrectionBody | ReplenishmentBody,
+    Field(discriminator="action"),
 ]
 
 
@@ -103,8 +112,16 @@ def create_inventory_router(
             receipt = inventory.intake(key, body.product_id, MaterialQuantity(body.quantity))
         elif isinstance(body, AdjustmentBody):
             receipt = inventory.adjust(key, body.product_id, body.quantity, body.reason)
-        else:
+        elif isinstance(body, IntakeCorrectionBody):
             receipt = inventory.correct_intake(key, body.product_id, body.movement_id, body.reason)
+        else:
+            receipt = inventory.configure_replenishment(
+                key,
+                body.product_id,
+                MaterialQuantity(body.minimum),
+                MaterialQuantity(body.target),
+                int(body.expected_revision),
+            )
         return _receipt(receipt)
 
     @router.get("/requests/{action}/{key}", response_model=ReceiptResponse)

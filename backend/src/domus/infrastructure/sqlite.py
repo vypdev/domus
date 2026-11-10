@@ -43,6 +43,7 @@ from domus.infrastructure.sqlite_inventory import (
     INVENTORY_STATEMENTS,
     INVENTORY_TABLES,
     MOVEMENT_HISTORY_STATEMENTS,
+    REPLENISHMENT_STATEMENT,
     SQLiteInventory,
 )
 from domus.infrastructure.sqlite_member_profile_schema import PROFILE_STATEMENTS, PROFILE_TABLES
@@ -83,7 +84,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 21
+SCHEMA_VERSION = 22
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -161,6 +162,7 @@ SCHEMA_STATEMENTS = (
     *REWARD_STATEMENTS,
     *CATALOG_STATEMENTS,
     *MOVEMENT_HISTORY_STATEMENTS,
+    REPLENISHMENT_STATEMENT,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -178,7 +180,8 @@ POINTS_SCHEMA_TABLES = CATEGORY_SCHEMA_TABLES | {POINTS_TABLE}
 INVENTORY_SCHEMA_TABLES = POINTS_SCHEMA_TABLES | INVENTORY_TABLES
 ALLOCATION_SCHEMA_TABLES = INVENTORY_SCHEMA_TABLES | ALLOCATION_TABLES
 REWARD_SCHEMA_TABLES = ALLOCATION_SCHEMA_TABLES | REWARD_TABLES
-TABLES = REWARD_SCHEMA_TABLES | CATALOG_TABLES
+CATALOG_SCHEMA_TABLES = REWARD_SCHEMA_TABLES | CATALOG_TABLES
+TABLES = CATALOG_SCHEMA_TABLES | {"inventory_replenishment"}
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -215,6 +218,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(REWARD_STATEMENTS if version >= 19 else ()),
             *(CATALOG_STATEMENTS if version >= 20 else ()),
             *(MOVEMENT_HISTORY_STATEMENTS if version >= 21 else ()),
+            *((REPLENISHMENT_STATEMENT,) if version >= 22 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -483,6 +487,8 @@ class SQLiteDatabase:
                 17: INVENTORY_SCHEMA_TABLES,
                 18: ALLOCATION_SCHEMA_TABLES,
                 19: REWARD_SCHEMA_TABLES,
+                20: CATALOG_SCHEMA_TABLES,
+                21: CATALOG_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -549,7 +555,8 @@ class SQLiteDatabase:
                         *(ALLOCATION_STATEMENTS if version < 18 else ()),
                         *(REWARD_STATEMENTS if version < 19 else ()),
                         *(CATALOG_STATEMENTS if version < 20 else ()),
-                        *MOVEMENT_HISTORY_STATEMENTS,
+                        *(MOVEMENT_HISTORY_STATEMENTS if version < 21 else ()),
+                        REPLENISHMENT_STATEMENT,
                     )
                     for statement in migration:
                         connection.execute(statement)

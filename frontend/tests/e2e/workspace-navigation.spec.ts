@@ -464,6 +464,46 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(historial.getByText('+2,000001 mililitros')).toBeVisible();
     await expect(historial.getByText('Ajuste manual')).toBeVisible();
 
+    await expect(oil.getByText('La reposición está desactivada.')).toBeVisible();
+    await oil.getByRole('button', {name:'Editar reposición'}).click();
+    const minimum = oil.getByRole('textbox', {name:'Stock mínimo'});
+    const target = oil.getByRole('textbox', {name:'Stock objetivo'});
+    await expect(minimum).toBeFocused();
+    await minimum.fill('2,000002');
+    await target.fill('1');
+    await oil.getByRole('button', {name:'Guardar reposición'}).click();
+    await expect(oil.getByRole('alert')).toContainText('El objetivo debe ser igual o superior al mínimo.');
+    await target.fill('3,250002');
+    let policyKey = '';
+    await page.route(inventoryCommands, async route => {
+      policyKey = route.request().headers()['idempotency-key'];
+      const committed = await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(committed.status()).toBe(200);
+      expect((await committed.json()).result).toMatchObject({minimum:'2.000002', target:'3.250002', revision:'1'});
+      await route.abort('connectionclosed');
+    });
+    await oil.getByRole('button', {name:'Guardar reposición'}).click();
+    await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
+    await page.unroute(inventoryCommands);
+    await page.reload();
+    await expect(page).toHaveURL(base + '#inventory');
+    await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption('en');
+    const originalPolicy = page.waitForResponse(
+      base + 'api/v1/inventory/requests/inventory.configure-replenishment/' + policyKey,
+    );
+    await stock.getByRole('button', {name:'Recover original request'}).click();
+    expect((await originalPolicy).ok()).toBe(true);
+    await expect(stock.getByText('Replenishment settings saved.')).toBeVisible();
+    await expect(oil.getByText('Replenish · 1.250001 millilitres')).toBeVisible();
+    await expect(oil.getByText('Minimum stock · 2.000002 millilitres')).toBeVisible();
+    await expect(oil.getByText('Target stock · 3.250002 millilitres')).toBeVisible();
+    await oil.getByRole('button', {name:'Edit replenishment'}).click();
+    await oil.getByRole('textbox', {name:'Minimum stock'}).fill('2.000001');
+    await oil.getByRole('button', {name:'Save replenishment'}).click();
+    await expect(oil.getByText('No replenishment needed.')).toBeVisible();
+    await page.getByLabel('Language', {exact:true}).selectOption('es');
+    await expect(oil.getByText('No hace falta reponer.')).toBeVisible();
+
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});
     await expect(end).toBeVisible();

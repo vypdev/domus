@@ -164,6 +164,7 @@ PUBLIC_CODES = frozenset(
         "material_unchanged",
         "inventory_unavailable",
         "invalid_inventory_unit",
+        "invalid_replenishment_bounds",
         "invalid_inventory_receipt",
         "inventory_product_missing",
         "inventory_stock_capacity",
