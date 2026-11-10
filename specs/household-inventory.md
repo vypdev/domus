@@ -700,3 +700,138 @@ ledger identities. The current protected routes use the same Inventory writer
 in both deployments. See the [catalog qualification](../docs/evidence/inventory-catalog-qualification.md)
 for the twelve cases and the verification gates. The wider inventory capability
 remains a draft while its remaining workflows are developed.
+
+## Inventory movement history and stock corrections
+
+- Status: Draft
+- Owners: Domus maintainers and the Household Inventory capability
+- Scope: Protected product movement history and explicit Pantry adjustments and intake reversals
+- Source baseline: develop at eab3077fef9cc659978bf4d7c9f6f6a85c287961
+- Related issues and pull requests: https://github.com/vypdev/domus/issues/70 and https://github.com/vypdev/domus/pull/69
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+Extend the protected Inventory workspace with the existing ledger's movement history and attributable, exact Pantry corrections.
+
+### 2. Problem, current behavior, and evidence
+
+PR #69 provides protected products, projected quantities, positive intake and original receipts. The ledger also records task material effects. Members need to inspect posted movements and correct an erroneous intake while preserving history and active reservations. This delta extends the existing household-inventory capability in specs/household-inventory.md and preserves its existing requirements and cases.
+
+### 3. Actors, surfaces, and terminology
+
+Current household readers inspect posted movements for a product. Inventory managers may adjust stock or reverse an intake. Tasks retains its own consumption and regularization flow. A reversal is one compensating movement that references its original intake.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| inventory-movements-R1 | A currently authorized household reader can inspect one product's bounded, paginated ledger with exact signed amount, base unit, source, author and date. |
+| inventory-movements-R2 | A current inventory.manage grant permits a reasoned signed adjustment or one full intake reversal linked to the unchanged original. Task material settlement stays in Tasks. |
+| inventory-movements-R3 | Stock, reservations, correction identity and original receipts are validated and committed atomically with exact quantities. |
+| inventory-movements-R4 | Existing data, original receipts and links remain usable through schema upgrade, restart and compatible restoration. The same protected workspace works in English and Spanish on both deployment targets. |
+
+Multiple locations, lots, package conversions, replenishment, shopping, barcodes and Gateway remain outside this increment.
+
+### 5. Current versus proposed product journey
+
+Open a product's movement history from Inventory. Review intake, task consumption and correction entries. Use a signed adjustment to reconcile stock, or reverse an erroneous intake with a reason and use normal intake to record a replacement when needed.
+
+### 6. Functional behavior and state model
+
+Order by newest ledger append first and continue from a stable keyset position. The workspace requests 25 records. The API defaults to 25 and accepts 1 to 100 with the limit included in the cursor binding. A later append appears on refresh. Show the member alias when present and the stable household member ID as fallback. Use localized UTC timestamps. Keep original and compensating movement identities visible and linked.
+
+An intake reversal derives the opposite quantity from the original Pantry intake. One reversal is allowed per original movement. An adjustment can increase or decrease stock. A rejected adjustment or reversal leaves the ledger, balance and reservations intact. A retry with the original key returns its original receipt. A changed payload under that key conflicts.
+
+### 7. User-facing configuration
+
+Reuse the Pantry binding and unchanged base units. Pieces are whole. Grams and millilitres use up to six decimal places. Use a required nonblank reason of up to 240 characters for both writes.
+
+### 8. Clean Architecture design
+
+Application queries and commands authorize the current member and operate through existing Inventory and transaction ports. Exact quantities and validation are independent of transport. SQLite persists and queries the ledger and command receipts. HTTP and shared HA UI components adapt the same contract in both deployments.
+
+### 9. UI/UX and content contract
+
+Use localized labels, signed amounts and visible reasons. Distinguish entries, task consumption, manual adjustments and linked corrections. Expose bounded pagination and original request recovery with keyboard-accessible controls.
+
+### 10. Failure, recovery, and cleanup
+
+Reject invalid scope, unsupported reversal sources, duplicate fresh-key reversals and quantities that would reduce recorded stock below active reservations. Preserve original receipts after an uncertain reply. A restored historical receipt remains distinguishable from the current effect.
+
+### 11. Security, permissions, and privacy
+
+Require current household read access and bind the signed cursor to installation, channel, household, member, current authority context, product and page size. Enforce current inventory.manage and existing write protections. Treat member text as plain text and avoid exposing provider identifiers.
+
+### 12. Observability and operational UX
+
+Show the committed movement and original receipt. Provide safe rejection messages that let an authorized member review stock and correct input.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+When the ledger schema changes, upgrade a real schema 20 fixture with intake, task consumption and its correction, active reservations and original receipts. Preserve durable identities and validate snapshot restoration with a compatible image and database.
+
+### 14. Testing strategy and numeric budget
+
+Minimum 8 distinct cases in this delta. The existing Inventory and Tasks acceptance inventories retain their case definitions and counts.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Protected history | 2 | Observable scenarios in the case inventory. |
+| Stock commands | 2 | Observable scenarios in the case inventory. |
+| Transaction and recovery | 3 | Observable scenarios in the case inventory. |
+| Workspace qualification | 1 | Observable scenarios in the case inventory. |
+| Total | 8 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| inventory-movements-C01 | Protected history | inventory-movements-R1 | A household reader sees attributable intake, task and correction records for one product. An outsider or a cursor scoped to another reader or product cannot inspect the page. |
+| inventory-movements-C02 | Protected history | inventory-movements-R1 | Several entries share a timestamp and a new entry posts between page reads. Each earlier entry appears once and the new entry appears on refresh. |
+| inventory-movements-C03 | Stock commands | inventory-movements-R2, inventory-movements-R3 | An authorized member records positive and negative exact adjustments with a reason. A viewer, invalid quantity or missing reason cannot change stock. |
+| inventory-movements-C04 | Stock commands | inventory-movements-R2, inventory-movements-R3 | Reversing intake preserves the original and creates one linked negative compensation. The correction command rejects a task movement and leaves task material settlement in Tasks. |
+| inventory-movements-C05 | Transaction and recovery | inventory-movements-R3 | An excessive decrease, an active reservation conflict and a failure inside a write leave balances, reservations, history and receipts intact. |
+| inventory-movements-C06 | Transaction and recovery | inventory-movements-R3, inventory-movements-R4 | Concurrent writers using the same or different keys cannot duplicate an intake reversal. Replay and restart recover the original receipt. |
+| inventory-movements-C07 | Transaction and recovery | inventory-movements-R4 | A representative schema 20 database upgrades with unchanged task and stock history. A restored snapshot reconciles balances and reservations and retains original receipts. |
+| inventory-movements-C08 | Workspace qualification | inventory-movements-R1, inventory-movements-R2, inventory-movements-R4 | English and Spanish browser journeys exercise protected history and corrections through Ingress and standalone, including the actual amd64 and ARM64 images. |
+
+### 15. Documentation and discoverability
+
+[specs/household-inventory.md](household-inventory.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/inventory-movement-qualification.md](../docs/evidence/inventory-movement-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/application/inventory\_queries.py](../backend/src/domus/application/inventory_queries.py) · [backend/src/domus/infrastructure/sqlite\_inventory.py](../backend/src/domus/infrastructure/sqlite_inventory.py) · [frontend/src/presentation/domus-inventory.ts](../frontend/src/presentation/domus-inventory.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-inventory.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/inventory-movement-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/application/inventory_queries.py | update |
+| backend/src/domus/infrastructure/sqlite_inventory.py | update |
+| frontend/src/presentation/domus-inventory.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Execute the eight cases with assertions against the authoritative ledger, exact balances and durable receipts. Link executed evidence from the reviewed source revision.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| inventory-movements-R1 | inventory-movements-C01, inventory-movements-C02, inventory-movements-C08 |
+| inventory-movements-R2 | inventory-movements-C03, inventory-movements-C04, inventory-movements-C08 |
+| inventory-movements-R3 | inventory-movements-C03, inventory-movements-C04, inventory-movements-C05, inventory-movements-C06 |
+| inventory-movements-R4 | inventory-movements-C06, inventory-movements-C07, inventory-movements-C08 |
+
+### 18. Implementation sequence
+
+Add the protected ledger projection and transactional stock commands. Preserve compatibility with schema 20, then exercise the localized workspace and both deployment compositions.
+
+### 19. Definition of Done
+
+Keep 100% global and per-file coverage and require CI and Bugbot green for the same commit. An exception for Copilot Verification requires verified exclusive Copilot cause and a linked upstream report. Keep releases and deployments separate.
+
+### 20. References and decisions
+
+The existing household-inventory specification and its prior catalog and task cases remain authoritative. The answers on issue #70 record the full reversal and pagination decisions.
