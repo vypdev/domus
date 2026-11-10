@@ -39,6 +39,7 @@ const SHOPPING_SAVED = {
   'shopping.cancel-balance': 'cancelSaved',
   'shopping.void-receipt': 'voidSaved',
   'shopping.correct-posted-receipt': 'postedCorrectionSaved',
+  'shopping.return-receipt': 'returnSaved',
   'shopping.post-receipt': 'stockPosted',
   'shopping.add-extra': 'extraAdded',
   'shopping.clear-extra': 'extraCleared',
@@ -269,7 +270,7 @@ export class DomusInventory extends LitElement {
 
   private historyRow(entry: StockMovement, history: MovementHistory, manage: boolean, blocked: boolean) {
     return html`<li>
-      <p><strong>${this.signed(entry.quantity)} ${this.text(history.unit)}</strong> · ${this.text(entry.kind === 'intake' ? 'intakeMovement' : entry.kind)}</p>
+      <p><strong>${this.signed(entry.quantity)} ${this.text(history.unit)}</strong> · ${this.text(entry.returnOf !== null ? 'returnMovement' : entry.kind === 'intake' ? 'intakeMovement' : entry.kind)}</p>
       <dl>
         <dt>${this.text('author')}</dt><dd>${entry.authorAlias ?? entry.memberId}</dd>
         <dt>${this.text('date')}</dt><dd>${instant(Number(entry.createdAt), this.language)}</dd>
@@ -277,6 +278,7 @@ export class DomusInventory extends LitElement {
       </dl>
       <details><summary>${this.text('movementDetails')}</summary>
         <p>${this.text('movement')} <code>${entry.id}</code></p>
+        ${entry.returnOf === null ? nothing : html`<p>${this.text('originalMovement')} <code>${entry.returnOf}</code></p>`}
         ${entry.corrects === null ? nothing : html`<p>${this.text('originalMovement')} <code>${entry.corrects}</code></p>`}
         ${entry.correctedBy === null ? nothing : html`<p>${this.text('correctedBy')} <code>${entry.correctedBy}</code></p>`}
         ${entry.occurrenceId === null ? nothing : html`<p>${this.text('taskOccurrence')} <code>${entry.occurrenceId}</code></p>`}

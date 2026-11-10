@@ -433,7 +433,7 @@ def test_schema_27_migration_legacy_history_and_activated_restore(tmp_path, monk
     assert path.read_bytes() == before
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (28,)
+        assert db.execute("PRAGMA user_version").fetchone() == (29,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in old.items():
             assert db.execute("SELECT * FROM " + table).fetchall() == rows

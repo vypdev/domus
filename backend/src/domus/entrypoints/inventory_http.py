@@ -142,6 +142,10 @@ class CorrectPostedReceiptBody(ReceiptCorrectionBody):
     action: Literal["shopping.correct-posted-receipt"]
 
 
+class ReturnReceiptBody(ReceiptCorrectionBody):
+    action: Literal["shopping.return-receipt"]
+
+
 CatalogBody = Annotated[
     ProductBody
     | IntakeBody
@@ -156,7 +160,8 @@ CatalogBody = Annotated[
     | PurchaseSessionBody
     | CancelPurchaseBalanceBody
     | VoidReceiptBody
-    | CorrectPostedReceiptBody,
+    | CorrectPostedReceiptBody
+    | ReturnReceiptBody,
     Field(discriminator="action"),
 ]
 
@@ -281,6 +286,10 @@ def create_inventory_router(
         elif isinstance(body, CancelPurchaseBalanceBody):
             receipt = inventory.cancel_purchase_balance(
                 key, body.purchase_id, body.reason, int(body.expected_revision)
+            )
+        elif isinstance(body, ReturnReceiptBody):
+            receipt = inventory.return_posted_receipt(
+                key, body.purchase_id, body.receipt_id, body.reason, int(body.expected_revision)
             )
         elif isinstance(body, CorrectPostedReceiptBody):
             receipt = inventory.correct_posted_receipt(

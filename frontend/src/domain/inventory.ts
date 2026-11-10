@@ -7,7 +7,7 @@ export const BASE_UNITS = ['piece', 'gram', 'millilitre'] as const;
 export type BaseUnit = typeof BASE_UNITS[number];
 export type ReplenishmentRevision = Revision | '0';
 export type ShoppingAction = 'shopping.purchase' | 'shopping.receive' | 'shopping.post-receipt'
-  | 'shopping.correct-posted-receipt' | 'shopping.void-receipt' | 'shopping.cancel-balance' | 'shopping.add-extra' | 'shopping.clear-extra' | 'shopping.record-session';
+  | 'shopping.return-receipt' | 'shopping.correct-posted-receipt' | 'shopping.void-receipt' | 'shopping.cancel-balance' | 'shopping.add-extra' | 'shopping.clear-extra' | 'shopping.record-session';
 
 export const MIN_SESSION_ITEMS = 2;
 export const MAX_SESSION_ITEMS = 16;
@@ -33,6 +33,8 @@ export type InventoryCommand =
     expected_revision: Revision}>
   | Readonly<{action: 'shopping.correct-posted-receipt'; purchase_id: string; receipt_id: string; reason: string;
     expected_revision: Revision}>
+  | Readonly<{action: 'shopping.return-receipt'; purchase_id: string; receipt_id: string; reason: string;
+    expected_revision: Revision}>
   | Readonly<{action: 'shopping.post-receipt'; purchase_id: string; receipt_id: string}>
   | Readonly<{action: 'shopping.clear-extra'; extra_id: string}>
   | Readonly<{action: 'shopping.record-session'; items: readonly SessionSelection[]}>;
@@ -53,6 +55,7 @@ export interface StockMovement {
   readonly corrects: string | null;
   readonly correctedBy: string | null;
   readonly shoppingReceipt: boolean;
+  readonly returnOf: string | null;
 }
 
 export interface MovementHistory {
@@ -117,6 +120,10 @@ export interface PostedReceiptCorrection extends PhysicalReceiptVoid {
   readonly legacy: boolean;
 }
 
+export interface ReceiptReturn extends PhysicalReceiptVoid {
+  readonly movementId: string;
+}
+
 export interface PhysicalReceipt {
   readonly id: string;
   readonly quantity: string;
@@ -126,6 +133,7 @@ export interface PhysicalReceipt {
   readonly movementId: string | null;
   readonly voided: PhysicalReceiptVoid | null;
   readonly correction: PostedReceiptCorrection | null;
+  readonly returned: ReceiptReturn | null;
 }
 
 export interface Purchases {
@@ -270,7 +278,7 @@ export function inventoryCommand(value: unknown): InventoryCommand {
     return {action, purchase_id:taskIdentifier(record.purchase_id), reason:taskText(record.reason, STOCK_REASON_LIMIT, true),
       expected_revision:revisionValue(record.expected_revision)};
   }
-  if ((action === 'shopping.void-receipt' || action === 'shopping.correct-posted-receipt')
+  if ((action === 'shopping.void-receipt' || action === 'shopping.correct-posted-receipt' || action === 'shopping.return-receipt')
       && hasFields(record, ['action','purchase_id','receipt_id','reason','expected_revision'])) {
     return {action, purchase_id:taskIdentifier(record.purchase_id), receipt_id:taskIdentifier(record.receipt_id),
       reason:taskText(record.reason, STOCK_REASON_LIMIT, true), expected_revision:revisionValue(record.expected_revision)};

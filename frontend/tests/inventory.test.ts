@@ -22,12 +22,12 @@ const committed = {kind:'committed', operationId:'operation', productId:'product
 const adjust = {action:'inventory.adjust', product_id:'product', quantity:'-0.000001', reason:'Counted one less'} as const;
 const reverse = {action:'inventory.correct-intake', product_id:'product', movement_id:'movement', reason:'Duplicate'} as const;
 const wireMovement = {movement_id:'movement', kind:'intake', quantity:'1.250001', member_id:'member', author_alias:null,
-  created_at:'100', reason:null, task_occurrence_id:null, corrects:null, corrected_by:null, shopping_receipt:false};
+  created_at:'100', reason:null, task_occurrence_id:null, corrects:null, corrected_by:null, shopping_receipt:false, return_of:null};
 const wireHistory = {product_id:'product', product_name:'Olive oil', base_unit:'millilitre',
   movements:[wireMovement], next_cursor:'older'};
 const history: MovementHistory = {productId:'product', productName:'Olive oil', unit:'millilitre', cursor:'older',
   movements:[{id:'movement', kind:'intake', quantity:'1.250001', memberId:'member', authorAlias:null, createdAt:'100',
-    reason:null, occurrenceId:null, corrects:null, correctedBy:null, shoppingReceipt:false}]};
+    reason:null, occurrenceId:null, corrects:null, correctedBy:null, shoppingReceipt:false, returnOf:null}]};
 const emptyPolicy = {source_id:'product', minimum:'0', target:'0', revision:'0', needed:'0'} as const;
 const policy = {action:'inventory.configure-replenishment', product_id:'product', minimum:'1.250001',
   target:'2.000001', expected_revision:'0'} as const;
@@ -39,13 +39,13 @@ const wirePurchase = {purchase_id:'purchase', product_id:'product', name:'Olive 
   purchased:'6.000001', received:'4.000001', remaining:'2', pending_stock:'4.000001', cancelled:'0', revision:'2',
   member_id:'member', author_alias:'Shopper', created_at:'100'};
 const wireArrival = {receipt_id:'arrival', quantity:'4.000001', member_id:'member', author_alias:null,
-  created_at:'101', movement_id:null, voided:null, correction:null};
+  created_at:'101', movement_id:null, voided:null, correction:null, returned:null};
 const purchase: Purchase = {id:'purchase', productId:'product', name:'Olive oil', unit:'millilitre',
   purchased:'6.000001', received:'4.000001', remaining:'2', pendingStock:'4.000001', cancelled:'0',
   revision:arrive.expected_revision, memberId:'member', authorAlias:'Shopper', createdAt:'100'};
 const purchases: Purchases = {items:[purchase],cursor:'older'};
 const purchaseReceipts: PurchaseReceipts = {purchase,items:[{
-  id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null, voided:null, correction:null,
+  id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null, voided:null, correction:null, returned:null,
 }],cancellation:null,cursor:'older'};
 const savedPolicy = {product_id:'product', minimum:policy.minimum, target:policy.target, revision:'1'};
 const wireProduct = {...savedProduct, reference_id:'reference', recorded:'999999999999.999999', reserved:'0.000001',
@@ -1545,7 +1545,7 @@ test('posted receipt correction uses the shared reason form and keeps both histo
     await node.updateComplete;
     await element.updateComplete;
   };
-  expect(root.textContent).toContain('Correct this receipt in Shopping.');
+  expect(root.textContent).toContain('Review this receipt in Shopping.');
   expect([...root.querySelectorAll('vyp-ha-button')].map(button => button.state.label)).not.toContain('Reverse this intake');
   await assign({...open,report:{...report,mayManage:false}});
   expect(shop.querySelector('.posted-receipt-correction-form')).toBeNull();
@@ -1573,4 +1573,104 @@ test('posted receipt correction uses the shared reason form and keeps both histo
   await assign({...open,purchaseReceipts:{...corrected,items:[{...corrected.items[0],correction:{...correction,legacy:true}}]}});
   expect(shop.textContent).toContain('Pantry entry reversed separately.');
   expect(shop.querySelector('.posted-receipt-correction-form')).toBeNull();
+});
+
+const returnReceipt = {...correctPosted,action:'shopping.return-receipt'} as const;
+const wireReturn = {movement_id:'returned',reason:'Returned to supplier',
+  member_id:'shopper',author_alias:'Marta',created_at:'104'};
+
+test('physical return commands and transport keep the closed purchase and linked movement', async () => {
+  expect(inventoryCommand(returnReceipt)).toEqual(returnReceipt);
+  for (const malformed of [{...returnReceipt,quantity:'1'},{...returnReceipt,reason:' '},
+    {...returnReceipt,expected_revision:'0'}]) expect(() => inventoryCommand(malformed)).toThrow();
+  const original = {...request,command:returnReceipt};
+  const local = journal();
+  local.journal.save(original);
+  expect(local.journal.open(scope.key)).toEqual(original);
+  const {server} = http([[200,csrf],[200,receipt(postedResult)],[200,receipt(postedResult,'historical')]]);
+  expect(await server.send(scope,original).result).toMatchObject({shoppingAction:returnReceipt.action,kind:'committed'});
+  expect(await server.original(scope,original).result).toMatchObject({shoppingAction:returnReceipt.action,kind:'historical'});
+  const closed = {...wirePurchase,received:wirePurchase.purchased,remaining:'0',pending_stock:'0',revision:'4'};
+  const arrival = {...wireArrival,movement_id:'original',returned:wireReturn};
+  const detail = {purchase:closed,receipts:[arrival],cancellation:null,next_cursor:null};
+  expect(await http([[200,detail]]).server.purchaseReceipts(scope,'purchase',null).result).toMatchObject({
+    purchase:{remaining:'0',pendingStock:'0'},items:[{movementId:'original',
+      returned:{movementId:'returned',reason:wireReturn.reason,authorAlias:'Marta'}}],
+  });
+  for (const invalid of [
+    {...detail,receipts:[{...arrival,movement_id:null}]},
+    {...detail,receipts:[{...arrival,correction:wirePostedCorrection}]},
+    {...detail,receipts:[{...arrival,returned:{...wireReturn,movement_id:'original'}}]},
+    {...detail,purchase:{...closed,product_id:null,base_unit:'piece',purchased:'6',received:'6'}},
+  ]) await expect(http([[200,invalid]]).server.purchaseReceipts(scope,'purchase',null).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+  const withdrawal = {...wireMovement,kind:'adjustment',quantity:'-1.250001',reason:wireReturn.reason,return_of:'original'};
+  expect((await http([[200,{...wireHistory,movements:[withdrawal]}]]).server.history(scope,'product',null).result).movements[0])
+    .toMatchObject({returnOf:'original',quantity:'-1.250001'});
+});
+
+test('a physical return needs both grants and reloads receipt history', async () => {
+  const f = controller(), app = f.controller;
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  for (const grants of [{mayManage:false,mayShop:true},{mayManage:true,mayShop:false}]) {
+    f.load.mockReturnValueOnce(read({...report,...grants}));
+    await app.refresh();
+    await app.submit(returnReceipt);
+    expect(f.send).not.toHaveBeenCalled();
+  }
+  await app.refresh();
+  await app.showPurchases();
+  await app.showPurchaseReceipts('purchase');
+  await app.submit(returnReceipt);
+  expect(f.send.mock.lastCall?.[1].command).toEqual(returnReceipt);
+  expect(f.arrivals).toHaveBeenCalledTimes(2);
+});
+
+test('only a valid posting on a settled purchase exposes the full physical return', async () => {
+  const {node,root,events,submit} = component();
+  const settled = {...purchase,received:purchase.purchased,remaining:'0',pendingStock:'0',revision:returnReceipt.expected_revision};
+  const posted = {...purchaseReceipts,purchase:settled,items:[{...purchaseReceipts.items[0],movementId:'original'}]};
+  const open = {...initial,report,purchaseReceipts:posted};
+  node.view = open;
+  await node.updateComplete;
+  const element = root.querySelector('domus-shopping')!;
+  const shop = element.shadowRoot!;
+  const assign = async (state:InventoryState) => {
+    node.view = state;
+    await node.updateComplete;
+    await element.updateComplete;
+  };
+  await assign({...open,report:{...report,mayManage:false}});
+  expect(shop.querySelector('.receipt-return-form')).toBeNull();
+  await assign({...open,purchaseReceipts:{...posted,purchase:{...settled,pendingStock:'1'}}});
+  expect(shop.querySelector('.receipt-return-form')).toBeNull();
+  await assign({...open,purchaseReceipts:{...posted,purchase:{...settled,remaining:'1'}}});
+  expect(shop.querySelector('.receipt-return-form')).toBeNull();
+  await assign(open);
+  const form = shop.querySelector<HTMLFormElement>('.receipt-return-form')!;
+  expect(form.textContent).toContain('Quantity to return');
+  expect(form.textContent).toContain('4.000001 millilitres');
+  submit(form);
+  await element.updateComplete;
+  expect(form.querySelector('[role=alert]')?.textContent).toContain('Enter a reason');
+  form.querySelector('input')!.value = returnReceipt.reason;
+  submit(form);
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:returnReceipt});
+  node.language = 'es';
+  const returned = {movementId:'returned',reason:wireReturn.reason,memberId:'shopper',authorAlias:null,createdAt:'104'};
+  await assign({...open,purchaseReceipts:{...posted,items:[{...posted.items[0],returned}]},
+    history:{...history,movements:[{...history.movements[0],kind:'adjustment',quantity:'-1.250001',
+      reason:wireReturn.reason,returnOf:'original'}]},
+    result:{kind:'committed',operationId:'return',productId:null,movement:null,shoppingAction:returnReceipt.action}});
+  expect(shop.querySelector('.receipt-return-form')).toBeNull();
+  expect(shop.querySelector('.posted-receipt-correction-form')).toBeNull();
+  expect(shop.textContent).toContain('Devuelto desde Despensa.');
+  expect(shop.textContent).toContain(wireReturn.reason);
+  expect(shop.textContent).toContain('shopper');
+  expect(root.textContent).toContain('Devolución física registrada.');
+  expect(root.textContent).toContain('Devolución de compra');
+  expect(root.textContent).toContain('original');
+  await assign({...open,purchaseReceipts:{...posted,items:[{...posted.items[0],returned:{...returned,authorAlias:'Marta'}}]}});
+  expect(shop.textContent).toContain('Marta');
 });

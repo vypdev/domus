@@ -77,6 +77,13 @@ class Purchase:
         reopened = self.void_receipt(quantity, expected_revision)
         return replace(reopened, settled=self.settled - quantity)
 
+    def return_receipt(self, expected_revision: int) -> Purchase:
+        if self.revision != expected_revision:
+            raise Conflict("revision_conflict")
+        if self.cancelled or self.settled != self.purchased:
+            raise Conflict("shopping_purchase_not_settled")
+        return replace(self, revision=self.revision + 1)
+
     def post(self, quantity: int) -> Purchase:
         return replace(self, settled=self.settled + quantity, revision=self.revision + 1)
 
@@ -110,3 +117,7 @@ class PurchaseReceipt:
     @property
     def stock_source(self) -> str:
         return JsonDocument.from_value({"shopping_receipt": self.receipt_id}).fingerprint
+
+    @property
+    def return_source(self) -> str:
+        return JsonDocument.from_value({"shopping_return": self.receipt_id}).fingerprint

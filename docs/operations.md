@@ -191,6 +191,27 @@ After an activated restore, review the receipt and both histories before
 starting a new correction. The original request can return a historical
 operation receipt.
 
+## Physical returns from closed purchases
+
+Schema 29 links one physical return to its original receipt and stock
+withdrawal. Migration from schema 28 preserves existing receipts, corrections,
+voids, cancellations and original operations. Snapshot verification checks the
+return link, exact withdrawal and purchase revision.
+
+Both current `shopping.manage` and `inventory.manage` grants are required
+to record a return or recover its original request. The purchase item must be
+fully received and posted, with its entire balance fulfilled. The command
+validates its revision, available stock, active reservations and any earlier
+reversal in the same transaction.
+
+A return retains the closed purchase amounts and advances the revision.
+The withdrawal has a stable source bound to the physical receipt. Stock and
+Shopping commit together with the operation receipt. A return and correction
+of the same receipt are mutually exclusive.
+
+After an activated restore, review the current return history before starting
+a new request. The original return operation may be historical.
+
 ## Family rewards
 
 Rewards start disabled. A current points administrator can enable new requests,

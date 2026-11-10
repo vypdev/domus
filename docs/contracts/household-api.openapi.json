@@ -1100,7 +1100,8 @@
           "shopping.record-session",
           "shopping.cancel-balance",
           "shopping.void-receipt",
-          "shopping.correct-posted-receipt"
+          "shopping.correct-posted-receipt",
+          "shopping.return-receipt"
         ],
         "title": "CatalogAction",
         "type": "string"
@@ -3758,6 +3759,17 @@
             ],
             "title": "Reason"
           },
+          "return_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Of"
+          },
           "shopping_receipt": {
             "title": "Shopping Receipt",
             "type": "boolean"
@@ -3785,7 +3797,8 @@
           "task_occurrence_id",
           "corrects",
           "corrected_by",
-          "shopping_receipt"
+          "shopping_receipt",
+          "return_of"
         ],
         "title": "MovementView",
         "type": "object"
@@ -4202,6 +4215,16 @@
             "title": "Receipt Id",
             "type": "string"
           },
+          "returned": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptReturnView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "voided": {
             "anyOf": [
               {
@@ -4221,7 +4244,8 @@
           "created_at",
           "movement_id",
           "voided",
-          "correction"
+          "correction",
+          "returned"
         ],
         "title": "PhysicalReceiptView",
         "type": "object"
@@ -5007,6 +5031,46 @@
         "title": "ReceiptResponse",
         "type": "object"
       },
+      "ReceiptReturnView": {
+        "properties": {
+          "author_alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Alias"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "movement_id": {
+            "title": "Movement Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "movement_id",
+          "reason",
+          "member_id",
+          "author_alias",
+          "created_at"
+        ],
+        "title": "ReceiptReturnView",
+        "type": "object"
+      },
       "ReceivePurchaseBody": {
         "additionalProperties": false,
         "properties": {
@@ -5679,6 +5743,46 @@
           "destination"
         ],
         "title": "RescheduleBody",
+        "type": "object"
+      },
+      "ReturnReceiptBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "shopping.return-receipt",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "title": "Expected Revision",
+            "type": "string"
+          },
+          "purchase_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Purchase Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "receipt_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Receipt Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "purchase_id",
+          "receipt_id",
+          "reason",
+          "expected_revision",
+          "action"
+        ],
+        "title": "ReturnReceiptBody",
         "type": "object"
       },
       "ReviewAction": {
@@ -13123,6 +13227,7 @@
                     "shopping.purchase": "#/components/schemas/PurchaseBody",
                     "shopping.receive": "#/components/schemas/ReceivePurchaseBody",
                     "shopping.record-session": "#/components/schemas/PurchaseSessionBody",
+                    "shopping.return-receipt": "#/components/schemas/ReturnReceiptBody",
                     "shopping.void-receipt": "#/components/schemas/VoidReceiptBody"
                   },
                   "propertyName": "action"
@@ -13169,6 +13274,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/CorrectPostedReceiptBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReturnReceiptBody"
                   }
                 ],
                 "title": "Body"

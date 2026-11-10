@@ -62,12 +62,12 @@ function attribution(row: Record<string, unknown>) {
 
 function movement(value: unknown): StockMovement {
   const row = fields(value, ['movement_id','quantity','kind','member_id','author_alias','created_at',
-    'reason','task_occurrence_id','corrects','corrected_by','shopping_receipt'], []);
+    'reason','task_occurrence_id','corrects','corrected_by','shopping_receipt','return_of'], []);
   return {
     id: identifier(row.movement_id), quantity: signedQuantity(row.quantity), kind: choice(row.kind, MOVEMENT_KINDS),
     ...attribution(row), reason: row.reason === null ? null : text(row.reason, STOCK_REASON_LIMIT),
     occurrenceId: nullableId(row.task_occurrence_id), corrects: nullableId(row.corrects), correctedBy: nullableId(row.corrected_by),
-    shoppingReceipt:boolean(row.shopping_receipt),
+    shoppingReceipt:boolean(row.shopping_receipt), returnOf:nullableId(row.return_of),
   };
 }
 
@@ -115,7 +115,7 @@ function purchaseReceipts(value: unknown, purchaseId: string): PurchaseReceipts 
   const selected = purchase(row.purchase);
   check(selected.id === purchaseId && Array.isArray(row.receipts) && row.receipts.length <= 25);
   const items = row.receipts.map(value => {
-    const entry = fields(value, ['receipt_id','quantity','member_id','author_alias','created_at','movement_id','voided','correction'], []);
+    const entry = fields(value, ['receipt_id','quantity','member_id','author_alias','created_at','movement_id','voided','correction','returned'], []);
     const movementId = nullableId(entry.movement_id);
     let voided = null;
     if (entry.voided !== null) {
@@ -132,8 +132,16 @@ function purchaseReceipts(value: unknown, purchaseId: string): PurchaseReceipts 
       correction = {movementId:correctionId, reason:text(row.reason, STOCK_REASON_LIMIT),
         ...attribution(row), legacy:boolean(row.legacy)};
     }
+    let returned = null;
+    if (entry.returned !== null) {
+      check(selected.productId !== null && movementId !== null && correction === null);
+      const row = fields(entry.returned, ['movement_id','reason','member_id','author_alias','created_at'], []);
+      const returnId = identifier(row.movement_id);
+      check(returnId !== movementId);
+      returned = {movementId:returnId, reason:text(row.reason, STOCK_REASON_LIMIT), ...attribution(row)};
+    }
     return {id:identifier(entry.receipt_id), quantity:positiveQuantity(entry.quantity), ...attribution(entry),
-      movementId, voided, correction};
+      movementId, voided, correction, returned};
   });
   check(new Set(items.map(item => item.id)).size === items.length);
   const balance = cancellation(row.cancellation);
@@ -251,11 +259,12 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
     }
     return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
   }
-  if (command.action === 'shopping.void-receipt' || command.action === 'shopping.correct-posted-receipt') {
+  if (command.action === 'shopping.void-receipt' || command.action === 'shopping.correct-posted-receipt'
+      || command.action === 'shopping.return-receipt') {
     const keys = ['purchase_id','receipt_id','quantity','revision'];
-    if (command.action === 'shopping.correct-posted-receipt') keys.push('movement_id');
+    if (command.action !== 'shopping.void-receipt') keys.push('movement_id');
     const result = fields(row.result, keys, []);
-    if (command.action === 'shopping.correct-posted-receipt') identifier(result.movement_id);
+    if (command.action !== 'shopping.void-receipt') identifier(result.movement_id);
     check(result.purchase_id === command.purchase_id && result.receipt_id === command.receipt_id);
     check(taskQuantity(result.quantity) !== '0');
     check(BigInt(revisionValue(result.revision)) === BigInt(command.expected_revision) + 1n);

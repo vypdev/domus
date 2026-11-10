@@ -121,6 +121,17 @@ SHOPPING_RECEIPT_CORRECTION_STATEMENTS = (
 )
 
 
+SHOPPING_RECEIPT_RETURN_TABLE = "shopping_receipt_returns"
+SHOPPING_RECEIPT_RETURN_STATEMENTS = (
+    "CREATE TABLE shopping_receipt_returns(household_id TEXT NOT NULL, "
+    "receipt_id TEXT NOT NULL, movement_id TEXT NOT NULL, "
+    "PRIMARY KEY(household_id,receipt_id), UNIQUE(household_id,movement_id), "
+    "FOREIGN KEY(household_id,receipt_id) REFERENCES shopping_receipts(household_id,receipt_id), "
+    "FOREIGN KEY(household_id,movement_id) "
+    "REFERENCES inventory_movements(household_id,movement_id)) STRICT",
+)
+
+
 def _session(row: sqlite3.Row) -> PurchaseSession:
     return PurchaseSession(row["session_id"], row["member_id"], row["created_at"])
 
@@ -340,6 +351,30 @@ class SQLiteShopping:
             (home, receipt_id, movement_id),
         )
 
+    def receipt_return(self, home: str, receipt_id: str) -> str | None:
+        row = self.connection.execute(
+            "SELECT movement_id FROM shopping_receipt_returns "
+            "WHERE household_id=? AND receipt_id=?",
+            (home, receipt_id),
+        ).fetchone()
+        return None if row is None else str(row[0])
+
+    def return_of(self, home: str, movement_id: str) -> str | None:
+        row = self.connection.execute(
+            "SELECT r.movement_id FROM shopping_receipt_returns AS returned "
+            "JOIN shopping_receipts AS r USING(household_id,receipt_id) "
+            "WHERE returned.household_id=? AND returned.movement_id=? "
+            "AND r.movement_id IS NOT NULL",
+            (home, movement_id),
+        ).fetchone()
+        return None if row is None else str(row[0])
+
+    def link_receipt_return(self, home: str, receipt_id: str, movement_id: str) -> None:
+        self.connection.execute(
+            "INSERT INTO shopping_receipt_returns VALUES (?,?,?)",
+            (home, receipt_id, movement_id),
+        )
+
     def extra(self, home: str, extra_id: str) -> ShoppingExtra | None:
         row = self.connection.execute(
             "SELECT * FROM shopping_extras WHERE household_id=? AND extra_id=?", (home, extra_id)
@@ -420,7 +455,7 @@ def verify_shopping_extras(connection: sqlite3.Connection) -> None:
                 raise StorageFailure("invalid_shopping_records")
 
 
-def verify_shopping_records(connection: sqlite3.Connection, *, version: int = 28) -> None:
+def verify_shopping_records(connection: sqlite3.Connection, *, version: int = 29) -> None:
     stock = SQLiteInventory(connection)
     shopping = SQLiteShopping(connection)
     for row in connection.execute("SELECT * FROM shopping_purchases"):
@@ -461,6 +496,20 @@ def verify_shopping_records(connection: sqlite3.Connection, *, version: int = 28
                     != (movement.movement_id, movement.reference_id)
                 ):
                     raise StorageFailure("invalid_shopping_records")
+            if version >= 29:
+                returned = stock.movement(home, receipt.return_source)
+                linked = shopping.receipt_return(home, receipt.receipt_id)
+                if linked != (None if returned is None else returned.movement_id):
+                    raise StorageFailure("invalid_shopping_records")
+                if returned is not None:
+                    if (
+                        movement is None
+                        or stock.correction_id(home, movement.movement_id) is not None
+                        or (returned.kind, returned.reference_id, returned.delta)
+                        != (MovementKind.ADJUSTMENT, movement.reference_id, -receipt.quantity)
+                    ):
+                        raise StorageFailure("invalid_shopping_records")
+                    revision += 1
             void = shopping.receipt_void(home, receipt.receipt_id) if version >= 27 else None
             if void is not None:
                 if product is None or movement is not None:

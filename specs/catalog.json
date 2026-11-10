@@ -706,6 +706,8 @@
         "tests/backend/test_purchase_balance.py",
         "tests/backend/test_physical_receipt_void.py",
         "tests/backend/test_posted_receipt_correction.py",
+        "tests/backend/test_physical_receipt_return.py",
+        "tests/fixtures/sqlite/v28-physical-receipt-return-source.sql",
         "tests/fixtures/sqlite/v27-posted-receipt-correction-source.sql",
         "tests/fixtures/sqlite/v26-physical-receipt-void-source.sql",
         "tests/fixtures/sqlite/v25-purchase-balance-source.sql",
@@ -726,11 +728,12 @@
         "docs/evidence/purchase-session-qualification.md",
         "docs/evidence/purchase-balance-qualification.md",
         "docs/evidence/physical-receipt-void-qualification.md",
-        "docs/evidence/posted-receipt-correction-qualification.md"
+        "docs/evidence/posted-receipt-correction-qualification.md",
+        "docs/evidence/physical-receipt-return-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items.",
         "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and refunds have separate acceptance.",
         "copilotChangesAllowed": false
       }
