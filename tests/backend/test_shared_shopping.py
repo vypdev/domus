@@ -385,7 +385,8 @@ def test_v23_migration_and_activated_restore_of_extra_receipts(tmp_path, monkeyp
         assert db.execute("PRAGMA user_version").fetchone() == (26,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
-            assert db.execute("SELECT * FROM " + table).fetchall() == rows
+            expected = [(*row, 0) for row in rows] if table == "shopping_purchases" else rows
+            assert db.execute("SELECT * FROM " + table).fetchall() == expected
     identity_at(root, installation)
     actor = Actor()
     actor.human = HumanIdentity("ha_admin", True, True, False)
