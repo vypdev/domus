@@ -127,7 +127,7 @@ def test_actual_older_image_refuses_selected_generation_without_changing_any_fil
     indirect=["previous_image"],
 )
 def test_real_older_image_upgrades_replays_and_restores_its_pre_upgrade_snapshot(
-    image, previous_image, data_volume, old_schema, expected_schema=23
+    image, previous_image, data_volume, old_schema, expected_schema=24
 ):
     old = "domus-upgrade-old-" + uuid.uuid4().hex
     new = "domus-upgrade-new-" + uuid.uuid4().hex

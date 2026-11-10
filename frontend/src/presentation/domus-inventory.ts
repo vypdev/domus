@@ -15,12 +15,13 @@ import {inventoryMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
 import './domus-shopping';
 import type {ShoppingIntent} from './domus-shopping';
+import type {ShoppingListIntent} from './domus-shopping-list';
 import {instant} from './messages';
 import type {Language} from './messages';
 
 export type InventoryIntent = {readonly type: 'refresh' | 'more' | 'recover' | 'more-history' | 'close-history'}
   | {readonly type: 'history'; readonly productId: string}
-  | ShoppingIntent;
+  | ShoppingIntent | ShoppingListIntent;
 
 const QUANTITY_ERRORS = new Set<InventoryError>([
   'inventory_stock_capacity', 'invalid_inventory_receipt', 'invalid_material_quantity', 'invalid_material_precision',
@@ -36,6 +37,8 @@ const SHOPPING_SAVED = {
   'shopping.purchase': 'purchaseSaved',
   'shopping.receive': 'arrivalSaved',
   'shopping.post-receipt': 'stockPosted',
+  'shopping.add-extra': 'extraAdded',
+  'shopping.clear-extra': 'extraCleared',
 } as const;
 
 interface PolicyEditor {

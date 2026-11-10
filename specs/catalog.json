@@ -690,14 +690,19 @@
       ],
       "code": [
         "backend/src/domus/domain/shopping.py",
+        "backend/src/domus/domain/shopping_needs.py",
+        "backend/src/domus/application/shopping_list.py",
         "backend/src/domus/application/inventory.py",
         "backend/src/domus/application/inventory_queries.py",
         "backend/src/domus/infrastructure/sqlite_shopping.py",
-        "frontend/src/presentation/domus-shopping.ts"
+        "frontend/src/presentation/domus-shopping.ts",
+        "frontend/src/presentation/domus-shopping-list.ts"
       ],
       "tests": [
         "tests/backend/test_shopping_http.py",
         "tests/backend/test_shopping_storage.py",
+        "tests/backend/test_shared_shopping.py",
+        "tests/fixtures/sqlite/v23-shared-shopping-source.sql",
         "tests/fixtures/sqlite/v22-shopping-source.sql",
         "frontend/tests/inventory.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts"
@@ -708,12 +713,13 @@
         "docs/operations.md",
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
-        "docs/evidence/shopping-receipts-qualification.md"
+        "docs/evidence/shopping-receipts-qualification.md",
+        "docs/evidence/shared-shopping-list-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "The purchase and receipt qualification maps the protected one-item workflow, exact partial receiving and Pantry posting to issue #74.",
-        "blockingDecisions": "Multi-list demand planning, task and manual demand consolidation, pricing and purchase sessions have separate acceptance.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle.",
+        "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and purchase sessions have separate acceptance.",
         "copilotChangesAllowed": false
       }
     },

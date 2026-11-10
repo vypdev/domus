@@ -12,6 +12,7 @@ import {inventoryMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
 import {instant} from './messages';
 import type {Language} from './messages';
+import './domus-shopping-list';
 
 export type ShoppingIntent = {readonly type: 'purchases' | 'more-purchases' | 'more-purchase-receipts'}
   | {readonly type: 'purchase-receipts'; readonly purchaseId: string}
@@ -176,6 +177,7 @@ export class DomusShopping extends LitElement {
     const mayPost = report!.mayManage && !scope.readOnly;
     return html`<vyp-ha-card .state=${cardState({title:this.text('shopping'), headingLevel:3})}>
       <div class="shopping">
+      <domus-shopping-list .view=${this.view} .language=${this.language}></domus-shopping-list>
       ${purchases == null ? this.button('showPurchases', busy, {type:'purchases'}) : html`
         ${mayShop ? this.purchaseForm(report!.products, blocked) : nothing}
         ${purchases.items.length === 0 ? html`<p>${this.text('emptyPurchases')}</p>` : html`<ol>

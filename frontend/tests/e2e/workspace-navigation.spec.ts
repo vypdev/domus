@@ -46,6 +46,15 @@ for (const mode of ['native', 'standalone'] as const) {
     const familyRegion = page.locator('domus-app #family');
     const inventory = tabs.getByRole('link', {name: 'Inventory', exact: true});
     const stock = page.locator('domus-app #inventory');
+    const reopenInventory = async (locale: 'en' | 'es') => {
+      await page.reload();
+      await expect(page).toHaveURL(base + '#inventory');
+      await expect(stock.getByRole('button', {
+        name:/^(Recover original request|Recuperar la solicitud original)$/u,
+      })).toBeEnabled();
+      await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption(locale);
+      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+    };
     const household = tabs.getByRole('link', {name: 'Household', exact: true});
     const overviewRegion = page.locator('domus-app #overview');
     const tasksRegion = page.locator('domus-app #tasks');
@@ -383,9 +392,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await oil.getByRole('button', {name: 'Confirmar entrada'}).click();
     await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
     await page.unroute(inventoryCommands);
-    await page.reload();
-    await expect(page).toHaveURL(base + '#inventory');
-    await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption('es');
+    await reopenInventory('es');
     expect(intakeKey).toBeTruthy();
     const originalIntake = page.waitForResponse(base + 'api/v1/inventory/requests/inventory.intake/' + intakeKey);
     await stock.getByRole('button', {name: 'Recuperar la solicitud original'}).click();
@@ -432,9 +439,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await historial.getByRole('button', {name:'Confirmar reversión de entrada'}).click();
     await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
     await page.unroute(inventoryCommands);
-    await page.reload();
-    await expect(page).toHaveURL(base + '#inventory');
-    await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption('en');
+    await reopenInventory('en');
     const originalCorrection = page.waitForResponse(
       base + 'api/v1/inventory/requests/inventory.correct-intake/' + correctionKey,
     );
@@ -485,9 +490,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await oil.getByRole('button', {name:'Guardar reposición'}).click();
     await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
     await page.unroute(inventoryCommands);
-    await page.reload();
-    await expect(page).toHaveURL(base + '#inventory');
-    await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption('en');
+    await reopenInventory('en');
     const originalPolicy = page.waitForResponse(
       base + 'api/v1/inventory/requests/inventory.configure-replenishment/' + policyKey,
     );
@@ -541,9 +544,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await arrivals.getByRole('button', {name:'Post to Pantry'}).click();
     await expect(stock.getByText(/The result is unconfirmed/u)).toBeVisible();
     await page.unroute(inventoryCommands);
-    await page.reload();
-    await expect(page).toHaveURL(base + '#inventory');
-    await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption('en');
+    await reopenInventory('en');
     const originalPosting = page.waitForResponse(
       base + 'api/v1/inventory/requests/shopping.post-receipt/' + postingKey,
     );
@@ -559,7 +560,58 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(arrivals.getByText('Posted to Pantry.', {exact:true})).toBeVisible();
     await arrivals.getByText('Receipt details').click();
     await expect(arrivals.getByText(postedMovement, {exact:true})).toBeVisible();
+
+    const catalog = await page.request.get(base + 'api/v1/inventory', {headers:{'X-Domus-Context':contextHeader}});
+    expect(catalog.ok()).toBe(true);
+    const oilProduct = (await catalog.json()).products.find((product: {name:string}) => product.name === 'Pantry oil');
+    await post('definitions', 'shopping-task', {
+      title:'Mix the dressing', materials:[{reference_id:oilProduct.reference_id,planned_quantity:'7'}],
+    });
+    await oil.getByRole('button', {name:'Edit replenishment'}).click();
+    await oil.getByRole('textbox', {name:'Minimum stock'}).fill('7');
+    await oil.getByRole('textbox', {name:'Target stock'}).fill('10');
+    await oil.getByRole('button', {name:'Save replenishment'}).click();
+    await expect(oil.getByText('Replenish · 3.999998 millilitres')).toBeVisible();
+    const shared = shopping.locator('domus-shopping-list');
+    await shared.getByRole('button', {name:'Show shared shopping list'}).click();
+    const listedOil = shared.getByRole('listitem').filter({has:page.getByText('Pantry oil',{exact:true})});
+    await expect(listedOil.locator('dd')).toHaveText([
+      '2.999996 millilitres', '1.999998 millilitres', '0.999998 millilitres', '0 millilitres',
+    ]);
+    await listedOil.getByRole('button', {name:'Show shopping sources'}).click();
+    const sources = shared.getByRole('region', {name:'Show shopping sources · Pantry oil'});
+    await expect(sources.getByRole('heading')).toBeFocused();
+    const taskSource = sources.getByRole('listitem').filter({hasText:'Tasks · Mix the dressing'});
+    await expect(taskSource.locator('dd')).toHaveText([
+      '7 millilitres', '0 millilitres', '6.000002 millilitres', '0 millilitres', '0.999998 millilitres',
+    ]);
     await page.getByLabel('Language', {exact:true}).selectOption('es');
+    await expect(shared.getByText('Tareas · Mix the dressing', {exact:true})).toBeVisible();
+    await expect(listedOil.getByText('2,999996 mililitros', {exact:true})).toBeVisible();
+    await shared.getByRole('combobox', {name:'Artículo para añadir como extra'}).selectOption({label:'Pantry oil'});
+    await shared.getByRole('textbox', {name:'Cantidad del extra'}).fill('2,000002');
+    let extraKey = '';
+    await page.route(inventoryCommands, async route => {
+      extraKey = route.request().headers()['idempotency-key'];
+      const committed = await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(committed.status()).toBe(200);
+      await route.abort('connectionclosed');
+    });
+    await shared.getByRole('button', {name:'Añadir extra manual'}).click();
+    await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
+    await page.unroute(inventoryCommands);
+    await reopenInventory('es');
+    const originalExtra = page.waitForResponse(base + 'api/v1/inventory/requests/shopping.add-extra/' + extraKey);
+    await stock.getByRole('button', {name:'Recuperar la solicitud original'}).click();
+    expect((await originalExtra).ok()).toBe(true);
+    await expect(stock.getByText('Extra manual añadido.', {exact:true})).toBeVisible();
+    await shared.getByRole('button', {name:'Mostrar lista compartida de compras'}).click();
+    await expect(listedOil.getByText('4,999998 mililitros', {exact:true})).toBeVisible();
+    await listedOil.getByRole('button', {name:'Mostrar orígenes de compra'}).click();
+    const manual = shared.getByRole('listitem').filter({hasText:'Extras manuales · Pantry oil'});
+    await manual.getByRole('button', {name:'Retirar extra manual'}).click();
+    await expect(stock.getByText('Extra manual retirado.', {exact:true})).toBeVisible();
+    await expect(listedOil.getByText('2,999996 mililitros', {exact:true})).toBeVisible();
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

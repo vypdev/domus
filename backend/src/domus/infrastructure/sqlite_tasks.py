@@ -350,6 +350,30 @@ class SQLiteTasks(TaskRepository):
             is not None
         )
 
+    def shopping_occurrences(
+        self, household_id: str, references: tuple[str, ...]
+    ) -> tuple[TaskOccurrence, ...]:
+        placeholders = ",".join("?" for _ in references)
+        rows = self.connection.execute(
+            "SELECT * FROM task_occurrences WHERE household_id=? "
+            "AND state IN ('available','assigned','in_progress','blocked') AND EXISTS ("
+            "SELECT 1 FROM json_each(document,'$.definition_snapshot.materials') AS material "
+            f"WHERE json_extract(material.value,'$.binding.reference_id') IN ({placeholders})) "
+            "ORDER BY occurrence_id",
+            (household_id, *references),
+        )
+        return tuple(
+            cast(
+                TaskOccurrence,
+                _model(
+                    row,
+                    lambda encoded: read_occurrence(encoded, version=self.record_version),
+                    _occurrence_headers,
+                ),
+            )
+            for row in rows
+        )
+
     def occurrences(
         self,
         household_id: str,

@@ -48,10 +48,10 @@ const purchaseReceipts: PurchaseReceipts = {purchase,items:[{
   id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null,
 }],cursor:'older'};
 const savedPolicy = {product_id:'product', minimum:policy.minimum, target:policy.target, revision:'1'};
-const wireProduct = {...savedProduct, recorded:'999999999999.999999', reserved:'0.000001',
+const wireProduct = {...savedProduct, reference_id:'reference', recorded:'999999999999.999999', reserved:'0.000001',
   available:'999999999999.999998', replenishment:emptyPolicy, outstanding_purchase:'0', shopping_needed:'0'};
-const wire = {location_id:'pantry', may_manage:true, may_shop:true, products:[wireProduct], next_cursor:'next'};
-const report: InventoryReport = {mayManage:true, mayShop:true, products:[{id:'product', name:'Olive oil', unit:'millilitre',
+const wire = {location_id:'pantry', may_manage:true, may_shop:true, may_request:true, products:[wireProduct], next_cursor:'next'};
+const report: InventoryReport = {mayManage:true, mayShop:true, mayRequest:true, products:[{id:'product', referenceId:'reference', name:'Olive oil', unit:'millilitre',
   recorded:'999999999999.999999', reserved:'0.000001', available:'999999999999.999998',
   outstandingPurchase:'0', shoppingNeeded:'0',
   replenishment:{sourceId:'product', minimum:'0', target:'0', revision:'0', needed:'0'}}], cursor:'next'};
@@ -283,7 +283,8 @@ function controller() {
   const movements = vi.fn((_scope: InventoryScope, _product: string, _cursor: string|null): EntryRead<MovementHistory> => read(history));
   const buys = vi.fn((_scope: InventoryScope, _cursor: string|null): EntryRead<Purchases> => read(purchases));
   const arrivals = vi.fn((_scope: InventoryScope, _id:string, _cursor: string|null): EntryRead<PurchaseReceipts> => read(purchaseReceipts));
-  const controller = new InventoryController({read:load,history:movements,purchases:buys,purchaseReceipts:arrivals,send,original},
+  const controller = new InventoryController({read:load,history:movements,purchases:buys,purchaseReceipts:arrivals,
+    shoppingList:() => lost(),shoppingSources:() => lost(),send,original},
     local.journal,{requestKey:() => request.key},publish);
   const current = () => publish.mock.lastCall?.[0];
   return {...local, controller, load, movements, buys, arrivals, send, original, current};
@@ -871,4 +872,199 @@ test('history and signed stock forms expose links, actor, validation and current
   expect(form()).toBeNull();
   for (const text of ['Entrada revertida', '-1,250001 mililitros', 'Kitchen lead', 'Duplicate', 'Movimiento original',
     'Movimiento compensatorio', 'Instancia de tarea']) expect(root.textContent).toContain(text);
+});
+
+const addExtra = {action:'shopping.add-extra', product_id:'product', name:null, quantity:'2.000002'} as const;
+const clearExtra = {action:'shopping.clear-extra', extra_id:'extra'} as const;
+const extraAuthor = {member_id:'member', author_alias:'Shopper', created_at:'100'};
+const wireShoppingItem = {product_id:'product',extra_id:null,name:'Olive oil',base_unit:'millilitre',
+  pantry:'4',tasks:'0',manual:'2.000002',total:'6.000002',attribution:null};
+const wireFreeExtra = {product_id:null,extra_id:'free',name:'Olive oil',base_unit:'piece',
+  pantry:'0',tasks:'0',manual:'1',total:'1',attribution:extraAuthor};
+const wireTaskSource = {source_id:'task-source',kind:'task',origin_id:'occurrence',line_id:'line',name:'Make dinner',
+  quantity:'1.25',reserved:'0.25',stock:'0.5',incoming:'0.5',to_buy:'0',attribution:null};
+const wireExtraSource = {source_id:'extra-source',kind:'extra',origin_id:'extra',line_id:null,name:'Olive oil',
+  quantity:'2.000002',reserved:'0',stock:'0',incoming:'0',to_buy:'2.000002',attribution:{...extraAuthor,author_alias:null}};
+const wireList = {items:[wireShoppingItem,wireFreeExtra],next_cursor:'list-more'};
+const wireSources = {item:wireShoppingItem,sources:[wireTaskSource,wireExtraSource],next_cursor:'sources-more'};
+
+async function shoppingPages() {
+  const {server} = http([[200,wireList],[200,wireSources]]);
+  return {shoppingList:await server.shoppingList(scope,null).result,
+    shoppingSources:await server.shoppingSources(scope,'product',null).result};
+}
+
+test('shared Shopping decodes bounded pages, exact quantities, linked sources and original extra operations', async () => {
+  const {server,fetch} = http([
+    [200,wireList],[200,wireSources],[200,csrf],[200,receipt({extra_id:'extra'})],
+    [200,receipt({extra_id:'extra'},'historical')],[200,csrf],[200,receipt({extra_id:'wrong'})],
+  ],'native');
+  expect(await server.shoppingList(scope,'previous').result).toMatchObject({cursor:'list-more',
+    items:[{productId:'product',total:'6.000002'},{extraId:'free',attribution:{authorAlias:'Shopper'}}]});
+  expect(await server.shoppingSources(scope,'product',null).result).toMatchObject({cursor:'sources-more',
+    items:[{kind:'task',lineId:'line',toBuy:'0'},{kind:'extra',originId:'extra',toBuy:'2.000002'}]});
+  expect(fetch.mock.calls[0][0]).toMatch(/inventory\/shopping-list\?limit=25&cursor=previous$/u);
+  expect(fetch.mock.calls[1][0]).toMatch(/inventory\/shopping-list\/product\/sources\?limit=25$/u);
+  expect(await server.send(scope,{...request,command:addExtra}).result).toMatchObject({shoppingAction:addExtra.action});
+  expect(await server.original(scope,{...request,command:clearExtra}).result).toMatchObject({kind:'historical',shoppingAction:clearExtra.action});
+  await expect(server.send(scope,{...request,command:clearExtra}).result).rejects.toThrow();
+  expect(() => inventoryCommand({...clearExtra,forged:true})).toThrow();
+  expect(() => inventoryCommand({...addExtra,product_id:null})).toThrow();
+  const huge = {...wireShoppingItem,pantry:'0',manual:'999999999999999.999999',total:'999999999999999.999999'};
+  expect(await http([[200,{...wireList,items:[huge]}]]).server.shoppingList(scope,null).result)
+    .toMatchObject({items:[{total:'999999999999999.999999'}]});
+
+  for (const value of [
+    {...wireList,items:{}}, {...wireList,items:Array(26).fill(wireShoppingItem)},
+    {...wireList,items:[wireShoppingItem,wireShoppingItem]},
+    ...[
+      {...wireShoppingItem,total:'6'}, {...wireShoppingItem,total:'06.000002'},
+      {...wireShoppingItem,extra_id:'also-extra'}, {...wireShoppingItem,attribution:extraAuthor},
+      {...wireFreeExtra,extra_id:null}, {...wireFreeExtra,attribution:null},
+      {...wireFreeExtra,base_unit:'gram'}, {...wireFreeExtra,pantry:'1',total:'2'},
+      {...wireFreeExtra,tasks:'1',total:'2'}, {...wireFreeExtra,manual:'0',total:'0'},
+      {...wireFreeExtra,manual:'0.5',total:'0.5'},
+    ].map(item => ({...wireList,items:[item]})),
+  ]) await expect(http([[200,value]]).server.shoppingList(scope,null).result).rejects.toThrow();
+  for (const value of [
+    {...wireSources,item:wireFreeExtra}, {...wireSources,sources:{}},
+    {...wireSources,sources:Array(26).fill(wireTaskSource)}, {...wireSources,sources:[wireTaskSource,wireTaskSource]},
+    ...[{...wireTaskSource,reserved:'0'}, {...wireTaskSource,line_id:null},
+      {...wireExtraSource,attribution:null}].map(source => ({...wireSources,sources:[source]})),
+  ]) await expect(http([[200,value]]).server.shoppingSources(scope,'product',null).result).rejects.toThrow();
+});
+
+test('shared Shopping loads pages only in scope and recovers requests with their current grants', async () => {
+  const pages = await shoppingPages();
+  const local = journal(), publish = vi.fn<(state:InventoryState|null) => void>();
+  const load = vi.fn(():EntryRead<InventoryReport> => read(report));
+  const list = vi.fn((_scope:InventoryScope,_cursor:string|null) => read(pages.shoppingList));
+  const sources = vi.fn((_scope:InventoryScope,_id:string,_cursor:string|null) => read(pages.shoppingSources));
+  const send = vi.fn((_scope:InventoryScope,_request:InventoryRequest):EntryRead<InventoryResult> => lost());
+  const original = vi.fn((_scope:InventoryScope,_request:InventoryRequest):EntryRead<InventoryResult|null> => read(null));
+  const app = new InventoryController({read:load,history:() => lost(),purchases:() => lost(),
+    purchaseReceipts:() => lost(),shoppingList:list,shoppingSources:sources,send,original},
+    local.journal,{requestKey:() => 'extra-operation'},publish);
+  const state = () => publish.mock.lastCall?.[0];
+  await app.showShoppingList(); await app.showShoppingSources('product'); await app.moreShoppingSources();
+  app.bind(scope);
+  await app.showShoppingList();
+  await vi.waitFor(() => expect(state()?.busy).toBe(false));
+  await app.showShoppingSources('product'); await app.showShoppingList(true);
+  expect(list).not.toHaveBeenCalled(); expect(sources).not.toHaveBeenCalled();
+  await app.showShoppingList();
+  list.mockReturnValueOnce(read({items:[],cursor:null}));
+  await app.showShoppingList(true); await app.showShoppingList(true);
+  expect(list).toHaveBeenLastCalledWith(scope,'list-more');
+  expect(state()?.shoppingList?.items).toEqual(pages.shoppingList.items);
+  const first = app.showShoppingSources('product');
+  await app.showShoppingSources('product');
+  await first;
+  sources.mockReturnValueOnce(read({...pages.shoppingSources,items:[],cursor:null}));
+  await app.moreShoppingSources(); await app.moreShoppingSources();
+  expect(sources).toHaveBeenLastCalledWith(scope,'product','sources-more');
+  expect(state()?.shoppingSources?.items).toEqual(pages.shoppingSources.items);
+
+  load.mockReturnValueOnce(read({...report,mayRequest:false,mayShop:false}));
+  await app.refresh();
+  await app.submit(addExtra); await app.submit(clearExtra);
+  expect(send).not.toHaveBeenCalled();
+  await app.refresh();
+  await app.submit(addExtra);
+  expect(state()).toMatchObject({pending:true,notice:'uncertain'});
+  await app.showShoppingList();
+  await app.showShoppingSources('product');
+  expect(local.journal.open(scope.key)?.command).toEqual(addExtra);
+  await app.recover();
+  expect(send).toHaveBeenCalledTimes(2);
+  const added = {kind:'committed',operationId:'extra-operation',productId:null,
+    movement:null,shoppingAction:addExtra.action} as const;
+  original.mockReturnValueOnce(read(added));
+  await app.recover();
+  expect(state()).toMatchObject({result:added,pending:false});
+  send.mockReturnValueOnce(read({...added,shoppingAction:clearExtra.action}));
+  await app.submit(clearExtra);
+  expect(send.mock.lastCall?.[1].command).toEqual(clearExtra);
+  sources.mockReturnValueOnce(lost());
+  await app.showShoppingSources('product');
+  expect(state()?.shoppingSources).toBeNull();
+  list.mockReturnValueOnce(lost());
+  await app.showShoppingList();
+  expect(state()?.shoppingList).toBeNull();
+  list.mockReturnValueOnce(lost());
+  const interrupted = app.showShoppingList();
+  app.bind(null);
+  await interrupted;
+  expect(state()).toBeNull();
+});
+
+test('shared Shopping renders bilingual per-source totals and controls for authorized users', async () => {
+  const pages = await shoppingPages();
+  const {node,root,events,submit} = component();
+  const open = {...initial,report};
+  node.view = open;
+  await node.updateComplete;
+  const shopping = root.querySelector('domus-shopping')!;
+  await shopping.updateComplete;
+  const list = shopping.shadowRoot!.querySelector('domus-shopping-list')!;
+  await list.updateComplete;
+  const panel = list.shadowRoot!;
+  const buttons = (label:string) => [...panel.querySelectorAll('vyp-ha-button')].filter(button => button.state.label === label);
+  const press = (label:string, index=0) => buttons(label)[index]!.dispatchEvent(new Event('ha-press-request'));
+  const command = () => events.mock.lastCall?.[0].detail;
+  const assign = async (state:InventoryState) => {
+    node.view=state; await node.updateComplete; await shopping.updateComplete; await list.updateComplete;
+  };
+  press('Show shared shopping list');
+  expect(command()).toEqual({type:'shopping-list'});
+  await assign({...open,shoppingList:{items:[],cursor:null},shoppingSources:{...pages.shoppingSources,items:[],cursor:null},
+    report:{...report,mayRequest:false,mayShop:false}});
+  expect(panel.textContent).toContain('There are no shopping needs');
+  expect(panel.textContent).toContain('There are no current sources');
+  expect(panel.querySelector('form')).toBeNull();
+  const current = {...open,...pages};
+  await assign(current);
+  expect(panel.textContent).toContain('6.000002 millilitres');
+  expect(panel.textContent).toContain('Tasks · Make dinner');
+  expect(panel.textContent).toContain('member ·');
+  expect(panel.textContent).toContain('Shopper ·');
+  press('Show shopping sources');
+  expect(command()).toEqual({type:'shopping-sources',productId:'product'});
+  press('Show more shopping items');
+  expect(command()).toEqual({type:'more-shopping-list'});
+  press('Show more sources');
+  expect(command()).toEqual({type:'more-shopping-sources'});
+  press('Clear manual extra');
+  expect(command()).toEqual({type:'submit',command:{...clearExtra,extra_id:'free'}});
+  press('Clear manual extra',1);
+  expect(command()).toEqual({type:'submit',command:clearExtra});
+  const form = panel.querySelector('form')!;
+  const name = form.querySelector<HTMLInputElement>('input[name="name"]')!;
+  const quantity = form.querySelector<HTMLInputElement>('input[name="quantity"]')!;
+  const selector = form.querySelector('select')!;
+  quantity.value='0.5'; submit(form); await list.updateComplete;
+  expect(quantity.getAttribute('aria-invalid')).toBe('true');
+  quantity.value='1'; submit(form); await list.updateComplete;
+  expect(name.getAttribute('aria-invalid')).toBe('true');
+  name.value='Olive oil'; submit(form); await list.updateComplete;
+  expect(command()).toEqual({type:'submit',command:{...addExtra,product_id:null,name:'Olive oil',quantity:'1'}});
+  selector.value='product'; selector.dispatchEvent(new Event('change')); await list.updateComplete;
+  quantity.value='2.000002'; submit(form); await list.updateComplete;
+  expect(command()).toEqual({type:'submit',command:addExtra});
+  await assign({...current,pending:true});
+  events.mockClear(); submit(form);
+  expect(events).not.toHaveBeenCalled();
+  await assign({...current,result:{kind:'committed',operationId:'op',productId:null,movement:null,shoppingAction:addExtra.action}});
+  await list.updateComplete;
+  expect(selector.value).toBe('');
+  expect(quantity.value).toBe('');
+  expect(root.textContent).toContain('Manual extra added.');
+  await assign({...current,result:{kind:'committed',operationId:'op-clear',productId:null,movement:null,shoppingAction:clearExtra.action}});
+  expect(root.textContent).toContain('Manual extra cleared.');
+  node.language='es';
+  await assign({...current,scope:{...scope,readOnly:true}});
+  expect(panel.textContent).toContain('6,000002 mililitros');
+  expect(panel.textContent).toContain('Tareas · Make dinner');
+  expect(panel.querySelector('form')).toBeNull();
+  expect(buttons('Retirar extra manual')).toHaveLength(0);
 });

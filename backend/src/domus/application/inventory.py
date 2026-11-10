@@ -27,6 +27,7 @@ from domus.domain.inventory import (
     validate_stock_reason,
 )
 from domus.domain.shopping import Purchase, PurchaseReceipt
+from domus.domain.shopping_needs import ShoppingExtra
 from domus.domain.storage import CommandKey, JsonDocument, Receipt
 from domus.domain.task_material_values import (
     MaterialBinding,
@@ -133,10 +134,18 @@ class CatalogAction(StrEnum):
     PURCHASE = "shopping.purchase"
     RECEIVE_PURCHASE = "shopping.receive"
     POST_RECEIPT = "shopping.post-receipt"
+    ADD_EXTRA = "shopping.add-extra"
+    CLEAR_EXTRA = "shopping.clear-extra"
 
 
 def _permission(action: str) -> Permission:
-    if action in (CatalogAction.PURCHASE, CatalogAction.RECEIVE_PURCHASE):
+    if action == CatalogAction.ADD_EXTRA:
+        return Permission.SHOPPING_REQUEST
+    if action in (
+        CatalogAction.PURCHASE,
+        CatalogAction.RECEIVE_PURCHASE,
+        CatalogAction.CLEAR_EXTRA,
+    ):
         return Permission.SHOPPING_MANAGE
     return Permission.INVENTORY_MANAGE
 
@@ -147,6 +156,18 @@ def _shopping_quantity(quantity: MaterialQuantity, unit: BaseUnit) -> int:
     if quantity.precision > unit.precision:
         raise InvalidInput("invalid_material_precision")
     return stock_units(quantity)
+
+
+def _shopping_item(
+    product_id: str | None, name: str | None, quantity: MaterialQuantity
+) -> JsonDocument:
+    if (product_id is None) == (name is None):
+        raise InvalidInput("invalid_shopping_item")
+    if name is not None:
+        validate_task_text(name, 160, required=True)
+    return JsonDocument.from_value(
+        {"product_id": product_id, "name": name, "quantity": quantity.value}
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -419,13 +440,7 @@ class InventoryCommands:
     def purchase(
         self, key: str, product_id: str | None, name: str | None, quantity: MaterialQuantity
     ) -> Receipt:
-        if (product_id is None) == (name is None):
-            raise InvalidInput("invalid_shopping_item")
-        if name is not None:
-            validate_task_text(name, 160, required=True)
-        payload = JsonDocument.from_value(
-            {"product_id": product_id, "name": name, "quantity": quantity.value}
-        )
+        payload = _shopping_item(product_id, name, quantity)
 
         def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
             home = self.household_id
@@ -457,6 +472,47 @@ class InventoryCommands:
             return JsonDocument.from_value({"purchase_id": purchase_id})
 
         return self._execute(CatalogAction.PURCHASE.value, key, payload, apply)
+
+    def add_extra(
+        self, key: str, product_id: str | None, name: str | None, quantity: MaterialQuantity
+    ) -> Receipt:
+        payload = _shopping_item(product_id, name, quantity)
+
+        def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
+            if product_id is None:
+                assert name is not None
+                label, base_unit = name, BaseUnit.PIECE
+            else:
+                product = self._product(unit.inventory, product_id)
+                label, base_unit = product.name, product.base_unit
+            extra = ShoppingExtra(
+                self.identifiers.new(),
+                product_id,
+                label,
+                base_unit,
+                _shopping_quantity(quantity, base_unit),
+                member,
+                self.clock.now(),
+            )
+            unit.shopping.add_extra(self.household_id, extra)
+            return JsonDocument.from_value({"extra_id": extra.extra_id})
+
+        return self._execute(CatalogAction.ADD_EXTRA.value, key, payload, apply)
+
+    def clear_extra(self, key: str, extra_id: str) -> Receipt:
+        payload = JsonDocument.from_value({"extra_id": extra_id})
+
+        def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
+            home = self.household_id
+            extra = unit.shopping.extra(home, extra_id)
+            if extra is None:
+                raise NotFound("shopping_extra_missing")
+            if extra.cleared_at is not None:
+                raise Conflict("shopping_extra_cleared")
+            unit.shopping.clear_extra(home, extra_id, member, self.clock.now())
+            return payload
+
+        return self._execute(CatalogAction.CLEAR_EXTRA.value, key, payload, apply)
 
     def _purchase(self, unit: UnitOfWork, purchase_id: str) -> Purchase:
         purchase = unit.shopping.purchase(self.household_id, purchase_id)
