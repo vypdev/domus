@@ -111,7 +111,7 @@ def main():
     assert phase in ("initialize", "later", "refuse", "restored", "rollback")
     assert mode in ("native", "standalone") and delivery in ("pending", "acknowledged")
     assert os.getuid() == os.getgid() == 65532
-    assert SCHEMA_VERSION == (19 if phase in ("later", "restored") else 9)
+    assert SCHEMA_VERSION == (20 if phase in ("later", "restored") else 9)
     if phase == "refuse":
         saved = json.loads(RECORD.read_text())
         selected = ROOT / "generations" / saved["selected_generation"] / "domus.sqlite3"

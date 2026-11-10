@@ -29,6 +29,24 @@ Administrator mapping defaults to all_ha_administrators; setup_administrator and
 
 Reopening a prerequisite preserves already-completed downstream work and points and raises dependency_attention. Approved unfulfilled redemptions without backing enter funding_hold with approval/reservation retained; delivery cannot proceed until funding is sufficient or an explicit authorized resolution occurs. Disabling a rule fences new admissions and subsequent steps while recording the result of already-started atomic commands. Restart/re-enable does not silently resume its cancelled queue or waits.
 
+## Inventory catalog and stock intake
+
+The protected Inventory workspace uses the current household session. Reads
+require household access, and registration and intake require a current
+`inventory.manage` grant. New products receive a binding at the household's
+logical Pantry location. Intake posts an attributable movement, audit entry and
+original-command receipt in one SQLite transaction. The existing task material
+authority continues to govern linked consumption.
+
+Schema 20 adds the catalog to schema 19. Migration keeps existing material
+bindings, locations, reservations and movements at their existing identities.
+Legacy task material references remain usable through their original task
+flows. A compatible snapshot verifies that each new product resolves its
+original Pantry binding and that stock reconciles with movements and reservations.
+Restore activation keeps the original request identity and distinguishes effects
+present in the current database from historical receipts. Downgrade requires a
+compatible database and image pair.
+
 ## Family rewards
 
 Rewards start disabled. A current points administrator can enable new requests,

@@ -13,7 +13,7 @@ export const styles = css`
     --vyp-ha-surface:var(--surface);--vyp-ha-text:var(--text);--vyp-ha-text-secondary:var(--muted);
     --vyp-ha-border:var(--line);--vyp-ha-primary:var(--accent);--vyp-ha-tab-indicator-color:var(--accent)
   }
-  #overview,#household {scroll-margin-block-start:68px}
+  #overview,#household,#inventory {scroll-margin-block-start:68px}
   .brand {display:flex;align-items:center;gap:12px} .logo {width:44px;height:44px;color:var(--accent)}
   .wordmark {font-size:1.5rem;font-weight:750;letter-spacing:.12em;line-height:1.2}
   .tagline {font-size:.8rem;color:var(--muted)} .language {font-size:.8rem;display:flex;align-items:center;gap:8px}

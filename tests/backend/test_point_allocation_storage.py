@@ -53,7 +53,7 @@ def test_real_schema17_migrates_without_rewriting_pending_or_posted_awards(tmp_p
     assert path.read_bytes() == before
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone() == (19,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (20,)
         assert (
             connection.execute("SELECT * FROM points_task_receipts ORDER BY position").fetchall()
             == original
@@ -76,7 +76,7 @@ def test_real_schema17_migrates_without_rewriting_pending_or_posted_awards(tmp_p
     checkpoint = SQLiteSnapshots(store, tmp_path / "checkpoint", installation, Clock()).create(
         "legacy"
     )
-    assert checkpoint.schema_version == 19
+    assert checkpoint.schema_version == 20
 
 
 def test_concurrent_replay_freezes_once_and_reopened_pending_work_uses_fresh_policy(tmp_path):

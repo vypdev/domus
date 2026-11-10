@@ -1,0 +1,64 @@
+import type {Language} from './messages';
+
+const EN = {
+  title: 'Inventory', pantry: 'Pantry', empty: 'There are no registered products.', loading: 'Loading inventory.',
+  refresh: 'Refresh inventory', more: 'Show more products', recover: 'Recover original request',
+  productName: 'Product name', unit: 'Base unit', permanent: 'The base unit cannot change after registration.',
+  register: 'Register product', recorded: 'Recorded stock', reserved: 'Reserved stock', available: 'Available stock',
+  piece: 'pieces', gram: 'grams', millilitre: 'millilitres',
+  intake: 'Record stock intake', quantity: 'Quantity to add', review: 'Review intake', confirm: 'Confirm intake',
+  reviewBody: 'This quantity will be added to Pantry.', viewProduct: 'View product',
+  pieceGuide: 'Enter a positive whole number. Pantry can hold up to 999,999,999,999 pieces of this product.',
+  decimalGuide: 'Enter a positive quantity with up to six decimal places. Pantry can hold up to 999,999,999,999.999999 base units.',
+  invalidName: 'Enter a product name of up to 160 characters.', invalidQuantity: 'Enter a quantity in the required format.',
+  unavailable: 'Inventory is unavailable. Refresh to check current stock.',
+  uncertain: 'The result is unconfirmed. Recover the original request before submitting again.',
+  registered: 'Product registered.', added: 'Stock recorded in Pantry.',
+  historical: 'This receipt is from before restoration. Check current stock before making a new request.',
+  receipt: 'Receipt details', operation: 'Operation', movement: 'Stock movement',
+  permission_denied: 'Stock was not changed. Ask a household member with inventory management access.',
+  idempotency_conflict: 'The request key belongs to a different request. Check current stock before trying again.',
+  invalid_request: 'The request was rejected. Review the entered values.',
+  invalid_task_text: 'The product name was rejected. Check the name.',
+  invalid_inventory_unit: 'Choose a supported base unit.',
+  invalid_inventory_receipt: 'Stock was not changed. Enter a positive quantity.',
+  invalid_material_quantity: 'Stock was not changed. Check the quantity.',
+  invalid_material_precision: 'Stock was not changed. Check the allowed decimal places.',
+  inventory_product_missing: 'The product is unavailable. Refresh the catalog.',
+  inventory_stock_capacity: 'Stock was not changed. Compare the recorded quantity with the limit and enter a smaller amount.',
+  rejected: 'The request was rejected. Check current inventory and try again.',
+} as const;
+
+const ES: Record<keyof typeof EN, string> = {
+  title: 'Inventario', pantry: 'Despensa', empty: 'No hay productos registrados.', loading: 'Cargando el inventario.',
+  refresh: 'Actualizar inventario', more: 'Mostrar más productos', recover: 'Recuperar la solicitud original',
+  productName: 'Nombre del producto', unit: 'Unidad base', permanent: 'La unidad base no se puede cambiar después del registro.',
+  register: 'Registrar producto', recorded: 'Stock registrado', reserved: 'Stock reservado', available: 'Stock disponible',
+  piece: 'unidades', gram: 'gramos', millilitre: 'mililitros',
+  intake: 'Registrar entrada de stock', quantity: 'Cantidad que se añadirá', review: 'Revisar entrada', confirm: 'Confirmar entrada',
+  reviewBody: 'Esta cantidad se añadirá a la despensa.', viewProduct: 'Ver producto',
+  pieceGuide: 'Introduce un número entero positivo. La despensa admite hasta 999.999.999.999 unidades de este producto.',
+  decimalGuide: 'Introduce una cantidad positiva con hasta seis decimales. La despensa admite hasta 999.999.999.999,999999 unidades base.',
+  invalidName: 'Introduce un nombre de producto de hasta 160 caracteres.', invalidQuantity: 'Introduce una cantidad con el formato indicado.',
+  unavailable: 'El inventario no está disponible. Actualiza para consultar el stock.',
+  uncertain: 'El resultado está sin confirmar. Recupera la solicitud original antes de volver a enviar.',
+  registered: 'Producto registrado.', added: 'Stock registrado en la despensa.',
+  historical: 'Este comprobante es anterior a la restauración. Consulta el stock actual antes de hacer una solicitud nueva.',
+  receipt: 'Detalles del comprobante', operation: 'Operación', movement: 'Movimiento de stock',
+  permission_denied: 'El stock no ha cambiado. Pide ayuda a un miembro del hogar que pueda gestionar el inventario.',
+  idempotency_conflict: 'La clave corresponde a otra solicitud. Consulta el stock antes de volver a intentarlo.',
+  invalid_request: 'Se rechazó la solicitud. Revisa los valores introducidos.',
+  invalid_task_text: 'Se rechazó el nombre del producto. Revisa el nombre.',
+  invalid_inventory_unit: 'Elige una unidad base admitida.',
+  invalid_inventory_receipt: 'El stock no ha cambiado. Introduce una cantidad positiva.',
+  invalid_material_quantity: 'El stock no ha cambiado. Revisa la cantidad.',
+  invalid_material_precision: 'El stock no ha cambiado. Revisa los decimales permitidos.',
+  inventory_product_missing: 'El producto no está disponible. Actualiza el catálogo.',
+  inventory_stock_capacity: 'El stock no ha cambiado. Compara la cantidad registrada con el límite e introduce una cantidad menor.',
+  rejected: 'Se rechazó la solicitud. Consulta el inventario y vuelve a intentarlo.',
+};
+
+export type InventoryMessage = keyof typeof EN;
+export function inventoryMessage(key: InventoryMessage, language: Language): string {
+  return language === 'es' ? ES[key] : EN[key];
+}

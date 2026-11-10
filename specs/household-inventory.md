@@ -453,3 +453,250 @@ All new case rows have actual persisted positive controls and pass on the same r
 ### 20. References and decisions
 
 The Inventory owner is `specs/household-inventory.md`. The retained recurrence contracts are `specs/recurrence-calendar.md`, `specs/recurrence-execution-foundation.md` and `specs/recurrence-lifecycle-calendar.md`. Keep existing cases with their owners. The Points consumer in https://github.com/vypdev/domus/pull/58 supplies the authoritative award and reversal witness. This draft records planned behavior.
+
+## Proposed change: Add the protected inventory catalog and basic stock intake
+
+- Status: Draft
+- Catalog capability: household-inventory
+
+### 1. Executive summary
+
+This delta adds a protected household inventory workspace for browsing products and their recorded, reserved, and available quantities, registering products, and recording positive stock intake into the household’s default stock location. Product units remain fixed, quantities use exact decimal representation, and intake is recorded through the existing append-only Inventory ledger with replay returning the original command receipt. The existing owner in `specs/household-inventory.md` remains authoritative for the broader inventory contract; this issue narrows the addition to catalog and basic intake.
+
+### 2. Problem, current behavior, and evidence
+
+#### 2.1 Problem
+
+The issue describes a gap between existing material bindings, stock movements, and reservations, and a household-facing product catalog with a basic way to add stock. Without that catalog and intake flow, a household cannot use the protected Inventory workspace to browse product quantities or record opening and subsequent stock while preserving the existing ledger and task-linked behavior. This paragraph reports the requested scope in issue #68; it does not claim independent verification of runtime behavior.
+
+#### 2.2 Current behavior
+
+The immutable retained owner, `specs/household-inventory.md`, describes the broader prospective inventory contract, including movements, reservations, and task-linked material effects. Issue #68 identifies the integrated product catalog and basic intake as the missing increment. The selected source tree has not been inspected for implementation evidence establishing whether those issue-described gaps remain absent at runtime; treat their implementation status as unverified.
+
+#### 2.3 Evidence
+
+The requested scope and constraints are recorded in [issue #68](https://github.com/vypdev/domus/issues/68) and the retained owner `specs/household-inventory.md`. The issue’s statements are requirements, not proof of installed behavior. Runtime implementation and test evidence for this delta remain unverified in this draft.
+
+### 3. Actors, surfaces, and terminology
+
+The actors for this delta are active household members who browse the protected inventory workspace and members granted `inventory.manage` who register products and record intake. The workspace is the member-facing surface; the server authorizes household scope and selects the stock binding used for catalog intake. A product has a stable identity and an immutable base unit. A household’s default stock location is one logical location identified within that household by `pantry`, displayed with a localized Pantry label. Recorded quantity is the ledger-backed stock amount; reserved quantity is committed to reservations; available quantity distinguishes stock usable beyond those reservations. The existing owner remains authoritative for other inventory actors, surfaces, and terms.
+
+### 4. Goals, non-goals, and fixed invariants
+
+#### 4.1 Goals
+
+This delta adds protected, household-scoped product browsing with recorded, reserved, and available quantities; registration of products with stable identities and fixed base units; and positive stock intake at the default household location. Intake uses exact decimal quantities, appends one Inventory ledger movement, and returns the original receipt on retry. Registration creates the catalog record and its default-location binding atomically. The server selects that binding; clients cannot supply or switch the location. The observable acceptance scope includes authorized browsing and denial outside household access, registration and unit persistence, exact intake quantities, original-key replay and concurrent retry behavior, and preservation of existing task-linked bindings, effects, history, and task permissions. These are the requested outcomes, not claims of completed implementation or executed acceptance.
+
+#### 4.2 Non-goals
+
+This increment does not add package or unit conversions, location management, lots, manual stock adjustment, demand or purchasing workflows, partial purchase receipts, or barcode lookup. It does not reclassify existing material bindings into the new catalog.
+
+#### 4.3 Fixed product and safety invariants
+
+Supported product units are piece, gram, and millilitre. Piece quantities are whole; gram and millilitre quantities use exact millionth-unit representation and allow at most six decimal places. Intake must be positive. A binding total must not exceed 999999999999.999999 base units, or 999999999999 pieces for whole-unit stock. A product’s base unit cannot change during its lifetime; reject excess precision and incompatible units, and perform no conversion. Each configured household has one logical default stock location with household-scoped identifier `pantry` and a localized Pantry label. Existing households can use it immediately after upgrade. Existing material bindings, their locations, and ledger history retain their identities; the upgrade does not automatically reclassify them. Catalog and intake changes preserve existing task-linked bindings and effects, historical quantities, and task permissions. Publication retains the standard’s required outcomes: the specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. The concrete invocation and prerequisite for these publication checks remain unverified.
+
+| Requirement | Behavior |
+| --- | --- |
+| SDD-I68-U1-R1 | Protected inventory workspace lets active household members browse products and recorded, reserved, and available quantities within their household. |
+| SDD-I68-U1-R2 | Members with inventory.manage can register products with stable identities and immutable base units. |
+| SDD-I68-U1-R3 | Authorized members can record an explicit positive stock intake at the default household stock location using exact decimal quantities, the append-only Inventory ledger, and the original-command receipt. |
+| SDD-I68-U1-R4 | Catalog and intake changes preserve existing task-linked bindings and effects, historical quantities, and task permissions. |
+| SDD-I68-U2-R1 | Register products using piece, gram, or millilitre units; piece quantities are whole, while gram and millilitre quantities use the existing exact millionth-unit representation with at most six decimal places. |
+| SDD-I68-U2-R2 | Require positive intake and prevent a binding total from exceeding 999999999999.999999 base units, or 999999999999 pieces for whole-unit stock. |
+| SDD-I68-U2-R3 | Preserve each product's unit for its lifetime and reject excess precision or incompatible units. Do not perform package or unit conversions. |
+| SDD-I68-U3-R1 | Each configured household has one logical default stock location with the stable household-scoped identifier `pantry` and a localized Pantry label. |
+| SDD-I68-U3-R2 | Registering a product atomically creates its binding at the household’s default stock location together with the catalog record. |
+| SDD-I68-U3-R3 | Catalog intake uses the server-selected product binding; clients cannot supply or switch the stock location. |
+| SDD-I68-U3-R4 | After upgrade, existing households can immediately use the default stock location, while existing material bindings, their locations, and ledger history retain their identities and are not automatically reclassified into the new catalog. |
+
+### 5. Current versus proposed product journey
+
+This update adds the first protected catalog and basic stock intake to the retained household-inventory contract in `specs/household-inventory.md`; it does not replace that contract’s existing task-linked inventory journey. An active household member opens Inventory and sees only their household’s products and recorded, reserved, and available quantities. A member with `inventory.manage` can register a product and record a positive intake. The product is bound to the household’s default stock location, and the intake appears as a durable ledger movement. A retry with the original command key returns the original receipt; it does not add stock twice. Existing task-linked bindings, effects, quantities, ledger history, and task permissions remain intact.
+
+### 6. Functional behavior and state model
+
+Products have stable identities and a base unit chosen from piece, gram, or millilitre. The unit is immutable for the product’s lifetime. Piece quantities are whole numbers; gram and millilitre quantities use exact millionth-unit representation and accept at most six decimal places. Reject zero or negative intake, excess precision, incompatible units, and an intake that would exceed the binding limit: 999999999999.999999 base units, or 999999999999 pieces for whole-unit stock. Do not convert packages or units.
+
+Each configured household has one logical default stock location, identified within that household by the stable identifier `pantry` and shown with a localized Pantry label. Product registration atomically creates both the catalog record and its binding at that location. Intake resolves the binding on the server; the client cannot supply or switch the location. Record the positive intake through the existing append-only Inventory ledger and return its original-command receipt. The recorded, reserved, and available quantities must reflect the exact amount while retaining the existing reservation and availability rules.
+
+On upgrade, existing households can use the default location immediately. Existing material bindings, their locations, and ledger history retain their identities; migration does not automatically reclassify them into the new catalog. Catalog and intake operations do not reinterpret historical quantities, alter existing task-linked effects, or grant task actors broader inventory permissions. These behaviors extend the retained invariants and state model in `specs/household-inventory.md`.
+
+### 7. User-facing configuration
+
+The product-registration flow requires a supported base unit: piece, gram, or millilitre. Once registered, the unit cannot be changed. The intake flow accepts an explicit positive quantity in that unit and displays validation errors beside the quantity field, preserving the entered draft for correction. Explain whether the value must be whole or may have up to six decimal places, and show the applicable maximum before submission. Do not expose package conversion or location selection in this increment.
+
+Show the household’s localized Pantry label as the intake destination. Keep location choice server-controlled and do not offer a client field that can select another binding. After success, show the recorded quantity and updated recorded, reserved, and available totals; on retry, show the original result. Denials, invalid precision, incompatible units, and limit violations must explain the correction or access action and whether any stock was recorded. All labels and quantity guidance must be localized for English and Spanish on Ingress and standalone surfaces, with accessible names, keyboard operation, visible focus, and status cues that do not rely on color.
+
+### 8. Clean Architecture design
+
+Extend the existing Inventory domain and application boundaries described in `specs/household-inventory.md`. Domain policy owns product identity, immutable base units, exact quantity validation, stock limits, and the household-scoped default-location invariant. The application boundary authorizes household-scoped catalog reads and `inventory.manage` mutations, resolves the server-selected binding, and coordinates product registration with binding creation and intake with the existing ledger and original-command receipt. Persistence must make product-plus-binding registration atomic and preserve ledger append-only behavior and replay semantics under concurrent requests. Presentation renders authorized household projections and validation outcomes; it does not decide authorization, units, or stock location.
+
+Use the existing composition and persistence ownership rather than introducing a parallel architecture. Keep dependency direction from presentation and adapters through application contracts to domain policy; domain code must not depend on UI, HTTP, or persistence details. Verification must establish exact quantity and limit behavior, household authorization, atomic registration, server-selected binding, original-key replay and concurrency, and upgrade compatibility. The concrete specification-validation invocation and any implementation-level architecture or integration verification prerequisites remain unverified for this delta; declaration of a repository command alone is not evidence that it checks these outcomes.
+
+### 9. UI/UX and content contract
+
+#### 9.1 Inventory workspace
+
+The protected Inventory workspace is scoped to the active household. Its product list and product detail show the product name, immutable base unit, recorded quantity, reserved quantity, and available quantity. Use text labels for each quantity; do not rely on color or icons to distinguish them. Show the localized Pantry label for the default stock location. A member without inventory access or from another household receives an access-denied state without product or quantity details. The existing inventory contract remains in `specs/household-inventory.md` (sections 3, 4, and 6); this delta adds catalog browsing and intake.
+
+For an empty catalog, explain that no products are registered and show registration only to a member with `inventory.manage`. A product form requires a name and one supported base unit: piece, gram, or millilitre. Identify the chosen unit as permanent before save. Validate inline and in the accessible error summary; preserve entered values after validation failure. Do not offer package conversion or location selection.
+
+An authorized intake form identifies the product and its base unit, accepts an explicit positive decimal amount, and explains that the amount will be added to Pantry. Show a review/confirmation with product, quantity, and unit before submission. On success, report the recorded amount and updated recorded, reserved, and available quantities, with a link to the product and its receipt or movement. A retry with the original command key returns the same outcome and must not show a second addition. Keep focus visible, associate labels and errors programmatically, support keyboard use and narrow layouts, and communicate status without color alone. English and Spanish are required on Ingress and standalone; use the product locale and a defined English fallback. Do not expose implementation identifiers in primary content; make technical receipt details available progressively.
+
+### 10. Failure, recovery, and cleanup
+
+Invalid, zero, negative, over-precision, incompatible-unit, or over-limit quantities are rejected before any movement is committed. Explain the field error and applicable limit, retain the form draft, and offer correction. A product registration failure must not leave a catalog record without its default-location binding or a binding without its record; retry the registration as one atomic operation.
+
+If intake fails before commit, state that stock was not added and allow correction or retry. If the response is lost after commit, retry or retrieve the receipt using the original command key. Return the original receipt for a repeated key and reject a changed payload under that key as a conflict; never advise a fresh key as a recovery for an uncertain commit. A concurrent duplicate resolves to the same single movement. If the binding total would exceed its applicable maximum, reject the whole intake and show the current quantity and limit without partial addition. Do not automatically delete catalog records, bindings, or ledger history during cleanup. These outcomes extend the retained append-only ledger and replay contract in `specs/household-inventory.md` (sections 4 and 6).
+
+### 11. Security, permissions, and privacy
+
+Authorize product reads and quantity views against the authenticated active household member and household scope on the server. Require `inventory.manage` for product registration and stock intake; a client-selected identity, household, or location is not authority. Deny cross-household access without disclosing whether a foreign product exists. Task permissions remain governed by the retained inventory and task contracts; catalog access must not broaden task authority.
+
+Treat names, quantities, command keys, and all client-supplied identifiers as untrusted input. Validate supported units, decimal precision, positivity, range, and household membership at the application boundary and again where needed for transactional integrity. Select the product binding and default location on the server; reject or ignore no client attempt to switch the target—return a clear validation error and make no movement. Record actor, source, and time with the immutable movement as required by `specs/household-inventory.md` (household-inventory-R2). Logs and operator diagnostics must omit credentials and avoid unnecessary personal data.
+
+### 12. Observability and operational UX
+
+Give the member a clear outcome for each registration and intake: saved, rejected before change, or uncertain response with a safe same-key retry or receipt lookup. Show recorded, reserved, and available quantities after a successful intake, and identify the product and Pantry destination. The receipt must make the original command outcome inspectable; retries must not create duplicate activity or notifications.
+
+Provide operators with sanitized evidence sufficient to investigate authorization denials, invalid quantities, conflicts, binding-limit rejections, and persistence failures, correlated to the original command where available. Distinguish a committed movement from a failed or unresolved request. Do not log secrets or unrestricted request payloads. Metrics or activity records must not imply that an intake committed solely because it was submitted. The concrete logging, metric, and receipt surfaces remain to be specified by implementation; their presence and safe content require verification.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Upgrade must make the household-scoped `pantry` default stock location immediately usable for each existing configured household, with a localized Pantry label and exactly one logical default. Product registration creates its catalog record and binding at that location atomically. Preserve existing material bindings, their locations, and ledger history with their identities and historical quantities unchanged; do not automatically classify or reclassify them into the new catalog. This delta does not authorize rewriting prior movements or widening existing task permissions.
+
+Before rollout, verify migration behavior against existing households and an activated restore: the default is usable immediately after upgrade, and pre-existing bindings, locations, and ledger history retain identity without automatic reclassification. Preserve the existing owner’s compatible backup/restore and schema safety expectations in `specs/household-inventory.md` (section 13). If migration or restore validation fails, stop rollout and retain the recoverable prior state; do not silently reinterpret newer data on downgrade. The concrete migration mechanism, deployment sequence, and rollback invocation are not established by this delta and remain unverified; define and review them before implementation readiness.
+
+### 14. Testing strategy and numeric budget
+
+This delta adds twelve distinct acceptance cases to the retained household-inventory inventory. The budget is twelve minimum cases, one per new case definition; repeated runs and parameter rows that do not exercise distinct behavior do not increase the count. Cover protected household-scoped browsing and authorization; authorized registration with stable identity and lifetime unit; exact positive intake, append-only movement and original-command receipt; replay, concurrent duplicate requests and changed-payload conflict; preservation of task-linked bindings, effects, history and permissions; each supported unit and precision boundary; zero, negative, incompatible, excess-precision and over-limit rejection, including the separate whole-piece maximum; exactly one localized household default location; atomic product and binding creation; server-selected intake binding despite client location input; and upgrade compatibility without reclassification. These cases refine the existing `specs/household-inventory.md` contract and do not replace its retained cases.
+
+Use deterministic persistence and concurrency controls to assert exact decimal amounts, movement and receipt identities, binding totals, household scope, and absence of duplicate side effects. Exercise permission denial and incompatible input as well as successful paths. The twelve-case delta budget does not claim to satisfy the retained specification's broader test budget or repository-wide coverage thresholds. Existing project-wide thresholds remain in force; establish changed-module and pure-policy coverage expectations against the implementation and its configured tooling. Human acceptance must also inspect the accessible, localized inventory and intake experience in English and Spanish on Ingress and standalone, and the amd64 and ARM64 images. The issue requests global and per-file 100% coverage; record measured results for the implemented revision rather than treating this draft or a declared command as evidence.
+
+The selected source declares `package.json` at the repository root, but no package manager, specification-validation script, or concrete project verification invocation has been established here. The standard in `specs/README.md` names `pnpm run validate:specifications` and `pnpm run generate:specifications`; their selected-project availability and definitions remain unverified, so they are not required steps. Before acceptance, verify specification format and internal and cross-document consistency, and establish the concrete command or other evidence and prerequisites for those outcomes. Keep product acceptance separate from documentation/catalog publication checks.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Browse and authorization | 1 | Observable scenarios in the case inventory. |
+| Product registration | 1 | Observable scenarios in the case inventory. |
+| Stock intake | 1 | Observable scenarios in the case inventory. |
+| Replay and concurrency | 1 | Observable scenarios in the case inventory. |
+| Existing task-linked inventory | 1 | Observable scenarios in the case inventory. |
+| product registration | 1 | Observable scenarios in the case inventory. |
+| stock intake | 1 | Observable scenarios in the case inventory. |
+| unit consistency | 1 | Observable scenarios in the case inventory. |
+| default-location | 1 | Observable scenarios in the case inventory. |
+| product-registration | 1 | Observable scenarios in the case inventory. |
+| catalog-intake | 1 | Observable scenarios in the case inventory. |
+| upgrade-compatibility | 1 | Observable scenarios in the case inventory. |
+| Total | 12 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| inventory1-C01 | Browse and authorization | SDD-I68-U1-R1 | An active household member opens the protected workspace and sees products with recorded, reserved, and available quantities scoped to that household; a member without access or from another household is denied. |
+| inventory1-C02 | Product registration | SDD-I68-U1-R2 | A member with inventory.manage registers a product; its stable identity and base unit persist, and the base unit cannot be changed. |
+| inventory1-C03 | Stock intake | SDD-I68-U1-R3 | An authorized member records a positive fractional intake; the default household location receives one append-only movement, and recorded, reserved, and available quantities reflect the exact decimal amount. |
+| inventory1-C04 | Replay and concurrency | SDD-I68-U1-R3 | Retrying an intake with its original command key returns the original receipt without another movement; concurrent requests for that command resolve to one movement, while a changed payload under the same key conflicts. |
+| inventory1-C05 | Existing task-linked inventory | SDD-I68-U1-R4 | After catalog and intake changes, existing task-linked bindings and effects remain readable and usable with historical quantities unchanged, and task access does not gain broader inventory permissions. |
+| inventory2-C01 | product registration | SDD-I68-U2-R1 | Register a product in each supported unit; whole-piece quantities and gram or millilitre quantities with up to six decimal places are accepted using exact millionth-unit representation. |
+| inventory2-C02 | stock intake | SDD-I68-U2-R2 | Reject zero and negative intake; accept intake that keeps a binding total at or below its applicable limit and reject intake that would exceed the limit, including the distinct whole-piece limit. |
+| inventory2-C03 | unit consistency | SDD-I68-U2-R3 | After registration, reject changing the product's unit and reject intake with excess precision or an incompatible unit; verify no package or unit conversion is applied. |
+| inventory3-C01 | default-location | SDD-I68-U3-R1 | For a configured household, observe exactly one logical default stock location with household-scoped identifier `pantry` and a localized Pantry label. |
+| inventory3-C02 | product-registration | SDD-I68-U3-R2 | Register a product and observe its catalog record and binding at the default stock location established atomically. |
+| inventory3-C03 | catalog-intake | SDD-I68-U3-R3 | Submit catalog intake with a client-supplied or switched location and observe that intake targets only the server-selected binding. |
+| inventory3-C04 | upgrade-compatibility | SDD-I68-U3-R4 | After upgrade, observe an existing household can use the default stock location immediately and its pre-existing material bindings, locations, and ledger history keep their identities without automatic reclassification. |
+
+### 15. Documentation and discoverability
+
+Update the retained owner `specs/household-inventory.md` with this bounded catalog and basic-intake delta. The member-facing documentation must explain the protected workspace, recorded, reserved and available quantities, product registration, supported base units and precision, and recording an opening quantity or additional stock. Explain that intake is positive, targets the household's server-selected default Pantry location, and can be safely retried with its original command key. Document authorization, household scope, quantity limits, rejected units and precision, and that package or unit conversion is unavailable.
+
+Operator and contributor documentation must describe the default-location upgrade behavior, atomic product-and-binding creation, immutable movement history, task-linked compatibility, recovery and the evidence needed to verify permissions, replay and concurrency. Keep English and Spanish content aligned and ensure the user journey is discoverable from the protected Inventory workspace. The selected owner path is the only approved path operation in this delta; additional documentation destinations and exact verification invocations remain unverified and must be resolved through the host's retained inventory and project evidence.
+
+| Path | Change |
+| --- | --- |
+| specs/household-inventory.md | update |
+
+[specs/household-inventory.md](household-inventory.md)
+
+### 16. Acceptance scenarios
+
+Acceptance is based on observable member and persisted outcomes. An active household member sees only that household's products and recorded, reserved and available quantities; an unauthorized or cross-household member is denied. A member with `inventory.manage` can register products in piece, gram or millilitre, retaining stable identity and immutable base unit. Whole-piece quantities remain integral; gram and millilitre values preserve exact millionth-unit representation through six decimal places.
+
+An authorized positive intake creates one append-only movement at the household default location, and visible quantities reflect the exact amount. Retrying the original command returns its original receipt without another movement; simultaneous requests with that key resolve to one movement, while reusing the key with a changed payload conflicts. Zero and negative amounts fail. Intake is accepted only when the resulting binding total stays within 999999999999.999999 base units, or 999999999999 pieces for whole-unit stock; an amount exceeding the applicable limit fails without changing stock. Excess precision, incompatible units and attempts to change a product's unit fail, and no package or unit conversion occurs.
+
+Each configured household exposes one logical default stock location with household-scoped identifier `pantry` and a localized Pantry label. Product registration creates the catalog record and its binding at that location atomically. Catalog intake uses the server-selected binding even when a client supplies or attempts to switch a location. After upgrade, an existing household can use the default immediately; prior material bindings, locations and ledger history retain their identities and are not automatically reclassified. Across these outcomes, existing task-linked effects, historical quantities and task permissions remain intact.
+
+### 17. Requirements traceability
+
+The host-owned requirement and case inventories provide the authoritative row definitions. Preserve all eleven supplied requirement identities exactly and map each only to cases that exercise its behavior:
+
+- `SDD-I68-U1-R1` maps to `inventory1-C01`.
+- `SDD-I68-U1-R2` maps to `inventory1-C02`.
+- `SDD-I68-U1-R3` maps to `inventory1-C03` and `inventory1-C04`.
+- `SDD-I68-U1-R4` maps to `inventory1-C05`.
+- `SDD-I68-U2-R1` maps to `inventory2-C01`.
+- `SDD-I68-U2-R2` maps to `inventory2-C02`.
+- `SDD-I68-U2-R3` maps to `inventory2-C03`.
+- `SDD-I68-U3-R1` maps to `inventory3-C01`.
+- `SDD-I68-U3-R2` maps to `inventory3-C02`.
+- `SDD-I68-U3-R3` maps to `inventory3-C03`.
+- `SDD-I68-U3-R4` maps to `inventory3-C04`.
+
+Retain the existing owner's requirement and case identities as references; do not redefine or rename them. Reconcile the host-generated reciprocal mappings against the actual case inventory before publication. Structural counts and reciprocal mappings establish consistency only; they do not establish semantic completeness, execution, coverage, or acceptance.
+
+| Requirement | Cases |
+|---|---|
+| SDD-I68-U1-R1 | inventory1-C01 |
+| SDD-I68-U1-R2 | inventory1-C02 |
+| SDD-I68-U1-R3 | inventory1-C03, inventory1-C04 |
+| SDD-I68-U1-R4 | inventory1-C05 |
+| SDD-I68-U2-R1 | inventory2-C01 |
+| SDD-I68-U2-R2 | inventory2-C02 |
+| SDD-I68-U2-R3 | inventory2-C03 |
+| SDD-I68-U3-R1 | inventory3-C01 |
+| SDD-I68-U3-R2 | inventory3-C02 |
+| SDD-I68-U3-R3 | inventory3-C03 |
+| SDD-I68-U3-R4 | inventory3-C04 |
+
+### 18. Implementation sequence
+
+1. Resolve the unit, reservation/replenishment, barcode/provider, upgrade and catalog-gate decisions recorded in the retained owner; review the complete contract before readiness.
+2. Establish deterministic tests and enforceable architecture constraints alongside the first implementation. Define atomic product registration, default-location setup, append-only intake movements and original-command receipts before exposing the commands.
+3. Implement exact quantity and unit policies, household authorization and scope, then transactional registration and intake use cases. Cover command replay, changed-payload conflicts, concurrent requests and applicable binding limits.
+4. Add persistence and adapters for the catalog, household-scoped `pantry` location, binding and ledger. Upgrade configured households so the default is immediately usable while preserving existing bindings, locations and ledger identities without reclassification.
+5. Add the protected, localized workspace and accessible browse, registration and intake flows. Show recorded, reserved and available quantities with clear validation and failure outcomes.
+6. Verify compatibility, restore behavior, security, both deployment targets and required user/operator documentation. Run the complete applicable checks and coverage review, then collect the specified human UX evidence with artifact, channel, test records and cleanup.
+
+These steps deliver the bounded catalog and basic-intake delta within the retained owner; its other domain goals and cases remain in force. The approved new case inventory has 12 definitions across the three supplied increments; this structural count does not establish semantic completeness or acceptance.
+
+### 19. Definition of Done
+
+Completion requires all of the following:
+
+- Every retained normative requirement and each new requirement maps reciprocally to concrete observable cases; every declared case is implemented meaningfully. Preserve the existing `household-inventory-C01` through `household-inventory-C35` definitions as owner references, and retain each approved new case identity and its specific assertion in the case inventory.
+- Protected browsing is household-scoped; registration and intake enforce `inventory.manage` and other applicable permissions. Registration keeps stable product identity and immutable base unit. Intake is positive, exact, append-only, targets the server-selected default binding and returns the original receipt on replay without duplicate movement. Concurrent same-key requests resolve once; a changed payload conflicts.
+- Piece, gram and millilitre rules, six-decimal exact representation, whole-piece quantities, precision and unit rejection, and both distinct maximum totals are covered. Catalog registration creates the default binding atomically. The logical household default has stable identifier `pantry` and a localized Pantry label. Existing material bindings, locations and ledger history retain identity and are not automatically reclassified after upgrade.
+- Existing task-linked bindings and effects remain readable and usable; historical quantities and task permissions are preserved. Compatibility and activated-restore acceptance establish the required household and inventory outcomes.
+- The existing numeric test budget and repository-wide coverage expectations remain applicable. New behavior has deterministic tests for transaction failures, replay and races, and each new requirement is covered. Human UX evidence records the artifact, channel, test records and cleanup; it supplements automated evidence.
+- The specification satisfies the required format. Internal and cross-document consistency is checked. Reciprocal catalog ownership, paths and evidence agree with the generated view. These are separate observable publication outcomes; structural counts and maintainer acceptance do not substitute for them.
+- User/operator documentation, migration and recovery guidance, catalog evidence, and all declared paths are current. No material readiness decision remains unresolved.
+
+The selected root `package.json` declares `pnpm@10.34.0` and does not declare `validate:specifications` or `generate:specifications`. The repository standard describes those invocations, but their scripts and definitions are unverified in this selected project. Therefore, the concrete invocation and prerequisites remain unverified: the required format, consistency and reciprocal generated-catalog outcomes above must be evidenced without treating an unavailable example command as a required step.
+
+### 20. References and decisions
+
+This is a delta to the immutable retained owner `specs/household-inventory.md` at selected revision `cdae48535cab00d9fdb78b50ede59cee41cf80cc`; its requirements, existing case definitions, broader contract and unrelated deferred decisions remain authoritative. The new catalog and intake behavior is prospective and does not claim implementation or acceptance evidence.
+
+The issue source is [#68](https://github.com/vypdev/domus/issues/68). The requested changes are bounded to `specs/household-inventory.md`. Repository format and publication expectations come from `specs/README.md` and `specs/_template.md`. The owner’s existing testing budget, cases, implementation sequence and DoD are in sections 14, 16, 18 and 19 of `specs/household-inventory.md`; its catalog ownership record is in `specs/catalog.json`, with the generated view in `specs/CATALOG.md`.
+
+The selected root `package.json` identifies pnpm as the package manager. Its scripts do not provide the two specification commands named in the standard; no equivalent format-and-catalog verification invocation was established from the inspected declarations. Their concrete invocation and prerequisites remain unverified. Do not claim a check passed from its declaration alone.
+
+The added decisions are the supplied fixed product constraints: supported units and exact quantity limits; one household-scoped `pantry` default; atomic catalog-and-binding registration; server-selected intake binding; and upgrade compatibility without automatic reclassification. Broader owner decisions remain as recorded in the retained document.
+
+### Inventory catalog implementation evidence
+
+Schema 20 adds the catalog while keeping existing task material bindings and
+ledger identities. The current protected routes use the same Inventory writer
+in both deployments. See the [catalog qualification](../docs/evidence/inventory-catalog-qualification.md)
+for the twelve cases and the verification gates. The wider inventory capability
+remains a draft while its remaining workflows are developed.

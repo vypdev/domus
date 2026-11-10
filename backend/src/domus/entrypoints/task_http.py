@@ -10,6 +10,8 @@ from fastapi.params import Depends
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.family_queries import FamilyQueries
+from domus.application.inventory import CatalogAction, InventoryCommands
+from domus.application.inventory_queries import InventoryQueries
 from domus.application.point_allocations import AllocationCommands, AllocationQueries
 from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
@@ -114,6 +116,9 @@ class TaskHTTPContext:
     rewards: Callable[[], RewardQueries]
     reward_commands: RewardCommands
     reward_original: Callable[[RewardAction, str], Receipt]
+    inventory: Callable[[], InventoryQueries]
+    inventory_commands: InventoryCommands
+    inventory_original: Callable[[CatalogAction, str], Receipt]
 
 
 def create_task_router(

@@ -7,6 +7,8 @@ from typing import cast
 from domus.domain.errors import Conflict, StorageFailure
 from domus.domain.inventory import (
     MAX_STOCK_UNITS,
+    BaseUnit,
+    CatalogProduct,
     EffectKind,
     InventoryEffect,
     StockMovement,
@@ -58,6 +60,23 @@ INVENTORY_STATEMENTS = (
 )
 
 
+CATALOG_TABLES = {"inventory_products"}
+CATALOG_STATEMENTS = (
+    "CREATE TABLE inventory_products(household_id TEXT NOT NULL, product_id TEXT NOT NULL, "
+    "reference_id TEXT NOT NULL, name TEXT NOT NULL, "
+    "base_unit TEXT NOT NULL CHECK(base_unit IN ('piece','gram','millilitre')), "
+    "PRIMARY KEY(household_id,product_id), UNIQUE(household_id,reference_id), "
+    "FOREIGN KEY(household_id,reference_id) "
+    "REFERENCES inventory_materials(household_id,reference_id)) STRICT",
+)
+
+
+def _product(row: sqlite3.Row) -> CatalogProduct:
+    return CatalogProduct(
+        row["product_id"], row["reference_id"], row["name"], BaseUnit(row["base_unit"])
+    )
+
+
 def _effect(row: sqlite3.Row) -> InventoryEffect:
     return InventoryEffect(
         row["household_id"],
@@ -91,6 +110,28 @@ def _movement(row: sqlite3.Row) -> StockMovement:
 @dataclass(frozen=True, slots=True)
 class SQLiteInventory:
     connection: sqlite3.Connection
+
+    def add_product(self, home: str, product: CatalogProduct) -> None:
+        self.connection.execute(
+            "INSERT INTO inventory_products VALUES (?,?,?,?,?)", (home, *astuple(product))
+        )
+
+    def product(self, home: str, product_id: str) -> CatalogProduct | None:
+        row = self.connection.execute(
+            "SELECT * FROM inventory_products WHERE household_id=? AND product_id=?",
+            (home, product_id),
+        ).fetchone()
+        return None if row is None else _product(row)
+
+    def products(self, home: str, after: str, limit: int) -> tuple[CatalogProduct, ...]:
+        return tuple(
+            _product(row)
+            for row in self.connection.execute(
+                "SELECT * FROM inventory_products WHERE household_id=? AND product_id>? "
+                "ORDER BY product_id LIMIT ?",
+                (home, after, limit),
+            )
+        )
 
     def material(self, home: str, reference: str) -> MaterialBinding | None:
         row = self.connection.execute(
@@ -250,3 +291,12 @@ def verify_inventory_records(connection: sqlite3.Connection) -> None:
             or stock.reserved(home, reference) > balance
         ):
             raise StorageFailure("invalid_inventory_balance")
+
+
+def verify_inventory_catalog(connection: sqlite3.Connection) -> None:
+    stock = SQLiteInventory(connection)
+    for row in connection.execute("SELECT * FROM inventory_products"):
+        product = _product(row)
+        home = row["household_id"]
+        if stock.material(home, product.reference_id) != product.binding(home):
+            raise StorageFailure("invalid_inventory_catalog_binding")

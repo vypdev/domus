@@ -1,3 +1,8 @@
+import {HttpInventoryServer} from '../adapters/inventory-http';
+import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../adapters/inventory-journal';
+import {InventoryController} from '../application/inventory-controller';
+import {inventoryCommand} from '../domain/inventory';
+import type {InventoryIntent} from '../presentation/domus-inventory';
 import {HttpRewardsServer} from '../adapters/reward-http';
 import {REWARD_JOURNAL_KEY, RewardsSessionJournal} from '../adapters/reward-journal';
 import {RewardsController} from '../application/rewards-controller';
@@ -176,6 +181,16 @@ export function decodeReviewIntent(value: unknown): ReviewIntent | null {
   } catch {return null;}
 }
 
+export function decodeInventoryIntent(value: unknown): InventoryIntent | null {
+  try {
+    const {type} = fields(value, ['type'], ['command']);
+    if (type === 'submit') return {type, command: inventoryCommand(fields(value, ['type','command'], []).command)};
+    fields(value, ['type'], []);
+    check(type === 'refresh' || type === 'more' || type === 'recover');
+    return {type};
+  } catch {return null;}
+}
+
 /** Wire only this document's owned nodes/capabilities; never inspect the HA parent or private storage. */
 export function mountEntry(page: EntryPage): PageMount {
   const doc = page.document; mounts.get(doc)?.();
@@ -183,13 +198,14 @@ export function mountEntry(page: EntryPage): PageMount {
   let calendarPreference: CalendarPreferenceController | null = null;
   let family: FamilyController | null = null;
   let rewards: RewardsController | null = null;
+  let inventory: InventoryController | null = null;
   let allocation: AllocationController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -198,7 +214,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -350,16 +366,38 @@ export function mountEntry(page: EntryPage): PageMount {
       try {input = allocationInput((event as CustomEvent<unknown>).detail);} catch {return;}
       await allocations.preview(input);
     }, {signal: widget.signal});
+    const inventoryController = new InventoryController(new HttpInventoryServer(source.target, browser.transport),
+      new InventorySessionJournal({getItem:key => browser.storage().getItem(key),
+        setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
+      new BrowserEntropy(browser.random), view => {element.inventory = view;});
+    inventory = inventoryController;
+    const syncInventory = () => {
+      const entry = element.view;
+      if (element.workspaceDestination === 'inventory' && entry?.phase === 'ready'
+          && entry.decision?.householdReadable && entry.session) {
+        const context = entry.session.context;
+        const key = JSON.stringify([context.installationId, context.channel, context.subject]);
+        inventoryController.bind({key, context, readOnly:entry.decision.readOnly});
+      } else inventoryController.bind(null);
+    };
+    element.addEventListener('domus-inventory-intent', async event => {
+      if (event.target !== element) return;
+      const intent = decodeInventoryIntent((event as CustomEvent<unknown>).detail);
+      if (intent?.type === 'refresh') await inventoryController.refresh();
+      if (intent?.type === 'more') await inventoryController.more();
+      if (intent?.type === 'recover') await inventoryController.recover();
+      if (intent?.type === 'submit') await inventoryController.submit(intent.command);
+    }, {signal:widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
-        : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : null;
-      syncCalendar(); syncReview(); syncFamily(); syncAllocation();
+        : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : fragment === '#inventory' ? 'inventory' : null;
+      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
@@ -410,6 +448,7 @@ export function mountEntry(page: EntryPage): PageMount {
             const storage = browser.storage();
             storage.removeItem(ALLOCATION_JOURNAL_KEY);
             storage.removeItem(REWARD_JOURNAL_KEY);
+            storage.removeItem(INVENTORY_JOURNAL_KEY);
             storage.removeItem(CALENDAR_JOURNAL_KEY);
             storage.removeItem(RECURRENCE_JOURNAL_KEY);
             await signOut;
