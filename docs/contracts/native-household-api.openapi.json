@@ -956,6 +956,23 @@
         "title": "CalendarTiming",
         "type": "string"
       },
+      "CatalogReward": {
+        "properties": {
+          "eligible": {
+            "title": "Eligible",
+            "type": "boolean"
+          },
+          "offer": {
+            "$ref": "#/components/schemas/RewardOffer"
+          }
+        },
+        "required": [
+          "offer",
+          "eligible"
+        ],
+        "title": "CatalogReward",
+        "type": "object"
+      },
       "CategoryCatalog": {
         "properties": {
           "can_manage": {
@@ -1984,6 +2001,25 @@
             "title": "Posted Minor",
             "type": "integer"
           },
+          "reserved_minor": {
+            "title": "Reserved Minor",
+            "type": "integer"
+          },
+          "spending": {
+            "items": {
+              "$ref": "#/components/schemas/RewardSpend"
+            },
+            "title": "Spending",
+            "type": "array"
+          },
+          "spending_count": {
+            "title": "Spending Count",
+            "type": "integer"
+          },
+          "spent_in_period_minor": {
+            "title": "Spent In Period Minor",
+            "type": "integer"
+          },
           "time_zone": {
             "title": "Time Zone",
             "type": "string"
@@ -1998,6 +2034,10 @@
           "time_zone",
           "posted_minor",
           "available_minor",
+          "reserved_minor",
+          "spent_in_period_minor",
+          "spending_count",
+          "spending",
           "earned_minor",
           "pending_verification_minor",
           "pending_posting_minor",
@@ -3978,6 +4018,100 @@
         "title": "RecoveryTransitionRequest",
         "type": "object"
       },
+      "Redemption": {
+        "properties": {
+          "approval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RewardDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cancellation_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Reason"
+          },
+          "closed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RewardDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cost_minor": {
+            "title": "Cost Minor",
+            "type": "integer"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "offer_id": {
+            "title": "Offer Id",
+            "type": "string"
+          },
+          "offer_revision": {
+            "title": "Offer Revision",
+            "type": "integer"
+          },
+          "redemption_id": {
+            "title": "Redemption Id",
+            "type": "string"
+          },
+          "requested_at": {
+            "title": "Requested At",
+            "type": "integer"
+          },
+          "revision": {
+            "default": 1,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/RedemptionStage",
+            "default": "requested"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "redemption_id",
+          "member_id",
+          "offer_id",
+          "title",
+          "offer_revision",
+          "cost_minor",
+          "requested_at"
+        ],
+        "title": "Redemption",
+        "type": "object"
+      },
+      "RedemptionStage": {
+        "enum": [
+          "requested",
+          "approved",
+          "funding_hold",
+          "delivered",
+          "cancelled"
+        ],
+        "title": "RedemptionStage",
+        "type": "string"
+      },
       "RelativeAttachmentBody": {
         "additionalProperties": false,
         "properties": {
@@ -5192,6 +5326,377 @@
           "plan_fingerprint"
         ],
         "title": "ReviewedStateBody",
+        "type": "object"
+      },
+      "RewardAction": {
+        "enum": [
+          "reward.configure",
+          "reward.offer",
+          "reward.request",
+          "reward.approve",
+          "reward.deliver",
+          "reward.cancel"
+        ],
+        "title": "RewardAction",
+        "type": "string"
+      },
+      "RewardApproveBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "reward.approve",
+            "title": "Action",
+            "type": "string"
+          },
+          "redemption_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Redemption Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "redemption_id"
+        ],
+        "title": "RewardApproveBody",
+        "type": "object"
+      },
+      "RewardBalance": {
+        "properties": {
+          "posted_minor": {
+            "title": "Posted Minor",
+            "type": "integer"
+          },
+          "reserved_minor": {
+            "title": "Reserved Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "posted_minor",
+          "reserved_minor"
+        ],
+        "title": "RewardBalance",
+        "type": "object"
+      },
+      "RewardCancelBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "reward.cancel",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "redemption_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Redemption Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "redemption_id",
+          "expected_revision",
+          "reason"
+        ],
+        "title": "RewardCancelBody",
+        "type": "object"
+      },
+      "RewardConfigureBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "reward.configure",
+            "title": "Action",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "expected_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "action",
+          "enabled",
+          "expected_revision"
+        ],
+        "title": "RewardConfigureBody",
+        "type": "object"
+      },
+      "RewardDecision": {
+        "properties": {
+          "actor_member_id": {
+            "title": "Actor Member Id",
+            "type": "string"
+          },
+          "at": {
+            "title": "At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "actor_member_id",
+          "at"
+        ],
+        "title": "RewardDecision",
+        "type": "object"
+      },
+      "RewardDeliverBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "reward.deliver",
+            "title": "Action",
+            "type": "string"
+          },
+          "redemption_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Redemption Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "redemption_id"
+        ],
+        "title": "RewardDeliverBody",
+        "type": "object"
+      },
+      "RewardOffer": {
+        "properties": {
+          "cost_minor": {
+            "title": "Cost Minor",
+            "type": "integer"
+          },
+          "eligible_roles": {
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            },
+            "title": "Eligible Roles",
+            "type": "array"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "offer_id": {
+            "title": "Offer Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offer_id",
+          "title",
+          "cost_minor",
+          "enabled",
+          "eligible_roles",
+          "revision"
+        ],
+        "title": "RewardOffer",
+        "type": "object"
+      },
+      "RewardOfferBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "reward.offer",
+            "title": "Action",
+            "type": "string"
+          },
+          "cost_minor": {
+            "maximum": 1000000.0,
+            "minimum": 1.0,
+            "title": "Cost Minor",
+            "type": "integer"
+          },
+          "eligible_roles": {
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Eligible Roles",
+            "type": "array"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "expected_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "title": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "title",
+          "cost_minor",
+          "enabled",
+          "eligible_roles",
+          "expected_revision"
+        ],
+        "title": "RewardOfferBody",
+        "type": "object"
+      },
+      "RewardRequestBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "reward.request",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "format": "int64",
+            "maximum": 9223372036854775807,
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "offer_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Offer Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "offer_id",
+          "expected_revision"
+        ],
+        "title": "RewardRequestBody",
+        "type": "object"
+      },
+      "RewardSpend": {
+        "properties": {
+          "cost_minor": {
+            "title": "Cost Minor",
+            "type": "integer"
+          },
+          "posted_at": {
+            "title": "Posted At",
+            "type": "integer"
+          },
+          "redemption_id": {
+            "title": "Redemption Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "redemption_id",
+          "title",
+          "cost_minor",
+          "posted_at"
+        ],
+        "title": "RewardSpend",
+        "type": "object"
+      },
+      "RewardsView": {
+        "properties": {
+          "balance": {
+            "$ref": "#/components/schemas/RewardBalance"
+          },
+          "catalog": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogReward"
+            },
+            "title": "Catalog",
+            "type": "array"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "may_manage": {
+            "title": "May Manage",
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/Redemption"
+            },
+            "title": "Requests",
+            "type": "array"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "revision",
+          "may_manage",
+          "balance",
+          "catalog",
+          "requests",
+          "next_cursor"
+        ],
+        "title": "RewardsView",
         "type": "object"
       },
       "Role": {
@@ -9135,6 +9640,551 @@
       "get": {
         "operationId": "original_api_v1_family_allocation_requests__key__get",
         "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Original"
+      }
+    },
+    "/api/v1/family/rewards": {
+      "get": {
+        "operationId": "rewards_api_v1_family_rewards_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 25,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Rewards"
+      }
+    },
+    "/api/v1/family/rewards/commands": {
+      "post": {
+        "operationId": "command_api_v1_family_rewards_commands_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "mapping": {
+                    "reward.approve": "#/components/schemas/RewardApproveBody",
+                    "reward.cancel": "#/components/schemas/RewardCancelBody",
+                    "reward.configure": "#/components/schemas/RewardConfigureBody",
+                    "reward.deliver": "#/components/schemas/RewardDeliverBody",
+                    "reward.offer": "#/components/schemas/RewardOfferBody",
+                    "reward.request": "#/components/schemas/RewardRequestBody"
+                  },
+                  "propertyName": "action"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/RewardConfigureBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RewardOfferBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RewardRequestBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RewardApproveBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RewardDeliverBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RewardCancelBody"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Command"
+      }
+    },
+    "/api/v1/family/rewards/requests/{action}/{key}": {
+      "get": {
+        "operationId": "original_api_v1_family_rewards_requests__action___key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/RewardAction"
+            }
+          },
           {
             "in": "path",
             "name": "key",

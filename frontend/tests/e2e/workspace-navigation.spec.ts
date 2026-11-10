@@ -4,6 +4,7 @@ const ingress = '/api/hassio_ingress/fixture_domus_supervisor_1234567890';
 
 for (const mode of ['native', 'standalone'] as const) {
   test(`shared workspace navigation in ${mode}`, async ({page, context, request}, info) => {
+    test.setTimeout(50_000);
     const origin = `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;
     const base = origin + (mode === 'native' ? ingress : '') + '/';
     if (process.env.DOMUS_BROWSER_IMAGE) {
@@ -107,6 +108,8 @@ for (const mode of ['native', 'standalone'] as const) {
     expect(firstFamily.ok()).toBe(true);
     await expect(familyRegion.getByText('Available balance', {exact: true})).toBeVisible();
     await expect(familyRegion.getByText('There are no points movements yet.')).toBeVisible();
+    const rewards = familyRegion.locator('domus-rewards');
+    await expect(rewards.getByText('Rewards are disabled for this household.')).toBeVisible();
     await family.focus();
     await page.keyboard.press('Tab');
     await expect(household).toBeFocused();
@@ -245,7 +248,7 @@ for (const mode of ['native', 'standalone'] as const) {
       expected_revision: done.revision, cycle_id: done.cycle.cycle_id, reason: 'Check the original work',
     });
     await expect.poll(async () => (await ledger()).history.length, {timeout: 15_000}).toBe(2);
-    await familyRegion.getByRole('button', {name: 'Actualizar'}).click();
+    await familyRegion.getByRole('button', {name: 'Actualizar', exact: true}).click();
     await expect(familyRegion.getByText('Reversión −2,25', {exact: true})).toBeVisible();
     await expect(familyRegion.getByText('Premio original', {exact: true})).toBeVisible();
     await familyRegion.screenshot({path: info.outputPath('family-es-reversal.png')});
@@ -279,6 +282,65 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(familyRegion.getByText(/Equal shares.*Round up.*Policy revision 1/su)).toBeVisible();
     await page.getByLabel('Language', {exact: true}).selectOption('es');
     await expect(familyRegion.getByText(/Cuotas iguales.*Hacia arriba.*Revisión de la política 1/su)).toBeVisible();
+
+    await expect(rewards.getByText('Las recompensas están desactivadas para este hogar.')).toBeVisible();
+    await rewards.getByRole('button', {name: 'Activar recompensas'}).click();
+    await expect(rewards.getByRole('button', {name: 'Desactivar recompensas'})).toBeVisible();
+    await rewards.getByRole('textbox', {name: 'Nombre de la recompensa'}).fill('Movie night');
+    await rewards.getByRole('textbox', {name: 'Precio en puntos'}).fill('2,00');
+    await rewards.getByRole('button', {name: 'Guardar recompensa'}).click();
+    await rewards.getByRole('button', {name: 'Solicitar recompensa'}).click();
+    await expect(rewards.getByText('Disponible después de la reserva 1,00')).toBeVisible();
+    await rewards.getByRole('button', {name: 'Confirmar solicitud'}).click();
+    await rewards.getByRole('button', {name: 'Cancelar solicitud', exact: true}).click();
+    await rewards.getByRole('textbox', {name: 'Motivo de la cancelación'}).fill('Choose a different day');
+    await rewards.getByRole('button', {name: 'Confirmar cancelación'}).click();
+    await expect(rewards.getByText(/Choose a different day/u)).toBeVisible();
+    await rewards.getByRole('button', {name: 'Solicitar recompensa'}).click();
+    await rewards.getByRole('button', {name: 'Confirmar solicitud'}).click();
+    await expect(rewards.locator('li').filter({hasText: 'Pendiente de aprobación'})).toBeVisible();
+    const code = await rewards.locator('li').filter({hasText: 'Pendiente de aprobación'}).locator('code').textContent();
+    await rewards.getByRole('textbox', {name: 'Código de solicitud', exact: true}).fill(code!);
+    await rewards.getByRole('button', {name: 'Aprobar solicitud'}).click();
+    await expect(rewards.locator('li').filter({hasText: 'Aprobada para entrega'})).toBeVisible();
+    await expect.poll(async () => (await ledger()).reserved_minor).toBe(200);
+    const latest = await (await page.request.get(base + 'api/v1/tasks/occurrences/' + seeded.occurrence_id,
+      {headers: {'X-Domus-Context': contextHeader}})).json();
+    await post('occurrences/' + seeded.occurrence_id + '/reopen', 'family-reward-hold', {
+      expected_revision: latest.work.revision, cycle_id: latest.cycle.cycle_id, reason: 'Check the reward funding',
+    });
+    await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(-200);
+    await rewards.getByRole('button', {name: 'Actualizar recompensas'}).click();
+    await expect(rewards.getByText('Puntos necesarios para cubrir las reservas activas 2,00')).toBeVisible();
+    await page.getByLabel('Idioma', {exact: true}).selectOption('en');
+    await expect(rewards.getByText('Points needed to cover active reservations 2.00')).toBeVisible();
+    await rewards.getByRole('checkbox', {name: 'I delivered this reward'}).check();
+    await rewards.getByRole('button', {name: 'Record delivery'}).click();
+    await expect(rewards.getByText('Delivery is paused until available points cover the reservation.')).toBeVisible();
+
+    const newCredit = await post('definitions', 'family-reward-credit', {
+      title: 'Organize shelves', overrides: {point_value_minor: 300},
+    });
+    const earned = await post('occurrences/' + newCredit.occurrence_id + '/complete', 'family-reward-completed', {
+      expected_revision: newCredit.revision, performer_ids: [member], performed_at: Date.now() - 500,
+    });
+    await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(100);
+    await rewards.getByRole('button', {name: 'Refresh rewards'}).click();
+    await expect(rewards.locator('li').filter({hasText: 'Approved for delivery'})).toBeVisible();
+    expect((await ledger()).spending_count).toBe(0);
+    await rewards.getByRole('checkbox', {name: 'I delivered this reward'}).check();
+    await rewards.getByRole('button', {name: 'Record delivery'}).click();
+    await expect(rewards.locator('li').filter({hasText: 'Spending recorded'})).toBeVisible();
+    await expect(familyRegion.getByText('Spent in this period 2.00')).toBeVisible();
+    await post('occurrences/' + newCredit.occurrence_id + '/reopen', 'family-reward-negative', {
+      expected_revision: earned.revision, cycle_id: earned.cycle.cycle_id, reason: 'Check the original work',
+    });
+    await expect.poll(async () => (await ledger()).posted_minor, {timeout: 15_000}).toBe(-200);
+    await familyRegion.getByRole('button', {name: 'Refresh', exact: true}).click();
+    await expect(familyRegion.getByText(/Task reversals can leave a negative posted balance/u)).toBeVisible();
+    await page.getByLabel('Language', {exact: true}).selectOption('es');
+    await expect(familyRegion.getByText('Gastado en este período 2,00')).toBeVisible();
+    await expect(rewards.locator('li').filter({hasText: 'Gasto registrado'})).toBeVisible();
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

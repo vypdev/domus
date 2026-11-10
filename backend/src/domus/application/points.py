@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from domus.application.ports import Clock, Transactions, UnitOfWork
+from domus.application.reward_funding import reconcile_reward_funding
 from domus.application.task_events import lifecycle_page
 from domus.domain.errors import Forbidden, StorageFailure
 from domus.domain.points import (
@@ -12,6 +13,7 @@ from domus.domain.points import (
     frozen_points,
     points_source_fingerprint,
 )
+from domus.domain.rewards import FundingSource
 from domus.domain.storage import Installation, validate_identifier
 from domus.domain.task_events import TaskLifecycleEvent
 
@@ -74,3 +76,14 @@ class PointsConsumer:
                     else frozen_points(event, self.clock.now(), snapshot)
                 )
         unit.points.add(event, fingerprint, posting)
+        if posting is not None:
+            for member_id, amount in posting.shares:
+                if amount:
+                    reconcile_reward_funding(
+                        unit,
+                        scope,
+                        member_id,
+                        FundingSource.POINTS,
+                        posting.event_id,
+                        posting.posted_at,
+                    )

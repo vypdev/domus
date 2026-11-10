@@ -602,7 +602,7 @@
       "status": "proposed",
       "scope": "Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-09",
+      "lastVerified": "2026-11-10",
       "specs": [
         "specs/points-rewards.md"
       ],
@@ -613,7 +613,8 @@
         "backend/src/domus/composition/ingress.py",
         "backend/src/domus/composition/server.py",
         "backend/src/domus/entrypoints/family_http.py",
-        "backend/src/domus/entrypoints/point_allocation_http.py"
+        "backend/src/domus/entrypoints/point_allocation_http.py",
+        "backend/src/domus/entrypoints/reward_http.py"
       ],
       "code": [
         "backend/src/domus/domain/points.py",
@@ -633,7 +634,15 @@
         "frontend/src/application/allocation-controller.ts",
         "frontend/src/adapters/allocation-http.ts",
         "frontend/src/presentation/domus-allocation-settings.ts",
-        "frontend/src/presentation/domus-allocation-preview.ts"
+        "frontend/src/presentation/domus-allocation-preview.ts",
+        "backend/src/domus/domain/rewards.py",
+        "backend/src/domus/application/reward_commands.py",
+        "backend/src/domus/application/reward_funding.py",
+        "backend/src/domus/application/reward_queries.py",
+        "backend/src/domus/infrastructure/sqlite_rewards.py",
+        "frontend/src/application/rewards-controller.ts",
+        "frontend/src/adapters/reward-http.ts",
+        "frontend/src/presentation/domus-rewards.ts"
       ],
       "tests": [
         "tests/backend/test_points_consumer.py",
@@ -643,7 +652,11 @@
         "tests/backend/test_point_allocation.py",
         "tests/backend/test_point_allocation_http.py",
         "tests/backend/test_point_allocation_storage.py",
-        "frontend/tests/allocation.test.ts"
+        "frontend/tests/allocation.test.ts",
+        "tests/backend/test_rewards.py",
+        "tests/backend/test_rewards_http.py",
+        "tests/backend/test_rewards_storage.py",
+        "frontend/tests/rewards.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -651,12 +664,13 @@
         "docs/operations.md",
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
-        "docs/tasks/points-consumer.md"
+        "docs/tasks/points-consumer.md",
+        "docs/evidence/family-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: PR #58 verifies the durable Points consumer and exact reversal. PR #63 verifies the protected Family read model. The configured-allocation tests exercise exact arithmetic, permission and revision checks, frozen pending and posted shares, schema 17 migration, replay, restart, restoration, and localized Ingress and standalone preview and history.",
-        "blockingDecisions": "Reward redemption and complete Family acceptance remain open.",
+        "implementationEvidence": "PR #63 covers scoped Family participation and Points history. PR #66 covers exact configurable allocation, saved policies, and migration. The Family qualification maps the reward command, lifecycle, restoration, and bilingual browser evidence to issue #65 and the retained owner cases.",
+        "blockingDecisions": "Family qualification records the M2 gate. Publication follows the separate release workflow.",
         "copilotChangesAllowed": false
       }
     },

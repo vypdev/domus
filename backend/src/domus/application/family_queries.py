@@ -9,12 +9,14 @@ from domus.application.family_ports import FamilyAllocationEvidence, FamilyLedge
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import Transactions
 from domus.application.recurrence_ports import RecurrenceTimes
+from domus.application.reward_funding import reward_balance
 from domus.application.task_authorization import TaskAccess
 from domus.application.task_ports import TaskCursors
 from domus.domain.calendar_values import CalendarRange
 from domus.domain.identity import HumanIdentity, Permission
 from domus.domain.points import conserved_shares
 from domus.domain.recurrence_time import TimePolicy
+from domus.domain.rewards import RewardSpend
 from domus.domain.storage import JsonDocument
 from domus.domain.task_values import VerificationState
 
@@ -36,6 +38,10 @@ class FamilyReport:
     time_zone: str
     posted_minor: int
     available_minor: int
+    reserved_minor: int
+    spent_in_period_minor: int
+    spending_count: int
+    spending: tuple[RewardSpend, ...]
     earned_minor: int
     pending_verification_minor: int
     pending_posting_minor: int
@@ -84,6 +90,11 @@ class FamilyQueries:
             )
             after = None if cursor is None else self.cursors.decode(binding, cursor)
             posted, earned = unit.points.member_totals(household_id, member_id, start, end)
+            balance = reward_balance(unit, household_id, member_id, posted)
+            spent, spending_count = unit.rewards.spending_totals(
+                household_id, member_id, start, end
+            )
+            spending = unit.rewards.spending(household_id, member_id, start, end, limit=4)
             history = unit.points.member_history(household_id, member_id, after, limit + 1)
             next_cursor = (
                 self.cursors.encode(binding, history[limit - 1].event_id)
@@ -126,8 +137,12 @@ class FamilyQueries:
             return FamilyReport(
                 period,
                 home.time_zone,
-                posted,
-                posted,
+                balance.posted_minor,
+                balance.available_minor,
+                balance.reserved_minor,
+                spent,
+                spending_count,
+                spending,
                 earned,
                 verification,
                 posting,

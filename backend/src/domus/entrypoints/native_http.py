@@ -29,6 +29,7 @@ from domus.entrypoints.http_errors import CALENDAR_RANGE_GUIDANCE, classify
 from domus.entrypoints.ingress_boundary import require_ingress_source
 from domus.entrypoints.openapi import DomusAPI
 from domus.entrypoints.point_allocation_http import create_point_allocation_router
+from domus.entrypoints.reward_http import create_reward_router
 from domus.entrypoints.task_http import TaskHTTPContext, create_task_router
 from domus.entrypoints.ui_bundle import UIBundle
 from domus.entrypoints.ui_http import attach_ui
@@ -102,7 +103,8 @@ class _NativeBoundary(BoundedHTTP):
             and scope["method"] == "GET"
             and (
                 scope["path"].startswith("/api/v1/tasks/")
-                or scope["path"] in ("/api/v1/family", "/api/v1/family/allocation")
+                or scope["path"]
+                in ("/api/v1/family", "/api/v1/family/allocation", "/api/v1/family/rewards")
             )
         ):
             if len(query) > 8192:
@@ -235,6 +237,7 @@ def create_native_app(
     if task_context is not None:
         app.include_router(create_task_router(task_context, security=Depends(security)))
         app.include_router(create_point_allocation_router(task_context, security=Depends(security)))
+        app.include_router(create_reward_router(task_context, security=Depends(security)))
         app.include_router(
             create_family_router(
                 lambda request: task_context(request).family(), security=Depends(security)

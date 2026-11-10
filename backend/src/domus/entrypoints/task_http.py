@@ -14,6 +14,8 @@ from domus.application.point_allocations import AllocationCommands, AllocationQu
 from domus.application.recurrence_commands import RecurrenceCommands
 from domus.application.recurrence_review import RecurrenceReview
 from domus.application.relative_recurrence_commands import RelativeRecurrenceCommands
+from domus.application.reward_commands import RewardAction, RewardCommands
+from domus.application.reward_queries import RewardQueries
 from domus.application.task_category_commands import TaskCategoryCommands
 from domus.application.task_commands import TaskCommands
 from domus.application.task_queries import (
@@ -42,6 +44,7 @@ from domus.application.task_requests import (
     VerifyTask,
 )
 from domus.application.task_reviews import DependencyReviewView
+from domus.domain.storage import Receipt
 from domus.domain.task_material_values import MaterialQuantity
 from domus.domain.task_values import DefinitionState
 from domus.entrypoints.calendar_http import create_calendar_router
@@ -108,6 +111,9 @@ class TaskHTTPContext:
     family: Callable[[], FamilyQueries]
     allocation: Callable[[], AllocationQueries]
     allocation_commands: AllocationCommands
+    rewards: Callable[[], RewardQueries]
+    reward_commands: RewardCommands
+    reward_original: Callable[[RewardAction, str], Receipt]
 
 
 def create_task_router(

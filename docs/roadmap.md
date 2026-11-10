@@ -100,7 +100,7 @@ original requests and exact revisions must survive the shell migration.
 1. Establish the native shared-package SDD, framework-neutral API and real Lit/DOM plus React/Vue/Angular/Svelte consumer fixtures. Then extract reusable Gateway presentation styles/behavior once, with Storybook and versioned artifact acceptance. Record ownership and dependency delivery before claiming extraction.
 2. Adopt that same package for the Domus shell and existing task/administration workflows. Introduce the upper tabs and an actionable Overview as real scoped summaries become available. Test light/dark, EN/ES, narrow/wide, keyboard, reduced motion, Ingress and standalone. Do this before expanding additional bespoke domain screens.
 3. Complete the durable relative lifecycle, shared maintenance budgets, reviewed recurrence changes and protected calendar using the common components. Backend work may continue while the presentation package is prepared.
-4. Complete points, configurable distribution, participation and rewards in the Family experience.
+4. Complete points, configurable distribution, participation and rewards in the Family experience. See the [Family qualification](evidence/family-qualification.md).
 5. Deliver M3 supplies, then M4 automation/HA surfaces, composing their screens from the same package.
 6. Complete M5 integrated overview, usability, recovery and Stable/Edge acceptance. This verifies the established foundation; it is not a late design-system rewrite.
 
