@@ -839,3 +839,140 @@ Keep 100 percent coverage globally and per authored file. Require CI, both actua
 ### 20. References and decisions
 
 Qualifies the linked quantity-correction portion of shopping-management-C17 and exercises original-operation, receipt and shopping-demand invariants.
+
+## Void a physical receipt awaiting Pantry posting
+
+- Status: Draft
+- Owners: Domus maintainers and Shopping Management
+- Scope: Void one tracked purchase receipt before Pantry posting
+- Source baseline: develop at f067b5c788ece813ef2d21f531e1ff03d1376586
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+A shopping manager can void a mistaken physical receipt and record the correct arrival using the existing flow. The original receipt and its attributed void remain visible on the purchase item.
+
+### 2. Problem, current behavior, and evidence
+
+A pending physical receipt cannot be corrected today. Posting a mistaken quantity would create incorrect Pantry stock. The balance cancellation applies to the undelivered quantity, so it cannot correct a receipt.
+
+### 3. Actors, surfaces, and terminology
+
+Household readers can inspect item and receipt history. A shopping manager records arrivals and can void eligible receipts. Inventory managers post eligible tracked receipts to Pantry.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| receipt-void-R1 | Void one entire tracked physical receipt that has no Pantry posting and belongs to a purchase with no balance cancellation. Require a nonblank reason and the current item revision. |
+| receipt-void-R2 | Append an attributed void and update the received quantity, purchase revision and original operation journal atomically. An already voided receipt cannot be posted or voided again. |
+| receipt-void-R3 | Preserve original receipts, the purchased amount, other arrivals and existing Pantry movements. The void moves the recorded quantity from received and awaiting posting back to still due. |
+| receipt-void-R4 | Enforce current permissions for commands and recovery. Qualify legacy data, schema 26 migration, restart, activated restoration and both protected workspaces. |
+
+Corrections after Pantry posting, untracked receipts, canceled purchase balances, financial refunds, returns and edits to the original receipt are outside this increment.
+
+### 5. Current versus proposed product journey
+
+Open physical receipts on a purchase item, including a session item. Review the amount on the mistaken receipt, enter a reason and confirm the void. The voided receipt stays in history and the user can record the correct quantity through the existing receipt form.
+
+### 6. Functional behavior and state model
+
+Select an existing receipt of the given purchase. Check current permission, the purchase revision, tracked status, no balance cancellation, no Pantry movement and no prior void within one write transaction. Require a nonblank reason of at most 240 characters. Subtract the whole receipt quantity from the effective received amount and advance the item revision once. Keep the original receipt with its identity, quantity, actor and time. Link one void with reason, actor and time. Calculate the change from the original stored exact amount.
+
+The pending posting quantity decreases and the amount still due increases by that exact amount. The original purchased amount and the total compatible incoming supply retain their values. A later arrival uses the current purchase revision. A later purchase balance cancellation applies to the then-current undelivered quantity.
+
+### 7. User-facing configuration
+
+Use existing shopping and inventory permissions and base units. No household setting is needed.
+
+### 8. Clean Architecture design
+
+Keep purchase rules in the aggregate and authorize through the existing command journal. Use transaction-scoped Shopping ports and a linked receipt void record. Guard Pantry posting with the same persisted receipt state. Use the existing item detail and shared UI controls.
+
+### 9. UI/UX and content contract
+
+Show the exact quantity on the confirmation, require a reason, and show the voided status, author, reason and time in the original receipt history. Use localized labels in Ingress and standalone. Show the void control only to shoppers for eligible receipts, and remove the Pantry posting action from a voided receipt.
+
+### 10. Failure, recovery, and cleanup
+
+Invalid, stale, denied and competing commands leave the receipt and balances intact. Only one of a void and a competing Pantry posting can commit. An identical replay returns the original operation result, and a changed payload conflicts. A restored operation can be historical.
+
+### 11. Security, permissions, and privacy
+
+Require household.read for queries and current shopping.manage for voiding and its original receipt recovery. Pantry posting retains its current inventory.manage requirement. Apply existing authentication, context, origin and CSRF checks.
+
+### 12. Observability and operational UX
+
+Retain the attributed original and void in receipt history. Use the existing feedback and original request recovery controls. Preserve current audit and operation receipt semantics.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Upgrade a schema 26 database with a session, posted and pending receipts, an existing purchase balance cancellation, and original operations. Preserve prior records and verify interruption rollback, restart and activated restoration with current and historical void receipts.
+
+### 14. Testing strategy and numeric budget
+
+Minimum eight distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| State and UI | 1 | Observable scenarios in the case inventory. |
+| Inventory projection | 1 | Observable scenarios in the case inventory. |
+| Concurrency | 1 | Observable scenarios in the case inventory. |
+| Recovery | 1 | Observable scenarios in the case inventory. |
+| Authorization | 1 | Observable scenarios in the case inventory. |
+| Rejection | 1 | Observable scenarios in the case inventory. |
+| Compatibility | 1 | Observable scenarios in the case inventory. |
+| Workspace | 1 | Observable scenarios in the case inventory. |
+| Total | 8 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| receipt-void-C01 | State and UI | receipt-void-R1, receipt-void-R3 | Void a precise mistaken receipt, retain its original details and attributed reason, then record the correct arrival. |
+| receipt-void-C02 | Inventory projection | receipt-void-R3 | Check effective received, pending posting and still due amounts. Preserve original purchased quantity, other arrivals, stock and incoming supply. |
+| receipt-void-C03 | Concurrency | receipt-void-R2 | Race posting against voiding and two independent voids. Verify one accepted effect and no ledger movement when the void wins. |
+| receipt-void-C04 | Recovery | receipt-void-R2, receipt-void-R4 | Replay the same key, reject a changed payload, and recover current and historical operations through restart and activated restore. |
+| receipt-void-C05 | Authorization | receipt-void-R1, receipt-void-R4 | Reject a bad reason, foreign item or receipt, denied or revoked permission and missing CSRF. |
+| receipt-void-C06 | Rejection | receipt-void-R1, receipt-void-R2 | Reject stale revisions, untracked, posted, canceled-balance and previously voided receipts. Verify write failure rollback. |
+| receipt-void-C07 | Compatibility | receipt-void-R3, receipt-void-R4 | Migrate representative schema 26 data and preserve sessions, previous cancellations and receipts. Check interrupted migration and snapshot integrity. |
+| receipt-void-C08 | Workspace | receipt-void-R1, receipt-void-R3, receipt-void-R4 | Void from the session item detail, verify attribution and receive and post the corrected amount in English and Spanish, Ingress and standalone, on amd64 and ARM64. |
+
+### 15. Documentation and discoverability
+
+[specs/shopping-management.md](shopping-management.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/physical-receipt-void-qualification.md](../docs/evidence/physical-receipt-void-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/infrastructure/sqlite\_shopping.py](../backend/src/domus/infrastructure/sqlite_shopping.py) · [frontend/src/presentation/domus-shopping.ts](../frontend/src/presentation/domus-shopping.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/shopping-management.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/physical-receipt-void-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/infrastructure/sqlite_shopping.py | update |
+| frontend/src/presentation/domus-shopping.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Record four units against a six-unit purchase, void that receipt and then record the three units that arrived. Post the corrected receipt once. Recover the original void and verify that the original receipt stays visible and cannot be posted.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| receipt-void-R1 | receipt-void-C01, receipt-void-C05, receipt-void-C06, receipt-void-C08 |
+| receipt-void-R2 | receipt-void-C03, receipt-void-C04, receipt-void-C06 |
+| receipt-void-R3 | receipt-void-C01, receipt-void-C02, receipt-void-C07, receipt-void-C08 |
+| receipt-void-R4 | receipt-void-C04, receipt-void-C05, receipt-void-C07, receipt-void-C08 |
+
+### 18. Implementation sequence
+
+Add the linked void and transactional command, guard Pantry posting, expose attributed history and qualify the bilingual interaction with migration, recovery and concurrency tests.
+
+### 19. Definition of Done
+
+Keep 100 percent coverage globally and per authored file. Require CI, both actual image architectures, Copilot verification and Bugbot on the same commit. Keep the installed Copilot resources. Releases and deployments require separate authorization.
+
+### 20. References and decisions
+
+Qualifies the pending physical receipt correction in shopping-management-C17, following the purchase balance cancellation accepted in issue #80.
