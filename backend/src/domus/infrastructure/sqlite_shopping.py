@@ -5,7 +5,13 @@ from dataclasses import astuple, dataclass
 
 from domus.domain.errors import StorageFailure
 from domus.domain.inventory import MAX_STOCK_UNITS, BaseUnit, MovementKind
-from domus.domain.shopping import Purchase, PurchaseReceipt
+from domus.domain.shopping import (
+    MAX_SESSION_ITEMS,
+    MIN_SESSION_ITEMS,
+    Purchase,
+    PurchaseReceipt,
+    PurchaseSession,
+)
 from domus.domain.shopping_needs import ShoppingExtra
 from domus.domain.storage import validate_identifier
 from domus.domain.task_values import validate_task_text, validate_task_time
@@ -56,6 +62,26 @@ SHOPPING_EXTRA_STATEMENTS = (
     "CREATE INDEX shopping_active_extras ON shopping_extras(household_id,product_id,position) "
     "WHERE cleared_at IS NULL",
 )
+
+
+SHOPPING_SESSION_TABLES = {"shopping_sessions", "shopping_session_items"}
+SHOPPING_SESSION_STATEMENTS = (
+    "CREATE TABLE shopping_sessions(position INTEGER PRIMARY KEY, household_id TEXT NOT NULL, "
+    "session_id TEXT NOT NULL, member_id TEXT NOT NULL, "
+    "created_at INTEGER NOT NULL CHECK(created_at>=0), UNIQUE(household_id,session_id), "
+    "FOREIGN KEY(household_id,member_id) REFERENCES members(household_id,member_id)) STRICT",
+    "CREATE INDEX shopping_session_history ON shopping_sessions(household_id,position)",
+    "CREATE TABLE shopping_session_items(household_id TEXT NOT NULL, session_id TEXT NOT NULL, "
+    f"ordinal INTEGER NOT NULL CHECK(ordinal>=0 AND ordinal<{MAX_SESSION_ITEMS}), "
+    "purchase_id TEXT NOT NULL, PRIMARY KEY(household_id,session_id,ordinal), "
+    "UNIQUE(household_id,purchase_id), FOREIGN KEY(household_id,session_id) "
+    "REFERENCES shopping_sessions(household_id,session_id), FOREIGN KEY(household_id,purchase_id) "
+    "REFERENCES shopping_purchases(household_id,purchase_id)) STRICT",
+)
+
+
+def _session(row: sqlite3.Row) -> PurchaseSession:
+    return PurchaseSession(row["session_id"], row["member_id"], row["created_at"])
 
 
 def _extra(row: sqlite3.Row) -> ShoppingExtra:
@@ -117,6 +143,50 @@ class SQLiteShopping:
                 "ORDER BY position DESC LIMIT ?",
                 (home, through, limit),
             )
+        )
+
+    def purchase_session(self, home: str, session_id: str) -> PurchaseSession | None:
+        row = self.connection.execute(
+            "SELECT * FROM shopping_sessions WHERE household_id=? AND session_id=?",
+            (home, session_id),
+        ).fetchone()
+        return None if row is None else _session(row)
+
+    def purchase_sessions(
+        self, home: str, through: int, limit: int
+    ) -> tuple[tuple[int, PurchaseSession], ...]:
+        return tuple(
+            (row["position"], _session(row))
+            for row in self.connection.execute(
+                "SELECT * FROM shopping_sessions WHERE household_id=? AND position<=? "
+                "ORDER BY position DESC LIMIT ?",
+                (home, through, limit),
+            )
+        )
+
+    def session_items(self, home: str, session_id: str) -> tuple[Purchase, ...]:
+        return tuple(
+            _purchase(row)
+            for row in self.connection.execute(
+                "SELECT p.* FROM shopping_session_items AS i JOIN shopping_purchases AS p "
+                "USING(household_id,purchase_id) WHERE i.household_id=? AND i.session_id=? "
+                "ORDER BY i.ordinal",
+                (home, session_id),
+            )
+        )
+
+    def add_session(
+        self, home: str, session: PurchaseSession, purchase_ids: tuple[str, ...]
+    ) -> None:
+        self.connection.execute(
+            "INSERT INTO shopping_sessions VALUES (NULL,?,?,?,?)", (home, *astuple(session))
+        )
+        self.connection.executemany(
+            "INSERT INTO shopping_session_items VALUES (?,?,?,?)",
+            (
+                (home, session.session_id, ordinal, item)
+                for ordinal, item in enumerate(purchase_ids)
+            ),
         )
 
     def outstanding(self, home: str, product_id: str) -> int:
@@ -215,6 +285,20 @@ class SQLiteShopping:
                 (home, home, after, limit),
             )
         )
+
+
+def verify_shopping_sessions(connection: sqlite3.Connection) -> None:
+    shopping = SQLiteShopping(connection)
+    for row in connection.execute("SELECT * FROM shopping_sessions"):
+        session = _session(row)
+        validate_identifier(session.session_id)
+        validate_task_time(session.created_at)
+        items = shopping.session_items(row["household_id"], session.session_id)
+        if not MIN_SESSION_ITEMS <= len(items) <= MAX_SESSION_ITEMS or any(
+            (item.member_id, item.created_at) != (session.member_id, session.created_at)
+            for item in items
+        ):
+            raise StorageFailure("invalid_shopping_records")
 
 
 def verify_shopping_extras(connection: sqlite3.Connection) -> None:

@@ -613,6 +613,67 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(stock.getByText('Extra manual retirado.', {exact:true})).toBeVisible();
     await expect(listedOil.getByText('2,999996 mililitros', {exact:true})).toBeVisible();
 
+    const sessionCsrf = await page.request.get(base + 'api/v1/auth/csrf');
+    expect(sessionCsrf.ok()).toBe(true);
+    const sessionToken = (await sessionCsrf.json()).csrf_token;
+    const inventoryWrite = async (key:string, data:object) => {
+      const response = await page.request.post(inventoryCommands, {data,headers:{
+        Origin:origin, 'X-Domus-Context':contextHeader, 'X-CSRF-Token':sessionToken, 'Idempotency-Key':key,
+      }});
+      expect(response.ok(), await response.text()).toBe(true);
+      return (await response.json()).result;
+    };
+    const flour = await inventoryWrite('session-flour', {action:'inventory.register-product',name:'Session flour',base_unit:'gram'});
+    await inventoryWrite('session-flour-extra', {action:'shopping.add-extra',product_id:flour.product_id,name:null,quantity:'3'});
+    await inventoryWrite('session-lemons', {action:'shopping.add-extra',product_id:null,name:'Session lemons',quantity:'2'});
+    await stock.getByRole('button', {name:'Actualizar inventario'}).click();
+    for (const name of ['Session flour','Session lemons']) {
+      const item = shared.getByRole('listitem').filter({has:page.getByText(name,{exact:true})});
+      await item.getByRole('button', {name:'Añadir a la sesión de compra'}).click();
+    }
+    const draftSession = shared.getByRole('form', {name:'Revisar sesión de compra'});
+    await draftSession.getByRole('textbox', {name:'Session flour · gramos'}).fill('2,000001');
+    await draftSession.getByRole('textbox', {name:'Session lemons · unidades'}).fill('1');
+    let sessionKey = '';
+    let sessionId = '';
+    await page.route(inventoryCommands, async route => {
+      sessionKey = route.request().headers()['idempotency-key'];
+      const committed = await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(committed.status()).toBe(200);
+      const {result} = await committed.json();
+      sessionId = result.session_id;
+      expect(result.purchase_ids).toHaveLength(2);
+      await route.abort('connectionclosed');
+    });
+    await draftSession.getByRole('button', {name:'Registrar sesión de compra'}).click();
+    await expect(stock.getByText(/El resultado está sin confirmar/u)).toBeVisible();
+    await page.unroute(inventoryCommands);
+    await reopenInventory('en');
+    const originalSession = page.waitForResponse(base + 'api/v1/inventory/requests/shopping.record-session/' + sessionKey);
+    await stock.getByRole('button', {name:'Recover original request'}).click();
+    const recoveredSession = await originalSession;
+    expect(recoveredSession.ok()).toBe(true);
+    expect((await recoveredSession.json()).result.session_id).toBe(sessionId);
+    await expect(stock.getByText('Purchase session recorded.', {exact:true})).toBeVisible();
+    await shopping.getByRole('button', {name:'Show recorded session'}).click();
+    const session = shopping.getByRole('region', {name:/^Session items · /u});
+    await expect(session.getByRole('heading')).toBeFocused();
+    const flourItem = session.getByRole('listitem').filter({hasText:'Session flour'});
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','0 grams','2.000001 grams','0 grams']);
+    await expect(session.getByText('Session lemons',{exact:true})).toBeVisible();
+    await flourItem.getByRole('button', {name:'Show physical receipts'}).click();
+    const flourReceipts = shopping.getByRole('region', {name:'Physical receipts · Session flour'});
+    await flourReceipts.getByRole('textbox', {name:'Quantity received'}).fill('1.25');
+    await flourReceipts.getByRole('button', {name:'Record physical receipt'}).click();
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.25 grams','0.750001 grams','1.25 grams']);
+    await flourReceipts.getByRole('button', {name:'Post to Pantry'}).click();
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.25 grams','0.750001 grams','0 grams']);
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    const sessionHistory = shopping.getByRole('region', {name:'Sesiones de compra',exact:true});
+    await sessionHistory.getByRole('button', {name:'Mostrar sesiones de compra'}).click();
+    await sessionHistory.getByRole('button', {name:'Mostrar artículos de la sesión'}).click();
+    await expect(shopping.getByRole('region', {name:/^Artículos de la sesión · /u}).getByText('0,750001 gramos',{exact:true})).toBeVisible();
+
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});
     await expect(end).toBeVisible();

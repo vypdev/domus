@@ -94,6 +94,15 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route.startsWith('inventory/purchases?')) raw = JSON.stringify({
       purchases:[], next_cursor:route.includes('cursor=')?null:'older-purchases',
     });
+    else if (route.startsWith('inventory/purchase-sessions?')) raw = JSON.stringify({
+      sessions:[],next_cursor:route.includes('cursor=')?null:'older-sessions',
+    });
+    else if (route === 'inventory/purchase-sessions/session') {
+      const session = {session_id:'session',member_id:'member',author_alias:null,created_at:'100'};
+      const item = {purchase_id:'a',product_id:null,name:'Apples',base_unit:'piece',purchased:'2',
+        received:'0',remaining:'2',pending_stock:'0',revision:'1',member_id:'member',author_alias:null,created_at:'100'};
+      raw = JSON.stringify({session,items:[item,{...item,purchase_id:'b',name:'Bread'}]});
+    }
     else if (route.startsWith('inventory/shopping-list/product/sources?')) raw = JSON.stringify({
       item:{product_id:'product',extra_id:null,name:'Salt',base_unit:'gram',pantry:'0',
         tasks:'0',manual:'0',total:'0',attribution:null},
@@ -710,6 +719,13 @@ test('Inventory owns the current protected destination and accepts only closed u
   emit({type:'more-shopping-sources'});
   await vi.waitFor(() => expect(app.inventory?.shoppingSources?.cursor).toBeNull());
   expect(decodeInventoryIntent({type:'shopping-sources',productId:'../outside'})).toBeNull();
+  emit({type:'purchase-sessions'});
+  await vi.waitFor(() => expect(app.inventory?.purchaseSessions?.cursor).toBe('older-sessions'));
+  emit({type:'more-purchase-sessions'});
+  await vi.waitFor(() => expect(app.inventory?.purchaseSessions?.cursor).toBeNull());
+  emit({type:'purchase-session',sessionId:'session'});
+  await vi.waitFor(() => expect(app.inventory?.purchaseSession?.session.id).toBe('session'));
+  expect(decodeInventoryIntent({type:'purchase-session',sessionId:'../outside'})).toBeNull();
   expect(decodeInventoryIntent({type:'purchase-receipts',purchaseId:'../outside'})).toBeNull();
   expect(decodeInventoryIntent({type:'submit',command:{action:'inventory.intake',product_id:'product',quantity:'1',location:'foreign'}})).toBeNull();
   navigate('#tasks');

@@ -5,6 +5,24 @@ from dataclasses import dataclass, replace
 from domus.domain.errors import Conflict
 from domus.domain.inventory import BaseUnit
 from domus.domain.storage import JsonDocument
+from domus.domain.task_material_values import MaterialQuantity
+
+MIN_SESSION_ITEMS = 2
+MAX_SESSION_ITEMS = 16
+
+
+@dataclass(frozen=True, slots=True)
+class SessionSelection:
+    product_id: str | None
+    extra_id: str | None
+    quantity: MaterialQuantity
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseSession:
+    session_id: str
+    member_id: str
+    created_at: int
 
 
 @dataclass(frozen=True, slots=True)

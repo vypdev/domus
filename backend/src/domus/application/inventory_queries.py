@@ -17,7 +17,7 @@ from domus.application.task_ports import TaskCursors
 from domus.domain.errors import NotFound
 from domus.domain.identity import HumanIdentity, Permission, allows, effective_role
 from domus.domain.inventory import PANTRY, BaseUnit, MovementKind, stock_quantity
-from domus.domain.shopping import Purchase
+from domus.domain.shopping import Purchase, PurchaseSession
 from domus.domain.storage import JsonDocument
 
 
@@ -100,6 +100,26 @@ class PurchasesView:
 
 
 @dataclass(frozen=True, slots=True)
+class PurchaseSessionView:
+    session_id: str
+    member_id: str
+    author_alias: str | None
+    created_at: str
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseSessionsView:
+    sessions: tuple[PurchaseSessionView, ...]
+    next_cursor: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseSessionDetail:
+    session: PurchaseSessionView
+    items: tuple[PurchaseView, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class PhysicalReceiptView:
     receipt_id: str
     quantity: str
@@ -132,6 +152,14 @@ def _purchase_view(unit: UnitOfWork, home: str, purchase: Purchase) -> PurchaseV
         purchase.member_id,
         author.alias,
         str(purchase.created_at),
+    )
+
+
+def _session_view(unit: UnitOfWork, home: str, session: PurchaseSession) -> PurchaseSessionView:
+    author = unit.presentations.get(home, session.member_id)
+    assert author is not None
+    return PurchaseSessionView(
+        session.session_id, session.member_id, author.alias, str(session.created_at)
     )
 
 
@@ -279,6 +307,35 @@ class InventoryQueries:
             )
             page = tuple(_purchase_view(unit, home, purchase) for _, purchase in rows[:limit])
             return PurchasesView(page, next_cursor)
+
+    def purchase_sessions(self, *, limit: int, cursor: str | None) -> PurchaseSessionsView:
+        with self.store.read() as unit:
+            home, _, binding = self._access(unit, "shopping-sessions-v1", limit, None)
+            through = 2**63 - 1 if cursor is None else int(self.cursors.decode(binding, cursor))
+            rows = unit.shopping.purchase_sessions(home, through, limit + 1)
+            next_cursor = (
+                self.cursors.encode(binding, str(rows[limit - 1][0] - 1))
+                if len(rows) > limit
+                else None
+            )
+            return PurchaseSessionsView(
+                tuple(_session_view(unit, home, session) for _, session in rows[:limit]),
+                next_cursor,
+            )
+
+    def purchase_session(self, session_id: str) -> PurchaseSessionDetail:
+        with self.store.read() as unit:
+            home, _, _ = self._access(unit, "shopping-session-v1", 0, session_id)
+            session = unit.shopping.purchase_session(home, session_id)
+            if session is None:
+                raise NotFound("shopping_session_missing")
+            return PurchaseSessionDetail(
+                _session_view(unit, home, session),
+                tuple(
+                    _purchase_view(unit, home, purchase)
+                    for purchase in unit.shopping.session_items(home, session_id)
+                ),
+            )
 
     def physical_receipts(
         self, purchase_id: str, *, limit: int, cursor: str | None

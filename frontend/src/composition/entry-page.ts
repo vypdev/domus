@@ -183,14 +183,16 @@ export function decodeReviewIntent(value: unknown): ReviewIntent | null {
 
 export function decodeInventoryIntent(value: unknown): InventoryIntent | null {
   try {
-    const {type} = fields(value, ['type'], ['command', 'productId', 'purchaseId']);
+    const {type} = fields(value, ['type'], ['command', 'productId', 'purchaseId', 'sessionId']);
     if (type === 'submit') return {type, command: inventoryCommand(fields(value, ['type','command'], []).command)};
     if (type === 'history' || type === 'shopping-sources') return {type, productId: identifier(fields(value, ['type','productId'], []).productId)};
     if (type === 'purchase-receipts') return {type, purchaseId: identifier(fields(value, ['type','purchaseId'], []).purchaseId)};
+    if (type === 'purchase-session') return {type, sessionId: identifier(fields(value, ['type','sessionId'], []).sessionId)};
     fields(value, ['type'], []);
     check(type === 'refresh' || type === 'more' || type === 'recover' || type === 'more-history' || type === 'close-history'
       || type === 'purchases' || type === 'more-purchases' || type === 'more-purchase-receipts'
-      || type === 'shopping-list' || type === 'more-shopping-list' || type === 'more-shopping-sources');
+      || type === 'shopping-list' || type === 'more-shopping-list' || type === 'more-shopping-sources'
+      || type === 'purchase-sessions' || type === 'more-purchase-sessions');
     return {type};
   } catch {return null;}
 }
@@ -397,6 +399,9 @@ export function mountEntry(page: EntryPage): PageMount {
       if (intent?.type === 'more-purchases') await inventoryController.morePurchases();
       if (intent?.type === 'purchase-receipts') await inventoryController.showPurchaseReceipts(intent.purchaseId);
       if (intent?.type === 'more-purchase-receipts') await inventoryController.morePurchaseReceipts();
+      if (intent?.type === 'purchase-sessions') await inventoryController.showPurchaseSessions();
+      if (intent?.type === 'more-purchase-sessions') await inventoryController.showPurchaseSessions(true);
+      if (intent?.type === 'purchase-session') await inventoryController.showPurchaseSession(intent.sessionId);
       if (intent?.type === 'shopping-list') await inventoryController.showShoppingList();
       if (intent?.type === 'more-shopping-list') await inventoryController.showShoppingList(true);
       if (intent?.type === 'shopping-sources') await inventoryController.showShoppingSources(intent.productId);

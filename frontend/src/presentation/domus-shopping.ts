@@ -6,7 +6,7 @@ import {registerCard} from '@vypdev/ha-ui/card';
 import {cardState} from '@vypdev/ha-ui/card-contracts';
 import type {InventoryState} from '../application/inventory-controller';
 import {intakeQuantity, stockUnits} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, PhysicalReceipt, ProductStock, Purchase, PurchaseReceipts} from '../domain/inventory';
+import type {BaseUnit, InventoryCommand, PhysicalReceipt, ProductStock, Purchase, PurchaseReceipts, PurchaseSession} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
@@ -14,8 +14,10 @@ import {instant} from './messages';
 import type {Language} from './messages';
 import './domus-shopping-list';
 
-export type ShoppingIntent = {readonly type: 'purchases' | 'more-purchases' | 'more-purchase-receipts'}
+export type ShoppingIntent = {readonly type: 'purchases' | 'more-purchases' | 'more-purchase-receipts'
+    | 'purchase-sessions' | 'more-purchase-sessions'}
   | {readonly type: 'purchase-receipts'; readonly purchaseId: string}
+  | {readonly type: 'purchase-session'; readonly sessionId: string}
   | {readonly type: 'submit'; readonly command: InventoryCommand};
 
 export class DomusShopping extends LitElement {
@@ -26,7 +28,7 @@ export class DomusShopping extends LitElement {
     .shopping, form, label, li {display:grid;gap:8px}
     ol {display:grid;gap:12px;margin:0;padding:0;list-style:none}
     li + li {padding-block-start:8px;border-block-start:1px solid var(--line)}
-    h4, p, dl {margin:0} dl {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+    h4, h5, p, dl {margin:0} dl {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
     dd {margin:0} dt {font-weight:650}
     input,select {font:inherit;color:inherit;background:var(--surface);padding:8px;border:1px solid var(--line);
       border-radius:8px;min-width:0}
@@ -49,10 +51,12 @@ export class DomusShopping extends LitElement {
 
   protected updated(changed: PropertyValues<this>): void {
     if (!changed.has('view')) return;
-    const previous = changed.get('view'), {result, purchaseReceipts} = this.view;
+    const previous = changed.get('view'), {result, purchaseReceipts, purchaseSession} = this.view;
+    if (purchaseSession && purchaseSession.session.id !== previous?.purchaseSession?.session.id)
+      this.renderRoot.querySelector<HTMLElement>('#purchase-session-title')?.focus();
     if (purchaseReceipts && purchaseReceipts.purchase.id !== previous?.purchaseReceipts?.purchase.id) {
       this.arrivalError = null;
-      this.renderRoot.querySelector<HTMLElement>('h4')?.focus();
+      this.renderRoot.querySelector<HTMLElement>('#purchase-receipts-title')?.focus();
       this.renderRoot.querySelector<HTMLFormElement>('#arrival-form')?.reset();
     }
     if (result?.kind === 'committed' && result !== previous?.result) {
@@ -170,6 +174,31 @@ export class DomusShopping extends LitElement {
     </section>`;
   }
 
+  private sessionLabel(session: PurchaseSession): string {
+    return (session.authorAlias ?? session.memberId) + ' · ' + instant(Number(session.createdAt), this.language);
+  }
+
+  private sessionHistory(busy: boolean) {
+    const {purchaseSessions, purchaseSession, result} = this.view;
+    const recent = result?.kind === 'committed' ? result.sessionId : undefined;
+    return html`<section class="shopping" aria-labelledby="session-history-title">
+      <h4 id="session-history-title">${this.text('sessionHistory')}</h4>
+      ${recent ? this.button('showRecordedSession', busy, {type:'purchase-session',sessionId:recent}) : nothing}
+      ${purchaseSessions == null ? this.button('showSessions', busy, {type:'purchase-sessions'}) : html`
+        ${purchaseSessions.items.length === 0 ? html`<p>${this.text('emptySessions')}</p>` : html`<ol>
+          ${purchaseSessions.items.map(session => html`<li><strong>${this.sessionLabel(session)}</strong>
+            ${this.button('showSessionItems', busy, {type:'purchase-session',sessionId:session.id})}</li>`)}
+        </ol>`}
+        ${purchaseSessions.cursor === null ? nothing : this.button('moreSessions', busy, {type:'more-purchase-sessions'})}
+      `}
+      ${purchaseSession == null ? nothing : html`<section class="shopping" aria-labelledby="purchase-session-title">
+        <h5 id="purchase-session-title" tabindex="-1">${this.text('sessionItems')} · ${this.sessionLabel(purchaseSession.session)}</h5>
+        <ol>${purchaseSession.items.map(item => html`<li><strong>${item.name}</strong>${this.facts(item)}
+          ${this.button('showReceipts', busy, {type:'purchase-receipts',purchaseId:item.id})}</li>`)}</ol>
+      </section>`}
+    </section>`;
+  }
+
   protected render() {
     const {report, purchases, purchaseReceipts, busy, pending, scope} = this.view;
     const blocked = busy || pending || scope.readOnly;
@@ -178,6 +207,7 @@ export class DomusShopping extends LitElement {
     return html`<vyp-ha-card .state=${cardState({title:this.text('shopping'), headingLevel:3})}>
       <div class="shopping">
       <domus-shopping-list .view=${this.view} .language=${this.language}></domus-shopping-list>
+      ${this.sessionHistory(busy)}
       ${purchases == null ? this.button('showPurchases', busy, {type:'purchases'}) : html`
         ${mayShop ? this.purchaseForm(report!.products, blocked) : nothing}
         ${purchases.items.length === 0 ? html`<p>${this.text('emptyPurchases')}</p>` : html`<ol>
@@ -186,8 +216,8 @@ export class DomusShopping extends LitElement {
           </li>`)}
         </ol>`}
         ${purchases.cursor === null ? nothing : this.button('olderPurchases', busy, {type:'more-purchases'})}
-        ${purchaseReceipts == null ? nothing : this.detail(purchaseReceipts, mayShop, mayPost, blocked, busy)}
       `}
+      ${purchaseReceipts == null ? nothing : this.detail(purchaseReceipts, mayShop, mayPost, blocked, busy)}
       </div>
     </vyp-ha-card>`;
   }
