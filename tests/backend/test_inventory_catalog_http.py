@@ -39,6 +39,7 @@ def test_catalog_is_scoped_bounded_and_writes_require_current_grants(api):
     assert get(api).json() == {
         "location_id": "pantry",
         "may_manage": True,
+        "may_shop": True,
         "products": [],
         "next_cursor": None,
     }
@@ -159,6 +160,8 @@ def test_exact_stock_capacity_rejects_partial_posting_and_forced_binding(
             "recorded": maximum,
             "reserved": "0",
             "available": maximum,
+            "outstanding_purchase": "0",
+            "shopping_needed": "0",
             "replenishment": {
                 "source_id": product_id,
                 "minimum": "0",

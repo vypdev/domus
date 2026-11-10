@@ -1,8 +1,9 @@
 /** Bounded same-origin Inventory reads and exact original-command recovery. */
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
-import {BASE_UNITS, MOVEMENT_KINDS, STOCK_REASON_LIMIT, inventoryCommand, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
-import type {InventoryCommand, InventoryReport, MovementHistory, ProductStock, Replenishment, StockMovement} from '../domain/inventory';
+import {BASE_UNITS, MOVEMENT_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
+import type {InventoryCommand, InventoryReport, MovementHistory, ProductStock, Purchase, Purchases, PurchaseReceipts, Replenishment, StockMovement} from '../domain/inventory';
+import {revisionValue} from '../domain/administration';
 import {taskQuantity, taskTime} from '../domain/tasks';
 import {BoundedHTTP} from './http-transport';
 import type {FetchTransport} from './http-transport';
@@ -26,33 +27,45 @@ function replenishment(value: unknown, id: string, unit: ProductStock['unit'], a
 }
 
 function product(value: unknown): ProductStock {
-  const row = fields(value, ['product_id','name','base_unit','recorded','reserved','available','replenishment'], []);
+  const row = fields(value, ['product_id','name','base_unit','recorded','reserved','available',
+    'replenishment','outstanding_purchase','shopping_needed'], []);
   const id = identifier(row.product_id);
   const unit = choice(row.base_unit, BASE_UNITS), recorded = taskQuantity(row.recorded);
   const reserved = taskQuantity(row.reserved), available = taskQuantity(row.available);
   check(stockUnits(recorded) === stockUnits(reserved) + stockUnits(available));
   check(unit !== 'piece' || [recorded, reserved, available].every(amount => !amount.includes('.')));
+  const policy = replenishment(row.replenishment, id, unit, available);
+  const outstandingPurchase = taskQuantity(row.outstanding_purchase), shoppingNeeded = taskQuantity(row.shopping_needed);
+  const gap = stockUnits(policy.needed) - stockUnits(outstandingPurchase);
+  check(stockUnits(shoppingNeeded) === (gap < 0n ? 0n : gap));
+  check(unit !== 'piece' || !outstandingPurchase.includes('.'));
   return {id, name: text(row.name, 160), unit, recorded, reserved, available,
-    replenishment: replenishment(row.replenishment, id, unit, available)};
+    replenishment:policy, outstandingPurchase, shoppingNeeded};
 }
 
 function report(value: unknown): InventoryReport {
-  const row = fields(value, ['location_id','may_manage','products','next_cursor'], []);
+  const row = fields(value, ['location_id','may_manage','may_shop','products','next_cursor'], []);
   check(row.location_id === 'pantry' && Array.isArray(row.products) && row.products.length <= 25);
   const products = row.products.map(product);
   check(new Set(products.map(item => item.id)).size === products.length);
-  return {mayManage: boolean(row.may_manage), products, cursor: row.next_cursor === null ? null : text(row.next_cursor, 512)};
+  return {mayManage: boolean(row.may_manage), mayShop:boolean(row.may_shop), products,
+    cursor: cursorValue(row.next_cursor)};
 }
 
 function nullableId(value: unknown): string | null {return value === null ? null : identifier(value);}
+function cursorValue(value: unknown): string | null {return value === null ? null : text(value, 512);}
+
+function attribution(row: Record<string, unknown>) {
+  return {memberId:identifier(row.member_id),
+    authorAlias:row.author_alias === null ? null : text(row.author_alias, 80), createdAt:taskTime(row.created_at)};
+}
 
 function movement(value: unknown): StockMovement {
   const row = fields(value, ['movement_id','quantity','kind','member_id','author_alias','created_at',
     'reason','task_occurrence_id','corrects','corrected_by'], []);
   return {
     id: identifier(row.movement_id), quantity: signedQuantity(row.quantity), kind: choice(row.kind, MOVEMENT_KINDS),
-    memberId: identifier(row.member_id), authorAlias: row.author_alias === null ? null : text(row.author_alias, 80),
-    createdAt: taskTime(row.created_at), reason: row.reason === null ? null : text(row.reason, STOCK_REASON_LIMIT),
+    ...attribution(row), reason: row.reason === null ? null : text(row.reason, STOCK_REASON_LIMIT),
     occurrenceId: nullableId(row.task_occurrence_id), corrects: nullableId(row.corrects), correctedBy: nullableId(row.corrected_by),
   };
 }
@@ -63,7 +76,42 @@ function history(value: unknown, productId: string): MovementHistory {
   const movements = row.movements.map(movement);
   check(new Set(movements.map(item => item.id)).size === movements.length);
   return {productId, productName: text(row.product_name, 160), unit: choice(row.base_unit, BASE_UNITS),
-    movements, cursor: row.next_cursor === null ? null : text(row.next_cursor, 512)};
+    movements, cursor: cursorValue(row.next_cursor)};
+}
+
+function purchase(value: unknown): Purchase {
+  const row = fields(value, ['purchase_id','product_id','name','base_unit','purchased','received','remaining',
+    'pending_stock','revision','member_id','author_alias','created_at'], []);
+  const productId = nullableId(row.product_id), unit = choice(row.base_unit, BASE_UNITS);
+  const purchased = positiveQuantity(row.purchased), received = taskQuantity(row.received);
+  const remaining = taskQuantity(row.remaining), pendingStock = taskQuantity(row.pending_stock);
+  check(stockUnits(purchased) === stockUnits(received) + stockUnits(remaining));
+  check(stockUnits(pendingStock) <= stockUnits(received));
+  check(productId !== null || (unit === 'piece' && pendingStock === '0'));
+  check(unit !== 'piece' || [purchased, received, remaining, pendingStock].every(amount => !amount.includes('.')));
+  return {id:identifier(row.purchase_id), productId, name:text(row.name, 160), unit, purchased, received, remaining,
+    pendingStock, revision:revisionValue(row.revision), ...attribution(row)};
+}
+
+function purchases(value: unknown): Purchases {
+  const row = fields(value, ['purchases','next_cursor'], []);
+  check(Array.isArray(row.purchases) && row.purchases.length <= 25);
+  const items = row.purchases.map(purchase);
+  check(new Set(items.map(item => item.id)).size === items.length);
+  return {items, cursor:cursorValue(row.next_cursor)};
+}
+
+function purchaseReceipts(value: unknown, purchaseId: string): PurchaseReceipts {
+  const row = fields(value, ['purchase','receipts','next_cursor'], []);
+  const selected = purchase(row.purchase);
+  check(selected.id === purchaseId && Array.isArray(row.receipts) && row.receipts.length <= 25);
+  const items = row.receipts.map(value => {
+    const entry = fields(value, ['receipt_id','quantity','member_id','author_alias','created_at','movement_id'], []);
+    return {id:identifier(entry.receipt_id), quantity:positiveQuantity(entry.quantity), ...attribution(entry),
+      movementId:nullableId(entry.movement_id)};
+  });
+  check(new Set(items.map(item => item.id)).size === items.length);
+  return {purchase:selected, items, cursor:cursorValue(row.next_cursor)};
 }
 
 function receipt(value: unknown, command: InventoryCommand): InventoryResult {
@@ -82,6 +130,21 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
     check(result.product_id === command.product_id && result.minimum === command.minimum && result.target === command.target);
     check(BigInt(replenishmentRevision(result.revision)) === BigInt(command.expected_revision) + 1n);
     return {kind, operationId, productId: command.product_id, movement: null, replenishmentSaved:true};
+  }
+  if (command.action === 'shopping.purchase' || command.action === 'shopping.receive' || command.action === 'shopping.post-receipt') {
+    const keys = command.action === 'shopping.purchase' ? ['purchase_id']
+      : command.action === 'shopping.receive' ? ['purchase_id','receipt_id'] : ['purchase_id','receipt_id','movement_id'];
+    const result = fields(row.result, keys, []);
+    const purchaseId = identifier(result.purchase_id);
+    if (command.action !== 'shopping.purchase') {
+      check(purchaseId === command.purchase_id);
+      identifier(result.receipt_id);
+    }
+    if (command.action === 'shopping.post-receipt') {
+      check(result.receipt_id === command.receipt_id);
+      identifier(result.movement_id);
+    }
+    return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
   }
   const action = command.action;
   const result = fields(row.result, ['product_id','movement_id','base_unit','quantity'],
@@ -104,24 +167,39 @@ function fault(value: unknown): InventoryError {
   return INVENTORY_ERRORS.some(known => known === code) ? code : 'rejected';
 }
 
+function pageQuery(cursor: string | null): string {
+  const query = new URLSearchParams({limit:'25'});
+  if (cursor !== null) query.set('cursor', text(cursor, 512));
+  return '?' + query.toString();
+}
+
 export class HttpInventoryServer implements InventoryServer {
   private readonly network: BoundedHTTP;
   constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
 
   read(scope: InventoryScope, cursor: string | null) {
     return this.network.owned(async signal => {
-      const query = new URLSearchParams({limit: '25'});
-      if (cursor !== null) query.set('cursor', text(cursor, 512));
-      return report(await this.network.get(BASE + '?' + query.toString(), scope.context, signal));
+      return report(await this.network.get(BASE + pageQuery(cursor), scope.context, signal));
     });
   }
 
   history(scope: InventoryScope, productId: string, cursor: string | null) {
     return this.network.owned(async signal => {
-      const query = new URLSearchParams({limit: '25'});
-      if (cursor !== null) query.set('cursor', text(cursor, 512));
-      const route = BASE + '/products/' + identifier(productId) + '/movements?' + query.toString();
+      const route = BASE + '/products/' + identifier(productId) + '/movements' + pageQuery(cursor);
       return history(await this.network.get(route, scope.context, signal), productId);
+    });
+  }
+
+  purchases(scope: InventoryScope, cursor: string | null) {
+    return this.network.owned(async signal => {
+      return purchases(await this.network.get(BASE + '/purchases' + pageQuery(cursor), scope.context, signal));
+    });
+  }
+
+  purchaseReceipts(scope: InventoryScope, purchaseId: string, cursor: string | null) {
+    return this.network.owned(async signal => {
+      const route = BASE + '/purchases/' + identifier(purchaseId) + '/receipts' + pageQuery(cursor);
+      return purchaseReceipts(await this.network.get(route, scope.context, signal), purchaseId);
     });
   }
 

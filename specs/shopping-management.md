@@ -289,3 +289,140 @@ These are internal implementation steps within the first integrated release; the
 Primary sources: [Copilot standard](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/README.md), [original template](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/_template.md), and the linked [reference investigation](../docs/reference-investigation.md).
 
 Confirmed owner choices and unresolved proposals are separated in [decisions](../docs/decisions.md). [Issue #2](https://github.com/vypdev/domus/issues/2) tracks the documentation foundation. The [adoption note](../docs/copilot-adoption.md) records the current catalog evidence limitation. Optional future depth remains explicitly deferred in the product vision; the gateway's installation and MCP internals are outside Domus scope.
+
+## Protected shopping purchases and partial receipts
+
+- Status: Draft
+- Owners: Domus maintainers and Shopping Management
+- Scope: Record one-item household purchases, partial receipts and tracked Pantry postings
+- Source baseline: develop at 1c88bb4ee84771644b2135efcbeb5755c9538830
+- Open decisions blocking readiness: none for this slice
+
+### 1. Executive summary
+
+Provide one shared Shopping section in the protected Inventory workspace. Record a purchase, confirm quantities as they physically arrive, and post each tracked receipt to Pantry as a separate durable action.
+
+### 2. Problem, current behavior, and evidence
+
+Develop has a protected Pantry catalogue, an append-only stock ledger and per-product replenishment. A stock intake cannot distinguish a purchase, an arrival, and a stock posting. Extend specs/shopping-management.md with a bounded implementation slice.
+
+### 3. Actors, surfaces, and terminology
+
+Current household readers see purchases and physical receipt history. A shopping manager records purchases and physical receipts. An inventory manager posts tracked receipts into Pantry. A pending posting is an already recorded physical receipt with no linked stock movement.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| shopping-receipts-R1 | Record an attributed single-item purchase for a current Pantry product or an untracked free-text item. Show purchased, received, remaining and pending stock amounts and retain attributed receipts. |
+| shopping-receipts-R2 | Validate exact positive quantities and revisions in the same transaction as each write. A partial physical receipt cannot exceed the remaining purchased amount. Free-text receipt records do not create Inventory bindings or movements. |
+| shopping-receipts-R3 | Post each tracked receipt once through the existing Pantry ledger. A rejected posting keeps the physical receipt pending. Replay returns the original result and a changed payload conflicts. |
+| shopping-receipts-R4 | Allow one outstanding tracked purchase per product. Subtract compatible open supply from the existing Pantry recommendation without mutating stock, reservations or task effects. |
+| shopping-receipts-R5 | Apply current household and operation permissions to reads, writes and recovery. Preserve legacy data and purchase evidence through upgrade, restart and restore. Qualify both deployments and languages. |
+
+Multi-list demand planning, manual demand consolidation and task demand allocation, purchase sessions, prices, refunds, package conversions, and external buying are separate increments.
+
+### 5. Current versus proposed product journey
+
+A member opens Shopping within Inventory. They choose a Pantry product or enter a free-text item and record the quantity already bought. Later, they record the amount that arrived. They can still see the outstanding amount. An authorized stock manager posts each tracked arrival and can inspect its movement link.
+
+### 6. Functional behavior and state model
+
+A purchase identifies the household, immutable item and quantity, shopper and timestamp. A tracked purchase is open while quantity is due or awaiting stock posting. A free-text purchase uses whole pieces and finishes when fully received. Each physical receipt is attributed and stores its own quantity and posting state. A stock posting has a unique movement link. Stock corrections continue to be separately attributed ledger facts. Derive the remaining Pantry recommendation from the existing exact replenishment projection minus the open purchase's unposted amount, floored at zero. A purchase alone never changes recorded stock. Physical receipt and stock posting each commit independently.
+
+### 7. User-facing configuration
+
+Use the existing product base unit. Pieces and untracked items use whole quantities. Grams and millilitres retain the existing precision and bounds. No monetary configuration is needed for this slice.
+
+### 8. Clean Architecture design
+
+Keep exact quantity and transition rules at the domain or application boundary. Store purchase and receipt records through transaction-scoped ports. Reuse Inventory's ledger writer, command authorization, idempotency journal and protected HTTP compositions. Presentation uses shared HA UI components and displays server-authorized state.
+
+### 9. UI/UX and content contract
+
+Show purchase and arrival amounts distinctly, including amounts awaiting stock posting. Use accessible controls for purchase, partial receipt and posting. Provide English and Spanish labels in Ingress and standalone. A pending operation exposes safe recovery by the original key.
+
+### 10. Failure, recovery, and cleanup
+
+An excessive or stale receipt does not change records or balances. An over-capacity or interrupted stock posting leaves the durable physical receipt pending. Retry posting when space is available. Return original command evidence on retry and distinguish historical results after restoration.
+
+### 11. Security, permissions, and privacy
+
+Derive the household, actor and tracked product binding from current server context. Reads require household.read. Purchases and physical receipts require shopping.manage. Posting requires inventory.manage. Writes retain the existing origin, session and CSRF controls. A client-supplied identifier cannot select a different household or warehouse.
+
+### 12. Observability and operational UX
+
+Use the existing audit and original-operation journal. Show receipt identity, actor, date and linked movement in history with safe status and error messages.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Verify upgrade from representative schema 22 on develop. Preserve Pantry products, policies, stock, task reservations and existing receipts. Exercise restart and activated snapshot restore with purchases, pending physical receipts and posted movements. Both images follow the established compatibility checks.
+
+### 14. Testing strategy and numeric budget
+
+Minimum nine distinct acceptance cases in this slice.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Shopping workflow | 2 | Observable scenarios in the case inventory. |
+| Exact quantities | 1 | Observable scenarios in the case inventory. |
+| Concurrency and recovery | 2 | Observable scenarios in the case inventory. |
+| Replenishment | 1 | Observable scenarios in the case inventory. |
+| Authorization | 1 | Observable scenarios in the case inventory. |
+| Compatibility | 1 | Observable scenarios in the case inventory. |
+| Workspace | 1 | Observable scenarios in the case inventory. |
+| Total | 9 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| shopping-receipts-C01 | Shopping workflow | shopping-receipts-R1, shopping-receipts-R2 | A six-unit tracked purchase and four-unit physical receipt show two due and four pending stock. Posting adds exactly four. |
+| shopping-receipts-C02 | Shopping workflow | shopping-receipts-R1, shopping-receipts-R2 | An untracked item can be purchased and received in whole pieces without any product or ledger movement. |
+| shopping-receipts-C03 | Exact quantities | shopping-receipts-R2, shopping-receipts-R3 | A fractional piece, over-receipt or capacity failure leaves authoritative amounts intact. A pending receipt remains retryable. |
+| shopping-receipts-C04 | Concurrency and recovery | shopping-receipts-R2, shopping-receipts-R3, shopping-receipts-R4 | Competing tracked purchases, receipt revisions and posting writers produce one accepted effect. Replayed commands return their original results. |
+| shopping-receipts-C05 | Replenishment | shopping-receipts-R4 | Open tracked supply reduces the Pantry recommendation once. Posting changes ledger stock and open supply without consuming task reservations or settling pending task usage. |
+| shopping-receipts-C06 | Authorization | shopping-receipts-R5 | A reader can see scoped history and cannot mutate it. Shopping and Inventory grants fence each write and its recovery. Invalid CSRF and foreign resources are rejected. |
+| shopping-receipts-C07 | Compatibility | shopping-receipts-R5 | A representative schema 22 database upgrades with its policy, reservations, stock history and operation receipts intact. |
+| shopping-receipts-C08 | Concurrency and recovery | shopping-receipts-R3, shopping-receipts-R5 | Restart and activated restore preserve pending and posted receipts, original and historical operation results, and exact stock. |
+| shopping-receipts-C09 | Workspace | shopping-receipts-R1, shopping-receipts-R5 | The accessible Shopping journey records and posts a partial tracked receipt in both deployments, covers both locales and runs on amd64 and ARM64 images. |
+
+### 15. Documentation and discoverability
+
+[specs/shopping-management.md](shopping-management.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/shopping-receipts-qualification.md](../docs/evidence/shopping-receipts-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/infrastructure/sqlite.py](../backend/src/domus/infrastructure/sqlite.py) · [frontend/src/presentation/domus-inventory.ts](../frontend/src/presentation/domus-inventory.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/shopping-management.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/shopping-receipts-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/infrastructure/sqlite.py | update |
+| frontend/src/presentation/domus-inventory.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Verify each executable case against the source revision proposed for merge. Keep the full authored backend and frontend coverage gates and both actual-image browser runs.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| shopping-receipts-R1 | shopping-receipts-C01, shopping-receipts-C02, shopping-receipts-C09 |
+| shopping-receipts-R2 | shopping-receipts-C01, shopping-receipts-C02, shopping-receipts-C03, shopping-receipts-C04 |
+| shopping-receipts-R3 | shopping-receipts-C03, shopping-receipts-C04, shopping-receipts-C08 |
+| shopping-receipts-R4 | shopping-receipts-C04, shopping-receipts-C05 |
+| shopping-receipts-R5 | shopping-receipts-C06, shopping-receipts-C07, shopping-receipts-C08, shopping-receipts-C09 |
+
+### 18. Implementation sequence
+
+Persist purchases and physical receipt facts, integrate the stock posting writer and Pantry recommendation, expose the protected shopping journey, and qualify migration, recovery and both deployments.
+
+### 19. Definition of Done
+
+Require CI and Bugbot green for the same PR commit. Copilot Verification must pass or have a verified exclusively upstream defect documented with the upstream report. Keep releases and deployment separately authorized.
+
+### 20. References and decisions
+
+This slice qualifies the purchase and receipt parts of shopping-management-C10, shopping-management-C11, shopping-management-C12, shopping-management-C13, shopping-management-C14, shopping-management-C15, shopping-management-C18, shopping-management-C19 and shopping-management-C21.

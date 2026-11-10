@@ -9,6 +9,7 @@ from domus.application.task_ports import TaskCursors
 from domus.domain.errors import NotFound
 from domus.domain.identity import HumanIdentity, Permission, allows, effective_role
 from domus.domain.inventory import PANTRY, BaseUnit, MovementKind, stock_quantity
+from domus.domain.shopping import Purchase
 from domus.domain.storage import JsonDocument
 
 
@@ -30,12 +31,15 @@ class CatalogStock:
     reserved: str
     available: str
     replenishment: ReplenishmentView
+    outstanding_purchase: str
+    shopping_needed: str
 
 
 @dataclass(frozen=True, slots=True)
 class InventoryView:
     location_id: str
     may_manage: bool
+    may_shop: bool
     products: tuple[CatalogStock, ...]
     next_cursor: str | None
 
@@ -64,6 +68,64 @@ class MovementHistory:
 
 
 @dataclass(frozen=True, slots=True)
+class PurchaseView:
+    purchase_id: str
+    product_id: str | None
+    name: str
+    base_unit: BaseUnit
+    purchased: str
+    received: str
+    remaining: str
+    pending_stock: str
+    revision: str
+    member_id: str
+    author_alias: str | None
+    created_at: str
+
+
+@dataclass(frozen=True, slots=True)
+class PurchasesView:
+    purchases: tuple[PurchaseView, ...]
+    next_cursor: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class PhysicalReceiptView:
+    receipt_id: str
+    quantity: str
+    member_id: str
+    author_alias: str | None
+    created_at: str
+    movement_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class PhysicalReceiptsView:
+    purchase: PurchaseView
+    receipts: tuple[PhysicalReceiptView, ...]
+    next_cursor: str | None
+
+
+def _purchase_view(unit: UnitOfWork, home: str, purchase: Purchase) -> PurchaseView:
+    author = unit.presentations.get(home, purchase.member_id)
+    assert author is not None
+    return PurchaseView(
+        purchase.purchase_id,
+        purchase.product_id,
+        purchase.name,
+        purchase.base_unit,
+        stock_quantity(purchase.purchased),
+        stock_quantity(purchase.received),
+        stock_quantity(purchase.remaining),
+        stock_quantity(purchase.pending),
+        str(purchase.revision),
+        purchase.member_id,
+        author.alias,
+        str(purchase.created_at),
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class InventoryQueries:
     store: Transactions
     scope: MaintenanceScope
@@ -72,7 +134,7 @@ class InventoryQueries:
 
     def _access(
         self, unit: UnitOfWork, query: str, limit: int, product_id: str | None
-    ) -> tuple[str, bool, JsonDocument]:
+    ) -> tuple[str, bool, bool, JsonDocument]:
         home = self.scope.require(unit).household_id
         member = HouseholdAccess(self.human).require(unit, home, Permission.HOUSEHOLD_READ)
         policy = unit.policies.get(home)
@@ -93,11 +155,18 @@ class InventoryQueries:
                 "limit": limit,
             }
         )
-        return home, allows(self.human, member, policy, Permission.INVENTORY_MANAGE, home), binding
+        return (
+            home,
+            allows(self.human, member, policy, Permission.INVENTORY_MANAGE, home),
+            allows(self.human, member, policy, Permission.SHOPPING_MANAGE, home),
+            binding,
+        )
 
     def report(self, *, limit: int, cursor: str | None) -> InventoryView:
         with self.store.read() as unit:
-            home, may_manage, binding = self._access(unit, "inventory-catalog-v1", limit, None)
+            home, may_manage, may_shop, binding = self._access(
+                unit, "inventory-catalog-v1", limit, None
+            )
             after = "" if cursor is None else self.cursors.decode(binding, cursor)
             stock = unit.inventory
             products = stock.products(home, after, limit + 1)
@@ -112,6 +181,8 @@ class InventoryQueries:
                 reserved = stock.reserved(home, product.reference_id)
                 available = recorded - reserved
                 policy = stock.replenishment(home, product.product_id)
+                needed = policy.needed(available)
+                outstanding = unit.shopping.outstanding(home, product.product_id)
                 page.append(
                     CatalogStock(
                         product.product_id,
@@ -125,15 +196,17 @@ class InventoryQueries:
                             stock_quantity(policy.minimum),
                             stock_quantity(policy.target),
                             str(policy.revision),
-                            stock_quantity(policy.needed(available)),
+                            stock_quantity(needed),
                         ),
+                        stock_quantity(outstanding),
+                        stock_quantity(max(0, needed - outstanding)),
                     )
                 )
-            return InventoryView(PANTRY, may_manage, tuple(page), next_cursor)
+            return InventoryView(PANTRY, may_manage, may_shop, tuple(page), next_cursor)
 
     def history(self, product_id: str, *, limit: int, cursor: str | None) -> MovementHistory:
         with self.store.read() as unit:
-            home, _, binding = self._access(unit, "inventory-history-v1", limit, product_id)
+            home, _, _, binding = self._access(unit, "inventory-history-v1", limit, product_id)
             stock = unit.inventory
             product = stock.product(home, product_id)
             if product is None:
@@ -169,4 +242,50 @@ class InventoryQueries:
                 )
             return MovementHistory(
                 product_id, product.name, product.base_unit, tuple(page), next_cursor
+            )
+
+    def purchases(self, *, limit: int, cursor: str | None) -> PurchasesView:
+        with self.store.read() as unit:
+            home, _, _, binding = self._access(unit, "shopping-purchases-v1", limit, None)
+            through = 2**63 - 1 if cursor is None else int(self.cursors.decode(binding, cursor))
+            rows = unit.shopping.purchases(home, through, limit + 1)
+            next_cursor = (
+                self.cursors.encode(binding, str(rows[limit - 1][0] - 1))
+                if len(rows) > limit
+                else None
+            )
+            page = tuple(_purchase_view(unit, home, purchase) for _, purchase in rows[:limit])
+            return PurchasesView(page, next_cursor)
+
+    def physical_receipts(
+        self, purchase_id: str, *, limit: int, cursor: str | None
+    ) -> PhysicalReceiptsView:
+        with self.store.read() as unit:
+            home, _, _, binding = self._access(unit, "shopping-receipts-v1", limit, purchase_id)
+            purchase = unit.shopping.purchase(home, purchase_id)
+            if purchase is None:
+                raise NotFound("shopping_purchase_missing")
+            through = 2**63 - 1 if cursor is None else int(self.cursors.decode(binding, cursor))
+            rows = unit.shopping.receipts(home, purchase_id, through, limit + 1)
+            next_cursor = (
+                self.cursors.encode(binding, str(rows[limit - 1][0] - 1))
+                if len(rows) > limit
+                else None
+            )
+            page: list[PhysicalReceiptView] = []
+            for _, receipt in rows[:limit]:
+                author = unit.presentations.get(home, receipt.member_id)
+                assert author is not None
+                page.append(
+                    PhysicalReceiptView(
+                        receipt.receipt_id,
+                        stock_quantity(receipt.quantity),
+                        receipt.member_id,
+                        author.alias,
+                        str(receipt.created_at),
+                        receipt.movement_id,
+                    )
+                )
+            return PhysicalReceiptsView(
+                _purchase_view(unit, home, purchase), tuple(page), next_cursor
             )

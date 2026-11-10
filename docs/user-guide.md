@@ -123,14 +123,32 @@ zero to turn replenishment off. If another edit wins first, review the current
 values and reopen the editor. If the reply is lost, choose **Recover original
 request**.
 
+### Shopping and physical receipts
+
+In **Inventory**, choose **Show purchases** in the Shopping card. With shopping
+management access, select a Pantry product or enter an untracked item and record
+the quantity bought. Tracked purchases use the product's base unit. Untracked
+items use whole pieces. A product can have one open purchase while some units
+are still due or awaiting Pantry posting. The amount still to buy for Pantry
+accounts for those incoming units.
+
+Choose **Show physical receipts** on a purchase. Record the amount that arrived,
+up to the amount still due. The purchase keeps its original quantity and shows
+how much arrived and how much is still due. An untracked arrival is complete at
+this point. For a tracked item, an inventory manager chooses **Post to Pantry**
+on each physical receipt. The receipt then shows the linked stock movement.
+
+If Pantry cannot accept the full receipt, make space and post that saved receipt
+again. If a response is lost, choose **Recover original request**. After a
+snapshot restoration, check the current receipt and stock before making a new
+request.
+
 ### Subsequent supplies workflows
 
 Add products independently from package formats and locations. Receive physical quantities into their base unit.
 Record consumption explicitly. Shopping will combine attributable needs from Pantry replenishment and task materials.
 Scan a barcode with the camera or enter it manually. Domus searches local products first. If an administrator configures Internet product lookup, you may retrieve a candidate and review its source before importing it. External unavailability does not block local search or manual creation.
 Manual additional requests remain additional unless you choose overlapping intent.
-A purchase can be partially received. Inventory is updated only for confirmed receipts, once.
-Free-text groceries need no tracked product.
 
 ## Participation
 

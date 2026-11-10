@@ -5,7 +5,8 @@ import {InventoryController} from '../src/application/inventory-controller';
 import type {InventoryRequest, InventoryResult, InventoryScope, InventoryState} from '../src/application/inventory-controller';
 import type {EntryRead} from '../src/application/ports';
 import {adjustmentQuantity, intakeQuantity, inventoryCommand} from '../src/domain/inventory';
-import type {InventoryReport, MovementHistory} from '../src/domain/inventory';
+import {revisionValue} from '../src/domain/administration';
+import type {InventoryReport, MovementHistory, Purchase, PurchaseReceipts, Purchases} from '../src/domain/inventory';
 import '../src/presentation/domus-inventory';
 import corpus from './fixtures/entry-wire.json';
 
@@ -30,12 +31,29 @@ const history: MovementHistory = {productId:'product', productName:'Olive oil', 
 const emptyPolicy = {source_id:'product', minimum:'0', target:'0', revision:'0', needed:'0'} as const;
 const policy = {action:'inventory.configure-replenishment', product_id:'product', minimum:'1.250001',
   target:'2.000001', expected_revision:'0'} as const;
+const buy = {action:'shopping.purchase', product_id:'product', name:null, quantity:'6.000001'} as const;
+const arrive = {action:'shopping.receive', purchase_id:'purchase', quantity:'4.000001',
+  expected_revision:revisionValue('2')} as const;
+const postReceipt = {action:'shopping.post-receipt', purchase_id:'purchase', receipt_id:'arrival'} as const;
+const wirePurchase = {purchase_id:'purchase', product_id:'product', name:'Olive oil', base_unit:'millilitre',
+  purchased:'6.000001', received:'4.000001', remaining:'2', pending_stock:'4.000001', revision:'2',
+  member_id:'member', author_alias:'Shopper', created_at:'100'};
+const wireArrival = {receipt_id:'arrival', quantity:'4.000001', member_id:'member', author_alias:null,
+  created_at:'101', movement_id:null};
+const purchase: Purchase = {id:'purchase', productId:'product', name:'Olive oil', unit:'millilitre',
+  purchased:'6.000001', received:'4.000001', remaining:'2', pendingStock:'4.000001',
+  revision:arrive.expected_revision, memberId:'member', authorAlias:'Shopper', createdAt:'100'};
+const purchases: Purchases = {items:[purchase],cursor:'older'};
+const purchaseReceipts: PurchaseReceipts = {purchase,items:[{
+  id:'arrival', quantity:'4.000001', memberId:'member', authorAlias:null, createdAt:'101', movementId:null,
+}],cursor:'older'};
 const savedPolicy = {product_id:'product', minimum:policy.minimum, target:policy.target, revision:'1'};
 const wireProduct = {...savedProduct, recorded:'999999999999.999999', reserved:'0.000001',
-  available:'999999999999.999998', replenishment:emptyPolicy};
-const wire = {location_id:'pantry', may_manage:true, products:[wireProduct], next_cursor:'next'};
-const report: InventoryReport = {mayManage:true, products:[{id:'product', name:'Olive oil', unit:'millilitre',
+  available:'999999999999.999998', replenishment:emptyPolicy, outstanding_purchase:'0', shopping_needed:'0'};
+const wire = {location_id:'pantry', may_manage:true, may_shop:true, products:[wireProduct], next_cursor:'next'};
+const report: InventoryReport = {mayManage:true, mayShop:true, products:[{id:'product', name:'Olive oil', unit:'millilitre',
   recorded:'999999999999.999999', reserved:'0.000001', available:'999999999999.999998',
+  outstandingPurchase:'0', shoppingNeeded:'0',
   replenishment:{sourceId:'product', minimum:'0', target:'0', revision:'0', needed:'0'}}], cursor:'next'};
 const failure = (code:string) => ({state:'blocked', code, message:'Blocked.', action_required:'Review.', correlation_id:'cor_test'});
 const csrf = {csrf_token:'c'.repeat(64)};
@@ -75,7 +93,7 @@ test('only supported closed commands and exact positive decimal drafts cross the
 });
 
 test.each(['native','standalone'] as const)('exact catalog and original receipt use bounded %s endpoints', async mode => {
-  const whole = {product_id:'other', name:'Boxes', base_unit:'piece', recorded:'2', reserved:'0', available:'2',
+  const whole = {...wireProduct, product_id:'other', name:'Boxes', base_unit:'piece', recorded:'2', reserved:'0', available:'2',
     replenishment:{...emptyPolicy,source_id:'other'}};
   const {server, fetch} = http([
     [200,wire], [200,{...wire,products:[whole],next_cursor:null}],
@@ -126,7 +144,7 @@ test('wire replies reject mismatched totals, quantities, identities and unsuppor
 test('replenishment decodes an exact projection and recovers only its original matching settings', async () => {
   const available = {...wireProduct, recorded:'2', reserved:'1.25', available:'0.75'};
   const replenishment = {...emptyPolicy, minimum:policy.minimum, target:policy.target, needed:'1.250001', revision:'1'};
-  const item = {...available,replenishment};
+  const item = {...available,replenishment,shopping_needed:replenishment.needed};
   const operation = {...request,command:policy};
   const {server,fetch} = http([
     [200,{...wire,products:[item]}],
@@ -167,6 +185,76 @@ test('replenishment decodes an exact projection and recovers only its original m
       .rejects.toMatchObject({code:'invalid_response'});
 });
 
+test('shopping commands and original receipts keep purchase, arrival and posting identities separate', async () => {
+  const free = {...buy, product_id:null, name:'Apples', quantity:'1'};
+  for (const value of [buy, free, arrive, postReceipt]) expect(inventoryCommand(value)).toEqual(value);
+  for (const invalid of [
+    {...buy, extra:true}, {...buy, product_id:null}, {...buy,name:'Both'}, {...buy,quantity:'0'},
+    {...buy, name:undefined}, {...arrive, extra:true}, {...arrive, expected_revision:'0'},
+    {...arrive,quantity:'0'}, {...postReceipt,extra:true}, {...postReceipt,receipt_id:'../different'},
+  ]) expect(() => inventoryCommand(invalid)).toThrow();
+  const buyResult = {purchase_id:'purchase'};
+  const arrivalResult = {...buyResult,receipt_id:'arrival'};
+  const postResult = {...arrivalResult,movement_id:'movement'};
+  const {server, fetch} = http([
+    [200,csrf], [200,receipt(buyResult)], [200,receipt(arrivalResult,'historical')], [200,receipt(postResult)],
+  ]);
+  expect(await server.send(scope,{...request,command:buy}).result).toMatchObject({
+    kind:'committed', shoppingAction:buy.action, productId:null,
+  });
+  expect(await server.original(scope,{...request,command:arrive}).result).toMatchObject({
+    kind:'historical', shoppingAction:arrive.action,
+  });
+  expect(await server.original(scope,{...request,command:postReceipt}).result).toMatchObject({
+    kind:'committed', shoppingAction:postReceipt.action,
+  });
+  expect(fetch.mock.calls[2][0]).toContain('inventory/requests/shopping.receive/original');
+  for (const payload of [{...postResult,purchase_id:'other'},{...postResult,receipt_id:'other'}])
+    await expect(http([[200,receipt(payload)]]).server.original(scope,{...request,command:postReceipt}).result)
+      .rejects.toMatchObject({code:'invalid_response'});
+  const local = journal();
+  local.journal.save({...request,command:postReceipt});
+  expect(local.journal.open(scope.key)).toEqual({...request,command:postReceipt});
+});
+
+test('protected shopping pages and Pantry supply have exact bounded responses', async () => {
+  const free = {...wirePurchase, product_id:null, name:'Apples', base_unit:'piece',
+    purchased:'2', received:'2', remaining:'0', pending_stock:'0'};
+  const page = {purchases:[wirePurchase],next_cursor:'older'};
+  const details = {purchase:wirePurchase,receipts:[wireArrival],next_cursor:'older'};
+  const {server,fetch} = http([
+    [200,page], [200,{...page,purchases:[free],next_cursor:null}], [200,details],
+    [200,{...details,receipts:[{...wireArrival,movement_id:'movement'}],next_cursor:null}],
+    [200,{...wire,products:[{...wireProduct,outstanding_purchase:'1'}]}],
+  ]);
+  expect(await server.purchases(scope,null).result).toEqual(purchases);
+  expect((await server.purchases(scope,'older/+').result).items[0]).toMatchObject({productId:null,unit:'piece'});
+  expect(await server.purchaseReceipts(scope,'purchase',null).result).toEqual(purchaseReceipts);
+  expect((await server.purchaseReceipts(scope,'purchase','older/+').result).items[0].movementId).toBe('movement');
+  expect((await server.read(scope,null).result).products[0].outstandingPurchase).toBe('1');
+  expect(fetch.mock.calls[1][0]).toContain('inventory/purchases?limit=25&cursor=older%2F%2B');
+  expect(fetch.mock.calls[3][0]).toContain('inventory/purchases/purchase/receipts?limit=25&cursor=older%2F%2B');
+  for (const invalid of [
+    {...page,purchases:{}}, {...page,purchases:Array(26).fill(wirePurchase)},
+    {...page,purchases:[wirePurchase,wirePurchase]},
+    ...[
+      {...wirePurchase,remaining:'1'}, {...wirePurchase,pending_stock:'5'},
+      {...wirePurchase,product_id:null}, {...free,pending_stock:'1'},
+      {...free,purchased:'2.000001',remaining:'0.000001'},
+    ].map(item => ({...page,purchases:[item]})),
+  ]) await expect(http([[200,invalid]]).server.purchases(scope,null).result).rejects.toMatchObject({code:'invalid_response'});
+  for (const invalid of [
+    {...details,purchase:{...wirePurchase,purchase_id:'other'}}, {...details,receipts:{}},
+    {...details,receipts:Array(26).fill(wireArrival)}, {...details,receipts:[wireArrival,wireArrival]},
+  ]) await expect(http([[200,invalid]]).server.purchaseReceipts(scope,'purchase',null).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+  for (const invalid of [
+    {...wireProduct,shopping_needed:'1'},
+    {...wireProduct,base_unit:'piece',recorded:'2',available:'2',reserved:'0',outstanding_purchase:'0.1'},
+  ]) await expect(http([[200,{...wire,products:[invalid]}]]).server.read(scope,null).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+});
+
 function journal() {
   const values = new Map<string,string>();
   const journal = new InventorySessionJournal({getItem:key => values.get(key) ?? null,
@@ -193,10 +281,57 @@ function controller() {
   const send = vi.fn((_scope: InventoryScope, _request: InventoryRequest): EntryRead<InventoryResult> => read(committed));
   const original = vi.fn((_scope: InventoryScope, _request: InventoryRequest): EntryRead<InventoryResult|null> => read(null));
   const movements = vi.fn((_scope: InventoryScope, _product: string, _cursor: string|null): EntryRead<MovementHistory> => read(history));
-  const controller = new InventoryController({read:load,history:movements,send,original},local.journal,{requestKey:() => request.key},publish);
+  const buys = vi.fn((_scope: InventoryScope, _cursor: string|null): EntryRead<Purchases> => read(purchases));
+  const arrivals = vi.fn((_scope: InventoryScope, _id:string, _cursor: string|null): EntryRead<PurchaseReceipts> => read(purchaseReceipts));
+  const controller = new InventoryController({read:load,history:movements,purchases:buys,purchaseReceipts:arrivals,send,original},
+    local.journal,{requestKey:() => request.key},publish);
   const current = () => publish.mock.lastCall?.[0];
-  return {...local, controller, load, movements, send, original, current};
+  return {...local, controller, load, movements, buys, arrivals, send, original, current};
 }
+
+test('shopping reads and writes stay within the current authorized session and use original recovery', async () => {
+  const f = controller(), app = f.controller;
+  await app.showPurchases(); await app.morePurchases();
+  await app.showPurchaseReceipts('purchase'); await app.morePurchaseReceipts();
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await app.showPurchaseReceipts('purchase');
+  const reading = app.showPurchases();
+  await app.showPurchases();
+  await reading;
+  expect(f.buys).toHaveBeenCalledOnce();
+  f.buys.mockReturnValueOnce(read({items:[],cursor:null}));
+  await app.morePurchases(); await app.morePurchases();
+  const detail = app.showPurchaseReceipts('purchase');
+  await app.showPurchaseReceipts('purchase');
+  await detail;
+  expect(f.arrivals).toHaveBeenCalledOnce();
+  f.arrivals.mockReturnValueOnce(read({...purchaseReceipts,items:[],cursor:null}));
+  await app.morePurchaseReceipts(); await app.morePurchaseReceipts();
+  expect(f.current()?.purchaseReceipts?.items).toEqual(purchaseReceipts.items);
+  f.load.mockReturnValueOnce(read({...report,mayManage:false}));
+  await app.refresh();
+  await app.submit(postReceipt);
+  expect(f.send).not.toHaveBeenCalled();
+  f.send.mockReturnValueOnce(lost());
+  await app.submit(buy);
+  expect(f.send.mock.lastCall?.[1].command).toEqual(buy);
+  await app.showPurchases(); await app.showPurchaseReceipts('purchase');
+  expect(f.current()).toMatchObject({pending:true,notice:'uncertain'});
+  await app.recover();
+  expect(f.current()?.pending).toBe(false);
+  expect(f.send.mock.lastCall?.[1].command).toEqual(buy);
+  f.arrivals.mockReturnValueOnce(lost());
+  await app.showPurchaseReceipts('purchase');
+  expect(f.current()?.purchaseReceipts).toBeNull();
+  f.buys.mockReturnValueOnce(lost());
+  await app.showPurchases();
+  expect(f.current()?.purchases).toBeNull();
+  f.load.mockReturnValueOnce(lost());
+  await app.refresh();
+  await app.showPurchases();
+  expect(f.current()?.report).toBeNull();
+});
 
 test('controller reloads authoritative stock, pages within scope, and blocks denied or uncertain writes', async () => {
   const f = controller(), app = f.controller;
@@ -322,6 +457,98 @@ function component() {
   return {node,root,events,press,input,submit};
 }
 const initial: InventoryState = {scope,report:null,history:null,busy:false,pending:false,result:null,notice:null};
+
+test('Shopping distinguishes tracked stock posting from an untracked receipt and retains the original operations', async () => {
+  const {node,root,events,submit} = component();
+  const open = {...initial,report};
+  node.view = open;
+  await node.updateComplete;
+  const element = root.querySelector('domus-shopping')!;
+  await element.updateComplete;
+  const shop = element.shadowRoot!;
+  const press = (label:string) => {
+    const control = [...shop.querySelectorAll('vyp-ha-button')].find(button => button.state.label === label);
+    expect(control).toBeDefined();
+    control!.dispatchEvent(new Event('ha-press-request'));
+  };
+  const assign = async (state: InventoryState) => {
+    node.view = state; await node.updateComplete; await element.updateComplete;
+  };
+  const command = () => events.mock.lastCall?.[0].detail;
+  press('Show purchases');
+  expect(command()).toEqual({type:'purchases'});
+  const empty = {...open,purchases:{items:[],cursor:null},report:{...report,mayShop:false}};
+  await assign(empty);
+  expect(shop.textContent).toContain('There are no purchases recorded.');
+  expect(shop.querySelector('form')).toBeNull();
+
+  const extra = {...report.products[0],id:'other',name:'Tinned beans',outstandingPurchase:'1'};
+  const shopping = {...open,report:{...report,products:[...report.products,extra]},purchases};
+  await assign(shopping);
+  press('Show older purchases');
+  expect(command()).toEqual({type:'more-purchases'});
+  press('Show physical receipts');
+  expect(command()).toEqual({type:'purchase-receipts',purchaseId:'purchase'});
+  const purchaseForm = shop.querySelector<HTMLFormElement>('#purchase-form')!;
+  const quantity = purchaseForm.querySelector<HTMLInputElement>('input[name=quantity]')!;
+  submit(purchaseForm); await element.updateComplete;
+  expect(purchaseForm.querySelector('[role=alert]')?.textContent).toContain('Enter a quantity');
+  quantity.value = '2';
+  submit(purchaseForm); await element.updateComplete;
+  expect(purchaseForm.querySelector('[role=alert]')?.textContent).toContain('Enter a product name');
+  purchaseForm.querySelector<HTMLInputElement>('input[name=name]')!.value = 'Apples';
+  submit(purchaseForm); await element.updateComplete;
+  expect(command()).toEqual({type:'submit',command:{action:buy.action,product_id:null,name:'Apples',quantity:'2'}});
+  const select = purchaseForm.querySelector('select')!;
+  expect(select.querySelector<HTMLOptionElement>('option[value=other]')?.disabled).toBe(true);
+  select.value='product'; select.dispatchEvent(new Event('change'));
+  await element.updateComplete;
+  expect(purchaseForm.textContent).toContain('Still to buy for Pantry');
+  quantity.value='6,000001';
+  submit(purchaseForm);
+  expect(command()).toEqual({type:'submit',command:buy});
+  const committedPurchase = {kind:'committed',operationId:'buy',movement:null,productId:null,shoppingAction:buy.action} as const;
+  await assign({...shopping,result:committedPurchase});
+  expect(root.textContent).toContain('Purchase recorded.');
+  expect(select.value).toBe('');
+  const tracked = {...shopping,purchaseReceipts:{...purchaseReceipts,items:[]}};
+  await assign(tracked);
+  expect(shop.activeElement?.tagName).toBe('H4');
+  expect(shop.textContent).toContain('No physical receipts recorded.');
+  const form = shop.querySelector<HTMLFormElement>('#arrival-form')!;
+  const amount = form.querySelector('input')!;
+  submit(form); await element.updateComplete;
+  expect(form.querySelector('[role=alert]')?.textContent).toContain('Enter a quantity');
+  amount.value='3';
+  submit(form); await element.updateComplete;
+  expect(form.querySelector('[role=alert]')?.textContent).toContain('no greater than');
+  amount.value='1,25';
+  const before = events.mock.calls.length;
+  await assign({...tracked,pending:true});
+  submit(form); submit(purchaseForm);
+  expect(events).toHaveBeenCalledTimes(before);
+  await assign({...tracked,purchaseReceipts});
+  submit(form);
+  expect(command()).toEqual({type:'submit',command:{...arrive,quantity:'1.25'}});
+  press('Show older receipts');
+  expect(command()).toEqual({type:'more-purchase-receipts'});
+  press('Post to Pantry');
+  expect(command()).toEqual({type:'submit',command:postReceipt});
+  await assign({...tracked,purchaseReceipts,result:{kind:'rejected',reason:'inventory_stock_capacity',command:postReceipt}});
+  expect(root.querySelector('vyp-ha-feedback')?.state?.message).toContain('physical receipt is saved');
+  node.language = 'es';
+  const posted = {...purchaseReceipts,items:[{...purchaseReceipts.items[0],movementId:'movement'}],cursor:null};
+  await assign({...shopping,purchaseReceipts:posted,result:{...committedPurchase,shoppingAction:arrive.action}});
+  expect(shop.textContent).toContain('Contabilizado en Despensa.');
+  expect(shop.textContent).toContain('4,000001 mililitros');
+  expect(shop.textContent).toContain('movement');
+  expect(root.textContent).toContain('Recepción física registrada.');
+  const free = {...purchase, id:'free',productId:null,unit:'piece' as const,received:'2',remaining:'0',
+    pendingStock:'0',authorAlias:null};
+  await assign({...shopping,scope:{...scope,readOnly:true},purchaseReceipts:{purchase:free,items:purchaseReceipts.items,cursor:null}});
+  expect(shop.querySelector('form')).toBeNull();
+  expect(shop.textContent).toContain('Artículo sin seguimiento recibido.');
+});
 
 test('the policy form validates exact drafts, preserves its revision and limits editing to managers', async () => {
   const {node,root,events,press,submit} = component();

@@ -9,6 +9,7 @@ from domus.application.point_allocation_ports import PointAllocations
 from domus.application.points_ports import PointsRepository
 from domus.application.recurrence_ports import RecurrenceRepository
 from domus.application.reward_ports import RewardsRepository
+from domus.application.shopping_ports import ShoppingRecords
 from domus.application.task_material_ports import TaskMaterialRepository
 from domus.application.task_ports import TaskRepository
 from domus.domain.calendar_values import (
@@ -102,6 +103,9 @@ class TaskCategories(Protocol):
 class UnitOfWork(Protocol):
     @property
     def inventory(self) -> InventoryRecords: ...
+
+    @property
+    def shopping(self) -> ShoppingRecords: ...
 
     @property
     def points(self) -> PointsRepository: ...

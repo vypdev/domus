@@ -8,7 +8,12 @@ from fastapi.params import Depends
 from pydantic import Field
 
 from domus.application.inventory import CatalogAction
-from domus.application.inventory_queries import InventoryView, MovementHistory
+from domus.application.inventory_queries import (
+    InventoryView,
+    MovementHistory,
+    PhysicalReceiptsView,
+    PurchasesView,
+)
 from domus.domain.inventory import MAX_STOCK_REASON, BaseUnit
 from domus.domain.task_material_values import MaterialQuantity
 from domus.entrypoints.household_http import (
@@ -65,8 +70,35 @@ class ReplenishmentBody(StrictModel):
     expected_revision: str = Field(pattern=r"^(?:0|[1-9][0-9]{0,18})$")
 
 
+class PurchaseBody(StrictModel):
+    action: Literal["shopping.purchase"]
+    product_id: Identifier | None
+    name: Annotated[str, Field(min_length=1, max_length=160)] | None
+    quantity: Quantity
+
+
+class ReceivePurchaseBody(StrictModel):
+    action: Literal["shopping.receive"]
+    purchase_id: Identifier
+    quantity: Quantity
+    expected_revision: str = Field(pattern=r"^[1-9][0-9]{0,18}$")
+
+
+class PostReceiptBody(StrictModel):
+    action: Literal["shopping.post-receipt"]
+    purchase_id: Identifier
+    receipt_id: Identifier
+
+
 CatalogBody = Annotated[
-    ProductBody | IntakeBody | AdjustmentBody | IntakeCorrectionBody | ReplenishmentBody,
+    ProductBody
+    | IntakeBody
+    | AdjustmentBody
+    | IntakeCorrectionBody
+    | ReplenishmentBody
+    | PurchaseBody
+    | ReceivePurchaseBody
+    | PostReceiptBody,
     Field(discriminator="action"),
 ]
 
@@ -92,6 +124,20 @@ def create_inventory_router(
             context(request).inventory().history(product_id, limit=query.limit, cursor=query.cursor)
         )
 
+    @router.get("/purchases", response_model=PurchasesView)
+    def purchases(request: Request, query: Annotated[PageQuery, Query()]) -> PurchasesView:
+        return context(request).inventory().purchases(limit=query.limit, cursor=query.cursor)
+
+    @router.get("/purchases/{purchase_id}/receipts", response_model=PhysicalReceiptsView)
+    def physical_receipts(
+        request: Request, purchase_id: Identifier, query: Annotated[PageQuery, Query()]
+    ) -> PhysicalReceiptsView:
+        return (
+            context(request)
+            .inventory()
+            .physical_receipts(purchase_id, limit=query.limit, cursor=query.cursor)
+        )
+
     @router.post(
         "/commands",
         response_model=ReceiptResponse,
@@ -114,7 +160,7 @@ def create_inventory_router(
             receipt = inventory.adjust(key, body.product_id, body.quantity, body.reason)
         elif isinstance(body, IntakeCorrectionBody):
             receipt = inventory.correct_intake(key, body.product_id, body.movement_id, body.reason)
-        else:
+        elif isinstance(body, ReplenishmentBody):
             receipt = inventory.configure_replenishment(
                 key,
                 body.product_id,
@@ -122,6 +168,16 @@ def create_inventory_router(
                 MaterialQuantity(body.target),
                 int(body.expected_revision),
             )
+        elif isinstance(body, PurchaseBody):
+            receipt = inventory.purchase(
+                key, body.product_id, body.name, MaterialQuantity(body.quantity)
+            )
+        elif isinstance(body, ReceivePurchaseBody):
+            receipt = inventory.receive_purchase(
+                key, body.purchase_id, MaterialQuantity(body.quantity), int(body.expected_revision)
+            )
+        else:
+            receipt = inventory.post_purchase_receipt(key, body.purchase_id, body.receipt_id)
         return _receipt(receipt)
 
     @router.get("/requests/{action}/{key}", response_model=ReceiptResponse)

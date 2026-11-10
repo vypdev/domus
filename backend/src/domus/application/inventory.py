@@ -26,6 +26,7 @@ from domus.domain.inventory import (
     stock_units,
     validate_stock_reason,
 )
+from domus.domain.shopping import Purchase, PurchaseReceipt
 from domus.domain.storage import CommandKey, JsonDocument, Receipt
 from domus.domain.task_material_values import (
     MaterialBinding,
@@ -129,6 +130,23 @@ class CatalogAction(StrEnum):
     ADJUST = "inventory.adjust"
     CORRECT_INTAKE = "inventory.correct-intake"
     CONFIGURE_REPLENISHMENT = "inventory.configure-replenishment"
+    PURCHASE = "shopping.purchase"
+    RECEIVE_PURCHASE = "shopping.receive"
+    POST_RECEIPT = "shopping.post-receipt"
+
+
+def _permission(action: str) -> Permission:
+    if action in (CatalogAction.PURCHASE, CatalogAction.RECEIVE_PURCHASE):
+        return Permission.SHOPPING_MANAGE
+    return Permission.INVENTORY_MANAGE
+
+
+def _shopping_quantity(quantity: MaterialQuantity, unit: BaseUnit) -> int:
+    if quantity.is_zero:
+        raise InvalidInput("invalid_material_quantity")
+    if quantity.precision > unit.precision:
+        raise InvalidInput("invalid_material_precision")
+    return stock_units(quantity)
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,10 +169,11 @@ class InventoryCommands:
         human = self.actor.current()
         command = CommandKey(self.household_id, human.ha_user_id, action, key)
         access = HouseholdAccess(human)
-        authority = MembershipAuthorization(access, action, Permission.INVENTORY_MANAGE)
+        permission = _permission(action)
+        authority = MembershipAuthorization(access, action, permission)
 
         def change(unit: UnitOfWork) -> Change:
-            member = access.require(unit, self.household_id, Permission.INVENTORY_MANAGE)
+            member = access.require(unit, self.household_id, permission)
             result = apply(unit, member.member_id, command)
             return Change(result, payload, JsonDocument.from_value({"version": 1, "kind": action}))
 
@@ -188,6 +207,8 @@ class InventoryCommands:
         quantity: MaterialQuantity,
         member: str,
         command: CommandKey,
+        *,
+        source_key: str | None = None,
     ) -> StockMovement:
         home, reference = binding.household_id, binding.reference_id
         received = stock_units(quantity)
@@ -198,7 +219,7 @@ class InventoryCommands:
             home,
             reference,
             self.identifiers.new(),
-            JsonDocument.from_value(asdict(command)).fingerprint,
+            source_key or JsonDocument.from_value(asdict(command)).fingerprint,
             member,
             received,
             self.clock.now(),
@@ -389,11 +410,116 @@ class InventoryCommands:
     def original(self, action: CatalogAction, key: str, human: HumanIdentity) -> Receipt:
         with self.transactions.read() as unit:
             home = self.household_id
-            HouseholdAccess(human).require(unit, home, Permission.INVENTORY_MANAGE)
+            HouseholdAccess(human).require(unit, home, _permission(action))
             receipt = unit.receipts.get(CommandKey(home, human.ha_user_id, action.value, key))
             if receipt is None:
                 raise NotFound("operation_missing")
             return receipt
+
+    def purchase(
+        self, key: str, product_id: str | None, name: str | None, quantity: MaterialQuantity
+    ) -> Receipt:
+        if (product_id is None) == (name is None):
+            raise InvalidInput("invalid_shopping_item")
+        if name is not None:
+            validate_task_text(name, 160, required=True)
+        payload = JsonDocument.from_value(
+            {"product_id": product_id, "name": name, "quantity": quantity.value}
+        )
+
+        def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
+            home = self.household_id
+            if product_id is not None:
+                product = self._product(unit.inventory, product_id)
+                label, base_unit = product.name, product.base_unit
+                if unit.shopping.outstanding(home, product_id):
+                    raise Conflict("shopping_purchase_open")
+            else:
+                assert name is not None
+                label, base_unit = name, BaseUnit.PIECE
+            purchased = _shopping_quantity(quantity, base_unit)
+            purchase_id = self.identifiers.new()
+            unit.shopping.add_purchase(
+                home,
+                Purchase(
+                    purchase_id,
+                    product_id,
+                    label,
+                    base_unit,
+                    purchased,
+                    0,
+                    0,
+                    1,
+                    member,
+                    self.clock.now(),
+                ),
+            )
+            return JsonDocument.from_value({"purchase_id": purchase_id})
+
+        return self._execute(CatalogAction.PURCHASE.value, key, payload, apply)
+
+    def _purchase(self, unit: UnitOfWork, purchase_id: str) -> Purchase:
+        purchase = unit.shopping.purchase(self.household_id, purchase_id)
+        if purchase is None:
+            raise NotFound("shopping_purchase_missing")
+        return purchase
+
+    def receive_purchase(
+        self, key: str, purchase_id: str, quantity: MaterialQuantity, expected_revision: int
+    ) -> Receipt:
+        validate_revision(expected_revision)
+        payload = JsonDocument.from_value(
+            {
+                "purchase_id": purchase_id,
+                "quantity": quantity.value,
+                "expected_revision": str(expected_revision),
+            }
+        )
+
+        def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
+            purchase = self._purchase(unit, purchase_id)
+            received = _shopping_quantity(quantity, purchase.base_unit)
+            changed = purchase.receive(received, expected_revision)
+            receipt_id = self.identifiers.new()
+            home = self.household_id
+            unit.shopping.add_receipt(
+                home,
+                PurchaseReceipt(receipt_id, purchase_id, received, member, self.clock.now(), None),
+            )
+            unit.shopping.update_purchase(home, changed)
+            return JsonDocument.from_value({"purchase_id": purchase_id, "receipt_id": receipt_id})
+
+        return self._execute(CatalogAction.RECEIVE_PURCHASE.value, key, payload, apply)
+
+    def post_purchase_receipt(self, key: str, purchase_id: str, receipt_id: str) -> Receipt:
+        payload = JsonDocument.from_value({"purchase_id": purchase_id, "receipt_id": receipt_id})
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            home = self.household_id
+            purchase = self._purchase(unit, purchase_id)
+            receipt = unit.shopping.receipt(home, receipt_id)
+            if receipt is None or receipt.purchase_id != purchase_id:
+                raise NotFound("shopping_receipt_missing")
+            if purchase.product_id is None:
+                raise InvalidInput("shopping_receipt_untracked")
+            if receipt.movement_id is not None:
+                raise Conflict("shopping_receipt_posted")
+            product = self._product(unit.inventory, purchase.product_id)
+            movement = self._receive_stock(
+                unit.inventory,
+                product.binding(home),
+                MaterialQuantity(stock_quantity(receipt.quantity)),
+                member,
+                command,
+                source_key=receipt.stock_source,
+            )
+            unit.shopping.link_movement(home, receipt_id, movement.movement_id)
+            unit.shopping.update_purchase(home, purchase.post(receipt.quantity))
+            return JsonDocument.from_value(
+                {**payload.decode(), "movement_id": movement.movement_id}
+            )
+
+        return self._execute(CatalogAction.POST_RECEIPT.value, key, payload, apply)
 
     def commit_effect(
         self,

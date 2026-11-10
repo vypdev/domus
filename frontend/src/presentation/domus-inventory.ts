@@ -9,16 +9,18 @@ import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
 import type {InventoryError, InventoryState} from '../application/inventory-controller';
 import {BASE_UNITS, STOCK_REASON_LIMIT, adjustmentQuantity, intakeQuantity, policyQuantity, stockUnits} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, MovementHistory, ProductStock, ReplenishmentRevision, StockMovement} from '../domain/inventory';
+import type {BaseUnit, MovementHistory, ProductStock, ReplenishmentRevision, StockMovement} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
+import './domus-shopping';
+import type {ShoppingIntent} from './domus-shopping';
 import {instant} from './messages';
 import type {Language} from './messages';
 
 export type InventoryIntent = {readonly type: 'refresh' | 'more' | 'recover' | 'more-history' | 'close-history'}
   | {readonly type: 'history'; readonly productId: string}
-  | {readonly type: 'submit'; readonly command: InventoryCommand};
+  | ShoppingIntent;
 
 const QUANTITY_ERRORS = new Set<InventoryError>([
   'inventory_stock_capacity', 'invalid_inventory_receipt', 'invalid_material_quantity', 'invalid_material_precision',
@@ -28,6 +30,12 @@ const MOVEMENT_SAVED = {
   'inventory.intake': 'added',
   'inventory.adjust': 'adjusted',
   'inventory.correct-intake': 'reversed',
+} as const;
+
+const SHOPPING_SAVED = {
+  'shopping.purchase': 'purchaseSaved',
+  'shopping.receive': 'arrivalSaved',
+  'shopping.post-receipt': 'stockPosted',
 } as const;
 
 interface PolicyEditor {
@@ -111,7 +119,9 @@ export class DomusInventory extends LitElement {
         if (result.command.action === 'inventory.configure-replenishment' && result.reason === 'revision_conflict')
           this.policyEditor = null;
       } else if (result.replenishmentSaved) this.policyEditor = null;
-      else if (result.movement === null) this.nameDraft = '';
+      else if (result.movement === null) {
+        if (!result.shoppingAction) this.nameDraft = '';
+      }
       else if (result.movement.action === 'inventory.intake') this.select(result.productId);
       else this.editor = null;
     }
@@ -336,6 +346,9 @@ export class DomusInventory extends LitElement {
       <p>${policy.minimum === '0' ? this.text('replenishmentDisabled')
         : policy.needed === '0' ? this.text('replenishmentSatisfied')
         : html`<strong>${this.text('needed')} · ${this.quantity(policy.needed)} ${this.text(product.unit)}</strong>`}</p>
+      ${product.outstandingPurchase === '0' ? nothing : html`
+        <p>${this.text('outstandingPurchase')} · ${this.quantity(product.outstandingPurchase)} ${this.text(product.unit)}</p>
+        <p>${this.text('shoppingNeeded')} · ${this.quantity(product.shoppingNeeded)} ${this.text(product.unit)}</p>`}
       <div class="actions">
         ${this.button('showHistory', () => this.intent({type:'history', productId:product.id}), busy)}
         ${manage && this.selected !== product.id ? this.button('intake', () => this.select(product.id), blocked) : nothing}
@@ -354,12 +367,16 @@ export class DomusInventory extends LitElement {
     const manage = report?.mayManage === true && !view.scope.readOnly;
     const saved = result !== null && result.kind !== 'rejected' ? result : null;
     const movement = saved?.movement;
-    const message = result?.kind === 'rejected' ? result.reason : notice;
+    const message = result?.kind === 'rejected'
+      ? result.reason === 'inventory_stock_capacity' && result.command.action === 'shopping.post-receipt'
+        ? 'shoppingPostingCapacity' : result.reason
+      : notice;
     return html`<h2>${this.text('title')}</h2>
       ${message === null ? nothing : html`<vyp-ha-feedback
         .state=${feedbackState({kind:'notice', tone:'warning', message:this.text(message)})}></vyp-ha-feedback>`}
       ${saved === null ? nothing : html`<p role="status">${this.text(saved.kind === 'historical'
-        ? 'historical' : movement ? MOVEMENT_SAVED[movement.action] : saved.replenishmentSaved ? 'replenishmentSaved' : 'registered')}
+        ? 'historical' : movement ? MOVEMENT_SAVED[movement.action] : saved.shoppingAction
+          ? SHOPPING_SAVED[saved.shoppingAction] : saved.replenishmentSaved ? 'replenishmentSaved' : 'registered')}
         ${movement ? html`${this.quantity(movement.quantity)} ${this.text(movement.unit)}` : nothing}</p>
         ${report?.products.some(product => product.id === saved.productId) ? html`<a href=${'#product-' + saved.productId}
           @click=${(event: MouseEvent) => {
@@ -379,7 +396,8 @@ export class DomusInventory extends LitElement {
           ${report.products.length === 0 ? html`<p>${this.text('empty')}</p>`
             : html`<div class="products">${report.products.map(product => this.product(product, manage, busy, blocked))}</div>`}
           ${report.cursor === null ? nothing : this.button('more', () => this.intent({type:'more'}), busy)}
-        </vyp-ha-card>`}
+        </vyp-ha-card>
+        <domus-shopping .view=${view} .language=${this.language}></domus-shopping>`}
       ${history === null ? nothing : this.history(history, manage, busy, blocked)}
     `;
   }

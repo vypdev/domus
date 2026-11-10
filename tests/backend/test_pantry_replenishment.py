@@ -125,6 +125,11 @@ def test_replenishment_reopens_and_does_not_modify_task_effects_or_pending_usage
     assert report(commands, product).replenishment == ReplenishmentView(
         product, "0", "1.750001", "2", "0"
     )
+    purchase = commands.purchase("buy", product, None, MaterialQuantity("0.5"))
+    purchase_id = purchase.result.decode()["purchase_id"]
+    arrival = commands.receive_purchase("arrive", purchase_id, MaterialQuantity("0.5"), 1)
+    commands.post_purchase_receipt("post", purchase_id, arrival.result.decode()["receipt_id"])
+    assert report(commands, product).recorded == "2.5"
     with store.read() as unit:
         assert unit.task_materials.get("home", intent_id) == intent
         assert unit.inventory.effects("home", (occurrence,)) == effects
@@ -190,7 +195,7 @@ def test_upgrade_and_activated_restore_preserve_stock_and_policy_receipts(tmp_pa
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (22,)
+        assert db.execute("PRAGMA user_version").fetchone() == (23,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
             assert db.execute("SELECT * FROM " + table).fetchall() == rows
@@ -259,7 +264,7 @@ def test_snapshot_rejects_fractional_piece_threshold(tmp_path, minimum, target):
     configure(commands, "policy", product, "1", "2")
     archive = tmp_path / "archive"
     snapshots = SQLiteSnapshots(store, archive, store.installation, Clock())
-    assert snapshots.create("valid").schema_version == 22
+    assert snapshots.create("valid").schema_version == 23
     with closing(sqlite3.connect(store.path, autocommit=True)) as db:
         db.execute("UPDATE inventory_replenishment SET minimum=?,target=?", (minimum, target))
     with pytest.raises(DatabaseRejected, match="invalid_snapshot_records"):

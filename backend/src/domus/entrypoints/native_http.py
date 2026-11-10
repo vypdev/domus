@@ -103,13 +103,20 @@ class _NativeBoundary(BoundedHTTP):
             query
             and scope["method"] == "GET"
             and (
-                scope["path"].startswith(("/api/v1/tasks/", "/api/v1/inventory/products/"))
+                scope["path"].startswith(
+                    (
+                        "/api/v1/tasks/",
+                        "/api/v1/inventory/products/",
+                        "/api/v1/inventory/purchases/",
+                    )
+                )
                 or scope["path"]
                 in (
                     "/api/v1/family",
                     "/api/v1/family/allocation",
                     "/api/v1/family/rewards",
                     "/api/v1/inventory",
+                    "/api/v1/inventory/purchases",
                 )
             )
         ):
