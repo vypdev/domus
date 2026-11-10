@@ -976,3 +976,144 @@ Keep 100 percent coverage globally and per authored file. Require CI, both actua
 ### 20. References and decisions
 
 Qualifies the pending physical receipt correction in shopping-management-C17, following the purchase balance cancellation accepted in issue #80.
+
+## Correct a physical receipt posted to Pantry
+
+- Status: Draft
+- Owners: Domus maintainers and Shopping Management
+- Scope: Reverse one tracked, posted physical receipt through an attributed Shopping and Pantry correction
+- Source baseline: develop at 4ebedb48eb296622c337a6d0f17208a1f4d9de10
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+An authorized member can reverse one mistaken physical receipt that was posted to Pantry. One linked inventory correction removes its exact stock quantity and returns that quantity to the purchase item's outstanding balance.
+
+### 2. Problem, current behavior, and evidence
+
+Shopping supports voiding a physical receipt before posting. Inventory can reverse a posted intake independently, leaving the Shopping receipt recorded as posted. The linked command synchronizes the two records in one transaction.
+
+### 3. Actors, surfaces, and terminology
+
+Household readers see the receipt and its correction. A member with both shopping.manage and inventory.manage can correct a posted receipt. Shopping retains its existing receipt and outstanding balance permissions. Pantry retains its existing permissions for ordinary intake corrections.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| posted-receipt-R1 | Correct one tracked and posted receipt on an item with no balance cancellation. Require both grants, a nonblank reason and the current item revision. |
+| posted-receipt-R2 | Commit one exact negative movement linked to the original intake, one receipt correction, effective purchase amounts, revision and original operation receipt atomically. Protect available stock and active reservations. |
+| posted-receipt-R3 | Prevent a second correction and preserve the one-open-purchase invariant. Preserve historical standalone reversals and their receipts. Route new Shopping receipt corrections through the linked command. |
+| posted-receipt-R4 | Preserve original facts and attribution in both histories. Verify current authorization, concurrent writes, recovery, representative schema 27 migration, restart, activated restoration and both protected workspaces. |
+
+Partial corrections, financial refunds, physical returns, canceled purchase balances and reconciling previously reversed receipts are outside this increment.
+
+### 5. Current versus proposed product journey
+
+Open the purchase item and its physical receipt history, including from a session. On an eligible posted receipt, review the exact quantity, enter a reason and confirm. The original receipt and posting remain visible with the compensating movement. Record and post the correct amount using the existing flows.
+
+### 6. Functional behavior and state model
+
+Bind receipt identity to the household and purchase. Validate the item revision, both grants, tracked status, original stock movement, lack of an existing correction, absence of a balance cancellation and sufficient unreserved stock in one write transaction. Require a nonblank reason of at most 240 characters. If a fully settled purchase would reopen, check that the same product has no other open purchase.
+
+Append a negative intake correction linked to the original movement. Keep the original receipt and posting identifiers, and link the receipt to the new movement. Subtract the whole receipt quantity from both effective received and settled amounts and advance the purchase revision once. Awaiting posting retains the quantities of other active receipts. Still due and incoming supply gain the exact corrected amount. Existing task reservations and manual extras retain their identities.
+
+If an intake was already reversed through Inventory before this increment, display that historical reversal with its original movement and receipt. Preserve the prior purchase projection. Protect the original operation receipt and reject a second reversal. Future standalone Inventory reversal requests for Shopping receipts point users to Shopping.
+
+### 7. User-facing configuration
+
+Use existing base units, grants and purchase revision tokens. No household setting is needed.
+
+### 8. Clean Architecture design
+
+Reuse the Inventory ledger's linked correction and reservation checks. Use transaction-scoped Shopping and Inventory ports and the existing command journal. Persist a link to the compensating movement and derive its attribution from the ledger. Keep pending receipt voids as distinct history.
+
+### 9. UI/UX and content contract
+
+Reuse the protected receipt detail and shared controls. Show the exact quantity before confirming and show the reason, actor, time and linked movement afterward. Distinguish a historical Inventory-only reversal from a linked Shopping correction. Point to Shopping from the Inventory movement history for Shopping receipts. Localize the flow in Ingress and standalone.
+
+### 10. Failure, recovery, and cleanup
+
+A stale, denied or rejected correction changes neither balances nor original receipts. Competing corrections and a competing replacement purchase cannot produce duplicate or conflicting state. Replaying the same key returns the original operation. A changed payload conflicts. Restore can make a prior operation historical.
+
+### 11. Security, permissions, and privacy
+
+Require household.read for history. Both shopping.manage and inventory.manage must be current for the correction and its original operation recovery, including replay. Apply existing authentication, context, origin and CSRF checks.
+
+### 12. Observability and operational UX
+
+Keep both original and compensating movements in the Pantry ledger. Display the linked correction on the receipt and retain the original request recovery workflow. Distinguish conflicts caused by reservations, another open purchase or an earlier correction.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Upgrade a representative schema 27 database with a Shopping session, a posted receipt, a pending receipt, a receipt void, a purchase balance cancellation, original operations and an Inventory-only reversal. Keep original rows and verify migration rollback and activated restoration with current and historical linked corrections.
+
+### 14. Testing strategy and numeric budget
+
+Minimum nine distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| State and UI | 1 | Observable scenarios in the case inventory. |
+| Inventory projection | 1 | Observable scenarios in the case inventory. |
+| Concurrency | 1 | Observable scenarios in the case inventory. |
+| Recovery | 1 | Observable scenarios in the case inventory. |
+| Authorization | 1 | Observable scenarios in the case inventory. |
+| Rejection | 1 | Observable scenarios in the case inventory. |
+| Compatibility | 1 | Observable scenarios in the case inventory. |
+| Snapshot integrity | 1 | Observable scenarios in the case inventory. |
+| Workspace | 1 | Observable scenarios in the case inventory. |
+| Total | 9 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| posted-receipt-C01 | State and UI | posted-receipt-R1, posted-receipt-R2, posted-receipt-R4 | Correct a fractional posted receipt, show the linked history, and receive and post the right amount. |
+| posted-receipt-C02 | Inventory projection | posted-receipt-R2 | Preserve exact amounts, other receipts and reservations. Reject a correction below the reservation floor without a ledger write. |
+| posted-receipt-C03 | Concurrency | posted-receipt-R2, posted-receipt-R3 | Race two corrections, an identical request, and a competing purchase against reopening. |
+| posted-receipt-C04 | Recovery | posted-receipt-R2, posted-receipt-R4 | Replay the same key, reject a changed payload and recover current and historical operations after restart and activated restore. |
+| posted-receipt-C05 | Authorization | posted-receipt-R1, posted-receipt-R4 | Require both current permissions and CSRF. Reject foreign identities, revoked grants and unauthenticated reads. |
+| posted-receipt-C06 | Rejection | posted-receipt-R1, posted-receipt-R2, posted-receipt-R3 | Reject pending, untracked, canceled, stale or previously corrected receipts, and prove rollback on an injected write failure. |
+| posted-receipt-C07 | Compatibility | posted-receipt-R3, posted-receipt-R4 | Migrate schema 27 data, preserve previous voids and Inventory-only corrections, reject a new unlinked reversal and recover the original legacy receipt. |
+| posted-receipt-C08 | Snapshot integrity | posted-receipt-R2, posted-receipt-R4 | Verify the receipt, its posting and its linked reversal agree with the purchase totals and revision. |
+| posted-receipt-C09 | Workspace | posted-receipt-R1, posted-receipt-R2, posted-receipt-R4 | Correct a posted session receipt and verify both histories in English and Spanish, Ingress and standalone, on amd64 and ARM64. |
+
+### 15. Documentation and discoverability
+
+[specs/shopping-management.md](shopping-management.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/posted-receipt-correction-qualification.md](../docs/evidence/posted-receipt-correction-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/infrastructure/sqlite\_shopping.py](../backend/src/domus/infrastructure/sqlite_shopping.py) · [frontend/src/presentation/domus-shopping.ts](../frontend/src/presentation/domus-shopping.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/shopping-management.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/posted-receipt-correction-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/infrastructure/sqlite_shopping.py | update |
+| frontend/src/presentation/domus-shopping.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Post the wrong amount, correct it once, and verify that both the stock and purchase receipt show the linked correction. Check the exact reopened amount, then record and post the corrected arrival. Verify rejection with active reservations and safe original request recovery.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| posted-receipt-R1 | posted-receipt-C01, posted-receipt-C05, posted-receipt-C06, posted-receipt-C09 |
+| posted-receipt-R2 | posted-receipt-C01, posted-receipt-C02, posted-receipt-C03, posted-receipt-C04, posted-receipt-C06, posted-receipt-C08, posted-receipt-C09 |
+| posted-receipt-R3 | posted-receipt-C03, posted-receipt-C06, posted-receipt-C07 |
+| posted-receipt-R4 | posted-receipt-C01, posted-receipt-C04, posted-receipt-C05, posted-receipt-C07, posted-receipt-C08, posted-receipt-C09 |
+
+### 18. Implementation sequence
+
+Add the linked correction and command guards, update stock and receipt projections, localize history and confirmation, and qualify migration, concurrency and recovery.
+
+### 19. Definition of Done
+
+Keep 100 percent coverage globally and per authored file. Require CI, both actual image architectures, Copilot Verification and Bugbot on the same commit. Preserve installed Copilot resources. Releases and deployments require separate authorization.
+
+### 20. References and decisions
+
+Qualifies the posted receipt correction in shopping-management-C17 after issue #82.

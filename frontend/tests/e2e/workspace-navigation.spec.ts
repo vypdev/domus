@@ -686,6 +686,31 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','0 grams','2.000001 grams','0 grams']);
     await expect(mistaken.getByText('Counted a bag twice',{exact:true})).toBeVisible();
     await expect(mistaken.getByRole('button', {name:'Post to Pantry'})).toHaveCount(0);
+    await flourReceipts.getByRole('textbox', {name:'Quantity received'}).fill('1.500001');
+    await flourReceipts.getByRole('button', {name:'Record physical receipt'}).click();
+    const postedMistake = flourReceipts.getByRole('listitem').filter({has:page.getByText('1.500001 grams',{exact:true})});
+    await postedMistake.getByRole('button', {name:'Post to Pantry'}).click();
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.500001 grams','0.5 grams','0 grams']);
+    const flourStock = stock.getByRole('article',{name:'Session flour',exact:true});
+    await flourStock.getByRole('button',{name:'Show movement history'}).click();
+    const flourHistory = stock.getByRole('region',{name:'Movement history · Session flour'});
+    await expect(flourHistory.getByText('Correct this receipt in Shopping.',{exact:true})).toBeVisible();
+    await expect(flourHistory.getByRole('button',{name:'Reverse this intake'})).toHaveCount(0);
+    await flourHistory.getByRole('button',{name:'Close movement history'}).click();
+
+    await postedMistake.getByText('Correct posted receipt',{exact:true}).click();
+    const postedCorrection = postedMistake.locator('.posted-receipt-correction-form');
+    await expect(postedCorrection).toContainText('1.500001 grams');
+    await postedCorrection.getByRole('textbox',{name:'Reason'}).fill('Posted the wrong amount');
+    await postedCorrection.getByRole('button',{name:'Confirm posted receipt correction'}).click();
+    await expect(stock.getByText('Posted receipt corrected.',{exact:true})).toBeVisible();
+    await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','0 grams','2.000001 grams','0 grams']);
+    await expect(postedMistake.getByText('Posted the wrong amount',{exact:true})).toBeVisible();
+    await flourStock.getByRole('button',{name:'Show movement history'}).click();
+    await expect(flourHistory.getByText('-1.500001 grams',{exact:true})).toBeVisible();
+    await expect(flourHistory.getByText('+1.500001 grams',{exact:true})).toBeVisible();
+    await flourHistory.getByRole('button',{name:'Close movement history'}).click();
+
     await flourReceipts.getByRole('textbox', {name:'Quantity received'}).fill('1.25');
     await flourReceipts.getByRole('button', {name:'Record physical receipt'}).click();
     await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','1.25 grams','0.750001 grams','1.25 grams']);
@@ -715,6 +740,12 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(receiptsEs.getByText('Supplier cancelled the rest',{exact:true})).toBeVisible();
     await expect(receiptsEs.getByText('Anulada antes de contabilizar en Despensa.',{exact:true})).toBeVisible();
     await expect(receiptsEs.getByText('Counted a bag twice',{exact:true})).toBeVisible();
+    await expect(receiptsEs.getByText('Corregida tras contabilizar en Despensa.',{exact:true})).toBeVisible();
+    await expect(receiptsEs.getByText('Posted the wrong amount',{exact:true})).toBeVisible();
+    await flourStock.getByRole('button',{name:'Mostrar historial de movimientos'}).click();
+    const flourHistoryEs = stock.getByRole('region',{name:'Historial de movimientos · Session flour'});
+    await expect(flourHistoryEs.getByText('-1,500001 gramos',{exact:true})).toBeVisible();
+    await flourHistoryEs.getByRole('button',{name:'Cerrar historial de movimientos'}).click();
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

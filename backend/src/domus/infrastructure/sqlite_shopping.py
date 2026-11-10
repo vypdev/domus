@@ -110,6 +110,17 @@ SHOPPING_RECEIPT_VOID_STATEMENTS = (
 )
 
 
+SHOPPING_RECEIPT_CORRECTION_TABLE = "shopping_receipt_corrections"
+SHOPPING_RECEIPT_CORRECTION_STATEMENTS = (
+    "CREATE TABLE shopping_receipt_corrections(household_id TEXT NOT NULL, "
+    "receipt_id TEXT NOT NULL, movement_id TEXT NOT NULL, "
+    "PRIMARY KEY(household_id,receipt_id), UNIQUE(household_id,movement_id), "
+    "FOREIGN KEY(household_id,receipt_id) REFERENCES shopping_receipts(household_id,receipt_id), "
+    "FOREIGN KEY(household_id,movement_id) "
+    "REFERENCES inventory_movements(household_id,movement_id)) STRICT",
+)
+
+
 def _session(row: sqlite3.Row) -> PurchaseSession:
     return PurchaseSession(row["session_id"], row["member_id"], row["created_at"])
 
@@ -306,6 +317,29 @@ class SQLiteShopping:
             (movement_id, home, receipt_id),
         )
 
+    def is_receipt_movement(self, home: str, movement_id: str) -> bool:
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM shopping_receipts WHERE household_id=? AND movement_id=?",
+                (home, movement_id),
+            ).fetchone()
+            is not None
+        )
+
+    def receipt_correction(self, home: str, receipt_id: str) -> str | None:
+        row = self.connection.execute(
+            "SELECT movement_id FROM shopping_receipt_corrections "
+            "WHERE household_id=? AND receipt_id=?",
+            (home, receipt_id),
+        ).fetchone()
+        return None if row is None else str(row[0])
+
+    def link_receipt_correction(self, home: str, receipt_id: str, movement_id: str) -> None:
+        self.connection.execute(
+            "INSERT INTO shopping_receipt_corrections VALUES (?,?,?)",
+            (home, receipt_id, movement_id),
+        )
+
     def extra(self, home: str, extra_id: str) -> ShoppingExtra | None:
         row = self.connection.execute(
             "SELECT * FROM shopping_extras WHERE household_id=? AND extra_id=?", (home, extra_id)
@@ -386,9 +420,7 @@ def verify_shopping_extras(connection: sqlite3.Connection) -> None:
                 raise StorageFailure("invalid_shopping_records")
 
 
-def verify_shopping_records(
-    connection: sqlite3.Connection, *, has_cancellations: bool = True, has_voids: bool = True
-) -> None:
+def verify_shopping_records(connection: sqlite3.Connection, *, version: int = 28) -> None:
     stock = SQLiteInventory(connection)
     shopping = SQLiteShopping(connection)
     for row in connection.execute("SELECT * FROM shopping_purchases"):
@@ -417,15 +449,26 @@ def verify_shopping_records(
             movement = stock.movement(home, receipt.stock_source)
             if receipt.movement_id != (None if movement is None else movement.movement_id):
                 raise StorageFailure("invalid_shopping_records")
-            correction = shopping.receipt_void(home, receipt.receipt_id) if has_voids else None
-            if correction is not None:
+            corrected = (
+                shopping.receipt_correction(home, receipt.receipt_id) if version >= 28 else None
+            )
+            if corrected is not None:
+                reversal = stock.movement_by_id(home, corrected)
+                if (
+                    movement is None
+                    or reversal is None
+                    or (reversal.corrects, reversal.reference_id)
+                    != (movement.movement_id, movement.reference_id)
+                ):
+                    raise StorageFailure("invalid_shopping_records")
+            void = shopping.receipt_void(home, receipt.receipt_id) if version >= 27 else None
+            if void is not None:
                 if product is None or movement is not None:
                     raise StorageFailure("invalid_shopping_records")
-                validate_stock_reason(correction.reason)
-                validate_task_time(correction.created_at)
+                validate_stock_reason(void.reason)
+                validate_task_time(void.created_at)
                 revision += 1
                 continue
-            received += receipt.quantity
             if movement is not None:
                 if (
                     product is None
@@ -434,13 +477,16 @@ def verify_shopping_records(
                     or movement.delta != receipt.quantity
                 ):
                     raise StorageFailure("invalid_shopping_records")
-                settled += receipt.quantity
                 revision += 1
+            if corrected is not None:
+                revision += 1
+                continue
+            received += receipt.quantity
+            if movement is not None:
+                settled += receipt.quantity
         if product is None:
             settled = received
-        cancellation = (
-            shopping.cancellation(home, purchase.purchase_id) if has_cancellations else None
-        )
+        cancellation = shopping.cancellation(home, purchase.purchase_id) if version >= 26 else None
         cancelled = 0
         if cancellation is not None:
             validate_stock_reason(cancellation.reason)

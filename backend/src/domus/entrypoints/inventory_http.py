@@ -127,12 +127,19 @@ class CancelPurchaseBalanceBody(StrictModel):
     expected_revision: str = Field(pattern=r"^[1-9][0-9]{0,18}$")
 
 
-class VoidReceiptBody(StrictModel):
-    action: Literal["shopping.void-receipt"]
+class ReceiptCorrectionBody(StrictModel):
     purchase_id: Identifier
     receipt_id: Identifier
     reason: StockReason
     expected_revision: str = Field(pattern=r"^[1-9][0-9]{0,18}$")
+
+
+class VoidReceiptBody(ReceiptCorrectionBody):
+    action: Literal["shopping.void-receipt"]
+
+
+class CorrectPostedReceiptBody(ReceiptCorrectionBody):
+    action: Literal["shopping.correct-posted-receipt"]
 
 
 CatalogBody = Annotated[
@@ -148,7 +155,8 @@ CatalogBody = Annotated[
     | ClearExtraBody
     | PurchaseSessionBody
     | CancelPurchaseBalanceBody
-    | VoidReceiptBody,
+    | VoidReceiptBody
+    | CorrectPostedReceiptBody,
     Field(discriminator="action"),
 ]
 
@@ -273,6 +281,10 @@ def create_inventory_router(
         elif isinstance(body, CancelPurchaseBalanceBody):
             receipt = inventory.cancel_purchase_balance(
                 key, body.purchase_id, body.reason, int(body.expected_revision)
+            )
+        elif isinstance(body, CorrectPostedReceiptBody):
+            receipt = inventory.correct_posted_receipt(
+                key, body.purchase_id, body.receipt_id, body.reason, int(body.expected_revision)
             )
         elif isinstance(body, VoidReceiptBody):
             receipt = inventory.void_purchase_receipt(

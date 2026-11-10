@@ -38,6 +38,7 @@ const SHOPPING_SAVED = {
   'shopping.receive': 'arrivalSaved',
   'shopping.cancel-balance': 'cancelSaved',
   'shopping.void-receipt': 'voidSaved',
+  'shopping.correct-posted-receipt': 'postedCorrectionSaved',
   'shopping.post-receipt': 'stockPosted',
   'shopping.add-extra': 'extraAdded',
   'shopping.clear-extra': 'extraCleared',
@@ -281,7 +282,8 @@ export class DomusInventory extends LitElement {
         ${entry.occurrenceId === null ? nothing : html`<p>${this.text('taskOccurrence')} <code>${entry.occurrenceId}</code></p>`}
       </details>
       ${manage && entry.kind === 'intake' && entry.correctedBy === null
-        ? this.button('reverseIntake', () => this.editStock(history.productId, entry), blocked) : nothing}
+        ? entry.shoppingReceipt ? html`<p>${this.text('correctReceiptInShopping')}</p>`
+          : this.button('reverseIntake', () => this.editStock(history.productId, entry), blocked) : nothing}
     </li>`;
   }
 

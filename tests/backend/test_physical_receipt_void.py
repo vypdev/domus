@@ -333,7 +333,7 @@ def test_schema_26_upgrade_restart_and_activated_restore(tmp_path, monkeypatch):
             "WHERE r.movement_id IS NULL ORDER BY r.position"
         ).fetchall()
         db.row_factory = sqlite3.Row
-        verify_shopping_records(db, has_voids=False)
+        verify_shopping_records(db, version=26)
     path.chmod(0o600)
     store = SQLiteDatabase(path, installation)
     original_bytes = path.read_bytes()
@@ -348,7 +348,7 @@ def test_schema_26_upgrade_restart_and_activated_restore(tmp_path, monkeypatch):
     assert path.read_bytes() == original_bytes
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (27,)
+        assert db.execute("PRAGMA user_version").fetchone() == (28,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
             assert db.execute("SELECT * FROM " + table).fetchall() == rows

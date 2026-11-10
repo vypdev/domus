@@ -23,7 +23,7 @@ export type ShoppingIntent = {readonly type: 'purchases' | 'more-purchases' | 'm
 
 export class DomusShopping extends LitElement {
   static properties = {view:{attribute:false}, language:{attribute:false}, selected:{state:true},
-    purchaseError:{state:true}, arrivalError:{state:true}, cancelError:{state:true}, voidError:{state:true}};
+    purchaseError:{state:true}, arrivalError:{state:true}, cancelError:{state:true}, receiptError:{state:true}};
 
   static styles = css`
     .shopping, form, label, li {display:grid;gap:8px}
@@ -42,7 +42,7 @@ export class DomusShopping extends LitElement {
   private declare selected: string;
   private declare purchaseError: 'invalidName' | 'invalidQuantity' | null;
   private declare cancelError: boolean;
-  private declare voidError: string | null;
+  private declare receiptError: string | null;
   private declare arrivalError: 'invalidQuantity' | 'shopping_receipt_exceeds_purchase' | null;
 
   constructor() {
@@ -51,7 +51,7 @@ export class DomusShopping extends LitElement {
     this.purchaseError = null;
     this.arrivalError = null;
     this.cancelError = false;
-    this.voidError = null;
+    this.receiptError = null;
   }
 
   protected updated(changed: PropertyValues<this>): void {
@@ -62,7 +62,7 @@ export class DomusShopping extends LitElement {
     if (purchaseReceipts && purchaseReceipts.purchase.id !== previous?.purchaseReceipts?.purchase.id) {
       this.arrivalError = null;
       this.cancelError = false;
-      this.voidError = null;
+      this.receiptError = null;
       this.renderRoot.querySelector<HTMLElement>('#purchase-receipts-title')?.focus();
       this.renderRoot.querySelector<HTMLFormElement>('#arrival-form')?.reset();
       this.renderRoot.querySelector<HTMLFormElement>('#cancel-form')?.reset();
@@ -182,26 +182,28 @@ export class DomusShopping extends LitElement {
     </details>`;
   }
 
-  private voidForm(entry: PhysicalReceipt, purchase: Purchase, blocked: boolean) {
-    const invalid = this.voidError === entry.id;
-    const errorId = 'void-error-' + entry.id;
-    return html`<details><summary>${this.text('voidReceipt')}</summary>
-      <form class="receipt-void-form" novalidate @submit=${(event: SubmitEvent) => {
+  private receiptCorrectionForm(entry: PhysicalReceipt, purchase: Purchase, blocked: boolean) {
+    const posted = entry.movementId !== null;
+    const action = posted ? 'shopping.correct-posted-receipt' : 'shopping.void-receipt';
+    const invalid = this.receiptError === entry.id;
+    const errorId = 'receipt-reason-' + entry.id;
+    return html`<details><summary>${this.text(posted ? 'correctPostedReceipt' : 'voidReceipt')}</summary>
+      <form class=${posted ? 'posted-receipt-correction-form' : 'receipt-void-form'} novalidate @submit=${(event: SubmitEvent) => {
         event.preventDefault();
         if (blocked) return;
         const fields = new FormData(event.currentTarget as HTMLFormElement);
         let reason: string;
         try {reason = taskText(fields.get('reason'), STOCK_REASON_LIMIT, true);}
-        catch {this.voidError = entry.id; return;}
-        this.voidError = null;
-        this.intent({type:'submit', command:{action:'shopping.void-receipt', purchase_id:purchase.id,
+        catch {this.receiptError = entry.id; return;}
+        this.receiptError = null;
+        this.intent({type:'submit', command:{action, purchase_id:purchase.id,
           receipt_id:entry.id, reason, expected_revision:purchase.revision}});
       }}>
-        <p>${this.text('voidAmount')} · <strong>${this.amount(entry.quantity, purchase.unit)}</strong></p>
+        <p>${this.text(posted ? 'postedCorrectionAmount' : 'voidAmount')} · <strong>${this.amount(entry.quantity, purchase.unit)}</strong></p>
         <label>${this.text('reason')}<input name="reason" required maxlength=${STOCK_REASON_LIMIT} ?disabled=${blocked}
           aria-invalid=${invalid} aria-describedby=${invalid ? errorId : nothing}></label>
         ${invalid ? html`<p role="alert" id=${errorId}>${this.text('invalid_inventory_reason')}</p>` : nothing}
-        ${this.button('confirmVoid', blocked)}
+        ${this.button(posted ? 'confirmPostedCorrection' : 'confirmVoid', blocked)}
       </form>
     </details>`;
   }
@@ -209,19 +211,24 @@ export class DomusShopping extends LitElement {
   private physicalReceipt(entry: PhysicalReceipt, purchase: Purchase, mayShop: boolean, mayPost: boolean, blocked: boolean) {
     const tracked = purchase.productId !== null;
     const pending = tracked && entry.movementId === null && entry.voided === null;
-    const status = entry.voided !== null ? 'voidedReceipt'
-      : pending ? 'awaitingPosting' : tracked ? 'posted' : 'untrackedReceived';
+    const correction = entry.correction;
+    const canCorrectPosting = tracked && entry.movementId !== null && correction === null && mayPost;
+    const status = correction !== null ? correction.legacy ? 'legacyReceiptReversal' : 'postedReceiptCorrected'
+      : entry.voided !== null ? 'voidedReceipt' : pending ? 'awaitingPosting' : tracked ? 'posted' : 'untrackedReceived';
+    const annotation = correction ?? entry.voided;
     return html`<li>
       <p><strong>${this.amount(entry.quantity, purchase.unit)}</strong> ·
         ${entry.authorAlias ?? entry.memberId} · ${instant(Number(entry.createdAt), this.language)}</p>
       <p>${this.text(status)}</p>
-      ${entry.voided === null ? nothing : html`
-        <p>${entry.voided.authorAlias ?? entry.voided.memberId} · ${instant(Number(entry.voided.createdAt), this.language)}</p>
-        <dl><dt>${this.text('reason')}</dt><dd>${entry.voided.reason}</dd></dl>`}
+      ${annotation === null ? nothing : html`
+        <p>${annotation.authorAlias ?? annotation.memberId} · ${instant(Number(annotation.createdAt), this.language)}</p>
+        <dl><dt>${this.text('reason')}</dt><dd>${annotation.reason}</dd></dl>`}
       <details><summary>${this.text('receipt')}</summary><code>${entry.id}</code>
         ${entry.movementId === null ? nothing : html`<p>${this.text('movement')} <code>${entry.movementId}</code></p>`}
+        ${correction === null ? nothing : html`<p>${this.text('correctedBy')} <code>${correction.movementId}</code></p>`}
       </details>
-      ${pending && mayShop && purchase.cancelled === '0' ? this.voidForm(entry, purchase, blocked) : nothing}
+      ${mayShop && purchase.cancelled === '0' && (pending || canCorrectPosting)
+        ? this.receiptCorrectionForm(entry, purchase, blocked) : nothing}
       ${pending && mayPost ? this.button('postToPantry', blocked,
         {type:'submit',command:{action:'shopping.post-receipt',purchase_id:purchase.id,receipt_id:entry.id}}) : nothing}
     </li>`;

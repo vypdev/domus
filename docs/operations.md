@@ -171,6 +171,26 @@ The void moves the recorded quantity back to the amount still due. After an
 activated restore, review the current item and physical receipt before
 starting a new void. The original operation may be historical.
 
+## Correcting a posted physical receipt
+
+Schema 28 links a physical receipt to its compensating Pantry movement.
+Migration from schema 27 preserves all existing rows and operation receipts.
+Snapshot verification checks the relationship between the receipt, posting
+and compensation, and reconciles effective receipt totals and purchase
+revision.
+
+Both current `shopping.manage` and `inventory.manage` grants are required
+to correct a posted receipt or recover the original operation. The write
+checks the item revision, reservations and other open purchases before
+committing the ledger movement, receipt link and purchase balance together.
+Inventory directs new corrections of Shopping postings to the receipt
+detail. Previous Inventory-only reversals retain their original stock
+movement and receipt and are identified separately in Shopping.
+
+After an activated restore, review the receipt and both histories before
+starting a new correction. The original request can return a historical
+operation receipt.
+
 ## Family rewards
 
 Rewards start disabled. A current points administrator can enable new requests,

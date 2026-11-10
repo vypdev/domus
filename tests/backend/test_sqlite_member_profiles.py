@@ -302,7 +302,7 @@ def test_real_historical_input_upgrade_preserves_every_original_table_and_adds_d
                     current.household_id, current.member_id
                 ) == MemberPreferences(current.member_id, current.household_id)
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 27
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 28
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
 
@@ -350,7 +350,7 @@ def test_snapshot_independently_preserves_both_profiles_without_changing_member_
     archive = tmp_path / "snapshot"
     snapshots = SQLiteSnapshots(store, archive, store.installation, Clock())
     checkpoint = snapshots.create("original")
-    assert checkpoint.schema_version == 27 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 28 and snapshots.inspect() == checkpoint
     with SQLiteDatabase(archive / "domus.sqlite3", store.installation).read() as unit:
         assert unit.presentations.get("home", "member_1") == public
         assert unit.preferences.get("home", "member_1") == private
