@@ -8,8 +8,8 @@ from fastapi.params import Depends
 from pydantic import Field
 
 from domus.application.inventory import CatalogAction
-from domus.application.inventory_queries import InventoryView
-from domus.domain.inventory import BaseUnit
+from domus.application.inventory_queries import InventoryView, MovementHistory
+from domus.domain.inventory import MAX_STOCK_REASON, BaseUnit
 from domus.domain.task_material_values import MaterialQuantity
 from domus.entrypoints.household_http import (
     ReceiptResponse,
@@ -36,7 +36,30 @@ class IntakeBody(StrictModel):
     quantity: Quantity
 
 
-CatalogBody = Annotated[ProductBody | IntakeBody, Field(discriminator="action")]
+StockReason = Annotated[str, Field(min_length=1, max_length=MAX_STOCK_REASON)]
+SignedQuantity = Annotated[
+    str,
+    Field(min_length=1, max_length=20, pattern=r"^-?(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{0,5}[1-9])?$"),
+]
+
+
+class AdjustmentBody(StrictModel):
+    action: Literal["inventory.adjust"]
+    product_id: Identifier
+    quantity: SignedQuantity
+    reason: StockReason
+
+
+class IntakeCorrectionBody(StrictModel):
+    action: Literal["inventory.correct-intake"]
+    product_id: Identifier
+    movement_id: Identifier
+    reason: StockReason
+
+
+CatalogBody = Annotated[
+    ProductBody | IntakeBody | AdjustmentBody | IntakeCorrectionBody, Field(discriminator="action")
+]
 
 
 def create_inventory_router(
@@ -51,6 +74,14 @@ def create_inventory_router(
     @router.get("", response_model=InventoryView)
     def catalog(request: Request, query: Annotated[PageQuery, Query()]) -> InventoryView:
         return context(request).inventory().report(limit=query.limit, cursor=query.cursor)
+
+    @router.get("/products/{product_id}/movements", response_model=MovementHistory)
+    def history(
+        request: Request, product_id: Identifier, query: Annotated[PageQuery, Query()]
+    ) -> MovementHistory:
+        return (
+            context(request).inventory().history(product_id, limit=query.limit, cursor=query.cursor)
+        )
 
     @router.post(
         "/commands",
@@ -68,8 +99,12 @@ def create_inventory_router(
         inventory, key = context(request).inventory_commands, _key(request)
         if isinstance(body, ProductBody):
             receipt = inventory.register(key, body.name, body.base_unit)
-        else:
+        elif isinstance(body, IntakeBody):
             receipt = inventory.intake(key, body.product_id, MaterialQuantity(body.quantity))
+        elif isinstance(body, AdjustmentBody):
+            receipt = inventory.adjust(key, body.product_id, body.quantity, body.reason)
+        else:
+            receipt = inventory.correct_intake(key, body.product_id, body.movement_id, body.reason)
         return _receipt(receipt)
 
     @router.get("/requests/{action}/{key}", response_model=ReceiptResponse)

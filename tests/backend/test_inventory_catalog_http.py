@@ -6,6 +6,8 @@ from test_rewards_http import member_context
 from test_task_runtime import api as api
 
 from domus.domain.identity import Member, MemberStatus, Role
+from domus.domain.member_profiles import MemberPresentation
+from domus.infrastructure.application_runtime import SystemClock
 
 INVENTORY = "/api/v1/inventory"
 VIEWER = "b" * 32
@@ -159,3 +161,174 @@ def test_exact_stock_capacity_rejects_partial_posting_and_forced_binding(
             "available": maximum,
         }
     ]
+
+
+def test_product_history_is_protected_and_pages_across_later_appends(api, monkeypatch):
+    now = SystemClock().now()
+    monkeypatch.setattr(SystemClock, "now", lambda _clock: now)
+    with api.store.write() as unit:
+        unit.members.save(Member("viewer", "home", VIEWER, Role.VIEWER, MemberStatus.ACTIVE, 1), 0)
+    api.user(USER, True)
+    product = register(api, "oil", "Oil", "millilitre")
+    other = register(api, "tea", "Tea", "gram")
+    path = f"{INVENTORY}/products/{product}/movements"
+
+    def history(user=USER, **params):
+        return api.client.get(path, headers=member_context(user), params=params)
+
+    assert history().json()["movements"] == []
+    with api.store.write() as unit:
+        actor = unit.members.by_user("home", USER).member_id
+        unit.presentations.save(MemberPresentation(actor, "home", "Kitchen lead", 2), 1)
+    first = post(api, "intake", "intake", product_id=product, quantity="5.000001").json()["result"]
+    adjustment = {"product_id": product, "quantity": "-0.000001", "reason": "Counted one less"}
+    second = post(api, "adjust", "adjust", **adjustment).json()["result"]
+    response = history(limit=1)
+    assert response.status_code == 200, response.text
+    page = response.json()
+    assert page["product_name"] == "Oil" and page["base_unit"] == "millilitre"
+    (movement,) = page["movements"]
+    assert movement == {
+        "movement_id": second["movement_id"],
+        "quantity": "-0.000001",
+        "kind": "adjustment",
+        "member_id": actor,
+        "author_alias": "Kitchen lead",
+        "created_at": movement["created_at"],
+        "reason": adjustment["reason"],
+        "task_occurrence_id": None,
+        "corrects": None,
+        "corrected_by": None,
+    }
+    cursor = page["next_cursor"]
+    assert cursor
+    for limit in (0, 101, 2):
+        assert history(limit=limit, cursor=cursor).status_code == 422
+    assert (
+        api.client.get(
+            f"{INVENTORY}/products/{other}/movements",
+            headers=member_context(USER),
+            params={"limit": 1, "cursor": cursor},
+        ).json()["code"]
+        == "invalid_task_cursor"
+    )
+    recent = post(api, "later", "adjust", **(adjustment | {"quantity": "1"})).json()["result"]
+    older = history(limit=1, cursor=cursor).json()
+    assert older["next_cursor"] is None
+    assert older["movements"][0]["movement_id"] == first["movement_id"]
+    assert older["movements"][0]["created_at"] == movement["created_at"]
+    assert history().json()["movements"][0]["movement_id"] == recent["movement_id"]
+    before = history().json()
+    deleted = api.client.delete(path, headers=api.headers("delete") | member_context(USER))
+    assert deleted.status_code == (403 if api.mode == "native" else 405)
+    assert history().json() == before
+
+    api.user(VIEWER)
+    assert history(VIEWER).status_code == 200
+    assert history(VIEWER, limit=1, cursor=cursor).status_code == 422
+    assert post(api, "adjust", "adjust", user=VIEWER, **adjustment).status_code == 403
+    assert (
+        post(
+            api,
+            "correct",
+            "correct-intake",
+            user=VIEWER,
+            product_id=product,
+            movement_id=first["movement_id"],
+            reason="Duplicate",
+        ).status_code
+        == 403
+    )
+    api.user(OUTSIDER)
+    assert history(OUTSIDER).status_code == 403
+
+
+def test_adjustment_and_reversal_wire_retain_linked_facts_and_receipts(api):
+    api.user(USER, True)
+    product = register(api, "soap", "Soap", "millilitre")
+    other = register(api, "salt", "Salt", "piece")
+    payload = {"product_id": product, "reason": "Inventory check"}
+    path = f"{INVENTORY}/products/{product}/movements"
+    assert (
+        api.client.get(
+            f"{INVENTORY}/products/unknown/movements", headers=member_context(USER)
+        ).status_code
+        == 404
+    )
+    assert post(api, "bad", "adjust", product_id=product, quantity="1").status_code == 422
+    for quantity in ("-0", "0", "0.0000001", "1.2e3", 1):
+        assert post(api, "bad", "adjust", **payload, quantity=quantity).status_code == 422
+    assert (
+        post(api, "bad", "adjust", **(payload | {"reason": " "}), quantity="1").json()["code"]
+        == "invalid_inventory_reason"
+    )
+    assert post(api, "bad", "adjust", **payload, quantity="1", base_unit="gram").status_code == 422
+    assert (
+        post(api, "bad", "adjust", **(payload | {"product_id": other}), quantity="0.1").json()[
+            "code"
+        ]
+        == "invalid_material_precision"
+    )
+    assert (
+        post(api, "below", "adjust", **payload, quantity="-1").json()["code"]
+        == "inventory_insufficient_stock"
+    )
+    added = post(api, "intake", "intake", product_id=product, quantity="1.250001").json()["result"]
+    correct = payload | {"movement_id": added["movement_id"]}
+    assert (
+        post(api, "cross", "correct-intake", **(correct | {"product_id": other})).json()["code"]
+        == "inventory_movement_missing"
+    )
+    assert (
+        post(api, "missing", "correct-intake", **(correct | {"movement_id": "unknown"})).status_code
+        == 404
+    )
+    assert post(api, "forged", "correct-intake", **correct, quantity="-1").status_code == 422
+
+    first = post(api, "correct", "correct-intake", **correct).json()
+    compensation = first["result"]
+    assert compensation == {
+        "product_id": product,
+        "movement_id": compensation["movement_id"],
+        "base_unit": "millilitre",
+        "quantity": "-1.250001",
+        "corrects": added["movement_id"],
+    }
+    assert post(api, "correct", "correct-intake", **correct).json() == first
+    assert (
+        api.client.get(
+            f"{INVENTORY}/requests/inventory.correct-intake/correct", headers=member_context(USER)
+        ).json()
+        == first
+    )
+    assert (
+        post(api, "correct", "correct-intake", **(correct | {"reason": "Changed"})).json()["code"]
+        == "idempotency_conflict"
+    )
+    assert (
+        post(api, "fresh", "correct-intake", **correct).json()["code"]
+        == "inventory_intake_corrected"
+    )
+    assert (
+        post(
+            api,
+            "forged",
+            "correct-intake",
+            **(correct | {"movement_id": compensation["movement_id"]}),
+        ).json()["code"]
+        == "inventory_correction_requires_intake"
+    )
+    correction, original = api.client.get(path, headers=member_context(USER)).json()["movements"]
+    assert (
+        correction["kind"] == "intake_correction"
+        and correction["corrects"] == original["movement_id"]
+    )
+    assert original["kind"] == "intake" and original["quantity"] == "1.250001"
+    assert original["corrected_by"] == correction["movement_id"]
+    assert get(api).json()["products"][0]["recorded"] == "0"
+    maximum = post(api, "maximum", "adjust", **payload, quantity="999999999999.999999")
+    assert maximum.status_code == 200
+    assert (
+        post(api, "overflow", "adjust", **payload, quantity="0.000001").json()["code"]
+        == "inventory_stock_capacity"
+    )

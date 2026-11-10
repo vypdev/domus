@@ -81,7 +81,7 @@ def test_original_schema6_migration_preserves_rows_and_projects_existing_cause(t
             upgraded[table] == values for table, values in original.items() if table != "households"
         )
         assert all(upgraded[table] == [] for table in added)
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 20
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 21
     service = queries(store, HumanIdentity("ha_admin", True, True, False))
     detail = service.occurrence("identity-15")
     assert detail.dependency_review_required and len(detail.dependency_reviews.items) == 1

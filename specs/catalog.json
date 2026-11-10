@@ -729,6 +729,8 @@
         "tests/backend/test_inventory_catalog_http.py",
         "tests/backend/test_inventory_catalog_storage.py",
         "tests/fixtures/sqlite/v19-inventory-catalog-source.sql",
+        "tests/backend/test_inventory_movements.py",
+        "tests/fixtures/sqlite/v20-inventory-history-source.sql",
         "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
       "documentation": [
@@ -738,7 +740,8 @@
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
         "docs/evidence/recurrence-calendar-qualification.md",
-        "docs/evidence/inventory-catalog-qualification.md"
+        "docs/evidence/inventory-catalog-qualification.md",
+        "docs/evidence/inventory-movement-qualification.md"
       ],
       "readiness": {
         "state": "draft",

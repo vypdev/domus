@@ -4,8 +4,8 @@ import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../src/adapters/in
 import {InventoryController} from '../src/application/inventory-controller';
 import type {InventoryRequest, InventoryResult, InventoryScope, InventoryState} from '../src/application/inventory-controller';
 import type {EntryRead} from '../src/application/ports';
-import {intakeQuantity, inventoryCommand} from '../src/domain/inventory';
-import type {InventoryReport} from '../src/domain/inventory';
+import {adjustmentQuantity, intakeQuantity, inventoryCommand} from '../src/domain/inventory';
+import type {InventoryReport, MovementHistory} from '../src/domain/inventory';
 import '../src/presentation/domus-inventory';
 import corpus from './fixtures/entry-wire.json';
 
@@ -16,8 +16,17 @@ const intake = {action:'inventory.intake', product_id:'product', quantity:'1.250
 const request: InventoryRequest = {key:'original', scope:scope.key, command:intake};
 const savedProduct = {product_id:'product', name:register.name, base_unit:register.base_unit};
 const savedMovement = {product_id:'product', movement_id:'movement', base_unit:register.base_unit, quantity:intake.quantity};
-const committed: InventoryResult = {kind:'committed', operationId:'operation', productId:'product',
-  intake:{movementId:'movement', unit:register.base_unit, quantity:intake.quantity}};
+const committed = {kind:'committed', operationId:'operation', productId:'product',
+  movement:{movementId:'movement', unit:register.base_unit, quantity:intake.quantity, action:intake.action}} as const;
+const adjust = {action:'inventory.adjust', product_id:'product', quantity:'-0.000001', reason:'Counted one less'} as const;
+const reverse = {action:'inventory.correct-intake', product_id:'product', movement_id:'movement', reason:'Duplicate'} as const;
+const wireMovement = {movement_id:'movement', kind:'intake', quantity:'1.250001', member_id:'member', author_alias:null,
+  created_at:'100', reason:null, task_occurrence_id:null, corrects:null, corrected_by:null};
+const wireHistory = {product_id:'product', product_name:'Olive oil', base_unit:'millilitre',
+  movements:[wireMovement], next_cursor:'older'};
+const history: MovementHistory = {productId:'product', productName:'Olive oil', unit:'millilitre', cursor:'older',
+  movements:[{id:'movement', kind:'intake', quantity:'1.250001', memberId:'member', authorAlias:null, createdAt:'100',
+    reason:null, occurrenceId:null, corrects:null, correctedBy:null}]};
 const wireProduct = {...savedProduct, recorded:'999999999999.999999', reserved:'0.000001', available:'999999999999.999998'};
 const wire = {location_id:'pantry', may_manage:true, products:[wireProduct], next_cursor:'next'};
 const report: InventoryReport = {mayManage:true, products:[{id:'product', name:'Olive oil', unit:'millilitre',
@@ -74,7 +83,7 @@ test.each(['native','standalone'] as const)('exact catalog and original receipt 
   expect(await server.read(scope,null).result).toEqual(report);
   expect((await server.read(scope,'next/+?').result).products[0].unit).toBe('piece');
   expect(await server.send(scope,{...request,command:register}).result)
-    .toEqual({kind:'committed',operationId:'operation',productId:'product',intake:null});
+    .toEqual({kind:'committed',operationId:'operation',productId:'product',movement:null});
   expect(await server.send(scope,request).result).toEqual(committed);
   expect(await server.original(scope,request).result).toEqual({...committed,kind:'historical'});
   expect(await server.original(scope,request).result).toEqual(committed);
@@ -132,9 +141,10 @@ function controller() {
   const load = vi.fn((): EntryRead<InventoryReport> => read(report));
   const send = vi.fn((_scope: InventoryScope, _request: InventoryRequest): EntryRead<InventoryResult> => read(committed));
   const original = vi.fn((_scope: InventoryScope, _request: InventoryRequest): EntryRead<InventoryResult|null> => read(null));
-  const controller = new InventoryController({read:load,send,original},local.journal,{requestKey:() => request.key},publish);
+  const movements = vi.fn((_scope: InventoryScope, _product: string, _cursor: string|null): EntryRead<MovementHistory> => read(history));
+  const controller = new InventoryController({read:load,history:movements,send,original},local.journal,{requestKey:() => request.key},publish);
   const current = () => publish.mock.lastCall?.[0];
-  return {...local, controller, load, send, original, current};
+  return {...local, controller, load, movements, send, original, current};
 }
 
 test('controller reloads authoritative stock, pages within scope, and blocks denied or uncertain writes', async () => {
@@ -260,7 +270,7 @@ function component() {
   const submit = (form:HTMLFormElement) => form.dispatchEvent(new Event('submit',{cancelable:true}));
   return {node,root,events,press,input,submit};
 }
-const initial: InventoryState = {scope,report:null,busy:false,pending:false,result:null,notice:null};
+const initial: InventoryState = {scope,report:null,history:null,busy:false,pending:false,result:null,notice:null};
 
 test('inventory exposes scoped empty, read-only and failure states with accessible draft review', async () => {
   const {node,root,events,press,input,submit} = component();
@@ -330,7 +340,7 @@ test('inventory exposes scoped empty, read-only and failure states with accessib
 test('receipt details preserve exact quantities, product focus, and historical outcomes in both locales', async () => {
   const {node,root,press} = component();
   node.view = {...initial,report:{...report,products:[{...report.products[0],unit:'piece',recorded:'2',reserved:'1',available:'1'}]},
-    result:{kind:'committed',operationId:'new-op',productId:'product',intake:null}};
+    result:{kind:'committed',operationId:'new-op',productId:'product',movement:null}};
   await node.updateComplete;
   expect(root.textContent).toContain('Product registered.');
   expect(root.textContent).not.toContain('Stock movement');
@@ -348,4 +358,178 @@ test('receipt details preserve exact quantities, product focus, and historical o
   await node.updateComplete;
   expect(root.textContent).toContain('anterior a la restauración');
   expect(root.querySelector('a')).toBeNull();
+});
+
+test('adjustment drafts and journal commands retain exact signed decimal values', () => {
+  expect(inventoryCommand(adjust)).toEqual(adjust);
+  expect(inventoryCommand(reverse)).toEqual(reverse);
+  for (const value of [
+    {...adjust, quantity:'-0'}, {...adjust, quantity:2}, {...adjust, quantity:'-0.0000001'},
+    {...adjust, reason:' '}, {...reverse, movement_id:'../foreign'},
+    {action:adjust.action, product_id:'product', reason:'Count', actor:'forged'},
+    {action:reverse.action, product_id:'product', reason:'Count', quantity:'-1'},
+    {action:reverse.action, product_id:'product', movement_id:'movement', actor:'forged'},
+    {action:reverse.action, movement_id:'movement', reason:'Count', actor:'forged'},
+    {product_id:'product', movement_id:'movement', reason:'Count', actor:'forged'},
+  ]) expect(() => inventoryCommand(value)).toThrow();
+  expect(adjustmentQuantity(' -1,250001 ', 'gram')).toBe('-1.250001');
+  expect(adjustmentQuantity('+2', 'piece')).toBe('2');
+  expect(adjustmentQuantity('-0', 'gram')).toBeNull();
+  expect(adjustmentQuantity('1.5', 'piece')).toBeNull();
+  const stored = journal().journal;
+  stored.save({...request, command:reverse});
+  expect(stored.open(scope.key)).toEqual({...request, command:reverse});
+});
+
+test('history transport scopes its route and decodes attribution, links and exact receipts', async () => {
+  const changed = {...wireMovement, movement_id:'compensation', kind:'intake_correction', quantity:'-1.250001',
+    author_alias:'Kitchen lead', reason:'Duplicate', task_occurrence_id:'occurrence', corrects:'movement', corrected_by:'later'};
+  const adjusted = {...savedMovement, quantity:adjust.quantity, corrects:null};
+  const corrected = {...savedMovement, movement_id:changed.movement_id, quantity:changed.quantity, corrects:reverse.movement_id};
+  const {server,fetch} = http([
+    [200,wireHistory], [200,{...wireHistory, movements:[changed],next_cursor:null}],
+    [200,csrf], [200,receipt(adjusted)], [200,receipt(corrected)],
+  ]);
+  expect(await server.history(scope,'product',null).result).toEqual(history);
+  const older = await server.history(scope,'product','older/+?').result;
+  expect(older).toMatchObject({cursor:null, movements:[{
+    id:'compensation', quantity:'-1.250001', authorAlias:'Kitchen lead', reason:'Duplicate',
+    occurrenceId:'occurrence', corrects:'movement', correctedBy:'later',
+  }]});
+  expect(fetch.mock.calls[1][0]).toContain('inventory/products/product/movements?limit=25&cursor=older%2F%2B%3F');
+  expect(await server.send(scope,{...request,command:adjust}).result)
+    .toMatchObject({movement:{action:adjust.action, quantity:adjust.quantity}});
+  expect(await server.original(scope,{...request,command:reverse}).result)
+    .toMatchObject({movement:{action:reverse.action, movementId:'compensation', quantity:'-1.250001'}});
+  for (const value of [
+    {...wireHistory, product_id:'other'}, {...wireHistory, movements:{}},
+    {...wireHistory, movements:Array(26).fill(wireMovement)},
+    {...wireHistory, movements:[wireMovement, wireMovement]},
+    {...wireHistory, movements:[{...wireMovement, kind:'unknown'}]},
+  ]) await expect(http([[200,value]]).server.history(scope,'product',null).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+  for (const [command, payload] of [
+    [adjust,{...adjusted,corrects:'movement'}],
+    [reverse,{...corrected,corrects:'different'}],
+    [reverse,{...corrected,quantity:'1.250001'}],
+  ] as const) await expect(http([[200,receipt(payload)]]).server.original(scope,{...request,command}).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+});
+
+test('history paging and refresh retire stale reads and keep the current product', async () => {
+  const f = controller(), app = f.controller;
+  await app.showHistory('product');
+  await app.moreHistory();
+  app.closeHistory();
+  app.bind(scope);
+  await app.showHistory('product'); // A catalog request owns the read.
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await app.showHistory('product');
+  expect(f.current()?.history).toBe(history);
+  f.movements.mockReturnValueOnce(read({...history, cursor:null, movements:[]}));
+  await app.moreHistory();
+  expect(f.current()?.history).toEqual({...history, cursor:null});
+  await app.moreHistory();
+  await app.refresh();
+  expect(f.movements.mock.lastCall).toEqual([scope,'product',null]);
+  expect(f.current()?.history).toBe(history);
+  f.load.mockReturnValueOnce(lost());
+  await app.refresh();
+  expect(f.current()).toMatchObject({report:null,history:null});
+  await app.showHistory('product');
+  expect(f.movements).toHaveBeenCalledTimes(3);
+  await app.refresh();
+  f.movements.mockReturnValueOnce(lost());
+  await app.showHistory('product');
+  expect(f.current()).toMatchObject({history:null,notice:'unavailable'});
+  await app.showHistory('product');
+  expect(f.current()?.notice).toBeNull();
+  app.closeHistory();
+  expect(f.current()?.history).toBeNull();
+  app.bind(null);
+  f.journal.save(request);
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  f.original.mockReturnValueOnce(lost());
+  await app.recover();
+  await app.showHistory('product');
+  expect(f.current()).toMatchObject({history,pending:true,notice:'uncertain'});
+  const cancel = vi.fn();
+  let resolve!: (value:MovementHistory) => void;
+  f.movements.mockReturnValueOnce({result:new Promise(done => {resolve = done;}),cancel});
+  const loading = app.showHistory('product');
+  app.closeHistory();
+  expect(f.current()?.history).toBe(history);
+  app.bind(null);
+  resolve(history);
+  await loading;
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(f.current()).toBeNull();
+});
+
+test('history and signed stock forms expose links, actor, validation and current authority', async () => {
+  const {node,root,events,press,submit} = component();
+  node.view = {...initial, report};
+  await node.updateComplete;
+  press('Show movement history');
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'history',productId:'product'});
+  node.view = {...initial, report, history:{...history,movements:[],cursor:null}};
+  await node.updateComplete;
+  expect(root.activeElement?.className).toBe('history');
+  expect(root.textContent).toContain('There are no movements for this product.');
+  node.view = {...initial,report:{...report,mayManage:false},history};
+  await node.updateComplete;
+  expect(root.textContent).toContain('+1.250001 millilitres');
+  expect(root.textContent).toContain('UTC');
+  expect(root.textContent).toContain('member');
+  expect([...root.querySelectorAll('vyp-ha-button')].map(item => item.state.label)).not.toContain('Reverse this intake');
+  press('Show older movements');
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'more-history'});
+  press('Close movement history');
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'close-history'});
+  node.view = {...initial,report,history};
+  await node.updateComplete;
+  press('Adjust stock');
+  await node.updateComplete;
+  const form = () => root.querySelector<HTMLFormElement>('.history form')!;
+  const fill = (value: string, index = 0) => {
+    const field = form().querySelectorAll('input')[index];
+    field.value=value; field.dispatchEvent(new Event('input'));
+  };
+  submit(form());
+  await node.updateComplete;
+  expect(form().textContent).toContain('Enter a reason');
+  fill(adjust.reason,1);
+  submit(form());
+  await node.updateComplete;
+  expect(form().textContent).toContain('Enter a quantity');
+  fill('-0,000001');
+  submit(form());
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:adjust});
+  node.view = {...node.view,pending:true};
+  await node.updateComplete;
+  const count = events.mock.calls.length;
+  submit(form());
+  expect(events.mock.calls).toHaveLength(count);
+  node.view = {...node.view,pending:false};
+  await node.updateComplete;
+  press('Cancel');
+  await node.updateComplete;
+  expect(form()).toBeNull();
+  press('Reverse this intake');
+  await node.updateComplete;
+  expect(form().textContent).toContain('−1.250001');
+  fill(reverse.reason);
+  submit(form());
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:reverse});
+  node.language = 'es';
+  node.view = {...node.view,history:{...history,cursor:null,movements:[
+    {...history.movements[0],correctedBy:'compensating'},
+    {...history.movements[0],id:'compensating',kind:'intake_correction',quantity:'-1.250001',
+      reason:'Duplicate',authorAlias:'Kitchen lead',corrects:'movement',occurrenceId:'occurrence'},
+  ]},result:{...committed,movement:{...committed.movement,action:reverse.action,quantity:'-1.250001'}}};
+  await node.updateComplete;
+  expect(form()).toBeNull();
+  for (const text of ['Entrada revertida', '-1,250001 mililitros', 'Kitchen lead', 'Duplicate', 'Movimiento original',
+    'Movimiento compensatorio', 'Instancia de tarea']) expect(root.textContent).toContain(text);
 });

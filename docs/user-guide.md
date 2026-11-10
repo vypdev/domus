@@ -87,6 +87,27 @@ key prevents a second stock entry, including after reload. A historical receipt
 can be viewed after restoring a backup. Check the current recorded stock before
 making another request.
 
+### Movement history and corrections
+
+Choose **Show movement history** on a product. Each entry shows its signed
+quantity, unit, source, author and date in UTC. **Show older movements**
+continues the current view. **Refresh inventory** shows newer entries. Movement
+details identify the original and compensating entries when a correction is linked.
+
+If you have inventory management access, choose **Adjust stock** in the history.
+Enter a positive or negative quantity and explain the physical count or other
+change. To undo an erroneous intake, use **Reverse this intake** on the original
+entry and confirm the full removal with a reason. When the original quantity was
+wrong, record the replacement quantity through normal intake after reversal.
+Both actions use the product's existing unit and precision. Stock needed by
+active reservations stays reserved. Review task usage and pending
+regularization in **Tasks**.
+
+If a reply is lost, choose **Recover original request** in the same tab, even
+after reloading. A historical receipt can refer to a movement that was recorded
+after the restored backup. Check the current history and balance before
+submitting a new request.
+
 ### Subsequent supplies workflows
 
 Add products independently from package formats and locations. Receive physical quantities into their base unit.

@@ -1,9 +1,17 @@
 """Inventory records belong to the current unit of work."""
 
+from dataclasses import dataclass
 from typing import Protocol
 
 from domus.domain.inventory import CatalogProduct, InventoryEffect, StockMovement
 from domus.domain.task_material_values import MaterialBinding
+
+
+@dataclass(frozen=True, slots=True)
+class LedgerEntry:
+    position: int
+    movement: StockMovement
+    corrected_by: str | None
 
 
 class InventoryRecords(Protocol):
@@ -20,4 +28,8 @@ class InventoryRecords(Protocol):
     def update_effect(self, value: InventoryEffect, previous_revision: int) -> None: ...
     def movement(self, home: str, source_key: str) -> StockMovement | None: ...
     def movement_by_id(self, home: str, movement_id: str) -> StockMovement | None: ...
+    def correction_id(self, home: str, original_id: str) -> str | None: ...
+    def history(
+        self, home: str, reference: str, through: int, limit: int
+    ) -> tuple[LedgerEntry, ...]: ...
     def append(self, value: StockMovement, balance: int) -> None: ...

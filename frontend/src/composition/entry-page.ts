@@ -183,10 +183,11 @@ export function decodeReviewIntent(value: unknown): ReviewIntent | null {
 
 export function decodeInventoryIntent(value: unknown): InventoryIntent | null {
   try {
-    const {type} = fields(value, ['type'], ['command']);
+    const {type} = fields(value, ['type'], ['command', 'productId']);
     if (type === 'submit') return {type, command: inventoryCommand(fields(value, ['type','command'], []).command)};
+    if (type === 'history') return {type, productId: identifier(fields(value, ['type','productId'], []).productId)};
     fields(value, ['type'], []);
-    check(type === 'refresh' || type === 'more' || type === 'recover');
+    check(type === 'refresh' || type === 'more' || type === 'recover' || type === 'more-history' || type === 'close-history');
     return {type};
   } catch {return null;}
 }
@@ -386,6 +387,9 @@ export function mountEntry(page: EntryPage): PageMount {
       if (intent?.type === 'refresh') await inventoryController.refresh();
       if (intent?.type === 'more') await inventoryController.more();
       if (intent?.type === 'recover') await inventoryController.recover();
+      if (intent?.type === 'history') await inventoryController.showHistory(intent.productId);
+      if (intent?.type === 'more-history') await inventoryController.moreHistory();
+      if (intent?.type === 'close-history') inventoryController.closeHistory();
       if (intent?.type === 'submit') await inventoryController.submit(intent.command);
     }, {signal:widget.signal});
     const syncWorkspace = () => {

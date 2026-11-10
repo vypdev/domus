@@ -39,7 +39,7 @@ def test_bare_source_and_managed_generation_source_are_explicit_and_roundtrip(tm
         ).prepare("restore-generation")
         assert prepared.source.generation_id == selection.generation_id
         assert prepared.source.identity_sha256 == selection.document().fingerprint
-        assert prepared.source.schema_version == 20
+        assert prepared.source.schema_version == 21
         assert PreparedRestoration.from_value(prepared.document().decode()) == prepared
     finally:
         storage.close()

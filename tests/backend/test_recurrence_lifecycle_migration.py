@@ -57,7 +57,7 @@ def test_supported_schema9_keeps_fixed_work_pristine_relative_progress_and_priva
         assert private.routine_participation_summaries is False and private.revision == 2
     assert facts(store.path, tables) == original
     with restarted._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 20
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 21
     with restarted.read() as unit:
         assert unit.recurrence.relative_inbox_after("home") == 0
 
@@ -81,7 +81,7 @@ def test_independent_snapshot_inspection_after_migration_preserves_every_origina
         store, archive, store.installation, SimpleNamespace(now=lambda: 1800000000000)
     )
     checkpoint = snapshots.create("source-nine")
-    assert checkpoint.schema_version == 20 and snapshots.inspect() == checkpoint
+    assert checkpoint.schema_version == 21 and snapshots.inspect() == checkpoint
     assert facts(archive / "domus.sqlite3", tables) == original
     assert store.path.read_bytes() == before
 
