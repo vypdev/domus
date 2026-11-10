@@ -93,6 +93,42 @@
         ],
         "type": "string"
       },
+      "AdjustmentBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.adjust",
+            "title": "Action",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantity": {
+            "maxLength": 20,
+            "minLength": 1,
+            "pattern": "^-?(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "product_id",
+          "quantity",
+          "reason"
+        ],
+        "title": "AdjustmentBody",
+        "type": "object"
+      },
       "AdministrationAction": {
         "enum": [
           "household.update",
@@ -968,7 +1004,9 @@
       "CatalogAction": {
         "enum": [
           "inventory.register-product",
-          "inventory.intake"
+          "inventory.intake",
+          "inventory.adjust",
+          "inventory.correct-intake"
         ],
         "title": "CatalogAction",
         "type": "string"
@@ -2663,6 +2701,40 @@
         "title": "IntakeBody",
         "type": "object"
       },
+      "IntakeCorrectionBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.correct-intake",
+            "title": "Action",
+            "type": "string"
+          },
+          "movement_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Movement Id",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "product_id",
+          "movement_id",
+          "reason"
+        ],
+        "title": "IntakeCorrectionBody",
+        "type": "object"
+      },
       "InventoryView": {
         "properties": {
           "location_id": {
@@ -3352,6 +3424,151 @@
           "revision"
         ],
         "title": "MissedPolicyView",
+        "type": "object"
+      },
+      "MovementHistory": {
+        "properties": {
+          "base_unit": {
+            "$ref": "#/components/schemas/BaseUnit"
+          },
+          "movements": {
+            "items": {
+              "$ref": "#/components/schemas/MovementView"
+            },
+            "title": "Movements",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_name",
+          "base_unit",
+          "movements",
+          "next_cursor"
+        ],
+        "title": "MovementHistory",
+        "type": "object"
+      },
+      "MovementKind": {
+        "enum": [
+          "intake",
+          "task_consumption",
+          "task_correction",
+          "adjustment",
+          "intake_correction"
+        ],
+        "title": "MovementKind",
+        "type": "string"
+      },
+      "MovementView": {
+        "properties": {
+          "author_alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Alias"
+          },
+          "corrected_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corrected By"
+          },
+          "corrects": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corrects"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MovementKind"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "movement_id": {
+            "title": "Movement Id",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "task_occurrence_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Occurrence Id"
+          }
+        },
+        "required": [
+          "movement_id",
+          "quantity",
+          "kind",
+          "member_id",
+          "author_alias",
+          "created_at",
+          "reason",
+          "task_occurrence_id",
+          "corrects",
+          "corrected_by"
+        ],
+        "title": "MovementView",
         "type": "object"
       },
       "NominalDateBody": {
@@ -11729,6 +11946,8 @@
               "schema": {
                 "discriminator": {
                   "mapping": {
+                    "inventory.adjust": "#/components/schemas/AdjustmentBody",
+                    "inventory.correct-intake": "#/components/schemas/IntakeCorrectionBody",
                     "inventory.intake": "#/components/schemas/IntakeBody",
                     "inventory.register-product": "#/components/schemas/ProductBody"
                   },
@@ -11740,6 +11959,12 @@
                   },
                   {
                     "$ref": "#/components/schemas/IntakeBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AdjustmentBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/IntakeCorrectionBody"
                   }
                 ],
                 "title": "Body"
@@ -11876,6 +12101,190 @@
           }
         ],
         "summary": "Command"
+      }
+    },
+    "/api/v1/inventory/products/{product_id}/movements": {
+      "get": {
+        "operationId": "history_api_v1_inventory_products__product_id__movements_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Product Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovementHistory"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "History"
       }
     },
     "/api/v1/inventory/requests/{action}/{key}": {

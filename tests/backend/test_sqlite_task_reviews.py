@@ -351,7 +351,7 @@ def test_original_schema6_checkpoint_activation_migrates_only_the_prepared_targe
             SQLiteSnapshots(selected.database, tmp_path / "new-checkpoint", INSTALLATION, Clock())
             .create("new")
             .schema_version
-            == 20
+            == 21
         )
     finally:
         selected.close()

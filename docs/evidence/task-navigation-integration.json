@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected product registration, exact Pantry intake, stock availability, and original intake recovery in English and Spanish.",
+  "scope": "Compiled household workspace with protected Pantry movement history, signed adjustments, linked intake reversals and original receipt recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "25c08c7aa7ab8adfcd458e7d2e1fdc51f1dfecdc12f1cac0d65d3e7741962fd1",
+    ".vite/manifest.json": "b6de45597b979e181a1edf40718327757de99e583083e602f24e24340f70e5d4",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-Dx8HsQnC.js": "eeef7579c8591ebe2ed679c5edf3d12e14c42f2316a3dee552f07759001f4eb2",
-    "index.html": "df5fca477aea9e4719d6a0cfb28dbc11ac5eb4d4694bddb5a8a64457c5e4c361"
+    "assets/index-DOZPU9An.js": "46061b09d5b81df6e4f8d869adfd23a7937a0429e920e8be57b5304d7a0ecf75",
+    "index.html": "419b965325ecb37b35ba383ae896d3db4c6bdd2ce0e1e0ac9ee359a275e10172"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -211,6 +211,16 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "assets/index-CnxWRd6p.js": "2cd064ed787aab2011186ee773bd7f18821f182b25e1ab4d6bd2d30be038cac2",
       "index.html": "3fbbdda81711a1844ec2c72ffd0a6d78f2e160f7fdc47f03576b4df3f8ddc992"
+    }
+  },
+  "preInventoryMovements": {
+    "sourceCommit": "eab3077fef9cc659978bf4d7c9f6f6a85c287961",
+    "scope": "Compiled household workspace with protected product registration, exact Pantry intake, stock availability, and original intake recovery in English and Spanish.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "25c08c7aa7ab8adfcd458e7d2e1fdc51f1dfecdc12f1cac0d65d3e7741962fd1",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-Dx8HsQnC.js": "eeef7579c8591ebe2ed679c5edf3d12e14c42f2316a3dee552f07759001f4eb2",
+      "index.html": "df5fca477aea9e4719d6a0cfb28dbc11ac5eb4d4694bddb5a8a64457c5e4c361"
     }
   }
 }

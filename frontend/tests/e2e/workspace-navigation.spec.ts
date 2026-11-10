@@ -412,6 +412,7 @@ for (const mode of ['native', 'standalone'] as const) {
     const historial = stock.getByRole('region', {name:'Historial de movimientos · Pantry oil'});
     await expect(historial.getByText('+1,250001 mililitros')).toBeVisible();
     await historial.getByRole('button', {name:'Revertir esta entrada'}).click();
+    await expect(historial.getByRole('textbox', {name:'Motivo'})).toBeFocused();
     await historial.getByRole('button', {name:'Confirmar reversión de entrada'}).click();
     await expect(historial.getByRole('alert')).toContainText('Introduce un motivo');
     await historial.getByRole('textbox', {name:'Motivo'}).fill('Entrada duplicada');

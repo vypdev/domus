@@ -195,6 +195,7 @@ export class DomusInventory extends LitElement {
     this.reason = '';
     this.adjustment = '';
     this.invalid = null;
+    void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLInputElement>('.history form input')?.focus());
   }
 
   private stockForm(history: MovementHistory, editor: NonNullable<DomusInventory['editor']>, blocked: boolean) {

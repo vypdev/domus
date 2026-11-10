@@ -441,7 +441,7 @@ def test_schema5_real_offline_activation_upgrades_only_target_and_keeps_original
             SQLiteSnapshots(selected.database, tmp_path / "new-snapshot", installation, Clock())
             .create("new")
             .schema_version
-            == 20
+            == 21
         )
     finally:
         selected.close()

@@ -492,6 +492,7 @@ test('history and signed stock forms expose links, actor, validation and current
   press('Adjust stock');
   await node.updateComplete;
   const form = () => root.querySelector<HTMLFormElement>('.history form')!;
+  expect(root.activeElement).toBe(form().querySelector('input'));
   const fill = (value: string, index = 0) => {
     const field = form().querySelectorAll('input')[index];
     field.value=value; field.dispatchEvent(new Event('input'));

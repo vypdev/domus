@@ -264,7 +264,7 @@ def test_pattern_edit_requires_matching_progress_and_preserves_existing_slot_sna
         SQLiteSnapshots(store, tmp_path / "edited", store.installation, Clock())
         .create("edited")
         .schema_version
-        == 20
+        == 21
     )
 
 
