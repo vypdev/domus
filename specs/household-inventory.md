@@ -835,3 +835,139 @@ Keep 100% global and per-file coverage and require CI and Bugbot green for the s
 ### 20. References and decisions
 
 The existing household-inventory specification and its prior catalog and task cases remain authoritative. The answers on issue #70 record the full reversal and pagination decisions.
+
+## Pantry minimum and target replenishment
+
+- Status: Draft
+- Owners: Domus maintainers and the Household Inventory capability
+- Scope: Pantry replenishment settings and one derived need per product
+- Source baseline: develop at e05958fd4df855cb24449372151135e361eba650
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+Let inventory managers set a minimum and target for a Pantry product. Current household readers can see the exact amount to replenish when available stock falls below that minimum.
+
+### 2. Problem, current behavior, and evidence
+
+PR #71 exposes attributed movements and exact available stock. Inventory cannot yet turn a low balance into a replenishment need. Extend the existing household-inventory owner at specs/household-inventory.md and qualify household-inventory-R4 for Pantry.
+
+### 3. Actors, surfaces, and terminology
+
+Household readers see the current need on the Inventory product. Members with inventory.manage edit the settings. Available stock is recorded stock minus active reservations. Tasks owns pending consumption and its material effects.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| pantry-replenishment-R1 | Current inventory.manage can update a versioned Pantry policy using exact quantities and recover the original receipt. Current household readers can see the policy and need. |
+| pantry-replenishment-R2 | Compare available stock with the minimum and expose target minus availability under one stable source when below the minimum. Resolve that source at or above the minimum. |
+| pantry-replenishment-R3 | Keep reservations, task effects, and pending consumption independent of the replenishment projection. |
+| pantry-replenishment-R4 | Preserve prior records across migration and retain policy, need identity, and receipts through restart and restoration. Exercise both deployment targets and locales. |
+
+Shopping, manual shopping extras, purchases and purchase receipts remain later increments.
+
+### 5. Current versus proposed product journey
+
+A manager enters minimum and target on the product. Readers see those values and a replenishment amount when available stock is below minimum. An intake or reservation change appears on the next refresh.
+
+### 6. Functional behavior and state model
+
+One policy per Pantry product has a revision. Unconfigured products use minimum and target zero at revision zero. Minimum and target are nonnegative and ordered. A zero minimum suspends the need. Below minimum, the amount is target minus current availability. At or above minimum the need is resolved. Reopening uses the same source identity scoped to the Pantry product. Project the current need from authoritative stock, active reservations, and the durable policy in one read transaction. Repeated reads do not create stored duplicates.
+
+### 7. User-facing configuration
+
+Use the product base unit and existing exact quantity limits. Pieces are whole. Grams and millilitres support up to six decimals. An edit carries the revision the manager saw. Both zero values are permitted.
+
+### 8. Clean Architecture design
+
+Keep exact replenishment arithmetic in the domain. Use the existing transaction, Inventory, authorization, and receipt ports. Persist policy in SQLite and project it through the protected Inventory workspace.
+
+### 9. UI/UX and content contract
+
+Show the minimum, target and replenishment state alongside the selected product in English and Spanish. Provide an accessible editor and reuse existing request recovery.
+
+### 10. Failure, recovery, and cleanup
+
+Reject stale edits, invalid values and unauthorized requests before committing. Retrying an original key recovers the original receipt. Refresh projects the latest facts after a recovery.
+
+### 11. Security, permissions, and privacy
+
+Derive household and Pantry binding from server context. Apply current household read and inventory.manage grants. Keep existing origin, session and CSRF checks.
+
+### 12. Observability and operational UX
+
+Keep the policy edit in the existing operation and audit journal. Inventory shows current settings, current need and safe failures.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Verify a representative schema 21 database with stock, reservations, task effects and receipts. Preserve those facts after upgrade. Verify restart and compatible snapshot restoration.
+
+### 14. Testing strategy and numeric budget
+
+Minimum eight distinct cases in this delta.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Protected policy | 1 | Observable scenarios in the case inventory. |
+| Exact quantities | 1 | Observable scenarios in the case inventory. |
+| Demand lifecycle | 1 | Observable scenarios in the case inventory. |
+| Task isolation | 1 | Observable scenarios in the case inventory. |
+| Write recovery | 1 | Observable scenarios in the case inventory. |
+| Migration | 1 | Observable scenarios in the case inventory. |
+| Restore | 1 | Observable scenarios in the case inventory. |
+| Workspace | 1 | Observable scenarios in the case inventory. |
+| Total | 8 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| pantry-replenishment-C01 | Protected policy | pantry-replenishment-R1 | A manager edits a product policy and a household reader can see it. A denied or foreign actor cannot change it. |
+| pantry-replenishment-C02 | Exact quantities | pantry-replenishment-R1 | Reject inverted bounds, fractional pieces, excess precision and out-of-range values without changing policy. |
+| pantry-replenishment-C03 | Demand lifecycle | pantry-replenishment-R2 | Below minimum a fractional gap is exact. Reevaluation, intake, satisfaction and later reopening keep the same source identity. |
+| pantry-replenishment-C04 | Task isolation | pantry-replenishment-R2, pantry-replenishment-R3 | A task reservation changes availability once. Existing task demand and pending consumption are preserved through reevaluation and intake. |
+| pantry-replenishment-C05 | Write recovery | pantry-replenishment-R1, pantry-replenishment-R4 | Concurrent edits with the same expected revision cannot overwrite each other. Same-key replay, restart and incompatible replay preserve the accepted revision. |
+| pantry-replenishment-C06 | Migration | pantry-replenishment-R4 | Schema 21 stock, reservation, task and receipt data survives upgrade with zero defaults. |
+| pantry-replenishment-C07 | Restore | pantry-replenishment-R2, pantry-replenishment-R4 | Snapshot restoration recovers policy, demand source, exact amount and original receipts. |
+| pantry-replenishment-C08 | Workspace | pantry-replenishment-R1, pantry-replenishment-R4 | Ingress and standalone show and edit replenishment in both languages. Actual amd64 and ARM64 images run the journeys. |
+
+### 15. Documentation and discoverability
+
+[specs/household-inventory.md](household-inventory.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/pantry-replenishment-qualification.md](../docs/evidence/pantry-replenishment-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/application/inventory\_queries.py](../backend/src/domus/application/inventory_queries.py) · [backend/src/domus/infrastructure/sqlite\_inventory.py](../backend/src/domus/infrastructure/sqlite_inventory.py) · [frontend/src/presentation/domus-inventory.ts](../frontend/src/presentation/domus-inventory.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-inventory.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/pantry-replenishment-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/application/inventory_queries.py | update |
+| backend/src/domus/infrastructure/sqlite_inventory.py | update |
+| frontend/src/presentation/domus-inventory.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Run the listed cases and link evidence from the PR commit. Existing purchase and shopping acceptance remains separately owned.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| pantry-replenishment-R1 | pantry-replenishment-C01, pantry-replenishment-C02, pantry-replenishment-C05, pantry-replenishment-C08 |
+| pantry-replenishment-R2 | pantry-replenishment-C03, pantry-replenishment-C04, pantry-replenishment-C07 |
+| pantry-replenishment-R3 | pantry-replenishment-C04 |
+| pantry-replenishment-R4 | pantry-replenishment-C05, pantry-replenishment-C06, pantry-replenishment-C07, pantry-replenishment-C08 |
+
+### 18. Implementation sequence
+
+Persist versioned settings, project the exact current need, integrate the protected workspace, and qualify migration, restoration and both deployments.
+
+### 19. Definition of Done
+
+Keep 100% global and per-file coverage. Require CI and Bugbot green for the PR commit. A Copilot Verification exception requires verified exclusive Copilot cause and a linked upstream report. Keep releases and deployments separate.
+
+### 20. References and decisions
+
+This increment qualifies Pantry aspects of household-inventory-C10, household-inventory-C11 and household-inventory-C34. Shopping integration and household-inventory-C12 follow in a separate increment.
