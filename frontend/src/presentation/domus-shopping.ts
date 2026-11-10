@@ -1,5 +1,6 @@
 import {LitElement, css, html, nothing} from 'lit';
 import type {PropertyValues} from 'lit';
+import {repeat} from 'lit/directives/repeat.js';
 import {registerButton} from '@vypdev/ha-ui/button';
 import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import {registerCard} from '@vypdev/ha-ui/card';
@@ -22,7 +23,7 @@ export type ShoppingIntent = {readonly type: 'purchases' | 'more-purchases' | 'm
 
 export class DomusShopping extends LitElement {
   static properties = {view:{attribute:false}, language:{attribute:false}, selected:{state:true},
-    purchaseError:{state:true}, arrivalError:{state:true}, cancelError:{state:true}};
+    purchaseError:{state:true}, arrivalError:{state:true}, cancelError:{state:true}, voidError:{state:true}};
 
   static styles = css`
     .shopping, form, label, li {display:grid;gap:8px}
@@ -41,6 +42,7 @@ export class DomusShopping extends LitElement {
   private declare selected: string;
   private declare purchaseError: 'invalidName' | 'invalidQuantity' | null;
   private declare cancelError: boolean;
+  private declare voidError: string | null;
   private declare arrivalError: 'invalidQuantity' | 'shopping_receipt_exceeds_purchase' | null;
 
   constructor() {
@@ -49,6 +51,7 @@ export class DomusShopping extends LitElement {
     this.purchaseError = null;
     this.arrivalError = null;
     this.cancelError = false;
+    this.voidError = null;
   }
 
   protected updated(changed: PropertyValues<this>): void {
@@ -59,6 +62,7 @@ export class DomusShopping extends LitElement {
     if (purchaseReceipts && purchaseReceipts.purchase.id !== previous?.purchaseReceipts?.purchase.id) {
       this.arrivalError = null;
       this.cancelError = false;
+      this.voidError = null;
       this.renderRoot.querySelector<HTMLElement>('#purchase-receipts-title')?.focus();
       this.renderRoot.querySelector<HTMLFormElement>('#arrival-form')?.reset();
       this.renderRoot.querySelector<HTMLFormElement>('#cancel-form')?.reset();
@@ -178,16 +182,47 @@ export class DomusShopping extends LitElement {
     </details>`;
   }
 
-  private physicalReceipt(entry: PhysicalReceipt, purchase: Purchase, mayPost: boolean, blocked: boolean) {
+  private voidForm(entry: PhysicalReceipt, purchase: Purchase, blocked: boolean) {
+    const invalid = this.voidError === entry.id;
+    const errorId = 'void-error-' + entry.id;
+    return html`<details><summary>${this.text('voidReceipt')}</summary>
+      <form class="receipt-void-form" novalidate @submit=${(event: SubmitEvent) => {
+        event.preventDefault();
+        if (blocked) return;
+        const fields = new FormData(event.currentTarget as HTMLFormElement);
+        let reason: string;
+        try {reason = taskText(fields.get('reason'), STOCK_REASON_LIMIT, true);}
+        catch {this.voidError = entry.id; return;}
+        this.voidError = null;
+        this.intent({type:'submit', command:{action:'shopping.void-receipt', purchase_id:purchase.id,
+          receipt_id:entry.id, reason, expected_revision:purchase.revision}});
+      }}>
+        <p>${this.text('voidAmount')} · <strong>${this.amount(entry.quantity, purchase.unit)}</strong></p>
+        <label>${this.text('reason')}<input name="reason" required maxlength=${STOCK_REASON_LIMIT} ?disabled=${blocked}
+          aria-invalid=${invalid} aria-describedby=${invalid ? errorId : nothing}></label>
+        ${invalid ? html`<p role="alert" id=${errorId}>${this.text('invalid_inventory_reason')}</p>` : nothing}
+        ${this.button('confirmVoid', blocked)}
+      </form>
+    </details>`;
+  }
+
+  private physicalReceipt(entry: PhysicalReceipt, purchase: Purchase, mayShop: boolean, mayPost: boolean, blocked: boolean) {
     const tracked = purchase.productId !== null;
+    const pending = tracked && entry.movementId === null && entry.voided === null;
+    const status = entry.voided !== null ? 'voidedReceipt'
+      : pending ? 'awaitingPosting' : tracked ? 'posted' : 'untrackedReceived';
     return html`<li>
       <p><strong>${this.amount(entry.quantity, purchase.unit)}</strong> ·
         ${entry.authorAlias ?? entry.memberId} · ${instant(Number(entry.createdAt), this.language)}</p>
-      <p>${this.text(tracked ? entry.movementId === null ? 'awaitingPosting' : 'posted' : 'untrackedReceived')}</p>
+      <p>${this.text(status)}</p>
+      ${entry.voided === null ? nothing : html`
+        <p>${entry.voided.authorAlias ?? entry.voided.memberId} · ${instant(Number(entry.voided.createdAt), this.language)}</p>
+        <dl><dt>${this.text('reason')}</dt><dd>${entry.voided.reason}</dd></dl>`}
       <details><summary>${this.text('receipt')}</summary><code>${entry.id}</code>
         ${entry.movementId === null ? nothing : html`<p>${this.text('movement')} <code>${entry.movementId}</code></p>`}
       </details>
-      ${tracked && entry.movementId === null && mayPost ? this.button('postToPantry', blocked,
+      ${pending && mayShop && purchase.cancelled === '0' ? this.voidForm(entry, purchase, blocked) : nothing}
+      ${pending && mayPost ? this.button('postToPantry', blocked,
         {type:'submit',command:{action:'shopping.post-receipt',purchase_id:purchase.id,receipt_id:entry.id}}) : nothing}
     </li>`;
   }
@@ -205,7 +240,7 @@ export class DomusShopping extends LitElement {
         <dl><dt>${this.text('reason')}</dt><dd>${cancellation.reason}</dd></dl>
       </div>`}
       ${items.length === 0 ? html`<p>${this.text('emptyReceipts')}</p>`
-        : html`<ol>${items.map(entry => this.physicalReceipt(entry, purchase, mayPost, blocked))}</ol>`}
+        : html`<ol>${repeat(items, entry => entry.id, entry => this.physicalReceipt(entry, purchase, mayShop, mayPost, blocked))}</ol>`}
       ${cursor === null ? nothing : this.button('olderReceipts', busy, {type:'more-purchase-receipts'})}
     </section>`;
   }

@@ -2,7 +2,13 @@
 
 from typing import Protocol
 
-from domus.domain.shopping import Purchase, PurchaseCancellation, PurchaseReceipt, PurchaseSession
+from domus.domain.shopping import (
+    Purchase,
+    PurchaseCancellation,
+    PurchaseReceipt,
+    PurchaseReceiptVoid,
+    PurchaseSession,
+)
 from domus.domain.shopping_needs import ShoppingExtra
 
 
@@ -29,6 +35,8 @@ class ShoppingRecords(Protocol):
         self, home: str, purchase_id: str, through: int, limit: int
     ) -> tuple[tuple[int, PurchaseReceipt], ...]: ...
     def add_receipt(self, home: str, receipt: PurchaseReceipt) -> None: ...
+    def receipt_void(self, home: str, receipt_id: str) -> PurchaseReceiptVoid | None: ...
+    def add_receipt_void(self, home: str, correction: PurchaseReceiptVoid) -> None: ...
     def link_movement(self, home: str, receipt_id: str, movement_id: str) -> None: ...
     def extra(self, home: str, extra_id: str) -> ShoppingExtra | None: ...
     def add_extra(self, home: str, extra: ShoppingExtra) -> None: ...

@@ -11,6 +11,7 @@ from domus.domain.shopping import (
     Purchase,
     PurchaseCancellation,
     PurchaseReceipt,
+    PurchaseReceiptVoid,
     PurchaseSession,
 )
 from domus.domain.shopping_needs import ShoppingExtra
@@ -94,6 +95,17 @@ SHOPPING_CANCELLATION_STATEMENTS = (
     "created_at INTEGER NOT NULL CHECK(created_at>=0), PRIMARY KEY(household_id,purchase_id), "
     "FOREIGN KEY(household_id,purchase_id) "
     "REFERENCES shopping_purchases(household_id,purchase_id), "
+    "FOREIGN KEY(household_id,member_id) REFERENCES members(household_id,member_id)) STRICT",
+)
+
+
+SHOPPING_RECEIPT_VOID_TABLE = "shopping_receipt_voids"
+SHOPPING_RECEIPT_VOID_STATEMENTS = (
+    "CREATE TABLE shopping_receipt_voids(household_id TEXT NOT NULL, receipt_id TEXT NOT NULL, "
+    "reason TEXT NOT NULL, member_id TEXT NOT NULL, "
+    "created_at INTEGER NOT NULL CHECK(created_at>=0), "
+    "PRIMARY KEY(household_id,receipt_id), "
+    "FOREIGN KEY(household_id,receipt_id) REFERENCES shopping_receipts(household_id,receipt_id), "
     "FOREIGN KEY(household_id,member_id) REFERENCES members(household_id,member_id)) STRICT",
 )
 
@@ -275,6 +287,19 @@ class SQLiteShopping:
             (home, *astuple(receipt)),
         )
 
+    def receipt_void(self, home: str, receipt_id: str) -> PurchaseReceiptVoid | None:
+        row = self.connection.execute(
+            "SELECT receipt_id,reason,member_id,created_at FROM shopping_receipt_voids "
+            "WHERE household_id=? AND receipt_id=?",
+            (home, receipt_id),
+        ).fetchone()
+        return None if row is None else PurchaseReceiptVoid(*row)
+
+    def add_receipt_void(self, home: str, correction: PurchaseReceiptVoid) -> None:
+        self.connection.execute(
+            "INSERT INTO shopping_receipt_voids VALUES (?,?,?,?,?)", (home, *astuple(correction))
+        )
+
     def link_movement(self, home: str, receipt_id: str, movement_id: str) -> None:
         self.connection.execute(
             "UPDATE shopping_receipts SET movement_id=? WHERE household_id=? AND receipt_id=?",
@@ -362,7 +387,7 @@ def verify_shopping_extras(connection: sqlite3.Connection) -> None:
 
 
 def verify_shopping_records(
-    connection: sqlite3.Connection, *, has_cancellations: bool = True
+    connection: sqlite3.Connection, *, has_cancellations: bool = True, has_voids: bool = True
 ) -> None:
     stock = SQLiteInventory(connection)
     shopping = SQLiteShopping(connection)
@@ -388,11 +413,19 @@ def verify_shopping_records(
             validate_task_time(receipt.created_at)
             if purchase.base_unit is BaseUnit.PIECE and receipt.quantity % 1_000_000:
                 raise StorageFailure("invalid_shopping_records")
-            received += receipt.quantity
             revision += 1
             movement = stock.movement(home, receipt.stock_source)
             if receipt.movement_id != (None if movement is None else movement.movement_id):
                 raise StorageFailure("invalid_shopping_records")
+            correction = shopping.receipt_void(home, receipt.receipt_id) if has_voids else None
+            if correction is not None:
+                if product is None or movement is not None:
+                    raise StorageFailure("invalid_shopping_records")
+                validate_stock_reason(correction.reason)
+                validate_task_time(correction.created_at)
+                revision += 1
+                continue
+            received += receipt.quantity
             if movement is not None:
                 if (
                     product is None

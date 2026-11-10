@@ -153,6 +153,24 @@ receipts on the original item are posted. After an activated restore, a
 historical cancellation receipt describes the original command. Review the
 restored balance before starting a new cancellation.
 
+## Voiding a pending physical receipt
+
+Schema 27 adds an attributed void linked to the original physical receipt.
+Migration from schema 26 preserves existing sessions, purchases, cancellations,
+receipt postings and operation receipts. Snapshot verification checks effective
+receipt totals and the purchase revision, and rejects a void linked to a
+posted or untracked receipt.
+
+Current `shopping.manage` is required to void a receipt or recover the original
+operation. A void applies to a tracked receipt awaiting Pantry posting on an
+item with an active purchase balance. The item revision, reason and operation
+receipt commit together. Posting and voiding check the same persisted receipt
+inside their write transactions.
+
+The void moves the recorded quantity back to the amount still due. After an
+activated restore, review the current item and physical receipt before
+starting a new void. The original operation may be historical.
+
 ## Family rewards
 
 Rewards start disabled. A current points administrator can enable new requests,

@@ -66,6 +66,13 @@ class Purchase:
             raise Conflict("shopping_balance_closed")
         return replace(self, cancelled=self.remaining, revision=self.revision + 1)
 
+    def void_receipt(self, quantity: int, expected_revision: int) -> Purchase:
+        if self.revision != expected_revision:
+            raise Conflict("revision_conflict")
+        if self.cancelled:
+            raise Conflict("shopping_receipt_balance_cancelled")
+        return replace(self, received=self.received - quantity, revision=self.revision + 1)
+
     def post(self, quantity: int) -> Purchase:
         return replace(self, settled=self.settled + quantity, revision=self.revision + 1)
 
@@ -74,6 +81,14 @@ class Purchase:
 class PurchaseCancellation:
     purchase_id: str
     quantity: int
+    reason: str
+    member_id: str
+    created_at: int
+
+
+@dataclass(frozen=True, slots=True)
+class PurchaseReceiptVoid:
+    receipt_id: str
     reason: str
     member_id: str
     created_at: int
