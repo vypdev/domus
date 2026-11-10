@@ -971,3 +971,138 @@ Keep 100% global and per-file coverage. Require CI and Bugbot green for the PR c
 ### 20. References and decisions
 
 This increment qualifies Pantry aspects of household-inventory-C10, household-inventory-C11 and household-inventory-C34. Shopping integration and household-inventory-C12 follow in a separate increment.
+
+## Add household storage locations and balanced stock transfers
+
+- Status: Draft
+- Owners: Domus maintainers and Inventory
+- Scope: Named storage locations, stock by location and one atomic transfer command
+- Source baseline: develop at 3d037257e37513f91f72ef060282b278a49511de
+- Open decisions blocking readiness: none for this increment
+
+### 1. Executive summary
+
+Household members can find a catalog product across their storage locations. An authorized member can add a location and record moving an exact amount of a product. Each transfer leaves two linked, attributable ledger movements and preserves the household total.
+
+### 2. Problem, current behavior, and evidence
+
+The catalog currently reports the Pantry binding. Recording a physical move as unrelated stock adjustments loses the connection between the origin and destination. The existing ledger already tracks exact quantities, task reservations and receipt posting. This increment preserves that evidence and extends the household-inventory capability.
+
+### 3. Actors, surfaces, and terminology
+
+A member with household.read can browse the catalog, locations and movement history. A member with inventory.manage can add locations, record transfers and recover their own requests. Pantry remains the household's built-in default location. A transfer has one source, one destination and one exact base-unit quantity.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| stock-location-transfer-R01 | Add uniquely named household locations with stable identities and keep the localized built-in Pantry. Authorize reads, writes and request recovery using current household scope and grants. |
+| stock-location-transfer-R02 | Record a positive quantity of a catalog product between two distinct household locations as linked, signed movements and a single operation. Enforce base-unit precision, available source stock, reservations and destination capacity atomically. |
+| stock-location-transfer-R03 | Show recorded, reserved and available quantities by location and for the household. Show both sides of each transfer with quantity, author, time and location in the product history. Keep Pantry replenishment scoped to the Pantry balance. |
+| stock-location-transfer-R04 | Preserve all previous locations, bindings, stock movements, shopping records and receipts. Recover identical requests once across concurrency, restart and restoration. |
+
+Location renaming and archiving, lot allocation, location-specific replenishment policies, package conversion and receipt routing have separate acceptance.
+
+### 5. Current versus proposed product journey
+
+Open Inventory, add a storage location, then open a product and choose Move stock. Select an origin and destination, enter a positive quantity in the established unit and confirm. The updated detail shows both location balances and the household total. The history identifies the transfer and its two ends.
+
+### 6. Functional behavior and state model
+
+Pantry remains the default binding for registration, ordinary intake, manual adjustment and Shopping posting. A new named location belongs to the current household. A location may have zero stock and its first transfer can establish the product binding. A transfer does not move an active reservation and cannot lower the source below its reserved quantity. The destination uses the catalog product's base unit and existing per-binding capacity. Historical noncatalog bindings keep their original semantics. Existing open demand and shopping quantities remain attributed to their existing sources.
+
+### 7. User-facing configuration
+
+Use the existing grants and product units. Validate nonempty bounded location names, reject duplicate names, and provide a localized label for the built-in Pantry. Use a bounded location query or a documented household limit so the selector can always represent all its valid options.
+
+### 8. Clean Architecture design
+
+Keep unit and balance rules in the Inventory domain and application. The use case resolves scope and exact quantity, writes both ledger legs and retains the request receipt inside one transaction. The SQLite adapter persists locations, bindings and transfer linkage. HTTP exposes bounded views; the frontend renders these views and never decides authorization or writes balances directly.
+
+### 9. UI/UX and content contract
+
+Use published ha-ui controls for the location and transfer forms. The action is available from the product detail for a permitted member. Display the selected product, unit, origin availability and distinct destination before confirmation. Localize labels, accessible names and recovery messages in English and Spanish. Retain the draft on correctable failure, support keyboard and touch, and preserve useful focus at narrow and wide widths.
+
+### 10. Failure, recovery, and cleanup
+
+Invalid, unauthorized, stale or insufficient-stock requests leave no transfer or operation receipt. An injected failure on the second movement rolls back both movements and any newly created binding. A lost response is recoverable by the same original key. A changed payload conflicts. Activated restore may retain a historical operation receipt, which does not imply its stock effects are present in the active generation.
+
+### 11. Security, permissions, and privacy
+
+Apply the existing verified household context, Origin and CSRF checks. Resolve both location IDs and the product in the current household. Current grants are required even for replay or recovery. Retained history may be read only within the authorized household.
+
+### 12. Observability and operational UX
+
+Keep an attributable immutable pair. Explain whether any stock moved and what to do after a failure. Preserve both historical and current operation evidence after restore and keep private household information out of diagnostics.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Qualify representative schema 29 and schema 20 data. Preserve product IDs, Pantry, task bindings, reservations, movements, shopping receipts and original operation history. Reject an incomplete or inconsistent transfer during snapshot verification. Verify migration rollback, restart and activated restore. Use an immutable Domus Edge candidate for installed browser acceptance and retain the previous preview for rollback.
+
+### 14. Testing strategy and numeric budget
+
+Minimum eight distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Location catalog | 1 | Observable scenarios in the case inventory. |
+| Ledger and projections | 1 | Observable scenarios in the case inventory. |
+| Rejection and rollback | 1 | Observable scenarios in the case inventory. |
+| Concurrency | 1 | Observable scenarios in the case inventory. |
+| Authorization | 1 | Observable scenarios in the case inventory. |
+| Migration | 1 | Observable scenarios in the case inventory. |
+| Restart and restore | 1 | Observable scenarios in the case inventory. |
+| Household workspace | 1 | Observable scenarios in the case inventory. |
+| Total | 8 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| stock-location-transfer-C01 | Location catalog | stock-location-transfer-R01 | A permitted member adds a named location; Pantry stays available and empty or duplicate names are rejected without changing the list. |
+| stock-location-transfer-C02 | Ledger and projections | stock-location-transfer-R02, stock-location-transfer-R03 | Move an exact fractional amount from Pantry and move it back. Check each balance, both signed movements, attribution, unchanged total and Pantry-specific need. |
+| stock-location-transfer-C03 | Rejection and rollback | stock-location-transfer-R02, stock-location-transfer-R04 | Reject invalid units, same-location requests, insufficient available stock and destination overflow. Fail the second leg and inspect both balances, linkage and original request. |
+| stock-location-transfer-C04 | Concurrency | stock-location-transfer-R02, stock-location-transfer-R04 | Race two transfers for the last available quantity and race an identical key. Retain one effective pair, and reject a changed payload under the committed key. |
+| stock-location-transfer-C05 | Authorization | stock-location-transfer-R01, stock-location-transfer-R04 | Reject missing or revoked write grants, missing CSRF and foreign locations. Household readers see the protected projection and a revoked writer cannot recover a receipt. |
+| stock-location-transfer-C06 | Migration | stock-location-transfer-R03, stock-location-transfer-R04 | Upgrade representative schema 29 and schema 20 fixtures and compare stock, reservations, purchases and receipt identities. Roll back an interrupted migration and reject a mismatched transfer link. |
+| stock-location-transfer-C07 | Restart and restore | stock-location-transfer-R02, stock-location-transfer-R04 | Recover the same transfer receipt on restart and distinguish a current transfer from a historical receipt after activating an older snapshot. |
+| stock-location-transfer-C08 | Household workspace | stock-location-transfer-R01, stock-location-transfer-R02, stock-location-transfer-R03 | Create a location, complete a transfer and inspect balances and history in both locales and deployment modes. Exercise keyboard, touch, narrow and wide layouts in both image architectures and qualify the installed Edge candidate. |
+
+### 15. Documentation and discoverability
+
+[specs/household-inventory.md](household-inventory.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [docs/operations.md](../docs/operations.md) · [docs/evidence/stock-location-transfer-qualification.md](../docs/evidence/stock-location-transfer-qualification.md) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/infrastructure/sqlite\_inventory.py](../backend/src/domus/infrastructure/sqlite_inventory.py) · [frontend/src/presentation/domus-inventory.ts](../frontend/src/presentation/domus-inventory.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-inventory.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/operations.md | update |
+| docs/evidence/stock-location-transfer-qualification.md | create |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/infrastructure/sqlite_inventory.py | update |
+| frontend/src/presentation/domus-inventory.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+Create a cupboard and move 250.5 grams of flour from Pantry to it. Verify the Pantry quantities, cupboard quantities, unchanged total and linked entries. Move the stock back. Recover the original request after a lost response and show the previously recorded result.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| stock-location-transfer-R01 | stock-location-transfer-C01, stock-location-transfer-C05, stock-location-transfer-C08 |
+| stock-location-transfer-R02 | stock-location-transfer-C02, stock-location-transfer-C03, stock-location-transfer-C04, stock-location-transfer-C07, stock-location-transfer-C08 |
+| stock-location-transfer-R03 | stock-location-transfer-C02, stock-location-transfer-C06, stock-location-transfer-C08 |
+| stock-location-transfer-R04 | stock-location-transfer-C03, stock-location-transfer-C04, stock-location-transfer-C05, stock-location-transfer-C06, stock-location-transfer-C07 |
+
+### 18. Implementation sequence
+
+Extend the protected location and stock model, implement the transaction and projections, compose the two forms and history in Inventory, then qualify recovery, migration, compiled images and the installed Edge candidate.
+
+### 19. Definition of Done
+
+Maintain 100 percent global and per-file supported coverage and pass CI and applicable Copilot checks for the same commit. Exercise English and Spanish, Ingress and standalone, and amd64 and ARM64. Verify the installed Edge version before testing and isolate test records. Keep distribution and Stable release approval separate.
+
+### 20. References and decisions
+
+This increment exercises the balanced-transfer and location portions of the existing household-inventory specification after issue #86. It retains the owning acceptance inventory and its original case identities.
