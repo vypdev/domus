@@ -78,6 +78,27 @@ target minus availability when below the minimum, and zero otherwise. These
 reads create no movements or task effects. Restocking leaves any pending task
 consumption available for separate review in Tasks.
 
+## Shopping purchases and receipts
+
+Schema 23 adds household-scoped purchase and physical receipt tables to schema
+22. Migration preserves Pantry stock, replenishment policies, reservations and
+previous operation receipts. Snapshot verification reconciles purchase totals
+and revisions with receipt rows and checks each posting against its attributed
+Inventory movement and stable receipt source.
+
+Current `shopping.manage` is required to record purchases and physical
+receipts. Current `inventory.manage` is required to post tracked receipts.
+Recovery applies the permission for the original action. A physical receipt
+commits with the purchase revision and its operation receipt. Posting commits
+the stock movement, receipt link, purchase totals and original operation in a
+separate transaction. A failed posting leaves the received quantity pending.
+
+Restore activation keeps historical operation receipts distinguishable from
+effects in the restored database. If an earlier posting is historical and
+the restored physical receipt is pending, review the current record before
+starting a new posting. A normal Inventory correction remains a separate
+ledger fact linked to its original movement.
+
 ## Family rewards
 
 Rewards start disabled. A current points administrator can enable new requests,

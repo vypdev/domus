@@ -504,6 +504,63 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.getByLabel('Language', {exact:true}).selectOption('es');
     await expect(oil.getByText('No hace falta reponer.')).toBeVisible();
 
+    const shopping = stock.locator('domus-shopping');
+    await shopping.getByRole('button', {name:'Mostrar compras'}).click();
+    await expect(shopping.getByText('No hay compras registradas.')).toBeVisible();
+    await shopping.getByRole('combobox', {name:'Artículo comprado'}).selectOption({label:'Pantry oil'});
+    await shopping.getByRole('textbox', {name:'Cantidad comprada'}).fill('6,000001');
+    await shopping.getByRole('button', {name:'Registrar compra'}).click();
+    await expect(stock.getByText('Compra registrada.', {exact:true})).toBeVisible();
+    const bought = shopping.getByRole('listitem').filter({hasText:'Pantry oil'});
+    await expect(bought.getByText('6,000001 mililitros', {exact:true}).first()).toBeVisible();
+    await bought.getByRole('button', {name:'Mostrar recepciones físicas'}).click();
+    const arrivalsES = shopping.getByRole('region', {name:'Recepciones físicas · Pantry oil'});
+    await expect(arrivalsES.getByRole('heading')).toBeFocused();
+    await arrivalsES.getByRole('textbox', {name:'Cantidad recibida'}).fill('7');
+    await arrivalsES.getByRole('button', {name:'Registrar recepción física'}).click();
+    await expect(arrivalsES.getByRole('alert')).toContainText('no supere lo que queda por recibir');
+    await arrivalsES.getByRole('textbox', {name:'Cantidad recibida'}).fill('4,000001');
+    await arrivalsES.getByRole('button', {name:'Registrar recepción física'}).click();
+    await expect(stock.getByText('Recepción física registrada.', {exact:true})).toBeVisible();
+    await expect(arrivalsES.getByText('Recibido, pendiente de entrada en Despensa.')).toBeVisible();
+    await expect(oil.locator('dd')).toHaveText(['2,000001','0','2,000001']);
+    await page.getByLabel('Idioma', {exact:true}).selectOption('en');
+    const arrivals = shopping.getByRole('region', {name:'Physical receipts · Pantry oil'});
+    await expect(arrivals.locator('dd')).toHaveText([
+      '6.000001 millilitres','4.000001 millilitres','2 millilitres','4.000001 millilitres',
+    ]);
+    let postingKey = '';
+    let postedMovement = '';
+    await page.route(inventoryCommands, async route => {
+      postingKey = route.request().headers()['idempotency-key'];
+      const committed = await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(committed.status()).toBe(200);
+      postedMovement = (await committed.json()).result.movement_id;
+      await route.abort('connectionclosed');
+    });
+    await arrivals.getByRole('button', {name:'Post to Pantry'}).click();
+    await expect(stock.getByText(/The result is unconfirmed/u)).toBeVisible();
+    await page.unroute(inventoryCommands);
+    await page.reload();
+    await expect(page).toHaveURL(base + '#inventory');
+    await page.getByRole('combobox', {name:/^(Language|Idioma)$/u}).selectOption('en');
+    const originalPosting = page.waitForResponse(
+      base + 'api/v1/inventory/requests/shopping.post-receipt/' + postingKey,
+    );
+    await stock.getByRole('button', {name:'Recover original request'}).click();
+    expect((await originalPosting).ok()).toBe(true);
+    await expect(stock.getByText('Receipt posted to Pantry.', {exact:true})).toBeVisible();
+    await expect(oil.locator('dd')).toHaveText(['6.000002','0','6.000002']);
+    await shopping.getByRole('button', {name:'Show purchases'}).click();
+    await bought.getByRole('button', {name:'Show physical receipts'}).click();
+    await expect(arrivals.locator('dd')).toHaveText([
+      '6.000001 millilitres','4.000001 millilitres','2 millilitres','0 millilitres',
+    ]);
+    await expect(arrivals.getByText('Posted to Pantry.', {exact:true})).toBeVisible();
+    await arrivals.getByText('Receipt details').click();
+    await expect(arrivals.getByText(postedMovement, {exact:true})).toBeVisible();
+    await page.getByLabel('Language', {exact:true}).selectOption('es');
+
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});
     await expect(end).toBeVisible();

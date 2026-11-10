@@ -86,7 +86,15 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       product_id:'product', product_name:'Salt', base_unit:'gram', movements:[],
       next_cursor:route.includes('cursor=')?null:'older',
     });
-    else if (route.startsWith('inventory?')) raw = JSON.stringify({location_id:'pantry', may_manage:true, products:[],
+    else if (route.startsWith('inventory/purchases/purchase/receipts?')) raw = JSON.stringify({
+      purchase:{purchase_id:'purchase',product_id:null,name:'Apples',base_unit:'piece',purchased:'2',
+        received:'0',remaining:'2',pending_stock:'0',revision:'1',member_id:'member',author_alias:null,created_at:'100'},
+      receipts:[], next_cursor:route.includes('cursor=')?null:'older-receipts',
+    });
+    else if (route.startsWith('inventory/purchases?')) raw = JSON.stringify({
+      purchases:[], next_cursor:route.includes('cursor=')?null:'older-purchases',
+    });
+    else if (route.startsWith('inventory?')) raw = JSON.stringify({location_id:'pantry', may_manage:true, may_shop:true, products:[],
       next_cursor:route.includes('cursor=')?null:'inventory-next'});
     else if (route.startsWith('family/rewards?')) raw = JSON.stringify({
       enabled:false,revision:0,may_manage:canManagePoints,balance:{posted_minor:0,reserved_minor:0},
@@ -677,6 +685,15 @@ test('Inventory owns the current protected destination and accepts only closed u
   await vi.waitFor(() => expect(app.inventory?.history?.cursor).toBeNull());
   emit({type:'close-history'});
   expect(app.inventory?.history).toBeNull();
+  emit({type:'purchases'});
+  await vi.waitFor(() => expect(app.inventory?.purchases?.cursor).toBe('older-purchases'));
+  emit({type:'more-purchases'});
+  await vi.waitFor(() => expect(app.inventory?.purchases?.cursor).toBeNull());
+  emit({type:'purchase-receipts',purchaseId:'purchase'});
+  await vi.waitFor(() => expect(app.inventory?.purchaseReceipts?.cursor).toBe('older-receipts'));
+  emit({type:'more-purchase-receipts'});
+  await vi.waitFor(() => expect(app.inventory?.purchaseReceipts?.cursor).toBeNull());
+  expect(decodeInventoryIntent({type:'purchase-receipts',purchaseId:'../outside'})).toBeNull();
   expect(decodeInventoryIntent({type:'submit',command:{action:'inventory.intake',product_id:'product',quantity:'1',location:'foreign'}})).toBeNull();
   navigate('#tasks');
   expect(app.inventory).toBeNull();

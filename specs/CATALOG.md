@@ -15,7 +15,7 @@ debt or convert unknown historic intent into a design decision.
 | `household-tasks` | Proposed | Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence. | [Task definitions&#44; occurrences and household execution](./household-tasks.md) + 2 companion | 32 paths · 2026-11-01 |
 | `recurrence-calendar` | Proposed | A bounded scheduler turns task definitions into stable occurrences and a family calendar distinguishes planned start, deadline and actual completion. Original recurrence outcomes bind receipt status, action, result and source-cycle identity before replay and snapshot acceptance. | [Recurrence engine and family calendar](./recurrence-calendar.md) + 3 companion | 37 paths · 2026-11-09 |
 | `points-rewards` | Proposed | Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation. | [Auditable points&#44; participation and optional rewards](./points-rewards.md) | 51 paths · 2026-11-10 |
-| `shopping-management` | Proposed | Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts. | [Shared shopping demand&#44; purchases and receipt](./shopping-management.md) | 5 paths · 2026-10-29 |
+| `shopping-management` | Proposed | Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts. | [Shared shopping demand&#44; purchases and receipt](./shopping-management.md) | 17 paths · 2026-11-10 |
 | `household-inventory` | Proposed | The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger. | [Product catalog&#44; pantry stock and replenishment](./household-inventory.md) | 22 paths · 2026-11-10 |
 | `home-assistant-surface` | Proposed | Domus exposes its household capabilities as native Home Assistant entities, services and events. The already integrated HA MCP consumes these surfaces; no gateway work or second MCP is included. | [Home Assistant entities&#44; services and integration](./home-assistant-surface.md) + 1 companion | 5 paths · 2026-10-29 |
 | `application-experience` | Proposed | A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.; combined native/standalone browser CI uses a bounded complete-suite deadline with protected candidate workflow qualification | [Responsive application&#44; household dashboard and navigation](./application-experience.md) + 1 companion | 37 paths · 2026-11-08 |
@@ -82,13 +82,13 @@ debt or convert unknown historic intent into a design decision.
 ### `shopping-management` — Shared shopping demand&#44; purchases and receipt
 
 - Owner: Domus maintainers (review assignment pending)
-- Last verified: 2026-10-29
+- Last verified: 2026-11-10
 - Specifications: [`specs/shopping-management.md`](./shopping-management.md)
 - Workflows: Not applicable for this capability.
-- Entrypoints: Not yet implemented (proposed capability).
-- Core code: Not yet implemented (proposed capability).
-- Tests: Not yet implemented (proposed capability).
-- User documentation: [`docs/product-vision.md`](../docs/product-vision.md) · [`docs/architecture.md`](../docs/architecture.md) · [`docs/operations.md`](../docs/operations.md) · [`docs/user-guide.md`](../docs/user-guide.md) · [`docs/contracts/home-assistant.md`](../docs/contracts/home-assistant.md)
+- Entrypoints: [`backend/src/domus/entrypoints/inventory_http.py`](../backend/src/domus/entrypoints/inventory_http.py)
+- Core code: [`backend/src/domus/domain/shopping.py`](../backend/src/domus/domain/shopping.py) · [`backend/src/domus/application/inventory.py`](../backend/src/domus/application/inventory.py) · [`backend/src/domus/application/inventory_queries.py`](../backend/src/domus/application/inventory_queries.py) · [`backend/src/domus/infrastructure/sqlite_shopping.py`](../backend/src/domus/infrastructure/sqlite_shopping.py) · [`frontend/src/presentation/domus-shopping.ts`](../frontend/src/presentation/domus-shopping.ts)
+- Tests: [`tests/backend/test_shopping_http.py`](../tests/backend/test_shopping_http.py) · [`tests/backend/test_shopping_storage.py`](../tests/backend/test_shopping_storage.py) · [`tests/fixtures/sqlite/v22-shopping-source.sql`](../tests/fixtures/sqlite/v22-shopping-source.sql) · [`frontend/tests/inventory.test.ts`](../frontend/tests/inventory.test.ts) · [`frontend/tests/e2e/workspace-navigation.spec.ts`](../frontend/tests/e2e/workspace-navigation.spec.ts)
+- User documentation: [`docs/product-vision.md`](../docs/product-vision.md) · [`docs/architecture.md`](../docs/architecture.md) · [`docs/operations.md`](../docs/operations.md) · [`docs/user-guide.md`](../docs/user-guide.md) · [`docs/contracts/home-assistant.md`](../docs/contracts/home-assistant.md) · [`docs/evidence/shopping-receipts-qualification.md`](../docs/evidence/shopping-receipts-qualification.md)
 
 ### `household-inventory` — Product catalog&#44; pantry stock and replenishment
 

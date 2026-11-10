@@ -1007,7 +1007,10 @@
           "inventory.intake",
           "inventory.adjust",
           "inventory.correct-intake",
-          "inventory.configure-replenishment"
+          "inventory.configure-replenishment",
+          "shopping.purchase",
+          "shopping.receive",
+          "shopping.post-receipt"
         ],
         "title": "CatalogAction",
         "type": "string"
@@ -1042,6 +1045,10 @@
             "title": "Name",
             "type": "string"
           },
+          "outstanding_purchase": {
+            "title": "Outstanding Purchase",
+            "type": "string"
+          },
           "product_id": {
             "title": "Product Id",
             "type": "string"
@@ -1056,6 +1063,10 @@
           "reserved": {
             "title": "Reserved",
             "type": "string"
+          },
+          "shopping_needed": {
+            "title": "Shopping Needed",
+            "type": "string"
           }
         },
         "required": [
@@ -1065,7 +1076,9 @@
           "recorded",
           "reserved",
           "available",
-          "replenishment"
+          "replenishment",
+          "outstanding_purchase",
+          "shopping_needed"
         ],
         "title": "CatalogStock",
         "type": "object"
@@ -2744,6 +2757,10 @@
             "title": "May Manage",
             "type": "boolean"
           },
+          "may_shop": {
+            "title": "May Shop",
+            "type": "boolean"
+          },
           "next_cursor": {
             "anyOf": [
               {
@@ -2766,6 +2783,7 @@
         "required": [
           "location_id",
           "may_manage",
+          "may_shop",
           "products",
           "next_cursor"
         ],
@@ -3950,6 +3968,90 @@
         "title": "PermissionDecision",
         "type": "object"
       },
+      "PhysicalReceiptView": {
+        "properties": {
+          "author_alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Alias"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "movement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Movement Id"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "receipt_id": {
+            "title": "Receipt Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "receipt_id",
+          "quantity",
+          "member_id",
+          "author_alias",
+          "created_at",
+          "movement_id"
+        ],
+        "title": "PhysicalReceiptView",
+        "type": "object"
+      },
+      "PhysicalReceiptsView": {
+        "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "purchase": {
+            "$ref": "#/components/schemas/PurchaseView"
+          },
+          "receipts": {
+            "items": {
+              "$ref": "#/components/schemas/PhysicalReceiptView"
+            },
+            "title": "Receipts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "purchase",
+          "receipts",
+          "next_cursor"
+        ],
+        "title": "PhysicalReceiptsView",
+        "type": "object"
+      },
       "PolicyBody": {
         "additionalProperties": false,
         "properties": {
@@ -4041,6 +4143,33 @@
           "mapping_mode"
         ],
         "title": "PolicyUpdateRequest",
+        "type": "object"
+      },
+      "PostReceiptBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "shopping.post-receipt",
+            "title": "Action",
+            "type": "string"
+          },
+          "purchase_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Purchase Id",
+            "type": "string"
+          },
+          "receipt_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Receipt Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "purchase_id",
+          "receipt_id"
+        ],
+        "title": "PostReceiptBody",
         "type": "object"
       },
       "PreferencesRequest": {
@@ -4212,6 +4341,165 @@
         "title": "ProfileDecision",
         "type": "object"
       },
+      "PurchaseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "shopping.purchase",
+            "title": "Action",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "quantity": {
+            "maxLength": 19,
+            "minLength": 1,
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Quantity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "product_id",
+          "name",
+          "quantity"
+        ],
+        "title": "PurchaseBody",
+        "type": "object"
+      },
+      "PurchaseView": {
+        "properties": {
+          "author_alias": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Alias"
+          },
+          "base_unit": {
+            "$ref": "#/components/schemas/BaseUnit"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pending_stock": {
+            "title": "Pending Stock",
+            "type": "string"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "purchase_id": {
+            "title": "Purchase Id",
+            "type": "string"
+          },
+          "purchased": {
+            "title": "Purchased",
+            "type": "string"
+          },
+          "received": {
+            "title": "Received",
+            "type": "string"
+          },
+          "remaining": {
+            "title": "Remaining",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "purchase_id",
+          "product_id",
+          "name",
+          "base_unit",
+          "purchased",
+          "received",
+          "remaining",
+          "pending_stock",
+          "revision",
+          "member_id",
+          "author_alias",
+          "created_at"
+        ],
+        "title": "PurchaseView",
+        "type": "object"
+      },
+      "PurchasesView": {
+        "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "purchases": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseView"
+            },
+            "title": "Purchases",
+            "type": "array"
+          }
+        },
+        "required": [
+          "purchases",
+          "next_cursor"
+        ],
+        "title": "PurchasesView",
+        "type": "object"
+      },
       "ReceiptResponse": {
         "additionalProperties": false,
         "properties": {
@@ -4267,6 +4555,41 @@
           "created_at"
         ],
         "title": "ReceiptResponse",
+        "type": "object"
+      },
+      "ReceivePurchaseBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "shopping.receive",
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "title": "Expected Revision",
+            "type": "string"
+          },
+          "purchase_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Purchase Id",
+            "type": "string"
+          },
+          "quantity": {
+            "maxLength": 19,
+            "minLength": 1,
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Quantity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "purchase_id",
+          "quantity",
+          "expected_revision"
+        ],
+        "title": "ReceivePurchaseBody",
         "type": "object"
       },
       "RecoveryResponse": {
@@ -11519,7 +11842,10 @@
                     "inventory.configure-replenishment": "#/components/schemas/ReplenishmentBody",
                     "inventory.correct-intake": "#/components/schemas/IntakeCorrectionBody",
                     "inventory.intake": "#/components/schemas/IntakeBody",
-                    "inventory.register-product": "#/components/schemas/ProductBody"
+                    "inventory.register-product": "#/components/schemas/ProductBody",
+                    "shopping.post-receipt": "#/components/schemas/PostReceiptBody",
+                    "shopping.purchase": "#/components/schemas/PurchaseBody",
+                    "shopping.receive": "#/components/schemas/ReceivePurchaseBody"
                   },
                   "propertyName": "action"
                 },
@@ -11538,6 +11864,15 @@
                   },
                   {
                     "$ref": "#/components/schemas/ReplenishmentBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PurchaseBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReceivePurchaseBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PostReceiptBody"
                   }
                 ],
                 "title": "Body"
@@ -11858,6 +12193,364 @@
           }
         ],
         "summary": "History"
+      }
+    },
+    "/api/v1/inventory/purchases": {
+      "get": {
+        "operationId": "purchases_api_v1_inventory_purchases_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Purchases"
+      }
+    },
+    "/api/v1/inventory/purchases/{purchase_id}/receipts": {
+      "get": {
+        "operationId": "physical_receipts_api_v1_inventory_purchases__purchase_id__receipts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "purchase_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Purchase Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhysicalReceiptsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Physical Receipts"
       }
     },
     "/api/v1/inventory/requests/{action}/{key}": {

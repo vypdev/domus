@@ -680,25 +680,40 @@
       "status": "proposed",
       "scope": "Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-11-10",
       "specs": [
         "specs/shopping-management.md"
       ],
       "workflows": [],
-      "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "entrypoints": [
+        "backend/src/domus/entrypoints/inventory_http.py"
+      ],
+      "code": [
+        "backend/src/domus/domain/shopping.py",
+        "backend/src/domus/application/inventory.py",
+        "backend/src/domus/application/inventory_queries.py",
+        "backend/src/domus/infrastructure/sqlite_shopping.py",
+        "frontend/src/presentation/domus-shopping.ts"
+      ],
+      "tests": [
+        "tests/backend/test_shopping_http.py",
+        "tests/backend/test_shopping_storage.py",
+        "tests/fixtures/sqlite/v22-shopping-source.sql",
+        "frontend/tests/inventory.test.ts",
+        "frontend/tests/e2e/workspace-navigation.spec.ts"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/evidence/shopping-receipts-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
-        "blockingDecisions": "Detailed demand-coverage and unit fixtures; partial-receipt UX; price/currency precision; launch purchase-session scope. The owner confirmed manual-extra and duplicate-safe automatic consolidation defaults on 2026-10-29.",
+        "implementationEvidence": "The purchase and receipt qualification maps the protected one-item workflow, exact partial receiving and Pantry posting to issue #74.",
+        "blockingDecisions": "Multi-list demand planning, task and manual demand consolidation, pricing and purchase sessions have separate acceptance.",
         "copilotChangesAllowed": false
       }
     },
