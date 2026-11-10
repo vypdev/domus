@@ -12,7 +12,7 @@ from domus.application.inventory_ports import InventoryRecords
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.task_material_ports import InventoryMaterialResult, MaterialPostingRequest
 from domus.domain.errors import Conflict, InvalidInput, NotFound, StorageFailure
-from domus.domain.identity import HumanIdentity, Permission
+from domus.domain.identity import HumanIdentity, Permission, validate_revision
 from domus.domain.inventory import (
     MAX_STOCK_UNITS,
     BaseUnit,
@@ -20,6 +20,7 @@ from domus.domain.inventory import (
     EffectKind,
     InventoryEffect,
     MovementKind,
+    ReplenishmentPolicy,
     StockMovement,
     stock_quantity,
     stock_units,
@@ -127,6 +128,7 @@ class CatalogAction(StrEnum):
     INTAKE = "inventory.intake"
     ADJUST = "inventory.adjust"
     CORRECT_INTAKE = "inventory.correct-intake"
+    CONFIGURE_REPLENISHMENT = "inventory.configure-replenishment"
 
 
 @dataclass(frozen=True, slots=True)
@@ -300,6 +302,48 @@ class InventoryCommands:
         if product is None:
             raise NotFound("inventory_product_missing")
         return product
+
+    def configure_replenishment(
+        self,
+        key: str,
+        product_id: str,
+        minimum: MaterialQuantity,
+        target: MaterialQuantity,
+        expected_revision: int,
+    ) -> Receipt:
+        if expected_revision != 0:
+            validate_revision(expected_revision)
+        payload = JsonDocument.from_value(
+            {
+                "product_id": product_id,
+                "minimum": minimum.value,
+                "target": target.value,
+                "expected_revision": str(expected_revision),
+            }
+        )
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            stock, home = unit.inventory, self.household_id
+            binding = self._product(stock, product_id).binding(home)
+            binding.require_quantity(minimum)
+            binding.require_quantity(target)
+            current = stock.replenishment(home, product_id)
+            if current.revision != expected_revision:
+                raise Conflict("revision_conflict")
+            policy = ReplenishmentPolicy(
+                stock_units(minimum), stock_units(target), current.revision + 1
+            )
+            stock.save_replenishment(home, product_id, policy)
+            return JsonDocument.from_value(
+                {
+                    "product_id": product_id,
+                    "minimum": minimum.value,
+                    "target": target.value,
+                    "revision": str(policy.revision),
+                }
+            )
+
+        return self._execute(CatalogAction.CONFIGURE_REPLENISHMENT.value, key, payload, apply)
 
     def _change_stock(
         self,

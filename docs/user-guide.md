@@ -108,10 +108,25 @@ after reloading. A historical receipt can refer to a movement that was recorded
 after the restored backup. Check the current history and balance before
 submitting a new request.
 
+### Pantry replenishment
+
+Each Pantry product shows its minimum, target and current amount to replenish
+in the base unit. Available stock is recorded stock minus active reservations.
+When available stock falls below the minimum, Pantry shows the amount needed
+to reach the target. At the minimum or above it shows that replenishment is
+satisfied. Refresh Inventory after stock or reservations change.
+
+With inventory management access, choose **Edit replenishment** on the product.
+Enter a nonnegative minimum and a target at least as large. Pieces use whole
+numbers. Grams and millilitres allow up to six decimal places. Use a minimum of
+zero to turn replenishment off. If another edit wins first, review the current
+values and reopen the editor. If the reply is lost, choose **Recover original
+request**.
+
 ### Subsequent supplies workflows
 
 Add products independently from package formats and locations. Receive physical quantities into their base unit.
-Record consumption explicitly. A low-stock policy or missing task material creates an attributable shopping demand.
+Record consumption explicitly. Shopping will combine attributable needs from Pantry replenishment and task materials.
 Scan a barcode with the camera or enter it manually. Domus searches local products first. If an administrator configures Internet product lookup, you may retrieve a candidate and review its source before importing it. External unavailability does not block local search or manual creation.
 Manual additional requests remain additional unless you choose overlapping intent.
 A purchase can be partially received. Inventory is updated only for confirmed receipts, once.

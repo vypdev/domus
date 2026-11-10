@@ -8,13 +8,15 @@ export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'i
   'invalid_task_text', 'invalid_inventory_unit', 'invalid_inventory_receipt', 'invalid_material_quantity',
   'invalid_material_precision', 'inventory_product_missing', 'inventory_stock_capacity',
   'invalid_inventory_reason', 'inventory_insufficient_stock', 'inventory_movement_missing',
-  'inventory_correction_requires_intake', 'inventory_intake_corrected'] as const;
+  'inventory_correction_requires_intake', 'inventory_intake_corrected', 'invalid_replenishment_bounds',
+  'invalid_revision', 'revision_conflict'] as const;
 export type InventoryError = typeof INVENTORY_ERRORS[number] | 'rejected';
 
 export interface InventoryScope {readonly key: string; readonly context: JournalContext; readonly readOnly: boolean;}
 export interface InventoryRequest {readonly key: string; readonly scope: string; readonly command: InventoryCommand;}
 export type InventoryResult = Readonly<{
   kind: 'committed' | 'historical'; operationId: string; productId: string;
+  replenishmentSaved?: true;
   movement: Readonly<{movementId: string; quantity: string; unit: BaseUnit;
     action: 'inventory.intake' | 'inventory.adjust' | 'inventory.correct-intake'}> | null;
 }> | Readonly<{kind: 'rejected'; reason: InventoryError; command: InventoryCommand}>;

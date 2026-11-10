@@ -159,8 +159,85 @@ def test_exact_stock_capacity_rejects_partial_posting_and_forced_binding(
             "recorded": maximum,
             "reserved": "0",
             "available": maximum,
+            "replenishment": {
+                "source_id": product_id,
+                "minimum": "0",
+                "target": "0",
+                "revision": "0",
+                "needed": "0",
+            },
         }
     ]
+
+
+def test_replenishment_policy_uses_current_grants_and_exact_values(api):
+    with api.store.write() as unit:
+        unit.members.save(Member("viewer", "home", VIEWER, Role.VIEWER, MemberStatus.ACTIVE, 1), 0)
+    api.user(USER, True)
+    oil = register(api, "oil", "Oil", "millilitre")
+    piece = register(api, "piece", "Boxes", "piece")
+    action = "configure-replenishment"
+    policy = {
+        "product_id": oil,
+        "minimum": "1.250002",
+        "target": "2.500001",
+        "expected_revision": "0",
+    }
+    assert post(api, "seed", "intake", product_id=oil, quantity="1.250001").status_code == 200
+    for invalid, code in (
+        ({"minimum": "3"}, "invalid_replenishment_bounds"),
+        ({"product_id": piece}, "invalid_material_precision"),
+        ({"product_id": "other-household-product"}, "inventory_product_missing"),
+        ({"target": "999999999999.9999999"}, "invalid_request"),
+        ({"target": "1000000000000"}, "invalid_request"),
+        ({"expected_revision": "9223372036854775808"}, "invalid_revision"),
+        ({"expected_revision": 0}, "invalid_request"),
+        ({"household_id": "other"}, "invalid_request"),
+    ):
+        assert post(api, "policy", action, **(policy | invalid)).json()["code"] == code
+    without_csrf = api.headers("policy") | member_context(USER)
+    without_csrf = {
+        name: value for name, value in without_csrf.items() if name.lower() != "x-csrf-token"
+    }
+    assert (
+        api.client.post(
+            INVENTORY + "/commands",
+            json={"action": "inventory." + action, **policy},
+            headers=without_csrf,
+        ).status_code
+        == 403
+    )
+    first = post(api, "policy", action, **policy)
+    assert first.status_code == 200, first.text
+    receipt = first.json()
+    assert receipt["result"] == {
+        "product_id": oil,
+        "minimum": "1.250002",
+        "target": "2.500001",
+        "revision": "1",
+    }
+    original = INVENTORY + "/requests/inventory.configure-replenishment/policy"
+    assert api.client.get(original, headers=member_context(USER)).json() == receipt
+    assert post(api, "policy", action, **policy).json() == receipt
+    assert post(api, "stale", action, **policy).json()["code"] == "revision_conflict"
+    assert (
+        post(api, "policy", action, **(policy | {"target": "5"})).json()["code"]
+        == "idempotency_conflict"
+    )
+    api.user(VIEWER)
+    products = {row["product_id"]: row for row in get(api, VIEWER).json()["products"]}
+    assert products[oil]["replenishment"] == {
+        "source_id": oil,
+        "minimum": "1.250002",
+        "target": "2.500001",
+        "revision": "1",
+        "needed": "1.25",
+    }
+    assert post(api, "policy", action, user=VIEWER, **policy).status_code == 403
+    assert api.client.get(original, headers=member_context(VIEWER)).status_code == 403
+    api.user(OUTSIDER)
+    assert post(api, "policy", action, user=OUTSIDER, **policy).status_code == 403
+    assert get(api, OUTSIDER).status_code == 403
 
 
 def test_product_history_is_protected_and_pages_across_later_appends(api, monkeypatch):

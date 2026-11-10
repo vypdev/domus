@@ -27,10 +27,16 @@ const wireHistory = {product_id:'product', product_name:'Olive oil', base_unit:'
 const history: MovementHistory = {productId:'product', productName:'Olive oil', unit:'millilitre', cursor:'older',
   movements:[{id:'movement', kind:'intake', quantity:'1.250001', memberId:'member', authorAlias:null, createdAt:'100',
     reason:null, occurrenceId:null, corrects:null, correctedBy:null}]};
-const wireProduct = {...savedProduct, recorded:'999999999999.999999', reserved:'0.000001', available:'999999999999.999998'};
+const emptyPolicy = {source_id:'product', minimum:'0', target:'0', revision:'0', needed:'0'} as const;
+const policy = {action:'inventory.configure-replenishment', product_id:'product', minimum:'1.250001',
+  target:'2.000001', expected_revision:'0'} as const;
+const savedPolicy = {product_id:'product', minimum:policy.minimum, target:policy.target, revision:'1'};
+const wireProduct = {...savedProduct, recorded:'999999999999.999999', reserved:'0.000001',
+  available:'999999999999.999998', replenishment:emptyPolicy};
 const wire = {location_id:'pantry', may_manage:true, products:[wireProduct], next_cursor:'next'};
 const report: InventoryReport = {mayManage:true, products:[{id:'product', name:'Olive oil', unit:'millilitre',
-  recorded:'999999999999.999999', reserved:'0.000001', available:'999999999999.999998'}], cursor:'next'};
+  recorded:'999999999999.999999', reserved:'0.000001', available:'999999999999.999998',
+  replenishment:{sourceId:'product', minimum:'0', target:'0', revision:'0', needed:'0'}}], cursor:'next'};
 const failure = (code:string) => ({state:'blocked', code, message:'Blocked.', action_required:'Review.', correlation_id:'cor_test'});
 const csrf = {csrf_token:'c'.repeat(64)};
 const receipt = (result:unknown, state = 'committed') => ({state, archived_by:state === 'historical' ? 'restore' : null,
@@ -69,7 +75,8 @@ test('only supported closed commands and exact positive decimal drafts cross the
 });
 
 test.each(['native','standalone'] as const)('exact catalog and original receipt use bounded %s endpoints', async mode => {
-  const whole = {product_id:'other', name:'Boxes', base_unit:'piece', recorded:'2', reserved:'0', available:'2'};
+  const whole = {product_id:'other', name:'Boxes', base_unit:'piece', recorded:'2', reserved:'0', available:'2',
+    replenishment:{...emptyPolicy,source_id:'other'}};
   const {server, fetch} = http([
     [200,wire], [200,{...wire,products:[whole],next_cursor:null}],
     [200,csrf], [200,receipt(savedProduct)], [200,csrf], [200,receipt(savedMovement)],
@@ -114,6 +121,50 @@ test('wire replies reject mismatched totals, quantities, identities and unsuppor
       .rejects.toMatchObject({code:'invalid_response'});
   await expect(http([[200,{...receipt(savedMovement),archived_by:42}]]).server.original(scope,request).result)
     .rejects.toMatchObject({code:'invalid_response'});
+});
+
+test('replenishment decodes an exact projection and recovers only its original matching settings', async () => {
+  const available = {...wireProduct, recorded:'2', reserved:'1.25', available:'0.75'};
+  const replenishment = {...emptyPolicy, minimum:policy.minimum, target:policy.target, needed:'1.250001', revision:'1'};
+  const item = {...available,replenishment};
+  const operation = {...request,command:policy};
+  const {server,fetch} = http([
+    [200,{...wire,products:[item]}],
+    [200,csrf], [200,receipt(savedPolicy)],
+    [200,receipt(savedPolicy,'historical')],
+  ]);
+  expect((await server.read(scope,null).result).products[0].replenishment).toEqual({
+    sourceId:'product',minimum:policy.minimum,target:policy.target,needed:'1.250001',revision:'1',
+  });
+  expect(await server.send(scope,operation).result).toMatchObject({kind:'committed',replenishmentSaved:true});
+  expect(await server.original(scope,operation).result).toMatchObject({kind:'historical',replenishmentSaved:true});
+  expect(fetch.mock.calls[2][1].body).toBe(JSON.stringify(policy));
+  expect(fetch.mock.calls[3][0]).toContain('inventory/requests/inventory.configure-replenishment/original');
+  expect(inventoryCommand({...policy,expected_revision:'9223372036854775807'})).toMatchObject({
+    expected_revision:'9223372036854775807',
+  });
+  for (const command of [
+    {...policy, actor:'forged'}, {...policy,expected_revision:'01'}, {...policy,expected_revision:0},
+    {...policy,minimum:undefined}, {...policy,target:'1.0000001'},
+    {action:policy.action, product_id:'product', target:'2', expected_revision:'0', extra:'forged'},
+  ]) expect(() => inventoryCommand(command)).toThrow();
+  const journalInstance = journal().journal;
+  journalInstance.save(operation);
+  expect(journalInstance.open(scope.key)).toEqual(operation);
+  for (const product of [
+    {...item,replenishment:{...replenishment, source_id:'other'}},
+    {...item,replenishment:{...replenishment, target:'1'}},
+    {...item,replenishment:{...replenishment, revision:'0'}},
+    {...item,replenishment:{...replenishment, minimum:'0', revision:'0'}},
+    {...item,replenishment:{...replenishment, needed:'0'}},
+    {...item,base_unit:'piece',recorded:'1',available:'1',reserved:'0'},
+    {...item,base_unit:'piece',recorded:'1',available:'1',reserved:'0',
+      replenishment:{...replenishment,minimum:'1'}},
+  ]) await expect(http([[200,{...wire,products:[product]}]]).server.read(scope,null).result)
+    .rejects.toMatchObject({code:'invalid_response'});
+  for (const altered of [{product_id:'other'}, {minimum:'0'}, {target:'0'}, {revision:'2'}])
+    await expect(http([[200,receipt({...savedPolicy,...altered})]]).server.original(scope,operation).result)
+      .rejects.toMatchObject({code:'invalid_response'});
 });
 
 function journal() {
@@ -271,6 +322,66 @@ function component() {
   return {node,root,events,press,input,submit};
 }
 const initial: InventoryState = {scope,report:null,history:null,busy:false,pending:false,result:null,notice:null};
+
+test('the policy form validates exact drafts, preserves its revision and limits editing to managers', async () => {
+  const {node,root,events,press,submit} = component();
+  const product = report.products[0];
+  const stock = {...report,products:[{...product,unit:'piece' as const}]};
+  node.view = {...initial,report:{...stock,mayManage:false}};
+  await node.updateComplete;
+  expect(root.textContent).toContain('Replenishment is off.');
+  expect([...root.querySelectorAll('vyp-ha-button')].map(button => button.state.label)).not.toContain('Edit replenishment');
+  node.view = {...initial,report:stock};
+  await node.updateComplete;
+  press('Edit replenishment'); await node.updateComplete;
+  let form = root.querySelector<HTMLFormElement>('.replenishment-form')!;
+  expect(form.querySelector('input')?.inputMode).toBe('numeric');
+  expect(root.activeElement).toBe(form.querySelector('input'));
+  press('Cancel'); await node.updateComplete;
+  expect(root.querySelector('.replenishment-form')).toBeNull();
+  node.language = 'es';
+  const enabled = {...product.replenishment,minimum:'1.25',target:'2',revision:'1' as typeof product.replenishment.revision,needed:'0.75'};
+  const next = {...report,products:[{...product,replenishment:enabled}]};
+  node.view = {...initial,report:next};
+  await node.updateComplete;
+  expect(root.textContent).toContain('Reponer · 0,75 mililitros');
+  press('Editar reposición'); await node.updateComplete;
+  form = root.querySelector<HTMLFormElement>('.replenishment-form')!;
+  const [minimum,target] = form.querySelectorAll('input');
+  const set = async (field: HTMLInputElement, value:string) => {
+    field.value=value; field.dispatchEvent(new Event('input')); await node.updateComplete;
+  };
+  expect(minimum.value).toBe('1,25');
+  expect(minimum.inputMode).toBe('decimal');
+  await set(minimum,'');
+  submit(form); await node.updateComplete;
+  expect(form.querySelector('[role=alert]')?.textContent).toContain('Introduce una cantidad');
+  await set(minimum,'3');
+  submit(form); await node.updateComplete;
+  expect(form.querySelector('[role=alert]')?.textContent).toContain('igual o superior al mínimo');
+  await set(minimum,'0');
+  await set(target,'4,25');
+  node.view = {...node.view,busy:true};
+  await node.updateComplete;
+  submit(form);
+  expect(events).not.toHaveBeenCalled();
+  node.view = {...node.view,busy:false};
+  await node.updateComplete;
+  submit(form);
+  const command = {action:policy.action,product_id:'product',minimum:'0',target:'4.25',expected_revision:enabled.revision} as const;
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command});
+  node.view = {...initial,report:next,result:{kind:'rejected',reason:'revision_conflict',command}};
+  await node.updateComplete;
+  expect(root.querySelector('.replenishment-form')).toBeNull();
+  expect(root.querySelector('vyp-ha-feedback')?.state?.message).toContain('ha cambiado');
+  press('Editar reposición'); await node.updateComplete;
+  node.view = {...initial,report:{...next,products:[{...product,replenishment:{...enabled,needed:'0'}}]},
+    result:{kind:'committed',operationId:'policy',productId:'product',movement:null,replenishmentSaved:true}};
+  await node.updateComplete;
+  expect(root.querySelector('.replenishment-form')).toBeNull();
+  expect(root.textContent).toContain('Se ha guardado la configuración de reposición.');
+  expect(root.textContent).toContain('No hace falta reponer.');
+});
 
 test('inventory exposes scoped empty, read-only and failure states with accessible draft review', async () => {
   const {node,root,events,press,input,submit} = component();

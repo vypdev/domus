@@ -1,8 +1,8 @@
 /** Bounded same-origin Inventory reads and exact original-command recovery. */
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
-import {BASE_UNITS, MOVEMENT_KINDS, STOCK_REASON_LIMIT, inventoryCommand, signedQuantity, stockUnits} from '../domain/inventory';
-import type {InventoryCommand, InventoryReport, MovementHistory, ProductStock, StockMovement} from '../domain/inventory';
+import {BASE_UNITS, MOVEMENT_KINDS, STOCK_REASON_LIMIT, inventoryCommand, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
+import type {InventoryCommand, InventoryReport, MovementHistory, ProductStock, Replenishment, StockMovement} from '../domain/inventory';
 import {taskQuantity, taskTime} from '../domain/tasks';
 import {BoundedHTTP} from './http-transport';
 import type {FetchTransport} from './http-transport';
@@ -12,13 +12,28 @@ import {boolean, check, choice, fields, identifier, integer, text} from './json-
 
 const BASE = 'inventory';
 
+function replenishment(value: unknown, id: string, unit: ProductStock['unit'], available: string): Replenishment {
+  const row = fields(value, ['source_id','minimum','target','revision','needed'], []);
+  const minimum = taskQuantity(row.minimum), target = taskQuantity(row.target), needed = taskQuantity(row.needed);
+  const revision = replenishmentRevision(row.revision);
+  const minimumUnits = stockUnits(minimum), targetUnits = stockUnits(target), availableUnits = stockUnits(available);
+  check(row.source_id === id);
+  check(minimumUnits <= targetUnits);
+  check(revision !== '0' || (minimum === '0' && target === '0'));
+  check(unit !== 'piece' || [minimum, target].every(amount => !amount.includes('.')));
+  check(stockUnits(needed) === (availableUnits < minimumUnits ? targetUnits - availableUnits : 0n));
+  return {sourceId:id, minimum, target, revision, needed};
+}
+
 function product(value: unknown): ProductStock {
-  const row = fields(value, ['product_id','name','base_unit','recorded','reserved','available'], []);
+  const row = fields(value, ['product_id','name','base_unit','recorded','reserved','available','replenishment'], []);
+  const id = identifier(row.product_id);
   const unit = choice(row.base_unit, BASE_UNITS), recorded = taskQuantity(row.recorded);
   const reserved = taskQuantity(row.reserved), available = taskQuantity(row.available);
   check(stockUnits(recorded) === stockUnits(reserved) + stockUnits(available));
   check(unit !== 'piece' || [recorded, reserved, available].every(amount => !amount.includes('.')));
-  return {id: identifier(row.product_id), name: text(row.name, 160), unit, recorded, reserved, available};
+  return {id, name: text(row.name, 160), unit, recorded, reserved, available,
+    replenishment: replenishment(row.replenishment, id, unit, available)};
 }
 
 function report(value: unknown): InventoryReport {
@@ -61,6 +76,12 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
     const result = fields(row.result, ['product_id','name','base_unit'], []);
     check(result.name === command.name && result.base_unit === command.base_unit);
     return {kind, operationId, productId: identifier(result.product_id), movement: null};
+  }
+  if (command.action === 'inventory.configure-replenishment') {
+    const result = fields(row.result, ['product_id','minimum','target','revision'], []);
+    check(result.product_id === command.product_id && result.minimum === command.minimum && result.target === command.target);
+    check(BigInt(replenishmentRevision(result.revision)) === BigInt(command.expected_revision) + 1n);
+    return {kind, operationId, productId: command.product_id, movement: null, replenishmentSaved:true};
   }
   const action = command.action;
   const result = fields(row.result, ['product_id','movement_id','base_unit','quantity'],

@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected Pantry movement history, signed adjustments, linked intake reversals and original receipt recovery in English and Spanish.",
+  "scope": "Compiled household workspace with protected Pantry movements, stock corrections and minimum and target replenishment with original receipt recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "b6de45597b979e181a1edf40718327757de99e583083e602f24e24340f70e5d4",
+    ".vite/manifest.json": "9d4b0e20a95d95c1449bda8db3a3b200a8aa61a72cb1d6ac1353fdbaa0296e4d",
+    "assets/index-CImSnA--.js": "de27b736f889cd712b858a7719ddbcb694becb95394bb7493a340ed78c5564f7",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DOZPU9An.js": "46061b09d5b81df6e4f8d869adfd23a7937a0429e920e8be57b5304d7a0ecf75",
-    "index.html": "419b965325ecb37b35ba383ae896d3db4c6bdd2ce0e1e0ac9ee359a275e10172"
+    "index.html": "ad8bdf2c42fb922bcc1fe3d4283bdb0c0bce9e41bff100f699f50b40c804c64f"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

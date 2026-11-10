@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from domus.domain.errors import InvalidInput
+from domus.domain.identity import validate_revision
 from domus.domain.storage import validate_identifier
 from domus.domain.task_material_values import MaterialBinding, MaterialQuantity
 from domus.domain.task_materials import MaterialPosting
@@ -61,6 +62,22 @@ def stock_quantity(units: int) -> str:
 def stock_units(quantity: MaterialQuantity) -> int:
     whole, _, fraction = quantity.value.partition(".")
     return int(whole) * 1_000_000 + int(fraction.ljust(6, "0"))
+
+
+@dataclass(frozen=True, slots=True)
+class ReplenishmentPolicy:
+    minimum: int = 0
+    target: int = 0
+    revision: int = 0
+
+    def __post_init__(self) -> None:
+        if self.revision != 0:
+            validate_revision(self.revision)
+        if not 0 <= self.minimum <= self.target <= MAX_STOCK_UNITS:
+            raise InvalidInput("invalid_replenishment_bounds")
+
+    def needed(self, available: int) -> int:
+        return self.target - available if available < self.minimum else 0
 
 
 def validate_stock_reason(reason: str) -> None:

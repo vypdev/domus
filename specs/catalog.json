@@ -731,6 +731,8 @@
         "tests/fixtures/sqlite/v19-inventory-catalog-source.sql",
         "tests/backend/test_inventory_movements.py",
         "tests/fixtures/sqlite/v20-inventory-history-source.sql",
+        "tests/backend/test_pantry_replenishment.py",
+        "tests/fixtures/sqlite/v21-pantry-replenishment-source.sql",
         "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
       "documentation": [
@@ -741,7 +743,8 @@
         "docs/contracts/home-assistant.md",
         "docs/evidence/recurrence-calendar-qualification.md",
         "docs/evidence/inventory-catalog-qualification.md",
-        "docs/evidence/inventory-movement-qualification.md"
+        "docs/evidence/inventory-movement-qualification.md",
+        "docs/evidence/pantry-replenishment-qualification.md"
       ],
       "readiness": {
         "state": "draft",

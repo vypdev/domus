@@ -8,8 +8,8 @@ import {cardState} from '@vypdev/ha-ui/card-contracts';
 import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
 import type {InventoryError, InventoryState} from '../application/inventory-controller';
-import {BASE_UNITS, STOCK_REASON_LIMIT, adjustmentQuantity, intakeQuantity} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, MovementHistory, ProductStock, StockMovement} from '../domain/inventory';
+import {BASE_UNITS, STOCK_REASON_LIMIT, adjustmentQuantity, intakeQuantity, policyQuantity, stockUnits} from '../domain/inventory';
+import type {BaseUnit, InventoryCommand, MovementHistory, ProductStock, ReplenishmentRevision, StockMovement} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
@@ -30,11 +30,20 @@ const MOVEMENT_SAVED = {
   'inventory.correct-intake': 'reversed',
 } as const;
 
+interface PolicyEditor {
+  readonly productId: string;
+  readonly revision: ReplenishmentRevision;
+  readonly minimum: string;
+  readonly target: string;
+  readonly error: 'invalidQuantity' | 'invalid_replenishment_bounds' | null;
+}
+
 export class DomusInventory extends LitElement {
   static properties = {
     view: {attribute:false}, language: {attribute:false}, nameDraft: {state:true}, unit: {state:true},
     selected: {state:true}, amount: {state:true}, review: {state:true}, invalid: {state:true},
     editor: {state:true}, reason: {state:true}, adjustment: {state:true},
+    policyEditor: {state:true},
   };
 
   static styles = css`
@@ -67,6 +76,7 @@ export class DomusInventory extends LitElement {
   private declare editor: {productId: string; original: StockMovement | null} | null;
   private declare reason: string;
   private declare adjustment: string;
+  private declare policyEditor: PolicyEditor | null;
 
   constructor() {
     super();
@@ -81,6 +91,7 @@ export class DomusInventory extends LitElement {
     this.editor = null;
     this.reason = '';
     this.adjustment = '';
+    this.policyEditor = null;
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
@@ -91,11 +102,16 @@ export class DomusInventory extends LitElement {
       this.unit = 'piece';
       this.select(null);
       this.editor = null;
+      this.policyEditor = null;
     }
     if (previous?.history?.productId !== current?.history?.productId) this.editor = null;
     const result = current?.result;
-    if (result && result !== previous?.result && result.kind !== 'rejected') {
-      if (result.movement === null) this.nameDraft = '';
+    if (result && result !== previous?.result) {
+      if (result.kind === 'rejected') {
+        if (result.command.action === 'inventory.configure-replenishment' && result.reason === 'revision_conflict')
+          this.policyEditor = null;
+      } else if (result.replenishmentSaved) this.policyEditor = null;
+      else if (result.movement === null) this.nameDraft = '';
       else if (result.movement.action === 'inventory.intake') this.select(result.productId);
       else this.editor = null;
     }
@@ -270,17 +286,63 @@ export class DomusInventory extends LitElement {
     </section>`;
   }
 
+  private editPolicy(product: ProductStock): void {
+    const {minimum, target, revision} = product.replenishment;
+    this.policyEditor = {productId:product.id, revision, minimum:this.quantity(minimum),
+      target:this.quantity(target), error:null};
+    void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLInputElement>('.replenishment-form input')?.focus());
+  }
+
+  private policyForm(product: ProductStock, editor: PolicyEditor, blocked: boolean) {
+    const helpId = 'replenishment-help-' + product.id, errorId = 'replenishment-error-' + product.id;
+    return html`<form class="replenishment-form" novalidate @submit=${(event: SubmitEvent) => {
+      event.preventDefault();
+      if (blocked) return;
+      const minimum = policyQuantity(editor.minimum, product.unit), target = policyQuantity(editor.target, product.unit);
+      if (minimum === null || target === null) {
+        this.policyEditor = {...editor, error:'invalidQuantity'};
+        return;
+      }
+      if (stockUnits(minimum) > stockUnits(target)) {
+        this.policyEditor = {...editor, error:'invalid_replenishment_bounds'};
+        return;
+      }
+      this.intent({type:'submit', command:{action:'inventory.configure-replenishment', product_id:product.id,
+        expected_revision:editor.revision, minimum, target}});
+    }}>
+      ${(['minimum','target'] as const).map(field => html`<label>${this.text(field)}
+        <input required maxlength="19" inputmode=${product.unit === 'piece' ? 'numeric' : 'decimal'}
+          .value=${live(editor[field])} ?disabled=${blocked} aria-invalid=${editor.error !== null}
+          aria-describedby=${editor.error === null ? helpId : helpId + ' ' + errorId}
+          @input=${(event: InputEvent) => {
+            this.policyEditor = {...this.policyEditor!, [field]:(event.target as HTMLInputElement).value, error:null};
+          }}></label>`)}
+      <p id=${helpId}>${this.text('replenishmentGuide')}</p>
+      ${editor.error === null ? nothing : this.error(errorId, editor.error)}
+      <div class="actions">${this.submitButton('saveReplenishment', blocked)}
+        ${this.button('cancel', () => {this.policyEditor = null;}, blocked)}</div>
+    </form>`;
+  }
+
   private product(product: ProductStock, manage: boolean, busy: boolean, blocked: boolean) {
+    const policy = product.replenishment, editor = this.policyEditor;
     return html`<article tabindex="-1" id=${'product-' + product.id} aria-labelledby=${'name-' + product.id}>
       <h3 id=${'name-' + product.id}>${product.name}</h3>
       <p>${this.text('unit')} · ${this.text(product.unit)}</p>
       <dl>${(['recorded', 'reserved', 'available'] as const).map(key => html`
         <dt>${this.text(key)}</dt><dd>${this.quantity(product[key])}</dd>`)}</dl>
+      <p>${this.text('minimum')} · ${this.quantity(policy.minimum)} ${this.text(product.unit)}</p>
+      <p>${this.text('target')} · ${this.quantity(policy.target)} ${this.text(product.unit)}</p>
+      <p>${policy.minimum === '0' ? this.text('replenishmentDisabled')
+        : policy.needed === '0' ? this.text('replenishmentSatisfied')
+        : html`<strong>${this.text('needed')} · ${this.quantity(policy.needed)} ${this.text(product.unit)}</strong>`}</p>
       <div class="actions">
         ${this.button('showHistory', () => this.intent({type:'history', productId:product.id}), busy)}
         ${manage && this.selected !== product.id ? this.button('intake', () => this.select(product.id), blocked) : nothing}
+        ${manage && editor?.productId !== product.id ? this.button('editReplenishment', () => this.editPolicy(product), blocked) : nothing}
       </div>
       ${manage && this.selected === product.id ? this.intake(product, blocked) : nothing}
+      ${manage && editor?.productId === product.id ? this.policyForm(product, editor, blocked) : nothing}
     </article>`;
   }
 
@@ -297,7 +359,7 @@ export class DomusInventory extends LitElement {
       ${message === null ? nothing : html`<vyp-ha-feedback
         .state=${feedbackState({kind:'notice', tone:'warning', message:this.text(message)})}></vyp-ha-feedback>`}
       ${saved === null ? nothing : html`<p role="status">${this.text(saved.kind === 'historical'
-        ? 'historical' : movement ? MOVEMENT_SAVED[movement.action] : 'registered')}
+        ? 'historical' : movement ? MOVEMENT_SAVED[movement.action] : saved.replenishmentSaved ? 'replenishmentSaved' : 'registered')}
         ${movement ? html`${this.quantity(movement.quantity)} ${this.text(movement.unit)}` : nothing}</p>
         ${report?.products.some(product => product.id === saved.productId) ? html`<a href=${'#product-' + saved.productId}
           @click=${(event: MouseEvent) => {

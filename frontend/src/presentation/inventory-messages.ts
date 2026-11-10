@@ -42,6 +42,14 @@ const EN = {
   inventory_movement_missing: 'The movement is unavailable. Refresh the history.',
   inventory_correction_requires_intake: 'Choose an original intake to reverse. Review task use in Tasks.',
   inventory_intake_corrected: 'This intake already has a reversal. Refresh the history.',
+  minimum: 'Minimum stock', target: 'Target stock', needed: 'Replenish',
+  replenishmentDisabled: 'Replenishment is off.', replenishmentSatisfied: 'No replenishment needed.',
+  editReplenishment: 'Edit replenishment', saveReplenishment: 'Save replenishment',
+  replenishmentGuide: 'Enter both quantities in the base unit. A minimum of zero turns replenishment off.',
+  replenishmentSaved: 'Replenishment settings saved.',
+  invalid_replenishment_bounds: 'The target must be at least the minimum.',
+  invalid_revision: 'These settings cannot be saved. Refresh Inventory.',
+  revision_conflict: 'The replenishment settings changed. Review the current values and try again.',
   rejected: 'The request was rejected. Check current inventory and try again.',
 } as const;
 
@@ -87,6 +95,14 @@ const ES: Record<keyof typeof EN, string> = {
   inventory_movement_missing: 'El movimiento no está disponible. Actualiza el historial.',
   inventory_correction_requires_intake: 'Elige una entrada original para revertirla. Revisa el consumo de tareas en Tareas.',
   inventory_intake_corrected: 'Esta entrada ya tiene una reversión. Actualiza el historial.',
+  minimum: 'Stock mínimo', target: 'Stock objetivo', needed: 'Reponer',
+  replenishmentDisabled: 'La reposición está desactivada.', replenishmentSatisfied: 'No hace falta reponer.',
+  editReplenishment: 'Editar reposición', saveReplenishment: 'Guardar reposición',
+  replenishmentGuide: 'Introduce ambas cantidades en la unidad base. Un mínimo de cero desactiva la reposición.',
+  replenishmentSaved: 'Se ha guardado la configuración de reposición.',
+  invalid_replenishment_bounds: 'El objetivo debe ser igual o superior al mínimo.',
+  invalid_revision: 'No se puede guardar la configuración. Actualiza el inventario.',
+  revision_conflict: 'La configuración de reposición ha cambiado. Revisa los valores actuales y vuelve a intentarlo.',
   rejected: 'Se rechazó la solicitud. Consulta el inventario y vuelve a intentarlo.',
 };
 

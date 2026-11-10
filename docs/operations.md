@@ -61,6 +61,23 @@ context and page size. Adjustments and intake reversals require
 active reservations before appending a movement and committing its original
 receipt. A unique correction link allows one full reversal per intake.
 
+## Pantry replenishment
+
+Schema 22 adds one revisioned minimum and target policy per Pantry product.
+Existing products start with both thresholds at zero. The upgrade preserves
+product identities, movement links, reservations, task effects and original
+operation receipts. Snapshot validation checks the policy table and verifies
+whole-piece precision before a compatible restoration can activate.
+
+Current `inventory.manage` is required to edit thresholds or recover their
+original write receipt. The write checks the expected revision and commits
+the policy, audit entry and receipt in the same transaction. Inventory reads
+the policy, ledger balance and active reservations in one snapshot. Its
+replenishment source is the Pantry product identity. The projected amount is
+target minus availability when below the minimum, and zero otherwise. These
+reads create no movements or task effects. Restocking leaves any pending task
+consumption available for separate review in Tasks.
+
 ## Family rewards
 
 Rewards start disabled. A current points administrator can enable new requests,

@@ -1,14 +1,19 @@
 /** Catalog commands and exact base-unit quantities shared by the protected workspace. */
 import {taskIdentifier, taskQuantity, taskText} from './tasks';
+import {revisionValue} from './administration';
+import type {Revision} from './administration';
 
 export const BASE_UNITS = ['piece', 'gram', 'millilitre'] as const;
 export type BaseUnit = typeof BASE_UNITS[number];
+export type ReplenishmentRevision = Revision | '0';
 
 export type InventoryCommand =
   | Readonly<{action: 'inventory.register-product'; name: string; base_unit: BaseUnit}>
   | Readonly<{action: 'inventory.intake'; product_id: string; quantity: string}>
   | Readonly<{action: 'inventory.adjust'; product_id: string; quantity: string; reason: string}>
-  | Readonly<{action: 'inventory.correct-intake'; product_id: string; movement_id: string; reason: string}>;
+  | Readonly<{action: 'inventory.correct-intake'; product_id: string; movement_id: string; reason: string}>
+  | Readonly<{action: 'inventory.configure-replenishment'; product_id: string; minimum: string;
+    target: string; expected_revision: ReplenishmentRevision}>;
 
 export const MOVEMENT_KINDS = ['intake', 'task_consumption', 'task_correction', 'adjustment', 'intake_correction'] as const;
 export type MovementKind = typeof MOVEMENT_KINDS[number];
@@ -42,6 +47,15 @@ export interface ProductStock {
   readonly recorded: string;
   readonly reserved: string;
   readonly available: string;
+  readonly replenishment: Replenishment;
+}
+
+export interface Replenishment {
+  readonly sourceId: string;
+  readonly minimum: string;
+  readonly target: string;
+  readonly revision: ReplenishmentRevision;
+  readonly needed: string;
 }
 
 export interface InventoryReport {
@@ -76,7 +90,17 @@ export function inventoryCommand(value: unknown): InventoryCommand {
         reason: taskText(record.reason, STOCK_REASON_LIMIT, true)};
     }
   }
+  const policyKeys = ['action', 'product_id', 'minimum', 'target', 'expected_revision'];
+  if (action === 'inventory.configure-replenishment' && Object.keys(record).length === policyKeys.length
+      && policyKeys.every(key => Object.hasOwn(record, key))) {
+    return {action, product_id: taskIdentifier(record.product_id), minimum: taskQuantity(record.minimum),
+      target: taskQuantity(record.target), expected_revision: replenishmentRevision(record.expected_revision)};
+  }
   throw new Error('invalid_inventory_command');
+}
+
+export function replenishmentRevision(value: unknown): ReplenishmentRevision {
+  return value === '0' ? value : revisionValue(value);
 }
 
 export function signedQuantity(value: unknown): string {
@@ -94,11 +118,15 @@ export function adjustmentQuantity(value: string, unit: BaseUnit): string | null
 }
 
 export function intakeQuantity(value: string, unit: BaseUnit): string | null {
+  const quantity = policyQuantity(value, unit);
+  return quantity === '0' ? null : quantity;
+}
+
+export function policyQuantity(value: string, unit: BaseUnit): string | null {
   const match = /^(0|[1-9][0-9]{0,11})(?:[.,]([0-9]{1,6}))?$/u.exec(value.trim());
   if (match === null || (unit === 'piece' && match[2] !== undefined)) return null;
   const fraction = match[2]?.replace(/0+$/u, '') ?? '';
-  const quantity = fraction ? match[1] + '.' + fraction : match[1];
-  return quantity === '0' ? null : quantity;
+  return fraction ? match[1] + '.' + fraction : match[1];
 }
 
 export function stockUnits(quantity: string): bigint {

@@ -13,6 +13,7 @@ from domus.domain.inventory import (
     EffectKind,
     InventoryEffect,
     MovementKind,
+    ReplenishmentPolicy,
     StockMovement,
     stock_units,
     validate_stock_reason,
@@ -96,6 +97,15 @@ CATALOG_STATEMENTS = (
     "REFERENCES inventory_materials(household_id,reference_id)) STRICT",
 )
 
+REPLENISHMENT_STATEMENT = (
+    "CREATE TABLE inventory_replenishment(household_id TEXT NOT NULL, product_id TEXT NOT NULL, "
+    f"minimum INTEGER NOT NULL CHECK(minimum BETWEEN 0 AND {MAX_STOCK_UNITS}), "
+    f"target INTEGER NOT NULL CHECK(target BETWEEN minimum AND {MAX_STOCK_UNITS}), "
+    "revision INTEGER NOT NULL CHECK(revision>0), PRIMARY KEY(household_id,product_id), "
+    "FOREIGN KEY(household_id,product_id) "
+    "REFERENCES inventory_products(household_id,product_id)) STRICT"
+)
+
 
 def _product(row: sqlite3.Row) -> CatalogProduct:
     return CatalogProduct(
@@ -164,6 +174,22 @@ class SQLiteInventory:
                 "ORDER BY product_id LIMIT ?",
                 (home, after, limit),
             )
+        )
+
+    def replenishment(self, home: str, product_id: str) -> ReplenishmentPolicy:
+        row = self.connection.execute(
+            "SELECT minimum,target,revision FROM inventory_replenishment "
+            "WHERE household_id=? AND product_id=?",
+            (home, product_id),
+        ).fetchone()
+        return ReplenishmentPolicy() if row is None else ReplenishmentPolicy(*row)
+
+    def save_replenishment(self, home: str, product_id: str, policy: ReplenishmentPolicy) -> None:
+        self.connection.execute(
+            "INSERT INTO inventory_replenishment VALUES (?,?,?,?,?) "
+            "ON CONFLICT(household_id,product_id) DO UPDATE SET "
+            "minimum=excluded.minimum,target=excluded.target,revision=excluded.revision",
+            (home, product_id, policy.minimum, policy.target, policy.revision),
         )
 
     def material(self, home: str, reference: str) -> MaterialBinding | None:
@@ -366,3 +392,12 @@ def verify_inventory_catalog(connection: sqlite3.Connection) -> None:
         home = row["household_id"]
         if stock.material(home, product.reference_id) != product.binding(home):
             raise StorageFailure("invalid_inventory_catalog_binding")
+
+
+def verify_replenishment(connection: sqlite3.Connection) -> None:
+    for minimum, target in connection.execute(
+        "SELECT r.minimum,r.target FROM inventory_replenishment AS r "
+        "JOIN inventory_products AS p USING(household_id,product_id) WHERE p.base_unit='piece'"
+    ):
+        if minimum % 1_000_000 or target % 1_000_000:
+            raise StorageFailure("invalid_replenishment_bounds")
