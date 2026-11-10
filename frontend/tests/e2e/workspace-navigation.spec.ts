@@ -119,6 +119,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.keyboard.press('Enter');
     await expect(stock).toBeFocused();
     await expect(stock.getByText('There are no registered products.')).toBeVisible();
+    await expect(stock.getByRole('article', {name:'Pantry', exact:true})).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     await inventory.focus();
     await page.keyboard.press('Tab');
     await expect(household).toBeFocused();
@@ -354,6 +355,10 @@ for (const mode of ['native', 'standalone'] as const) {
     await tabs.getByRole('link', {name: 'Inventario', exact: true}).click();
     await expect(stock).toBeFocused();
     await expect(stock.getByText('No hay productos registrados.')).toBeVisible();
+    const pantry = stock.getByRole('article', {name:'Despensa', exact:true});
+    await expect(pantry).toHaveCSS('background-color', 'rgb(24, 36, 47)');
+    await expect(pantry).toHaveCSS('color', 'rgb(237, 244, 250)');
+    await expect(stock.getByRole('button', {name:'Registrar producto'})).toHaveCSS('color', 'rgb(24, 36, 47)');
     await stock.getByRole('textbox', {name: 'Nombre del producto'}).fill('Pantry oil');
     await stock.getByRole('combobox', {name: 'Unidad base'}).selectOption('millilitre');
     await stock.getByRole('button', {name: 'Registrar producto'}).click();

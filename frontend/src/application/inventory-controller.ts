@@ -14,7 +14,7 @@ export interface InventoryRequest {readonly key: string; readonly scope: string;
 export type InventoryResult = Readonly<{
   kind: 'committed' | 'historical'; operationId: string; productId: string;
   intake: Readonly<{movementId: string; quantity: string; unit: BaseUnit}> | null;
-}> | Readonly<{kind: 'rejected'; reason: InventoryError}>;
+}> | Readonly<{kind: 'rejected'; reason: InventoryError; command: InventoryCommand}>;
 export interface InventoryServer {
   read(scope: InventoryScope, cursor: string | null): EntryRead<InventoryReport>;
   send(scope: InventoryScope, request: InventoryRequest): EntryRead<InventoryResult>;

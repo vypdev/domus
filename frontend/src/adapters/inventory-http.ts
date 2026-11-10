@@ -72,7 +72,7 @@ export class HttpInventoryServer implements InventoryServer {
       const reply = await this.network.request(BASE + '/commands', 'POST', scope.context, JSON.stringify(command),
         identifier(request.key), token, signal);
       if (reply.status === 200) return receipt(reply.value, command);
-      if ([401,403,404,409,422].includes(reply.status)) return {kind: 'rejected', reason: fault(reply.value)};
+      if ([401,403,404,409,422].includes(reply.status)) return {kind: 'rejected', reason: fault(reply.value), command};
       throw new Error('inventory_unavailable');
     });
   }

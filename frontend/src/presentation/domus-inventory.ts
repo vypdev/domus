@@ -29,11 +29,12 @@ export class DomusInventory extends LitElement {
   };
 
   static styles = css`
-    :host {display:grid;gap:16px;--vyp-ha-surface:var(--surface);--vyp-ha-text:var(--text);
-      --vyp-ha-text-secondary:var(--muted);--vyp-ha-border:var(--line);--vyp-ha-primary:var(--accent)}
+    :host {display:grid;gap:16px;--vyp-ha-surface:var(--surface);--vyp-ha-surface-raised:var(--surface);
+      --vyp-ha-text:var(--text);--vyp-ha-text-secondary:var(--muted);--vyp-ha-border:var(--line);
+      --vyp-ha-primary:var(--accent);--vyp-ha-on-accent:var(--surface);--vyp-ha-focus-ring:3px solid var(--accent)}
     h2, h3, p {margin:0} form, label, article, .products {display:grid;gap:8px}
     article + article {border-block-start:1px solid var(--line);padding-block-start:12px}
-    article {overflow-wrap:anywhere}
+    article {scroll-margin-block-start:68px} article,code {overflow-wrap:anywhere}
     dl {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0}
     dt {font-weight:650} dd {margin:0}
     input,select {font:inherit;color:inherit;background:var(--surface);padding:8px;border:1px solid var(--line);
@@ -129,8 +130,9 @@ export class DomusInventory extends LitElement {
 
   private intake(product: ProductStock, blocked: boolean) {
     const state = this.view!.result;
-    const fieldError = this.review !== null && state?.kind === 'rejected' && QUANTITY_ERRORS.has(state.reason)
-      ? state.reason : null;
+    const fieldError = state?.kind === 'rejected' && state.command.action === 'inventory.intake'
+      && state.command.product_id === product.id && state.command.quantity === this.review
+      && QUANTITY_ERRORS.has(state.reason) ? state.reason : null;
     const invalid = this.invalid === 'quantity' || fieldError !== null;
     return html`<form novalidate @submit=${(event: SubmitEvent) => {
       event.preventDefault();

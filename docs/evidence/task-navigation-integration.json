@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected product registration, exact Pantry intake, stock availability, and original intake recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "3437d7210f9777f64bf241751191114f85cea09cdff61d3e78713a2e6de2ab92",
+    ".vite/manifest.json": "25c08c7aa7ab8adfcd458e7d2e1fdc51f1dfecdc12f1cac0d65d3e7741962fd1",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-CqYhhcYL.js": "5b2665cbeeb4b989e43c400b4768567ae22a9cdb95ad10917356436b07fbfc16",
-    "index.html": "ae70ee645f02d2fba27e41d65101977bd4cfde3eebf3a67ce7872051cc77971a"
+    "assets/index-Dx8HsQnC.js": "eeef7579c8591ebe2ed679c5edf3d12e14c42f2316a3dee552f07759001f4eb2",
+    "index.html": "df5fca477aea9e4719d6a0cfb28dbc11ac5eb4d4694bddb5a8a64457c5e4c361"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

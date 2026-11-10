@@ -81,8 +81,8 @@ test.each(['native','standalone'] as const)('exact catalog and original receipt 
   expect(await server.original(scope,request).result).toBeNull();
   await expect(server.original(scope,request).result).rejects.toMatchObject({code:'unavailable'});
   await expect(server.original(scope,request).result).rejects.toMatchObject({code:'unavailable'});
-  expect(await server.send(scope,request).result).toEqual({kind:'rejected',reason:'inventory_stock_capacity'});
-  expect(await server.send(scope,request).result).toEqual({kind:'rejected',reason:'rejected'});
+  expect(await server.send(scope,request).result).toEqual({kind:'rejected',reason:'inventory_stock_capacity',command:intake});
+  expect(await server.send(scope,request).result).toEqual({kind:'rejected',reason:'rejected',command:intake});
   await expect(server.send(scope,request).result).rejects.toMatchObject({code:'unavailable'});
   expect(fetch.mock.calls[1][0]).toContain('cursor=next%2F%2B%3F');
   const headers = new Headers(fetch.mock.calls[5][1].headers);
@@ -305,12 +305,24 @@ test('inventory exposes scoped empty, read-only and failure states with accessib
   const count = events.mock.calls.length;
   submit(registration); submit(entry);
   expect(events.mock.calls).toHaveLength(count);
-  node.view = {...node.view,busy:false,result:{kind:'rejected',reason:'inventory_stock_capacity'}};
+  node.view = {...node.view,busy:false,result:{kind:'rejected',reason:'inventory_stock_capacity',command:intake}};
   await node.updateComplete;
   expect(entry.querySelector('input')?.value).toBe('1,250001');
   expect(entry.querySelector('[role=alert]')?.textContent).toContain('enter a smaller amount');
   expect(root.querySelector('vyp-ha-feedback')?.state?.message).toContain('Stock was not changed');
-  node.view = {...node.view,result:{kind:'rejected',reason:'permission_denied'}};
+  node.view = {...node.view,result:{kind:'rejected',reason:'inventory_stock_capacity',
+    command:{...intake,product_id:'other'}}};
+  await node.updateComplete;
+  expect(entry.querySelector('[role=alert]')).toBeNull();
+  node.view = {...node.view,result:{kind:'rejected',reason:'invalid_task_text',command:register}};
+  await node.updateComplete;
+  expect(entry.querySelector('[role=alert]')).toBeNull();
+  input(entry,'2'); submit(entry); await node.updateComplete;
+  node.view = {...node.view,result:{kind:'rejected',reason:'inventory_stock_capacity',command:intake}};
+  await node.updateComplete;
+  expect(entry.querySelector('[role=alert]')).toBeNull();
+  input(entry,'1,250001'); submit(entry); await node.updateComplete;
+  node.view = {...node.view,result:{kind:'rejected',reason:'permission_denied',command:intake}};
   await node.updateComplete;
   expect(entry.querySelector('[role=alert]')).toBeNull();
 });
