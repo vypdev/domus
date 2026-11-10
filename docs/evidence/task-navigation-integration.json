@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected Pantry, shared Shopping, purchase sessions, receipt corrections, physical returns and original operation recovery in English and Spanish.",
+  "scope": "Compiled household workspace with protected Pantry, shared Shopping, purchase sessions, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "84fbc7a16cb93d74b4b595e92c033112fc6db61a1ad036d80fdea27caa8f445c",
-    "assets/index-BlyvXtxY.js": "180d432e476b8ee3efe38f6c3ec45c02aa75eceefbb8695f0fcfb1770ac705f1",
+    ".vite/manifest.json": "82a7757610e3302ee93b3144a1602f10192decaba376a8f8c0c6cc34443ffe09",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "9cf5dec14380e5eeadaa1ef22d758456fe217e8c39654fc4d813514e41069ed1"
+    "assets/index-GhvsHyVf.js": "01b4ff2f0230ebe525bbd107d5c7615e5df5431421648342210a67f80721cdc6",
+    "index.html": "0cf5921a27a0f1f90e6bed64c7ac1b0f83bf6e8e6dd0587a38cdd4a89e62d162"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
