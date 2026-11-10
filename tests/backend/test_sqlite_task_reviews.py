@@ -68,6 +68,7 @@ def test_original_schema6_migration_preserves_rows_and_projects_existing_cause(t
             "inventory_effects",
             "inventory_movements",
             "inventory_products",
+            "inventory_replenishment",
         }
         assert set(upgraded) == set(original) | added | {
             "member_presentations",
