@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from domus.application.authorization import HouseholdAccess
 from domus.application.fixed_materialization import MaintenanceScope
+from domus.application.inventory_ports import InventoryRecords
 from domus.application.ports import Transactions, UnitOfWork
 from domus.application.shopping_list import (
     ShoppingListItem,
@@ -16,7 +17,14 @@ from domus.application.shopping_list import (
 from domus.application.task_ports import TaskCursors
 from domus.domain.errors import NotFound
 from domus.domain.identity import HumanIdentity, Permission, allows, effective_role
-from domus.domain.inventory import PANTRY, BaseUnit, MovementKind, stock_quantity
+from domus.domain.inventory import (
+    PANTRY,
+    BaseUnit,
+    MovementKind,
+    StockTransfer,
+    StorageLocation,
+    stock_quantity,
+)
 from domus.domain.shopping import Purchase, PurchaseReceipt, PurchaseSession
 from domus.domain.storage import JsonDocument
 
@@ -52,6 +60,7 @@ class InventoryView:
     may_request: bool
     products: tuple[CatalogStock, ...]
     next_cursor: str | None
+    locations: tuple[StorageLocation, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +77,21 @@ class MovementView:
     corrected_by: str | None
     shopping_receipt: bool
     return_of: str | None
+    transfer: StockTransfer | None
+
+
+@dataclass(frozen=True, slots=True)
+class StockTotals:
+    recorded: str
+    reserved: str
+    available: str
+
+
+@dataclass(frozen=True, slots=True)
+class LocationStock:
+    location_id: str
+    name: str | None
+    stock: StockTotals
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +101,8 @@ class MovementHistory:
     base_unit: BaseUnit
     movements: tuple[MovementView, ...]
     next_cursor: str | None
+    locations: tuple[LocationStock, ...]
+    total: StockTotals
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,6 +268,31 @@ def _session_view(unit: UnitOfWork, home: str, session: PurchaseSession) -> Purc
     )
 
 
+def _stock_totals(recorded: int, reserved: int) -> StockTotals:
+    return StockTotals(
+        stock_quantity(recorded), stock_quantity(reserved), stock_quantity(recorded - reserved)
+    )
+
+
+def _location_stock(
+    stock: InventoryRecords, home: str, references: dict[str, str]
+) -> tuple[tuple[LocationStock, ...], StockTotals]:
+    recorded_total = reserved_total = 0
+    locations = [(PANTRY, None), *((item.location_id, item.name) for item in stock.locations(home))]
+    view = []
+    for location, name in locations:
+        reference = references.get(location)
+        recorded, reserved = (
+            (0, 0)
+            if reference is None
+            else (stock.balance(home, reference), stock.reserved(home, reference))
+        )
+        recorded_total += recorded
+        reserved_total += reserved
+        view.append(LocationStock(location, name, _stock_totals(recorded, reserved)))
+    return tuple(view), _stock_totals(recorded_total, reserved_total)
+
+
 @dataclass(frozen=True, slots=True)
 class _InventoryGrants:
     manage: bool
@@ -331,7 +382,13 @@ class InventoryQueries:
                     )
                 )
             return InventoryView(
-                PANTRY, grants.manage, grants.shop, grants.request, tuple(page), next_cursor
+                PANTRY,
+                grants.manage,
+                grants.shop,
+                grants.request,
+                tuple(page),
+                next_cursor,
+                stock.locations(home),
             )
 
     def history(self, product_id: str, *, limit: int, cursor: str | None) -> MovementHistory:
@@ -342,7 +399,8 @@ class InventoryQueries:
             if product is None:
                 raise NotFound("inventory_product_missing")
             through = 2**63 - 1 if cursor is None else int(self.cursors.decode(binding, cursor))
-            records = stock.history(home, product.reference_id, through, limit + 1)
+            references = stock.location_bindings(home, product_id)
+            records = stock.history(home, tuple(references.values()), through, limit + 1)
             next_cursor = (
                 self.cursors.encode(binding, str(records[limit - 1].position - 1))
                 if len(records) > limit
@@ -373,10 +431,18 @@ class InventoryQueries:
                         unit.shopping.return_of(home, movement.movement_id)
                         if movement.kind is MovementKind.ADJUSTMENT
                         else None,
+                        entry.transfer,
                     )
                 )
+            locations, total = _location_stock(stock, home, references)
             return MovementHistory(
-                product_id, product.name, product.base_unit, tuple(page), next_cursor
+                product_id,
+                product.name,
+                product.base_unit,
+                tuple(page),
+                next_cursor,
+                locations,
+                total,
             )
 
     def purchases(self, *, limit: int, cursor: str | None) -> PurchasesView:

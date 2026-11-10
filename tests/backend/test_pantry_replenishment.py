@@ -195,10 +195,13 @@ def test_upgrade_and_activated_restore_preserve_stock_and_policy_receipts(tmp_pa
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (29,)
+        assert db.execute("PRAGMA user_version").fetchone() == (30,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
-            assert db.execute("SELECT * FROM " + table).fetchall() == rows
+            actual = db.execute("SELECT * FROM " + table).fetchall()
+            if table == "inventory_movements":
+                rows = [(*row, None) for row in rows]
+            assert actual == rows
     identity_at(root, installation)
     actor = Actor()
     actor.human = HumanIdentity("ha_admin", True, True, False)
@@ -264,7 +267,7 @@ def test_snapshot_rejects_fractional_piece_threshold(tmp_path, minimum, target):
     configure(commands, "policy", product, "1", "2")
     archive = tmp_path / "archive"
     snapshots = SQLiteSnapshots(store, archive, store.installation, Clock())
-    assert snapshots.create("valid").schema_version == 29
+    assert snapshots.create("valid").schema_version == 30
     with closing(sqlite3.connect(store.path, autocommit=True)) as db:
         db.execute("UPDATE inventory_replenishment SET minimum=?,target=?", (minimum, target))
     with pytest.raises(DatabaseRejected, match="invalid_snapshot_records"):

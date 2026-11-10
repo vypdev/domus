@@ -17,7 +17,7 @@ from domus.application.inventory_queries import (
     PurchasesView,
 )
 from domus.application.shopping_list import ShoppingListView, ShoppingSourcesView
-from domus.domain.inventory import MAX_STOCK_REASON, BaseUnit
+from domus.domain.inventory import MAX_LOCATION_NAME, MAX_STOCK_REASON, BaseUnit
 from domus.domain.shopping import MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, SessionSelection
 from domus.domain.task_material_values import MaterialQuantity
 from domus.entrypoints.household_http import (
@@ -37,6 +37,19 @@ class ProductBody(StrictModel):
     action: Literal["inventory.register-product"]
     name: str = Field(min_length=1, max_length=160)
     base_unit: Annotated[BaseUnit, Field(strict=False)]
+
+
+class LocationBody(StrictModel):
+    action: Literal["inventory.add-location"]
+    name: str = Field(min_length=1, max_length=MAX_LOCATION_NAME)
+
+
+class TransferBody(StrictModel):
+    action: Literal["inventory.transfer"]
+    product_id: Identifier
+    source_location: Identifier
+    destination_location: Identifier
+    quantity: Quantity
 
 
 class IntakeBody(StrictModel):
@@ -148,6 +161,8 @@ class ReturnReceiptBody(ReceiptCorrectionBody):
 
 CatalogBody = Annotated[
     ProductBody
+    | LocationBody
+    | TransferBody
     | IntakeBody
     | AdjustmentBody
     | IntakeCorrectionBody
@@ -245,6 +260,16 @@ def create_inventory_router(
         inventory, key = context(request).inventory_commands, _key(request)
         if isinstance(body, ProductBody):
             receipt = inventory.register(key, body.name, body.base_unit)
+        elif isinstance(body, LocationBody):
+            receipt = inventory.add_location(key, body.name)
+        elif isinstance(body, TransferBody):
+            receipt = inventory.transfer(
+                key,
+                body.product_id,
+                body.source_location,
+                body.destination_location,
+                MaterialQuantity(body.quantity),
+            )
         elif isinstance(body, IntakeBody):
             receipt = inventory.intake(key, body.product_id, MaterialQuantity(body.quantity))
         elif isinstance(body, AdjustmentBody):

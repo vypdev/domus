@@ -5,11 +5,17 @@ import {registerButton} from '@vypdev/ha-ui/button';
 import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import {registerCard} from '@vypdev/ha-ui/card';
 import {cardState} from '@vypdev/ha-ui/card-contracts';
+import {registerField} from '@vypdev/ha-ui/field';
+import type {FieldValueEvent} from '@vypdev/ha-ui/field';
+import {textFieldState} from '@vypdev/ha-ui/field-contracts';
+import {registerSelect} from '@vypdev/ha-ui/select';
+import type {SelectValueEvent} from '@vypdev/ha-ui/select';
+import {selectState} from '@vypdev/ha-ui/select-contracts';
 import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
 import type {InventoryError, InventoryState} from '../application/inventory-controller';
-import {BASE_UNITS, STOCK_REASON_LIMIT, adjustmentQuantity, intakeQuantity, policyQuantity, stockUnits} from '../domain/inventory';
-import type {BaseUnit, MovementHistory, ProductStock, ReplenishmentRevision, StockMovement} from '../domain/inventory';
+import {BASE_UNITS, MAX_LOCATION_NAME, STOCK_REASON_LIMIT, adjustmentQuantity, intakeQuantity, locationName, policyQuantity, stockUnits} from '../domain/inventory';
+import type {BaseUnit, MovementHistory, ProductStock, ReplenishmentRevision, StockMovement, StockTotals, StorageLocation} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
@@ -31,6 +37,7 @@ const MOVEMENT_SAVED = {
   'inventory.intake': 'added',
   'inventory.adjust': 'adjusted',
   'inventory.correct-intake': 'reversed',
+  'inventory.transfer': 'moved',
 } as const;
 
 const SHOPPING_SAVED = {
@@ -46,6 +53,15 @@ const SHOPPING_SAVED = {
   'shopping.record-session': 'sessionSaved',
 } as const;
 
+interface TransferDraft {
+  readonly productId: string;
+  readonly source: string | null;
+  readonly destination: string | null;
+  readonly amount: string;
+  readonly reviewed: boolean;
+  readonly error: 'selectLocation' | 'invalidQuantity' | 'insufficientTransfer' | null;
+}
+
 interface PolicyEditor {
   readonly productId: string;
   readonly revision: ReplenishmentRevision;
@@ -59,7 +75,7 @@ export class DomusInventory extends LitElement {
     view: {attribute:false}, language: {attribute:false}, nameDraft: {state:true}, unit: {state:true},
     selected: {state:true}, amount: {state:true}, review: {state:true}, invalid: {state:true},
     editor: {state:true}, reason: {state:true}, adjustment: {state:true},
-    policyEditor: {state:true},
+    policyEditor: {state:true}, locationDraft: {state:true}, locationInvalid: {state:true}, transferDraft: {state:true},
   };
 
   static styles = css`
@@ -77,7 +93,12 @@ export class DomusInventory extends LitElement {
     ol {padding:0;margin:0;list-style:none;display:grid;gap:12px}
     li {overflow-wrap:anywhere;border-block-start:1px solid var(--line);padding-block-start:12px}
     .history {scroll-margin-block-start:68px}
-    .history-content {display:grid;gap:12px}
+    .history-content, .location-content, .location-balances {display:grid;gap:12px}
+    .location-balances {grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
+    .location-stock {border:1px solid var(--line);border-radius:8px;padding:12px;overflow-wrap:anywhere}
+    .location-stock h5 {font-size:inherit;margin:0 0 8px}
+    .location-content ul {margin:0;padding-inline-start:20px}
+    .location-content li {border:none;padding:0}
     a {color:var(--accent)} :focus-visible {outline:3px solid var(--accent);outline-offset:3px}
   `;
 
@@ -93,6 +114,9 @@ export class DomusInventory extends LitElement {
   private declare reason: string;
   private declare adjustment: string;
   private declare policyEditor: PolicyEditor | null;
+  private declare locationDraft: string;
+  private declare locationInvalid: boolean;
+  private declare transferDraft: TransferDraft | null;
 
   constructor() {
     super();
@@ -108,6 +132,9 @@ export class DomusInventory extends LitElement {
     this.reason = '';
     this.adjustment = '';
     this.policyEditor = null;
+    this.locationDraft = "";
+    this.locationInvalid = false;
+    this.transferDraft = null;
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
@@ -119,18 +146,26 @@ export class DomusInventory extends LitElement {
       this.select(null);
       this.editor = null;
       this.policyEditor = null;
+      this.locationDraft = "";
+      this.locationInvalid = false;
+      this.transferDraft = null;
     }
-    if (previous?.history?.productId !== current?.history?.productId) this.editor = null;
+    if (previous?.history?.productId !== current?.history?.productId) {
+      this.editor = null;
+      if (current?.history && current.history.productId !== this.transferDraft?.productId) this.transferDraft = null;
+    }
     const result = current?.result;
     if (result && result !== previous?.result) {
       if (result.kind === 'rejected') {
         if (result.command.action === 'inventory.configure-replenishment' && result.reason === 'revision_conflict')
           this.policyEditor = null;
-      } else if (result.replenishmentSaved) this.policyEditor = null;
+      } else if (result.locationSaved) this.locationDraft = '';
+      else if (result.replenishmentSaved) this.policyEditor = null;
       else if (result.movement === null) {
         if (!result.shoppingAction) this.nameDraft = '';
       }
       else if (result.movement.action === 'inventory.intake') this.select(result.productId);
+      else if (result.movement.action === 'inventory.transfer') this.transferDraft = null;
       else this.editor = null;
     }
   }
@@ -140,6 +175,12 @@ export class DomusInventory extends LitElement {
     const product = this.view?.history?.productId;
     if (product && product !== changed.get('view')?.history?.productId)
       this.renderRoot.querySelector<HTMLElement>('.history')?.focus();
+    const result = this.view?.result;
+    if (result && result !== changed.get('view')?.result && result.kind !== 'rejected') {
+      if (result.locationSaved) this.renderRoot.querySelector<HTMLFormElement>('.location-content form')?.reset();
+      if (result.movement?.action === 'inventory.transfer')
+        this.renderRoot.querySelector<HTMLElement>('.history')?.focus();
+    }
   }
 
   private text(key: InventoryMessage): string {return inventoryMessage(key, this.language);}
@@ -268,9 +309,111 @@ export class DomusInventory extends LitElement {
     </form>`;
   }
 
+  private locations(locations: readonly StorageLocation[], manage: boolean, blocked: boolean) {
+    return html`<vyp-ha-card .state=${cardState({title:this.text('locations'), headingLevel:3})}>
+      <div class="location-content">
+        <ul><li>${this.text('pantry')}</li>${locations.map(item => html`<li>${item.name}</li>`)}</ul>
+        ${manage ? html`<form novalidate @submit=${(event: SubmitEvent) => {
+          event.preventDefault();
+          if (blocked) return;
+          let name: string;
+          try {name = locationName(this.locationDraft.trim());}
+          catch {
+            this.locationInvalid = true;
+            this.renderRoot.querySelector<HTMLElement>('.location-content vyp-ha-field')?.focus();
+            return;
+          }
+          this.intent({type:'submit', command:{action:'inventory.add-location', name}});
+        }}>
+          <vyp-ha-field .value=${this.locationDraft} ?disabled=${blocked}
+            .state=${textFieldState({label:this.text('locationName'), required:true, maxLength:MAX_LOCATION_NAME,
+              error:this.locationInvalid ? this.text('invalid_inventory_location_name') : ''})}
+            @ha-value-request=${(event: FieldValueEvent) => {
+              this.locationDraft = event.detail.value;
+              this.locationInvalid = false;
+            }}></vyp-ha-field>
+          ${this.submitButton('addLocation', blocked)}
+        </form>` : nothing}
+      </div>
+    </vyp-ha-card>`;
+  }
+
+  private beginTransfer(productId: string): void {
+    if (this.transferDraft?.productId !== productId)
+      this.transferDraft = {productId, source:'pantry', destination:null, amount:'', reviewed:false, error:null};
+    if (this.view?.history?.productId !== productId) this.intent({type:'history', productId});
+    else void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.history')?.focus());
+  }
+
+  private changeTransfer(draft: TransferDraft, patch: Partial<TransferDraft>): void {
+    this.transferDraft = {...draft, ...patch, reviewed:false, error:null};
+  }
+
+  private transferForm(history: MovementHistory, draft: TransferDraft, blocked: boolean) {
+    const origin = history.locations.find(item => item.id === draft.source);
+    const destination = history.locations.find(item => item.id === draft.destination);
+    const options = history.locations.map(item => ({value:item.id, label:item.name ?? this.text('pantry'), disabled:false}));
+    return html`<form class="transfer-form" aria-label=${this.text('moveStock')} novalidate @submit=${(event: SubmitEvent) => {
+      event.preventDefault();
+      if (blocked) return;
+      if (!origin || !destination) {this.transferDraft = {...draft, error:'selectLocation'}; return;}
+      const quantity = intakeQuantity(draft.amount, history.unit);
+      if (quantity === null) {this.transferDraft = {...draft, error:'invalidQuantity'}; return;}
+      if (stockUnits(quantity) > stockUnits(origin.stock.available)) {
+        this.transferDraft = {...draft, error:'insufficientTransfer', reviewed:false};
+        return;
+      }
+      if (!draft.reviewed) {this.transferDraft = {...draft, reviewed:true, error:null}; return;}
+      this.intent({type:'submit', command:{action:'inventory.transfer', product_id:history.productId,
+        source_location:origin.id, destination_location:destination.id, quantity}});
+    }}>
+      <vyp-ha-select .value=${draft.source} ?disabled=${blocked}
+        .state=${selectState({label:this.text('sourceLocation'), options, required:true, clearable:false,
+          placeholder:this.text('selectLocation'), requiredMessage:this.text('selectLocation')})}
+        @ha-select-request=${(event: SelectValueEvent) => {
+          const source = event.detail.value as string | null;
+          this.changeTransfer(draft, {source, destination:source === draft.destination ? null : draft.destination});
+        }}></vyp-ha-select>
+      <vyp-ha-select .value=${draft.destination} ?disabled=${blocked}
+        .state=${selectState({label:this.text('destinationLocation'), required:true, clearable:false,
+          placeholder:this.text('selectLocation'), requiredMessage:this.text('selectLocation'),
+          options:options.map(item => ({...item, disabled:item.value === draft.source}))})}
+        @ha-select-request=${(event: SelectValueEvent) =>
+          this.changeTransfer(draft, {destination:event.detail.value as string | null})}></vyp-ha-select>
+      ${origin ? html`<p>${this.text('available')} · ${this.quantity(origin.stock.available)} ${this.text(history.unit)}</p>` : nothing}
+      <vyp-ha-field .value=${draft.amount} ?disabled=${blocked}
+        .state=${textFieldState({label:this.text('transferQuantity'), required:true, maxLength:19,
+          description:this.text(history.unit === 'piece' ? 'wholeTransfer' : 'decimalTransfer')})}
+        @ha-value-request=${(event: FieldValueEvent) => this.changeTransfer(draft, {amount:event.detail.value})}></vyp-ha-field>
+      ${draft.error ? this.error('transfer-error', draft.error) : nothing}
+      ${draft.reviewed && origin && destination ? html`<p role="status">${history.productName} · ${draft.amount}
+        ${this.text(history.unit)} · ${origin.name ?? this.text('pantry')} → ${destination.name ?? this.text('pantry')}</p>` : nothing}
+      <div class="actions">${this.submitButton(draft.reviewed ? 'confirmTransfer' : 'reviewTransfer', blocked)}
+        ${this.button('cancel', () => {
+          this.transferDraft = null;
+          void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.history')?.focus());
+        }, blocked)}</div>
+    </form>`;
+  }
+
+  private balances(history: MovementHistory) {
+    const stock = (name: string, totals: StockTotals) => html`<div class="location-stock">
+      <h5>${name}</h5><dl>${(['recorded','reserved','available'] as const).map(key => html`
+        <dt>${this.text(key)}</dt><dd>${this.quantity(totals[key])} ${this.text(history.unit)}</dd>`)}</dl>
+    </div>`;
+    return html`<h4>${this.text('stockByLocation')}</h4>
+      <div class="location-balances">
+        ${stock(this.text('householdTotal'), history.total)}
+        ${history.locations.map(item => stock(item.name ?? this.text('pantry'), item.stock))}
+      </div>`;
+  }
+
   private historyRow(entry: StockMovement, history: MovementHistory, manage: boolean, blocked: boolean) {
+    const linked = entry.transfer;
+    const name = (id: string) => history.locations.find(item => item.id === id)?.name ?? this.text('pantry');
     return html`<li>
       <p><strong>${this.signed(entry.quantity)} ${this.text(history.unit)}</strong> · ${this.text(entry.returnOf !== null ? 'returnMovement' : entry.kind === 'intake' ? 'intakeMovement' : entry.kind)}</p>
+      ${linked === null ? nothing : html`<p>${name(linked.source)} → ${name(linked.destination)}</p>`}
       <dl>
         <dt>${this.text('author')}</dt><dd>${entry.authorAlias ?? entry.memberId}</dd>
         <dt>${this.text('date')}</dt><dd>${instant(Number(entry.createdAt), this.language)}</dd>
@@ -278,6 +421,8 @@ export class DomusInventory extends LitElement {
       </dl>
       <details><summary>${this.text('movementDetails')}</summary>
         <p>${this.text('movement')} <code>${entry.id}</code></p>
+        ${linked === null ? nothing : html`<p>${this.text('linkedMovement')}
+          <code>${entry.id === linked.withdrawalId ? linked.depositId : linked.withdrawalId}</code></p>`}
         ${entry.returnOf === null ? nothing : html`<p>${this.text('originalMovement')} <code>${entry.returnOf}</code></p>`}
         ${entry.corrects === null ? nothing : html`<p>${this.text('originalMovement')} <code>${entry.corrects}</code></p>`}
         ${entry.correctedBy === null ? nothing : html`<p>${this.text('correctedBy')} <code>${entry.correctedBy}</code></p>`}
@@ -290,14 +435,18 @@ export class DomusInventory extends LitElement {
   }
 
   private history(history: MovementHistory, manage: boolean, busy: boolean, blocked: boolean) {
-    const editor = this.editor;
+    const editor = this.editor, transfer = this.transferDraft;
     return html`<section class="history" tabindex="-1" aria-label=${this.text('history') + ' · ' + history.productName}>
       <vyp-ha-card .state=${cardState({title:this.text('history'), headingLevel:3})}><div class="history-content">
         <h4>${history.productName}</h4>
+        ${manage && transfer?.productId === history.productId ? this.transferForm(history, transfer, blocked) : nothing}
         <div class="actions">
+          ${manage && history.locations.length > 1 && transfer === null
+            ? this.button('moveStock', () => this.beginTransfer(history.productId), blocked) : nothing}
           ${manage ? this.button('adjust', () => this.editStock(history.productId, null), blocked) : nothing}
-          ${this.button('closeHistory', () => this.intent({type:'close-history'}), busy)}
+          ${this.button('closeHistory', () => {this.transferDraft = null; this.intent({type:'close-history'});}, busy)}
         </div>
+        ${this.balances(history)}
         ${manage && editor?.productId === history.productId ? this.stockForm(history, editor, blocked) : nothing}
         ${history.movements.length === 0 ? html`<p>${this.text('emptyHistory')}</p>`
           : html`<ol>${history.movements.map(entry => this.historyRow(entry, history, manage, blocked))}</ol>`}
@@ -361,6 +510,8 @@ export class DomusInventory extends LitElement {
         <p>${this.text('shoppingNeeded')} · ${this.quantity(product.shoppingNeeded)} ${this.text(product.unit)}</p>`}
       <div class="actions">
         ${this.button('showHistory', () => this.intent({type:'history', productId:product.id}), busy)}
+        ${manage && this.view!.report!.locations.length > 0
+          ? this.button('moveStock', () => this.beginTransfer(product.id), blocked) : nothing}
         ${manage && this.selected !== product.id ? this.button('intake', () => this.select(product.id), blocked) : nothing}
         ${manage && editor?.productId !== product.id ? this.button('editReplenishment', () => this.editPolicy(product), blocked) : nothing}
       </div>
@@ -386,7 +537,7 @@ export class DomusInventory extends LitElement {
         .state=${feedbackState({kind:'notice', tone:'warning', message:this.text(message)})}></vyp-ha-feedback>`}
       ${saved === null ? nothing : html`<p role="status">${this.text(saved.kind === 'historical'
         ? 'historical' : movement ? MOVEMENT_SAVED[movement.action] : saved.shoppingAction
-          ? SHOPPING_SAVED[saved.shoppingAction] : saved.replenishmentSaved ? 'replenishmentSaved' : 'registered')}
+          ? SHOPPING_SAVED[saved.shoppingAction] : saved.replenishmentSaved ? 'replenishmentSaved' : saved.locationSaved ? 'locationSaved' : 'registered')}
         ${movement ? html`${this.quantity(movement.quantity)} ${this.text(movement.unit)}` : nothing}</p>
         ${report?.products.some(product => product.id === saved.productId) ? html`<a href=${'#product-' + saved.productId}
           @click=${(event: MouseEvent) => {
@@ -402,6 +553,7 @@ export class DomusInventory extends LitElement {
       ${busy && report === null ? html`<p role="status">${this.text('loading')}</p>` : nothing}
       ${report === null ? nothing : html`
         ${manage ? this.registration(blocked) : nothing}
+        ${this.locations(report.locations, manage, blocked)}
         <vyp-ha-card .state=${cardState({title:this.text('pantry'), headingLevel:3})}>
           ${report.products.length === 0 ? html`<p>${this.text('empty')}</p>`
             : html`<div class="products">${report.products.map(product => this.product(product, manage, busy, blocked))}</div>`}
@@ -416,6 +568,8 @@ export class DomusInventory extends LitElement {
 registerButton();
 registerCard();
 registerFeedback();
+registerField();
+registerSelect();
 customElements.define('domus-inventory', DomusInventory);
 
 declare global {

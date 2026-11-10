@@ -102,10 +102,10 @@ def legacy(root, monkeypatch):
     assert path.read_bytes() == original
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (29,)
+        assert db.execute("PRAGMA user_version").fetchone() == (30,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         assert [
-            row[:-1] for row in db.execute("SELECT * FROM inventory_movements ORDER BY position")
+            row[:-2] for row in db.execute("SELECT * FROM inventory_movements ORDER BY position")
         ] == previous
     actor = Actor()
     actor.human = HumanIdentity("ha_admin", True, True, False)

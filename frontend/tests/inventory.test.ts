@@ -22,12 +22,14 @@ const committed = {kind:'committed', operationId:'operation', productId:'product
 const adjust = {action:'inventory.adjust', product_id:'product', quantity:'-0.000001', reason:'Counted one less'} as const;
 const reverse = {action:'inventory.correct-intake', product_id:'product', movement_id:'movement', reason:'Duplicate'} as const;
 const wireMovement = {movement_id:'movement', kind:'intake', quantity:'1.250001', member_id:'member', author_alias:null,
-  created_at:'100', reason:null, task_occurrence_id:null, corrects:null, corrected_by:null, shopping_receipt:false, return_of:null};
+  created_at:'100', reason:null, task_occurrence_id:null, corrects:null, corrected_by:null, shopping_receipt:false, return_of:null, transfer:null};
+const historyStock = {recorded:'1.250001', reserved:'0', available:'1.250001'};
 const wireHistory = {product_id:'product', product_name:'Olive oil', base_unit:'millilitre',
-  movements:[wireMovement], next_cursor:'older'};
-const history: MovementHistory = {productId:'product', productName:'Olive oil', unit:'millilitre', cursor:'older',
-  movements:[{id:'movement', kind:'intake', quantity:'1.250001', memberId:'member', authorAlias:null, createdAt:'100',
-    reason:null, occurrenceId:null, corrects:null, correctedBy:null, shoppingReceipt:false, returnOf:null}]};
+  movements:[wireMovement], next_cursor:'older', total:historyStock,
+  locations:[{location_id:'pantry', name:null, stock:historyStock}]};
+const history: MovementHistory = {productId:'product', productName:'Olive oil', unit:'millilitre', cursor:'older', total:historyStock,
+  locations:[{id:'pantry', name:null, stock:historyStock}], movements:[{id:'movement', kind:'intake', quantity:'1.250001', memberId:'member', authorAlias:null, createdAt:'100',
+    reason:null, occurrenceId:null, corrects:null, correctedBy:null, shoppingReceipt:false, returnOf:null, transfer:null}]};
 const emptyPolicy = {source_id:'product', minimum:'0', target:'0', revision:'0', needed:'0'} as const;
 const policy = {action:'inventory.configure-replenishment', product_id:'product', minimum:'1.250001',
   target:'2.000001', expected_revision:'0'} as const;
@@ -50,11 +52,11 @@ const purchaseReceipts: PurchaseReceipts = {purchase,items:[{
 const savedPolicy = {product_id:'product', minimum:policy.minimum, target:policy.target, revision:'1'};
 const wireProduct = {...savedProduct, reference_id:'reference', recorded:'999999999999.999999', reserved:'0.000001',
   available:'999999999999.999998', replenishment:emptyPolicy, outstanding_purchase:'0', shopping_needed:'0'};
-const wire = {location_id:'pantry', may_manage:true, may_shop:true, may_request:true, products:[wireProduct], next_cursor:'next'};
+const wire = {location_id:'pantry', may_manage:true, may_shop:true, may_request:true, products:[wireProduct], next_cursor:'next', locations:[]};
 const report: InventoryReport = {mayManage:true, mayShop:true, mayRequest:true, products:[{id:'product', referenceId:'reference', name:'Olive oil', unit:'millilitre',
   recorded:'999999999999.999999', reserved:'0.000001', available:'999999999999.999998',
   outstandingPurchase:'0', shoppingNeeded:'0',
-  replenishment:{sourceId:'product', minimum:'0', target:'0', revision:'0', needed:'0'}}], cursor:'next'};
+  replenishment:{sourceId:'product', minimum:'0', target:'0', revision:'0', needed:'0'}}], cursor:'next', locations:[]};
 const failure = (code:string) => ({state:'blocked', code, message:'Blocked.', action_required:'Review.', correlation_id:'cor_test'});
 const csrf = {csrf_token:'c'.repeat(64)};
 const receipt = (result:unknown, state = 'committed') => ({state, archived_by:state === 'historical' ? 'restore' : null,
@@ -1673,4 +1675,211 @@ test('only a valid posting on a settled purchase exposes the full physical retur
   expect(root.textContent).toContain('original');
   await assign({...open,purchaseReceipts:{...posted,items:[{...posted.items[0],returned:{...returned,authorAlias:'Marta'}}]}});
   expect(shop.textContent).toContain('Marta');
+});
+
+const addLocation = {action:'inventory.add-location', name:'Cupboard'} as const;
+const moveStock = {action:'inventory.transfer', product_id:'product', source_location:'pantry',
+  destination_location:'cupboard', quantity:'1.25'} as const;
+const namedLocation = {location_id:'cupboard', name:'Cupboard'};
+const locationLink = {transfer_id:'transfer', product_id:'product', source_location:'pantry',
+  destination_location:'cupboard', withdrawal_id:'withdrawal', deposit_id:'deposit'};
+const emptyStock = {recorded:'0',reserved:'0',available:'0'};
+const locationHistory = {...wireHistory, total:historyStock, locations:[
+  {location_id:'pantry',name:null,stock:emptyStock}, {...namedLocation,stock:historyStock},
+], movements:[
+  {...wireMovement, movement_id:'deposit',kind:'transfer',quantity:'1.25',transfer:locationLink},
+  {...wireMovement, movement_id:'withdrawal',kind:'transfer',quantity:'-1.25',transfer:locationLink},
+]};
+
+test('location and transfer commands validate closed payloads and recover exact outcomes', async () => {
+  expect(inventoryCommand(addLocation)).toEqual(addLocation);
+  expect(inventoryCommand(moveStock)).toEqual(moveStock);
+  for (const invalid of [
+    {...addLocation,name:' Pantry'}, {...addLocation,name:'despensa'}, {...addLocation,name:'x'.repeat(81)},
+    {...addLocation,extra:true}, {...moveStock,extra:true}, {...moveStock,source_location:'cupboard'},
+    {...moveStock,quantity:'0'}, {...moveStock,destination_location:'../invalid'},
+  ]) expect(() => inventoryCommand(invalid)).toThrow();
+  const savedTransfer = {...locationLink, base_unit:'millilitre', quantity:moveStock.quantity};
+  const {server} = http([
+    [200,{...wire,locations:[namedLocation]}], [200,locationHistory],
+    [200,csrf], [200,receipt(namedLocation)], [200,receipt(namedLocation,'historical')],
+    [200,csrf], [200,receipt(savedTransfer)], [200,receipt(savedTransfer,'historical')],
+    [200,receipt({...namedLocation,name:'Drawer'})],
+    [200,receipt({...savedTransfer,product_id:'other'})],
+    [200,receipt({...savedTransfer,source_location:'other'})],
+    [200,receipt({...savedTransfer,destination_location:'other'})],
+    [200,receipt({...savedTransfer,quantity:'2'})],
+  ]);
+  const locationRequest = {...request,command:addLocation}, transferRequest = {...request,command:moveStock};
+  expect((await server.read(scope,null).result).locations).toEqual([{id:'cupboard',name:'Cupboard'}]);
+  const view = await server.history(scope,'product',null).result;
+  expect(view.total).toEqual(historyStock);
+  expect(view.movements.map(item => [item.id,item.transfer?.id])).toEqual([['deposit','transfer'],['withdrawal','transfer']]);
+  expect(await server.send(scope,locationRequest).result).toMatchObject({kind:'committed',locationSaved:true});
+  expect(await server.original(scope,locationRequest).result).toMatchObject({kind:'historical',locationSaved:true});
+  expect(await server.send(scope,transferRequest).result).toMatchObject({kind:'committed',
+    movement:{movementId:'withdrawal',quantity:'1.25',action:'inventory.transfer'}});
+  expect(await server.original(scope,transferRequest).result).toMatchObject({kind:'historical'});
+  await expect(server.original(scope,locationRequest).result).rejects.toMatchObject({code:'invalid_response'});
+  for (let index = 0; index < 4; index++)
+    await expect(server.original(scope,transferRequest).result).rejects.toMatchObject({code:'invalid_response'});
+});
+
+test('bounded location projections reject conflicting links, totals and identities', async () => {
+  for (const locations of [null,[namedLocation,namedLocation],[{...namedLocation,location_id:'pantry'}],
+    Array.from({length:33}, (_, index) => ({...namedLocation,location_id:'loc-' + index}))]) {
+    const {server} = http([[200,{...wire,locations}]]);
+    await expect(server.read(scope,null).result).rejects.toMatchObject({code:'invalid_response'});
+  }
+  const row = locationHistory.movements[0];
+  const linked = (patch:Record<string,unknown>) => [{...row,transfer:{...locationLink,...patch}}];
+  const wrongTotal = {recorded:'2',reserved:'0',available:'2'};
+  for (const patch of [
+    {locations:null}, {locations:[]}, {locations:Array(34).fill(locationHistory.locations[0])},
+    {locations:[locationHistory.locations[0], locationHistory.locations[0]]},
+    {locations:[locationHistory.locations[1]]},
+    {locations:[{...locationHistory.locations[0], name:'Untrusted'}]},
+    {locations:[{...locationHistory.locations[0], stock:{...emptyStock,available:'1'}}]},
+    {total:{...emptyStock,recorded:'0000'}}, {total:{...emptyStock,recorded:1}},
+    {total:wrongTotal}, {base_unit:'piece'},
+    {movements:[{...row,transfer:null}]}, {movements:[{...row,kind:'intake'}]},
+    {movements:[{...row,movement_id:'wrong'}]}, {movements:linked({deposit_id:'withdrawal'})},
+    {movements:linked({source_location:'cupboard'})}, {movements:linked({source_location:'missing'})},
+    {movements:linked({destination_location:'missing'})}, {movements:linked({product_id:'other'})},
+  ]) {
+    const {server} = http([[200,{...locationHistory,...patch}]]);
+    await expect(server.history(scope,'product',null).result).rejects.toMatchObject({code:'invalid_response'});
+  }
+  const large = '999999999999.999999';
+  const stock = {recorded:large,reserved:'0',available:large};
+  const total = '1999999999999.999998';
+  const {server} = http([[200,{...locationHistory, total:{recorded:total,reserved:'0',available:total},
+    locations:locationHistory.locations.map(item => ({...item,stock}))}]]);
+  expect((await server.history(scope,'product',null).result).total.recorded).toBe(total);
+});
+
+test('the shared location and transfer controls retain drafts through rejection and show linked balances', async () => {
+  const {node,root,events,press,submit} = component();
+  const reportWithLocation = {...report,locations:[{id:'cupboard',name:'Cupboard'}]};
+  const stockHistory: MovementHistory = {...history,locations:[...history.locations,
+    {id:'cupboard',name:'Cupboard',stock:emptyStock}]};
+  const setValue = (control:Element, type:string, value:string|null) =>
+    control.dispatchEvent(new CustomEvent(type,{detail:{value}}));
+  node.view = {...initial,report:reportWithLocation};
+  await node.updateComplete;
+  const locationForm = root.querySelector<HTMLFormElement>('.location-content form')!;
+  const name = locationForm.querySelector('vyp-ha-field')!;
+  submit(locationForm);
+  await node.updateComplete;
+  expect(name.state.error).toContain('Enter a location name');
+  setValue(name,'ha-value-request',' Cupboard ');
+  await node.updateComplete;
+  submit(locationForm);
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:addLocation});
+  node.view = {...node.view,result:{kind:'rejected',reason:'inventory_location_exists',command:addLocation}};
+  await node.updateComplete;
+  expect(name.value).toBe(' Cupboard ');
+  expect(root.querySelector('vyp-ha-feedback')?.state?.message).toContain('already has this name');
+  node.view = {...node.view,result:{kind:'committed',operationId:'loc',productId:null,movement:null,locationSaved:true}};
+  await node.updateComplete;
+  expect(name.value).toBe('');
+  expect(root.textContent).toContain('Storage location added.');
+  node.view = {...node.view,report:{...reportWithLocation,mayManage:false},
+    result:{kind:'historical',operationId:'previous-location',productId:null,movement:null,locationSaved:true}};
+  await node.updateComplete;
+  expect(root.querySelector('.location-content form')).toBeNull();
+  node.view = {...node.view,report:reportWithLocation,result:null};
+  await node.updateComplete;
+
+  press('Move stock');
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'history',productId:'product'});
+  node.view = {...node.view,history:stockHistory,result:null};
+  await node.updateComplete;
+  const form = root.querySelector<HTMLFormElement>('.transfer-form')!;
+  const [source,destination] = form.querySelectorAll('vyp-ha-select');
+  const quantity = form.querySelector('vyp-ha-field')!;
+  expect(root.activeElement?.className).toBe('history');
+  expect(destination.state.options).toContainEqual({value:'pantry',label:'Pantry',disabled:true});
+  submit(form);
+  await node.updateComplete;
+  expect(form.textContent).toContain('Choose a location');
+  setValue(source,'ha-select-request',null);
+  await node.updateComplete;
+  expect(form.textContent).not.toContain('Available stock');
+  setValue(source,'ha-select-request','pantry');
+  await node.updateComplete;
+  setValue(destination,'ha-select-request','cupboard');
+  await node.updateComplete;
+  submit(form);
+  await node.updateComplete;
+  expect(form.textContent).toContain('Enter a quantity');
+  setValue(quantity,'ha-value-request','2');
+  await node.updateComplete;
+  submit(form);
+  await node.updateComplete;
+  expect(form.textContent).toContain('no greater than the available stock');
+  setValue(source,'ha-select-request','cupboard');
+  await node.updateComplete;
+  expect(destination.value).toBeNull();
+  setValue(source,'ha-select-request','pantry');
+  await node.updateComplete;
+  setValue(destination,'ha-select-request','cupboard');
+  await node.updateComplete;
+  setValue(quantity,'ha-value-request','1,25');
+  await node.updateComplete;
+  submit(form);
+  await node.updateComplete;
+  expect(form.textContent).toMatch(/Pantry\s+→\s+Cupboard/u);
+  submit(form);
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:moveStock});
+  node.view = {...node.view,busy:true};
+  await node.updateComplete;
+  const submissions = events.mock.calls.length;
+  submit(form); submit(root.querySelector<HTMLFormElement>('.location-content form')!);
+  expect(events.mock.calls).toHaveLength(submissions);
+  node.view = {...node.view,busy:false,result:{kind:'rejected',reason:'inventory_insufficient_stock',command:moveStock}};
+  await node.updateComplete;
+  expect(quantity.value).toBe('1,25');
+  press('Move stock');
+  await node.updateComplete;
+  expect(quantity.value).toBe('1,25');
+  const cupboardStock = {recorded:'2',reserved:'0',available:'2'};
+  node.view = {...node.view,history:{...stockHistory,unit:'piece',
+    locations:[{id:'pantry',name:null,stock:emptyStock},{id:'cupboard',name:'Cupboard',stock:cupboardStock}]}};
+  await node.updateComplete;
+  expect(quantity.state.description).toContain('whole number');
+  setValue(source,'ha-select-request','cupboard');
+  await node.updateComplete;
+  setValue(destination,'ha-select-request','pantry');
+  await node.updateComplete;
+  setValue(quantity,'ha-value-request','1');
+  await node.updateComplete;
+  submit(form);
+  await node.updateComplete;
+  expect(form.textContent).toMatch(/Cupboard\s+→\s+Pantry/u);
+  press('Cancel');
+  await node.updateComplete;
+  expect(root.querySelector('.transfer-form')).toBeNull();
+  const historyButton = [...root.querySelectorAll<HTMLElementTagNameMap['vyp-ha-button']>('.history vyp-ha-button')]
+    .find(control => control.state.label === 'Move stock')!;
+  historyButton.dispatchEvent(new Event('ha-press-request'));
+  await node.updateComplete;
+  expect(root.querySelector('.transfer-form')).not.toBeNull();
+  const linked = {id:'transfer',productId:'product',source:'pantry',destination:'cupboard',
+    withdrawalId:'withdrawal',depositId:'deposit'};
+  const movement = history.movements[0];
+  node.language = 'es';
+  node.view = {...node.view,history:{...stockHistory,movements:[
+    {...movement,id:'withdrawal',kind:'transfer',quantity:'-1.25',transfer:linked},
+    {...movement,id:'deposit',kind:'transfer',quantity:'1.25',transfer:linked},
+  ]},result:{kind:'committed',operationId:'move',productId:'product',
+    movement:{movementId:'withdrawal',quantity:'1.25',unit:'millilitre',action:'inventory.transfer'}}};
+  await node.updateComplete;
+  expect(root.querySelector('.transfer-form')).toBeNull();
+  expect(root.textContent).toContain('Se trasladó el stock.');
+  expect(root.textContent).toContain('Total del hogar');
+  expect(root.textContent).toContain('Despensa → Cupboard');
+  expect(root.textContent).toContain('Otro movimiento del traslado');
+  press('Cerrar historial de movimientos');
+  expect(events.mock.lastCall?.[0].detail).toEqual({type:'close-history'});
 });

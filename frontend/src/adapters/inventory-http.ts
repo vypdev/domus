@@ -1,8 +1,8 @@
 /** Bounded same-origin Inventory reads and exact original-command recovery. */
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
-import {BASE_UNITS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement} from '../domain/inventory';
+import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
+import type {BaseUnit, InventoryCommand, InventoryReport, LocationStock, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement, StockTotals, StockTransfer, StorageLocation} from '../domain/inventory';
 import {revisionValue} from '../domain/administration';
 import {taskQuantity, taskTime} from '../domain/tasks';
 import {BoundedHTTP} from './http-transport';
@@ -43,13 +43,23 @@ function product(value: unknown): ProductStock {
     replenishment:policy, outstandingPurchase, shoppingNeeded};
 }
 
+function namedLocation(value: unknown): StorageLocation {
+  const row = fields(value, ['location_id','name'], []);
+  const id = identifier(row.location_id);
+  check(id !== 'pantry');
+  return {id, name:text(row.name, MAX_LOCATION_NAME)};
+}
+
 function report(value: unknown): InventoryReport {
-  const row = fields(value, ['location_id','may_manage','may_shop','may_request','products','next_cursor'], []);
+  const row = fields(value, ['location_id','may_manage','may_shop','may_request','products','next_cursor','locations'], []);
   check(row.location_id === 'pantry' && Array.isArray(row.products) && row.products.length <= 25);
+  check(Array.isArray(row.locations) && row.locations.length <= MAX_NAMED_LOCATIONS);
+  const locations = row.locations.map(namedLocation);
+  check(new Set(locations.map(item => item.id)).size === locations.length);
   const products = row.products.map(product);
   check(new Set(products.map(item => item.id)).size === products.length);
   return {mayManage: boolean(row.may_manage), mayShop:boolean(row.may_shop), mayRequest:boolean(row.may_request), products,
-    cursor: cursorValue(row.next_cursor)};
+    cursor: cursorValue(row.next_cursor), locations};
 }
 
 function nullableId(value: unknown): string | null {return value === null ? null : identifier(value);}
@@ -60,24 +70,72 @@ function attribution(row: Record<string, unknown>) {
     authorAlias:row.author_alias === null ? null : text(row.author_alias, 80), createdAt:taskTime(row.created_at)};
 }
 
+function transfer(row: Record<string, unknown>): StockTransfer {
+  const source = identifier(row.source_location), destination = identifier(row.destination_location);
+  const withdrawalId = identifier(row.withdrawal_id), depositId = identifier(row.deposit_id);
+  check(source !== destination && withdrawalId !== depositId);
+  return {id:identifier(row.transfer_id), productId:identifier(row.product_id),
+    source, destination, withdrawalId, depositId};
+}
+
+const TRANSFER_FIELDS = ['transfer_id','product_id','source_location','destination_location',
+  'withdrawal_id','deposit_id'];
+
 function movement(value: unknown): StockMovement {
   const row = fields(value, ['movement_id','quantity','kind','member_id','author_alias','created_at',
-    'reason','task_occurrence_id','corrects','corrected_by','shopping_receipt','return_of'], []);
+    'reason','task_occurrence_id','corrects','corrected_by','shopping_receipt','return_of','transfer'], []);
+  const id = identifier(row.movement_id), quantity = signedQuantity(row.quantity), kind = choice(row.kind, MOVEMENT_KINDS);
+  const linked = row.transfer === null ? null : transfer(fields(row.transfer, TRANSFER_FIELDS, []));
+  check((kind === 'transfer') === (linked !== null));
+  if (linked) check(id === (quantity.startsWith('-') ? linked.withdrawalId : linked.depositId));
   return {
-    id: identifier(row.movement_id), quantity: signedQuantity(row.quantity), kind: choice(row.kind, MOVEMENT_KINDS),
+    id, quantity, kind,
     ...attribution(row), reason: row.reason === null ? null : text(row.reason, STOCK_REASON_LIMIT),
     occurrenceId: nullableId(row.task_occurrence_id), corrects: nullableId(row.corrects), correctedBy: nullableId(row.corrected_by),
-    shoppingReceipt:boolean(row.shopping_receipt), returnOf:nullableId(row.return_of),
+    shoppingReceipt:boolean(row.shopping_receipt), returnOf:nullableId(row.return_of), transfer:linked,
   };
 }
 
+const STOCK_FIELDS = ['recorded','reserved','available'] as const;
+
+function stockTotals(value: unknown, unit: BaseUnit, parse: (value: unknown) => string): StockTotals {
+  const row = fields(value, STOCK_FIELDS, []);
+  const recorded = parse(row.recorded), reserved = parse(row.reserved), available = parse(row.available);
+  check(stockUnits(recorded) === stockUnits(reserved) + stockUnits(available));
+  check(unit !== 'piece' || [recorded, reserved, available].every(amount => !amount.includes('.')));
+  return {recorded, reserved, available};
+}
+
+function aggregateQuantity(value: unknown): string {
+  check(typeof value === 'string' && /^(?:0|[1-9][0-9]{0,13})(?:\.[0-9]{0,5}[1-9])?$/u.test(value));
+  return value;
+}
+
+function locationStock(value: unknown, unit: BaseUnit): LocationStock {
+  const row = fields(value, ['location_id','name','stock'], []);
+  const id = identifier(row.location_id);
+  check((id === 'pantry') === (row.name === null));
+  return {id, name:row.name === null ? null : text(row.name, MAX_LOCATION_NAME),
+    stock:stockTotals(row.stock, unit, taskQuantity)};
+}
+
 function history(value: unknown, productId: string): MovementHistory {
-  const row = fields(value, ['product_id','product_name','base_unit','movements','next_cursor'], []);
+  const row = fields(value, ['product_id','product_name','base_unit','movements','next_cursor','locations','total'], []);
   check(row.product_id === productId && Array.isArray(row.movements) && row.movements.length <= 25);
+  check(Array.isArray(row.locations) && row.locations.length > 0 && row.locations.length <= MAX_NAMED_LOCATIONS + 1);
+  const unit = choice(row.base_unit, BASE_UNITS);
+  const locations = row.locations.map(item => locationStock(item, unit));
+  const locationIds = new Set(locations.map(item => item.id));
+  check(locationIds.size === locations.length && locationIds.has('pantry'));
+  const total = stockTotals(row.total, unit, aggregateQuantity);
+  check(STOCK_FIELDS.every(key => stockUnits(total[key]) ===
+    locations.reduce((sum, location) => sum + stockUnits(location.stock[key]), 0n)));
   const movements = row.movements.map(movement);
   check(new Set(movements.map(item => item.id)).size === movements.length);
-  return {productId, productName: text(row.product_name, 160), unit: choice(row.base_unit, BASE_UNITS),
-    movements, cursor: cursorValue(row.next_cursor)};
+  check(movements.every(({transfer}) => transfer === null ||
+    (transfer.productId === productId && locationIds.has(transfer.source) && locationIds.has(transfer.destination))));
+  return {productId, productName: text(row.product_name, 160), unit, movements, locations, total,
+    cursor: cursorValue(row.next_cursor)};
 }
 
 function purchase(value: unknown): Purchase {
@@ -288,6 +346,19 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
     const extra = identifier(fields(row.result, ['extra_id'], []).extra_id);
     if (command.action === 'shopping.clear-extra') check(extra === command.extra_id);
     return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
+  }
+  if (command.action === 'inventory.add-location') {
+    const location = namedLocation(row.result);
+    check(location.name === command.name);
+    return {kind, operationId, productId:null, movement:null, locationSaved:true};
+  }
+  if (command.action === 'inventory.transfer') {
+    const result = fields(row.result, [...TRANSFER_FIELDS,'base_unit','quantity'], []);
+    const linked = transfer(result), quantity = positiveQuantity(result.quantity);
+    check(linked.productId === command.product_id && linked.source === command.source_location
+      && linked.destination === command.destination_location && quantity === command.quantity);
+    return {kind, operationId, productId:linked.productId,
+      movement:{movementId:linked.withdrawalId, unit:choice(result.base_unit, BASE_UNITS), quantity, action:command.action}};
   }
   const action = command.action;
   const result = fields(row.result, ['product_id','movement_id','base_unit','quantity'],

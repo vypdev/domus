@@ -61,6 +61,25 @@ context and page size. Adjustments and intake reversals require
 active reservations before appending a movement and committing its original
 receipt. A unique correction link allows one full reversal per intake.
 
+## Storage locations and transfers
+
+Schema 30 stores named locations and links both movements of a transfer.
+Migration preserves Pantry, legacy material bindings, reservations, Shopping
+receipts and original operation records. Snapshot inspection verifies that a
+transfer has exactly two linked movements for the same product, opposite
+quantities, the expected locations and consistent attribution.
+
+Adding a location or moving stock requires a current `inventory.manage` grant.
+The household can add up to 32 named locations. Pantry is built in. Each
+location uses the existing base-unit capacity. A transfer checks availability
+after reservations and commits both movements, any new binding and the original
+receipt in one SQLite transaction. Pantry replenishment uses its own balance.
+
+Recover a lost response with the original operation key. After a restore,
+review the current location balances and compare the original operation receipt.
+Rollback requires the compatible image and database checkpoint taken before
+the upgrade.
+
 ## Pantry replenishment
 
 Schema 22 adds one revisioned minimum and target policy per Pantry product.

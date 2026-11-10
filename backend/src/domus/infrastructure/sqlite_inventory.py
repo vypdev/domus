@@ -7,7 +7,9 @@ from typing import cast
 from domus.application.inventory_ports import LedgerEntry
 from domus.domain.errors import Conflict, StorageFailure
 from domus.domain.inventory import (
+    MAX_NAMED_LOCATIONS,
     MAX_STOCK_UNITS,
+    PANTRY,
     BaseUnit,
     CatalogProduct,
     EffectKind,
@@ -15,6 +17,8 @@ from domus.domain.inventory import (
     MovementKind,
     ReplenishmentPolicy,
     StockMovement,
+    StockTransfer,
+    StorageLocation,
     stock_units,
     validate_stock_reason,
 )
@@ -107,6 +111,42 @@ REPLENISHMENT_STATEMENT = (
 )
 
 
+LOCATION_TABLES = {"inventory_locations", "inventory_transfers"}
+LOCATION_STATEMENTS = (
+    "CREATE TABLE inventory_locations(household_id TEXT NOT NULL "
+    "REFERENCES households(household_id), location_id TEXT NOT NULL CHECK(location_id!='pantry'), "
+    "name TEXT NOT NULL, name_key TEXT NOT NULL, "
+    "PRIMARY KEY(household_id,location_id), UNIQUE(household_id,name_key)) STRICT",
+    "CREATE TABLE inventory_transfers(household_id TEXT NOT NULL, transfer_id TEXT NOT NULL, "
+    "product_id TEXT NOT NULL, source_location TEXT NOT NULL, destination_location TEXT NOT NULL, "
+    "withdrawal_id TEXT NOT NULL, deposit_id TEXT NOT NULL, "
+    "PRIMARY KEY(household_id,transfer_id), UNIQUE(household_id,withdrawal_id), "
+    "UNIQUE(household_id,deposit_id), CHECK(source_location!=destination_location), "
+    "FOREIGN KEY(household_id,product_id) REFERENCES inventory_products(household_id,product_id), "
+    "FOREIGN KEY(household_id,withdrawal_id) "
+    "REFERENCES inventory_movements(household_id,movement_id), "
+    "FOREIGN KEY(household_id,deposit_id) "
+    "REFERENCES inventory_movements(household_id,movement_id)) STRICT",
+    # Preserve the existing ledger and its dependent foreign keys. The transfer identifier
+    # specializes an adjustment into one of the two immutable transfer legs.
+    "ALTER TABLE inventory_movements ADD COLUMN transfer_id TEXT "
+    "CHECK(transfer_id IS NULL OR (kind='adjustment' AND posting IS NULL AND corrects IS NULL))",
+    "CREATE INDEX inventory_transfer_legs ON inventory_movements(household_id,transfer_id) "
+    "WHERE transfer_id IS NOT NULL",
+)
+
+
+def _transfer(row: sqlite3.Row) -> StockTransfer:
+    return StockTransfer(
+        row["transfer_id"],
+        row["product_id"],
+        row["source_location"],
+        row["destination_location"],
+        row["withdrawal_id"],
+        row["deposit_id"],
+    )
+
+
 def _product(row: sqlite3.Row) -> CatalogProduct:
     return CatalogProduct(
         row["product_id"], row["reference_id"], row["name"], BaseUnit(row["base_unit"])
@@ -129,7 +169,10 @@ def _effect(row: sqlite3.Row) -> InventoryEffect:
 
 def _movement(row: sqlite3.Row) -> StockMovement:
     posting, corrects = row["posting"], row["corrects"]
-    if "kind" in row.keys():
+    transfer_id = row["transfer_id"] if "transfer_id" in row.keys() else None
+    if transfer_id is not None:
+        kind = MovementKind.TRANSFER
+    elif "kind" in row.keys():
         kind = MovementKind(row["kind"])
     elif posting is None:
         kind = MovementKind.INTAKE
@@ -147,6 +190,7 @@ def _movement(row: sqlite3.Row) -> StockMovement:
         kind,
         None if posting is None else read_posting(JsonDocument(posting).decode()),
         corrects,
+        transfer_id,
     )
 
 
@@ -190,6 +234,47 @@ class SQLiteInventory:
             "ON CONFLICT(household_id,product_id) DO UPDATE SET "
             "minimum=excluded.minimum,target=excluded.target,revision=excluded.revision",
             (home, product_id, policy.minimum, policy.target, policy.revision),
+        )
+
+    def locations(self, home: str) -> tuple[StorageLocation, ...]:
+        return tuple(
+            StorageLocation(row["location_id"], row["name"])
+            for row in self.connection.execute(
+                "SELECT location_id,name FROM inventory_locations "
+                "WHERE household_id=? ORDER BY name_key",
+                (home,),
+            )
+        )
+
+    def add_location(self, home: str, value: StorageLocation) -> None:
+        self.connection.execute(
+            "INSERT INTO inventory_locations VALUES (?,?,?,?)",
+            (home, value.location_id, value.name, value.name.casefold()),
+        )
+
+    def location_is_used(self, home: str, location_id: str) -> bool:
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM inventory_materials WHERE household_id=? AND location_id=? LIMIT 1",
+                (home, location_id),
+            ).fetchone()
+            is not None
+        )
+
+    def location_bindings(self, home: str, product_id: str) -> dict[str, str]:
+        return dict(
+            self.connection.execute(
+                "SELECT m.location_id,m.reference_id FROM inventory_materials m "
+                "LEFT JOIN inventory_locations l USING(household_id,location_id) "
+                "WHERE m.household_id=? AND m.product_id=? "
+                "AND (m.location_id=? OR l.location_id IS NOT NULL)",
+                (home, product_id, PANTRY),
+            )
+        )
+
+    def add_transfer(self, home: str, value: StockTransfer) -> None:
+        self.connection.execute(
+            "INSERT INTO inventory_transfers VALUES (?,?,?,?,?,?,?)", (home, *astuple(value))
         )
 
     def material(self, home: str, reference: str) -> MaterialBinding | None:
@@ -302,16 +387,28 @@ class SQLiteInventory:
         return None if row is None else cast(str, row["movement_id"])
 
     def history(
-        self, home: str, reference: str, through: int, limit: int
+        self, home: str, references: tuple[str, ...], through: int, limit: int
     ) -> tuple[LedgerEntry, ...]:
+        placeholders = ",".join("?" for _ in references)
         return tuple(
-            LedgerEntry(row["position"], _movement(row), row["corrected_by"])
+            LedgerEntry(
+                row["position"],
+                _movement(row),
+                row["corrected_by"],
+                None if row["transfer_id"] is None else _transfer(row),
+            )
             for row in self.connection.execute(
-                "SELECT m.*, c.movement_id AS corrected_by FROM inventory_movements m "
+                "SELECT m.*, c.movement_id AS corrected_by, "
+                "t.product_id,t.source_location,t.destination_location,"
+                "t.withdrawal_id,t.deposit_id "
+                "FROM inventory_movements m "
                 "LEFT JOIN inventory_movements c ON c.household_id=m.household_id "
-                "AND c.corrects=m.movement_id WHERE m.household_id=? AND m.reference_id=? "
+                "AND c.corrects=m.movement_id "
+                "LEFT JOIN inventory_transfers t ON t.household_id=m.household_id "
+                "AND t.transfer_id=m.transfer_id WHERE m.household_id=? "
+                f"AND m.reference_id IN ({placeholders}) "
                 "AND m.position<=? ORDER BY m.position DESC LIMIT ?",
-                (home, reference, through, limit),
+                (home, *references, through, limit),
             )
         )
 
@@ -321,8 +418,8 @@ class SQLiteInventory:
         )
         self.connection.execute(
             "INSERT INTO inventory_movements(household_id,reference_id,movement_id,source_key,"
-            "member_id,delta,created_at,reason,posting,corrects,kind) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "member_id,delta,created_at,reason,posting,corrects,kind,transfer_id) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 value.household_id,
                 value.reference_id,
@@ -334,7 +431,8 @@ class SQLiteInventory:
                 value.reason,
                 None if posting is None else posting.encoded,
                 value.corrects,
-                value.kind,
+                MovementKind.ADJUSTMENT if value.kind is MovementKind.TRANSFER else value.kind,
+                value.transfer_id,
             ),
         )
         self.connection.execute(
@@ -415,3 +513,68 @@ def verify_replenishment(connection: sqlite3.Connection) -> None:
     ):
         if minimum % 1_000_000 or target % 1_000_000:
             raise StorageFailure("invalid_replenishment_bounds")
+
+
+def verify_inventory_locations(connection: sqlite3.Connection) -> None:
+    stock = SQLiteInventory(connection)
+    for home, count in connection.execute(
+        "SELECT household_id,COUNT(*) FROM inventory_locations GROUP BY household_id"
+    ):
+        if count > MAX_NAMED_LOCATIONS:
+            raise StorageFailure("invalid_inventory_locations")
+        for location in stock.locations(home):
+            key = connection.execute(
+                "SELECT name_key FROM inventory_locations WHERE household_id=? AND location_id=?",
+                (home, location.location_id),
+            ).fetchone()[0]
+            if key != location.name.casefold():
+                raise StorageFailure("invalid_inventory_locations")
+
+    for row in connection.execute(
+        "SELECT m.household_id,m.reference_id,m.location_id,m.product_id "
+        "FROM inventory_materials m "
+        "JOIN inventory_locations l USING(household_id,location_id)"
+    ):
+        home, reference, location, product_id = row
+        product = stock.product(home, product_id)
+        if product is None or stock.material(home, reference) != product.binding(
+            home, location=location, reference=reference
+        ):
+            raise StorageFailure("invalid_inventory_catalog_binding")
+
+    for row in connection.execute("SELECT * FROM inventory_transfers"):
+        home = row["household_id"]
+        transfer = _transfer(row)
+        validate_identifier(transfer.transfer_id)
+        references = stock.location_bindings(home, transfer.product_id)
+        legs = connection.execute(
+            "SELECT * FROM inventory_movements WHERE household_id=? AND transfer_id=? "
+            "ORDER BY delta LIMIT 3",
+            (home, transfer.transfer_id),
+        ).fetchall()
+        if len(legs) != 2:
+            raise StorageFailure("invalid_inventory_transfer")
+        withdrawal, deposit = map(_movement, legs)
+        if (
+            withdrawal.movement_id != transfer.withdrawal_id
+            or deposit.movement_id != transfer.deposit_id
+            or withdrawal.reference_id != references.get(transfer.source_location)
+            or deposit.reference_id != references.get(transfer.destination_location)
+            or withdrawal.delta >= 0
+            or deposit.delta != -withdrawal.delta
+            or withdrawal.member_id != deposit.member_id
+            or withdrawal.created_at != deposit.created_at
+            or withdrawal.reason != ""
+            or deposit.reason != ""
+        ):
+            raise StorageFailure("invalid_inventory_transfer")
+
+    if (
+        connection.execute(
+            "SELECT 1 FROM inventory_movements m LEFT JOIN inventory_transfers t "
+            "USING(household_id,transfer_id) WHERE m.transfer_id IS NOT NULL "
+            "AND t.transfer_id IS NULL LIMIT 1"
+        ).fetchone()
+        is not None
+    ):
+        raise StorageFailure("invalid_inventory_transfer")
