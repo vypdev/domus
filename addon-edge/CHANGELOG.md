@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.11
+
+- Use singular English and Spanish stock units when the displayed quantity is exactly one.
+- Keep schema 30 and the location and transfer history from Edge.10.
+
 ## 0.0.0-edge.10
 
 - Qualify storage locations, exact stock transfers and per-location balances.

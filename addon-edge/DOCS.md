@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.10 packages the immutable runtime declared in
+Edge 0.0.0-edge.11 packages the immutable runtime declared in
 [artifact.json](artifact.json). It upgrades supported owned databases to
 schema 30 and exposes storage locations and balanced stock transfers in
 Inventory. Retain a compatible image and data backup before upgrading.
