@@ -69,6 +69,10 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='administration/capabilities') raw=JSON.stringify({state:'available',contract_version:2,household_id:'home',exact_revisions:'json-integer-int64',
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
+    else if (route === 'tasks/overview') raw = JSON.stringify({
+      assigned: {total: 1, items: [{occurrence_id: 'work-1', title: 'Wipe table', state: 'assigned'}]},
+      unclaimed: {total: 0, items: []},
+    });
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
       can_manage_points:canManagePoints,can_record_for_others:canManagePoints});
     else if (route === 'family/allocation' || route.startsWith('family/allocation?')) raw = JSON.stringify({household:null,override:null});
@@ -731,4 +735,22 @@ test('Inventory owns the current protected destination and accepts only closed u
   expect(decodeInventoryIntent({type:'submit',command:{action:'inventory.intake',product_id:'product',quantity:'1',location:'foreign'}})).toBeNull();
   navigate('#tasks');
   expect(app.inventory).toBeNull();
+});
+
+test('Overview summary dispatches an authorized detail read through the Tasks workspace', async () => {
+  const f = fixture(); f.phase('active');
+  const {app} = await f.open();
+  await vi.waitFor(() => expect(app.taskOverview?.state).toBe('ready'));
+  const event = (detail: unknown) => new CustomEvent('domus-task-overview-intent', {detail, bubbles: true, composed: true});
+  const unrelated = document.createElement('div'); app.append(unrelated);
+  unrelated.dispatchEvent(event({type: 'select', occurrenceId: 'work-1'}));
+  app.dispatchEvent(event({type: 'select', occurrenceId: '../forged'}));
+  expect(f.navigation).toEqual([]);
+  const before = f.fetch.mock.calls.filter(([path]) => path.endsWith('/tasks/overview')).length;
+  app.dispatchEvent(event({type: 'refresh'}));
+  await vi.waitFor(() => expect(app.taskOverview?.state).toBe('ready'));
+  expect(f.fetch.mock.calls.filter(([path]) => path.endsWith('/tasks/overview'))).toHaveLength(before + 1);
+  app.dispatchEvent(event({type: 'select', occurrenceId: 'work-1'}));
+  await vi.waitFor(() => expect(f.fetch.mock.calls.some(([path]) => path.endsWith('/tasks/occurrences/work-1'))).toBe(true));
+  expect(f.navigation).toEqual(['#tasks']);
 });

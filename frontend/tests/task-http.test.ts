@@ -294,3 +294,29 @@ test('task detail decodes the current completion allocation affordance before se
   f.transport.mockResolvedValueOnce(reply({...detail(), completion_points: 'other'}));
   await expect(f.server.detail('work-1', 'home', context).result).rejects.toThrow('invalid_response');
 });
+
+test('Overview reads the exact authorized count with a bounded list of validated task rows', async () => {
+  const f = fixture('native');
+  const items = Array.from({length: 25}, (_, index) => ({occurrence_id: 'work-' + index,
+    title: 'Clean <b>table</b>', state: 'assigned'}));
+  f.transport.mockResolvedValueOnce(reply({assigned: {total: 37, items}, unclaimed: {total: 0, items: []}}));
+  const result = await f.server.overview(context).result;
+  expect(result.assigned.total).toBe(37);
+  expect(result.assigned.items).toHaveLength(25);
+  expect(result.assigned.items[0]).toEqual({id: 'work-0', title: 'Clean <b>table</b>', state: 'assigned'});
+  const [path, init] = f.transport.mock.calls[0];
+  expect(path).toBe(f.target.applicationBase + 'api/v1/tasks/overview');
+  expect(init.method).toBe('GET');
+  expect(new Headers(init.headers).has('X-Domus-Context')).toBe(true);
+});
+
+test.each([
+  {total: 1, items: null},
+  {total: 1, items: []},
+  {total: 1, items: [{occurrence_id: 'work', title: 'Clean', state: 'completed'}]},
+  {total: 2, items: Array.from({length: 2}, () => ({occurrence_id: 'same', title: 'Clean', state: 'assigned'}))},
+])('Overview rejects an incomplete or inconsistent group', async assigned => {
+  const f = fixture();
+  f.transport.mockResolvedValueOnce(reply({assigned, unclaimed: {total: 0, items: []}}));
+  await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
+});

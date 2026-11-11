@@ -1,3 +1,5 @@
+import {HttpTaskServer} from '../adapters/task-http';
+import {TaskOverviewController} from '../application/task-overview';
 import {HttpInventoryServer} from '../adapters/inventory-http';
 import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../adapters/inventory-journal';
 import {InventoryController} from '../application/inventory-controller';
@@ -205,13 +207,14 @@ export function mountEntry(page: EntryPage): PageMount {
   let family: FamilyController | null = null;
   let rewards: RewardsController | null = null;
   let inventory: InventoryController | null = null;
+  let taskOverview: TaskOverviewController | null = null;
   let allocation: AllocationController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); error?.remove();
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -220,7 +223,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); app?.remove();
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -408,16 +411,28 @@ export function mountEntry(page: EntryPage): PageMount {
       if (intent?.type === 'more-shopping-sources') await inventoryController.moreShoppingSources();
       if (intent?.type === 'submit') await inventoryController.submit(intent.command);
     }, {signal:widget.signal});
+    const overviewController = new TaskOverviewController(new HttpTaskServer(source.target, browser.transport),
+      view => {element.taskOverview = view;});
+    taskOverview = overviewController;
+    const syncOverview = () => {
+      const entry = element.view, tasks = element.tasks, destination = element.workspaceDestination;
+      if ((destination === null || destination === 'overview') && entry?.phase === 'ready'
+          && entry.decision?.state === 'active' && entry.session && tasks?.phase === 'ready') {
+        const {context, access} = entry.session;
+        const key = JSON.stringify([context.installationId, context.channel, context.subject, access, tasks.scopeKey]);
+        overviewController.bind({key, context});
+      } else overviewController.bind(null);
+    };
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : fragment === '#inventory' ? 'inventory' : null;
-      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory();
+      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
@@ -491,6 +506,15 @@ export function mountEntry(page: EntryPage): PageMount {
         }
       }catch{fail();}
     },{signal:widget.signal});
+    element.addEventListener('domus-task-overview-intent', async event => {
+      if (event.target !== element) return;
+      const intent = decodeTaskIntent((event as CustomEvent<unknown>).detail);
+      if (intent?.type === 'refresh') await overviewController.refresh();
+      if (intent?.type === 'select') {
+        page.location.assign('#tasks');
+        await active.taskWork(controller => controller.select(intent.occurrenceId));
+      }
+    }, {signal: widget.signal});
     element.addEventListener('domus-task-intent', async event => {
       if (event.target !== element) return;
       try {

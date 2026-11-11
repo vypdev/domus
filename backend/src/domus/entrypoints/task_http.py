@@ -25,6 +25,7 @@ from domus.application.task_queries import (
     OccurrenceSummary,
     TaskHistoryItem,
     TaskMaterialsView,
+    TaskOverview,
     TaskPage,
     TaskPolicyView,
     TaskQueries,
@@ -135,6 +136,10 @@ def create_task_router(
     @router.get("/access", response_model=TaskWorkspaceView)
     def workspace(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskWorkspaceView:
         return context(request).queries().workspace()
+
+    @router.get("/overview", response_model=TaskOverview)
+    def overview(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskOverview:
+        return context(request).queries().overview()
 
     @router.get("/policy", response_model=TaskPolicyView)
     def policy(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskPolicyView:

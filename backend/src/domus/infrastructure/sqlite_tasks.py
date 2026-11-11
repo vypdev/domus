@@ -1,11 +1,11 @@
 """Scoped task repositories with compare-and-swap writes and strict stored-header checks."""
 
 import sqlite3
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import cast
 
-from domus.application.task_ports import TaskRepository, TaskReviewEvidence
+from domus.application.task_ports import TaskOccurrenceGroup, TaskRepository, TaskReviewEvidence
 from domus.domain.errors import Conflict, InvalidInput, StorageFailure
 from domus.domain.restoration import OperationEvidence, RetainedOperation
 from domus.domain.storage import validate_identifier
@@ -410,6 +410,38 @@ class SQLiteTasks(TaskRepository):
             + " ORDER BY occurrence_id LIMIT ?",
             (*parameters, limit),
         )
+        return self._occurrence_rows(rows)
+
+    def occurrence_group(
+        self,
+        household_id: str,
+        states: tuple[OccurrenceState, ...],
+        assignee_id: str | None,
+        *,
+        limit: int = 25,
+    ) -> TaskOccurrenceGroup:
+        where, parameters = _page(household_id, limit, None, "occurrence_id")
+        placeholders = ",".join("?" for _ in states)
+        where.append(f"state IN ({placeholders})")
+        parameters.extend(state.value for state in states)
+        if assignee_id is None:
+            where.append("json_array_length(document,'$.assignee_ids')=0")
+        else:
+            where.append(
+                "EXISTS (SELECT 1 FROM json_each(task_occurrences.document,'$.assignee_ids') "
+                "AS assigned WHERE assigned.value=?)"
+            )
+            parameters.append(assignee_id)
+        selection = " FROM task_occurrences WHERE " + " AND ".join(where)
+        total = cast(
+            int, self.connection.execute("SELECT COUNT(*)" + selection, parameters).fetchone()[0]
+        )
+        rows = self.connection.execute(
+            "SELECT *" + selection + " ORDER BY occurrence_id LIMIT ?", (*parameters, limit)
+        )
+        return TaskOccurrenceGroup(total, self._occurrence_rows(rows))
+
+    def _occurrence_rows(self, rows: Iterable[sqlite3.Row]) -> tuple[TaskOccurrence, ...]:
         return tuple(
             cast(
                 TaskOccurrence,

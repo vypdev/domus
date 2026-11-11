@@ -33,6 +33,13 @@ Definition lists accept `state`; occurrence lists additionally accept `assignee_
 `definition_id`. Unknown or duplicate query parameters fail. Cursors expire after five minutes by
 default and can become invalid after a process restart. Pages are not a cross-page snapshot.
 
+GET `/overview` returns `assigned` and `unclaimed` groups. Each has an exact `total` and up to
+25 task summaries ordered by occurrence ID. The response includes each item's occurrence ID, title,
+and state. Assigned work uses the verified member and the assigned, in-progress, and blocked
+states. Unclaimed work uses the available state. Both groups use one protected household snapshot
+and the current Tasks read grant. The route accepts an empty query and delegates item detail to
+the existing occurrence route.
+
 GET `/definitions/{id}` returns current definition facts. GET `/occurrences/{id}` returns its frozen
 definition snapshot, current policy rules, required work, current cycle and action hints. Hints do
 not authorize a later change; the command checks again. GET `/policy` returns defaults with revision

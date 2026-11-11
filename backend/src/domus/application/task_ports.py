@@ -24,6 +24,12 @@ class TaskReviewEvidence:
     acknowledgements: tuple[OperationEvidence, ...] = ()
 
 
+@dataclass(frozen=True, slots=True)
+class TaskOccurrenceGroup:
+    total: int
+    items: tuple[TaskOccurrence, ...]
+
+
 class TaskRepository(Protocol):
     def lifecycle_sources(
         self, household_id: str, *, limit: int = 100, after: int = 0
@@ -94,6 +100,14 @@ class TaskRepository(Protocol):
         assignee_id: str | None = None,
         open_only: bool = False,
     ) -> tuple[TaskOccurrence, ...]: ...
+    def occurrence_group(
+        self,
+        household_id: str,
+        states: tuple[OccurrenceState, ...],
+        assignee_id: str | None,
+        *,
+        limit: int = 25,
+    ) -> TaskOccurrenceGroup: ...
     def cycle(self, household_id: str, cycle_id: str) -> TaskCycle | None: ...
     def save_cycle(self, value: TaskCycle, expected_revision: int) -> None: ...
     def cycles(

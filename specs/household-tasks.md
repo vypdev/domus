@@ -353,3 +353,321 @@ These are internal implementation steps within the first integrated release; the
 Primary sources: [Copilot standard](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/README.md), [original template](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/_template.md), and the linked [reference investigation](../docs/reference-investigation.md).
 
 Confirmed owner choices and unresolved proposals are separated in [decisions](../docs/decisions.md). [Issue #2](https://github.com/vypdev/domus/issues/2) tracks the documentation foundation. The [adoption note](../docs/copilot-adoption.md) records the current catalog evidence limitation. Optional future depth remains explicitly deferred in the product vision; the gateway's installation and MCP internals are outside Domus scope.
+
+## Proposed change: Show assigned and unclaimed household tasks on Overview
+
+- Status: Draft
+- Catalog capability: household-tasks
+
+### 1. Executive summary
+
+This update adds two task summaries to Overview. “Assigned to me” shows the current member’s tasks in the existing Assigned, In progress, and Blocked states; “Unclaimed” shows Available tasks with no assignees. Both use current Tasks read authority, the authoritative household snapshot, and existing bounded Tasks ordering. A selected task opens its protected detail in Tasks.
+
+```text
+Open Overview -> read authorized household snapshot -> show the two task groups and exact counts -> open a selected task in Tasks
+```
+
+The existing `specs/household-tasks.md` contract and cases remain authoritative for task states, permissions, ordering, and protected details. This delta adds Overview visibility; it does not claim the behavior is implemented.
+
+### 2. Problem, current behavior, and evidence
+
+#### 2.1 Problem
+
+Members currently go to the paginated Tasks workspace to find their assigned or unclaimed work. The visible page cannot establish totals. The proposed Overview summaries let a member see relevant open work on entry and proceed directly to a protected task detail.
+
+#### 2.2 Current behavior
+
+The retained task contract defines task states, assignment, household authorization, and history in `specs/household-tasks.md`. This update proposes surfacing a bounded summary of those existing task facts on Overview; it does not change their meaning or imply that the new summaries already exist.
+
+#### 2.3 Evidence
+
+The requested behavior and current limitation are described in issue https://github.com/vypdev/domus/issues/92. The immutable selected owner is `specs/household-tasks.md`; its sections 1–6 define the prospective task contract, including separate task definitions and occurrences, assignments, state transitions, and household-scoped permissions. The owner records implementation as pending, so this update makes no claim of runtime verification. The issue’s proposed summaries, counts, ordering, navigation, and failure distinction are acceptance requirements for this delta.
+
+### 3. Actors, surfaces, and terminology
+
+The household member is the actor. Overview is the entry surface and shows the two task groups. Tasks remains the protected workspace for task details and the existing task journeys.
+
+“Assigned to me” means tasks assigned to the current member in Assigned, In progress, or Blocked state. “Unclaimed” means Available tasks with no assignees. The count is the exact count from the authoritative household snapshot, subject to the existing bounded Tasks ordering. A visible page of paginated tasks is not the source of a total. “Empty” means a successful authorized read with no matching tasks; it is distinct from a read failure.
+
+### 4. Goals, non-goals, and fixed invariants
+
+#### 4.1 Goals
+
+1. On Overview, show the current member’s Assigned, In progress, and Blocked tasks in “Assigned to me,” and Available tasks with no assignees in “Unclaimed.”
+2. Show each group’s exact count from the authoritative household snapshot, apply existing bounded Tasks ordering, distinguish an empty group from a read failure, and open selected task details in the protected Tasks workspace using keyboard or touch.
+
+#### 4.2 Non-goals
+
+1. Changing task states, assignment rules, authorization policy, pagination, or task-detail behavior defined by the retained owner.
+2. Adding task creation, claiming, reassignment, or other task mutations to Overview.
+
+#### 4.3 Fixed product/safety invariants
+
+1. Both groups and their counts require current Tasks read authority. Without it, Overview must not disclose protected task data or counts and must communicate read failure distinctly from an empty result.
+2. Group membership, counts, and ordering must derive from the authoritative household snapshot and existing Tasks behavior; the visible paginated page must not be used to infer totals.
+3. Opening a task must lead to its protected detail in Tasks and preserve existing authorization checks.
+
+| Requirement | Behavior |
+| --- | --- |
+| SDD-I92-U1-R1 | Overview MUST show an Assigned to me group for the current member using existing Assigned, In progress, and Blocked states, and an Unclaimed group using existing Available tasks with no assignees. Both groups MUST respect current Tasks read authority, show exact counts from the authoritative household snapshot using existing bounded Tasks ordering, distinguish an empty group from a read failure, and open selected task details in the protected Tasks workspace with keyboard and touch input. |
+
+### 5. Current versus proposed product journey
+
+For issue [#92](https://github.com/vypdev/domus/issues/92), extend the Overview journey with two task summaries. A member with current Tasks read authority sees “Assigned to me” for their Assigned, In progress, and Blocked tasks, and “Unclaimed” for Available tasks with no assignees. Each group shows the exact count from the authoritative household snapshot and follows the existing bounded Tasks ordering. The member can open a task’s protected detail in Tasks using keyboard or touch. An empty group is presented as empty; a read failure remains visibly distinct. Without current Tasks read authority, neither group nor its count reveals protected task data. This increment adds the task summaries to the existing owner journey; other Overview summaries remain outside this delta.
+
+### 6. Functional behavior and state model
+
+The Overview derives both groups from the current authoritative household snapshot under current Tasks read authority. “Assigned to me” includes only tasks assigned to the current member in the existing Assigned, In progress, or Blocked states. “Unclaimed” includes only Available tasks with no assignees. Use the existing bounded Tasks ordering and exact snapshot counts; do not infer a household total from a paginated visible page. Refresh or otherwise obtain a current authorized snapshot before presenting the summaries, and do not treat unavailable or incomplete data as zero.
+
+Render each task as an accessible, keyboard- and touch-operable selection that opens its protected detail in the Tasks workspace. Preserve the existing task state and authorization rules. Distinguish a successful empty result from a failed or unauthorized read: failures must not disclose task content or counts and must provide truthful failure feedback rather than an empty-state message.
+
+### 7. User-facing configuration
+
+No new user-facing configuration is introduced. The summaries use the current member, existing task states, assignees, Tasks read authority, and established Tasks ordering.
+
+### 8. Clean Architecture design
+
+Add the Overview summary as a presentation of the existing Tasks read contract. The application-side read must enforce current Tasks authority and return only the authorized task facts and exact counts needed for these groups; the Overview must not derive protected data or household totals from client state or a paginated page. Keep task-state and authorization semantics in the existing domain and application boundaries, with presentation limited to rendering the authorized result and its loading, empty, and failure states.
+
+Selecting a summary item routes to the existing protected task detail in Tasks. Keep the summary and detail authorization checks current; a rendered item or stale Overview snapshot grants no access. Build the interaction with the published ha-ui components and preserve keyboard and touch operation. The existing owner contract remains in `specs/household-tasks.md`; the roadmap identifies authoritative permission-scoped Overview projections and the shared component ownership in `docs/roadmap.md`.
+
+### 9. UI/UX and content contract
+
+The Overview adds two task summaries within the existing household surface. “Assigned to me” includes only the current member’s tasks in Assigned, In progress, or Blocked states. “Unclaimed” includes only Available tasks with no assignees. Both summaries use current Tasks read authority, the authoritative household snapshot for exact counts, and the existing bounded Tasks ordering; a paginated page is not a source for totals. These are summaries, not new task states or assignment controls. Selecting a task opens its protected detail in the Tasks workspace.
+
+```text
+Assigned to me · 3
+Laundry — In progress
+Take out recycling — Assigned
+Fix the tap — Blocked
+
+Unclaimed · 1
+Water the plants — Available
+```
+
+Each group has a localized heading and count. Each task is a descriptive, keyboard-focusable and touch-operable link or control with an accessible name that identifies the task and its state; state is conveyed by text, not color alone. An empty group has a clear empty message and a zero count. Loading, unavailable data, and denied authority must not be rendered as an empty group or zero. Follow the existing English/Spanish translation-key, base-language matching, and English-fallback conventions. Preserve responsive narrow and wide layouts, visible focus, light/dark contrast, and reduced-motion behavior. Existing task labels and state terminology are defined in `frontend/src/presentation/task-messages.ts`; the established shell and Overview region are in `frontend/src/presentation/domus-app.ts`. Acceptance covers the assigned summary, unclaimed summary, empty-versus-failure distinction, and protected navigation as specified by `inventory1-C01`, `inventory1-C02`, and `inventory1-C03`.
+
+### 10. Failure, recovery, and cleanup
+
+If the task summary read is loading, unavailable, or incomplete, identify that the summary could not be loaded and offer the existing safe retry or navigation path when available. Keep failure visibly distinct from a successful empty result; never substitute zero or a count inferred from one page. If access is denied or no longer current, hide task rows and counts and explain that current Tasks access is required. Do not retry indefinitely or change task state as part of summary recovery. A task that changes between summary display and selection is resolved by the protected Tasks detail flow, which remains authoritative. These are read-only summaries and create no task-side effects or cleanup work. The distinction between unavailable or incomplete projections and zero totals is also required by `docs/roadmap.md`.
+
+### 11. Security, permissions, and privacy
+
+Both groups and their counts are protected by current Tasks read authority. Derive the member and household context from the authenticated application context; do not treat a selected member, URL fragment, task identifier, or rendered component event as authority. On denial, expired access, or a context change, disclose neither rows nor counts and present a failure state rather than an empty result. Only validated summary data may reach the Overview renderer; task detail navigation must return to the protected Tasks workspace, where its existing authorization checks apply. Render task titles and other user-controlled values as inert text, without arbitrary HTML or executable links. Do not add credentials, household details, or task data to diagnostics. These rules extend the existing read authorization and untrusted-input contract in `specs/household-tasks.md`.
+
+### 12. Observability and operational UX
+
+Members can tell whether each group is loading, populated, empty, or unavailable, and can reach the Tasks workspace for the full list or a selected detail. A failed read must not be reported as a successful count. Operational evidence may distinguish denied, unavailable, and incomplete summary reads using existing sanitized error handling; it must not include task titles, member names, household identifiers, credentials, or unrestricted payloads. Do not add telemetry leaving the installation or duplicate notifications for these read outcomes. No concrete new metric, logging hook, or verification invocation is established for this delta; its implementation prerequisite remains unverified.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+This is a read-only presentation and projection change. Keep existing task states, authorization rules, bounded ordering, Tasks detail behavior, and persisted read schema compatible; do not add stored task records or migrate existing task data for these summaries. The summary must be based on the authoritative household snapshot and remain correct beyond the visible paginated Tasks page. Verify the behavior in both supported locales, relevant responsive compositions and deployment architectures, with disposable test data, as called for by the issue. Installed Edge-candidate acceptance remains an explicit product-validation outcome; no result is established by this draft. No specific installed invocation for the full specification/catalog checks or Edge acceptance is established here, so those concrete invocations and prerequisites remain unverified.
+
+### 14. Testing strategy and numeric budget
+
+Add a minimum of three distinct cases for this delta, one for each supplied Overview behavior: authorized assigned-task presentation and protected detail navigation; authorized unclaimed-task presentation with empty-result distinction; and denial without task-data disclosure. These cases supplement the immutable testing strategy and retained cases in `specs/household-tasks.md` (sections 14 and 16); they do not replace its existing coverage or establish that any test has run. Each case must use the authoritative household snapshot, verify exact counts and the existing bounded Tasks ordering where applicable, and cover keyboard and touch navigation. Exercise read failure separately from an empty group and verify that missing current Tasks read authority protects both task groups and their counts. Verify the specification satisfies the required format; check internal and cross-document consistency; and verify reciprocal catalog ownership, paths, and evidence agree with the generated view. The selected root `package.json` declares pnpm 10.34.0 and scripts including `test`, but does not declare the `validate:specifications` or `generate:specifications` invocations recommended in `specs/README.md`. The concrete publication-check invocation and prerequisites remain unverified; declarations are not execution, passing checks, or product acceptance.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Overview | 2 | Observable scenarios in the case inventory. |
+| Security and recovery | 1 | Observable scenarios in the case inventory. |
+| Total | 3 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| inventory1-C01 | Overview | SDD-I92-U1-R1 | With Tasks read authority, the current member sees only their Assigned, In progress, and Blocked tasks in Assigned to me, ordered by the existing bounded Tasks ordering; the displayed count matches the authoritative household snapshot, and selecting a task opens its protected detail in Tasks by keyboard or touch. |
+| inventory1-C02 | Overview | SDD-I92-U1-R1 | With Tasks read authority, Unclaimed contains only Available tasks with no assignees; its displayed count matches the authoritative household snapshot, and an empty group is distinguishable from a read failure. |
+| inventory1-C03 | Security and recovery | SDD-I92-U1-R1 | Without current Tasks read authority, neither task group nor its counts disclose protected task data, and the Overview distinguishes the read failure from an empty result. |
+
+### 15. Documentation and discoverability
+
+Update the existing household-task user guidance to explain that Overview summarizes the current member’s Assigned, In progress, and Blocked tasks and household Available tasks with no assignees. Explain exact snapshot counts, bounded ordering, the difference between an empty group and a read failure, and that selecting a task opens its protected detail in Tasks. Document that current Tasks read authority governs both groups and their counts, and that keyboard and touch input are supported. Keep this delta within the existing ownership and documentation structure in `specs/household-tasks.md`; the concrete user-document location and any additional path changes are not established by the supplied inventory. The inventory declares only the update to `specs/household-tasks.md`; it is an operation declaration, not evidence of changed files. Publication checks and their concrete invocation remain as described in section 14.
+
+| Path | Change |
+| --- | --- |
+| specs/household-tasks.md | update |
+
+[specs/household-tasks.md](household-tasks.md)
+
+### 16. Acceptance scenarios
+
+1. With current Tasks read authority, the current member sees only their Assigned, In progress, and Blocked tasks in “Assigned to me,” in the existing bounded Tasks ordering. Its count matches the authoritative household snapshot, and selecting a task opens its protected detail in Tasks by keyboard or touch. This is the observable assertion for `inventory1-C01`.
+2. With current Tasks read authority, “Unclaimed” contains only Available tasks with no assignees, and its count matches the authoritative household snapshot. An empty group is distinguishable from a read failure. This is the observable assertion for `inventory1-C02`.
+3. Without current Tasks read authority, neither task group nor its count discloses protected task data, and Overview distinguishes the read failure from an empty result. This is the observable assertion for `inventory1-C03`.
+
+These are the three supplied new case identities. Existing task and companion owner cases remain references under their immutable contracts; no new case identity is inferred for them.
+
+### 17. Requirements traceability
+
+`SDD-I92-U1-R1` requires Overview to show the current member’s Assigned, In progress, and Blocked tasks and the household’s Available tasks with no assignees; respect current Tasks read authority; show exact authoritative-snapshot counts using existing bounded Tasks ordering; distinguish empty results from read failures; and open protected task details in Tasks by keyboard and touch. `inventory1-C01` exercises assigned-task filtering, ordering, count, and protected keyboard/touch detail navigation. `inventory1-C02` exercises unclaimed-task filtering, count, and empty-versus-failure distinction. `inventory1-C03` exercises denial and non-disclosure for both groups and counts, including failure-versus-empty presentation. Existing behavior and cases remain owned by the immutable `specs/household-tasks.md` contract. Publication acceptance also requires required-format conformance, an internal and cross-document consistency check, and reciprocal catalog ownership, paths, and evidence agreeing with the generated view; the concrete invocation and prerequisites remain unverified in the selected source.
+
+| Requirement | Cases |
+|---|---|
+| SDD-I92-U1-R1 | inventory1-C01, inventory1-C02, inventory1-C03 |
+
+### 18. Implementation sequence
+
+1. Finalize the Overview query and presentation contract against the retained task state, authorization, bounded ordering, and protected detail behavior in `specs/household-tasks.md` and `specs/task-execution-foundation.md`.
+2. Implement the authoritative, permission-scoped summary so it returns the current member’s Assigned, In progress, and Blocked tasks and Available tasks with no assignees, preserving existing ordering and bounded limits.
+3. Add the Overview groups, exact snapshot counts, distinct empty and read-failure states, and protected Tasks detail navigation. Keep keyboard and touch interaction accessible and localized in English and Spanish.
+4. Add focused acceptance coverage for both groups, counts, ordering, selection, empty results, and denied or failed reads; include the Overview in supported compositions and architectures and use disposable test data for the installed Edge candidate.
+5. Update the owning contract and reciprocal catalog evidence with the verified paths and validation evidence before publication. The selected declarations establish pnpm 10.34.0 with Node `>=24.20.0 <25` and uv/Python `>=3.14,<3.15`; no task-specific verification invocation or prerequisite was verified here.
+
+### 19. Definition of Done
+
+- [ ] Overview shows only the current member’s Assigned, In progress, and Blocked tasks under “Assigned to me,” and only Available tasks with no assignees under “Unclaimed.” Both groups use the authoritative household snapshot, exact counts, and existing bounded Tasks ordering.
+- [ ] Current Tasks read authority protects both groups and their counts. A read failure is visibly distinct from a successful empty result, and failure or denied authority discloses no protected task data.
+- [ ] Selecting a task opens its protected detail in the Tasks workspace with keyboard and touch input. The groups and states remain accessible and localized in both supported locales and compositions.
+- [ ] The three supplied Overview cases are implemented with their concrete observable assertions; requirement `SDD-I92-U1-R1` maps to cases that exercise each specified behavior.
+- [ ] Required test, coverage, architecture, localization, and product-validation outcomes are satisfied. The concrete task-specific invocation and prerequisites remain unverified; no command declaration is execution or passing evidence.
+- [ ] The specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view.
+- [ ] No publication outcome is inferred from structural inventory counts or from a declared check alone.
+
+### 20. References and decisions
+
+- Issue: https://github.com/vypdev/domus/issues/92.
+- This is a bounded update to the immutable retained owner `specs/household-tasks.md`; its existing contract and cases remain in force. `specs/task-execution-foundation.md` supplies the existing task lifecycle, authorization, bounded query, and protected task-detail context. `specs/household-task-categories.md` remains unchanged.
+- The delta adds assigned and unclaimed task summaries to Overview while retaining the existing task states, read authority, ordering, and detail workspace. It adds no task mutations or changes to the task read schema.
+- Selected declarations identify pnpm 10.34.0 with Node `>=24.20.0 <25` and uv/Python `>=3.14,<3.15`. The concrete invocation and prerequisites for complete coverage, both locales, compositions, architectures, and installed Edge-candidate validation remain unverified.
+
+## Qualify bounded and scoped Overview task summaries
+
+- Status: Draft
+- Owners: Domus maintainers and Tasks
+- Scope: Additional qualification of the already published Overview task read
+- Open decisions blocking readiness: none
+
+### 1. Executive summary
+
+Record two focused acceptance cases for the Overview read. Verify the
+difference between a group total and a bounded preview, and prove that
+a delayed read cannot survive a household context change.
+
+### 2. Problem, current behavior, and evidence
+
+Issue 92's first published SDD defines both task groups and three cases.
+The implementation uses a fixed 25-item preview with exact counts and
+cancellable browser reads. It has distinct witnesses for large groups
+and delayed replies, beyond the original basic group and denial cases.
+
+### 3. Actors, surfaces, and terminology
+
+A current member reads Overview. A preview is the bounded set of task
+rows from the same authorized snapshot as the exact count. A context
+retirement invalidates every pending read bound to the old identity.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| overview-task-evidence-R01 | A group larger than the existing Tasks page bound keeps its exact authorized total, includes only its bounded ordered preview, and is unavailable if the transport returns an incomplete or inconsistent preview. |
+| overview-task-evidence-R02 | Replacing or retiring the verified Overview context clears its private result, cancels its owned read and discards a response delivered after retirement. |
+
+Preserve all three previously published cases and the existing user
+journey. These assertions qualify the authorized read already in issue 92.
+
+### 5. Current versus proposed product journey
+
+Observe exact counts on Overview even when the group exceeds one page.
+After leaving a verified context, only a current authorized response
+can fill the next Overview.
+
+### 6. Functional behavior and state model
+
+The read returns one exact total and at most 25 rows per group. The UI
+checks that each preview has the expected size and unique task IDs.
+Loading, unavailable and retired states carry no private rows or counts.
+
+### 7. User-facing configuration
+
+Use the current household membership, Tasks read permission, locale
+and existing page bound.
+
+### 8. Clean Architecture design
+
+Application owns the authorized snapshot and group meaning. SQLite reads
+counts and ordered bounded rows in the same transaction. The HTTP adapter
+validates the private response. The browser controller owns cancellation
+and does not use retired results.
+
+### 9. UI/UX and content contract
+
+Display the exact count beside the group title. A shortened preview
+points to the existing Tasks workspace. A failed or superseded read
+cannot populate the summary.
+
+### 10. Failure, recovery, and cleanup
+
+A malformed or incomplete result shows the existing unavailable state.
+Retry rechecks current authority. Retirement clears old facts while
+retaining the existing application navigation.
+
+### 11. Security, permissions, and privacy
+
+The transport uses the verified installation, channel and subject.
+The application resolves the current household member and permission.
+A late reply never authorizes disclosure in a new context.
+
+### 12. Observability and operational UX
+
+Record test evidence for count completeness and discarded late results.
+Use the existing sanitized read errors in the user interface.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+The read uses the existing SQLite schema 30. Verify the pinned Edge.12
+runtime and the same-head application and image checks.
+
+### 14. Testing strategy and numeric budget
+
+Minimum two distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Bounded snapshot | 1 | Observable scenarios in the case inventory. |
+| Context retirement | 1 | Observable scenarios in the case inventory. |
+| Total | 2 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| overview-task-evidence-C01 | Bounded snapshot | overview-task-evidence-R01 | Seed more than 25 matching rows in both groups. Verify exact totals and the ordered first 25. Pass an incomplete or duplicated preview to the transport decoder and verify the read fails. |
+| overview-task-evidence-C02 | Context retirement | overview-task-evidence-R02 | Delay a valid read while changing verified subject or retiring the view. Complete the old read after the change and verify that no old rows or counts appear. Resolve a current read and observe its own result. |
+
+### 15. Documentation and discoverability
+
+[specs/household-tasks.md](household-tasks.md) · [docs/evidence/overview-task-qualification.md](../docs/evidence/overview-task-qualification.md) · [tests/backend/test\_task\_overview.py](../tests/backend/test_task_overview.py) · [frontend/tests/task-overview.test.ts](../frontend/tests/task-overview.test.ts) · [frontend/tests/task-http.test.ts](../frontend/tests/task-http.test.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-tasks.md | update |
+| docs/evidence/overview-task-qualification.md | reference |
+| tests/backend/test_task_overview.py | reference |
+| frontend/tests/task-overview.test.ts | reference |
+| frontend/tests/task-http.test.ts | reference |
+
+### 16. Acceptance scenarios
+
+Run the bounded snapshot and context retirement witnesses. Keep the
+three original Overview cases under their published identifiers.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| overview-task-evidence-R01 | overview-task-evidence-C01 |
+| overview-task-evidence-R02 | overview-task-evidence-C02 |
+
+### 18. Implementation sequence
+
+Trace the existing backend, transport and controller checks to the two
+qualification cases and run the same-head application and image checks.
+
+### 19. Definition of Done
+
+Both new witnesses pass with the already published Overview contract,
+complete coverage and the exact installed Edge.12 candidate.
+
+### 20. References and decisions
+
+Issue 92 and its first verified publication own the Overview behavior.
+This revision adds explicit evidence for the page bound and delayed reads.

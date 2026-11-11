@@ -17,6 +17,13 @@ standalone. Use Tab and Enter or the browser's Back and Forward actions. Moving 
 sections keeps an unsent draft in the current page; reload verifies access again and does
 not restore an unsent administration draft.
 
+### Task summary on Overview
+
+**Assigned to me** shows your assigned, in-progress, and blocked tasks. **Unclaimed tasks**
+shows household work in the available state. Both groups show exact totals with up to 25
+items per group. Select a task to open its current details in Tasks. Use **Retry task summary**
+if the summary could not be loaded. Access follows your current Tasks read permission.
+
 ## Current task workspace
 
 The current source increment adds a real task workspace. Published Edge.7 remains administration-only until the next verified preview package is adopted; refreshing that older app does not install this source change.

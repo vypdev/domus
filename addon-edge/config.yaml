@@ -1,5 +1,5 @@
 name: Domus Edge
-version: "0.0.0-edge.11"
+version: "0.0.0-edge.12"
 slug: domus_edge
 description: Development preview of the local Domus household application
 url: https://github.com/vypdev/domus
