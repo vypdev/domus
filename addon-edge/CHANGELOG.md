@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.17
+
+- Preview a manual task proposal in Household settings in English and Spanish.
+- Explain whether an optional stock condition matches using current available stock.
+
 ## 0.0.0-edge.16
 
 - Show the effective date-only deadline in the task list and selected task detail.
