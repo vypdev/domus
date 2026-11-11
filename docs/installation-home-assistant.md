@@ -2,10 +2,10 @@
 
 ## Verified Edge preview
 
-The Domus development repository offers Edge `0.0.0-edge.21` through Supervisor.
-Use the durable repository source `https://github.com/vypdev/domus#develop` and check
-that Supervisor reports the intended version before installing. The artifact declaration
-pins the source commit, source archive and installed files. [Edge artifact](../addon-edge/artifact.json)
+Install Domus Edge through the durable Supervisor repository source
+`https://github.com/vypdev/domus#develop`. Before installing, match the version
+offered by Supervisor to the artifact declaration. It records the preview version,
+source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
 Edge.21 was installed in a disposable `aarch64` Supervisor app on 2026-11-11.
 The Ingress walkthrough verified the Overview stock summary and replenishment in
