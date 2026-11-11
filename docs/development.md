@@ -257,9 +257,11 @@ pnpm test:frontend-browser
 pnpm test:frontend-guards
 ```
 
-CI installs Chromium with its Linux dependencies using --with-deps. Local environments must provide
-Python 3 for the disposable static Storybook server. Loopback socket restrictions require permission
-for browser/component tests; these commands do not contact the owner's HA. Ports 56171 and 56172
+CI downloads the lockfile-pinned Chromium and uses the shared libraries on the GitHub-hosted Ubuntu
+runners. The browser suites launch Chromium in every job that installs it. On other Linux hosts,
+install the system dependencies required by Playwright before running the browser tests. Local
+environments also need Python 3 for the disposable static Storybook server. Browser and component
+tests use loopback fixtures and may require permission to open sockets. Ports 56171 and 56172
 are fixture-only, refuse existing listeners and are managed by Playwright. Run browser and guard
 commands sequentially, after both builds. The guards inject owned temporary negative fixtures and
 remove them in finally blocks. They also verify server cleanup after a deliberate browser-test failure.
