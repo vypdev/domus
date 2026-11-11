@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.22
+
+- Show completed tasks and posted earned points for the current Family week on Overview in English and Spanish.
+- Open Family from the summary to review pending work and the full report.
+
 ## 0.0.0-edge.21
 
 - Use singular units when reviewing an intake of exactly one item in English and Spanish.
