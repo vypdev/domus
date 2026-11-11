@@ -8618,13 +8618,17 @@
           },
           "unclaimed": {
             "$ref": "#/components/schemas/TaskOverviewGroup_TaskOverviewItem_"
+          },
+          "upcoming_maintenance": {
+            "$ref": "#/components/schemas/TaskOverviewGroup_TaskOverviewDeadlineItem_"
           }
         },
         "required": [
           "assigned",
           "unclaimed",
           "due_today",
-          "overdue"
+          "overdue",
+          "upcoming_maintenance"
         ],
         "title": "TaskOverview",
         "type": "object"

@@ -952,6 +952,44 @@ for (const mode of ['native', 'standalone'] as const) {
     await dueItem.tap();
     expect((await dueDetail).ok()).toBe(true);
     await expect(tasksRegion).toBeFocused();
+
+    const scheduled = await request.post(origin + '/__fixture__/calendar-review');
+    expect(scheduled.ok()).toBe(true);
+    const {title:maintenanceTitle, future:maintenanceId, new_date:maintenanceDay} = await scheduled.json();
+    const maintenanceURL = base + 'api/v1/tasks/occurrences/' + maintenanceId;
+    const label = (locale: 'en' | 'es', state: string) => {
+      const deadline = new Intl.DateTimeFormat(locale,
+        {dateStyle:'medium', timeStyle:'short', timeZone:'UTC'}).format(new Date(maintenanceDay + 'T07:00:00Z'));
+      return `${maintenanceTitle} · ${deadline} · ${state}`;
+    };
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await overview.press('Enter');
+    const scheduledEN = taskSummary.getByRole('heading',{name:/^Upcoming maintenance · [12]$/u});
+    await expect(scheduledEN).toBeVisible();
+    const groupEN = taskSummary.getByRole('article',{name:/^Upcoming maintenance ·/u});
+    await expect(groupEN).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await groupEN.screenshot({path:info.outputPath('upcoming-maintenance-en-wide.png')});
+    const keyboardDetail = page.waitForResponse(maintenanceURL);
+    await taskSummary.getByRole('button',{name:label('en','Available'),exact:true}).press('Enter');
+    expect((await keyboardDetail).ok()).toBe(true);
+    await expect(tasksRegion).toBeFocused();
+    await expect(tasksRegion.getByRole('heading',{name:maintenanceTitle,exact:true})).toBeVisible();
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    const groupES = resumen.getByRole('article',{name:/^Próximos mantenimientos ·/u});
+    await expect(groupES).toHaveCSS('background-color','rgb(24, 36, 47)');
+    await groupES.screenshot({path:info.outputPath('upcoming-maintenance-es-narrow.png')});
+    const touchDetail = page.waitForResponse(maintenanceURL);
+    await resumen.getByRole('button',{name:label('es','Disponible'),exact:true}).tap();
+    expect((await touchDetail).ok()).toBe(true);
+    await expect(tasksRegion).toBeFocused();
+    await expect(tasksRegion.getByRole('heading',{name:maintenanceTitle,exact:true})).toBeVisible();
+
     await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
     await unclaimedItem.tap();
     await expect(page).toHaveURL(base + '#tasks');
