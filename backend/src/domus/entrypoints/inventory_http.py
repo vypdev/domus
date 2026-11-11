@@ -15,6 +15,7 @@ from domus.application.inventory_queries import (
     PurchaseSessionDetail,
     PurchaseSessionsView,
     PurchasesView,
+    StockAttention,
 )
 from domus.application.shopping_list import ShoppingListView, ShoppingSourcesView
 from domus.domain.inventory import MAX_LOCATION_NAME, MAX_STOCK_REASON, BaseUnit
@@ -201,6 +202,10 @@ def create_inventory_router(
     @router.get("", response_model=InventoryView)
     def catalog(request: Request, query: Annotated[PageQuery, Query()]) -> InventoryView:
         return context(request).inventory().report(limit=query.limit, cursor=query.cursor)
+
+    @router.get("/stock-attention", response_model=StockAttention)
+    def stock_attention(request: Request, query: Annotated[_EmptyQuery, Query()]) -> StockAttention:
+        return context(request).inventory().stock_attention()
 
     @router.get("/products/{product_id}/movements", response_model=MovementHistory)
     def history(

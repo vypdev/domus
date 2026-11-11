@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
+  "scope": "Compiled household workspace with upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "82ec4efae0874d560a9c4afe2da6c164d4d7e6aa8c480f166f519cfdbe935ba3",
+    ".vite/manifest.json": "1789042c177af87e1166a5f5e0ed5d7e6b0d29a331d342cd3d419f0f198074ab",
+    "assets/index-7H7NHrFa.js": "35f935ed84a568e22be6a5b113404bb2cbfa05aa0ad6bc6efbfd82044033b8b7",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DbtJZoHT.js": "ea090772ec5c64266d040f5770850ca1a8b13d7264be47684fcc2d792cb02024",
-    "index.html": "e9a939f3060f7be87b377495e8eb1f1c6c53a001a87fd40bd95a42a65293f354"
+    "index.html": "095865b65ddbebe2c027a6910d70c67b5ae86b95f2404c8b539994bdce23ceb9"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

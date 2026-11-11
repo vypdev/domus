@@ -68,11 +68,11 @@ export class DomusTaskOverview extends LitElement {
     return html`<section aria-labelledby="overview-task-title">
       <h2 id="overview-task-title">${this.text('overviewHeading')}</h2>
       ${view.state === 'ready' ? html`<div class="groups">
-        ${this.group('overviewOverdue', view.overview.overdue)}
-        ${this.group('overviewDueToday', view.overview.dueToday)}
-        ${this.group('overviewMaintenance', view.overview.upcomingMaintenance)}
-        ${this.group('overviewAssigned', view.overview.assigned)}
-        ${this.group('overviewUnclaimed', view.overview.unclaimed)}
+        ${this.group('overviewOverdue', view.data.overdue)}
+        ${this.group('overviewDueToday', view.data.dueToday)}
+        ${this.group('overviewMaintenance', view.data.upcomingMaintenance)}
+        ${this.group('overviewAssigned', view.data.assigned)}
+        ${this.group('overviewUnclaimed', view.data.unclaimed)}
       </div>` : html`<vyp-ha-feedback .state=${view.state === 'loading'
         ? feedbackState({kind: 'loading', message: this.text('overviewLoading')})
         : feedbackState({kind: 'notice', tone: 'warning',

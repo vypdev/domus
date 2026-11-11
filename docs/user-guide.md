@@ -32,6 +32,16 @@ Each group shows an exact total and up to 25 items. Select a task to open
 its current details in Tasks. Use **Retry task summary** if the summary
 could not be loaded. Access follows your current Tasks read permission.
 
+### Stock summary on Overview
+
+**Products below minimum** shows products whose available stock falls below their configured
+replenishment minimum. Available stock accounts for quantities reserved for tasks. Purchased
+items count as stock after their physical receipts are posted to Inventory.
+
+The summary shows the exact product count and up to 25 products, with the available and minimum
+quantities in each product's base unit. Select **Open Inventory** to review stock and take any
+actions your role allows. Use **Retry inventory summary** if the summary could not be loaded.
+
 ## Current task workspace
 
 The current source increment adds a real task workspace. Published Edge.7 remains administration-only until the next verified preview package is adopted; refreshing that older app does not install this source change.

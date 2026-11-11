@@ -27,6 +27,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   data.textContent = JSON.stringify({version: 1, deployment, application_base: wire.endpoint.applicationBase, style_nonce: 'a'.repeat(32)});
   document.head.append(data); nodes.push(data);
   let phase = 'unconfigured', postRequests = 0, putRequests = 0;
+  let taskOverviewDenied = false;
   const originalAccess=JSON.parse(wire.active);
   let preferenceReceipt:Record<string,unknown>|null=null;
   let memberId:string=originalAccess.member.member_id, preferenceLocale:'en'|'es'|null=null, preferenceRevision=1, preferencesReadable=true;
@@ -35,7 +36,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let weekStart='monday', weekRevision=1, weekOriginal:object|null=null;
   const fetch = vi.fn(async (path: string, init: RequestInit) => {
     const route = path.slice(wire.endpoint.applicationBase.length + 'api/v1/'.length);
-    let raw: string;
+    let raw: string, status = 200;
     if (route === 'session') raw = phase === 'eligible' || phase === 'pending' ? wire.participantSession : wire.session;
     else if (route === 'authorization') raw = phase === 'active' ? JSON.stringify({...originalAccess,member:{...originalAccess.member,member_id:memberId},
       permissions:originalAccess.permissions.filter((permission:string)=>preferencesReadable||permission!=='preferences.read')})
@@ -69,13 +70,20 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='administration/capabilities') raw=JSON.stringify({state:'available',contract_version:2,household_id:'home',exact_revisions:'json-integer-int64',
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
-    else if (route === 'tasks/overview') raw = JSON.stringify({
-      assigned: {total: 1, items: [{occurrence_id: 'work-1', title: 'Wipe table', state: 'assigned'}]},
-      unclaimed: {total: 0, items: []},
-      due_today: {total: 0, items: []},
-      overdue: {total: 0, items: []},
-      upcoming_maintenance: {total: 0, items: []},
-    });
+    else if (route === 'tasks/overview') {
+      if (taskOverviewDenied) {
+        status = 403;
+        raw = JSON.stringify({state:'blocked',code:'permission_denied',message:'Denied.',
+          action_required:'Review your access.',correlation_id:'cor_test'});
+      } else raw = JSON.stringify({
+        assigned: {total: 1, items: [{occurrence_id: 'work-1', title: 'Wipe table', state: 'assigned'}]},
+        unclaimed: {total: 0, items: []},
+        due_today: {total: 0, items: []},
+        overdue: {total: 0, items: []},
+        upcoming_maintenance: {total: 0, items: []},
+      });
+    }
+    else if (route === 'inventory/stock-attention') raw = JSON.stringify({total:0,items:[]});
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
       can_manage_points:canManagePoints,can_record_for_others:canManagePoints});
     else if (route === 'family/allocation' || route.startsWith('family/allocation?')) raw = JSON.stringify({household:null,override:null});
@@ -145,7 +153,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='policy') raw=JSON.stringify({household_id:'home',revision:1,mapping:{mode:'all_ha_administrators',target_ha_user_id:null},adjustments:[]});
     else if (init.method === 'POST') {postRequests++; phase = route === 'household' ? 'active' : 'pending'; raw = route === 'household' ? wire.setup : wire.enrollment;}
     else raw = wire.household;
-    const response = new Response(raw, {headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
+    const response = new Response(raw, {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
     Object.defineProperty(response, 'url', {value: wire.endpoint.origin + path}); return response;
   });
   const events = new EventTarget();
@@ -158,6 +166,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   const open = async () => {const mounted = mountEntry(page); dispose.push(mounted.dispose); await mounted.ready;
     const app = root.querySelector<DomusApp>('domus-app')!; await app?.updateComplete; return {mounted, app};};
   return {root, data, page, open, values, navigation, fetch, events, postRequests: () => postRequests,
+    denyTaskOverview: () => {taskOverviewDenied = true;},
     putRequests:()=>putRequests,preferences:(locale:'en'|'es'|null,revision=1)=>{preferenceLocale=locale;preferenceRevision=revision;},
     member:(value:string)=>{memberId=value;},preferencesReadable:(value:boolean)=>{preferencesReadable=value;},
     phase: (value: string) => {phase = value;}};
@@ -756,4 +765,30 @@ test('Overview summary dispatches an authorized detail read through the Tasks wo
   app.dispatchEvent(event({type: 'select', occurrenceId: 'work-1'}));
   await vi.waitFor(() => expect(f.fetch.mock.calls.some(([path]) => path.endsWith('/tasks/occurrences/work-1'))).toBe(true));
   expect(f.navigation).toEqual(['#tasks']);
+});
+
+test('Overview stock is independently available and retires with the verified household context', async () => {
+  const f = fixture(); f.phase('active'); f.denyTaskOverview();
+  const {app} = await f.open();
+  await vi.waitFor(() => expect(app.taskOverview?.state).toBe('denied'));
+  await vi.waitFor(() => expect(app.stockAttention).toEqual({state:'ready', data:{total:0,items:[]}}));
+  const summary = app.shadowRoot!.querySelector('domus-stock-attention')!;
+  await summary.updateComplete;
+  expect(summary.view).toBe(app.stockAttention);
+  const readCount = () => f.fetch.mock.calls.filter(([path]) => path.endsWith('/inventory/stock-attention')).length;
+  const before = readCount();
+  const retry = () => new Event('domus-stock-attention-retry', {bubbles:true, composed:true});
+  const unrelated = document.createElement('div');
+  app.append(unrelated); unrelated.dispatchEvent(retry());
+  expect(readCount()).toBe(before);
+  summary.dispatchEvent(retry());
+  await vi.waitFor(() => expect(app.stockAttention?.state).toBe('ready'));
+  expect(readCount()).toBe(before + 1);
+
+  f.member('replacement');
+  administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(() => expect(readCount()).toBeGreaterThan(before + 1));
+  f.page.location.href += '#inventory';
+  f.events.dispatchEvent(new Event('hashchange'));
+  expect(app.stockAttention).toBeNull();
 });
