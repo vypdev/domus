@@ -17,7 +17,7 @@ import type {InventoryError, InventoryState} from '../application/inventory-cont
 import {BASE_UNITS, MAX_LOCATION_NAME, STOCK_REASON_LIMIT, adjustmentQuantity, intakeQuantity, locationName, policyQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, MovementHistory, ProductStock, ReplenishmentRevision, StockMovement, StockTotals, StorageLocation} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
-import {inventoryMessage} from './inventory-messages';
+import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
 import './domus-shopping';
 import type {ShoppingIntent} from './domus-shopping';
@@ -32,8 +32,6 @@ export type InventoryIntent = {readonly type: 'refresh' | 'more' | 'recover' | '
 const QUANTITY_ERRORS = new Set<InventoryError>([
   'inventory_stock_capacity', 'invalid_inventory_receipt', 'invalid_material_quantity', 'invalid_material_precision',
 ]);
-
-const SINGULAR_UNIT = {piece:'singularPiece', gram:'singularGram', millilitre:'singularMillilitre'} as const;
 
 const MOVEMENT_SAVED = {
   'inventory.intake': 'added',
@@ -188,7 +186,7 @@ export class DomusInventory extends LitElement {
   private text(key: InventoryMessage): string {return inventoryMessage(key, this.language);}
   private quantity(value: string): string {return this.language === 'es' ? value.replace('.', ',') : value;}
   private unitLabel(unit: BaseUnit, quantity: string): string {
-    return this.text(quantity === '1' || quantity === '-1' ? SINGULAR_UNIT[unit] : unit);
+    return this.text(inventoryUnitMessage(unit, quantity));
   }
   private intent(detail: InventoryIntent): void {
     this.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail, bubbles:true, composed:true}));

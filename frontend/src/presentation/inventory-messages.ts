@@ -1,4 +1,7 @@
+import type {BaseUnit} from '../domain/inventory';
 import type {Language} from './messages';
+
+const SINGULAR_UNIT = {piece:'singularPiece', gram:'singularGram', millilitre:'singularMillilitre'} as const;
 
 const EN = {
   title: 'Inventory', pantry: 'Pantry', empty: 'There are no registered products.', loading: 'Loading inventory.',
@@ -261,4 +264,8 @@ const ES: Record<keyof typeof EN, string> = {
 export type InventoryMessage = keyof typeof EN;
 export function inventoryMessage(key: InventoryMessage, language: Language): string {
   return language === 'es' ? ES[key] : EN[key];
+}
+
+export function inventoryUnitMessage(unit: BaseUnit, quantity: string): InventoryMessage {
+  return quantity === '1' || quantity === '-1' ? SINGULAR_UNIT[unit] : unit;
 }

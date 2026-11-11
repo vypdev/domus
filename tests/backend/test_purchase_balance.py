@@ -310,7 +310,7 @@ def test_v25_migration_and_activated_restore_of_cancelled_balances(tmp_path, mon
         for table, rows in existing.items():
             actual = db.execute("SELECT * FROM " + table).fetchall()
             expected = [(*row, 0) for row in rows] if table == "shopping_purchases" else rows
-            if table == "inventory_movements":
+            if table in ("inventory_movements", "shopping_sessions"):
                 expected = [(*row, None) for row in rows]
             assert actual == expected
     identity_at(root, installation)

@@ -10,7 +10,7 @@ import type {InventoryState} from '../application/inventory-controller';
 import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, intakeQuantity, purchaseStoreName} from '../domain/inventory';
 import type {BaseUnit, ExtraAttribution, InventoryCommand, SessionSelection, ShoppingItem, ShoppingSource} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
-import {inventoryMessage} from './inventory-messages';
+import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
 import {instant} from './messages';
 import type {Language} from './messages';
@@ -85,7 +85,7 @@ export class DomusShoppingList extends LitElement {
   private text(key: InventoryMessage): string {return inventoryMessage(key, this.language);}
 
   private amount(quantity: string, unit: BaseUnit): string {
-    return (this.language === 'es' ? quantity.replace('.', ',') : quantity) + ' ' + this.text(unit);
+    return (this.language === 'es' ? quantity.replace('.', ',') : quantity) + ' ' + this.text(inventoryUnitMessage(unit, quantity));
   }
 
   private intent(detail: ShoppingListIntent): void {

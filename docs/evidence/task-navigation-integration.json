@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with assigned and unclaimed task summaries, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "76f7700a8ade4eb7fa64f24683301d0ec439e96597c7f1b5ea3b8130550e4d4c",
+    ".vite/manifest.json": "94f828b7f3dae6040645b343c231c60243008b372039ab4424599acb21c2f009",
+    "assets/index-CFU3NqOv.js": "ffafe4c09de7ba84bcbcf0a6de3151017216a55e67cd9c4f8624a8574caecb80",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-bFlrIuPI.js": "3aa801ac5dffdbb155588b18a19e88f927755aaf2788401f2bac4343d8cc37e4",
-    "index.html": "341fd0d9c44b3e9aac5f90e7f99bba80b8a83a88b5c6e01a7f75989a4b32617e"
+    "index.html": "9be56f56432cc919ab4a090bbc8dee36f209f9c41d1be921bf66894f2dd15fee"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

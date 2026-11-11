@@ -1296,12 +1296,16 @@ test('a manager reviews exact session quantities, retains a rejected draft and o
   expect([...card.querySelectorAll('.session-store')].map(label => label.textContent))
     .toEqual(['Store · '+storeName,'Store · '+storeName]);
   expect(card.textContent).toContain('4.000001 millilitres');
+  expect([...card.querySelectorAll('dd')].map(cell => cell.textContent)).toContain('1 piece');
+  expect([...panel.querySelectorAll('dd')].map(cell => cell.textContent)).toContain('1 piece');
   press(card,'Show physical receipts');
   expect(command()).toEqual({type:'purchase-receipts',purchaseId:'purchase'});
   node.language='es';
   await assign({...open,purchaseSessions:history,purchaseSession:detail});
   expect(card.textContent).toContain('Artículos de la sesión');
   expect(card.textContent).toContain('Tienda · '+storeName);
+  expect([...card.querySelectorAll('dd')].map(cell => cell.textContent)).toContain('1 unidad');
+  expect([...panel.querySelectorAll('dd')].map(cell => cell.textContent)).toContain('1 unidad');
 
   const lots = {items:Array.from({length:17},(_,index) => ({...shoppingList.items[0],productId:'p'+index})),cursor:null};
   await assign({...open,shoppingList:lots});

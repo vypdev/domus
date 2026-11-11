@@ -699,7 +699,8 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.setViewportSize({width:320,height:720});
     const flourItem = session.getByRole('listitem').filter({hasText:'Session flour'});
     await expect(flourItem.locator('dd')).toHaveText(['2.000001 grams','0 grams','2.000001 grams','0 grams']);
-    await expect(session.getByText('Session lemons',{exact:true})).toBeVisible();
+    await expect(session.getByRole('listitem').filter({hasText:'Session lemons'}).locator('dd'))
+      .toHaveText(['1 piece','0 pieces','1 piece','0 pieces']);
     await flourItem.getByRole('button', {name:'Show physical receipts'}).click();
     const flourReceipts = shopping.getByRole('region', {name:'Physical receipts · Session flour'});
     await flourReceipts.getByRole('textbox', {name:'Quantity received'}).fill('1.5');
@@ -790,6 +791,8 @@ for (const mode of ['native', 'standalone'] as const) {
     const sessionEs = shopping.getByRole('region', {name:/^Artículos de la sesión · /u});
     const savedStore = sessionEs.getByText('Tienda · '+store,{exact:true});
     await expect(savedStore).toBeVisible();
+    await expect(sessionEs.getByRole('listitem').filter({hasText:'Session lemons'}).locator('dd'))
+      .toHaveText(['1 unidad','0 unidades','1 unidad','0 unidades']);
     await savedStore.screenshot({path:info.outputPath('purchase-session-store-es-narrow.png')});
     const flourEs = sessionEs.getByRole('listitem').filter({hasText:'Session flour'});
     await expect(flourEs.getByText('0,750001 gramos',{exact:true})).toBeVisible();
