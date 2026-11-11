@@ -51,7 +51,8 @@ implementation, verification and packaging gates. The Family increments now cove
 - M4: the shared automation engine, both editors and Domus-owned HA entities/services remain open. The existing gateway is already integrated; its MCP/business behavior is outside this work.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
   and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).
-  Upcoming maintenance and cross-domain summaries, full integrated acceptance and Stable release
+  [Upcoming maintenance](evidence/overview-maintenance-qualification.md) shows open scheduled
+  tasks for the next seven days. Cross-domain summaries, full integrated acceptance and Stable release
   acceptance remain open.
 
 ## Shared components, Domus-owned experience

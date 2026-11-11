@@ -1,5 +1,6 @@
 """Bounded local task reads and current action hints never mutate or establish write authority."""
 
+from bisect import insort
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import date, timedelta
@@ -59,6 +60,7 @@ from domus.domain.task_values import (
 from domus.domain.tasks import TaskCycle, TaskDefinition, TaskOccurrence
 
 OVERVIEW_LIMIT = 25
+OVERVIEW_MAINTENANCE_DAYS = 7
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,6 +143,7 @@ class TaskOverview:
     unclaimed: TaskOverviewGroup[TaskOverviewItem]
     due_today: TaskOverviewGroup[TaskOverviewDeadlineItem]
     overdue: TaskOverviewGroup[TaskOverviewDeadlineItem]
+    upcoming_maintenance: TaskOverviewGroup[TaskOverviewDeadlineItem]
 
 
 def _overview_group(group: TaskOccurrenceGroup) -> TaskOverviewGroup[TaskOverviewItem]:
@@ -174,31 +177,52 @@ def _due_date(unit: UnitOfWork, work: TaskOccurrence) -> date | None:
 def _overview_deadline_groups(
     unit: UnitOfWork, household_id: str, now: int, times: RecurrenceTimes
 ) -> tuple[
-    TaskOverviewGroup[TaskOverviewDeadlineItem], TaskOverviewGroup[TaskOverviewDeadlineItem]
+    TaskOverviewGroup[TaskOverviewDeadlineItem],
+    TaskOverviewGroup[TaskOverviewDeadlineItem],
+    TaskOverviewGroup[TaskOverviewDeadlineItem],
 ]:
     household = unit.households.get(household_id)
     assert household is not None
     policy = TimePolicy(household.time_zone, times.data_identity)
     today = times.local_at(now, policy).local.date()
     timed_before = calendar_boundary(today + timedelta(days=1), times, policy)
+    scheduled_before = calendar_boundary(
+        today + timedelta(days=OVERVIEW_MAINTENANCE_DAYS + 1), times, policy
+    )
     days = {policy: today}
     totals = {False: 0, True: 0}
     items: dict[bool, list[TaskOverviewDeadlineItem]] = {False: [], True: []}
-    for work in unit.tasks.deadline_occurrences(household_id, timed_before):
+    maintenance_total = 0
+    maintenance: list[tuple[date, str, TaskOverviewDeadlineItem]] = []
+    for work in unit.tasks.deadline_occurrences(household_id, timed_before, scheduled_before):
+        future_day: date | None = None
         if work.due_at is not None:
             overdue = work.due_at < now
             deadline = TaskOverviewDeadline(None, str(work.due_at), policy.zone)
+            if work.due_at >= timed_before:
+                future_day = times.local_at(work.due_at, policy).local.date()
         else:
             date_only = _date_only_deadline(unit, work)
             assert date_only is not None
             due_date, saved_policy = date_only
             if saved_policy not in days:
                 days[saved_policy] = times.local_at(now, saved_policy).local.date()
-            local_day = days[saved_policy]
-            if due_date > local_day:
+            days_until_due = (due_date - days[saved_policy]).days
+            if days_until_due > OVERVIEW_MAINTENANCE_DAYS:
                 continue
-            overdue = due_date < local_day
+            if days_until_due > 0:
+                future_day = due_date
+            overdue = days_until_due < 0
             deadline = TaskOverviewDeadline(due_date, None, saved_policy.zone)
+        if future_day is not None:
+            maintenance_total += 1
+            item = TaskOverviewDeadlineItem(
+                work.occurrence_id, work.definition_snapshot.content.title, work.state, deadline
+            )
+            insort(maintenance, (future_day, item.occurrence_id, item))
+            if len(maintenance) > OVERVIEW_LIMIT:
+                maintenance.pop()
+            continue
         totals[overdue] += 1
         if len(items[overdue]) < OVERVIEW_LIMIT:
             items[overdue].append(
@@ -209,6 +233,7 @@ def _overview_deadline_groups(
     return (
         TaskOverviewGroup(totals[False], tuple(items[False])),
         TaskOverviewGroup(totals[True], tuple(items[True])),
+        TaskOverviewGroup(maintenance_total, tuple(item for _, _, item in maintenance)),
     )
 
 
@@ -439,11 +464,15 @@ class TaskQueries:
             unclaimed = unit.tasks.occurrence_group(
                 self.household_id, (OccurrenceState.AVAILABLE,), None, limit=OVERVIEW_LIMIT
             )
-            due_today, overdue = _overview_deadline_groups(
+            due_today, overdue, upcoming_maintenance = _overview_deadline_groups(
                 unit, self.household_id, clock.now(), times
             )
             return TaskOverview(
-                _overview_group(assigned), _overview_group(unclaimed), due_today, overdue
+                _overview_group(assigned),
+                _overview_group(unclaimed),
+                due_today,
+                overdue,
+                upcoming_maintenance,
             )
 
     def occurrence(self, occurrence_id: str) -> TaskDetail:

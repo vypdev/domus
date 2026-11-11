@@ -78,13 +78,14 @@ export class HttpTaskServer implements TaskServer {
   overview(expected: JournalContext) {
     return this.network.owned<TaskOverview>(async signal => {
       const result = fields(await this.network.get('tasks/overview', expected, signal),
-        ['assigned', 'unclaimed', 'due_today', 'overdue'], []);
+        ['assigned', 'unclaimed', 'due_today', 'overdue', 'upcoming_maintenance'], []);
       const dueToday = overviewGroup(result.due_today, DEADLINE_STATES, true);
       const overdue = overviewGroup(result.overdue, DEADLINE_STATES, true);
-      const todayIds = new Set(dueToday.items.map(item => item.id));
-      check(overdue.items.every(item => !todayIds.has(item.id)));
+      const upcomingMaintenance = overviewGroup(result.upcoming_maintenance, DEADLINE_STATES, true);
+      const deadlineItems = [...dueToday.items, ...overdue.items, ...upcomingMaintenance.items];
+      check(new Set(deadlineItems.map(item => item.id)).size === deadlineItems.length);
       return {assigned: overviewGroup(result.assigned, ASSIGNED_STATES),
-        unclaimed: overviewGroup(result.unclaimed, ['available']), dueToday, overdue};
+        unclaimed: overviewGroup(result.unclaimed, ['available']), dueToday, overdue, upcomingMaintenance};
     });
   }
   list(expected: JournalContext, cursor: string | null) {

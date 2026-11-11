@@ -442,34 +442,37 @@ class SQLiteTasks(TaskRepository):
         return TaskOccurrenceGroup(total, tuple(self._occurrence_rows(rows)))
 
     def deadline_occurrences(
-        self, household_id: str, timed_before: int
+        self, household_id: str, timed_before: int, scheduled_before: int
     ) -> Iterator[TaskOccurrence]:
         validate_identifier(household_id)
         rows = self.connection.execute(
             """
-            SELECT work.* FROM task_occurrences AS work
-            WHERE work.household_id = ?
-              AND work.state IN ('available', 'assigned', 'in_progress', 'blocked')
-              AND (
-                json_extract(work.document, '$.due_at') < ?
-                OR (json_extract(work.document, '$.due_at') IS NULL AND (
+            WITH open_work AS (
+                SELECT *, json_extract(document, '$.due_at') AS due_at
+                FROM task_occurrences
+                WHERE household_id = ?
+                  AND state IN ('available', 'assigned', 'in_progress', 'blocked')
+            )
+            SELECT work.* FROM open_work AS work
+            WHERE work.due_at < ?
+               OR ((work.due_at IS NULL OR work.due_at < ?) AND (
                   EXISTS (
                     SELECT 1 FROM recurrence_slots AS fixed
                     WHERE fixed.household_id = work.household_id
                       AND fixed.occurrence_id = work.occurrence_id
-                      AND fixed.nominal_kind = 'date'
+                      AND (work.due_at IS NOT NULL OR fixed.nominal_kind = 'date')
                   )
                   OR EXISTS (
                     SELECT 1 FROM recurrence_relative_slots AS relative
                     WHERE relative.household_id = work.household_id
                       AND relative.occurrence_id = work.occurrence_id
-                      AND json_extract(relative.document, '$.planned.nominal.kind') = 'date'
+                      AND (work.due_at IS NOT NULL
+                           OR json_extract(relative.document, '$.planned.nominal.kind') = 'date')
                   )
-                ))
-              )
+               ))
             ORDER BY work.occurrence_id
             """,
-            (household_id, timed_before),
+            (household_id, timed_before, scheduled_before),
         )
         return self._occurrence_rows(rows)
 

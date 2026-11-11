@@ -834,3 +834,159 @@ The roadmap's Overview section and application-experience-R2 require
 current actionable summaries. The recurrence guide's overdue fixed slot
 rules and the existing Calendar projection define effective deadlines and
 preserve date-only precision.
+
+## Show upcoming scheduled maintenance on Overview
+
+- Status: Draft
+- Owners: Domus maintainers and Tasks
+- Scope: Protected read-only preview of open recurring work due during the next seven days
+- Open decisions blocking readiness: none for the existing task and recurrence rules
+
+### 1. Executive summary
+
+A household member opens Overview to find the maintenance already scheduled
+for the next seven days. Each item opens its existing Tasks detail.
+
+### 2. Problem, current behavior, and evidence
+
+Overview shows assigned, unclaimed, due today and overdue tasks. The roadmap
+also calls for upcoming maintenance. Calendar and Tasks already display
+effective deadlines for materialized fixed and relative recurrence.
+
+### 3. Actors, surfaces, and terminology
+
+A verified household member with current Tasks read access sees the group.
+A maintenance item is a materialized task occurrence linked to a fixed or
+relative recurrence slot. Timed items use the household's local calendar day.
+Date-only items use their effective date and saved scheduling time zone.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| overview-maintenance-R01 | Show open materialized fixed and relative task occurrences due from tomorrow through the seventh upcoming local day, using one observation instant and their effective deadlines. Exclude ad hoc work, closed work and today's work. |
+| overview-maintenance-R02 | Require current Tasks read access and one household snapshot. Return an exact count and at most 25 items ordered by effective date and stable occurrence identity. |
+| overview-maintenance-R03 | Show a localized Upcoming maintenance group with the task, effective date or time, state and existing detail action. Provide accurate empty and retry states and retire results when the verified context changes. |
+| overview-maintenance-R04 | Preserve stored task and recurrence data. Verify both deployment compositions, image architectures and the installed Edge candidate. |
+
+The preview reads current materialized work. Recurrence generation and
+editing continue through the existing Calendar and Tasks flows.
+
+### 5. Current versus proposed product journey
+
+Open Overview to see upcoming maintenance after the deadline groups. Select
+an item to review the existing task detail and its current permitted actions.
+
+### 6. Functional behavior and state model
+
+Use Available, Assigned, In progress and Blocked occurrences. Use the
+household time zone for timed deadlines and the saved scheduling time zone
+for date-only deadlines. Apply reviewed moves through effective-deadline
+rules. Include the last day of the seven-day window and keep a bounded
+preview even when more rows qualify. A successful empty result has zero
+matching items. An incomplete result is unavailable.
+
+### 7. User-facing configuration
+
+Use the existing household time zone, recurrence policy and member locale.
+
+### 8. Clean Architecture design
+
+Extend the existing protected Tasks overview projection. Storage streams
+household-scoped open scheduled candidates. Application evaluates effective
+deadlines from one snapshot and bounds the selected rows. Presentation
+reuses the current Overview cards and Tasks detail selection.
+
+### 9. UI/UX and content contract
+
+Label the group Upcoming maintenance and Próximos mantenimientos. Keep each
+deadline's precision and show the count and direct detail action. Keep the
+existing retry and keyboard focus behavior.
+
+### 10. Failure, recovery, and cleanup
+
+Reject malformed or incomplete groups. Retire stale reads when the context
+changes. Offer a retry after an unavailable read. Remove disposable data
+after installed acceptance.
+
+### 11. Security, permissions, and privacy
+
+Check current Tasks read authority before returning rows or counts. Use the
+verified household scope in the same read transaction.
+
+### 12. Observability and operational UX
+
+Use current protected read diagnostics and the shared Overview recovery.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Read current task and recurrence records with the existing schema. Verify
+both compositions and image architectures before installed acceptance.
+
+### 14. Testing strategy and numeric budget
+
+Minimum six distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Timing and selection | 1 | Observable scenarios in the case inventory. |
+| Date-only recurrence | 1 | Observable scenarios in the case inventory. |
+| Protected bounded snapshot | 1 | Observable scenarios in the case inventory. |
+| Recovery | 1 | Observable scenarios in the case inventory. |
+| Accessible navigation | 1 | Observable scenarios in the case inventory. |
+| Installed qualification | 1 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| overview-maintenance-C01 | Timing and selection | overview-maintenance-R01 | Include tomorrow and the seventh day for timed scheduled tasks across a local clock change. Exclude today's work, later work, closed work and ad hoc tasks. |
+| overview-maintenance-C02 | Date-only recurrence | overview-maintenance-R01 | Include effective dates for fixed and relative slots in their saved zones, including a reviewed move into or out of the seven-day window. |
+| overview-maintenance-C03 | Protected bounded snapshot | overview-maintenance-R02 | Verify deterministic earliest rows and an exact total above 25. Deny both rows and counts after Tasks access is revoked in either composition. |
+| overview-maintenance-C04 | Recovery | overview-maintenance-R02, overview-maintenance-R03 | Reject incomplete and malformed groups, show successful zero results, retry a failed read and discard obsolete responses on context change. |
+| overview-maintenance-C05 | Accessible navigation | overview-maintenance-R03 | Open a listed task and focus its detail using English desktop keyboard and Spanish narrow touch in both compositions. |
+| overview-maintenance-C06 | Installed qualification | overview-maintenance-R04 | Verify both image architectures and the exact installed Edge candidate with disposable maintenance data, then remove the test data. |
+
+### 15. Documentation and discoverability
+
+[specs/household-tasks.md](household-tasks.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [backend/src/domus/application/task\_queries.py](../backend/src/domus/application/task_queries.py) · [backend/src/domus/infrastructure/sqlite\_tasks.py](../backend/src/domus/infrastructure/sqlite_tasks.py) · [frontend/src/presentation/domus-task-overview.ts](../frontend/src/presentation/domus-task-overview.ts) · [frontend/src/adapters/task-http.ts](../frontend/src/adapters/task-http.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-tasks.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| backend/src/domus/application/task_queries.py | update |
+| backend/src/domus/infrastructure/sqlite_tasks.py | update |
+| frontend/src/presentation/domus-task-overview.ts | update |
+| frontend/src/adapters/task-http.ts | update |
+
+### 16. Acceptance scenarios
+
+Find a scheduled household task due in the next seven days and open its
+existing detail. Verify date-only and timed deadlines, scope and retry.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| overview-maintenance-R01 | overview-maintenance-C01, overview-maintenance-C02 |
+| overview-maintenance-R02 | overview-maintenance-C03, overview-maintenance-C04 |
+| overview-maintenance-R03 | overview-maintenance-C04, overview-maintenance-C05 |
+| overview-maintenance-R04 | overview-maintenance-C06 |
+
+### 18. Implementation sequence
+
+Extend the authorized task projection, validate the wire group and show its
+localized rows. Qualify the complete cases and installed Edge candidate.
+
+### 19. Definition of Done
+
+Verify six cases, complete coverage, exact-head CI in both architectures
+and installed Edge evidence with scoped cleanup.
+
+### 20. References and decisions
+
+The roadmap's Overview section asks for upcoming maintenance.
+Application-experience-R2 defines the overview and current authorized
+navigation. The recurrence specification defines materialized work and
+existing effective deadlines.

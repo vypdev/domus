@@ -11,7 +11,9 @@ const overview: TaskOverview = {assigned: {total: 2, items: [{id: 'work-1', titl
   overdue: {total: 1, items: [{id: 'late', title: 'Change filter', state: 'blocked',
     deadline: {day: '2026-04-02', instant: null, zone: 'Europe/Madrid'}}]},
   dueToday: {total: 1, items: [{id: 'due', title: 'Check meter', state: 'available',
-    deadline: {day: null, instant: Date.parse('2026-04-02T07:00:00Z'), zone: 'Europe/Madrid'}}]}};
+    deadline: {day: null, instant: Date.parse('2026-04-02T07:00:00Z'), zone: 'Europe/Madrid'}}]},
+  upcomingMaintenance: {total: 1, items: [{id: 'maintenance', title: 'Drain the tank', state: 'assigned',
+    deadline: {day: '2026-04-05', instant: null, zone: 'Europe/Madrid'}}]}};
 
 function deferred() {
   let resolve!: (value: TaskOverview) => void;
@@ -107,7 +109,7 @@ test('Overview shows localized states and emits only task selection or retry', a
   element.view = {state: 'ready', overview};
   await element.updateComplete;
   expect(Array.from(element.shadowRoot!.querySelectorAll('vyp-ha-card'), card => card.state.title))
-    .toEqual(['Overdue · 1', 'Due today · 1', 'Assigned to me · 2', 'Unclaimed tasks · 0']);
+    .toEqual(['Overdue · 1', 'Due today · 1', 'Upcoming maintenance · 1', 'Assigned to me · 2', 'Unclaimed tasks · 0']);
   expect(element.shadowRoot!.textContent).toContain('No tasks in this group.');
   expect(element.shadowRoot!.textContent).toContain('Open Tasks for the full list.');
   expect((await press('Fold')).state.label).toBe('Fold <b>laundry</b> · Assigned');
@@ -115,9 +117,11 @@ test('Overview shows localized states and emits only task selection or retry', a
   expect((await press('Change filter')).state.label).toBe('Change filter · Apr 2, 2026 · Blocked');
   expect(intent.mock.calls.at(-1)![0].detail).toEqual({type: 'select', occurrenceId: 'late'});
   expect((await press('Check meter')).state.label).toMatch(/Apr 2, 2026.*9:00 AM/u);
+  expect((await press('Drain the tank')).state.label).toBe('Drain the tank · Apr 5, 2026 · Assigned');
+  expect(intent.mock.calls.at(-1)![0].detail).toEqual({type: 'select', occurrenceId: 'maintenance'});
   element.language = 'es';
   await element.updateComplete;
   expect(Array.from(element.shadowRoot!.querySelectorAll('vyp-ha-card'), card => card.state.title))
-    .toEqual(['Vencidas · 1', 'Para hoy · 1', 'Asignadas a mí · 2', 'Tareas sin asignar · 0']);
+    .toEqual(['Vencidas · 1', 'Para hoy · 1', 'Próximos mantenimientos · 1', 'Asignadas a mí · 2', 'Tareas sin asignar · 0']);
   expect((await press('Check meter')).state.label).toMatch(/2 abr 2026.*9:00/u);
 });

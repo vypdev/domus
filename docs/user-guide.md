@@ -23,6 +23,8 @@ not restore an unsent administration draft.
 due on the current local day whose deadlines are still ahead or due now.
 Timed deadlines use the household time zone. Date-only recurring deadlines
 use their saved scheduling time zone and stay due through that day.
+**Upcoming maintenance** shows open scheduled tasks from tomorrow through
+the seventh upcoming local day, in date order.
 **Assigned to me** shows your assigned, in-progress, and blocked tasks.
 **Unclaimed tasks** shows household work in the available state.
 

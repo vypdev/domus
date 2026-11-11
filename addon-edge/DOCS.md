@@ -1,9 +1,9 @@
 # Installation and operation
 
-Edge 0.0.0-edge.16 packages the immutable runtime declared in
-[artifact.json](artifact.json). Overview shows open tasks due today and
-overdue using their effective deadlines. Date-only deadlines stay visible
-in the owning task list and detail. This preview migrates
+Edge 0.0.0-edge.19 packages the immutable runtime declared in
+[artifact.json](artifact.json). Overview lists open scheduled maintenance
+from tomorrow through the seventh upcoming local day. Items open their
+existing Tasks detail and retain their effective deadlines. This preview migrates
 supported databases to SQLite schema 31. Edge.13 introduced that schema and
 is listed in `breaking_versions`. Keep a compatible image and stopped-app
 backup before upgrading from an earlier schema. A binary that expects the

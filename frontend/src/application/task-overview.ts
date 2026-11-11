@@ -24,6 +24,7 @@ export interface TaskOverview {
   readonly unclaimed: TaskOverviewGroup;
   readonly dueToday: TaskOverviewGroup;
   readonly overdue: TaskOverviewGroup;
+  readonly upcomingMaintenance: TaskOverviewGroup;
 }
 
 export type TaskOverviewView = Readonly<{state: 'loading' | 'denied' | 'unavailable'}>

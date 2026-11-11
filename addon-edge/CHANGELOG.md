@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.19
+
+- Show open scheduled maintenance for the next seven days on Overview in English and Spanish.
+- Keep the effective deadline and open the existing Tasks detail from each item.
+
 ## 0.0.0-edge.16
 
 - Show the effective date-only deadline in the task list and selected task detail.

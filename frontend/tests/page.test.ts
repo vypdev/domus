@@ -74,6 +74,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       unclaimed: {total: 0, items: []},
       due_today: {total: 0, items: []},
       overdue: {total: 0, items: []},
+      upcoming_maintenance: {total: 0, items: []},
     });
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
       can_manage_points:canManagePoints,can_record_for_others:canManagePoints});
