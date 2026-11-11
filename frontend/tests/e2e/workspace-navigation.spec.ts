@@ -809,7 +809,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(locationDetail.getByRole('alert')).toContainText('available stock');
     const amount = locationDetail.getByRole('textbox',{name:'Quantity to move'});
     await expect(amount).toHaveValue('2');
-    await amount.fill('0.5');
+    await amount.fill('0.25');
     await locationDetail.getByRole('button',{name:'Review transfer'}).press('Enter');
     await expect(locationDetail.getByRole('status')).toContainText('Pantry → Dry shelf');
     await locationDetail.getByRole('button',{name:'Confirm transfer'}).press('Enter');
@@ -818,18 +818,22 @@ for (const mode of ['native', 'standalone'] as const) {
     const total = locationDetail.locator('.location-stock').filter({hasText:'Household total'});
     await expect(total.locator('dd')).toHaveText(['1.25 grams','0 grams','1.25 grams']);
     await expect(locationDetail.locator('.location-stock').filter({hasText:'Dry shelf'}).locator('dd'))
-      .toHaveText(['0.5 grams','0 grams','0.5 grams']);
+      .toHaveText(['0.25 grams','0 grams','0.25 grams']);
+    await expect(locationDetail.locator('.location-stock').filter({hasText:'Pantry'}).locator('dd'))
+      .toHaveText(['1 gram','0 grams','1 gram']);
     await locationDetail.screenshot({path:info.outputPath('stock-transfer-en-wide.png')});
 
     await page.getByLabel('Language',{exact:true}).selectOption('es');
     await page.setViewportSize({width:320,height:720});
     const locationDetailEs = stock.getByRole('region',{name:'Historial de movimientos · Session flour'});
+    await expect(locationDetailEs.locator('.location-stock').filter({hasText:'Despensa'}).locator('dd'))
+      .toHaveText(['1 gramo','0 gramos','1 gramo']);
     await locationDetailEs.getByRole('button',{name:'Trasladar stock'}).tap();
     await locationDetailEs.getByRole('combobox',{name:'Ubicación de origen'}).tap();
     await locationDetailEs.getByRole('option',{name:'Dry shelf',exact:true}).tap();
     await locationDetailEs.getByRole('combobox',{name:'Ubicación de destino'}).tap();
     await locationDetailEs.getByRole('option',{name:'Despensa',exact:true}).tap();
-    await locationDetailEs.getByRole('textbox',{name:'Cantidad que se trasladará'}).fill('0,5');
+    await locationDetailEs.getByRole('textbox',{name:'Cantidad que se trasladará'}).fill('0,25');
     await locationDetailEs.getByRole('button',{name:'Revisar traslado'}).tap();
     await expect(locationDetailEs.getByRole('status')).toContainText('Dry shelf → Despensa');
     await locationDetailEs.getByRole('button',{name:'Confirmar traslado'}).tap();

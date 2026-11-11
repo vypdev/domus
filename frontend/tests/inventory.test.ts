@@ -1829,6 +1829,7 @@ test('the shared location and transfer controls retain drafts through rejection 
   await node.updateComplete;
   submit(form);
   await node.updateComplete;
+  expect(form.textContent).toMatch(/1\.25\s+millilitres/u);
   expect(form.textContent).toMatch(/Pantry\s+→\s+Cupboard/u);
   submit(form);
   expect(events.mock.lastCall?.[0].detail).toEqual({type:'submit',command:moveStock});
@@ -1856,6 +1857,7 @@ test('the shared location and transfer controls retain drafts through rejection 
   await node.updateComplete;
   submit(form);
   await node.updateComplete;
+  expect(form.textContent).toMatch(/1\s+piece/u);
   expect(form.textContent).toMatch(/Cupboard\s+→\s+Pantry/u);
   press('Cancel');
   await node.updateComplete;
@@ -1870,13 +1872,15 @@ test('the shared location and transfer controls retain drafts through rejection 
   const movement = history.movements[0];
   node.language = 'es';
   node.view = {...node.view,history:{...stockHistory,movements:[
-    {...movement,id:'withdrawal',kind:'transfer',quantity:'-1.25',transfer:linked},
-    {...movement,id:'deposit',kind:'transfer',quantity:'1.25',transfer:linked},
+    {...movement,id:'withdrawal',kind:'transfer',quantity:'-1',transfer:linked},
+    {...movement,id:'deposit',kind:'transfer',quantity:'1',transfer:linked},
   ]},result:{kind:'committed',operationId:'move',productId:'product',
-    movement:{movementId:'withdrawal',quantity:'1.25',unit:'millilitre',action:'inventory.transfer'}}};
+    movement:{movementId:'withdrawal',quantity:'1',unit:'millilitre',action:'inventory.transfer'}}};
   await node.updateComplete;
   expect(root.querySelector('.transfer-form')).toBeNull();
-  expect(root.textContent).toContain('Se trasladó el stock.');
+  expect(root.textContent).toMatch(/Se trasladó el stock.\s+1 mililitro/u);
+  expect(root.textContent).toContain('+1 mililitro');
+  expect(root.textContent).toContain('-1 mililitro');
   expect(root.textContent).toContain('Total del hogar');
   expect(root.textContent).toContain('Despensa → Cupboard');
   expect(root.textContent).toContain('Otro movimiento del traslado');

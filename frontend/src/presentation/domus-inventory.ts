@@ -33,6 +33,8 @@ const QUANTITY_ERRORS = new Set<InventoryError>([
   'inventory_stock_capacity', 'invalid_inventory_receipt', 'invalid_material_quantity', 'invalid_material_precision',
 ]);
 
+const SINGULAR_UNIT = {piece:'singularPiece', gram:'singularGram', millilitre:'singularMillilitre'} as const;
+
 const MOVEMENT_SAVED = {
   'inventory.intake': 'added',
   'inventory.adjust': 'adjusted',
@@ -58,7 +60,7 @@ interface TransferDraft {
   readonly source: string | null;
   readonly destination: string | null;
   readonly amount: string;
-  readonly reviewed: boolean;
+  readonly reviewedAmount: string | null;
   readonly error: 'selectLocation' | 'invalidQuantity' | 'insufficientTransfer' | null;
 }
 
@@ -132,7 +134,7 @@ export class DomusInventory extends LitElement {
     this.reason = '';
     this.adjustment = '';
     this.policyEditor = null;
-    this.locationDraft = "";
+    this.locationDraft = '';
     this.locationInvalid = false;
     this.transferDraft = null;
   }
@@ -146,7 +148,7 @@ export class DomusInventory extends LitElement {
       this.select(null);
       this.editor = null;
       this.policyEditor = null;
-      this.locationDraft = "";
+      this.locationDraft = '';
       this.locationInvalid = false;
       this.transferDraft = null;
     }
@@ -185,6 +187,9 @@ export class DomusInventory extends LitElement {
 
   private text(key: InventoryMessage): string {return inventoryMessage(key, this.language);}
   private quantity(value: string): string {return this.language === 'es' ? value.replace('.', ',') : value;}
+  private unitLabel(unit: BaseUnit, quantity: string): string {
+    return this.text(quantity === '1' || quantity === '-1' ? SINGULAR_UNIT[unit] : unit);
+  }
   private intent(detail: InventoryIntent): void {
     this.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail, bubbles:true, composed:true}));
   }
@@ -340,13 +345,13 @@ export class DomusInventory extends LitElement {
 
   private beginTransfer(productId: string): void {
     if (this.transferDraft?.productId !== productId)
-      this.transferDraft = {productId, source:'pantry', destination:null, amount:'', reviewed:false, error:null};
+      this.transferDraft = {productId, source:'pantry', destination:null, amount:'', reviewedAmount:null, error:null};
     if (this.view?.history?.productId !== productId) this.intent({type:'history', productId});
     else void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.history')?.focus());
   }
 
   private changeTransfer(draft: TransferDraft, patch: Partial<TransferDraft>): void {
-    this.transferDraft = {...draft, ...patch, reviewed:false, error:null};
+    this.transferDraft = {...draft, ...patch, reviewedAmount:null, error:null};
   }
 
   private transferForm(history: MovementHistory, draft: TransferDraft, blocked: boolean) {
@@ -360,10 +365,13 @@ export class DomusInventory extends LitElement {
       const quantity = intakeQuantity(draft.amount, history.unit);
       if (quantity === null) {this.transferDraft = {...draft, error:'invalidQuantity'}; return;}
       if (stockUnits(quantity) > stockUnits(origin.stock.available)) {
-        this.transferDraft = {...draft, error:'insufficientTransfer', reviewed:false};
+        this.transferDraft = {...draft, error:'insufficientTransfer', reviewedAmount:null};
         return;
       }
-      if (!draft.reviewed) {this.transferDraft = {...draft, reviewed:true, error:null}; return;}
+      if (draft.reviewedAmount !== quantity) {
+        this.transferDraft = {...draft, reviewedAmount:quantity, error:null};
+        return;
+      }
       this.intent({type:'submit', command:{action:'inventory.transfer', product_id:history.productId,
         source_location:origin.id, destination_location:destination.id, quantity}});
     }}>
@@ -380,15 +388,17 @@ export class DomusInventory extends LitElement {
           options:options.map(item => ({...item, disabled:item.value === draft.source}))})}
         @ha-select-request=${(event: SelectValueEvent) =>
           this.changeTransfer(draft, {destination:event.detail.value as string | null})}></vyp-ha-select>
-      ${origin ? html`<p>${this.text('available')} · ${this.quantity(origin.stock.available)} ${this.text(history.unit)}</p>` : nothing}
+      ${origin ? html`<p>${this.text('available')} · ${this.quantity(origin.stock.available)} ${this.unitLabel(history.unit, origin.stock.available)}</p>` : nothing}
       <vyp-ha-field .value=${draft.amount} ?disabled=${blocked}
         .state=${textFieldState({label:this.text('transferQuantity'), required:true, maxLength:19,
           description:this.text(history.unit === 'piece' ? 'wholeTransfer' : 'decimalTransfer')})}
         @ha-value-request=${(event: FieldValueEvent) => this.changeTransfer(draft, {amount:event.detail.value})}></vyp-ha-field>
       ${draft.error ? this.error('transfer-error', draft.error) : nothing}
-      ${draft.reviewed && origin && destination ? html`<p role="status">${history.productName} · ${draft.amount}
-        ${this.text(history.unit)} · ${origin.name ?? this.text('pantry')} → ${destination.name ?? this.text('pantry')}</p>` : nothing}
-      <div class="actions">${this.submitButton(draft.reviewed ? 'confirmTransfer' : 'reviewTransfer', blocked)}
+      ${draft.reviewedAmount !== null && origin && destination ? html`<p role="status">
+        ${history.productName} · ${this.quantity(draft.reviewedAmount)}
+        ${this.unitLabel(history.unit, draft.reviewedAmount)} ·
+        ${origin.name ?? this.text('pantry')} → ${destination.name ?? this.text('pantry')}</p>` : nothing}
+      <div class="actions">${this.submitButton(draft.reviewedAmount !== null ? 'confirmTransfer' : 'reviewTransfer', blocked)}
         ${this.button('cancel', () => {
           this.transferDraft = null;
           void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.history')?.focus());
@@ -399,7 +409,7 @@ export class DomusInventory extends LitElement {
   private balances(history: MovementHistory) {
     const stock = (name: string, totals: StockTotals) => html`<div class="location-stock">
       <h5>${name}</h5><dl>${(['recorded','reserved','available'] as const).map(key => html`
-        <dt>${this.text(key)}</dt><dd>${this.quantity(totals[key])} ${this.text(history.unit)}</dd>`)}</dl>
+        <dt>${this.text(key)}</dt><dd>${this.quantity(totals[key])} ${this.unitLabel(history.unit, totals[key])}</dd>`)}</dl>
     </div>`;
     return html`<h4>${this.text('stockByLocation')}</h4>
       <div class="location-balances">
@@ -412,7 +422,7 @@ export class DomusInventory extends LitElement {
     const linked = entry.transfer;
     const name = (id: string) => history.locations.find(item => item.id === id)?.name ?? this.text('pantry');
     return html`<li>
-      <p><strong>${this.signed(entry.quantity)} ${this.text(history.unit)}</strong> · ${this.text(entry.returnOf !== null ? 'returnMovement' : entry.kind === 'intake' ? 'intakeMovement' : entry.kind)}</p>
+      <p><strong>${this.signed(entry.quantity)} ${this.unitLabel(history.unit, entry.quantity)}</strong> · ${this.text(entry.returnOf !== null ? 'returnMovement' : entry.kind === 'intake' ? 'intakeMovement' : entry.kind)}</p>
       ${linked === null ? nothing : html`<p>${name(linked.source)} → ${name(linked.destination)}</p>`}
       <dl>
         <dt>${this.text('author')}</dt><dd>${entry.authorAlias ?? entry.memberId}</dd>
@@ -538,7 +548,7 @@ export class DomusInventory extends LitElement {
       ${saved === null ? nothing : html`<p role="status">${this.text(saved.kind === 'historical'
         ? 'historical' : movement ? MOVEMENT_SAVED[movement.action] : saved.shoppingAction
           ? SHOPPING_SAVED[saved.shoppingAction] : saved.replenishmentSaved ? 'replenishmentSaved' : saved.locationSaved ? 'locationSaved' : 'registered')}
-        ${movement ? html`${this.quantity(movement.quantity)} ${this.text(movement.unit)}` : nothing}</p>
+        ${movement ? html`${this.quantity(movement.quantity)} ${this.unitLabel(movement.unit, movement.quantity)}` : nothing}</p>
         ${report?.products.some(product => product.id === saved.productId) ? html`<a href=${'#product-' + saved.productId}
           @click=${(event: MouseEvent) => {
             event.preventDefault();

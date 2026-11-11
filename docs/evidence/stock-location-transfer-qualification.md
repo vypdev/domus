@@ -10,6 +10,7 @@ balanced-transfer and location portions of the Inventory contract.
 | `stock-location-transfer-C02`, `stock-location-transfer-C03` | The same suite checks signed movements, stock totals, Pantry need, exact quantities, reservation floors, destination capacity and rollback after the first leg. |
 | `stock-location-transfer-C04`, `stock-location-transfer-C07` | Independent SQLite connections race the original key and competing transfers. Restart and activated restore preserve current and historical receipts. |
 | `stock-location-transfer-C06` | The schema 29 [source fixture](../../tests/fixtures/sqlite/v29-stock-location-source.sql) was generated from `3d03725` with an existing physical return. The migration suite also uses the representative schema 20 fixture and verifies transaction rollback, historical identities and transfer linkage. |
+| `stock-location-wording-C01` | The same compiled journey checks exactly one gram in English and Spanish. Component tests cover signed exact-one movements and canonical quantity review. |
 | `stock-location-transfer-C08` | The [compiled browser journey](../../frontend/tests/e2e/workspace-navigation.spec.ts) exercises desktop keyboard use in English and narrow touch use in Spanish. Image CI and the installed Edge candidate are separate evidence. |
 
 Shopping intake, adjustments and replenishment use the Pantry binding.
