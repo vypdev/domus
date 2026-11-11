@@ -951,7 +951,7 @@ for (const mode of ['native', 'standalone'] as const) {
     const dueDetail = page.waitForResponse(base + 'api/v1/tasks/occurrences/' + dueWork.occurrence_id);
     await dueItem.tap();
     expect((await dueDetail).ok()).toBe(true);
-    await expect(tasksRegion).toBeFocused();
+    await expect(tasksRegion.getByRole('heading',{name:'Read the water meter',exact:true})).toBeFocused();
 
     const scheduled = await request.post(origin + '/__fixture__/calendar-review');
     expect(scheduled.ok()).toBe(true);
@@ -966,6 +966,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.setViewportSize({width:1100,height:760});
     await page.emulateMedia({colorScheme:'light'});
     await overview.press('Enter');
+    await expect(page).toHaveURL(base + '#overview');
     const scheduledEN = taskSummary.getByRole('heading',{name:/^Upcoming maintenance · [12]$/u});
     await expect(scheduledEN).toBeVisible();
     const groupEN = taskSummary.getByRole('article',{name:/^Upcoming maintenance ·/u});
