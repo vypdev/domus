@@ -1242,3 +1242,157 @@ the same-commit image checks and the installed candidate.
 This delta refines the bilingual location and transfer presentation from the
 existing published specification for issue #88. Its original cases remain
 under their original identifiers.
+
+## Show products needing replenishment on Overview
+
+- Status: Draft
+- Owners: Domus maintainers and Inventory
+- Scope: Protected read-only preview of products below their configured replenishment minimum
+- Open decisions blocking readiness: none for the existing Inventory replenishment policy
+
+### 1. Executive summary
+
+A verified household member opens Overview to see products below their
+replenishment minimum and reach the existing Inventory workspace.
+
+### 2. Problem, current behavior, and evidence
+
+The Overview roadmap calls for stock and shopping attention. Inventory
+already computes available stock from recorded stock and reservations and
+evaluates each configured minimum and target.
+
+### 3. Actors, surfaces, and terminology
+
+Household members with current Pantry read access can see the summary.
+Available stock uses the existing household Inventory calculation.
+Replenishment need is the existing policy's result for that availability.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| overview-stock-R01 | Qualify products with a positive need from the existing replenishment policy using current available stock after reservations. Preserve exact quantities and base units. |
+| overview-stock-R02 | Check current Pantry household read authority and use one household snapshot. Return an exact total and at most 25 rows in stable catalog order. |
+| overview-stock-R03 | Display a localized stock attention summary and the existing Inventory action. Preserve independent loading, empty and unavailable states and retire data when the verified context changes. |
+| overview-stock-R04 | Preserve Inventory records and storage schema. Verify both deployment compositions, image architectures and the installed Edge candidate. |
+
+The summary reports actual stock attention. Inventory and Shopping retain
+their existing replenishment, purchase, receipt and stock movement commands.
+
+### 5. Current versus proposed product journey
+
+Open Overview, review which products need attention and open Inventory to
+see their current stock and permitted actions.
+
+### 6. Functional behavior and state model
+
+Read tracked household products and calculate availability and need from
+the same snapshot. Qualify a product when its policy reports positive need.
+Outstanding purchases do not change actual stock availability. Show exact
+totals with a bounded preview. A successful empty response is distinct
+from an unavailable or denied read.
+
+### 7. User-facing configuration
+
+Use the existing per-product replenishment policy and member locale.
+
+### 8. Clean Architecture design
+
+Application owns the authorized read and the bounded projection. Reuse the
+existing Inventory ports and domain replenishment policy. Presentation uses
+ha-ui and the existing Inventory workspace navigation.
+
+### 9. UI/UX and content contract
+
+Show Products below minimum in English and Productos por debajo del mínimo
+in Spanish. Include each product's name, available stock and minimum in the
+current unit. Show one Inventory action and preserve existing workspace focus.
+
+### 10. Failure, recovery, and cleanup
+
+Reject inconsistent and malformed responses. Retry the protected read after
+a failure and discard any result from a retired verified context. Remove
+only the test instance and test data after installed acceptance.
+
+### 11. Security, permissions, and privacy
+
+Apply current household read authority before returning product facts or
+counts. Retain the existing separate permission checks on Inventory writes.
+The read never changes products, stock, reservations, demand or receipts.
+
+### 12. Observability and operational UX
+
+Reuse existing protected read diagnostics and localized retry feedback.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Use the existing catalog, stock, reservation and replenishment records and
+the current schema. Qualify the candidate in both compositions and images.
+
+### 14. Testing strategy and numeric budget
+
+Minimum six distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Replenishment policy | 1 | Observable scenarios in the case inventory. |
+| Bounded projection | 1 | Observable scenarios in the case inventory. |
+| Household scope | 1 | Observable scenarios in the case inventory. |
+| Read recovery | 1 | Observable scenarios in the case inventory. |
+| Browser navigation | 1 | Observable scenarios in the case inventory. |
+| Installed qualification | 1 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| overview-stock-C01 | Replenishment policy | overview-stock-R01 | Compare exact stock immediately below, equal to and above the minimum with a reservation and an outstanding purchase. Only physical stock and reservations change availability. |
+| overview-stock-C02 | Bounded projection | overview-stock-R02 | Verify exact totals beyond 25, deterministic rows, exact units and a successful empty group from one snapshot. |
+| overview-stock-C03 | Household scope | overview-stock-R02 | Verify that current Pantry readers can see only their household summary in both compositions and that revocation denies counts and rows. |
+| overview-stock-C04 | Read recovery | overview-stock-R02, overview-stock-R03 | Reject incomplete and malformed responses, retry unavailable reads and retire stale responses without affecting the separate task summary. |
+| overview-stock-C05 | Browser navigation | overview-stock-R03 | Review localized quantities and open Inventory with English desktop keyboard and narrow Spanish touch in both compositions. |
+| overview-stock-C06 | Installed qualification | overview-stock-R04 | Verify both image architectures and the exact installed candidate with disposable stock and cleanup. |
+
+### 15. Documentation and discoverability
+
+[specs/household-inventory.md](household-inventory.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [backend/src/domus/application/inventory\_queries.py](../backend/src/domus/application/inventory_queries.py) · [backend/src/domus/entrypoints/inventory\_http.py](../backend/src/domus/entrypoints/inventory_http.py) · [frontend/src/composition/entry-page.ts](../frontend/src/composition/entry-page.ts) · [frontend/src/presentation/domus-app.ts](../frontend/src/presentation/domus-app.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-inventory.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| backend/src/domus/application/inventory_queries.py | update |
+| backend/src/domus/entrypoints/inventory_http.py | update |
+| frontend/src/composition/entry-page.ts | update |
+| frontend/src/presentation/domus-app.ts | update |
+
+### 16. Acceptance scenarios
+
+Register a product and configure its minimum. Review it on Overview and
+open Inventory. Intake enough stock to reach the minimum and confirm the
+summary changes without creating any operation of its own.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| overview-stock-R01 | overview-stock-C01 |
+| overview-stock-R02 | overview-stock-C02, overview-stock-C03, overview-stock-C04 |
+| overview-stock-R03 | overview-stock-C04, overview-stock-C05 |
+| overview-stock-R04 | overview-stock-C06 |
+
+### 18. Implementation sequence
+
+Extend the scoped Inventory read, validate the bounded browser contract and
+render the localized summary and navigation. Qualify the exact Edge candidate.
+
+### 19. Definition of Done
+
+Verify all six cases, full coverage, exact-head CI in both architectures and
+installed Edge evidence with scoped cleanup.
+
+### 20. References and decisions
+
+The roadmap's Overview section calls for stock attention. Household Inventory
+defines availability and replenishment. The application experience specification
+defines the existing Overview and Inventory navigation.
