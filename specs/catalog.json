@@ -487,7 +487,8 @@
         ".github/workflows/ci_check.yml"
       ],
       "entrypoints": [
-        "backend/src/domus/entrypoints/task_http.py"
+        "backend/src/domus/entrypoints/task_http.py",
+        "backend/src/domus/entrypoints/schedule_creation_http.py"
       ],
       "code": [
         "backend/src/domus/domain/task_values.py",
@@ -500,10 +501,14 @@
         "backend/src/domus/infrastructure/sqlite_task_integrity.py",
         "backend/src/domus/application/task_authorization.py",
         "backend/src/domus/application/task_commands.py",
+        "backend/src/domus/application/task_creation.py",
         "backend/src/domus/application/task_requests.py",
         "backend/src/domus/application/task_queries.py",
         "frontend/src/application/task-overview.ts",
         "frontend/src/adapters/task-http.ts",
+        "frontend/src/domain/tasks.ts",
+        "frontend/src/application/task-controller.ts",
+        "frontend/src/presentation/domus-tasks.ts",
         "frontend/src/presentation/domus-task-overview.ts"
       ],
       "tests": [
@@ -516,11 +521,14 @@
         "tests/backend/test_task_restoration.py",
         "tests/backend/test_task_authorization.py",
         "tests/backend/test_task_commands.py",
+        "tests/backend/test_task_http.py",
+        "tests/backend/test_schedule_creation_http.py",
         "tests/backend/test_task_execution_commands.py",
         "tests/backend/test_task_edit_commands.py",
         "tests/backend/test_task_overview.py",
         "frontend/tests/task-overview.test.ts",
         "frontend/tests/task-http.test.ts",
+        "frontend/tests/task-component.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
       "documentation": [
@@ -535,7 +543,8 @@
         "docs/tasks/execution.md",
         "docs/evidence/overview-task-qualification.md",
         "docs/evidence/overview-deadlines-qualification.md",
-        "docs/evidence/overview-maintenance-qualification.md"
+        "docs/evidence/overview-maintenance-qualification.md",
+        "docs/evidence/task-base-points-qualification.md"
       ],
       "readiness": {
         "state": "draft",

@@ -60,16 +60,17 @@ test.each(['fixed', 'relative'] as const)('scheduled %s task uses exact policy a
   const start = kind === 'fixed' ? {kind: 'time', local: '2027-01-02T09:30'} : {kind: 'date', local: '2027-01-02'};
   const rule = kind === 'fixed' ? {rrule: 'FREQ=WEEKLY;BYDAY=SA'} : {interval_days: 17, visibility: 'at_verification'};
   const command = taskCommand({action: 'task.create', payload: {expected_revision: 0, title: 'Inspect filter', description: '', priority: 'normal',
-    schedule: {draft: {kind, start, ...rule}, policy: access.schedulePolicy}}})!;
+    overrides: {point_value_minor: 225}, schedule: {draft: {kind, start, ...rule}, policy: access.schedulePolicy}}})!;
   const request = {key: 'scheduled-request', command};
   const raw = {state: 'committed', archived_by: null, operation_id: 'scheduled-op', created_at: 100,
     message: 'Saved.', action_required: 'Review.', result: {definition_id: 'definition-1', schedule_id: 'rule-1',
-      revision: 1, pattern_revision: 1, processing: 'pending', state: 'active', first_occurrence_id: null}};
+      revision: 1, pattern_revision: 1, processing: 'pending', state: 'active', first_occurrence_id: null, point_value_minor: 225}};
   f.transport.mockResolvedValueOnce(reply({csrf_token: 'a'.repeat(64)})).mockResolvedValueOnce(reply(raw));
-  expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', occurrenceId: null, state: 'active'});
+  expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', occurrenceId: null, state: 'active', basePointsMinor: 225});
   const [path, init] = f.transport.mock.calls[2];
   expect(path).toBe('/api/v1/tasks/recurrence/creation/' + kind);
-  expect(init.body).toBe(encode({task: {title: 'Inspect filter', description: '', priority: 'normal'}, start, ...rule, policy: rawPolicy}));
+  expect(init.body).toBe(encode({task: {title: 'Inspect filter', description: '', priority: 'normal', overrides: {point_value_minor: 225}},
+    start, ...rule, policy: rawPolicy}));
   f.transport.mockResolvedValueOnce(reply({...raw, action: 'recurrence.' + kind + '.create', command_key: request.key, delivery: 'pending'}));
   expect(await f.server.original({...request, operationId: null}, context).result).toMatchObject({operationId: 'scheduled-op'});
   expect(f.transport.mock.calls.at(-1)?.[0]).toBe('/api/v1/tasks/recurrence/creation/requests/recurrence.' + kind + '.create/' + request.key);
@@ -77,6 +78,25 @@ test.each(['fixed', 'relative'] as const)('scheduled %s task uses exact policy a
     f.transport.mockResolvedValueOnce(reply({...raw, result: {...raw.result, ...change},
       action: 'recurrence.' + kind + '.create', command_key: request.key, delivery: 'pending'}));
     await expect(f.server.original({...request, operationId: null}, context).result).rejects.toThrow();
+  }
+});
+
+test.each([0, 225])('creation and original recovery bind the exact configured amount %s', async amount => {
+  const f = fixture();
+  const overrides = {point_value_minor: amount};
+  const command = taskCommand({...rawCommands[0], payload: {...rawCommands[0].payload, overrides}})!;
+  const request = {key: 'original-key', command};
+  const raw = receipt(0);
+  f.transport.mockResolvedValueOnce(reply({csrf_token: 'a'.repeat(64)}))
+    .mockResolvedValueOnce(reply({...raw, result: {...raw.result, ...overrides}}));
+  expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', basePointsMinor: amount});
+  expect(JSON.parse(String(f.transport.mock.calls[1][1].body))).toMatchObject({overrides});
+  const original = receipt(0, true);
+  f.transport.mockResolvedValueOnce(reply({...original, result: {...original.result, ...overrides}}));
+  expect(await f.server.original({...request, operationId: 'op-1'}, context).result).toMatchObject({basePointsMinor: amount});
+  for (const result of [original.result, {...original.result, point_value_minor: amount + 1}]) {
+    f.transport.mockResolvedValueOnce(reply({...original, result}));
+    await expect(f.server.original({...request, operationId: 'op-1'}, context).result).rejects.toThrow('invalid_response');
   }
 });
 
@@ -159,8 +179,8 @@ test('detail rejects another household or task before publishing its content', a
 for (const mode of ['native', 'standalone'] as const) test(`${mode}: task-specific access uses its own protected contract`, async () => {
   const f = fixture(mode); f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: false}));
   expect(await f.server.access(context).result).toEqual({householdId: 'home', memberId: 'member-1', canCreate: false, canReviewSchedule: false});
-  f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: true, can_review_schedule: true}));
-  expect(await f.server.access(context).result).toMatchObject({canReviewSchedule: true});
+  f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: true, can_review_schedule: true, can_configure: true}));
+  expect(await f.server.access(context).result).toMatchObject({canReviewSchedule: true, canConfigure: true});
   expect(f.transport.mock.calls[0][0]).toBe(f.target.applicationBase + 'api/v1/tasks/access');
 });
 

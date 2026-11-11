@@ -10,8 +10,17 @@ from domus.application.task_material_commands import TaskMaterialCommands
 from domus.application.task_material_ports import MissingTaskInventory, TaskInventory
 from domus.application.task_requests import CreateTask
 from domus.domain.errors import IntegrationUnavailable
+from domus.domain.storage import JsonDocument, JsonObject
 from domus.domain.task_values import TaskRules
 from domus.domain.tasks import HouseholdTaskPolicy, TaskDefinition
+
+
+def task_creation_result(result: JsonObject, definition: TaskDefinition) -> JsonDocument:
+    """Preserve the explicit base amount in the original creation receipt."""
+    amount = definition.overrides.point_value_minor
+    return JsonDocument.from_value(
+        result if amount is None else {**result, "point_value_minor": amount}
+    )
 
 
 @dataclass

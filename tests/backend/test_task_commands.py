@@ -100,7 +100,10 @@ def test_title_only_creation_commits_default_policy_definition_occurrence_and_on
 
 def test_creation_replay_survives_restart_and_does_not_allocate_more_ids(tmp_path):
     commands, store, actor, identifiers = fixture(tmp_path)
-    request = CreateTask(TaskContent("A <script> & @mention", description="Untrusted\ntext"))
+    request = CreateTask(
+        TaskContent("A <script> & @mention", description="Untrusted\ntext"),
+        overrides=TaskOverrides(point_value_minor=225),
+    )
     first = commands.create("create", request)
     allocated = identifiers.count
     reopened = SQLiteDatabase(store.path, store.installation)
@@ -109,9 +112,28 @@ def test_creation_replay_survives_restart_and_does_not_allocate_more_ids(tmp_pat
     with store.read() as unit:
         item = unit.tasks.definition("home", resource(first)[0])
         assert item.content == request.content
+        assert item.overrides.point_value_minor == again.result.decode()["point_value_minor"] == 225
     assert counts(store) == (1, 1, 2, 2)
     with pytest.raises(Conflict, match="idempotency_conflict"):
-        commands.create("create", CreateTask(TaskContent("Changed")))
+        commands.create("create", replace(request, overrides=TaskOverrides(point_value_minor=226)))
+
+
+def test_concurrent_configured_creation_shares_one_original_receipt(tmp_path):
+    commands, store, _, _ = fixture(tmp_path)
+    request = CreateTask(
+        TaskContent("Inspect filter"), overrides=TaskOverrides(point_value_minor=225)
+    )
+    gate = Barrier(2)
+
+    def create():
+        gate.wait(timeout=5)
+        return commands.create("configured", request)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        attempts = [pool.submit(create) for _ in range(2)]
+        first, second = [attempt.result(timeout=5) for attempt in attempts]
+    assert first == second and first.result.decode()["point_value_minor"] == 225
+    assert counts(store) == (1, 1, 2, 2)
 
 
 @pytest.mark.parametrize("stage", ["definition", "occurrence"])
@@ -128,7 +150,10 @@ def test_failure_between_real_creation_writes_rolls_back_initial_policy_and_all_
 
     monkeypatch.setattr(SQLiteTasks, name, fail)
     with pytest.raises(StorageFailure):
-        commands.create("create", CreateTask(TaskContent("Wipe table")))
+        commands.create(
+            "create",
+            CreateTask(TaskContent("Wipe table"), overrides=TaskOverrides(point_value_minor=225)),
+        )
     assert counts(store) == (0, 0, 1, 1)
     with store.read() as unit:
         assert unit.tasks.policy("home") is None

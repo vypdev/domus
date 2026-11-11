@@ -99,13 +99,13 @@ def test_real_task_commands_return_historical_receipts_without_reapplying_restor
     from test_task_commands import fixture as task_fixture
 
     from domus.application.task_commands import ClaimTask, CreateTask, TaskCommands
-    from domus.domain.task_values import TaskContent
+    from domus.domain.task_values import TaskContent, TaskOverrides
 
     root, archive, target = tmp_path / "source", tmp_path / "checkpoint", tmp_path / "prepared"
     root.mkdir(mode=0o700)
     commands, store, actor, identifiers = task_fixture(root)
     identity_at(root, store.installation)
-    create = CreateTask(TaskContent("Work"))
+    create = CreateTask(TaskContent("Work"), overrides=TaskOverrides(point_value_minor=225))
     work_id = None
     if action == "claim":
         work_id = resource(commands.create("create", create))[1]
@@ -133,10 +133,12 @@ def test_real_task_commands_return_historical_receipts_without_reapplying_restor
         assert result.result == original.result and identifiers.count == count
         with restored.database.read() as unit:
             if action == "create":
+                assert result.result.decode()["point_value_minor"] == 225
                 assert unit.tasks.definitions("home") == unit.tasks.occurrences("home") == ()
                 assert unit.tasks.policy("home") is None
             else:
                 work = unit.tasks.occurrence("home", work_id)
+                assert work.definition_snapshot.overrides.point_value_minor == 225
                 assert work.assignee_ids == () and work.state is OccurrenceState.AVAILABLE
                 assert work.revision == 1
     finally:

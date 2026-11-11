@@ -119,7 +119,7 @@ export class TaskController {
     if (command.action === 'task.create') {
       if (command.payload.category_id !== undefined && !access.categoryCatalog?.categories.some(item => item.id === command.payload.category_id))
         {this.update({notice: 'category_unavailable'}); return false;}
-      return access.canCreate;
+      return access.canCreate && (command.payload.overrides === undefined || access.canConfigure === true);
     }
     if (isCategoryCommand(command)) {
       if (!access.categoryCatalog?.canManage) return false;
@@ -178,10 +178,11 @@ export class TaskController {
     }
     await this.facts(generation, occurrence);
   }
-  create(title: unknown, description: unknown, priority: TaskPriority, draft?: TaskScheduleDraft, categoryId?: string): Promise<void> {
+  create(title: unknown, description: unknown, priority: TaskPriority, draft?: TaskScheduleDraft, categoryId?: string, basePointsMinor?: number): Promise<void> {
     const schedule = draft === undefined ? {} : {schedule: {draft, policy: this.state.access?.schedulePolicy}};
     return this.execute({action: 'task.create', payload: {expected_revision: 0, title, description, priority, ...schedule,
-      ...categoryId === undefined ? {} : {category_id: categoryId}}});
+      ...categoryId === undefined ? {} : {category_id: categoryId},
+      ...basePointsMinor === undefined ? {} : {overrides: {point_value_minor: basePointsMinor}}}});
   }
   createCategory(label: string): Promise<void> {
     return this.execute({action: 'task.category.create', payload: {expected_revision: 0, label}});

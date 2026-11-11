@@ -64,7 +64,8 @@ export class HttpTaskServer implements TaskServer {
   constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
   access(expected: JournalContext) {
     return this.network.owned(async signal => {
-      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'], ['can_review_schedule','schedule_policy','category_catalog','can_record_for_others','can_manage_points']);
+      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'],
+        ['can_review_schedule','schedule_policy','category_catalog','can_record_for_others','can_manage_points','can_configure']);
       const policy = access.schedule_policy == null ? null : fields(access.schedule_policy, ['zone','data_identity','repeated_time','revision'], []);
       const householdId = identifier(access.household_id);
       const catalog = access.category_catalog === undefined ? {} : {categoryCatalog: taskCategoryCatalog(access.category_catalog, householdId)};
@@ -72,6 +73,7 @@ export class HttpTaskServer implements TaskServer {
         canReviewSchedule: access.can_review_schedule === undefined ? false : boolean(access.can_review_schedule),
         ...access.can_record_for_others === undefined ? {} : {canRecordForOthers: boolean(access.can_record_for_others)},
         ...access.can_manage_points === undefined ? {} : {canManagePoints: boolean(access.can_manage_points)},
+        ...access.can_configure === undefined ? {} : {canConfigure: boolean(access.can_configure)},
         ...policy === null ? {} : {schedulePolicy: taskSchedulePolicy({...policy, revision: responseRevision(policy.revision)})}});
     });
   }
