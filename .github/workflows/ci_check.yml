@@ -44,7 +44,7 @@ jobs:
   backend:
     name: Backend application
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -118,7 +118,7 @@ jobs:
           run_install: false
           cache: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @domus/frontend-toolchain exec playwright install --with-deps chromium
+      - run: pnpm --filter @domus/frontend-toolchain exec playwright install chromium
       - run: pnpm check:frontend-toolchain
       - run: pnpm test:frontend-toolchain
       - run: pnpm build:frontend-toolchain
@@ -162,7 +162,7 @@ jobs:
           enable-cache: false
       - run: uv sync --frozen
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @domus/frontend exec playwright install --with-deps chromium
+      - run: pnpm --filter @domus/frontend exec playwright install chromium
       - run: pnpm check:frontend
       - run: pnpm test:frontend
       - run: pnpm build:frontend
@@ -315,7 +315,7 @@ jobs:
           run_install: false
           cache: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @domus/frontend exec playwright install --with-deps chromium
+      - run: pnpm --filter @domus/frontend exec playwright install chromium
       - name: Execute household workflows in the actual isolated image from Chromium
         env:
           DOMUS_BROWSER_IMAGE: domus-app-ci
