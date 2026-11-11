@@ -168,7 +168,7 @@ def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
     assert commands == [
         "uv sync --frozen",
         "pnpm install --frozen-lockfile",
-        "pnpm --filter @domus/frontend exec playwright install --with-deps chromium",
+        "pnpm --filter @domus/frontend exec playwright install chromium",
         "pnpm check:frontend",
         "pnpm test:frontend",
         "pnpm build:frontend",
@@ -217,7 +217,7 @@ def test_frontend_toolchain_requires_actual_execution_and_separate_artifacts() -
     commands = [step["run"] for step in job["steps"] if "run" in step]
     assert commands == [
         "pnpm install --frozen-lockfile",
-        "pnpm --filter @domus/frontend-toolchain exec playwright install --with-deps chromium",
+        "pnpm --filter @domus/frontend-toolchain exec playwright install chromium",
         "pnpm check:frontend-toolchain",
         "pnpm test:frontend-toolchain",
         "pnpm build:frontend-toolchain",
@@ -284,7 +284,7 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     assert "--pass-with-no-tests" not in actual["run"]
     commands = [step["run"] for step in steps if "run" in step]
     assert "pnpm install --frozen-lockfile" in commands
-    assert "pnpm --filter @domus/frontend exec playwright install --with-deps chromium" in commands
+    assert "pnpm --filter @domus/frontend exec playwright install chromium" in commands
     audit = next(
         step
         for step in steps
