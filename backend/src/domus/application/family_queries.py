@@ -1,23 +1,24 @@
 """Project private ledger and work facts from one authorized read transaction."""
 
 from dataclasses import dataclass
+from datetime import date, timedelta
 from typing import Literal
 
 from domus.application.authorization import HouseholdAccess
 from domus.application.calendar_queries import calendar_boundary
 from domus.application.family_ports import FamilyAllocationEvidence, FamilyLedgerEntry
 from domus.application.fixed_materialization import MaintenanceScope
-from domus.application.ports import Transactions
+from domus.application.ports import Clock, Transactions, UnitOfWork
 from domus.application.recurrence_ports import RecurrenceTimes
 from domus.application.reward_funding import reward_balance
-from domus.application.task_authorization import TaskAccess
+from domus.application.task_authorization import TaskAccess, TaskActor
 from domus.application.task_ports import TaskCursors
 from domus.domain.calendar_values import CalendarRange
 from domus.domain.identity import HumanIdentity, Permission
 from domus.domain.points import conserved_shares
 from domus.domain.recurrence_time import TimePolicy
 from domus.domain.rewards import RewardSpend
-from domus.domain.storage import JsonDocument
+from domus.domain.storage import Household, JsonDocument
 from domus.domain.task_values import VerificationState
 
 PENDING_LIMIT = 4
@@ -55,6 +56,13 @@ class FamilyReport:
 
 
 @dataclass(frozen=True, slots=True)
+class FamilyWeek:
+    period: CalendarRange
+    earned_minor: int
+    completed_count: int
+
+
+@dataclass(frozen=True, slots=True)
 class FamilyQueries:
     transactions: Transactions
     scope: MaintenanceScope
@@ -62,12 +70,30 @@ class FamilyQueries:
     cursors: TaskCursors
     times: RecurrenceTimes
 
+    def _access(self, unit: UnitOfWork) -> tuple[Household, TaskActor]:
+        home = self.scope.require(unit)
+        HouseholdAccess(self.human).require(unit, home.household_id, Permission.HOUSEHOLD_READ)
+        actor = TaskAccess(self.human).require(unit, home.household_id, Permission.TASKS_READ)
+        return home, actor
+
+    def overview(self, clock: Clock) -> FamilyWeek:
+        with self.transactions.read() as unit:
+            home, actor = self._access(unit)
+            policy = TimePolicy(home.time_zone, self.times.data_identity)
+            today = self.times.local_at(clock.now(), policy).local.date()
+            monday = today - timedelta(days=today.weekday())
+            period = CalendarRange(max(date(1970, 1, 1), monday), monday + timedelta(days=7))
+            start = calendar_boundary(period.start, self.times, policy)
+            end = calendar_boundary(period.end, self.times, policy)
+            household_id, member_id = home.household_id, actor.member.member_id
+            _, earned = unit.points.member_totals(household_id, member_id, start, end)
+            completed = sum(1 for _ in unit.points.member_work(household_id, member_id, start, end))
+            return FamilyWeek(period, earned, completed)
+
     def report(self, period: CalendarRange, *, limit: int, cursor: str | None) -> FamilyReport:
         with self.transactions.read() as unit:
-            home = self.scope.require(unit)
+            home, actor = self._access(unit)
             household_id = home.household_id
-            HouseholdAccess(self.human).require(unit, household_id, Permission.HOUSEHOLD_READ)
-            actor = TaskAccess(self.human).require(unit, household_id, Permission.TASKS_READ)
             member_id = actor.member.member_id
             policy = TimePolicy(home.time_zone, self.times.data_identity)
             start = calendar_boundary(period.start, self.times, policy)

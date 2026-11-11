@@ -255,11 +255,7 @@ def create_native_app(
         app.include_router(create_point_allocation_router(task_context, security=Depends(security)))
         app.include_router(create_reward_router(task_context, security=Depends(security)))
         app.include_router(create_inventory_router(task_context, security=Depends(security)))
-        app.include_router(
-            create_family_router(
-                lambda request: task_context(request).family(), security=Depends(security)
-            )
-        )
+        app.include_router(create_family_router(task_context, security=Depends(security)))
     if administration_context is not None:
         app.include_router(
             create_administration_router(administration_context, security=Depends(security))

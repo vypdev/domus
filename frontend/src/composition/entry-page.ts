@@ -21,6 +21,7 @@ import type {AllocationInput, ReviewedAllocation} from '../domain/point-allocati
 import type {AllocationSettingsIntent} from '../presentation/domus-allocation-settings';
 import {HttpFamilyServer} from '../adapters/family-http';
 import {FamilyController} from '../application/family-controller';
+import type {FamilyWeek} from '../application/family-controller';
 import {civilDate} from '../domain/calendar';
 import type {FamilyIntent} from '../presentation/domus-family';
 import {HttpRecurrenceServer} from '../adapters/recurrence-http';
@@ -34,7 +35,7 @@ import {CALENDAR_JOURNAL_KEY, CalendarSessionJournal} from '../adapters/calendar
 import {CalendarPreferenceController} from '../application/calendar-preferences';
 import {HttpCalendarServer} from '../adapters/calendar-http';
 import {CalendarController} from '../application/calendar-controller';
-import {calendarQuery, calendarToday, WEEK_STARTS} from '../domain/calendar';
+import {calendarPeriod, calendarQuery, calendarToday, WEEK_STARTS} from '../domain/calendar';
 import type {CalendarIntent} from '../presentation/domus-calendar';
 import {bootstrap} from '../adapters/bootstrap';
 import {check, fields, identifier} from '../adapters/http-values';
@@ -211,6 +212,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let inventory: InventoryController | null = null;
   let taskOverview: OverviewReadController<TaskOverview> | null = null;
   let stockAttention: OverviewReadController<StockAttention> | null = null;
+  let familyOverview: OverviewReadController<FamilyWeek> | null = null;
   let allocation: AllocationController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
@@ -218,7 +220,7 @@ export function mountEntry(page: EntryPage): PageMount {
   const dispose = () => {
     if (stopped) return;
     stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); error?.remove();
-    stockAttention?.bind(null);
+    stockAttention?.bind(null); familyOverview?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -228,7 +230,7 @@ export function mountEntry(page: EntryPage): PageMount {
   const fail = () => {
     if (stopped || error !== null) return;
     widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); app?.remove();
-    stockAttention?.bind(null);
+    stockAttention?.bind(null); familyOverview?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -273,7 +275,8 @@ export function mountEntry(page: EntryPage): PageMount {
         calendarController.bind(null); preferences.bind(null); element.calendarScopeKey = null;
       }
     };
-    const familyController = new FamilyController(new HttpFamilyServer(source.target, browser.transport),
+    const familyServer = new HttpFamilyServer(source.target, browser.transport);
+    const familyController = new FamilyController(familyServer,
       view => {element.family = view;});
     family = familyController;
     const rewardsController = new RewardsController(new HttpRewardsServer(source.target, browser.transport),
@@ -447,16 +450,33 @@ export function mountEntry(page: EntryPage): PageMount {
     element.addEventListener('domus-stock-attention-retry', event => {
       if (event.target === element) void stockController.refresh();
     }, {signal: widget.signal});
+    const familySummary = new OverviewReadController(context => familyServer.overview(context),
+      view => {element.familyOverview = view;});
+    familyOverview = familySummary;
+    const syncFamilyOverview = () => {
+      const entry = element.view, tasks = element.tasks, destination = element.workspaceDestination;
+      if ((destination === null || destination === 'overview') && entry?.phase === 'ready'
+          && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.household
+          && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey) {
+        const day = calendarToday(tasks.session.serverTime, entry.household.timeZone);
+        const start = calendarPeriod('week', day).start;
+        const key = JSON.stringify([tasks.scopeKey, entry.household.revision, start]);
+        familySummary.bind({key, context:tasks.session.context});
+      } else familySummary.bind(null);
+    };
+    element.addEventListener('domus-family-overview-retry', event => {
+      if (event.target === element) void familySummary.refresh();
+    }, {signal: widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : fragment === '#inventory' ? 'inventory' : null;
-      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncStockAttention();
+      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncStockAttention(); syncFamilyOverview();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncStockAttention();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncStockAttention();syncFamilyOverview();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;

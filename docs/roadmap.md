@@ -54,7 +54,9 @@ implementation, verification and packaging gates. The Family increments now cove
   [Upcoming maintenance](evidence/overview-maintenance-qualification.md) shows open scheduled
   tasks for the next seven days. [Products below minimum](evidence/overview-stock-attention-qualification.md)
   shows where available stock after reservations falls below the household's replenishment minimums.
-  Shopping and Family summaries, full integrated acceptance and Stable release acceptance remain open.
+  [Weekly Family participation](evidence/overview-family-participation-qualification.md) shows the
+  member's completed tasks and posted earned points for the current household week.
+  The Shopping summary, full integrated acceptance and Stable release acceptance remain open.
 
 ## Shared components, Domus-owned experience
 

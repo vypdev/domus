@@ -84,6 +84,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       });
     }
     else if (route === 'inventory/stock-attention') raw = JSON.stringify({total:0,items:[]});
+    else if (route === 'family/overview') raw = JSON.stringify({period:{start:'2026-05-25',end:'2026-06-01'},
+      earned_minor:125,completed_count:3});
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
       can_manage_points:canManagePoints,can_record_for_others:canManagePoints});
     else if (route === 'family/allocation' || route.startsWith('family/allocation?')) raw = JSON.stringify({household:null,override:null});
@@ -791,4 +793,26 @@ test('Overview stock is independently available and retires with the verified ho
   f.page.location.href += '#inventory';
   f.events.dispatchEvent(new Event('hashchange'));
   expect(app.stockAttention).toBeNull();
+});
+
+test('the weekly Family summary retries its own read and retires on member and workspace changes', async () => {
+  const f = fixture(); f.phase('active');
+  const {app} = await f.open();
+  const expected = {state:'ready',data:{period:{start:'2026-05-25',end:'2026-06-01'},earned:125,completed:3}};
+  await vi.waitFor(() => expect(app.familyOverview).toEqual(expected));
+  const summary = app.shadowRoot!.querySelector('domus-family-overview')!;
+  await summary.updateComplete;
+  expect(summary.view).toBe(app.familyOverview);
+  const readCount = () => f.fetch.mock.calls.filter(([path]) => path.endsWith('/family/overview')).length;
+  const before = readCount();
+  const retry = () => new Event('domus-family-overview-retry',{bubbles:true,composed:true});
+  const unrelated = document.createElement('div'); app.append(unrelated); unrelated.dispatchEvent(retry());
+  expect(readCount()).toBe(before);
+  summary.dispatchEvent(retry());
+  await vi.waitFor(() => expect(app.familyOverview).toEqual(expected));
+  expect(readCount()).toBe(before+1);
+  f.member('replacement'); administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(() => expect(readCount()).toBeGreaterThan(before+1));
+  f.page.location.href += '#family'; f.events.dispatchEvent(new Event('hashchange'));
+  expect(app.familyOverview).toBeNull();
 });
