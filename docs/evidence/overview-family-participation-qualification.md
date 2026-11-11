@@ -16,5 +16,12 @@ from a server observation in the household time zone. [Issue #105](https://githu
 The [browser tests](../../frontend/tests/e2e/workspace-navigation.spec.ts) use
 real posted points, recover a failed read and open Family from Overview using
 English desktop keyboard and narrow Spanish touch in both compositions. CI
-runs these journeys on amd64 and ARM64. The pull request records the exact
-Edge package and installed acceptance.
+runs these journeys on amd64 and ARM64.
+
+On 2026-11-11, the [pinned Edge.22 artifact](https://github.com/vypdev/domus/blob/36b6532541890f4af3ff9a50b77ca17bca278521/addon-edge/artifact.json)
+was installed in a disposable Supervisor app with a UTC household. A posted
+2.25-point award appeared with one completed task in English desktop and at
+390 px in Spanish as 2,25. Opening Family focused its heading. Reopening the
+task retained its historical completion and brought earned points back to
+0,00 with a linked reversal in Family. The disposable app, its data and its
+repository source were removed after verification.
