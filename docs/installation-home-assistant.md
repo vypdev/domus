@@ -9,13 +9,13 @@ published. Source, package and adoption evidence are recorded in
 [task workspace evidence](evidence/task-workspace.json). Historical receipts below retain their
 original Edge.1–3 observations and do not describe the current installation.
 
-## Edge.22 candidate
+## Edge.21 candidate
 
-The Family participation preview uses the Supervisor repository flow with
-the [managed issue branch](https://github.com/vypdev/domus/issues/105).
+The Overview stock summary preview uses the Supervisor repository flow with
+the [managed issue branch](https://github.com/vypdev/domus/issues/102).
 The [artifact declaration](../addon-edge/artifact.json) pins the source
 commit, archive and installed files. Check that Supervisor reports
-`0.0.0-edge.22` before testing. The candidate uses SQLite schema 31,
+`0.0.0-edge.21` before testing. The candidate uses SQLite schema 31,
 introduced by Edge.13. Keep a compatible image and cold data backup before
 updating from an earlier schema. When using a separate repository source,
 keep existing preview data in its original app and use a disposable household
