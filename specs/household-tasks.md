@@ -529,3 +529,145 @@ These are the three supplied new case identities. Existing task and companion ow
 - This is a bounded update to the immutable retained owner `specs/household-tasks.md`; its existing contract and cases remain in force. `specs/task-execution-foundation.md` supplies the existing task lifecycle, authorization, bounded query, and protected task-detail context. `specs/household-task-categories.md` remains unchanged.
 - The delta adds assigned and unclaimed task summaries to Overview while retaining the existing task states, read authority, ordering, and detail workspace. It adds no task mutations or changes to the task read schema.
 - Selected declarations identify pnpm 10.34.0 with Node `>=24.20.0 <25` and uv/Python `>=3.14,<3.15`. The concrete invocation and prerequisites for complete coverage, both locales, compositions, architectures, and installed Edge-candidate validation remain unverified.
+
+## Qualify bounded and scoped Overview task summaries
+
+- Status: Draft
+- Owners: Domus maintainers and Tasks
+- Scope: Additional qualification of the already published Overview task read
+- Open decisions blocking readiness: none
+
+### 1. Executive summary
+
+Record two focused acceptance cases for the Overview read. Verify the
+difference between a group total and a bounded preview, and prove that
+a delayed read cannot survive a household context change.
+
+### 2. Problem, current behavior, and evidence
+
+Issue 92's first published SDD defines both task groups and three cases.
+The implementation uses a fixed 25-item preview with exact counts and
+cancellable browser reads. It has distinct witnesses for large groups
+and delayed replies, beyond the original basic group and denial cases.
+
+### 3. Actors, surfaces, and terminology
+
+A current member reads Overview. A preview is the bounded set of task
+rows from the same authorized snapshot as the exact count. A context
+retirement invalidates every pending read bound to the old identity.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| overview-task-evidence-R01 | A group larger than the existing Tasks page bound keeps its exact authorized total, includes only its bounded ordered preview, and is unavailable if the transport returns an incomplete or inconsistent preview. |
+| overview-task-evidence-R02 | Replacing or retiring the verified Overview context clears its private result, cancels its owned read and discards a response delivered after retirement. |
+
+Preserve all three previously published cases and the existing user
+journey. These assertions qualify the authorized read already in issue 92.
+
+### 5. Current versus proposed product journey
+
+Observe exact counts on Overview even when the group exceeds one page.
+After leaving a verified context, only a current authorized response
+can fill the next Overview.
+
+### 6. Functional behavior and state model
+
+The read returns one exact total and at most 25 rows per group. The UI
+checks that each preview has the expected size and unique task IDs.
+Loading, unavailable and retired states carry no private rows or counts.
+
+### 7. User-facing configuration
+
+Use the current household membership, Tasks read permission, locale
+and existing page bound.
+
+### 8. Clean Architecture design
+
+Application owns the authorized snapshot and group meaning. SQLite reads
+counts and ordered bounded rows in the same transaction. The HTTP adapter
+validates the private response. The browser controller owns cancellation
+and does not use retired results.
+
+### 9. UI/UX and content contract
+
+Display the exact count beside the group title. A shortened preview
+points to the existing Tasks workspace. A failed or superseded read
+cannot populate the summary.
+
+### 10. Failure, recovery, and cleanup
+
+A malformed or incomplete result shows the existing unavailable state.
+Retry rechecks current authority. Retirement clears old facts while
+retaining the existing application navigation.
+
+### 11. Security, permissions, and privacy
+
+The transport uses the verified installation, channel and subject.
+The application resolves the current household member and permission.
+A late reply never authorizes disclosure in a new context.
+
+### 12. Observability and operational UX
+
+Record test evidence for count completeness and discarded late results.
+Use the existing sanitized read errors in the user interface.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+The read uses the existing SQLite schema 30. Verify the pinned Edge.12
+runtime and the same-head application and image checks.
+
+### 14. Testing strategy and numeric budget
+
+Minimum two distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Bounded snapshot | 1 | Observable scenarios in the case inventory. |
+| Context retirement | 1 | Observable scenarios in the case inventory. |
+| Total | 2 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| overview-task-evidence-C01 | Bounded snapshot | overview-task-evidence-R01 | Seed more than 25 matching rows in both groups. Verify exact totals and the ordered first 25. Pass an incomplete or duplicated preview to the transport decoder and verify the read fails. |
+| overview-task-evidence-C02 | Context retirement | overview-task-evidence-R02 | Delay a valid read while changing verified subject or retiring the view. Complete the old read after the change and verify that no old rows or counts appear. Resolve a current read and observe its own result. |
+
+### 15. Documentation and discoverability
+
+[specs/household-tasks.md](household-tasks.md) · [docs/evidence/overview-task-qualification.md](../docs/evidence/overview-task-qualification.md) · [tests/backend/test\_task\_overview.py](../tests/backend/test_task_overview.py) · [frontend/tests/task-overview.test.ts](../frontend/tests/task-overview.test.ts) · [frontend/tests/task-http.test.ts](../frontend/tests/task-http.test.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-tasks.md | update |
+| docs/evidence/overview-task-qualification.md | reference |
+| tests/backend/test_task_overview.py | reference |
+| frontend/tests/task-overview.test.ts | reference |
+| frontend/tests/task-http.test.ts | reference |
+
+### 16. Acceptance scenarios
+
+Run the bounded snapshot and context retirement witnesses. Keep the
+three original Overview cases under their published identifiers.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| overview-task-evidence-R01 | overview-task-evidence-C01 |
+| overview-task-evidence-R02 | overview-task-evidence-C02 |
+
+### 18. Implementation sequence
+
+Trace the existing backend, transport and controller checks to the two
+qualification cases and run the same-head application and image checks.
+
+### 19. Definition of Done
+
+Both new witnesses pass with the already published Overview contract,
+complete coverage and the exact installed Edge.12 candidate.
+
+### 20. References and decisions
+
+Issue 92 and its first verified publication own the Overview behavior.
+This revision adds explicit evidence for the page bound and delayed reads.
