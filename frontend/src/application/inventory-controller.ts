@@ -5,6 +5,8 @@ import type {JournalContext} from '../domain/journal';
 import type {EntryEntropy, EntryRead} from './ports';
 
 export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'invalid_request',
+  'invalid_inventory_location_name', 'inventory_location_exists', 'inventory_location_limit',
+  'inventory_location_missing', 'inventory_same_location',
   'invalid_task_text', 'invalid_inventory_unit', 'invalid_inventory_receipt', 'invalid_material_quantity',
   'invalid_material_precision', 'inventory_product_missing', 'inventory_stock_capacity',
   'invalid_inventory_reason', 'inventory_insufficient_stock', 'inventory_movement_missing',
@@ -22,10 +24,11 @@ export interface InventoryRequest {readonly key: string; readonly scope: string;
 export type InventoryResult = Readonly<{
   kind: 'committed' | 'historical'; operationId: string; productId: string | null;
   replenishmentSaved?: true;
+  locationSaved?: true;
   shoppingAction?: ShoppingAction;
   sessionId?: string;
   movement: Readonly<{movementId: string; quantity: string; unit: BaseUnit;
-    action: 'inventory.intake' | 'inventory.adjust' | 'inventory.correct-intake'}> | null;
+    action: 'inventory.intake' | 'inventory.adjust' | 'inventory.correct-intake' | 'inventory.transfer'}> | null;
 }> | Readonly<{kind: 'rejected'; reason: InventoryError; command: InventoryCommand}>;
 export interface InventoryServer {
   read(scope: InventoryScope, cursor: string | null): EntryRead<InventoryReport>;

@@ -7,6 +7,8 @@ export default defineConfig({optimizeDeps: {include: [
   '@vypdev/ha-ui/contracts', '@vypdev/ha-ui/tabs',
   '@vypdev/ha-ui/card-contracts', '@vypdev/ha-ui/card', '@vypdev/ha-ui/button-contracts', '@vypdev/ha-ui/button',
   '@vypdev/ha-ui/feedback-contracts', '@vypdev/ha-ui/feedback',
+  '@vypdev/ha-ui/field-contracts', '@vypdev/ha-ui/field',
+  '@vypdev/ha-ui/select-contracts', '@vypdev/ha-ui/select',
 ]}, test: {
   include: ['tests/*.test.ts'],
   browser: {enabled: true, provider: playwright(), headless: true, instances: [{browser: 'chromium'}]},

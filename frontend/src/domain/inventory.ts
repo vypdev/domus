@@ -11,6 +11,8 @@ export type ShoppingAction = 'shopping.purchase' | 'shopping.receive' | 'shoppin
 
 export const MIN_SESSION_ITEMS = 2;
 export const MAX_SESSION_ITEMS = 16;
+export const MAX_LOCATION_NAME = 80;
+export const MAX_NAMED_LOCATIONS = 32;
 
 export interface SessionSelection {
   readonly product_id: string | null;
@@ -20,6 +22,9 @@ export interface SessionSelection {
 
 export type InventoryCommand =
   | Readonly<{action: 'inventory.register-product'; name: string; base_unit: BaseUnit}>
+  | Readonly<{action: 'inventory.add-location'; name: string}>
+  | Readonly<{action: 'inventory.transfer'; product_id: string; source_location: string;
+    destination_location: string; quantity: string}>
   | Readonly<{action: 'inventory.intake'; product_id: string; quantity: string}>
   | Readonly<{action: 'inventory.adjust'; product_id: string; quantity: string; reason: string}>
   | Readonly<{action: 'inventory.correct-intake'; product_id: string; movement_id: string; reason: string}>
@@ -39,9 +44,35 @@ export type InventoryCommand =
   | Readonly<{action: 'shopping.clear-extra'; extra_id: string}>
   | Readonly<{action: 'shopping.record-session'; items: readonly SessionSelection[]}>;
 
-export const MOVEMENT_KINDS = ['intake', 'task_consumption', 'task_correction', 'adjustment', 'intake_correction'] as const;
+export const MOVEMENT_KINDS = ['intake', 'task_consumption', 'task_correction', 'adjustment', 'intake_correction', 'transfer'] as const;
 export type MovementKind = typeof MOVEMENT_KINDS[number];
 export const STOCK_REASON_LIMIT = 240;
+
+export interface StockTransfer {
+  readonly id: string;
+  readonly productId: string;
+  readonly source: string;
+  readonly destination: string;
+  readonly withdrawalId: string;
+  readonly depositId: string;
+}
+
+export interface StorageLocation {
+  readonly id: string;
+  readonly name: string;
+}
+
+export interface StockTotals {
+  readonly recorded: string;
+  readonly reserved: string;
+  readonly available: string;
+}
+
+export interface LocationStock {
+  readonly id: string;
+  readonly name: string | null;
+  readonly stock: StockTotals;
+}
 
 export interface StockMovement {
   readonly id: string;
@@ -56,6 +87,7 @@ export interface StockMovement {
   readonly correctedBy: string | null;
   readonly shoppingReceipt: boolean;
   readonly returnOf: string | null;
+  readonly transfer: StockTransfer | null;
 }
 
 export interface MovementHistory {
@@ -63,6 +95,8 @@ export interface MovementHistory {
   readonly productName: string;
   readonly unit: BaseUnit;
   readonly movements: readonly StockMovement[];
+  readonly locations: readonly LocationStock[];
+  readonly total: StockTotals;
   readonly cursor: string | null;
 }
 
@@ -92,6 +126,7 @@ export interface InventoryReport {
   readonly mayShop: boolean;
   readonly mayRequest: boolean;
   readonly products: readonly ProductStock[];
+  readonly locations: readonly StorageLocation[];
   readonly cursor: string | null;
 }
 
@@ -215,6 +250,13 @@ function hasFields(record: Record<string, unknown>, fields: readonly string[]): 
   return Object.keys(record).length === fields.length && fields.every(key => Object.hasOwn(record, key));
 }
 
+export function locationName(value: unknown): string {
+  const name = taskText(value, MAX_LOCATION_NAME, true);
+  if (name !== name.trim() || ['pantry', 'despensa'].includes(name.toLowerCase()))
+    throw new Error('invalid_inventory_location_name');
+  return name;
+}
+
 export function positiveQuantity(value: unknown): string {
   const quantity = taskQuantity(value);
   if (quantity === '0') throw new Error('invalid_inventory_quantity');
@@ -236,6 +278,16 @@ export function inventoryCommand(value: unknown): InventoryCommand {
     throw new Error('invalid_inventory_command');
   const record = value as Record<string, unknown>;
   const {action} = record;
+  if (action === 'inventory.add-location' && hasFields(record, ['action', 'name']))
+    return {action, name: locationName(record.name)};
+  if (action === 'inventory.transfer'
+      && hasFields(record, ['action','product_id','source_location','destination_location','quantity'])) {
+    const source_location = taskIdentifier(record.source_location);
+    const destination_location = taskIdentifier(record.destination_location);
+    if (source_location !== destination_location)
+      return {action, product_id:taskIdentifier(record.product_id), source_location,
+        destination_location, quantity:positiveQuantity(record.quantity)};
+  }
   if (Object.keys(record).length === 3 && Object.hasOwn(record, 'action')) {
     if (action === 'inventory.register-product' && Object.hasOwn(record, 'name') && Object.hasOwn(record, 'base_unit')) {
       const base_unit = record.base_unit as BaseUnit;

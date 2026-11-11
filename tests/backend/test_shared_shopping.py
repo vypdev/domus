@@ -382,11 +382,14 @@ def test_v23_migration_and_activated_restore_of_extra_receipts(tmp_path, monkeyp
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (29,)
+        assert db.execute("PRAGMA user_version").fetchone() == (30,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
             expected = [(*row, 0) for row in rows] if table == "shopping_purchases" else rows
-            assert db.execute("SELECT * FROM " + table).fetchall() == expected
+            actual = db.execute("SELECT * FROM " + table).fetchall()
+            if table == "inventory_movements":
+                expected = [(*row, None) for row in expected]
+            assert actual == expected
     identity_at(root, installation)
     actor = Actor()
     actor.human = HumanIdentity("ha_admin", True, True, False)

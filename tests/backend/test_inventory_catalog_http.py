@@ -43,6 +43,7 @@ def test_catalog_is_scoped_bounded_and_writes_require_current_grants(api):
         "may_request": True,
         "products": [],
         "next_cursor": None,
+        "locations": [],
     }
     for quantity in ("1.25", "0.000001"):
         assert get(api, limit=quantity).status_code == 422
@@ -286,6 +287,7 @@ def test_product_history_is_protected_and_pages_across_later_appends(api, monkey
         "corrected_by": None,
         "shopping_receipt": False,
         "return_of": None,
+        "transfer": None,
     }
     cursor = page["next_cursor"]
     assert cursor

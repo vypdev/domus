@@ -13,6 +13,8 @@ from domus.domain.task_values import validate_task_text
 MAX_STOCK_UNITS = 10**18 - 1
 PANTRY = "pantry"
 MAX_STOCK_REASON = 240
+MAX_LOCATION_NAME = 80
+MAX_NAMED_LOCATIONS = 32
 
 
 class BaseUnit(StrEnum):
@@ -39,17 +41,50 @@ class CatalogProduct:
         if not isinstance(self.base_unit, BaseUnit):
             raise InvalidInput("invalid_inventory_unit")
 
-    def binding(self, home: str) -> MaterialBinding:
+    def binding(
+        self, home: str, *, location: str = PANTRY, reference: str | None = None
+    ) -> MaterialBinding:
         return MaterialBinding(
             home,
-            self.reference_id,
+            self.reference_id if reference is None else reference,
             self.product_id,
             self.base_unit.value,
-            PANTRY,
+            location,
             1,
             self.base_unit.precision,
             self.name,
         )
+
+
+def validate_location_name(name: str) -> None:
+    try:
+        validate_task_text(name, MAX_LOCATION_NAME, required=True)
+    except InvalidInput:
+        raise InvalidInput("invalid_inventory_location_name") from None
+    if name != name.strip() or name.casefold() in ("pantry", "despensa"):
+        raise InvalidInput("invalid_inventory_location_name")
+
+
+@dataclass(frozen=True, slots=True)
+class StorageLocation:
+    location_id: str
+    name: str
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.location_id)
+        if self.location_id == PANTRY:
+            raise InvalidInput("invalid_inventory_location")
+        validate_location_name(self.name)
+
+
+@dataclass(frozen=True, slots=True)
+class StockTransfer:
+    transfer_id: str
+    product_id: str
+    source_location: str
+    destination_location: str
+    withdrawal_id: str
+    deposit_id: str
 
 
 def stock_quantity(units: int) -> str:
@@ -93,6 +128,7 @@ class MovementKind(StrEnum):
     TASK_CORRECTION = "task_correction"
     ADJUSTMENT = "adjustment"
     INTAKE_CORRECTION = "intake_correction"
+    TRANSFER = "transfer"
 
 
 class EffectKind(StrEnum):
@@ -126,3 +162,4 @@ class StockMovement:
     kind: MovementKind
     posting: MaterialPosting | None = None
     corrects: str | None = None
+    transfer_id: str | None = None

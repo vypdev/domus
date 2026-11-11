@@ -1,5 +1,7 @@
 import {expect, test} from '@playwright/test';
 
+test.use({hasTouch: true});
+
 const ingress = '/api/hassio_ingress/fixture_domus_supervisor_1234567890';
 
 for (const mode of ['native', 'standalone'] as const) {
@@ -784,6 +786,62 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(riceHistoryEs.getByText('-2 gramos',{exact:true})).toBeVisible();
     await expect(riceHistoryEs.getByText(/Devolución de compra/u)).toBeVisible();
     await riceHistoryEs.getByRole('button',{name:'Cerrar historial de movimientos'}).click();
+
+    await page.setViewportSize({width: 1120, height: 900});
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await stock.getByRole('textbox',{name:'Location name'}).fill('Dry shelf');
+    await stock.getByRole('button',{name:'Add location'}).press('Enter');
+    await expect(stock.getByText('Storage location added.',{exact:true})).toBeVisible();
+    const moveFlour = flourStock.getByRole('button',{name:'Move stock'});
+    await expect(moveFlour).toBeEnabled();
+    await expect(stock.getByRole('textbox',{name:'Location name'})).toHaveValue('');
+    await expect(stock.getByRole('textbox',{name:'Location name'})).not.toHaveAttribute('aria-invalid','true');
+    await moveFlour.press('Enter');
+    const locationDetail = stock.getByRole('region',{name:'Movement history · Session flour'});
+    await expect(locationDetail).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(locationDetail.getByRole('combobox',{name:'From location'})).toBeFocused();
+    const destination = locationDetail.getByRole('combobox',{name:'To location'});
+    await destination.press('End');
+    await destination.press('Enter');
+    await locationDetail.getByRole('textbox',{name:'Quantity to move'}).fill('2');
+    await locationDetail.getByRole('button',{name:'Review transfer'}).press('Enter');
+    await expect(locationDetail.getByRole('alert')).toContainText('available stock');
+    const amount = locationDetail.getByRole('textbox',{name:'Quantity to move'});
+    await expect(amount).toHaveValue('2');
+    await amount.fill('0.25');
+    await locationDetail.getByRole('button',{name:'Review transfer'}).press('Enter');
+    await expect(locationDetail.getByRole('status')).toContainText('Pantry → Dry shelf');
+    await locationDetail.getByRole('button',{name:'Confirm transfer'}).press('Enter');
+    await expect(locationDetail).toBeFocused();
+    await expect(locationDetail.getByText('Pantry → Dry shelf',{exact:true})).toHaveCount(2);
+    const total = locationDetail.locator('.location-stock').filter({hasText:'Household total'});
+    await expect(total.locator('dd')).toHaveText(['1.25 grams','0 grams','1.25 grams']);
+    await expect(locationDetail.locator('.location-stock').filter({hasText:'Dry shelf'}).locator('dd'))
+      .toHaveText(['0.25 grams','0 grams','0.25 grams']);
+    await expect(locationDetail.locator('.location-stock').filter({hasText:'Pantry'}).locator('dd'))
+      .toHaveText(['1 gram','0 grams','1 gram']);
+    await locationDetail.screenshot({path:info.outputPath('stock-transfer-en-wide.png')});
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:320,height:720});
+    const locationDetailEs = stock.getByRole('region',{name:'Historial de movimientos · Session flour'});
+    await expect(locationDetailEs.locator('.location-stock').filter({hasText:'Despensa'}).locator('dd'))
+      .toHaveText(['1 gramo','0 gramos','1 gramo']);
+    await locationDetailEs.getByRole('button',{name:'Trasladar stock'}).tap();
+    await locationDetailEs.getByRole('combobox',{name:'Ubicación de origen'}).tap();
+    await locationDetailEs.getByRole('option',{name:'Dry shelf',exact:true}).tap();
+    await locationDetailEs.getByRole('combobox',{name:'Ubicación de destino'}).tap();
+    await locationDetailEs.getByRole('option',{name:'Despensa',exact:true}).tap();
+    await locationDetailEs.getByRole('textbox',{name:'Cantidad que se trasladará'}).fill('0,25');
+    await locationDetailEs.getByRole('button',{name:'Revisar traslado'}).tap();
+    await expect(locationDetailEs.getByRole('status')).toContainText('Dry shelf → Despensa');
+    await locationDetailEs.getByRole('button',{name:'Confirmar traslado'}).tap();
+    await expect(locationDetailEs.getByText('Dry shelf → Despensa',{exact:true})).toHaveCount(2);
+    await expect(locationDetailEs.locator('.location-stock').filter({hasText:'Dry shelf'}).locator('dd'))
+      .toHaveText(['0 gramos','0 gramos','0 gramos']);
+    await locationDetailEs.screenshot({path:info.outputPath('stock-transfer-es-narrow.png')});
+    await locationDetailEs.getByRole('button',{name:'Cerrar historial de movimientos'}).tap();
 
     await tabs.evaluate(element => {element.style.width = '125px';});
     const end = tabs.getByRole('button', {name: 'Desplazar al final', exact: true});

@@ -84,7 +84,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     }
     else if (route.startsWith('inventory/products/product/movements?')) raw = JSON.stringify({
       product_id:'product', product_name:'Salt', base_unit:'gram', movements:[],
-      next_cursor:route.includes('cursor=')?null:'older',
+      next_cursor:route.includes('cursor=')?null:'older', total:{recorded:'0',reserved:'0',available:'0'},
+      locations:[{location_id:'pantry',name:null,stock:{recorded:'0',reserved:'0',available:'0'}}],
     });
     else if (route.startsWith('inventory/purchases/purchase/receipts?')) raw = JSON.stringify({
       purchase:{purchase_id:'purchase',product_id:null,name:'Apples',base_unit:'piece',purchased:'2',
@@ -112,7 +113,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       items:[],next_cursor:route.includes('cursor=')?null:'more-list',
     });
     else if (route.startsWith('inventory?')) raw = JSON.stringify({location_id:'pantry', may_manage:true, may_shop:true, may_request:true, products:[],
-      next_cursor:route.includes('cursor=')?null:'inventory-next'});
+      next_cursor:route.includes('cursor=')?null:'inventory-next', locations:[]});
     else if (route.startsWith('family/rewards?')) raw = JSON.stringify({
       enabled:false,revision:0,may_manage:canManagePoints,balance:{posted_minor:0,reserved_minor:0},
       catalog:[],requests:[],next_cursor:null,

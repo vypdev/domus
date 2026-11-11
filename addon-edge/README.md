@@ -1,31 +1,13 @@
 # Domus Edge
 
-Development preview of Domus installed as a Home Assistant app. Open it through HA's Open Web UI;
-it uses your existing HA sign-in without another login.
+Development preview of Domus installed as a Home Assistant app. Open it through
+HA's Open Web UI using your existing Home Assistant session.
 
-Edge 0.0.0-edge.9 includes the Tasks workspace: create, claim, complete, approve/reject and reopen work
-in English or Spanish. Tasks open by default; household administration remains available from the
-Household tab. Material quantities and original-request recovery preserve the existing server
-authorization and exact operation identity. Calendar, recurrence controls, points and supplies
-remain in progress. Task forms retain invalid drafts and enforce exact Unicode character limits;
-original task recovery uses the current task grants independently of general operation browsing.
+Edge 0.0.0-edge.11 includes the current household work, Family, Inventory and
+Shopping workspaces. Inventory shows storage locations and exact stock
+transfers, with English and Spanish labels and original-request recovery.
 
-It retains the English/Spanish household administration workspace: participant roster,
-household settings, HA administrator mapping, member roles/ordinary permissions, public aliases
-and owner-private preferences. Reviewed changes retain exact revisions and original operation
-identity; a changed verified household retires private drafts. Saved preferences describe stored
-choices; notification delivery remains unavailable.
-
-Edge.7 also requests cold Supervisor backups: HA stops the app while copying its private data.
-The brief interruption closes in-memory sessions; reopening verifies the current HA identity.
-
-This version upgrades verified older data to SQLite schema 9. Preserve the original application/data
-checkpoint and use the documented compatible restore/rollback procedure. Existing identity,
-household records, history and original-operation evidence are retained. The installed Edge.5
-recipe is preserved separately as an immutable compatibility fixture.
-
-Set your Home Assistant browser origins in Configuration before starting. Edge remains experimental;
-the remaining domain screens, required human UX review and complete Stable product are
-still in progress.
-
-See [installation and permissions](DOCS.md) and the [reviewed artifact declaration](artifact.json).
+This candidate upgrades supported owned data to SQLite schema 30. Keep a
+compatible image and cold data backup before upgrading a previous preview.
+See [installation and operation](DOCS.md) for the source pin and rollback
+instructions.

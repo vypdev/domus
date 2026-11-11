@@ -144,10 +144,13 @@ def test_upgrade_v22_preserves_pantry_and_restore_recovers_pending_and_posted(
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (29,)
+        assert db.execute("PRAGMA user_version").fetchone() == (30,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
-            assert db.execute("SELECT * FROM " + table).fetchall() == rows
+            actual = db.execute("SELECT * FROM " + table).fetchall()
+            if table == "inventory_movements":
+                rows = [(*row, None) for row in rows]
+            assert actual == rows
     identity_at(root, installation)
     actor = Actor()
     actor.human = HumanIdentity("ha_admin", True, True, False)

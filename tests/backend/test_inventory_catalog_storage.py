@@ -156,8 +156,8 @@ def test_schema19_upgrade_preserves_legacy_stock_and_rewards(tmp_path, monkeypat
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (29,)
-        assert [row[:-1] for row in db.execute("SELECT * FROM inventory_movements")] == previous
+        assert db.execute("PRAGMA user_version").fetchone() == (30,)
+        assert [row[:-2] for row in db.execute("SELECT * FROM inventory_movements")] == previous
     with store.read() as unit:
         assert unit.inventory.products("home", "", 25) == ()
         binding = unit.inventory.material("home", "legacy-material")

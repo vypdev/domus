@@ -14,7 +14,9 @@ from domus.application.task_material_ports import InventoryMaterialResult, Mater
 from domus.domain.errors import Conflict, InvalidInput, NotFound, StorageFailure
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
 from domus.domain.inventory import (
+    MAX_NAMED_LOCATIONS,
     MAX_STOCK_UNITS,
+    PANTRY,
     BaseUnit,
     CatalogProduct,
     EffectKind,
@@ -22,8 +24,11 @@ from domus.domain.inventory import (
     MovementKind,
     ReplenishmentPolicy,
     StockMovement,
+    StockTransfer,
+    StorageLocation,
     stock_quantity,
     stock_units,
+    validate_location_name,
     validate_stock_reason,
 )
 from domus.domain.shopping import (
@@ -37,7 +42,7 @@ from domus.domain.shopping import (
     SessionSelection,
 )
 from domus.domain.shopping_needs import ShoppingExtra
-from domus.domain.storage import CommandKey, JsonDocument, Receipt
+from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
 from domus.domain.task_material_values import (
     MaterialBinding,
     MaterialPendingReason,
@@ -136,6 +141,8 @@ class InventorySettlement:
 
 class CatalogAction(StrEnum):
     REGISTER = "inventory.register-product"
+    ADD_LOCATION = "inventory.add-location"
+    TRANSFER = "inventory.transfer"
     INTAKE = "inventory.intake"
     ADJUST = "inventory.adjust"
     CORRECT_INTAKE = "inventory.correct-intake"
@@ -176,6 +183,15 @@ def _catalog_authorization(access: HouseholdAccess, action: str) -> MembershipAu
         if action in (CatalogAction.CORRECT_POSTED_RECEIPT, CatalogAction.RETURN_RECEIPT)
         else None,
     )
+
+
+def _stock_balance(stock: InventoryRecords, home: str, reference: str, delta: int) -> int:
+    balance = stock.balance(home, reference) + delta
+    if balance < stock.reserved(home, reference):
+        raise Conflict("inventory_insufficient_stock")
+    if balance > MAX_STOCK_UNITS:
+        raise Conflict("inventory_stock_capacity")
+    return balance
 
 
 def _shopping_quantity(quantity: MaterialQuantity, unit: BaseUnit) -> int:
@@ -292,6 +308,101 @@ class InventoryCommands:
             return JsonDocument.from_value({"product_id": product.product_id, **payload.decode()})
 
         return self._execute(CatalogAction.REGISTER.value, key, payload, apply)
+
+    def add_location(self, key: str, name: str) -> Receipt:
+        validate_location_name(name)
+        payload = JsonDocument.from_value({"name": name})
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            home, stock = self.household_id, unit.inventory
+            locations = stock.locations(home)
+            if any(location.name.casefold() == name.casefold() for location in locations):
+                raise Conflict("inventory_location_exists")
+            if len(locations) >= MAX_NAMED_LOCATIONS:
+                raise Conflict("inventory_location_limit")
+            location = StorageLocation(self.identifiers.new(), name)
+            if stock.location_is_used(home, location.location_id):
+                raise StorageFailure("inventory_location_identity_conflict")
+            stock.add_location(home, location)
+            return JsonDocument.from_value(asdict(location))
+
+        return self._execute(CatalogAction.ADD_LOCATION.value, key, payload, apply)
+
+    def transfer(
+        self, key: str, product_id: str, source: str, destination: str, quantity: MaterialQuantity
+    ) -> Receipt:
+        for identifier in (product_id, source, destination):
+            validate_identifier(identifier)
+        if source == destination:
+            raise InvalidInput("inventory_same_location")
+        payload = JsonDocument.from_value(
+            {
+                "product_id": product_id,
+                "source_location": source,
+                "destination_location": destination,
+                "quantity": quantity.value,
+            }
+        )
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            home, stock = self.household_id, unit.inventory
+            product = self._product(stock, product_id)
+            moved = _shopping_quantity(quantity, product.base_unit)
+            locations = {PANTRY, *(location.location_id for location in stock.locations(home))}
+            if source not in locations or destination not in locations:
+                raise NotFound("inventory_location_missing")
+            references = stock.location_bindings(home, product_id)
+            source_reference = references.get(source)
+            if source_reference is None:
+                raise Conflict("inventory_insufficient_stock")
+            source_balance = _stock_balance(stock, home, source_reference, -moved)
+            destination_reference = references.get(destination)
+            if destination_reference is None:
+                destination_reference = self.identifiers.new()
+                stock.add_material(
+                    product.binding(home, location=destination, reference=destination_reference)
+                )
+            destination_balance = _stock_balance(stock, home, destination_reference, moved)
+
+            transfer = StockTransfer(
+                self.identifiers.new(),
+                product_id,
+                source,
+                destination,
+                self.identifiers.new(),
+                self.identifiers.new(),
+            )
+            timestamp = self.clock.now()
+            source_key = JsonDocument.from_value(asdict(command)).fingerprint
+            for reference, movement_id, delta, balance, leg in (
+                (source_reference, transfer.withdrawal_id, -moved, source_balance, "out"),
+                (destination_reference, transfer.deposit_id, moved, destination_balance, "in"),
+            ):
+                stock.append(
+                    StockMovement(
+                        home,
+                        reference,
+                        movement_id,
+                        f"{source_key}:{leg}",
+                        member,
+                        delta,
+                        timestamp,
+                        "",
+                        MovementKind.TRANSFER,
+                        transfer_id=transfer.transfer_id,
+                    ),
+                    balance,
+                )
+            stock.add_transfer(home, transfer)
+            return JsonDocument.from_value(
+                {
+                    **asdict(transfer),
+                    "base_unit": product.base_unit.value,
+                    "quantity": quantity.value,
+                }
+            )
+
+        return self._execute(CatalogAction.TRANSFER.value, key, payload, apply)
 
     def intake(self, key: str, product_id: str, quantity: MaterialQuantity) -> Receipt:
         if quantity.is_zero:
@@ -437,11 +548,7 @@ class InventoryCommands:
         source_key: str | None = None,
     ) -> JsonDocument:
         home, reference = self.household_id, product.reference_id
-        balance = stock.balance(home, reference) + delta
-        if balance < stock.reserved(home, reference):
-            raise Conflict("inventory_insufficient_stock")
-        if balance > MAX_STOCK_UNITS:
-            raise Conflict("inventory_stock_capacity")
+        balance = _stock_balance(stock, home, reference, delta)
         movement = StockMovement(
             home,
             reference,

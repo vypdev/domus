@@ -459,7 +459,7 @@ def test_genuine_schema_16_inventory_migration_preserves_points_and_is_atomic(
             connection.execute("SELECT * FROM points_task_receipts ORDER BY position").fetchall()
             == before
         )
-        assert connection.execute("PRAGMA user_version").fetchone() == (29,)
+        assert connection.execute("PRAGMA user_version").fetchone() == (30,)
 
 
 def test_real_task_material_posts_in_both_compositions_and_keeps_shortage_pending(api):

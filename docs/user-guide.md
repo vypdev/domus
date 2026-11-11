@@ -108,6 +108,24 @@ after reloading. A historical receipt can refer to a movement that was recorded
 after the restored backup. Check the current history and balance before
 submitting a new request.
 
+### Storage locations and transfers
+
+Choose **Show movement history** to see the product's recorded, reserved and
+available stock at each location and across the household. Pantry remains the
+location used by ordinary intake, adjustments, Shopping receipts and Pantry
+replenishment.
+
+With inventory management access, enter a name under **Storage locations** and
+choose **Add location**. On the product, choose **Move stock**, select the origin
+and destination, and enter the amount in its base unit. The form shows how much
+stock is available at the origin after reservations. Choose **Review transfer**
+and check the locations and amount before choosing **Confirm transfer**.
+
+The two linked entries show where the stock moved, the amount and who recorded
+it. If the quantity exceeds the available stock, revise it and try again. If
+the result is unconfirmed, choose **Recover original request** before sending
+another transfer. Check current balances when a restored request is historical.
+
 ### Pantry replenishment
 
 Each Pantry product shows its minimum, target and current amount to replenish

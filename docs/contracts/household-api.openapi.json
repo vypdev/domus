@@ -1088,6 +1088,8 @@
       "CatalogAction": {
         "enum": [
           "inventory.register-product",
+          "inventory.add-location",
+          "inventory.transfer",
           "inventory.intake",
           "inventory.adjust",
           "inventory.correct-intake",
@@ -2946,6 +2948,13 @@
             "title": "Location Id",
             "type": "string"
           },
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/StorageLocation"
+            },
+            "title": "Locations",
+            "type": "array"
+          },
           "may_manage": {
             "title": "May Manage",
             "type": "boolean"
@@ -2983,7 +2992,8 @@
           "may_shop",
           "may_request",
           "products",
-          "next_cursor"
+          "next_cursor",
+          "locations"
         ],
         "title": "InventoryView",
         "type": "object"
@@ -3018,6 +3028,57 @@
             "type": "null"
           }
         ]
+      },
+      "LocationBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.add-location",
+            "title": "Action",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "name"
+        ],
+        "title": "LocationBody",
+        "type": "object"
+      },
+      "LocationStock": {
+        "properties": {
+          "location_id": {
+            "title": "Location Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "stock": {
+            "$ref": "#/components/schemas/StockTotals"
+          }
+        },
+        "required": [
+          "location_id",
+          "name",
+          "stock"
+        ],
+        "title": "LocationStock",
+        "type": "object"
       },
       "LogoutResponse": {
         "additionalProperties": false,
@@ -3646,6 +3707,13 @@
           "base_unit": {
             "$ref": "#/components/schemas/BaseUnit"
           },
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/LocationStock"
+            },
+            "title": "Locations",
+            "type": "array"
+          },
           "movements": {
             "items": {
               "$ref": "#/components/schemas/MovementView"
@@ -3671,6 +3739,9 @@
           "product_name": {
             "title": "Product Name",
             "type": "string"
+          },
+          "total": {
+            "$ref": "#/components/schemas/StockTotals"
           }
         },
         "required": [
@@ -3678,7 +3749,9 @@
           "product_name",
           "base_unit",
           "movements",
-          "next_cursor"
+          "next_cursor",
+          "locations",
+          "total"
         ],
         "title": "MovementHistory",
         "type": "object"
@@ -3689,7 +3762,8 @@
           "task_consumption",
           "task_correction",
           "adjustment",
-          "intake_correction"
+          "intake_correction",
+          "transfer"
         ],
         "title": "MovementKind",
         "type": "string"
@@ -3784,6 +3858,16 @@
               }
             ],
             "title": "Task Occurrence Id"
+          },
+          "transfer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StockTransfer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -3798,7 +3882,8 @@
           "corrects",
           "corrected_by",
           "shopping_receipt",
-          "return_of"
+          "return_of",
+          "transfer"
         ],
         "title": "MovementView",
         "type": "object"
@@ -7662,6 +7747,85 @@
         "title": "SourceState",
         "type": "string"
       },
+      "StockTotals": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "string"
+          },
+          "recorded": {
+            "title": "Recorded",
+            "type": "string"
+          },
+          "reserved": {
+            "title": "Reserved",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recorded",
+          "reserved",
+          "available"
+        ],
+        "title": "StockTotals",
+        "type": "object"
+      },
+      "StockTransfer": {
+        "properties": {
+          "deposit_id": {
+            "title": "Deposit Id",
+            "type": "string"
+          },
+          "destination_location": {
+            "title": "Destination Location",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "source_location": {
+            "title": "Source Location",
+            "type": "string"
+          },
+          "transfer_id": {
+            "title": "Transfer Id",
+            "type": "string"
+          },
+          "withdrawal_id": {
+            "title": "Withdrawal Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transfer_id",
+          "product_id",
+          "source_location",
+          "destination_location",
+          "withdrawal_id",
+          "deposit_id"
+        ],
+        "title": "StockTransfer",
+        "type": "object"
+      },
+      "StorageLocation": {
+        "properties": {
+          "location_id": {
+            "title": "Location Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location_id",
+          "name"
+        ],
+        "title": "StorageLocation",
+        "type": "object"
+      },
       "SuccessorVisibility": {
         "enum": [
           "at_completion",
@@ -8776,6 +8940,47 @@
           "data_identity"
         ],
         "title": "TimePolicy",
+        "type": "object"
+      },
+      "TransferBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.transfer",
+            "title": "Action",
+            "type": "string"
+          },
+          "destination_location": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Destination Location",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantity": {
+            "maxLength": 19,
+            "minLength": 1,
+            "pattern": "^(?:0|[1-9][0-9]{0,11})(?:\\.[0-9]{0,5}[1-9])?$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "source_location": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Source Location",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "product_id",
+          "source_location",
+          "destination_location",
+          "quantity"
+        ],
+        "title": "TransferBody",
         "type": "object"
       },
       "TransitionBody": {
@@ -13214,11 +13419,13 @@
               "schema": {
                 "discriminator": {
                   "mapping": {
+                    "inventory.add-location": "#/components/schemas/LocationBody",
                     "inventory.adjust": "#/components/schemas/AdjustmentBody",
                     "inventory.configure-replenishment": "#/components/schemas/ReplenishmentBody",
                     "inventory.correct-intake": "#/components/schemas/IntakeCorrectionBody",
                     "inventory.intake": "#/components/schemas/IntakeBody",
                     "inventory.register-product": "#/components/schemas/ProductBody",
+                    "inventory.transfer": "#/components/schemas/TransferBody",
                     "shopping.add-extra": "#/components/schemas/AddExtraBody",
                     "shopping.cancel-balance": "#/components/schemas/CancelPurchaseBalanceBody",
                     "shopping.clear-extra": "#/components/schemas/ClearExtraBody",
@@ -13235,6 +13442,12 @@
                 "oneOf": [
                   {
                     "$ref": "#/components/schemas/ProductBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LocationBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TransferBody"
                   },
                   {
                     "$ref": "#/components/schemas/IntakeBody"
