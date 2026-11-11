@@ -1,8 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.16",
-  "sourceCommit": "888c563271527d992c8f026656122549b8a8c34f",
-  "sourceArchiveSHA256": "3b414db7439eaa26cd5c3fe4929bf93d0b54d6fc3db7b396f413642199a3e10d",
+  "version": "0.0.0-edge.19",
+  "sourceCommit": "4a66b5b2d1a89f839d6291a120ef3b16b160026d",
+  "sourceArchiveSHA256": "6dd4b32d8083fddaffb5a442a162e20c841ecc8402935d8eced859957dcc4d32",
+  "storageSchema": 31,
+  "wheelSHA256": "29f5fadffaa3b9dfc2d41b38f2f91a6ab34a5c259fa384e6a02d9dd14e37fb51",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -80,8 +82,8 @@
     "domus/application/task_material_scope.py": "f1d44c700578da0681872e4fac42d1ebb801e33fa843065b9dabb397f69888d1",
     "domus/application/task_material_views.py": "1f4e1b52c17064b73e3c6502b38fc578a7589d68044279312c783b656e5aa5bf",
     "domus/application/task_materials.py": "caa132a7b16fca293770deba3da149cf9bda2e24d4719abe9de39470d686698e",
-    "domus/application/task_ports.py": "c38e0cf30f3eb00bd5b5db90e3d3e0c5f5862cddc8c17a21c9e35b1498353d41",
-    "domus/application/task_queries.py": "7a55a81e2cf11d47c1a0acdf53da8714d2434f51a8fc3d59455b422864656053",
+    "domus/application/task_ports.py": "165f04fc639310da0b742c8c2d58b2eadd459142720fdc138df384f34e53e35a",
+    "domus/application/task_queries.py": "4eaac872592d615117b85783036488742ac0ac4c3440d9471fc3c54ca7379718",
     "domus/application/task_requests.py": "2e9ead8f5458d45335ec55bad50f5f7e12b42ee9b00ff54634f3ff681b320897",
     "domus/application/task_reviews.py": "dcc288cda6cdcf5073bad4f24133b9d3496c0b0cf1272e8328e6df38129f3328",
     "domus/composition/__init__.py": "a902d8faf7dd19da6829fb730d81e32d34ec38ee6cfafd676966a95d0ad31366",
@@ -215,17 +217,15 @@
     "domus/infrastructure/sqlite_task_records.py": "ec46d74954b62b6f4618b2b12198c4587d829c1d711ec8f67b5adc125989d988",
     "domus/infrastructure/sqlite_task_reviews.py": "96984dc6f02f6e7a4cf88a328da94cac20ebc9ce405134859b141290ff1bd7ed",
     "domus/infrastructure/sqlite_task_schema.py": "25e3241cb6c30ceb1701c854c7c88a4051085cabc255b03e78847beda525214a",
-    "domus/infrastructure/sqlite_tasks.py": "311b5674955ddb8d7c963feb62112fae1bc3a497df1f014ab95da98895a5bff2",
+    "domus/infrastructure/sqlite_tasks.py": "26ee9ae24b101d07e3f5c08c01cbb761c9eb602aa0dd272720bceb328364a7a4",
     "domus/infrastructure/standalone_sessions.py": "ec3fd7a848c2c2a57e416bc7361e416c823d76706b474d08120cdd9e1534655a",
     "domus/infrastructure/task_cursor.py": "b21dbb915ce874b51008689d05abb4480cb7a65aabc5851f9500e51238bb6b5f",
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
-  "storageSchema": 31,
   "uiFiles": {
-    ".vite/manifest.json": "760377f5a7a906e87692cafe272941c0a43bc34aaedfb448adac84cf320051a4",
+    ".vite/manifest.json": "82ec4efae0874d560a9c4afe2da6c164d4d7e6aa8c480f166f519cfdbe935ba3",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-CknUPUos.js": "190d8afc8019137ecd20fc8306fd9c103b1897f81c3fe5c3bc1fb50cbd7af378",
-    "index.html": "26b1784e37e0541e8de112d8284fc54c050af96523b56dea10f3953f3cb51e59"
-  },
-  "wheelSHA256": "ae84d47aabd1d0305063210844dd08de27eec39204f4655e0178770d1507a07d"
+    "assets/index-DbtJZoHT.js": "ea090772ec5c64266d040f5770850ca1a8b13d7264be47684fcc2d792cb02024",
+    "index.html": "e9a939f3060f7be87b377495e8eb1f1c6c53a001a87fd40bd95a42a65293f354"
+  }
 }
