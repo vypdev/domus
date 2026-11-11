@@ -25,7 +25,7 @@ from domus.application.task_facts import (
     resolved_rules,
 )
 from domus.application.task_material_views import MaterialOutcome, material_outcome
-from domus.application.task_ports import TaskCursors
+from domus.application.task_ports import TaskCursors, TaskOccurrenceGroup
 from domus.application.task_reviews import DependencyReviewView, review_cycle, review_items
 from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
@@ -101,6 +101,35 @@ class OccurrenceSummary:
     assignee_ids: tuple[str, ...]
     due_at: int | None
     current_cycle_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class TaskOverviewItem:
+    occurrence_id: str
+    title: str
+    state: OccurrenceState
+
+
+@dataclass(frozen=True, slots=True)
+class TaskOverviewGroup:
+    total: int
+    items: tuple[TaskOverviewItem, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class TaskOverview:
+    assigned: TaskOverviewGroup
+    unclaimed: TaskOverviewGroup
+
+
+def _overview_group(group: TaskOccurrenceGroup) -> TaskOverviewGroup:
+    return TaskOverviewGroup(
+        group.total,
+        tuple(
+            TaskOverviewItem(item.occurrence_id, item.definition_snapshot.content.title, item.state)
+            for item in group.items
+        ),
+    )
 
 
 CompletionPoints = Literal["automatic", "manual", "manager_required"]
@@ -315,6 +344,19 @@ class TaskQueries:
                 for item in rows
             )
             return self._page(summaries, limit, binding, lambda item: item.occurrence_id)
+
+    def overview(self) -> TaskOverview:
+        with self.transactions.read() as unit:
+            actor = self._read(unit)
+            assigned = unit.tasks.occurrence_group(
+                self.household_id,
+                (OccurrenceState.ASSIGNED, OccurrenceState.IN_PROGRESS, OccurrenceState.BLOCKED),
+                actor.member.member_id,
+            )
+            unclaimed = unit.tasks.occurrence_group(
+                self.household_id, (OccurrenceState.AVAILABLE,), None
+            )
+            return TaskOverview(_overview_group(assigned), _overview_group(unclaimed))
 
     def occurrence(self, occurrence_id: str) -> TaskDetail:
         with self.transactions.read() as unit:

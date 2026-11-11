@@ -477,7 +477,7 @@
       "status": "proposed",
       "scope": "Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-01",
+      "lastVerified": "2026-11-11",
       "specs": [
         "specs/household-tasks.md",
         "specs/task-execution-foundation.md",
@@ -486,7 +486,9 @@
       "workflows": [
         ".github/workflows/ci_check.yml"
       ],
-      "entrypoints": [],
+      "entrypoints": [
+        "backend/src/domus/entrypoints/task_http.py"
+      ],
       "code": [
         "backend/src/domus/domain/task_values.py",
         "backend/src/domus/domain/task_policy.py",
@@ -498,7 +500,11 @@
         "backend/src/domus/infrastructure/sqlite_task_integrity.py",
         "backend/src/domus/application/task_authorization.py",
         "backend/src/domus/application/task_commands.py",
-        "backend/src/domus/application/task_requests.py"
+        "backend/src/domus/application/task_requests.py",
+        "backend/src/domus/application/task_queries.py",
+        "frontend/src/application/task-overview.ts",
+        "frontend/src/adapters/task-http.ts",
+        "frontend/src/presentation/domus-task-overview.ts"
       ],
       "tests": [
         "tests/backend/test_task_values.py",
@@ -511,7 +517,11 @@
         "tests/backend/test_task_authorization.py",
         "tests/backend/test_task_commands.py",
         "tests/backend/test_task_execution_commands.py",
-        "tests/backend/test_task_edit_commands.py"
+        "tests/backend/test_task_edit_commands.py",
+        "tests/backend/test_task_overview.py",
+        "frontend/tests/task-overview.test.ts",
+        "frontend/tests/task-http.test.ts",
+        "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -522,11 +532,12 @@
         "docs/evidence/task-execution-foundation.json",
         "docs/tasks/operator-recovery.md",
         "docs/tasks/migration.md",
-        "docs/tasks/execution.md"
+        "docs/tasks/execution.md",
+        "docs/evidence/overview-task-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete",
+        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation",
         "blockingDecisions": "A34 prerequisite gating and A35 same-task points remainder rotation are owner-confirmed. Bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }

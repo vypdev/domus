@@ -8,6 +8,8 @@ import type {PropertyValues} from 'lit';
 import type {EntryView} from '../application/entry-controller';
 import type {TaskView} from '../application/task-controller';
 import './domus-tasks';
+import './domus-task-overview';
+import type {TaskOverviewView} from '../application/task-overview';
 import './domus-calendar';
 import './domus-family';
 import './domus-rewards';
@@ -42,11 +44,12 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
   static properties = {inventory: {attribute:false}, rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
-    workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
+    taskOverview: {attribute: false}, workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
   declare administration:AdministrationView|null;
   declare tasks: TaskView | null;
+  declare taskOverview: TaskOverviewView | null;
   declare calendar: CalendarView | null;
   declare family: FamilyView | null;
   declare rewards: RewardsView | null;
@@ -69,7 +72,7 @@ export class DomusApp extends LitElement {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
     this.recurrenceReview = null; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
     this.family = null; this.rewards = null; this.inventory = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
-    this.workspaceDestination = null; this.nameDraft = ''; this.zoneDraft = '';
+    this.workspaceDestination = null; this.taskOverview = null; this.nameDraft = ''; this.zoneDraft = '';
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
   private text(key: MessageKey): string {return message(key, this.language);}
@@ -215,6 +218,7 @@ export class DomusApp extends LitElement {
             ${!taskWorkspace ? this.button('refresh', 'refresh', decision?.action === 'refresh') : nothing}` : nothing}</div>
         ${!loading && decision?.action === 'contact_administrator' ? html`<p class="help">${this.text('contact')}</p>` : nothing}
         ${!closed && view?.busy ? html`<p class="busy" role="status">${this.text('busy')}</p>` : nothing}
+        <domus-task-overview .view=${this.taskOverview} .language=${this.language}></domus-task-overview>
       </section>
       <section id="tasks" tabindex="-1" aria-label=${this.text('navigationTasks')}
         ?hidden=${!workspace || this.workspaceDestination !== 'tasks'}>

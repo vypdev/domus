@@ -78,6 +78,8 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(overview).toHaveAttribute('aria-current', 'page');
     await expect(overview).toHaveCSS('border-bottom-width', '2px');
     await tabs.screenshot({path: info.outputPath('en-light-wide.png')});
+    await expect(overviewRegion.getByRole('heading', {name:'Assigned to me · 0', exact:true})).toBeVisible();
+    await expect(overviewRegion.getByRole('heading', {name:'Unclaimed tasks · 0', exact:true})).toBeVisible();
 
     await overview.focus();
     await page.keyboard.press('Tab');
@@ -854,5 +856,43 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.keyboard.press('Enter');
     await expect(hogar).toHaveAttribute('aria-current', 'page');
     await expect(page).toHaveURL(base + '#household');
+
+    await tabs.evaluate(element => {element.style.removeProperty('width');});
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    const assigned = await post('definitions', 'overview-assigned', {title:'Check the filters'});
+    await post('occurrences/' + assigned.occurrence_id + '/claim', 'overview-claim',
+      {expected_revision:assigned.revision});
+    await post('definitions', 'overview-unclaimed', {title:'Sort the recycling'});
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.route(base + 'api/v1/tasks/overview', route => route.abort('failed'), {times:1});
+    await overview.click();
+    await expect(overviewRegion.getByText('The task summary could not be loaded.')).toBeVisible();
+    await expect(overviewRegion.getByRole('heading',{name:/Assigned to me ·/u})).toHaveCount(0);
+    await overviewRegion.getByRole('button',{name:'Retry task summary'}).press('Enter');
+    const taskSummary = overviewRegion.getByRole('region',{name:'Task summary',exact:true});
+    const assignedItem = taskSummary.getByRole('button',{name:'Check the filters · Assigned',exact:true});
+    await expect(assignedItem).toBeVisible();
+    await expect(taskSummary.getByRole('article',{name:/^Assigned to me ·/u}))
+      .toHaveCSS('background-color','rgb(255, 255, 255)');
+    await taskSummary.screenshot({path:info.outputPath('task-overview-en-wide.png')});
+    await assignedItem.press('Enter');
+    await expect(page).toHaveURL(base + '#tasks');
+    await expect(tasksRegion).toBeFocused();
+    await expect(tasksRegion.getByRole('heading',{name:'Check the filters',exact:true})).toBeVisible();
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    const resumen = overviewRegion.getByRole('region',{name:'Resumen de tareas',exact:true});
+    const unclaimedItem = resumen.getByRole('button',{name:'Sort the recycling · Disponible',exact:true});
+    await expect(unclaimedItem).toBeVisible();
+    await expect(resumen.getByRole('article',{name:/^Tareas sin asignar ·/u}))
+      .toHaveCSS('background-color','rgb(24, 36, 47)');
+    await resumen.screenshot({path:info.outputPath('task-overview-es-narrow.png')});
+    await unclaimedItem.tap();
+    await expect(page).toHaveURL(base + '#tasks');
+    await expect(tasksRegion.getByRole('heading',{name:'Sort the recycling',exact:true})).toBeVisible();
   });
 }
