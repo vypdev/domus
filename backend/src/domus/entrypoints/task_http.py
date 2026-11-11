@@ -104,6 +104,7 @@ class TaskOriginalResponse(OperationResponse):
 @dataclass(frozen=True, slots=True)
 class TaskHTTPContext:
     queries: Callable[[], TaskQueries]
+    overview: Callable[[], TaskOverview]
     commands: TaskCommands
     recurrence_review: RecurrenceReview
     calendar: Callable[[], CalendarQueries]
@@ -139,7 +140,7 @@ def create_task_router(
 
     @router.get("/overview", response_model=TaskOverview)
     def overview(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskOverview:
-        return context(request).queries().overview()
+        return context(request).overview()
 
     @router.get("/policy", response_model=TaskPolicyView)
     def policy(request: Request, query: Annotated[_EmptyQuery, Query()]) -> TaskPolicyView:

@@ -56,14 +56,19 @@ def task_contexts(
     def context(actor: TaskSession) -> TaskHTTPContext:
         rewards = RewardCommands(store, actor, clock, identifiers)
         catalog = InventoryCommands(store, actor, clock, identifiers)
-        return TaskHTTPContext(
-            lambda: TaskQueries(
+
+        def queries() -> TaskQueries:
+            return TaskQueries(
                 store,
                 actor.read(),
                 cursors,
                 installation,
                 schedule_data_identity=planner.times.data_identity,
-            ),
+            )
+
+        return TaskHTTPContext(
+            queries,
+            lambda: queries().overview(clock, planner.times),
             TaskCommands(store, actor, clock, identifiers, inventory_factory=inventory),
             RecurrenceReview(store, installation, actor, actor.read, clock, identifiers, planner),
             lambda: CalendarQueries(store, scope, actor.read(), cursors, planner.times),

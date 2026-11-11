@@ -2,13 +2,17 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from datetime import date, timedelta
 from functools import partial
 from typing import Literal, cast
 
 from domus.application.authorization import HouseholdAccess
+from domus.application.calendar_queries import calendar_boundary
 from domus.application.household_queries import OperationView
 from domus.application.point_allocations import effective_allocation
-from domus.application.ports import Transactions, UnitOfWork
+from domus.application.ports import Clock, Transactions, UnitOfWork
+from domus.application.recurrence_ports import RecurrenceTimes
+from domus.application.reschedule_review import effective_deadline
 from domus.application.schedule_creation_policy import schedule_creation_policy
 from domus.application.task_authorization import (
     TaskAccess,
@@ -53,6 +57,8 @@ from domus.domain.task_values import (
     validate_task_time,
 )
 from domus.domain.tasks import TaskCycle, TaskDefinition, TaskOccurrence
+
+OVERVIEW_LIMIT = 25
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,24 +117,83 @@ class TaskOverviewItem:
 
 
 @dataclass(frozen=True, slots=True)
-class TaskOverviewGroup:
+class TaskOverviewDeadline:
+    local_date: date | None
+    instant_ms: str | None
+    time_zone: str
+
+
+@dataclass(frozen=True, slots=True)
+class TaskOverviewDeadlineItem(TaskOverviewItem):
+    deadline: TaskOverviewDeadline
+
+
+@dataclass(frozen=True, slots=True)
+class TaskOverviewGroup[T: TaskOverviewItem]:
     total: int
-    items: tuple[TaskOverviewItem, ...]
+    items: tuple[T, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class TaskOverview:
-    assigned: TaskOverviewGroup
-    unclaimed: TaskOverviewGroup
+    assigned: TaskOverviewGroup[TaskOverviewItem]
+    unclaimed: TaskOverviewGroup[TaskOverviewItem]
+    due_today: TaskOverviewGroup[TaskOverviewDeadlineItem]
+    overdue: TaskOverviewGroup[TaskOverviewDeadlineItem]
 
 
-def _overview_group(group: TaskOccurrenceGroup) -> TaskOverviewGroup:
+def _overview_group(group: TaskOccurrenceGroup) -> TaskOverviewGroup[TaskOverviewItem]:
     return TaskOverviewGroup(
         group.total,
         tuple(
             TaskOverviewItem(item.occurrence_id, item.definition_snapshot.content.title, item.state)
             for item in group.items
         ),
+    )
+
+
+def _overview_deadline_groups(
+    unit: UnitOfWork, household_id: str, now: int, times: RecurrenceTimes
+) -> tuple[
+    TaskOverviewGroup[TaskOverviewDeadlineItem], TaskOverviewGroup[TaskOverviewDeadlineItem]
+]:
+    household = unit.households.get(household_id)
+    assert household is not None
+    policy = TimePolicy(household.time_zone, times.data_identity)
+    today = times.local_at(now, policy).local.date()
+    timed_before = calendar_boundary(today + timedelta(days=1), times, policy)
+    days = {policy: today}
+    totals = {False: 0, True: 0}
+    items: dict[bool, list[TaskOverviewDeadlineItem]] = {False: [], True: []}
+    for work in unit.tasks.deadline_occurrences(household_id, timed_before):
+        if work.due_at is not None:
+            overdue = work.due_at < now
+            deadline = TaskOverviewDeadline(None, str(work.due_at), policy.zone)
+        else:
+            slot = unit.recurrence.fixed_slot_for_occurrence(
+                household_id, work.occurrence_id
+            ) or unit.recurrence.relative_slot_for_occurrence(household_id, work.occurrence_id)
+            assert slot is not None
+            effective = effective_deadline(unit, work, slot)
+            assert effective.local_date is not None
+            saved_policy = slot.schedule.policy
+            if saved_policy not in days:
+                days[saved_policy] = times.local_at(now, saved_policy).local.date()
+            local_day = days[saved_policy]
+            if effective.local_date > local_day:
+                continue
+            overdue = effective.local_date < local_day
+            deadline = TaskOverviewDeadline(effective.local_date, None, saved_policy.zone)
+        totals[overdue] += 1
+        if len(items[overdue]) < OVERVIEW_LIMIT:
+            items[overdue].append(
+                TaskOverviewDeadlineItem(
+                    work.occurrence_id, work.definition_snapshot.content.title, work.state, deadline
+                )
+            )
+    return (
+        TaskOverviewGroup(totals[False], tuple(items[False])),
+        TaskOverviewGroup(totals[True], tuple(items[True])),
     )
 
 
@@ -345,18 +410,24 @@ class TaskQueries:
             )
             return self._page(summaries, limit, binding, lambda item: item.occurrence_id)
 
-    def overview(self) -> TaskOverview:
+    def overview(self, clock: Clock, times: RecurrenceTimes) -> TaskOverview:
         with self.transactions.read() as unit:
             actor = self._read(unit)
             assigned = unit.tasks.occurrence_group(
                 self.household_id,
                 (OccurrenceState.ASSIGNED, OccurrenceState.IN_PROGRESS, OccurrenceState.BLOCKED),
                 actor.member.member_id,
+                limit=OVERVIEW_LIMIT,
             )
             unclaimed = unit.tasks.occurrence_group(
-                self.household_id, (OccurrenceState.AVAILABLE,), None
+                self.household_id, (OccurrenceState.AVAILABLE,), None, limit=OVERVIEW_LIMIT
             )
-            return TaskOverview(_overview_group(assigned), _overview_group(unclaimed))
+            due_today, overdue = _overview_deadline_groups(
+                unit, self.household_id, clock.now(), times
+            )
+            return TaskOverview(
+                _overview_group(assigned), _overview_group(unclaimed), due_today, overdue
+            )
 
     def occurrence(self, occurrence_id: str) -> TaskDetail:
         with self.transactions.read() as unit:

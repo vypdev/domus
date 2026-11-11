@@ -533,11 +533,12 @@
         "docs/tasks/operator-recovery.md",
         "docs/tasks/migration.md",
         "docs/tasks/execution.md",
-        "docs/evidence/overview-task-qualification.md"
+        "docs/evidence/overview-task-qualification.md",
+        "docs/evidence/overview-deadlines-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation",
+        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work",
         "blockingDecisions": "A34 prerequisite gating and A35 same-task points remainder rotation are owner-confirmed. Bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }

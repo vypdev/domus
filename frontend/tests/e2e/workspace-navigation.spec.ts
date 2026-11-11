@@ -893,6 +893,20 @@ for (const mode of ['native', 'standalone'] as const) {
     await post('occurrences/' + assigned.occurrence_id + '/claim', 'overview-claim',
       {expected_revision:assigned.revision});
     await post('definitions', 'overview-unclaimed', {title:'Sort the recycling'});
+    const lateDefinition = await post('definitions', 'overview-late-definition', {title:'Check window latches'});
+    const todayDefinition = await post('definitions', 'overview-today-definition', {title:'Read the water meter'});
+    const day = 86_400_000;
+    const nextMidnight = (now:number) => Math.floor(now / day + 1) * day;
+    const rollover = nextMidnight(Date.now());
+    if (rollover - Date.now() < 20_000)
+      await expect.poll(() => Date.now(),{timeout:25_000}).toBeGreaterThanOrEqual(rollover);
+    const observed = Date.now();
+    const overdueWork = await post('definitions/' + lateDefinition.definition_id + '/occurrences','overview-overdue', {
+      due_at:observed - 60_000, assignee_ids:[member],
+    });
+    const dueWork = await post('definitions/' + todayDefinition.definition_id + '/occurrences','overview-today', {
+      due_at:nextMidnight(observed) - 1,
+    });
     await page.getByLabel('Idioma',{exact:true}).selectOption('en');
     await page.route(base + 'api/v1/tasks/overview', route => route.abort('failed'), {times:1});
     await overview.click();
@@ -904,7 +918,18 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(assignedItem).toBeVisible();
     await expect(taskSummary.getByRole('article',{name:/^Assigned to me ·/u}))
       .toHaveCSS('background-color','rgb(255, 255, 255)');
+    await expect(taskSummary.getByRole('heading',{name:'Overdue · 1',exact:true})).toBeVisible();
+    await expect(taskSummary.getByRole('heading',{name:'Due today · 1',exact:true})).toBeVisible();
+    const overdueItem = taskSummary.getByRole('button',{name:/^Check window latches · .+ · Assigned$/u});
+    await expect(overdueItem).toBeVisible();
+    await expect(taskSummary.getByRole('button',{name:/^Read the water meter · .+ · Available$/u})).toBeVisible();
     await taskSummary.screenshot({path:info.outputPath('task-overview-en-wide.png')});
+    const overdueDetail = page.waitForResponse(base + 'api/v1/tasks/occurrences/' + overdueWork.occurrence_id);
+    await overdueItem.press('Enter');
+    expect((await overdueDetail).ok()).toBe(true);
+    await expect(tasksRegion).toBeFocused();
+    await overview.click();
+    await expect(assignedItem).toBeVisible();
     await assignedItem.press('Enter');
     await expect(page).toHaveURL(base + '#tasks');
     await expect(tasksRegion).toBeFocused();
@@ -919,7 +944,15 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(unclaimedItem).toBeVisible();
     await expect(resumen.getByRole('article',{name:/^Tareas sin asignar ·/u}))
       .toHaveCSS('background-color','rgb(24, 36, 47)');
+    await expect(resumen.getByRole('heading',{name:'Vencidas · 1',exact:true})).toBeVisible();
+    await expect(resumen.getByRole('heading',{name:'Para hoy · 1',exact:true})).toBeVisible();
+    const dueItem = resumen.getByRole('button',{name:/^Read the water meter · .+ · Disponible$/u});
     await resumen.screenshot({path:info.outputPath('task-overview-es-narrow.png')});
+    const dueDetail = page.waitForResponse(base + 'api/v1/tasks/occurrences/' + dueWork.occurrence_id);
+    await dueItem.tap();
+    expect((await dueDetail).ok()).toBe(true);
+    await expect(tasksRegion).toBeFocused();
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
     await unclaimedItem.tap();
     await expect(page).toHaveURL(base + '#tasks');
     await expect(tasksRegion.getByRole('heading',{name:'Sort the recycling',exact:true})).toBeVisible();

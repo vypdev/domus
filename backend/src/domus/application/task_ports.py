@@ -1,5 +1,6 @@
 """Task persistence and opaque pagination contracts expose domain facts and bounded reads."""
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -108,6 +109,9 @@ class TaskRepository(Protocol):
         *,
         limit: int = 25,
     ) -> TaskOccurrenceGroup: ...
+    def deadline_occurrences(
+        self, household_id: str, timed_before: int
+    ) -> Iterator[TaskOccurrence]: ...
     def cycle(self, household_id: str, cycle_id: str) -> TaskCycle | None: ...
     def save_cycle(self, value: TaskCycle, expected_revision: int) -> None: ...
     def cycles(

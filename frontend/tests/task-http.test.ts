@@ -295,15 +295,26 @@ test('task detail decodes the current completion allocation affordance before se
   await expect(f.server.detail('work-1', 'home', context).result).rejects.toThrow('invalid_response');
 });
 
-test('Overview reads the exact authorized count with a bounded list of validated task rows', async () => {
+const emptyOverviewGroup = {total: 0, items: []};
+const emptyOverview = {assigned: emptyOverviewGroup, unclaimed: emptyOverviewGroup,
+  due_today: emptyOverviewGroup, overdue: emptyOverviewGroup};
+const dueWireItem = {occurrence_id: 'due', title: 'Check meter', state: 'available',
+  deadline: {local_date: null, instant_ms: '1775113200000', time_zone: 'Europe/Madrid'}};
+const overdueWireItem = {occurrence_id: 'late', title: 'Change filter', state: 'blocked',
+  deadline: {local_date: '2026-04-01', instant_ms: null, time_zone: 'Europe/Madrid'}};
+
+test('Overview reads exact counts, bounded task rows and both effective deadline precisions', async () => {
   const f = fixture('native');
   const items = Array.from({length: 25}, (_, index) => ({occurrence_id: 'work-' + index,
     title: 'Clean <b>table</b>', state: 'assigned'}));
-  f.transport.mockResolvedValueOnce(reply({assigned: {total: 37, items}, unclaimed: {total: 0, items: []}}));
+  f.transport.mockResolvedValueOnce(reply({...emptyOverview, assigned: {total: 37, items},
+    due_today: {total: 1, items: [dueWireItem]}, overdue: {total: 1, items: [overdueWireItem]}}));
   const result = await f.server.overview(context).result;
   expect(result.assigned.total).toBe(37);
   expect(result.assigned.items).toHaveLength(25);
   expect(result.assigned.items[0]).toEqual({id: 'work-0', title: 'Clean <b>table</b>', state: 'assigned'});
+  expect(result.dueToday.items[0].deadline).toEqual({day: null, instant: 1775113200000, zone: 'Europe/Madrid'});
+  expect(result.overdue.items[0].deadline).toEqual({day: '2026-04-01', instant: null, zone: 'Europe/Madrid'});
   const [path, init] = f.transport.mock.calls[0];
   expect(path).toBe(f.target.applicationBase + 'api/v1/tasks/overview');
   expect(init.method).toBe('GET');
@@ -317,6 +328,23 @@ test.each([
   {total: 2, items: Array.from({length: 2}, () => ({occurrence_id: 'same', title: 'Clean', state: 'assigned'}))},
 ])('Overview rejects an incomplete or inconsistent group', async assigned => {
   const f = fixture();
-  f.transport.mockResolvedValueOnce(reply({assigned, unclaimed: {total: 0, items: []}}));
+  f.transport.mockResolvedValueOnce(reply({...emptyOverview, assigned}));
+  await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
+});
+
+test('Overview rejects malformed, ambiguous and duplicate deadline rows', async () => {
+  const f = fixture();
+  const group = (item: object) => ({total: 1, items: [item]});
+  for (const deadline of [
+    {...dueWireItem.deadline, instant_ms: '253402300800000'},
+    {...dueWireItem.deadline, instant_ms: null},
+    {...dueWireItem.deadline, local_date: '2026-02-30'},
+    {...dueWireItem.deadline, local_date: '2026-04-01'},
+    {...dueWireItem.deadline, time_zone: 'Invalid/Zone'},
+  ]) {
+    f.transport.mockResolvedValueOnce(reply({...emptyOverview, due_today: group({...dueWireItem, deadline})}));
+    await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
+  }
+  f.transport.mockResolvedValueOnce(reply({...emptyOverview, due_today: group(dueWireItem), overdue: group(dueWireItem)}));
   await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
 });

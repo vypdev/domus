@@ -1,7 +1,7 @@
 """Scoped task repositories with compare-and-swap writes and strict stored-header checks."""
 
 import sqlite3
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from typing import cast
 
@@ -410,7 +410,7 @@ class SQLiteTasks(TaskRepository):
             + " ORDER BY occurrence_id LIMIT ?",
             (*parameters, limit),
         )
-        return self._occurrence_rows(rows)
+        return tuple(self._occurrence_rows(rows))
 
     def occurrence_group(
         self,
@@ -439,11 +439,43 @@ class SQLiteTasks(TaskRepository):
         rows = self.connection.execute(
             "SELECT *" + selection + " ORDER BY occurrence_id LIMIT ?", (*parameters, limit)
         )
-        return TaskOccurrenceGroup(total, self._occurrence_rows(rows))
+        return TaskOccurrenceGroup(total, tuple(self._occurrence_rows(rows)))
 
-    def _occurrence_rows(self, rows: Iterable[sqlite3.Row]) -> tuple[TaskOccurrence, ...]:
-        return tuple(
-            cast(
+    def deadline_occurrences(
+        self, household_id: str, timed_before: int
+    ) -> Iterator[TaskOccurrence]:
+        validate_identifier(household_id)
+        rows = self.connection.execute(
+            """
+            SELECT work.* FROM task_occurrences AS work
+            WHERE work.household_id = ?
+              AND work.state IN ('available', 'assigned', 'in_progress', 'blocked')
+              AND (
+                json_extract(work.document, '$.due_at') < ?
+                OR (json_extract(work.document, '$.due_at') IS NULL AND (
+                  EXISTS (
+                    SELECT 1 FROM recurrence_slots AS fixed
+                    WHERE fixed.household_id = work.household_id
+                      AND fixed.occurrence_id = work.occurrence_id
+                      AND fixed.nominal_kind = 'date'
+                  )
+                  OR EXISTS (
+                    SELECT 1 FROM recurrence_relative_slots AS relative
+                    WHERE relative.household_id = work.household_id
+                      AND relative.occurrence_id = work.occurrence_id
+                      AND json_extract(relative.document, '$.planned.nominal.kind') = 'date'
+                  )
+                ))
+              )
+            ORDER BY work.occurrence_id
+            """,
+            (household_id, timed_before),
+        )
+        return self._occurrence_rows(rows)
+
+    def _occurrence_rows(self, rows: Iterable[sqlite3.Row]) -> Iterator[TaskOccurrence]:
+        for row in rows:
+            yield cast(
                 TaskOccurrence,
                 _model(
                     row,
@@ -451,8 +483,6 @@ class SQLiteTasks(TaskRepository):
                     _occurrence_headers,
                 ),
             )
-            for row in rows
-        )
 
     def cycle(self, household_id: str, cycle_id: str) -> TaskCycle | None:
         validate_identifier(household_id)
