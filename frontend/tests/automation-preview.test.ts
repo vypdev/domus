@@ -81,13 +81,15 @@ test('manual preview keeps the draft through validation, read retries and produc
   expect(publish).toHaveBeenLastCalledWith(ready({title:TITLE, result:true}));
 });
 
-test('navigation retains a draft, cancels stale outcomes and rechecks current access', async () => {
+test('navigation retains a draft, reloads products, cancels stale outcomes and rechecks access', async () => {
   const obsolete = deferred<boolean>(), lateFailure = deferred<boolean>();
   const access = vi.fn().mockImplementationOnce(() => settled(undefined))
     .mockImplementationOnce(() => failed(new Error('HA unavailable')))
     .mockImplementationOnce(() => settled(undefined)).mockImplementationOnce(() => settled(undefined))
     .mockImplementationOnce(() => failed(new EntryReadError('authentication_required')));
-  const read = vi.fn().mockImplementation(() => settled(page([tea], 'next')));
+  const read = vi.fn().mockImplementationOnce(() => settled(page([tea], 'next')))
+    .mockImplementationOnce(() => settled(page([tea, coffee], null)))
+    .mockImplementationOnce(() => settled(page([tea], 'next')));
   const preview = vi.fn().mockReturnValueOnce(obsolete).mockReturnValueOnce(lateFailure)
     .mockImplementationOnce(() => failed(new EntryReadError('forbidden')));
   const publish = vi.fn();
@@ -107,7 +109,8 @@ test('navigation retains a draft, cancels stale outcomes and rechecks current ac
   controller.bind(scope, true);
   await vi.waitFor(() => expect(publish).toHaveBeenLastCalledWith({state:'unavailable'}));
   await controller.handle({type:'retry'});
-  expect(publish).toHaveBeenLastCalledWith(ready({title:TITLE}));
+  await vi.waitFor(() => expect(publish).toHaveBeenLastCalledWith(ready({title:TITLE,
+    catalog:{products:[tea, coffee], after:null, next:null}})));
   const second = controller.handle({type:'preview'});
   const secondContext = {...context, subject:'b'.repeat(32)};
   controller.bind({...scope, key:'second', context:secondContext}, true);
@@ -232,6 +235,8 @@ test('preview component localizes draft, status and recovery, and keeps the titl
   expect(feedback()).toContain('Could not preview the rule');
   await view(ready({issue:'products'}));
   expect(feedback()).toContain('Could not load products');
+  await press('Try again');
+  expect(latest()).toEqual({type:'retry'});
   await view(ready({title:TITLE,result:true,catalog:{products:[],after:null,next:null}}));
   expect(root.querySelector('.result')!.textContent).toContain('Would create this task');
   expect(root.querySelector('.result b')).toBeNull();

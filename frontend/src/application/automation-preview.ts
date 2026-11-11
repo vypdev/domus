@@ -119,8 +119,8 @@ export class AutomationPreviewController {
     this.publish({state: 'loading'});
     await this.settle(this.server.access(scope.context, scope.householdId), () => {
       this.granted = true;
-      if (this.ready === null) void this.products(null);
-      else this.update({...this.ready, busy: null, issue: null, result: null});
+      if (this.ready !== null) this.ready = {...this.ready, busy: null, result: null};
+      void this.products(null);
     }, () => this.publish({state: 'unavailable'}));
   }
 

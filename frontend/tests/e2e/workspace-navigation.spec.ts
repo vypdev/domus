@@ -989,17 +989,26 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(preview).toHaveCSS('color','rgb(255, 255, 255)');
     await rule.screenshot({path:info.outputPath('automation-preview-en-wide.png')});
 
+    await inventory.click();
+    const previewProduct = await inventoryWrite('preview-product', {
+      action:'inventory.register-product', name:'Tea filters for preview', base_unit:'piece',
+    });
+    await inventoryWrite('preview-product-minimum', {action:'inventory.configure-replenishment',
+      product_id:previewProduct.product_id, minimum:'2', target:'4', expected_revision:'0'});
+    await household.press('Enter');
+    await expect(title).toHaveValue('Check the tea supplies');
+    await expect(rule.getByRole('status')).toHaveCount(0);
     await page.getByLabel('Language',{exact:true}).selectOption('es');
     await page.setViewportSize({width:390,height:844});
     await page.emulateMedia({colorScheme:'dark'});
     await rule.getByRole('combobox',{name:'Existencias por debajo del mínimo (opcional)'}).tap();
-    await rule.getByRole('option',{name:'Session flour',exact:true}).tap();
+    await rule.getByRole('option',{name:'Tea filters for preview',exact:true}).tap();
     const previsualizar = rule.getByRole('button',{name:'Previsualizar regla',exact:true});
     await previsualizar.tap();
     await expect(rule.getByRole('status')).toContainText('Se crearía esta tarea');
-    await expect(rule.getByRole('status')).toContainText('Session flour');
+    await expect(rule.getByRole('status')).toContainText('Tea filters for preview');
     await expect(rule.getByRole('status')).toContainText('Las existencias disponibles están por debajo del mínimo.');
-    await inventoryWrite('preview-stock-intake', {action:'inventory.intake', product_id:flour.product_id, quantity:'2'});
+    await inventoryWrite('preview-stock-intake', {action:'inventory.intake', product_id:previewProduct.product_id, quantity:'2'});
     await previsualizar.tap();
     await expect(rule.getByRole('status')).toContainText('No se crearía ninguna tarea');
     await expect(rule.getByRole('status')).toContainText('No se cumple la condición de existencias.');

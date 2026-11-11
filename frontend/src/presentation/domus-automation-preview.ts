@@ -149,7 +149,8 @@ export class DomusAutomationPreview extends LitElement {
         .state=${buttonState({label: this.text('preview'), variant: 'primary'})}></vyp-ha-button></div>
       ${view.busy === 'preview' ? this.feedback('previewing', true)
         : view.busy === 'products' ? this.feedback('products', true) : nothing}
-      ${view.issue === 'products' ? this.feedback('productsUnavailable')
+      ${view.issue === 'products' ? html`${this.feedback('productsUnavailable')}
+        <div class="actions">${this.button('retry', 'retry')}</div>`
         : view.issue === 'preview' ? this.feedback('previewUnavailable') : nothing}
       ${view.result === null ? nothing : html`<div class="result" role="status">
         <p><strong>${this.text(view.result ? 'wouldCreate' : 'noAction')}</strong></p><p>${view.title}</p>
