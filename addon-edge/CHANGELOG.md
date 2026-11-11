@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.14
+
+- Use singular units for quantities of exactly one in the shared shopping list and purchase history in English and Spanish.
+
 ## 0.0.0-edge.13
 
 - Record an optional store on a purchase session and show it in protected trip history.
