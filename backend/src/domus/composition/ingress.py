@@ -18,14 +18,16 @@ from domus.application.points import PointsConsumer
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.task_events import TaskEventSource
-from domus.composition.ha_calendar import attach_ha_calendar
+from domus.composition.ha_projections import attach_ha_projections
 from domus.composition.household_administration import administration_services
 from domus.composition.recurrence import bind_lifespan, recurrence_worker
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
 from domus.entrypoints.entry_context import EntryHTTPContext
-from domus.entrypoints.ha_calendar_http import CALENDAR_DIGEST_ENV, CALENDAR_PORT
+from domus.entrypoints.ha_calendar_http import CALENDAR_DIGEST_ENV
+from domus.entrypoints.ha_deadline_http import DEADLINE_DIGEST_ENV
+from domus.entrypoints.ha_projection_http import PROJECTION_PORT
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.ingress_http import create_ingress_app
 from domus.entrypoints.native_http import NativeHTTPContext, create_native_app
@@ -70,12 +72,15 @@ def create_owned_runtime(
     public_origins: tuple[str, ...],
     *,
     ha_calendar_digest: str | None = None,
+    ha_deadline_digest: str | None = None,
 ) -> NativeRuntime:
     origins = PublicOrigins(public_origins).values
     identity = SupervisorIdentity(HomeAssistantWebSocket(HAEndpoint.supervisor()), token)
     storage = open_storage(data_directory, channel)
     try:
-        runtime = _compose_business(identity, storage.database, origins, ha_calendar_digest)
+        runtime = _compose_business(
+            identity, storage.database, origins, ha_calendar_digest, ha_deadline_digest
+        )
         runtime.storage = storage
         return runtime
     except BaseException:
@@ -91,6 +96,7 @@ def create_business_runtime(
     public_origins: tuple[str, ...],
     *,
     ha_calendar_digest: str | None = None,
+    ha_deadline_digest: str | None = None,
 ) -> NativeRuntime:
     installation = Installation(instance_id, channel)
     origins = PublicOrigins(public_origins).values
@@ -98,7 +104,7 @@ def create_business_runtime(
     reject_owned_database(database)
     store = SQLiteDatabase(database, installation)
     store.initialize()
-    return _compose_business(identity, store, origins, ha_calendar_digest)
+    return _compose_business(identity, store, origins, ha_calendar_digest, ha_deadline_digest)
 
 
 def _compose_business(
@@ -106,6 +112,7 @@ def _compose_business(
     store: SQLiteDatabase,
     origins: tuple[str, ...],
     ha_calendar_digest: str | None,
+    ha_deadline_digest: str | None,
 ) -> NativeRuntime:
     clock, entropy = MonotonicClock(), SecureEntropy()
     sessions = IngressSessions(
@@ -155,7 +162,7 @@ def _compose_business(
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
         ui_binding=ui_binding,
     )
-    attach_ha_calendar(app, store, ha_calendar_digest)
+    attach_ha_projections(app, store, ha_calendar_digest, ha_deadline_digest)
     worker = recurrence_worker(store, store.installation)
     bind_lifespan(app, worker)
     points = PointsConsumer(store, store.installation, utc)
@@ -177,7 +184,7 @@ def create_runtime(token: str, channel: str) -> FastAPI:
     return create_ingress_app(identity.prove, channel, correlation=lambda: "cor_" + entropy.new())
 
 
-def _serve_calendar(app: FastAPI) -> None:
+def _serve_ha_projections(app: FastAPI) -> None:
     config = uvicorn.Config(
         app,
         proxy_headers=False,
@@ -192,9 +199,9 @@ def _serve_calendar(app: FastAPI) -> None:
     )
     with (
         socket.create_server(("0.0.0.0", 8099)) as ingress,
-        socket.create_server(("0.0.0.0", CALENDAR_PORT)) as calendar,
+        socket.create_server(("0.0.0.0", PROJECTION_PORT)) as projections,
     ):
-        uvicorn.Server(config).run(sockets=[ingress, calendar])
+        uvicorn.Server(config).run(sockets=[ingress, projections])
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -207,7 +214,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--public-origin", action="append", default=[])
     args = parser.parse_args(argv)
     token = os.environ.pop("SUPERVISOR_TOKEN", "")
-    digest = os.environ.pop(CALENDAR_DIGEST_ENV, None)
+    calendar_digest = os.environ.pop(CALENDAR_DIGEST_ENV, None)
+    deadline_digest = os.environ.pop(DEADLINE_DIGEST_ENV, None)
+    projections_enabled = calendar_digest is not None or deadline_digest is not None
     runtime = None
     try:
         if args.data_directory is not None:
@@ -218,7 +227,8 @@ def main(argv: list[str] | None = None) -> int:
                 args.channel,
                 args.data_directory,
                 tuple(args.public_origin),
-                ha_calendar_digest=digest,
+                ha_calendar_digest=calendar_digest,
+                ha_deadline_digest=deadline_digest,
             )
             app = runtime.app
         elif args.database is not None:
@@ -230,11 +240,12 @@ def main(argv: list[str] | None = None) -> int:
                 args.database,
                 args.instance_id,
                 tuple(args.public_origin),
-                ha_calendar_digest=digest,
+                ha_calendar_digest=calendar_digest,
+                ha_deadline_digest=deadline_digest,
             )
             app = runtime.app
         else:
-            if args.instance_id or args.public_origin or digest is not None:
+            if args.instance_id or args.public_origin or projections_enabled:
                 raise InvalidInput("invalid_persistent_configuration")
             app = create_runtime(token, args.channel)
     except DomusError:
@@ -245,8 +256,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     try:
-        if digest is not None:
-            _serve_calendar(app)
+        if projections_enabled:
+            _serve_ha_projections(app)
         else:
             uvicorn.run(
                 app,

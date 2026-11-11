@@ -1,10 +1,12 @@
 # Installation and operation
 
-Edge 0.0.0-edge.21 packages the immutable runtime declared in
-[artifact.json](artifact.json). Overview shows the exact count and up to 25 products
-whose available stock falls below the configured minimum. Open Inventory to review
-stock and its available actions. This preview migrates
-supported databases to SQLite schema 31. Edge.13 introduced that schema and
+Edge 0.0.0-edge.23 packages the immutable runtime declared in
+[artifact.json](artifact.json). Home Assistant can read the same due-today and
+overdue task counts shown on Overview through a dedicated installation grant.
+Enable the [native deadline sensors](../docs/tasks/ha-deadline-sensors.md) using
+the optional `ha_deadline_digest` setting. The calendar uses its own
+`ha_calendar_digest` setting. Both share the private app port `8100` when enabled.
+This preview retains SQLite schema 31. Edge.13 introduced that schema and
 is listed in `breaking_versions`. Keep a compatible image and stopped-app
 backup before upgrading from an earlier schema. A binary that expects the
 earlier schema requires its compatible data backup.
