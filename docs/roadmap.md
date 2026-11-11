@@ -48,7 +48,10 @@ implementation, verification and packaging gates. The Family increments now cove
   increment](evidence/stock-location-transfer-qualification.md) shows the stock at each location and
   records a move as two linked ledger entries. Multiple lists, prices, refunds, location editing and
   archiving, lot and package management, barcodes and optional online lookup remain open.
-- M4: the shared automation engine, both editors and Domus-owned HA entities/services remain open. The existing gateway is already integrated; its MCP/business behavior is outside this work.
+- M4 starts with the [manual automation preview](evidence/automation-preview-qualification.md).
+  Household settings can simulate one task proposal against current stock. Durable rule
+  storage, enabling, execution, the advanced editor and Domus-owned HA entities and services
+  remain open.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
   and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).
   Upcoming maintenance and cross-domain summaries, full integrated acceptance and Stable release

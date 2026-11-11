@@ -956,5 +956,58 @@ for (const mode of ['native', 'standalone'] as const) {
     await unclaimedItem.tap();
     await expect(page).toHaveURL(base + '#tasks');
     await expect(tasksRegion.getByRole('heading',{name:'Sort the recycling',exact:true})).toBeVisible();
+
+    const previewAPI = base + 'api/v1/automation/preview';
+    const definitions = async () => {
+      const response = await page.request.get(base + 'api/v1/tasks/definitions', {
+        headers: {'X-Domus-Context':contextHeader},
+      });
+      expect(response.ok(), await response.text()).toBe(true);
+      return response.json();
+    };
+    const beforePreview = await definitions();
+    const writeOffset = writes.length;
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await household.press('Enter');
+    const rule = page.locator('domus-automation-preview');
+    const title = rule.getByRole('textbox',{name:'Proposed task title'});
+    const preview = rule.getByRole('button',{name:'Preview rule',exact:true});
+    await preview.press('Enter');
+    await expect(title).toBeFocused();
+    await expect(rule.getByText('Enter a task title of 1 to 160 characters.')).toBeVisible();
+    await title.fill('Check the tea supplies');
+    await page.route(previewAPI, route => route.abort('failed'), {times:1});
+    await preview.press('Enter');
+    await expect(rule.getByText(/Could not preview the rule/u)).toBeVisible();
+    await expect(title).toHaveValue('Check the tea supplies');
+    await preview.press('Enter');
+    await expect(rule.getByRole('status')).toContainText('Would create this task');
+    await expect(rule.getByRole('status')).toContainText('Check the tea supplies');
+    await expect(rule.getByRole('article',{name:'Automation preview'})).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await expect(preview).toHaveCSS('color','rgb(255, 255, 255)');
+    await rule.screenshot({path:info.outputPath('automation-preview-en-wide.png')});
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    await rule.getByRole('combobox',{name:'Existencias por debajo del mínimo (opcional)'}).tap();
+    await rule.getByRole('option',{name:'Session flour',exact:true}).tap();
+    const previsualizar = rule.getByRole('button',{name:'Previsualizar regla',exact:true});
+    await previsualizar.tap();
+    await expect(rule.getByRole('status')).toContainText('Se crearía esta tarea');
+    await expect(rule.getByRole('status')).toContainText('Session flour');
+    await expect(rule.getByRole('status')).toContainText('Las existencias disponibles están por debajo del mínimo.');
+    await inventoryWrite('preview-stock-intake', {action:'inventory.intake', product_id:flour.product_id, quantity:'2'});
+    await previsualizar.tap();
+    await expect(rule.getByRole('status')).toContainText('No se crearía ninguna tarea');
+    await expect(rule.getByRole('status')).toContainText('No se cumple la condición de existencias.');
+    await expect(rule.getByRole('article',{name:'Vista previa de automatización'}))
+      .toHaveCSS('background-color','rgb(24, 36, 47)');
+    await expect(previsualizar).toHaveCSS('color','rgb(24, 36, 47)');
+    await rule.screenshot({path:info.outputPath('automation-preview-es-narrow.png')});
+    expect(writes.slice(writeOffset)).toEqual(Array(4).fill('POST ' + previewAPI));
+    expect(await definitions()).toEqual(beforePreview);
   });
 }

@@ -20,7 +20,7 @@ debt or convert unknown historic intent into a design decision.
 | `home-assistant-surface` | Proposed | Domus exposes its household capabilities as native Home Assistant entities, services and events. The already integrated HA MCP consumes these surfaces; no gateway work or second MCP is included. | [Home Assistant entities&#44; services and integration](./home-assistant-surface.md) + 1 companion | 5 paths · 2026-10-29 |
 | `application-experience` | Proposed | A complete household interface serves all six domains from the first release with fast daily actions, responsive navigation and clear operation results, independently of entity dashboards and AI.; combined native/standalone browser CI uses a bounded complete-suite deadline with protected candidate workflow qualification | [Responsive application&#44; household dashboard and navigation](./application-experience.md) + 1 companion | 37 paths · 2026-11-08 |
 | `delivery-quality` | Proposed | Every implemented capability starts with meaningful tests and enforced architecture boundaries. A CI Check workflow validates each PR update, and both deployment targets ship isolated experimental and production channels. | [Clean Architecture&#44; CI Check and isolated Stable and Edge channels](./delivery-quality.md) | 27 paths · 2026-10-31 |
-| `household-automation` | Proposed | Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces. | [Household automation engine and simple&#47;advanced rule editors](./household-automation.md) | 5 paths · 2026-10-29 |
+| `household-automation` | Proposed | Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces. | [Household automation engine and simple&#47;advanced rule editors](./household-automation.md) | 21 paths · 2026-11-11 |
 
 ## Evidence map
 
@@ -137,13 +137,13 @@ debt or convert unknown historic intent into a design decision.
 ### `household-automation` — Household automation engine and simple&#47;advanced rule editors
 
 - Owner: Domus maintainers (review assignment pending)
-- Last verified: 2026-10-29
+- Last verified: 2026-11-11
 - Specifications: [`specs/household-automation.md`](./household-automation.md)
 - Workflows: Not applicable for this capability.
-- Entrypoints: Not yet implemented (proposed capability).
-- Core code: Not yet implemented (proposed capability).
-- Tests: Not yet implemented (proposed capability).
-- User documentation: [`docs/product-vision.md`](../docs/product-vision.md) · [`docs/architecture.md`](../docs/architecture.md) · [`docs/operations.md`](../docs/operations.md) · [`docs/user-guide.md`](../docs/user-guide.md) · [`docs/contracts/home-assistant.md`](../docs/contracts/home-assistant.md)
+- Entrypoints: [`backend/src/domus/entrypoints/automation_http.py`](../backend/src/domus/entrypoints/automation_http.py) · [`frontend/src/composition/entry-page.ts`](../frontend/src/composition/entry-page.ts) · [`frontend/src/presentation/domus-app.ts`](../frontend/src/presentation/domus-app.ts)
+- Core code: [`backend/src/domus/domain/automation.py`](../backend/src/domus/domain/automation.py) · [`backend/src/domus/application/automation_preview.py`](../backend/src/domus/application/automation_preview.py) · [`frontend/src/application/automation-preview.ts`](../frontend/src/application/automation-preview.ts) · [`frontend/src/adapters/automation-preview-http.ts`](../frontend/src/adapters/automation-preview-http.ts) · [`frontend/src/presentation/domus-automation-preview.ts`](../frontend/src/presentation/domus-automation-preview.ts)
+- Tests: [`tests/backend/test_automation_preview.py`](../tests/backend/test_automation_preview.py) · [`frontend/tests/automation-preview.test.ts`](../frontend/tests/automation-preview.test.ts) · [`frontend/tests/page.test.ts`](../frontend/tests/page.test.ts) · [`frontend/tests/e2e/workspace-navigation.spec.ts`](../frontend/tests/e2e/workspace-navigation.spec.ts)
+- User documentation: [`docs/product-vision.md`](../docs/product-vision.md) · [`docs/architecture.md`](../docs/architecture.md) · [`docs/operations.md`](../docs/operations.md) · [`docs/user-guide.md`](../docs/user-guide.md) · [`docs/contracts/home-assistant.md`](../docs/contracts/home-assistant.md) · [`docs/roadmap.md`](../docs/roadmap.md) · [`docs/evidence/automation-preview-qualification.md`](../docs/evidence/automation-preview-qualification.md) · [`docs/contracts/household-api.openapi.json`](../docs/contracts/household-api.openapi.json) · [`docs/contracts/native-household-api.openapi.json`](../docs/contracts/native-household-api.openapi.json)
 
 ## Maintenance contract
 

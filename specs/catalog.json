@@ -956,24 +956,43 @@
       "status": "proposed",
       "scope": "Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-10-29",
+      "lastVerified": "2026-11-11",
       "specs": [
         "specs/household-automation.md"
       ],
       "workflows": [],
-      "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "entrypoints": [
+        "backend/src/domus/entrypoints/automation_http.py",
+        "frontend/src/composition/entry-page.ts",
+        "frontend/src/presentation/domus-app.ts"
+      ],
+      "code": [
+        "backend/src/domus/domain/automation.py",
+        "backend/src/domus/application/automation_preview.py",
+        "frontend/src/application/automation-preview.ts",
+        "frontend/src/adapters/automation-preview-http.ts",
+        "frontend/src/presentation/domus-automation-preview.ts"
+      ],
+      "tests": [
+        "tests/backend/test_automation_preview.py",
+        "frontend/tests/automation-preview.test.ts",
+        "frontend/tests/page.test.ts",
+        "frontend/tests/e2e/workspace-navigation.spec.ts"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/roadmap.md",
+        "docs/evidence/automation-preview-qualification.md",
+        "docs/contracts/household-api.openapi.json",
+        "docs/contracts/native-household-api.openapi.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
+        "implementationEvidence": "partial: protected versioned manual task preview with optional current stock condition, typed validation and English/Spanish simple form",
         "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects.",
         "copilotChangesAllowed": false
       }

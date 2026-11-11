@@ -41,6 +41,9 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       permissions:originalAccess.permissions.filter((permission:string)=>preferencesReadable||permission!=='preferences.read')})
       : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
+    else if (route === 'automation/preview-access') raw = JSON.stringify({household_id: 'home'});
+    else if (route === 'automation/preview') raw = JSON.stringify({version:1, trigger:'manual',
+      task_title:JSON.parse(String(init.body)).action.title, would_create:true, conditions:[]});
     else if (route === 'auth/logout') raw = JSON.stringify({state: 'logged_out', upstream_revoked: true,
       message: 'You are signed out of Domus.', action_required: 'Sign in to continue.'});
     else if (route === 'tasks/calendar/preferences') {
@@ -755,4 +758,39 @@ test('Overview summary dispatches an authorized detail read through the Tasks wo
   app.dispatchEvent(event({type: 'select', occurrenceId: 'work-1'}));
   await vi.waitFor(() => expect(f.fetch.mock.calls.some(([path]) => path.endsWith('/tasks/occurrences/work-1'))).toBe(true));
   expect(f.navigation).toEqual(['#tasks']);
+});
+
+test('Household automation binds the verified member and retires requests outside its workspace', async () => {
+  const f = fixture(); f.phase('active');
+  const {app} = await f.open();
+  const navigate = (fragment: string) => {
+    f.page.location.href = f.page.location.href.split('#')[0] + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  const emit = (target: EventTarget, detail: unknown) =>
+    target.dispatchEvent(new CustomEvent('domus-automation-preview-intent', {detail, bubbles:true, composed:true}));
+  const requests = () => f.fetch.mock.calls.filter(([path]) => path.endsWith('/automation/preview'));
+  expect(app.automationPreview).toBeNull();
+  navigate('#household');
+  await vi.waitFor(() => expect(app.automationPreview?.state).toBe('ready'));
+  const widget = app.shadowRoot!.querySelector('domus-automation-preview')!;
+  await widget.updateComplete;
+  expect(widget.view).toBe(app.automationPreview);
+  const unrelated = document.createElement('div'); app.append(unrelated);
+  emit(unrelated, {type:'title',value:'Foreign'});
+  emit(unrelated, {type:'preview'});
+  expect(requests()).toHaveLength(0);
+  emit(widget, {type:'title',value:'Check lights'});
+  emit(widget, {type:'preview'});
+  await vi.waitFor(() => expect(app.automationPreview).toMatchObject({title:'Check lights',result:true}));
+  expect(requests()).toHaveLength(1);
+  navigate('#overview');
+  expect(app.automationPreview).toBeNull();
+  emit(widget, {type:'preview'});
+  expect(requests()).toHaveLength(1);
+  navigate('#household');
+  await vi.waitFor(() => expect(app.automationPreview).toMatchObject({title:'Check lights',result:null}));
+  f.member('replacement');
+  administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(() => expect(app.automationPreview).toMatchObject({title:'',result:null}));
 });
