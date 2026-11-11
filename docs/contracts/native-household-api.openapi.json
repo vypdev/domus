@@ -4030,6 +4030,18 @@
             ],
             "title": "Due At"
           },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
           "occurrence_id": {
             "title": "Occurrence Id",
             "type": "string"
@@ -8353,6 +8365,18 @@
               }
             ],
             "title": "Due At"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
           },
           "household_id": {
             "title": "Household Id",

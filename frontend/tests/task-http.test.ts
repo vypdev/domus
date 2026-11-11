@@ -111,6 +111,22 @@ test.each([401,403,409,422,503])('known task mutation rejection %s preserves onl
   expect(await f.server.send({key: 'key', command: commands[0]}, context)).toMatchObject({kind: 'rejected', correlationId: 'cor_safe'});
   expect(f.transport).toHaveBeenCalledTimes(2);
 });
+
+test('the task list and detail retain a date-only deadline without inventing a time', async () => {
+  const f = fixture();
+  const dated = {...summary(), due_date: '2026-04-02'};
+  const record = detail();
+  f.transport.mockResolvedValueOnce(reply({items: [dated], next_cursor: null}))
+    .mockResolvedValueOnce(reply({...record, work: {...record.work, due_date: dated.due_date}}));
+  const {items} = await f.server.list(context, null).result;
+  expect(items[0]).toMatchObject({dueAt: null, dueDate: '2026-04-02'});
+  expect(await f.server.detail('work-1', 'home', context).result)
+    .toMatchObject({dueAt: null, dueDate: '2026-04-02'});
+  for (const wrong of [{...dated, due_at: 100}, {...dated, due_date: '2026-02-30'}]) {
+    f.transport.mockResolvedValueOnce(reply({items: [wrong], next_cursor: null}));
+    await expect(f.server.list(context, null).result).rejects.toMatchObject({code: 'invalid_response'});
+  }
+});
 test.each(['lost', 'malformed', 'wrong_revision', 'wrong_target', 'unexpected_status'])(
   'task write with %s reply remains uncertain and never resends', async kind => {
     const f = fixture(), data = receipt(1); f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)}));

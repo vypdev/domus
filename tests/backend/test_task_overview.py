@@ -15,6 +15,7 @@ from domus.domain.identity import Member, MemberStatus, Permission, PermissionRu
 from domus.domain.recurrence_rules import NominalDate
 from domus.domain.task_values import OccurrenceState, TaskRules
 from domus.domain.tasks import HouseholdTaskPolicy
+from domus.entrypoints.task_response import detail_response
 from domus.infrastructure.application_runtime import SystemClock
 from domus.infrastructure.task_cursor import TaskCursor
 
@@ -147,6 +148,8 @@ def test_overview_timed_deadlines_use_one_clock_and_the_household_day(api, monke
         "time_zone": "Europe/Madrid",
     }
     assert last["deadline"]["instant_ms"] == str(next_day - 1)
+    timed = api.client.get("/api/v1/tasks/occurrences/at-now").json()["work"]
+    assert timed["due_at"] == now and timed["due_date"] is None
     assert [item["occurrence_id"] for item in report["overdue"]["items"]] == [
         f"late-{number:02}" for number in range(25)
     ]
@@ -208,6 +211,14 @@ def test_date_only_overview_uses_the_reviewed_deadline_and_saved_zone(tmp_path, 
         None,
         "Europe/Madrid",
     )
+    (listed,) = queries.occurrences().items
+    assert (listed.occurrence_id, listed.due_at, listed.due_date) == (
+        choice.occurrence_id,
+        None,
+        moved_day,
+    )
+    selected = detail_response(queries.occurrence(choice.occurrence_id)).work
+    assert selected.due_at is None and selected.due_date == moved_day
     clock.value = millis(2026, 4, 2, 22)
     overdue = queries.overview(clock, times)
     assert overdue.due_today.total == 0 and overdue.overdue.total == 1

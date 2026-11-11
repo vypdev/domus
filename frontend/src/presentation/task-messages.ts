@@ -1,3 +1,4 @@
+import type {TaskSummary} from '../domain/tasks';
 import {instant, language, message} from './messages';
 const english = Object.freeze({
   title: 'Tasks', intro: 'Plan household work, share it and keep track of what is done.',
@@ -122,4 +123,13 @@ export function taskInstant(value: string | null, locale: unknown): string {
   const number = Number(value);
   return Number.isSafeInteger(number) && number >= 0 && number <= 8_640_000_000_000_000
     ? instant(number, language(locale, 'en')) : message('unavailableTime', language(locale, 'en'));
+}
+
+export function taskDay(value: string, locale: unknown): string {
+  return new Intl.DateTimeFormat(language(locale, 'en'),
+    {dateStyle: 'medium', timeZone: 'UTC'}).format(Date.parse(value + 'T00:00:00Z'));
+}
+
+export function taskDeadline(work: Pick<TaskSummary, 'dueAt' | 'dueDate'>, locale: unknown): string {
+  return work.dueDate === undefined ? taskInstant(work.dueAt, locale) : taskDay(work.dueDate, locale);
 }

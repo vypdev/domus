@@ -1,6 +1,7 @@
 """Read DTOs flatten material value objects at the wire boundary, outside Domain."""
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Annotated
 
 from pydantic import Field
@@ -59,6 +60,7 @@ class TaskOccurrence:
     current_cycle_id: str | None = None
     current_cycle_revision: int | None = None
     state_reason: str = ""
+    due_date: date | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,6 +112,7 @@ def detail_response(value: Detail) -> TaskDetail:
             work.current_cycle_id,
             work.current_cycle_revision,
             work.state_reason,
+            value.due_date,
         ),
         value.rules,
         value.task_policy_revision,

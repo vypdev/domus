@@ -107,6 +107,7 @@ class OccurrenceSummary:
     assignee_ids: tuple[str, ...]
     due_at: int | None
     current_cycle_id: str | None
+    due_date: date | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,6 +153,24 @@ def _overview_group(group: TaskOccurrenceGroup) -> TaskOverviewGroup[TaskOvervie
     )
 
 
+def _date_only_deadline(unit: UnitOfWork, work: TaskOccurrence) -> tuple[date, TimePolicy] | None:
+    if work.due_at is not None:
+        return None
+    slot = unit.recurrence.fixed_slot_for_occurrence(
+        work.household_id, work.occurrence_id
+    ) or unit.recurrence.relative_slot_for_occurrence(work.household_id, work.occurrence_id)
+    if slot is None:
+        return None
+    deadline = effective_deadline(unit, work, slot)
+    assert deadline.local_date is not None
+    return deadline.local_date, slot.schedule.policy
+
+
+def _due_date(unit: UnitOfWork, work: TaskOccurrence) -> date | None:
+    deadline = _date_only_deadline(unit, work)
+    return None if deadline is None else deadline[0]
+
+
 def _overview_deadline_groups(
     unit: UnitOfWork, household_id: str, now: int, times: RecurrenceTimes
 ) -> tuple[
@@ -170,20 +189,16 @@ def _overview_deadline_groups(
             overdue = work.due_at < now
             deadline = TaskOverviewDeadline(None, str(work.due_at), policy.zone)
         else:
-            slot = unit.recurrence.fixed_slot_for_occurrence(
-                household_id, work.occurrence_id
-            ) or unit.recurrence.relative_slot_for_occurrence(household_id, work.occurrence_id)
-            assert slot is not None
-            effective = effective_deadline(unit, work, slot)
-            assert effective.local_date is not None
-            saved_policy = slot.schedule.policy
+            date_only = _date_only_deadline(unit, work)
+            assert date_only is not None
+            due_date, saved_policy = date_only
             if saved_policy not in days:
                 days[saved_policy] = times.local_at(now, saved_policy).local.date()
             local_day = days[saved_policy]
-            if effective.local_date > local_day:
+            if due_date > local_day:
                 continue
-            overdue = effective.local_date < local_day
-            deadline = TaskOverviewDeadline(effective.local_date, None, saved_policy.zone)
+            overdue = due_date < local_day
+            deadline = TaskOverviewDeadline(due_date, None, saved_policy.zone)
         totals[overdue] += 1
         if len(items[overdue]) < OVERVIEW_LIMIT:
             items[overdue].append(
@@ -213,6 +228,7 @@ class TaskDetail:
     materials: tuple[MaterialOutcome, ...] = ()
     dependency_reviews: TaskPage[DependencyReviewView] = TaskPage((), None)
     dependency_review_required: bool = False
+    due_date: date | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -405,6 +421,7 @@ class TaskQueries:
                     item.assignee_ids,
                     item.due_at,
                     item.current_cycle_id,
+                    _due_date(unit, item),
                 )
                 for item in rows
             )
@@ -479,6 +496,7 @@ class TaskQueries:
                 else tuple(material_outcome(value) for value in cycle_materials(unit, work, cycle)),
                 dependency_reviews=reviews,
                 dependency_review_required=bool(reviews.items),
+                due_date=_due_date(unit, work),
             )
 
     def dependency_reviews(

@@ -7,7 +7,7 @@ import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
 import type {TaskOverviewDeadline, TaskOverviewGroup, TaskOverviewView} from '../application/task-overview';
 import type {Language} from './messages';
-import {taskMessage} from './task-messages';
+import {taskDay, taskMessage} from './task-messages';
 import type {TaskMessageKey} from './task-messages';
 
 type OverviewIntent = {readonly type: 'refresh'} | {readonly type: 'select'; readonly occurrenceId: string};
@@ -42,8 +42,7 @@ export class DomusTaskOverview extends LitElement {
     return deadline.day === null
       ? new Intl.DateTimeFormat(this.language,
         {dateStyle: 'medium', timeStyle: 'short', timeZone: deadline.zone}).format(deadline.instant)
-      : new Intl.DateTimeFormat(this.language,
-        {dateStyle: 'medium', timeZone: 'UTC'}).format(Date.parse(deadline.day + 'T00:00:00Z'));
+      : taskDay(deadline.day, this.language);
   }
 
   private group(key: 'overviewAssigned' | 'overviewUnclaimed' | 'overviewDueToday' | 'overviewOverdue',

@@ -178,6 +178,7 @@ export interface TaskSummary {
   readonly occurrenceId: string; readonly definitionId: string; readonly definitionRevision: Revision;
   readonly title: string; readonly state: TaskState; readonly revision: Revision;
   readonly assigneeIds: readonly string[]; readonly dueAt: string | null; readonly currentCycleId: string | null;
+  readonly dueDate?: string;
 }
 export interface TaskPage {readonly items: readonly TaskSummary[]; readonly nextCursor: string | null;}
 export interface TaskMaterial {readonly lineId: string; readonly label: string; readonly plannedQuantity: string; readonly precision: number;}

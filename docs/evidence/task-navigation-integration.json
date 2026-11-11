@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with due today, overdue, assigned and unclaimed task summaries, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "5edb33c10bd67d80a1771d0a14f9c407252b856dc5dd086e1d84c28c71759183",
+    ".vite/manifest.json": "760377f5a7a906e87692cafe272941c0a43bc34aaedfb448adac84cf320051a4",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DHd8_BXA.js": "b942c92ec491731e363ebe531bbbee1fee6420c667227dbc276f43006e20fd9a",
-    "index.html": "1a5037755dde286160878014f94546cfdeaea5f70639468766130419c908bce4"
+    "assets/index-CknUPUos.js": "190d8afc8019137ecd20fc8306fd9c103b1897f81c3fe5c3bc1fb50cbd7af378",
+    "index.html": "26b1784e37e0541e8de112d8284fc54c050af96523b56dea10f3953f3cb51e59"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

@@ -1,5 +1,6 @@
 /** Project the task wire contract into immutable UI facts, preserving exact integers. */
 import {nextRevision} from '../domain/administration';
+import {civilDate} from '../domain/civil-date';
 import {categoryLabel, isCategoryCommand, taskCommand, taskIdentifier, taskQuantity, taskText, TASK_PRIORITIES, TASK_STATES} from '../domain/tasks';
 import type {TaskCategoryCatalog, TaskCommand, TaskCycleSummary, TaskDetail, TaskPage, TaskReceipt, TaskSummary} from '../domain/tasks';
 import type {TaskOriginal, TaskRequest} from '../application/task-ports';
@@ -18,10 +19,13 @@ export function taskTimestamp(value: unknown): string {
 function nullableId(value: unknown): string | null {return value === null ? null : identifier(value);}
 function nullableTime(value: unknown): string | null {return value === null ? null : taskTimestamp(value);}
 function summary(value: unknown): TaskSummary {
-  const item = fields(value, ['occurrence_id', 'definition_id', 'definition_revision', 'title', 'state', 'revision', 'assignee_ids', 'due_at', 'current_cycle_id'], []);
+  const item = fields(value, ['occurrence_id', 'definition_id', 'definition_revision', 'title', 'state', 'revision', 'assignee_ids', 'due_at', 'current_cycle_id'], ['due_date']);
+  const dueAt = nullableTime(item.due_at), dueDate = item.due_date ?? null;
+  check(dueDate === null || (dueAt === null && civilDate(dueDate)));
   return Object.freeze({occurrenceId: identifier(item.occurrence_id), definitionId: identifier(item.definition_id),
     definitionRevision: responseRevision(item.definition_revision), title: literal(item.title, 160), state: choice(item.state, TASK_STATES),
-    revision: responseRevision(item.revision), assigneeIds: ids(item.assignee_ids), dueAt: nullableTime(item.due_at), currentCycleId: nullableId(item.current_cycle_id)});
+    revision: responseRevision(item.revision), assigneeIds: ids(item.assignee_ids), dueAt, currentCycleId: nullableId(item.current_cycle_id),
+    ...(dueDate === null ? {} : {dueDate})});
 }
 export function taskPage(value: unknown): TaskPage {
   const item = fields(value, ['items', 'next_cursor'], []); check(Array.isArray(item.items) && item.items.length <= 25);
@@ -48,7 +52,7 @@ export function taskDetail(value: unknown, occurrenceId: string, householdId: st
     'materials', 'dependency_reviews', 'dependency_review_required'], ['completion_points']);
   check(item.consumer_delivery === 'unconfirmed');
   const work = fields(item.work, ['occurrence_id', 'household_id', 'definition_snapshot', 'created_at', 'state', 'revision',
-    'assignee_ids', 'prerequisite_ids', 'required_subtask_ids', 'due_at', 'current_cycle_id', 'current_cycle_revision', 'state_reason'], []);
+    'assignee_ids', 'prerequisite_ids', 'required_subtask_ids', 'due_at', 'current_cycle_id', 'current_cycle_revision', 'state_reason'], ['due_date']);
   check(identifier(work.occurrence_id) === occurrenceId && identifier(work.household_id) === householdId);
   const definition = fields(work.definition_snapshot, ['definition_id', 'household_id', 'content', 'created_at', 'overrides', 'state', 'revision', 'materials'], ['category_label']);
   check(identifier(definition.household_id) === householdId);
@@ -59,7 +63,8 @@ export function taskDetail(value: unknown, occurrenceId: string, householdId: st
   const rules = fields(item.rules, ['claim_allowed', 'eligible_roles', 'verification', 'adult_performer_may_approve',
     'task_scoped_material_consumption', 'material_recording', 'point_value_minor', 'dependency_gate'], []);
   const base = summary({occurrence_id: work.occurrence_id, definition_id: definition.definition_id, definition_revision: definition.revision,
-    title: content.title, state: work.state, revision: work.revision, assignee_ids: work.assignee_ids, due_at: work.due_at, current_cycle_id: work.current_cycle_id});
+    title: content.title, state: work.state, revision: work.revision, assignee_ids: work.assignee_ids, due_at: work.due_at,
+    due_date: work.due_date, current_cycle_id: work.current_cycle_id});
   check(Array.isArray(item.allowed_actions) && item.allowed_actions.length <= actions.length);
   const allowedActions = item.allowed_actions.map(raw => choice(raw, actions)); check(new Set(allowedActions).size === allowedActions.length);
   check(Array.isArray(definition.materials) && definition.materials.length <= 32);
