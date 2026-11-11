@@ -1106,3 +1106,139 @@ Maintain 100 percent global and per-file supported coverage and pass CI and appl
 ### 20. References and decisions
 
 This increment exercises the balanced-transfer and location portions of the existing household-inventory specification after issue #86. It retains the owning acceptance inventory and its original case identities.
+
+## Localize exact-one stock quantities
+
+- Status: Draft
+- Owners: Domus maintainers and Inventory
+- Scope: Singular unit labels in stock location and transfer views
+- Open decisions blocking readiness: none
+
+### 1. Executive summary
+
+Use the singular unit when a displayed location quantity is exactly one unit.
+Use the correct English and Spanish labels in the transfer review, completion,
+and history.
+
+### 2. Problem, current behavior, and evidence
+
+The installed Edge.10 test moved stock back to Pantry and showed one gram as
+“1 gramos” on a narrow Spanish view. The backend quantities and paired movements
+reconciled correctly. The existing published storage and transfer specification
+retains all eight acceptance cases.
+
+### 3. Actors, surfaces, and terminology
+
+An authorized household reader can inspect per-location totals and transfer
+history. A stock manager reviews and confirms a transfer. These views use the
+product's existing base unit.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| stock-location-wording-R01 | Location balances and transfer review, confirmation and history display an exact magnitude of one with the singular base-unit noun in English and Spanish. Other amounts use the plural. |
+
+The unit name is presentation only. Exact decimal arithmetic, authorization,
+movement linkage and the operation receipt retain their published contract.
+
+### 5. Current versus proposed product journey
+
+Open product movement history after a transfer leaves exactly one gram in
+Pantry. The location card reads “1 gram” in English and “1 gramo” in Spanish.
+
+### 6. Functional behavior and state model
+
+Choose the noun from the canonical quantity before localizing its decimal
+separator. An absolute signed quantity of one has a singular noun. Quantity
+entry and transfer state remain owned by the existing workflow.
+
+### 7. User-facing configuration
+
+Use the current member locale and the product's existing pieces, grams or
+millilitres base unit. No new setting is needed.
+
+### 8. Clean Architecture design
+
+Implement the noun choice in presentation. Use the existing exact domain
+quantity for transfer review and the retained movement view for history.
+
+### 9. UI/UX and content contract
+
+Use piece, gram and millilitre in English and unidad, gramo and mililitro in
+Spanish when the displayed quantity has magnitude one. Keep the signed transfer
+entry, the localized decimal separator and readable labels at narrow widths.
+
+### 10. Failure, recovery, and cleanup
+
+A correctable failure retains the original transfer draft and its recovery
+controls. The label choice has no effect on writes or cleanup.
+
+### 11. Security, permissions, and privacy
+
+Current household read access and inventory management grants continue to
+control the same surfaces and actions.
+
+### 12. Observability and operational UX
+
+The history continues to show both attributable movements and their exact
+signed quantities.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+The presentation change uses the existing schema 30. Verify the next immutable
+Edge candidate against the same disposable household workflow.
+
+### 14. Testing strategy and numeric budget
+
+Minimum one distinct case.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Localized presentation | 1 | Observable scenarios in the case inventory. |
+| Total | 1 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| stock-location-wording-C01 | Localized presentation | stock-location-wording-R01 | Leave one gram in a location and display signed transfers of one. Verify singular labels in English and Spanish, plural labels for a fractional amount and a quantity above one, and the canonical value in transfer review. |
+
+### 15. Documentation and discoverability
+
+[specs/household-inventory.md](household-inventory.md) · [frontend/src/presentation/domus-inventory.ts](../frontend/src/presentation/domus-inventory.ts) · [frontend/src/presentation/inventory-messages.ts](../frontend/src/presentation/inventory-messages.ts) · [frontend/tests/inventory.test.ts](../frontend/tests/inventory.test.ts) · [frontend/tests/e2e/workspace-navigation.spec.ts](../frontend/tests/e2e/workspace-navigation.spec.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-inventory.md | update |
+| frontend/src/presentation/domus-inventory.ts | update |
+| frontend/src/presentation/inventory-messages.ts | update |
+| frontend/tests/inventory.test.ts | update |
+| frontend/tests/e2e/workspace-navigation.spec.ts | update |
+
+### 16. Acceptance scenarios
+
+With one gram in Pantry after a transfer, inspect the English and Spanish
+location balances and both signed transfer entries. Verify that the household
+total and stock at every location still reconcile.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| stock-location-wording-R01 | stock-location-wording-C01 |
+
+### 18. Implementation sequence
+
+Add the singular labels and apply the quantity-dependent noun in the Inventory
+presentation. Run component and compiled browser tests, then qualify the next
+installed Edge candidate.
+
+### 19. Definition of Done
+
+Verify both locales and deployment compositions, global and per-file coverage,
+the same-commit image checks and the installed candidate.
+
+### 20. References and decisions
+
+This delta refines the bilingual location and transfer presentation from the
+existing published specification for issue #88. Its original cases remain
+under their original identifiers.
