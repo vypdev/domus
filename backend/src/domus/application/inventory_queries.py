@@ -134,6 +134,7 @@ class PurchaseSessionView:
     member_id: str
     author_alias: str | None
     created_at: str
+    store_name: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,7 +265,11 @@ def _session_view(unit: UnitOfWork, home: str, session: PurchaseSession) -> Purc
     author = unit.presentations.get(home, session.member_id)
     assert author is not None
     return PurchaseSessionView(
-        session.session_id, session.member_id, author.alias, str(session.created_at)
+        session.session_id,
+        session.member_id,
+        author.alias,
+        str(session.created_at),
+        session.store_name,
     )
 
 

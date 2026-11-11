@@ -61,7 +61,7 @@ def test_frontier_commits_reopens_and_never_creates_task_or_business_evidence(tm
         SQLiteSnapshots(store, tmp_path / "checkpoint", store.installation, Clock())
         .create("frontier")
         .schema_version
-        == 30
+        == 31
     )
 
 

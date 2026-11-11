@@ -632,7 +632,9 @@ class InventoryCommands:
 
         return self._execute(CatalogAction.PURCHASE.value, key, payload, apply)
 
-    def record_purchase_session(self, key: str, items: tuple[SessionSelection, ...]) -> Receipt:
+    def record_purchase_session(
+        self, key: str, items: tuple[SessionSelection, ...], *, store_name: str | None = None
+    ) -> Receipt:
         selected = {(item.product_id, item.extra_id) for item in items}
         if not MIN_SESSION_ITEMS <= len(items) <= MAX_SESSION_ITEMS or len(selected) != len(items):
             raise InvalidInput("invalid_shopping_session")
@@ -647,13 +649,14 @@ class InventoryCommands:
                         "quantity": item.quantity.value,
                     }
                     for item in items
-                ]
+                ],
+                **({} if store_name is None else {"store_name": store_name}),
             }
         )
 
         def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
             home = self.household_id
-            session = PurchaseSession(self.identifiers.new(), member, self.clock.now())
+            session = PurchaseSession(self.identifiers.new(), member, self.clock.now(), store_name)
             purchase_ids = []
             for item in items:
                 name = None
@@ -671,7 +674,11 @@ class InventoryCommands:
                 )
             unit.shopping.add_session(home, session, tuple(purchase_ids))
             return JsonDocument.from_value(
-                {"session_id": session.session_id, "purchase_ids": purchase_ids}
+                {
+                    "session_id": session.session_id,
+                    "purchase_ids": purchase_ids,
+                    **({} if session.store_name is None else {"store_name": session.store_name}),
+                }
             )
 
         return self._execute(CatalogAction.RECORD_SESSION.value, key, payload, apply)

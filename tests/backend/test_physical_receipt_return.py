@@ -404,7 +404,7 @@ def test_schema_28_migration_returns_and_activated_restore(tmp_path, monkeypatch
     assert path.read_bytes() == before
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (30,)
+        assert db.execute("PRAGMA user_version").fetchone() == (31,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in old.items():
             actual = db.execute("SELECT * FROM " + table).fetchall()

@@ -18,7 +18,12 @@ from domus.application.inventory_queries import (
 )
 from domus.application.shopping_list import ShoppingListView, ShoppingSourcesView
 from domus.domain.inventory import MAX_LOCATION_NAME, MAX_STOCK_REASON, BaseUnit
-from domus.domain.shopping import MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, SessionSelection
+from domus.domain.shopping import (
+    MAX_PURCHASE_STORE_NAME,
+    MAX_SESSION_ITEMS,
+    MIN_SESSION_ITEMS,
+    SessionSelection,
+)
 from domus.domain.task_material_values import MaterialQuantity
 from domus.entrypoints.household_http import (
     ReceiptResponse,
@@ -131,6 +136,9 @@ class PurchaseSessionBody(StrictModel):
         list[SessionSelectionBody],
         Field(min_length=MIN_SESSION_ITEMS, max_length=MAX_SESSION_ITEMS),
     ]
+    store_name: Annotated[str, Field(min_length=1, max_length=MAX_PURCHASE_STORE_NAME)] | None = (
+        None
+    )
 
 
 class CancelPurchaseBalanceBody(StrictModel):
@@ -307,6 +315,7 @@ def create_inventory_router(
                     )
                     for item in body.items
                 ),
+                store_name=body.store_name,
             )
         elif isinstance(body, CancelPurchaseBalanceBody):
             receipt = inventory.cancel_purchase_balance(

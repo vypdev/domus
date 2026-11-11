@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with assigned and unclaimed task summaries, protected Pantry, shared Shopping, purchase sessions, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
+  "scope": "Compiled household workspace with assigned and unclaimed task summaries, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "4ed436146d05865e5e60e2ef76b99a611b35208a39db3b770b4c039e1de0fb7f",
+    ".vite/manifest.json": "76f7700a8ade4eb7fa64f24683301d0ec439e96597c7f1b5ea3b8130550e4d4c",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-Co1HI4BR.js": "cf08dbc51e03912c2762adf261f770bf6fa5deaca70d55d0a06ddf902f5157ca",
-    "index.html": "ac2712a0405457448fb205d0de452f7a50f2f9c2a10e0772578a2fd18adef47a"
+    "assets/index-bFlrIuPI.js": "3aa801ac5dffdbb155588b18a19e88f927755aaf2788401f2bac4343d8cc37e4",
+    "index.html": "341fd0d9c44b3e9aac5f90e7f99bba80b8a83a88b5c6e01a7f75989a4b32617e"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

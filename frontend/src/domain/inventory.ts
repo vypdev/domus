@@ -11,6 +11,7 @@ export type ShoppingAction = 'shopping.purchase' | 'shopping.receive' | 'shoppin
 
 export const MIN_SESSION_ITEMS = 2;
 export const MAX_SESSION_ITEMS = 16;
+export const MAX_PURCHASE_STORE_NAME = 160;
 export const MAX_LOCATION_NAME = 80;
 export const MAX_NAMED_LOCATIONS = 32;
 
@@ -42,7 +43,7 @@ export type InventoryCommand =
     expected_revision: Revision}>
   | Readonly<{action: 'shopping.post-receipt'; purchase_id: string; receipt_id: string}>
   | Readonly<{action: 'shopping.clear-extra'; extra_id: string}>
-  | Readonly<{action: 'shopping.record-session'; items: readonly SessionSelection[]}>;
+  | Readonly<{action: 'shopping.record-session'; items: readonly SessionSelection[]; store_name?: string}>;
 
 export const MOVEMENT_KINDS = ['intake', 'task_consumption', 'task_correction', 'adjustment', 'intake_correction', 'transfer'] as const;
 export type MovementKind = typeof MOVEMENT_KINDS[number];
@@ -196,6 +197,7 @@ export interface ExtraAttribution {
 
 export interface PurchaseSession extends ExtraAttribution {
   readonly id: string;
+  readonly storeName: string | null;
 }
 
 export interface PurchaseSessions {
@@ -255,6 +257,10 @@ export function locationName(value: unknown): string {
   if (name !== name.trim() || ['pantry', 'despensa'].includes(name.toLowerCase()))
     throw new Error('invalid_inventory_location_name');
   return name;
+}
+
+export function purchaseStoreName(value: unknown): string {
+  return taskText(value, MAX_PURCHASE_STORE_NAME, true);
 }
 
 export function positiveQuantity(value: unknown): string {
@@ -340,11 +346,13 @@ export function inventoryCommand(value: unknown): InventoryCommand {
   }
   if (action === 'shopping.clear-extra' && hasFields(record, ['action','extra_id']))
     return {action, extra_id:taskIdentifier(record.extra_id)};
-  if (action === 'shopping.record-session' && hasFields(record, ['action','items']) && Array.isArray(record.items)
-      && record.items.length >= MIN_SESSION_ITEMS && record.items.length <= MAX_SESSION_ITEMS) {
+  if (action === 'shopping.record-session' && Array.isArray(record.items)
+      && record.items.length >= MIN_SESSION_ITEMS && record.items.length <= MAX_SESSION_ITEMS
+      && (hasFields(record, ['action','items']) || hasFields(record, ['action','items','store_name']))) {
     const items = record.items.map(sessionSelection);
     if (new Set(items.map(item => JSON.stringify([item.product_id,item.extra_id]))).size === items.length)
-      return {action, items};
+      return Object.hasOwn(record, 'store_name') ? {action, items, store_name:purchaseStoreName(record.store_name)}
+        : {action, items};
   }
   throw new Error('invalid_inventory_command');
 }

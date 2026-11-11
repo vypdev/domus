@@ -36,7 +36,8 @@ implementation, verification and packaging gates. The Family increments now cove
   list](evidence/shared-shopping-list-qualification.md) combines Pantry, uncovered Task materials
   and manual extras with source details. A [purchase
   session](evidence/purchase-session-qualification.md) records a trip from the shared list and
-  groups receipt progress by item. Shopping managers can [cancel the undelivered
+  groups receipt progress by item. Shoppers can [record the store for a trip](evidence/purchase-session-store-qualification.md).
+  Shopping managers can [cancel the undelivered
   balance](evidence/purchase-balance-qualification.md) of an item and restore unmet demand to the
   shared list. They can also [void a mistaken receipt before Pantry
   posting](evidence/physical-receipt-void-qualification.md) and record the correct arrival. A

@@ -6,6 +6,7 @@ from dataclasses import astuple, dataclass
 from domus.domain.errors import StorageFailure
 from domus.domain.inventory import MAX_STOCK_UNITS, BaseUnit, MovementKind, validate_stock_reason
 from domus.domain.shopping import (
+    MAX_PURCHASE_STORE_NAME,
     MAX_SESSION_ITEMS,
     MIN_SESSION_ITEMS,
     Purchase,
@@ -82,6 +83,12 @@ SHOPPING_SESSION_STATEMENTS = (
 )
 
 
+SHOPPING_SESSION_STORE_STATEMENT = (
+    "ALTER TABLE shopping_sessions ADD COLUMN store_name TEXT "
+    f"CHECK(store_name IS NULL OR length(store_name) BETWEEN 1 AND {MAX_PURCHASE_STORE_NAME})"
+)
+
+
 SHOPPING_CANCELLATION_TABLE = "shopping_cancellations"
 SHOPPING_CANCELLATION_STATEMENTS = (
     "ALTER TABLE shopping_purchases ADD COLUMN cancelled INTEGER NOT NULL DEFAULT 0 "
@@ -132,8 +139,13 @@ SHOPPING_RECEIPT_RETURN_STATEMENTS = (
 )
 
 
-def _session(row: sqlite3.Row) -> PurchaseSession:
-    return PurchaseSession(row["session_id"], row["member_id"], row["created_at"])
+def _session(row: sqlite3.Row, *, has_store: bool = True) -> PurchaseSession:
+    return PurchaseSession(
+        row["session_id"],
+        row["member_id"],
+        row["created_at"],
+        row["store_name"] if has_store else None,
+    )
 
 
 def _extra(row: sqlite3.Row) -> ShoppingExtra:
@@ -232,7 +244,7 @@ class SQLiteShopping:
         self, home: str, session: PurchaseSession, purchase_ids: tuple[str, ...]
     ) -> None:
         self.connection.execute(
-            "INSERT INTO shopping_sessions VALUES (NULL,?,?,?,?)", (home, *astuple(session))
+            "INSERT INTO shopping_sessions VALUES (NULL,?,?,?,?,?)", (home, *astuple(session))
         )
         self.connection.executemany(
             "INSERT INTO shopping_session_items VALUES (?,?,?,?)",
@@ -421,10 +433,10 @@ class SQLiteShopping:
         )
 
 
-def verify_shopping_sessions(connection: sqlite3.Connection) -> None:
+def verify_shopping_sessions(connection: sqlite3.Connection, *, has_store: bool = True) -> None:
     shopping = SQLiteShopping(connection)
     for row in connection.execute("SELECT * FROM shopping_sessions"):
-        session = _session(row)
+        session = _session(row, has_store=has_store)
         validate_identifier(session.session_id)
         validate_task_time(session.created_at)
         items = shopping.session_items(row["household_id"], session.session_id)

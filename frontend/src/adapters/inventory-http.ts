@@ -1,7 +1,7 @@
 /** Bounded same-origin Inventory reads and exact original-command recovery. */
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
-import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
+import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, InventoryCommand, InventoryReport, LocationStock, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement, StockTotals, StockTransfer, StorageLocation} from '../domain/inventory';
 import {revisionValue} from '../domain/administration';
 import {taskQuantity, taskTime} from '../domain/tasks';
@@ -208,8 +208,9 @@ function purchaseReceipts(value: unknown, purchaseId: string): PurchaseReceipts 
 }
 
 function purchaseSession(value: unknown): PurchaseSession {
-  const row = fields(value, ['session_id','member_id','author_alias','created_at'], []);
-  return {id:identifier(row.session_id), ...attribution(row)};
+  const row = fields(value, ['session_id','member_id','author_alias','created_at'], ['store_name']);
+  const storeName = row.store_name == null ? null : purchaseStoreName(row.store_name);
+  return {id:identifier(row.session_id), storeName, ...attribution(row)};
 }
 
 function purchaseSessions(value: unknown): PurchaseSessions {
@@ -336,7 +337,8 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
     return {kind, operationId, productId:null, movement:null, shoppingAction:command.action};
   }
   if (command.action === 'shopping.record-session') {
-    const result = fields(row.result, ['session_id','purchase_ids'], []);
+    const result = fields(row.result, ['session_id','purchase_ids'], ['store_name']);
+    check(result.store_name === command.store_name);
     check(Array.isArray(result.purchase_ids) && result.purchase_ids.length === command.items.length);
     check(new Set(result.purchase_ids.map(identifier)).size === command.items.length);
     return {kind, operationId, productId:null, movement:null, shoppingAction:command.action,

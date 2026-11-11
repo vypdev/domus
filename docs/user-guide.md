@@ -168,13 +168,15 @@ add or clear response is lost.
 
 In the shared shopping list, a shopping manager can choose **Add to purchase
 session** on two to sixteen different items. Review the quantities you actually
-bought and choose **Record purchase session**. Tracked quantities use each
+bought, enter a name in **Store (optional)** if known, and choose
+**Record purchase session**. Tracked quantities use each
 product's base unit. Untracked extras use whole pieces. If any selected
 tracked product already has an open purchase, review that purchase and adjust
 the selection before saving the session again.
 
-Choose **Show purchase sessions** to browse trips by shopper and time. Open a
-session to see the amount purchased, received, still due and awaiting Pantry
+Choose **Show purchase sessions** to browse trips by shopper and time, with the
+store shown when provided. Open a session to see the store and the amounts
+purchased, received, still due and awaiting Pantry
 posting for each item. Use **Show physical receipts** on an item to record an
 arrival, cancel the outstanding balance, or post a receipt to Pantry with the
 required access. Manage manual extras

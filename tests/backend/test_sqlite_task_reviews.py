@@ -93,7 +93,7 @@ def test_original_schema6_migration_preserves_rows_and_projects_existing_cause(t
             upgraded[table] == values for table, values in original.items() if table != "households"
         )
         assert all(upgraded[table] == [] for table in added)
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 30
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 31
     service = queries(store, HumanIdentity("ha_admin", True, True, False))
     detail = service.occurrence("identity-15")
     assert detail.dependency_review_required and len(detail.dependency_reviews.items) == 1
@@ -363,7 +363,7 @@ def test_original_schema6_checkpoint_activation_migrates_only_the_prepared_targe
             SQLiteSnapshots(selected.database, tmp_path / "new-checkpoint", INSTALLATION, Clock())
             .create("new")
             .schema_version
-            == 30
+            == 31
         )
     finally:
         selected.close()

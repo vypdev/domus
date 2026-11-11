@@ -77,6 +77,7 @@ from domus.infrastructure.sqlite_shopping import (
     SHOPPING_RECEIPT_VOID_STATEMENTS,
     SHOPPING_RECEIPT_VOID_TABLE,
     SHOPPING_SESSION_STATEMENTS,
+    SHOPPING_SESSION_STORE_STATEMENT,
     SHOPPING_SESSION_TABLES,
     SHOPPING_STATEMENTS,
     SHOPPING_TABLES,
@@ -102,7 +103,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 30
+SCHEMA_VERSION = 31
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -189,6 +190,7 @@ SCHEMA_STATEMENTS = (
     *SHOPPING_RECEIPT_CORRECTION_STATEMENTS,
     *SHOPPING_RECEIPT_RETURN_STATEMENTS,
     *LOCATION_STATEMENTS,
+    SHOPPING_SESSION_STORE_STATEMENT,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -261,6 +263,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(SHOPPING_RECEIPT_CORRECTION_STATEMENTS if version >= 28 else ()),
             *(SHOPPING_RECEIPT_RETURN_STATEMENTS if version >= 29 else ()),
             *(LOCATION_STATEMENTS if version >= 30 else ()),
+            *((SHOPPING_SESSION_STORE_STATEMENT,) if version >= 31 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -615,7 +618,8 @@ class SQLiteDatabase:
                         *(SHOPPING_RECEIPT_VOID_STATEMENTS if version < 27 else ()),
                         *(SHOPPING_RECEIPT_CORRECTION_STATEMENTS if version < 28 else ()),
                         *(SHOPPING_RECEIPT_RETURN_STATEMENTS if version < 29 else ()),
-                        *LOCATION_STATEMENTS,
+                        *(LOCATION_STATEMENTS if version < 30 else ()),
+                        SHOPPING_SESSION_STORE_STATEMENT,
                     )
                     for statement in migration:
                         connection.execute(statement)

@@ -1,5 +1,6 @@
 """Exercise grouped recording, individual receipts and durable recovery."""
 
+import json
 import sqlite3
 from contextlib import closing
 from dataclasses import replace
@@ -38,8 +39,8 @@ from domus.infrastructure.owned_storage import open_storage
 from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_activation import SQLiteActivation
 from domus.infrastructure.sqlite_restoration import SQLiteRestorations
-from domus.infrastructure.sqlite_shopping import verify_shopping_sessions
-from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
+from domus.infrastructure.sqlite_shopping import SQLiteShopping, verify_shopping_sessions
+from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots, _verify_database
 
 M = MaterialQuantity
 ACTION = CatalogAction.RECORD_SESSION
@@ -103,17 +104,36 @@ def test_protected_grouping_and_independent_receipts(api):
     for items in ([tracked], [tracked] * (MAX_SESSION_ITEMS + 1)):
         assert command(api, "limit", "record-session", items=items).status_code == 422
 
-    accepted = command(api, "trip", "record-session", items=[tracked, untracked])
+    items = [tracked, untracked]
+    for invalid_name in (" ", "Market\tNorth"):
+        rejected = command(api, "bad-store", "record-session", items=items, store_name=invalid_name)
+        assert rejected.json()["code"] == "invalid_shopping_store_name"
+        assert original(api, "bad-store", "record-session").status_code == 404
+    assert (
+        command(api, "long-store", "record-session", items=items, store_name="á" * 161).status_code
+        == 422
+    )
+    assert read(api).json() == {"sessions": [], "next_cursor": None}
+
+    store = "Mercado del Río"
+    accepted = command(api, "trip", "record-session", items=items, store_name=store)
     assert accepted.status_code == 200, accepted.text
     record = accepted.json()
+    assert record["result"]["store_name"] == store
     session = record["result"]["session_id"]
     bought, loose = record["result"]["purchase_ids"]
-    assert command(api, "trip", "record-session", items=[tracked, untracked]).json() == record
+    assert command(api, "trip", "record-session", items=items, store_name=store).json() == record
     assert original(api, "trip", "record-session").json() == record
-    assert (
-        command(api, "trip", "record-session", items=[untracked, tracked]).json()["code"]
-        == "idempotency_conflict"
-    )
+    for changes in (
+        {"items": [untracked, tracked]},
+        {"store_name": "Other market"},
+        {"store_name": None},
+    ):
+        payload = {"items": items, "store_name": store} | changes
+        assert (
+            command(api, "trip", "record-session", **payload).json()["code"]
+            == "idempotency_conflict"
+        )
     assert (
         command(api, "other", "record-session", items=[untracked, tracked]).json()["code"]
         == "shopping_purchase_open"
@@ -124,6 +144,8 @@ def test_protected_grouping_and_independent_receipts(api):
 
     detail = read(api, "/" + session).json()
     assert detail["session"]["author_alias"] == "Shopper"
+    assert detail["session"]["store_name"] == store
+    assert read(api).json()["sessions"][0]["store_name"] == store
     first, second = detail["items"]
     assert first["purchase_id"] == bought and second["purchase_id"] == loose
     assert first["product_id"] == oil and second["product_id"] is None
@@ -176,9 +198,11 @@ def test_protected_grouping_and_independent_receipts(api):
     )
     page = read(api, limit=1).json()
     assert page["next_cursor"] and page["sessions"][0]["session_id"] != session
+    assert page["sessions"][0]["store_name"] is None
     assert read(api, limit=1, cursor=page["next_cursor"]).json()["sessions"] == [detail["session"]]
     api.user(VIEWER)
-    assert read(api, "/" + session, VIEWER).status_code == 200
+    viewer = read(api, "/" + session, VIEWER)
+    assert viewer.status_code == 200 and viewer.json()["session"]["store_name"] == store
     assert read(api, user=VIEWER, limit=1, cursor=page["next_cursor"]).status_code == 422
     assert (
         command(
@@ -249,9 +273,12 @@ def test_session_races_and_retry_use_one_transaction(tmp_path, competitor):
     def second():
         if competitor == "individual":
             return other.purchase(key, product, None, M("6"))
-        return other.record_purchase_session(key, items)
+        name = "First market" if competitor == "same-key" else "Second market"
+        return other.record_purchase_session(key, items, store_name=name)
 
-    results = race(lambda: commands.record_purchase_session("same", items), second)
+    results = race(
+        lambda: commands.record_purchase_session("same", items, store_name="First market"), second
+    )
     if competitor == "same-key":
         assert isinstance(results[0], Receipt) and results[0] == results[1]
     else:
@@ -262,8 +289,12 @@ def test_session_races_and_retry_use_one_transaction(tmp_path, competitor):
     if "session_id" in result:
         saved_key = "same" if isinstance(results[0], Receipt) else key
         assert commands.original(ACTION, saved_key, commands.actor.current()) == accepted
-        assert commands.record_purchase_session(saved_key, items) == accepted
-        assert [session.session_id for session in sessions] == [result["session_id"]]
+        name = "First market" if saved_key == "same" else "Second market"
+        assert commands.record_purchase_session(saved_key, items, store_name=name) == accepted
+        assert [(session.session_id, session.store_name) for session in sessions] == [
+            (result["session_id"], name)
+        ]
+        assert result["store_name"] == name
         assert len(queries(commands).purchases(limit=25, cursor=None).purchases) == 2
     else:
         assert sessions == ()
@@ -313,7 +344,7 @@ def test_schema_24_upgrade_and_restore_of_sessions_and_original_receipts(tmp_pat
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (30,)
+        assert db.execute("PRAGMA user_version").fetchone() == (31,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
             expected = [(*row, 0) for row in rows] if table == "shopping_purchases" else rows
@@ -329,7 +360,7 @@ def test_schema_24_upgrade_and_restore_of_sessions_and_original_receipts(tmp_pat
         SessionSelection(None, add_free(commands, key, name), M("2"))
         for key, name in (("fruit", "Fruit"), ("bread", "Bread"))
     )
-    committed = commands.record_purchase_session("first", items)
+    committed = commands.record_purchase_session("first", items, store_name="Original market")
     archive, target = tmp_path / "archive", tmp_path / "prepared"
     checkpoint = SQLiteSnapshots(store, archive, installation, Clock()).create("sessions")
     later = commands.record_purchase_session("later", items)
@@ -339,13 +370,19 @@ def test_schema_24_upgrade_and_restore_of_sessions_and_original_receipts(tmp_pat
     try:
         recovery = replace(commands, transactions=reopened.database)
         original_id = committed.result.decode()["session_id"]
-        assert recovery.record_purchase_session("first", items) == committed
+        assert (
+            recovery.record_purchase_session("first", items, store_name="Original market")
+            == committed
+        )
         historical = recovery.record_purchase_session("later", items)
         assert historical.historical and historical.operation_id == later.operation_id
         assert historical.result == later.result
         assert (
             queries(recovery).purchase_sessions(limit=25, cursor=None).sessions[0].session_id
             == original_id
+        )
+        assert (
+            queries(recovery).purchase_session(original_id).session.store_name == "Original market"
         )
         with pytest.raises(NotFound, match="shopping_session_missing"):
             queries(recovery).purchase_session(later.result.decode()["session_id"])
@@ -373,3 +410,102 @@ def test_snapshot_rejects_invalid_session_groups(tmp_path, damage):
         db.execute(damage)
         with pytest.raises(StorageFailure, match="invalid_shopping_records"):
             verify_shopping_sessions(db)
+
+
+def test_named_session_rolls_back_after_the_store_and_items_are_written(tmp_path, monkeypatch):
+    _, store, commands = setup(tmp_path)
+    items = tuple(
+        SessionSelection(None, add_free(commands, key, name), M("2"))
+        for key, name in (("fruit", "Fruit"), ("bread", "Bread"))
+    )
+    original_add = SQLiteShopping.add_session
+
+    def fail_after_write(shopping, home, session, purchase_ids):
+        original_add(shopping, home, session, purchase_ids)
+        raise StorageFailure("injected_late_session_failure")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteShopping, "add_session", fail_after_write)
+        with pytest.raises(StorageFailure, match="injected_late_session_failure"):
+            commands.record_purchase_session("trip", items, store_name="North Market")
+    assert queries(commands).purchase_sessions(limit=25, cursor=None).sessions == ()
+    assert queries(commands).purchases(limit=25, cursor=None).purchases == ()
+    with pytest.raises(NotFound, match="operation_missing"):
+        commands.original(ACTION, "trip", commands.actor.current())
+    assert (
+        commands.record_purchase_session("trip", items, store_name="North Market").result.decode()[
+            "store_name"
+        ]
+        == "North Market"
+    )
+
+
+@pytest.mark.parametrize(
+    "version, filename",
+    [(20, "v20-inventory-history-source.sql"), (30, "v30-purchase-store-source.sql")],
+)
+def test_store_migration_keeps_historical_data_and_unnamed_originals(
+    tmp_path, monkeypatch, version, filename
+):
+    path = tmp_path / "domus.sqlite3"
+    fixture = Path(__file__).parents[1] / "fixtures/sqlite" / filename
+    with closing(sqlite3.connect(path, autocommit=True)) as db:
+        db.executescript(fixture.read_text())
+        installation = Installation(
+            *db.execute("SELECT instance_id,channel FROM installation").fetchone()
+        )
+        assert db.execute("PRAGMA user_version").fetchone() == (version,)
+        names = ("receipts", "inventory_materials", "inventory_movements")
+        if version == 30:
+            names += ("shopping_sessions", "shopping_session_items", "inventory_transfers")
+        original = {name: db.execute("SELECT * FROM " + name).fetchall() for name in names}
+    path.chmod(0o600)
+    database = SQLiteDatabase(path, installation)
+    with closing(sqlite3.connect(path)) as db:
+        db.row_factory = sqlite3.Row
+        assert _verify_database(db, database, previous=True) == version
+    before = path.read_bytes()
+    with monkeypatch.context() as patch:
+        patch.setattr(storage, "SHOPPING_SESSION_STORE_STATEMENT", "bad SQL")
+        with pytest.raises(StorageFailure):
+            database.initialize(require_existing=True)
+    assert path.read_bytes() == before
+    database.initialize(require_existing=True)
+
+    with closing(sqlite3.connect(path)) as db:
+        assert db.execute("PRAGMA user_version").fetchone() == (31,)
+        assert db.execute("PRAGMA foreign_key_check").fetchall() == []
+        for table, rows in original.items():
+            migrated = db.execute("SELECT * FROM " + table).fetchall()
+            if table == "shopping_sessions":
+                assert migrated == [(*row, None) for row in rows]
+            elif table == "inventory_movements" and version == 20:
+                assert [row[:-2] for row in migrated] == rows
+                assert {row[-2:] for row in migrated} == {
+                    ("intake", None),
+                    ("task_consumption", None),
+                    ("task_correction", None),
+                }
+            else:
+                assert migrated == rows
+        if version == 20:
+            assert db.execute("SELECT * FROM shopping_sessions").fetchall() == []
+            return
+        payload = json.loads(
+            db.execute("SELECT detail FROM audit WHERE command_key='v25-trip'").fetchone()[0]
+        )
+
+    actor = Actor()
+    actor.human = HumanIdentity("ha_admin", True, True, False)
+    commands = InventoryCommands(database, actor, Clock(), SecureIdentifiers())
+    replay = commands.original(ACTION, "v25-trip", actor.current())
+    selections = tuple(
+        SessionSelection(row["product_id"], row["extra_id"], M(row["quantity"]))
+        for row in payload["items"]
+    )
+    assert commands.record_purchase_session("v25-trip", selections) == replay
+    assert "store_name" not in replay.result.decode()
+    assert (
+        queries(commands).purchase_session(replay.result.decode()["session_id"]).session.store_name
+        is None
+    )
