@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.20
+
+- Show products whose available stock falls below their replenishment minimum on Overview in English and Spanish.
+- Keep the exact count and open Inventory to review stock and its available actions.
+
 ## 0.0.0-edge.19
 
 - Show open scheduled maintenance for the next seven days on Overview in English and Spanish.

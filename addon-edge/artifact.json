@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.19",
-  "sourceCommit": "4a66b5b2d1a89f839d6291a120ef3b16b160026d",
-  "sourceArchiveSHA256": "6dd4b32d8083fddaffb5a442a162e20c841ecc8402935d8eced859957dcc4d32",
+  "version": "0.0.0-edge.20",
+  "sourceCommit": "bb3a8806eb3855af1dba0539eca505875467bd5c",
+  "sourceArchiveSHA256": "12b86bd22bec3abc1c699110c783e3db8cc22400ad5950b4057173d52f270c3e",
   "storageSchema": 31,
-  "wheelSHA256": "29f5fadffaa3b9dfc2d41b38f2f91a6ab34a5c259fa384e6a02d9dd14e37fb51",
+  "wheelSHA256": "d8d839218a5fb34ac6662b839fb786f6839a92846f6821c61d047fcecf13a322",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -35,7 +35,7 @@
     "domus/application/identity_ports.py": "aebf50fc433fa1c77bacf2bb9e35fdde8c746069b567154de01eaf9980c49075",
     "domus/application/inventory.py": "0723c4697ca7668b1d3a66b33aa2fba65c0bf5179faee918b5f4a073ddfe5dc1",
     "domus/application/inventory_ports.py": "b0a04487925b2714702ce2737051b334949d7df09baa1e2ae29931b4c7df3d68",
-    "domus/application/inventory_queries.py": "3e766821587202a6cb0f752f309999b09ce1088961a310be2515a8261eb6a7df",
+    "domus/application/inventory_queries.py": "b395a570fce3b924b2167e74a5943dce15655e49d975553b035883cb5a83ad50",
     "domus/application/member_commands.py": "d3e93982d2e42d9a57771269ec0ccd4692fcd196189922bb09e7b0398b924649",
     "domus/application/member_profile_access.py": "c3af66244b9b10a43848e2422f9d662390f4ffd557440d9eae0e0a45d6e4b8a4",
     "domus/application/member_profile_commands.py": "cee8b699d2774056fe8620c22befb369193c2e3acec7fe861c4555540ffdbcc8",
@@ -151,7 +151,7 @@
     "domus/entrypoints/http_errors.py": "7d838b6a0169de57b79b80efb8aec455560aa96bbd956334bcb5479f95e934f9",
     "domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
     "domus/entrypoints/ingress_http.py": "f6557eb5481d132131f66ad7691e30c223c63a66a6f0ae5754c9fba3bc7f3626",
-    "domus/entrypoints/inventory_http.py": "e67afe618069e4b4960c9fd4bf7cdcf83f400093d8dd3ecac158161aface768b",
+    "domus/entrypoints/inventory_http.py": "a62ee56429988b15e9ac5903cc78dfa7ea38884e3c1aaa5efc2c6722829d0437",
     "domus/entrypoints/native_http.py": "067770c688cd044e2169a144ae4e53bd33586f948deac3239c2c601bbbd19088",
     "domus/entrypoints/openapi.py": "01a3fab9e5890ebcc1fb9c70bce9ced43d45b9190afd134db7dd45e0c5eb28f1",
     "domus/entrypoints/point_allocation_http.py": "7339c88c083206c0778885b55793c80af219b15af7004c5a51d34dbc28f4da5c",
@@ -223,9 +223,9 @@
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
   "uiFiles": {
-    ".vite/manifest.json": "82ec4efae0874d560a9c4afe2da6c164d4d7e6aa8c480f166f519cfdbe935ba3",
+    ".vite/manifest.json": "1789042c177af87e1166a5f5e0ed5d7e6b0d29a331d342cd3d419f0f198074ab",
+    "assets/index-7H7NHrFa.js": "35f935ed84a568e22be6a5b113404bb2cbfa05aa0ad6bc6efbfd82044033b8b7",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DbtJZoHT.js": "ea090772ec5c64266d040f5770850ca1a8b13d7264be47684fcc2d792cb02024",
-    "index.html": "e9a939f3060f7be87b377495e8eb1f1c6c53a001a87fd40bd95a42a65293f354"
+    "index.html": "095865b65ddbebe2c027a6910d70c67b5ae86b95f2404c8b539994bdce23ceb9"
   }
 }
