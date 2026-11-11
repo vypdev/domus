@@ -3,8 +3,9 @@
 import asyncio
 import json
 import os
+import sys
 import tempfile
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -35,11 +36,14 @@ DEADLINES_OTHER = f"{OTHER_UUID}.edge.deadlines.{'c' * 64}"
 
 
 @asynccontextmanager
-async def core():
-    with tempfile.TemporaryDirectory() as config:
-        Path(config, "custom_components").symlink_to(
-            "/config/custom_components", target_is_directory=True
-        )
+async def core(config_directory=None):
+    directory = (
+        tempfile.TemporaryDirectory() if config_directory is None else nullcontext(config_directory)
+    )
+    with directory as config:
+        components = Path(config, "custom_components")
+        if not components.is_symlink():
+            components.symlink_to("/config/custom_components", target_is_directory=True)
         hass = HomeAssistant(config)
         loader.async_setup(hass)
         result = await bootstrap.async_from_config_dict(
@@ -215,9 +219,10 @@ async def fixtures():
     app.router.add_get(DEADLINES_PATH, fixture.respond_deadlines)
     runner = web.AppRunner(app, access_log=None)
     await runner.setup()
+    config = tempfile.TemporaryDirectory()
     try:
         await web.TCPSite(runner, "0.0.0.0", 8100).start()
-        async with core() as hass:
+        async with core(config.name) as hass:
             form = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
             assert form["type"] == "form" and form["step_id"] == "user"
             for url in (
@@ -348,9 +353,23 @@ async def fixtures():
                 raise AssertionError("Calendar reads continued after config entry unload")
             state = hass.states.get(entity)
             assert state is None or state.state == "unavailable"
-            await deadline_fixtures(hass, fixture)
+            entry_id, identity, sensors = await deadline_fixtures(hass, fixture)
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            __file__,
+            "restart-deadlines",
+            config.name,
+            entry_id,
+            identity,
+            *sensors,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        output, _ = await process.communicate()
+        assert process.returncode == 0, output.decode()
     finally:
         await runner.cleanup()
+        config.cleanup()
 
 
 async def deadline_fixtures(hass, fixture):
@@ -358,6 +377,10 @@ async def deadline_fixtures(hass, fixture):
     assert "projection" in {str(field) for field in form["data_schema"].schema}
     rejected = await configure(hass, NATIVE, FIRST, projection="deadlines")
     assert rejected["errors"] == {"token": "invalid_auth"}
+    unreachable = await configure(
+        hass, "http://deadbeef-domus-edge:8100", DEADLINES_FIRST, projection="deadlines"
+    )
+    assert unreachable["errors"] == {"base": "cannot_connect"}
     first = await configure(hass, NATIVE, DEADLINES_FIRST, projection="deadlines")
     assert first["type"] == "create_entry", first.get("errors")
     entry = first["result"]
@@ -436,6 +459,16 @@ async def deadline_fixtures(hass, fixture):
         hass.states.get(entity) is None or hass.states.get(entity).state == STATE_UNAVAILABLE
         for entity in sensors
     )
+    return entry.entry_id, entry.unique_id, sensors
+
+
+async def verify_deadline_restart(config, entry_id, identity, due, overdue):
+    async with core(config) as restarted:
+        await restarted.async_block_till_done()
+        restored = restarted.config_entries.async_get_entry(entry_id)
+        assert restored.unique_id == identity
+        assert deadline_entities(restarted, restored) == (due, overdue)
+        assert entity_states(restarted, (due, overdue)) == ("2", "3")
 
 
 class suppress_expected_unavailable:
@@ -528,5 +561,9 @@ async def live():
 
 if __name__ == "__main__":
     assert __version__ == "2026.10.4", __version__
-    asyncio.run(live() if "DOMUS_CALENDAR_TARGETS" in os.environ else fixtures())
+    if len(sys.argv) > 1:
+        assert sys.argv[1] == "restart-deadlines"
+        asyncio.run(verify_deadline_restart(*sys.argv[2:]))
+    else:
+        asyncio.run(live() if "DOMUS_CALENDAR_TARGETS" in os.environ else fixtures())
     print("Home Assistant native calendar acceptance passed")
