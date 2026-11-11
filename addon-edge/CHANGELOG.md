@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.13
+
+- Record an optional store on a purchase session and show it in protected trip history.
+- Migrate to schema 31 while preserving the original receipts for existing sessions.
+
 ## 0.0.0-edge.12
 
 - Show assigned and unclaimed task summaries on Overview with exact authorized totals.
