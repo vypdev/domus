@@ -820,20 +820,36 @@
         "specs/home-assistant-calendar.md",
         "specs/home-assistant-deadline-sensors.md"
       ],
-      "workflows": [],
-      "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
+      "entrypoints": [
+        "backend/src/domus/entrypoints/ha_calendar_http.py",
+        "backend/src/domus/entrypoints/ha_deadline_http.py",
+        "custom_components/domus_calendar/config_flow.py"
+      ],
+      "code": [
+        "backend/src/domus/application/task_queries.py",
+        "backend/src/domus/composition/ha_projections.py",
+        "custom_components/domus_calendar/sensor.py"
+      ],
+      "tests": [
+        "tests/backend/test_ha_deadline_installation.py",
+        "tests/containers/test_app_image.py",
+        "tests/ha/calendar_smoke.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/tasks/ha-deadline-sensors.md",
+        "docs/evidence/ha-deadline-sensors-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
+        "implementationEvidence": "Partial. The calendar and task deadline sensors use separate installation grants. Issue #112 qualifies exact Overview deadline counts, scoped reads, Core configuration, credential rotation and entity lifecycle in the two deployment compositions.",
         "blockingDecisions": "Public service schemas and scope review; technical principal authorization; response-service exposure contract; supported HA matrix.",
         "copilotChangesAllowed": false
       }

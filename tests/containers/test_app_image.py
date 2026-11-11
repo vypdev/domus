@@ -723,7 +723,9 @@ def _supervisor_candidate(channel, target):
     }
     assert config["ports"] == {} and config["ingress_port"] == 8099
     assert config["schema"]["ha_calendar_digest"] == "str?"
+    assert config["schema"]["ha_deadline_digest"] == "str?"
     assert "ha_calendar_digest" not in config["options"]
+    assert "ha_deadline_digest" not in config["options"]
     target.write_text(json.dumps(config))
 
 
@@ -825,7 +827,15 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
                 assert marker["channel"] == channel
                 assert not _calendar_checked(docker("port", name)).strip()
                 token = f"{marker['instance_id']}.{channel}.{'d' * 64}"
-                targets.append({"url": url, "token": token, "label": f"{mode} {channel}"})
+                deadline = f"{marker['instance_id']}.{channel}.deadlines.{'e' * 64}"
+                targets.append(
+                    {
+                        "url": url,
+                        "token": token,
+                        "deadline": deadline,
+                        "label": f"{mode} {channel}",
+                    }
+                )
         probe = _calendar_core(
             "--network",
             network,
