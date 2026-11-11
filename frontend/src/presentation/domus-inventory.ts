@@ -258,7 +258,7 @@ export class DomusInventory extends LitElement {
         }}></label>
       <p id="inventory-quantity-help">${this.text(product.unit === 'piece' ? 'pieceGuide' : 'decimalGuide')}</p>
       ${invalid ? this.error('inventory-quantity-error', fieldError ?? 'invalidQuantity') : nothing}
-      ${this.review === null ? nothing : html`<p role="status">${product.name} · ${this.quantity(this.review)} ${this.text(product.unit)}.
+      ${this.review === null ? nothing : html`<p role="status">${product.name} · ${this.quantity(this.review)} ${this.unitLabel(product.unit, this.review)}.
         ${this.text('reviewBody')}</p>`}
       ${this.submitButton(this.review === null ? 'review' : 'confirm', blocked)}
     </form>`;

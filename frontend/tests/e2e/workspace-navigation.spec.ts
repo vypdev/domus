@@ -1028,7 +1028,13 @@ for (const mode of ['native', 'standalone'] as const) {
     await attention.screenshot({path:info.outputPath('stock-attention-es-narrow.png')});
     await attention.getByRole('link',{name:'Abrir Inventario',exact:true}).tap();
     await expect(stock).toBeFocused();
-    await inventoryWrite('overview-restock-two', {action:'inventory.intake', product_id:restock.product_id, quantity:'1'});
+    const restockProduct = stock.getByRole('article',{name:'Filters for the Overview',exact:true});
+    await restockProduct.getByRole('button',{name:'Registrar entrada de stock',exact:true}).tap();
+    await restockProduct.getByRole('textbox',{name:'Cantidad que se añadirá',exact:true}).fill('1');
+    await restockProduct.getByRole('button',{name:'Revisar entrada',exact:true}).tap();
+    await expect(restockProduct.getByRole('status')).toContainText('1 unidad.');
+    await restockProduct.getByRole('button',{name:'Confirmar entrada',exact:true}).tap();
+    await expect(restockProduct.getByText('No hace falta reponer.',{exact:true})).toBeVisible();
     await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
     await expect(attention.getByRole('heading',{name:/^Productos por debajo del mínimo ·/u})).toBeVisible();
     await expect(restockRow).toHaveCount(0);
