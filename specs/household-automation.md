@@ -3,10 +3,10 @@
 - Status: Draft
 - Date: 2026-10-29
 - Catalog capability ID: household-automation
-- Last verified: 2026-11-11 (manual preview increment)
+- Last verified: 2026-10-29 (document structure only; no implementation evidence)
 - Owners: Domus maintainer; engineering/product reviewers to be assigned
 - Scope: Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces.
-- Related issues/PRs: https://github.com/vypdev/domus/issues/2; https://github.com/vypdev/domus/pull/3; https://github.com/vypdev/domus/issues/98
+- Related issues/PRs: https://github.com/vypdev/domus/issues/2; https://github.com/vypdev/domus/pull/3
 - Required review gates: product UX, architecture, testing, documentation, security/operations
 - Open decisions blocking readiness: Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects. Catalog gate prerequisites remain unverified.
 
@@ -20,10 +20,7 @@ Rule editor -> validate and preview -> explicit enable -> durable trigger/run ->
 
 ## 2. Problem, current behavior, and evidence
 
-Domus can preview one manual task proposal with an optional stock condition in
-Household settings. The [preview qualification](../docs/evidence/automation-preview-qualification.md)
-records the typed input, current grants and evidence in both compositions. The
-durable engine, advanced editing and external effects remain future work.
+Domus has no implemented rule engine yet. HA-facing commands alone do not provide the in-application simple and advanced experiences now requested by the owner. The existing gateway is already integrated and is not changed. HA's automation model, concurrency modes and traces are design references, not a backend to reconfigure or a compatibility promise.
 
 Evidence: owner decisions in [decisions](../docs/decisions.md), the [product vision](../docs/product-vision.md) and primary references in section 20. This is prospective; retrospective classification is not applicable.
 
@@ -54,7 +51,7 @@ Non-goals: arbitrary scripts, SQL/network passthrough, unbounded loops, rewritin
 | Stage | Current | Proposed | Effect |
 |---|---|---|---|
 | Configure | No Domus rule UI | Simple form or optional advanced flow editor | Same versioned rule data |
-| Preview | Manual task proposal with optional available-stock check | Explain supported triggers, conditions and intended steps | No side effects |
+| Preview | No simulation | Explain trigger/conditions and intended steps | No side effects |
 | Enable | No runtime | Explicit validated revision and scoped principal | Safe admission |
 | Execute | No durable run | Persist trigger, plan, waits and step receipts | Restart/replay correctness |
 | Recover | No trace | Explain committed effects and safe retry/cancel | Honest partial success |
