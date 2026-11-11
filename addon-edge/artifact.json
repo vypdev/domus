@@ -1,10 +1,8 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.11",
-  "sourceCommit": "7e869ff0d1755def7d06046ba5ea48150a26ccfb",
-  "sourceArchiveSHA256": "a65ec787de95548bbce7e70f834e9101055bba335301e22fb18d17c424b79200",
-  "storageSchema": 30,
-  "wheelSHA256": "1606135b747a4705bb741c557c51ea4f224fc1fa8114284058a4ca984a75ebda",
+  "version": "0.0.0-edge.12",
+  "sourceCommit": "3a803ddce3092abcd9da48c8533c65d24e2e0e37",
+  "sourceArchiveSHA256": "6eaaf75c60a7582e21da627dc17f9cb9dcad007e0ab90c433d61d311cbf8363b",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -82,8 +80,8 @@
     "domus/application/task_material_scope.py": "f1d44c700578da0681872e4fac42d1ebb801e33fa843065b9dabb397f69888d1",
     "domus/application/task_material_views.py": "1f4e1b52c17064b73e3c6502b38fc578a7589d68044279312c783b656e5aa5bf",
     "domus/application/task_materials.py": "caa132a7b16fca293770deba3da149cf9bda2e24d4719abe9de39470d686698e",
-    "domus/application/task_ports.py": "20b4d6ecc29cce45a0df48c35e6c50889934bf2a239fa149e951932f0eb0c6ae",
-    "domus/application/task_queries.py": "577c50a09be8205cd836680b757693320d26ec6a0afd88effa49105e14fdc430",
+    "domus/application/task_ports.py": "fca67b4b08fedfdf2c61a9acdd58535620d0c6a8c7de283debb8eb27a12535b2",
+    "domus/application/task_queries.py": "7c810bcec8a5c0f16bda47d577cce5f060976b348b96bacad737c65da91d8101",
     "domus/application/task_requests.py": "2e9ead8f5458d45335ec55bad50f5f7e12b42ee9b00ff54634f3ff681b320897",
     "domus/application/task_reviews.py": "dcc288cda6cdcf5073bad4f24133b9d3496c0b0cf1272e8328e6df38129f3328",
     "domus/composition/__init__.py": "a902d8faf7dd19da6829fb730d81e32d34ec38ee6cfafd676966a95d0ad31366",
@@ -161,7 +159,7 @@
     "domus/entrypoints/schedule_creation_http.py": "f5bc369e5135229e9eb62ad1ac1046c3fb2d0c9c53e6acad6bd61631c2a7042e",
     "domus/entrypoints/task_category_http.py": "e5443015f5e5cb2684eb6807e0a3bac5116703b5611508281afd7d1addee9672",
     "domus/entrypoints/task_dto.py": "df12654a0917a06742ea4605f0aca552d339df610ecb0f7467f69aa89b5a7c9d",
-    "domus/entrypoints/task_http.py": "b56e13323473176d0cb2e6e6b03438dbaabb54c70f3c62db397ce2252f1ef6d5",
+    "domus/entrypoints/task_http.py": "bf62f9424c0352e08d5f67fcaf1a39ff34dd556ddccfaf163d9a9004ef8f39f2",
     "domus/entrypoints/task_response.py": "618c0b07680e35db446428e06fdf9d6baeba33e117f8168a234c68e01eba31f7",
     "domus/entrypoints/ui_bundle.py": "beae3d4a7a57375ee195cca81efccdbc899d9db4286029d53eabaf30de6e14f7",
     "domus/entrypoints/ui_http.py": "b6c47baa742f3862173a93e4121dc9914fd972eb6287ffffb9ffccecbf2ebe4a",
@@ -217,15 +215,17 @@
     "domus/infrastructure/sqlite_task_records.py": "ec46d74954b62b6f4618b2b12198c4587d829c1d711ec8f67b5adc125989d988",
     "domus/infrastructure/sqlite_task_reviews.py": "96984dc6f02f6e7a4cf88a328da94cac20ebc9ce405134859b141290ff1bd7ed",
     "domus/infrastructure/sqlite_task_schema.py": "25e3241cb6c30ceb1701c854c7c88a4051085cabc255b03e78847beda525214a",
-    "domus/infrastructure/sqlite_tasks.py": "f3785700505045ccf6f3e63dbb122c210166027ac296f85729c32d97b16d1126",
+    "domus/infrastructure/sqlite_tasks.py": "9ebbf88c1ac1bd75e6832c8e25c595d28b124110c4076639d226097164ef3cc1",
     "domus/infrastructure/standalone_sessions.py": "ec3fd7a848c2c2a57e416bc7361e416c823d76706b474d08120cdd9e1534655a",
     "domus/infrastructure/task_cursor.py": "b21dbb915ce874b51008689d05abb4480cb7a65aabc5851f9500e51238bb6b5f",
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
+  "storageSchema": 30,
   "uiFiles": {
-    ".vite/manifest.json": "40360e01a5c4d65902058c0f719644bb3a135a3283e2b3135d1c6f29a822c9aa",
-    "assets/index-CacQb2hQ.js": "c9e4d9642fa6990c9c8c53941f2c53abeb55ee873480ac3da73bd72b3dd1b137",
+    ".vite/manifest.json": "4ed436146d05865e5e60e2ef76b99a611b35208a39db3b770b4c039e1de0fb7f",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "e6c4761e022f08f0e32d1bfe9cc4eaa6646d5ef1c2816c3dff1d0dba4b2e3c11"
-  }
+    "assets/index-Co1HI4BR.js": "cf08dbc51e03912c2762adf261f770bf6fa5deaca70d55d0a06ddf902f5157ca",
+    "index.html": "ac2712a0405457448fb205d0de452f7a50f2f9c2a10e0772578a2fd18adef47a"
+  },
+  "wheelSHA256": "c91bccef222b5206e61829c090b9719a969d2705ea8339c86b896ec39f30d328"
 }

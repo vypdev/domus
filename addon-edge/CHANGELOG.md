@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.12
+
+- Show assigned and unclaimed task summaries on Overview with exact authorized totals.
+- Open a selected task through the existing protected Tasks detail in English and Spanish.
+
 ## 0.0.0-edge.11
 
 - Use singular English and Spanish stock units when the displayed quantity is exactly one.

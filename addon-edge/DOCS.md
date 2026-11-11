@@ -1,9 +1,9 @@
 # Installation and operation
 
-Edge 0.0.0-edge.11 packages the immutable runtime declared in
-[artifact.json](artifact.json). It upgrades supported owned databases to
-schema 30 and exposes storage locations and balanced stock transfers in
-Inventory. Retain a compatible image and data backup before upgrading.
+Edge 0.0.0-edge.12 packages the immutable runtime declared in
+[artifact.json](artifact.json). Overview shows the current member's assigned
+work and unclaimed household tasks. This preview uses SQLite schema 30.
+Retain a compatible image and data backup before upgrading.
 A separate Supervisor repository source creates an independent app and data
 directory. Check the source, installed version and app slug before using
 a preview.
