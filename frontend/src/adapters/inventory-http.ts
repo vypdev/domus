@@ -1,8 +1,10 @@
 /** Bounded same-origin Inventory reads and exact original-command recovery. */
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
+import type {StockAttention} from '../application/stock-attention';
 import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, InventoryCommand, InventoryReport, LocationStock, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement, StockTotals, StockTransfer, StorageLocation} from '../domain/inventory';
+import type {JournalContext} from '../domain/journal';
 import {revisionValue} from '../domain/administration';
 import {taskQuantity, taskTime} from '../domain/tasks';
 import {BoundedHTTP} from './http-transport';
@@ -60,6 +62,22 @@ function report(value: unknown): InventoryReport {
   check(new Set(products.map(item => item.id)).size === products.length);
   return {mayManage: boolean(row.may_manage), mayShop:boolean(row.may_shop), mayRequest:boolean(row.may_request), products,
     cursor: cursorValue(row.next_cursor), locations};
+}
+
+function stockAttention(value: unknown): StockAttention {
+  const group = fields(value, ['total', 'items'], []);
+  const total = integer(group.total, 0);
+  check(Array.isArray(group.items) && group.items.length === Math.min(total, 25));
+  const items = group.items.map(value => {
+    const row = fields(value, ['product_id', 'name', 'base_unit', 'available', 'minimum'], []);
+    const unit = choice(row.base_unit, BASE_UNITS), available = taskQuantity(row.available);
+    const minimum = taskQuantity(row.minimum);
+    check(stockUnits(available) < stockUnits(minimum)
+      && (unit !== 'piece' || (!available.includes('.') && !minimum.includes('.'))));
+    return {id:identifier(row.product_id), name:text(row.name, 160), unit, available, minimum};
+  });
+  check(new Set(items.map(item => item.id)).size === items.length);
+  return {total, items};
 }
 
 function nullableId(value: unknown): string | null {return value === null ? null : identifier(value);}
@@ -392,6 +410,10 @@ function pageQuery(cursor: string | null): string {
 export class HttpInventoryServer implements InventoryServer {
   private readonly network: BoundedHTTP;
   constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
+
+  stockAttention(context: JournalContext) {
+    return this.network.owned(async signal => stockAttention(await this.network.get(BASE + '/stock-attention', context, signal)));
+  }
 
   read(scope: InventoryScope, cursor: string | null) {
     return this.network.owned(async signal => {

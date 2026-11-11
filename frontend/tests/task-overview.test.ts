@@ -1,6 +1,6 @@
 import {afterEach, expect, test, vi} from 'vitest';
 import {EntryReadError} from '../src/application/ports';
-import {TaskOverviewController} from '../src/application/task-overview';
+import {OverviewReadController} from '../src/application/overview-read';
 import type {TaskOverview} from '../src/application/task-overview';
 import '../src/presentation/domus-task-overview';
 
@@ -27,7 +27,7 @@ test('Overview retires obsolete responses on refresh and account change', async 
   const read = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(refresh)
     .mockReturnValueOnce(next).mockReturnValueOnce(closed);
   const publish = vi.fn();
-  const controller = new TaskOverviewController({overview: read}, publish);
+  const controller = new OverviewReadController<TaskOverview>(read, publish);
   await controller.refresh();
   controller.bind(null);
   expect(read).not.toHaveBeenCalled();
@@ -50,7 +50,7 @@ test('Overview retires obsolete responses on refresh and account change', async 
   expect(publish).toHaveBeenLastCalledWith({state: 'loading'});
   next.resolve(overview);
   await next.result;
-  expect(publish).toHaveBeenLastCalledWith({state: 'ready', overview});
+  expect(publish).toHaveBeenLastCalledWith({state: 'ready', data: overview});
 
   const retired = controller.refresh();
   controller.bind(null);
@@ -67,7 +67,7 @@ test.each([
   [new Error('local service unavailable'), 'unavailable'],
 ] as const)('Overview maps %s without exposing an empty count', async (error, state) => {
   const request = deferred(), publish = vi.fn();
-  const controller = new TaskOverviewController({overview: () => request}, publish);
+  const controller = new OverviewReadController(() => request, publish);
   controller.bind(scope);
   request.reject(error);
   await request.result.catch(() => {});
@@ -106,7 +106,7 @@ test('Overview shows localized states and emits only task selection or retry', a
   expect(intent.mock.calls.at(-1)![0].detail).toEqual({type: 'refresh'});
 
   element.language = 'en';
-  element.view = {state: 'ready', overview};
+  element.view = {state: 'ready', data: overview};
   await element.updateComplete;
   expect(Array.from(element.shadowRoot!.querySelectorAll('vyp-ha-card'), card => card.state.title))
     .toEqual(['Overdue · 1', 'Due today · 1', 'Upcoming maintenance · 1', 'Assigned to me · 2', 'Unclaimed tasks · 0']);

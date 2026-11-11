@@ -1,5 +1,7 @@
 import {HttpTaskServer} from '../adapters/task-http';
-import {TaskOverviewController} from '../application/task-overview';
+import {OverviewReadController} from '../application/overview-read';
+import type {TaskOverview} from '../application/task-overview';
+import type {StockAttention} from '../application/stock-attention';
 import {HttpInventoryServer} from '../adapters/inventory-http';
 import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../adapters/inventory-journal';
 import {InventoryController} from '../application/inventory-controller';
@@ -207,7 +209,8 @@ export function mountEntry(page: EntryPage): PageMount {
   let family: FamilyController | null = null;
   let rewards: RewardsController | null = null;
   let inventory: InventoryController | null = null;
-  let taskOverview: TaskOverviewController | null = null;
+  let taskOverview: OverviewReadController<TaskOverview> | null = null;
+  let stockAttention: OverviewReadController<StockAttention> | null = null;
   let allocation: AllocationController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
@@ -215,6 +218,7 @@ export function mountEntry(page: EntryPage): PageMount {
   const dispose = () => {
     if (stopped) return;
     stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); error?.remove();
+    stockAttention?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -224,6 +228,7 @@ export function mountEntry(page: EntryPage): PageMount {
   const fail = () => {
     if (stopped || error !== null) return;
     widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); app?.remove();
+    stockAttention?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -375,7 +380,8 @@ export function mountEntry(page: EntryPage): PageMount {
       try {input = allocationInput((event as CustomEvent<unknown>).detail);} catch {return;}
       await allocations.preview(input);
     }, {signal: widget.signal});
-    const inventoryController = new InventoryController(new HttpInventoryServer(source.target, browser.transport),
+    const inventoryServer = new HttpInventoryServer(source.target, browser.transport);
+    const inventoryController = new InventoryController(inventoryServer,
       new InventorySessionJournal({getItem:key => browser.storage().getItem(key),
         setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
       new BrowserEntropy(browser.random), view => {element.inventory = view;});
@@ -411,7 +417,8 @@ export function mountEntry(page: EntryPage): PageMount {
       if (intent?.type === 'more-shopping-sources') await inventoryController.moreShoppingSources();
       if (intent?.type === 'submit') await inventoryController.submit(intent.command);
     }, {signal:widget.signal});
-    const overviewController = new TaskOverviewController(new HttpTaskServer(source.target, browser.transport),
+    const tasksServer = new HttpTaskServer(source.target, browser.transport);
+    const overviewController = new OverviewReadController(context => tasksServer.overview(context),
       view => {element.taskOverview = view;});
     taskOverview = overviewController;
     const syncOverview = () => {
@@ -423,16 +430,33 @@ export function mountEntry(page: EntryPage): PageMount {
         overviewController.bind({key, context});
       } else overviewController.bind(null);
     };
+    const stockController = new OverviewReadController(context => inventoryServer.stockAttention(context),
+      view => {element.stockAttention = view;});
+    stockAttention = stockController;
+    const syncStockAttention = () => {
+      const entry = element.view, destination = element.workspaceDestination;
+      if ((destination === null || destination === 'overview') && entry?.phase === 'ready'
+          && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.session && entry.household) {
+        const {context, access} = entry.session, {householdId} = entry.household;
+        const authority = element.administration?.access;
+        const key = JSON.stringify([context.installationId, context.channel, context.subject, householdId, access,
+          authority?.member?.memberId, authority?.member?.revision, authority?.policyRevision]);
+        stockController.bind({key, context});
+      } else stockController.bind(null);
+    };
+    element.addEventListener('domus-stock-attention-retry', event => {
+      if (event.target === element) void stockController.refresh();
+    }, {signal: widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : fragment === '#inventory' ? 'inventory' : null;
-      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview();
+      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncStockAttention();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncStockAttention();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;

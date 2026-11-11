@@ -994,5 +994,49 @@ for (const mode of ['native', 'standalone'] as const) {
     await unclaimedItem.tap();
     await expect(page).toHaveURL(base + '#tasks');
     await expect(tasksRegion.getByRole('heading',{name:'Sort the recycling',exact:true})).toBeVisible();
+
+    const restock = await inventoryWrite('overview-restock-product', {
+      action:'inventory.register-product', name:'Filters for the Overview', base_unit:'piece',
+    });
+    await inventoryWrite('overview-restock-policy', {action:'inventory.configure-replenishment',
+      product_id:restock.product_id, minimum:'2', target:'4', expected_revision:'0'});
+    await inventoryWrite('overview-restock-one', {action:'inventory.intake', product_id:restock.product_id, quantity:'1'});
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await page.route(base + 'api/v1/inventory/stock-attention', route => route.abort('failed'), {times:1});
+    await overview.press('Enter');
+    const attention = overviewRegion.locator('domus-stock-attention');
+    await expect(attention.getByText('The inventory summary could not be loaded.')).toBeVisible();
+    await expect(taskSummary.getByRole('heading',{name:/^Upcoming maintenance ·/u})).toBeVisible();
+    await attention.getByRole('button',{name:'Retry inventory summary',exact:true}).press('Enter');
+    const restockRow = attention.getByRole('listitem').filter({hasText:'Filters for the Overview'});
+    await expect(restockRow).toContainText('Available stock 1 piece');
+    await expect(restockRow).toContainText('Minimum stock 2 pieces');
+    await expect(attention.getByRole('article')).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await attention.screenshot({path:info.outputPath('stock-attention-en-wide.png')});
+    await attention.getByRole('link',{name:'Open Inventory',exact:true}).press('Enter');
+    await expect(stock).toBeFocused();
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    await expect(restockRow).toContainText('Stock disponible 1 unidad');
+    await expect(restockRow).toContainText('Stock mínimo 2 unidades');
+    await expect(attention.getByRole('article')).toHaveCSS('background-color','rgb(24, 36, 47)');
+    await attention.screenshot({path:info.outputPath('stock-attention-es-narrow.png')});
+    await attention.getByRole('link',{name:'Abrir Inventario',exact:true}).tap();
+    await expect(stock).toBeFocused();
+    const restockProduct = stock.getByRole('article',{name:'Filters for the Overview',exact:true});
+    await restockProduct.getByRole('button',{name:'Registrar entrada de stock',exact:true}).tap();
+    await restockProduct.getByRole('textbox',{name:'Cantidad que se añadirá',exact:true}).fill('1');
+    await restockProduct.getByRole('button',{name:'Revisar entrada',exact:true}).tap();
+    await expect(restockProduct.getByRole('status')).toContainText('1 unidad.');
+    await restockProduct.getByRole('button',{name:'Confirmar entrada',exact:true}).tap();
+    await expect(restockProduct.getByText('No hace falta reponer.',{exact:true})).toBeVisible();
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    await expect(attention.getByRole('heading',{name:/^Productos por debajo del mínimo ·/u})).toBeVisible();
+    await expect(restockRow).toHaveCount(0);
   });
 }

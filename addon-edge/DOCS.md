@@ -1,9 +1,9 @@
 # Installation and operation
 
-Edge 0.0.0-edge.19 packages the immutable runtime declared in
-[artifact.json](artifact.json). Overview lists open scheduled maintenance
-from tomorrow through the seventh upcoming local day. Items open their
-existing Tasks detail and retain their effective deadlines. This preview migrates
+Edge 0.0.0-edge.21 packages the immutable runtime declared in
+[artifact.json](artifact.json). Overview shows the exact count and up to 25 products
+whose available stock falls below the configured minimum. Open Inventory to review
+stock and its available actions. This preview migrates
 supported databases to SQLite schema 31. Edge.13 introduced that schema and
 is listed in `breaking_versions`. Keep a compatible image and stopped-app
 backup before upgrading from an earlier schema. A binary that expects the
