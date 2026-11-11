@@ -1,4 +1,7 @@
+import type {BaseUnit} from '../domain/inventory';
 import type {Language} from './messages';
+
+const SINGULAR_UNIT = {piece:'singularPiece', gram:'singularGram', millilitre:'singularMillilitre'} as const;
 
 const EN = {
   title: 'Inventory', pantry: 'Pantry', empty: 'There are no registered products.', loading: 'Loading inventory.',
@@ -68,11 +71,13 @@ const EN = {
   addToSession: 'Add to purchase session', removeFromSession: 'Remove from session',
   recordSession: 'Review purchase session', saveSession: 'Record purchase session',
   sessionItemLimit: 'Select 2 to 16 items and enter the quantities you bought.',
+  sessionStore: 'Store', sessionStoreOptional: 'Store (optional)',
   sessionHistory: 'Purchase sessions', showSessions: 'Show purchase sessions',
   emptySessions: 'There are no purchase sessions recorded.', moreSessions: 'Show older sessions',
   showRecordedSession: 'Show recorded session', showSessionItems: 'Show session items',
   sessionItems: 'Session items', sessionSaved: 'Purchase session recorded.',
   invalid_shopping_session: 'Choose 2 to 16 distinct items for the session.',
+  invalid_shopping_store_name: 'Enter a store name of 1 to 160 characters, or leave it empty.',
   shopping_session_missing: 'The purchase session is unavailable. Refresh Inventory.',
   sharedShoppingList: 'Shared shopping list', showShoppingList: 'Show shared shopping list',
   emptyShoppingList: 'There are no shopping needs on this page.', moreShoppingList: 'Show more shopping items',
@@ -194,11 +199,13 @@ const ES: Record<keyof typeof EN, string> = {
   addToSession: 'Añadir a la sesión de compra', removeFromSession: 'Quitar de la sesión',
   recordSession: 'Revisar sesión de compra', saveSession: 'Registrar sesión de compra',
   sessionItemLimit: 'Selecciona de 2 a 16 artículos e introduce las cantidades que compraste.',
+  sessionStore: 'Tienda', sessionStoreOptional: 'Tienda (opcional)',
   sessionHistory: 'Sesiones de compra', showSessions: 'Mostrar sesiones de compra',
   emptySessions: 'No hay sesiones de compra registradas.', moreSessions: 'Mostrar sesiones anteriores',
   showRecordedSession: 'Mostrar sesión registrada', showSessionItems: 'Mostrar artículos de la sesión',
   sessionItems: 'Artículos de la sesión', sessionSaved: 'Sesión de compra registrada.',
   invalid_shopping_session: 'Elige de 2 a 16 artículos distintos para la sesión.',
+  invalid_shopping_store_name: 'Introduce un nombre de tienda de 1 a 160 caracteres o deja el campo vacío.',
   shopping_session_missing: 'La sesión de compra no está disponible. Actualiza el inventario.',
   sharedShoppingList: 'Lista compartida de compras', showShoppingList: 'Mostrar lista compartida de compras',
   emptyShoppingList: 'No hay necesidades de compra en esta página.', moreShoppingList: 'Mostrar más artículos de la lista',
@@ -257,4 +264,8 @@ const ES: Record<keyof typeof EN, string> = {
 export type InventoryMessage = keyof typeof EN;
 export function inventoryMessage(key: InventoryMessage, language: Language): string {
   return language === 'es' ? ES[key] : EN[key];
+}
+
+export function inventoryUnitMessage(unit: BaseUnit, quantity: string): InventoryMessage {
+  return quantity === '1' || quantity === '-1' ? SINGULAR_UNIT[unit] : unit;
 }

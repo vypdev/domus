@@ -4853,6 +4853,19 @@
             "minItems": 2,
             "title": "Items",
             "type": "array"
+          },
+          "store_name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Name"
           }
         },
         "required": [
@@ -4906,13 +4919,25 @@
           "session_id": {
             "title": "Session Id",
             "type": "string"
+          },
+          "store_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Name"
           }
         },
         "required": [
           "session_id",
           "member_id",
           "author_alias",
-          "created_at"
+          "created_at",
+          "store_name"
         ],
         "title": "PurchaseSessionView",
         "type": "object"

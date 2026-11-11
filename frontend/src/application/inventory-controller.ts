@@ -16,7 +16,7 @@ export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'i
   'shopping_balance_closed', 'shopping_receipt_untracked', 'shopping_receipt_posted',
   'shopping_purchase_not_settled', 'shopping_receipt_returned', 'shopping_receipt_not_posted', 'shopping_receipt_requires_linked_correction',
   'shopping_receipt_voided', 'shopping_receipt_balance_cancelled', 'shopping_extra_missing', 'shopping_extra_cleared',
-  'invalid_shopping_session', 'shopping_session_missing'] as const;
+  'invalid_shopping_session', 'invalid_shopping_store_name', 'shopping_session_missing'] as const;
 export type InventoryError = typeof INVENTORY_ERRORS[number] | 'rejected';
 
 export interface InventoryScope {readonly key: string; readonly context: JournalContext; readonly readOnly: boolean;}

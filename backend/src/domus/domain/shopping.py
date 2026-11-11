@@ -2,13 +2,15 @@
 
 from dataclasses import dataclass, replace
 
-from domus.domain.errors import Conflict
+from domus.domain.errors import Conflict, InvalidInput
 from domus.domain.inventory import BaseUnit
 from domus.domain.storage import JsonDocument
 from domus.domain.task_material_values import MaterialQuantity
+from domus.domain.task_values import validate_task_text
 
 MIN_SESSION_ITEMS = 2
 MAX_SESSION_ITEMS = 16
+MAX_PURCHASE_STORE_NAME = 160
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +25,14 @@ class PurchaseSession:
     session_id: str
     member_id: str
     created_at: int
+    store_name: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.store_name is not None:
+            try:
+                validate_task_text(self.store_name, MAX_PURCHASE_STORE_NAME, required=True)
+            except InvalidInput:
+                raise InvalidInput("invalid_shopping_store_name") from None
 
 
 @dataclass(frozen=True, slots=True)

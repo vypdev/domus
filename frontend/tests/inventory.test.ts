@@ -1081,13 +1081,21 @@ const freePurchase = {...wirePurchase,purchase_id:'other-purchase',product_id:nu
   name:'Lemons',purchased:'1',received:'1',remaining:'0',pending_stock:'0'};
 const wireSessionDetail = {session:wireSession,items:[wirePurchase,freePurchase]};
 const sessionReceipt = {session_id:'session',purchase_ids:['purchase','other-purchase']};
+const storeName = 'Mercado del Río';
+const namedSession = {...recordSession,store_name:storeName};
+const namedWireSession = {...wireSession,store_name:storeName};
+const namedSessionDetail = {...wireSessionDetail,session:namedWireSession};
 const sessionSaved = {kind:'committed',operationId:'operation',productId:null,movement:null,
   shoppingAction:recordSession.action,sessionId:'session'} as const;
 
 test('purchase sessions admit distinct bounded selections and validate attributed history and original receipts', async () => {
   expect(inventoryCommand(recordSession)).toEqual(recordSession);
+  expect(inventoryCommand(namedSession)).toEqual(namedSession);
+  expect(inventoryCommand({...namedSession,store_name:'🍋'.repeat(160)}))
+    .toEqual({...namedSession,store_name:'🍋'.repeat(160)});
   for (const bad of [
     {...recordSession,wrong:true}, {...recordSession,items:{}}, {...recordSession,items:[sessionItem]},
+    ...[null,'',' ','Store\tNorth','🍋'.repeat(161)].map(store_name => ({...recordSession,store_name})),
     {...recordSession,items:Array(17).fill(sessionItem)}, {...recordSession,items:[sessionItem,sessionItem]},
     ...[null,[],1,{...sessionExtra,name:'forged'}, {...sessionExtra,product_id:'both'},
       {...sessionExtra,extra_id:null}, {...sessionExtra,quantity:'0'}]
@@ -1097,7 +1105,7 @@ test('purchase sessions admit distinct bounded selections and validate attribute
   const {server,fetch} = http([[200,sessionPage],[200,wireSessionDetail],[200,csrf],
     [200,receipt(sessionReceipt)],[200,receipt(sessionReceipt,'historical')]],'native');
   expect(await server.purchaseSessions(scope,'previous').result).toMatchObject({
-    items:[{id:'session',authorAlias:'Shopper',createdAt:'100'}],cursor:'older-sessions',
+    items:[{id:'session',authorAlias:'Shopper',createdAt:'100',storeName:null}],cursor:'older-sessions',
   });
   expect(await server.purchaseSession(scope,'session').result).toMatchObject({
     session:{id:'session'},items:[{id:'purchase',pendingStock:'4.000001'},{id:'other-purchase',pendingStock:'0'}],
@@ -1106,6 +1114,20 @@ test('purchase sessions admit distinct bounded selections and validate attribute
   expect(fetch.mock.calls[1][0]).toMatch(/inventory\/purchase-sessions\/session$/u);
   expect(await server.send(scope,{...request,command:recordSession}).result).toEqual(sessionSaved);
   expect(await server.original(scope,{...request,command:recordSession}).result).toEqual({...sessionSaved,kind:'historical'});
+
+  const withStore = {...sessionReceipt,store_name:storeName};
+  const named = http([[200,{...sessionPage,sessions:[namedWireSession]}],[200,namedSessionDetail],
+    [200,csrf],[200,receipt(withStore)],[200,receipt(withStore,'historical')]]);
+  expect((await named.server.purchaseSessions(scope,null).result).items[0].storeName).toBe(storeName);
+  expect((await named.server.purchaseSession(scope,'session').result).session.storeName).toBe(storeName);
+  expect(await named.server.send(scope,{...request,command:namedSession}).result).toEqual(sessionSaved);
+  expect(JSON.parse(String(named.fetch.mock.calls[3][1]?.body))).toEqual(namedSession);
+  expect(await named.server.original(scope,{...request,command:namedSession}).result).toEqual({...sessionSaved,kind:'historical'});
+  for (const result of [sessionReceipt,{...withStore,store_name:'Another market'}])
+    await expect(http([[200,receipt(result,'historical')]])
+      .server.original(scope,{...request,command:namedSession}).result).rejects.toThrow();
+  await expect(http([[200,{...sessionPage,sessions:[{...wireSession,store_name:' '}]}]])
+    .server.purchaseSessions(scope,null).result).rejects.toThrow();
 
   for (const invalid of [null,Array(26).fill(wireSession),[wireSession,wireSession]]) {
     const response = {...sessionPage,sessions:invalid};
@@ -1184,8 +1206,8 @@ test('session history stays in scope and opens independent per-item receipts aft
 
 test('a manager reviews exact session quantities, retains a rejected draft and opens grouped receipts', async () => {
   const {shoppingList} = await shoppingPages();
-  const wireHistory = {sessions:[wireSession,{...wireSession,session_id:'other',author_alias:null}],next_cursor:'older'};
-  const adapter = http([[200,wireHistory],[200,wireSessionDetail]]).server;
+  const wireHistory = {sessions:[namedWireSession,{...wireSession,session_id:'other',author_alias:null,store_name:null}],next_cursor:'older'};
+  const adapter = http([[200,wireHistory],[200,namedSessionDetail]]).server;
   const history = await adapter.purchaseSessions(scope,null).result;
   const detail = await adapter.purchaseSession(scope,'session').result;
   const {node,root,events,submit} = component();
@@ -1209,7 +1231,7 @@ test('a manager reviews exact session quantities, retains a rejected draft and o
   await assign({...open,purchaseSessions:{items:[],cursor:null}});
   expect(card.textContent).toContain('There are no purchase sessions recorded.');
   const draft = () => panel.querySelector<HTMLFormElement>('#purchase-session-form')!;
-  const quantities = () => [...draft().querySelectorAll<HTMLInputElement>('input')];
+  const quantities = () => [...draft().querySelectorAll<HTMLInputElement>('input[name="quantity"]')];
   press(panel,'Add to purchase session');
   await list.updateComplete;
   expect(button(panel,'Record purchase session').disabled).toBe(true);
@@ -1224,9 +1246,22 @@ test('a manager reviews exact session quantities, retains a rejected draft and o
     input.value=value;
     input.dispatchEvent(new Event('input'));
   };
+  const store = () => draft().querySelector('vyp-ha-field')!;
+  const enterStore = (value:string) => store().dispatchEvent(new CustomEvent('ha-value-request',{detail:{value}}));
+  expect(store().state.label).toBe('Store (optional)');
+  enterStore('   ');
+  await list.updateComplete;
+  submit(draft()); await list.updateComplete;
+  expect(store().state.error).toContain('Enter a store name');
+  expect(store().value).toBe('   ');
+  expect(events).not.toHaveBeenCalled();
+  enterStore(storeName);
+  await list.updateComplete;
+  expect(store().state.error).toBe('');
   enter(1,'0.5'); await list.updateComplete;
   submit(draft()); await list.updateComplete;
   expect(quantities()[1].getAttribute('aria-invalid')).toBe('true');
+  expect(store().value).toBe(storeName);
   press(panel,'Remove from session',1);
   await list.updateComplete;
   expect(quantities()).toHaveLength(1);
@@ -1234,12 +1269,17 @@ test('a manager reviews exact session quantities, retains a rejected draft and o
   await list.updateComplete;
   enter(0,'2,000001'); await list.updateComplete;
   submit(draft()); await list.updateComplete;
+  expect(command()).toEqual({type:'submit',command:namedSession});
+  enterStore(''); await list.updateComplete;
+  submit(draft()); await list.updateComplete;
   expect(command()).toEqual({type:'submit',command:recordSession});
+  enterStore(storeName); await list.updateComplete;
   await assign({...open,pending:true});
   events.mockClear(); submit(draft());
   expect(events).not.toHaveBeenCalled();
-  await assign({...open,result:{kind:'rejected',reason:'shopping_purchase_open',command:recordSession}});
+  await assign({...open,result:{kind:'rejected',reason:'shopping_purchase_open',command:namedSession}});
   expect(quantities()[0].value).toBe('2,000001');
+  expect(store().value).toBe(storeName);
   await assign({...open,result:sessionSaved,purchaseSessions:history});
   await list.updateComplete;
   expect(panel.querySelector('#purchase-session-form')).toBeNull();
@@ -1253,18 +1293,26 @@ test('a manager reviews exact session quantities, retains a rejected draft and o
   await assign({...open,purchaseSessions:history,purchaseSession:detail,purchaseReceipts});
   expect(card.textContent).toContain('Shopper ·');
   expect(card.textContent).toContain('member ·');
+  expect([...card.querySelectorAll('.session-store')].map(label => label.textContent))
+    .toEqual(['Store · '+storeName,'Store · '+storeName]);
   expect(card.textContent).toContain('4.000001 millilitres');
+  expect([...card.querySelectorAll('dd')].map(cell => cell.textContent)).toContain('1 piece');
+  expect([...panel.querySelectorAll('dd')].map(cell => cell.textContent)).toContain('1 piece');
   press(card,'Show physical receipts');
   expect(command()).toEqual({type:'purchase-receipts',purchaseId:'purchase'});
   node.language='es';
   await assign({...open,purchaseSessions:history,purchaseSession:detail});
   expect(card.textContent).toContain('Artículos de la sesión');
+  expect(card.textContent).toContain('Tienda · '+storeName);
+  expect([...card.querySelectorAll('dd')].map(cell => cell.textContent)).toContain('1 unidad');
+  expect([...panel.querySelectorAll('dd')].map(cell => cell.textContent)).toContain('1 unidad');
 
   const lots = {items:Array.from({length:17},(_,index) => ({...shoppingList.items[0],productId:'p'+index})),cursor:null};
   await assign({...open,shoppingList:lots});
   for (let index=0;index<16;index++) press(panel,'Añadir a la sesión de compra',index);
   await list.updateComplete;
   expect(quantities()).toHaveLength(16);
+  expect(store().value).toBe('');
   expect(button(panel,'Añadir a la sesión de compra',16).disabled).toBe(true);
   await assign({...open,scope:{...scope,readOnly:true}});
   expect(panel.querySelector('#purchase-session-form')).toBeNull();

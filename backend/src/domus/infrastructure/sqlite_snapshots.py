@@ -223,7 +223,7 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
         if version >= 24:
             verify_shopping_extras(connection)
         if version >= 25:
-            verify_shopping_sessions(connection)
+            verify_shopping_sessions(connection, has_store=version >= 31)
         if version >= 30:
             verify_inventory_locations(connection)
     except DomusError as error:

@@ -3,11 +3,14 @@ import type {PropertyValues} from 'lit';
 import {repeat} from 'lit/directives/repeat.js';
 import {registerButton} from '@vypdev/ha-ui/button';
 import {buttonState} from '@vypdev/ha-ui/button-contracts';
+import {registerField} from '@vypdev/ha-ui/field';
+import type {FieldValueEvent} from '@vypdev/ha-ui/field';
+import {textFieldState} from '@vypdev/ha-ui/field-contracts';
 import type {InventoryState} from '../application/inventory-controller';
-import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, intakeQuantity} from '../domain/inventory';
+import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, intakeQuantity, purchaseStoreName} from '../domain/inventory';
 import type {BaseUnit, ExtraAttribution, InventoryCommand, SessionSelection, ShoppingItem, ShoppingSource} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
-import {inventoryMessage} from './inventory-messages';
+import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
 import {instant} from './messages';
 import type {Language} from './messages';
@@ -30,7 +33,7 @@ function itemKey(item: ShoppingItem): string {
 
 export class DomusShoppingList extends LitElement {
   static properties = {view:{attribute:false}, language:{attribute:false}, selected:{state:true}, error:{state:true},
-    sessionDraft:{state:true}, sessionError:{state:true}};
+    sessionDraft:{state:true}, sessionStoreDraft:{state:true}, sessionError:{state:true}};
 
   static styles = css`
     section, form, label, li {display:grid;gap:8px}
@@ -50,6 +53,7 @@ export class DomusShoppingList extends LitElement {
   private declare selected: string;
   private declare error: 'invalidName' | 'invalidQuantity' | null;
   private declare sessionDraft: readonly SessionDraft[];
+  private declare sessionStoreDraft: string;
   private declare sessionError: string | null;
 
   constructor() {
@@ -57,6 +61,7 @@ export class DomusShoppingList extends LitElement {
     this.selected = '';
     this.error = null;
     this.sessionDraft = [];
+    this.sessionStoreDraft = '';
     this.sessionError = null;
   }
 
@@ -67,6 +72,7 @@ export class DomusShoppingList extends LitElement {
       this.renderRoot.querySelector<HTMLElement>('#shopping-sources-title')?.focus();
     if (result?.kind === 'committed' && result.shoppingAction === 'shopping.record-session' && result !== previous?.result) {
       this.sessionDraft = [];
+      this.sessionStoreDraft = '';
       this.sessionError = null;
     }
     if (result?.kind === 'committed' && result.shoppingAction === 'shopping.add-extra' && result !== previous?.result) {
@@ -79,7 +85,7 @@ export class DomusShoppingList extends LitElement {
   private text(key: InventoryMessage): string {return inventoryMessage(key, this.language);}
 
   private amount(quantity: string, unit: BaseUnit): string {
-    return (this.language === 'es' ? quantity.replace('.', ',') : quantity) + ' ' + this.text(unit);
+    return (this.language === 'es' ? quantity.replace('.', ',') : quantity) + ' ' + this.text(inventoryUnitMessage(unit, quantity));
   }
 
   private intent(detail: ShoppingListIntent): void {
@@ -140,6 +146,14 @@ export class DomusShoppingList extends LitElement {
   private submitSession(event: SubmitEvent, blocked: boolean): void {
     event.preventDefault();
     if (blocked || this.sessionDraft.length < MIN_SESSION_ITEMS) return;
+    let storeName: string | undefined;
+    try {
+      if (this.sessionStoreDraft !== '') storeName = purchaseStoreName(this.sessionStoreDraft);
+    } catch {
+      this.sessionError = 'store_name';
+      this.renderRoot.querySelector<HTMLElement>('#session-store')?.focus();
+      return;
+    }
     const items: SessionSelection[] = [];
     for (const {key, item, quantity: entered} of this.sessionDraft) {
       const quantity = intakeQuantity(entered, item.unit);
@@ -147,7 +161,8 @@ export class DomusShoppingList extends LitElement {
       items.push({product_id:item.productId, extra_id:item.extraId, quantity});
     }
     this.sessionError = null;
-    this.intent({type:'submit',command:{action:'shopping.record-session',items}});
+    const command = {action:'shopping.record-session',items} as const;
+    this.intent({type:'submit',command:storeName === undefined ? command : {...command,store_name:storeName}});
   }
 
   private sessionForm(blocked: boolean) {
@@ -155,6 +170,13 @@ export class DomusShoppingList extends LitElement {
       @submit=${(event: SubmitEvent) => this.submitSession(event, blocked)}>
       <h5 id="purchase-session-form-title">${this.text('recordSession')}</h5>
       <p>${this.text('sessionItemLimit')}</p>
+      <vyp-ha-field id="session-store" .value=${this.sessionStoreDraft} ?disabled=${blocked}
+        .state=${textFieldState({label:this.text('sessionStoreOptional'),
+          error:this.sessionError === 'store_name' ? this.text('invalid_shopping_store_name') : ''})}
+        @ha-value-request=${(event: FieldValueEvent) => {
+          this.sessionStoreDraft = event.detail.value;
+          if (this.sessionError === 'store_name') this.sessionError = null;
+        }}></vyp-ha-field>
       ${repeat(this.sessionDraft, draft => draft.key, ({key,item,quantity}) => html`<div>
         <label>${item.name} · ${this.text(item.unit)}<input name="quantity" inputmode="decimal"
           .value=${quantity} ?disabled=${blocked} maxlength="20" aria-invalid=${this.sessionError === key}
@@ -167,7 +189,8 @@ export class DomusShoppingList extends LitElement {
           this.sessionError = null;
         })}
       </div>`)}
-      <span id="purchase-session-error" role="alert">${this.sessionError === null ? nothing : this.text('invalidQuantity')}</span>
+      <span id="purchase-session-error" role="alert">${this.sessionError === null || this.sessionError === 'store_name'
+        ? nothing : this.text('invalidQuantity')}</span>
       ${this.button('saveSession', blocked || this.sessionDraft.length < MIN_SESSION_ITEMS)}
     </form>`;
   }
@@ -239,6 +262,7 @@ export class DomusShoppingList extends LitElement {
 }
 
 registerButton();
+registerField();
 customElements.define('domus-shopping-list', DomusShoppingList);
 
 declare global {

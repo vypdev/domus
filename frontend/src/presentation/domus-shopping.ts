@@ -9,7 +9,7 @@ import type {InventoryState} from '../application/inventory-controller';
 import {STOCK_REASON_LIMIT, intakeQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, InventoryCommand, PhysicalReceipt, ProductStock, Purchase, PurchaseReceipts, PurchaseSession} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
-import {inventoryMessage} from './inventory-messages';
+import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
 import {instant} from './messages';
 import type {Language} from './messages';
@@ -40,7 +40,7 @@ export class DomusShopping extends LitElement {
     dd {margin:0} dt {font-weight:650}
     input,select {font:inherit;color:inherit;background:var(--surface);padding:8px;border:1px solid var(--line);
       border-radius:8px;min-width:0}
-    li,code {overflow-wrap:anywhere}
+    li,code,.session-store {overflow-wrap:anywhere}
     :focus-visible {outline:3px solid var(--accent);outline-offset:3px}
   `;
 
@@ -88,7 +88,7 @@ export class DomusShopping extends LitElement {
 
   private text(key: InventoryMessage): string {return inventoryMessage(key, this.language);}
   private amount(quantity: string, unit: BaseUnit): string {
-    return (this.language === 'es' ? quantity.replace('.', ',') : quantity) + ' ' + this.text(unit);
+    return (this.language === 'es' ? quantity.replace('.', ',') : quantity) + ' ' + this.text(inventoryUnitMessage(unit, quantity));
   }
   private intent(detail: ShoppingIntent): void {
     this.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail, bubbles:true, composed:true}));
@@ -268,6 +268,11 @@ export class DomusShopping extends LitElement {
     return (session.authorAlias ?? session.memberId) + ' · ' + instant(Number(session.createdAt), this.language);
   }
 
+  private sessionStore(session: PurchaseSession) {
+    return session.storeName === null ? nothing
+      : html`<p class="session-store">${this.text('sessionStore')} · ${session.storeName}</p>`;
+  }
+
   private sessionHistory(busy: boolean) {
     const {purchaseSessions, purchaseSession, result} = this.view;
     const recent = result?.kind === 'committed' ? result.sessionId : undefined;
@@ -277,12 +282,14 @@ export class DomusShopping extends LitElement {
       ${purchaseSessions == null ? this.button('showSessions', busy, {type:'purchase-sessions'}) : html`
         ${purchaseSessions.items.length === 0 ? html`<p>${this.text('emptySessions')}</p>` : html`<ol>
           ${purchaseSessions.items.map(session => html`<li><strong>${this.sessionLabel(session)}</strong>
+            ${this.sessionStore(session)}
             ${this.button('showSessionItems', busy, {type:'purchase-session',sessionId:session.id})}</li>`)}
         </ol>`}
         ${purchaseSessions.cursor === null ? nothing : this.button('moreSessions', busy, {type:'more-purchase-sessions'})}
       `}
       ${purchaseSession == null ? nothing : html`<section class="shopping" aria-labelledby="purchase-session-title">
         <h5 id="purchase-session-title" tabindex="-1">${this.text('sessionItems')} · ${this.sessionLabel(purchaseSession.session)}</h5>
+        ${this.sessionStore(purchaseSession.session)}
         <ol>${purchaseSession.items.map(item => html`<li><strong>${item.name}</strong>${this.facts(item)}
           ${this.button('showReceipts', busy, {type:'purchase-receipts',purchaseId:item.id})}</li>`)}</ol>
       </section>`}

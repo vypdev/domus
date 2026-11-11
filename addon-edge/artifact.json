@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.12",
-  "sourceCommit": "3a803ddce3092abcd9da48c8533c65d24e2e0e37",
-  "sourceArchiveSHA256": "6eaaf75c60a7582e21da627dc17f9cb9dcad007e0ab90c433d61d311cbf8363b",
+  "version": "0.0.0-edge.14",
+  "sourceCommit": "8ccaa301efbcfa354d21a160eabcd135196d7776",
+  "sourceArchiveSHA256": "b127c8f381e70a6907a83c020429efd667216fc8851b43235feede9bcb5a8116",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -31,9 +31,9 @@
     "domus/application/household_queries.py": "d68db5e792eaeaac07bb1dcb232f84ee573be42c071ae2e3567b32482bb4e27d",
     "domus/application/household_roster.py": "32ff065c1aa94086aa0390b5c4f3834a5a2e5319f2c26bd8f20af887bf051928",
     "domus/application/identity_ports.py": "aebf50fc433fa1c77bacf2bb9e35fdde8c746069b567154de01eaf9980c49075",
-    "domus/application/inventory.py": "5b62417f981c2189fab72d2c0cd65d1bfab6b622116633fa924d856b79e26344",
+    "domus/application/inventory.py": "0723c4697ca7668b1d3a66b33aa2fba65c0bf5179faee918b5f4a073ddfe5dc1",
     "domus/application/inventory_ports.py": "b0a04487925b2714702ce2737051b334949d7df09baa1e2ae29931b4c7df3d68",
-    "domus/application/inventory_queries.py": "eec45f2be9cc992932379b7904533a3fa451cb31e2b1eabd2e6bc6044223471b",
+    "domus/application/inventory_queries.py": "3e766821587202a6cb0f752f309999b09ce1088961a310be2515a8261eb6a7df",
     "domus/application/member_commands.py": "d3e93982d2e42d9a57771269ec0ccd4692fcd196189922bb09e7b0398b924649",
     "domus/application/member_profile_access.py": "c3af66244b9b10a43848e2422f9d662390f4ffd557440d9eae0e0a45d6e4b8a4",
     "domus/application/member_profile_commands.py": "cee8b699d2774056fe8620c22befb369193c2e3acec7fe861c4555540ffdbcc8",
@@ -121,7 +121,7 @@
     "domus/domain/relative_recurrence.py": "97b09d14d293d38f837d07c5a875dba72089652f0ce1fdee1b2088b9882f9fa8",
     "domus/domain/restoration.py": "4bb02d6633a0c81c1ce0cb58ae73dd300813b7ed40f495de521a0290d7b2ce0f",
     "domus/domain/rewards.py": "0e19f55b46aa387f2d3d57792d0b72aa101a530d7dfbebcf69d8345df4f3789f",
-    "domus/domain/shopping.py": "b3383dfa63271531d2e4b5d4735760aecbf03ad2e5c3e4c206044534e64b3b10",
+    "domus/domain/shopping.py": "eda5af9c94c91edc831d528dfd884fab15eac448958716e209697d515262fbaf",
     "domus/domain/shopping_needs.py": "2a3ef89fc0ece49572e5c0f72644e93e39014266c31b2bbce835142899c05551",
     "domus/domain/snapshots.py": "81060c12e0ef06c7329bc3be780d321f40426d36e87e42fea5e85ad075bf7f19",
     "domus/domain/storage.py": "f5d1468532a49bdd74450fec47d12d64b718eaa63838b5c8d15702aa04562b7a",
@@ -146,10 +146,10 @@
     "domus/entrypoints/household_http.py": "37e948848115bfa8714c9cccc50058389114f2e665cad965a66964b0dcd098c8",
     "domus/entrypoints/http.py": "d6e318bad8731c4edcba4da3bc15a762b7aa17610cd8a4d04c71bfd370b5ac96",
     "domus/entrypoints/http_contract.py": "613be310d4ff6a6c7e2a699c20f1c4a142d0b34073629884e58e973c4b040039",
-    "domus/entrypoints/http_errors.py": "32ab90002900133b0492f3dd852551209d1edab1f2e2bbc44a5fdf877ab96102",
+    "domus/entrypoints/http_errors.py": "7d838b6a0169de57b79b80efb8aec455560aa96bbd956334bcb5479f95e934f9",
     "domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
     "domus/entrypoints/ingress_http.py": "f6557eb5481d132131f66ad7691e30c223c63a66a6f0ae5754c9fba3bc7f3626",
-    "domus/entrypoints/inventory_http.py": "75b6ba5133c26c6207ae4bb0cf120fe953c7eaddf61482ece874d80086858349",
+    "domus/entrypoints/inventory_http.py": "e67afe618069e4b4960c9fd4bf7cdcf83f400093d8dd3ecac158161aface768b",
     "domus/entrypoints/native_http.py": "067770c688cd044e2169a144ae4e53bd33586f948deac3239c2c601bbbd19088",
     "domus/entrypoints/openapi.py": "01a3fab9e5890ebcc1fb9c70bce9ced43d45b9190afd134db7dd45e0c5eb28f1",
     "domus/entrypoints/point_allocation_http.py": "7339c88c083206c0778885b55793c80af219b15af7004c5a51d34dbc28f4da5c",
@@ -181,7 +181,7 @@
     "domus/infrastructure/recurrence_worker.py": "23f76be62ed3ce5ddd557338d7e553d818001f1b3083e6e2f17b1e53723297b0",
     "domus/infrastructure/restore_source.py": "71917a2db52f5f6794504fd8caa7fd23b0732e8328760c728ea3f082acd2d203",
     "domus/infrastructure/session_access.py": "1e8bc8d44b60d985da7b44d7bb75fd21bb05f3a45ec38dc7031eff1a2709197d",
-    "domus/infrastructure/sqlite.py": "f0b8be60dc55b63ac71754a06f6e2e1cc860755ad811c4b6b13f10051f58babf",
+    "domus/infrastructure/sqlite.py": "63c9db9c4bd114503e8a410472e3f745ed63502c15836e081875f23f34874851",
     "domus/infrastructure/sqlite_activation.py": "eabd490e86eab9dec76104d7d65c687133b8768a0ec8679e6cca97ba8616ded2",
     "domus/infrastructure/sqlite_calendar.py": "ad71b0ee9398131664662531b262da00ec6be312e068a97ef9c3a92172c7c80e",
     "domus/infrastructure/sqlite_calendar_preferences.py": "0e10804e9571a885518868b5bcbb69ad4eb1d006cafc33bf8b563e7067e69a4e",
@@ -204,8 +204,8 @@
     "domus/infrastructure/sqlite_relative_recurrence_records.py": "adf60c10b464451f05c0f36fd6ae915fd0c773578f4b99908fa15baae43e5e54",
     "domus/infrastructure/sqlite_restoration.py": "2f28207974082bdee48d72afdca08956e077b957377b1a2894b3eb6f4e6c224a",
     "domus/infrastructure/sqlite_rewards.py": "91a9d549198d523d5cd12beefa31cc2d947dc9fe55af245c8cb12017ff1cad5d",
-    "domus/infrastructure/sqlite_shopping.py": "42a8586c7ee52e12ecf4fe47f0523d1bdbeaab3956d8df437e5b617a8beb5f21",
-    "domus/infrastructure/sqlite_snapshots.py": "06b3d7c4e61cf0b5262b878ea70838e7d97c4b5f62c60782f3120b271382a0db",
+    "domus/infrastructure/sqlite_shopping.py": "521e335ae6419f6cd1ee8286c3c6689932ae06330ef370a666581ec915b29688",
+    "domus/infrastructure/sqlite_snapshots.py": "70cf919b4e877f3c57bbd7152281a25762d8d6a0971fc090d5850e29c1ef4fe7",
     "domus/infrastructure/sqlite_task_categories.py": "88adfacc0cbb4408ae902f0dceb4db8cf138073e98314a92fb85d881184e2e3d",
     "domus/infrastructure/sqlite_task_history.py": "d701c2ce24f8116976b524130dfd6406f0419144b9b68fed7341f18929f77aaf",
     "domus/infrastructure/sqlite_task_integrity.py": "982435ff6b6742506c98204292893744aff7b1d64645762eba131e7951e4d09c",
@@ -220,12 +220,12 @@
     "domus/infrastructure/task_cursor.py": "b21dbb915ce874b51008689d05abb4480cb7a65aabc5851f9500e51238bb6b5f",
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
-  "storageSchema": 30,
+  "storageSchema": 31,
   "uiFiles": {
-    ".vite/manifest.json": "4ed436146d05865e5e60e2ef76b99a611b35208a39db3b770b4c039e1de0fb7f",
+    ".vite/manifest.json": "94f828b7f3dae6040645b343c231c60243008b372039ab4424599acb21c2f009",
+    "assets/index-CFU3NqOv.js": "ffafe4c09de7ba84bcbcf0a6de3151017216a55e67cd9c4f8624a8574caecb80",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-Co1HI4BR.js": "cf08dbc51e03912c2762adf261f770bf6fa5deaca70d55d0a06ddf902f5157ca",
-    "index.html": "ac2712a0405457448fb205d0de452f7a50f2f9c2a10e0772578a2fd18adef47a"
+    "index.html": "9be56f56432cc919ab4a090bbc8dee36f209f9c41d1be921bf66894f2dd15fee"
   },
-  "wheelSHA256": "c91bccef222b5206e61829c090b9719a969d2705ea8339c86b896ec39f30d328"
+  "wheelSHA256": "c25814c890558ca7989276415435e6a6f47f103f98471087b2f61af09c84936c"
 }

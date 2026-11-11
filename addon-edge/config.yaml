@@ -1,5 +1,5 @@
 name: Domus Edge
-version: "0.0.0-edge.12"
+version: "0.0.0-edge.14"
 slug: domus_edge
 description: Development preview of the local Domus household application
 url: https://github.com/vypdev/domus
@@ -15,6 +15,7 @@ breaking_versions:
   - "0.0.0-edge.4"
   - "0.0.0-edge.6"
   - "0.0.0-edge.10"
+  - "0.0.0-edge.13"
 init: true
 timeout: 30
 backup: cold

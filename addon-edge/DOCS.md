@@ -1,9 +1,12 @@
 # Installation and operation
 
-Edge 0.0.0-edge.12 packages the immutable runtime declared in
-[artifact.json](artifact.json). Overview shows the current member's assigned
-work and unclaimed household tasks. This preview uses SQLite schema 30.
-Retain a compatible image and data backup before upgrading.
+Edge 0.0.0-edge.14 packages the immutable runtime declared in
+[artifact.json](artifact.json). Shoppers can record an optional store on a
+purchase session and view it in the saved trip. This preview migrates
+supported databases to SQLite schema 31. Edge.13 introduced that schema and
+is listed in `breaking_versions`. Keep a compatible image and stopped-app
+backup before upgrading from an earlier schema. A binary that expects the
+earlier schema requires its compatible data backup.
 A separate Supervisor repository source creates an independent app and data
 directory. Check the source, installed version and app slug before using
 a preview.

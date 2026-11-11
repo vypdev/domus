@@ -233,7 +233,7 @@ def test_normal_transactions_refuse_schema7_until_explicit_atomic_upgrade(tmp_pa
     with store.read() as unit:
         assert unit.recurrence.schedules("home") == ()
     with store._connection() as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 30
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 31
         assert tuple(connection.execute("SELECT * FROM receipts ORDER BY operation_id")) == original
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
 
