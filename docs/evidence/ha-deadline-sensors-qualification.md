@@ -16,5 +16,22 @@ counts have independent grants and configuration entries.
 | `domus-ha-deadline-sensors-C08` | The packaged tests exercise Core 2026.10.4 with the Ingress and standalone images. The [operator guide](../tasks/ha-deadline-sensors.md) covers setup and recovery in English and Spanish. |
 
 The increment uses the existing SQLite schema and preserves the native calendar
-configuration. The release candidate's installed walkthrough is recorded
-separately from the disposable Core tests.
+configuration.
+
+## Installed Edge.23
+
+On 2026-11-11, Supervisor installed `0.0.0-edge.23` in a separate `aarch64`
+app with runtime `b72b5e40c0c552ae597ce77c95447c12a8a40cc4`. The app started
+with a synthetic deadline digest and the configured local Ingress origin.
+The disposable UTC household initially showed zero tasks in both groups.
+Two date-only schedules then produced one overdue task and one task due today.
+
+In English on desktop, keyboard selection focused the overdue task and showed
+November 10. At 390 pixels in Spanish, Inicio showed `Vencidas · 1` and
+`Para hoy · 1`. A touch opened the task due today, focused its heading, and
+showed `Vencimiento: 11 nov 2026`.
+
+The temporary app, its private data and its repository source were removed.
+Supervisor returned to 14 installed apps and eight repository sources.
+The disposable Core suites exercise the authenticated sensor reads against
+both deployment compositions.

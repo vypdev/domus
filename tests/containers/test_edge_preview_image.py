@@ -74,7 +74,7 @@ print(json.dumps({"pythonFiles":python,"uiFiles":ui}))
     actual = json.loads(probe.stdout)
     assert actual["pythonFiles"] == edge_artifact["pythonFiles"]
     assert actual["uiFiles"] == edge_artifact["uiFiles"]
-    assert len(actual["pythonFiles"]) == 215 and len(actual["uiFiles"]) == 4
+    assert len(actual["pythonFiles"]) == 218 and len(actual["uiFiles"]) == 4
 
 
 def test_pinned_edge_native_launcher_authority_storage_and_restart(

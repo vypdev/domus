@@ -7,6 +7,11 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
+Edge.23 was installed in a disposable `aarch64` Supervisor app on 2026-11-11.
+Ingress accepted the optional deadline setting and showed the two Overview
+counts in English and Spanish. The [qualification record](evidence/ha-deadline-sensors-qualification.md#installed-edge23)
+records the exact runtime, browser journeys and scoped cleanup.
+
 Edge.21 was installed in a disposable `aarch64` Supervisor app on 2026-11-11.
 The Ingress walkthrough verified the Overview stock summary and replenishment in
 English and Spanish. The test app, its data and its temporary repository source were
