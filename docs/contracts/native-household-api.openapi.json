@@ -4030,6 +4030,18 @@
             ],
             "title": "Due At"
           },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
           "occurrence_id": {
             "title": "Occurrence Id",
             "type": "string"
@@ -8354,6 +8366,18 @@
             ],
             "title": "Due At"
           },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
           "household_id": {
             "title": "Household Id",
             "type": "string"
@@ -8584,20 +8608,113 @@
       "TaskOverview": {
         "properties": {
           "assigned": {
-            "$ref": "#/components/schemas/TaskOverviewGroup"
+            "$ref": "#/components/schemas/TaskOverviewGroup_TaskOverviewItem_"
+          },
+          "due_today": {
+            "$ref": "#/components/schemas/TaskOverviewGroup_TaskOverviewDeadlineItem_"
+          },
+          "overdue": {
+            "$ref": "#/components/schemas/TaskOverviewGroup_TaskOverviewDeadlineItem_"
           },
           "unclaimed": {
-            "$ref": "#/components/schemas/TaskOverviewGroup"
+            "$ref": "#/components/schemas/TaskOverviewGroup_TaskOverviewItem_"
           }
         },
         "required": [
           "assigned",
-          "unclaimed"
+          "unclaimed",
+          "due_today",
+          "overdue"
         ],
         "title": "TaskOverview",
         "type": "object"
       },
-      "TaskOverviewGroup": {
+      "TaskOverviewDeadline": {
+        "properties": {
+          "instant_ms": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instant Ms"
+          },
+          "local_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Date"
+          },
+          "time_zone": {
+            "title": "Time Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "local_date",
+          "instant_ms",
+          "time_zone"
+        ],
+        "title": "TaskOverviewDeadline",
+        "type": "object"
+      },
+      "TaskOverviewDeadlineItem": {
+        "properties": {
+          "deadline": {
+            "$ref": "#/components/schemas/TaskOverviewDeadline"
+          },
+          "occurrence_id": {
+            "title": "Occurrence Id",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/OccurrenceState"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "occurrence_id",
+          "title",
+          "state",
+          "deadline"
+        ],
+        "title": "TaskOverviewDeadlineItem",
+        "type": "object"
+      },
+      "TaskOverviewGroup_TaskOverviewDeadlineItem_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskOverviewDeadlineItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "TaskOverviewGroup",
+        "type": "object"
+      },
+      "TaskOverviewGroup_TaskOverviewItem_": {
         "properties": {
           "items": {
             "items": {

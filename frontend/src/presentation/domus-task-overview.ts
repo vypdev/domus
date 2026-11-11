@@ -5,9 +5,9 @@ import {registerCard} from '@vypdev/ha-ui/card';
 import {cardState} from '@vypdev/ha-ui/card-contracts';
 import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
-import type {TaskOverviewGroup, TaskOverviewView} from '../application/task-overview';
+import type {TaskOverviewDeadline, TaskOverviewGroup, TaskOverviewView} from '../application/task-overview';
 import type {Language} from './messages';
-import {taskMessage} from './task-messages';
+import {taskDay, taskMessage} from './task-messages';
 import type {TaskMessageKey} from './task-messages';
 
 type OverviewIntent = {readonly type: 'refresh'} | {readonly type: 'select'; readonly occurrenceId: string};
@@ -38,12 +38,22 @@ export class DomusTaskOverview extends LitElement {
     }));
   }
 
-  private group(key: 'overviewAssigned' | 'overviewUnclaimed', group: TaskOverviewGroup) {
+  private deadlineLabel(deadline: TaskOverviewDeadline): string {
+    return deadline.day === null
+      ? new Intl.DateTimeFormat(this.language,
+        {dateStyle: 'medium', timeStyle: 'short', timeZone: deadline.zone}).format(deadline.instant)
+      : taskDay(deadline.day, this.language);
+  }
+
+  private group(key: 'overviewAssigned' | 'overviewUnclaimed' | 'overviewDueToday' | 'overviewOverdue',
+    group: TaskOverviewGroup) {
     const total = new Intl.NumberFormat(this.language).format(group.total);
     return html`<vyp-ha-card .state=${cardState({title: this.text(key) + ' · ' + total, headingLevel: 3})}>
       ${group.total === 0 ? html`<p>${this.text('overviewEmpty')}</p>` : html`<ul>${group.items.map(item => {
         const title = item.title.replace(/[\u007f-\u009f]/gu, ' ');
-        const label = title + ' · ' + this.text(`state_${item.state}`);
+        const state = this.text(`state_${item.state}`);
+        const label = item.deadline === undefined ? title + ' · ' + state
+          : title + ' · ' + this.deadlineLabel(item.deadline) + ' · ' + state;
         return html`<li><vyp-ha-button .state=${buttonState({label, variant: 'plain'})}
           @ha-press-request=${() => this.intent({type: 'select', occurrenceId: item.id})}></vyp-ha-button></li>`;
       })}</ul>`}
@@ -57,6 +67,8 @@ export class DomusTaskOverview extends LitElement {
     return html`<section aria-labelledby="overview-task-title">
       <h2 id="overview-task-title">${this.text('overviewHeading')}</h2>
       ${view.state === 'ready' ? html`<div class="groups">
+        ${this.group('overviewOverdue', view.overview.overdue)}
+        ${this.group('overviewDueToday', view.overview.dueToday)}
         ${this.group('overviewAssigned', view.overview.assigned)}
         ${this.group('overviewUnclaimed', view.overview.unclaimed)}
       </div>` : html`<vyp-ha-feedback .state=${view.state === 'loading'

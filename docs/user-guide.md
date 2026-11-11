@@ -19,10 +19,16 @@ not restore an unsent administration draft.
 
 ### Task summary on Overview
 
-**Assigned to me** shows your assigned, in-progress, and blocked tasks. **Unclaimed tasks**
-shows household work in the available state. Both groups show exact totals with up to 25
-items per group. Select a task to open its current details in Tasks. Use **Retry task summary**
-if the summary could not be loaded. Access follows your current Tasks read permission.
+**Overdue** shows open tasks past their deadline. **Due today** shows open tasks
+due on the current local day whose deadlines are still ahead or due now.
+Timed deadlines use the household time zone. Date-only recurring deadlines
+use their saved scheduling time zone and stay due through that day.
+**Assigned to me** shows your assigned, in-progress, and blocked tasks.
+**Unclaimed tasks** shows household work in the available state.
+
+Each group shows an exact total and up to 25 items. Select a task to open
+its current details in Tasks. Use **Retry task summary** if the summary
+could not be loaded. Access follows your current Tasks read permission.
 
 ## Current task workspace
 

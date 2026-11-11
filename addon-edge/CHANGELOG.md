@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.0-edge.16
+
+- Show the effective date-only deadline in the task list and selected task detail.
+
+## 0.0.0-edge.15
+
+- Show exact counts of tasks due today and overdue on Overview in English and Spanish.
+- Keep the effective deadline of each timed or date-only task and open its existing protected detail.
+
 ## 0.0.0-edge.14
 
 - Use singular units for quantities of exactly one in the shared shopping list and purchase history in English and Spanish.

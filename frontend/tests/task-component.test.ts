@@ -126,6 +126,18 @@ test('task date formatting respects exact bounds and uses English fallback witho
   expect(taskInstant(null, 'es')).toBe('Sin fecha de vencimiento'); expect(taskInstant('0', 'en')).toContain('UTC');
   for (const value of ['9223372036854775807', '-1', 'not-a-time']) expect(taskInstant(value, 'en')).toBe('Time unavailable');
 });
+test('the task list and selected detail display the same date-only deadline in both locales', async () => {
+  const dated = {...work, dueDate: '2026-04-02'};
+  const f = await mount(view({page: {items: [dated], nextCursor: null}, detail: dated}));
+  expect(f.root.querySelector('.task-meta')!.textContent).toContain('Apr 2, 2026');
+  expect(f.text()).toContain('Due: Apr 2, 2026');
+  expect(f.text()).not.toContain('No due date');
+  f.element.language = 'es';
+  await f.element.updateComplete;
+  expect(f.root.querySelector('.task-meta')!.textContent).toContain('2 abr 2026');
+  expect(f.text()).toContain('Vencimiento: 2 abr 2026');
+  expect(f.text()).not.toContain('Sin fecha de vencimiento');
+});
 test('choosing a priority retains the visible value across language changes', async () => {
   const f = await mount(); await f.input('task-title', 'Clean the filter'); const select = f.root.querySelector<HTMLSelectElement>('#task-priority')!;
   select.value = 'urgent'; select.dispatchEvent(new Event('change', {bubbles: true})); await f.element.updateComplete;

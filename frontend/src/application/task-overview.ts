@@ -7,7 +7,12 @@ export interface TaskOverviewItem {
   readonly id: string;
   readonly title: string;
   readonly state: TaskState;
+  readonly deadline?: TaskOverviewDeadline;
 }
+
+export type TaskOverviewDeadline =
+  | Readonly<{day: string; instant: null; zone: string}>
+  | Readonly<{day: null; instant: number; zone: string}>;
 
 export interface TaskOverviewGroup {
   readonly total: number;
@@ -17,6 +22,8 @@ export interface TaskOverviewGroup {
 export interface TaskOverview {
   readonly assigned: TaskOverviewGroup;
   readonly unclaimed: TaskOverviewGroup;
+  readonly dueToday: TaskOverviewGroup;
+  readonly overdue: TaskOverviewGroup;
 }
 
 export type TaskOverviewView = Readonly<{state: 'loading' | 'denied' | 'unavailable'}>

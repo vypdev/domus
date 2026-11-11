@@ -1,3 +1,4 @@
+import type {TaskSummary} from '../domain/tasks';
 import {instant, language, message} from './messages';
 const english = Object.freeze({
   title: 'Tasks', intro: 'Plan household work, share it and keep track of what is done.',
@@ -36,6 +37,7 @@ const english = Object.freeze({
   requests: 'Saved requests', check: 'Check saved request', dismiss: 'Dismiss saved request',
   action_create: 'Create task', action_claim: 'Claim task', action_complete: 'Complete task', action_verify: 'Review task', action_reopen: 'Reopen task',
   overviewHeading: 'Task summary', overviewAssigned: 'Assigned to me', overviewUnclaimed: 'Unclaimed tasks',
+  overviewDueToday: 'Due today', overviewOverdue: 'Overdue',
   overviewEmpty: 'No tasks in this group.', overviewMore: 'Open Tasks for the full list.',
   overviewLoading: 'Loading task summary…', overviewDenied: 'Your current access does not allow viewing tasks.',
   overviewUnavailable: 'The task summary could not be loaded.', overviewRetry: 'Retry task summary',
@@ -94,6 +96,7 @@ const spanish: Readonly<Record<TaskMessageKey, string>> = Object.freeze({
   requests: 'Solicitudes guardadas', check: 'Comprobar solicitud guardada', dismiss: 'Descartar solicitud guardada',
   action_create: 'Crear tarea', action_claim: 'Reclamar tarea', action_complete: 'Completar tarea', action_verify: 'Revisar tarea', action_reopen: 'Reabrir tarea',
   overviewHeading: 'Resumen de tareas', overviewAssigned: 'Asignadas a mí', overviewUnclaimed: 'Tareas sin asignar',
+  overviewDueToday: 'Para hoy', overviewOverdue: 'Vencidas',
   overviewEmpty: 'No hay tareas en este grupo.', overviewMore: 'Abre Tareas para ver la lista completa.',
   overviewLoading: 'Cargando el resumen de tareas…', overviewDenied: 'Tu acceso actual no permite ver las tareas.',
   overviewUnavailable: 'No se ha podido cargar el resumen de tareas.', overviewRetry: 'Volver a cargar el resumen de tareas',
@@ -120,4 +123,13 @@ export function taskInstant(value: string | null, locale: unknown): string {
   const number = Number(value);
   return Number.isSafeInteger(number) && number >= 0 && number <= 8_640_000_000_000_000
     ? instant(number, language(locale, 'en')) : message('unavailableTime', language(locale, 'en'));
+}
+
+export function taskDay(value: string, locale: unknown): string {
+  return new Intl.DateTimeFormat(language(locale, 'en'),
+    {dateStyle: 'medium', timeZone: 'UTC'}).format(Date.parse(value + 'T00:00:00Z'));
+}
+
+export function taskDeadline(work: Pick<TaskSummary, 'dueAt' | 'dueDate'>, locale: unknown): string {
+  return work.dueDate === undefined ? taskInstant(work.dueAt, locale) : taskDay(work.dueDate, locale);
 }

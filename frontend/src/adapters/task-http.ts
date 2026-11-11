@@ -1,16 +1,17 @@
 /** Same-origin task transport with bounded reads and no automatic write retry. */
 import {EntryReadError} from '../application/ports';
 import type {TaskCommandResult, TaskOriginal, TaskRequest, TaskServer} from '../application/task-ports';
-import type {TaskOverview, TaskOverviewGroup} from '../application/task-overview';
+import type {TaskOverview, TaskOverviewDeadline, TaskOverviewGroup} from '../application/task-overview';
+import {civilDate} from '../domain/civil-date';
 import type {JournalContext} from '../domain/journal';
 import {isCategoryCommand} from '../domain/tasks';
 import type {TaskCommand, TaskState} from '../domain/tasks';
-import {taskSchedulePolicy, taskText, TASK_TEXT_LIMITS} from '../domain/tasks';
+import {taskSchedulePolicy, taskText, taskTime, TASK_TEXT_LIMITS} from '../domain/tasks';
 import {BoundedHTTP, reason} from './http-transport';
 import type {FetchTransport} from './http-transport';
 import type {EntryEndpoint} from './http-values';
 import {assertion, csrf, failure} from './http-values';
-import {boolean, check, choice, fields, identifier, integer, responseRevision} from './json-values';
+import {boolean, check, choice, fields, identifier, integer, responseRevision, text} from './json-values';
 import {taskCategoryCatalog, taskCommandBody, taskDetail, taskPage, taskReceipt, taskRequest} from './task-values';
 function route(command: TaskCommand): string {
   if (command.action === 'task.create') return command.payload.schedule === undefined
@@ -23,14 +24,36 @@ function route(command: TaskCommand): string {
   const action = command.action.slice(5);
   return 'tasks/occurrences/' + command.occurrenceId + '/' + action;
 }
-function overviewGroup(value: unknown, states: readonly TaskState[]): TaskOverviewGroup {
+const ASSIGNED_STATES = ['assigned', 'in_progress', 'blocked'] as const;
+const DEADLINE_STATES = ['available', ...ASSIGNED_STATES] as const;
+const OVERVIEW_FIELDS = ['occurrence_id', 'title', 'state'] as const;
+
+function overviewDeadline(value: unknown): TaskOverviewDeadline {
+  const row = fields(value, ['local_date', 'instant_ms', 'time_zone'], []);
+  const zone = text(row.time_zone, 128);
+  try {
+    new Intl.DateTimeFormat('en', {timeZone: zone});
+    if (row.local_date !== null) {
+      check(civilDate(row.local_date) && row.instant_ms === null);
+      return {day: row.local_date, instant: null, zone};
+    }
+    const instant = Number(taskTime(row.instant_ms));
+    check(instant <= 253_402_300_799_999);
+    return {day: null, instant, zone};
+  } catch {
+    throw new EntryReadError('invalid_response');
+  }
+}
+
+function overviewGroup(value: unknown, states: readonly TaskState[], dated = false): TaskOverviewGroup {
   const group = fields(value, ['total', 'items'], []);
   const total = integer(group.total, 0);
   check(Array.isArray(group.items) && group.items.length === Math.min(total, 25));
   const items = group.items.map(value => {
-    const item = fields(value, ['occurrence_id', 'title', 'state'], []);
-    return {id: identifier(item.occurrence_id), title: taskText(item.title, TASK_TEXT_LIMITS.title, true),
+    const item = fields(value, dated ? [...OVERVIEW_FIELDS, 'deadline'] : OVERVIEW_FIELDS, []);
+    const work = {id: identifier(item.occurrence_id), title: taskText(item.title, TASK_TEXT_LIMITS.title, true),
       state: choice(item.state, states)};
+    return dated ? {...work, deadline: overviewDeadline(item.deadline)} : work;
   });
   check(new Set(items.map(item => item.id)).size === items.length);
   return {total, items};
@@ -54,9 +77,14 @@ export class HttpTaskServer implements TaskServer {
   }
   overview(expected: JournalContext) {
     return this.network.owned<TaskOverview>(async signal => {
-      const result = fields(await this.network.get('tasks/overview', expected, signal), ['assigned', 'unclaimed'], []);
-      return {assigned: overviewGroup(result.assigned, ['assigned', 'in_progress', 'blocked']),
-        unclaimed: overviewGroup(result.unclaimed, ['available'])};
+      const result = fields(await this.network.get('tasks/overview', expected, signal),
+        ['assigned', 'unclaimed', 'due_today', 'overdue'], []);
+      const dueToday = overviewGroup(result.due_today, DEADLINE_STATES, true);
+      const overdue = overviewGroup(result.overdue, DEADLINE_STATES, true);
+      const todayIds = new Set(dueToday.items.map(item => item.id));
+      check(overdue.items.every(item => !todayIds.has(item.id)));
+      return {assigned: overviewGroup(result.assigned, ASSIGNED_STATES),
+        unclaimed: overviewGroup(result.unclaimed, ['available']), dueToday, overdue};
     });
   }
   list(expected: JournalContext, cursor: string | null) {

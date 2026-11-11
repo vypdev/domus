@@ -1,13 +1,23 @@
 """Read authoritative Overview counts through both protected task compositions."""
 
 from dataclasses import replace
+from datetime import UTC, date, datetime
 
+import pytest
+from test_recurrence_review import fixed_move, review_service, reviewed
+from test_relative_materialization import configured as relative_configured
 from test_task_runtime import api as api
 from test_tasks import definition
 
+from domus.application.reschedule_review import RescheduleSelection
+from domus.application.task_queries import TaskQueries
 from domus.domain.identity import Member, MemberStatus, Permission, PermissionRule, Role
+from domus.domain.recurrence_rules import NominalDate
 from domus.domain.task_values import OccurrenceState, TaskRules
 from domus.domain.tasks import HouseholdTaskPolicy
+from domus.entrypoints.task_response import detail_response
+from domus.infrastructure.application_runtime import SystemClock
+from domus.infrastructure.task_cursor import TaskCursor
 
 OVERVIEW = "/api/v1/tasks/overview"
 OTHER_USER = "b" * 32
@@ -15,7 +25,12 @@ OTHER_USER = "b" * 32
 
 def test_overview_groups_authorized_records_and_counts_beyond_the_page(api):
     empty = {"total": 0, "items": []}
-    assert api.client.get(OVERVIEW).json() == {"assigned": empty, "unclaimed": empty}
+    assert api.client.get(OVERVIEW).json() == {
+        "assigned": empty,
+        "unclaimed": empty,
+        "due_today": empty,
+        "overdue": empty,
+    }
     assert api.client.get(OVERVIEW, params={"member_id": "other"}).status_code == 422
 
     task = definition()
@@ -88,4 +103,132 @@ def test_overview_requires_current_task_read_authority(api):
         )
     denied = api.client.get(OVERVIEW)
     assert denied.status_code == 403
-    assert "assigned" not in denied.json() and "unclaimed" not in denied.json()
+    assert not {"assigned", "unclaimed", "due_today", "overdue"} & denied.json().keys()
+
+
+def millis(year, month, day, hour=0, minute=0):
+    return int(datetime(year, month, day, hour, minute, tzinfo=UTC).timestamp()) * 1000
+
+
+def test_overview_timed_deadlines_use_one_clock_and_the_household_day(api, monkeypatch):
+    now = millis(2026, 3, 29, 21, 30)
+    next_day = millis(2026, 3, 29, 22)
+    monkeypatch.setattr(SystemClock, "now", lambda _: now)
+    task = definition()
+    with api.store.write() as unit:
+        home = unit.households.get("home")
+        unit.households.save(replace(home, time_zone="Europe/Madrid", revision=2), 1)
+        unit.tasks.save_policy(HouseholdTaskPolicy("home", TaskRules()), 0)
+        unit.tasks.save_definition(task, 0)
+        for number in range(27):
+            for name, due in ((f"late-{number:02}", now - 1), (f"today-{number:02}", now + 1)):
+                unit.tasks.save_occurrence(task.new_occurrence(name, 20, due_at=due), 0)
+        for name, due in (
+            ("at-now", now),
+            ("last-today", next_day - 1),
+            ("next-day", next_day),
+            ("undated", None),
+        ):
+            unit.tasks.save_occurrence(task.new_occurrence(name, 20, due_at=due), 0)
+        closed = task.new_occurrence("already-closed", 20, due_at=now - 1)
+        unit.tasks.save_occurrence(closed, 0)
+        unit.tasks.save_occurrence(closed.transition(OccurrenceState.CANCELLED, "Withdrawn"), 1)
+
+    response = api.client.get(OVERVIEW)
+    assert response.status_code == 200, response.text
+    report = response.json()
+    assert report["due_today"]["total"] == 29
+    assert report["overdue"]["total"] == 27
+    assert len(report["due_today"]["items"]) == len(report["overdue"]["items"]) == 25
+    first, last = report["due_today"]["items"][:2]
+    assert first["occurrence_id"] == "at-now" and last["occurrence_id"] == "last-today"
+    assert first["deadline"] == {
+        "local_date": None,
+        "instant_ms": str(now),
+        "time_zone": "Europe/Madrid",
+    }
+    assert last["deadline"]["instant_ms"] == str(next_day - 1)
+    timed = api.client.get("/api/v1/tasks/occurrences/at-now").json()["work"]
+    assert timed["due_at"] == now and timed["due_date"] is None
+    assert [item["occurrence_id"] for item in report["overdue"]["items"]] == [
+        f"late-{number:02}" for number in range(25)
+    ]
+    now = next_day
+    after_midnight = api.client.get(OVERVIEW).json()
+    assert after_midnight["overdue"]["total"] == 56
+    assert [item["occurrence_id"] for item in after_midnight["due_today"]["items"]] == ["next-day"]
+
+
+@pytest.mark.parametrize("kind", ["fixed", "relative"])
+def test_date_only_overview_uses_the_reviewed_deadline_and_saved_zone(tmp_path, kind):
+    moved_day = date(2026, 4, 2)
+    if kind == "fixed":
+        service, choice, _, _ = fixed_move(tmp_path)
+        store = service.transactions
+    else:
+        initial, store, actor, identifiers, schedule_id, _ = relative_configured(tmp_path)
+        work = initial.initial(schedule_id)
+        service = review_service(initial, store, actor, identifiers)
+        choice = RescheduleSelection(
+            schedule_id,
+            1,
+            work.receipt.command.key,
+            work.occurrence_id,
+            1,
+            NominalDate(moved_day),
+            "Review the new date",
+        )
+    _, move = reviewed(service, choice)
+    service.apply("move", move)
+    queries = TaskQueries(
+        store, service.actor.current(), TaskCursor(service.clock, b"k" * 32), store.installation
+    )
+    times = service.planner.times
+    with store.write() as unit:
+        home = unit.households.get("home")
+        unit.households.save(
+            replace(home, time_zone="UTC", revision=home.revision + 1), home.revision
+        )
+
+    class ObservationClock:
+        value = millis(2026, 4, 1, 21, 59)
+        reads = 0
+
+        def now(self):
+            self.reads += 1
+            return self.value
+
+    clock = ObservationClock()
+    before = queries.overview(clock, times)
+    assert before.due_today.total == before.overdue.total == 0
+    clock.value = millis(2026, 4, 1, 22)
+    today = queries.overview(clock, times)
+    assert today.due_today.total == 1 and today.overdue.total == 0
+    (work,) = today.due_today.items
+    assert work.occurrence_id == choice.occurrence_id
+    assert (work.deadline.local_date, work.deadline.instant_ms, work.deadline.time_zone) == (
+        moved_day,
+        None,
+        "Europe/Madrid",
+    )
+    (listed,) = queries.occurrences().items
+    assert (listed.occurrence_id, listed.due_at, listed.due_date) == (
+        choice.occurrence_id,
+        None,
+        moved_day,
+    )
+    selected = detail_response(queries.occurrence(choice.occurrence_id)).work
+    assert selected.due_at is None and selected.due_date == moved_day
+    clock.value = millis(2026, 4, 2, 22)
+    overdue = queries.overview(clock, times)
+    assert overdue.due_today.total == 0 and overdue.overdue.total == 1
+    assert overdue.overdue.items == (work,)
+    assert clock.reads == 3
+    with store.write() as unit:
+        home = unit.households.get("home")
+        unit.households.save(
+            replace(home, time_zone="Europe/Madrid", revision=home.revision + 1),
+            home.revision,
+        )
+    assert queries.overview(clock, times).overdue == overdue.overdue
+    assert clock.reads == 4

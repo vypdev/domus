@@ -9,13 +9,13 @@ published. Source, package and adoption evidence are recorded in
 [task workspace evidence](evidence/task-workspace.json). Historical receipts below retain their
 original Edge.1–3 observations and do not describe the current installation.
 
-## Edge.14 candidate
+## Edge.16 candidate
 
-The optional purchase-session store candidate uses the Supervisor repository
-flow with the [managed issue branch](https://github.com/vypdev/domus/issues/94).
+The Overview deadline candidate uses the Supervisor repository flow with
+the [managed issue branch](https://github.com/vypdev/domus/issues/96).
 The [artifact declaration](../addon-edge/artifact.json) pins the source
 commit, archive and installed files. Check that Supervisor reports
-`0.0.0-edge.14` before testing. The candidate uses SQLite schema 31,
+`0.0.0-edge.16` before testing. The candidate uses SQLite schema 31,
 introduced by Edge.13. Keep a compatible image and cold data backup before
 updating from an earlier schema. When using a separate repository source,
 keep existing preview data in its original app and use a disposable household

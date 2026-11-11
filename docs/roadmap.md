@@ -49,8 +49,9 @@ implementation, verification and packaging gates. The Family increments now cove
   records a move as two linked ledger entries. Multiple lists, prices, refunds, location editing and
   archiving, lot and package management, barcodes and optional online lookup remain open.
 - M4: the shared automation engine, both editors and Domus-owned HA entities/services remain open. The existing gateway is already integrated; its MCP/business behavior is outside this work.
-- M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md).
-  Date-based and cross-domain summaries, full integrated acceptance and Stable release
+- M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
+  and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).
+  Upcoming maintenance and cross-domain summaries, full integrated acceptance and Stable release
   acceptance remain open.
 
 ## Shared components, Domus-owned experience

@@ -8,7 +8,7 @@ import type {Revision} from '../domain/administration';
 import type {TaskCategory, TaskDetail, TaskMaterialUsage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
 import {language} from './messages';
 import type {Language} from './messages';
-import {taskInstant, taskMessage} from './task-messages';
+import {taskDeadline, taskInstant, taskMessage} from './task-messages';
 import type {TaskMessageKey} from './task-messages';
 import {styles} from './styles';
 import type {AllocationView} from '../application/allocation-controller';
@@ -296,7 +296,7 @@ export class DomusTasks extends LitElement {
       <p><span class="badge">${this.text(`state_${work.state}`)}</span><span class="badge">${this.text(`priority_${work.priority}`)}</span></p>
       ${work.categoryLabel ? html`<p>${this.text('category')} ${work.categoryLabel}</p>` : nothing}
       ${work.description ? html`<p class="description">${work.description}</p>` : nothing}
-      <p class="help">${this.text('due')}: ${taskInstant(work.dueAt, this.language)}</p>
+      <p class="help">${this.text('due')}: ${taskDeadline(work, this.language)}</p>
       ${work.cycle ? html`<p class="note" role="status"><strong>${this.text(`verification_${work.cycle.verification}`)}</strong><br>
         <small>${this.text('performed')}: ${taskInstant(work.cycle.performedAt, this.language)}</small></p>` : nothing}
       ${work.dependencyReviewRequired ? html`<p class="note warning" role="status">${this.text('dependencyReview')}</p>` : nothing}
@@ -358,7 +358,7 @@ export class DomusTasks extends LitElement {
             <section class="card" aria-labelledby="task-list-title"><h3 id="task-list-title">${this.text('list')}</h3>
               ${view.page?.items.length ? html`<ul class="task-list">${view.page.items.map(item => html`<li><button type="button" class="task-link" ?disabled=${view.busy}
                 aria-pressed=${item.occurrenceId === view.detail?.occurrenceId ? 'true' : 'false'} @click=${() => this.intent({type: 'select', occurrenceId: item.occurrenceId})}>${item.title}</button>
-                <div class="task-meta"><span>${this.text(`state_${item.state}`)}</span><span>${taskInstant(item.dueAt, this.language)}</span></div></li>`)}</ul>`
+                <div class="task-meta"><span>${this.text(`state_${item.state}`)}</span><span>${taskDeadline(item, this.language)}</span></div></li>`)}</ul>`
                 : view.page !== null ? html`<p>${this.text('empty')}</p>` : nothing}
               ${view.page?.nextCursor ? html`<div class="actions"><button type="button" ?disabled=${view.busy} @click=${() => this.intent({type: 'more'})}>${this.text('more')}</button></div>` : nothing}</section></div>
           <div>${view.detail ? this.workDetail() : nothing}</div>

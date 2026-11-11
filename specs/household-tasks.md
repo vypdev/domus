@@ -671,3 +671,166 @@ complete coverage and the exact installed Edge.12 candidate.
 
 Issue 92 and its first verified publication own the Overview behavior.
 This revision adds explicit evidence for the page bound and delayed reads.
+
+## Show tasks due today and overdue on Overview
+
+- Status: Draft
+- Owners: Domus maintainers and Tasks
+- Scope: Protected read-only task deadline summaries and links to existing task details
+- Open decisions blocking readiness: none for the existing deadline semantics
+
+### 1. Executive summary
+
+A household member opens Overview to find open tasks due today and overdue.
+Counts and links come from the authoritative task and recurrence records.
+
+### 2. Problem, current behavior, and evidence
+
+Overview shows assigned and unclaimed work. The roadmap also calls for
+current task deadline summaries. The protected Calendar and recurrence
+review already distinguish actual timed deadlines from date-only deadlines.
+
+### 3. Actors, surfaces, and terminology
+
+A verified household member with current Tasks read access sees the summary.
+A timed task has a due instant. A date-only occurrence has an effective
+calendar date in its saved scheduling time zone. Overview links to Tasks.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| overview-deadlines-R01 | Report open tasks due today and overdue using their effective deadline and one authoritative observation time. Use the household time zone for the local day of a timed deadline and the saved scheduling time zone for a date-only deadline. |
+| overview-deadlines-R02 | Scope counts and item lists to the current household and Tasks read authority. Read exact totals and bounded items from the same snapshot. |
+| overview-deadlines-R03 | Present clear loading, empty, unavailable and ready states in English and Spanish. Open details through the existing protected Tasks view with keyboard and touch. |
+| overview-deadlines-R04 | Preserve existing task and recurrence records, validate both deployment compositions and architecture images, and verify the installed Edge candidate. |
+
+This increment covers today's and overdue work in the roadmap's Overview.
+Future maintenance, stock and family summaries have separate acceptance.
+
+### 5. Current versus proposed product journey
+
+Open Overview, review overdue work and tasks due today, then select a task
+to see its details and permitted actions in Tasks. Assigned and unclaimed
+summaries remain available.
+
+### 6. Functional behavior and state model
+
+Use the existing Available, Assigned, In progress and Blocked work states.
+Exclude work without a deadline and closed or draft work. A timed deadline
+becomes overdue after its instant. A date-only deadline becomes overdue
+after its effective date in the saved scheduling time zone. Apply reviewed
+reschedules through the existing effective-deadline rules. A deadline on
+its current local day that has yet to become overdue belongs to Due today.
+Return exact totals and at most 25 items per group. A successful empty
+result has a zero count. Failed and incomplete reads are unavailable.
+
+### 7. User-facing configuration
+
+Use the existing member locale, household time zone and saved scheduling
+policy. No additional configuration is required.
+
+### 8. Clean Architecture design
+
+Application owns authorization, deadline classification and the read
+projection. Reuse the existing task and recurrence deadline records,
+pinned time conversion and protected Tasks overview route. Presentation
+uses ha-ui and the current task selection and focus behavior.
+
+### 9. UI/UX and content contract
+
+Use Due today and Overdue in English and equivalent Spanish labels.
+Show task title and deadline with its date-only or timed precision.
+Place time-sensitive work before assigned and unclaimed groups. Counts,
+retry and task links use the existing Overview interaction patterns.
+
+### 10. Failure, recovery, and cleanup
+
+Reject incomplete summaries and retire any response for a stale context.
+Retry the protected read. A removed or changed task uses current detail
+recovery. Only disposable candidate data is removed after the live test.
+
+### 11. Security, permissions, and privacy
+
+Enforce current Tasks read access before counts or details. Read only the
+verified household. Locale or UI navigation does not establish authority.
+
+### 12. Observability and operational UX
+
+Use existing protected read diagnostics. A date conversion or source
+failure produces an unavailable summary with the normal retry action.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Read current records and retain their task identities. Qualify the
+candidate on both compositions and actual image architectures.
+
+### 14. Testing strategy and numeric budget
+
+Minimum six distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Timed deadlines | 1 | Observable scenarios in the case inventory. |
+| Date-only deadlines | 1 | Observable scenarios in the case inventory. |
+| Bounded protected snapshot | 1 | Observable scenarios in the case inventory. |
+| Read recovery | 1 | Observable scenarios in the case inventory. |
+| Browser acceptance | 1 | Observable scenarios in the case inventory. |
+| Installed acceptance | 1 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| overview-deadlines-C01 | Timed deadlines | overview-deadlines-R01 | Classify a timed deadline just before, at and after the observed instant, using the household's local date and the next day boundary. Exclude undated and closed tasks. |
+| overview-deadlines-C02 | Date-only deadlines | overview-deadlines-R01 | Evaluate fixed and relative date-only work in its saved time zone, including a reviewed date move and a local date that differs from the household date. |
+| overview-deadlines-C03 | Bounded protected snapshot | overview-deadlines-R02 | More than 25 matching tasks produce exact counts and bounded rows. Current Tasks read denial excludes both counts and rows. |
+| overview-deadlines-C04 | Read recovery | overview-deadlines-R02, overview-deadlines-R03 | Show zero for a successful empty group, offer retry after an unavailable read and retire a delayed result on verified context change. |
+| overview-deadlines-C05 | Browser acceptance | overview-deadlines-R03 | Select deadline rows with English desktop keyboard and Spanish narrow touch. Open and focus the existing protected task detail in both compositions. |
+| overview-deadlines-C06 | Installed acceptance | overview-deadlines-R04 | Qualify both architecture images and verify the exact installed Edge candidate with disposable household tasks, then remove the test data. |
+
+### 15. Documentation and discoverability
+
+[specs/household-tasks.md](household-tasks.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [backend/src/domus/application/task\_queries.py](../backend/src/domus/application/task_queries.py) · [backend/src/domus/infrastructure/sqlite\_tasks.py](../backend/src/domus/infrastructure/sqlite_tasks.py) · [frontend/src/presentation/domus-task-overview.ts](../frontend/src/presentation/domus-task-overview.ts) · [frontend/src/adapters/task-http.ts](../frontend/src/adapters/task-http.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-tasks.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| backend/src/domus/application/task_queries.py | update |
+| backend/src/domus/infrastructure/sqlite_tasks.py | update |
+| frontend/src/presentation/domus-task-overview.ts | update |
+| frontend/src/adapters/task-http.ts | update |
+
+### 16. Acceptance scenarios
+
+See today's and overdue work for the same protected household. Review a
+date-only task and a timed task at the relevant day boundary. Open a listed
+task and observe current detail, then exercise read failure and retry.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| overview-deadlines-R01 | overview-deadlines-C01, overview-deadlines-C02 |
+| overview-deadlines-R02 | overview-deadlines-C03, overview-deadlines-C04 |
+| overview-deadlines-R03 | overview-deadlines-C04, overview-deadlines-C05 |
+| overview-deadlines-R04 | overview-deadlines-C06 |
+
+### 18. Implementation sequence
+
+Extend the protected aggregate read with effective deadlines and current
+time. Add the localized groups and reuse the owning task detail behavior.
+Qualify the complete cases and the pinned Edge candidate.
+
+### 19. Definition of Done
+
+Verify six cases, complete coverage, exact-head CI for both architectures
+and installed Edge evidence with scoped cleanup.
+
+### 20. References and decisions
+
+The roadmap's Overview section and application-experience-R2 require
+current actionable summaries. The recurrence guide's overdue fixed slot
+rules and the existing Calendar projection define effective deadlines and
+preserve date-only precision.
