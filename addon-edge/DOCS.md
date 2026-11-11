@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.20 packages the immutable runtime declared in
+Edge 0.0.0-edge.21 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the exact count and up to 25 products
 whose available stock falls below the configured minimum. Open Inventory to review
 stock and its available actions. This preview migrates

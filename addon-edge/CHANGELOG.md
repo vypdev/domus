@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.21
+
+- Use singular units when reviewing an intake of exactly one item in English and Spanish.
+
 ## 0.0.0-edge.20
 
 - Show products whose available stock falls below their replenishment minimum on Overview in English and Spanish.
