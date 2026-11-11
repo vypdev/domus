@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.18
+
+- Reload the preview product list on return to Household settings and keep the draft.
+- Let members retry an unavailable product list.
+
 ## 0.0.0-edge.17
 
 - Preview a manual task proposal in Household settings in English and Spanish.

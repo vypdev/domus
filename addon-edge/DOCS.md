@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.17 packages the immutable runtime declared in
+Edge 0.0.0-edge.18 packages the immutable runtime declared in
 [artifact.json](artifact.json). In Household settings, authorized members
 can preview a manual task proposal with an optional current stock condition.
 Previewing makes no changes. This candidate migrates
