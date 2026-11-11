@@ -1254,3 +1254,171 @@ Keep 100 percent coverage globally and per authored file. Require CI, both actua
 ### 20. References and decisions
 
 Extends the purchase history and receipt invariants in shopping-management-R4, shopping-management-R5 and shopping-management-R6 after issue #84.
+
+## Record the optional store on a household purchase session
+
+- Status: Draft
+- Owners: Domus maintainers and Shopping
+- Scope: Store name entry and purchase-session history
+- Open decisions blocking readiness: none
+
+### 1. Executive summary
+
+A shopping manager can record the store when saving a purchase session.
+Members authorized to read purchase-session history can see it in the
+list and detail.
+
+### 2. Problem, current behavior, and evidence
+
+Purchase sessions group a shopper, timestamp and multiple purchased items.
+The Shopping specification includes optional store metadata. The current
+session form and records contain no store field.
+
+### 3. Actors, surfaces, and terminology
+
+The authorized shopper records the trip from the current Shopping list.
+The store is optional local text. The purchase session owns the shared
+metadata for its existing item group.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| purchase-session-store-R01 | A member with the current session recording grant can provide an optional store name as bounded local text in the existing purchase-session command. |
+| purchase-session-store-R02 | Store metadata, purchase items and the original command receipt commit atomically. Replaying an original unnamed session retains its existing request identity. |
+| purchase-session-store-R03 | Authorized session lists and details show the saved name or omit the label for an unnamed session. Existing purchase, receipt and stock quantities remain authoritative in their owning records. |
+| purchase-session-store-R04 | Migrate and restore named and unnamed sessions with their identities, contents, and original receipts. |
+| purchase-session-store-R05 | Show accessible English and Spanish form and history states. Preserve the entered name when a correctable error allows retry. |
+
+The increment implements optional store metadata from shopping-management-R6.
+Prices, refunds and additional lists have separate acceptance.
+
+### 5. Current versus proposed product journey
+
+Select at least two items for a trip. Enter a store if known and review the
+session before recording it. Later open purchase sessions and verify the
+store alongside the saved item group.
+
+### 6. Functional behavior and state model
+
+Apply the existing required-text validation to a supplied store name and
+the existing 160-character product-label bound. An omitted store leaves an
+unnamed session. Preserve the entered text in the review and receipt.
+Omitting the field uses the original unnamed request shape and fingerprint.
+A changed store under the same key conflicts.
+
+### 7. User-facing configuration
+
+The optional store is free text from the authorized shopper. It belongs to
+the purchase session and uses the member's current UI language for labels.
+
+### 8. Clean Architecture design
+
+Shopping's domain value owns store validation. Application coordinates
+the current grant, session write and receipt. SQLite persists and verifies
+the optional column. The HTTP adapter exposes the typed request and views.
+Use published ha-ui controls for entry, review and feedback.
+
+### 9. UI/UX and content contract
+
+Label the field Store (optional) in English and Tienda (opcional) in
+Spanish. Show the exact entered name before recording and in the saved
+session. Preserve a draft when quantity or text validation fails.
+Use the existing session flow for an unnamed trip.
+
+### 10. Failure, recovery, and cleanup
+
+Roll back store metadata, items and receipt together on a failure.
+Recover an already recorded session by its original key. Preserve a
+correctable store draft in the form and show a specific field error.
+
+### 11. Security, permissions, and privacy
+
+Keep the existing Shopping read and session recording grants. Recheck
+current authority for original operation recovery. Render the store as
+inert text and scope all queries to the current household.
+
+### 12. Observability and operational UX
+
+The session history associates the name with the original shopper and
+item group. Operational diagnostics use existing safe errors.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Migrate representative schema 30 sessions and schema 20 storage. A
+previously recorded session remains unnamed, with its item links and
+original operation recoverable. Verify a compatible rollback checkpoint
+and the installed Edge candidate.
+
+### 14. Testing strategy and numeric budget
+
+Minimum six distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Store input | 1 | Observable scenarios in the case inventory. |
+| Protected history | 1 | Observable scenarios in the case inventory. |
+| Original operation | 1 | Observable scenarios in the case inventory. |
+| Atomicity and concurrency | 1 | Observable scenarios in the case inventory. |
+| Upgrade and restoration | 1 | Observable scenarios in the case inventory. |
+| Browser and installed acceptance | 1 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| purchase-session-store-C01 | Store input | purchase-session-store-R01 | Record a named and an unnamed session. Reject overlong or invalid supplied text with the existing input preserved and no session written. |
+| purchase-session-store-C02 | Protected history | purchase-session-store-R03 | Find the name in the authorized session list and detail with its original shopper and items. Verify unchanged stock and receipt quantities and current read denial. |
+| purchase-session-store-C03 | Original operation | purchase-session-store-R02 | Recover a named session after a lost reply. Reuse the exact receipt for the same input and reject a changed name under the same key. Recover a previously recorded unnamed session with its original input. |
+| purchase-session-store-C04 | Atomicity and concurrency | purchase-session-store-R02 | Inject a late failure and observe no new session, items or receipt. Compete for the same tracked purchase and verify only the winning session records its store. |
+| purchase-session-store-C05 | Upgrade and restoration | purchase-session-store-R04 | Upgrade representative schema 30 and schema 20 data, preserving prior records. Restart and activate a compatible backup with a named session and recover its original operation. |
+| purchase-session-store-C06 | Browser and installed acceptance | purchase-session-store-R05 | In English desktop and narrow Spanish views, enter a name, recover a correctable draft and find the recorded store in history. Verify both compositions, image architectures and the installed Edge version with disposable cleanup. |
+
+### 15. Documentation and discoverability
+
+[specs/shopping-management.md](shopping-management.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [backend/src/domus/domain/shopping.py](../backend/src/domus/domain/shopping.py) · [backend/src/domus/application/inventory.py](../backend/src/domus/application/inventory.py) · [backend/src/domus/application/inventory\_queries.py](../backend/src/domus/application/inventory_queries.py) · [backend/src/domus/infrastructure/sqlite\_shopping.py](../backend/src/domus/infrastructure/sqlite_shopping.py) · [backend/src/domus/entrypoints/inventory\_http.py](../backend/src/domus/entrypoints/inventory_http.py) · [frontend/src/presentation/domus-inventory.ts](../frontend/src/presentation/domus-inventory.ts) · [frontend/src/presentation/inventory-messages.ts](../frontend/src/presentation/inventory-messages.ts)
+
+| Path | Change |
+|---|---|
+| specs/shopping-management.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| backend/src/domus/domain/shopping.py | update |
+| backend/src/domus/application/inventory.py | update |
+| backend/src/domus/application/inventory_queries.py | update |
+| backend/src/domus/infrastructure/sqlite_shopping.py | update |
+| backend/src/domus/entrypoints/inventory_http.py | update |
+| frontend/src/presentation/domus-inventory.ts | update |
+| frontend/src/presentation/inventory-messages.ts | update |
+
+### 16. Acceptance scenarios
+
+Record a trip at a named store and find the name beside its item group.
+Record another trip without a store. Verify current grants, original
+operation recovery, atomicity, compatible data and both browser journeys.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| purchase-session-store-R01 | purchase-session-store-C01 |
+| purchase-session-store-R02 | purchase-session-store-C03, purchase-session-store-C04 |
+| purchase-session-store-R03 | purchase-session-store-C02 |
+| purchase-session-store-R04 | purchase-session-store-C05 |
+| purchase-session-store-R05 | purchase-session-store-C06 |
+
+### 18. Implementation sequence
+
+Add the optional store value and migration, integrate the protected write
+and history reads, then qualify the English and Spanish user journeys and
+the Edge candidate.
+
+### 19. Definition of Done
+
+Pass the six cases, complete coverage and both architecture image checks.
+Verify the installed Edge version and remove the disposable test data.
+
+### 20. References and decisions
+
+The existing Shopping contract defines optional stores and purchase-session
+history under shopping-management-R6. Retain the published session and
+physical receipt cases.
