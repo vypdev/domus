@@ -81,9 +81,6 @@ jobs:
       group: vypdev
       labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
-    env:
-      # Vitest puts coverage locks in the system temporary directory.
-      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -100,6 +97,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm test
+        env:
+          # Vitest puts coverage locks in the system temporary directory.
+          TMPDIR: ${{ runner.temp }}
       - name: Retain policy coverage
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.2
@@ -118,7 +118,6 @@ jobs:
     env:
       CI: "1"
       STORYBOOK_DISABLE_TELEMETRY: "1"
-      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -136,9 +135,15 @@ jobs:
       - run: pnpm --filter @domus/frontend-toolchain exec playwright install chromium
       - run: pnpm check:frontend-toolchain
       - run: pnpm test:frontend-toolchain
+        env:
+          TMPDIR: ${{ runner.temp }}
       - run: pnpm build:frontend-toolchain
       - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-browser
+        env:
+          TMPDIR: ${{ runner.temp }}
       - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-guards
+        env:
+          TMPDIR: ${{ runner.temp }}
       - name: Retain distinct framework fixture outputs and coverage
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.2
@@ -161,7 +166,6 @@ jobs:
     timeout-minutes: 15
     env:
       CI: "1"
-      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -184,12 +188,18 @@ jobs:
       - run: pnpm --filter @domus/frontend exec playwright install chromium
       - run: pnpm check:frontend
       - run: pnpm test:frontend
+        env:
+          TMPDIR: ${{ runner.temp }}
       - run: pnpm build:frontend
       - run: uv build --package domus-server --wheel
       - run: uv run pytest tests/packaging --no-cov
       - run: flock -w 600 /tmp/domus-ci-entry-browser.lock pnpm test:frontend-entry
+        env:
+          TMPDIR: ${{ runner.temp }}
       - run: pnpm build:frontend-catalog
       - run: flock -w 600 /tmp/domus-ci-catalog-browser.lock pnpm test:frontend-catalog
+        env:
+          TMPDIR: ${{ runner.temp }}
       - name: Retain distinct application coverage
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.2
