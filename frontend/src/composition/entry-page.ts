@@ -46,7 +46,7 @@ import {language, message} from '../presentation/messages';
 import type {DomusApp, EntryIntent} from '../presentation/domus-app';
 import {revisionValue} from '../domain/administration';
 import type {TaskIntent} from '../presentation/domus-tasks';
-import {taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
+import {taskBasePointAmount, taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
 import type {TaskPriority} from '../domain/tasks';
 import type {AdministrationIntent} from '../presentation/domus-administration';
 import {administrationCommand} from '../domain/administration-commands';
@@ -115,15 +115,16 @@ function reviewedAllocation(value: unknown): ReviewedAllocation {
 
 export function decodeTaskIntent(value: unknown): TaskIntent | null {
   try {
-    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed']);
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor']);
     const type = item.type;
     if (type === 'create') {
-      fields(value, ['type', 'title', 'description', 'priority'], ['schedule', 'categoryId']);
+      fields(value, ['type', 'title', 'description', 'priority'], ['schedule', 'categoryId', 'basePointsMinor']);
       check(typeof item.title === 'string' && typeof item.description === 'string' && typeof item.priority === 'string'
         && TASK_PRIORITIES.includes(item.priority as TaskPriority));
       return {type, title: item.title, description: item.description, priority: item.priority as TaskPriority,
         ...Object.hasOwn(item, 'schedule') ? {schedule: taskScheduleDraft(item.schedule)} : {},
-        ...Object.hasOwn(item, 'categoryId') ? {categoryId: identifier(item.categoryId)} : {}};
+        ...Object.hasOwn(item, 'categoryId') ? {categoryId: identifier(item.categoryId)} : {},
+        ...Object.hasOwn(item, 'basePointsMinor') ? {basePointsMinor: taskBasePointAmount(item.basePointsMinor)} : {}};
     }
     if (type === 'createCategory') {
       fields(value, ['type', 'label'], []); check(typeof item.label === 'string');
@@ -547,7 +548,8 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'refresh': await active.refresh(); break;
           case 'more': await active.taskWork(controller => controller.more()); break;
           case 'select': await active.taskWork(controller => controller.select(intent.occurrenceId)); break;
-          case 'create': await active.taskWork(controller => controller.create(intent.title, intent.description, intent.priority, intent.schedule, intent.categoryId)); break;
+          case 'create': await active.taskWork(controller => controller.create(intent.title, intent.description, intent.priority,
+            intent.schedule, intent.categoryId, intent.basePointsMinor)); break;
           case 'createCategory': await active.taskWork(controller => controller.createCategory(intent.label)); break;
           case 'renameCategory': await active.taskWork(controller => controller.renameCategory(intent.categoryId, intent.revision, intent.label)); break;
           case 'archiveCategory': await active.taskWork(controller => controller.archiveCategory(intent.categoryId, intent.revision)); break;

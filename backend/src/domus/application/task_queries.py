@@ -80,6 +80,7 @@ class TaskWorkspaceView:
     can_record_for_others: bool
     can_manage_points: bool
     schedule_policy: TimePolicy | None = None
+    can_configure: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -731,12 +732,13 @@ class TaskQueries:
                     unit, self.household_id, Permission.TASKS_MANAGE
                 )
             )
+            catalog = category_catalog(unit, TaskAccess(self.human), self.household_id)
             return TaskWorkspaceView(
                 self.household_id,
                 actor.member.member_id,
                 can_create,
                 can_review,
-                category_catalog(unit, TaskAccess(self.human), self.household_id),
+                catalog,
                 _possible(
                     lambda: TaskAccess(self.human).require(
                         unit, self.household_id, Permission.TASKS_RECORD_FOR_OTHERS
@@ -750,6 +752,7 @@ class TaskQueries:
                 schedule_creation_policy(unit, self.household_id, self.schedule_data_identity)
                 if can_create and self.schedule_data_identity is not None
                 else None,
+                can_configure=catalog.can_manage,
             )
 
     def _operation_access(self, unit: UnitOfWork) -> None:

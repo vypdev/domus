@@ -1,4 +1,5 @@
 import {afterEach, expect, test} from 'vitest';
+import type {HaTextField} from '@vypdev/ha-ui/field';
 import {taskInstant, taskMessage} from '../src/presentation/task-messages';
 import type {TaskRecord} from '../src/application/task-ports';
 import type {TaskView} from '../src/application/task-controller';
@@ -32,6 +33,70 @@ test('usable task creation preserves literal input and emits one semantic intent
   f.root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', {bubbles: true, cancelable: true}));
   expect(f.intents).toEqual([{type: 'create', title: '  Clean 🧹  ', description: 'Wipe then dry', priority: 'normal'}]);
   expect(f.text()).not.toContain('private-home-id'); expect(f.text()).not.toContain('private-member-id');
+  expect(f.root.querySelector('#task-base-points')).toBeNull();
+});
+test.each([
+  ['en', 'Base points (optional)', '2.25', 'Enter 0 to 10,000 points'],
+  ['es', 'Puntos base (opcional)', '2,25', 'Introduce entre 0 y 10.000 puntos'],
+] as const)('authorized %s form preserves the draft and submits exact base points', async (locale, label, value, error) => {
+  const access = {...view().access!, canConfigure: true};
+  const f = await mount(view({access}), locale);
+  f.root.querySelector<HTMLDetailsElement>('details.new-task')!.open = true;
+  const field = f.root.querySelector<HaTextField>('#task-base-points')!;
+  await field.updateComplete;
+  const amount = field.shadowRoot!.querySelector('input')!;
+  expect(amount.getAttribute('aria-label')).toBe(label);
+  const edit = async (text: string) => {
+    amount.value = text;
+    amount.dispatchEvent(new InputEvent('input', {bubbles: true}));
+    await f.element.updateComplete;
+    await field.updateComplete;
+  };
+  const submit = () => f.root.querySelector('form')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  await f.input('task-title', 'Inspect filter');
+  submit();
+  expect(f.intents.pop()).toEqual({type: 'create', title: 'Inspect filter', description: '', priority: 'normal'});
+  await edit('1,001');
+  submit(); await f.element.updateComplete; await field.updateComplete;
+  expect(field.value).toBe('1,001'); expect(field.shadowRoot!.textContent).toContain(error);
+  expect(f.root.activeElement).toBe(field); expect(f.intents).toEqual([]);
+  await edit(value); submit();
+  expect(f.intents).toEqual([{type: 'create', title: 'Inspect filter', description: '', priority: 'normal', basePointsMinor: 225}]);
+  f.element.view = view({access, outcome: {kind: 'rejected', reason: 'points_precision_two_required', correlationId: 'cor_precision'}});
+  await f.element.updateComplete; await field.updateComplete;
+  expect(field.shadowRoot!.textContent).toContain(locale === 'en' ? 'Use whole base points' : 'Usa puntos base enteros');
+  expect(amount.getAttribute('aria-invalid')).toBe('true');
+  expect(field.value).toBe(value);
+  expect(f.root.activeElement).toBe(field);
+  f.element.view = {...f.element.view!};
+  await f.element.updateComplete; await field.updateComplete;
+  expect(amount.getAttribute('aria-invalid')).toBe('true');
+  await edit('2');
+  expect(amount.getAttribute('aria-invalid')).not.toBe('true');
+  await edit(value); submit();
+  f.element.view = view({access, outcome: {kind: 'receipt', stage: 'committed', action: 'task.create',
+    operationId: 'configured', occurrenceId: 'work-1', revision, state: 'available', cycle: null, archivedBy: null, basePointsMinor: 225}});
+  await f.element.updateComplete; await field.updateComplete;
+  expect(f.root.querySelector('section[role=status] dd')?.textContent).toBe(value);
+  expect(field.value).toBe('');
+});
+
+test('revoking configuration in the same scope asks for explicit removal of the draft amount', async () => {
+  const access = {...view().access!, canConfigure: true};
+  const f = await mount(view({access}));
+  await f.input('task-title', 'Keep the title');
+  const field = f.root.querySelector<HaTextField>('#task-base-points')!;
+  field.dispatchEvent(new CustomEvent('ha-value-request', {detail: {value: '0', reason: 'input'}}));
+  await f.element.updateComplete;
+  const form = f.root.querySelector('form')!;
+  const submit = () => form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  submit(); expect(f.intents.pop()).toMatchObject({basePointsMinor: 0});
+  f.element.view = view({access: {...access, canConfigure: false}});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('#task-base-points')).toBeNull();
+  expect(f.button('Create task').disabled).toBe(true); submit(); expect(f.intents).toEqual([]);
+  f.button('Clear base points').click(); await f.element.updateComplete; submit();
+  expect(f.intents).toEqual([{type: 'create', title: 'Keep the title', description: '', priority: 'normal'}]);
 });
 test.each([['en','fixed'],['es','relative']] as const)('scheduled task form in %s preserves invalid input and emits a %s draft', async (locale, kind) => {
   const access = {...view().access!, schedulePolicy: {zone: 'Europe/Madrid', data_identity: 'tzdata:2026.6/iana:2026f',

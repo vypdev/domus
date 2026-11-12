@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.26
+
+- Let people with task configuration permission set optional base points when creating a task.
+- Keep the household default for title-only creation and accept localized decimal input.
+- Explain how to correct a fractional amount when the current allocation requires whole base points.
+
 ## 0.0.0-edge.21
 
 - Use singular units when reviewing an intake of exactly one item in English and Spanish.

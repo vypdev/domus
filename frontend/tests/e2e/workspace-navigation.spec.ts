@@ -244,9 +244,59 @@ for (const mode of ['native', 'standalone'] as const) {
       expect(response.ok(), await response.text()).toBe(true);
       return (await response.json()).result;
     };
-    const seeded = await post('definitions', 'family-work', {
-      title: 'Water plants', overrides: {point_value_minor: 225},
+    const previousTaskViewport = page.viewportSize()!;
+    await page.setViewportSize({width: 1120, height: 900});
+    await page.emulateMedia({colorScheme: 'light'});
+    await page.getByLabel('Idioma', {exact: true}).selectOption('en');
+    await tabs.getByRole('link', {name: 'Tasks', exact: true}).click();
+    const newTask = tasksRegion.locator('details.new-task:has(#new-task-title)');
+    await expect(newTask).toBeVisible();
+    if (!await newTask.evaluate((element: HTMLDetailsElement) => element.open))
+      await newTask.locator('summary').press('Enter');
+    await newTask.getByRole('textbox', {name: 'Title', exact: true}).fill('Water plants');
+    const englishPoints = newTask.getByRole('textbox', {name: 'Base points (optional)', exact: true});
+    await expect(englishPoints).toHaveAttribute('inputmode', 'decimal');
+    await englishPoints.fill('2.251');
+    await englishPoints.press('Enter');
+    const basePointsError = newTask.getByText('Enter 0 to 10,000 points with up to two decimal places.');
+    await expect(basePointsError).toBeVisible();
+    await expect(basePointsError).toHaveCSS('color', 'rgb(120, 67, 7)');
+    await expect(englishPoints).toBeFocused();
+    await newTask.screenshot({path: info.outputPath('task-base-points-en-invalid.png')});
+    await page.setViewportSize({width: 390, height: 820});
+    await page.emulateMedia({colorScheme: 'dark'});
+    await page.getByLabel('Language', {exact: true}).selectOption('es');
+    const spanishPoints = newTask.getByRole('textbox', {name: 'Puntos base (opcional)', exact: true});
+    await expect(spanishPoints).toHaveAttribute('inputmode', 'decimal');
+    await expect(spanishPoints).toHaveValue('2.251');
+    await spanishPoints.tap();
+    await spanishPoints.fill('2,25');
+    await expect(spanishPoints).toHaveCSS('color', 'rgb(237, 244, 250)');
+    await expect(newTask.getByText('Déjalo vacío para usar el valor predeterminado del hogar.'))
+      .toHaveCSS('color', 'rgb(187, 203, 216)');
+    await newTask.locator('#task-base-points').screenshot({path: info.outputPath('task-base-points-es-narrow.png')});
+    const creationUrl = base + 'api/v1/tasks/definitions';
+    const creation: {saved?: {occurrence_id: string; revision: number; point_value_minor: number}} = {};
+    await page.route(creationUrl, async route => {
+      if (route.request().method() !== 'POST') {await route.continue(); return;}
+      expect(route.request().postDataJSON()).toMatchObject({title: 'Water plants', overrides: {point_value_minor: 225}});
+      const committed = await route.fetch({maxRetries: 0, maxRedirects: 0});
+      expect(committed.ok(), await committed.text()).toBe(true);
+      creation.saved = (await committed.json()).result;
+      await route.abort('connectionclosed');
     });
+    await newTask.getByRole('button', {name: 'Crear tarea', exact: true}).tap();
+    await expect(tasksRegion.getByText('Resultado sin confirmar', {exact: true})).toBeVisible();
+    await expect(spanishPoints).toHaveValue('2,25');
+    await page.unroute(creationUrl);
+    const recoverCreation = tasksRegion.getByRole('region', {name: 'Solicitudes guardadas', exact: true})
+      .getByRole('button', {name: 'Comprobar solicitud guardada', exact: true});
+    await recoverCreation.click();
+    await expect(tasksRegion.getByText('Cambio de tarea guardado', {exact: true})).toBeVisible();
+    await expect(tasksRegion.getByRole('status').getByText('2,25', {exact: true})).toBeVisible();
+    const seeded = creation.saved;
+    if (seeded?.point_value_minor !== 225) throw Error('The original configured task was not saved');
+    await page.setViewportSize(previousTaskViewport);
     const done = await post('occurrences/' + seeded.occurrence_id + '/complete', 'family-completed', {
       expected_revision: seeded.revision, performer_ids: [member], performed_at: Date.now() - 500,
     });

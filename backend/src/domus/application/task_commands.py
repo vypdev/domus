@@ -14,7 +14,7 @@ from domus.application.task_authorization import (
     TaskCommandAuthorization,
 )
 from domus.application.task_category_commands import require_active_category
-from domus.application.task_creation import TaskCreation
+from domus.application.task_creation import TaskCreation, task_creation_result
 from domus.application.task_facts import (
     current_cycle,
     definition_result,
@@ -294,7 +294,9 @@ class TaskCommands:
             )
             work = item.new_occurrence(self.identifiers.new(), item.created_at)
             unit.tasks.save_occurrence(work, 0)
-            return _change("task.created", request, _result(work))
+            return _change(
+                "task.created", request, task_creation_result(_result(work).decode(), item)
+            )
 
         return self._execute(
             key,

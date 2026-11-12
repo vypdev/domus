@@ -17,6 +17,21 @@ test('task creation preserves literal text and supplies no actor, household or p
   expect(taskCommand({...raw, householdId: 'other'})).toBeUndefined();
 });
 
+test('task creation journals only an exact bounded override', () => {
+  const payload = {expected_revision: 0, title: 'Check filter', description: '', priority: 'normal'};
+  for (const amount of [0, 225, 1_000_000]) {
+    const raw = {action: 'task.create', payload: {...payload, overrides: {point_value_minor: amount}}};
+    const value = taskCommand(raw);
+    expect(value).toEqual(raw);
+    if (value?.action !== 'task.create') throw Error('missing task');
+    expect(Object.isFrozen(value.payload.overrides)).toBe(true);
+  }
+  for (const overrides of [null, {}, {point_value_minor: -1}, {point_value_minor: 2.25},
+    {point_value_minor: '225'}, {point_value_minor: 1_000_001}, {point_value_minor: 225, claim_allowed: false}]) {
+    expect(taskCommand({action: 'task.create', payload: {...payload, overrides}})).toBeUndefined();
+  }
+});
+
 test('completion takes an immutable copy of exact time, revision and material quantities', () => {
   const value = taskCommand(complete);
   expect(value).toEqual(complete); expect(value).not.toBe(complete);
