@@ -1090,7 +1090,9 @@ for (const mode of ['native', 'standalone'] as const) {
     const title = rule.getByRole('textbox',{name:'Proposed task title'});
     const preview = rule.getByRole('button',{name:'Preview rule',exact:true});
     const catalogWarning = rule.getByText('Could not load products. You can preview without a stock condition.');
+    const stockCondition = rule.getByRole('combobox',{name:'Stock below minimum (optional)',exact:true});
     await expect(catalogWarning).toBeVisible();
+    await expect(stockCondition).toHaveCount(0);
     await preview.press('Enter');
     await expect(title).toBeFocused();
     await expect(rule.getByText('Enter a task title of 1 to 160 characters.')).toBeVisible();
@@ -1113,6 +1115,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await rule.getByRole('button',{name:'Try again',exact:true}).press('Enter');
     await expect(preview).toBeEnabled();
     await expect(title).toHaveValue(unicodeTitle);
+    await expect(stockCondition).toBeEnabled();
     await expect(catalogWarning).toHaveCount(0);
     await expect(unicodeProposal).toHaveCount(0);
     await title.fill('Check the tea supplies');

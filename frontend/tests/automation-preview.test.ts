@@ -245,7 +245,7 @@ test('preview component localizes draft, status and recovery, and keeps the titl
   expect(feedback()).toContain('You can preview without a stock condition.');
   expect(select.hasAttribute('disabled')).toBe(false);
   await view(ready({catalogUnavailable:true, catalog:{products:[],after:null,next:null}}));
-  expect(select.hasAttribute('disabled')).toBe(true);
+  expect(root.querySelector('vyp-ha-select')).toBeNull();
   await press('Try again');
   expect(latest()).toEqual({type:'retry'});
   await view(ready({title:TITLE,result:true,catalog:{products:[],after:null,next:null}}));
@@ -253,10 +253,12 @@ test('preview component localizes draft, status and recovery, and keeps the titl
   expect(root.querySelector('.result b')).toBeNull();
   expect(root.querySelector('.result')!.textContent).toContain(TITLE);
   element.language = 'es';
+  await view(ready({catalogUnavailable:true, catalog:{products:[],after:null,next:null}}));
+  expect(feedback()).toContain('Puedes previsualizar la regla sin una condición de existencias.');
   const picked = {...tea,name:'Té\u0080'};
   const catalog = {products:[coffee],after:'next',next:null};
   await view(ready({title:TITLE,result:false,catalog,selected:picked}));
-  expect(select.state.options.map(option => option.label)).toEqual(['Coffee','Té�']);
+  expect(root.querySelector('vyp-ha-select')!.state.options.map(option => option.label)).toEqual(['Coffee','Té�']);
   expect(root.querySelector('.result')!.textContent).toContain('No se cumple la condición de existencias.');
   expect(root.querySelector('.result')!.textContent).toContain('No se crearía ninguna tarea');
   await press('Primeros productos');

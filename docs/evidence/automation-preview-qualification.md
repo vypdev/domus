@@ -12,11 +12,30 @@ and can evaluate an optional stock condition against the current household snaps
 | `automation-preview-C04` | C04 rejects forged context, invalid CSRF or Origin, revoked task grants and references unavailable in the household. It compares snapshots of tasks, stock, receipts, audit and outbox. |
 | `automation-preview-C05` | The [controller and transport tests](../../frontend/tests/automation-preview.test.ts) allow a title-only preview when the first catalog load fails, preserve the draft on retries, check response identity and retire obsolete results on navigation or account change. The [workspace composition test](../../frontend/tests/page.test.ts) also clears the draft on a member replacement. |
 | `automation-preview-C06` | The [compiled workspace journey](../../frontend/tests/e2e/workspace-navigation.spec.ts) rejects 161 code points without clearing the draft and previews 160 supplementary characters with English desktop keyboard input even during a catalog outage. Retrying the catalog preserves the title and clears the old result. The journey also retries a preview read, checks the product list after returning from Inventory, previews matching and nonmatching conditions with narrow Spanish touch input and compares the task definitions before and after. |
-| `automation-preview-C07` | The Edge package tests verify the pinned source and compiled assets. Image CI runs the workspace journey in both compositions on amd64 and ARM64. See [installed Edge.29](#installed-edge29) for the Supervisor walkthrough. |
+| `automation-preview-C07` | The Edge package tests verify the pinned source and compiled assets. Image CI runs the workspace journey in both compositions on amd64 and ARM64. See [installed Edge.30](#installed-edge30) for the catalog recovery walkthrough. |
 
 The [native contract](../contracts/native-household-api.openapi.json) and the
 [standalone contract](../contracts/household-api.openapi.json) publish the same
 preview request and result shapes. Preview uses the existing storage schema.
+
+## Installed Edge.30
+
+On 2026-11-12, Supervisor reported `0.0.0-edge.30` for the temporary
+`904f4e29_domus_edge` application. The ARM64 package pinned runtime
+`ad9d0d54e8b5458615e3243294e0eeaa000d119f` and used SQLite schema 31.
+
+- A Chrome rule blocked only the catalog request in the temporary tab. English
+  keyboard input reached the title-only preview, and the recovery action stayed
+  available. Removing the block and retrying restored the catalog, preserved
+  the title and cleared the old result.
+- Spanish touch at 390 × 844 proposed a task at zero available units and showed
+  no proposal at the configured minimum of two. Tasks stayed empty and available
+  stock stayed at two after the second preview.
+- The outage left a disabled, empty selector visible. The next candidate hides
+  it until there are options or the catalog recovers.
+
+The temporary app, private data, configuration and source were removed.
+Supervisor returned to the original 14 installed apps and eight sources.
 
 ## Installed Edge.29
 

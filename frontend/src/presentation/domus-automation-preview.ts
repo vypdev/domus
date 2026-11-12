@@ -135,12 +135,13 @@ export class DomusAutomationPreview extends LitElement {
           error: view.issue === 'title' ? this.text('titleInvalid') : ''})}
         @ha-value-request=${(event: FieldValueEvent) => this.intent({type: 'title', value: event.detail.value})}>
       </vyp-ha-field>
-      <vyp-ha-select .value=${view.selected?.id ?? null} ?disabled=${blocked || (view.catalogUnavailable && options.length === 0)}
-        .state=${selectState({label: this.text('condition'), options, placeholder: this.text('noCondition'),
-          emptyMessage: this.text('noProducts'), clearLabel: this.text('clearCondition'), searchLabel: this.text('findProduct'),
-          searchPlaceholder: this.text('findProduct'), notFoundMessage: this.text('noMatches')})}
-        @ha-select-request=${(event: SelectValueEvent) => this.intent({type: 'product', value: event.detail.value as string | null})}>
-      </vyp-ha-select>
+      ${view.catalogUnavailable && options.length === 0 ? nothing : html`
+        <vyp-ha-select .value=${view.selected?.id ?? null} ?disabled=${blocked}
+          .state=${selectState({label: this.text('condition'), options, placeholder: this.text('noCondition'),
+            emptyMessage: this.text('noProducts'), clearLabel: this.text('clearCondition'), searchLabel: this.text('findProduct'),
+            searchPlaceholder: this.text('findProduct'), notFoundMessage: this.text('noMatches')})}
+          @ha-select-request=${(event: SelectValueEvent) => this.intent({type: 'product', value: event.detail.value as string | null})}>
+        </vyp-ha-select>`}
       ${view.catalog.after !== null || view.catalog.next !== null ? html`<div class="actions">
         ${view.catalog.after !== null ? this.button('first', 'first', blocked) : nothing}
         ${view.catalog.next !== null ? this.button('next', 'next', blocked) : nothing}
