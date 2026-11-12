@@ -3,6 +3,7 @@
 from dataclasses import replace
 from types import SimpleNamespace
 
+import pytest
 from test_family_http import CHILD_CONTEXT, CHILD_USER, NEXT_WEEK, WEEK, timestamp
 from test_recurrence_http import CONTEXT, USER
 from test_task_commands import counts, resource
@@ -47,7 +48,8 @@ def approve(commands, clock, key, work, at):
     commands.verify(key, VerifyTask(occurrence, revision, cycle, VerificationState.APPROVED))
 
 
-def test_family_overview_observes_posted_points_and_current_household_week(api, monkeypatch):
+@pytest.fixture
+def participation(api, monkeypatch):
     api.user(USER, True)
     with api.store.write() as unit:
         home = unit.households.current()
@@ -63,52 +65,107 @@ def test_family_overview_observes_posted_points_and_current_household_week(api, 
     actor = SimpleNamespace(current=lambda: HumanIdentity(USER, True, True, False))
     commands = TaskCommands(api.store, actor, clock, SecureIdentifiers())
     worker = PointsConsumer(api.store, api.store.installation, clock)
+    return SimpleNamespace(
+        commands=commands, clock=clock, worker=worker, observation=observation, owner=owner
+    )
 
-    def overview(headers=CHILD_CONTEXT):
-        result = api.client.get(ROUTE, headers=headers)
-        assert result.status_code == 200, result.text
-        assert result.headers["cache-control"] == "no-store"
-        return result.json()
 
-    assert overview(CONTEXT) == {"period": NEXT_WEEK, "earned_minor": 0, "completed_count": 0}
-    sunday = record(commands, clock, "sunday-work", "child", timestamp(31, 21, 50), 125)
-    approve(commands, clock, "late-approval", sunday, timestamp(31, 22, 5))
-    worker.tick(lambda: True)
-    current = record(commands, clock, "current-work", "child", timestamp(2, 10), 175)
-    approve(commands, clock, "current-approval", current, timestamp(2, 10, 30))
-    record(commands, clock, "another-member", owner, timestamp(2, 11), 900)
-    worker.tick(lambda: True)
-    future = record(commands, clock, "future-week", "child", timestamp(8, 10), 500)
-    approve(commands, clock, "future-approval", future, timestamp(8, 10, 30))
-    worker.tick(lambda: True)
-    record(commands, clock, "awaiting-verification", "child", timestamp(3, 9), 225)
-    approved = record(commands, clock, "awaiting-posting", "child", timestamp(3, 10), 325)
-    approve(commands, clock, "queued-award", approved, timestamp(3, 10, 30))
+def overview(api, headers=CHILD_CONTEXT):
+    result = api.client.get(ROUTE, headers=headers)
+    assert result.status_code == 200, result.text
+    assert result.headers["cache-control"] == "no-store"
+    return result.json()
 
-    assert overview(CONTEXT) == {"period": NEXT_WEEK, "earned_minor": 900, "completed_count": 1}
+
+def family_report(api):
+    response = api.client.get("/api/v1/family", headers=CHILD_CONTEXT, params=NEXT_WEEK)
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def test_overview_participation_c01_reports_current_week_posted_points_without_writes(
+    api, participation
+):
+    scenario = participation
     api.user(CHILD_USER)
+    assert overview(api) == {"period": NEXT_WEEK, "earned_minor": 0, "completed_count": 0}
+    work = record(scenario.commands, scenario.clock, "current-work", "child", timestamp(2, 10), 175)
+    approve(scenario.commands, scenario.clock, "current-approval", work, timestamp(2, 10, 30))
+    scenario.worker.tick(lambda: True)
     original = counts(api.store)
-    expected = {"period": NEXT_WEEK, "earned_minor": 175, "completed_count": 3}
-    assert overview() == expected
-    assert overview() == expected
-    report = api.client.get("/api/v1/family", headers=CHILD_CONTEXT, params=NEXT_WEEK)
-    assert report.status_code == 200, report.text
-    assert report.json()["earned_minor"] == expected["earned_minor"]
-    assert report.json()["completed_count"] == expected["completed_count"]
-    assert report.json()["pending_verification_minor"] == 225
-    assert report.json()["pending_posting_minor"] == 325
+    expected = {"period": NEXT_WEEK, "earned_minor": 175, "completed_count": 1}
+    assert overview(api) == expected
+    assert overview(api) == expected
+    report = family_report(api)
+    assert report["earned_minor"] == expected["earned_minor"]
+    assert report["completed_count"] == expected["completed_count"]
+    assert counts(api.store) == original
 
-    observation.value = timestamp(31, 21, 59)
-    assert overview() == {"period": WEEK, "earned_minor": 125, "completed_count": 1}
-    observation.value = timestamp(31, 22)
-    assert overview() == expected
-    observation.value = timestamp(7, 22)
-    assert overview() == {
+
+def test_overview_participation_c02_excludes_sunday_work_posted_on_monday(api, participation):
+    scenario = participation
+    work = record(
+        scenario.commands, scenario.clock, "sunday-work", "child", timestamp(31, 21, 50), 125
+    )
+    approve(scenario.commands, scenario.clock, "late-approval", work, timestamp(31, 22, 5))
+    scenario.worker.tick(lambda: True)
+    api.user(CHILD_USER)
+    scenario.observation.value = timestamp(31, 21, 59)
+    assert overview(api) == {"period": WEEK, "earned_minor": 125, "completed_count": 1}
+    scenario.observation.value = timestamp(31, 22)
+    assert overview(api) == {"period": NEXT_WEEK, "earned_minor": 0, "completed_count": 0}
+
+
+def test_overview_participation_c03_excludes_future_week_points(api, participation):
+    scenario = participation
+    work = record(scenario.commands, scenario.clock, "future-work", "child", timestamp(8, 10), 500)
+    approve(scenario.commands, scenario.clock, "future-approval", work, timestamp(8, 10, 30))
+    scenario.worker.tick(lambda: True)
+    api.user(CHILD_USER)
+    assert overview(api) == {"period": NEXT_WEEK, "earned_minor": 0, "completed_count": 0}
+    scenario.observation.value = timestamp(7, 22)
+    assert overview(api) == {
         "period": {"start": "2026-06-08", "end": "2026-06-15"},
         "earned_minor": 500,
         "completed_count": 1,
     }
-    assert counts(api.store) == original
+
+
+def test_overview_participation_c04_excludes_points_pending_verification(api, participation):
+    scenario = participation
+    record(
+        scenario.commands, scenario.clock, "awaiting-verification", "child", timestamp(3, 9), 225
+    )
+    scenario.worker.tick(lambda: True)
+    api.user(CHILD_USER)
+    assert overview(api) == {"period": NEXT_WEEK, "earned_minor": 0, "completed_count": 1}
+    assert family_report(api)["pending_verification_minor"] == 225
+
+
+def test_overview_participation_c05_excludes_points_pending_posting(api, participation):
+    scenario = participation
+    work = record(
+        scenario.commands, scenario.clock, "awaiting-posting", "child", timestamp(3, 10), 325
+    )
+    approve(scenario.commands, scenario.clock, "queued-award", work, timestamp(3, 10, 30))
+    api.user(CHILD_USER)
+    assert overview(api) == {"period": NEXT_WEEK, "earned_minor": 0, "completed_count": 1}
+    assert family_report(api)["pending_posting_minor"] == 325
+
+
+def test_overview_participation_c06_scopes_posted_points_to_the_verified_member(api, participation):
+    scenario = participation
+    work = record(scenario.commands, scenario.clock, "child-work", "child", timestamp(2, 10), 175)
+    approve(scenario.commands, scenario.clock, "child-approval", work, timestamp(2, 10, 30))
+    record(scenario.commands, scenario.clock, "owner-work", scenario.owner, timestamp(2, 11), 900)
+    scenario.worker.tick(lambda: True)
+    assert overview(api, CONTEXT) == {
+        "period": NEXT_WEEK,
+        "earned_minor": 900,
+        "completed_count": 1,
+    }
+    api.user(CHILD_USER)
+    assert overview(api) == {"period": NEXT_WEEK, "earned_minor": 175, "completed_count": 1}
 
 
 def test_family_overview_rejects_unverified_or_revoked_scope(api):

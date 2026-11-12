@@ -13,6 +13,8 @@ from a server observation in the household time zone. [Issue #105](https://githu
 | `overview-participation-C05` | Approved work awaiting ledger posting contributes to the completed count. Its expected points appear in Family's pending-posting value. |
 | `overview-participation-C06` | The same HTTP tests switch verified members and confirm each receives their own totals. Forged context, caller-selected member and revoked Household or Tasks access return no participation facts. |
 
+The HTTP suite collects C01 through C06 independently in both Ingress and standalone.
+
 The [browser tests](../../frontend/tests/e2e/workspace-navigation.spec.ts) use
 real posted points, recover a failed read and open Family from Overview using
 English desktop keyboard and narrow Spanish touch in both compositions. CI
