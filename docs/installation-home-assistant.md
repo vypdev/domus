@@ -22,7 +22,9 @@ cold data backup before updating from an earlier schema. An additional Superviso
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.
 
-The manual task proposal preview was introduced for [issue #98](https://github.com/vypdev/domus/issues/98) and remains in the merged source. The earlier Edge.18 pin is historical; the current artifact still pins immutable Edge.28 bytes and does not claim a rebuilt merged-source package.
+Edge.29 includes the [manual task automation preview](evidence/automation-preview-qualification.md)
+in Household settings. It evaluates a task proposal and optional stock condition
+without changing household data.
 
 ## Edge.9 installation and update history
 

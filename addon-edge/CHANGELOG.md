@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.29
+
+- Preview a manual task proposal in Household settings in English and Spanish.
+- Check an optional product condition against current available stock without creating a task.
+- Keep the draft after a recoverable error or a return from another workspace.
+
 ## 0.0.0-edge.28
 
 - Refresh the Family summary when the household week changes while Overview is open.
