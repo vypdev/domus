@@ -55,7 +55,8 @@ installed Edge preview does not have this endpoint.
 4. Install the [Domus Calendar custom integration](../../custom_components/domus_calendar/manifest.json)
    by copying its complete `custom_components/domus_calendar` folder into the
    Home Assistant configuration directory. Restart Core. Under **Settings →
-   Devices & services → Add integration**, choose **Domus Calendar**. Enter the
+   Devices & services → Add integration**, choose **Domus** and select
+   **Calendar**. Enter the
    Domus address and the bearer from step 2. The calendar is available in
    Home Assistant's **Calendar** view.
 
@@ -72,6 +73,9 @@ To revoke the connection, remove the Domus digest and restart Domus. You can
 then remove the Home Assistant entry. No tasks or recurrence rules are removed.
 
 ## Read availability
+
+The [task deadline sensors](ha-deadline-sensors.md) use a separate grant and
+configuration entry. The calendar and sensors can run together.
 
 Home Assistant refreshes the next event once per minute over the next 31 days.
 Calendar reads allow up to 90 days and 1,000 events, in pages of up to 100. Use

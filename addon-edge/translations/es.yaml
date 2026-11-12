@@ -1,0 +1,17 @@
+configuration:
+  public_origins:
+    name: Orígenes de Home Assistant en el navegador
+    description: >-
+      Introduce entre uno y cuatro orígenes distintos con protocolo y puerto
+      cuando corresponda, sin rutas. Reinicia Domus después de cambiarlos.
+      Domus utiliza tu sesión actual de Home Assistant.
+  ha_calendar_digest:
+    name: Resumen del token del calendario
+    description: >-
+      Resumen SHA-256 opcional para el calendario nativo de solo lectura.
+      Elimina el valor para desactivar el acceso y reinicia Domus tras cambiarlo.
+  ha_deadline_digest:
+    name: Resumen del token de vencimientos
+    description: >-
+      Resumen SHA-256 opcional para los recuentos de vencimientos de solo lectura.
+      Elimina el valor para desactivar el acceso y reinicia Domus tras cambiarlo.

@@ -1,12 +1,8 @@
 name: CI Check
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
   push:
-    branches: [develop, master]
-  merge_group:
-    types: [checks_requested]
+    branches: ['**']
 
 permissions:
   contents: read
@@ -14,13 +10,15 @@ permissions:
 jobs:
   python:
     name: Python tooling
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -32,7 +30,7 @@ jobs:
         run: uv run pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing --cov-report=json:coverage-python.json --cov-report=xml:coverage-python.xml
       - name: Retain tooling coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: python-tooling-coverage-${{ github.sha }}
           path: |
@@ -43,13 +41,15 @@ jobs:
 
   backend:
     name: Backend application
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -61,7 +61,7 @@ jobs:
         run: uv run domus-check backend-coverage --report coverage-backend.json
       - name: Retain backend coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: backend-coverage-${{ github.sha }}
           path: |
@@ -72,18 +72,21 @@ jobs:
 
   node:
     name: Node architecture policy
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@v6.1.0
         with:
+          dest: ${{ runner.temp }}/domus-pnpm-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
           run_install: false
           cache: false
       - run: pnpm install --frozen-lockfile
@@ -91,7 +94,7 @@ jobs:
       - run: pnpm test
       - name: Retain policy coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: node-policy-coverage-${{ github.sha }}
           path: coverage/
@@ -100,21 +103,24 @@ jobs:
 
   frontend_toolchain:
     name: Frontend toolchain
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 15
     env:
       CI: "1"
       STORYBOOK_DISABLE_TELEMETRY: "1"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@v6.1.0
         with:
+          dest: ${{ runner.temp }}/domus-pnpm-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
           run_install: false
           cache: false
       - run: pnpm install --frozen-lockfile
@@ -122,11 +128,11 @@ jobs:
       - run: pnpm check:frontend-toolchain
       - run: pnpm test:frontend-toolchain
       - run: pnpm build:frontend-toolchain
-      - run: pnpm test:frontend-browser
-      - run: pnpm test:frontend-guards
+      - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-browser
+      - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-guards
       - name: Retain distinct framework fixture outputs and coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: frontend-toolchain-${{ github.sha }}
           path: |
@@ -140,23 +146,26 @@ jobs:
 
   frontend:
     name: Frontend application
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 15
     env:
       CI: "1"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@v6.1.0
         with:
+          dest: ${{ runner.temp }}/domus-pnpm-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
           run_install: false
           cache: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -168,12 +177,12 @@ jobs:
       - run: pnpm build:frontend
       - run: uv build --package domus-server --wheel
       - run: uv run pytest tests/packaging --no-cov
-      - run: pnpm test:frontend-entry
+      - run: flock -w 600 /tmp/domus-ci-entry-browser.lock pnpm test:frontend-entry
       - run: pnpm build:frontend-catalog
-      - run: pnpm test:frontend-catalog
+      - run: flock -w 600 /tmp/domus-ci-catalog-browser.lock pnpm test:frontend-catalog
       - name: Retain distinct application coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: frontend-application-${{ github.sha }}
           include-hidden-files: true
@@ -188,13 +197,15 @@ jobs:
 
   architecture:
     name: Python architecture contracts
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -205,13 +216,15 @@ jobs:
 
   documentation:
     name: Local documentation links
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -224,42 +237,84 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: ubuntu-latest
-            arch: amd64
-          - runner: ubuntu-24.04-arm
-            arch: aarch64
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+          - arch: amd64
+            platform: linux/amd64
+            machine: x86_64
+            core_digest: sha256:21935614df6d9f24f680a1ef749f0570d2d6b7936c606c0a44253ae875865c04
+          - arch: aarch64
+            platform: linux/arm64
+            machine: aarch64
+            core_digest: sha256:5881590fca108a6e6b5eb9fff1718baeddda9d6dd5b52d1594e3386fe33b4d66
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, macOS, ARM64]
+    env:
+      DOCKER_DEFAULT_PLATFORM: ${{ matrix.platform }}
+      DOMUS_IMAGE_PREFIX: domus-ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.arch }}
+      # Platform manifests from the immutable Core 2026.10.4 index.
+      DOMUS_HA_CORE_IMAGE: ghcr.io/home-assistant/home-assistant@${{ matrix.core_digest }}
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
       - run: uv sync --frozen
+      - name: Prepare this job's Docker client and verify image execution
+        shell: bash
+        env:
+          DOMUS_EXPECTED_MACHINE: ${{ matrix.machine }}
+        run: |
+          set -euo pipefail
+          docker_host=$(docker context inspect --format '{{.Endpoints.docker.Host}}')
+          buildx_plugin=$(docker info --format '{{range .ClientInfo.Plugins}}{{if eq .Name "buildx"}}{{.Path}}{{end}}{{end}}')
+          test -x "$buildx_plugin"
+          docker_config=$(mktemp -d "$RUNNER_TEMP/domus-docker.XXXXXX")
+          mkdir "$docker_config/cli-plugins"
+          ln -s "$buildx_plugin" "$docker_config/cli-plugins/docker-buildx"
+          {
+            printf 'DOCKER_HOST=%s\n' "$docker_host"
+            printf 'DOCKER_CONFIG=%s\n' "$docker_config"
+            printf 'DOCKER_CONTEXT=\n'
+            printf 'DOMUS_CI_DOCKER_CONFIG=%s\n' "$docker_config"
+          } >> "$GITHUB_ENV"
+          export DOCKER_HOST="$docker_host" DOCKER_CONFIG="$docker_config"
+          unset DOCKER_CONTEXT
+          docker pull "$DOMUS_HA_CORE_IMAGE"
+          machine=$(docker run --rm --network none --entrypoint uname "$DOMUS_HA_CORE_IMAGE" -m)
+          test "$machine" = "$DOMUS_EXPECTED_MACHINE"
+          docker buildx create --name "$DOMUS_IMAGE_PREFIX" --driver docker-container --use
       - name: Build the installed immutable Edge.5 image for schema-7 compatibility
-        run: docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-edge5 tests/fixtures/edge5-app
+        run: >-
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }} -t "$DOMUS_IMAGE_PREFIX:edge5" tests/fixtures/edge5-app
       - name: Build the actual reviewed Edge preview installed by the Supervisor
-        run: docker build --build-arg BUILD_ARCH=${{ matrix.arch }} -t domus-app-edge addon-edge
+        run: >-
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }} -t "$DOMUS_IMAGE_PREFIX:edge" addon-edge
       - name: Build the immutable published schema-8 image for profile migration compatibility
         run: >-
-          docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
-          -t domus-app-schema8 tests/fixtures/schema8-app
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }}
+          -t "$DOMUS_IMAGE_PREFIX:schema8" tests/fixtures/schema8-app
       - name: Build the immutable compatible schema-9 rollback application
         run: >-
-          docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
-          -t domus-app-schema9 tests/fixtures/schema9-app
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }}
+          -t "$DOMUS_IMAGE_PREFIX:schema9" tests/fixtures/schema9-app
       - name: Build the exact checked-out source and frontend
         run: >-
-          docker build --file tests/fixtures/current-app/Dockerfile
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --file tests/fixtures/current-app/Dockerfile
           --build-arg BUILD_ARCH=${{ matrix.arch }}
           --build-arg DOMUS_SOURCE_COMMIT=${{ github.sha }}
           --build-arg BUILD_VERSION=ci-current
-          -t domus-app-ci .
+          -t "$DOMUS_IMAGE_PREFIX:current" .
       - name: Check out the original schema-14 application
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           ref: 449dc04c17a9c41d949d74cd341bf1e943a2fba9
           path: previous-category-source
@@ -267,62 +322,63 @@ jobs:
       - name: Build the immutable schema-14 application
         working-directory: previous-category-source
         run: >-
-          docker build --file tests/fixtures/current-app/Dockerfile
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --file tests/fixtures/current-app/Dockerfile
           --build-arg BUILD_ARCH=${{ matrix.arch }}
           --build-arg DOMUS_SOURCE_COMMIT=449dc04c17a9c41d949d74cd341bf1e943a2fba9
           --build-arg BUILD_VERSION=ci-schema14
-          -t domus-app-schema14 .
+          -t "$DOMUS_IMAGE_PREFIX:schema14" .
       - name: Build the immutable previous image for upgrade and downgrade checks
         run: >-
-          docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }}
           --build-arg BUILD_VERSION=0.0.0-edge.2
           --build-arg DOMUS_SOURCE_COMMIT=d013cf2c8b932d0e00f5858053cbc0e663d5eee1
           --build-arg DOMUS_SOURCE_SHA256=fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c
-          -t domus-app-previous tests/fixtures/edge3-app
+          -t "$DOMUS_IMAGE_PREFIX:previous" tests/fixtures/edge3-app
       - name: Build the installed immutable Edge.3 image for actual upgrade acceptance
         run: >-
-          docker build --build-arg BUILD_ARCH=${{ matrix.arch }}
-          -t domus-app-installed tests/fixtures/edge3-app
-      - name: Pull the immutable Core reference for native calendar acceptance
-        run: >-
-          docker pull ghcr.io/home-assistant/home-assistant:2026.10.4@sha256:23f4dfbb69ce76315dbc4de7915504f1c2dcecd7ca2648113a493a385972e133
+          docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"
+          --build-arg BUILD_ARCH=${{ matrix.arch }}
+          -t "$DOMUS_IMAGE_PREFIX:installed" tests/fixtures/edge3-app
       - name: Verify the real image, listener and cleanup
         env:
-          DOMUS_TEST_IMAGE: domus-app-ci
+          DOMUS_TEST_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:current
           DOMUS_CALENDAR_COVERAGE_OUT: coverage-ha-calendar.json
           DOMUS_TEST_SOURCE_COMMIT: ${{ github.sha }}
-          DOMUS_PREVIOUS_IMAGE: domus-app-previous
-          DOMUS_UPGRADE_IMAGE: domus-app-installed
-          DOMUS_SCHEMA7_IMAGE: domus-app-edge5
-          DOMUS_EDGE_IMAGE: domus-app-edge
-          DOMUS_SCHEMA8_IMAGE: domus-app-schema8
-          DOMUS_SCHEMA9_IMAGE: domus-app-schema9
-          DOMUS_SCHEMA14_IMAGE: domus-app-schema14
+          DOMUS_PREVIOUS_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:previous
+          DOMUS_UPGRADE_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:installed
+          DOMUS_SCHEMA7_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:edge5
+          DOMUS_EDGE_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:edge
+          DOMUS_SCHEMA8_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema8
+          DOMUS_SCHEMA9_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema9
+          DOMUS_SCHEMA14_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema14
         run: uv run pytest tests/containers --no-cov
       - name: Retain native calendar coverage
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: native-calendar-coverage-${{ matrix.arch }}-${{ github.sha }}
           path: coverage-ha-calendar.json
           if-no-files-found: error
           retention-days: 7
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@v6.1.0
         with:
+          dest: ${{ runner.temp }}/domus-pnpm-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
           run_install: false
           cache: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @domus/frontend exec playwright install chromium
       - name: Execute household workflows in the actual isolated image from Chromium
         env:
-          DOMUS_BROWSER_IMAGE: domus-app-ci
+          DOMUS_BROWSER_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:current
           DOMUS_TEST_SOURCE_COMMIT: ${{ github.sha }}
           DOMUS_TEST_ARCH: ${{ matrix.arch }}
         run: >-
-          pnpm --filter @domus/frontend exec playwright test
+          lockf -k -t 600 /tmp/domus-ci-entry-browser.lock pnpm --filter @domus/frontend exec playwright test
           -c playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts tests/e2e/workspace-navigation.spec.ts
       - name: Require all fifty-four actual-image household journeys
         run: >-
@@ -333,7 +389,7 @@ jobs:
 
       - name: Retain actual-image browser evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: image-browser-${{ matrix.arch }}-${{ github.sha }}
           path: frontend/test-results/
@@ -343,23 +399,48 @@ jobs:
 
       - name: Require no surviving image browser fixtures
         if: ${{ always() }}
-        run: >-
-          uv run python -c "import subprocess;
-          assert not subprocess.check_output('docker ps --all --quiet --filter label=domus.browser-fixture=true'.split()).strip()"
+        run: |
+          survivors=$(docker ps --all --quiet --filter "label=domus.browser-fixture.image=$DOMUS_IMAGE_PREFIX:current")
+          if [ -n "$survivors" ]; then
+            printf '%s\n' "$survivors" | while IFS= read -r id; do docker rm --force "$id"; done
+            echo "An image browser fixture survived its test" >&2
+            exit 1
+          fi
+      - name: Remove this job's image tags
+        if: ${{ always() }}
+        run: |
+          for name in current edge edge5 schema8 schema9 schema14 previous installed; do
+            image="$DOMUS_IMAGE_PREFIX:$name"
+            if docker image inspect "$image" >/dev/null 2>&1; then
+              docker image rm "$image"
+            fi
+          done
+      - name: Remove this job's builder and Docker client configuration
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          if [ -n "${DOMUS_CI_DOCKER_CONFIG:-}" ]; then
+            trap 'rm -rf -- "$DOMUS_CI_DOCKER_CONFIG"' EXIT
+            if docker buildx inspect "$DOMUS_IMAGE_PREFIX" >/dev/null 2>&1; then
+              docker buildx rm "$DOMUS_IMAGE_PREFIX"
+            fi
+          fi
 
   aggregate:
     name: CI Check
     if: ${{ always() }}
     needs: [python, backend, node, frontend_toolchain, frontend, architecture, documentation, containers]
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     env:
       DOMUS_CI_RESULTS: ${{ toJSON(needs) }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false

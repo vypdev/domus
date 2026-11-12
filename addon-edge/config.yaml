@@ -1,5 +1,5 @@
 name: Domus Edge
-version: "0.0.0-edge.21"
+version: "0.0.0-edge.23"
 slug: domus_edge
 description: Development preview of the local Domus household application
 url: https://github.com/vypdev/domus
@@ -33,3 +33,5 @@ options:
 schema:
   public_origins:
     - url
+  ha_calendar_digest: str?
+  ha_deadline_digest: str?

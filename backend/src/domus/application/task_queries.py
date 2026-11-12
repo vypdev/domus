@@ -9,6 +9,7 @@ from typing import Literal, cast
 
 from domus.application.authorization import HouseholdAccess
 from domus.application.calendar_queries import calendar_boundary
+from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.household_queries import OperationView
 from domus.application.point_allocations import effective_allocation
 from domus.application.ports import Clock, Transactions, UnitOfWork
@@ -144,6 +145,28 @@ class TaskOverview:
     due_today: TaskOverviewGroup[TaskOverviewDeadlineItem]
     overdue: TaskOverviewGroup[TaskOverviewDeadlineItem]
     upcoming_maintenance: TaskOverviewGroup[TaskOverviewDeadlineItem]
+
+
+@dataclass(frozen=True, slots=True)
+class TaskDeadlineCounts:
+    due_today: int
+    overdue: int
+
+
+@dataclass(frozen=True, slots=True)
+class InstallationTaskDeadlines:
+    transactions: Transactions
+    scope: MaintenanceScope
+    clock: Clock
+    times: RecurrenceTimes
+
+    def read(self) -> TaskDeadlineCounts:
+        with self.transactions.read() as unit:
+            household = self.scope.require(unit)
+            today, overdue, _ = _overview_deadline_groups(
+                unit, household.household_id, self.clock.now(), self.times
+            )
+            return TaskDeadlineCounts(today.total, overdue.total)
 
 
 def _overview_group(group: TaskOccurrenceGroup) -> TaskOverviewGroup[TaskOverviewItem]:
