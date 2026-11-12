@@ -51,7 +51,11 @@ acceptance of the installed recurrence experience remain open.
   increment](evidence/stock-location-transfer-qualification.md) shows the stock at each location and
   records a move as two linked ledger entries. Multiple lists, prices, refunds, location editing and
   archiving, lot and package management, barcodes and optional online lookup remain open.
-- M4 includes the native Home Assistant calendar and [task deadline sensors](evidence/ha-deadline-sensors-qualification.md). The shared automation engine, both editors and additional Home Assistant entities and services remain open. The existing gateway is already integrated.
+- M4 starts with the [manual automation preview](evidence/automation-preview-qualification.md)
+  and includes the native Home Assistant calendar and [task deadline sensors](evidence/ha-deadline-sensors-qualification.md).
+  Household settings can simulate one task proposal against current stock. Durable rule storage,
+  enabling and execution, the advanced editor, a shared automation engine and additional Domus-owned
+  HA entities and services remain open. The existing gateway is already integrated.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
   and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).
   [Upcoming maintenance](evidence/overview-maintenance-qualification.md) shows open scheduled

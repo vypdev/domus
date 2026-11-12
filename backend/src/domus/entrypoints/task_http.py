@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Query, Request
 from fastapi.params import Depends
 
+from domus.application.automation_preview import AutomationPreview
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.family_queries import FamilyQueries, FamilyWeek
@@ -122,6 +123,7 @@ class TaskHTTPContext:
     inventory: Callable[[], InventoryQueries]
     inventory_commands: InventoryCommands
     inventory_original: Callable[[CatalogAction, str], Receipt]
+    automation: Callable[[], AutomationPreview]
 
 
 def create_task_router(

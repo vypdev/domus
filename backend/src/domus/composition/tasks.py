@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from typing import Protocol
 
+from domus.application.automation_preview import AutomationPreview
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.family_queries import FamilyQueries
@@ -105,6 +106,7 @@ def task_contexts(
             lambda: InventoryQueries(store, scope, actor.read(), cursors),
             catalog,
             lambda action, key: catalog.original(action, key, actor.read()),
+            lambda: AutomationPreview(store, scope, actor.read()),
         )
 
     return context

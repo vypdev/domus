@@ -716,6 +716,91 @@
         "title": "AssignmentBody",
         "type": "object"
       },
+      "AutomationPreviewAccess": {
+        "properties": {
+          "household_id": {
+            "title": "Household Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "household_id"
+        ],
+        "title": "AutomationPreviewAccess",
+        "type": "object"
+      },
+      "AutomationPreviewBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/CreateTaskProposalBody"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConditionBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/ManualTriggerBody"
+          },
+          "version": {
+            "maximum": 1.0,
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "trigger",
+          "condition",
+          "action"
+        ],
+        "title": "AutomationPreviewBody",
+        "type": "object"
+      },
+      "AutomationSimulation": {
+        "properties": {
+          "conditions": {
+            "items": {
+              "$ref": "#/components/schemas/ConditionDecision"
+            },
+            "title": "Conditions",
+            "type": "array"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          },
+          "trigger": {
+            "const": "manual",
+            "title": "Trigger",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "would_create": {
+            "title": "Would Create",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "version",
+          "trigger",
+          "task_title",
+          "would_create",
+          "conditions"
+        ],
+        "title": "AutomationSimulation",
+        "type": "object"
+      },
       "BaseUnit": {
         "enum": [
           "piece",
@@ -1374,6 +1459,101 @@
         "title": "CompleteBody",
         "type": "object"
       },
+      "ConditionBody": {
+        "discriminator": {
+          "mapping": {
+            "all": "#/components/schemas/ConditionGroupBody",
+            "any": "#/components/schemas/ConditionGroupBody",
+            "not": "#/components/schemas/NegatedConditionBody",
+            "stock_below_minimum": "#/components/schemas/StockConditionBody"
+          },
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/StockConditionBody"
+          },
+          {
+            "$ref": "#/components/schemas/ConditionGroupBody"
+          },
+          {
+            "$ref": "#/components/schemas/NegatedConditionBody"
+          }
+        ]
+      },
+      "ConditionDecision": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ConditionKind"
+          },
+          "matched": {
+            "title": "Matched",
+            "type": "boolean"
+          },
+          "path": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Path",
+            "type": "array"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          }
+        },
+        "required": [
+          "path",
+          "kind",
+          "matched"
+        ],
+        "title": "ConditionDecision",
+        "type": "object"
+      },
+      "ConditionGroupBody": {
+        "additionalProperties": false,
+        "properties": {
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/ConditionBody"
+            },
+            "maxItems": 64,
+            "minItems": 1,
+            "title": "Children",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "all",
+              "any"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "children"
+        ],
+        "title": "ConditionGroupBody",
+        "type": "object"
+      },
+      "ConditionKind": {
+        "enum": [
+          "stock_below_minimum",
+          "all",
+          "any",
+          "not"
+        ],
+        "type": "string"
+      },
       "CorrectPostedReceiptBody": {
         "additionalProperties": false,
         "properties": {
@@ -1574,6 +1754,28 @@
           }
         },
         "title": "CreateOccurrenceBody",
+        "type": "object"
+      },
+      "CreateTaskProposalBody": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "task.create",
+            "title": "Kind",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "CreateTaskProposalBody",
         "type": "object"
       },
       "DefinitionState": {
@@ -3155,6 +3357,21 @@
         "title": "ManualPointShare",
         "type": "object"
       },
+      "ManualTriggerBody": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "manual",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "ManualTriggerBody",
+        "type": "object"
+      },
       "MappingMode": {
         "enum": [
           "all_ha_administrators",
@@ -3939,6 +4156,25 @@
         ],
         "title": "NeedKind",
         "type": "string"
+      },
+      "NegatedConditionBody": {
+        "additionalProperties": false,
+        "properties": {
+          "child": {
+            "$ref": "#/components/schemas/ConditionBody"
+          },
+          "kind": {
+            "const": "not",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "child"
+        ],
+        "title": "NegatedConditionBody",
+        "type": "object"
       },
       "NominalDateBody": {
         "additionalProperties": false,
@@ -7885,6 +8121,27 @@
         "title": "StockAttentionItem",
         "type": "object"
       },
+      "StockConditionBody": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "stock_below_minimum",
+            "title": "Kind",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Product Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "product_id"
+        ],
+        "title": "StockConditionBody",
+        "type": "object"
+      },
       "StockTotals": {
         "properties": {
           "available": {
@@ -10975,6 +11232,320 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AccessResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Access"
+      }
+    },
+    "/api/v1/automation/preview": {
+      "post": {
+        "operationId": "preview_api_v1_automation_preview_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomationPreviewBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationSimulation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HomeAssistantIngress": []
+          }
+        ],
+        "summary": "Preview"
+      }
+    },
+    "/api/v1/automation/preview-access": {
+      "get": {
+        "operationId": "access_api_v1_automation_preview_access_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationPreviewAccess"
                 }
               }
             },

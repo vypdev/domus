@@ -13,9 +13,9 @@ import pytest
 import yaml
 
 
-def docker(*arguments: str) -> subprocess.CompletedProcess[str]:
+def docker(*arguments: str, timeout: int = 45) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["docker", *arguments], capture_output=True, text=True, timeout=45, check=False
+        ["docker", *arguments], capture_output=True, text=True, timeout=timeout, check=False
     )
 
 
@@ -691,10 +691,12 @@ def _calendar_core(*arguments, report_directory=None):
             "python -m coverage json --rcfile=/dev/null --fail-under=100 "
             "-o /evidence/coverage.json",
         )
-    return _calendar_checked(
+    name = f"domus-calendar-core-{uuid.uuid4().hex}"
+    _calendar_checked(
         docker(
-            "run",
-            "--rm",
+            "create",
+            "--name",
+            name,
             *arguments,
             *instrumentation,
             "--volume",
@@ -704,6 +706,11 @@ def _calendar_core(*arguments, report_directory=None):
             *command,
         )
     )
+    try:
+        # Instrumented Core takes longer on emulated amd64.
+        return _calendar_checked(docker("start", "--attach", name, timeout=120))
+    finally:
+        _calendar_checked(docker("rm", "--force", name))
 
 
 def _supervisor_candidate(channel, target):
