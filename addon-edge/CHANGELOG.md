@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.27
+
+- Show completed tasks and posted earned points for the current Family week on Overview.
+- Open Family from the localized summary to review the full report and pending values.
+
 ## 0.0.0-edge.26
 
 - Let people with task configuration permission set optional base points when creating a task.
