@@ -45,6 +45,12 @@ class AllocationPolicy:
     def quantum(self) -> int:
         return 100 if self.precision == 0 else 1
 
+    def require_representable_base(self, base: int) -> None:
+        if self.mode in (AllocationMode.CONSERVE_TOTAL, AllocationMode.FULL_PER_PARTICIPANT) and (
+            base % self.quantum
+        ):
+            raise InvalidInput("points_precision_two_required")
+
 
 @dataclass(frozen=True, slots=True)
 class PointAllocation:
@@ -110,8 +116,7 @@ def allocate_points(
         ):
             units += 1
         return PointAllocation(tuple((member, units * quantum) for member in members), None)
-    if base % quantum:
-        raise InvalidInput("points_precision_two_required")
+    policy.require_representable_base(base)
     if policy.mode is AllocationMode.FULL_PER_PARTICIPANT:
         return PointAllocation(tuple((member, base) for member in members), None)
     return _conserved(base, members, quantum, next_recipient)

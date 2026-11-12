@@ -129,8 +129,13 @@ export class HttpTaskServer implements TaskServer {
         const method = input.command.action === 'task.category.rename' ? 'PUT' : 'POST';
         const reply = await this.network.request(route(input.command), method, expected, body, input.key, token, signal);
         if (reply.status === 200) return taskReceipt(reply.value, input, false);
-        if ([401,403,409,422,503].includes(reply.status)) return Object.freeze({kind: 'rejected' as const,
-          reason: reason(reply.status), correlationId: failure(reply.value)});
+        if ([401,403,409,422,503].includes(reply.status)) {
+          const correlationId = failure(reply.value);
+          const precisionRequired = reply.status === 422 && input.command.action === 'task.create'
+            && (reply.value as {code: unknown}).code === 'points_precision_two_required';
+          return Object.freeze({kind: 'rejected' as const,
+            reason: precisionRequired ? 'points_precision_two_required' as const : reason(reply.status), correlationId});
+        }
       } catch {/* An unbound or missing reply cannot establish absence of the committed effect. */}
       return Object.freeze({kind: 'uncertain' as const});
     }).result.catch(() => posted ? Object.freeze({kind: 'uncertain' as const})

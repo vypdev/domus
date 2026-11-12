@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from domus.application.point_allocations import household_allocation
 from domus.application.ports import Clock, Identifiers, UnitOfWork
 from domus.application.task_authorization import TaskAccess, TaskMaterialAccess
 from domus.application.task_category_commands import require_active_category
@@ -51,6 +52,10 @@ class TaskCreation:
     def definition(
         self, unit: UnitOfWork, access: TaskAccess, household_id: str, request: CreateTask
     ) -> TaskDefinition:
+        amount = request.overrides.point_value_minor
+        if amount is not None:
+            allocation, _ = household_allocation(unit, household_id, amount)
+            allocation.require_representable_base(amount)
         category = (
             None
             if request.content.category_id is None

@@ -141,6 +141,9 @@ export class DomusTasks extends LitElement {
       this.shadowRoot?.querySelector<HTMLElement>(this.lastForm === 'create' ? '#task-title' : this.lastForm === 'category' ? '#task-category-label' : '#task-reason')?.focus();
     if (changed.has('view') && this.view?.notice === 'category_unavailable')
       this.renderRoot.querySelector<HTMLSelectElement>('#task-category')?.focus();
+    const outcome = this.view?.outcome;
+    if (changed.has('view') && outcome?.kind === 'rejected' && outcome.reason === 'points_precision_two_required')
+      this.renderRoot.querySelector<HTMLElement>('#task-base-points')?.focus();
     if (changed.has('quantityError') && this.quantityError) this.shadowRoot?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.reset();}

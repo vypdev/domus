@@ -49,8 +49,9 @@ actions your role allows. Use **Retry inventory summary** if the summary could n
 - In **Tasks**, open **New task**, enter a title, optional instructions and priority, then choose **Create task**. The title-only flow creates actual work, not a schedule draft.
 - If you can configure tasks, use **Base points (optional)** to set the amount for this task. Leave it
   empty to use the household default. Enter 0 to 10,000 points with up to two decimal places. The
-  saved amount appears with the creation result. Check **Family** after completing the task for
-  points posted under the household's award rules.
+  saved amount appears with the creation result. If the household conserves total points or gives
+  each participant full points at whole-point precision, use a whole amount or ask a points manager
+  to select two decimal places. Check **Family** after completing the task for posted points.
 - Select a task to inspect it. **Claim task** assigns eligible work to your own verified membership. **Mark done now** records you as the performer at the current server-anchored time.
 - Restricted performers require adult approval by default. An authorized adult can approve or reject the current cycle; rejection and reopening require a reason. Reopening preserves the previous cycle and its verification evidence.
 - If a task already has linked materials, review its quantities before completion. Decimal input is converted exactly, including a comma separator, and the linked unit's precision is enforced. Zero means unused. Separate-recording tasks do not silently submit planned consumption.

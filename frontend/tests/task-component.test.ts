@@ -62,6 +62,12 @@ test.each([
   expect(f.root.activeElement).toBe(field); expect(f.intents).toEqual([]);
   await edit(value); submit();
   expect(f.intents).toEqual([{type: 'create', title: 'Inspect filter', description: '', priority: 'normal', basePointsMinor: 225}]);
+  f.element.view = view({access, outcome: {kind: 'rejected', reason: 'points_precision_two_required', correlationId: 'cor_precision'}});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('section[role=status]')?.textContent)
+    .toContain(locale === 'en' ? 'Use whole base points' : 'Usa puntos base enteros');
+  expect(field.value).toBe(value);
+  expect(f.root.activeElement).toBe(field);
   f.element.view = view({access, outcome: {kind: 'receipt', stage: 'committed', action: 'task.create',
     operationId: 'configured', occurrenceId: 'work-1', revision, state: 'available', cycle: null, archivedBy: null, basePointsMinor: 225}});
   await f.element.updateComplete; await field.updateComplete;

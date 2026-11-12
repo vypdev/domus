@@ -1,5 +1,6 @@
 """Both compositions apply current allocation authority and preserve frozen pending awards."""
 
+import pytest
 from test_recurrence_http import CONTEXT, USER
 from test_task_http import create
 from test_task_runtime import api as api
@@ -47,6 +48,37 @@ def test_created_fractional_base_flows_through_preview_and_posted_award(api):
     assert worker.tick(lambda: True) == 1 and worker.tick(lambda: True) == 0
     (award,) = worker.ledger("home", cycle_id)
     assert dict(award.shares) == {member: 225}
+
+
+@pytest.mark.parametrize(
+    "mode", ["conserve_total", "full_per_participant", "equal_share", "manual"]
+)
+def test_task_creation_obeys_current_base_precision_without_changing_allocation(api, mode):
+    api.user(USER, True)
+    policy = {"mode": mode, "precision": 0}
+    if mode == "equal_share":
+        policy["rounding"] = "floor"
+    settings = api.client.put(
+        ALLOCATION,
+        json={"expected_revision": 0, "policy": policy},
+        headers=api.headers("whole-policy") | CONTEXT,
+    )
+    assert settings.status_code == 200, settings.text
+    body = {"title": "Check the filter", "overrides": {"point_value_minor": 225}}
+    definitions = TASKS + "/definitions"
+    headers = api.headers("fractional-base") | CONTEXT
+    reply = api.client.post(definitions, json=body, headers=headers)
+    if mode in ("conserve_total", "full_per_participant"):
+        assert reply.status_code == 422 and reply.json()["code"] == "points_precision_two_required"
+        assert api.client.get(definitions).json()["items"] == []
+        assert api.client.get(TASKS + "/requests/task.create/fractional-base").status_code == 404
+        body["overrides"]["point_value_minor"] = 200
+        reply = api.client.post(definitions, json=body, headers=headers)
+    assert reply.status_code == 200, reply.text
+    assert reply.json()["result"]["point_value_minor"] == body["overrides"]["point_value_minor"]
+    assert (
+        api.client.get(ALLOCATION, headers=CONTEXT).json()["household"]["policy"]["precision"] == 0
+    )
 
 
 def test_allocation_policy_and_override_remain_frozen_through_approval(api):

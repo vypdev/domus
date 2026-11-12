@@ -40,7 +40,7 @@ function receipt(index: number, lookup = false) {
 }
 function encode(value: unknown) {return JSON.stringify(value).replaceAll('"$revision"', REV).replaceAll('"$next"', NEXT);}
 function reply(value: unknown, status = 200) {return new Response(encode(value), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});}
-const failure = (status: number) => reply({state: 'blocked', code: 'request_forbidden', message: 'Private server detail.', action_required: 'Review.', correlation_id: 'cor_safe'}, status);
+const failure = (status: number, code = 'request_forbidden') => reply({state: 'blocked', code, message: 'Private server detail.', action_required: 'Review.', correlation_id: 'cor_safe'}, status);
 function fixture(mode: 'native' | 'standalone' = 'standalone') {
   const target = {deployment: mode, applicationBase: mode === 'native' ? '/api/hassio_ingress/' + 'b'.repeat(43) + '/' : '/', origin: 'https://domus.example'};
   const transport = vi.fn(async (_path: string, _init: RequestInit): Promise<Response> => reply({}));
@@ -131,6 +131,15 @@ test.each([401,403,409,422,503])('known task mutation rejection %s preserves onl
   expect(await f.server.send({key: 'key', command: commands[0]}, context)).toMatchObject({kind: 'rejected', correlationId: 'cor_safe'});
   expect(f.transport).toHaveBeenCalledTimes(2);
 });
+
+test.each([[0, 'points_precision_two_required'], [2, 'invalid_input']] as const)(
+  'the precision rejection requests a base correction only for creation command %s', async (index, reason) => {
+    const f = fixture();
+    f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)}))
+      .mockResolvedValueOnce(failure(422, 'points_precision_two_required'));
+    expect(await f.server.send({key: 'key', command: commands[index]}, context))
+      .toEqual({kind: 'rejected', reason, correlationId: 'cor_safe'});
+  });
 
 test('the task list and detail retain a date-only deadline without inventing a time', async () => {
   const f = fixture();
