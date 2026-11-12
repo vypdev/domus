@@ -1,12 +1,8 @@
 name: CI Check
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
   push:
-    branches: [develop, master]
-  merge_group:
-    types: [checks_requested]
+    branches: ['**']
 
 permissions:
   contents: read
@@ -14,7 +10,6 @@ permissions:
 jobs:
   python:
     name: Python tooling
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
@@ -46,7 +41,6 @@ jobs:
 
   backend:
     name: Backend application
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
@@ -78,7 +72,6 @@ jobs:
 
   node:
     name: Node architecture policy
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
@@ -109,7 +102,6 @@ jobs:
 
   frontend_toolchain:
     name: Frontend toolchain
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
@@ -152,7 +144,6 @@ jobs:
 
   frontend:
     name: Frontend application
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
@@ -203,7 +194,6 @@ jobs:
 
   architecture:
     name: Python architecture contracts
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
@@ -223,7 +213,6 @@ jobs:
 
   documentation:
     name: Local documentation links
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
@@ -241,7 +230,6 @@ jobs:
 
   containers:
     name: App container (${{ matrix.arch }})
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     strategy:
       fail-fast: false
       matrix:
@@ -436,7 +424,7 @@ jobs:
 
   aggregate:
     name: CI Check
-    if: ${{ always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    if: ${{ always() }}
     needs: [python, backend, node, frontend_toolchain, frontend, architecture, documentation, containers]
     runs-on:
       group: vypdev

@@ -103,12 +103,12 @@ See the primary [dependency-cruiser API](https://github.com/sverweij/dependency-
 
 The project-owned .github/workflows/ci_check.yml runs Python tooling, the separate backend suite,
 Node policy, real frontend framework execution, Python architecture
-contracts and local documentation links for PR updates from branches in this repository, including drafts
-and documentation changes. It also runs on develop/master pushes and merge-queue validation.
-Fork workflows require maintainer approval in GitHub. The CI jobs restrict execution to same-repository PRs.
+contracts and local documentation links for every branch push to this repository, including documentation changes.
+An internal pull request shows CI for its pushed head. Bring the head up to date with the target branch before merging.
+Fork workflows require maintainer approval in GitHub.
 Actions are pinned to immutable commits and installs use lockfiles.
 
-The final CI Check job always evaluates all seven required job results, including the container matrix.
+The final CI Check job always evaluates the eight required job results, including the container matrix.
 Missing, malformed, unexpected, failed, skipped, cancelled or pending results prevent success.
 Every required job must explicitly succeed. CI uses the organization's `vypdev` runner group.
 The container matrix uses the Apple Silicon runner's Linux Docker engine. It executes ARM64

@@ -1,4 +1,4 @@
-"""Enforce the internal PR workflow contract and immutable installed resources."""
+"""Enforce the branch CI workflow contract and immutable installed resources."""
 
 import ast
 import hashlib
@@ -15,25 +15,16 @@ from domus_tooling.ci_policy import REQUIRED_JOBS
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/ci_check.yml"
 PROTECTED = ROOT / "tests/contracts/copilot-resource-hashes.json"
-INTERNAL_EVENT = (
-    "github.event_name != 'pull_request' || "
-    "github.event.pull_request.head.repo.full_name == github.repository"
-)
 
 
 def workflow() -> dict:
     return yaml.load(WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
 
 
-def test_every_pr_update_and_merge_queue_run_without_path_filters() -> None:
+def test_ci_runs_on_every_branch_push_without_accepting_pr_events() -> None:
     config = workflow()
     assert config["name"] == "CI Check"
-    assert {"opened", "reopened", "synchronize", "ready_for_review", "converted_to_draft"} <= set(
-        config["on"]["pull_request"]["types"]
-    )
-    assert set(config["on"]["pull_request"]) == {"types"}
-    assert config["on"]["merge_group"]["types"] == ["checks_requested"]
-    assert set(config["on"]["push"]["branches"]) == {"develop", "master"}
+    assert config["on"] == {"push": {"branches": ["**"]}}
 
 
 def test_required_jobs_always_reach_a_fail_closed_aggregate() -> None:
@@ -43,10 +34,8 @@ def test_required_jobs_always_reach_a_fail_closed_aggregate() -> None:
     aggregate = jobs["aggregate"]
     assert aggregate["name"] == "CI Check"
     assert set(aggregate["needs"]) == set(REQUIRED_JOBS)
-    assert aggregate["if"] == "${{ always() && (" + INTERNAL_EVENT + ") }}"
+    assert aggregate["if"] == "${{ always() }}"
     assert aggregate["env"]["DOMUS_CI_RESULTS"] == "${{ toJSON(needs) }}"
-    for name in REQUIRED_JOBS:
-        assert jobs[name]["if"] == "${{ " + INTERNAL_EVENT + " }}"
     for name, job in jobs.items():
         if name != "containers":
             assert job["runs-on"] == {
