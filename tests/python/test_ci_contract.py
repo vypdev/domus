@@ -1,4 +1,4 @@
-"""Enforce the every-PR workflow contract and immutable installed resources."""
+"""Enforce the internal PR workflow contract and immutable installed resources."""
 
 import ast
 import hashlib
@@ -15,6 +15,10 @@ from domus_tooling.ci_policy import REQUIRED_JOBS
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/ci_check.yml"
 PROTECTED = ROOT / "tests/contracts/copilot-resource-hashes.json"
+INTERNAL_EVENT = (
+    "github.event_name != 'pull_request' || "
+    "github.event.pull_request.head.repo.full_name == github.repository"
+)
 
 
 def workflow() -> dict:
@@ -39,10 +43,10 @@ def test_required_jobs_always_reach_a_fail_closed_aggregate() -> None:
     aggregate = jobs["aggregate"]
     assert aggregate["name"] == "CI Check"
     assert set(aggregate["needs"]) == set(REQUIRED_JOBS)
-    assert aggregate["if"] == "${{ always() }}"
+    assert aggregate["if"] == "${{ always() && (" + INTERNAL_EVENT + ") }}"
     assert aggregate["env"]["DOMUS_CI_RESULTS"] == "${{ toJSON(needs) }}"
     for name in REQUIRED_JOBS:
-        assert "if" not in jobs[name], f"{name} must not skip applicable PR updates"
+        assert jobs[name]["if"] == "${{ " + INTERNAL_EVENT + " }}"
     for name, job in jobs.items():
         if name != "containers":
             assert job["runs-on"] == {
@@ -189,7 +193,6 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
 def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
     jobs = workflow()["jobs"]
     job = jobs["frontend"]
-    assert "if" not in job
     assert "continue-on-error" not in job
     assert all("continue-on-error" not in step for step in job["steps"])
     commands = [step["run"] for step in job["steps"] if "run" in step]
