@@ -114,7 +114,7 @@ Every required job must explicitly succeed. CI uses the organization's `vypdev` 
 The container matrix uses the Apple Silicon runner's Linux Docker engine. It executes ARM64
 images natively and amd64 images through the runner's x86-64 emulation. Before building the
 exact Supervisor app folder, each matrix job verifies execution of its architecture.
-Image tags and the Docker client directory belong to the job. Browser suites lock their
+Image tags, the Buildx builder and the Docker client directory belong to the job. Browser suites lock their
 loopback fixture ports when runs share a host. CI never installs into live HA.
 The workflow uses read-only repository permissions, does not persist checkout credentials and does not
 publish artifacts to a release or deploy. Coverage reports are retained for seven days under the checked SHA.

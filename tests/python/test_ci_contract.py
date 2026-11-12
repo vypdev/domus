@@ -82,14 +82,17 @@ def test_linux_app_images_are_built_and_exercised_on_both_cpu_families() -> None
         'docker pull "$DOMUS_HA_CORE_IMAGE"' in command
         and '--entrypoint uname "$DOMUS_HA_CORE_IMAGE" -m' in command
         and 'test "$machine" = "$DOMUS_EXPECTED_MACHINE"' in command
+        and 'docker buildx create --name "$DOMUS_IMAGE_PREFIX" --driver docker-container --use'
+        in command
         for command in commands
     )
+    build = 'docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"'
     assert (
-        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }}"
+        build + " --build-arg BUILD_ARCH=${{ matrix.arch }}"
         ' -t "$DOMUS_IMAGE_PREFIX:edge5" tests/fixtures/edge5-app' in commands
     )
     assert any(
-        "docker build --file tests/fixtures/current-app/Dockerfile" in command
+        f"{build} --file tests/fixtures/current-app/Dockerfile" in command
         and "--build-arg BUILD_ARCH=${{ matrix.arch }}" in command
         and "--build-arg DOMUS_SOURCE_COMMIT=${{ github.sha }}" in command
         and "--build-arg BUILD_VERSION=ci-current" in command
@@ -97,7 +100,7 @@ def test_linux_app_images_are_built_and_exercised_on_both_cpu_families() -> None
         for command in commands
     )
     assert any(
-        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }}" in command
+        (build + " --build-arg BUILD_ARCH=${{ matrix.arch }}") in command
         and command.rstrip().endswith('-t "$DOMUS_IMAGE_PREFIX:edge" addon-edge')
         for command in commands
     )
@@ -346,7 +349,11 @@ def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair
     )
     assert build["run"].split() == [
         "docker",
+        "buildx",
         "build",
+        "--load",
+        "--platform",
+        '"$DOCKER_DEFAULT_PLATFORM"',
         "--build-arg",
         "BUILD_ARCH=${{",
         "matrix.arch",
