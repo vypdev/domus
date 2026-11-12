@@ -238,7 +238,7 @@ export class DomusTasks extends LitElement {
   }
   private basePointsField() {
     return html`<vyp-ha-field id="task-base-points" .value=${this.basePointsDraft} ?disabled=${this.view!.busy}
-      .state=${textFieldState({label: this.text('basePointsOptional'), description: this.text('basePointsHelp'),
+      .state=${textFieldState({label: this.text('basePointsOptional'), description: this.text('basePointsHelp'), inputMode: 'decimal',
         error: this.basePointsError ? this.text('basePointsInvalid') : ''})}
       @ha-value-request=${(event: FieldValueEvent) => {
         this.basePointsDraft = event.detail.value;

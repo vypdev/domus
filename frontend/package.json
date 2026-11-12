@@ -13,7 +13,7 @@
     "browser:entry": "playwright test -c playwright.entry.config.ts"
   },
   "dependencies": {
-    "@vypdev/ha-ui": "0.1.0-next.1",
+    "@vypdev/ha-ui": "0.1.0-next.2",
     "lit": "3.3.3"
   },
   "devDependencies": {

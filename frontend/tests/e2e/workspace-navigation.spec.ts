@@ -255,6 +255,7 @@ for (const mode of ['native', 'standalone'] as const) {
       await newTask.locator('summary').press('Enter');
     await newTask.getByRole('textbox', {name: 'Title', exact: true}).fill('Water plants');
     const englishPoints = newTask.getByRole('textbox', {name: 'Base points (optional)', exact: true});
+    await expect(englishPoints).toHaveAttribute('inputmode', 'decimal');
     await englishPoints.fill('2.251');
     await englishPoints.press('Enter');
     const basePointsError = newTask.getByText('Enter 0 to 10,000 points with up to two decimal places.');
@@ -266,6 +267,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.emulateMedia({colorScheme: 'dark'});
     await page.getByLabel('Language', {exact: true}).selectOption('es');
     const spanishPoints = newTask.getByRole('textbox', {name: 'Puntos base (opcional)', exact: true});
+    await expect(spanishPoints).toHaveAttribute('inputmode', 'decimal');
     await expect(spanishPoints).toHaveValue('2.251');
     await spanishPoints.tap();
     await spanishPoints.fill('2,25');
