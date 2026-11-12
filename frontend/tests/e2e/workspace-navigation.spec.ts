@@ -244,9 +244,59 @@ for (const mode of ['native', 'standalone'] as const) {
       expect(response.ok(), await response.text()).toBe(true);
       return (await response.json()).result;
     };
-    const seeded = await post('definitions', 'family-work', {
-      title: 'Water plants', overrides: {point_value_minor: 225},
+    const previousTaskViewport = page.viewportSize()!;
+    await page.setViewportSize({width: 1120, height: 900});
+    await page.emulateMedia({colorScheme: 'light'});
+    await page.getByLabel('Idioma', {exact: true}).selectOption('en');
+    await tabs.getByRole('link', {name: 'Tasks', exact: true}).click();
+    const newTask = tasksRegion.locator('details.new-task:has(#new-task-title)');
+    await expect(newTask).toBeVisible();
+    if (!await newTask.evaluate((element: HTMLDetailsElement) => element.open))
+      await newTask.locator('summary').press('Enter');
+    await newTask.getByRole('textbox', {name: 'Title', exact: true}).fill('Water plants');
+    const englishPoints = newTask.getByRole('textbox', {name: 'Base points (optional)', exact: true});
+    await expect(englishPoints).toHaveAttribute('inputmode', 'decimal');
+    await englishPoints.fill('2.251');
+    await englishPoints.press('Enter');
+    const basePointsError = newTask.getByText('Enter 0 to 10,000 points with up to two decimal places.');
+    await expect(basePointsError).toBeVisible();
+    await expect(basePointsError).toHaveCSS('color', 'rgb(120, 67, 7)');
+    await expect(englishPoints).toBeFocused();
+    await newTask.screenshot({path: info.outputPath('task-base-points-en-invalid.png')});
+    await page.setViewportSize({width: 390, height: 820});
+    await page.emulateMedia({colorScheme: 'dark'});
+    await page.getByLabel('Language', {exact: true}).selectOption('es');
+    const spanishPoints = newTask.getByRole('textbox', {name: 'Puntos base (opcional)', exact: true});
+    await expect(spanishPoints).toHaveAttribute('inputmode', 'decimal');
+    await expect(spanishPoints).toHaveValue('2.251');
+    await spanishPoints.tap();
+    await spanishPoints.fill('2,25');
+    await expect(spanishPoints).toHaveCSS('color', 'rgb(237, 244, 250)');
+    await expect(newTask.getByText('Déjalo vacío para usar el valor predeterminado del hogar.'))
+      .toHaveCSS('color', 'rgb(187, 203, 216)');
+    await newTask.locator('#task-base-points').screenshot({path: info.outputPath('task-base-points-es-narrow.png')});
+    const creationUrl = base + 'api/v1/tasks/definitions';
+    const creation: {saved?: {occurrence_id: string; revision: number; point_value_minor: number}} = {};
+    await page.route(creationUrl, async route => {
+      if (route.request().method() !== 'POST') {await route.continue(); return;}
+      expect(route.request().postDataJSON()).toMatchObject({title: 'Water plants', overrides: {point_value_minor: 225}});
+      const committed = await route.fetch({maxRetries: 0, maxRedirects: 0});
+      expect(committed.ok(), await committed.text()).toBe(true);
+      creation.saved = (await committed.json()).result;
+      await route.abort('connectionclosed');
     });
+    await newTask.getByRole('button', {name: 'Crear tarea', exact: true}).tap();
+    await expect(tasksRegion.getByText('Resultado sin confirmar', {exact: true})).toBeVisible();
+    await expect(spanishPoints).toHaveValue('2,25');
+    await page.unroute(creationUrl);
+    const recoverCreation = tasksRegion.getByRole('region', {name: 'Solicitudes guardadas', exact: true})
+      .getByRole('button', {name: 'Comprobar solicitud guardada', exact: true});
+    await recoverCreation.click();
+    await expect(tasksRegion.getByText('Cambio de tarea guardado', {exact: true})).toBeVisible();
+    await expect(tasksRegion.getByRole('status').getByText('2,25', {exact: true})).toBeVisible();
+    const seeded = creation.saved;
+    if (seeded?.point_value_minor !== 225) throw Error('The original configured task was not saved');
+    await page.setViewportSize(previousTaskViewport);
     const done = await post('occurrences/' + seeded.occurrence_id + '/complete', 'family-completed', {
       expected_revision: seeded.revision, performer_ids: [member], performed_at: Date.now() - 500,
     });
@@ -256,8 +306,33 @@ for (const mode of ['native', 'standalone'] as const) {
       return result.json();
     };
     await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(225);
-    const familia = tabs.getByRole('link', {name: 'Familia', exact: true});
-    await familia.click();
+    const participation = overviewRegion.locator('domus-family-overview');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    await expect(participation.getByRole('heading',{name:'Tu participación esta semana',exact:true})).toBeVisible();
+    await expect(participation.locator('dd')).toHaveText(['1','2,25']);
+    await expect(participation.getByRole('article')).toHaveCSS('background-color','rgb(24, 36, 47)');
+    await participation.screenshot({path:info.outputPath('family-overview-es-narrow.png')});
+    await participation.getByRole('link',{name:'Abrir Familia',exact:true}).tap();
+    await expect(familyRegion).toBeFocused();
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await page.route(base + 'api/v1/family/overview', route => route.abort('failed'), {times:1});
+    await overview.press('Enter');
+    await expect(page).toHaveURL(base + '#overview');
+    await expect(participation.getByText('Weekly participation could not be loaded.',{exact:true})).toBeVisible();
+    await expect(overviewRegion.getByRole('heading',{name:/^Products below minimum ·/u})).toBeVisible();
+    await participation.getByRole('button',{name:'Retry participation summary',exact:true}).press('Enter');
+    await expect(participation.locator('dd')).toHaveText(['1','2.25']);
+    await expect(participation.getByRole('article')).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await participation.screenshot({path:info.outputPath('family-overview-en-wide.png')});
+    await participation.getByRole('link',{name:'Open Family',exact:true}).press('Enter');
+    await expect(familyRegion).toBeFocused();
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:320,height:720});
+    await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});
     await expect(familyRegion.getByText('Saldo disponible', {exact: true})).toBeVisible();
     await expect(familyRegion.getByText('Premio 2,25', {exact: true})).toBeVisible();
     await expect(familyRegion.getByText('Puntos estimados pendientes de verificación')).toBeVisible();
@@ -951,7 +1026,46 @@ for (const mode of ['native', 'standalone'] as const) {
     const dueDetail = page.waitForResponse(base + 'api/v1/tasks/occurrences/' + dueWork.occurrence_id);
     await dueItem.tap();
     expect((await dueDetail).ok()).toBe(true);
+    await expect(tasksRegion.getByRole('heading',{name:'Read the water meter',exact:true})).toBeFocused();
+
+    const scheduled = await request.post(origin + '/__fixture__/calendar-review');
+    expect(scheduled.ok()).toBe(true);
+    const {title:maintenanceTitle, future:maintenanceId, new_date:maintenanceDay} = await scheduled.json();
+    const maintenanceURL = base + 'api/v1/tasks/occurrences/' + maintenanceId;
+    const label = (locale: 'en' | 'es', state: string) => {
+      const deadline = new Intl.DateTimeFormat(locale,
+        {dateStyle:'medium', timeStyle:'short', timeZone:'UTC'}).format(new Date(maintenanceDay + 'T07:00:00Z'));
+      return `${maintenanceTitle} · ${deadline} · ${state}`;
+    };
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await overview.press('Enter');
+    await expect(page).toHaveURL(base + '#overview');
+    const scheduledEN = taskSummary.getByRole('heading',{name:/^Upcoming maintenance · [12]$/u});
+    await expect(scheduledEN).toBeVisible();
+    const groupEN = taskSummary.getByRole('article',{name:/^Upcoming maintenance ·/u});
+    await expect(groupEN).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await groupEN.screenshot({path:info.outputPath('upcoming-maintenance-en-wide.png')});
+    const keyboardDetail = page.waitForResponse(maintenanceURL);
+    await taskSummary.getByRole('button',{name:label('en','Available'),exact:true}).press('Enter');
+    expect((await keyboardDetail).ok()).toBe(true);
     await expect(tasksRegion).toBeFocused();
+    await expect(tasksRegion.getByRole('heading',{name:maintenanceTitle,exact:true})).toBeVisible();
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    const groupES = resumen.getByRole('article',{name:/^Próximos mantenimientos ·/u});
+    await expect(groupES).toHaveCSS('background-color','rgb(24, 36, 47)');
+    await groupES.screenshot({path:info.outputPath('upcoming-maintenance-es-narrow.png')});
+    const touchDetail = page.waitForResponse(maintenanceURL);
+    await resumen.getByRole('button',{name:label('es','Disponible'),exact:true}).tap();
+    expect((await touchDetail).ok()).toBe(true);
+    await expect(tasksRegion).toBeFocused();
+    await expect(tasksRegion.getByRole('heading',{name:maintenanceTitle,exact:true})).toBeVisible();
+
     await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
     await unclaimedItem.tap();
     await expect(page).toHaveURL(base + '#tasks');
@@ -1018,5 +1132,49 @@ for (const mode of ['native', 'standalone'] as const) {
     await rule.screenshot({path:info.outputPath('automation-preview-es-narrow.png')});
     expect(writes.slice(writeOffset)).toEqual(Array(4).fill('POST ' + previewAPI));
     expect(await definitions()).toEqual(beforePreview);
+
+    const restock = await inventoryWrite('overview-restock-product', {
+      action:'inventory.register-product', name:'Filters for the Overview', base_unit:'piece',
+    });
+    await inventoryWrite('overview-restock-policy', {action:'inventory.configure-replenishment',
+      product_id:restock.product_id, minimum:'2', target:'4', expected_revision:'0'});
+    await inventoryWrite('overview-restock-one', {action:'inventory.intake', product_id:restock.product_id, quantity:'1'});
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await page.route(base + 'api/v1/inventory/stock-attention', route => route.abort('failed'), {times:1});
+    await overview.press('Enter');
+    const attention = overviewRegion.locator('domus-stock-attention');
+    await expect(attention.getByText('The inventory summary could not be loaded.')).toBeVisible();
+    await expect(taskSummary.getByRole('heading',{name:/^Upcoming maintenance ·/u})).toBeVisible();
+    await attention.getByRole('button',{name:'Retry inventory summary',exact:true}).press('Enter');
+    const restockRow = attention.getByRole('listitem').filter({hasText:'Filters for the Overview'});
+    await expect(restockRow).toContainText('Available stock 1 piece');
+    await expect(restockRow).toContainText('Minimum stock 2 pieces');
+    await expect(attention.getByRole('article')).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await attention.screenshot({path:info.outputPath('stock-attention-en-wide.png')});
+    await attention.getByRole('link',{name:'Open Inventory',exact:true}).press('Enter');
+    await expect(stock).toBeFocused();
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    await expect(restockRow).toContainText('Stock disponible 1 unidad');
+    await expect(restockRow).toContainText('Stock mínimo 2 unidades');
+    await expect(attention.getByRole('article')).toHaveCSS('background-color','rgb(24, 36, 47)');
+    await attention.screenshot({path:info.outputPath('stock-attention-es-narrow.png')});
+    await attention.getByRole('link',{name:'Abrir Inventario',exact:true}).tap();
+    await expect(stock).toBeFocused();
+    const restockProduct = stock.getByRole('article',{name:'Filters for the Overview',exact:true});
+    await restockProduct.getByRole('button',{name:'Registrar entrada de stock',exact:true}).tap();
+    await restockProduct.getByRole('textbox',{name:'Cantidad que se añadirá',exact:true}).fill('1');
+    await restockProduct.getByRole('button',{name:'Revisar entrada',exact:true}).tap();
+    await expect(restockProduct.getByRole('status')).toContainText('1 unidad.');
+    await restockProduct.getByRole('button',{name:'Confirmar entrada',exact:true}).tap();
+    await expect(restockProduct.getByText('No hace falta reponer.',{exact:true})).toBeVisible();
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    await expect(attention.getByRole('heading',{name:/^Productos por debajo del mínimo ·/u})).toBeVisible();
+    await expect(restockRow).toHaveCount(0);
   });
 }

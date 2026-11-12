@@ -1,11 +1,13 @@
 # Intended household journey
 
-These complete household workflows are still under development. This guide describes the intended
-first integrated release. The [current HA preview](installation-home-assistant.md) describes what is available today.
+The verified Edge preview includes Overview, Tasks, Calendar, Inventory with Shopping, Family and
+Household administration. This guide covers those workflows and the intended first integrated
+release. See the [installation guide](installation-home-assistant.md) for the current preview and
+the [roadmap](roadmap.md) for remaining work.
 
-Open Domus with your own Home Assistant account. Ingress uses the existing HA session; standalone offers HA sign-in. The complete release will provide Dashboard, Tasks, Calendar, Shopping,
-Inventory, Family or Settings. English and Spanish are supported. Your role controls permitted actions,
-with backend checks applying even when a client presents an outdated button.
+Open Domus with your own Home Assistant account. Ingress uses the existing HA session and standalone
+offers HA sign-in. English and Spanish are supported. Your role controls permitted actions, with
+backend checks applying even when a client presents an outdated button.
 
 During explicit setup, choose how administration maps from HA: all HA administrators by default, only the verified administrator completing setup, or an explicitly selected HA user. The default gives each proven HA administrator inherited Domus administration; ordinary users are not promoted by opening the app. An administrator configures household permission profiles and per-member exceptions. Known suspension or revoked authority still blocks access; changing a label or choosing another performer never changes the caller's permission.
 
@@ -23,6 +25,8 @@ not restore an unsent administration draft.
 due on the current local day whose deadlines are still ahead or due now.
 Timed deadlines use the household time zone. Date-only recurring deadlines
 use their saved scheduling time zone and stay due through that day.
+**Upcoming maintenance** shows open scheduled tasks from tomorrow through
+the seventh upcoming local day, in date order.
 **Assigned to me** shows your assigned, in-progress, and blocked tasks.
 **Unclaimed tasks** shows household work in the available state.
 
@@ -30,11 +34,24 @@ Each group shows an exact total and up to 25 items. Select a task to open
 its current details in Tasks. Use **Retry task summary** if the summary
 could not be loaded. Access follows your current Tasks read permission.
 
-## Current task workspace
+### Stock summary on Overview
 
-The current source increment adds a real task workspace. Published Edge.7 remains administration-only until the next verified preview package is adopted; refreshing that older app does not install this source change.
+**Products below minimum** shows products whose available stock falls below their configured
+replenishment minimum. Available stock accounts for quantities reserved for tasks. Purchased
+items count as stock after their physical receipts are posted to Inventory.
+
+The summary shows the exact product count and up to 25 products, with the available and minimum
+quantities in each product's base unit. Select **Open Inventory** to review stock and take any
+actions your role allows. Use **Retry inventory summary** if the summary could not be loaded.
+
+## Task workspace
 
 - In **Tasks**, open **New task**, enter a title, optional instructions and priority, then choose **Create task**. The title-only flow creates actual work, not a schedule draft.
+- If you can configure tasks, use **Base points (optional)** to set the amount for this task. Leave it
+  empty to use the household default. Enter 0 to 10,000 points with up to two decimal places. The
+  saved amount appears with the creation result. If the household conserves total points or gives
+  each participant full points at whole-point precision, use a whole amount or ask a points manager
+  to select two decimal places. Check **Family** after completing the task for posted points.
 - Select a task to inspect it. **Claim task** assigns eligible work to your own verified membership. **Mark done now** records you as the performer at the current server-anchored time.
 - Restricted performers require adult approval by default. An authorized adult can approve or reject the current cycle; rejection and reopening require a reason. Reopening preserves the previous cycle and its verification evidence.
 - If a task already has linked materials, review its quantities before completion. Decimal input is converted exactly, including a comma separator, and the linked unit's precision is enforced. Zero means unused. Separate-recording tasks do not silently submit planned consumption.
@@ -277,6 +294,11 @@ Record consumption explicitly in Tasks.
 Scan a barcode with the camera or enter it manually. Domus searches local products first. If an administrator configures Internet product lookup, you may retrieve a candidate and review its source before importing it. External unavailability does not block local search or manual creation.
 
 ## Participation
+
+**Your participation this week** on Overview shows your completed tasks and posted earned points
+for the current Family week. The week starts on Monday in the household time zone. Select
+**Open Family** for the full report, including work awaiting verification and approved points
+awaiting posting.
 
 Open Family to see your balance, point history and recorded work. Select a week or
 month using a date in that period. The household time zone determines where the

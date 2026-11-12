@@ -31,6 +31,10 @@ export function taskTime(value: unknown): string {
 export function taskQuantity(value: unknown): string {
   requireValue(typeof value === 'string' && /^(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{0,5}[1-9])?$/u.test(value)); return value;
 }
+export function taskBasePointAmount(value: unknown): number {
+  requireValue(typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 1_000_000);
+  return value;
+}
 export interface TaskMaterialUsage {readonly line_id: string; readonly quantity: string;}
 export const TASK_STATES = ['draft', 'available', 'assigned', 'in_progress', 'blocked', 'completed', 'cancelled', 'skipped'] as const;
 export type TaskState = typeof TASK_STATES[number];
@@ -47,6 +51,7 @@ export interface TaskSchedulePolicy {
   readonly revision: Revision;
 }
 type TaskSchedule = Readonly<{draft: TaskScheduleDraft; policy: TaskSchedulePolicy}>;
+type TaskCreationOverrides = Readonly<{point_value_minor: number}>;
 export const CATEGORY_ACTIONS = ['task.category.create', 'task.category.rename', 'task.category.archive'] as const;
 export type CategoryCommand =
   Readonly<{action: 'task.category.create'; payload: Readonly<{expected_revision: 0; label: string}>}>
@@ -62,7 +67,8 @@ export function categoryLabel(value: unknown): string {
   return label;
 }
 export type TaskCommand = CategoryCommand |
-  Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority; category_id?: string; schedule?: TaskSchedule}>}>
+  Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority;
+    category_id?: string; schedule?: TaskSchedule; overrides?: TaskCreationOverrides}>}>
   | Readonly<{action: 'task.claim'; occurrenceId: string; payload: Readonly<{expected_revision: Revision}>}>
   | Readonly<{action: 'task.complete'; occurrenceId: string; payload: Readonly<{expected_revision: Revision;
     performer_ids: readonly string[]; performed_at: string; material_usages: readonly TaskMaterialUsage[] | null;
@@ -131,14 +137,23 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
     }
     const item = fields(value, action === 'task.create' ? ['action', 'payload'] : ['action', 'occurrenceId', 'payload']);
     if (action === 'task.create') {
-      const hasSchedule = typeof item.payload === 'object' && item.payload !== null && Object.hasOwn(item.payload, 'schedule');
-      const hasCategory = typeof item.payload === 'object' && item.payload !== null && Object.hasOwn(item.payload, 'category_id');
-      const body = fields(item.payload, ['expected_revision', 'title', 'description', 'priority', ...hasSchedule ? ['schedule'] : [], ...hasCategory ? ['category_id'] : []]);
+      requireValue(typeof item.payload === 'object' && item.payload !== null);
+      const hasSchedule = Object.hasOwn(item.payload, 'schedule');
+      const hasCategory = Object.hasOwn(item.payload, 'category_id');
+      const hasOverrides = Object.hasOwn(item.payload, 'overrides');
+      const body = fields(item.payload, ['expected_revision', 'title', 'description', 'priority',
+        ...hasSchedule ? ['schedule'] : [], ...hasCategory ? ['category_id'] : [], ...hasOverrides ? ['overrides'] : []]);
       requireValue(body.expected_revision === 0);
       const schedule = hasSchedule ? fields(body.schedule, ['draft', 'policy']) : null;
+      let overrides: TaskCreationOverrides | undefined;
+      if (hasOverrides) {
+        const {point_value_minor} = fields(body.overrides, ['point_value_minor']);
+        overrides = Object.freeze({point_value_minor: taskBasePointAmount(point_value_minor)});
+      }
       return Object.freeze({action, payload: Object.freeze({expected_revision: 0,
         title: taskText(body.title, TASK_TEXT_LIMITS.title, true), description: taskText(body.description, TASK_TEXT_LIMITS.description, false, true),
         priority: choice(body.priority, TASK_PRIORITIES),
+        ...overrides === undefined ? {} : {overrides},
         ...hasCategory ? {category_id: taskIdentifier(body.category_id)} : {}, ...schedule === null ? {} : {
           schedule: Object.freeze({draft: taskScheduleDraft(schedule.draft), policy: taskSchedulePolicy(schedule.policy)})
         }})});
@@ -198,7 +213,7 @@ export interface TaskCategory {readonly id: string; readonly label: string; read
 export interface TaskCategoryCatalog {readonly categories: readonly TaskCategory[]; readonly canManage: boolean;}
 export interface TaskAccess {
   readonly householdId: string; readonly memberId: string; readonly canCreate: boolean; readonly canReviewSchedule: boolean;
-  readonly canRecordForOthers?: boolean; readonly canManagePoints?: boolean;
+  readonly canRecordForOthers?: boolean; readonly canManagePoints?: boolean; readonly canConfigure?: boolean;
   readonly schedulePolicy?: TaskSchedulePolicy;
   readonly categoryCatalog?: TaskCategoryCatalog;
 }
@@ -207,4 +222,5 @@ export interface TaskReceipt {
   readonly action: TaskCommand['action']; readonly occurrenceId: string | null; readonly revision: Revision;
   readonly state: TaskState | 'active' | 'archived'; readonly cycle: TaskCycleSummary | null;
   readonly archivedBy: string | null;
+  readonly basePointsMinor?: number;
 }

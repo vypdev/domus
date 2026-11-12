@@ -1,9 +1,11 @@
 import {HttpTaskServer} from '../adapters/task-http';
-import {TaskOverviewController} from '../application/task-overview';
-import {HttpInventoryServer} from '../adapters/inventory-http';
+import {OverviewReadController} from '../application/overview-read';
+import type {TaskOverview} from '../application/task-overview';
 import {HttpAutomationPreview} from '../adapters/automation-preview-http';
 import {AutomationPreviewController} from '../application/automation-preview';
 import type {AutomationPreviewIntent} from '../application/automation-preview';
+import type {StockAttention} from '../application/stock-attention';
+import {HttpInventoryServer} from '../adapters/inventory-http';
 import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../adapters/inventory-journal';
 import {InventoryController} from '../application/inventory-controller';
 import {inventoryCommand} from '../domain/inventory';
@@ -22,6 +24,7 @@ import type {AllocationInput, ReviewedAllocation} from '../domain/point-allocati
 import type {AllocationSettingsIntent} from '../presentation/domus-allocation-settings';
 import {HttpFamilyServer} from '../adapters/family-http';
 import {FamilyController} from '../application/family-controller';
+import type {FamilyWeek} from '../application/family-controller';
 import {civilDate} from '../domain/calendar';
 import type {FamilyIntent} from '../presentation/domus-family';
 import {HttpRecurrenceServer} from '../adapters/recurrence-http';
@@ -35,7 +38,7 @@ import {CALENDAR_JOURNAL_KEY, CalendarSessionJournal} from '../adapters/calendar
 import {CalendarPreferenceController} from '../application/calendar-preferences';
 import {HttpCalendarServer} from '../adapters/calendar-http';
 import {CalendarController} from '../application/calendar-controller';
-import {calendarQuery, calendarToday, WEEK_STARTS} from '../domain/calendar';
+import {calendarPeriod, calendarQuery, calendarToday, WEEK_STARTS} from '../domain/calendar';
 import type {CalendarIntent} from '../presentation/domus-calendar';
 import {bootstrap} from '../adapters/bootstrap';
 import {check, fields, identifier} from '../adapters/http-values';
@@ -47,7 +50,7 @@ import {language, message} from '../presentation/messages';
 import type {DomusApp, EntryIntent} from '../presentation/domus-app';
 import {revisionValue} from '../domain/administration';
 import type {TaskIntent} from '../presentation/domus-tasks';
-import {taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
+import {taskBasePointAmount, taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
 import type {TaskPriority} from '../domain/tasks';
 import type {AdministrationIntent} from '../presentation/domus-administration';
 import {administrationCommand} from '../domain/administration-commands';
@@ -116,15 +119,16 @@ function reviewedAllocation(value: unknown): ReviewedAllocation {
 
 export function decodeTaskIntent(value: unknown): TaskIntent | null {
   try {
-    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed']);
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor']);
     const type = item.type;
     if (type === 'create') {
-      fields(value, ['type', 'title', 'description', 'priority'], ['schedule', 'categoryId']);
+      fields(value, ['type', 'title', 'description', 'priority'], ['schedule', 'categoryId', 'basePointsMinor']);
       check(typeof item.title === 'string' && typeof item.description === 'string' && typeof item.priority === 'string'
         && TASK_PRIORITIES.includes(item.priority as TaskPriority));
       return {type, title: item.title, description: item.description, priority: item.priority as TaskPriority,
         ...Object.hasOwn(item, 'schedule') ? {schedule: taskScheduleDraft(item.schedule)} : {},
-        ...Object.hasOwn(item, 'categoryId') ? {categoryId: identifier(item.categoryId)} : {}};
+        ...Object.hasOwn(item, 'categoryId') ? {categoryId: identifier(item.categoryId)} : {},
+        ...Object.hasOwn(item, 'basePointsMinor') ? {basePointsMinor: taskBasePointAmount(item.basePointsMinor)} : {}};
     }
     if (type === 'createCategory') {
       fields(value, ['type', 'label'], []); check(typeof item.label === 'string');
@@ -210,16 +214,18 @@ export function mountEntry(page: EntryPage): PageMount {
   let family: FamilyController | null = null;
   let rewards: RewardsController | null = null;
   let inventory: InventoryController | null = null;
-  let taskOverview: TaskOverviewController | null = null;
+  let taskOverview: OverviewReadController<TaskOverview> | null = null;
   let automationPreview: AutomationPreviewController | null = null;
+  let stockAttention: OverviewReadController<StockAttention> | null = null;
+  let familyOverview: OverviewReadController<FamilyWeek> | null = null;
   let allocation: AllocationController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
   let stopped = false, runtime: EntryRuntime | null = null, app: DomusApp | null = null, error: HTMLElement | null = null;
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); error?.remove();
-    automationPreview?.bind(null);
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); error?.remove();
+    stockAttention?.bind(null); familyOverview?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -228,8 +234,8 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); app?.remove();
-    automationPreview?.bind(null);
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); app?.remove();
+    stockAttention?.bind(null); familyOverview?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -274,7 +280,8 @@ export function mountEntry(page: EntryPage): PageMount {
         calendarController.bind(null); preferences.bind(null); element.calendarScopeKey = null;
       }
     };
-    const familyController = new FamilyController(new HttpFamilyServer(source.target, browser.transport),
+    const familyServer = new HttpFamilyServer(source.target, browser.transport);
+    const familyController = new FamilyController(familyServer,
       view => {element.family = view;});
     family = familyController;
     const rewardsController = new RewardsController(new HttpRewardsServer(source.target, browser.transport),
@@ -418,7 +425,8 @@ export function mountEntry(page: EntryPage): PageMount {
       if (intent?.type === 'more-shopping-sources') await inventoryController.moreShoppingSources();
       if (intent?.type === 'submit') await inventoryController.submit(intent.command);
     }, {signal:widget.signal});
-    const overviewController = new TaskOverviewController(new HttpTaskServer(source.target, browser.transport),
+    const tasksServer = new HttpTaskServer(source.target, browser.transport);
+    const overviewController = new OverviewReadController(context => tasksServer.overview(context),
       view => {element.taskOverview = view;});
     taskOverview = overviewController;
     const syncOverview = () => {
@@ -430,6 +438,42 @@ export function mountEntry(page: EntryPage): PageMount {
         overviewController.bind({key, context});
       } else overviewController.bind(null);
     };
+    const stockController = new OverviewReadController(context => inventoryServer.stockAttention(context),
+      view => {element.stockAttention = view;});
+    stockAttention = stockController;
+    const syncStockAttention = () => {
+      const entry = element.view, destination = element.workspaceDestination;
+      if ((destination === null || destination === 'overview') && entry?.phase === 'ready'
+          && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.session && entry.household) {
+        const {context, access} = entry.session, {householdId} = entry.household;
+        const authority = element.administration?.access;
+        const key = JSON.stringify([context.installationId, context.channel, context.subject, householdId, access,
+          authority?.member?.memberId, authority?.member?.revision, authority?.policyRevision]);
+        stockController.bind({key, context});
+      } else stockController.bind(null);
+    };
+    element.addEventListener('domus-stock-attention-retry', event => {
+      if (event.target === element) void stockController.refresh();
+    }, {signal: widget.signal});
+    const familySummary = new OverviewReadController(context => familyServer.overview(context),
+      view => {element.familyOverview = view;});
+    familyOverview = familySummary;
+    const syncFamilyOverview = () => {
+      const entry = element.view, tasks = element.tasks, destination = element.workspaceDestination;
+      if ((destination === null || destination === 'overview') && entry?.phase === 'ready'
+          && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.household
+          && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey) {
+        let day: string;
+        try {day = calendarToday(runtime!.serverTime, entry.household.timeZone);}
+        catch {familySummary.bind(null); return;}
+        const start = calendarPeriod('week', day).start;
+        const key = JSON.stringify([tasks.scopeKey, entry.household.revision, start]);
+        familySummary.bind({key, context:tasks.session.context});
+      } else familySummary.bind(null);
+    };
+    element.addEventListener('domus-family-overview-retry', event => {
+      if (event.target === element) void familySummary.refresh();
+    }, {signal: widget.signal});
     const automation = new AutomationPreviewController(new HttpAutomationPreview(source.target, browser.transport),
       inventoryServer, view => {element.automationPreview = view;});
     automationPreview = automation;
@@ -451,12 +495,12 @@ export function mountEntry(page: EntryPage): PageMount {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : fragment === '#inventory' ? 'inventory' : null;
-      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncAutomation();
+      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncAutomation(); syncStockAttention(); syncFamilyOverview();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncAutomation();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncAutomation();syncStockAttention();syncFamilyOverview();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
@@ -547,7 +591,8 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'refresh': await active.refresh(); break;
           case 'more': await active.taskWork(controller => controller.more()); break;
           case 'select': await active.taskWork(controller => controller.select(intent.occurrenceId)); break;
-          case 'create': await active.taskWork(controller => controller.create(intent.title, intent.description, intent.priority, intent.schedule, intent.categoryId)); break;
+          case 'create': await active.taskWork(controller => controller.create(intent.title, intent.description, intent.priority,
+            intent.schedule, intent.categoryId, intent.basePointsMinor)); break;
           case 'createCategory': await active.taskWork(controller => controller.createCategory(intent.label)); break;
           case 'renameCategory': await active.taskWork(controller => controller.renameCategory(intent.categoryId, intent.revision, intent.label)); break;
           case 'archiveCategory': await active.taskWork(controller => controller.archiveCategory(intent.categoryId, intent.revision)); break;

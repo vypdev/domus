@@ -54,6 +54,10 @@ def seed(channel, label):
             "fixture-due",
             CreateTaskOccurrence(created.result.decode()["definition_id"], due_at=due_at),
         )
+        tasks.create_occurrence(
+            "fixture-overdue",
+            CreateTaskOccurrence(created.result.decode()["definition_id"], due_at=1),
+        )
         times = PinnedRecurrenceTime()
         rule = FixedPattern(NominalDate(tomorrow.date()), Frequency.DAILY, count=1)
         RecurrenceCommands(
@@ -96,9 +100,16 @@ def serve(mode, channel, host, config_path):
     )
     instance = completed.stdout.strip()
     digest = hashlib.sha256(f"{instance}.{channel}.{'d' * 64}".encode("ascii")).hexdigest()
+    deadline_digest = hashlib.sha256(
+        f"{instance}.{channel}.deadlines.{'e' * 64}".encode("ascii")
+    ).hexdigest()
     if mode == "native":
         config = json.loads(Path(config_path).read_text())
-        options = {**config["options"], "ha_calendar_digest": digest}
+        options = {
+            **config["options"],
+            "ha_calendar_digest": digest,
+            "ha_deadline_digest": deadline_digest,
+        }
         Path("/data/options.json").write_text(json.dumps(options))
         launcher = "/app/.venv/bin/domus-ha-app"
         os.environ["SUPERVISOR_TOKEN"] = "disposable-supervisor-token"
@@ -113,7 +124,12 @@ def serve(mode, channel, host, config_path):
     os.setgid(RUNTIME_UID)
     os.setuid(RUNTIME_UID)
     runtime = create_owned_runtime(
-        "https://ha.fixture", f"https://{host}:8443", channel, ROOT, ha_calendar_digest=digest
+        "https://ha.fixture",
+        f"https://{host}:8443",
+        channel,
+        ROOT,
+        ha_calendar_digest=digest,
+        ha_deadline_digest=deadline_digest,
     )
     try:
         uvicorn.run(

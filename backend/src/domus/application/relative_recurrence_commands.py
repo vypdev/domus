@@ -10,7 +10,7 @@ from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
 from domus.application.recurrence_ports import RecurrenceTimes
 from domus.application.schedule_creation_policy import require_schedule_creation_policy
 from domus.application.task_authorization import TaskAccess, TaskCommandAuthorization
-from domus.application.task_creation import TaskCreation
+from domus.application.task_creation import TaskCreation, task_creation_result
 from domus.application.task_material_ports import TaskInventory
 from domus.application.task_requests import CreateTask
 from domus.domain.errors import IntegrationUnavailable, InvalidInput
@@ -136,7 +136,7 @@ class RelativeRecurrenceCommands:
             )
             unit.recurrence.save_relative_schedule(schedule, 0)
             unit.recurrence.save_relative_progress(progress, 0)
-            result = JsonDocument.from_value(
+            result = task_creation_result(
                 {
                     "schedule_id": schedule.schedule_id,
                     "definition_id": item.definition_id,
@@ -145,7 +145,8 @@ class RelativeRecurrenceCommands:
                     "state": schedule.state.value,
                     "processing": "pending",
                     "first_occurrence_id": None,
-                }
+                },
+                item,
             )
             detail = JsonDocument.from_value(
                 {

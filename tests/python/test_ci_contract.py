@@ -1,4 +1,4 @@
-"""Enforce the every-PR workflow contract and immutable installed resources."""
+"""Enforce the branch CI workflow contract and immutable installed resources."""
 
 import ast
 import hashlib
@@ -21,15 +21,10 @@ def workflow() -> dict:
     return yaml.load(WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
 
 
-def test_every_pr_update_and_merge_queue_run_without_path_filters() -> None:
+def test_ci_runs_on_every_branch_push_without_accepting_pr_events() -> None:
     config = workflow()
     assert config["name"] == "CI Check"
-    assert {"opened", "reopened", "synchronize", "ready_for_review", "converted_to_draft"} <= set(
-        config["on"]["pull_request"]["types"]
-    )
-    assert set(config["on"]["pull_request"]) == {"types"}
-    assert config["on"]["merge_group"]["types"] == ["checks_requested"]
-    assert set(config["on"]["push"]["branches"]) == {"develop", "master"}
+    assert config["on"] == {"push": {"branches": ["**"]}}
 
 
 def test_required_jobs_always_reach_a_fail_closed_aggregate() -> None:
@@ -41,35 +36,61 @@ def test_required_jobs_always_reach_a_fail_closed_aggregate() -> None:
     assert set(aggregate["needs"]) == set(REQUIRED_JOBS)
     assert aggregate["if"] == "${{ always() }}"
     assert aggregate["env"]["DOMUS_CI_RESULTS"] == "${{ toJSON(needs) }}"
-    for name in REQUIRED_JOBS:
-        assert "if" not in jobs[name], f"{name} must not skip applicable PR updates"
+    for name, job in jobs.items():
+        if name != "containers":
+            assert job["runs-on"] == {
+                "group": "vypdev",
+                "labels": ["self-hosted", "codex", "Linux"],
+            }
 
 
-def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> None:
+def test_linux_app_images_are_built_and_exercised_on_both_cpu_families() -> None:
     jobs = workflow()["jobs"]
     container = jobs["containers"]
     assert container["strategy"]["fail-fast"] == "false"
-    assert container["strategy"]["matrix"]["include"] == [
-        {"runner": "ubuntu-latest", "arch": "amd64"},
-        {"runner": "ubuntu-24.04-arm", "arch": "aarch64"},
+    platforms = container["strategy"]["matrix"]["include"]
+    assert [(row["arch"], row["platform"], row["machine"]) for row in platforms] == [
+        ("amd64", "linux/amd64", "x86_64"),
+        ("aarch64", "linux/arm64", "aarch64"),
     ]
-    assert container["runs-on"] == "${{ matrix.runner }}"
+    assert all(re.fullmatch(r"sha256:[a-f0-9]{64}", row["core_digest"]) for row in platforms)
+    assert len({row["core_digest"] for row in platforms}) == 2
+    assert container["runs-on"] == {
+        "group": "vypdev",
+        "labels": ["self-hosted", "macOS", "ARM64"],
+    }
+    assert container["env"]["DOCKER_DEFAULT_PLATFORM"] == "${{ matrix.platform }}"
+    assert container["env"]["DOMUS_HA_CORE_IMAGE"] == (
+        "ghcr.io/home-assistant/home-assistant@${{ matrix.core_digest }}"
+    )
+    assert container["env"]["DOMUS_IMAGE_PREFIX"] == (
+        "domus-ci-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.arch }}"
+    )
     commands = [step["run"] for step in container["steps"] if "run" in step]
+    assert any(
+        'docker pull "$DOMUS_HA_CORE_IMAGE"' in command
+        and '--entrypoint uname "$DOMUS_HA_CORE_IMAGE" -m' in command
+        and 'test "$machine" = "$DOMUS_EXPECTED_MACHINE"' in command
+        and 'docker buildx create --name "$DOMUS_IMAGE_PREFIX" --driver docker-container --use'
+        in command
+        for command in commands
+    )
+    build = 'docker buildx build --load --platform "$DOCKER_DEFAULT_PLATFORM"'
     assert (
-        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }}"
-        " -t domus-app-edge5 tests/fixtures/edge5-app" in commands
+        build + " --build-arg BUILD_ARCH=${{ matrix.arch }}"
+        ' -t "$DOMUS_IMAGE_PREFIX:edge5" tests/fixtures/edge5-app' in commands
     )
     assert any(
-        "docker build --file tests/fixtures/current-app/Dockerfile" in command
+        f"{build} --file tests/fixtures/current-app/Dockerfile" in command
         and "--build-arg BUILD_ARCH=${{ matrix.arch }}" in command
         and "--build-arg DOMUS_SOURCE_COMMIT=${{ github.sha }}" in command
         and "--build-arg BUILD_VERSION=ci-current" in command
-        and command.rstrip().endswith("-t domus-app-ci .")
+        and command.rstrip().endswith('-t "$DOMUS_IMAGE_PREFIX:current" .')
         for command in commands
     )
     assert any(
-        "docker build --build-arg BUILD_ARCH=${{ matrix.arch }}" in command
-        and command.rstrip().endswith("-t domus-app-edge addon-edge")
+        (build + " --build-arg BUILD_ARCH=${{ matrix.arch }}") in command
+        and command.rstrip().endswith('-t "$DOMUS_IMAGE_PREFIX:edge" addon-edge')
         for command in commands
     )
     assert "uv run pytest tests/containers --no-cov" in commands
@@ -78,7 +99,7 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
         and "DOMUS_SOURCE_SHA256=fa58d457bef8a863a1943b4e6ba5c9513da8d3baa8b0a033bdcbe7bf11b09c6c"
         in command
         and "BUILD_VERSION=0.0.0-edge.2" in command
-        and "-t domus-app-previous tests/fixtures/edge3-app" in command
+        and '-t "$DOMUS_IMAGE_PREFIX:previous" tests/fixtures/edge3-app' in command
         for command in commands
     )
     verification = next(
@@ -86,26 +107,40 @@ def test_native_app_images_are_built_and_exercised_on_both_cpu_families() -> Non
         for step in container["steps"]
         if step.get("run") == "uv run pytest tests/containers --no-cov"
     )
-    assert verification["env"]["DOMUS_PREVIOUS_IMAGE"] == "domus-app-previous"
-    assert verification["env"]["DOMUS_UPGRADE_IMAGE"] == "domus-app-installed"
-    assert verification["env"]["DOMUS_TEST_IMAGE"] == "domus-app-ci"
+    assert verification["env"]["DOMUS_PREVIOUS_IMAGE"] == "${{ env.DOMUS_IMAGE_PREFIX }}:previous"
+    assert verification["env"]["DOMUS_UPGRADE_IMAGE"] == "${{ env.DOMUS_IMAGE_PREFIX }}:installed"
+    assert verification["env"]["DOMUS_TEST_IMAGE"] == "${{ env.DOMUS_IMAGE_PREFIX }}:current"
     assert verification["env"]["DOMUS_TEST_SOURCE_COMMIT"] == "${{ github.sha }}"
-    assert verification["env"]["DOMUS_SCHEMA7_IMAGE"] == "domus-app-edge5"
-    assert verification["env"]["DOMUS_EDGE_IMAGE"] == "domus-app-edge"
-    assert any("-t domus-app-installed tests/fixtures/edge3-app" in command for command in commands)
+    assert verification["env"]["DOMUS_SCHEMA7_IMAGE"] == "${{ env.DOMUS_IMAGE_PREFIX }}:edge5"
+    assert verification["env"]["DOMUS_EDGE_IMAGE"] == "${{ env.DOMUS_IMAGE_PREFIX }}:edge"
+    assert any(
+        '-t "$DOMUS_IMAGE_PREFIX:installed" tests/fixtures/edge3-app' in command
+        for command in commands
+    )
     assert "containers" in jobs["aggregate"]["needs"]
 
 
-def test_ci_is_read_only_with_immutable_actions_and_locked_installs() -> None:
+def test_ci_is_read_only_with_exact_action_versions_and_locked_installs() -> None:
     config = workflow()
+    lock = yaml.safe_load(WORKFLOW.with_name("actions.lock").read_text(encoding="utf-8"))
+    refs = set()
     assert config["permissions"] == {"contents": "read"}
     for job in config["jobs"].values():
         assert "permissions" not in job
         for step in job["steps"]:
             if "uses" in step:
-                assert re.fullmatch(r"[\w/-]+@[a-f0-9]{40}", step["uses"])
+                assert re.fullmatch(r"[\w/-]+@v[0-9]+\.[0-9]+\.[0-9]+", step["uses"])
+                refs.add(step["uses"])
             if step.get("uses", "").startswith("actions/checkout@"):
                 assert step["with"]["persist-credentials"] == "false"
+            if step.get("uses", "").startswith("pnpm/action-setup@"):
+                assert step["with"]["dest"] == (
+                    "${{ runner.temp }}/domus-pnpm-${{ github.run_id }}-"
+                    "${{ github.run_attempt }}-${{ github.job }}"
+                )
+    assert refs == set(lock["workflows"][WORKFLOW.relative_to(ROOT).as_posix()])
+    for ref in refs:
+        assert re.fullmatch(r"sha1-[a-f0-9]{40}", lock["dependencies"][ref]["commit"])
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "uv sync --frozen" in source
     assert "pnpm install --frozen-lockfile" in source
@@ -161,22 +196,21 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
 def test_product_frontend_has_its_own_required_chromium_coverage_gate() -> None:
     jobs = workflow()["jobs"]
     job = jobs["frontend"]
-    assert "if" not in job
     assert "continue-on-error" not in job
     assert all("continue-on-error" not in step for step in job["steps"])
     commands = [step["run"] for step in job["steps"] if "run" in step]
     assert commands == [
         "uv sync --frozen",
         "pnpm install --frozen-lockfile",
-        "pnpm --filter @domus/frontend exec playwright install --with-deps chromium",
+        "pnpm --filter @domus/frontend exec playwright install chromium",
         "pnpm check:frontend",
         "pnpm test:frontend",
         "pnpm build:frontend",
         "uv build --package domus-server --wheel",
         "uv run pytest tests/packaging --no-cov",
-        "pnpm test:frontend-entry",
+        "flock -w 600 /tmp/domus-ci-entry-browser.lock pnpm test:frontend-entry",
         "pnpm build:frontend-catalog",
-        "pnpm test:frontend-catalog",
+        "flock -w 600 /tmp/domus-ci-catalog-browser.lock pnpm test:frontend-catalog",
     ]
     assert "frontend" in REQUIRED_JOBS
     assert "frontend" in jobs["aggregate"]["needs"]
@@ -217,12 +251,12 @@ def test_frontend_toolchain_requires_actual_execution_and_separate_artifacts() -
     commands = [step["run"] for step in job["steps"] if "run" in step]
     assert commands == [
         "pnpm install --frozen-lockfile",
-        "pnpm --filter @domus/frontend-toolchain exec playwright install --with-deps chromium",
+        "pnpm --filter @domus/frontend-toolchain exec playwright install chromium",
         "pnpm check:frontend-toolchain",
         "pnpm test:frontend-toolchain",
         "pnpm build:frontend-toolchain",
-        "pnpm test:frontend-browser",
-        "pnpm test:frontend-guards",
+        "flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-browser",
+        "flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-guards",
     ]
     artifact = next(step for step in job["steps"] if "path" in step.get("with", {}))
     assert artifact["if"] == "${{ always() }}"
@@ -272,7 +306,7 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
         == "Execute household workflows in the actual isolated image from Chromium"
     )
     assert actual["env"] == {
-        "DOMUS_BROWSER_IMAGE": "domus-app-ci",
+        "DOMUS_BROWSER_IMAGE": "${{ env.DOMUS_IMAGE_PREFIX }}:current",
         "DOMUS_TEST_SOURCE_COMMIT": "${{ github.sha }}",
         "DOMUS_TEST_ARCH": "${{ matrix.arch }}",
     }
@@ -280,11 +314,12 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
         "playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts"
         " tests/e2e/workspace-navigation.spec.ts" in actual["run"]
     )
+    assert actual["run"].startswith("lockf -k -t 600 /tmp/domus-ci-entry-browser.lock ")
     assert "--grep" not in actual["run"]
     assert "--pass-with-no-tests" not in actual["run"]
     commands = [step["run"] for step in steps if "run" in step]
     assert "pnpm install --frozen-lockfile" in commands
-    assert "pnpm --filter @domus/frontend exec playwright install --with-deps chromium" in commands
+    assert "pnpm --filter @domus/frontend exec playwright install chromium" in commands
     audit = next(
         step
         for step in steps
@@ -295,9 +330,14 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )
-    assert "docker ps --all --quiet --filter label=domus.browser-fixture=true" in cleanup["run"]
-    assert "assert not" in cleanup["run"] and "check_output" in cleanup["run"]
+    assert "domus.browser-fixture.image=$DOMUS_IMAGE_PREFIX:current" in cleanup["run"]
+    assert 'docker rm --force "$id"' in cleanup["run"]
+    assert "exit 1" in cleanup["run"]
     assert steps.index(cleanup) > steps.index(audit)
+    images = next(step for step in steps if step.get("name") == "Remove this job's image tags")
+    assert images["if"] == "${{ always() }}"
+    assert 'image="$DOMUS_IMAGE_PREFIX:$name"' in images["run"]
+    assert 'docker image rm "$image"' in images["run"]
 
 
 def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair() -> None:
@@ -309,19 +349,23 @@ def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair
     )
     assert build["run"].split() == [
         "docker",
+        "buildx",
         "build",
+        "--load",
+        "--platform",
+        '"$DOCKER_DEFAULT_PLATFORM"',
         "--build-arg",
         "BUILD_ARCH=${{",
         "matrix.arch",
         "}}",
         "-t",
-        "domus-app-schema9",
+        '"$DOMUS_IMAGE_PREFIX:schema9"',
         "tests/fixtures/schema9-app",
     ]
     verify = next(
         step for step in steps if step.get("run") == "uv run pytest tests/containers --no-cov"
     )
-    assert verify["env"]["DOMUS_SCHEMA9_IMAGE"] == "domus-app-schema9"
+    assert verify["env"]["DOMUS_SCHEMA9_IMAGE"] == "${{ env.DOMUS_IMAGE_PREFIX }}:schema9"
     assert steps.index(build) < steps.index(verify)
     fixture = (ROOT / "tests/fixtures/schema9-app/Dockerfile").read_text()
     assert "DOMUS_SOURCE_COMMIT=87d726fa5a6a8cbcb56e0b911d15cc5b8a96a470" in fixture

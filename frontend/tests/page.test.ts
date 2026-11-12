@@ -20,13 +20,19 @@ afterEach(() => {
   for (const node of nodes.splice(0)) node.remove();
   document.querySelector('#domus-entry-error')?.remove();
 });
-function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'en', canReview = false, canManagePoints = false) {
+function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'en', canReview = false, canManagePoints = false,
+  timing?: {serverTime: number; timeZone: string; elapsed: () => number; overview: () => unknown}) {
   const wire = corpus[deployment], values = new Map<string, string>(), navigation: string[] = [];
+  const session = JSON.parse(wire.session);
+  const sessionBody = timing ? JSON.stringify({...session, context: {...session.context,
+    server_time: timing.serverTime, expires_at: timing.serverTime + 3_600_000}}) : wire.session;
+  const household = timing ? JSON.stringify({...JSON.parse(wire.household), time_zone: timing.timeZone}) : wire.household;
   const root = document.createElement('div'); root.id = 'domus-entry'; document.body.append(root); nodes.push(root);
   const data = document.createElement('script'); data.id = 'domus-bootstrap'; data.type = 'application/json';
   data.textContent = JSON.stringify({version: 1, deployment, application_base: wire.endpoint.applicationBase, style_nonce: 'a'.repeat(32)});
   document.head.append(data); nodes.push(data);
   let phase = 'unconfigured', postRequests = 0, putRequests = 0;
+  let taskOverviewDenied = false;
   const originalAccess=JSON.parse(wire.active);
   let preferenceReceipt:Record<string,unknown>|null=null;
   let memberId:string=originalAccess.member.member_id, preferenceLocale:'en'|'es'|null=null, preferenceRevision=1, preferencesReadable=true;
@@ -35,8 +41,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let weekStart='monday', weekRevision=1, weekOriginal:object|null=null;
   const fetch = vi.fn(async (path: string, init: RequestInit) => {
     const route = path.slice(wire.endpoint.applicationBase.length + 'api/v1/'.length);
-    let raw: string;
-    if (route === 'session') raw = phase === 'eligible' || phase === 'pending' ? wire.participantSession : wire.session;
+    let raw: string, status = 200;
+    if (route === 'session') raw = phase === 'eligible' || phase === 'pending' ? wire.participantSession : sessionBody;
     else if (route === 'authorization') raw = phase === 'active' ? JSON.stringify({...originalAccess,member:{...originalAccess.member,member_id:memberId},
       permissions:originalAccess.permissions.filter((permission:string)=>preferencesReadable||permission!=='preferences.read')})
       : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
@@ -72,12 +78,22 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='administration/capabilities') raw=JSON.stringify({state:'available',contract_version:2,household_id:'home',exact_revisions:'json-integer-int64',
       actions:['household.update','member.update','policy.update','member.presentation.update','member.preferences.update'],
       journal:{namespace:'administration',version:1,maximum_records:8,maximum_bytes:65536,lifetime_ms:3600000}});
-    else if (route === 'tasks/overview') raw = JSON.stringify({
-      assigned: {total: 1, items: [{occurrence_id: 'work-1', title: 'Wipe table', state: 'assigned'}]},
-      unclaimed: {total: 0, items: []},
-      due_today: {total: 0, items: []},
-      overdue: {total: 0, items: []},
-    });
+    else if (route === 'tasks/overview') {
+      if (taskOverviewDenied) {
+        status = 403;
+        raw = JSON.stringify({state:'blocked',code:'permission_denied',message:'Denied.',
+          action_required:'Review your access.',correlation_id:'cor_test'});
+      } else raw = JSON.stringify({
+        assigned: {total: 1, items: [{occurrence_id: 'work-1', title: 'Wipe table', state: 'assigned'}]},
+        unclaimed: {total: 0, items: []},
+        due_today: {total: 0, items: []},
+        overdue: {total: 0, items: []},
+        upcoming_maintenance: {total: 0, items: []},
+      });
+    }
+    else if (route === 'inventory/stock-attention') raw = JSON.stringify({total:0,items:[]});
+    else if (route === 'family/overview') raw = JSON.stringify(timing ? timing.overview() : {
+      period:{start:'2026-05-25',end:'2026-06-01'}, earned_minor:125,completed_count:3});
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
       can_manage_points:canManagePoints,can_record_for_others:canManagePoints});
     else if (route === 'family/allocation' || route.startsWith('family/allocation?')) raw = JSON.stringify({household:null,override:null});
@@ -146,20 +162,21 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route==='administration/members/'+memberId+'/presentation') raw=JSON.stringify(presentation());
     else if (route==='policy') raw=JSON.stringify({household_id:'home',revision:1,mapping:{mode:'all_ha_administrators',target_ha_user_id:null},adjustments:[]});
     else if (init.method === 'POST') {postRequests++; phase = route === 'household' ? 'active' : 'pending'; raw = route === 'household' ? wire.setup : wire.enrollment;}
-    else raw = wire.household;
-    const response = new Response(raw, {headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
+    else raw = household;
+    const response = new Response(raw, {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
     Object.defineProperty(response, 'url', {value: wire.endpoint.origin + path}); return response;
   });
   const events = new EventTarget();
   const page: EntryPage = {document, location: {href: wire.endpoint.origin + wire.endpoint.applicationBase,
     assign: url => {navigation.push(String(url));}, reload: vi.fn()}, navigator: {language: locale},
-    crypto, performance, fetch, sessionStorage: {getItem: key => values.get(key) ?? null,
+    crypto, performance: timing ? {now: timing.elapsed} : performance, fetch, sessionStorage: {getItem: key => values.get(key) ?? null,
       setItem: (key, value) => {values.set(key, value);}, removeItem: key => {values.delete(key);}},
     addEventListener: events.addEventListener.bind(events), removeEventListener: events.removeEventListener.bind(events),
     dispatchEvent: events.dispatchEvent.bind(events), setTimeout: window.setTimeout.bind(window), clearTimeout: window.clearTimeout.bind(window)};
   const open = async () => {const mounted = mountEntry(page); dispose.push(mounted.dispose); await mounted.ready;
     const app = root.querySelector<DomusApp>('domus-app')!; await app?.updateComplete; return {mounted, app};};
   return {root, data, page, open, values, navigation, fetch, events, postRequests: () => postRequests,
+    denyTaskOverview: () => {taskOverviewDenied = true;},
     putRequests:()=>putRequests,preferences:(locale:'en'|'es'|null,revision=1)=>{preferenceLocale=locale;preferenceRevision=revision;},
     member:(value:string)=>{memberId=value;},preferencesReadable:(value:boolean)=>{preferencesReadable=value;},
     phase: (value: string) => {phase = value;}};
@@ -371,6 +388,7 @@ test('household-browser-C18: a signed-out language choice has no identity or mut
 
 test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
   {type: 'create', title: 'Task', description: '', priority: 'normal', householdId: 'forged'},
+  {type: 'create', title: 'Task', description: '', priority: 'normal', basePointsMinor: '225'},
   {type: 'create', title: 1, description: '', priority: 'normal'}, {type: 'create', title: 'Task', description: '', priority: 'future'},
   {type: 'complete', materialUsages: true}, {type: 'complete', materialUsages: [{line_id: 'line', quantity: '1.0'}]},
   {type: 'verify', decision: 'pending', reason: 'A'}, {type: 'reopen', reason: 1}, {type: 'select', occurrenceId: '../other'},
@@ -381,6 +399,7 @@ test('closed task events preserve semantic user inputs and exact material quanti
   const inputs = [{type:'createCategory', label:'Garden'}, {type:'renameCategory', categoryId:'garden', revision:'9007199254740993', label:'Garden'},
     {type:'archiveCategory', categoryId:'garden', revision:'9007199254740993'},
     {type:'create', title:'Clean', description:'', priority:'normal', categoryId:'garden'}, {type: 'refresh'}, {type: 'more'}, {type: 'claim'}, {type: 'select', occurrenceId: 'work-1'},
+    {type: 'create', title: 'Clean', description: '', priority: 'normal', basePointsMinor: 0},
     {type: 'create', title: '  Clean 🧹  ', description: '', priority: 'high'}, {type: 'complete', materialUsages: null},
     {type: 'complete', materialUsages: [{line_id: 'line-1', quantity: '3.333333'}]},
     {type: 'verify', decision: 'approved', reason: ''}, {type: 'verify', decision: 'rejected', reason: 'Not done'},
@@ -404,10 +423,12 @@ test('the mounted task surface routes only owned semantic intents to its applica
     send({type: 'create', title: 'Forged actor', description: '', priority: 'normal', actor: 'other'}); await Promise.resolve(); expect(spies.create).not.toHaveBeenCalled();
     const review = {occurrenceId:'work-1',revision:'1',performerIds:['identity-1','other'],fingerprint:'c'.repeat(64)};
     const cases: readonly [unknown, keyof typeof spies, readonly unknown[]][] = [
-      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined, undefined]],
+      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined, undefined, undefined]],
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high',
         schedule: {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}},
-      'create', ['Clean', 'Wipe', 'high', {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}, undefined]],
+      'create', ['Clean', 'Wipe', 'high', {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}, undefined, undefined]],
+      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high', basePointsMinor: 225},
+        'create', ['Clean', 'Wipe', 'high', undefined, undefined, 225]],
       [{type:'createCategory', label:'Garden'}, 'createCategory', ['Garden']],
       [{type:'renameCategory', categoryId:'garden', revision:'1', label:'Garden'}, 'renameCategory', ['garden', '1', 'Garden']],
       [{type:'archiveCategory', categoryId:'garden', revision:'1'}, 'archiveCategory', ['garden', '1']],
@@ -793,4 +814,81 @@ test('Household automation binds the verified member and retires requests outsid
   f.member('replacement');
   administrationIntent(app,{type:'refresh'});
   await vi.waitFor(() => expect(app.automationPreview).toMatchObject({title:'',result:null}));
+});
+
+test('Overview stock is independently available and retires with the verified household context', async () => {
+  const f = fixture(); f.phase('active'); f.denyTaskOverview();
+  const {app} = await f.open();
+  await vi.waitFor(() => expect(app.taskOverview?.state).toBe('denied'));
+  await vi.waitFor(() => expect(app.stockAttention).toEqual({state:'ready', data:{total:0,items:[]}}));
+  const summary = app.shadowRoot!.querySelector('domus-stock-attention')!;
+  await summary.updateComplete;
+  expect(summary.view).toBe(app.stockAttention);
+  const readCount = () => f.fetch.mock.calls.filter(([path]) => path.endsWith('/inventory/stock-attention')).length;
+  const before = readCount();
+  const retry = () => new Event('domus-stock-attention-retry', {bubbles:true, composed:true});
+  const unrelated = document.createElement('div');
+  app.append(unrelated); unrelated.dispatchEvent(retry());
+  expect(readCount()).toBe(before);
+  summary.dispatchEvent(retry());
+  await vi.waitFor(() => expect(app.stockAttention?.state).toBe('ready'));
+  expect(readCount()).toBe(before + 1);
+
+  f.member('replacement');
+  administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(() => expect(readCount()).toBeGreaterThan(before + 1));
+  f.page.location.href += '#inventory';
+  f.events.dispatchEvent(new Event('hashchange'));
+  expect(app.stockAttention).toBeNull();
+});
+
+test('the weekly Family summary retries its own read and retires on member and workspace changes', async () => {
+  const f = fixture(); f.phase('active');
+  const {app} = await f.open();
+  const expected = {state:'ready',data:{period:{start:'2026-05-25',end:'2026-06-01'},earned:125,completed:3}};
+  await vi.waitFor(() => expect(app.familyOverview).toEqual(expected));
+  const summary = app.shadowRoot!.querySelector('domus-family-overview')!;
+  await summary.updateComplete;
+  expect(summary.view).toBe(app.familyOverview);
+  const readCount = () => f.fetch.mock.calls.filter(([path]) => path.endsWith('/family/overview')).length;
+  const before = readCount();
+  const retry = () => new Event('domus-family-overview-retry',{bubbles:true,composed:true});
+  const unrelated = document.createElement('div'); app.append(unrelated); unrelated.dispatchEvent(retry());
+  expect(readCount()).toBe(before);
+  summary.dispatchEvent(retry());
+  await vi.waitFor(() => expect(app.familyOverview).toEqual(expected));
+  expect(readCount()).toBe(before+1);
+  f.member('replacement'); administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(() => expect(readCount()).toBeGreaterThan(before+1));
+  f.page.location.href += '#family'; f.events.dispatchEvent(new Event('hashchange'));
+  expect(app.familyOverview).toBeNull();
+});
+
+test('the weekly summary refreshes at household Monday while Overview stays open', async () => {
+  let elapsed = 0, tick!: () => void;
+  const f = fixture('standalone', 'en', false, false, {
+    serverTime: Date.parse('2026-05-31T21:59:59Z'), timeZone: 'Europe/Madrid', elapsed: () => elapsed,
+    overview: () => elapsed < 1000
+      ? {period:{start:'2026-05-25',end:'2026-06-01'}, earned_minor:125, completed_count:3}
+      : {period:{start:'2026-06-01',end:'2026-06-08'}, earned_minor:0, completed_count:0},
+  });
+  f.phase('active');
+  f.page.setTimeout = callback => {tick = callback; return 1;};
+  f.page.clearTimeout = () => {};
+  const {app} = await f.open();
+  const reads = (route: string) => f.fetch.mock.calls.filter(([path]) => path.endsWith(route)).length;
+  await vi.waitFor(() => expect(app.familyOverview).toMatchObject({state:'ready', data:{earned:125}}));
+  const sessions = reads('/session');
+  elapsed = 999; tick();
+  expect(reads('/family/overview')).toBe(1);
+  elapsed = 1000; tick();
+  await vi.waitFor(() => expect(app.familyOverview).toEqual({state:'ready', data:{
+    period:{start:'2026-06-01',end:'2026-06-08'}, earned:0, completed:0,
+  }}));
+  elapsed = 2000; tick();
+  expect(reads('/family/overview')).toBe(2);
+  expect(reads('/session')).toBe(sessions);
+  elapsed = Number.NaN;
+  f.events.dispatchEvent(new Event('hashchange'));
+  expect(app.familyOverview).toBeNull();
 });

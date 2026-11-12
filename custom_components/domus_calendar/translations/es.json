@@ -2,29 +2,33 @@
   "config": {
     "step": {
       "user": {
-        "title": "Conectar el calendario de Domus",
-        "description": "Usa el origen HTTPS de Domus o la dirección privada de su aplicación de Home Assistant. Introduce el token de calendario de esa instalación.",
-        "data": {"url": "Dirección de Domus", "token": "Token de calendario"}
+        "title": "Conectar Domus",
+        "description": "Elige qué compartir con Home Assistant. Introduce el origen HTTPS de Domus o la dirección privada de su aplicación de Home Assistant y usa el token de la proyección elegida.",
+        "data": {"projection": "Compartir con Home Assistant", "url": "Dirección de Domus", "token": "Token de instalación"}
       },
       "reconfigure": {
-        "title": "Volver a conectar el calendario de Domus",
+        "title": "Volver a conectar Domus",
         "description": "Introduce la dirección y el token de la misma instalación de Domus.",
-        "data": {"url": "Dirección de Domus", "token": "Token de calendario"}
+        "data": {"url": "Dirección de Domus", "token": "Token de instalación"}
       }
     },
     "error": {
-      "cannot_connect": "No se pudo conectar al calendario de Domus. Comprueba la dirección e inténtalo de nuevo.",
-      "invalid_auth": "Domus no ha aceptado este token de calendario.",
+      "cannot_connect": "Domus no devolvió esta proyección. Comprueba la dirección e inténtalo de nuevo.",
+      "invalid_auth": "Domus no ha aceptado este token. Comprueba que corresponda a la proyección y la instalación elegidas.",
       "invalid_endpoint": "Usa un origen HTTPS o la dirección privada de la aplicación de Home Assistant."
     },
     "abort": {
-      "already_configured": "Esta instalación de Domus ya está conectada.",
+      "already_configured": "Esta proyección ya está conectada para esta instalación de Domus.",
       "wrong_source": "Vuelve a conectar con la misma instalación y el mismo canal de Domus.",
-      "reconfigure_successful": "Se ha vuelto a conectar el calendario de Domus."
+      "reconfigure_successful": "Se ha vuelto a conectar Domus."
     }
   },
   "exceptions": {
-    "calendar_unavailable": {"message": "Domus no pudo devolver un calendario completo para este intervalo."}
+    "calendar_unavailable": {"message": "Domus no pudo devolver un calendario completo para este intervalo."},
+    "deadlines_unavailable": {"message": "Domus no pudo devolver los recuentos de vencimientos."}
+  },
+  "selector": {
+    "projection": {"options": {"calendar": "Calendario", "deadlines": "Recuentos de vencimientos"}}
   },
   "entity": {
     "calendar": {
@@ -32,6 +36,10 @@
         "name": "Agenda de Domus",
         "state_attributes": {"projection_pending": {"name": "Proyección pendiente"}}
       }
+    },
+    "sensor": {
+      "tasks_due_today": {"name": "Tareas de Domus que vencen hoy"},
+      "tasks_overdue": {"name": "Tareas atrasadas de Domus"}
     }
   }
 }

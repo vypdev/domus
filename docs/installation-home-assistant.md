@@ -1,29 +1,37 @@
 # Home Assistant app installation
 
-Current development state (2026-11-04): Edge `0.0.0-edge.9` is installed and running on the
-owner's `aarch64` Home Assistant. Through its existing HA session and Ingress, the agent created,
-claimed, completed and reopened a development task, completed a second cycle, and verified the task
-and saved Spanish preference after reloading. This is agent-operated acceptance on actual hardware;
-human usability review and complete first-release acceptance remain separate. Stable is not yet
-published. Source, package and adoption evidence are recorded in
-[task workspace evidence](evidence/task-workspace.json). Historical receipts below retain their
-original Edge.1–3 observations and do not describe the current installation.
+## Verified Edge preview
 
-## Edge.18 candidate
+Install Domus Edge through the durable Supervisor repository source
+`https://github.com/vypdev/domus#develop`. Before installing, match the version
+offered by Supervisor to the artifact declaration. It records the preview version,
+source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
-The manual automation preview uses the Supervisor repository flow with
-the [managed issue branch](https://github.com/vypdev/domus/issues/98).
-The [artifact declaration](../addon-edge/artifact.json) pins the source
-commit, archive and installed files. Check that Supervisor reports
-`0.0.0-edge.18` before testing. The candidate uses SQLite schema 31,
-introduced by Edge.13. Keep a compatible image and cold data backup before
-updating from an earlier schema. When using a separate repository source,
-keep existing preview data in its original app and use a disposable household
-in the candidate.
+Edge.23 was installed in a disposable `aarch64` Supervisor app on 2026-11-11.
+Ingress accepted the optional deadline setting and showed the two Overview
+counts in English and Spanish. The [qualification record](evidence/ha-deadline-sensors-qualification.md#installed-edge23)
+records the exact runtime, browser journeys and scoped cleanup.
+
+Edge.21 was installed in a disposable `aarch64` Supervisor app on 2026-11-11.
+The Ingress walkthrough verified the Overview stock summary and replenishment in
+English and Spanish. The test app, its data and its temporary repository source were
+removed after verification. [Installed acceptance](https://github.com/vypdev/domus/pull/103#issuecomment-6797153928)
+
+The preview uses SQLite schema 31, introduced by Edge.13. Keep a compatible image and
+cold data backup before updating from an earlier schema. An additional Supervisor source
+creates an independent app and data directory. Use the [installation steps](#installation-journey)
+for the selected source and check the installed version before opening it.
+
+The manual task proposal preview was introduced for [issue #98](https://github.com/vypdev/domus/issues/98) and remains in the merged source. The earlier Edge.18 pin is historical; the current artifact still pins immutable Edge.28 bytes and does not claim a rebuilt merged-source package.
 
 ## Edge.9 installation and update history
 
-The current Edge.9 repository source, verified in Supervisor and tracked in PR #29, is:
+On 2026-11-04, Edge `0.0.0-edge.9` ran on the owner's `aarch64` Home Assistant.
+The Ingress walkthrough created, claimed, completed and reopened a development task,
+completed a second cycle, and verified the task and saved Spanish preference after
+reloading. [Task workspace evidence](evidence/task-workspace.json)
+
+The Edge.9 repository source verified in Supervisor and tracked in PR #29 was
 
 ```text
 https://github.com/vypdev/domus#feature/23-complete-relative-recurrence-lifecycle-and-protected-calendar-after-the-execution-checkpoint
@@ -40,19 +48,18 @@ to redirect an old repository.
 
 Edge.9 pins published runtime `93d7d77b98a196640bf0049bca36a3d90b7a5857` and archive SHA-256
 `97dc46699ad7eab54c487386ffaffc28624e8e50f9d3a2f1ffc6b525fb7b8f0e`.
-The [artifact declaration](../addon-edge/artifact.json) fixes all Python and compiled UI bytes.
-It retains schema 9, cold backups, Ingress and the same Core API scope; no Supervisor management
-API, host mount or public port is requested. Read the
-[configuration, permissions and schema-9 rollback limits](../addon-edge/DOCS.md) before adoption.
+The artifact declaration fixes all Python and compiled UI bytes. [Edge.9 artifact](https://github.com/vypdev/domus/blob/baf2515c0c7ac5c73bfc873dd244b95a24da8b42/addon-edge/artifact.json)
+
+Edge.9 retains schema 9, cold backups, Ingress and its existing Core API scope.
+[Edge.9 configuration, permissions and rollback limits](https://github.com/vypdev/domus/blob/baf2515c0c7ac5c73bfc873dd244b95a24da8b42/addon-edge/DOCS.md)
 The branch repository created a separate app with separate private data. A new development
 household was created explicitly; the earlier Edge.7 household/preferences were not migrated into
-it. Edge.7 and its selected local app backup remain the prior rollback while the next corrected
-preview is prepared. No actual backup restoration is claimed. The older Edge.3 and Edge.5 apps
+it. Edge.7 and its selected local app backup were retained for rollback during that preview.
+No actual backup restoration is claimed. The older Edge.3 and Edge.5 apps
 were uninstalled.
 
-The later required-reason button correction is verified in current source and will ship in the
-next preview. The installed Edge.9 remains fixed to the runtime above; a newer PR commit does not
-silently replace its immutable application bytes.
+The required-reason button correction was verified after that installation. Each Edge.9
+installation retains the runtime pinned above until Supervisor installs a different version.
 
 ## A local pre-update app backup
 

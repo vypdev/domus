@@ -20,6 +20,7 @@ export class DomusTaskOverview extends LitElement {
       --vyp-ha-focus-ring:3px solid var(--accent)}
     section {margin-block-start:20px} h2 {margin-block:0 12px}
     .groups {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr));gap:12px}
+    vyp-ha-card::part(heading) {text-wrap:balance}
     ul {list-style:none;margin:0;padding:0} li+li {border-block-start:1px solid var(--line)}
     vyp-ha-button {--vyp-ha-button-padding:8px}
     vyp-ha-feedback + vyp-ha-button {margin-block-start:8px}
@@ -45,7 +46,7 @@ export class DomusTaskOverview extends LitElement {
       : taskDay(deadline.day, this.language);
   }
 
-  private group(key: 'overviewAssigned' | 'overviewUnclaimed' | 'overviewDueToday' | 'overviewOverdue',
+  private group(key: 'overviewAssigned' | 'overviewUnclaimed' | 'overviewDueToday' | 'overviewOverdue' | 'overviewMaintenance',
     group: TaskOverviewGroup) {
     const total = new Intl.NumberFormat(this.language).format(group.total);
     return html`<vyp-ha-card .state=${cardState({title: this.text(key) + ' · ' + total, headingLevel: 3})}>
@@ -67,10 +68,11 @@ export class DomusTaskOverview extends LitElement {
     return html`<section aria-labelledby="overview-task-title">
       <h2 id="overview-task-title">${this.text('overviewHeading')}</h2>
       ${view.state === 'ready' ? html`<div class="groups">
-        ${this.group('overviewOverdue', view.overview.overdue)}
-        ${this.group('overviewDueToday', view.overview.dueToday)}
-        ${this.group('overviewAssigned', view.overview.assigned)}
-        ${this.group('overviewUnclaimed', view.overview.unclaimed)}
+        ${this.group('overviewOverdue', view.data.overdue)}
+        ${this.group('overviewDueToday', view.data.dueToday)}
+        ${this.group('overviewMaintenance', view.data.upcomingMaintenance)}
+        ${this.group('overviewAssigned', view.data.assigned)}
+        ${this.group('overviewUnclaimed', view.data.unclaimed)}
       </div>` : html`<vyp-ha-feedback .state=${view.state === 'loading'
         ? feedbackState({kind: 'loading', message: this.text('overviewLoading')})
         : feedbackState({kind: 'notice', tone: 'warning',

@@ -10,7 +10,7 @@ from fastapi.params import Depends
 from domus.application.automation_preview import AutomationPreview
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
-from domus.application.family_queries import FamilyQueries
+from domus.application.family_queries import FamilyQueries, FamilyWeek
 from domus.application.inventory import CatalogAction, InventoryCommands
 from domus.application.inventory_queries import InventoryQueries
 from domus.application.point_allocations import AllocationCommands, AllocationQueries
@@ -114,6 +114,7 @@ class TaskHTTPContext:
     relative_creation: RelativeRecurrenceCommands
     category_commands: TaskCategoryCommands
     family: Callable[[], FamilyQueries]
+    family_overview: Callable[[], FamilyWeek]
     allocation: Callable[[], AllocationQueries]
     allocation_commands: AllocationCommands
     rewards: Callable[[], RewardQueries]

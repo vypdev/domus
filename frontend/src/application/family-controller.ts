@@ -3,10 +3,17 @@ import {calendarPeriod} from '../domain/calendar';
 import type {CalendarPeriod} from '../domain/calendar';
 import type {AllocationEvidence} from '../domain/point-allocation';
 import type {JournalContext} from '../domain/journal';
+import type {OverviewView} from './overview-read';
 import {EntryReadError} from './ports';
 import type {EntryRead} from './ports';
 
 export type FamilyPeriod = 'week' | 'month';
+export interface FamilyWeek {
+  readonly period: CalendarPeriod;
+  readonly earned: number;
+  readonly completed: number;
+}
+export type FamilyOverviewView = OverviewView<FamilyWeek>;
 export interface FamilyEntry {
   readonly id: string;
   readonly title: string;

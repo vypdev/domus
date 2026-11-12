@@ -4,7 +4,8 @@ import type {CommandResult, EntryRead} from './ports';
 
 export interface TaskRequest {readonly key: string; readonly command: TaskCommand;}
 export interface TaskOriginal extends TaskRequest {readonly operationId: string | null;}
-export type TaskCommandResult = TaskReceipt | Exclude<CommandResult, {kind: 'receipt'}>;
+export type TaskCommandResult = TaskReceipt | Exclude<CommandResult, {kind: 'receipt'}>
+  | Readonly<{kind: 'rejected'; reason: 'points_precision_two_required'; correlationId: string}>;
 export interface TaskServer {
   access(expected: JournalContext): EntryRead<TaskAccess>;
   list(expected: JournalContext, cursor: string | null): EntryRead<TaskPage>;

@@ -36,7 +36,7 @@ def test_atomic_scheduled_creation_and_original_recovery(api, kind):
     assert workspace.status_code == 200, workspace.text
     policy = workspace.json()["schedule_policy"]
     payload = {
-        "task": {"title": "Recurring inspection"},
+        "task": {"title": "Recurring inspection", "overrides": {"point_value_minor": 225}},
         "start": {"kind": "date", "local": "2027-01-02"},
         "policy": policy,
     } | (
@@ -54,6 +54,22 @@ def test_atomic_scheduled_creation_and_original_recovery(api, kind):
     assert api.client.post(path, json=payload | invalid, headers=headers).status_code == 422
     forged = payload | {"policy": policy | {"revision": policy["revision"] + 1}}
     assert api.client.post(path, json=forged, headers=headers).status_code == 409
+    allocation = "/api/v1/family/allocation"
+    for revision, precision in ((0, 0), (1, 2)):
+        configured = api.client.put(
+            allocation,
+            json={
+                "expected_revision": revision,
+                "policy": {"mode": "conserve_total", "precision": precision},
+            },
+            headers=api.headers(f"policy-{precision}") | CONTEXT,
+        )
+        assert configured.status_code == 200, configured.text
+        if precision == 0:
+            rejected = api.client.post(path, json=payload, headers=headers)
+            assert rejected.status_code == 422
+            assert rejected.json()["code"] == "points_precision_two_required"
+            assert api.client.get(original, headers=CONTEXT).status_code == 404
     assert api.client.get(TASKS + "/definitions").json()["items"] == []
 
     committed = api.client.post(path, json=payload, headers=headers)
@@ -61,6 +77,7 @@ def test_atomic_scheduled_creation_and_original_recovery(api, kind):
     receipt = committed.json()
     assert receipt["result"]["processing"] == "pending"
     assert receipt["result"]["first_occurrence_id"] is None
+    assert receipt["result"]["point_value_minor"] == 225
     assert api.client.get(TASKS + "/occurrences").json()["items"] == []
     with api.store.write() as unit:
         home = unit.households.get("home")

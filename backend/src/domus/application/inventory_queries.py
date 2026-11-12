@@ -28,6 +28,8 @@ from domus.domain.inventory import (
 from domus.domain.shopping import Purchase, PurchaseReceipt, PurchaseSession
 from domus.domain.storage import JsonDocument
 
+STOCK_ATTENTION_LIMIT = 25
+
 
 @dataclass(frozen=True, slots=True)
 class ReplenishmentView:
@@ -61,6 +63,21 @@ class InventoryView:
     products: tuple[CatalogStock, ...]
     next_cursor: str | None
     locations: tuple[StorageLocation, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class StockAttentionItem:
+    product_id: str
+    name: str
+    base_unit: BaseUnit
+    available: str
+    minimum: str
+
+
+@dataclass(frozen=True, slots=True)
+class StockAttention:
+    total: int
+    items: tuple[StockAttentionItem, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -395,6 +412,39 @@ class InventoryQueries:
                 next_cursor,
                 stock.locations(home),
             )
+
+    def stock_attention(self) -> StockAttention:
+        with self.store.read() as unit:
+            home, _, _ = self._access(
+                unit, "inventory-stock-attention-v1", STOCK_ATTENTION_LIMIT, None
+            )
+            stock = unit.inventory
+            total = 0
+            items: list[StockAttentionItem] = []
+            after = ""
+            while products := stock.products(home, after, STOCK_ATTENTION_LIMIT):
+                for product in products:
+                    available = stock.balance(home, product.reference_id) - stock.reserved(
+                        home, product.reference_id
+                    )
+                    policy = stock.replenishment(home, product.product_id)
+                    if policy.needed(available) <= 0:
+                        continue
+                    total += 1
+                    if len(items) < STOCK_ATTENTION_LIMIT:
+                        items.append(
+                            StockAttentionItem(
+                                product.product_id,
+                                product.name,
+                                product.base_unit,
+                                stock_quantity(available),
+                                stock_quantity(policy.minimum),
+                            )
+                        )
+                if len(products) < STOCK_ATTENTION_LIMIT:
+                    break
+                after = products[-1].product_id
+            return StockAttention(total, tuple(items))
 
     def history(self, product_id: str, *, limit: int, cursor: str | None) -> MovementHistory:
         with self.store.read() as unit:

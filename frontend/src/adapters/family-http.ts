@@ -1,5 +1,6 @@
 /** Family reports use the same context assertion and bounded JSON decoder as other private reads. */
-import type {FamilyEntry, FamilyPendingEntry, FamilyReport, FamilyServer, FamilySpending} from '../application/family-controller';
+import type {FamilyEntry, FamilyPendingEntry, FamilyReport, FamilyServer, FamilySpending, FamilyWeek} from '../application/family-controller';
+import {calendarPeriod, civilDate} from '../domain/calendar';
 import type {CalendarPeriod} from '../domain/calendar';
 import {rewardCost} from '../domain/rewards';
 import type {JournalContext} from '../domain/journal';
@@ -44,6 +45,16 @@ function spendingEntry(value: unknown): FamilySpending {
     cost: rewardCost(integer(row.cost_minor, 1)), postedAt: timestamp(row.posted_at)};
 }
 
+function week(value: unknown): FamilyWeek {
+  const row = fields(value, ['period','earned_minor','completed_count'], []);
+  const range = fields(row.period, ['start','end'], []);
+  check(civilDate(range.start));
+  const period = calendarPeriod('week', range.start);
+  check(range.start === period.start && range.end === period.end);
+  return {period, earned:integer(row.earned_minor, -Number.MAX_SAFE_INTEGER),
+    completed:integer(row.completed_count, 0)};
+}
+
 function report(value: unknown, expected: CalendarPeriod): FamilyReport {
   const row = fields(value, ['period','time_zone','posted_minor','available_minor','reserved_minor',
     'spent_in_period_minor','spending_count','spending','earned_minor',
@@ -80,6 +91,9 @@ function report(value: unknown, expected: CalendarPeriod): FamilyReport {
 export class HttpFamilyServer implements FamilyServer {
   private readonly network: BoundedHTTP;
   constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
+  overview(context: JournalContext) {
+    return this.network.owned(async signal => week(await this.network.get('family/overview', context, signal)));
+  }
   read(context: JournalContext, period: CalendarPeriod, cursor: string | null) {
     return this.network.owned(async signal => {
       const query = new URLSearchParams({start: period.start, end: period.end, limit: '8'});

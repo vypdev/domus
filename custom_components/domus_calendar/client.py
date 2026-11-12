@@ -7,11 +7,13 @@ import json
 import re
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta, tzinfo
-from uuid import UUID
 
 from aiohttp import ClientError, ClientSession, ClientTimeout
 from homeassistant.components.calendar import CalendarEvent
-from yarl import URL
+
+from .connection import InvalidCredential, bearer_source, connection_origin
+from .connection import InvalidEndpoint as InvalidEndpoint
+from .connection import ProjectionUnavailable as CalendarUnavailable
 
 PATH = "/api/v1/ha/calendar"
 PAGE_SIZE = 100
@@ -23,20 +25,7 @@ _READ_TIMEOUT = 15
 _MIN_DATE = date(1970, 1, 1)
 _KINDS = ("planned", "due")
 _TOKEN = re.compile(r"([0-9a-f-]{36})\.(stable|edge)\.[0-9a-f]{64}")
-_PRIVATE_HOST = re.compile(r"(?:local|[0-9a-f]{8})-domus(?:-edge)?")
 _DAY = timedelta(days=1)
-
-
-class CalendarUnavailable(Exception):
-    """No complete, trustworthy calendar read is available."""
-
-
-class InvalidCredential(CalendarUnavailable):
-    """The installation rejected its calendar bearer."""
-
-
-class InvalidEndpoint(CalendarUnavailable):
-    """The endpoint is outside the permitted transport boundary."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,53 +89,13 @@ def _event(raw: object, kind: str) -> CalendarEvent:
         raise CalendarUnavailable from None
 
 
-def _origin(value: str, channel: str) -> URL:
-    if (
-        not value
-        or len(value) > 2048
-        or any(char.isspace() or ord(char) < 32 or char in "?#\\%" for char in value)
-    ):
-        raise InvalidEndpoint
-    try:
-        url = URL(value)
-        host = url.raw_host
-        if (
-            not host
-            or url.user is not None
-            or url.password is not None
-            or url.path != "/"
-            or url.port is None
-            or not 1 <= url.port <= 65535
-        ):
-            raise InvalidEndpoint
-        if url.scheme != "https" and (
-            url.scheme != "http"
-            or url.port != 8100
-            or _PRIVATE_HOST.fullmatch(host) is None
-            or host.endswith("-edge") != (channel == "edge")
-        ):
-            raise InvalidEndpoint
-        return url.origin()
-    except ValueError, UnicodeError:
-        raise InvalidEndpoint from None
-
-
 class CalendarClient:
     """Keep the bearer private and publish a result only after all pages succeed."""
 
     def __init__(self, session: ClientSession, url: str, token: str) -> None:
-        match = _TOKEN.fullmatch(token)
-        if match is None:
-            raise InvalidCredential
-        self.instance_id, self.channel = match.groups()
-        try:
-            instance = UUID(self.instance_id)
-            if str(instance) != self.instance_id or not instance.int:
-                raise ValueError
-        except ValueError:
-            raise InvalidCredential from None
+        self.instance_id, self.channel = bearer_source(token, _TOKEN)
         self.identity = f"{self.instance_id}.{self.channel}"
-        self.url = _origin(url, self.channel)
+        self.url = connection_origin(url, self.channel)
         self._endpoint = self.url.with_path(PATH)
         self._authorization = f"Bearer {token}"
         self._session = session

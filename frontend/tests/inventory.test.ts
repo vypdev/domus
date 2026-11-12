@@ -678,8 +678,8 @@ test('inventory exposes scoped empty, read-only and failure states with accessib
   expect(entry.querySelector('[role=alert]')).toBeNull();
 });
 
-test('receipt details preserve exact quantities, product focus, and historical outcomes in both locales', async () => {
-  const {node,root,press} = component();
+test('intake review and receipt details preserve quantities, focus, and outcomes in both locales', async () => {
+  const {node,root,press,input,submit} = component();
   node.view = {...initial,report:{...report,products:[{...report.products[0],unit:'piece',recorded:'2',reserved:'1',available:'1'}]},
     result:{kind:'committed',operationId:'new-op',productId:'product',movement:null}};
   await node.updateComplete;
@@ -689,7 +689,12 @@ test('receipt details preserve exact quantities, product focus, and historical o
   await node.updateComplete;
   expect(root.querySelector('article input')?.getAttribute('inputmode')).toBe('numeric');
   expect(root.textContent).toContain('positive whole number');
-  node.language='es'; node.view={...initial,report,result:committed};
+  const entry = root.querySelector<HTMLFormElement>('article form')!;
+  input(entry,'1'); submit(entry); await node.updateComplete;
+  expect(entry.querySelector('[role=status]')?.textContent).toContain('1 piece.');
+  node.language='es'; await node.updateComplete;
+  expect(entry.querySelector('[role=status]')?.textContent).toContain('1 unidad.');
+  node.view={...initial,report,result:committed};
   await node.updateComplete;
   expect(root.textContent).toContain('1,250001 mililitros');
   expect(root.textContent).toContain('Movimiento de stock');

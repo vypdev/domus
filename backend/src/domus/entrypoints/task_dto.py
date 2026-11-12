@@ -30,6 +30,7 @@ from domus.entrypoints.http_contract import NonnegativeRevision, PositiveRevisio
 Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")]
 Revision = PositiveRevision
 TaskTime = NonnegativeRevision
+PointValueMinor = Annotated[int, Field(ge=0, le=1_000_000)]
 WireRole = Annotated[Role, Field(strict=False)]
 Quantity = Annotated[
     str,
@@ -119,7 +120,7 @@ class OverridesBody(StrictModel):
     adult_performer_may_approve: bool | None = None
     task_scoped_material_consumption: bool | None = None
     material_recording: MaterialRecording | None = Field(default=None, strict=False)
-    point_value_minor: int | None = Field(default=None, ge=0, le=1_000_000)
+    point_value_minor: PointValueMinor | None = None
     dependency_gate: DependencyGate | None = Field(default=None, strict=False)
 
     def domain(self) -> TaskOverrides:
@@ -146,7 +147,7 @@ class RulesBody(StrictModel):
     material_recording: MaterialRecording = Field(
         default=MaterialRecording.REVIEW_ON_COMPLETION, strict=False
     )
-    point_value_minor: int = Field(default=0, ge=0, le=1_000_000)
+    point_value_minor: PointValueMinor = 0
     dependency_gate: DependencyGate = Field(default=DependencyGate.PERFORMED, strict=False)
 
     def domain(self) -> TaskRules:

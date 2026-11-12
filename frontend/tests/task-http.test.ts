@@ -40,7 +40,7 @@ function receipt(index: number, lookup = false) {
 }
 function encode(value: unknown) {return JSON.stringify(value).replaceAll('"$revision"', REV).replaceAll('"$next"', NEXT);}
 function reply(value: unknown, status = 200) {return new Response(encode(value), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});}
-const failure = (status: number) => reply({state: 'blocked', code: 'request_forbidden', message: 'Private server detail.', action_required: 'Review.', correlation_id: 'cor_safe'}, status);
+const failure = (status: number, code = 'request_forbidden') => reply({state: 'blocked', code, message: 'Private server detail.', action_required: 'Review.', correlation_id: 'cor_safe'}, status);
 function fixture(mode: 'native' | 'standalone' = 'standalone') {
   const target = {deployment: mode, applicationBase: mode === 'native' ? '/api/hassio_ingress/' + 'b'.repeat(43) + '/' : '/', origin: 'https://domus.example'};
   const transport = vi.fn(async (_path: string, _init: RequestInit): Promise<Response> => reply({}));
@@ -60,16 +60,17 @@ test.each(['fixed', 'relative'] as const)('scheduled %s task uses exact policy a
   const start = kind === 'fixed' ? {kind: 'time', local: '2027-01-02T09:30'} : {kind: 'date', local: '2027-01-02'};
   const rule = kind === 'fixed' ? {rrule: 'FREQ=WEEKLY;BYDAY=SA'} : {interval_days: 17, visibility: 'at_verification'};
   const command = taskCommand({action: 'task.create', payload: {expected_revision: 0, title: 'Inspect filter', description: '', priority: 'normal',
-    schedule: {draft: {kind, start, ...rule}, policy: access.schedulePolicy}}})!;
+    overrides: {point_value_minor: 225}, schedule: {draft: {kind, start, ...rule}, policy: access.schedulePolicy}}})!;
   const request = {key: 'scheduled-request', command};
   const raw = {state: 'committed', archived_by: null, operation_id: 'scheduled-op', created_at: 100,
     message: 'Saved.', action_required: 'Review.', result: {definition_id: 'definition-1', schedule_id: 'rule-1',
-      revision: 1, pattern_revision: 1, processing: 'pending', state: 'active', first_occurrence_id: null}};
+      revision: 1, pattern_revision: 1, processing: 'pending', state: 'active', first_occurrence_id: null, point_value_minor: 225}};
   f.transport.mockResolvedValueOnce(reply({csrf_token: 'a'.repeat(64)})).mockResolvedValueOnce(reply(raw));
-  expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', occurrenceId: null, state: 'active'});
+  expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', occurrenceId: null, state: 'active', basePointsMinor: 225});
   const [path, init] = f.transport.mock.calls[2];
   expect(path).toBe('/api/v1/tasks/recurrence/creation/' + kind);
-  expect(init.body).toBe(encode({task: {title: 'Inspect filter', description: '', priority: 'normal'}, start, ...rule, policy: rawPolicy}));
+  expect(init.body).toBe(encode({task: {title: 'Inspect filter', description: '', priority: 'normal', overrides: {point_value_minor: 225}},
+    start, ...rule, policy: rawPolicy}));
   f.transport.mockResolvedValueOnce(reply({...raw, action: 'recurrence.' + kind + '.create', command_key: request.key, delivery: 'pending'}));
   expect(await f.server.original({...request, operationId: null}, context).result).toMatchObject({operationId: 'scheduled-op'});
   expect(f.transport.mock.calls.at(-1)?.[0]).toBe('/api/v1/tasks/recurrence/creation/requests/recurrence.' + kind + '.create/' + request.key);
@@ -77,6 +78,25 @@ test.each(['fixed', 'relative'] as const)('scheduled %s task uses exact policy a
     f.transport.mockResolvedValueOnce(reply({...raw, result: {...raw.result, ...change},
       action: 'recurrence.' + kind + '.create', command_key: request.key, delivery: 'pending'}));
     await expect(f.server.original({...request, operationId: null}, context).result).rejects.toThrow();
+  }
+});
+
+test.each([0, 225])('creation and original recovery bind the exact configured amount %s', async amount => {
+  const f = fixture();
+  const overrides = {point_value_minor: amount};
+  const command = taskCommand({...rawCommands[0], payload: {...rawCommands[0].payload, overrides}})!;
+  const request = {key: 'original-key', command};
+  const raw = receipt(0);
+  f.transport.mockResolvedValueOnce(reply({csrf_token: 'a'.repeat(64)}))
+    .mockResolvedValueOnce(reply({...raw, result: {...raw.result, ...overrides}}));
+  expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', basePointsMinor: amount});
+  expect(JSON.parse(String(f.transport.mock.calls[1][1].body))).toMatchObject({overrides});
+  const original = receipt(0, true);
+  f.transport.mockResolvedValueOnce(reply({...original, result: {...original.result, ...overrides}}));
+  expect(await f.server.original({...request, operationId: 'op-1'}, context).result).toMatchObject({basePointsMinor: amount});
+  for (const result of [original.result, {...original.result, point_value_minor: amount + 1}]) {
+    f.transport.mockResolvedValueOnce(reply({...original, result}));
+    await expect(f.server.original({...request, operationId: 'op-1'}, context).result).rejects.toThrow('invalid_response');
   }
 });
 
@@ -111,6 +131,15 @@ test.each([401,403,409,422,503])('known task mutation rejection %s preserves onl
   expect(await f.server.send({key: 'key', command: commands[0]}, context)).toMatchObject({kind: 'rejected', correlationId: 'cor_safe'});
   expect(f.transport).toHaveBeenCalledTimes(2);
 });
+
+test.each([[0, 'points_precision_two_required'], [2, 'invalid_input']] as const)(
+  'the precision rejection requests a base correction only for creation command %s', async (index, reason) => {
+    const f = fixture();
+    f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)}))
+      .mockResolvedValueOnce(failure(422, 'points_precision_two_required'));
+    expect(await f.server.send({key: 'key', command: commands[index]}, context))
+      .toEqual({kind: 'rejected', reason, correlationId: 'cor_safe'});
+  });
 
 test('the task list and detail retain a date-only deadline without inventing a time', async () => {
   const f = fixture();
@@ -159,8 +188,8 @@ test('detail rejects another household or task before publishing its content', a
 for (const mode of ['native', 'standalone'] as const) test(`${mode}: task-specific access uses its own protected contract`, async () => {
   const f = fixture(mode); f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: false}));
   expect(await f.server.access(context).result).toEqual({householdId: 'home', memberId: 'member-1', canCreate: false, canReviewSchedule: false});
-  f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: true, can_review_schedule: true}));
-  expect(await f.server.access(context).result).toMatchObject({canReviewSchedule: true});
+  f.transport.mockResolvedValueOnce(reply({household_id: 'home', member_id: 'member-1', can_create: true, can_review_schedule: true, can_configure: true}));
+  expect(await f.server.access(context).result).toMatchObject({canReviewSchedule: true, canConfigure: true});
   expect(f.transport.mock.calls[0][0]).toBe(f.target.applicationBase + 'api/v1/tasks/access');
 });
 
@@ -313,24 +342,28 @@ test('task detail decodes the current completion allocation affordance before se
 
 const emptyOverviewGroup = {total: 0, items: []};
 const emptyOverview = {assigned: emptyOverviewGroup, unclaimed: emptyOverviewGroup,
-  due_today: emptyOverviewGroup, overdue: emptyOverviewGroup};
+  due_today: emptyOverviewGroup, overdue: emptyOverviewGroup, upcoming_maintenance: emptyOverviewGroup};
 const dueWireItem = {occurrence_id: 'due', title: 'Check meter', state: 'available',
   deadline: {local_date: null, instant_ms: '1775113200000', time_zone: 'Europe/Madrid'}};
 const overdueWireItem = {occurrence_id: 'late', title: 'Change filter', state: 'blocked',
   deadline: {local_date: '2026-04-01', instant_ms: null, time_zone: 'Europe/Madrid'}};
+const maintenanceWireItem = {occurrence_id: 'maintenance', title: 'Drain the tank', state: 'assigned',
+  deadline: {local_date: '2026-04-05', instant_ms: null, time_zone: 'Europe/Madrid'}};
 
 test('Overview reads exact counts, bounded task rows and both effective deadline precisions', async () => {
   const f = fixture('native');
   const items = Array.from({length: 25}, (_, index) => ({occurrence_id: 'work-' + index,
     title: 'Clean <b>table</b>', state: 'assigned'}));
   f.transport.mockResolvedValueOnce(reply({...emptyOverview, assigned: {total: 37, items},
-    due_today: {total: 1, items: [dueWireItem]}, overdue: {total: 1, items: [overdueWireItem]}}));
+    due_today: {total: 1, items: [dueWireItem]}, overdue: {total: 1, items: [overdueWireItem]},
+    upcoming_maintenance: {total: 1, items: [maintenanceWireItem]}}));
   const result = await f.server.overview(context).result;
   expect(result.assigned.total).toBe(37);
   expect(result.assigned.items).toHaveLength(25);
   expect(result.assigned.items[0]).toEqual({id: 'work-0', title: 'Clean <b>table</b>', state: 'assigned'});
   expect(result.dueToday.items[0].deadline).toEqual({day: null, instant: 1775113200000, zone: 'Europe/Madrid'});
   expect(result.overdue.items[0].deadline).toEqual({day: '2026-04-01', instant: null, zone: 'Europe/Madrid'});
+  expect(result.upcomingMaintenance.items[0].deadline).toEqual({day: '2026-04-05', instant: null, zone: 'Europe/Madrid'});
   const [path, init] = f.transport.mock.calls[0];
   expect(path).toBe(f.target.applicationBase + 'api/v1/tasks/overview');
   expect(init.method).toBe('GET');
@@ -362,5 +395,10 @@ test('Overview rejects malformed, ambiguous and duplicate deadline rows', async 
     await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
   }
   f.transport.mockResolvedValueOnce(reply({...emptyOverview, due_today: group(dueWireItem), overdue: group(dueWireItem)}));
+  await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
+  f.transport.mockResolvedValueOnce(reply({...emptyOverview, overdue: group(overdueWireItem),
+    upcoming_maintenance: group(overdueWireItem)}));
+  await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
+  f.transport.mockResolvedValueOnce(reply({...emptyOverview, upcoming_maintenance: {total: 1, items: []}}));
   await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
 });

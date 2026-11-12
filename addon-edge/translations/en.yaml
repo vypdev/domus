@@ -5,3 +5,13 @@ configuration:
       The URLs used to open Home Assistant, including scheme and port when present,
       for example http://homeassistant.local:8123. Enter one to four distinct origins
       without paths. Restart Domus after changing them. Your existing HA sign-in is used.
+  ha_calendar_digest:
+    name: Calendar grant digest
+    description: >-
+      Optional SHA-256 digest for the native read-only calendar. Remove this
+      value to disable calendar access. Restart Domus after changing it.
+  ha_deadline_digest:
+    name: Task deadline grant digest
+    description: >-
+      Optional SHA-256 digest for the read-only task deadline counts. Remove
+      this value to disable sensor access. Restart Domus after changing it.

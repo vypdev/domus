@@ -43,6 +43,24 @@ test('lost task replies block a second new key and recover by read without resen
   await f.controller.recover('key-1'); expect(f.server.original).toHaveBeenCalledTimes(1);
   expect(f.server.send).toHaveBeenCalledTimes(1); expect(f.controller.view.outcome).toEqual(saved);
 });
+test('base points require current configuration authority and survive lost-reply recovery', async () => {
+  const f = fixture();
+  await f.controller.refresh();
+  await f.controller.create('Check filter', '', 'normal', undefined, undefined, 225);
+  expect(f.controller.view.notice).toBe('action_not_allowed');
+  expect(f.server.send).not.toHaveBeenCalled();
+  f.server.access.mockReturnValue(read({...f.controller.view.access!, canConfigure: true}));
+  f.server.send.mockResolvedValueOnce({kind: 'uncertain'});
+  await f.controller.create('Check filter', '', 'normal', undefined, undefined, 225);
+  const request = f.server.send.mock.calls[0][0];
+  expect(request.command.payload).toMatchObject({overrides: {point_value_minor: 225}});
+  expect(f.controller.view.records?.[0]).toMatchObject({command: request.command, stage: 'uncertain'});
+  f.server.original.mockReturnValue(read({...saved, basePointsMinor: 225}));
+  await f.controller.recover('key-1');
+  expect(f.server.original).toHaveBeenCalledWith({...request, operationId: null}, context);
+  expect(f.server.send).toHaveBeenCalledOnce();
+  expect(f.controller.view.outcome).toMatchObject({basePointsMinor: 225});
+});
 test('scheduled task creation binds the verified household policy and keeps a lost reply under its original key', async () => {
   const f = fixture();
   const draft: TaskScheduleDraft = {kind: 'relative', start: {kind: 'date', local: '2027-01-02'},

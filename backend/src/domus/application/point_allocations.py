@@ -24,17 +24,22 @@ from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_ide
 ALLOCATION_ACTION = "points.allocation.update"
 
 
+def household_allocation(unit: UnitOfWork, home: str, base: int) -> tuple[AllocationPolicy, int]:
+    default = unit.point_allocations.setting(home, None)
+    if default is None:
+        return AllocationPolicy(precision=2 if base % 100 else 0), 0
+    assert default.policy is not None
+    return default.policy, default.revision
+
+
 def effective_allocation(
     unit: UnitOfWork, home: str, definition_id: str, base: int
 ) -> tuple[AllocationPolicy, int, str | None]:
     override = unit.point_allocations.setting(home, definition_id)
     if override is not None and override.policy is not None:
         return override.policy, override.revision, definition_id
-    default = unit.point_allocations.setting(home, None)
-    if default is None:
-        return AllocationPolicy(precision=2 if base % 100 else 0), 0, None
-    assert default.policy is not None
-    return default.policy, default.revision, None
+    policy, revision = household_allocation(unit, home, base)
+    return policy, revision, None
 
 
 def resolve_allocation(

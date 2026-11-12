@@ -64,7 +64,8 @@ export class HttpTaskServer implements TaskServer {
   constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
   access(expected: JournalContext) {
     return this.network.owned(async signal => {
-      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'], ['can_review_schedule','schedule_policy','category_catalog','can_record_for_others','can_manage_points']);
+      const access = fields(await this.network.get('tasks/access', expected, signal), ['household_id', 'member_id', 'can_create'],
+        ['can_review_schedule','schedule_policy','category_catalog','can_record_for_others','can_manage_points','can_configure']);
       const policy = access.schedule_policy == null ? null : fields(access.schedule_policy, ['zone','data_identity','repeated_time','revision'], []);
       const householdId = identifier(access.household_id);
       const catalog = access.category_catalog === undefined ? {} : {categoryCatalog: taskCategoryCatalog(access.category_catalog, householdId)};
@@ -72,19 +73,21 @@ export class HttpTaskServer implements TaskServer {
         canReviewSchedule: access.can_review_schedule === undefined ? false : boolean(access.can_review_schedule),
         ...access.can_record_for_others === undefined ? {} : {canRecordForOthers: boolean(access.can_record_for_others)},
         ...access.can_manage_points === undefined ? {} : {canManagePoints: boolean(access.can_manage_points)},
+        ...access.can_configure === undefined ? {} : {canConfigure: boolean(access.can_configure)},
         ...policy === null ? {} : {schedulePolicy: taskSchedulePolicy({...policy, revision: responseRevision(policy.revision)})}});
     });
   }
   overview(expected: JournalContext) {
     return this.network.owned<TaskOverview>(async signal => {
       const result = fields(await this.network.get('tasks/overview', expected, signal),
-        ['assigned', 'unclaimed', 'due_today', 'overdue'], []);
+        ['assigned', 'unclaimed', 'due_today', 'overdue', 'upcoming_maintenance'], []);
       const dueToday = overviewGroup(result.due_today, DEADLINE_STATES, true);
       const overdue = overviewGroup(result.overdue, DEADLINE_STATES, true);
-      const todayIds = new Set(dueToday.items.map(item => item.id));
-      check(overdue.items.every(item => !todayIds.has(item.id)));
+      const upcomingMaintenance = overviewGroup(result.upcoming_maintenance, DEADLINE_STATES, true);
+      const deadlineItems = [...dueToday.items, ...overdue.items, ...upcomingMaintenance.items];
+      check(new Set(deadlineItems.map(item => item.id)).size === deadlineItems.length);
       return {assigned: overviewGroup(result.assigned, ASSIGNED_STATES),
-        unclaimed: overviewGroup(result.unclaimed, ['available']), dueToday, overdue};
+        unclaimed: overviewGroup(result.unclaimed, ['available']), dueToday, overdue, upcomingMaintenance};
     });
   }
   list(expected: JournalContext, cursor: string | null) {
@@ -126,8 +129,13 @@ export class HttpTaskServer implements TaskServer {
         const method = input.command.action === 'task.category.rename' ? 'PUT' : 'POST';
         const reply = await this.network.request(route(input.command), method, expected, body, input.key, token, signal);
         if (reply.status === 200) return taskReceipt(reply.value, input, false);
-        if ([401,403,409,422,503].includes(reply.status)) return Object.freeze({kind: 'rejected' as const,
-          reason: reason(reply.status), correlationId: failure(reply.value)});
+        if ([401,403,409,422,503].includes(reply.status)) {
+          const correlationId = failure(reply.value);
+          const precisionRequired = reply.status === 422 && input.command.action === 'task.create'
+            && (reply.value as {code: unknown}).code === 'points_precision_two_required';
+          return Object.freeze({kind: 'rejected' as const,
+            reason: precisionRequired ? 'points_precision_two_required' as const : reason(reply.status), correlationId});
+        }
       } catch {/* An unbound or missing reply cannot establish absence of the committed effect. */}
       return Object.freeze({kind: 'uncertain' as const});
     }).result.catch(() => posted ? Object.freeze({kind: 'uncertain' as const})

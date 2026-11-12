@@ -487,7 +487,8 @@
         ".github/workflows/ci_check.yml"
       ],
       "entrypoints": [
-        "backend/src/domus/entrypoints/task_http.py"
+        "backend/src/domus/entrypoints/task_http.py",
+        "backend/src/domus/entrypoints/schedule_creation_http.py"
       ],
       "code": [
         "backend/src/domus/domain/task_values.py",
@@ -500,10 +501,14 @@
         "backend/src/domus/infrastructure/sqlite_task_integrity.py",
         "backend/src/domus/application/task_authorization.py",
         "backend/src/domus/application/task_commands.py",
+        "backend/src/domus/application/task_creation.py",
         "backend/src/domus/application/task_requests.py",
         "backend/src/domus/application/task_queries.py",
         "frontend/src/application/task-overview.ts",
         "frontend/src/adapters/task-http.ts",
+        "frontend/src/domain/tasks.ts",
+        "frontend/src/application/task-controller.ts",
+        "frontend/src/presentation/domus-tasks.ts",
         "frontend/src/presentation/domus-task-overview.ts"
       ],
       "tests": [
@@ -516,11 +521,14 @@
         "tests/backend/test_task_restoration.py",
         "tests/backend/test_task_authorization.py",
         "tests/backend/test_task_commands.py",
+        "tests/backend/test_task_http.py",
+        "tests/backend/test_schedule_creation_http.py",
         "tests/backend/test_task_execution_commands.py",
         "tests/backend/test_task_edit_commands.py",
         "tests/backend/test_task_overview.py",
         "frontend/tests/task-overview.test.ts",
         "frontend/tests/task-http.test.ts",
+        "frontend/tests/task-component.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
       "documentation": [
@@ -534,11 +542,13 @@
         "docs/tasks/migration.md",
         "docs/tasks/execution.md",
         "docs/evidence/overview-task-qualification.md",
-        "docs/evidence/overview-deadlines-qualification.md"
+        "docs/evidence/overview-deadlines-qualification.md",
+        "docs/evidence/overview-maintenance-qualification.md",
+        "docs/evidence/task-base-points-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work",
+        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work; issue #100 adds bounded upcoming scheduled maintenance in the next seven local days",
         "blockingDecisions": "A34 prerequisite gating and A35 same-task points remainder rotation are owner-confirmed. Bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }
@@ -614,7 +624,7 @@
       "status": "proposed",
       "scope": "Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-10",
+      "lastVerified": "2026-11-11",
       "specs": [
         "specs/points-rewards.md"
       ],
@@ -638,6 +648,7 @@
         "frontend/src/application/family-controller.ts",
         "frontend/src/adapters/family-http.ts",
         "frontend/src/presentation/domus-family.ts",
+        "frontend/src/presentation/domus-family-overview.ts",
         "frontend/src/presentation/family-messages.ts",
         "backend/src/domus/domain/point_allocation.py",
         "backend/src/domus/application/point_allocations.py",
@@ -659,6 +670,7 @@
       "tests": [
         "tests/backend/test_points_consumer.py",
         "tests/backend/test_family_http.py",
+        "tests/backend/test_family_overview.py",
         "frontend/tests/family.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts",
         "tests/backend/test_point_allocation.py",
@@ -677,11 +689,12 @@
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
         "docs/tasks/points-consumer.md",
-        "docs/evidence/family-qualification.md"
+        "docs/evidence/family-qualification.md",
+        "docs/evidence/overview-family-participation-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "PR #63 covers scoped Family participation and Points history. PR #66 covers exact configurable allocation, saved policies, and migration. The Family qualification maps the reward command, lifecycle, restoration, and bilingual browser evidence to issue #65 and the retained owner cases.",
+        "implementationEvidence": "PR #63 covers scoped Family participation and Points history. PR #66 covers exact configurable allocation, saved policies, and migration. The Family qualification maps the reward command, lifecycle, restoration, and bilingual browser evidence to issue #65 and the retained owner cases. Issue #105 covers the protected current-week Overview projection and Family navigation.",
         "blockingDecisions": "Family qualification records the M2 gate. Publication follows the separate release workflow.",
         "copilotChangesAllowed": false
       }
@@ -758,7 +771,7 @@
       "status": "proposed",
       "scope": "The household knows what is available, where it is stored and what needs replenishment through a local product catalog and an immutable stock movement ledger.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-10",
+      "lastVerified": "2026-11-11",
       "specs": [
         "specs/household-inventory.md"
       ],
@@ -771,7 +784,8 @@
         "backend/src/domus/application/inventory.py",
         "backend/src/domus/infrastructure/sqlite_inventory.py",
         "backend/src/domus/application/inventory_queries.py",
-        "frontend/src/presentation/domus-inventory.ts"
+        "frontend/src/presentation/domus-inventory.ts",
+        "frontend/src/presentation/domus-stock-attention.ts"
       ],
       "tests": [
         "tests/backend/test_inventory_recurrence.py",
@@ -783,6 +797,8 @@
         "tests/fixtures/sqlite/v20-inventory-history-source.sql",
         "tests/backend/test_pantry_replenishment.py",
         "tests/fixtures/sqlite/v21-pantry-replenishment-source.sql",
+        "tests/backend/test_stock_attention.py",
+        "frontend/tests/stock-attention.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
       "documentation": [
@@ -794,7 +810,8 @@
         "docs/evidence/recurrence-calendar-qualification.md",
         "docs/evidence/inventory-catalog-qualification.md",
         "docs/evidence/inventory-movement-qualification.md",
-        "docs/evidence/pantry-replenishment-qualification.md"
+        "docs/evidence/pantry-replenishment-qualification.md",
+        "docs/evidence/overview-stock-attention-qualification.md"
       ],
       "readiness": {
         "state": "draft",
@@ -812,22 +829,39 @@
       "lastVerified": "2026-10-29",
       "specs": [
         "specs/home-assistant-surface.md",
-        "specs/home-assistant-calendar.md"
+        "specs/home-assistant-calendar.md",
+        "specs/home-assistant-deadline-sensors.md"
       ],
-      "workflows": [],
-      "entrypoints": [],
-      "code": [],
-      "tests": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
+      "entrypoints": [
+        "backend/src/domus/entrypoints/ha_calendar_http.py",
+        "backend/src/domus/entrypoints/ha_deadline_http.py",
+        "custom_components/domus_calendar/config_flow.py"
+      ],
+      "code": [
+        "backend/src/domus/application/task_queries.py",
+        "backend/src/domus/composition/ha_projections.py",
+        "custom_components/domus_calendar/sensor.py"
+      ],
+      "tests": [
+        "tests/backend/test_ha_deadline_installation.py",
+        "tests/containers/test_app_image.py",
+        "tests/ha/calendar_smoke.py"
+      ],
       "documentation": [
         "docs/product-vision.md",
         "docs/architecture.md",
         "docs/operations.md",
         "docs/user-guide.md",
-        "docs/contracts/home-assistant.md"
+        "docs/contracts/home-assistant.md",
+        "docs/tasks/ha-deadline-sensors.md",
+        "docs/evidence/ha-deadline-sensors-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "absent",
+        "implementationEvidence": "Partial. The calendar and task deadline sensors use separate installation grants. Issue #112 qualifies exact Overview deadline counts, scoped reads, Core configuration, credential rotation and entity lifecycle in the two deployment compositions.",
         "blockingDecisions": "Public service schemas and scope review; technical principal authorization; response-service exposure contract; supported HA matrix.",
         "copilotChangesAllowed": false
       }

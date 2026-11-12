@@ -1,22 +1,32 @@
 """Read authoritative Overview counts through both protected task compositions."""
 
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
+from test_recurrence_creation import request as fixed_request
+from test_recurrence_creation import setup as recurrence_setup
 from test_recurrence_review import fixed_move, review_service, reviewed
 from test_relative_materialization import configured as relative_configured
+from test_task_commands import counts
 from test_task_runtime import api as api
 from test_tasks import definition
 
+from domus.application.fixed_materialization import FixedMaintenance, MaintenanceScope
 from domus.application.reschedule_review import RescheduleSelection
-from domus.application.task_queries import TaskQueries
+from domus.application.task_queries import (
+    InstallationTaskDeadlines,
+    TaskDeadlineCounts,
+    TaskQueries,
+)
 from domus.domain.identity import Member, MemberStatus, Permission, PermissionRule, Role
 from domus.domain.recurrence_rules import NominalDate
+from domus.domain.recurrence_time import NominalTime
 from domus.domain.task_values import OccurrenceState, TaskRules
 from domus.domain.tasks import HouseholdTaskPolicy
 from domus.entrypoints.task_response import detail_response
 from domus.infrastructure.application_runtime import SystemClock
+from domus.infrastructure.recurrence_time import PinnedRecurrenceTime
 from domus.infrastructure.task_cursor import TaskCursor
 
 OVERVIEW = "/api/v1/tasks/overview"
@@ -30,6 +40,7 @@ def test_overview_groups_authorized_records_and_counts_beyond_the_page(api):
         "unclaimed": empty,
         "due_today": empty,
         "overdue": empty,
+        "upcoming_maintenance": empty,
     }
     assert api.client.get(OVERVIEW, params={"member_id": "other"}).status_code == 422
 
@@ -103,7 +114,9 @@ def test_overview_requires_current_task_read_authority(api):
         )
     denied = api.client.get(OVERVIEW)
     assert denied.status_code == 403
-    assert not {"assigned", "unclaimed", "due_today", "overdue"} & denied.json().keys()
+    assert not {"assigned", "unclaimed", "due_today", "overdue", "upcoming_maintenance"} & (
+        denied.json().keys()
+    )
 
 
 def millis(year, month, day, hour=0, minute=0):
@@ -140,6 +153,13 @@ def test_overview_timed_deadlines_use_one_clock_and_the_household_day(api, monke
     assert report["due_today"]["total"] == 29
     assert report["overdue"]["total"] == 27
     assert len(report["due_today"]["items"]) == len(report["overdue"]["items"]) == 25
+    sensors = InstallationTaskDeadlines(
+        api.store,
+        MaintenanceScope(api.store.installation, "home"),
+        SystemClock(),
+        PinnedRecurrenceTime(),
+    )
+    assert sensors.read() == TaskDeadlineCounts(29, 27)
     first, last = report["due_today"]["items"][:2]
     assert first["occurrence_id"] == "at-now" and last["occurrence_id"] == "last-today"
     assert first["deadline"] == {
@@ -153,10 +173,89 @@ def test_overview_timed_deadlines_use_one_clock_and_the_household_day(api, monke
     assert [item["occurrence_id"] for item in report["overdue"]["items"]] == [
         f"late-{number:02}" for number in range(25)
     ]
+    assert report["upcoming_maintenance"] == {"total": 0, "items": []}
     now = next_day
     after_midnight = api.client.get(OVERVIEW).json()
     assert after_midnight["overdue"]["total"] == 56
     assert [item["occurrence_id"] for item in after_midnight["due_today"]["items"]] == ["next-day"]
+    assert sensors.read() == TaskDeadlineCounts(1, 56)
+
+
+def test_timed_maintenance_is_bounded_and_ordered_over_the_next_seven_local_days(tmp_path):
+    creation, _, store, actor, identifiers = recurrence_setup(tmp_path)
+    planner = creation.planner
+    maintenance = FixedMaintenance(
+        store, MaintenanceScope(store.installation, "home"), planner, creation.clock, identifiers
+    )
+    with store.write() as unit:
+        home = unit.households.get("home")
+        unit.households.save(
+            replace(home, time_zone="Europe/Madrid", revision=home.revision + 1), home.revision
+        )
+    day = date(2026, 3, 28)
+    draft = fixed_request(timed=True)
+    rule = replace(
+        draft,
+        pattern=replace(draft.pattern, start=NominalTime(datetime(2026, 3, 28, 23, 45)), count=9),
+    )
+    planned = []
+    for number in range(4):
+        result = creation.create_fixed(f"overview-rule-{number}", rule).result.decode()
+        horizon = NominalTime(datetime(2026, 4, 7))
+        for index in range(9):
+            step = maintenance.step(result["schedule_id"], horizon)
+            assert step.status == "created"
+            planned.append((day + timedelta(days=index), step.occurrence_id))
+    closed_day, closed_id = planned[1]
+    with store.write() as unit:
+        closed = unit.tasks.occurrence("home", closed_id)
+        unit.tasks.save_occurrence(closed.transition(OccurrenceState.CANCELLED, "Withdrawn"), 1)
+        work = unit.tasks.definition("home", result["definition_id"])
+        unit.tasks.save_occurrence(
+            work.new_occurrence("ad-hoc-work", work.created_at, due_at=millis(2026, 3, 31, 14)), 0
+        )
+    query = TaskQueries(
+        store, actor.current(), TaskCursor(creation.clock, b"k" * 32), store.installation
+    )
+
+    class ObservationClock:
+        def now(self):
+            return millis(2026, 3, 28, 22, 30)
+
+    original = counts(store)
+    summary = query.overview(ObservationClock(), planner.times)
+    expected = sorted(
+        (due, identifier)
+        for due, identifier in planned
+        if 1 <= (due - day).days <= 7 and (due, identifier) != (closed_day, closed_id)
+    )
+    group = summary.upcoming_maintenance
+    assert group.total == 27 and len(group.items) == 25
+    assert [item.occurrence_id for item in group.items] == [
+        identifier for _, identifier in expected[:25]
+    ]
+    assert group.items[0].deadline.instant_ms == str(millis(2026, 3, 29, 21, 45))
+    assert group.items[-1].deadline.instant_ms == str(millis(2026, 4, 4, 21, 45))
+    assert all(item.deadline.time_zone == "Europe/Madrid" for item in group.items)
+    assert summary.due_today.total == 4 and summary.overdue.total == 0
+    assert counts(store) == original
+
+
+def test_upcoming_timed_relative_occurrence_is_scheduled(tmp_path):
+    initial, store, actor, _, schedule_id, _ = relative_configured(tmp_path, timed=True)
+    result = initial.initial(schedule_id)
+    query = TaskQueries(
+        store, actor.current(), TaskCursor(initial.clock, b"k" * 32), store.installation
+    )
+
+    class ObservationClock:
+        def now(self):
+            return millis(2026, 3, 28, 12)
+
+    group = query.overview(ObservationClock(), initial.times).upcoming_maintenance
+    assert group.total == 1
+    (work,) = group.items
+    assert work.occurrence_id == result.occurrence_id and work.deadline.local_date is None
 
 
 @pytest.mark.parametrize("kind", ["fixed", "relative"])
@@ -199,11 +298,19 @@ def test_date_only_overview_uses_the_reviewed_deadline_and_saved_zone(tmp_path, 
             return self.value
 
     clock = ObservationClock()
+    sensor_clock = ObservationClock()
+    sensors = InstallationTaskDeadlines(
+        store, MaintenanceScope(store.installation, "home"), sensor_clock, times
+    )
     before = queries.overview(clock, times)
     assert before.due_today.total == before.overdue.total == 0
+    assert sensors.read() == TaskDeadlineCounts(0, 0)
     clock.value = millis(2026, 4, 1, 22)
+    sensor_clock.value = clock.value
     today = queries.overview(clock, times)
     assert today.due_today.total == 1 and today.overdue.total == 0
+    assert sensors.read() == TaskDeadlineCounts(1, 0)
+    assert today.upcoming_maintenance.total == 0
     (work,) = today.due_today.items
     assert work.occurrence_id == choice.occurrence_id
     assert (work.deadline.local_date, work.deadline.instant_ms, work.deadline.time_zone) == (
@@ -211,6 +318,7 @@ def test_date_only_overview_uses_the_reviewed_deadline_and_saved_zone(tmp_path, 
         None,
         "Europe/Madrid",
     )
+    assert before.upcoming_maintenance.items == (work,)
     (listed,) = queries.occurrences().items
     assert (listed.occurrence_id, listed.due_at, listed.due_date) == (
         choice.occurrence_id,
@@ -220,10 +328,13 @@ def test_date_only_overview_uses_the_reviewed_deadline_and_saved_zone(tmp_path, 
     selected = detail_response(queries.occurrence(choice.occurrence_id)).work
     assert selected.due_at is None and selected.due_date == moved_day
     clock.value = millis(2026, 4, 2, 22)
+    sensor_clock.value = clock.value
     overdue = queries.overview(clock, times)
     assert overdue.due_today.total == 0 and overdue.overdue.total == 1
+    assert sensors.read() == TaskDeadlineCounts(0, 1)
     assert overdue.overdue.items == (work,)
     assert clock.reads == 3
+    assert sensor_clock.reads == 3
     with store.write() as unit:
         home = unit.households.get("home")
         unit.households.save(
@@ -232,3 +343,6 @@ def test_date_only_overview_uses_the_reviewed_deadline_and_saved_zone(tmp_path, 
         )
     assert queries.overview(clock, times).overdue == overdue.overdue
     assert clock.reads == 4
+    clock.value = millis(2026, 3, 25, 12)
+    assert queries.overview(clock, times).upcoming_maintenance.total == 0
+    assert clock.reads == 5

@@ -63,3 +63,8 @@ in disposable environments. The CI artifacts record complete statement and
 branch coverage for every native integration module. This check does not change
 the historical owner
 preview evidence or qualify a new published Domus package.
+
+The same disposable Core 2026.10.4 environments exercise the
+[task deadline sensors](tasks/ha-deadline-sensors.md) beside the calendar.
+The tests verify both counts, independent grants, unavailable and recovered
+states, stable entity IDs and unload across both deployment compositions.

@@ -106,6 +106,8 @@ class ImageBridge:
             "65532:65532",
             "--label",
             "domus.browser-fixture=true",
+            "--label",
+            f"domus.browser-fixture.image={self.image}",
             "--entrypoint",
             "/app/.venv/bin/python",
             data["Id"],
