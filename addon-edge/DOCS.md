@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.24 packages the immutable runtime declared in
+Edge 0.0.0-edge.25 packages the immutable runtime declared in
 [artifact.json](artifact.json). People with task configuration permission can set
 optional base points when creating a task. Leaving the field empty uses the
 household default. Home Assistant can read the same due-today and

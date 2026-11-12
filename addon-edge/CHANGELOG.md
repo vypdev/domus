@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.0.0-edge.24
+## 0.0.0-edge.25
 
 - Let people with task configuration permission set optional base points when creating a task.
 - Keep the household default for title-only creation and accept localized decimal input.
+- Explain how to correct a fractional amount when the current allocation requires whole base points.
 
 ## 0.0.0-edge.21
 
