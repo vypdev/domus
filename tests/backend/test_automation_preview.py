@@ -29,6 +29,13 @@ BASE = "/api/v1/automation"
 TITLE = "Buy more tea"
 ACTION = {"kind": "task.create", "title": TITLE}
 RULE = {"version": 1, "trigger": {"kind": "manual"}, "condition": None, "action": ACTION}
+PROPOSAL = {
+    "version": 1,
+    "trigger": "manual",
+    "task_title": TITLE,
+    "would_create": True,
+    "conditions": [],
+}
 
 
 def preview(api, headers, **changes):
@@ -60,36 +67,30 @@ def decision(path, kind, matched, product_id=None):
     return {"path": path, "kind": kind, "matched": matched, "product_id": product_id}
 
 
-def test_protected_preview_uses_current_authorized_stock_without_effects(api):
+@pytest.fixture
+def authorized_headers(api):
     api.user(USER, True)
     headers = api.headers() | CONTEXT
     headers.pop("Idempotency-Key")
-    assert api.client.get(BASE + "/preview-access", headers=CONTEXT).json() == {
-        "household_id": "home"
-    }
-    assert api.client.get(BASE + "/preview-access").status_code == 422
-    assert preview(api, api.headers()).status_code == 422
-    assert preview(api, headers | {"X-Domus-Context": "v1:forged"}).status_code == 403
-    assert preview(api, headers | {"Origin": "https://wrong.example"}).status_code == 403
-    assert preview(api, headers | {"X-CSRF-Token": "wrong"}).status_code == 403
+    return headers
 
+
+def test_automation_preview_c01_proposes_one_deterministic_manual_task(api, authorized_headers):
     before = snapshot(api)
-    baseline = {
-        "version": 1,
-        "trigger": "manual",
-        "task_title": TITLE,
-        "would_create": True,
-        "conditions": [],
-    }
-    assert preview(api, headers).json() == baseline
-    assert preview(api, headers).json() == baseline
+    for title in (TITLE, "🧹" * 160):
+        expected = PROPOSAL | {"task_title": title}
+        for _ in range(2):
+            result = preview(api, authorized_headers, action=ACTION | {"title": title})
+            assert (result.status_code, result.json()) == (200, expected)
     assert snapshot(api) == before
 
+
+def test_automation_preview_c02_enforces_closed_types_and_exact_bounds(api, authorized_headers):
+    headers = authorized_headers
     product = register(api, "tea", "Tea", "piece")
     other = register(api, "coffee", "Coffee", "piece")
     policy = {"product_id": product, "minimum": "2", "target": "4", "expected_revision": "0"}
     assert post(api, "minimum", "configure-replenishment", **policy).status_code == 200
-    before = snapshot(api)
     tree = {
         "kind": "all",
         "children": [
@@ -97,7 +98,7 @@ def test_protected_preview_uses_current_authorized_stock_without_effects(api):
             {"kind": "not", "child": leaf(other)},
         ],
     }
-    assert preview(api, headers, condition=tree).json() == baseline | {
+    assert preview(api, headers, condition=tree).json() == PROPOSAL | {
         "conditions": [
             decision([0, 0], "stock_below_minimum", False, other),
             decision([0, 1], "stock_below_minimum", True, product),
@@ -107,13 +108,59 @@ def test_protected_preview_uses_current_authorized_stock_without_effects(api):
             decision([], "all", True),
         ]
     }
-    unknown = preview(api, headers, condition=leaf("other-household-product"))
-    assert unknown.status_code == 404 and unknown.json()["code"] == "inventory_product_missing"
+    for changes in (
+        {"version": 2},
+        {"version": True},
+        {"version": "1"},
+        {"trigger": {"kind": "scheduled"}},
+        {"trigger": {"kind": "manual", "script": "run"}},
+        {"action": {"kind": "notify", "title": TITLE}},
+        {"action": ACTION | {"code": "run()"}},
+        {"action": ACTION | {"title": "á" * 161}},
+        {"household_id": "elsewhere"},
+        {"condition": {"kind": "not", "child": None}},
+        {"condition": {"kind": "all", "children": []}},
+        {"condition": leaf("bad id")},
+        {"condition": {"kind": "expression", "source": "return true"}},
+    ):
+        response = preview(api, headers, **changes)
+        assert (response.status_code, response.json()["code"]) == (422, "invalid_request"), (
+            response.text
+        )
+    assert (
+        preview(api, headers, action=ACTION | {"title": " \t"}).json()["code"]
+        == "invalid_task_text"
+    )
+    condition = leaf(other)
+    for _ in range(MAX_CONDITION_DEPTH - 1):
+        condition = {"kind": "not", "child": condition}
+    result = preview(api, headers, condition=condition).json()
+    assert result["would_create"] is True and len(result["conditions"]) == MAX_CONDITION_DEPTH
+    too_deep = preview(api, headers, condition={"kind": "not", "child": condition})
+    assert too_deep.json()["code"] == "automation_condition_depth"
+    children = [leaf(other)] * (MAX_RULE_NODES - 3)
+    result = preview(api, headers, condition={"kind": "any", "children": children}).json()
+    assert result["would_create"] is False and len(result["conditions"]) == MAX_RULE_NODES - 2
+    too_many = preview(
+        api, headers, condition={"kind": "any", "children": [*children, leaf(other)]}
+    )
+    assert too_many.json()["code"] == "automation_rule_node_limit"
+
+
+def test_automation_preview_c03_tracks_current_available_stock(api, authorized_headers):
+    headers = authorized_headers
+    product = register(api, "tea", "Tea", "piece")
+    policy = {"product_id": product, "minimum": "2", "target": "4", "expected_revision": "0"}
+    assert post(api, "minimum", "configure-replenishment", **policy).status_code == 200
+    before = snapshot(api)
+    assert preview(api, headers, condition=leaf(product)).json() == PROPOSAL | {
+        "conditions": [decision([], "stock_below_minimum", True, product)],
+    }
     assert snapshot(api) == before
 
     assert post(api, "stock", "intake", product_id=product, quantity="2").status_code == 200
     before = snapshot(api)
-    assert preview(api, headers, condition=leaf(product)).json() == baseline | {
+    assert preview(api, headers, condition=leaf(product)).json() == PROPOSAL | {
         "would_create": False,
         "conditions": [decision([], "stock_below_minimum", False, product)],
     }
@@ -148,11 +195,29 @@ def test_protected_preview_uses_current_authorized_stock_without_effects(api):
             )
         )
     before = snapshot(api)
-    assert preview(api, headers, condition=leaf(product)).json() == baseline | {
+    assert preview(api, headers, condition=leaf(product)).json() == PROPOSAL | {
         "conditions": [decision([], "stock_below_minimum", True, product)],
     }
     assert snapshot(api) == before
 
+
+def test_automation_preview_c04_checks_current_grants_and_scoped_stock(api, authorized_headers):
+    headers = authorized_headers
+    product = register(api, "tea", "Tea", "piece")
+    before = snapshot(api)
+    assert api.client.get(BASE + "/preview-access", headers=CONTEXT).json() == {
+        "household_id": "home"
+    }
+    assert api.client.get(BASE + "/preview-access").status_code == 422
+    assert preview(api, api.headers()).status_code == 422
+    assert preview(api, headers | {"X-Domus-Context": "v1:forged"}).status_code == 403
+    assert preview(api, headers | {"Origin": "https://wrong.example"}).status_code == 403
+    assert preview(api, headers | {"X-CSRF-Token": "wrong"}).status_code == 403
+    foreign = preview(api, headers, condition=leaf("other-household-product"))
+    assert (foreign.status_code, foreign.json()["code"]) == (404, "inventory_product_missing")
+    assert "conditions" not in foreign.json()
+    assert preview(api, headers, condition=leaf(product)).status_code == 200
+    assert snapshot(api) == before
     with api.store.write() as unit:
         member = unit.members.by_user("home", USER)
         unit.members.save(
@@ -166,62 +231,16 @@ def test_protected_preview_uses_current_authorized_stock_without_effects(api):
         unit.members.save(Member("viewer", "home", VIEWER, Role.VIEWER, MemberStatus.ACTIVE, 1), 0)
     before = snapshot(api)
     assert api.client.get(BASE + "/preview-access", headers=CONTEXT).status_code == 403
-    assert preview(api, headers, condition=leaf("unknown")).status_code == 403
+    for product_id in (product, "other-household-product"):
+        denied = preview(api, headers, condition=leaf(product_id))
+        assert denied.status_code == 403
+        assert "conditions" not in denied.json()
     api.user(VIEWER)
     assert (
         api.client.get(BASE + "/preview-access", headers=member_context(VIEWER)).status_code == 403
     )
     assert preview(api, api.headers() | member_context(VIEWER)).status_code == 403
     assert snapshot(api) == before
-
-
-def test_preview_enforces_closed_types_and_exact_bounds(api):
-    api.user(USER, True)
-    headers = api.headers() | CONTEXT
-    product = register(api, "tea", "Tea", "piece")
-    for changes in (
-        {"version": 2},
-        {"version": True},
-        {"version": "1"},
-        {"trigger": {"kind": "scheduled"}},
-        {"trigger": {"kind": "manual", "script": "run"}},
-        {"action": {"kind": "notify", "title": TITLE}},
-        {"action": ACTION | {"code": "run()"}},
-        {"action": ACTION | {"title": "á" * 161}},
-        {"household_id": "elsewhere"},
-        {"condition": {"kind": "not", "child": None}},
-        {"condition": {"kind": "all", "children": []}},
-        {"condition": leaf("bad id")},
-        {"condition": {"kind": "expression", "source": "return true"}},
-    ):
-        response = preview(api, headers, **changes)
-        assert (response.status_code, response.json()["code"]) == (422, "invalid_request"), (
-            response.text
-        )
-    assert (
-        preview(api, headers, action=ACTION | {"title": " \t"}).json()["code"]
-        == "invalid_task_text"
-    )
-    exact_title = "🧹" * 160
-    assert (
-        preview(api, headers, action=ACTION | {"title": exact_title}).json()["task_title"]
-        == exact_title
-    )
-
-    condition = leaf(product)
-    for _ in range(MAX_CONDITION_DEPTH - 1):
-        condition = {"kind": "not", "child": condition}
-    result = preview(api, headers, condition=condition).json()
-    assert result["would_create"] is True and len(result["conditions"]) == MAX_CONDITION_DEPTH
-    too_deep = preview(api, headers, condition={"kind": "not", "child": condition})
-    assert too_deep.json()["code"] == "automation_condition_depth"
-    children = [leaf(product)] * (MAX_RULE_NODES - 3)
-    result = preview(api, headers, condition={"kind": "any", "children": children}).json()
-    assert result["would_create"] is False and len(result["conditions"]) == MAX_RULE_NODES - 2
-    too_many = preview(
-        api, headers, condition={"kind": "any", "children": [*children, leaf(product)]}
-    )
-    assert too_many.json()["code"] == "automation_rule_node_limit"
 
 
 def test_domain_rejects_invalid_in_memory_rules_and_simulates_unconditional_action():

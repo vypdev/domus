@@ -442,8 +442,6 @@ def create_app(
         app.include_router(create_reward_router(tasks, security=session_security))
         app.include_router(create_inventory_router(tasks, security=session_security))
         app.include_router(create_automation_router(tasks, security=session_security))
-        app.include_router(
-            create_family_router(lambda request: tasks(request).family(), security=session_security)
-        )
+        app.include_router(create_family_router(tasks, security=session_security))
     attach_ui(app, ui_bundle, "standalone", lambda request: None)
     return app
