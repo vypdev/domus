@@ -81,6 +81,9 @@ jobs:
       group: vypdev
       labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
+    env:
+      # Vitest puts coverage locks in the system temporary directory.
+      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -115,6 +118,7 @@ jobs:
     env:
       CI: "1"
       STORYBOOK_DISABLE_TELEMETRY: "1"
+      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -157,6 +161,7 @@ jobs:
     timeout-minutes: 15
     env:
       CI: "1"
+      TMPDIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
