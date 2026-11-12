@@ -1091,6 +1091,20 @@ for (const mode of ['native', 'standalone'] as const) {
     await preview.press('Enter');
     await expect(title).toBeFocused();
     await expect(rule.getByText('Enter a task title of 1 to 160 characters.')).toBeVisible();
+    const longTitle = 'a'.repeat(161);
+    await title.fill(longTitle);
+    await preview.press('Enter');
+    await expect(rule.getByText('Enter a task title of 1 to 160 characters.')).toBeVisible();
+    await expect(title).toBeFocused();
+    await expect(title).toHaveValue(longTitle);
+    expect(writes).toHaveLength(writeOffset);
+    const unicodeTitle = '🧹'.repeat(160);
+    await title.fill('');
+    await title.focus();
+    await page.keyboard.insertText(unicodeTitle);
+    await expect(title).toHaveValue(unicodeTitle);
+    await preview.press('Enter');
+    await expect(rule.getByRole('status')).toContainText(unicodeTitle);
     await title.fill('Check the tea supplies');
     await page.route(previewAPI, route => route.abort('failed'), {times:1});
     await preview.press('Enter');
@@ -1130,7 +1144,7 @@ for (const mode of ['native', 'standalone'] as const) {
       .toHaveCSS('background-color','rgb(24, 36, 47)');
     await expect(previsualizar).toHaveCSS('color','rgb(24, 36, 47)');
     await rule.screenshot({path:info.outputPath('automation-preview-es-narrow.png')});
-    expect(writes.slice(writeOffset)).toEqual(Array(4).fill('POST ' + previewAPI));
+    expect(writes.slice(writeOffset)).toEqual(Array(5).fill('POST ' + previewAPI));
     expect(await definitions()).toEqual(beforePreview);
 
     const restock = await inventoryWrite('overview-restock-product', {
