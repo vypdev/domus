@@ -25,3 +25,8 @@ was installed in a disposable Supervisor app with a UTC household. A posted
 task retained its historical completion and brought earned points back to
 0,00 with a linked reversal in Family. The disposable app, its data and its
 repository source were removed after verification.
+
+A mounted-page test advances the server-anchored clock across the household's
+Monday boundary while Overview stays open. It checks that the new period replaces
+the prior totals with one read, without renewing the current session. If the
+monotonic clock fails, the old summary is retired.

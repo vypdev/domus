@@ -459,7 +459,9 @@ export function mountEntry(page: EntryPage): PageMount {
       if ((destination === null || destination === 'overview') && entry?.phase === 'ready'
           && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.household
           && tasks?.phase === 'ready' && tasks.session && tasks.scopeKey) {
-        const day = calendarToday(tasks.session.serverTime, entry.household.timeZone);
+        let day: string;
+        try {day = calendarToday(runtime!.serverTime, entry.household.timeZone);}
+        catch {familySummary.bind(null); return;}
         const start = calendarPeriod('week', day).start;
         const key = JSON.stringify([tasks.scopeKey, entry.household.revision, start]);
         familySummary.bind({key, context:tasks.session.context});

@@ -63,6 +63,7 @@ export class EntryRuntime {
   get view(): EntryView {return this.current.controller.view;}
   get administration(): AdministrationView | null {return this.current.controller.administration;}
   get tasks(): TaskView | null {return this.current.controller.tasks;}
+  get serverTime(): number {return this.current.clock.now();}
   taskWork(work: (controller: TaskController) => Promise<void>): Promise<void> {return this.perform(controller => controller.taskWork(work));}
   private publish(): void {
     try {this.changed(this.view, this.administration, this.tasks);} catch {/* A renderer failure cannot change authority or interrupt resource cleanup. */}
