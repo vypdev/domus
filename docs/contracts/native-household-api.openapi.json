@@ -2699,7 +2699,7 @@
             "title": "Start"
           },
           "task": {
-            "$ref": "#/components/schemas/TaskTextBody"
+            "$ref": "#/components/schemas/ScheduledTaskTextBody"
           }
         },
         "required": [
@@ -5688,7 +5688,7 @@
             "title": "Start"
           },
           "task": {
-            "$ref": "#/components/schemas/TaskTextBody"
+            "$ref": "#/components/schemas/ScheduledTaskTextBody"
           },
           "visibility": {
             "default": "at_completion",
@@ -7454,6 +7454,70 @@
         "title": "ScheduledTaskOriginalResponse",
         "type": "object"
       },
+      "ScheduledTaskOverridesBody": {
+        "additionalProperties": false,
+        "properties": {
+          "point_value_minor": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Point Value Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "point_value_minor"
+        ],
+        "title": "ScheduledTaskOverridesBody",
+        "type": "object"
+      },
+      "ScheduledTaskTextBody": {
+        "additionalProperties": false,
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Description",
+            "type": "string"
+          },
+          "overrides": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScheduledTaskOverridesBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority",
+            "default": "normal"
+          },
+          "title": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ScheduledTaskTextBody",
+        "type": "object"
+      },
       "SessionSelectionBody": {
         "additionalProperties": false,
         "properties": {
@@ -9067,46 +9131,13 @@
         "title": "TaskRules",
         "type": "object"
       },
-      "TaskTextBody": {
-        "additionalProperties": false,
-        "properties": {
-          "category_id": {
-            "anyOf": [
-              {
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category Id"
-          },
-          "description": {
-            "default": "",
-            "maxLength": 4000,
-            "title": "Description",
-            "type": "string"
-          },
-          "priority": {
-            "$ref": "#/components/schemas/Priority",
-            "default": "normal"
-          },
-          "title": {
-            "maxLength": 160,
-            "minLength": 1,
-            "title": "Title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "title"
-        ],
-        "title": "TaskTextBody",
-        "type": "object"
-      },
       "TaskWorkspaceView": {
         "properties": {
+          "can_configure": {
+            "default": false,
+            "title": "Can Configure",
+            "type": "boolean"
+          },
           "can_create": {
             "title": "Can Create",
             "type": "boolean"

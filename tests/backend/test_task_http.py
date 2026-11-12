@@ -1,8 +1,11 @@
 """Both real compositions exercise task wire DTOs and existing authenticated boundaries."""
 
+from dataclasses import replace
+
 import pytest
 from test_task_runtime import api as api
 
+from domus.domain.identity import Member, MemberStatus, Role
 from domus.infrastructure.recurrence_time import PinnedRecurrenceTime
 
 PREFIX = "/api/v1/tasks"
@@ -29,6 +32,7 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
         "can_review_schedule": True,
         "can_record_for_others": True,
         "can_manage_points": True,
+        "can_configure": True,
         "schedule_policy": {
             "zone": "UTC",
             "data_identity": PinnedRecurrenceTime().data_identity,
@@ -38,6 +42,7 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
         "category_catalog": {"categories": [], "can_manage": True},
     }
     assert result["state"] == "available" and result["revision"] == 1
+    assert "point_value_minor" not in result
     assert create(api) == receipt
     definitions = api.client.get(PREFIX + "/definitions").json()["items"]
     assert len(definitions) == 1 and definitions[0]["title"] == "Wipe table"
@@ -63,6 +68,75 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
     assert "ha_user_id" not in history.text and "payload_fingerprint" not in history.text
 
 
+@pytest.mark.parametrize("amount", [0, 225, 1_000_000])
+def test_configured_task_preserves_exact_amount_in_original_receipt(api, amount):
+    body = {"title": "Inspect the filter", "overrides": {"point_value_minor": amount}}
+    saved = checked(api, "post", "/definitions", body, "configured")
+    result = saved["result"]
+    assert result["point_value_minor"] == amount
+    definition = api.client.get(PREFIX + "/definitions/" + result["definition_id"]).json()
+    assert definition["overrides"]["point_value_minor"] == amount
+    original = api.client.get(PREFIX + "/requests/task.create/configured")
+    assert original.status_code == 200, original.text
+    assert original.json()["operation_id"] == saved["operation_id"]
+    assert original.json()["result"] == result
+    assert checked(api, "post", "/definitions", body, "configured") == saved
+    different = body | {"overrides": {"point_value_minor": 1}}
+    assert (
+        api.client.post(
+            PREFIX + "/definitions", json=different, headers=api.headers("configured")
+        ).status_code
+        == 409
+    )
+    assert len(api.client.get(PREFIX + "/definitions").json()["items"]) == 1
+
+
+def test_basic_creator_inherits_default_and_revoked_override_cannot_be_recovered(api):
+    api.user("a" * 32, True)
+    checked(
+        api,
+        "put",
+        "/policy",
+        {"expected_revision": 0, "rules": {"point_value_minor": 600}},
+        "task-default",
+    )
+    body = {"title": "Check the filter", "overrides": {"point_value_minor": 225}}
+    checked(api, "post", "/definitions", body, "configured")
+    with api.store.write() as unit:
+        owner = unit.members.by_user("home", "a" * 32)
+        unit.members.save(
+            replace(
+                owner,
+                revision=owner.revision + 1,
+                role=Role.ADULT,
+            ),
+            owner.revision,
+        )
+        unit.members.save(Member("adult", "home", "b" * 32, Role.ADULT, MemberStatus.ACTIVE, 1), 0)
+    api.user("a" * 32)
+    assert api.client.get(PREFIX + "/requests/task.create/configured").status_code == 403
+    assert (
+        api.client.post(
+            PREFIX + "/definitions", json=body, headers=api.headers("configured")
+        ).status_code
+        == 403
+    )
+    api.user("b" * 32)
+    access = api.client.get(PREFIX + "/access").json()
+    assert access["can_create"] and not access["can_configure"]
+    assert (
+        api.client.post(
+            PREFIX + "/definitions", json=body, headers=api.headers("forged-amount")
+        ).status_code
+        == 403
+    )
+    saved = create(api, key="title-only")["result"]
+    assert "point_value_minor" not in saved
+    detail = api.client.get(PREFIX + "/occurrences/" + saved["occurrence_id"]).json()
+    assert detail["rules"]["point_value_minor"] == 600
+    assert len(api.client.get(PREFIX + "/definitions").json()["items"]) == 2
+
+
 @pytest.mark.parametrize(
     "fields",
     [
@@ -74,6 +148,11 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
         {"tags": ["duplicate", "duplicate"]},
         {"state": "paused"},
         {"overrides": {"claim_allowed": "false"}},
+        {"overrides": {"point_value_minor": -1}},
+        {"overrides": {"point_value_minor": 1_000_001}},
+        {"overrides": {"point_value_minor": 2.25}},
+        {"overrides": {"point_value_minor": "225"}},
+        {"overrides": {"point_value_minor": False}},
     ],
 )
 def test_invalid_or_unsupported_creation_never_partially_writes(api, fields):

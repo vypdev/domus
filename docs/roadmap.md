@@ -26,7 +26,10 @@ With the recurrence and calendar implementation in develop:
 - M2 includes task creation, claiming, completion, review and reopening, previously exercised with English/Spanish and persisted task/preferences in the owner's Edge.9 through Ingress. PR #29 wires fixed and relative maintenance, durable cycle closure and successor generation/invalidation, reviewed schedule adoption and changes, protected calendar views, explicit exclusions/additions and private week-start preferences. Its authorized HA event projection shares calendar identities. Current source checks and historical installed observations are recorded separately in the [recurrence evidence](evidence/recurrence-lifecycle-calendar.json). PRs #33, #35, #37 and #39
 add household timing controls and the read-only native calendar. The
 [case qualification audit](evidence/recurrence-calendar-qualification.md) tracks the remaining
-implementation, verification and packaging gates. The Family increments now cover protected participation, configurable point distribution and rewards. See [Family qualification](evidence/family-qualification.md). Full task editors and owner acceptance of the installed recurrence experience remain open.
+implementation, verification and packaging gates. The Family increments now cover protected participation, configurable point distribution and rewards. See [Family qualification](evidence/family-qualification.md).
+[Base points during task creation](evidence/task-base-points-qualification.md) lets task
+configurators set the exact amount used by the existing award rules. Full task editors and owner
+acceptance of the installed recurrence experience remain open.
 - M3 starts with the [protected product catalog and stock
   intake](evidence/inventory-catalog-qualification.md), followed by [movement history, adjustments
   and intake reversals](evidence/inventory-movement-qualification.md) and [minimum and target
@@ -48,7 +51,7 @@ implementation, verification and packaging gates. The Family increments now cove
   increment](evidence/stock-location-transfer-qualification.md) shows the stock at each location and
   records a move as two linked ledger entries. Multiple lists, prices, refunds, location editing and
   archiving, lot and package management, barcodes and optional online lookup remain open.
-- M4: the shared automation engine, both editors and Domus-owned HA entities/services remain open. The existing gateway is already integrated; its MCP/business behavior is outside this work.
+- M4 includes the native Home Assistant calendar and [task deadline sensors](evidence/ha-deadline-sensors-qualification.md). The shared automation engine, both editors and additional Home Assistant entities and services remain open. The existing gateway is already integrated.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
   and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).
   [Upcoming maintenance](evidence/overview-maintenance-qualification.md) shows open scheduled

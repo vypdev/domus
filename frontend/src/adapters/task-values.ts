@@ -110,6 +110,11 @@ export function taskCategoryCatalog(value: unknown, householdId: string): TaskCa
   check(new Set(categories.map(item => item.id)).size === categories.length);
   return Object.freeze({categories: Object.freeze(categories), canManage: boolean(item.can_manage)});
 }
+function originalBasePoints(raw: unknown, expected: number | undefined) {
+  if (expected === undefined) return {};
+  check(responseInteger(raw) === expected);
+  return {basePointsMinor: expected};
+}
 export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal, lookup: boolean): TaskReceipt {
   const command = request.command, categoryCommand = isCategoryCommand(command);
   const item = fields(value, ['state', 'archived_by', 'operation_id', 'created_at', 'result', 'message', 'action_required',
@@ -117,6 +122,8 @@ export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal,
   text(item.message, 2048); text(item.action_required, 4096); taskTimestamp(item.created_at);
   const stage = choice(item.state, ['committed', 'historical']), archivedBy = nullableId(item.archived_by), operationId = identifier(item.operation_id);
   const schedule = command.action === 'task.create' ? command.payload.schedule : undefined;
+  const basePoints = command.action === 'task.create' ? command.payload.overrides?.point_value_minor : undefined;
+  const pointFields = basePoints === undefined ? [] : ['point_value_minor'];
   check(stage !== 'historical' || archivedBy !== null);
   if (lookup) {
     const action = schedule === undefined ? command.action : 'recurrence.' + schedule.draft.kind + '.create';
@@ -138,15 +145,15 @@ export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal,
   }
   if (schedule !== undefined) {
     const result = fields(item.result, ['schedule_id', 'definition_id', 'revision', 'pattern_revision',
-      'state', 'processing', 'first_occurrence_id'], []);
+      'state', 'processing', 'first_occurrence_id', ...pointFields], []);
     identifier(result.schedule_id); identifier(result.definition_id);
     const revision = responseRevision(result.revision);
     check(revision === '1' && responseRevision(result.pattern_revision) === '1'
       && result.state === 'active' && result.processing === 'pending' && result.first_occurrence_id === null);
     return Object.freeze({kind: 'receipt', stage, action: command.action, operationId,
-      occurrenceId: null, revision, state: 'active', cycle: null, archivedBy});
+      occurrenceId: null, revision, state: 'active', cycle: null, archivedBy, ...originalBasePoints(result.point_value_minor, basePoints)});
   }
-  const result = fields(item.result, ['definition_id', 'definition_revision', 'occurrence_id', 'revision', 'state', 'assignee_ids', 'state_reason', 'prerequisite_ids', 'required_subtask_ids'],
+  const result = fields(item.result, ['definition_id', 'definition_revision', 'occurrence_id', 'revision', 'state', 'assignee_ids', 'state_reason', 'prerequisite_ids', 'required_subtask_ids', ...pointFields],
     ['cycle', 'consumer_delivery', 'materials', 'compensates_cycle_id', 'dependency_review_required']);
   const occurrenceId = identifier(result.occurrence_id), revision = responseRevision(result.revision), state = choice(result.state, TASK_STATES);
   identifier(result.definition_id); responseRevision(result.definition_revision); ids(result.assignee_ids); ids(result.prerequisite_ids, 64); ids(result.required_subtask_ids, 64);
@@ -162,7 +169,8 @@ export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal,
     if (command.action === 'task.verify') check(savedCycle.verification === command.payload.decision);
     else check(result.compensates_cycle_id === command.payload.cycle_id && result.dependency_review_required === true);
   }
-  return Object.freeze({kind: 'receipt', stage, action: command.action, operationId, occurrenceId, revision, state, cycle: savedCycle, archivedBy});
+  return Object.freeze({kind: 'receipt', stage, action: command.action, operationId, occurrenceId, revision, state, cycle: savedCycle, archivedBy,
+    ...originalBasePoints(result.point_value_minor, basePoints)});
 }
 /** Only validated decimal lexemes bypass JSON's string quoting; arbitrary text always uses JSON.stringify. */
 export function taskCommandBody(value: TaskCommand): string {
@@ -172,10 +180,10 @@ export function taskCommandBody(value: TaskCommand): string {
     return '{"expected_revision":' + expected_revision + ',"performed_at":' + performed_at + ',' + JSON.stringify(rest).slice(1);
   }
   if (command.action === 'task.create' && command.payload.schedule !== undefined) {
-    const {title, description, priority, category_id, schedule} = command.payload;
+    const {title, description, priority, category_id, overrides, schedule} = command.payload;
     const {kind: _, ...draft} = schedule.draft;
     const {revision, ...policy} = schedule.policy;
-    const fields = JSON.stringify({task: {title, description, priority, category_id}, ...draft, policy});
+    const fields = JSON.stringify({task: {title, description, priority, category_id, overrides}, ...draft, policy});
     return fields.slice(0, -2) + ',"revision":' + revision + '}}';
   }
   const {expected_revision, ...rest} = command.payload;

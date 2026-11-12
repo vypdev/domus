@@ -380,6 +380,7 @@ test('household-browser-C18: a signed-out language choice has no identity or mut
 
 test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
   {type: 'create', title: 'Task', description: '', priority: 'normal', householdId: 'forged'},
+  {type: 'create', title: 'Task', description: '', priority: 'normal', basePointsMinor: '225'},
   {type: 'create', title: 1, description: '', priority: 'normal'}, {type: 'create', title: 'Task', description: '', priority: 'future'},
   {type: 'complete', materialUsages: true}, {type: 'complete', materialUsages: [{line_id: 'line', quantity: '1.0'}]},
   {type: 'verify', decision: 'pending', reason: 'A'}, {type: 'reopen', reason: 1}, {type: 'select', occurrenceId: '../other'},
@@ -390,6 +391,7 @@ test('closed task events preserve semantic user inputs and exact material quanti
   const inputs = [{type:'createCategory', label:'Garden'}, {type:'renameCategory', categoryId:'garden', revision:'9007199254740993', label:'Garden'},
     {type:'archiveCategory', categoryId:'garden', revision:'9007199254740993'},
     {type:'create', title:'Clean', description:'', priority:'normal', categoryId:'garden'}, {type: 'refresh'}, {type: 'more'}, {type: 'claim'}, {type: 'select', occurrenceId: 'work-1'},
+    {type: 'create', title: 'Clean', description: '', priority: 'normal', basePointsMinor: 0},
     {type: 'create', title: '  Clean 🧹  ', description: '', priority: 'high'}, {type: 'complete', materialUsages: null},
     {type: 'complete', materialUsages: [{line_id: 'line-1', quantity: '3.333333'}]},
     {type: 'verify', decision: 'approved', reason: ''}, {type: 'verify', decision: 'rejected', reason: 'Not done'},
@@ -413,10 +415,12 @@ test('the mounted task surface routes only owned semantic intents to its applica
     send({type: 'create', title: 'Forged actor', description: '', priority: 'normal', actor: 'other'}); await Promise.resolve(); expect(spies.create).not.toHaveBeenCalled();
     const review = {occurrenceId:'work-1',revision:'1',performerIds:['identity-1','other'],fingerprint:'c'.repeat(64)};
     const cases: readonly [unknown, keyof typeof spies, readonly unknown[]][] = [
-      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined, undefined]],
+      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined, undefined, undefined]],
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high',
         schedule: {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}},
-      'create', ['Clean', 'Wipe', 'high', {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}, undefined]],
+      'create', ['Clean', 'Wipe', 'high', {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}, undefined, undefined]],
+      [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high', basePointsMinor: 225},
+        'create', ['Clean', 'Wipe', 'high', undefined, undefined, 225]],
       [{type:'createCategory', label:'Garden'}, 'createCategory', ['Garden']],
       [{type:'renameCategory', categoryId:'garden', revision:'1', label:'Garden'}, 'renameCategory', ['garden', '1', 'Garden']],
       [{type:'archiveCategory', categoryId:'garden', revision:'1'}, 'archiveCategory', ['garden', '1']],

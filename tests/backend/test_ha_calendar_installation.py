@@ -40,7 +40,7 @@ def header(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def runtime(native, installation, path, fingerprint):
+def runtime(native, installation, path, fingerprint, *, deadline_fingerprint=None):
     if native:
         return ingress.create_business_runtime(
             SUPERVISOR,
@@ -49,6 +49,7 @@ def runtime(native, installation, path, fingerprint):
             installation.instance_id,
             (ORIGIN,),
             ha_calendar_digest=fingerprint,
+            ha_deadline_digest=deadline_fingerprint,
         )
     return server.create_runtime(
         "https://ha.example",
@@ -57,6 +58,7 @@ def runtime(native, installation, path, fingerprint):
         installation.channel,
         database=path,
         ha_calendar_digest=fingerprint,
+        ha_deadline_digest=deadline_fingerprint,
     )
 
 

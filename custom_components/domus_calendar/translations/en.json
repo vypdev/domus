@@ -2,29 +2,33 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect Domus Calendar",
-        "description": "Use the Domus HTTPS origin or its private Home Assistant app address. Enter the calendar bearer configured for that installation.",
-        "data": {"url": "Domus address", "token": "Calendar bearer"}
+        "title": "Connect Domus",
+        "description": "Choose what to share with Home Assistant. Enter the Domus HTTPS origin or its private Home Assistant app address, then supply the bearer for the selected projection.",
+        "data": {"projection": "Share with Home Assistant", "url": "Domus address", "token": "Installation bearer"}
       },
       "reconfigure": {
-        "title": "Reconnect Domus Calendar",
+        "title": "Reconnect Domus",
         "description": "Enter the address and bearer for the same Domus installation.",
-        "data": {"url": "Domus address", "token": "Calendar bearer"}
+        "data": {"url": "Domus address", "token": "Installation bearer"}
       }
     },
     "error": {
-      "cannot_connect": "Domus Calendar could not be reached. Check the address and try again.",
-      "invalid_auth": "Domus did not accept this calendar bearer.",
+      "cannot_connect": "Domus did not return this projection. Check the address and try again.",
+      "invalid_auth": "Domus did not accept this bearer. Check that it matches the selected projection and installation.",
       "invalid_endpoint": "Use an HTTPS origin or the private Home Assistant app address."
     },
     "abort": {
-      "already_configured": "This Domus installation is already connected.",
+      "already_configured": "This projection is already connected for this Domus installation.",
       "wrong_source": "Reconnect to the same Domus installation and channel.",
-      "reconfigure_successful": "Domus Calendar was reconnected."
+      "reconfigure_successful": "Domus was reconnected."
     }
   },
   "exceptions": {
-    "calendar_unavailable": {"message": "Domus could not return a complete calendar for this range."}
+    "calendar_unavailable": {"message": "Domus could not return a complete calendar for this range."},
+    "deadlines_unavailable": {"message": "Domus could not return the task deadline counts."}
+  },
+  "selector": {
+    "projection": {"options": {"calendar": "Calendar", "deadlines": "Task deadline counts"}}
   },
   "entity": {
     "calendar": {
@@ -32,6 +36,10 @@
         "name": "Domus Schedule",
         "state_attributes": {"projection_pending": {"name": "Projection pending"}}
       }
+    },
+    "sensor": {
+      "tasks_due_today": {"name": "Domus tasks due today"},
+      "tasks_overdue": {"name": "Domus overdue tasks"}
     }
   }
 }

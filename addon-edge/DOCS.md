@@ -1,10 +1,13 @@
 # Installation and operation
 
-Edge 0.0.0-edge.22 packages the immutable runtime declared in
-[artifact.json](artifact.json). Overview shows your completed tasks and posted earned
-points for the current Family week. Open Family for the full report, including pending
-verification and pending posting. This preview migrates
-supported databases to SQLite schema 31. Edge.13 introduced that schema and
+Edge 0.0.0-edge.26 packages the immutable runtime declared in
+[artifact.json](artifact.json). People with task configuration permission can set optional base points when creating
+a task; leaving the field empty uses the household default. Home Assistant can read
+the due-today and overdue task counts shown on Overview through a dedicated installation
+grant. Enable the [native deadline sensors](../docs/tasks/ha-deadline-sensors.md) using
+the optional `ha_deadline_digest` setting. The calendar uses its own
+`ha_calendar_digest` setting. Both share the private app port `8100` when enabled.
+This preview retains SQLite schema 31. Edge.13 introduced that schema and
 is listed in `breaking_versions`. Keep a compatible image and stopped-app
 backup before upgrading from an earlier schema. A binary that expects the
 earlier schema requires its compatible data backup.

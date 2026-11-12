@@ -990,3 +990,196 @@ The roadmap's Overview section asks for upcoming maintenance.
 Application-experience-R2 defines the overview and current authorized
 navigation. The recurrence specification defines materialized work and
 existing effective deadlines.
+
+## Proposed change: Set base points when creating a task
+
+- Status: Draft
+- Catalog capability: household-tasks
+
+### 1. Executive summary
+
+Issue #111 adds an optional base-point amount to task creation for a creator with current task-configuration authority. Leaving it unset preserves the existing household default and title-only workflow. The amount must remain within the existing minor-point bound; retries and later awards must preserve the original amount and existing award rules.
+
+```text
+Authorized creator -> optionally enter base points -> create task
+Basic creator -> create task with title only -> household default applies
+```
+
+### 2. Problem, current behavior, and evidence
+
+#### 2.1 Problem
+
+Creators who need a task-specific base amount cannot set it while creating a task. They must rely on the household default or use the existing task-override path later. This delta makes the optional override available at creation while preserving the simpler workflow for other creators.
+
+#### 2.2 Current behavior
+
+1. The task creation form accepts a title and other existing creation fields, but exposes no base-point control and sends no base-point amount. See `frontend/src/presentation/domus-tasks.ts`, `frontend/src/application/task-controller.ts`, and `frontend/src/domain/tasks.ts`.
+2. The selected task domain supports an optional `point_value_minor` override bounded from 0 through 1,000,000; the task-execution contract identifies the base value as administrator-controlled and snapshotted. See `backend/src/domus/domain/task_values.py` and `specs/task-execution-foundation.md`.
+3. The retained Points contract requires current `points.manage` authority for task-definition overrides and defines exact integer minor-point allocation and award behavior. See `specs/points-rewards.md`.
+
+The gap is in the creation form and its request path. This delta extends the retained `specs/household-tasks.md` contract; it does not replace existing task-creation, recovery, or award requirements. Current task-override bounds and authority are the baseline for review.
+
+### 3. Actors, surfaces, and terminology
+
+| Actor | Goal | Entry point | Visible surfaces |
+|---|---|---|---|
+| Creator with current task-configuration authority | Set an optional base amount when creating a task | Existing task creation form | Localized form control and creation result |
+| Creator without that authority | Create a task without configuring points | Existing task creation form | Title-only path and existing household default |
+| Household member | Understand the amount used for a created task and its later award | Task view and existing award history | Existing task and Points surfaces |
+
+“Base points” means the task’s base amount expressed in exact integer minor points. The existing household default applies when no override is supplied. Current task-configuration authority is checked at the write boundary; a visible control or client-provided identity does not grant permission. The creation control and its amount must be presented in English and Spanish, following the retained owner’s locale conventions.
+
+### 4. Goals, non-goals, and fixed invariants
+
+#### 4.1 Goals
+
+1. Authorized creators can optionally provide a bounded base-point override during task creation; creators without current task-configuration authority retain title-only creation and the household default.
+2. Validate the amount against the existing minor-point bound, preserve the original request’s recovery behavior, and apply the existing task award rules to the exact configured base amount.
+3. Present the control and exact amount consistently in English and Spanish.
+
+#### 4.2 Non-goals
+
+1. Changing household defaults, saved task overrides, allocation policy, award rules, or the existing permission model.
+2. Requiring a base-point amount for task creation or changing title-only creation.
+
+#### 4.3 Fixed product/safety invariants
+
+1. Omission of the optional amount retains the existing household default; it must not silently become a new default or an invented override.
+2. The creation path must enforce the current task-configuration authority and existing amount bounds. Invalid values create no task effect and leave the user able to correct the amount.
+3. Recovering the original committed request returns the same task and base amount without creating a duplicate. Later award processing uses that exact amount under existing award and verification rules.
+4. Existing task and Points contracts and their cases remain in force; this delta adds the six supplied cases without redefining retained cases. Requirements and cases remain prospective acceptance criteria, not claims of implementation or execution.
+
+| Requirement | Behavior |
+| --- | --- |
+| SDD-I111-U1-R1 | Task creation MUST expose an optional base-point override to creators with current task configuration authority, while creators without that authority retain title-only creation and the existing household default. |
+| SDD-I111-U1-R2 | The override MUST use the current bounded minor-point amount and preserve original request recovery and task award rules. |
+| SDD-I111-U1-R3 | The creation form MUST support exact base-point amounts in English and Spanish. |
+
+### 5. Current versus proposed product journey
+
+The existing task journey and retained task contract remain as documented in `specs/household-tasks.md`. This delta adds an optional base-point override to task creation for a creator with current task configuration authority. A creator without that authority keeps title-only creation and the existing household default.
+
+The creator enters an exact bounded minor-point amount in the creation form. The form presents the control and amount in the selected English or Spanish locale. Invalid out-of-range input is rejected without changing the established creation behavior. After creation, the task retains that exact base amount; existing task award rules use it. If the creation response is lost after commit, recovery with the original request returns the same task and amount without creating a duplicate.
+
+### 6. Functional behavior and state model
+
+#### 6.1 Creation flow delta
+
+1. The creator opens task creation. Current task configuration authority determines whether the optional base-point override is available.
+2. An authorized creator may submit an exact amount within the existing bounded minor-point range. A creator without that authority submits the existing title-only form and receives the household default.
+3. The system validates and commits the task using the existing creation and request-recovery rules. A lost response is recovered by replaying the original request; the same task and base amount are returned.
+4. Later award processing applies the existing task award rules using the task's exact base amount.
+
+The existing task lifecycle, state transitions, permissions, and award behavior in `specs/household-tasks.md` remain in force. This change adds no new task lifecycle state. Invalid amounts are rejected before task creation; replay of the same request does not create a second task.
+
+### 7. User-facing configuration
+
+The creation form gains one optional input: base-point override. Its value is an exact minor-point amount within the current supported bounded range. The recommended default is no override, preserving the household default. The value is scoped to the task being created and persists as that task's base amount. Current task configuration authority governs whether the input is available and accepted; the creator cannot expand their own authority. Invalid or out-of-range values are rejected. The control and amount must be presented consistently in English and Spanish. Other task configuration and precedence rules remain those in `specs/household-tasks.md`.
+
+### 8. Clean Architecture design
+
+This delta extends the existing task creation path; it does not introduce a parallel task or points policy. The creation presentation exposes the optional control only when current task configuration authority permits it and submits the amount through the existing task creation boundary. The application and domain validate the bounded minor-point amount and retain it on the created task. Existing request receipt/recovery behavior returns the original committed task for a replay. Existing award processing consumes the task's exact base amount under the established award rules.
+
+The UI must not be the authorization boundary: the creation command rechecks current authority and validates untrusted submitted amounts before committing. Invalid input creates no task. Recovery and award integration must preserve existing idempotency and ledger rules. English and Spanish presentation belongs to the existing localization boundary. This delta adds no new durable state machine; the task's base amount remains part of the existing task record and award flow.
+
+### 9. UI/UX and content contract
+
+#### 9.1 Creation form
+
+For a creator with current task configuration authority, the task creation form MUST expose an optional base-point control alongside the existing title-only path. A creator without that authority continues to create a task using the household default and does not see an editable override. The control accepts and displays the exact bounded minor-point amount; it must not round or silently substitute a value. The established task contract keeps title-only creation minimal (`specs/household-tasks.md`, `household-tasks-R7`); the task execution contract defines `point_value_minor` as an integer from 0 through 1,000,000 (`specs/task-execution-foundation.md`).
+
+Label the control with its purpose and unit, provide an accessible name, keyboard operation, visible focus, and field-level feedback that is not conveyed by color alone. English and Spanish must each present the control, unit, entered amount, and validation feedback consistently in the selected language; use the existing English fallback when no supported language matches. Preserve the entered title and amount when validation fails. On narrow screens the title-only save path remains available without opening advanced fields. These outcomes are exercised by the authorized and basic creator cases, amount boundary case, and localization case defined for this delta.
+
+### 10. Failure, recovery, and cleanup
+
+Reject a missing-authority override, malformed amount, or amount outside the supported minor-point bounds before task creation; identify the field and retain the draft for correction. A creator without override authority may still submit title-only creation under the existing household default. Do not partially create a task or apply an unrequested amount on rejection.
+
+If the creation response is lost after commit, recovery through the original request identity returns the same task and exact base amount without creating another task. A changed request under that identity follows the retained task command conflict behavior. Subsequent award processing uses the committed base amount under the existing award and verification rules; a failed or pending projection must not be reported as a failed creation or as points already awarded. These recovery and award outcomes extend the existing actionable validation, conflict, and receipt contract (`specs/household-tasks.md`, `household-tasks-R8`; `specs/task-execution-foundation.md`, `task-execution-foundation-C22`).
+
+### 11. Security, permissions, and privacy
+
+The override is available only to a creator with current task configuration authority, checked by the protected task command at commit time. Hiding or disabling a control is not authorization: requests that forge an override or use stale/revoked authority must be rejected without changing task state. A creator lacking that authority retains title-only creation and the existing household default. Keep household scoping, current role checks, and original-operation authorization consistent with the retained task contract (`specs/household-tasks.md`, `household-tasks-R8`).
+
+Treat the amount and all request fields as untrusted input. Validate the bounded integer on the server; do not accept a client-selected household, permission, award, or ledger effect through this control. Diagnostics may record a safe outcome and correlation reference, but must not include credentials or unrestricted request payloads, consistent with `specs/household-tasks.md`.
+
+### 12. Observability and operational UX
+
+The creator must be able to distinguish a saved task from validation failure, authorization denial, conflict, and an unresolved response. On failure, state the impact, safe cause, corrective action, and whether the task was retained or committed; after an uncertain response, direct recovery to the original operation rather than inviting a fresh duplicate request. Show the saved base amount with the task when appropriate, and distinguish it from points awarded: the amount is the base for existing award processing, not evidence that an award has posted. Keep operator evidence limited to sanitized outcome, operation correlation, and the committed task reference; do not create duplicate activity or notifications on recovery. Follow the retained operational contract in `specs/household-tasks.md`.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+This delta adds a creation-time way to set the existing task base-point amount. Reuse the existing saved task override and Points rules described by the issue and retained task execution contract; do not define a second points value or change award, verification, replay, or ledger semantics. Existing tasks without an explicit override continue to use the household default, and existing in-flight creation requests retain their original request-recovery behavior.
+
+The selected owner describes task implementation as prospective and does not establish the creation form's storage representation or a migration requirement. Review implementation evidence before deciding whether persistence changes are needed. If a schema change proves necessary, preserve existing task values and operation receipts atomically, and require a compatible image/data pair for rollback; never discard committed base amounts or replay awards as rollback compensation. Rollout must retain title-only creation for creators without current configuration authority. The concrete migration and rollback procedure remains unverified until the implementation and its evidence are available.
+
+### 14. Testing strategy and numeric budget
+
+#### Risk-derived budget and verification
+
+Retain the immutable owner’s 49-case baseline and add six distinct cases for this delta, for a minimum of 55 distinct cases overall. Each new case counts once; repeated executions do not increase the count. The six cases cover authorized and unauthorized creation-form behavior, supported amount boundaries and rejection, recovery of the original request after a lost response, application of the configured base amount under existing award rules, and English/Spanish presentation. Their concrete outcomes are defined by the supplied case inventory. These additions do not claim semantic completeness or executed acceptance.
+
+Tests MUST establish that authorized creators can set an optional bounded minor-point amount, unauthorized creators retain title-only creation and the household default, invalid amounts are rejected without changing the existing task contract, and valid amounts are preserved exactly. Recovery MUST return the same created task and amount without duplication. Subsequent awards MUST use the stored amount under existing award rules. Localization checks MUST verify that the control and exact amount are understandable in both languages. Keep deterministic request/recovery and boundary assertions, and test authorization at the command boundary as well as the form. No test run or coverage result is asserted by this draft. The concrete verification invocation and prerequisites remain unverified in the selected source.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| UI and authorization | 2 | Observable scenarios in the case inventory. |
+| Domain and validation | 1 | Observable scenarios in the case inventory. |
+| Integration and recovery | 1 | Observable scenarios in the case inventory. |
+| Integration and awards | 1 | Observable scenarios in the case inventory. |
+| UI and localization | 1 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| task-base-points-C01 | UI and authorization | SDD-I111-U1-R1 | Given a creator with current task configuration authority, the creation form exposes an optional base-point override. |
+| task-base-points-C02 | UI and authorization | SDD-I111-U1-R1 | Given a creator without current task configuration authority, creation remains title-only and uses the existing household default. |
+| task-base-points-C03 | Domain and validation | SDD-I111-U1-R2 | Given an override at each supported boundary and an out-of-range amount, valid bounded minor-point amounts are accepted exactly and the invalid amount is rejected. |
+| task-base-points-C04 | Integration and recovery | SDD-I111-U1-R2 | Given a creation request whose response is lost after commit, recovering the original request returns the same created task and base amount without creating a duplicate. |
+| task-base-points-C05 | Integration and awards | SDD-I111-U1-R2 | Given a task created with a base-point override, subsequent task award processing applies the existing award rules using that exact base amount. |
+| task-base-points-C06 | UI and localization | SDD-I111-U1-R3 | Given English or Spanish selected, the creation form presents the base-point control and its exact amount consistently in that language. |
+
+### 15. Documentation and discoverability
+
+#### Documentation and discoverability
+
+This is a bounded update to `specs/household-tasks.md`; the retained owner’s existing task creation, authorization, default, request recovery, and award contracts remain in force. Update that contract to explain the optional base-point control, who can use it, the bounded minor-point amount, the household default for creators without current configuration authority, and the English and Spanish labels and amount presentation. Describe validation and recovery in user-facing terms without promising a new award behavior.
+
+Document the six supplied cases as the acceptance evidence for this change and link them through the owner’s existing documentation structure. The selected source establishes the owner path; it does not establish new documentation paths or a concrete verification invocation for this delta. Any publication inventory and navigation are host-managed.
+
+| Path | Change |
+| --- | --- |
+| specs/household-tasks.md | update |
+
+[specs/household-tasks.md](household-tasks.md)
+
+### 16. Acceptance scenarios
+
+#### Acceptance scenarios
+
+The six supplied scenarios define the new observable acceptance inventory. With current task configuration authority, a creator sees an optional base-point override during creation. Without that authority, the creator retains title-only creation and the existing household default. At every supported boundary, valid minor-point amounts are accepted exactly and an out-of-range amount is rejected. If the response is lost after commit, recovery of the original request returns the same task and base amount without a duplicate. A task created with an override uses that exact base amount in subsequent processing governed by existing award rules. In English and Spanish, the creation form presents the control and exact amount consistently in the selected language.
+
+Acceptance MUST assert persisted task state and relevant side effects, including absence of a duplicate on recovery. Existing owner cases remain baseline references and are not redefined by this delta. Human review and execution results remain pending until the implemented artifact is exercised.
+
+### 17. Requirements traceability
+
+#### Requirements traceability
+
+The three supplied requirements map to the cases that exercise them: the authorized override and unauthorized title-only/default behavior map to `task-base-points-C01` and `task-base-points-C02`; bounded exact amounts, original-request recovery, and existing award processing map to `task-base-points-C03`, `task-base-points-C04`, and `task-base-points-C05`; English and Spanish control and amount presentation map to `task-base-points-C06`. These mappings preserve the supplied identities and concrete assertions. Existing task and Points cases remain references to baseline evidence, not new definitions. Reciprocal structural mappings do not establish semantic completeness or passing tests.
+
+| Requirement | Cases |
+|---|---|
+| SDD-I111-U1-R1 | task-base-points-C01, task-base-points-C02 |
+| SDD-I111-U1-R2 | task-base-points-C03, task-base-points-C04, task-base-points-C05 |
+| SDD-I111-U1-R3 | task-base-points-C06 |
+
+### 18. Implementation sequence
+
+Extend the immutable retained owner `specs/household-tasks.md` with the optional base-point override during task creation. Preserve its existing contract and cases, and retain the task lifecycle and authorization boundaries in `specs/task-execution-foundation.md` and the category contract in `specs/household-task-categories.md`. Expose the control only to creators with current task configuration authority; preserve title-only creation and the household default for creators without that authority. Validate and persist the exact bounded minor-point amount through the existing task and Points behavior. Preserve recovery of the original request after a lost response and apply the established task award rules. Provide the exact amount control in English and Spanish.
+
+### 19. Definition of Done
+
+Done when the six supplied cases establish that authorized creators can use the optional override while other creators retain title-only creation and the household default; supported boundary amounts are accepted exactly and an out-of-range amount is rejected; recovery of the original committed request returns the same task and base amount without a duplicate; and subsequent award processing uses that exact base amount under existing award rules. The creation control and exact amount are presented consistently in English and Spanish. Verify each behavior with observable UI, authorization, domain, recovery, and award evidence, and map each requirement only to cases that exercise it. The specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths and evidence agree with the generated view. These publication outcomes are required; the concrete invocation or prerequisite for SDK consistency verification remains unverified in the selected source.
+
+### 20. References and decisions
+
+Issue: https://github.com/vypdev/domus/issues/111. This is a bounded update to the immutable retained owner `specs/household-tasks.md` at selected revision `209b396f6fde5dc34b69baa13251247918ab01cc`; its existing contract and cases remain authoritative. `specs/task-execution-foundation.md` retains the task execution context, and `specs/household-task-categories.md` remains an owning companion. The issue describes the protected task command, preview, and ledger as already supporting an exact base amount; that claim is issue-provided and was not independently verified here. The package declares pnpm 10.34.0, and `specs/README.md` documents specification validation and generation invocations, but their referenced definitions and execution prerequisites were not inspected here; no command result or SDK consistency verification is claimed.

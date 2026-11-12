@@ -3,7 +3,7 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, weekly Family participation, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
+  "scope": "Compiled household workspace with upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
     ".vite/manifest.json": "6d74ac3eb2615802725ca9760e3ecf6ad4b261a6d94072aa83341dfaff1d66b4",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
@@ -221,6 +221,25 @@
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
       "assets/index-Dx8HsQnC.js": "eeef7579c8591ebe2ed679c5edf3d12e14c42f2316a3dee552f07759001f4eb2",
       "index.html": "df5fca477aea9e4719d6a0cfb28dbc11ac5eb4d4694bddb5a8a64457c5e4c361"
+    }
+  },
+  "preTaskBasePoints": {
+    "sourceCommit": "ff6b64fec87bab3d156a0c64952387c7a33ceff1",
+    "scope": "Compiled household workspace before optional task base points, with task and stock summaries, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "d3e5d88e254b44f115434200d7c06e3786503ddd3dcc54159b12cfa478a0e8d3",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DOfU-Xei.js": "58c0a0583f61ddb56f7990abdb08988801cb12ab8cd261424507f6a1d6489a84",
+      "index.html": "640506dad66475ec8db78b827e96c250a8ce3fbacbc4c2f77aa1173266c51f7d"
+    }
+  },
+  "taskBasePointsIntegration": {
+    "scope": "Compiled household workspace with the existing task, Pantry, and Shopping journeys and optional base points during task creation, including localized decimal entry and original operation recovery in English and Spanish.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "734a1f5ba77da03257115ade8cb5f680b19febd79c853f95a3fa51993e0f2cdb",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-CrrA8YHS.js": "c32342fbb48c4d5e7266a3a6272e77d6a4479290440c4e801887750470b99bb2",
+      "index.html": "1198c1ad6b3475ec0c03041f145522f4454e7782aec020a2779204a4bea2f399"
     }
   }
 }

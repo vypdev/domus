@@ -9,6 +9,7 @@ from typing import Literal, cast
 
 from domus.application.authorization import HouseholdAccess
 from domus.application.calendar_queries import calendar_boundary
+from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.household_queries import OperationView
 from domus.application.point_allocations import effective_allocation
 from domus.application.ports import Clock, Transactions, UnitOfWork
@@ -79,6 +80,7 @@ class TaskWorkspaceView:
     can_record_for_others: bool
     can_manage_points: bool
     schedule_policy: TimePolicy | None = None
+    can_configure: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,6 +146,28 @@ class TaskOverview:
     due_today: TaskOverviewGroup[TaskOverviewDeadlineItem]
     overdue: TaskOverviewGroup[TaskOverviewDeadlineItem]
     upcoming_maintenance: TaskOverviewGroup[TaskOverviewDeadlineItem]
+
+
+@dataclass(frozen=True, slots=True)
+class TaskDeadlineCounts:
+    due_today: int
+    overdue: int
+
+
+@dataclass(frozen=True, slots=True)
+class InstallationTaskDeadlines:
+    transactions: Transactions
+    scope: MaintenanceScope
+    clock: Clock
+    times: RecurrenceTimes
+
+    def read(self) -> TaskDeadlineCounts:
+        with self.transactions.read() as unit:
+            household = self.scope.require(unit)
+            today, overdue, _ = _overview_deadline_groups(
+                unit, household.household_id, self.clock.now(), self.times
+            )
+            return TaskDeadlineCounts(today.total, overdue.total)
 
 
 def _overview_group(group: TaskOccurrenceGroup) -> TaskOverviewGroup[TaskOverviewItem]:
@@ -708,12 +732,13 @@ class TaskQueries:
                     unit, self.household_id, Permission.TASKS_MANAGE
                 )
             )
+            catalog = category_catalog(unit, TaskAccess(self.human), self.household_id)
             return TaskWorkspaceView(
                 self.household_id,
                 actor.member.member_id,
                 can_create,
                 can_review,
-                category_catalog(unit, TaskAccess(self.human), self.household_id),
+                catalog,
                 _possible(
                     lambda: TaskAccess(self.human).require(
                         unit, self.household_id, Permission.TASKS_RECORD_FOR_OTHERS
@@ -727,6 +752,7 @@ class TaskQueries:
                 schedule_creation_policy(unit, self.household_id, self.schedule_data_identity)
                 if can_create and self.schedule_data_identity is not None
                 else None,
+                can_configure=catalog.can_manage,
             )
 
     def _operation_access(self, unit: UnitOfWork) -> None:

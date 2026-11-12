@@ -15,11 +15,15 @@ def test_repository_and_edge_manifest_offer_native_ha_entry_without_user_credent
     manifest = yaml.safe_load((ROOT / "addon-edge/config.yaml").read_text())
     assert repository["url"] == "https://github.com/vypdev/domus"
     assert manifest["slug"] == "domus_edge" and manifest["stage"] == "experimental"
-    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.22"
+    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.26"
     assert manifest["ingress"] is True and manifest["ingress_port"] == 8099
     assert manifest["panel_admin"] is False and manifest["homeassistant_api"] is True
     assert manifest["options"] == {"public_origins": []}
-    assert manifest["schema"] == {"public_origins": ["url"]}
+    assert manifest["schema"] == {
+        "public_origins": ["url"],
+        "ha_calendar_digest": "str?",
+        "ha_deadline_digest": "str?",
+    }
     assert manifest["breaking_versions"] == [
         "0.0.0-edge.2",
         "0.0.0-edge.3",
@@ -54,15 +58,15 @@ def test_build_pins_source_checksum_bases_lock_and_nonroot_native_entrypoint() -
     commits = re.findall(r"^ARG DOMUS_SOURCE_COMMIT=(\w+)$", source, re.MULTILINE)
     assert len(commits) == 2 and len(set(commits)) == 1
     assert re.fullmatch(r"[a-f0-9]{40}", commits[0])
-    assert commits[0] == "2efa9e40cf29ed1ea311ef7e16b76f4c3bfd3f8b"
+    assert commits[0] == "691496c299ff371763e445acb9d36b9623a81404"
     assert (
-        "DOMUS_SOURCE_SHA256=7962705e1af98d83257496f55fd7552dace31c8b1fb4d38c035eb26ea0a494a9"
+        "DOMUS_SOURCE_SHA256=535c0b95a2db96fe3ebc927596f4e74f6eaadb7b641f2a674c23e672489f0d3b"
         in source
     )
-    assert "ARG BUILD_VERSION=0.0.0-edge.22" in source
+    assert "ARG BUILD_VERSION=0.0.0-edge.26" in source
     candidate = json.loads((ROOT / "addon-edge/artifact.json").read_text())
     assert candidate["sourceCommit"] == commits[0]
-    assert candidate["version"] == "0.0.0-edge.22"
+    assert candidate["version"] == "0.0.0-edge.26"
     assert "DOMUS_SOURCE_SHA256=" + candidate["sourceArchiveSHA256"] in source
     assert re.search(r"^ARG DOMUS_SOURCE_SHA256=[a-f0-9]{64}$", source, re.MULTILINE)
     assert "sha256sum --check" in source
@@ -95,6 +99,12 @@ def test_native_options_explain_the_one_time_origin_configuration_without_a_new_
     field = text["configuration"]["public_origins"]
     assert field["name"] == "Home Assistant browser origins"
     assert "one to four" in field["description"] and "existing HA sign-in" in field["description"]
+    for language in ("en", "es"):
+        labels = yaml.safe_load((ROOT / f"addon-edge/translations/{language}.yaml").read_text())
+        fields = labels["configuration"]
+        calendar, deadlines = fields["ha_calendar_digest"], fields["ha_deadline_digest"]
+        assert calendar["name"] != deadlines["name"]
+        assert all("SHA-256" in field["description"] for field in (calendar, deadlines))
 
 
 def test_edge_five_compatibility_recipe_is_frozen_and_not_a_discoverable_second_app() -> None:
@@ -130,12 +140,12 @@ def test_edge_artifact_declares_exact_reviewed_runtime_without_rebinding_histori
         "pythonFiles",
         "uiFiles",
     }
-    assert artifact["schemaVersion"] == 1 and artifact["version"] == "0.0.0-edge.22"
-    assert artifact["sourceCommit"] == "2efa9e40cf29ed1ea311ef7e16b76f4c3bfd3f8b"
+    assert artifact["schemaVersion"] == 1 and artifact["version"] == "0.0.0-edge.26"
+    assert artifact["sourceCommit"] == "691496c299ff371763e445acb9d36b9623a81404"
     assert artifact["storageSchema"] == 31
     for field in ["sourceArchiveSHA256", "wheelSHA256"]:
         assert re.fullmatch("[a-f0-9]{64}", artifact[field])
-    assert len(artifact["pythonFiles"]) == 215 and len(artifact["uiFiles"]) == 4
+    assert len(artifact["pythonFiles"]) == 218 and len(artifact["uiFiles"]) == 4
     for name, digest in artifact["pythonFiles"].items():
         assert re.fullmatch(r"domus/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.py", name)
         assert re.fullmatch("[a-f0-9]{64}", digest)

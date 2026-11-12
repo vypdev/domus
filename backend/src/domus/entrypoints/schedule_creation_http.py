@@ -16,6 +16,7 @@ from domus.application.task_requests import CreateTask
 from domus.domain.recurrence_rule_text import parse_fixed_pattern
 from domus.domain.recurrence_time import FoldPolicy, RelativeInterval, TimePolicy
 from domus.domain.relative_recurrence import SuccessorVisibility
+from domus.domain.task_values import TaskOverrides
 from domus.entrypoints.household_http import (
     OperationResponse,
     ReceiptResponse,
@@ -27,7 +28,7 @@ from domus.entrypoints.household_http import (
 from domus.entrypoints.http_contract import StrictModel
 from domus.entrypoints.recurrence_dto import NominalBody, nominal
 from domus.entrypoints.recurrence_http import _require_context
-from domus.entrypoints.task_dto import Identifier, Revision, TaskTextBody
+from domus.entrypoints.task_dto import Identifier, PointValueMinor, Revision, TaskTextBody
 
 ScheduleCreationAction = Literal["recurrence.fixed.create", "recurrence.relative.create"]
 
@@ -44,8 +45,20 @@ class ScheduleCreationPolicyBody(StrictModel):
         )
 
 
+class ScheduledTaskOverridesBody(StrictModel):
+    point_value_minor: PointValueMinor
+
+
+class ScheduledTaskTextBody(TaskTextBody):
+    overrides: ScheduledTaskOverridesBody | None = None
+
+    def domain(self) -> CreateTask:
+        amount = None if self.overrides is None else self.overrides.point_value_minor
+        return CreateTask(self.content(), overrides=TaskOverrides(point_value_minor=amount))
+
+
 class ScheduledTaskBody(StrictModel):
-    task: TaskTextBody
+    task: ScheduledTaskTextBody
     start: NominalBody
     policy: ScheduleCreationPolicyBody
 
@@ -89,7 +102,7 @@ def create_schedule_creation_router(
             fixed(request).create_fixed(
                 _key(request),
                 CreateFixedTask(
-                    CreateTask(body.task.content()),
+                    body.task.domain(),
                     parse_fixed_pattern(body.rrule, nominal(body.start)),
                     body.policy.domain(),
                 ),
@@ -104,7 +117,7 @@ def create_schedule_creation_router(
             relative(request).create(
                 _key(request),
                 CreateRelativeTask(
-                    CreateTask(body.task.content()),
+                    body.task.domain(),
                     nominal(body.start),
                     RelativeInterval(body.interval_days),
                     body.policy.domain(),
