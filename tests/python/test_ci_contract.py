@@ -122,14 +122,20 @@ def test_linux_app_images_are_built_and_exercised_on_both_cpu_families() -> None
 
 def test_ci_is_read_only_with_exact_action_versions_and_locked_installs() -> None:
     config = workflow()
+    lock = yaml.safe_load(WORKFLOW.with_name("actions.lock").read_text(encoding="utf-8"))
+    refs = set()
     assert config["permissions"] == {"contents": "read"}
     for job in config["jobs"].values():
         assert "permissions" not in job
         for step in job["steps"]:
             if "uses" in step:
                 assert re.fullmatch(r"[\w/-]+@v[0-9]+\.[0-9]+\.[0-9]+", step["uses"])
+                refs.add(step["uses"])
             if step.get("uses", "").startswith("actions/checkout@"):
                 assert step["with"]["persist-credentials"] == "false"
+    assert refs == set(lock["workflows"][WORKFLOW.relative_to(ROOT).as_posix()])
+    for ref in refs:
+        assert re.fullmatch(r"sha1-[a-f0-9]{40}", lock["dependencies"][ref]["commit"])
     source = WORKFLOW.read_text(encoding="utf-8")
     assert "uv sync --frozen" in source
     assert "pnpm install --frozen-lockfile" in source
