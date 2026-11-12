@@ -133,6 +133,11 @@ def test_ci_is_read_only_with_exact_action_versions_and_locked_installs() -> Non
                 refs.add(step["uses"])
             if step.get("uses", "").startswith("actions/checkout@"):
                 assert step["with"]["persist-credentials"] == "false"
+            if step.get("uses", "").startswith("pnpm/action-setup@"):
+                assert step["with"]["dest"] == (
+                    "${{ runner.temp }}/domus-pnpm-${{ github.run_id }}-"
+                    "${{ github.run_attempt }}-${{ github.job }}"
+                )
     assert refs == set(lock["workflows"][WORKFLOW.relative_to(ROOT).as_posix()])
     for ref in refs:
         assert re.fullmatch(r"sha1-[a-f0-9]{40}", lock["dependencies"][ref]["commit"])
