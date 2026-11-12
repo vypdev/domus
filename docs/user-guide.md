@@ -361,6 +361,8 @@ and whether the product's available stock is below its configured minimum.
 
 Previewing makes no changes. Update the title or condition and preview again to use
 current stock. If the preview is temporarily unavailable, retry with the same draft.
+If the product list fails to load, you can preview without a stock condition or
+choose **Try again** to reload the list with your title intact.
 Your current household grants control access to the form.
 
 The [automation specification](../specs/household-automation.md) describes the planned

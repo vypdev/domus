@@ -17,7 +17,7 @@ const page = (products: readonly ProductStock[], cursor: string | null): Invento
   ({products, cursor, locations: [], mayManage: true, mayShop: true, mayRequest: true});
 const ready = (overrides: Partial<Extract<AutomationPreviewView, {state:'ready'}>> = {}) => ({
   state: 'ready' as const, title: '', selected: null, catalog: {products: [tea], after: null, next: 'next'},
-  busy: null, result: null, issue: null, ...overrides,
+  catalogUnavailable: false, busy: null, result: null, issue: null, ...overrides,
 });
 
 function deferred<T>() {
@@ -29,7 +29,8 @@ function deferred<T>() {
 
 test('manual preview keeps the draft through validation, read retries and product paging', async () => {
   const access = vi.fn().mockImplementation(() => settled(undefined));
-  const preview = vi.fn().mockImplementationOnce(() => failed(new EntryReadError('unavailable')))
+  const preview = vi.fn().mockImplementationOnce(() => settled(true))
+    .mockImplementationOnce(() => failed(new EntryReadError('unavailable')))
     .mockImplementationOnce(() => settled(false)).mockImplementationOnce(() => settled(true));
   const read = vi.fn().mockImplementationOnce(() => failed(new Error('catalog unavailable')))
     .mockImplementationOnce(() => settled(page([tea], 'next')))
@@ -46,9 +47,16 @@ test('manual preview keeps the draft through validation, read retries and produc
   controller.bind(scope, true);
   await controller.handle({type:'retry'});
   expect(access).toHaveBeenCalledOnce();
-  await vi.waitFor(() => expect(publish).toHaveBeenLastCalledWith({state:'unavailable'}));
+  const emptyCatalog = {products:[], after:null, next:null};
+  const unavailableCatalog = ready({catalog:emptyCatalog, catalogUnavailable:true});
+  await vi.waitFor(() => expect(publish).toHaveBeenLastCalledWith(unavailableCatalog));
+  await controller.handle({type:'title', value:TITLE});
+  await controller.handle({type:'preview'});
+  expect(preview).toHaveBeenLastCalledWith(context, {title:TITLE, productId:null});
+  expect(publish).toHaveBeenLastCalledWith({...unavailableCatalog, title:TITLE, result:true});
   await controller.handle({type:'retry'});
-  await vi.waitFor(() => expect(publish).toHaveBeenLastCalledWith(ready()));
+  await vi.waitFor(() => expect(publish).toHaveBeenLastCalledWith(ready({title:TITLE})));
+  await controller.handle({type:'title', value:''});
   expect(access).toHaveBeenCalledWith(context, 'home');
   expect(read).toHaveBeenLastCalledWith(scope, null);
   await controller.handle(undefined);
@@ -59,11 +67,11 @@ test('manual preview keeps the draft through validation, read retries and produc
 
   await controller.handle({type:'preview'});
   expect(publish).toHaveBeenLastCalledWith(ready({issue:'title'}));
-  expect(preview).not.toHaveBeenCalled();
+  expect(preview).toHaveBeenCalledOnce();
   await controller.handle({type:'title', value:TITLE});
   await controller.handle({type:'product', value:tea.id});
   await controller.handle({type:'next'});
-  expect(publish).toHaveBeenLastCalledWith(ready({title:TITLE, selected:tea, issue:'products'}));
+  expect(publish).toHaveBeenLastCalledWith(ready({title:TITLE, selected:tea, catalogUnavailable:true}));
   await controller.handle({type:'next'});
   const second = {products: [coffee], after:'next', next:null};
   expect(publish).toHaveBeenLastCalledWith(ready({title:TITLE, selected:tea, catalog:second}));
@@ -233,8 +241,11 @@ test('preview component localizes draft, status and recovery, and keeps the titl
   expect(feedback()).toBe('Loading products…');
   await view(ready({issue:'preview'}));
   expect(feedback()).toContain('Could not preview the rule');
-  await view(ready({issue:'products'}));
-  expect(feedback()).toContain('Could not load products');
+  await view(ready({catalogUnavailable:true}));
+  expect(feedback()).toContain('You can preview without a stock condition.');
+  expect(select.hasAttribute('disabled')).toBe(false);
+  await view(ready({catalogUnavailable:true, catalog:{products:[],after:null,next:null}}));
+  expect(select.hasAttribute('disabled')).toBe(true);
   await press('Try again');
   expect(latest()).toEqual({type:'retry'});
   await view(ready({title:TITLE,result:true,catalog:{products:[],after:null,next:null}}));

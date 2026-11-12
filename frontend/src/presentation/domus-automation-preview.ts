@@ -35,7 +35,7 @@ const COPY = {
     products: 'Loading products…',
     denied: 'Your current household permissions do not allow automation previews.',
     unavailable: 'Automation preview is unavailable. Try again.',
-    productsUnavailable: 'Could not load products. Try again.',
+    productsUnavailable: 'Could not load products. You can preview without a stock condition.',
     previewUnavailable: 'Could not preview the rule. Check the selected product and try again.',
     retry: 'Try again',
     wouldCreate: 'Would create this task',
@@ -62,7 +62,7 @@ const COPY = {
     products: 'Cargando productos…',
     denied: 'Tus permisos actuales del hogar no permiten previsualizar automatizaciones.',
     unavailable: 'La vista previa de automatización no está disponible. Vuelve a intentarlo.',
-    productsUnavailable: 'No se pudieron cargar los productos. Vuelve a intentarlo.',
+    productsUnavailable: 'No se pudieron cargar los productos. Puedes previsualizar la regla sin una condición de existencias.',
     previewUnavailable: 'No se pudo previsualizar la regla. Comprueba el producto y vuelve a intentarlo.',
     retry: 'Volver a intentar',
     wouldCreate: 'Se crearía esta tarea',
@@ -135,7 +135,7 @@ export class DomusAutomationPreview extends LitElement {
           error: view.issue === 'title' ? this.text('titleInvalid') : ''})}
         @ha-value-request=${(event: FieldValueEvent) => this.intent({type: 'title', value: event.detail.value})}>
       </vyp-ha-field>
-      <vyp-ha-select .value=${view.selected?.id ?? null} ?disabled=${blocked}
+      <vyp-ha-select .value=${view.selected?.id ?? null} ?disabled=${blocked || (view.catalogUnavailable && options.length === 0)}
         .state=${selectState({label: this.text('condition'), options, placeholder: this.text('noCondition'),
           emptyMessage: this.text('noProducts'), clearLabel: this.text('clearCondition'), searchLabel: this.text('findProduct'),
           searchPlaceholder: this.text('findProduct'), notFoundMessage: this.text('noMatches')})}
@@ -149,9 +149,9 @@ export class DomusAutomationPreview extends LitElement {
         .state=${buttonState({label: this.text('preview'), variant: 'primary'})}></vyp-ha-button></div>
       ${view.busy === 'preview' ? this.feedback('previewing', true)
         : view.busy === 'products' ? this.feedback('products', true) : nothing}
-      ${view.issue === 'products' ? html`${this.feedback('productsUnavailable')}
-        <div class="actions">${this.button('retry', 'retry')}</div>`
-        : view.issue === 'preview' ? this.feedback('previewUnavailable') : nothing}
+      ${view.catalogUnavailable ? html`${this.feedback('productsUnavailable')}
+        <div class="actions">${this.button('retry', 'retry', blocked)}</div>` : nothing}
+      ${view.issue === 'preview' ? this.feedback('previewUnavailable') : nothing}
       ${view.result === null ? nothing : html`<div class="result" role="status">
         <p><strong>${this.text(view.result ? 'wouldCreate' : 'noAction')}</strong></p><p>${view.title}</p>
         ${view.selected === null ? nothing : html`<p>${view.selected.name} ·

@@ -24,12 +24,13 @@ interface ProductPage {
   readonly after: string | null;
   readonly next: string | null;
 }
-type Issue = 'title' | 'products' | 'preview';
+type Issue = 'title' | 'preview';
 interface ReadyPreview {
   readonly state: 'ready';
   readonly title: string;
   readonly selected: ProductOption | null;
   readonly catalog: ProductPage;
+  readonly catalogUnavailable: boolean;
   readonly busy: 'products' | 'preview' | null;
   readonly result: boolean | null;
   readonly issue: Issue | null;
@@ -125,16 +126,15 @@ export class AutomationPreviewController {
   }
 
   private async products(after: string | null): Promise<void> {
-    const current = this.ready;
-    if (current !== null) this.update({...current, busy: 'products', issue: null});
+    const current: ReadyPreview = this.ready ?? {
+      state: 'ready', title: '', selected: null, catalog: {products: [], after: null, next: null},
+      catalogUnavailable: false, busy: null, result: null, issue: null,
+    };
+    this.update({...current, catalogUnavailable: false, busy: 'products', issue: null});
     await this.settle(this.inventory.read(this.scope!, after), report => {
       const products = report.products.map(({id, name}) => ({id, name}));
-      this.update({state: 'ready', title: current?.title ?? '', selected: current?.selected ?? null,
-        catalog: {products, after, next: report.cursor}, busy: null, issue: null, result: current?.result ?? null});
-    }, () => {
-      if (current === null) this.publish({state: 'unavailable'});
-      else this.update({...current, issue: 'products'});
-    });
+      this.update({...current, catalog: {products, after, next: report.cursor}, catalogUnavailable: false, issue: null});
+    }, () => this.update({...current, catalogUnavailable: true, issue: null}));
   }
 
   private async preview(current: ReadyPreview): Promise<void> {
