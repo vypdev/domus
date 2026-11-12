@@ -295,6 +295,11 @@ Scan a barcode with the camera or enter it manually. Domus searches local produc
 
 ## Participation
 
+**Your participation this week** on Overview shows your completed tasks and posted earned points
+for the current Family week. The week starts on Monday in the household time zone. Select
+**Open Family** for the full report, including work awaiting verification and approved points
+awaiting posting.
+
 Open Family to see your balance, point history and recorded work. Select a week or
 month using a date in that period. The household time zone determines where the
 work belongs. Sunday work stays in Sunday's week if it is approved on Monday.

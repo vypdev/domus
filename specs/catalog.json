@@ -624,7 +624,7 @@
       "status": "proposed",
       "scope": "Task completion produces auditable point entries. Household-configurable collaboration policies determine each share and the actual award total; corrections preserve history and optional rewards never control basic participation.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-10",
+      "lastVerified": "2026-11-11",
       "specs": [
         "specs/points-rewards.md"
       ],
@@ -648,6 +648,7 @@
         "frontend/src/application/family-controller.ts",
         "frontend/src/adapters/family-http.ts",
         "frontend/src/presentation/domus-family.ts",
+        "frontend/src/presentation/domus-family-overview.ts",
         "frontend/src/presentation/family-messages.ts",
         "backend/src/domus/domain/point_allocation.py",
         "backend/src/domus/application/point_allocations.py",
@@ -669,6 +670,7 @@
       "tests": [
         "tests/backend/test_points_consumer.py",
         "tests/backend/test_family_http.py",
+        "tests/backend/test_family_overview.py",
         "frontend/tests/family.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts",
         "tests/backend/test_point_allocation.py",
@@ -687,11 +689,12 @@
         "docs/user-guide.md",
         "docs/contracts/home-assistant.md",
         "docs/tasks/points-consumer.md",
-        "docs/evidence/family-qualification.md"
+        "docs/evidence/family-qualification.md",
+        "docs/evidence/overview-family-participation-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "PR #63 covers scoped Family participation and Points history. PR #66 covers exact configurable allocation, saved policies, and migration. The Family qualification maps the reward command, lifecycle, restoration, and bilingual browser evidence to issue #65 and the retained owner cases.",
+        "implementationEvidence": "PR #63 covers scoped Family participation and Points history. PR #66 covers exact configurable allocation, saved policies, and migration. The Family qualification maps the reward command, lifecycle, restoration, and bilingual browser evidence to issue #65 and the retained owner cases. Issue #105 covers the protected current-week Overview projection and Family navigation.",
         "blockingDecisions": "Family qualification records the M2 gate. Publication follows the separate release workflow.",
         "copilotChangesAllowed": false
       }

@@ -66,6 +66,9 @@ def task_contexts(
                 schedule_data_identity=planner.times.data_identity,
             )
 
+        def family() -> FamilyQueries:
+            return FamilyQueries(store, scope, actor.read(), cursors, planner.times)
+
         return TaskHTTPContext(
             queries,
             lambda: queries().overview(clock, planner.times),
@@ -92,7 +95,8 @@ def task_contexts(
                 bind_household_policy=True,
             ),
             TaskCategoryCommands(store, actor, actor.read, clock, identifiers),
-            lambda: FamilyQueries(store, scope, actor.read(), cursors, planner.times),
+            family,
+            lambda: family().overview(clock),
             lambda: AllocationQueries(store, actor.read()),
             AllocationCommands(store, actor, clock, identifiers),
             lambda: RewardQueries(store, scope, actor.read(), cursors),

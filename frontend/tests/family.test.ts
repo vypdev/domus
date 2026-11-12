@@ -4,6 +4,7 @@ import type {FamilyReport} from '../src/application/family-controller';
 import {EntryReadError} from '../src/application/ports';
 import {HttpFamilyServer} from '../src/adapters/family-http';
 import '../src/presentation/domus-family';
+import '../src/presentation/domus-family-overview';
 import corpus from './fixtures/entry-wire.json';
 
 const period = {start: '2026-05-25', end: '2026-06-01'};
@@ -22,6 +23,7 @@ const wire = {period, time_zone: 'Europe/Madrid', posted_minor: 0, available_min
   ], history: [reversal, award], next_cursor: 'next'};
 const endpoint = {...corpus.standalone.endpoint, deployment: 'standalone' as const};
 const context = {installationId: '047cc6fb-dfb0-4fa4-b3c3-e0fe54d116b6', channel: 'edge' as const, subject: 'a'.repeat(32)};
+const wireWeek = {period, earned_minor:125, completed_count:3};
 
 function server(payload: unknown, status = 200) {
   const transport = vi.fn(async (path: string, _init: RequestInit) => {
@@ -30,6 +32,27 @@ function server(payload: unknown, status = 200) {
   });
   return {http: new HttpFamilyServer(endpoint, transport), transport};
 }
+
+test('the Family summary reads the protected current week without caller scope', async () => {
+  const {http, transport} = server(wireWeek);
+  expect(await http.overview(context).result).toEqual({period, earned:125, completed:3});
+  expect(transport.mock.calls[0][0]).toBe('/api/v1/family/overview');
+  expect(new Headers(transport.mock.calls[0][1].headers).get('X-Domus-Context')).toContain(context.subject);
+  const first = {start:'1970-01-01',end:'1970-01-05'};
+  expect(await server({period:first,earned_minor:0,completed_count:0}).http.overview(context).result)
+    .toEqual({period:first,earned:0,completed:0});
+});
+
+test.each([
+  {...wireWeek, period: {start:'2026-05-99',end:period.end}},
+  {...wireWeek, period: {start:'2026-05-26',end:period.end}},
+  {...wireWeek, period: {start:period.start,end:'2026-06-02'}},
+  {...wireWeek, earned_minor:1.5},
+  {...wireWeek, completed_count:-1},
+  {...wireWeek, pending_posting_minor:325},
+])('the Family summary rejects invalid or excessive facts %#', async payload => {
+  await expect(server(payload).http.overview(context).result).rejects.toMatchObject({code:'invalid_response'});
+});
 
 test('the private Family adapter preserves signed postings, dates and exact scoped pagination', async () => {
   const {http, transport} = server(wire);
@@ -109,7 +132,36 @@ test('Family refreshes, pages, retains a transient stale view and clears it on s
   expect(publish).toHaveBeenLastCalledWith(null);
 });
 
-afterEach(() => {document.querySelector('domus-family')?.remove();});
+afterEach(() => {
+  document.querySelector('domus-family')?.remove();
+  document.querySelector('domus-family-overview')?.remove();
+});
+
+test('weekly participation distinguishes an actual zero, read failures and localized earned values', async () => {
+  const node = document.createElement('domus-family-overview');
+  document.body.append(node); await node.updateComplete;
+  const root = node.shadowRoot!;
+  expect(root.querySelector('vyp-ha-card')).toBeNull();
+  const view = async (state: 'loading' | 'denied' | 'unavailable') => {
+    node.view = {state}; await node.updateComplete;
+    expect(root.querySelector('dl')).toBeNull();
+    return root.querySelector('vyp-ha-feedback')?.state?.message;
+  };
+  expect(await view('loading')).toBe('Loading weekly participation…');
+  expect(await view('denied')).toContain('does not allow viewing participation');
+  expect(await view('unavailable')).toBe('Weekly participation could not be loaded.');
+  const retry = vi.fn(); node.addEventListener('domus-family-overview-retry',retry);
+  root.querySelector('vyp-ha-button')!.dispatchEvent(new Event('ha-press-request'));
+  expect(retry).toHaveBeenCalledOnce();
+  node.view = {state:'ready', data:{period,earned:0,completed:0}}; await node.updateComplete;
+  expect([...root.querySelectorAll('dd')].map(item=>item.textContent)).toEqual(['0','0.00']);
+  expect(root.querySelector('a')?.getAttribute('href')).toBe('#family');
+  expect(root.querySelector('p')?.textContent).toContain('2026');
+  node.language = 'es'; node.view = {state:'ready',data:{period,earned:125,completed:3}};
+  await node.updateComplete;
+  expect([...root.querySelectorAll('dd')].map(item=>item.textContent)).toEqual(['3','1,25']);
+  expect(root.querySelector('a')?.textContent).toBe('Abrir Familia');
+});
 
 test('Family shows distinct pending values, contribution, localized signed history and a safe empty state', async () => {
   const node = document.createElement('domus-family'); document.body.append(node); await node.updateComplete;

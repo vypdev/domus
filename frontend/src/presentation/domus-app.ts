@@ -14,6 +14,7 @@ import './domus-stock-attention';
 import type {StockAttentionView} from '../application/stock-attention';
 import './domus-calendar';
 import './domus-family';
+import './domus-family-overview';
 import './domus-rewards';
 import './domus-inventory';
 import type {InventoryState} from '../application/inventory-controller';
@@ -22,7 +23,7 @@ import './domus-allocation-settings';
 import type {AllocationView} from '../application/allocation-controller';
 import type {ParticipantName} from './allocation-details';
 import {familyMessage} from './family-messages';
-import type {FamilyView} from '../application/family-controller';
+import type {FamilyOverviewView, FamilyView} from '../application/family-controller';
 import type {CalendarPreferenceView} from '../application/calendar-preferences';
 import './domus-recurrence-review';
 import type {ReviewView} from '../application/recurrence-review-controller';
@@ -46,7 +47,7 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
   static properties = {inventory: {attribute:false}, rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
-    taskOverview: {attribute: false}, stockAttention: {attribute: false},
+    taskOverview: {attribute: false}, stockAttention: {attribute: false}, familyOverview: {attribute: false},
     workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
@@ -54,6 +55,7 @@ export class DomusApp extends LitElement {
   declare tasks: TaskView | null;
   declare taskOverview: TaskOverviewView | null;
   declare stockAttention: StockAttentionView | null;
+  declare familyOverview: FamilyOverviewView | null;
   declare calendar: CalendarView | null;
   declare family: FamilyView | null;
   declare rewards: RewardsView | null;
@@ -77,7 +79,7 @@ export class DomusApp extends LitElement {
     this.recurrenceReview = null; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
     this.family = null; this.rewards = null; this.inventory = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
     this.workspaceDestination = null; this.taskOverview = null; this.nameDraft = ''; this.zoneDraft = '';
-    this.stockAttention = null;
+    this.stockAttention = null; this.familyOverview = null;
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
   private text(key: MessageKey): string {return message(key, this.language);}
@@ -225,6 +227,7 @@ export class DomusApp extends LitElement {
         ${!closed && view?.busy ? html`<p class="busy" role="status">${this.text('busy')}</p>` : nothing}
         <domus-task-overview .view=${this.taskOverview} .language=${this.language}></domus-task-overview>
         <domus-stock-attention .view=${this.stockAttention} .language=${this.language}></domus-stock-attention>
+        <domus-family-overview .view=${this.familyOverview} .language=${this.language}></domus-family-overview>
       </section>
       <section id="tasks" tabindex="-1" aria-label=${this.text('navigationTasks')}
         ?hidden=${!workspace || this.workspaceDestination !== 'tasks'}>

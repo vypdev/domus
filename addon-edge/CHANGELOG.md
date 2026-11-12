@@ -1,10 +1,24 @@
 # Changelog
 
+## 0.0.0-edge.28
+
+- Refresh the Family summary when the household week changes while Overview is open.
+
+## 0.0.0-edge.27
+
+- Show completed tasks and posted earned points for the current Family week on Overview.
+- Open Family from the localized summary to review the full report and pending values.
+
 ## 0.0.0-edge.26
 
 - Let people with task configuration permission set optional base points when creating a task.
 - Keep the household default for title-only creation and accept localized decimal input.
 - Explain how to correct a fractional amount when the current allocation requires whole base points.
+
+## 0.0.0-edge.22
+
+- Show completed tasks and posted earned points for the current Family week on Overview in English and Spanish.
+- Open Family from the summary to review pending work and the full report.
 
 ## 0.0.0-edge.21
 

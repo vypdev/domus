@@ -1243,3 +1243,143 @@ Completion requires the concrete behaviors represented by the retained owner cas
 ### 20. References and decisions
 
 Issue: https://github.com/vypdev/domus/issues/65. This delta applies to the immutable selected source revision `2e660f3fba255315316f6835a4b30cd6ee793629` and updates the registered owner `specs/points-rewards.md`; its retained contracts and cases remain authoritative. The issue specifies use of the Action-managed branch from `develop` after #64 merges and excludes Gateway, deployments, releases, and M3. No additional repository verification invocation is asserted here; any concrete invocation or prerequisite remains unverified.
+
+## Proposed change: Show this week's Family participation on Overview
+
+- Status: Draft
+- Catalog capability: points-rewards
+
+### 1. Executive summary
+
+This delta adds a compact Overview summary of the verified member’s completed-task count and earned points for the current Family week, plus one action to open Family for the full report. The Overview points figure includes only that member’s posted earned points for the current week. Points pending verification or pending posting remain visible in the full Family report. The existing points, participation, and rewards contract and cases remain authoritative in `specs/points-rewards.md`; this delta does not change ledger ownership or award behavior.
+
+### 2. Problem, current behavior, and evidence
+
+Members can currently see participation and points after opening Family, while the Overview specification calls for weekly points and participation. This delta brings a bounded weekly summary to the initial workspace and links to Family for details. It relies on the retained owner’s rules: work is attributed by actual `completed_at` under household calendar boundaries; approval and posting are distinct; pending points are not spendable credit. The existing Family proposal defines protected, member-scoped reads and separates pending verification, pending posting, and posted credit. These are documented contracts, not evidence that the proposed surfaces are implemented. Evidence: `specs/points-rewards.md` sections 6, 8, 9, and 19; `specs/points-rewards.md` section “Proposed change: Show protected Family points, history and participation”; `specs/application-experience.md` section “Dashboard and navigation”; issue #105 at https://github.com/vypdev/domus/issues/105. The supplied source establishes the Overview’s weekly-summary expectation and existing Family report context; implementation details for the Overview projection and its integration remain to be established.
+
+### 3. Actors, surfaces, and terminology
+
+The reader is the verified household member. The Overview is the initial workspace surface; Family remains the destination for the full participation report, including pending values. Use the retained owner’s identity, read-permission, ledger, and Family terminology. “Current Family week” means the current period under the household calendar policy, not the browser’s local week. “Posted earned points” means credit already recorded for the verified member. Completed-task count is based on completed work in that same period; it does not imply that pending points are posted. The single Overview action opens Family.
+
+### 4. Goals, non-goals, and fixed invariants
+
+This delta has one product goal: show only the verified member’s posted earned points for the current Family week on Overview, while keeping pending verification and pending posting in the full Family report. The Overview summary also shows that week’s completed-task count and offers one action to open Family. Acceptance includes exclusion of points from earlier and future Family weeks, exclusion of pending verification and pending posting from Overview while retaining each in Family, and member scoping so another member’s points do not appear. Existing Points and Family case IDs remain references to baseline coverage; the six new Overview participation cases are defined in the host inventory.
+
+This delta does not change the ledger, attribution, read permissions, Family’s role as the full report, or the household calendar policy. It does not expose another member’s data or treat pending points as spendable credit. The specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. The concrete invocation and prerequisites for those publication checks remain unverified in the selected source; no execution or passing result is claimed.
+
+| Requirement | Behavior |
+| --- | --- |
+| SDD-I105-U3-R1 | The Overview shows only posted earned points for the verified member's current Family week; pending verification and pending posting remain in the full Family report. |
+
+### 5. Current versus proposed product journey
+
+This delta adds a small participation summary to the verified member’s Overview, with one action to open Family. Family remains the full report; this change does not move ledger ownership or alter the retained Points and Family contracts (`specs/points-rewards.md`, sections 5–6).
+
+| Stage | Current | Proposed | User effect |
+|---|---|---|---|
+| Open Overview | Weekly points and participation are specified in the retained contract, but this Overview summary is not specified here. | Show the verified member’s completed-task count and earned points for the current Family week. | The member can see this week’s participation from the initial workspace. |
+| Read totals | Family provides the full report. | Include only that member’s posted earned points for the current Family week. | The summary has a clear, bounded meaning. |
+| See pending work | Pending verification and pending posting remain in the full Family report. | Exclude both from the Overview summary. | Pending values are not mistaken for posted points. |
+| Continue | Open Family for the full report. | Provide one accessible action to open Family. | The member can inspect the full report for pending values and other details. |
+
+The summary MUST exclude points attributed to earlier or future Family weeks and MUST be scoped to the currently verified member. In text: open Overview → read this week’s completed-task count and posted earned points → open Family for the full report.
+
+### 6. Functional behavior and state model
+
+The Overview MUST show the verified member’s completed-task count and earned points for the current Family week. Its points total includes only posted earned points attributed to that Family week. Points attributed to earlier or future Family weeks are excluded. Points pending verification and approved points pending posting are excluded from Overview and remain visible in the full Family report. Do not infer posting from completion or approval alone.
+
+The Overview read MUST use the existing Family week definition, read permissions, and ledger attribution. It MUST scope the result to the verified member and recheck current household authority at the read boundary, consistent with the retained Family read contract (`specs/points-rewards.md`, sections 4 and 6). The summary is read-only and does not create, alter, or erase ledger entries. Family remains the destination for the full report.
+
+Acceptance is observable across the current-week, earlier-week, future-week, pending-verification, pending-posting, and member-scope situations: only the verified member’s posted earned points for the current Family week appear in that member’s Overview; pending values remain visible in Family. These are covered by the six Overview participation cases in the inventory.
+
+### 7. User-facing configuration
+
+No new user-facing configuration is introduced. The summary uses the existing verified member, Family week, read permissions, and ledger attribution. Its scope and inclusion rules are fixed: configuration cannot include another member’s entries, a different week, pending verification, or pending posting. Family remains the full-report destination.
+
+### 8. Clean Architecture design
+
+The Overview should consume a member-scoped, read-only participation projection using the existing Points and Family contracts. Keep authorization and current household authority checks at the read boundary; derive member scope from verified context rather than caller-supplied identifiers. Reuse the existing Family week and ledger attribution rules so Overview does not introduce a competing calendar or posting policy.
+
+Presentation code renders the completed-task count and posted earned-points total and provides the Family action. It must not calculate a separate ledger balance, expose pending values as posted, or mutate ledger state. Preserve the Clean Architecture boundaries and verification expectations of the immutable owning specification (`specs/points-rewards.md`, sections 6 and 8); concrete implementation boundaries remain to be established during design.
+
+### 9. UI/UX and content contract
+
+Overview adds a concise participation summary for the verified member: completed-task count and earned points for the current Family week, plus one clear action that opens Family for the full report. Show only posted earned points. Keep points awaiting verification or posting out of this summary and visible in the full Family report. The summary must distinguish zero activity from unavailable data and use accessible labels that identify both the week and the measures. English and Spanish content must fit the existing application experience and remain understandable to assistive technology. The retained owner defines the baseline; this issue adds only the bounded Overview delta. The selected source must be checked for the exact retained UI contract before implementation.
+
+### 10. Failure, recovery, and cleanup
+
+If the current-week participation summary cannot load, keep the Overview usable, show an accessible unavailable state, and provide a retry path or the existing route to Family. Do not show stale-week or unverified values as current. Opening Family remains the recovery path to the full report, including pending verification and pending posting. Retry behavior must not duplicate ledger activity or alter earned points.
+
+### 11. Security, permissions, and privacy
+
+Use existing Family week boundaries, read permissions, and ledger attribution. The summary is scoped to the verified member and must not expose another member's participation or points. Include only that member's posted earned points in the current Family week; pending verification and pending posting remain confined to the full Family report. Do not change ledger ownership, permissions, or the existing Family report's access rules. Confirm the exact authorization and attribution rules against the immutable owner before implementation.
+
+### 12. Observability and operational UX
+
+The Overview must make the selected Family week and the completed-task and posted-points measures understandable without exposing ledger history or pending values. Loading and unavailable states must be accessible and must not imply that missing data is zero. The Family action must give a clear route to the full report. Validate the displayed week, member scope, posted-only total, pending-value exclusion, and English and Spanish presentation against the observable scenarios in the approved inventory. No new telemetry or operational instrumentation is specified by this delta.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+This is an additive Overview change. Preserve the existing Family report, week definition, read permissions, ledger attribution, and the retained owning contract and cases in `specs/points-rewards.md` at immutable revision `da5dd58efc90ecf94dd65cf814cc3f4ddd573017`. Use the application's existing localization and navigation conventions where confirmed in the selected source. The source declarations for the relevant presentation, localization, and navigation entry points have not been inspected here, so their exact names and any migration, rollout, or rollback mechanism remain unverified. Do not alter stored data or introduce a migration as part of this delta.
+
+### 14. Testing strategy and numeric budget
+
+The retained owner budget is 44 distinct cases. This delta adds six distinct Overview participation cases, bringing the minimum to 50. The six added cases exercise the same requirement through current-week inclusion, exclusion of earlier and future weeks, pending-verification and pending-posting visibility in the full Family report, and member-specific attribution. They are separate observable assertions; the total is a floor, not evidence that tests have run or that coverage is complete. Allocate the six additional cases to presentation and accessibility behavior, with underlying period and attribution rules covered by the existing domain, adapter, and integration budget where applicable. Preserve the retained owner’s deterministic clocks, fakes, coverage expectations, and human UX evidence. The concrete verification invocation and prerequisites for this delta remain unverified.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Overview participation | 6 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| overview-participation-C01 | Overview participation | SDD-I105-U3-R1 | The verified member's Overview shows only posted earned points from the current Family week. |
+| overview-participation-C02 | Overview participation | SDD-I105-U3-R1 | Points earned in an earlier Family week are excluded from the verified member's Overview. |
+| overview-participation-C03 | Overview participation | SDD-I105-U3-R1 | Points earned in a future Family week are excluded from the verified member's Overview. |
+| overview-participation-C04 | Overview participation | SDD-I105-U3-R1 | Points pending verification are excluded from the Overview and remain visible in the full Family report. |
+| overview-participation-C05 | Overview participation | SDD-I105-U3-R1 | Points pending posting are excluded from the Overview and remain visible in the full Family report. |
+| overview-participation-C06 | Overview participation | SDD-I105-U3-R1 | Only the verified member's posted earned points for the current Family week appear in that member's Overview. |
+
+### 15. Documentation and discoverability
+
+This update adds the Overview participation contract to the existing points and Family reporting documentation. The member-facing explanation must describe the current Family week, completed-task count, posted earned points, and the action to open Family for the full report. Explain that pending verification and pending posting remain visible in the full Family report and are excluded from Overview. Present this behavior in English and Spanish, consistent with the issue’s stated audience. The selected source does not establish a concrete documentation update destination or invocation for validating this delta; those remain unverified. Publication requires the specification to satisfy the required format, internal and cross-document consistency to be checked, and reciprocal catalog ownership, paths, and evidence to agree with the generated view.
+
+| Path | Change |
+| --- | --- |
+| specs/points-rewards.md | update |
+
+[specs/points-rewards.md](points-rewards.md)
+
+### 16. Acceptance scenarios
+
+Acceptance requires observable evidence that the verified member’s Overview includes only posted earned points and completed-task participation for the current Family week. Work attributed to an earlier or future Family week does not appear. Points pending verification and points pending posting do not appear on Overview and remain visible in the full Family report. Attribution is scoped to the verified member, so another member’s points do not appear in that member’s Overview. Provide the single Family action to reach the full report. These scenarios refine the six new inventory assertions; no acceptance result is inferred from their declaration. The existing owning contract and cases remain in force.
+
+### 17. Requirements traceability
+
+The new requirement, SDD-I105-U3-R1, is exercised by overview-participation-C01 for current-week posted points; overview-participation-C02 and overview-participation-C03 for earlier- and future-week exclusion; overview-participation-C04 and overview-participation-C05 for pending-state exclusion from Overview with retention in the full Family report; and overview-participation-C06 for verified-member attribution. These are the supplied concrete assertions, not a claim of semantic completeness or executed acceptance. Existing points and Family case identities remain references through the retained owner; they are not redefined by this delta.
+
+| Requirement | Cases |
+|---|---|
+| SDD-I105-U3-R1 | overview-participation-C01, overview-participation-C02, overview-participation-C03, overview-participation-C04, overview-participation-C05, overview-participation-C06 |
+
+### 18. Implementation sequence
+
+1. Extend the retained Points and Family contract in `specs/points-rewards.md` with a member-scoped Overview summary for the current Family week, preserving the existing owner requirements and case definitions. The six supplied Overview cases are new definitions; existing Points and Family cases remain references.
+2. Define the Overview projection from the existing Family-week attribution and read permissions. Show the verified member’s completed-task count and posted earned points for the current Family week only. Keep pending verification and pending posting visible in the full Family report, and provide one action to open Family.
+3. Implement the accessible English and Spanish Overview content using the existing Family and Overview surfaces. Do not make the Overview a new ledger or change ledger attribution, balances, or posting behavior.
+4. Cover current-week inclusion, earlier- and future-week exclusion, pending-state visibility in Family, and verified-member scoping with the six supplied observable cases. Complete applicable localization, accessibility, permission, and integration acceptance before publication.
+
+### 19. Definition of Done
+
+- [ ] The verified member’s Overview shows only that member’s posted earned points and completed-task count for the current Family week; earlier and future Family weeks are excluded.
+- [ ] Points pending verification and points pending posting are excluded from Overview and remain visible in the full Family report. The Overview offers one action to open Family.
+- [ ] English and Spanish content is accessible and consistent with the existing Overview and Family surfaces and their read permissions. No change to ledger ownership, attribution, balance, or posting semantics is introduced.
+- [ ] Each retained owner requirement and each of the six supplied Overview cases has observable acceptance coverage. Every requirement maps to cases that exercise it, and each case lists only requirements it exercises. Structural counts and reciprocal mappings do not establish semantic completeness or executed acceptance.
+- [ ] The specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. These are observable publication outcomes. `specs/README.md` names `pnpm run validate:specifications` and `pnpm run generate:specifications`, but the selected root `package.json` does not declare those scripts; concrete invocation and prerequisites for specification validation and generated-view consistency verification remain unverified. Do not treat a declaration as execution, a passing check, or acceptance.
+- [ ] Product acceptance verifies current-week boundaries, member scoping, pending verification and posting behavior, localization, and accessible navigation. A source review or structural inventory count alone does not satisfy these outcomes.
+
+### 20. References and decisions
+
+This delta updates the immutable retained owner `specs/points-rewards.md` at selected source revision `da5dd58efc90ecf94dd65cf814cc3f4ddd573017` for [issue #105](https://github.com/vypdev/domus/issues/105). The owner’s existing Family contract attributes participation to actual work dates under household calendar boundaries; approval and posting remain distinct, and pending points are not spendable credit. The retained contract also establishes member-scoped Family reads and English and Spanish presentation. This delta adds only the Overview summary and Family navigation action.
+
+`docs/roadmap.md` identifies household participation as an Overview destination concern and requires authoritative, permission-scoped projections. `specs/application-experience.md` describes Overview as a shared localized surface. The selected root `package.json` declares pnpm 10.34.0 and Node 24.20.x but has no specification-validation or generation script; the README’s named invocations and their prerequisites therefore remain unverified in this selected project.
