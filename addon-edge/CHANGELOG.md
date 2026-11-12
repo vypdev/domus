@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.30
+
+- Keep manual previews available without a stock condition when the product list fails to load.
+- Keep the draft while retrying the product list.
+
 ## 0.0.0-edge.29
 
 - Preview a manual task proposal in Household settings in English and Spanish.

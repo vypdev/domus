@@ -1,10 +1,12 @@
 # Installation and operation
 
-Edge 0.0.0-edge.29 packages the immutable runtime declared in
+Edge 0.0.0-edge.30 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
 see whether an optional stock condition matches. Preview leaves tasks and stock unchanged.
+If the product list fails to load, the title-only preview remains available and
+the draft is preserved while reloading the list.
 People with task configuration permission can set optional base points when creating a task.
 Leaving the field empty uses the household default. Home Assistant can read
 the due-today and overdue task counts shown on Overview through a dedicated installation
