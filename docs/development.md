@@ -103,14 +103,22 @@ See the primary [dependency-cruiser API](https://github.com/sverweij/dependency-
 
 The project-owned .github/workflows/ci_check.yml runs Python tooling, the separate backend suite,
 Node policy, real frontend framework execution, Python architecture
-contracts and local documentation links for every PR update, including drafts and documentation changes.
-It also runs on develop/master pushes and merge-queue validation. There are no path filters or job
-conditions hiding applicable suites. Actions are pinned to immutable commits and installs use lockfiles.
+contracts and local documentation links for every branch push to this repository, including documentation changes.
+An internal pull request shows CI for its pushed head. Bring the head up to date with the target branch before merging.
+Fork workflows require maintainer approval in GitHub.
+Workflow steps reference complete action release versions. GitHub runs the commits recorded in
+`.github/workflows/actions.lock`. Run `gh actions-lock .github/workflows/ci_check.yml` after updating
+an action version. Package installs use their lockfiles.
 
-The final CI Check job always evaluates all seven required job results, including the container matrix.
+The final CI Check job always evaluates the eight required job results, including the container matrix.
 Missing, malformed, unexpected, failed, skipped, cancelled or pending results prevent success.
-Every required job must explicitly succeed. The container job builds and tests the exact Supervisor
-app folder on native amd64 and aarch64 runners; it never publishes images or installs into live HA.
+Every required job must explicitly succeed. CI uses the organization's `vypdev` runner group.
+The container matrix uses the Apple Silicon runner's Linux Docker engine. It executes ARM64
+images natively and amd64 images through the runner's x86-64 emulation. Before building the
+exact Supervisor app folder, each matrix job verifies execution of its architecture.
+Each job installs pnpm into its own temporary directory. Image tags, the Buildx builder and the
+Docker client directory also belong to the job. Browser suites lock their
+loopback fixture ports when runs share a host. CI never installs into live HA.
 The workflow uses read-only repository permissions, does not persist checkout credentials and does not
 publish artifacts to a release or deploy. Coverage reports are retained for seven days under the checked SHA.
 
@@ -257,9 +265,9 @@ pnpm test:frontend-browser
 pnpm test:frontend-guards
 ```
 
-CI downloads the lockfile-pinned Chromium and uses the shared libraries on the GitHub-hosted Ubuntu
-runners. The browser suites launch Chromium in every job that installs it. On other Linux hosts,
-install the system dependencies required by Playwright before running the browser tests. Local
+CI downloads the lockfile-pinned Chromium and uses the shared libraries provided by the Linux
+self-hosted runners. Install Playwright's system dependencies on those runners before admitting
+browser jobs. The browser suites launch Chromium in every job that installs it. Local
 environments also need Python 3 for the disposable static Storybook server. Browser and component
 tests use loopback fixtures and may require permission to open sockets. Ports 56171 and 56172
 are fixture-only, refuse existing listeners and are managed by Playwright. Run browser and guard
