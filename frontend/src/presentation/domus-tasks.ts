@@ -78,7 +78,7 @@ export class DomusTasks extends LitElement {
   private declare createOpen: boolean;
   private declare descriptionDraft: string;
   private declare basePointsDraft: string;
-  private declare basePointsError: boolean;
+  private declare basePointsError: 'basePointsInvalid' | 'notice_points_precision_two_required' | null;
   private declare priorityDraft: TaskPriority;
   private declare scheduleKind: 'manual' | TaskScheduleDraft['kind'];
   private declare scheduleError: boolean;
@@ -93,7 +93,7 @@ export class DomusTasks extends LitElement {
   constructor() {super(); this.allocation = null; this.participantNames = []; this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = '';
     this.priorityDraft = 'normal'; this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS;
     this.createOpen = false; this.reasonDraft = ''; this.quantities = {}; this.quantityError = null;
-    this.basePointsDraft = ''; this.basePointsError = false;
+    this.basePointsDraft = ''; this.basePointsError = null;
     this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.manageOpen = false;}
   private text(key: TaskMessageKey): string {return taskMessage(key, this.language);}
   private get blocked(): boolean {return this.view?.busy !== false || this.view.readOnly || this.view.records === null
@@ -108,7 +108,7 @@ export class DomusTasks extends LitElement {
   private reset(): void {
     this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.submittedCategory = null; this.manageOpen = false;
     this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.reasonDraft = '';
-    this.basePointsDraft = ''; this.basePointsError = false;
+    this.basePointsDraft = ''; this.basePointsError = null;
     this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS; this.quantities = {}; this.quantityError = null; this.detailKey = null; this.focusDetail = false; this.submittedDraft = null; this.draftScope = null;}
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('retired') && this.retired) this.reset();
@@ -123,6 +123,8 @@ export class DomusTasks extends LitElement {
     if (key !== null && key !== this.detailKey) {this.focusDetail = this.view?.phase === 'ready'; this.detailKey = key; this.reasonDraft = ''; this.quantityError = null;
       this.quantities = Object.fromEntries(detail!.materials.map(item => [item.lineId, item.plannedQuantity]));}
     const outcome = this.view?.outcome;
+    if (outcome?.kind === 'rejected' && outcome.reason === 'points_precision_two_required'
+        && outcome !== changed.get('view')?.outcome) this.basePointsError = 'notice_points_precision_two_required';
     if (outcome?.kind === 'receipt' && outcome.stage === 'committed' && outcome.action === this.submittedCategory?.action
         && this.categoryName === this.submittedCategory.label) {
       this.categoryName = ''; this.categoryEdit = null; this.submittedCategory = null;
@@ -130,7 +132,7 @@ export class DomusTasks extends LitElement {
     if (outcome?.kind === 'receipt' && outcome.stage === 'committed' && outcome.action === 'task.create'
         && this.submittedDraft === this.creationDraftKey()) {
       this.categoryDraft = ''; this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.submittedDraft = null;
-      this.basePointsDraft = ''; this.basePointsError = false;
+      this.basePointsDraft = ''; this.basePointsError = null;
       this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS;
     }
   }
@@ -209,7 +211,7 @@ export class DomusTasks extends LitElement {
         }
         const basePointsMinor = this.basePointsDraft.trim() === '' ? undefined : minorPoints(this.basePointsDraft);
         if (basePointsMinor === null) {
-          this.basePointsError = true;
+          this.basePointsError = 'basePointsInvalid';
           this.renderRoot.querySelector<HTMLElement>('#task-base-points')?.focus();
           return;
         }
@@ -234,7 +236,7 @@ export class DomusTasks extends LitElement {
         ${this.view?.access?.categoryCatalog ? this.categorySelector() : nothing}
         ${canSetPoints ? this.basePointsField() : nothing}
         ${stalePoints ? html`<p role="alert">${this.text('basePointsUnavailable')}</p>
-          <button type="button" @click=${() => {this.basePointsDraft = ''; this.basePointsError = false;}}>
+          <button type="button" @click=${() => {this.basePointsDraft = ''; this.basePointsError = null;}}>
             ${this.text('clearBasePoints')}</button>` : nothing}
         <button type="submit" class="primary" ?disabled=${this.blocked || titleTooLong || descriptionInvalid || this.staleCategory || stalePoints}>${this.text('create')}</button>
       </form></details>`;
@@ -242,10 +244,10 @@ export class DomusTasks extends LitElement {
   private basePointsField() {
     return html`<vyp-ha-field id="task-base-points" .value=${this.basePointsDraft} ?disabled=${this.view!.busy}
       .state=${textFieldState({label: this.text('basePointsOptional'), description: this.text('basePointsHelp'), inputMode: 'decimal',
-        error: this.basePointsError ? this.text('basePointsInvalid') : ''})}
+        error: this.basePointsError === null ? '' : this.text(this.basePointsError)})}
       @ha-value-request=${(event: FieldValueEvent) => {
         this.basePointsDraft = event.detail.value;
-        this.basePointsError = false;
+        this.basePointsError = null;
       }}></vyp-ha-field>`;
   }
   private categorySelector() {
@@ -380,8 +382,10 @@ export class DomusTasks extends LitElement {
     const result = this.view!.outcome; if (result === null) return nothing;
     const kind = result.kind === 'receipt' ? result.stage === 'committed' ? 'saved' : 'historical' : result.kind;
     const body = kind === 'saved' && result.kind === 'receipt' && result.state === 'active' ? 'scheduleSaved' : `${kind}Body` as const;
-    return html`<section class="note" role="status"><h3>${this.text(kind)}</h3><p>${this.text(body)}</p>
-      ${result.kind === 'rejected' ? html`<p>${this.text(`notice_${result.reason}`)}</p>` : nothing}
+    const precisionRequired = result.kind === 'rejected' && result.reason === 'points_precision_two_required';
+    return html`<section class="note" role="status"><h3>${this.text(kind)}</h3>
+      ${precisionRequired ? nothing : html`<p>${this.text(body)}</p>`}
+      ${result.kind === 'rejected' && !precisionRequired ? html`<p>${this.text(`notice_${result.reason}`)}</p>` : nothing}
       ${result.kind === 'receipt' && result.basePointsMinor !== undefined ? html`<dl><dt>${this.text('basePoints')}</dt>
         <dd>${displayPoints(result.basePointsMinor, this.language)}</dd></dl>` : nothing}
       ${result.kind === 'receipt' ? html`<details><summary>${this.text('technical')}</summary><p>${this.text('operation')}: <code>${result.operationId}</code></p></details>` : nothing}</section>`;

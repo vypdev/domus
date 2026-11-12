@@ -23,3 +23,9 @@ message and retained the draft and input focus. In Spanish at 390 px, the same d
 remained available. Touch submission with `2,25` saved the task and its receipt showed
 exactly `2,25` base points. The disposable instance, synthetic data, and temporary
 repository source were removed. The original 14 apps and eight sources remained.
+
+Edge.25 reproduced the allocation review case in Ingress. With conserved allocation
+and whole-point precision, the server rejected `2.25` before creating the task and
+the form kept the draft. A touch submission after changing the amount to `2` saved
+`2,00` in Spanish. That trial showed the guidance needed to move into the focused
+field. The temporary instance, data, and repository source were removed after the trial.

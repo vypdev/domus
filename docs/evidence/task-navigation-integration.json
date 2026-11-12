@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with the existing task, Pantry, and Shopping journeys and optional base points during task creation, including localized decimal entry and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "8843a3a0e2b05e3cad45ef2c6bd508c2ea62f147d08635f36034b37ef1386acb",
+    ".vite/manifest.json": "734a1f5ba77da03257115ade8cb5f680b19febd79c853f95a3fa51993e0f2cdb",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-PnRkEZTm.js": "ec351a1267918679026e10bcc28cf378dd20726adc2e869c9e372e0df03e0fba",
-    "index.html": "090b151c34f5fd7610993c6a6d10ce6906892ce6677f01b75f19170b46aff674"
+    "assets/index-CrrA8YHS.js": "c32342fbb48c4d5e7266a3a6272e77d6a4479290440c4e801887750470b99bb2",
+    "index.html": "1198c1ad6b3475ec0c03041f145522f4454e7782aec020a2779204a4bea2f399"
   },
   "preTaskBasePoints": {
     "sourceCommit": "ff6b64fec87bab3d156a0c64952387c7a33ceff1",
