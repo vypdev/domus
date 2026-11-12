@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.27 packages the immutable runtime declared in
+Edge 0.0.0-edge.28 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 People with task configuration permission can set optional base points when creating a task.

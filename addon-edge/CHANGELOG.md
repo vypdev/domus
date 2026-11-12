@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.28
+
+- Refresh the Family summary when the household week changes while Overview is open.
+
 ## 0.0.0-edge.27
 
 - Show completed tasks and posted earned points for the current Family week on Overview.
