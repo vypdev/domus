@@ -120,14 +120,14 @@ def test_linux_app_images_are_built_and_exercised_on_both_cpu_families() -> None
     assert "containers" in jobs["aggregate"]["needs"]
 
 
-def test_ci_is_read_only_with_immutable_actions_and_locked_installs() -> None:
+def test_ci_is_read_only_with_exact_action_versions_and_locked_installs() -> None:
     config = workflow()
     assert config["permissions"] == {"contents": "read"}
     for job in config["jobs"].values():
         assert "permissions" not in job
         for step in job["steps"]:
             if "uses" in step:
-                assert re.fullmatch(r"[\w/-]+@[a-f0-9]{40}", step["uses"])
+                assert re.fullmatch(r"[\w/-]+@v[0-9]+\.[0-9]+\.[0-9]+", step["uses"])
             if step.get("uses", "").startswith("actions/checkout@"):
                 assert step["with"]["persist-credentials"] == "false"
     source = WORKFLOW.read_text(encoding="utf-8")

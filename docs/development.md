@@ -106,7 +106,7 @@ Node policy, real frontend framework execution, Python architecture
 contracts and local documentation links for every branch push to this repository, including documentation changes.
 An internal pull request shows CI for its pushed head. Bring the head up to date with the target branch before merging.
 Fork workflows require maintainer approval in GitHub.
-Actions are pinned to immutable commits and installs use lockfiles.
+Workflow steps reference complete action release versions and installs use lockfiles.
 
 The final CI Check job always evaluates the eight required job results, including the container matrix.
 Missing, malformed, unexpected, failed, skipped, cancelled or pending results prevent success.

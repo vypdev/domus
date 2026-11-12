@@ -15,10 +15,10 @@ jobs:
       labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -30,7 +30,7 @@ jobs:
         run: uv run pytest tests/python --cov=domus_tooling --cov-branch --cov-report=term-missing --cov-report=json:coverage-python.json --cov-report=xml:coverage-python.xml
       - name: Retain tooling coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: python-tooling-coverage-${{ github.sha }}
           path: |
@@ -46,10 +46,10 @@ jobs:
       labels: [self-hosted, codex, Linux]
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -61,7 +61,7 @@ jobs:
         run: uv run domus-check backend-coverage --report coverage-backend.json
       - name: Retain backend coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: backend-coverage-${{ github.sha }}
           path: |
@@ -77,14 +77,14 @@ jobs:
       labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
           cache: false
@@ -93,7 +93,7 @@ jobs:
       - run: pnpm test
       - name: Retain policy coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: node-policy-coverage-${{ github.sha }}
           path: coverage/
@@ -110,14 +110,14 @@ jobs:
       CI: "1"
       STORYBOOK_DISABLE_TELEMETRY: "1"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
           cache: false
@@ -130,7 +130,7 @@ jobs:
       - run: flock -w 600 /tmp/domus-ci-toolchain-browser.lock pnpm test:frontend-guards
       - name: Retain distinct framework fixture outputs and coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: frontend-toolchain-${{ github.sha }}
           path: |
@@ -151,18 +151,18 @@ jobs:
     env:
       CI: "1"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
           cache: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -179,7 +179,7 @@ jobs:
       - run: flock -w 600 /tmp/domus-ci-catalog-browser.lock pnpm test:frontend-catalog
       - name: Retain distinct application coverage
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: frontend-application-${{ github.sha }}
           include-hidden-files: true
@@ -199,10 +199,10 @@ jobs:
       labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -218,10 +218,10 @@ jobs:
       labels: [self-hosted, codex, Linux]
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -252,10 +252,10 @@ jobs:
       DOMUS_HA_CORE_IMAGE: ghcr.io/home-assistant/home-assistant@${{ matrix.core_digest }}
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
@@ -311,7 +311,7 @@ jobs:
           --build-arg BUILD_VERSION=ci-current
           -t "$DOMUS_IMAGE_PREFIX:current" .
       - name: Check out the original schema-14 application
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           ref: 449dc04c17a9c41d949d74cd341bf1e943a2fba9
           path: previous-category-source
@@ -352,17 +352,17 @@ jobs:
           DOMUS_SCHEMA14_IMAGE: ${{ env.DOMUS_IMAGE_PREFIX }}:schema14
         run: uv run pytest tests/containers --no-cov
       - name: Retain native calendar coverage
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: native-calendar-coverage-${{ matrix.arch }}-${{ github.sha }}
           path: coverage-ha-calendar.json
           if-no-files-found: error
           retention-days: 7
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
           cache: false
@@ -385,7 +385,7 @@ jobs:
 
       - name: Retain actual-image browser evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: image-browser-${{ matrix.arch }}-${{ github.sha }}
           path: frontend/test-results/
@@ -433,10 +433,10 @@ jobs:
     env:
       DOMUS_CI_RESULTS: ${{ toJSON(needs) }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           version: "0.11.29"
           enable-cache: false
