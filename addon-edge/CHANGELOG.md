@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.31
+
+- Hide the stock condition selector when the catalog is unavailable and has no choices.
+
 ## 0.0.0-edge.30
 
 - Keep manual previews available without a stock condition when the product list fails to load.

@@ -22,7 +22,7 @@ cold data backup before updating from an earlier schema. An additional Superviso
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.
 
-Edge.30 includes the [manual task automation preview](evidence/automation-preview-qualification.md)
+Edge.31 includes the [manual task automation preview](evidence/automation-preview-qualification.md)
 in Household settings. It evaluates a task proposal and optional stock condition
 without changing household data. If the product list fails, the title-only preview
 remains available and the list can be retried with the draft intact.
