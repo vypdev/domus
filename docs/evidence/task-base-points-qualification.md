@@ -15,3 +15,11 @@ exact minor points and bind them to the original creation receipt.
 | `task-base-points-C06` | The [compiled workspace journey](../../frontend/tests/e2e/workspace-navigation.spec.ts) checks English desktop keyboard validation, Spanish narrow touch, the exact draft and the localized recovered amount. |
 
 The increment uses the existing storage schema, award policies and restoration format.
+
+Home Assistant Supervisor installed the disposable ARM64 Edge.24 candidate pinned to
+runtime `f445f6e0ccffffb9a2fda43b029e1a3c6b908672`. The Ingress journey saved a task
+with just a title. In English, pressing Enter with `2.251` displayed the validation
+message and retained the draft and input focus. In Spanish at 390 px, the same draft
+remained available. Touch submission with `2,25` saved the task and its receipt showed
+exactly `2,25` base points. The disposable instance, synthetic data, and temporary
+repository source were removed. The original 14 apps and eight sources remained.
