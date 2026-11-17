@@ -298,3 +298,171 @@ Owner decisions are recorded in [decisions](../docs/decisions.md). Related contr
 [ADR 0005](../docs/adr/0005-one-automation-engine.md) records the accepted product direction while preserving the detailed engine's Draft review gates.
 
 Primary design references: [HA automation concepts](https://www.home-assistant.io/docs/automation/), [execution modes](https://www.home-assistant.io/docs/automation/modes/), [building blocks](https://www.home-assistant.io/docs/automation/building-blocks/) and [troubleshooting/traces](https://www.home-assistant.io/docs/automation/troubleshooting/). These inform explicit Domus choices, not an assertion that its semantics are identical to HA or that HA/gateway code will be changed. The original [Copilot template](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/_template.md) supplies the twenty-section format.
+
+## Preview a manual household task automation
+
+- Status: Draft
+- Owners: Domus maintainers and Automation
+- Scope: Protected, read-only preview of a bounded version-one manual task rule
+- Open decisions blocking readiness: none for this preview scope
+
+### 1. Executive summary
+
+An authorized administrator can preview a manual rule that proposes creating
+one household task. The preview reports the current condition result and
+proposed effect without persisting a rule or performing a task command.
+
+### 2. Problem, current behavior, and evidence
+
+The accepted automation direction requires one declarative model and safe
+simulation before execution. Domus has household automation configuration
+and task creation grants, the protected task input contract and the
+Inventory replenishment predicate. There is no automation preview.
+
+### 3. Actors, surfaces, and terminology
+
+An administrator uses the existing automation configuration grant. Current
+task creation authority applies to the proposed action. The simple preview
+form belongs to the existing Household settings workspace.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+|---|---|
+| automation-preview-R01 | Validate a version-one rule with one explicit manual trigger, a typed optional condition tree and one task creation proposal using the existing task content limits. Reject unknown members, types, versions and executable input. |
+| automation-preview-R02 | Evaluate closed conditions for current Pantry replenishment using the owning inventory facts and current household scope. Bound condition depth and node count using the engineering values in the parent specification. |
+| automation-preview-R03 | Require current automation configuration and task creation grants, bind referenced stock to the current household and return an inert, deterministic explanation. Perform no task, stock, notification or Home Assistant mutation. |
+| automation-preview-R04 | Provide the simple preview form in English and Spanish, with clear ready, invalid, no-action and unavailable states and recovery that retains the entered draft. |
+| automation-preview-R05 | Qualify the preview on both deployment compositions and image architectures and the installed Edge candidate. |
+
+Durable rule storage, enabling, execution, the advanced editor and external
+effects have separate acceptance. The validated rule contract can be reused
+by later editors without making the preview an execution path.
+
+### 5. Current versus proposed product journey
+
+Open Household settings, enter a task title, optionally choose a product
+whose replenishment needs attention, and preview the manual rule. Read the
+condition result and the proposed task. Change the draft and preview again.
+
+### 6. Functional behavior and state model
+
+The simple preview submits a manual trigger, one task creation proposal and
+an optional stock condition. The same validator accepts bounded all, any and
+not nodes over the typed stock predicate for simulation. Evaluate a product
+against its existing replenishment minimum using available stock. Unknown
+products and unauthorized context fail without exposing a stock value.
+Apply the parent specification's maximum condition depth of eight and 64
+rule nodes. Preview reports which predicates matched and whether the task
+would be proposed. The result is read-only and the draft remains editable.
+
+### 7. User-facing configuration
+
+Use existing household access, locale and automation configuration grant.
+The optional condition uses an existing household product. The preview does
+not introduce an enabled rule or a new installation setting.
+
+### 8. Clean Architecture design
+
+Domain validates the typed rule and evaluates a bounded condition tree from
+verified facts. Application reads authorized household data in one snapshot
+and produces the proposed task and explanation. The HTTP adapter validates
+scope and request shape. UI uses the published ha-ui controls.
+
+### 9. UI/UX and content contract
+
+Provide Preview rule and a clear explanation of the manual trigger and
+whether the task would be created. Preserve input through correctable
+errors. The visible result names the proposed task and condition status.
+Keep keyboard and narrow touch access in English and Spanish.
+
+### 10. Failure, recovery, and cleanup
+
+Reject unsupported or over-bound rules. A denied or unavailable read keeps
+the form editable where authority permits and retires obsolete results.
+Retry the preview against current facts. Only temporary test data is removed.
+
+### 11. Security, permissions, and privacy
+
+Require current automation configuration and task creation authority before
+reading referenced product facts. Resolve identity and household on the
+server. Accept data and fixed predicates. No raw commands, network targets,
+script expressions, credentials or identity overrides enter the plan.
+
+### 12. Observability and operational UX
+
+Return a bounded decision trace for the preview and existing safe errors.
+The response describes planned effects in conditional language.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+The preview uses current task and stock records and the existing schema.
+Verify both deployment modes and a pinned Edge candidate.
+
+### 14. Testing strategy and numeric budget
+
+Minimum seven distinct cases.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Manual plan | 1 | Observable scenarios in the case inventory. |
+| Bounded typed input | 1 | Observable scenarios in the case inventory. |
+| Authoritative conditions | 1 | Observable scenarios in the case inventory. |
+| Current grants and effects | 1 | Observable scenarios in the case inventory. |
+| Recovery | 1 | Observable scenarios in the case inventory. |
+| Browser | 1 | Observable scenarios in the case inventory. |
+| Installed acceptance | 1 | Observable scenarios in the case inventory. |
+| Total | 7 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+|---|---|---|---|
+| automation-preview-C01 | Manual plan | automation-preview-R01 | Preview a valid manual rule using the existing task title limit and receive one deterministic task proposal. |
+| automation-preview-C02 | Bounded typed input | automation-preview-R01, automation-preview-R02 | Exercise nested all, any and not outcomes and the exact depth and size bounds. Reject unknown versions, actions, keys and executable expressions without truncating input. |
+| automation-preview-C03 | Authoritative conditions | automation-preview-R02, automation-preview-R03 | Evaluate a tracked product before and after its available amount crosses the configured minimum. Verify the explanation and successful no-action result. |
+| automation-preview-C04 | Current grants and effects | automation-preview-R03 | Revoke a current grant and try a foreign product. Verify denial without disclosure and no changes to tasks, stock, receipts, outbox or external calls in either composition. |
+| automation-preview-C05 | Recovery | automation-preview-R04 | Correct an invalid draft and retry after a read failure, preserving entered values and retiring an old result on a new context. |
+| automation-preview-C06 | Browser | automation-preview-R04 | Preview the simple form with desktop keyboard and narrow touch in English and Spanish in both deployment compositions. |
+| automation-preview-C07 | Installed acceptance | automation-preview-R05 | Qualify both image architectures and the installed Edge candidate. Preview using a disposable household and verify its cleanup. |
+
+### 15. Documentation and discoverability
+
+[specs/household-automation.md](household-automation.md) · [docs/roadmap.md](../docs/roadmap.md) · [docs/user-guide.md](../docs/user-guide.md) · [frontend/src/composition/entry-page.ts](../frontend/src/composition/entry-page.ts) · [frontend/src/presentation/domus-app.ts](../frontend/src/presentation/domus-app.ts)
+
+| Path | Change |
+|---|---|
+| specs/household-automation.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| frontend/src/composition/entry-page.ts | update |
+| frontend/src/presentation/domus-app.ts | update |
+
+### 16. Acceptance scenarios
+
+Preview an authorized task proposal with a matching and nonmatching stock
+condition. Correct a malformed draft and verify that no task was created.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+|---|---|
+| automation-preview-R01 | automation-preview-C01, automation-preview-C02 |
+| automation-preview-R02 | automation-preview-C02, automation-preview-C03 |
+| automation-preview-R03 | automation-preview-C03, automation-preview-C04 |
+| automation-preview-R04 | automation-preview-C05, automation-preview-C06 |
+| automation-preview-R05 | automation-preview-C07 |
+
+### 18. Implementation sequence
+
+Define the bounded typed rule, then add the scoped read preview and simple
+form. Qualify the automated cases and the installed Edge candidate.
+
+### 19. Definition of Done
+
+Verify seven cases, complete coverage, exact-head CI and both architectures,
+and installed Edge evidence with scoped cleanup.
+
+### 20. References and decisions
+
+ADR 0005 and household-automation-R1, R2 and R7 define one typed model and
+simulation without effects. Reuse the current automation configuration and
+task creation permissions and Inventory replenishment semantics.

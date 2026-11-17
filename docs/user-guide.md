@@ -354,10 +354,19 @@ Use the operation/history link to inspect what succeeded and what remains.
 
 ## Household automation
 
-Settings -> Automations offers a simple/default editor and optional advanced editor in the first release. Start from a typed trigger, conditions and actions; advanced mode adds branches, bounded repetition/parallel steps and durable waits. Both views save the same rule. If the simple form cannot represent advanced content, it shows a summary and opens the advanced editor rather than deleting fields.
+In **Household**, open **Automation preview**. Enter the title of the task the manual
+rule would propose. To preview a stock condition, select an existing product under
+**Stock below minimum (optional)**. Choose **Preview rule** to see the proposed task
+and whether the product's available stock is below its configured minimum.
 
-Preview explains why a condition matches and what would happen without performing the actions. Enabling a validated rule is explicit. Execution history shows each saved effect, pending wait and safe retry/cancel action. If a task was created but a later notification failed, the task remains created and the retry addresses the notification. External HA automations may call the same public Domus actions.
-Disabling stops new executions and subsequent steps in queued, waiting or active runs. A step already executing atomically may finish and its result remains in history. The status identifies any outcomes still settling. Re-enabling allows future triggers without silently resuming those cancelled runs or undoing saved effects.
+Previewing makes no changes. Update the title or condition and preview again to use
+current stock. If the preview is temporarily unavailable, retry with the same draft.
+If the product list fails to load, you can preview without a stock condition or
+choose **Try again** to reload the list with your title intact.
+Your current household grants control access to the form.
+
+The [automation specification](../specs/household-automation.md) describes the planned
+rule editors, enabling, execution history and Home Assistant operations.
 
 ## Channels and privacy
 
