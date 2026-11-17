@@ -1071,6 +1071,95 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(page).toHaveURL(base + '#tasks');
     await expect(tasksRegion.getByRole('heading',{name:'Sort the recycling',exact:true})).toBeVisible();
 
+    const previewAPI = base + 'api/v1/automation/preview';
+    const definitions = async () => {
+      const response = await page.request.get(base + 'api/v1/tasks/definitions', {
+        headers: {'X-Domus-Context':contextHeader},
+      });
+      expect(response.ok(), await response.text()).toBe(true);
+      return response.json();
+    };
+    const beforePreview = await definitions();
+    const writeOffset = writes.length;
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await page.route(base + 'api/v1/inventory?limit=25', route => route.abort('failed'), {times:1});
+    await household.press('Enter');
+    const rule = page.locator('domus-automation-preview');
+    const title = rule.getByRole('textbox',{name:'Proposed task title'});
+    const preview = rule.getByRole('button',{name:'Preview rule',exact:true});
+    const catalogWarning = rule.getByText('Could not load products. You can preview without a stock condition.');
+    const stockCondition = rule.getByRole('combobox',{name:'Stock below minimum (optional)',exact:true});
+    await expect(catalogWarning).toBeVisible();
+    await expect(stockCondition).toHaveCount(0);
+    await preview.press('Enter');
+    await expect(title).toBeFocused();
+    await expect(rule.getByText('Enter a task title of 1 to 160 characters.')).toBeVisible();
+    const longTitle = 'a'.repeat(161);
+    await title.fill(longTitle);
+    await preview.press('Enter');
+    await expect(rule.getByText('Enter a task title of 1 to 160 characters.')).toBeVisible();
+    await expect(title).toBeFocused();
+    await expect(title).toHaveValue(longTitle);
+    expect(writes).toHaveLength(writeOffset);
+    const unicodeTitle = '🧹'.repeat(160);
+    await title.fill('');
+    await title.focus();
+    await page.keyboard.insertText(unicodeTitle);
+    await expect(title).toHaveValue(unicodeTitle);
+    await preview.press('Enter');
+    const unicodeProposal = rule.getByText(unicodeTitle,{exact:true});
+    await expect(unicodeProposal).toBeVisible();
+    await expect(catalogWarning).toBeVisible();
+    await rule.getByRole('button',{name:'Try again',exact:true}).press('Enter');
+    await expect(preview).toBeEnabled();
+    await expect(title).toHaveValue(unicodeTitle);
+    await expect(stockCondition).toBeEnabled();
+    await expect(catalogWarning).toHaveCount(0);
+    await expect(unicodeProposal).toHaveCount(0);
+    await title.fill('Check the tea supplies');
+    await page.route(previewAPI, route => route.abort('failed'), {times:1});
+    await preview.press('Enter');
+    await expect(rule.getByText(/Could not preview the rule/u)).toBeVisible();
+    await expect(title).toHaveValue('Check the tea supplies');
+    await preview.press('Enter');
+    await expect(rule.getByRole('status')).toContainText('Would create this task');
+    await expect(rule.getByRole('status')).toContainText('Check the tea supplies');
+    await expect(rule.getByRole('article',{name:'Automation preview'})).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await expect(preview).toHaveCSS('color','rgb(255, 255, 255)');
+    await rule.screenshot({path:info.outputPath('automation-preview-en-wide.png')});
+
+    await inventory.click();
+    const previewProduct = await inventoryWrite('preview-product', {
+      action:'inventory.register-product', name:'Tea filters for preview', base_unit:'piece',
+    });
+    await inventoryWrite('preview-product-minimum', {action:'inventory.configure-replenishment',
+      product_id:previewProduct.product_id, minimum:'2', target:'4', expected_revision:'0'});
+    await household.press('Enter');
+    await expect(title).toHaveValue('Check the tea supplies');
+    await expect(rule.getByRole('status')).toHaveCount(0);
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    await rule.getByRole('combobox',{name:'Existencias por debajo del mínimo (opcional)'}).tap();
+    await rule.getByRole('option',{name:'Tea filters for preview',exact:true}).tap();
+    const previsualizar = rule.getByRole('button',{name:'Previsualizar regla',exact:true});
+    await previsualizar.tap();
+    await expect(rule.getByRole('status')).toContainText('Se crearía esta tarea');
+    await expect(rule.getByRole('status')).toContainText('Tea filters for preview');
+    await expect(rule.getByRole('status')).toContainText('Las existencias disponibles están por debajo del mínimo.');
+    await inventoryWrite('preview-stock-intake', {action:'inventory.intake', product_id:previewProduct.product_id, quantity:'2'});
+    await previsualizar.tap();
+    await expect(rule.getByRole('status')).toContainText('No se crearía ninguna tarea');
+    await expect(rule.getByRole('status')).toContainText('No se cumple la condición de existencias.');
+    await expect(rule.getByRole('article',{name:'Vista previa de automatización'}))
+      .toHaveCSS('background-color','rgb(24, 36, 47)');
+    await expect(previsualizar).toHaveCSS('color','rgb(24, 36, 47)');
+    await rule.screenshot({path:info.outputPath('automation-preview-es-narrow.png')});
+    expect(writes.slice(writeOffset)).toEqual(Array(5).fill('POST ' + previewAPI));
+    expect(await definitions()).toEqual(beforePreview);
+
     const restock = await inventoryWrite('overview-restock-product', {
       action:'inventory.register-product', name:'Filters for the Overview', base_unit:'piece',
     });

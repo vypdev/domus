@@ -1,6 +1,9 @@
 import {HttpTaskServer} from '../adapters/task-http';
 import {OverviewReadController} from '../application/overview-read';
 import type {TaskOverview} from '../application/task-overview';
+import {HttpAutomationPreview} from '../adapters/automation-preview-http';
+import {AutomationPreviewController} from '../application/automation-preview';
+import type {AutomationPreviewIntent} from '../application/automation-preview';
 import type {StockAttention} from '../application/stock-attention';
 import {HttpInventoryServer} from '../adapters/inventory-http';
 import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../adapters/inventory-journal';
@@ -212,6 +215,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let rewards: RewardsController | null = null;
   let inventory: InventoryController | null = null;
   let taskOverview: OverviewReadController<TaskOverview> | null = null;
+  let automationPreview: AutomationPreviewController | null = null;
   let stockAttention: OverviewReadController<StockAttention> | null = null;
   let familyOverview: OverviewReadController<FamilyWeek> | null = null;
   let allocation: AllocationController | null = null;
@@ -220,7 +224,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); error?.remove();
     stockAttention?.bind(null); familyOverview?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
@@ -230,7 +234,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); app?.remove();
     stockAttention?.bind(null); familyOverview?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
@@ -470,16 +474,33 @@ export function mountEntry(page: EntryPage): PageMount {
     element.addEventListener('domus-family-overview-retry', event => {
       if (event.target === element) void familySummary.refresh();
     }, {signal: widget.signal});
+    const automation = new AutomationPreviewController(new HttpAutomationPreview(source.target, browser.transport),
+      inventoryServer, view => {element.automationPreview = view;});
+    automationPreview = automation;
+    const syncAutomation = () => {
+      const entry = element.view, member = element.administration?.access?.member;
+      if (entry?.phase === 'ready' && entry.notice !== 'context_changed' && entry.decision?.householdReadable
+          && entry.session && entry.household && member) {
+        const {context} = entry.session, {householdId} = entry.household;
+        const key = JSON.stringify([context.installationId, context.channel, context.subject, householdId, member.memberId]);
+        automation.bind({key, context, householdId, readOnly: entry.decision.readOnly},
+          element.workspaceDestination === 'household');
+      } else automation.bind(null);
+    };
+    element.addEventListener('domus-automation-preview-intent', event => {
+      if (event.target !== element) return;
+      void automation.handle((event as CustomEvent<AutomationPreviewIntent>).detail);
+    }, {signal: widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
         : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : fragment === '#inventory' ? 'inventory' : null;
-      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncStockAttention(); syncFamilyOverview();
+      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncAutomation(); syncStockAttention(); syncFamilyOverview();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncStockAttention();syncFamilyOverview();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncAutomation();syncStockAttention();syncFamilyOverview();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;
