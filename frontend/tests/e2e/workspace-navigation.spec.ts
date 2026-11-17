@@ -1213,6 +1213,8 @@ for (const mode of ['native', 'standalone'] as const) {
       action:'shopping.clear-extra', extra_id:overviewExtra.extra_id,
     });
     await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    await expect(page).toHaveURL(base + '#overview');
+    await expect(shoppingSummary.getByRole('heading',{name:/^Artículos por comprar · [1-9]/u})).toBeVisible();
     await expect(extraLink).toHaveCount(0);
     await page.evaluate(fragment => {location.hash = fragment!;}, oldFragment);
     await expect(sharedList.getByRole('heading',{name:'Lista compartida de compras'})).toBeFocused();
