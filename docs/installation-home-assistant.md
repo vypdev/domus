@@ -22,6 +22,10 @@ cold data backup before updating from an earlier schema. An additional Superviso
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.
 
+Edge.32 adds the [Overview shopping summary](user-guide.md#shared-shopping-list).
+Open any displayed item to focus it in Inventory. The preview uses the current
+shared-list permissions and SQLite schema 31.
+
 Edge.31 includes the [manual task automation preview](evidence/automation-preview-qualification.md)
 in Household settings. It evaluates a task proposal and optional stock condition
 without changing household data. If the product list fails, the title-only preview

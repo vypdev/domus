@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.32
+
+- Show the exact number of items still to buy and the first 25 shared-list items on Overview.
+- Open the selected item in Inventory with keyboard or touch in English and Spanish.
+
 ## 0.0.0-edge.31
 
 - Hide the stock condition selector when the catalog is unavailable and has no choices.
