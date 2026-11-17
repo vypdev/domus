@@ -1423,14 +1423,14 @@ The existing Shopping contract defines optional stores and purchase-session
 history under shopping-management-R6. Retain the published session and
 physical receipt cases.
 
-## Proposed change: Show items to buy on Overview
+## Show items to buy on Overview
 
-- Status: Draft
+- Status: Implementation in qualification
 - Catalog capability: shopping-management
 
 ### 1. Executive summary
 
-This delta adds a shopping summary to Overview: members can see the exact count of items still to be bought and the first 25 items, with their existing quantities and order, and open the shared list in Inventory with focus on that list. It reuses the existing shared-list permissions and supports English and Spanish. The list remains the source of shopping details and history. This is proposed behavior; the retained owner is a prospective Draft, not evidence of an implemented feature.
+Members can see the exact count of items still to be bought and the first 25 items in Overview, with their existing quantities and order. Selecting a row focuses that item in the shared list in Inventory. The summary uses the existing shared-list permissions and supports English and Spanish. Inventory remains the workspace for shopping details and history.
 
 ### 2. Problem, current behavior, and evidence
 
@@ -1591,4 +1591,19 @@ The selected `package.json` declares pnpm 10.34.0 and Node `>=24.20.0 <25`, but 
 
 This is a bounded update to the immutable owner `specs/shopping-management.md`. Its existing requirements and cases remain authoritative for shared-list behavior, permissions, purchasing, receipt, and inventory invariants. The Overview priority context is `application-experience-R2` in `specs/application-experience.md`; this delta adds only the shopping summary and navigation behavior described for issue [#104](https://github.com/vypdev/domus/issues/104).
 
-The source selection is revision `1331784a34cb7f6856ad8af95cc7098b0975d1c7`. Issue #104 supplies the exact-count, first-25-items, existing-list ordering and quantities, existing permissions, English and Spanish, and navigation-to-and-focus-in-Inventory outcomes. Implementation evidence for the proposed Overview behavior is not established by this draft.
+The specification was prepared from revision `1331784a34cb7f6856ad8af95cc7098b0975d1c7`. Issue #104 defines the count, the 25-item subset, the existing ordering, quantities and permissions, the two locales and the focused Inventory destination.
+
+### Implementation evidence
+
+| Case | Executable check |
+| --- | --- |
+| `inventory1-C01` | [Shared shopping API tests](../tests/backend/test_shared_shopping.py) verify exact totals beyond 25, row order, covered demand and independent same-name extras in both HTTP compositions. The [summary browser tests](../frontend/tests/shopping-attention.test.ts) verify the 25-row limit, exact quantities and both locales. |
+| `inventory1-C02` | The same API tests verify that the summary excludes task demand for members without task-read permission and denies members outside the household. The summary browser tests verify inaccessible and incomplete response states. |
+| `inventory1-C03` | The [workspace composition test](../frontend/tests/page.test.ts) verifies focus across a sparse page. The [compiled workspace journey](../frontend/tests/e2e/workspace-navigation.spec.ts) exercises English keyboard and Spanish touch activation of existing items and the fallback after an item is removed. |
+
+Both [Ingress](../docs/contracts/native-household-api.openapi.json) and
+[standalone](../docs/contracts/household-api.openapi.json) publish
+`GET /api/v1/inventory/shopping-attention`. The query takes a single snapshot
+under the shared-list authorization boundary. The destination reads current
+authorized list pages and matches the selected identity. These reads use the
+existing storage schema and leave household records intact.

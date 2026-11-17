@@ -33,6 +33,50 @@ class ShoppingListView:
     next_cursor: str | None
 
 
+SHOPPING_ATTENTION_LIMIT = 25
+
+
+@dataclass(frozen=True, slots=True)
+class ShoppingAttentionItem:
+    product_id: str | None
+    extra_id: str | None
+    name: str
+    base_unit: BaseUnit
+    total: str
+
+
+@dataclass(frozen=True, slots=True)
+class ShoppingAttention:
+    total: int
+    items: tuple[ShoppingAttentionItem, ...]
+
+
+def list_items(
+    unit: UnitOfWork, home: str, rows: tuple[tuple[str, str, bool], ...], *, include_tasks: bool
+) -> tuple[ShoppingListItem, ...]:
+    products = {}
+    for _, item_id, tracked in rows:
+        if tracked:
+            product = unit.inventory.product(home, item_id)
+            assert product is not None
+            products[item_id] = product
+    task_sources = task_needs(unit, home, tuple(products.values())) if include_tasks else {}
+    items: list[ShoppingListItem] = []
+    for _, item_id, tracked in rows:
+        if tracked:
+            product = products[item_id]
+            projected = project(
+                unit, home, product, tuple(task_sources.get(product.reference_id, ()))
+            )
+            if projected.sources:
+                items.append(projected.item)
+        else:
+            extra = unit.shopping.extra(home, item_id)
+            assert extra is not None
+            items.append(free_extra(unit, home, extra))
+    return tuple(items)
+
+
 @dataclass(frozen=True, slots=True)
 class ShoppingSourceView:
     source_id: str

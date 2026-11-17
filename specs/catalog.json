@@ -705,7 +705,7 @@
       "status": "proposed",
       "scope": "Shopping combines manual intent, replenishment and task materials without losing provenance. Buying an item and physically receiving it are separate recorded facts.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-10",
+      "lastVerified": "2026-11-17",
       "specs": [
         "specs/shopping-management.md"
       ],
@@ -721,7 +721,10 @@
         "backend/src/domus/application/inventory_queries.py",
         "backend/src/domus/infrastructure/sqlite_shopping.py",
         "frontend/src/presentation/domus-shopping.ts",
-        "frontend/src/presentation/domus-shopping-list.ts"
+        "frontend/src/presentation/domus-shopping-list.ts",
+        "frontend/src/application/shopping-attention.ts",
+        "frontend/src/adapters/inventory-http.ts",
+        "frontend/src/presentation/domus-shopping-attention.ts"
       ],
       "tests": [
         "tests/backend/test_shopping_http.py",
@@ -741,7 +744,9 @@
         "tests/fixtures/sqlite/v23-shared-shopping-source.sql",
         "tests/fixtures/sqlite/v22-shopping-source.sql",
         "frontend/tests/inventory.test.ts",
-        "frontend/tests/e2e/workspace-navigation.spec.ts"
+        "frontend/tests/e2e/workspace-navigation.spec.ts",
+        "frontend/tests/shopping-attention.test.ts",
+        "frontend/tests/page.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -756,11 +761,13 @@
         "docs/evidence/physical-receipt-void-qualification.md",
         "docs/evidence/posted-receipt-correction-qualification.md",
         "docs/evidence/physical-receipt-return-qualification.md",
-        "docs/evidence/purchase-session-store-qualification.md"
+        "docs/evidence/purchase-session-store-qualification.md",
+        "docs/contracts/household-api.openapi.json",
+        "docs/contracts/native-household-api.openapi.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
         "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and refunds have separate acceptance.",
         "copilotChangesAllowed": false
       }

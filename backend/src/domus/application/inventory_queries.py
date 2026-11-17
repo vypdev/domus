@@ -7,10 +7,12 @@ from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.inventory_ports import InventoryRecords
 from domus.application.ports import Transactions, UnitOfWork
 from domus.application.shopping_list import (
-    ShoppingListItem,
+    SHOPPING_ATTENTION_LIMIT,
+    ShoppingAttention,
+    ShoppingAttentionItem,
     ShoppingListView,
     ShoppingSourcesView,
-    free_extra,
+    list_items,
     project,
     task_needs,
 )
@@ -609,27 +611,35 @@ class InventoryQueries:
             next_cursor = (
                 self.cursors.encode(binding, rows[limit - 1][0]) if len(rows) > limit else None
             )
-            products = {}
-            for _, item_id, tracked in rows[:limit]:
-                if tracked:
-                    product = unit.inventory.product(home, item_id)
-                    assert product is not None
-                    products[item_id] = product
-            task_sources = task_needs(unit, home, tuple(products.values())) if grants.tasks else {}
-            items: list[ShoppingListItem] = []
-            for _, item_id, tracked in rows[:limit]:
-                if tracked:
-                    product = products[item_id]
-                    projected = project(
-                        unit, home, product, tuple(task_sources.get(product.reference_id, ()))
-                    )
-                    if projected.sources:
-                        items.append(projected.item)
-                else:
-                    extra = unit.shopping.extra(home, item_id)
-                    assert extra is not None
-                    items.append(free_extra(unit, home, extra))
-            return ShoppingListView(tuple(items), next_cursor)
+            items = list_items(unit, home, rows[:limit], include_tasks=grants.tasks)
+            return ShoppingListView(items, next_cursor)
+
+    def shopping_attention(self) -> ShoppingAttention:
+        limit = SHOPPING_ATTENTION_LIMIT
+        with self.store.read() as unit:
+            home, grants, _ = self._access(unit, "shopping-attention-v1", limit, None)
+            total = 0
+            items: list[ShoppingAttentionItem] = []
+            after = ""
+            while rows := unit.shopping.list_candidates(home, after, limit):
+                for item in list_items(unit, home, rows, include_tasks=grants.tasks):
+                    if item.total == "0":
+                        continue
+                    total += 1
+                    if len(items) < limit:
+                        items.append(
+                            ShoppingAttentionItem(
+                                item.product_id,
+                                item.extra_id,
+                                item.name,
+                                item.base_unit,
+                                item.total,
+                            )
+                        )
+                if len(rows) < limit:
+                    break
+                after = rows[-1][0]
+            return ShoppingAttention(total, tuple(items))
 
     def shopping_sources(
         self, product_id: str, *, limit: int, cursor: str | None

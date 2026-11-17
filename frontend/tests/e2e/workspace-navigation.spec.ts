@@ -1166,6 +1166,9 @@ for (const mode of ['native', 'standalone'] as const) {
     await inventoryWrite('overview-restock-policy', {action:'inventory.configure-replenishment',
       product_id:restock.product_id, minimum:'2', target:'4', expected_revision:'0'});
     await inventoryWrite('overview-restock-one', {action:'inventory.intake', product_id:restock.product_id, quantity:'1'});
+    const overviewExtra = await inventoryWrite('overview-shopping-extra', {
+      action:'shopping.add-extra', product_id:null, name:'Paper bags for the Overview', quantity:'2',
+    });
     await page.getByLabel('Idioma',{exact:true}).selectOption('en');
     await page.setViewportSize({width:1100,height:760});
     await page.emulateMedia({colorScheme:'light'});
@@ -1180,6 +1183,16 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(restockRow).toContainText('Minimum stock 2 pieces');
     await expect(attention.getByRole('article')).toHaveCSS('background-color','rgb(255, 255, 255)');
     await attention.screenshot({path:info.outputPath('stock-attention-en-wide.png')});
+    const shoppingSummary = overviewRegion.locator('domus-shopping-attention');
+    await expect(shoppingSummary.getByRole('heading',{name:/^Items to buy · [1-9]/u})).toBeVisible();
+    const shoppingRow = shoppingSummary.getByRole('link',{name:'Filters for the Overview 3 pieces',exact:true});
+    await expect(shoppingRow).toBeVisible();
+    await shoppingRow.press('Enter');
+    const sharedList = stock.locator('domus-shopping-list');
+    await expect(sharedList.getByRole('listitem').getByText('Filters for the Overview',{exact:true})).toBeFocused();
+    await inventory.press('Enter');
+    await expect(page).toHaveURL(base + '#inventory');
+    await overview.press('Enter');
     await attention.getByRole('link',{name:'Open Inventory',exact:true}).press('Enter');
     await expect(stock).toBeFocused();
 
@@ -1191,6 +1204,20 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(restockRow).toContainText('Stock mínimo 2 unidades');
     await expect(attention.getByRole('article')).toHaveCSS('background-color','rgb(24, 36, 47)');
     await attention.screenshot({path:info.outputPath('stock-attention-es-narrow.png')});
+    await expect(shoppingSummary.getByRole('heading',{name:/^Artículos por comprar · [1-9]/u})).toBeVisible();
+    const extraLink = shoppingSummary.getByRole('link',{name:'Paper bags for the Overview 2 unidades',exact:true});
+    const oldFragment = await extraLink.getAttribute('href');
+    await extraLink.tap();
+    await expect(sharedList.getByRole('listitem').getByText('Paper bags for the Overview',{exact:true})).toBeFocused();
+    await inventoryWrite('overview-shopping-clear', {
+      action:'shopping.clear-extra', extra_id:overviewExtra.extra_id,
+    });
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
+    await expect(extraLink).toHaveCount(0);
+    await page.evaluate(fragment => {location.hash = fragment!;}, oldFragment);
+    await expect(sharedList.getByRole('heading',{name:'Lista compartida de compras'})).toBeFocused();
+    await expect(sharedList.getByRole('status')).toContainText('Este artículo ya no está pendiente de compra.');
+    await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
     await attention.getByRole('link',{name:'Abrir Inventario',exact:true}).tap();
     await expect(stock).toBeFocused();
     const restockProduct = stock.getByRole('article',{name:'Filters for the Overview',exact:true});
