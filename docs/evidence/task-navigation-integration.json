@@ -294,5 +294,16 @@
     },
     "requirements": "daily-trigger-preview-R01 through daily-trigger-preview-R05",
     "evidence": "daily-automation-preview-qualification.md"
+  },
+  "dailyAutomationDrafts": {
+    "sourceCommit": "1acd83cd8ee2aa1fd25a64b830a74c1413ab24c8",
+    "actualProductFiles": {
+      ".vite/manifest.json": "daf007f71e459977685050b8df058681b2e0d210322239bfa05233627a1865d3",
+      "assets/index-B22CLM8q.js": "f47f4d2c05e424065a3535ea295d54410108df274c0f1b8c2a27725d3c928ef5",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "8cc5cec730db94bb12efb2c1a59201e62a8b506cc36227ebca93efda26a986c7"
+    },
+    "requirements": "daily-drafts-R01 through daily-drafts-R05",
+    "evidence": "daily-automation-drafts-qualification.md"
   }
 }

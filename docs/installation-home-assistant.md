@@ -17,7 +17,7 @@ The Ingress walkthrough verified the Overview stock summary and replenishment in
 English and Spanish. The test app, its data and its temporary repository source were
 removed after verification. [Installed acceptance](https://github.com/vypdev/domus/pull/103#issuecomment-6797153928)
 
-The current Edge preview uses SQLite schema 33. Keep a compatible image and
+The current Edge preview uses SQLite schema 34. Keep a compatible image and
 cold data backup before updating from an earlier schema. An additional Supervisor source
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.

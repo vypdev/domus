@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.41 packages the immutable runtime declared in
+Edge 0.0.0-edge.42 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -24,7 +24,9 @@ the original request after an interrupted response. Show run history lists
 your own previous runs of the selected rule, with older pages on demand.
 Daily schedule preview resolves five upcoming times in the household zone, including
 the spring gap and the repeated-time setting.
-Edge.41 uses SQLite schema 33. Edge.38 introduced SQLite schema 33 and is listed in `breaking_versions`.
+Daily titles, conditions and local times can be saved and reopened as inactive drafts.
+Edge.42 uses SQLite schema 34 and is listed in `breaking_versions`.
+Edge.38 introduced SQLite schema 33.
 Keep a compatible image and stopped-app backup before
 upgrading from an earlier schema. A binary that expects the earlier schema
 requires its compatible data backup.
