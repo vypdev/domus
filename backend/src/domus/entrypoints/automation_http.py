@@ -19,6 +19,7 @@ from domus.domain.automation import (
     NegatedCondition,
     StockCondition,
 )
+from domus.domain.identity import MAX_REVISION
 from domus.domain.task_values import TaskContent
 from domus.entrypoints.household_http import (
     ReceiptResponse,
@@ -85,9 +86,28 @@ class AutomationPreviewBody(StrictModel):
         )
 
 
+def _draft_revision_pattern() -> str:
+    # JSON Schema applies a numeric maximum to numbers only. For a decimal
+    # string, match shorter values and each prefix that first falls below the limit.
+    maximum = str(MAX_REVISION)
+    alternatives = ["0", f"[1-9][0-9]{{0,{len(maximum) - 2}}}", maximum]
+    for index, digit in enumerate(maximum):
+        first_digit = 1 if index == 0 else 0
+        last_digit = int(digit) - 1
+        if first_digit <= last_digit:
+            remaining = len(maximum) - index - 1
+            alternatives.append(
+                f"{maximum[:index]}[{first_digit}-{last_digit}][0-9]{{{remaining}}}"
+            )
+    return "^(?:" + "|".join(alternatives) + ")$"
+
+
 class AutomationDraftBody(AutomationPreviewBody):
     rule_id: Identifier | None
-    expected_revision: str = Field(pattern=r"^(?:0|[1-9][0-9]{0,18})$")
+    expected_revision: str = Field(
+        pattern=_draft_revision_pattern(),
+        description="Use zero to create a draft and a positive signed 64-bit revision to edit.",
+    )
 
 
 class AutomationDraftDetail(AutomationPreviewBody):

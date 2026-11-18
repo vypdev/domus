@@ -1,5 +1,6 @@
 """Qualify typed drafts and durable command recovery in both HTTP compositions."""
 
+import re
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
@@ -20,7 +21,7 @@ from domus.domain.automation import (
     StockCondition,
 )
 from domus.domain.errors import InvalidInput
-from domus.domain.identity import MemberStatus, Permission, PermissionRule
+from domus.domain.identity import MAX_REVISION, MemberStatus, Permission, PermissionRule
 from domus.domain.storage import JsonDocument
 from domus.domain.task_values import TaskContent
 
@@ -187,6 +188,8 @@ def test_draft_denies_revoked_grants_and_preserves_the_last_valid_revision(api):
     assert (bad_revision.status_code, bad_revision.json()["code"]) == (422, "invalid_revision")
     bad_creation = save(api, "edit", revision="1")
     assert (bad_creation.status_code, bad_creation.json()["code"]) == (422, "invalid_revision")
+    too_large = save(api, "edit", rule_id=rule_id, revision=str(MAX_REVISION + 1))
+    assert (too_large.status_code, too_large.json()["code"]) == (422, "invalid_request")
     missing = read(api, f"{DRAFTS}/elsewhere")
     assert (missing.status_code, missing.json()["code"]) == (404, "automation_draft_missing")
     assert read(api, path).json() == before
@@ -210,6 +213,18 @@ def test_draft_denies_revoked_grants_and_preserves_the_last_valid_revision(api):
         )
     assert all(read(api, route).status_code == 403 for route in (DRAFTS, path, original))
     assert save(api, "edit", rule_id=rule_id, revision="1").status_code == 403
+
+
+def test_openapi_draft_revision_pattern_matches_the_exact_signed_range(api):
+    schema = api.client.get("/api/v1/openapi.json").json()["components"]["schemas"]
+    pattern = schema["AutomationDraftBody"]["properties"]["expected_revision"]["pattern"]
+    assert all(re.fullmatch(pattern, value) is None for value in ("-1", "01", "1.0", "+1"))
+    for exponent in range(19):
+        boundary = (MAX_REVISION // 10**exponent) * 10**exponent
+        for revision in (10**exponent, boundary - 1, boundary, boundary + 1):
+            assert bool(re.fullmatch(pattern, str(revision))) == (0 <= revision <= MAX_REVISION)
+    assert re.fullmatch(pattern, "0")
+    assert re.fullmatch(pattern, str(10**19)) is None
 
 
 def test_concurrent_draft_edits_and_original_request_replay(api):

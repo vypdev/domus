@@ -90,9 +90,11 @@ DEFAULTS = {
     Role.VIEWER: COMMON,
 }
 
+MAX_REVISION = 2**63 - 1
+
 
 def validate_revision(revision: int) -> None:
-    if type(revision) is not int or not 1 <= revision <= 2**63 - 1:
+    if type(revision) is not int or not 1 <= revision <= MAX_REVISION:
         raise InvalidInput("invalid_revision")
 
 
