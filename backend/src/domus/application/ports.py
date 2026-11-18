@@ -12,7 +12,7 @@ from domus.application.reward_ports import RewardsRepository
 from domus.application.shopping_ports import ShoppingRecords
 from domus.application.task_material_ports import TaskMaterialRepository
 from domus.application.task_ports import TaskRepository
-from domus.domain.automation import AutomationDraft
+from domus.domain.automation import AutomationControl, AutomationDraft
 from domus.domain.calendar_values import (
     CalendarCandidate,
     CalendarFilters,
@@ -103,11 +103,24 @@ class TaskCategories(Protocol):
 
 class AutomationDraftRecords(Protocol):
     def latest(self, household_id: str, rule_id: str) -> AutomationDraft | None: ...
+    def revision(
+        self, household_id: str, rule_id: str, revision: int
+    ) -> AutomationDraft | None: ...
     def page(self, household_id: str, after: str, limit: int) -> tuple[AutomationDraft, ...]: ...
     def append(self, household_id: str, draft: AutomationDraft) -> None: ...
 
 
+class AutomationControls(Protocol):
+    def get(self, household_id: str, rule_id: str) -> AutomationControl | None: ...
+    def save(
+        self, household_id: str, control: AutomationControl, expected_revision: int
+    ) -> None: ...
+
+
 class UnitOfWork(Protocol):
+    @property
+    def automation_controls(self) -> AutomationControls: ...
+
     @property
     def automation_drafts(self) -> AutomationDraftRecords: ...
 

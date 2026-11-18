@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Protocol
 
 from domus.application.automation_drafts import AutomationDrafts
+from domus.application.automation_execution import AutomationExecution
 from domus.application.automation_preview import AutomationPreview
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
@@ -58,6 +59,7 @@ def task_contexts(
     def context(actor: TaskSession) -> TaskHTTPContext:
         rewards = RewardCommands(store, actor, clock, identifiers)
         catalog = InventoryCommands(store, actor, clock, identifiers)
+        tasks = TaskCommands(store, actor, clock, identifiers, inventory_factory=inventory)
 
         def queries() -> TaskQueries:
             return TaskQueries(
@@ -74,7 +76,7 @@ def task_contexts(
         return TaskHTTPContext(
             queries,
             lambda: queries().overview(clock, planner.times),
-            TaskCommands(store, actor, clock, identifiers, inventory_factory=inventory),
+            tasks,
             RecurrenceReview(store, installation, actor, actor.read, clock, identifiers, planner),
             lambda: CalendarQueries(store, scope, actor.read(), cursors, planner.times),
             CalendarCommands(store, actor, actor.read, clock, identifiers),
@@ -109,6 +111,7 @@ def task_contexts(
             lambda action, key: catalog.original(action, key, actor.read()),
             lambda: AutomationPreview(store, scope, actor.read()),
             AutomationDrafts(store, scope, actor, actor.read, clock, identifiers, cursors),
+            AutomationExecution(store, scope, actor, actor.read, clock, identifiers, tasks),
         )
 
     return context

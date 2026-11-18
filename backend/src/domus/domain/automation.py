@@ -160,6 +160,23 @@ class AutomationDraft:
 
 
 @dataclass(frozen=True, slots=True)
+class AutomationControl:
+    """Identify the exact configured definition independently of the latest draft."""
+
+    rule_id: str
+    rule_revision: int
+    control_revision: int
+    enabled: bool
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.rule_id)
+        validate_revision(self.rule_revision)
+        validate_revision(self.control_revision)
+        if type(self.enabled) is not bool:
+            raise InvalidInput("invalid_automation_control")
+
+
+@dataclass(frozen=True, slots=True)
 class ConditionDecision:
     path: tuple[int, ...]
     kind: ConditionKind

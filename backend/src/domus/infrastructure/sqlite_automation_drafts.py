@@ -37,6 +37,14 @@ class SQLiteAutomationDrafts:
         ).fetchone()
         return _draft(row) if row is not None else None
 
+    def revision(self, household_id: str, rule_id: str, revision: int) -> AutomationDraft | None:
+        row = self.connection.execute(
+            "SELECT rule_id,revision,definition FROM automation_draft_revisions "
+            "WHERE household_id=? AND rule_id=? AND revision=?",
+            (household_id, rule_id, revision),
+        ).fetchone()
+        return _draft(row) if row is not None else None
+
     def page(self, household_id: str, after: str, limit: int) -> tuple[AutomationDraft, ...]:
         return tuple(
             _draft(row)

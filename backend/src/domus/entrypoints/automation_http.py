@@ -8,6 +8,12 @@ from fastapi.params import Depends
 from pydantic import Field
 
 from domus.application.automation_drafts import DraftPage, SaveDraft
+from domus.application.automation_execution import (
+    RUN_AUTOMATION,
+    SET_AUTOMATION_CONTROL,
+    ConfigureAutomation,
+    RunAutomation,
+)
 from domus.application.automation_preview import AutomationPreviewAccess
 from domus.domain.automation import (
     AUTOMATION_RULE_VERSION,
@@ -86,11 +92,12 @@ class AutomationPreviewBody(StrictModel):
         )
 
 
-def _draft_revision_pattern() -> str:
+def _revision_pattern(*, allow_zero: bool) -> str:
     # JSON Schema applies a numeric maximum to numbers only. For a decimal
     # string, match shorter values and each prefix that first falls below the limit.
     maximum = str(MAX_REVISION)
-    alternatives = ["0", f"[1-9][0-9]{{0,{len(maximum) - 2}}}", maximum]
+    alternatives = ["0"] if allow_zero else []
+    alternatives.extend((f"[1-9][0-9]{{0,{len(maximum) - 2}}}", maximum))
     for index, digit in enumerate(maximum):
         first_digit = 1 if index == 0 else 0
         last_digit = int(digit) - 1
@@ -105,7 +112,7 @@ def _draft_revision_pattern() -> str:
 class AutomationDraftBody(AutomationPreviewBody):
     rule_id: Identifier | None
     expected_revision: str = Field(
-        pattern=_draft_revision_pattern(),
+        pattern=_revision_pattern(allow_zero=True),
         description="Use zero to create a draft and a positive signed 64-bit revision to edit.",
     )
 
@@ -115,6 +122,43 @@ class AutomationDraftDetail(AutomationPreviewBody):
     revision: str
     state: Literal["draft"] = "draft"
     enabled: Literal[False] = False
+
+
+type RevisionText = Annotated[str, Field(pattern=_revision_pattern(allow_zero=False))]
+type ControlRevisionText = Annotated[str, Field(pattern=_revision_pattern(allow_zero=True))]
+
+
+class ConfigureAutomationBody(StrictModel):
+    rule_revision: RevisionText
+    expected_control_revision: ControlRevisionText
+    enabled: bool
+
+
+class RunAutomationBody(StrictModel):
+    rule_revision: RevisionText
+    control_revision: RevisionText
+
+
+class AutomationControlDetail(StrictModel):
+    rule_revision: RevisionText
+    control_revision: RevisionText
+    enabled: bool
+    title: str = Field(min_length=1, max_length=160)
+
+
+class AutomationExecutionDetail(StrictModel):
+    rule_id: Identifier
+    latest_revision: RevisionText
+    latest_title: str = Field(min_length=1, max_length=160)
+    control: AutomationControlDetail | None
+
+
+_WRITE_HEADERS = {
+    "parameters": [
+        {"name": name, "in": "header", "required": True, "schema": {"type": "string"}}
+        for name in ("Idempotency-Key", "Origin", "X-CSRF-Token")
+    ]
+}
 
 
 def create_automation_router(
@@ -165,12 +209,7 @@ def create_automation_router(
     @router.post(
         "/drafts",
         response_model=ReceiptResponse,
-        openapi_extra={
-            "parameters": [
-                {"name": name, "in": "header", "required": True, "schema": {"type": "string"}}
-                for name in ("Idempotency-Key", "Origin", "X-CSRF-Token")
-            ]
-        },
+        openapi_extra=_WRITE_HEADERS,
     )
     def save(
         request: Request, body: AutomationDraftBody, query: Annotated[_EmptyQuery, Query()]
@@ -185,5 +224,71 @@ def create_automation_router(
         request: Request, key: Identifier, query: Annotated[_EmptyQuery, Query()]
     ) -> ReceiptResponse:
         return _receipt(context(request).automation_drafts.original(key))
+
+    @router.get("/drafts/{rule_id}/execution", response_model=AutomationExecutionDetail)
+    def execution_state(
+        request: Request, rule_id: Identifier, query: Annotated[_EmptyQuery, Query()]
+    ) -> AutomationExecutionDetail:
+        value = context(request).automation_execution.state(rule_id)
+        control = value.control
+        return AutomationExecutionDetail(
+            rule_id=value.rule_id,
+            latest_revision=str(value.latest_revision),
+            latest_title=value.latest_title,
+            control=None
+            if control is None
+            else AutomationControlDetail(
+                rule_revision=str(control.rule_revision),
+                control_revision=str(control.control_revision),
+                enabled=control.enabled,
+                title=control.title,
+            ),
+        )
+
+    @router.post(
+        "/drafts/{rule_id}/execution",
+        response_model=ReceiptResponse,
+        openapi_extra=_WRITE_HEADERS,
+    )
+    def configure(
+        request: Request,
+        rule_id: Identifier,
+        body: ConfigureAutomationBody,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> ReceiptResponse:
+        receipt = context(request).automation_execution.configure(
+            _key(request),
+            ConfigureAutomation(
+                rule_id, int(body.rule_revision), int(body.expected_control_revision), body.enabled
+            ),
+        )
+        return _receipt(receipt)
+
+    @router.post(
+        "/drafts/{rule_id}/runs",
+        response_model=ReceiptResponse,
+        openapi_extra=_WRITE_HEADERS,
+    )
+    def run(
+        request: Request,
+        rule_id: Identifier,
+        body: RunAutomationBody,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> ReceiptResponse:
+        receipt = context(request).automation_execution.run(
+            _key(request),
+            RunAutomation(rule_id, int(body.rule_revision), int(body.control_revision)),
+        )
+        return _receipt(receipt)
+
+    @router.get("/execution/requests/{kind}/{key}", response_model=ReceiptResponse)
+    def original_execution(
+        request: Request,
+        kind: Literal["configure", "run"],
+        key: Identifier,
+        query: Annotated[_EmptyQuery, Query()],
+    ) -> ReceiptResponse:
+        action = SET_AUTOMATION_CONTROL if kind == "configure" else RUN_AUTOMATION
+        return _receipt(context(request).automation_execution.original(action, key))
 
     return router

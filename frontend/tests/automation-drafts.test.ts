@@ -305,7 +305,7 @@ test('HTTP reopens a simple rule and checks the revision on an edit receipt', as
 
 afterEach(() => document.querySelectorAll('domus-automation-drafts').forEach(element => element.remove()));
 
-test('draft interface exposes localized inactive revisions, recovery and explicit review', async () => {
+test('draft interface exposes localized saved revisions, recovery and explicit review', async () => {
   const element = document.createElement('domus-automation-drafts');
   document.body.append(element);
   const event = vi.fn();
@@ -319,7 +319,7 @@ test('draft interface exposes localized inactive revisions, recovery and explici
   element.canEdit = true;
   await element.updateComplete;
   const root = element.shadowRoot!;
-  expect(root.textContent).toContain('Inactive');
+  expect(root.textContent).toMatch(/Current draft\s*·\s*Revision 1/u);
   expect(root.textContent).toContain('operation');
   expect(root.textContent).toContain('Any condition');
   expect(root.textContent).toContain('Stock below minimum · milk');

@@ -344,7 +344,7 @@ def test_schema_24_upgrade_and_restore_of_sessions_and_original_receipts(tmp_pat
     assert path.read_bytes() == baseline
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (32,)
+        assert db.execute("PRAGMA user_version").fetchone() == (33,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
             expected = [(*row, 0) for row in rows] if table == "shopping_purchases" else rows
@@ -473,7 +473,7 @@ def test_store_migration_keeps_historical_data_and_unnamed_originals(
     database.initialize(require_existing=True)
 
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (32,)
+        assert db.execute("PRAGMA user_version").fetchone() == (33,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in original.items():
             migrated = db.execute("SELECT * FROM " + table).fetchall()
