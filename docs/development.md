@@ -114,7 +114,8 @@ The final CI Check job always evaluates the eight required job results, includin
 Missing, malformed, unexpected, failed, skipped, cancelled or pending results prevent success.
 Every required job must explicitly succeed. CI uses the organization's `vypdev` runner group.
 The container matrix uses the Apple Silicon runner's Linux Docker engine. It executes ARM64
-images natively and amd64 images through the runner's x86-64 emulation. Before building the
+images natively and amd64 images through the runner's x86-64 emulation. The two matrix jobs
+run one at a time within each workflow run because they share the Docker host. Before building the
 exact Supervisor app folder, each matrix job verifies execution of its architecture.
 Each job installs pnpm into its own temporary directory. Image tags, the Buildx builder and the
 Docker client directory also belong to the job. Browser suites lock their

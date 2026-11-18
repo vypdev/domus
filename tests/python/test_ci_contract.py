@@ -48,6 +48,7 @@ def test_linux_app_images_are_built_and_exercised_on_both_cpu_families() -> None
     jobs = workflow()["jobs"]
     container = jobs["containers"]
     assert container["strategy"]["fail-fast"] == "false"
+    assert container["strategy"]["max-parallel"] == "1"
     platforms = container["strategy"]["matrix"]["include"]
     assert [(row["arch"], row["platform"], row["machine"]) for row in platforms] == [
         ("amd64", "linux/amd64", "x86_64"),
