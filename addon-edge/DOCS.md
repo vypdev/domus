@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.36 packages the immutable runtime declared in
+Edge 0.0.0-edge.37 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -9,6 +9,7 @@ Save the rule as an inactive draft to reopen its exact definition or append a re
 Use the original save receipt after an interrupted response. The editor
 waits while Domus checks for a pending save or opens a draft.
 Review the latest saved condition before keeping your edits after a conflict.
+If the latest revision fails to load, retry the review from the same draft.
 If the product list fails to load, the title-only preview remains available and
 the draft is preserved while reloading the list.
 People with task configuration permission can set optional base points when creating a task.
