@@ -7,7 +7,7 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
-The [native shared shopping list](tasks/ha-shopping-list.md) uses a dedicated
+Edge.44 includes the [native shared shopping list](tasks/ha-shopping-list.md) with a dedicated
 installation grant and a read-only to-do entity.
 [Qualification](evidence/ha-shopping-list-qualification.md)
 
