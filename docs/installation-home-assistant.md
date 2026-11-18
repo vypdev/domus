@@ -22,6 +22,8 @@ cold data backup before updating from an earlier schema. An additional Superviso
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.
 
+Edge.35 shows the latest saved condition when you review a conflicting draft revision.
+
 Edge.34 makes the draft API contract use the exact signed 64-bit revision range.
 
 Edge.33 [saves and reopens inactive automation drafts](evidence/automation-draft-qualification.md).

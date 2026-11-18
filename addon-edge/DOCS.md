@@ -1,12 +1,13 @@
 # Installation and operation
 
-Edge 0.0.0-edge.34 packages the immutable runtime declared in
+Edge 0.0.0-edge.35 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
 see whether an optional stock condition matches. Preview leaves tasks and stock unchanged.
 Save the rule as an inactive draft to reopen its exact definition or append a revision.
 Use the original save receipt after an interrupted response.
+Review the latest saved condition before keeping your edits after a conflict.
 If the product list fails to load, the title-only preview remains available and
 the draft is preserved while reloading the list.
 People with task configuration permission can set optional base points when creating a task.
