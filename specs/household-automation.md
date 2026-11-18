@@ -1225,3 +1225,177 @@ contracts and evidence match and the merge is confirmed on develop.
 Extend the owning `specs/household-automation.md` typed trigger and preview
 requirements. Preserve the current household repeated-time choice and pinned
 rules already used for recurrence.
+
+## Save inactive daily automation drafts
+
+- Status: Draft
+- Date: 2026-11-18
+- Catalog capability ID: household-automation
+- Owners: Domus maintainers
+- Scope: Closed daily task definitions as immutable inactive revisions
+- Required review gates: product UX, architecture, testing, documentation, security/operations
+- Open decisions blocking readiness: none for inactive daily drafts
+
+### 1. Executive summary
+
+An authorized household member can persist and reopen a daily task proposal at a
+chosen local time. This increment closes the editor and storage loop for an
+inactive rule before admitting background work.
+
+### 2. Problem, current behavior, and evidence
+
+The daily schedule preview renders the next five times with the pinned recurrence
+policy. The saved draft command currently accepts version-one manual task proposals
+with at most the existing supported stock-condition logic. Its original receipt,
+immutable revision and retry behavior are already qualified.
+
+### 3. Actors, surfaces, and terminology
+
+An authorized automation editor uses the simple Household editor. A manual or
+daily trigger belongs to one immutable revision. A daily draft contains a civil
+time with minute precision. An enabled older manual revision remains independently
+pinned by the existing control.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+| --- | --- |
+| daily-drafts-R01 | Represent and validate one daily trigger with a local HH:mm and the existing single task proposal and optional stock condition. Preserve the existing manual definition and protected contracts. |
+| daily-drafts-R02 | Save and reopen exact immutable revisions through the existing original request, expected revision, concurrency and rollback boundaries. |
+| daily-drafts-R03 | Enforce verified current household scope and grants. Keep every daily draft inactive and deny manual enablement or execution of a daily revision while preserving existing pinned manual controls and history. |
+| daily-drafts-R04 | Provide accessible English and Spanish trigger selection, local time editing, schedule preview, conflict review and original receipt recovery without losing the input where retry is safe. |
+| daily-drafts-R05 | Qualify restart, restoration, both protected deployments, exact amd64 and aarch64 images and a separate installed Edge candidate with scoped cleanup. |
+
+Scheduler, background admission, missed-run policy, notification and automatic
+task execution have separate acceptance. No authority is persisted from a preview.
+
+### 5. Current versus proposed product journey
+
+In Household, select Daily and enter the desired local time alongside the task
+proposal. Preview how it resolves in the current household zone. Save the definition
+as an inactive draft and reopen its exact revision later. Existing Manual remains
+the default for a new draft and is still available for manual revisions.
+
+### 6. Functional behavior and state model
+
+Use a closed discriminator for the triggered revision and retain strict manual
+wire compatibility. Validate daily local time with the same minute rules as the
+daily preview. A change appends an immutable revision. An original receipt returns
+its own revision after a committed retry. Saving a daily revision cannot create a
+manual control, arm a scheduler or run a task. Existing manual controls still
+address only the previously pinned manual revision.
+
+### 7. User-facing configuration
+
+The editor offers Manual and Daily. Daily accepts one local time and uses the
+current household zone and repeated-time choice for its preview.
+
+### 8. Clean Architecture design
+
+Keep normalized trigger and definition validation in the domain and reuse the
+existing application use cases, receipt boundaries and protected HTTP composition.
+Persist immutable definitions through the draft port. Render and edit in the
+application and presentation layers with existing shared components.
+
+### 9. UI/UX and content contract
+
+Label trigger and time and make the daily draft's inactive status explicit. Reopen
+the stored time and rule revision. Invalid, stale, unavailable and original-record
+states use existing recovery patterns. The saved daily time remains available after
+a recoverable request failure. Verify keyboard and narrow touch interaction in English
+and Spanish.
+
+### 10. Failure, recovery, and cleanup
+
+A failed or denied command leaves data consistent. Repeat an uncertain write only
+through original receipt recovery. A conflicting edit preserves the local input
+until the member reviews the latest revision. Repeat restart and restoration tests
+with retained and active evidence. Remove only the disposable installed candidate
+and its own data/source.
+
+### 11. Security, permissions, and privacy
+
+Use current installation, channel, household and member authority on every
+operation. Existing action and product scope limits apply. A daily draft supplies
+no execution principal. Manual enablement and execution must positively recognize
+a manual revision. Cross-household and revoked access fail closed.
+
+### 12. Observability and operational UX
+
+Use bounded errors and original receipts. Show the exact saved revision and inactive
+status. Do not create task, execution, stock or external effects from saving.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Keep existing version-one manual definitions readable, editable and runnable.
+Reuse the immutable draft storage envelope. The previous runtime rejects unknown
+definition versions during storage verification, so advance the SQLite compatibility
+version before accepting the new definition. Qualify migration from schema 33 and
+schema 20, restart, compatible protected rollback, the pinned Edge package and both
+current-source image architectures.
+
+### 14. Testing strategy and numeric budget
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+| --- | --- | --- |
+| Definition | 1 | Closed trigger and time validation, old manual codec |
+| Revisions | 2 | Exact saves, original lookup, concurrency and rollback |
+| Authorization | 2 | Current revocation and manual execution separation |
+| Interaction | 1 | Localized editing, preview and retry with retained input |
+| Lifecycle | 1 | Restart, restore and compatibility |
+| Deployment | 1 | Both protected compositions, images and installed Edge |
+| Total | 8 | Distinct observable scenarios |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| daily-drafts-C01 | Definition | daily-drafts-R01 | Round-trip an existing manual definition and a daily definition, then reject invalid time, unknown trigger and undeclared fields. |
+| daily-drafts-C02 | Revisions | daily-drafts-R02 | Save a daily definition, observe a lost response and recover the exact original revision without adding another revision. |
+| daily-drafts-C03 | Revisions | daily-drafts-R02 | Race two edits based on the same revision and verify the stale edit and a forced failure leave exactly one new immutable definition. |
+| daily-drafts-C04 | Authorization | daily-drafts-R03 | Check a foreign household and revoke current access across reads and writes. Verify neither admission nor private draft data is exposed. |
+| daily-drafts-C05 | Authorization | daily-drafts-R03 | Save a daily revision after an enabled manual revision, refuse daily enablement and direct manual dispatch, and show the original manual control and history without new effects. |
+| daily-drafts-C06 | Interaction | daily-drafts-R04 | Choose Daily by keyboard, preview and save, then reopen in Spanish on a narrow touch viewport and recover a failed save or stale edit with the input retained. |
+| daily-drafts-C07 | Lifecycle | daily-drafts-R02, daily-drafts-R05 | Migrate representative schema 33 and schema 20 data, then restart and restore across a saved daily revision. Verify exact original evidence, compatible stored manual rules, downgrade rejection and no automatic effect. |
+| daily-drafts-C08 | Deployment | daily-drafts-R05 | Exercise both protected deployments and exact images, then install the pinned Edge and verify and clean the temporary household. |
+
+### 15. Documentation and discoverability
+
+| Path | Change |
+| --- | --- |
+| specs/household-automation.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/contracts/household-api.openapi.json | update |
+| docs/contracts/native-household-api.openapi.json | update |
+| docs/evidence/daily-automation-drafts-qualification.md | create |
+
+### 16. Acceptance scenarios
+
+Verify the eight section 14 scenarios and retain the existing manual contract
+suite. Record exact image, test and installed evidence in the contributing PR.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+| --- | --- |
+| daily-drafts-R01 | daily-drafts-C01 |
+| daily-drafts-R02 | daily-drafts-C02, daily-drafts-C03, daily-drafts-C07 |
+| daily-drafts-R03 | daily-drafts-C04, daily-drafts-C05 |
+| daily-drafts-R04 | daily-drafts-C06 |
+| daily-drafts-R05 | daily-drafts-C07, daily-drafts-C08 |
+
+### 18. Implementation sequence
+
+Add closed versioned definition and protected save/read. Preserve manual execution
+eligibility and existing controls. Extend editor and recovery with shared controls.
+Qualify source, both migrations, exact images and installed Edge.
+
+### 19. Definition of Done
+
+All cases pass with complete supported coverage on the exact commit. The installed
+candidate passes and is cleaned up. Verify destination CI and Branch Sync.
+
+### 20. References and decisions
+
+Extend the typed rule, authorization and immutable-draft contract in
+`specs/household-automation.md`. Reuse the existing household clock and
+time-zone policy for daily schedule preview.
