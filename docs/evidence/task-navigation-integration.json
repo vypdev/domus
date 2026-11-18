@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "1b8638ee43b130fa6079e26eef3500cc09ba55b12fc59b6249ed6f989672729b",
-    "assets/index-Cg8YDLuZ.js": "d26b6cbf67e74ebcfb0480902a547cb44f77c5ef667286ecb1b40352ba1ca364",
+    ".vite/manifest.json": "6b7306c5c8bf00ef6645af1c42382d115bd1f2fb8f2543fef4d4d8e24a42b447",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "3f9c12f5ab3b63c8c395905b0dac7f1d9e9004a5a73263238c97f4e05f0ebfe1"
+    "assets/index-yveh722F.js": "adb93e081a9db030ffdb6d4f827284a8a4932a9eca3ae66fa650d2a8f554781c",
+    "index.html": "421ae444b7598e39be8b6f552c76a258d3d643c4685fd4b94470c538898c8583"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -274,12 +274,12 @@
     "evidence": "automation-execution-qualification.md"
   },
   "manualAutomationRunHistory": {
-    "sourceCommit": "eba168e88dedd7ddd6f84ea712094ca464a76f27",
+    "sourceCommit": "50aa7190e4d910c8bea5e35658314279db284e3b",
     "actualProductFiles": {
-      ".vite/manifest.json": "1b8638ee43b130fa6079e26eef3500cc09ba55b12fc59b6249ed6f989672729b",
-      "assets/index-Cg8YDLuZ.js": "d26b6cbf67e74ebcfb0480902a547cb44f77c5ef667286ecb1b40352ba1ca364",
+      ".vite/manifest.json": "6b7306c5c8bf00ef6645af1c42382d115bd1f2fb8f2543fef4d4d8e24a42b447",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "index.html": "3f9c12f5ab3b63c8c395905b0dac7f1d9e9004a5a73263238c97f4e05f0ebfe1"
+      "assets/index-yveh722F.js": "adb93e081a9db030ffdb6d4f827284a8a4932a9eca3ae66fa650d2a8f554781c",
+      "index.html": "421ae444b7598e39be8b6f552c76a258d3d643c4685fd4b94470c538898c8583"
     },
     "requirements": "manual-run-history-R01 through manual-run-history-R06",
     "evidence": "automation-run-history-qualification.md"

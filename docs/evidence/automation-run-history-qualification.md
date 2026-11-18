@@ -8,7 +8,7 @@ their own explicit manual runs for one saved rule. The
 | Case | Verification |
 | --- | --- |
 | `manual-run-history-C01` | The protected HTTP tests select one rule with two authorized members and a second rule. Each member sees only their own results for the selected rule. An unused rule has an empty history. |
-| `manual-run-history-C02` | The same tests revoke manual access between pages. Separate task-read revocation leaves the original task decision visible while the task link disappears. |
+| `manual-run-history-C02` | The same tests revoke manual access between pages. Separate task-read revocation leaves the original task decision visible while the task link disappears. The browser tests also retire an open page and its pending read when the same member's verified authorization changes. |
 | `manual-run-history-C03` | The original receipts remain in descending commit order when a new run arrives between pages. Tests verify the first page, the lookahead cursor, one-row continuations, and the supported page bounds. |
 | `manual-run-history-C04` | Cursor checks cover a different rule, member and page size, expiry and signing-key rotation. The browser controller can restart from recent results. |
 | `manual-run-history-C05` | The stored time, exact revision, task decision and receipt survive a rule edit, disabled control and restart. A history request leaves receipts, audit and task state untouched. |
