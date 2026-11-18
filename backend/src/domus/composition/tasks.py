@@ -7,6 +7,7 @@ from domus.application.automation_drafts import AutomationDrafts
 from domus.application.automation_execution import AutomationExecution
 from domus.application.automation_preview import AutomationPreview
 from domus.application.automation_run_history import AutomationRunHistory
+from domus.application.automation_schedule_preview import AutomationSchedulePreview
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.family_queries import FamilyQueries
@@ -114,6 +115,7 @@ def task_contexts(
             AutomationDrafts(store, scope, actor, actor.read, clock, identifiers, cursors),
             AutomationExecution(store, scope, actor, actor.read, clock, identifiers, tasks),
             AutomationRunHistory(store, scope, actor.read, cursors),
+            lambda: AutomationSchedulePreview(store, scope, actor.read(), clock, planner.times),
         )
 
     return context

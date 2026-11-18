@@ -55,6 +55,14 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
     else if (route === 'automation/preview-access') raw = JSON.stringify({household_id: 'home'});
+    else if (route === 'automation/schedule-preview?time=07%3A30') raw = JSON.stringify({
+      time_zone:JSON.parse(household).time_zone, requested_time:'07:30',
+      items:Array.from({length:5}, (_, index) => {
+        const date = '2026-11-2' + index;
+        const local = date + 'T07:30:00.000';
+        return {requested_date:date,resolved_local:local,instant_ms:Date.parse(local+'Z'),offset_seconds:0,resolution:'exact'};
+      }),
+    });
     else if (route === 'automation/drafts' && init.method === 'POST') {
       automationTitle = JSON.parse(String(init.body)).action.title;
       raw = JSON.stringify({state:'committed', archived_by:null, operation_id:'saved-automation', created_at:100,
@@ -943,6 +951,41 @@ test('Household manual execution binds drafts, original outcomes and task naviga
   navigate('#tasks');
   expect(app.automationExecution).toBeNull();
   expect(app.automationRunHistory).toBeNull();
+});
+
+test('Household daily preview binds verified authorization and accepts only its declared intents', async () => {
+  const f = fixture(); f.phase('active');
+  const {app} = await f.open();
+  const navigate = (fragment: string) => {
+    f.page.location.href = f.page.location.href.split('#')[0] + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  expect(app.automationSchedulePreview).toBeNull();
+  navigate('#household');
+  await vi.waitFor(() => expect(app.automationSchedulePreview).toMatchObject({input:'',result:null}));
+  const schedule = app.shadowRoot!.querySelector('domus-automation-schedule-preview')!;
+  const emit = (target: EventTarget, detail: unknown) => target.dispatchEvent(new CustomEvent(
+    'domus-automation-schedule-preview-intent', {detail,bubbles:true,composed:true},
+  ));
+  const other = document.createElement('div'); app.append(other);
+  emit(other, {type:'time',value:'07:30'});
+  emit(schedule, null);
+  emit(schedule, {type:'unknown'});
+  emit(schedule, {type:'time',value:730});
+  emit(schedule, {type:'time',value:'7'.repeat(17)});
+  expect(app.automationSchedulePreview?.input).toBe('');
+  emit(schedule, {type:'time',value:'07:30'});
+  emit(schedule, {type:'preview'});
+  await vi.waitFor(() => expect(app.automationSchedulePreview?.result).toHaveLength(5));
+  const reads = f.fetch.mock.calls.filter(([path]) => path.includes('/automation/schedule-preview?'));
+  expect(reads).toHaveLength(1);
+  expect(reads[0][1].method).toBe('GET');
+  f.accessRevisions(1, 2);
+  administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(() => expect(app.administration?.access?.policyRevision).toBe('2'));
+  expect(app.automationSchedulePreview).toMatchObject({input:'',result:null});
+  navigate('#tasks');
+  expect(app.automationSchedulePreview).toBeNull();
 });
 
 test('Overview stock is independently available and retires with the verified household context', async () => {

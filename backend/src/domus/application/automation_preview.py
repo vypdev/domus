@@ -20,6 +20,12 @@ def require_configuration(unit: UnitOfWork, home: str, human: HumanIdentity) -> 
     return access.require(unit, home, Permission.AUTOMATIONS_CONFIGURE)
 
 
+def require_manual_automation(unit: UnitOfWork, home: str, human: HumanIdentity) -> Member:
+    member = require_configuration(unit, home, human)
+    TaskAccess(human).require(unit, home, Permission.TASKS_CREATE)
+    return member
+
+
 def owned_product(unit: UnitOfWork, home: str, product_id: str) -> CatalogProduct:
     product = unit.inventory.product(home, product_id)
     if product is None:
@@ -35,9 +41,7 @@ class AutomationCommandAuthority:
 
     def owner(self, unit: UnitOfWork) -> Member:
         home = self.scope.require(unit).household_id
-        member = require_configuration(unit, home, self.human)
-        TaskAccess(self.human).require(unit, home, Permission.TASKS_CREATE)
-        return member
+        return require_manual_automation(unit, home, self.human)
 
     def require(self, command: CommandKey, unit: UnitOfWork) -> None:
         if command != self.command:
@@ -75,8 +79,7 @@ class AutomationPreview:
 
     def _require(self, unit: UnitOfWork) -> str:
         home = self.scope.require(unit).household_id
-        require_configuration(unit, home, self.human)
-        TaskAccess(self.human).require(unit, home, Permission.TASKS_CREATE)
+        require_manual_automation(unit, home, self.human)
         return home
 
     def access(self) -> AutomationPreviewAccess:

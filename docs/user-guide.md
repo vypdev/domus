@@ -410,6 +410,18 @@ A retained result is marked as being from before restoration. **Open created
 task** opens the original task when it belongs to the active household data
 and you can still read it.
 
+### Preview a daily schedule
+
+In **Household**, open **Daily schedule preview**. Enter **Time each day** in
+24-hour format, such as `07:30`, then choose **Preview daily times**. The five
+upcoming dates use the household time zone and the current server time.
+
+During a spring clock change, the preview shows the requested time and the
+first valid time after it. During an autumn clock change, it labels the first
+or second occurrence according to the household's repeated-time setting. Use
+**Try again** to refresh a failed preview with the same time. The preview
+leaves your saved automation rules and household records untouched.
+
 ## Channels and privacy
 
 Stable is production; Edge is experimental and has separate data, credentials and HA identities.
