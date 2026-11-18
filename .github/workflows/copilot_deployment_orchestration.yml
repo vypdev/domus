@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Prove managed operation identity
         id: identity
-        uses: actions/github-script@v9
+        uses: actions/github-script@v9.0.0
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
         with:
@@ -85,13 +85,13 @@ jobs:
       actions: write
     steps:
       - name: Checkout trusted base branch
-        uses: actions/checkout@v5
+        uses: actions/checkout@v5.1.0
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.ref }}
           fetch-depth: 1
       - name: Continue from current durable state
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: continue_deployment_action
           single-action-issue: ${{ needs.resolve-operation.outputs.issue }}

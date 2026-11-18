@@ -61,7 +61,7 @@ jobs:
     permissions: {}
     steps:
       - name: Validate bounded orchestration inputs
-        uses: actions/github-script@v9
+        uses: actions/github-script@v9.0.0
         env:
           MODE: ${{ inputs.mode }}
           OPERATION_ID: ${{ inputs.operation-id }}
@@ -111,7 +111,9 @@ jobs:
   candidate-preflight:
     name: Inspect unpublished candidate replacement
     if: ${{ inputs.mode == 'replace' }}
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     needs: validate
     timeout-minutes: 5
     permissions:
@@ -129,7 +131,7 @@ jobs:
     steps:
       - name: Read native candidate authority
         id: inspect
-        uses: vypdev/copilot/deployment-recovery@v3
+        uses: vypdev/copilot/deployment-recovery@v3.10.13
         with:
           issue: ${{ inputs.issue }}
           operation-id: ${{ inputs.operation-id }}
@@ -159,13 +161,13 @@ jobs:
     outputs:
       candidate-sha: ${{ steps.candidate-identity.outputs.candidate-sha }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.1.0
         with:
           persist-credentials: true
           ref: ${{ needs.candidate-preflight.outputs.source-branch || github.ref }}
       - name: Verify reviewed replacement source
         if: ${{ inputs.mode == 'replace' }}
-        uses: actions/github-script@v9
+        uses: actions/github-script@v9.0.0
         env:
           EXPECTED_SHA: ${{ inputs.source-sha }}
         with:
@@ -183,7 +185,7 @@ jobs:
           echo "Configure this step with every required project validator, including registry vacancy, before enabling candidate replacement."
           exit 1
       - name: Commit prepared hotfix files
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v9.1.4
         with:
           add: './'
           committer_name: GitHub Actions
@@ -193,7 +195,7 @@ jobs:
       - name: Confirm prepared replacement identity
         id: candidate-identity
         if: ${{ inputs.mode == 'replace' }}
-        uses: actions/github-script@v9
+        uses: actions/github-script@v9.0.0
         env:
           SOURCE_BRANCH: ${{ needs.candidate-preflight.outputs.source-branch }}
           VERIFICATION_RESULT: ${{ steps.replacement-verification.outcome }}
@@ -225,13 +227,13 @@ jobs:
       pull-requests: write
       actions: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.1.0
         with:
           persist-credentials: false
           ref: ${{ inputs.mode == 'replace' && (needs.candidate-preflight.outputs.mode == 'recover' && needs.candidate-preflight.outputs.candidate-sha || needs.prepare-version-files.outputs.candidate-sha) || github.ref }}
       - name: Create or resume promotion PR
         if: ${{ inputs.mode == 'prepare' }}
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: prepare_deployment_action
           single-action-issue: ${{ inputs.issue }}
@@ -263,7 +265,7 @@ jobs:
           token: ${{ secrets.PAT }}
       - name: Replace or recover unpublished candidate
         if: ${{ inputs.mode == 'replace' }}
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: replace_deployment_action
           single-action-operation-id: ${{ needs.candidate-preflight.outputs.operation-id }}
@@ -303,7 +305,9 @@ jobs:
   publish:
     name: Publish accepted production commit
     if: ${{ inputs.mode == 'publish' }}
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     needs: validate
     timeout-minutes: 30
     permissions:
@@ -311,12 +315,12 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.1.0
         with:
           persist-credentials: false
           ref: ${{ vars.MAIN_BRANCH || 'master' }}
       - name: Create or verify production tag
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: create_tag
           single-action-issue: ${{ inputs.issue }}
@@ -326,7 +330,7 @@ jobs:
           token: ${{ secrets.PAT }}
       # Add project-specific deployment here. It runs only after production promotion merged.
       - name: Create or verify GitHub Release
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: create_release
           single-action-issue: ${{ inputs.issue }}
@@ -335,7 +339,7 @@ jobs:
           single-action-version: ${{ inputs.version }}
           token: ${{ secrets.PAT }}
       - name: Start configured reconciliation
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: published_deployment_action
           merge-queue-check-attestations: ${{ vars.MERGE_QUEUE_CHECK_ATTESTATIONS || '[]' }}
@@ -361,7 +365,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Verify published operation before recovery
-        uses: actions/github-script@v9
+        uses: actions/github-script@v9.0.0
         env:
           ISSUE: ${{ inputs.issue }}
           OPERATION_ID: ${{ inputs.operation-id }}
@@ -389,7 +393,7 @@ jobs:
               || receipt?.operationId !== state.operationId || receipt?.productionSha !== state.productionSha
               || receipt?.tag !== state.tag) throw new Error('Recovery requires the matching, already verified publication and reconciliation state.');
       - name: Resume reconciliation from verified receipts
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: published_deployment_action
           single-action-issue: ${{ inputs.issue }}
@@ -415,7 +419,7 @@ jobs:
     steps:
       - name: Persist publication failure
         if: ${{ inputs.mode == 'publish' || inputs.mode == 'resume' }}
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: failed_deployment_action
           single-action-issue: ${{ inputs.issue }}
@@ -426,7 +430,7 @@ jobs:
           token: ${{ secrets.PAT }}
       - name: Report preparation failure
         if: ${{ inputs.mode == 'prepare' }}
-        uses: vypdev/copilot@v3
+        uses: vypdev/copilot@v3.10.13
         with:
           single-action: publish_issue_comment
           single-action-issue: ${{ inputs.issue }}
