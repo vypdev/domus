@@ -255,6 +255,7 @@ jobs:
     name: App container (${{ matrix.arch }})
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - arch: amd64
