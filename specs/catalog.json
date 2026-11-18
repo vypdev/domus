@@ -1018,7 +1018,13 @@
         "frontend/src/adapters/automation-draft-http.ts",
         "frontend/src/adapters/automation-draft-journal.ts",
         "frontend/src/presentation/domus-automation-preview.ts",
-        "frontend/src/presentation/domus-automation-drafts.ts"
+        "frontend/src/presentation/domus-automation-drafts.ts",
+        "backend/src/domus/application/automation_execution.py",
+        "backend/src/domus/infrastructure/sqlite_automation_controls.py",
+        "frontend/src/application/automation-execution.ts",
+        "frontend/src/adapters/automation-execution-http.ts",
+        "frontend/src/adapters/automation-execution-journal.ts",
+        "frontend/src/presentation/domus-automation-execution.ts"
       ],
       "tests": [
         "tests/backend/test_automation_preview.py",
@@ -1027,7 +1033,10 @@
         "frontend/tests/automation-preview.test.ts",
         "frontend/tests/automation-drafts.test.ts",
         "frontend/tests/page.test.ts",
-        "frontend/tests/e2e/workspace-navigation.spec.ts"
+        "frontend/tests/e2e/workspace-navigation.spec.ts",
+        "tests/backend/test_automation_execution.py",
+        "tests/backend/test_automation_execution_storage.py",
+        "frontend/tests/automation-execution.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -1039,11 +1048,12 @@
         "docs/evidence/automation-preview-qualification.md",
         "docs/evidence/automation-draft-qualification.md",
         "docs/contracts/household-api.openapi.json",
-        "docs/contracts/native-household-api.openapi.json"
+        "docs/contracts/native-household-api.openapi.json",
+        "docs/evidence/automation-execution-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: protected manual task preview and inactive drafts with immutable revisions, original-save recovery, current stock conditions and an English/Spanish editor",
+        "implementationEvidence": "partial: protected manual preview, immutable inactive drafts, exact-revision manual execution, atomic task and run receipts, disable admission control, and English/Spanish recovery",
         "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects.",
         "copilotChangesAllowed": false
       }

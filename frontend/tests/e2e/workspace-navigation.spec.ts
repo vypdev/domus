@@ -1358,3 +1358,135 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(restockRow).toHaveCount(0);
   });
 }
+
+for (const mode of ['native', 'standalone'] as const) {
+  test(`manual automation confirmation and original receipt in ${mode}`, async ({page, context, request}, info) => {
+    test.setTimeout(70_000);
+    const origin = `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;
+    const base = origin + (mode === 'native' ? ingress : '') + '/';
+    if (process.env.DOMUS_BROWSER_IMAGE) {
+      const answer = await request.get(origin + '/__fixture__/image');
+      expect(answer.ok()).toBe(true);
+      expect(await answer.json()).toEqual({
+        source_commit: process.env.DOMUS_TEST_SOURCE_COMMIT, architecture: process.env.DOMUS_TEST_ARCH,
+        image_id: expect.stringMatching(/^sha256:[a-f0-9]{64}$/u), mode,
+      });
+    }
+    expect((await request.post(origin + '/__fixture__/reset')).ok()).toBe(true);
+    if (mode === 'native') await context.addCookies([{name:'ingress_session', value:'f'.repeat(128),
+      domain:'127.0.0.1', path:'/', httpOnly:true, sameSite:'Strict'}]);
+    await page.goto(base + '#household');
+    if (mode === 'standalone') {
+      await page.getByRole('button',{name:'Sign in with Home Assistant',exact:true}).click();
+      await page.getByRole('link',{name:'Continue as fixture user',exact:true}).click();
+    }
+    await page.getByRole('textbox',{name:'Household name',exact:true}).fill('Manual Rule Fixture');
+    await page.getByRole('textbox',{name:'Timezone',exact:true}).fill('UTC');
+    const draftsURL = base + 'api/v1/automation/drafts';
+    const initialList = page.waitForResponse(response =>
+      response.url() === draftsURL && response.request().method() === 'GET');
+    await page.getByRole('button',{name:'Create household',exact:true}).press('Enter');
+    const tabs = page.locator('vyp-ha-tabs');
+    const house = tabs.getByRole('link',{name:'Household',exact:true});
+    await house.click();
+    const contextHeader = (await (await initialList).request().allHeaders())['x-domus-context'];
+    const stockWrite = async (key: string, data: object) => {
+      const token = await page.request.get(base + 'api/v1/auth/csrf', {headers:{'X-Domus-Context':contextHeader}});
+      const answer = await page.request.post(base + 'api/v1/inventory/commands', {headers:{
+        Origin:origin, 'X-Domus-Context':contextHeader, 'X-CSRF-Token':(await token.json()).csrf_token,
+        'Idempotency-Key':key,
+      }, data});
+      expect(answer.ok(), await answer.text()).toBe(true);
+      return (await answer.json()).result;
+    };
+    const {product_id:product} = await stockWrite('new-test-product', {
+      action:'inventory.register-product',name:'Fixture filters',base_unit:'piece',
+    });
+    await stockWrite('new-test-minimum', {action:'inventory.configure-replenishment', product_id:product,
+      minimum:'2',target:'4',expected_revision:'0'});
+    await stockWrite('initial-test-intake',{action:'inventory.intake',product_id:product,quantity:'2'});
+    await tabs.getByRole('link',{name:'Inventory',exact:true}).click();
+    await expect(page).toHaveURL(base + '#inventory');
+    await house.click();
+    await expect(page).toHaveURL(base + '#household');
+    const preview = page.locator('domus-automation-preview');
+    const drafts = page.locator('domus-automation-drafts');
+    const execution = page.locator('domus-automation-execution');
+    const draftTitle = 'Inspect the fixture filters';
+    await preview.getByRole('textbox',{name:'Proposed task title',exact:true}).fill(draftTitle);
+    await preview.getByRole('combobox',{name:'Stock below minimum (optional)',exact:true}).click();
+    await preview.getByRole('option',{name:'Fixture filters',exact:true}).click();
+    const saved = page.waitForResponse(response => response.url() === draftsURL && response.request().method() === 'POST');
+    await drafts.getByRole('button',{name:'Save draft',exact:true}).press('Enter');
+    const saving = await saved;
+    expect(saving.ok()).toBe(true);
+    const draftKey = (await saving.request().allHeaders())['idempotency-key'];
+    const draftReceipt = await page.request.get(draftsURL + '/requests/' + draftKey,
+      {headers:{'X-Domus-Context':contextHeader}});
+    expect(draftReceipt.ok(), await draftReceipt.text()).toBe(true);
+    const {result:rule} = await draftReceipt.json();
+    const runsURL = draftsURL + '/' + rule.rule_id + '/runs';
+    let requestedRuns = 0;
+    page.on('request', item => {
+      if (item.url() === runsURL && item.method() === 'POST') requestedRuns++;
+    });
+
+    await expect(execution.getByText('Disabled',{exact:true})).toBeVisible();
+    await execution.getByRole('button',{name:'Enable saved revision',exact:true}).press('Enter');
+    const confirmation = execution.getByRole('region',{name:'Confirm automation action',exact:true});
+    await expect(confirmation.getByRole('heading')).toBeFocused();
+    await expect(confirmation.getByText('Revision 1 · ' + draftTitle,{exact:true})).toBeVisible();
+    await confirmation.getByRole('button',{name:'Enable this revision',exact:true}).press('Enter');
+    const run = execution.getByRole('button',{name:'Run manually',exact:true});
+    await expect(run).toBeEnabled();
+    await run.press('Enter');
+    await expect(confirmation.getByText('Revision 1 · ' + draftTitle,{exact:true})).toBeVisible();
+    expect(requestedRuns).toBe(0);
+    await execution.screenshot({path:info.outputPath('manual-confirmation-en-wide.png')});
+    await confirmation.getByRole('button',{name:'Run this revision',exact:true}).press('Enter');
+    await expect(execution.getByText('The stock condition did not match. No task was created.',{exact:true})).toBeVisible();
+    await expect(execution.getByRole('link',{name:'Open created task'})).toHaveCount(0);
+
+    await stockWrite('test-stock-change',{action:'inventory.adjust',product_id:product,quantity:'-1',reason:'Counted one less'});
+    await page.getByRole('combobox',{name:'Language',exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    let exactKey = '', taskId = '';
+    await page.route(runsURL, async route => {
+      exactKey = (await route.request().allHeaders())['idempotency-key'];
+      const committed = await route.fetch();
+      expect(committed.ok(), await committed.text()).toBe(true);
+      taskId = (await committed.json()).result.task_occurrence_id;
+      await route.abort('failed');
+    }, {times:1});
+    await execution.getByRole('button',{name:'Ejecutar manualmente',exact:true}).tap();
+    await execution.getByRole('button',{name:'Ejecutar esta revisión',exact:true}).tap();
+    const recover = execution.getByRole('button',{name:/^(Check original request|Consultar solicitud original)$/u});
+    await expect(recover).toBeEnabled();
+    expect(exactKey).toMatch(/^req_[a-f0-9]{32}$/u);
+    expect(taskId).toMatch(/^domus_/u);
+    await page.reload();
+    await expect(recover).toBeEnabled();
+    await page.getByRole('combobox',{name:/^(Language|Idioma)$/u}).selectOption('es');
+    const original = page.waitForResponse(base + 'api/v1/automation/execution/requests/run/' + exactKey);
+    await recover.tap();
+    expect((await original).ok()).toBe(true);
+    await expect(execution.getByText('Tarea creada.',{exact:true})).toBeVisible();
+    expect(requestedRuns).toBe(2);
+    await execution.screenshot({path:info.outputPath('manual-original-es-narrow.png')});
+    const detail = page.waitForResponse(base + 'api/v1/tasks/occurrences/' + taskId);
+    await execution.getByRole('link',{name:'Abrir tarea creada',exact:true}).tap();
+    expect((await detail).ok()).toBe(true);
+    await expect(page).toHaveURL(base + '#tasks');
+    await expect(page.locator('domus-tasks').getByRole('heading',{name:draftTitle,exact:true})).toBeVisible();
+
+    await tabs.getByRole('link',{name:'Hogar',exact:true}).tap();
+    await drafts.getByRole('button',{name:'Abrir ' + draftTitle,exact:true}).tap();
+    const disable = execution.getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true});
+    await disable.tap();
+    await execution.getByRole('region',{name:'Confirmar acción de automatización',exact:true})
+      .getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true}).tap();
+    await expect(execution.getByText('Futuras ejecuciones deshabilitadas.',{exact:true})).toBeVisible();
+    await expect(execution.getByRole('button',{name:'Ejecutar manualmente',exact:true})).toHaveCount(0);
+  });
+}

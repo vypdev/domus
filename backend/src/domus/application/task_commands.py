@@ -69,7 +69,7 @@ from domus.application.task_requests import (
 )
 from domus.application.task_reviews import review_cycle, review_items
 from domus.domain.errors import Conflict, Forbidden, NotFound
-from domus.domain.identity import MemberStatus, Permission
+from domus.domain.identity import HumanIdentity, MemberStatus, Permission
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
 from domus.domain.task_material_values import validate_material_usages
 from domus.domain.task_materials import MaterialIntent
@@ -288,24 +288,42 @@ class TaskCommands:
         )
 
     def create(self, key: str, request: CreateTask) -> Receipt:
-        def apply(unit: UnitOfWork, access: TaskAccess) -> Change:
+        return self._create(self.actor.current(), key, request, None)
+
+    def create_in_unit(
+        self, unit: UnitOfWork, human: HumanIdentity, key: str, request: CreateTask
+    ) -> Receipt:
+        """Use the same authorization and receipt when another command owns the transaction."""
+        return self._create(human, key, request, unit)
+
+    def _create(
+        self, human: HumanIdentity, key: str, request: CreateTask, unit: UnitOfWork | None
+    ) -> Receipt:
+        access = TaskAccess(human)
+        command = CommandKey(self.household_id, human.ha_user_id, "task.create", key)
+        authority = TaskCommandAuthorization(
+            access=access,
+            household_id=self.household_id,
+            action=command.action,
+            needs_configuration=request.overrides != TaskOverrides(),
+            needs_material_link=request.materials is not None,
+        )
+
+        def apply(target: UnitOfWork) -> Change:
             item = TaskCreation(self.clock, self.identifiers, self.inventory_factory).definition(
-                unit, access, self.household_id, request
+                target, access, self.household_id, request
             )
             work = item.new_occurrence(self.identifiers.new(), item.created_at)
-            unit.tasks.save_occurrence(work, 0)
+            target.tasks.save_occurrence(work, 0)
             return _change(
                 "task.created", request, task_creation_result(_result(work).decode(), item)
             )
 
-        return self._execute(
-            key,
-            "task.create",
-            request,
-            apply,
-            needs_configuration=request.overrides != TaskOverrides(),
-            needs_material_link=request.materials is not None,
-        )
+        commands = AtomicCommands(self.transactions, authority, self.clock, self.identifiers)
+        payload = request.document()
+        if unit is None:
+            return commands.execute(command, payload, apply)
+        return commands.in_unit(unit, command, payload, apply)
 
     def assign(self, key: str, request: AssignTask) -> Receipt:
         def apply(unit: UnitOfWork, access: TaskAccess) -> Change:

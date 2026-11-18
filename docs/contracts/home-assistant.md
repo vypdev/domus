@@ -200,6 +200,14 @@ No gateway-client token or per-agent administration is implemented here.
 
 HA can trigger maintenance and replenishment through these commands with stable trigger identity,
 cooldown, correlation and loop suppression. Domain effects are deterministic and audited.
+Household settings currently use the protected Ingress and standalone HTTP
+contracts for manual runs. Configuration pins a saved rule revision and advances
+its control revision. A run confirms both revisions and persists one result with
+any ordinary task-creation receipt. The original request endpoint recovers the same
+outcome under the invoking member's current grants. See the
+[manual execution evidence](../evidence/automation-execution-qualification.md) for
+the supported paths and exact behavior.
+
 The in-app simple/default and optional advanced editors share one Domus engine. HA rule entrypoints delegate to that engine; its schema and run policy remain authoritative. External HA automations can still call ordinary typed Domus actions, with command receipts and backend permissions intact. No HA automation YAML or gateway code is rewritten.
 Disablement stops new runs and later steps, lets an already-started atomic command finish and preserves its actual receipt/effects. A response distinguishes authoritative disabled state from results still settling. Durable control revisions fence old workers, queues and waits; restart/re-enable does not silently resume cancelled runs, and no automatic rollback is claimed.
 Events such as domus_task_completed, domus_inventory_low and domus_operation_updated contain

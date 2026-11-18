@@ -36,6 +36,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let shoppingItemPresent = false;
   let automationTitle: string | null = null;
   const automationDraft = {rule_id:'saved-draft',revision:'1',state:'draft',enabled:false};
+  let manualEnabled = false;
   const shoppingItem = {product_id:'product',extra_id:null,name:'Salt',base_unit:'gram',total:'1.000001'};
   const originalAccess=JSON.parse(wire.active);
   let preferenceReceipt:Record<string,unknown>|null=null;
@@ -64,6 +65,21 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       ...automationDraft, version:1, trigger:{kind:'manual'}, condition:null,
       action:{kind:'task.create',title:automationTitle},
     });
+    else if (route === 'automation/drafts/saved-draft/execution' && init.method === 'POST') {
+      manualEnabled = JSON.parse(String(init.body)).enabled;
+      raw = JSON.stringify({state:'committed',archived_by:null,operation_id:'enable-operation',created_at:100,
+        result:{rule_id:'saved-draft',rule_revision:'1',control_revision:'1',enabled:manualEnabled,member_id:memberId},
+        message:'Enabled.',action_required:'Review.'});
+    }
+    else if (route === 'automation/drafts/saved-draft/execution') raw = JSON.stringify({
+      rule_id:'saved-draft', latest_revision:'1', latest_title:automationTitle,
+      control: manualEnabled ? {rule_revision:'1',control_revision:'1',enabled:true,title:automationTitle} : null,
+    });
+    else if (route === 'automation/drafts/saved-draft/runs') raw = JSON.stringify({
+      state:'committed',archived_by:null,operation_id:'run-operation',created_at:100,
+      result:{rule_id:'saved-draft',rule_revision:'1',control_revision:'1',member_id:memberId,
+        run_id:'run-1',condition_matched:true,task_occurrence_id:'work-1',task_operation_id:'task-operation'},
+      message:'Ran.',action_required:'Review.'});
     else if (route === 'automation/preview') raw = JSON.stringify({version:1, trigger:'manual',
       task_title:JSON.parse(String(init.body)).action.title, would_create:true, conditions:[]});
     else if (route === 'auth/logout') raw = JSON.stringify({state: 'logged_out', upstream_revoked: true,
@@ -852,6 +868,56 @@ test('Household automation binds the verified member and retires requests outsid
   f.member('replacement');
   administrationIntent(app,{type:'refresh'});
   await vi.waitFor(() => expect(app.automationPreview).toMatchObject({title:'',result:null}));
+});
+
+test('Household manual execution binds drafts, original outcomes and task navigation', async () => {
+  const f = fixture(); f.phase('active');
+  const {app} = await f.open();
+  const navigate = (fragment: string) => {
+    f.page.location.href = f.page.location.href.split('#')[0] + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  const dispatch = (target: EventTarget, name: string, detail: unknown) =>
+    target.dispatchEvent(new CustomEvent(name, {detail, bubbles:true, composed:true}));
+  navigate('#household');
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({state:'ready',busy:false}));
+  await vi.waitFor(() => expect(app.automationPreview).toMatchObject({state:'ready',busy:null}));
+  const preview = app.shadowRoot!.querySelector('domus-automation-preview')!;
+  const drafts = app.shadowRoot!.querySelector('domus-automation-drafts')!;
+  const execution = app.shadowRoot!.querySelector('domus-automation-execution')!;
+  const command = 'domus-automation-execution-intent';
+  const openTask = 'domus-automation-task-intent';
+  dispatch(preview, 'domus-automation-preview-intent', {type:'title',value:'Check filters'});
+  dispatch(drafts, 'domus-automation-draft-intent', {type:'save'});
+  await vi.waitFor(() => expect(app.automationExecution).toMatchObject({
+    configuration:{id:'saved-draft',latestTitle:'Check filters',control:null},busy:false,
+  }));
+
+  const other = document.createElement('div'); app.append(other);
+  dispatch(other, command, 'enable');
+  dispatch(execution, command, 'invalid');
+  expect(app.automationExecution?.confirmation).toBeNull();
+  dispatch(execution, command, 'enable');
+  expect(app.automationExecution?.confirmation?.title).toBe('Check filters');
+  dispatch(execution, command, 'confirm');
+  await vi.waitFor(() => expect(app.automationExecution).toMatchObject({
+    result:{action:'configure',enabled:true}, configuration:{control:{enabled:true}}, busy:false,
+  }));
+  dispatch(execution, command, 'run');
+  dispatch(execution, command, 'confirm');
+  await vi.waitFor(() => expect(app.automationExecution).toMatchObject({
+    result:{action:'run',taskOccurrenceId:'work-1'},busy:false,
+  }));
+
+  dispatch(other, openTask, {type:'select',occurrenceId:'work-1'});
+  dispatch(execution, openTask, {type:'refresh'});
+  expect(f.navigation).toHaveLength(0);
+  dispatch(execution, openTask, {type:'select',occurrenceId:'work-1'});
+  expect(f.navigation).toEqual(['#tasks']);
+  await vi.waitFor(() => expect(f.fetch.mock.calls.some(([path]) =>
+    path.endsWith('/tasks/occurrences/work-1'))).toBe(true));
+  navigate('#tasks');
+  expect(app.automationExecution).toBeNull();
 });
 
 test('Overview stock is independently available and retires with the verified household context', async () => {

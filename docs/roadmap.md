@@ -55,8 +55,10 @@ acceptance of the installed recurrence experience remain open.
   and includes the native Home Assistant calendar and [task deadline sensors](evidence/ha-deadline-sensors-qualification.md).
   Household settings can simulate one task proposal against current stock and
   [save and reopen inactive drafts with immutable revisions](evidence/automation-draft-qualification.md).
-  Enabling and execution, the advanced editor, a shared automation engine and additional Domus-owned
-  HA entities and services remain open. The existing gateway is already integrated.
+  [Manual execution](evidence/automation-execution-qualification.md) pins the enabled draft revision
+  and records one explicit run with the task it creates. Scheduled and event triggers, multi-step
+  execution, the advanced editor and additional Domus-owned HA entities and services remain open.
+  The existing gateway is already integrated.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
   and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).
   [Upcoming maintenance](evidence/overview-maintenance-qualification.md) shows open scheduled

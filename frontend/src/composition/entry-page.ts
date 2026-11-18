@@ -7,7 +7,11 @@ import type {AutomationPreviewIntent} from '../application/automation-preview';
 import {HttpAutomationDrafts} from '../adapters/automation-draft-http';
 import {AUTOMATION_DRAFT_JOURNAL_KEY, AutomationDraftSessionJournal} from '../adapters/automation-draft-journal';
 import {AutomationDraftController} from '../application/automation-drafts';
-import type {AutomationDraftIntent} from '../application/automation-drafts';
+import type {AutomationDraftIntent, AutomationDraftView, DraftScope} from '../application/automation-drafts';
+import {HttpAutomationExecution} from '../adapters/automation-execution-http';
+import {AutomationExecutionSessionJournal} from '../adapters/automation-execution-journal';
+import {AutomationExecutionController} from '../application/automation-execution';
+import type {AutomationExecutionIntent} from '../application/automation-execution';
 import type {StockAttention} from '../application/stock-attention';
 import type {ShoppingAttention} from '../application/shopping-attention';
 import {HttpInventoryServer} from '../adapters/inventory-http';
@@ -222,6 +226,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let taskOverview: OverviewReadController<TaskOverview> | null = null;
   let automationPreview: AutomationPreviewController | null = null;
   let automationDrafts: AutomationDraftController | null = null;
+  let automationExecution: AutomationExecutionController | null = null;
   let stockAttention: OverviewReadController<StockAttention> | null = null;
   let shoppingAttention: OverviewReadController<ShoppingAttention> | null = null;
   let familyOverview: OverviewReadController<FamilyWeek> | null = null;
@@ -231,7 +236,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); error?.remove();
     stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
@@ -241,7 +246,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); app?.remove();
     stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
@@ -499,10 +504,23 @@ export function mountEntry(page: EntryPage): PageMount {
     const automation = new AutomationPreviewController(new HttpAutomationPreview(source.target, browser.transport),
       inventoryServer, view => {element.automationPreview = view;});
     automationPreview = automation;
+    const execution = new AutomationExecutionController(new HttpAutomationExecution(source.target, browser.transport),
+      new AutomationExecutionSessionJournal({getItem:key => browser.storage().getItem(key),
+        setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
+      new BrowserEntropy(browser.random), view => {element.automationExecution = view;});
+    automationExecution = execution;
+    let executionScope: DraftScope | null = null;
+    const syncExecution = (view: AutomationDraftView | null) => {
+      if (view?.state === 'ready') execution.bind(executionScope, view.selected);
+      else execution.bind(null, null);
+    };
     const drafts = new AutomationDraftController(new HttpAutomationDrafts(source.target, browser.transport),
       new AutomationDraftSessionJournal({getItem:key => browser.storage().getItem(key),
         setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
-      new BrowserEntropy(browser.random), rule => automation.replaceDraft(rule), view => {element.automationDrafts = view;});
+      new BrowserEntropy(browser.random), rule => automation.replaceDraft(rule), view => {
+        element.automationDrafts = view;
+        syncExecution(view);
+      });
     automationDrafts = drafts;
     const syncAutomation = () => {
       const entry = element.view, member = element.administration?.access?.member;
@@ -511,9 +529,15 @@ export function mountEntry(page: EntryPage): PageMount {
         const {context} = entry.session, {householdId} = entry.household;
         const key = JSON.stringify([context.installationId, context.channel, context.subject, householdId, member.memberId]);
         const visible = element.workspaceDestination === 'household', readOnly = entry.decision.readOnly;
+        const draftScope = {key, context, memberId: member.memberId, readOnly};
+        executionScope = visible ? draftScope : null;
         automation.bind({key, context, householdId, readOnly}, visible);
-        drafts.bind({key, context, memberId: member.memberId, readOnly}, visible);
-      } else {automation.bind(null); drafts.bind(null);}
+        drafts.bind(draftScope, visible);
+        syncExecution(element.automationDrafts);
+      } else {
+        executionScope = null;
+        automation.bind(null); drafts.bind(null); execution.bind(null, null);
+      }
     };
     element.addEventListener('domus-automation-preview-intent', event => {
       if (event.target !== element) return;
@@ -522,6 +546,12 @@ export function mountEntry(page: EntryPage): PageMount {
     element.addEventListener('domus-automation-draft-intent', event => {
       if (event.target !== element) return;
       void drafts.handle((event as CustomEvent<AutomationDraftIntent>).detail, automation.draft());
+    }, {signal: widget.signal});
+    element.addEventListener('domus-automation-execution-intent', event => {
+      if (event.target !== element) return;
+      const intent = (event as CustomEvent<AutomationExecutionIntent>).detail;
+      if (['enable', 'disable', 'run', 'confirm', 'cancel', 'recover', 'reload'].includes(intent))
+        void execution.handle(intent);
     }, {signal: widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
@@ -609,14 +639,20 @@ export function mountEntry(page: EntryPage): PageMount {
         }
       }catch{fail();}
     },{signal:widget.signal});
+    const openTask = async (occurrenceId: string) => {
+      page.location.assign('#tasks');
+      await active.taskWork(controller => controller.select(occurrenceId));
+    };
+    element.addEventListener('domus-automation-task-intent', async event => {
+      if (event.target !== element) return;
+      const intent = decodeTaskIntent((event as CustomEvent<unknown>).detail);
+      if (intent?.type === 'select') await openTask(intent.occurrenceId);
+    }, {signal: widget.signal});
     element.addEventListener('domus-task-overview-intent', async event => {
       if (event.target !== element) return;
       const intent = decodeTaskIntent((event as CustomEvent<unknown>).detail);
       if (intent?.type === 'refresh') await overviewController.refresh();
-      if (intent?.type === 'select') {
-        page.location.assign('#tasks');
-        await active.taskWork(controller => controller.select(intent.occurrenceId));
-      }
+      if (intent?.type === 'select') await openTask(intent.occurrenceId);
     }, {signal: widget.signal});
     element.addEventListener('domus-task-intent', async event => {
       if (event.target !== element) return;

@@ -4,19 +4,20 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal
 
-from domus.application.automation_preview import owned_product, require_configuration
+from domus.application.automation_preview import (
+    AutomationCommandAuthority,
+    owned_product,
+    require_configuration,
+)
 from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.identity_ports import CurrentHuman
 from domus.application.ports import Clock, Identifiers, Transactions, UnitOfWork
-from domus.application.task_authorization import TaskAccess
 from domus.application.task_ports import TaskCursors
 from domus.domain.automation import AutomationDraft, AutomationRule
-from domus.domain.errors import Forbidden, InvalidInput, NotFound
+from domus.domain.errors import InvalidInput, NotFound
 from domus.domain.identity import (
     HumanIdentity,
-    Member,
-    Permission,
     effective_role,
     validate_revision,
 )
@@ -62,27 +63,6 @@ class DraftSummary:
 class DraftPage:
     drafts: tuple[DraftSummary, ...]
     next_cursor: str | None
-
-
-@dataclass(frozen=True, slots=True)
-class _DraftAuthority:
-    human: HumanIdentity
-    scope: MaintenanceScope
-    command: CommandKey
-
-    def owner(self, unit: UnitOfWork) -> Member:
-        home = self.scope.require(unit).household_id
-        member = require_configuration(unit, home, self.human)
-        TaskAccess(self.human).require(unit, home, Permission.TASKS_CREATE)
-        return member
-
-    def require(self, command: CommandKey, unit: UnitOfWork) -> None:
-        if command != self.command:
-            raise Forbidden("permission_denied")
-        owner = self.owner(unit)
-        original = unit.receipts.get(command)
-        if original is not None and original.result.decode().get("member_id") != owner.member_id:
-            raise Forbidden("permission_denied")
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,9 +125,9 @@ class AutomationDrafts:
                 raise NotFound("automation_draft_missing")
             return draft
 
-    def _authority(self, human: HumanIdentity, key: str) -> _DraftAuthority:
+    def _authority(self, human: HumanIdentity, key: str) -> AutomationCommandAuthority:
         command = CommandKey(self.scope.household_id, human.ha_user_id, SAVE_DRAFT, key)
-        return _DraftAuthority(human, self.scope, command)
+        return AutomationCommandAuthority(human, self.scope, command)
 
     def save(self, key: str, request: SaveDraft) -> Receipt:
         authority = self._authority(self.actor.current(), key)

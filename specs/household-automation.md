@@ -686,3 +686,159 @@ and the user guide with verified evidence.
 [Domus #118](https://github.com/vypdev/domus/issues/118) defines the draft
 increment. The existing capability owns the rule model and later execution.
 The selected base is `d18391736d425fb7c6a80e44e30371fe12124ad1`.
+
+## Proposed change: Run a saved household automation manually
+
+- Status: Draft
+- Catalog capability: household-automation
+
+### 1. Executive summary
+
+This delta lets a household administrator explicitly enable one saved, validated manual automation revision and request a run from Household settings. Before accepting the request, Domus checks current access and the exact revision the administrator confirmed. A run may create only the task proposed by that saved revision; the recorded result identifies the invoking member and any task created. The existing owner remains the contract for the shared automation engine, rule model, and draft behavior.
+
+### 2. Problem, current behavior, and evidence
+
+The retained owner describes a manual preview that proposes at most one task using current authorized stock facts, and saved drafts that remain inactive. The draft editor’s in-memory state is lost on reload; persisted drafts can be reopened as immutable revisions, but cannot admit a run. These are the current boundaries this increment extends: `specs/household-automation.md` (the existing preview and draft contracts), `frontend/src/application/automation-preview.ts` and `frontend/src/application/automation-drafts.ts` (application state), and `docs/evidence/automation-preview-qualification.md` (registered preview qualification evidence). The existing preview is read-only; its qualification records checks that task and stock state remain unchanged. This proposal adds explicit activation and manual execution; it does not claim those behaviors are implemented or qualified. Issue #120 requests exact-revision confirmation, admission-time authorization and product-scope checks, request-time stock evaluation, atomic recording of the run result and ordinary task command, recoverable request identity, and accessible English and Spanish outcome status. Migration, restart, restoration, concurrency, revocation, and deployment qualification remain acceptance work for this delta.
+
+### 3. Actors, surfaces, and terminology
+
+The household administrator uses Household settings to enable a validated saved revision, confirm a manual run, and inspect its outcome. A household member is the attributed requester; current membership and authority are checked when the request is admitted. A saved revision is the immutable definition selected for the run. A stale confirmation names a revision that is no longer the enabled revision and must not admit work. A run result is the original outcome, including whether a task was created; when created, the result links to that task. Stock condition evaluation uses facts current at request time. The UI presents accessible controls and statuses in English and Spanish.
+
+### 4. Goals, non-goals, and fixed invariants
+
+Goals: enable a specific saved validated revision and bind confirmation to it; recheck membership, automation authority, task permissions, and referenced product scope at admission while limiting authority to the saved single task step; attribute the run to the invoking member and evaluate stock at request time; commit the original run result with the ordinary authorized task command, record a no-task run when the optional condition does not match, and recover a lost response with the same request identity; serialize disablement against admission while preserving the task and receipt of an already committed run and never implicitly replacing the enabled revision when a draft changes; provide accessible English and Spanish controls and original outcome status with a task link when applicable; and qualify duplicate requests, concurrency, revocation, previous-schema migration, schema 20 if storage changes, restart, restoration, and the same Edge, Ingress, and standalone contexts used for drafts. Non-goals: event or scheduled triggers, multi-step execution, notifications, and advanced editing, which have separate acceptance. Fixed invariants: drafts and previews remain non-executing; current authorization and household product scope govern admission; a manual run has authority for one saved task step only; disablement blocks future admissions without rewriting an already committed result; duplicate recovery returns the original request result rather than creating another task; and run status reports actual retained effects, never implying rollback.
+
+| Requirement | Behavior |
+| --- | --- |
+| SDD-I120-U1-R1 | Allow a household administrator to enable an exact saved, validated manual automation revision and identify that revision when confirming a manual run; reject admission from a stale confirmation. |
+| SDD-I120-U1-R2 | At admission, recheck current membership, automation authority, task permissions, and referenced product scope; limit execution authority to the saved single task step, attribute the run to the invoking member, and evaluate stock at request time. |
+| SDD-I120-U1-R3 | Commit the original run result together with the ordinary authorized task command; when the optional stock condition does not match, record a run with no task; allow recovery of a lost response using the same request identity. |
+| SDD-I120-U1-R4 | Serialize disabling against admission so a run already committed retains its original task and receipt; editing a draft does not implicitly replace the enabled revision. |
+| SDD-I120-U1-R5 | Provide accessible English and Spanish controls and statuses that show the original run outcome and link to its task when one was created. |
+| SDD-I120-U1-R6 | Support the manual-run flow through duplicate requests, concurrency, revocation, migration from the previous schema, schema 20 if storage changes, restart, restoration, and the same Edge, Ingress, and standalone qualification used for drafts. |
+
+### 5. Current versus proposed product journey
+
+The existing owner remains the contract for saved rules, their lifecycle, and execution traces. This issue adds an explicit manual-run journey from Household settings for a saved, validated revision, extending the existing manual invocation trigger described by the owner. Today, saved rules are inactive: they can explain a proposed task against current stock, but a household member cannot request execution from a saved rule or inspect that run’s original result. The proposed change is limited to one saved revision and its single task step; event and scheduled triggers, multi-step execution, notifications, and advanced editing remain outside this increment (issue #120).
+
+A household administrator chooses a saved validated revision and enables it. A member starts a manual run from Household settings; the confirmation identifies that exact revision. If the revision or enablement is stale by admission time, the request is rejected without running it, and the interface explains that the member must review the current saved revision and try again. At admission, the system rechecks current membership, automation authority, task permissions, and referenced product scope. It evaluates the optional stock condition at request time and limits authority to the saved single task step. A matching condition commits the original run result and ordinary authorized task command together; a nonmatching condition still records the run, with no task. The result attributes the invoking member and links to the task when one was created. A retry with the same request identity recovers a lost response. Disabling serializes against admission: an already committed run retains its original task and receipt, while later admissions are refused. Editing a draft does not replace the enabled revision. Accessible English and Spanish controls and statuses expose the original outcome.
+
+Text equivalent: select and enable a saved revision -> confirm that revision for a manual run -> recheck current authority and scope, then record the run and optional task atomically -> inspect the original result and task link, if any.
+
+### 6. Functional behavior and state model
+
+The manual-run addition uses the existing rule and run lifecycle in `specs/household-automation.md`; it does not redefine event-triggered or multi-step execution. The enabled revision remains identifiable independently of draft edits. The confirmation names the revision to be run, and admission must reject a stale confirmation rather than silently substituting a newer revision. Disabling and admission serialize through the owning durable control so that a committed run keeps its original task and receipt and a later request cannot enter under stale enablement.
+
+For each request, admission verifies current household membership, authority to invoke automation, permission to perform the task, and access to every referenced product. Execution receives authority for only the saved single task step, and the run records the invoking member as its actor. The optional stock condition is evaluated against stock as of the request. A matching condition permits the ordinary authorized task command; a nonmatch produces a recorded run with no task. The run result and task command commit together, so the visible result cannot claim a task that was not committed. Repeating the same request identity returns or recovers the original result rather than creating another task. Duplicate and concurrent submissions must preserve this behavior.
+
+The interface reports the original run outcome, including whether the condition matched and whether a task was created; when created, it provides a task link. English and Spanish controls and statuses must be accessible by keyboard and assistive technology. Permission revocation before admission denies the run without a task. A lost response can be recovered with the same request identity. A retry cannot use a stale confirmation or bypass current authorization. Migration from the previous schema, schema 20 if storage changes, restart, restoration, and Edge, Ingress, and standalone qualification must be covered under the same qualification expectations as drafts, as retained by the owner.
+
+The bounded behavior is exercised by the revision-selection flow, admission authorization, atomic run and recovery, disable concurrency, localized result controls, and qualification/lifecycle scenarios defined in the supplied inventory. These are planned acceptance behaviors, not evidence of implementation or executed tests.
+
+### 7. User-facing configuration
+
+This increment adds no household-configurable execution policy. The administrator’s explicit enablement is a persisted rule state, initially disabled according to the existing owner contract; it applies to the exact saved, validated revision. Draft editing does not change the enabled revision. A member’s manual request identifies the revision being confirmed and carries a stable request identity for duplicate suppression and recovery. At admission, authorization and referenced product scope are read again, and stock is evaluated at request time rather than taken from an earlier preview. These revision, permission, single-step authority, atomic-result, and idempotency rules are fixed product invariants, not configuration options.
+
+An invalid or stale revision confirmation is rejected with an actionable status and no task effect. The user can inspect the current saved revision and initiate a new confirmation. Disabling prevents later admissions after it serializes with an in-progress admission; an already committed run retains its result and receipt. No additional run-policy settings or migration values are introduced by this delta. If implementation changes durable storage, the migration and schema-20 condition in the supplied lifecycle acceptance remain applicable.
+
+### 8. Clean Architecture design
+
+The existing Clean Architecture boundaries in `specs/household-automation.md` remain in force. The manual-run delta adds no second execution engine or provider-specific policy: the application admission use case accepts a narrowly defined request containing the selected saved revision and request identity, obtains current member and permission facts through semantic authorization capabilities, checks referenced product scope, evaluates request-time stock through the owning domain capability, and delegates the single task step to the ordinary authorized task use case. Domain policy owns the revision and single-step invariants; presentation builds the confirmation and localized result view without making authorization or mutation decisions. Provider and persistence adapters translate their own records and failures at the ports.
+
+Admission must atomically retain the original run result with the ordinary task command outcome. The durable request identity supports lookup or replay after a lost response without duplicating the task. Disablement and admission must serialize; after admission commits, the run’s task and receipt remain attached to that run even if disabling follows. Draft persistence is separate from the enabled revision so an edit cannot implicitly replace it. Authorization is checked against current membership, automation authority, task permissions, and product scope at admission, and execution authority is scoped to the saved task step. The invoking member is retained for attribution. A false optional stock condition records a no-task run outcome.
+
+The owner’s dependency and cycle constraints continue to apply: domain and application logic must not depend on infrastructure, and presentation primitives must not call APIs or perform state mutation. Extend the owner’s executable dependency, schema, and port-contract checks to cover manual admission, duplicate request recovery, task/result atomicity, and disable races. No repository verification command is asserted here; the concrete invocation and its coverage of these new contracts remain unverified.
+
+### 9. UI/UX and content contract
+
+For this increment, add an explicit manual-run control to the retained Household settings automation experience. Only a household administrator with current authority can enable a saved, validated revision or request a run. Before confirmation, identify the exact revision that will run; reject admission if that confirmation has become stale. Show the original run outcome and link to its task when one was created. A stock condition that does not match is shown as a completed run with no task. Provide accessible English and Spanish controls and statuses, with keyboard access, visible focus, and readable narrow layouts. Keep these additions within the retained owner’s Household settings surface and existing manual-rule scope (`specs/household-automation.md`, immutable base `54b20736fe41cdc36d0f431edd56ca72234ddd52`). The existing typed manual rule and its optional stock condition are represented in `backend/src/domus/domain/automation.py`; draft interaction state is represented in `frontend/src/application/automation-drafts.ts`.
+
+### 10. Failure, recovery, and cleanup
+
+Admission must recheck current membership, automation authority, task permissions, and referenced product scope. If any check fails, deny the run without creating a task or disclosing unauthorized product information. Evaluate the optional stock condition against request-time facts. Commit the original run result and any authorized task command together. If the response is lost, retry or recover with the same request identity and return the original result rather than creating a second run or task. A nonmatching condition still records the run, with no task. Serialize disablement against admission: a run already committed keeps its original task and receipt; disabling prevents subsequent admissions. Editing a draft does not silently replace the enabled revision. Duplicate requests, concurrent admission and disablement, and permission revocation must leave recoverable, truthful outcomes. Do not report rollback of a committed task.
+
+### 11. Security, permissions, and privacy
+
+Resolve installation, household, and invoking member from trusted server context. At admission, enforce current membership and automation authority, the ordinary task permissions, and ownership of every referenced product. Scope execution authority to the saved revision’s single task step, attribute the run to the invoking member, and never accept client-supplied identity or authority overrides. Treat the saved rule as bounded declarative input; it grants no authority by itself. Do not expose product facts when access is denied. Preserve the retained owner’s existing permission and data boundaries (`specs/household-automation.md`, immutable base `54b20736fe41cdc36d0f431edd56ca72234ddd52`).
+
+### 12. Observability and operational UX
+
+Present authoritative states for confirmation, stale revision, pending admission, denied, completed with task, completed without task, and uncertain response. Each displayed result must represent the original committed run outcome; link to the task only when the run created one. An uncertain response offers recovery using the same request identity and must not imply that a second run was started. Localize controls, errors, and statuses in English and Spanish. Operational diagnostics may use safe outcome codes and correlation identifiers, but must not include credentials or unnecessary private rule and product data.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Keep the change within the existing household-automation owner and qualify the manual-run flow through duplicate requests, concurrency, revocation, restart, and restoration. If storage changes, include schema 20 in migration qualification; also verify migration from the previous schema while preserving existing household data and original run/task receipts. Apply the same Edge, Ingress, and standalone qualification used for drafts. Record evidence for the actual selected deployment targets and cleanup of disposable test data. The selected source was inspected without executing project commands; a concrete invocation and its prerequisites for this qualification remain unverified. Do not treat a declared command as execution or acceptance. This delta does not add scheduled or event triggers, multi-step execution, notifications, or advanced editing; those remain outside this manual-run increment. The retained owner remains `specs/household-automation.md` at immutable base `54b20736fe41cdc36d0f431edd56ca72234ddd52`.
+
+### 14. Testing strategy and numeric budget
+
+The retained owner’s 45-case budget remains the baseline. Add a minimum of 18 distinct cases for this manual-run delta, derived from revision pinning, authorization, atomic task/run recording, concurrency, localization, and recovery risk: 4 revision selection and stale confirmation; 4 admission authorization and request-time stock evaluation; 4 run recording, no-task outcomes, duplicate requests, and lost-response recovery; 2 disable/edit races; 2 accessible localized result views; and 2 lifecycle and deployment qualification. These are planned cases, not executed tests. The approved acceptance inventory supplies six concrete observable scenarios; expand them into distinct test cases without counting aliases or structural traceability as semantic coverage. Use deterministic identities, clocks, and concurrency controls; inject failures around durable commits; avoid live waits and services in unit and contract tests. Include migration from the prior schema, schema 20 when storage changes, restart, restoration, and matching Edge, Ingress, and standalone qualification. Keep existing repository thresholds and changed-module coverage expectations from the retained owner. Verify assertions against implementation and contract fixtures, and retain human accessibility evidence where automation cannot establish the experience. The project declares pnpm 10.34.0 and Node 24.20 through <25, but the selected package scripts do not declare the specification validation or generation invocations; concrete SDD validation prerequisites and invocation remain unverified. Do not treat a declared command as executed or accepted.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| revision selection | 1 | Observable scenarios in the case inventory. |
+| admission authorization | 1 | Observable scenarios in the case inventory. |
+| run commit and recovery | 1 | Observable scenarios in the case inventory. |
+| disable concurrency | 1 | Observable scenarios in the case inventory. |
+| localized controls and status | 1 | Observable scenarios in the case inventory. |
+| qualification and lifecycle | 1 | Observable scenarios in the case inventory. |
+| Total | 6 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| inventory1-C01 | revision selection | SDD-I120-U1-R1, SDD-I120-U1-R4 | Enable a saved validated revision, confirm a run against that exact revision, reject a stale confirmation, and verify that editing a draft does not replace the enabled revision. |
+| inventory1-C02 | admission authorization | SDD-I120-U1-R2 | At admission, verify current membership, automation authority, task permissions, and referenced product scope; confirm authority covers only the saved single task step, attribution identifies the invoking member, and stock is evaluated at request time. |
+| inventory1-C03 | run commit and recovery | SDD-I120-U1-R3 | Verify the run result and authorized task command commit together; a nonmatching optional stock condition records a run without a task; retrying with the same request identity recovers a lost response. |
+| inventory1-C04 | disable concurrency | SDD-I120-U1-R4 | Race disabling against admission; verify serialization and that an already committed run retains its original task and receipt. |
+| inventory1-C05 | localized controls and status | SDD-I120-U1-R5 | Use accessible English and Spanish controls and verify statuses show the original run outcome and link to the created task when applicable. |
+| inventory1-C06 | qualification and lifecycle | SDD-I120-U1-R6 | Verify duplicate requests, concurrency, revocation, migration from the previous schema, schema 20 when storage changes, restart, restoration, and Edge, Ingress, and standalone qualification matching drafts. |
+
+### 15. Documentation and discoverability
+
+Extend the existing automation user and operator guidance to explain enabling a specific saved validated revision, confirming that revision before a manual run, disabling future admission, and reading the original run outcome. Explain the no-task result when the optional stock condition does not match, task navigation when a task is created, safe retry with the same request identity after a lost response, and the effect of revocation, editing, disable races, restart, and restoration. Provide accessible English and Spanish control and status examples. Keep the retained contract’s distinction between the automation engine and its entrypoint adapters. The selected tree contains `docs/user-guide.md`, `docs/operations.md`, `docs/architecture.md`, `docs/contracts/home-assistant.md`, `docs/evidence/automation-draft-qualification.md`, and `docs/evidence/automation-preview-qualification.md`; align relevant guidance and qualification evidence with the implemented behavior. The sole approved specification path is an update to `specs/household-automation.md`; no additional documentation paths are declared by this delta. The selected repository standard names specification validation and catalog generation, while the project package scripts do not expose those names; the concrete invocation and prerequisites remain unverified. Publication must have observable outcomes: the specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. A concrete invocation for these publication checks remains unverified.
+
+| Path | Change |
+| --- | --- |
+| specs/household-automation.md | update |
+
+[specs/household-automation.md](household-automation.md)
+
+### 16. Acceptance scenarios
+
+Preserve all existing owner cases as references. The manual-run acceptance inventory is defined by the six supplied identities and their concrete assertions:
+
+- `inventory1-C01`: Enable a saved validated revision; confirm a run against that exact revision; reject stale confirmation; editing a draft does not replace the enabled revision.
+- `inventory1-C02`: At admission, verify current membership, automation authority, task permissions, and referenced product scope; execution authority covers only the saved single task step; attribution names the invoking member; stock is evaluated at request time.
+- `inventory1-C03`: Commit the run result and authorized task command together; a nonmatching optional stock condition records a run without a task; retry with the same request identity recovers a lost response.
+- `inventory1-C04`: Race disabling against admission; verify serialization and that an already committed run retains its original task and receipt.
+- `inventory1-C05`: Use accessible English and Spanish controls; statuses show the original outcome and link to the task when one was created.
+- `inventory1-C06`: Verify duplicate requests, concurrency, revocation, migration from the previous schema, schema 20 when storage changes, restart, restoration, and Edge, Ingress, and standalone qualification matching drafts.
+
+These scenarios refine the manual-run increment to the retained automation contract at issue [#120](https://github.com/vypdev/domus/issues/120). They do not claim implementation, execution, or acceptance.
+
+### 17. Requirements traceability
+
+Trace the six new requirements only to the supplied scenarios that exercise them. `SDD-I120-U1-R1` maps to `inventory1-C01`. `SDD-I120-U1-R2` maps to `inventory1-C02`. `SDD-I120-U1-R3` maps to `inventory1-C03`. `SDD-I120-U1-R4` maps to `inventory1-C01` and `inventory1-C04`. `SDD-I120-U1-R5` maps to `inventory1-C05`. `SDD-I120-U1-R6` maps to `inventory1-C06`. Existing owning requirements and cases remain in the immutable retained owner and are references, not new definitions. This mapping establishes structural coverage only; it does not establish semantic completeness or that checks have run. Publication review must separately confirm required format, internal and cross-document consistency, and reciprocal catalog ownership, paths, and evidence against the generated view.
+
+| Requirement | Cases |
+|---|---|
+| SDD-I120-U1-R1 | inventory1-C01 |
+| SDD-I120-U1-R2 | inventory1-C02 |
+| SDD-I120-U1-R3 | inventory1-C03 |
+| SDD-I120-U1-R4 | inventory1-C01, inventory1-C04 |
+| SDD-I120-U1-R5 | inventory1-C05 |
+| SDD-I120-U1-R6 | inventory1-C06 |
+
+### 18. Implementation sequence
+
+Reuse the rule model, saved revision, authorization boundary, and draft lifecycle in the immutable retained owner, `specs/household-automation.md` (sections 6–13). Define explicit enablement for an exact saved validated revision and confirmation bound to that revision; then implement admission checks, request-time stock evaluation, attribution, atomic run and task recording, and same-identity recovery. Serialize disablement with admission and keep draft edits separate from the enabled revision. Add accessible English and Spanish controls and original-outcome status with a task link when applicable. Complete migration and lifecycle qualification, update applicable user and contract documentation and reciprocal catalog evidence, and record verification outcomes. The sequence is planned; it does not claim implementation or checks have run.
+
+### 19. Definition of Done
+
+- [ ] Each new behavior is covered by its concrete acceptance case: exact revision selection and stale confirmation in `inventory1-C01`; current admission authority, single-step scope, attribution, and request-time stock in `inventory1-C02`; atomic result and task recording, no-task condition outcome, and same-request recovery in `inventory1-C03`; disablement serialization and retained committed receipt in `inventory1-C04`; accessible localized controls and original outcome in `inventory1-C05`; duplicate requests, concurrency, revocation, migration, schema 20 when storage changes, restart, restoration, and deployment qualification in `inventory1-C06`.
+- [ ] Existing engine, preview, and draft contracts and cases in the immutable retained owner remain intact; every requirement and case mapping is reciprocal and each case verifies only the behavior it exercises.
+- [ ] Verify migration and authorization behavior, request replay, concurrency, restart and restoration, and the same Edge, Ingress, and standalone qualification used for drafts. If storage changes, include schema 20 migration evidence. Record accessible English and Spanish interaction evidence and scoped cleanup for disposable qualification data.
+- [ ] The specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. These are observable publication outcomes. `specs/README.md` recommends specification validation and generation invocations, but the selected root `package.json` declares neither script; the concrete invocation and prerequisite remain unverified. No declaration or planned check is evidence of execution, passing validation, or product acceptance.
+
+### 20. References and decisions
+
+[Domus #120](https://github.com/vypdev/domus/issues/120) supplies the manual-run delta. Retain the existing rule, preview, and draft contract and cases in `specs/household-automation.md`; this update adds manual enablement and execution while preserving that owner's boundaries. [Domus #118](https://github.com/vypdev/domus/issues/118) defines the saved-draft increment on which exact-revision enablement depends. The selected source revision is `54b20736fe41cdc36d0f431edd56ca72234ddd52`. The repository standard is in `specs/README.md`, and the selected root `package.json` declares pnpm 10.34.0 and Node `>=24.20.0 <25`; its scripts do not include the specification validation or generation invocations named by the standard. Their concrete invocation and prerequisite remain unverified.

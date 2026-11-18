@@ -14,7 +14,7 @@ const COPY = {
     heading: 'Automation drafts', loading: 'Loading automation drafts…',
     empty: 'Enter a task title above and save your first draft.',
     first: 'First drafts', next: 'Next drafts', retry: 'Try again', open: 'Open',
-    save: 'Save draft', new: 'New draft', revision: 'Revision', inactive: 'Inactive',
+    save: 'Save draft', new: 'New draft', revision: 'Revision',
     denied: 'Your current household permissions do not allow access to automation drafts.',
     unavailable: 'Automation drafts are unavailable. Try again.',
     invalid_title: 'Enter a task title of 1 to 160 characters.',
@@ -34,7 +34,7 @@ const COPY = {
     heading: 'Borradores de automatización', loading: 'Cargando borradores de automatización…',
     empty: 'Introduce un título de tarea arriba y guarda tu primer borrador.',
     first: 'Primeros borradores', next: 'Siguientes borradores', retry: 'Volver a intentar', open: 'Abrir',
-    save: 'Guardar borrador', new: 'Nuevo borrador', revision: 'Revisión', inactive: 'Inactivo',
+    save: 'Guardar borrador', new: 'Nuevo borrador', revision: 'Revisión',
     denied: 'Tus permisos actuales del hogar no permiten acceder a los borradores de automatización.',
     unavailable: 'Los borradores de automatización no están disponibles. Vuelve a intentarlo.',
     invalid_title: 'Introduce un título de tarea de 1 a 160 caracteres.',
@@ -111,7 +111,7 @@ export class DomusAutomationDrafts extends LitElement {
       ${view.pending ? this.button('recover', {type: 'recover'}, view.busy) : nothing}
     </div>
     ${view.selected === null ? nothing : html`<p role="status">${this.text('current')} ·
-      ${this.text('revision')} ${view.selected.revision} · ${this.text('inactive')}</p>`}
+      ${this.text('revision')} ${view.selected.revision}</p>`}
     ${view.readOnly ? html`<p>${this.text('readOnly')}</p>` : nothing}
     ${view.busy ? this.feedback('busy', true) : nothing}
     ${view.notice === null ? nothing : this.feedback(view.notice)}
@@ -131,7 +131,7 @@ export class DomusAutomationDrafts extends LitElement {
       ${view.preview === null ? nothing : html`<p role="status">${this.text(view.preview ? 'wouldCreate' : 'noAction')}</p>`}`}
     ${view.page.drafts.length === 0 ? html`<p>${this.text('empty')}</p>` : html`<ul class="drafts">
       ${view.page.drafts.map(draft => html`<li class="draft">
-        <p><strong>${draft.title}</strong> · ${this.text('revision')} ${draft.revision} · ${this.text('inactive')}</p>
+        <p><strong>${draft.title}</strong> · ${this.text('revision')} ${draft.revision}</p>
         ${this.button('open', {type: 'open', id: draft.id}, busy, draft.title)}
       </li>`)}
     </ul>`}

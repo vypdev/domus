@@ -373,15 +373,30 @@ If the product list fails to load, you can preview without a stock condition or
 choose **Try again** to reload the list with your title intact.
 Your current household grants control access to the form.
 
-Choose **Save draft** under **Automation drafts** to keep the rule inactive.
+Choose **Save draft** under **Automation drafts** to record the first revision.
 Choose **Open** beside a draft to load its latest revision. Saving edits appends a
 revision. **Review latest revision** shows a conflicting edit so you can decide
 whether to keep your own changes on the new revision. If the save could not be
 confirmed, choose **Check original save** to recover the operation without
 creating a duplicate. Grouped conditions are available to read and preview.
 
-The [automation specification](../specs/household-automation.md) describes the planned
-advanced editor, enabling, execution history and Home Assistant operations.
+### Run a saved revision manually
+
+Open or save a draft and find **Manual automation**. Choose **Enable saved revision**
+and confirm the title and revision. **Run manually** opens a confirmation for the
+enabled revision. Saving another draft revision leaves the enabled revision available
+until you explicitly enable a different revision or choose **Disable future runs**.
+
+Domus checks current grants and stock when you confirm **Run this revision**.
+When the stock condition matches, **Open created task** opens the task from the run.
+When it does not match, the receipt explains why the run created no task. If the
+revision changed while you were confirming, review the current rule and confirm again.
+
+If the result was interrupted, choose **Check original request**. The same request can
+recover its receipt after reload. Following restoration, a historical receipt shows the
+original outcome and its operation ID. Disabling continues to preserve committed runs
+and their tasks. See the [automation specification](../specs/household-automation.md)
+for the remaining editor, runtime and Home Assistant work.
 
 ## Channels and privacy
 
