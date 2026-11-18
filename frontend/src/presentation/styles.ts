@@ -2,6 +2,7 @@ import {css} from 'lit';
 
 export const styles = css`
   :host {--surface:#fff;--canvas:#f4f6f8;--text:#172b3a;--muted:#42596b;--line:#c6d1da;
+    --vyp-ha-surface-raised:var(--surface);
     --accent:#075b97;--soft:#e9f3fb;--warning:#784307;display:block;min-height:100dvh;
     background:var(--canvas);color:var(--text);font:16px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light}
   @media(prefers-color-scheme:dark) {:host {--surface:#18242f;--canvas:#101a23;--text:#edf4fa;

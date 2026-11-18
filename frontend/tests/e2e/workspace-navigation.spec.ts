@@ -360,6 +360,8 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.getByLabel('Language', {exact: true}).selectOption('es');
 
     const settings = familyRegion.locator('domus-allocation-settings');
+    await expect(settings.getByRole('article')).toHaveCSS('background-color', 'rgb(24, 36, 47)');
+    await expect(settings.getByRole('article')).toHaveCSS('color', 'rgb(237, 244, 250)');
     await settings.getByRole('combobox', {name: 'Política', exact: true}).selectOption('equal_share');
     await settings.getByRole('combobox', {name: 'Redondeo', exact: true}).selectOption('ceil');
     await settings.getByRole('button', {name: 'Guardar política', exact: true}).click();
@@ -367,6 +369,9 @@ for (const mode of ['native', 'standalone'] as const) {
     await tabs.getByRole('link', {name: 'Tareas', exact: true}).click();
     await tasksRegion.getByRole('button', {name: 'Actualizar tareas', exact: true}).click();
     await tasksRegion.getByRole('button', {name: 'Water plants', exact: true}).click();
+    const taskSettings = tasksRegion.locator('domus-allocation-settings');
+    await expect(taskSettings.getByRole('article')).toHaveCSS('background-color', 'rgb(24, 36, 47)');
+    await expect(taskSettings.getByRole('article')).toHaveCSS('color', 'rgb(237, 244, 250)');
     const points = tasksRegion.locator('domus-allocation-preview');
     await points.locator('summary').click();
     await points.getByRole('button', {name: 'Previsualizar puntos', exact: true}).click();

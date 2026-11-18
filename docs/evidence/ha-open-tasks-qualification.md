@@ -31,3 +31,11 @@ The preparatory SDD CI run `44407258836` encountered an ARM64 browser-port colli
 with a local browser campaign on the shared host. That local campaign has finished.
 Further local entry-browser campaigns use the workflow's existing shared
 `/tmp/domus-ci-entry-browser.lock`. Final candidate CI verifies both architectures.
+
+The installed Edge.45 English keyboard journey created, claimed and completed an
+identifiable synthetic task. Its dark-mode capture exposed a white allocation
+card with light text. The shared Domus theme now supplies the published card's
+raised-surface token. The existing compiled Ingress and standalone journeys verify
+dark backgrounds and readable text on both household and task allocation cards.
+Both journeys passed after reproducing the original white background. The
+corrected candidate uses a new immutable Edge version before installed acceptance.
