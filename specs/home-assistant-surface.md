@@ -474,3 +474,176 @@ Branch Sync.
 Use the proposed low-stock entity in `specs/home-assistant-surface.md`
 and `docs/contracts/home-assistant.md`. Preserve the existing Overview
 policy and private companion integration.
+
+## Show the shared shopping list in Home Assistant
+
+- Status: Draft
+- Date: 2026-11-18
+- Catalog capability ID: home-assistant-surface
+- Owners: Domus maintainers
+- Scope: A read-only native to-do list for outstanding shared shopping items
+- Required review gates: product UX, architecture, testing, documentation, security/operations
+- Open decisions blocking readiness: none for the bounded read-only list
+
+### 1. Executive summary
+
+Home Assistant can show the shared Domus shopping list with the names and quantities
+still to buy. Domus remains the source of items and the place to record purchasing
+or receiving work.
+
+### 2. Problem, current behavior, and evidence
+
+The protected Domus shopping projection already reconciles requests, replenishment,
+task demand and compatible supply. The Home Assistant companion supplies the
+calendar, deadline counts and low-stock count. The Home Assistant contract
+reserves a native shopping to-do entity.
+
+### 3. Actors, surfaces, and terminology
+
+A Domus installation administrator may opt into this separate technical grant.
+Home Assistant entities and dashboard users consume the shared shopping list.
+An outstanding item is a current consolidated line with a positive quantity still
+to buy. It is distinct from an outstanding delivery.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+| --- | --- |
+| ha-shopping-list-R01 | Reuse the authoritative shared list in a consistent read snapshot. Expose exactly the outstanding display names, quantities and units, including results beyond the first visible Overview rows. |
+| ha-shopping-list-R02 | Use an optional grant specific to the installation, channel and shopping purpose. Deny foreign, revoked and wrong-purpose access and preserve other projection credentials. |
+| ha-shopping-list-R03 | Show one read-only native to-do entity per configured source, with stable entity and item identities, complete availability states and localized discoverability. |
+| ha-shopping-list-R04 | Verify current Ingress and standalone compositions in disposable Home Assistant Core, real amd64 and ARM64 images and a separately installed Edge candidate. |
+
+Purchase creation, receipt posting, stock mutation, user attribution and native
+Home Assistant shopping-list synchronization are out of scope.
+
+### 5. Current versus proposed product journey
+
+Domus users continue to open the shared list from Overview or Inventory. After
+explicit configuration, Home Assistant users open the labeled Domus list under
+To-do lists. They consult the quantities and return to Domus for changes.
+
+### 6. Functional behavior and state model
+
+Project positive quantities still to buy with stable source-order display.
+Tracked product and untracked extra identities must remain distinct even when
+their names match. Editing the quantity must not replace an item's identity.
+The snapshot is complete when available. An empty successful result gives a
+zero state. An incomplete or failed read gives unavailable and a later valid
+snapshot restores the entity. Bound native snapshots to at most 1,000 items,
+consistent with the companion calendar budget. A list beyond this capacity
+must not appear available with a partial count.
+
+### 7. User-facing configuration
+
+Use a separate optional Domus app option or standalone environment digest and a
+dedicated companion setup selection per installation/channel. Explain what names
+and quantities Home Assistant dashboards can see, how to reconnect the same source,
+and how to remove access. Existing calendar, deadline and stock configuration stay valid.
+
+### 8. Clean Architecture design
+
+An application-owned read shares the existing shopping projection and current
+SQLite read transaction. The application projects only the agreed display fields.
+HTTP and Home Assistant map the read-only snapshot, identity and availability.
+The companion uses Home Assistant's native to-do platform and advertises no
+mutation features. Existing domain commands own purchase, receipt and stock writes.
+
+### 9. UI/UX and content contract
+
+Provide English and Spanish names, setup hints and failure states. Present names
+as untrusted plain text and preserve exact quantities and unit meanings. A readable
+empty list and unavailability must be distinguishable. Document where to manage
+items and how to continue using Domus if the native read becomes unavailable.
+
+### 10. Failure, recovery, and cleanup
+
+No refresh writes state. Missing, denied, malformed or oversized snapshots leave
+the configured identity intact and mark the entity unavailable. Unavailable reads
+must not return the previous list through native get-items or dashboard access.
+Restore the view after an authorized complete read. Remove only disposable HA Core entries, the
+temporary Edge app and the synthetic records used to verify it.
+
+### 11. Security, permissions, and privacy
+
+Opt in with a separate purpose-bound technical credential. The private Home Assistant
+listener and the existing protected standalone transport rules apply. Never include
+member identity, sourcing task identity, ledger records, purchase sessions, receipts
+or credentials in the list response or diagnostic logs. The read grant cannot act
+as a household member or authorize a mutation.
+
+### 12. Observability and operational UX
+
+Home Assistant visibly reports unavailable after a denied or failed refresh,
+with bounded error details. Instructions explain installation identity, permitted
+transport, scope, polling and verifying a valid reconnect.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Preserve current companion entries, support both protected compositions and leave
+the shopping projection disabled by default. There is no storage migration and no
+update to Gateway. Publish the scoped pinned Edge candidate after verification.
+
+### 14. Testing strategy and numeric budget
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+| --- | --- | --- |
+| Authoritative list | 2 | Consistent shopping logic and exact eligible rows beyond the Overview preview |
+| Authority and privacy | 2 | Independent grant, bounded payload and no exposed provenance or write effects |
+| Native integration | 2 | Recognition, immutable identities, empty/unavailable/recovered lifecycle and no advertised write |
+| Deployment | 1 | Both protected compositions and real image architectures, separate Edge app and cleanup |
+| Total | 7 | Distinct observable scenarios |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| ha-shopping-list-C01 | Authoritative list | ha-shopping-list-R01 | Mixed tracked and untracked demand, reservations and available supply yield the same outstanding lines and quantities as Domus. |
+| ha-shopping-list-C02 | Authoritative list | ha-shopping-list-R01 | A list beyond the first 25 display rows is complete and an oversized list fails unavailable without a partial count. |
+| ha-shopping-list-C03 | Authority and privacy | ha-shopping-list-R02 | Default-disabled, foreign, cross-channel, wrong-purpose and revoked grants cannot return list contents. |
+| ha-shopping-list-C04 | Authority and privacy | ha-shopping-list-R02 | Only presentation fields and opaque identities are present. Repeated reads leave inventory, shopping, task and command records unchanged. |
+| ha-shopping-list-C05 | Native integration | ha-shopping-list-R03 | In disposable Core, resolve distinct stable source and item identities, including after restart and quantity changes. |
+| ha-shopping-list-C06 | Native integration | ha-shopping-list-R03 | Empty, denied or malformed, and recovered reads give correct states. Denial hides old items. Core exposes no add, complete, update, reorder or delete route to Domus. |
+| ha-shopping-list-C07 | Deployment | ha-shopping-list-R04 | Verify the exact packaged Ingress and standalone deployments and architectures, and a separate installed Edge journey with synthetic bilingual scenarios and cleanup. |
+
+### 15. Documentation and discoverability
+
+| Path | Change |
+| --- | --- |
+| specs/home-assistant-surface.md | update |
+| docs/contracts/home-assistant.md | update |
+| docs/roadmap.md | update |
+| docs/installation-home-assistant.md | update |
+| docs/evidence/ha-shopping-list-qualification.md | create |
+
+### 16. Acceptance scenarios
+
+Execute the seven cases in section 14. Retain existing calendar and sensor
+coverage. Record both installed Edge evidence and disposable native integration
+results, exact image architectures and cleanup in the contributing PR.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+| --- | --- |
+| ha-shopping-list-R01 | ha-shopping-list-C01, ha-shopping-list-C02 |
+| ha-shopping-list-R02 | ha-shopping-list-C03, ha-shopping-list-C04 |
+| ha-shopping-list-R03 | ha-shopping-list-C05, ha-shopping-list-C06 |
+| ha-shopping-list-R04 | ha-shopping-list-C07 |
+
+### 18. Implementation sequence
+
+Project the authorized bounded snapshot using the existing shopping read logic.
+Add the optional companion entry and read-only native entity. Verify product,
+privacy and read-only semantics in each owned test installation.
+
+### 19. Definition of Done
+
+The seven cases have exact verification evidence. Backend, companion and frontend
+coverage stay complete. The candidate is verified and cleaned up. CI, review,
+destination CI and Branch Sync are verified according to the repository workflow.
+
+### 20. References and decisions
+
+Use the proposed native shopping list in the home-assistant-surface and linked
+Home Assistant contract, the authoritative shared shopping list in
+specs/shopping-management.md, and the Home Assistant contributor documentation
+for the to-do entity. Only Domus owns purchase and stock effects.
