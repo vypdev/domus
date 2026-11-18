@@ -1361,7 +1361,7 @@ for (const mode of ['native', 'standalone'] as const) {
 
 for (const mode of ['native', 'standalone'] as const) {
   test(`manual automation confirmation and original receipt in ${mode}`, async ({page, context, request}, info) => {
-    test.setTimeout(70_000);
+    test.setTimeout(90_000);
     const origin = `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;
     const base = origin + (mode === 'native' ? ingress : '') + '/';
     if (process.env.DOMUS_BROWSER_IMAGE) {
@@ -1431,6 +1431,12 @@ for (const mode of ['native', 'standalone'] as const) {
       if (item.url() === runsURL && item.method() === 'POST') requestedRuns++;
     });
 
+    const history = page.locator('domus-automation-run-history');
+    await history.getByRole('button',{name:'Show run history',exact:true}).press('Enter');
+    await expect(history.getByText('You have no manual runs for this rule.',{exact:true})).toBeVisible();
+    await history.getByRole('button',{name:'Hide run history',exact:true}).press('Enter');
+    await expect(history.getByRole('list')).toHaveCount(0);
+
     await expect(execution.getByText('Disabled',{exact:true})).toBeVisible();
     await execution.getByRole('button',{name:'Enable saved revision',exact:true}).press('Enter');
     const confirmation = execution.getByRole('region',{name:'Confirm automation action',exact:true});
@@ -1482,11 +1488,60 @@ for (const mode of ['native', 'standalone'] as const) {
 
     await tabs.getByRole('link',{name:'Hogar',exact:true}).tap();
     await drafts.getByRole('button',{name:'Abrir ' + draftTitle,exact:true}).tap();
+    await stockWrite('refill-for-later-no-task-runs',{action:'inventory.adjust',product_id:product,
+      quantity:'2',reason:'Replenished for history test'});
+    const token = await page.request.get(base + 'api/v1/auth/csrf', {headers:{'X-Domus-Context':contextHeader}});
+    expect(token.ok()).toBe(true);
+    const csrf = (await token.json()).csrf_token;
+    const writeHeaders = {Origin:origin, 'X-Domus-Context':contextHeader, 'X-CSRF-Token':csrf};
+    const secondDraft = await page.request.post(draftsURL, {data:{
+      version:1, trigger:{kind:'manual'}, condition:null,
+      action:{kind:'task.create',title:'Inspect the fixture shelf'}, rule_id:null, expected_revision:'0',
+    }, headers:{...writeHeaders, 'Idempotency-Key':'separate-history-rule'}});
+    expect(secondDraft.ok(), await secondDraft.text()).toBe(true);
+    for (let index = 0; index < 25; index++) {
+      const newer = await page.request.post(runsURL, {data:{rule_revision:'1',control_revision:'1'},
+        headers:{...writeHeaders, 'Idempotency-Key':'additional-history-run-' + index}});
+      expect(newer.ok(), await newer.text()).toBe(true);
+      expect((await newer.json()).result.condition_matched).toBe(false);
+    }
+
     const disable = execution.getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true});
     await disable.tap();
     await execution.getByRole('region',{name:'Confirmar acción de automatización',exact:true})
       .getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true}).tap();
     await expect(execution.getByText('Futuras ejecuciones deshabilitadas.',{exact:true})).toBeVisible();
     await expect(execution.getByRole('button',{name:'Ejecutar manualmente',exact:true})).toHaveCount(0);
+
+    await history.getByRole('button',{name:'Mostrar historial',exact:true}).tap();
+    await expect(history.getByRole('listitem')).toHaveCount(25);
+    await expect(history.getByRole('link',{name:'Abrir tarea creada',exact:true})).toHaveCount(0);
+    const olderPage = (url: URL) => url.origin + url.pathname === runsURL && url.searchParams.has('cursor');
+    await page.route(olderPage, route => route.abort('failed'), {times:1});
+    await history.getByRole('button',{name:'Ejecuciones anteriores',exact:true}).tap();
+    await expect(history.getByText('El historial no está disponible en este momento.',{exact:true})).toBeVisible();
+    await expect(history.getByRole('listitem')).toHaveCount(25);
+
+    const retry = page.waitForResponse(reply => olderPage(new URL(reply.url())) && reply.request().method() === 'GET');
+    await history.getByRole('button',{name:'Volver a intentar',exact:true}).tap();
+    expect((await retry).ok()).toBe(true);
+    await expect(history.getByRole('listitem')).toHaveCount(2);
+    await expect(history.getByText('Tarea creada.',{exact:true})).toBeVisible();
+    await expect(history.getByText('No se cumplió la condición de existencias. No se creó ninguna tarea.',{exact:true})).toBeVisible();
+    await expect(history.locator('time').first()).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}T/u);
+    await history.screenshot({path:info.outputPath('manual-history-es-narrow.png')});
+    const originalTask = page.waitForResponse(base + 'api/v1/tasks/occurrences/' + taskId);
+    await history.getByRole('link',{name:'Abrir tarea creada',exact:true}).tap();
+    expect((await originalTask).ok()).toBe(true);
+    await expect(page.locator('domus-tasks').getByRole('heading',{name:draftTitle,exact:true})).toBeVisible();
+    await tabs.getByRole('link',{name:'Hogar',exact:true}).tap();
+    await expect(history.getByRole('listitem')).toHaveCount(0);
+    await drafts.getByRole('button',{name:'Abrir ' + draftTitle,exact:true}).tap();
+    await history.getByRole('button',{name:'Mostrar historial',exact:true}).tap();
+    await expect(history.getByRole('listitem')).toHaveCount(25);
+    await drafts.getByRole('button',{name:'Abrir Inspect the fixture shelf',exact:true}).tap();
+    await expect(history.getByRole('listitem')).toHaveCount(0);
+    await history.getByRole('button',{name:'Mostrar historial',exact:true}).tap();
+    await expect(history.getByText('No tienes ejecuciones manuales para esta regla.',{exact:true})).toBeVisible();
   });
 }

@@ -56,7 +56,10 @@ acceptance of the installed recurrence experience remain open.
   Household settings can simulate one task proposal against current stock and
   [save and reopen inactive drafts with immutable revisions](evidence/automation-draft-qualification.md).
   [Manual execution](evidence/automation-execution-qualification.md) pins the enabled draft revision
-  and records one explicit run with the task it creates. Scheduled and event triggers, multi-step
+  and records one explicit run with the task it creates.
+  [Manual run history](evidence/automation-run-history-qualification.md) lets the invoking member
+  reopen their recorded run outcomes and follow a task that is currently accessible.
+  Scheduled and event triggers, multi-step
   execution, the advanced editor and additional Domus-owned HA entities and services remain open.
   The existing gateway is already integrated.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)

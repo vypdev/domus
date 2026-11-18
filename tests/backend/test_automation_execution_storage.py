@@ -2,6 +2,7 @@
 
 import sqlite3
 from contextlib import closing
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,7 @@ from domus.application.automation_execution import (
     ConfigureAutomation,
     RunAutomation,
 )
+from domus.application.automation_run_history import AutomationRunHistory
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.task_commands import TaskCommands
 from domus.domain.automation import AutomationControl, AutomationRule
@@ -32,6 +34,7 @@ from domus.infrastructure.sqlite import SQLiteDatabase
 from domus.infrastructure.sqlite_activation import SQLiteActivation
 from domus.infrastructure.sqlite_restoration import SQLiteRestorations
 from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots, _verify_database
+from domus.infrastructure.task_cursor import TaskCursor
 
 FIXTURES = Path(__file__).parents[1] / "fixtures/sqlite"
 
@@ -113,17 +116,30 @@ def test_runtime_migration_restoration_and_rollback_preserve_exact_outcomes(
     draft = drafts.save("execution-draft", SaveDraft(None, 0, rule))
     rule_id = draft.result.decode()["rule_id"]
     execution.configure("execution-enable", ConfigureAutomation(rule_id, 1, 0, True))
+    request = RunAutomation(rule_id, 1, 1)
+    current_run = execution.run("before-restore", request)
     archive, target = tmp_path / "checkpoint", tmp_path / "prepared"
     snapshotter = SQLiteSnapshots(store, archive, installation, Clock())
     checkpoint = snapshotter.create("before-run")
     assert checkpoint.schema_version == 33 and snapshotter.inspect() == checkpoint
-    request = RunAutomation(rule_id, 1, 1)
     complete = execution.run("record-run", request)
     occurrence_id = complete.result.decode()["task_occurrence_id"]
     restarted = execution_service(SQLiteDatabase(path, installation))
     assert restarted.state(rule_id).control.enabled
     assert restarted.original(RUN_AUTOMATION, "record-run") == complete
     assert restarted.run("record-run", request) == complete
+    history = AutomationRunHistory(
+        restarted.transactions,
+        restarted.scope,
+        restarted.read_actor,
+        TaskCursor(Clock(), b"s" * 32),
+    )
+    live = history.page(rule_id, limit=25, cursor=None)
+    assert [run.operation_id for run in live.items] == [
+        complete.operation_id,
+        current_run.operation_id,
+    ]
+    assert live.items[0].task_occurrence_id == occurrence_id
 
     SQLiteRestorations(store, archive, target, installation, Clock(), checkpoint).prepare(
         "restore-execution"
@@ -138,6 +154,15 @@ def test_runtime_migration_restoration_and_rollback_preserve_exact_outcomes(
         assert historical == restored.original(RUN_AUTOMATION, "record-run")
         assert historical.historical and historical.operation_id == complete.operation_id
         assert historical.result == complete.result
+        history = AutomationRunHistory(
+            selected.database, restored.scope, restored.read_actor, TaskCursor(Clock(), b"r" * 32)
+        )
+        selected_head = history.page(rule_id, limit=1, cursor=None)
+        assert selected_head.items == (
+            replace(live.items[0], historical=True, task_occurrence_id=None),
+        )
+        selected_tail = history.page(rule_id, limit=1, cursor=selected_head.next_cursor)
+        assert selected_tail.items == (live.items[1],) and selected_tail.next_cursor is None
         with selected.database.read() as unit:
             assert unit.tasks.occurrence("home", occurrence_id) is None
             assert all(event.event_id != complete.operation_id for event in unit.outbox.pending())

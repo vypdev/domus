@@ -398,6 +398,18 @@ original outcome and its operation ID. Disabling continues to preserve committed
 and their tasks. See the [automation specification](../specs/household-automation.md)
 for the remaining editor, runtime and Home Assistant work.
 
+### Review previous manual runs
+
+Open a saved rule in **Household** and choose **Show run history**. The list
+shows your latest runs for that rule, with the recorded time, revision and
+task outcome. Choose **Older runs** for earlier results or **Recent runs**
+to refresh the first page. Use **Try again** if an older page is temporarily
+unavailable. Return to **Recent runs** if the page has expired.
+
+A retained result is marked as being from before restoration. **Open created
+task** opens the original task when it belongs to the active household data
+and you can still read it.
+
 ## Channels and privacy
 
 Stable is production; Edge is experimental and has separate data, credentials and HA identities.

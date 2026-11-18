@@ -6,6 +6,7 @@ from typing import Protocol
 from domus.application.automation_drafts import AutomationDrafts
 from domus.application.automation_execution import AutomationExecution
 from domus.application.automation_preview import AutomationPreview
+from domus.application.automation_run_history import AutomationRunHistory
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.family_queries import FamilyQueries
@@ -112,6 +113,7 @@ def task_contexts(
             lambda: AutomationPreview(store, scope, actor.read()),
             AutomationDrafts(store, scope, actor, actor.read, clock, identifiers, cursors),
             AutomationExecution(store, scope, actor, actor.read, clock, identifiers, tasks),
+            AutomationRunHistory(store, scope, actor.read, cursors),
         )
 
     return context

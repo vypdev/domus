@@ -15,6 +15,7 @@ from domus.application.automation_execution import (
     RunAutomation,
 )
 from domus.application.automation_preview import AutomationPreviewAccess
+from domus.application.automation_run_history import AutomationRunPage
 from domus.domain.automation import (
     AUTOMATION_RULE_VERSION,
     MAX_RULE_NODES,
@@ -263,6 +264,14 @@ def create_automation_router(
             ),
         )
         return _receipt(receipt)
+
+    @router.get("/drafts/{rule_id}/runs", response_model=AutomationRunPage)
+    def run_history(
+        request: Request, rule_id: Identifier, query: Annotated[PageQuery, Query()]
+    ) -> AutomationRunPage:
+        return context(request).automation_run_history.page(
+            rule_id, limit=query.limit, cursor=query.cursor
+        )
 
     @router.post(
         "/drafts/{rule_id}/runs",

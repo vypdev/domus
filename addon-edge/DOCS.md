@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.38 packages the immutable runtime declared in
+Edge 0.0.0-edge.40 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -20,8 +20,9 @@ the optional `ha_deadline_digest` setting. The calendar uses its own
 `ha_calendar_digest` setting. Both share the private app port `8100` when enabled.
 Enable a saved revision in Manual automation and confirm it before running.
 The run receipt links to its task when the stock condition matches. Check
-the original request after an interrupted response.
-Edge.38 introduces SQLite schema 33 and is listed in `breaking_versions`.
+the original request after an interrupted response. Show run history lists
+your own previous runs of the selected rule, with older pages on demand.
+Edge.40 uses SQLite schema 33. Edge.38 introduced SQLite schema 33 and is listed in `breaking_versions`.
 Keep a compatible image and stopped-app backup before
 upgrading from an earlier schema. A binary that expects the earlier schema
 requires its compatible data backup.

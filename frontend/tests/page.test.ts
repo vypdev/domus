@@ -37,6 +37,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let automationTitle: string | null = null;
   const automationDraft = {rule_id:'saved-draft',revision:'1',state:'draft',enabled:false};
   let manualEnabled = false;
+  let memberRevision = 1, policyRevision = 1;
   const shoppingItem = {product_id:'product',extra_id:null,name:'Salt',base_unit:'gram',total:'1.000001'};
   const originalAccess=JSON.parse(wire.active);
   let preferenceReceipt:Record<string,unknown>|null=null;
@@ -48,7 +49,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     const route = path.slice(wire.endpoint.applicationBase.length + 'api/v1/'.length);
     let raw: string, status = 200;
     if (route === 'session') raw = phase === 'eligible' || phase === 'pending' ? wire.participantSession : sessionBody;
-    else if (route === 'authorization') raw = phase === 'active' ? JSON.stringify({...originalAccess,member:{...originalAccess.member,member_id:memberId},
+    else if (route === 'authorization') raw = phase === 'active' ? JSON.stringify({...originalAccess,policy_revision:policyRevision,
+      member:{...originalAccess.member,member_id:memberId,revision:memberRevision},
       permissions:originalAccess.permissions.filter((permission:string)=>preferencesReadable||permission!=='preferences.read')})
       : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
@@ -74,6 +76,10 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     else if (route === 'automation/drafts/saved-draft/execution') raw = JSON.stringify({
       rule_id:'saved-draft', latest_revision:'1', latest_title:automationTitle,
       control: manualEnabled ? {rule_revision:'1',control_revision:'1',enabled:true,title:automationTitle} : null,
+    });
+    else if (route === 'automation/drafts/saved-draft/runs' && init.method === 'GET') raw = JSON.stringify({
+      rule_id:'saved-draft',next_cursor:null,items:[{operation_id:'run-operation',created_at:100,
+        rule_revision:'1',condition_matched:true,task_created:true,historical:false,task_occurrence_id:'work-1'}],
     });
     else if (route === 'automation/drafts/saved-draft/runs') raw = JSON.stringify({
       state:'committed',archived_by:null,operation_id:'run-operation',created_at:100,
@@ -215,6 +221,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     denyTaskOverview: () => {taskOverviewDenied = true;},
     shoppingItem: (present: boolean) => {shoppingItemPresent = present;},
     putRequests:()=>putRequests,preferences:(locale:'en'|'es'|null,revision=1)=>{preferenceLocale=locale;preferenceRevision=revision;},
+    accessRevisions:(member: number, policy: number) => {memberRevision=member; policyRevision=policy;},
     member:(value:string)=>{memberId=value;},preferencesReadable:(value:boolean)=>{preferencesReadable=value;},
     phase: (value: string) => {phase = value;}};
 }
@@ -885,7 +892,9 @@ test('Household manual execution binds drafts, original outcomes and task naviga
   const preview = app.shadowRoot!.querySelector('domus-automation-preview')!;
   const drafts = app.shadowRoot!.querySelector('domus-automation-drafts')!;
   const execution = app.shadowRoot!.querySelector('domus-automation-execution')!;
+  const history = app.shadowRoot!.querySelector('domus-automation-run-history')!;
   const command = 'domus-automation-execution-intent';
+  const historyIntent = 'domus-automation-run-history-intent';
   const openTask = 'domus-automation-task-intent';
   dispatch(preview, 'domus-automation-preview-intent', {type:'title',value:'Check filters'});
   dispatch(drafts, 'domus-automation-draft-intent', {type:'save'});
@@ -909,6 +918,21 @@ test('Household manual execution binds drafts, original outcomes and task naviga
     result:{action:'run',taskOccurrenceId:'work-1'},busy:false,
   }));
 
+  const historyReads = () => f.fetch.mock.calls.filter(([path, init]) =>
+    path.endsWith('/automation/drafts/saved-draft/runs') && init.method === 'GET');
+  dispatch(other, historyIntent, 'open');
+  dispatch(history, historyIntent, 'invalid');
+  expect(historyReads()).toHaveLength(0);
+  dispatch(history, historyIntent, 'open');
+  await vi.waitFor(() => expect(app.automationRunHistory).toMatchObject({
+    phase:'ready',items:[{operationId:'run-operation',taskOccurrenceId:'work-1'}],
+  }));
+  expect(historyReads()).toHaveLength(1);
+  f.accessRevisions(2, 1);
+  administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(() => expect(app.administration?.access?.member?.revision).toBe('2'));
+  expect(app.automationRunHistory?.items ?? []).toEqual([]);
+  expect(historyReads()).toHaveLength(1);
   dispatch(other, openTask, {type:'select',occurrenceId:'work-1'});
   dispatch(execution, openTask, {type:'refresh'});
   expect(f.navigation).toHaveLength(0);
@@ -918,6 +942,7 @@ test('Household manual execution binds drafts, original outcomes and task naviga
     path.endsWith('/tasks/occurrences/work-1'))).toBe(true));
   navigate('#tasks');
   expect(app.automationExecution).toBeNull();
+  expect(app.automationRunHistory).toBeNull();
 });
 
 test('Overview stock is independently available and retires with the verified household context', async () => {
