@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.43
+
+- Share the complete Overview low-stock product count with the native Home Assistant sensor.
+- Use an independent read-only grant for each installation and channel.
+
 ## 0.0.0-edge.42
 
 - Save and reopen inactive daily drafts with the exact local time and original receipt.
