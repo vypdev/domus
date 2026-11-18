@@ -14,14 +14,17 @@ import uvicorn
 
 from domus.application.fixed_recurrence import FixedRecurrencePlanner
 from domus.application.household_commands import HouseholdCommands, SetupHousehold
+from domus.application.inventory import InventoryCommands
 from domus.application.recurrence_commands import CreateFixedTask, RecurrenceCommands
 from domus.application.task_commands import TaskCommands
 from domus.application.task_requests import CreateTask, CreateTaskOccurrence
 from domus.composition.server import create_owned_runtime
 from domus.domain.identity import HumanIdentity
+from domus.domain.inventory import BaseUnit
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_rules import FixedPattern, Frequency, NominalDate
 from domus.domain.recurrence_time import TimePolicy
+from domus.domain.task_material_values import MaterialQuantity
 from domus.domain.task_values import TaskContent
 from domus.infrastructure.application_runtime import SecureIdentifiers, SystemClock, TimeZoneCatalog
 from domus.infrastructure.owned_storage import open_storage
@@ -74,6 +77,14 @@ def seed(channel, label):
                 TimePolicy("UTC", times.data_identity),
             ),
         )
+        inventory = InventoryCommands(store, actor, clock, identifiers)
+        product = inventory.register(
+            "fixture-product", f"{label} private product", BaseUnit.PIECE
+        ).result.decode()["product_id"]
+        inventory.configure_replenishment(
+            "fixture-stock-policy", product, MaterialQuantity("2"), MaterialQuantity("4"), 0
+        )
+        inventory.intake("fixture-stock-intake", product, MaterialQuantity("1"))
         print(storage.installation.instance_id)
 
 
@@ -103,12 +114,16 @@ def serve(mode, channel, host, config_path):
     deadline_digest = hashlib.sha256(
         f"{instance}.{channel}.deadlines.{'e' * 64}".encode("ascii")
     ).hexdigest()
+    stock_digest = hashlib.sha256(
+        f"{instance}.{channel}.stock.{'f' * 64}".encode("ascii")
+    ).hexdigest()
     if mode == "native":
         config = json.loads(Path(config_path).read_text())
         options = {
             **config["options"],
             "ha_calendar_digest": digest,
             "ha_deadline_digest": deadline_digest,
+            "ha_stock_digest": stock_digest,
         }
         Path("/data/options.json").write_text(json.dumps(options))
         launcher = "/app/.venv/bin/domus-ha-app"
@@ -130,6 +145,7 @@ def serve(mode, channel, host, config_path):
         ROOT,
         ha_calendar_digest=digest,
         ha_deadline_digest=deadline_digest,
+        ha_stock_digest=stock_digest,
     )
     try:
         uvicorn.run(

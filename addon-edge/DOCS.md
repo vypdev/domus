@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.42 packages the immutable runtime declared in
+Edge 0.0.0-edge.43 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -17,7 +17,9 @@ Leaving the field empty uses the household default. Home Assistant can read
 the due-today and overdue task counts shown on Overview through a dedicated installation
 grant. Enable the [native deadline sensors](../docs/tasks/ha-deadline-sensors.md) using
 the optional `ha_deadline_digest` setting. The calendar uses its own
-`ha_calendar_digest` setting. Both share the private app port `8100` when enabled.
+`ha_calendar_digest` setting. The [low-stock sensor](../docs/tasks/ha-low-stock-sensor.md)
+uses `ha_stock_digest` to read the count from Overview. These opt-in projections share the
+private app port `8100` and each requires its own installation grant.
 Enable a saved revision in Manual automation and confirm it before running.
 The run receipt links to its task when the stock condition matches. Check
 the original request after an interrupted response. Show run history lists

@@ -19,7 +19,7 @@ and multi-instance calls must explicitly choose it. Names are stable English ide
 |---|---|---|
 | sensor.domus_tasks_due | Count of pending due occurrences in household local day | freshness and bounded summary; detailed items via query_tasks |
 | sensor.domus_tasks_overdue | Count of past-due incomplete occurrences | same count/filter semantics as UI |
-| sensor.domus_low_stock_products | Count of active policies below threshold | query_inventory for details |
+| `sensor.domus_low_stock_products` | Implemented opt-in count of products with available stock below their replenishment minimum | Integer count only. Open Domus Overview for details. |
 | `sensor.domus_member_points_<member>` | Approved net earned points attributable to actual work in the current household week | stable member reference; excludes pending points; later approval updates the original work period |
 | `sensor.domus_member_points_balance_<member>` | Current posted ledger balance for one member, possibly negative after reversal | ledger query distinguishes balance, reserved and spendable quantities; not the weekly earned total |
 | binary_sensor.domus_attention_required | Any authorized actionable household condition | bounded reason codes, never an unbounded record list |
@@ -31,6 +31,12 @@ and multi-instance calls must explicitly choose it. Names are stable English ide
 Actual entity_ids are assigned by HA and may have channel/instance suffixes; clients discover them.
 Availability is unavailable when authoritative data cannot be read; empty successful collections remain empty success.
 State properties read cached projection data and do not perform blocking network calls.
+
+The [low-stock sensor](../tasks/ha-low-stock-sensor.md) shares the Overview total,
+which subtracts reservations and includes all qualifying products beyond the display limit.
+Its separate installation/channel grant authorizes only the bounded count.
+The companion treats an unsuccessful refresh as unavailable and retains the entity
+registry identity through a valid refresh or reconfiguration.
 
 ## Services
 

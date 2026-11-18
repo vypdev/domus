@@ -732,8 +732,10 @@ def _supervisor_candidate(channel, target):
     assert config["ports"] == {} and config["ingress_port"] == 8099
     assert config["schema"]["ha_calendar_digest"] == "str?"
     assert config["schema"]["ha_deadline_digest"] == "str?"
+    assert config["schema"]["ha_stock_digest"] == "str?"
     assert "ha_calendar_digest" not in config["options"]
     assert "ha_deadline_digest" not in config["options"]
+    assert "ha_stock_digest" not in config["options"]
     target.write_text(json.dumps(config))
 
 
@@ -841,6 +843,7 @@ def test_calendar_core_uses_both_exact_packaged_compositions(image, tmp_path):
                         "url": url,
                         "token": token,
                         "deadline": deadline,
+                        "stock": f"{marker['instance_id']}.{channel}.stock.{'f' * 64}",
                         "label": f"{mode} {channel}",
                     }
                 )

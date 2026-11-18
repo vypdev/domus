@@ -12,6 +12,7 @@ from domus.domain.storage import JsonDocument
 from domus.entrypoints.ha_calendar_http import CALENDAR_DIGEST_ENV
 from domus.entrypoints.ha_deadline_http import DEADLINE_DIGEST_ENV
 from domus.entrypoints.ha_projection_http import validate_digest
+from domus.entrypoints.ha_stock_http import STOCK_DIGEST_ENV
 from domus.infrastructure.ha_config import PublicOrigins
 from domus.infrastructure.ha_http import _secret
 
@@ -22,7 +23,7 @@ _ENTRYPOINT = "/app/.venv/bin/domus-ingress"
 _DIRECTORY_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
 
 
-def _options(directory: int) -> tuple[tuple[str, ...], str | None, str | None]:
+def _options(directory: int) -> tuple[tuple[str, ...], str | None, str | None, str | None]:
     descriptor = os.open(
         "options.json",
         os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
@@ -44,7 +45,8 @@ def _options(directory: int) -> tuple[tuple[str, ...], str | None, str | None]:
         raise InvalidInput("invalid_app_options")
     value = JsonDocument(content.decode("utf-8")).decode()
     if (
-        set(value) - {"public_origins", "ha_calendar_digest", "ha_deadline_digest"}
+        set(value)
+        - {"public_origins", "ha_calendar_digest", "ha_deadline_digest", "ha_stock_digest"}
         or type(value.get("public_origins")) is not list
     ):
         raise InvalidInput("invalid_app_options")
@@ -58,8 +60,13 @@ def _options(directory: int) -> tuple[tuple[str, ...], str | None, str | None]:
         if "ha_deadline_digest" in value
         else None
     )
+    stock_digest = (
+        validate_digest(cast(str, value["ha_stock_digest"]), "invalid_ha_stock_digest")
+        if "ha_stock_digest" in value
+        else None
+    )
     origins = PublicOrigins(tuple(cast(list[str], value["public_origins"]))).values
-    return origins, calendar_digest, deadline_digest
+    return origins, calendar_digest, deadline_digest, stock_digest
 
 
 def _provision(directory: int) -> None:
@@ -110,7 +117,7 @@ def _run(channel: str) -> None:
         info = os.fstat(directory)
         if info.st_uid != _ROOT_UID or stat.S_IMODE(info.st_mode) & 0o022:
             raise InvalidInput("unsafe_app_data_parent")
-        origins, calendar_digest, deadline_digest = _options(directory)
+        origins, calendar_digest, deadline_digest, stock_digest = _options(directory)
         _provision(directory)
     finally:
         os.close(directory)
@@ -129,6 +136,7 @@ def _run(channel: str) -> None:
             "SUPERVISOR_TOKEN": token,
             **({CALENDAR_DIGEST_ENV: calendar_digest} if calendar_digest is not None else {}),
             **({DEADLINE_DIGEST_ENV: deadline_digest} if deadline_digest is not None else {}),
+            **({STOCK_DIGEST_ENV: stock_digest} if stock_digest is not None else {}),
         },
     )
 

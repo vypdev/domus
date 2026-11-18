@@ -33,6 +33,9 @@ DEADLINES_PATH = "/api/v1/ha/task-deadlines"
 DEADLINES_FIRST = f"{NATIVE_UUID}.edge.deadlines.{'a' * 64}"
 DEADLINES_ROTATED = f"{NATIVE_UUID}.edge.deadlines.{'b' * 64}"
 DEADLINES_OTHER = f"{OTHER_UUID}.edge.deadlines.{'c' * 64}"
+STOCK_PATH = "/api/v1/ha/low-stock-products"
+STOCK_FIRST = f"{NATIVE_UUID}.edge.stock.{'a' * 64}"
+STOCK_ROTATED = f"{NATIVE_UUID}.edge.stock.{'b' * 64}"
 
 
 @asynccontextmanager
@@ -85,6 +88,20 @@ def deadline_entities(hass, entry):
     )
 
 
+def stock_entity(hass, entry):
+    return entity_registry(hass).async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.unique_id}.low_stock_products"
+    )
+
+
+def assert_stock_state(hass, entity, expected):
+    state = hass.states.get(entity)
+    assert state.state == expected
+    assert set(state.attributes) <= {"friendly_name", "state_class"}
+    if expected != STATE_UNAVAILABLE:
+        assert state.attributes["state_class"] == "measurement"
+
+
 def entity_states(hass, entities):
     return tuple(hass.states.get(entity).state for entity in entities)
 
@@ -128,6 +145,16 @@ class Fixture:
         self.deadline_status = 200
         self.deadline_requests = 0
         self.deadline_tick = asyncio.Event()
+        self.stock_grant = STOCK_FIRST
+        self.stock_body = b'{"low_stock_products":0}'
+        self.stock_status = 200
+
+    async def respond_stock(self, request):
+        if request.headers.get("Authorization") != f"Bearer {self.stock_grant}":
+            return web.Response(status=401)
+        return web.Response(
+            status=self.stock_status, body=self.stock_body, content_type="application/json"
+        )
 
     async def respond_deadlines(self, request):
         self.deadline_requests += 1
@@ -217,6 +244,7 @@ async def fixtures():
     app = web.Application()
     app.router.add_get(PATH, fixture.respond)
     app.router.add_get(DEADLINES_PATH, fixture.respond_deadlines)
+    app.router.add_get(STOCK_PATH, fixture.respond_stock)
     runner = web.AppRunner(app, access_log=None)
     await runner.setup()
     config = tempfile.TemporaryDirectory()
@@ -354,14 +382,18 @@ async def fixtures():
             state = hass.states.get(entity)
             assert state is None or state.state == "unavailable"
             entry_id, identity, sensors = await deadline_fixtures(hass, fixture)
+            stock_entry, stock_identity, stock_id = await stock_fixtures(hass, fixture)
         process = await asyncio.create_subprocess_exec(
             sys.executable,
             __file__,
-            "restart-deadlines",
+            "restart-sensors",
             config.name,
             entry_id,
             identity,
             *sensors,
+            stock_entry,
+            stock_identity,
+            stock_id,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
@@ -462,13 +494,80 @@ async def deadline_fixtures(hass, fixture):
     return entry.entry_id, entry.unique_id, sensors
 
 
-async def verify_deadline_restart(config, entry_id, identity, due, overdue):
+async def stock_fixtures(hass, fixture):
+    rejected = await configure(hass, NATIVE, DEADLINES_FIRST, projection="stock")
+    assert rejected["errors"] == {"token": "invalid_auth"}
+    first = await configure(hass, NATIVE, STOCK_FIRST, projection="stock")
+    assert first["type"] == "create_entry", first.get("errors")
+    entry = first["result"]
+    await hass.async_block_till_done()
+    entity = stock_entity(hass, entry)
+    assert entity == "sensor.domus_low_stock_products", entity
+    assert_stock_state(hass, entity, "0")
+    assert entry.unique_id == f"{NATIVE_UUID}.edge.stock"
+    duplicate = await configure(hass, NATIVE, STOCK_FIRST, projection="stock")
+    assert duplicate["reason"] == "already_configured"
+
+    for locale, label, name in (
+        ("en", "Low-stock product count", "Domus low-stock products"),
+        (
+            "es",
+            "Recuento de productos con existencias bajas",
+            "Productos de Domus con existencias bajas",
+        ),
+    ):
+        selector = await async_get_translations(hass, locale, "selector", [DOMAIN])
+        assert selector[f"component.{DOMAIN}.selector.projection.options.stock"] == label
+        translations = await async_get_translations(hass, locale, "entity", [DOMAIN])
+        assert translations[f"component.{DOMAIN}.entity.sensor.low_stock_products.name"] == name
+
+    coordinator = entry.runtime_data
+    assert coordinator.update_interval == timedelta(minutes=1)
+    for malformed in (
+        b'[["low_stock_products",1]]',
+        b'{"low_stock_products":1,"low_stock_products":2}',
+        b'{"low_stock_products":1,"product":"private"}',
+        b'{"low_stock_products":true}',
+        b'{"low_stock_products":1.5}',
+        b'{"low_stock_products":-1}',
+        b'{"low_stock_products":9223372036854775808}',
+    ):
+        fixture.stock_body = malformed
+        await coordinator.async_refresh()
+        assert_stock_state(hass, entity, STATE_UNAVAILABLE)
+    fixture.stock_body = b'{"low_stock_products":27}'
+    fixture.stock_status = 503
+    await coordinator.async_refresh()
+    assert_stock_state(hass, entity, STATE_UNAVAILABLE)
+    fixture.stock_status = 200
+    await coordinator.async_refresh()
+    assert_stock_state(hass, entity, "27")
+
+    fixture.stock_grant = STOCK_ROTATED
+    await coordinator.async_refresh()
+    assert_stock_state(hass, entity, STATE_UNAVAILABLE)
+    rotated = await configure(hass, NATIVE, STOCK_ROTATED, entry)
+    assert rotated["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert stock_entity(hass, entry) == entity
+    assert_stock_state(hass, entity, "27")
+    return entry.entry_id, entry.unique_id, entity
+
+
+async def verify_sensor_restart(
+    config, entry_id, identity, due, overdue, stock_entry, stock_identity, stock_id
+):
     async with core(config) as restarted:
         await restarted.async_block_till_done()
         restored = restarted.config_entries.async_get_entry(entry_id)
         assert restored.unique_id == identity
         assert deadline_entities(restarted, restored) == (due, overdue)
         assert entity_states(restarted, (due, overdue)) == ("2", "3")
+        stock = restarted.config_entries.async_get_entry(stock_entry)
+        assert stock.unique_id == stock_identity
+        assert stock_entity(restarted, stock) == stock_id
+        assert_stock_state(restarted, stock_id, "27")
+        assert await restarted.config_entries.async_unload(stock_entry)
 
 
 class suppress_expected_unavailable:
@@ -498,7 +597,7 @@ async def live():
         except ClientConnectorCertificateError:
             pass
         now = dt_util.now()
-        entries, deadline_entries, identities = [], [], set()
+        entries, deadline_entries, stock_entries, identities = [], [], [], set()
         for target in targets:
             url, token, label = target["url"], target["token"], target["label"]
             other_channel = "stable" if label.endswith(" edge") else "edge"
@@ -531,6 +630,18 @@ async def live():
             identities.add(deadline_entry.unique_id)
             await hass.async_block_till_done()
             assert entity_states(hass, deadline_entities(hass, deadline_entry)) == ("0", "1")
+            async with session.get(
+                url + STOCK_PATH, headers={"Authorization": f"Bearer {target['deadline']}"}
+            ) as denied:
+                assert denied.status == 401
+            stock = await configure(hass, url, target["stock"], projection="stock")
+            assert stock["type"] == "create_entry", stock.get("errors")
+            stock_entry = stock["result"]
+            stock_entries.append(stock_entry)
+            assert stock_entry.unique_id not in identities
+            identities.add(stock_entry.unique_id)
+            await hass.async_block_till_done()
+            assert_stock_state(hass, stock_entity(hass, stock_entry), "1")
             for _ in range(20):
                 display = await events(hass, entity, now, now + timedelta(days=3))
                 if any(item["summary"] == f"{label} plan" for item in display):
@@ -555,15 +666,16 @@ async def live():
             len({entity for entry in deadline_entries for entity in deadline_entities(hass, entry)})
             == 8
         )
-        for entry in entries + deadline_entries:
+        assert len({stock_entity(hass, entry) for entry in stock_entries}) == len(targets)
+        for entry in entries + deadline_entries + stock_entries:
             assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 if __name__ == "__main__":
     assert __version__ == "2026.10.4", __version__
     if len(sys.argv) > 1:
-        assert sys.argv[1] == "restart-deadlines"
-        asyncio.run(verify_deadline_restart(*sys.argv[2:]))
+        assert sys.argv[1] == "restart-sensors"
+        asyncio.run(verify_sensor_restart(*sys.argv[2:]))
     else:
         asyncio.run(live() if "DOMUS_CALENDAR_TARGETS" in os.environ else fixtures())
     print("Home Assistant native calendar acceptance passed")

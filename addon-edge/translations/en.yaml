@@ -15,3 +15,8 @@ configuration:
     description: >-
       Optional SHA-256 digest for the read-only task deadline counts. Remove
       this value to disable sensor access. Restart Domus after changing it.
+  ha_stock_digest:
+    name: Low-stock product count grant digest
+    description: >-
+      Optional SHA-256 digest for the read-only low-stock product count. Remove the
+      digest and restart Domus to revoke access. Restart after changing the digest.

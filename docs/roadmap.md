@@ -52,7 +52,9 @@ acceptance of the installed recurrence experience remain open.
   records a move as two linked ledger entries. Multiple lists, prices, refunds, location editing and
   archiving, lot and package management, barcodes and optional online lookup remain open.
 - M4 starts with the [manual automation preview](evidence/automation-preview-qualification.md)
-  and includes the native Home Assistant calendar and [task deadline sensors](evidence/ha-deadline-sensors-qualification.md).
+  and includes the native Home Assistant calendar,
+  [task deadline sensors](evidence/ha-deadline-sensors-qualification.md) and
+  [low-stock sensor](evidence/ha-low-stock-sensor-qualification.md).
   Household settings can simulate one task proposal against current stock and
   [save and reopen inactive drafts with immutable revisions](evidence/automation-draft-qualification.md).
   [Manual execution](evidence/automation-execution-qualification.md) pins the enabled draft revision
