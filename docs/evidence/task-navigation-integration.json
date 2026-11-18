@@ -283,5 +283,16 @@
     },
     "requirements": "manual-run-history-R01 through manual-run-history-R06",
     "evidence": "automation-run-history-qualification.md"
+  },
+  "dailyAutomationSchedulePreview": {
+    "sourceCommit": "cf7af86e0f962b8386d7f3d52c189e2d1e7e6e0c",
+    "actualProductFiles": {
+      ".vite/manifest.json": "c55ff5e7c0d88d91ce05d9b2b886fef0c8b06f5b9dd6ab91424f9862d54cb24e",
+      "assets/index-BSWL2ugs.js": "76ec7e66b4b09fc891063b592773e80d07c43f5d3bd0501569d850bfeb611241",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "04f2e923a536ca16aead690e0cd00d689591abc404b3ad66bac82dfe9d1e1910"
+    },
+    "requirements": "daily-trigger-preview-R01 through daily-trigger-preview-R05",
+    "evidence": "daily-automation-preview-qualification.md"
   }
 }

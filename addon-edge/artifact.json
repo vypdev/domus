@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.40",
-  "sourceCommit": "50aa7190e4d910c8bea5e35658314279db284e3b",
-  "sourceArchiveSHA256": "3959dde1479d90d3d6ddcb1489742ed998d6b47fcccc7daeba1fe1a3f324b987",
+  "version": "0.0.0-edge.41",
+  "sourceCommit": "cf7af86e0f962b8386d7f3d52c189e2d1e7e6e0c",
+  "sourceArchiveSHA256": "dd86c8f9448ea7c55ef3547bf82ebb79dd8dcac895382ccc70be1b00fb7d7674",
   "storageSchema": 33,
-  "wheelSHA256": "a75cb57fd5e309a11bc26aeb33446b4ee5e78b63bdcc569423176cb6ebd1f716",
+  "wheelSHA256": "917dc1a4376fcee392793fbd541149ac46140410922f1f3e74165050a186711d",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -15,8 +15,9 @@
     "domus/application/authorization.py": "bb301cc7c1e37f26f176f6bb132a8d04fa166b014a5f06f00bccaea1c463e2fe",
     "domus/application/automation_drafts.py": "4dd7a3f4225c91580fc2ac8deb8831238b5bb2e9a32af5de71bbdaa5376b117b",
     "domus/application/automation_execution.py": "7e14ea9afa73a8ce3f3fb1ac373e9c13140eb1a08f6d7f3b1999d5fb036cb471",
-    "domus/application/automation_preview.py": "94289b9a6a5deb42ca4e82b430724e27d1bf53239b1d60b48c332a6ed854707f",
+    "domus/application/automation_preview.py": "be4d8a5b75b8a063fcf83414a1135be8e5daae3a01e06ffa445220409b9ba0ae",
     "domus/application/automation_run_history.py": "8b1b5de75b97920874a23e3df8b08483ea3a19cc6971163b61eb829b13280ac8",
+    "domus/application/automation_schedule_preview.py": "ba6c953c51db45167a87902bffc22ede621cf60783d898dcadc4ada9bcbcadd2",
     "domus/application/calendar_commands.py": "bec257c2b7ba07166e69b1dd7ed0016541cd30ab6cb26f18f4fc4dce11017001",
     "domus/application/calendar_queries.py": "37b9b8f1d43d9a21cc73c2533a908570783116ff7e5b6db47d6591dfbe2393d9",
     "domus/application/commands.py": "b41069d5db23e594f135bc742f2479e25fce537dc0966052546d95409dc7bc05",
@@ -101,7 +102,7 @@
     "domus/composition/recurrence.py": "62adda116cec8667e9142b03f422a138818575cf5814a79e219a65999dbed1e6",
     "domus/composition/restore.py": "fe4f5040a99db1404938e402eefa54fc93139055a5bc92abdfb7bf35d0c87297",
     "domus/composition/server.py": "f857338e254477cd7b1d452fc85434e75fd7a25781ed237bb0d5658ac13ad719",
-    "domus/composition/tasks.py": "1aeddf554d8b25182df653fcf7b4e6ffe5cf5bda5512cc9ad9578abdf7c8b4d8",
+    "domus/composition/tasks.py": "7e9bc0a30de9101623170429f243533db47a6361f497d84218614adec0251c05",
     "domus/domain/__init__.py": "0aac8a2ba41471d7a174ef7baca6073c95009a9db96df3e032392aa4f80bd079",
     "domus/domain/activation.py": "fcb2e47e939127d5e254e2136fb7f1459b40fa8c8561100579fced49666ad0fe",
     "domus/domain/automation.py": "6ba1e359240ed89115fbb0499160c3e1931d5e451ea18624bf15dad08b5036aa",
@@ -145,7 +146,7 @@
     "domus/entrypoints/__init__.py": "d46875cbfef7220c7244bf1b89112ece8122ecb0d66cd908f08f098f0f3c419f",
     "domus/entrypoints/administration_dto.py": "aefac6648dd8fefae9d2366abed1c9d595c24a356f7caf945b742043b2c39777",
     "domus/entrypoints/administration_http.py": "9ab62ee9759a4b31c5e994354562b48b947bd3428a5866dd9faeb0545ae37afe",
-    "domus/entrypoints/automation_http.py": "95a9e6cc02c30c8f658fea1fb6ff8c6ecb71869003156e412c7f9a51604b93cc",
+    "domus/entrypoints/automation_http.py": "946c8986026fe367f4a5214d3fd340705abb3356e0b86f71745d8b1ce0ff2b12",
     "domus/entrypoints/bounded_http.py": "d8047746eddb7193f1aa9f16007958c79cc6ae7ac1c30ab93909883e3aa97b54",
     "domus/entrypoints/calendar_http.py": "5a7359ac2a876296a13bfe4bc63ac69bd36aec48e55c536a20470a789a6fef13",
     "domus/entrypoints/console_recovery.py": "854a3f8d7a2e74f301ac5bd4b54682e409e2669a3bb7e05546e479c113c09026",
@@ -161,7 +162,7 @@
     "domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
     "domus/entrypoints/ingress_http.py": "f6557eb5481d132131f66ad7691e30c223c63a66a6f0ae5754c9fba3bc7f3626",
     "domus/entrypoints/inventory_http.py": "a58e114de6ff684f6d7d1a93f7f4cb316b8ffa60b0c662733df2c1fd70c2ab6e",
-    "domus/entrypoints/native_http.py": "d6d8c06095b9128ea316a2dcb2f7cb0ac1559c29ef28dad8d9d70150a69aac15",
+    "domus/entrypoints/native_http.py": "75a7d8c15afaa9ce82e627daa561a76e216546f627319563e032a770dc8d7fdc",
     "domus/entrypoints/openapi.py": "01a3fab9e5890ebcc1fb9c70bce9ced43d45b9190afd134db7dd45e0c5eb28f1",
     "domus/entrypoints/point_allocation_http.py": "7339c88c083206c0778885b55793c80af219b15af7004c5a51d34dbc28f4da5c",
     "domus/entrypoints/recurrence_dto.py": "094e6f64e1f963bfb053e830b214eed1189258e4f0eb8ff15ddba1f059649a1a",
@@ -170,7 +171,7 @@
     "domus/entrypoints/schedule_creation_http.py": "2a3c3ea682f978eb2767dc8808a218c312861f31079cc2c76dbc3847ddec3197",
     "domus/entrypoints/task_category_http.py": "e5443015f5e5cb2684eb6807e0a3bac5116703b5611508281afd7d1addee9672",
     "domus/entrypoints/task_dto.py": "10657d1df0180bf05e71d1f38ac3214d2cea34c8822f50ea25ab331b9c014049",
-    "domus/entrypoints/task_http.py": "a1182b29378346fb9822113f1296e497c5a90985045d0f7c577506235f827bf8",
+    "domus/entrypoints/task_http.py": "f83fb816f00becfb23fc28e953499803aadf43d229e17a5aca23a8147170fc76",
     "domus/entrypoints/task_response.py": "d2f4c0795aee429fc318b32495601031c559fa38af1d7da63b4735f7e6eb5d13",
     "domus/entrypoints/ui_bundle.py": "beae3d4a7a57375ee195cca81efccdbc899d9db4286029d53eabaf30de6e14f7",
     "domus/entrypoints/ui_http.py": "b6c47baa742f3862173a93e4121dc9914fd972eb6287ffffb9ffccecbf2ebe4a",
@@ -234,9 +235,9 @@
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
   "uiFiles": {
-    ".vite/manifest.json": "6b7306c5c8bf00ef6645af1c42382d115bd1f2fb8f2543fef4d4d8e24a42b447",
+    ".vite/manifest.json": "c55ff5e7c0d88d91ce05d9b2b886fef0c8b06f5b9dd6ab91424f9862d54cb24e",
+    "assets/index-BSWL2ugs.js": "76ec7e66b4b09fc891063b592773e80d07c43f5d3bd0501569d850bfeb611241",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-yveh722F.js": "adb93e081a9db030ffdb6d4f827284a8a4932a9eca3ae66fa650d2a8f554781c",
-    "index.html": "421ae444b7598e39be8b6f552c76a258d3d643c4685fd4b94470c538898c8583"
+    "index.html": "04f2e923a536ca16aead690e0cd00d689591abc404b3ad66bac82dfe9d1e1910"
   }
 }
