@@ -842,3 +842,217 @@ Reuse the rule model, saved revision, authorization boundary, and draft lifecycl
 ### 20. References and decisions
 
 [Domus #120](https://github.com/vypdev/domus/issues/120) supplies the manual-run delta. Retain the existing rule, preview, and draft contract and cases in `specs/household-automation.md`; this update adds manual enablement and execution while preserving that owner's boundaries. [Domus #118](https://github.com/vypdev/domus/issues/118) defines the saved-draft increment on which exact-revision enablement depends. The selected source revision is `54b20736fe41cdc36d0f431edd56ca72234ddd52`. The repository standard is in `specs/README.md`, and the selected root `package.json` declares pnpm 10.34.0 and Node `>=24.20.0 <25`; its scripts do not include the specification validation or generation invocations named by the standard. Their concrete invocation and prerequisite remain unverified.
+
+## Review previous manual automation runs
+
+- Status: Draft
+- Date: 2026-11-18
+- Catalog capability ID: household-automation
+- Owners: Domus maintainers
+- Scope: Protected history of the invoking member's explicit manual runs for one saved rule
+- Related issue: [Domus #122](https://github.com/vypdev/domus/issues/122)
+- Required review gates: product UX, architecture, testing, documentation, security/operations
+- Open decisions blocking readiness: none in this increment
+
+### 1. Executive summary
+
+A currently authorized member can select a saved automation rule and review the
+original outcomes of their manual runs. Each result preserves the committed
+time, admitted revision, stock decision and whether a task was created.
+
+### 2. Problem, current behavior, and evidence
+
+[Domus #120](https://github.com/vypdev/domus/issues/120) records each explicit run
+with its exact rule and control revisions, immutable stock decision and the
+ordinary Task receipt when applicable. The original request route recovers a
+particular submission, but users cannot find previous runs from Household
+settings. The selected owner at `1af12f3f2ecb1c6848f843808569e5ea3ba8da5a` is
+`specs/household-automation.md`. The existing qualification is recorded in
+`docs/evidence/automation-execution-qualification.md`.
+
+### 3. Actors, surfaces, and terminology
+
+| Actor | Goal | Entry point | Visible surface |
+| --- | --- | --- | --- |
+| Current authorized invoking member | Review their past manual run and find the task when still accessible | Selected saved rule in Household settings | Protected run history |
+| Member without current manual access | Continue to other allowed household views | Household settings | Permission feedback without private outcomes |
+
+A current result belongs to the active database generation. A historical result
+is the original evidence for a command retained across restoration. The
+original stock decision does not change when the rule or inventory changes.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+| --- | --- |
+| manual-run-history-R01 | List only the currently authorized caller's manual runs for the selected saved rule. Recheck current access on every page and clear displayed details when scope changes. |
+| manual-run-history-R02 | Show recent results first from a bounded page. Use the existing signed five-minute cursor bound to installation, channel, household, member, rule and page size. Start again at the latest page after cursor expiry or key rotation. |
+| manual-run-history-R03 | Show authoritative committed time, exact admitted revision and original stock and task decision. Editing and disabling the rule leave prior receipts untouched. |
+| manual-run-history-R04 | Show retained restored results distinctly. Link the original task only when the result and task are current and the caller has task read access. |
+| manual-run-history-R05 | Provide accessible English and Spanish history, empty, failure and recovery states for keyboard and touch. |
+| manual-run-history-R06 | Verify the read through both HTTP compositions, both image architectures and an exact separately installed Edge candidate. Preserve existing records and clean disposable evidence. |
+
+The view performs no run, task, inventory or auxiliary writes. Scheduling,
+event triggers, retention policy, additional execution steps and notification
+effects have separate acceptance.
+
+### 5. Current versus proposed product journey
+
+| Stage | Current | Proposed | User effect |
+| --- | --- | --- | --- |
+| Reopen | Select the saved rule and view its execution control | Open the history beside the execution controls | Review recent runs by their saved revision |
+| Inspect | The last result or original request is required | Read the immutable stock decision and task outcome | See what actually happened in that earlier run |
+| Continue | Earlier requests are difficult to locate | Request older results or return to recent runs | Navigate the list without unbounded data |
+| Follow up | A current receipt can link to its task | Open that exact task from the corresponding current result | Confirm the resulting work |
+
+### 6. Functional behavior and state model
+
+Resolve the installation, channel, household and authenticated member in the
+current protected context. Verify automation and task creation permissions as
+in the manual run access path, and require the selected saved rule. Query that
+member's original receipts only, including retained receipts in chronological
+commit order. Return each operation once. Retained projections of live results
+do not duplicate the live record.
+
+Use a default limit of 25 and accept limits from 1 to 100. Use a single
+lookahead result to decide whether to issue the next cursor. The next request
+checks authority and cursor binding again. Revoked authority or different
+household, member or rule never reveals previous entries. Disabled rules retain
+their earlier outcomes.
+
+### 7. User-facing configuration
+
+Use the current English or Spanish language and the household's existing time
+context. There is no additional installation setting. Older results are
+requested on demand and the view can return to recent results.
+
+### 8. Clean Architecture design
+
+Reuse the application authority for manual automation and the stored receipt
+and restoration semantics. SQLite performs bounded, scoped keyset reads in
+the current transaction. The application maps stored original facts to the
+narrow history contract and resolves current task access. Both HTTP entry
+points share the protected route. Frontend adapters validate the history
+response and settle requests only for the current application scope. Compose
+the localized controls from the already published ha-ui components.
+
+### 9. UI/UX and content contract
+
+In Household settings, expose run history for the selected saved rule. Show each
+result's recorded time, revision and task outcome. Identify a restored historical
+result with readable text. If a current task is available, link to that exact
+task. Show explicit empty, loading, temporary failure and expired-page states
+with a clear recovery control. Provide readable narrow layout, keyboard focus
+and accessible touch controls in English and Spanish.
+
+### 10. Failure, recovery, and cleanup
+
+Retain the successfully read page during a temporary pagination failure and allow
+the same cursor to retry. After a cursor expires or loses its process signing key,
+allow the member to return to the recent page. Retire old details when the
+selected scope changes or access is revoked. A failed read cannot change any
+record. Remove only the synthetic data, temporary app and source created during
+installed qualification.
+
+### 11. Security, permissions, and privacy
+
+Both reads and continuations resolve the current member from proven context.
+The original receipt must belong to that invoking member and selected rule.
+A cursor does not grant authority. No result from another member, household,
+installation or channel can be read through the new surface. Authorize the
+task link separately with the owning Tasks access and require a current task.
+
+### 12. Observability and operational UX
+
+Use a sanitized operation reference for correlation with the original result.
+Display authoritative current and historical outcomes in the user's language.
+Expose safe status and recovery messages without logging private task names,
+receipt payloads or credentials.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Reuse the existing run receipts and retained operation history. Read-only
+implementation can remain compatible with the existing schema. If schema
+changes become necessary, preserve representative schema 33 and schema 20
+through upgrade and verify rollback. Verify a real restored result, current
+task visibility and restart. The installed version is a pinned Edge candidate
+recorded with exact source and scoped cleanup. Stable distribution is outside
+this validation.
+
+### 14. Testing strategy and numeric budget
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+| --- | --- | --- |
+| Authorization | 2 | Own member and rule boundaries, current revocation and task access |
+| Pagination | 2 | Stable bounded order, stale or invalid cursor recovery |
+| Committed evidence | 1 | Immutable outcomes and restart |
+| Restored evidence | 1 | Current versus historical task link |
+| Browser acceptance | 1 | English and Spanish keyboard and touch |
+| Deployment acceptance | 1 | Both pinned images and installed Edge |
+| Total | 8 | Independently observable cases |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| manual-run-history-C01 | Authorization | manual-run-history-R01 | In a household with two authorized callers and two rules, show only the authenticated caller's previous manual runs for the selected rule. Include the empty case. |
+| manual-run-history-C02 | Authorization | manual-run-history-R01, manual-run-history-R04 | Revoke manual automation access during pagination and verify later reads disclose no prior details. With manual access and no task read permission, show original task creation without a link. |
+| manual-run-history-C03 | Pagination | manual-run-history-R02 | Start from the latest committed result, walk bounded pages and add a newer result between reads. Verify no duplicate operation and a fixed limit from one to 100. |
+| manual-run-history-C04 | Pagination | manual-run-history-R02, manual-run-history-R05 | Reject copied cursors for another query scope, expired cursors and cursors whose signing key changed. Navigate back to the latest page. |
+| manual-run-history-C05 | Committed evidence | manual-run-history-R03 | Record matching and nonmatching runs, edit and disable the rule, restart and compare exact results, revisions and original task decisions. |
+| manual-run-history-C06 | Restored evidence | manual-run-history-R03, manual-run-history-R04 | Activate a backup with one present run and one later run preserved as history. Verify the later run remains listed once with its original outcome and no link, and that the current entry opens its exact authorized task. |
+| manual-run-history-C07 | Browser acceptance | manual-run-history-R01, manual-run-history-R05 | In both HTTP compositions, exercise English keyboard and narrow Spanish touch history, recover a failed older-page request, and clear displayed outcomes after switching rules. |
+| manual-run-history-C08 | Deployment acceptance | manual-run-history-R06 | Run the exact CI Check matrix on amd64 and aarch64 and verify the separately installed candidate's version, task and no-task history, link and cleanup in Home Assistant. |
+
+### 15. Documentation and discoverability
+
+| Path | Change |
+| --- | --- |
+| specs/household-automation.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/contracts/household-api.openapi.json | update |
+| docs/contracts/native-household-api.openapi.json | update |
+| docs/evidence/automation-execution-qualification.md | reference |
+| docs/evidence/automation-run-history-qualification.md | create |
+
+Keep the same capability and retain all existing case identities.
+
+### 16. Acceptance scenarios
+
+Exercise the eight distinct cases in section 14. Confirm that accessing the
+history never creates an automation or task effect. Use the self-hosted CI
+Check workflow's actual image matrix and the existing Chromium workspace
+fixture with both deployments. Record the exact installed Edge source and
+the scoped cleanup in the contributing pull request.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+| --- | --- |
+| manual-run-history-R01 | manual-run-history-C01, manual-run-history-C02, manual-run-history-C07 |
+| manual-run-history-R02 | manual-run-history-C03, manual-run-history-C04 |
+| manual-run-history-R03 | manual-run-history-C05, manual-run-history-C06 |
+| manual-run-history-R04 | manual-run-history-C02, manual-run-history-C06 |
+| manual-run-history-R05 | manual-run-history-C04, manual-run-history-C07 |
+| manual-run-history-R06 | manual-run-history-C08 |
+
+### 18. Implementation sequence
+
+Implement the scoped original-result read and current task link check. Add
+the shared HTTP contract and localized controller and view. Qualify storage
+restoration, boundaries, browser and image matrices. Install and verify the
+pinned Edge candidate and record exact evidence.
+
+### 19. Definition of Done
+
+All eight acceptance cases and the existing regressions pass. The exact PR
+revision passes coverage, architecture and both image jobs. The pinned Edge
+candidate passes the real workflow with scoped cleanup. Source, API,
+specification mappings and evidence agree. The merge is verified on develop.
+
+### 20. References and decisions
+
+The owning specification is `specs/household-automation.md`, including
+household-automation-R7. Reuse the existing PageQuery limits and process-scoped
+five-minute TaskCursor, as recorded in the maintainer's first clarification
+answer. Use `.github/workflows/ci_check.yml` and the contributing PR's installed
+version evidence as recorded in the second clarification answer.
