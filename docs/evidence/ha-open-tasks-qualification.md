@@ -39,3 +39,9 @@ raised-surface token. The existing compiled Ingress and standalone journeys veri
 dark backgrounds and readable text on both household and task allocation cards.
 Both journeys passed after reproducing the original white background. The
 corrected candidate uses a new immutable Edge version before installed acceptance.
+
+A preparatory ARM64 browser run received the bounded `storage_busy` response while
+seeding inventory data. The fixture now verifies `Retry-After`, retries the exact
+key and payload once, and retains the final success assertion. A deliberately
+held SQLite writer exercises that path, followed by an identical replay that
+returns the original result. Both protected journeys passed this regression.
