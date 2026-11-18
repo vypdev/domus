@@ -53,8 +53,9 @@ acceptance of the installed recurrence experience remain open.
   archiving, lot and package management, barcodes and optional online lookup remain open.
 - M4 starts with the [manual automation preview](evidence/automation-preview-qualification.md)
   and includes the native Home Assistant calendar,
-  [task deadline sensors](evidence/ha-deadline-sensors-qualification.md) and
-  [low-stock sensor](evidence/ha-low-stock-sensor-qualification.md).
+  [task deadline sensors](evidence/ha-deadline-sensors-qualification.md),
+  [low-stock sensor](evidence/ha-low-stock-sensor-qualification.md) and
+  [read-only shopping list](evidence/ha-shopping-list-qualification.md).
   Household settings can simulate one task proposal against current stock and
   [save and reopen inactive drafts with immutable revisions](evidence/automation-draft-qualification.md).
   [Manual execution](evidence/automation-execution-qualification.md) pins the enabled draft revision
@@ -75,7 +76,8 @@ acceptance of the installed recurrence experience remain open.
   shows where available stock after reservations falls below the household's replenishment minimums.
   [Weekly Family participation](evidence/overview-family-participation-qualification.md) shows the
   member's completed tasks and posted earned points for the current household week.
-  The Shopping summary, full integrated acceptance and Stable release acceptance remain open.
+  The [Shopping summary](user-guide.md#shared-shopping-list) shows outstanding lines
+  and links to Inventory. Full integrated acceptance and Stable release acceptance remain open.
 
 ## Shared components, Domus-owned experience
 

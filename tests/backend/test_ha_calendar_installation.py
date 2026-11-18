@@ -41,7 +41,14 @@ def header(token: str) -> dict[str, str]:
 
 
 def runtime(
-    native, installation, path, fingerprint, *, deadline_fingerprint=None, stock_fingerprint=None
+    native,
+    installation,
+    path,
+    fingerprint,
+    *,
+    deadline_fingerprint=None,
+    stock_fingerprint=None,
+    shopping_fingerprint=None,
 ):
     if native:
         return ingress.create_business_runtime(
@@ -53,6 +60,7 @@ def runtime(
             ha_calendar_digest=fingerprint,
             ha_deadline_digest=deadline_fingerprint,
             ha_stock_digest=stock_fingerprint,
+            ha_shopping_digest=shopping_fingerprint,
         )
     return server.create_runtime(
         "https://ha.example",
@@ -63,6 +71,7 @@ def runtime(
         ha_calendar_digest=fingerprint,
         ha_deadline_digest=deadline_fingerprint,
         ha_stock_digest=stock_fingerprint,
+        ha_shopping_digest=shopping_fingerprint,
     )
 
 

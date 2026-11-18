@@ -7,6 +7,10 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
+Edge.44 includes the [native shared shopping list](tasks/ha-shopping-list.md) with a dedicated
+installation grant and a read-only to-do entity.
+[Qualification](evidence/ha-shopping-list-qualification.md)
+
 Edge.43 includes the optional [native low-stock sensor](tasks/ha-low-stock-sensor.md).
 Configure its separate installation grant when Home Assistant needs the Overview count.
 The app retains SQLite schema 34. [Qualification](evidence/ha-low-stock-sensor-qualification.md)

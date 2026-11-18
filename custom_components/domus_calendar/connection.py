@@ -3,6 +3,7 @@
 import re
 from uuid import UUID
 
+from aiohttp import ClientError, ClientSession, ClientTimeout
 from yarl import URL
 
 _PRIVATE_HOST = re.compile(r"(?:local|[0-9a-f]{8})-domus(?:-edge)?")
@@ -63,3 +64,28 @@ def connection_origin(value: str, channel: str) -> URL:
         return url.origin()
     except ValueError, UnicodeError:
         raise InvalidEndpoint from None
+
+
+async def read_projection(
+    session: ClientSession, endpoint: URL, authorization: str, *, byte_limit: int
+) -> bytearray:
+    try:
+        async with session.get(
+            endpoint,
+            headers={"Authorization": authorization, "Accept-Encoding": "identity"},
+            allow_redirects=False,
+            auto_decompress=False,
+            timeout=ClientTimeout(total=4),
+        ) as response:
+            if response.status == 401:
+                raise InvalidCredential
+            if response.status != 200 or response.content_type != "application/json":
+                raise ProjectionUnavailable
+            body = bytearray()
+            async for chunk in response.content.iter_chunked(min(byte_limit, 65_536)):
+                body.extend(chunk)
+                if len(body) > byte_limit:
+                    raise ProjectionUnavailable
+            return body
+    except ClientError, TimeoutError, ValueError, RecursionError:
+        raise ProjectionUnavailable from None

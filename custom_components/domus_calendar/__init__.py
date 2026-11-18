@@ -13,6 +13,7 @@ from homeassistant.util import dt as dt_util
 from .client import CalendarClient, CalendarUnavailable, Projection
 from .connection import ProjectionUnavailable
 from .count_client import DEADLINES, STOCK, CountClient, CountPurpose
+from .shopping_client import SHOPPING, SHOPPING_TITLE, ShoppingClient, ShoppingItem
 
 DOMAIN = "domus_calendar"
 CONF_PROJECTION = "projection"
@@ -21,11 +22,14 @@ COUNT_PROJECTIONS = {DEADLINES: "Domus task deadlines", STOCK: "Domus low-stock 
 _LOGGER = logging.getLogger(__name__)
 type DomusEntry = ConfigEntry[tuple[CalendarClient, DataUpdateCoordinator[Projection]]]
 type CountEntry = ConfigEntry[DataUpdateCoordinator[dict[str, int]]]
+type ShoppingEntry = ConfigEntry[DataUpdateCoordinator[tuple[ShoppingItem, ...]]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Start the projection selected by the verified config entry."""
     projection = entry.data.get(CONF_PROJECTION)
+    if projection == SHOPPING:
+        return await _setup_shopping(hass, entry)
     if projection in COUNT_PROJECTIONS:
         return await _setup_counts(hass, entry, projection)
     client = CalendarClient(
@@ -82,11 +86,40 @@ async def _setup_counts(hass: HomeAssistant, entry: CountEntry, purpose: CountPu
     return True
 
 
+async def _setup_shopping(hass: HomeAssistant, entry: ShoppingEntry) -> bool:
+    client = ShoppingClient(
+        async_get_clientsession(hass), entry.data[CONF_URL], entry.data[CONF_TOKEN]
+    )
+
+    async def update() -> tuple[ShoppingItem, ...]:
+        try:
+            return await client.read()
+        except ProjectionUnavailable:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="shopping_unavailable"
+            ) from None
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=SHOPPING_TITLE,
+        config_entry=entry,
+        update_method=update,
+        update_interval=timedelta(minutes=1),
+    )
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.TODO])
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove the configured platform and shut down its scheduled refresh."""
-    platform = (
-        Platform.SENSOR
-        if entry.data.get(CONF_PROJECTION) in COUNT_PROJECTIONS
-        else Platform.CALENDAR
-    )
+    projection = entry.data.get(CONF_PROJECTION)
+    if projection == SHOPPING:
+        platform = Platform.TODO
+    elif projection in COUNT_PROJECTIONS:
+        platform = Platform.SENSOR
+    else:
+        platform = Platform.CALENDAR
     return await hass.config_entries.async_unload_platforms(entry, [platform])

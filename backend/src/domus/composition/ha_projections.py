@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.inventory_queries import InstallationLowStock
+from domus.application.shopping_list import InstallationShoppingList
 from domus.application.task_queries import InstallationTaskDeadlines
 from domus.composition.ha_calendar import calendar_route
 from domus.domain.errors import InvalidInput
@@ -17,6 +18,7 @@ from domus.entrypoints.ha_projection_http import (
     ProjectionRoute,
     validate_digest,
 )
+from domus.entrypoints.ha_shopping_http import SHOPPING_GRANT_PREFIX, SHOPPING_PATH, shopping_api
 from domus.entrypoints.ha_stock_http import STOCK_GRANT_PREFIX, STOCK_PATH, stock_api
 from domus.infrastructure.application_runtime import SystemClock
 from domus.infrastructure.recurrence_time import PinnedRecurrenceTime
@@ -29,17 +31,23 @@ def attach_ha_projections(
     calendar_digest: str | None,
     deadline_digest: str | None,
     stock_digest: str | None,
+    shopping_digest: str | None,
     *,
     public_origin: str | None = None,
 ) -> None:
-    if calendar_digest is None and deadline_digest is None and stock_digest is None:
+    if all(
+        digest is None
+        for digest in (calendar_digest, deadline_digest, stock_digest, shopping_digest)
+    ):
         return
     if store is None or (public_origin is not None and not public_origin.startswith("https://")):
         if calendar_digest is not None:
             raise InvalidInput("ha_calendar_requires_persistent_secure_origin")
         if deadline_digest is not None:
             raise InvalidInput("ha_deadlines_require_persistent_secure_origin")
-        raise InvalidInput("ha_stock_requires_persistent_secure_origin")
+        if stock_digest is not None:
+            raise InvalidInput("ha_stock_requires_persistent_secure_origin")
+        raise InvalidInput("ha_shopping_requires_persistent_secure_origin")
     routes: dict[str, ProjectionRoute] = {}
     if calendar_digest is not None:
         routes[CALENDAR_PATH] = calendar_route(store, calendar_digest)
@@ -67,6 +75,16 @@ def attach_ha_projections(
         stock_query = InstallationLowStock(store, MaintenanceScope(store.installation, "home"))
         routes[STOCK_PATH] = ProjectionRoute(
             stock_api(stock_query), credential, "invalid_stock_credential"
+        )
+    if shopping_digest is not None:
+        credential = ProjectionGrant(
+            store.installation,
+            validate_digest(shopping_digest, "invalid_ha_shopping_digest"),
+            SHOPPING_GRANT_PREFIX,
+        )
+        shopping = InstallationShoppingList(store, MaintenanceScope(store.installation, "home"))
+        routes[SHOPPING_PATH] = ProjectionRoute(
+            shopping_api(shopping), credential, "invalid_shopping_credential"
         )
     app.add_middleware(
         HAProjectionBoundary,

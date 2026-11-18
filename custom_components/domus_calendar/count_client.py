@@ -4,9 +4,9 @@ import json
 import re
 from typing import Literal
 
-from aiohttp import ClientError, ClientSession, ClientTimeout
+from aiohttp import ClientSession
 
-from .connection import InvalidCredential, ProjectionUnavailable, bearer_source, connection_origin
+from .connection import ProjectionUnavailable, bearer_source, connection_origin, read_projection
 
 DEADLINES = "deadlines"
 STOCK = "stock"
@@ -44,23 +44,10 @@ class CountClient:
         self._session = session
 
     async def read(self) -> dict[str, int]:
+        body = await read_projection(
+            self._session, self._endpoint, self._authorization, byte_limit=_MAX_BODY_BYTES
+        )
         try:
-            async with self._session.get(
-                self._endpoint,
-                headers={"Authorization": self._authorization, "Accept-Encoding": "identity"},
-                allow_redirects=False,
-                auto_decompress=False,
-                timeout=ClientTimeout(total=4),
-            ) as response:
-                if response.status == 401:
-                    raise InvalidCredential
-                if response.status != 200 or response.content_type != "application/json":
-                    raise ProjectionUnavailable
-                body = bytearray()
-                async for chunk in response.content.iter_chunked(_MAX_BODY_BYTES):
-                    body.extend(chunk)
-                    if len(body) > _MAX_BODY_BYTES:
-                        raise ProjectionUnavailable
-                return _counts(body, self._fields)
-        except ClientError, TimeoutError, ValueError, RecursionError:
+            return _counts(body, self._fields)
+        except ValueError, RecursionError:
             raise ProjectionUnavailable from None

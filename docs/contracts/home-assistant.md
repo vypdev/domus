@@ -26,7 +26,7 @@ and multi-instance calls must explicitly choose it. Names are stable English ide
 | calendar.domus_schedule | Planned occurrence windows and due-date markers | stable UID; actual completion is not substituted |
 | calendar.domus_completion_history | Optional separate actual-work timeline | completion UID and actual timestamp; explicit history label |
 | todo.domus_tasks | Supported task occurrence projection with stable item UID | read plus only explicitly implemented native features |
-| todo.domus_shopping | Outstanding purchasing intent | initially read-only; checkbox cannot silently mean receipt/stock posting |
+| `todo.domus_shopping` | Implemented opt-in outstanding purchasing lines | Read-only names, quantities, units and stable opaque item identities. |
 
 Actual entity_ids are assigned by HA and may have channel/instance suffixes; clients discover them.
 Availability is unavailable when authoritative data cannot be read; empty successful collections remain empty success.
@@ -224,5 +224,9 @@ the same causal automation indefinitely.
 
 Disposable HA tests verify registration, selectors, response support, UID stability, context mapping,
 unload/reconnect and both deployment targets. Native task operations route through the same policies.
-Shopping remains read-only in native to-do until purchase/receipt semantics are unambiguous.
+The [native shopping list](../tasks/ha-shopping-list.md) uses a grant dedicated to the
+installation, channel and shopping purpose. It publishes up to 1,000 outstanding
+lines from a single household snapshot. Empty reads report zero. A denied,
+malformed or oversize read makes the entity unavailable and clears its items.
+Record purchases and receipts in Domus.
 Local Chrome dogfooding verifies discoverability and real user flows without changing the gateway.

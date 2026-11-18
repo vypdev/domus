@@ -117,6 +117,9 @@ def serve(mode, channel, host, config_path):
     stock_digest = hashlib.sha256(
         f"{instance}.{channel}.stock.{'f' * 64}".encode("ascii")
     ).hexdigest()
+    shopping_digest = hashlib.sha256(
+        f"{instance}.{channel}.shopping.{'a' * 64}".encode("ascii")
+    ).hexdigest()
     if mode == "native":
         config = json.loads(Path(config_path).read_text())
         options = {
@@ -124,6 +127,7 @@ def serve(mode, channel, host, config_path):
             "ha_calendar_digest": digest,
             "ha_deadline_digest": deadline_digest,
             "ha_stock_digest": stock_digest,
+            "ha_shopping_digest": shopping_digest,
         }
         Path("/data/options.json").write_text(json.dumps(options))
         launcher = "/app/.venv/bin/domus-ha-app"
@@ -146,6 +150,7 @@ def serve(mode, channel, host, config_path):
         ha_calendar_digest=digest,
         ha_deadline_digest=deadline_digest,
         ha_stock_digest=stock_digest,
+        ha_shopping_digest=shopping_digest,
     )
     try:
         uvicorn.run(

@@ -1,10 +1,14 @@
 """Project the current shopping list from one household read transaction."""
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 
-from domus.application.ports import UnitOfWork
+from domus.application.fixed_materialization import MaintenanceScope
+from domus.application.ports import Transactions, UnitOfWork
+from domus.domain.errors import IntegrationUnavailable
 from domus.domain.inventory import BaseUnit, CatalogProduct, EffectKind, stock_quantity, stock_units
 from domus.domain.shopping_needs import NeedKind, ShoppingExtra, ShoppingNeed, allocate_needs
+from domus.domain.storage import JsonDocument
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +38,7 @@ class ShoppingListView:
 
 
 SHOPPING_ATTENTION_LIMIT = 25
+HA_SHOPPING_ITEM_LIMIT = 1000
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +54,59 @@ class ShoppingAttentionItem:
 class ShoppingAttention:
     total: int
     items: tuple[ShoppingAttentionItem, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ShoppingSnapshotItem:
+    uid: str
+    name: str
+    quantity: str
+    unit: BaseUnit
+
+
+@dataclass(frozen=True, slots=True)
+class ShoppingSnapshot:
+    items: tuple[ShoppingSnapshotItem, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class InstallationShoppingList:
+    transactions: Transactions
+    scope: MaintenanceScope
+
+    def read(self) -> ShoppingSnapshot:
+        installation = self.scope.installation
+        with self.transactions.read() as unit:
+            household = self.scope.require(unit)
+            snapshot: list[ShoppingSnapshotItem] = []
+            for item in outstanding_items(unit, household.household_id, include_tasks=True):
+                if len(snapshot) == HA_SHOPPING_ITEM_LIMIT:
+                    raise IntegrationUnavailable("ha_shopping_list_capacity")
+                identity = JsonDocument.from_value(
+                    {
+                        "installation": installation.instance_id,
+                        "channel": installation.channel,
+                        "product": item.product_id,
+                        "extra": item.extra_id,
+                    }
+                ).fingerprint
+                snapshot.append(
+                    ShoppingSnapshotItem(identity, item.name, item.total, item.base_unit)
+                )
+            return ShoppingSnapshot(tuple(snapshot))
+
+
+def outstanding_items(
+    unit: UnitOfWork, home: str, *, include_tasks: bool
+) -> Iterator[ShoppingListItem]:
+    after = ""
+    while rows := unit.shopping.list_candidates(home, after, SHOPPING_ATTENTION_LIMIT):
+        for item in list_items(unit, home, rows, include_tasks=include_tasks):
+            if item.total != "0":
+                yield item
+        if len(rows) < SHOPPING_ATTENTION_LIMIT:
+            break
+        after = rows[-1][0]
 
 
 def list_items(

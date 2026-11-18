@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.44
+
+- Show the complete outstanding shared shopping list as a native read-only Home Assistant entity.
+- Connect it with its own optional installation grant.
+
 ## 0.0.0-edge.43
 
 - Share the complete Overview low-stock product count with the native Home Assistant sensor.
