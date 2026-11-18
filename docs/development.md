@@ -105,10 +105,18 @@ The project-owned .github/workflows/ci_check.yml runs Python tooling, the separa
 Node policy, real frontend framework execution, Python architecture
 contracts and local documentation links for every branch push to this repository, including documentation changes.
 An internal pull request shows CI for its pushed head. Bring the head up to date with the target branch before merging.
-Fork workflows require maintainer approval in GitHub.
-Workflow steps reference complete action release versions. GitHub runs the commits recorded in
-`.github/workflows/actions.lock`. Run `gh actions-lock .github/workflows/ci_check.yml` after updating
-an action version. Package installs use their lockfiles.
+The self-hosted pool runs reviewed internal branches.
+Every installed workflow references complete action release versions, including Copilot consumer
+snapshots and reusable workflow calls. Installed action-step resolutions are recorded in
+`.github/workflows/actions.lock`. Run `gh actions-lock` after updating an action reference and
+`gh actions-lock --verify` to check coverage and provenance. GitHub enforces the recorded commits
+for onboarded workflows. Job-level reusable workflow calls retain their reviewed complete release
+tags and follow GitHub's separate reusable-workflow resolution, which the caller lockfile currently
+excludes. Package installs use their lockfiles.
+
+Installed coordination, admission, queue and credential-health jobs use the organization's
+`vypdev` self-hosted group with Linux labels. Reusable workflow calls pass the configured
+runner input to their runtime. OIDC publication uses GitHub-hosted runners.
 
 The final CI Check job always evaluates the eight required job results, including the container matrix.
 Missing, malformed, unexpected, failed, skipped, cancelled or pending results prevent success.
@@ -123,8 +131,9 @@ loopback fixture ports when runs share a host. CI never installs into live HA.
 The workflow uses read-only repository permissions, does not persist checkout credentials and does not
 publish artifacts to a release or deploy. Coverage reports are retained for seven days under the checked SHA.
 
-29 installed Copilot resources have immutable SHA-256 fixtures. The existing dependency-preparation
-action remains the owner's explicit exception; this task does not edit it or enable/change Copilot settings.
+The 29 installed Copilot resources have reviewed SHA-256 fixtures. Their workflow snapshots
+include the exact release and runner policy. The repository-owned dependency-preparation
+action has its own configuration.
 The local link checker parses Markdown links/images and does not fetch external URLs. Only the unchanged
 upstream specification template's placeholder targets are excluded. Original Copilot format/catalog validation
 remains separate: link success does not establish SDD gate readiness.

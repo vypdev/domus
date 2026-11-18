@@ -1,4 +1,4 @@
-"""Enforce the branch CI workflow contract and immutable installed resources."""
+"""Enforce repository CI contracts and reviewed installed resource snapshots."""
 
 import ast
 import hashlib
@@ -15,6 +15,9 @@ from domus_tooling.ci_policy import REQUIRED_JOBS
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/ci_check.yml"
 PROTECTED = ROOT / "tests/contracts/copilot-resource-hashes.json"
+INSTALLED_WORKFLOWS = sorted(
+    path for path in WORKFLOW.parent.iterdir() if path.suffix in {".yml", ".yaml"}
+)
 
 
 def workflow() -> dict:
@@ -146,6 +149,52 @@ def test_ci_is_read_only_with_exact_action_versions_and_locked_installs() -> Non
     assert "uv sync --frozen" in source
     assert "pnpm install --frozen-lockfile" in source
     assert "secrets." not in source
+
+
+def test_every_installed_workflow_uses_complete_external_action_releases() -> None:
+    assert INSTALLED_WORKFLOWS
+    for path in INSTALLED_WORKFLOWS:
+        config = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+        for job in config["jobs"].values():
+            for entry in (job, *job.get("steps", [])):
+                reference = entry.get("uses")
+                if reference is not None and not reference.startswith("./"):
+                    assert re.fullmatch(r"[\w/.-]+@v[0-9]+\.[0-9]+\.[0-9]+", reference), (
+                        path,
+                        reference,
+                    )
+
+
+def test_installed_workflow_action_steps_have_reviewed_lockfile_resolutions() -> None:
+    lock = yaml.safe_load(WORKFLOW.with_name("actions.lock").read_text(encoding="utf-8"))
+    for path in INSTALLED_WORKFLOWS:
+        config = yaml.safe_load(path.read_text(encoding="utf-8"))
+        references = set()
+        for job in config["jobs"].values():
+            for step in job.get("steps", []):
+                reference = step.get("uses")
+                if reference is not None and not reference.startswith("./"):
+                    action, version = reference.rsplit("@", 1)
+                    references.add(f"{'/'.join(action.split('/')[:2]).lower()}@{version}")
+        relative = path.relative_to(ROOT).as_posix()
+        assert references == set(lock["workflows"][relative]), relative
+        for reference in references:
+            assert re.fullmatch(r"sha1-[a-f0-9]{40}", lock["dependencies"][reference]["commit"])
+
+
+def test_installed_workflow_jobs_use_self_hosted_runners_with_oidc_publication_on_github() -> None:
+    for path in INSTALLED_WORKFLOWS:
+        config = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+        for job in config["jobs"].values():
+            if "uses" in job:
+                runner = json.loads(job["with"]["runs-on"])
+            elif job.get("permissions", {}).get("id-token") == "write":
+                assert job["runs-on"] == "ubuntu-latest", path
+                continue
+            else:
+                runner = job["runs-on"]
+            assert runner["group"] == "vypdev", path
+            assert "self-hosted" in runner["labels"], path
 
 
 def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
@@ -294,7 +343,7 @@ def test_backend_cannot_inherit_the_tooling_coverage_result() -> None:
 
 
 @pytest.mark.parametrize("relative,expected", sorted(json.loads(PROTECTED.read_text()).items()))
-def test_installed_copilot_resources_are_unchanged(relative: str, expected: str) -> None:
+def test_installed_copilot_resources_match_reviewed_snapshots(relative: str, expected: str) -> None:
     assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected, relative
 
 
