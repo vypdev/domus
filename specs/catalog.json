@@ -837,7 +837,8 @@
       "specs": [
         "specs/home-assistant-surface.md",
         "specs/home-assistant-calendar.md",
-        "specs/home-assistant-deadline-sensors.md"
+        "specs/home-assistant-deadline-sensors.md",
+        "specs/home-assistant-todo-list.md"
       ],
       "workflows": [
         ".github/workflows/ci_check.yml"
