@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with a protected manual task automation preview and inactive saved revisions, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "0668970d07960016c3d9d24807f6ffdbd3e9aad8fedf67b0e46745316e0d2982",
-    "assets/index-Bq58zfmH.js": "e662150cb70518dd642a80be62c0ad15bc8ef3fd54c9b12ba138ffbc9fb44356",
+    ".vite/manifest.json": "1b8638ee43b130fa6079e26eef3500cc09ba55b12fc59b6249ed6f989672729b",
+    "assets/index-Cg8YDLuZ.js": "d26b6cbf67e74ebcfb0480902a547cb44f77c5ef667286ecb1b40352ba1ca364",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "be33a29f23894572c40532edb4128495f808ac8fb5b79b99f3a68a231a2949dc"
+    "index.html": "3f9c12f5ab3b63c8c395905b0dac7f1d9e9004a5a73263238c97f4e05f0ebfe1"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -272,5 +272,16 @@
     },
     "requirements": "SDD-I120-U1-R1 through SDD-I120-U1-R6",
     "evidence": "automation-execution-qualification.md"
+  },
+  "manualAutomationRunHistory": {
+    "sourceCommit": "eba168e88dedd7ddd6f84ea712094ca464a76f27",
+    "actualProductFiles": {
+      ".vite/manifest.json": "1b8638ee43b130fa6079e26eef3500cc09ba55b12fc59b6249ed6f989672729b",
+      "assets/index-Cg8YDLuZ.js": "d26b6cbf67e74ebcfb0480902a547cb44f77c5ef667286ecb1b40352ba1ca364",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "3f9c12f5ab3b63c8c395905b0dac7f1d9e9004a5a73263238c97f4e05f0ebfe1"
+    },
+    "requirements": "manual-run-history-R01 through manual-run-history-R06",
+    "evidence": "automation-run-history-qualification.md"
   }
 }
