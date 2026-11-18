@@ -7,6 +7,11 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
+The [native open-task list](tasks/ha-open-tasks.md) uses its own optional
+`ha_tasks_digest` grant. Home Assistant entity viewers can see the titles and
+current states of all open household occurrences. The companion preserves
+existing configured projections. [Qualification](evidence/ha-open-tasks-qualification.md)
+
 Edge.44 includes the [native shared shopping list](tasks/ha-shopping-list.md) with a dedicated
 installation grant and a read-only to-do entity.
 [Qualification](evidence/ha-shopping-list-qualification.md)

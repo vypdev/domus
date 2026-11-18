@@ -30,6 +30,7 @@ from domus.entrypoints.ha_deadline_http import DEADLINE_DIGEST_ENV
 from domus.entrypoints.ha_projection_http import PROJECTION_PORT
 from domus.entrypoints.ha_shopping_http import SHOPPING_DIGEST_ENV
 from domus.entrypoints.ha_stock_http import STOCK_DIGEST_ENV
+from domus.entrypoints.ha_tasks_http import TASKS_DIGEST_ENV
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.ingress_http import create_ingress_app
 from domus.entrypoints.native_http import NativeHTTPContext, create_native_app
@@ -77,6 +78,7 @@ def create_owned_runtime(
     ha_deadline_digest: str | None = None,
     ha_stock_digest: str | None = None,
     ha_shopping_digest: str | None = None,
+    ha_tasks_digest: str | None = None,
 ) -> NativeRuntime:
     origins = PublicOrigins(public_origins).values
     identity = SupervisorIdentity(HomeAssistantWebSocket(HAEndpoint.supervisor()), token)
@@ -90,6 +92,7 @@ def create_owned_runtime(
             ha_deadline_digest,
             ha_stock_digest,
             ha_shopping_digest,
+            ha_tasks_digest,
         )
         runtime.storage = storage
         return runtime
@@ -109,6 +112,7 @@ def create_business_runtime(
     ha_deadline_digest: str | None = None,
     ha_stock_digest: str | None = None,
     ha_shopping_digest: str | None = None,
+    ha_tasks_digest: str | None = None,
 ) -> NativeRuntime:
     installation = Installation(instance_id, channel)
     origins = PublicOrigins(public_origins).values
@@ -124,6 +128,7 @@ def create_business_runtime(
         ha_deadline_digest,
         ha_stock_digest,
         ha_shopping_digest,
+        ha_tasks_digest,
     )
 
 
@@ -135,6 +140,7 @@ def _compose_business(
     ha_deadline_digest: str | None,
     ha_stock_digest: str | None,
     ha_shopping_digest: str | None,
+    ha_tasks_digest: str | None = None,
 ) -> NativeRuntime:
     clock, entropy = MonotonicClock(), SecureEntropy()
     sessions = IngressSessions(
@@ -185,7 +191,13 @@ def _compose_business(
         ui_binding=ui_binding,
     )
     attach_ha_projections(
-        app, store, ha_calendar_digest, ha_deadline_digest, ha_stock_digest, ha_shopping_digest
+        app,
+        store,
+        ha_calendar_digest,
+        ha_deadline_digest,
+        ha_stock_digest,
+        ha_shopping_digest,
+        ha_tasks_digest,
     )
     worker = recurrence_worker(store, store.installation)
     bind_lifespan(app, worker)
@@ -242,9 +254,16 @@ def main(argv: list[str] | None = None) -> int:
     deadline_digest = os.environ.pop(DEADLINE_DIGEST_ENV, None)
     stock_digest = os.environ.pop(STOCK_DIGEST_ENV, None)
     shopping_digest = os.environ.pop(SHOPPING_DIGEST_ENV, None)
+    tasks_digest = os.environ.pop(TASKS_DIGEST_ENV, None)
     projections_enabled = any(
         digest is not None
-        for digest in (calendar_digest, deadline_digest, stock_digest, shopping_digest)
+        for digest in (
+            calendar_digest,
+            deadline_digest,
+            stock_digest,
+            shopping_digest,
+            tasks_digest,
+        )
     )
     runtime = None
     try:
@@ -260,6 +279,7 @@ def main(argv: list[str] | None = None) -> int:
                 ha_deadline_digest=deadline_digest,
                 ha_stock_digest=stock_digest,
                 ha_shopping_digest=shopping_digest,
+                ha_tasks_digest=tasks_digest,
             )
             app = runtime.app
         elif args.database is not None:
@@ -275,6 +295,7 @@ def main(argv: list[str] | None = None) -> int:
                 ha_deadline_digest=deadline_digest,
                 ha_stock_digest=stock_digest,
                 ha_shopping_digest=shopping_digest,
+                ha_tasks_digest=tasks_digest,
             )
             app = runtime.app
         else:

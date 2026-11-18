@@ -27,6 +27,7 @@ from domus.entrypoints.ha_calendar_http import CALENDAR_DIGEST_ENV
 from domus.entrypoints.ha_deadline_http import DEADLINE_DIGEST_ENV
 from domus.entrypoints.ha_shopping_http import SHOPPING_DIGEST_ENV
 from domus.entrypoints.ha_stock_http import STOCK_DIGEST_ENV
+from domus.entrypoints.ha_tasks_http import TASKS_DIGEST_ENV
 from domus.entrypoints.http import HTTPSettings, create_app
 from domus.entrypoints.task_http import TaskHTTPContext
 from domus.entrypoints.ui_bundle import load_bundle
@@ -77,6 +78,7 @@ def create_owned_runtime(
     ha_deadline_digest: str | None = None,
     ha_stock_digest: str | None = None,
     ha_shopping_digest: str | None = None,
+    ha_tasks_digest: str | None = None,
 ) -> AuthenticationRuntime:
     config = OAuthConfiguration(HAEndpoint(ha_origin), public_origin, development_http)
     storage = open_storage(data_directory, channel)
@@ -89,6 +91,7 @@ def create_owned_runtime(
             ha_deadline_digest,
             ha_stock_digest,
             ha_shopping_digest,
+            ha_tasks_digest,
         )
         runtime.storage = storage
         return runtime
@@ -108,6 +111,7 @@ def create_runtime(
     ha_deadline_digest: str | None = None,
     ha_stock_digest: str | None = None,
     ha_shopping_digest: str | None = None,
+    ha_tasks_digest: str | None = None,
     database: Path | None = None,
 ) -> AuthenticationRuntime:
     installation = Installation(instance_id, channel)
@@ -125,6 +129,7 @@ def create_runtime(
         ha_deadline_digest,
         ha_stock_digest,
         ha_shopping_digest,
+        ha_tasks_digest,
     )
 
 
@@ -136,6 +141,7 @@ def _compose(
     ha_deadline_digest: str | None,
     ha_stock_digest: str | None,
     ha_shopping_digest: str | None,
+    ha_tasks_digest: str | None = None,
 ) -> AuthenticationRuntime:
     clock, entropy = MonotonicClock(), SecureEntropy()
     identity = StandaloneIdentity(
@@ -185,6 +191,7 @@ def _compose(
         ha_deadline_digest,
         ha_stock_digest,
         ha_shopping_digest,
+        ha_tasks_digest,
         public_origin=config.public_origin,
     )
     worker = points = points_worker = None
@@ -239,6 +246,7 @@ def main(argv: list[str] | None = None) -> int:
                 ha_deadline_digest=os.environ.get(DEADLINE_DIGEST_ENV),
                 ha_stock_digest=os.environ.get(STOCK_DIGEST_ENV),
                 ha_shopping_digest=os.environ.get(SHOPPING_DIGEST_ENV),
+                ha_tasks_digest=os.environ.get(TASKS_DIGEST_ENV),
             )
         else:
             if not args.instance_id:
@@ -253,6 +261,7 @@ def main(argv: list[str] | None = None) -> int:
                 ha_deadline_digest=os.environ.get(DEADLINE_DIGEST_ENV),
                 ha_stock_digest=os.environ.get(STOCK_DIGEST_ENV),
                 ha_shopping_digest=os.environ.get(SHOPPING_DIGEST_ENV),
+                ha_tasks_digest=os.environ.get(TASKS_DIGEST_ENV),
                 database=args.database,
             )
     except DomusError as error:

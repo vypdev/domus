@@ -25,6 +25,7 @@ def test_repository_and_edge_manifest_offer_native_ha_entry_without_user_credent
         "ha_deadline_digest": "str?",
         "ha_stock_digest": "str?",
         "ha_shopping_digest": "str?",
+        "ha_tasks_digest": "str?",
     }
     assert manifest["breaking_versions"] == [
         "0.0.0-edge.2",
@@ -109,9 +110,9 @@ def test_native_options_explain_the_one_time_origin_configuration_without_a_new_
         fields = labels["configuration"]
         projections = [
             fields[f"ha_{purpose}_digest"]
-            for purpose in ("calendar", "deadline", "stock", "shopping")
+            for purpose in ("calendar", "deadline", "stock", "shopping", "tasks")
         ]
-        assert len({field["name"] for field in projections}) == 4
+        assert len({field["name"] for field in projections}) == 5
         assert all("SHA-256" in field["description"] for field in projections)
 
 

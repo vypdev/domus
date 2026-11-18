@@ -47,6 +47,23 @@ SHOPPING_ROWS = [
 ]
 SHOPPING_NAMES = ("Tea filters · ×2", "Harina · 1.25 g", "Oil · 0.5 mL")
 SHOPPING_NAMES_ES = ("Tea filters · ×2", "Harina · 1,25 g", "Oil · 0,5 mL")
+TASKS_PATH = "/api/v1/ha/tasks"
+TASKS_FIRST = f"{NATIVE_UUID}.edge.tasks.{'a' * 64}"
+TASKS_ROTATED = f"{NATIVE_UUID}.edge.tasks.{'b' * 64}"
+TASKS_OTHER = f"{OTHER_UUID}.edge.tasks.{'c' * 64}"
+TASK_STATES = ("draft", "available", "assigned", "in_progress", "blocked")
+TASK_ROWS = [
+    {"uid": f"{index:064x}", "title": "Sweep <kitchen> & hall", "state": state}
+    for index, state in enumerate(TASK_STATES, start=1)
+]
+TASK_NAMES = tuple(
+    f"Sweep <kitchen> & hall · {state}"
+    for state in ("Draft", "Available", "Assigned", "In progress", "Blocked")
+)
+TASK_NAMES_ES = tuple(
+    f"Sweep <kitchen> & hall · {state}"
+    for state in ("Borrador", "Disponible", "Asignada", "En curso", "Bloqueada")
+)
 
 
 @asynccontextmanager
@@ -194,6 +211,21 @@ class Fixture:
         self.shopping_grant = SHOPPING_FIRST
         self.shopping_body = b'{"items":[]}'
         self.shopping_status = 200
+        self.tasks_grants = {TASKS_FIRST, TASKS_OTHER}
+        self.tasks_body = b'{"items":[]}'
+        self.tasks_status = 200
+        self.tasks_requests = 0
+        self.tasks_tick = asyncio.Event()
+
+    async def respond_tasks(self, request):
+        self.tasks_requests += 1
+        self.tasks_tick.set()
+        token = request.headers.get("Authorization", "").removeprefix("Bearer ")
+        if token not in self.tasks_grants:
+            return web.Response(status=401)
+        return web.Response(
+            status=self.tasks_status, body=self.tasks_body, content_type="application/json"
+        )
 
     async def respond_shopping(self, request):
         if request.headers.get("Authorization") != f"Bearer {self.shopping_grant}":
@@ -299,6 +331,7 @@ async def fixtures():
     app.router.add_get(DEADLINES_PATH, fixture.respond_deadlines)
     app.router.add_get(STOCK_PATH, fixture.respond_stock)
     app.router.add_get(SHOPPING_PATH, fixture.respond_shopping)
+    app.router.add_get(TASKS_PATH, fixture.respond_tasks)
     runner = web.AppRunner(app, access_log=None)
     await runner.setup()
     config = tempfile.TemporaryDirectory()
@@ -438,6 +471,7 @@ async def fixtures():
             entry_id, identity, sensors = await deadline_fixtures(hass, fixture)
             stock_entry, stock_identity, stock_id = await stock_fixtures(hass, fixture)
             shopping = await shopping_fixtures(hass, fixture)
+            tasks = await task_fixtures(hass, fixture)
         process = await asyncio.create_subprocess_exec(
             sys.executable,
             __file__,
@@ -450,6 +484,7 @@ async def fixtures():
             stock_identity,
             stock_id,
             *shopping,
+            *tasks,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
@@ -727,6 +762,145 @@ async def shopping_fixtures(hass, fixture):
     return entry.entry_id, entry.unique_id, entity
 
 
+async def task_fixtures(hass, fixture):
+    rejected = await configure(hass, NATIVE, SHOPPING_FIRST, projection="tasks")
+    assert rejected["errors"] == {"token": "invalid_auth"}
+    fixture.tasks_body = b"invalid json"
+    failed = await configure(hass, NATIVE, TASKS_FIRST, projection="tasks")
+    assert failed["errors"] == {"base": "cannot_connect"}
+    fixture.tasks_body = shopping_body([])
+    first = await configure(hass, NATIVE, TASKS_FIRST, projection="tasks")
+    assert first["type"] == "create_entry", first.get("errors")
+    assert first["title"] == "Domus open tasks (edge)"
+    entry = first["result"]
+    await hass.async_block_till_done()
+    entity = shopping_entity(hass, entry)
+    assert entity == "todo.domus_tasks" and entry.unique_id == f"{NATIVE_UUID}.edge.tasks"
+    await assert_shopping_items(hass, entity, (), ())
+    assert (await configure(hass, NATIVE, TASKS_FIRST, projection="tasks"))[
+        "reason"
+    ] == "already_configured"
+    assert (await configure(hass, NATIVE, TASKS_OTHER, entry))["reason"] == "wrong_source"
+    for language, label, name in (
+        ("en", "Open household tasks (read-only)", "Domus open tasks"),
+        ("es", "Tareas abiertas del hogar (solo lectura)", "Tareas abiertas de Domus"),
+    ):
+        selector = await async_get_translations(hass, language, "selector", [DOMAIN])
+        assert selector[f"component.{DOMAIN}.selector.projection.options.tasks"] == label
+        names = await async_get_translations(hass, language, "entity", [DOMAIN])
+        assert names[f"component.{DOMAIN}.entity.todo.open_tasks.name"] == name
+
+    coordinator = entry.runtime_data
+    assert coordinator.update_interval == timedelta(minutes=1)
+    native = hass.data[TODO_COMPONENT].get_entity(entity)
+    changes = []
+    unsubscribe = native.async_subscribe_updates(changes.append)
+    fixture.tasks_body = shopping_body(TASK_ROWS)
+    await coordinator.async_refresh()
+    uids = tuple(row["uid"] for row in TASK_ROWS)
+    await assert_shopping_items(hass, entity, TASK_NAMES, uids)
+    assert [item.uid for item in changes[-1]] == list(uids)
+    assert set(hass.states.get(entity).attributes) <= {"friendly_name", "supported_features"}
+    before = fixture.tasks_requests
+    for service, arguments in (
+        ("add_item", {"item": "private"}),
+        ("update_item", {"item": uids[0], "status": "completed"}),
+        ("remove_item", {"item": [uids[0]]}),
+    ):
+        with suppress(ServiceValidationError):
+            await hass.services.async_call(
+                "todo", service, arguments, target={"entity_id": entity}, blocking=True
+            )
+            raise AssertionError(f"A task write was accepted by {entity}: {service}")
+    assert fixture.tasks_requests == before
+    await assert_shopping_items(hass, entity, TASK_NAMES, uids)
+    fixture.tasks_body = shopping_body(
+        [{**TASK_ROWS[0], "title": "Edited title", "state": "available"}, *TASK_ROWS[1:]]
+    )
+    await coordinator.async_refresh()
+    await assert_shopping_items(hass, entity, ("Edited title · Available", *TASK_NAMES[1:]), uids)
+    fixture.tasks_body = shopping_body(TASK_ROWS[1:])
+    await coordinator.async_refresh()
+    await assert_shopping_items(hass, entity, TASK_NAMES[1:], uids[1:])
+    fixture.tasks_body = shopping_body(TASK_ROWS)
+    await coordinator.async_refresh()
+    await assert_shopping_items(hass, entity, TASK_NAMES, uids)
+
+    row = TASK_ROWS[0]
+    for malformed in (
+        b"not json",
+        b"[]",
+        b'{"items":[],"private":"detail"}',
+        b'{"items":[],"items":[]}',
+        b'{"items":{}}',
+        b'{"items":["\xff"]}',
+        b"[" * 2000 + b"]" * 2000,
+        b" " * 1_048_577,
+        shopping_body([row] * 1001),
+        shopping_body([[]]),
+        shopping_body([{"uid": row["uid"]}]),
+        shopping_body([{**row, "title": True}]),
+        shopping_body([{**row, "uid": "private"}]),
+        shopping_body([{**row, "title": " "}]),
+        shopping_body([{**row, "title": "x" * 161}]),
+        shopping_body([{**row, "title": "private\nname"}]),
+        shopping_body([{**row, "title": "private\x7fname"}]),
+        shopping_body([{**row, "title": "\ud800"}]),
+        shopping_body([{**row, "state": "completed"}]),
+        shopping_body([row, row]),
+    ):
+        fixture.tasks_body = malformed
+        await coordinator.async_refresh()
+        assert_shopping_unavailable(hass, entity)
+        assert changes[-1] is None
+    fixture.tasks_body = shopping_body(
+        [
+            {"uid": f"{index:064x}", "title": f"Task {index}", "state": "available"}
+            for index in range(1000)
+        ]
+    )
+    await coordinator.async_refresh()
+    assert hass.states.get(entity).state == "1000"
+    assert len(await shopping_items(hass, entity)) == 1000
+    fixture.tasks_grants.remove(TASKS_FIRST)
+    fixture.tasks_grants.add(TASKS_ROTATED)
+    await coordinator.async_refresh()
+    assert_shopping_unavailable(hass, entity)
+    try:
+        await shopping_items(hass, entity)
+    except HomeAssistantError as error:
+        assert "did not match any entities" in str(error)
+    else:
+        raise AssertionError("Revoked task details remained available")
+    unsubscribe()
+    fixture.tasks_body = shopping_body(TASK_ROWS)
+    rotated = await configure(hass, NATIVE, TASKS_ROTATED, entry)
+    assert rotated["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert shopping_entity(hass, entry) == entity
+    await assert_shopping_items(hass, entity, TASK_NAMES, uids)
+    coordinator = entry.runtime_data
+    fixture.tasks_status = 503
+    await coordinator.async_refresh()
+    assert_shopping_unavailable(hass, entity)
+    fixture.tasks_status = 200
+    await coordinator.async_refresh()
+    await assert_shopping_items(hass, entity, TASK_NAMES, uids)
+    coordinator.update_interval = timedelta(seconds=1)
+    await coordinator.async_refresh()
+    fixture.tasks_tick.clear()
+    await asyncio.wait_for(fixture.tasks_tick.wait(), timeout=3)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    before = fixture.tasks_requests
+    await asyncio.sleep(1.2)
+    assert fixture.tasks_requests == before
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    await assert_shopping_items(hass, entity, TASK_NAMES, uids)
+    return entry.entry_id, entry.unique_id, entity
+
+
 async def verify_sensor_restart(
     config,
     entry_id,
@@ -739,6 +913,9 @@ async def verify_sensor_restart(
     shopping_entry,
     shopping_identity,
     shopping_id,
+    tasks_entry,
+    tasks_identity,
+    tasks_id,
 ):
     async with core(config, language="es") as restarted:
         await restarted.async_block_till_done()
@@ -758,6 +935,24 @@ async def verify_sensor_restart(
             restarted, shopping_id, SHOPPING_NAMES_ES, tuple(row["uid"] for row in SHOPPING_ROWS)
         )
         assert await restarted.config_entries.async_unload(shopping_entry)
+        tasks = restarted.config_entries.async_get_entry(tasks_entry)
+        assert tasks.unique_id == tasks_identity
+        assert shopping_entity(restarted, tasks) == tasks_id
+        await assert_shopping_items(
+            restarted, tasks_id, TASK_NAMES_ES, tuple(row["uid"] for row in TASK_ROWS)
+        )
+        assert await restarted.config_entries.async_unload(tasks_entry)
+        spanish = await configure(restarted, NATIVE, TASKS_OTHER, projection="tasks")
+        assert spanish["type"] == "create_entry", spanish.get("errors")
+        assert spanish["title"] == "Tareas abiertas de Domus (edge)"
+        await restarted.async_block_till_done()
+        await assert_shopping_items(
+            restarted,
+            shopping_entity(restarted, spanish["result"]),
+            TASK_NAMES_ES,
+            tuple(row["uid"] for row in TASK_ROWS),
+        )
+        assert await restarted.config_entries.async_unload(spanish["result"].entry_id)
 
 
 class suppress_expected_unavailable:
@@ -787,7 +982,13 @@ async def live():
         except ClientConnectorCertificateError:
             pass
         now = dt_util.now()
-        entries, deadline_entries, stock_entries, shopping_entries = [], [], [], []
+        entries, deadline_entries, stock_entries, shopping_entries, task_entries = (
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         identities, item_ids = set(), set()
         for target in targets:
             url, token, label = target["url"], target["token"], target["label"]
@@ -870,6 +1071,28 @@ async def live():
             assert datetime.fromisoformat(due["end"]) - datetime.fromisoformat(
                 due["start"]
             ) == timedelta(minutes=1)
+            async with session.get(
+                url + TASKS_PATH, headers={"Authorization": f"Bearer {target['shopping']}"}
+            ) as denied:
+                assert denied.status == 401
+            tasks = await configure(hass, url, target["tasks"], projection="tasks")
+            assert tasks["type"] == "create_entry", tasks.get("errors")
+            task_entry = tasks["result"]
+            task_entries.append(task_entry)
+            assert task_entry.unique_id not in identities
+            identities.add(task_entry.unique_id)
+            await hass.async_block_till_done()
+            todo = shopping_entity(hass, task_entry)
+            items = await shopping_items(hass, todo)
+            assert len(items) == 4
+            assert sorted(item["summary"] for item in items) == sorted(
+                [*[f"{label} deadline · Available"] * 3, f"{label} plan · Available"]
+            )
+            for item in items:
+                assert len(item["uid"]) == 64 and item["uid"] not in item_ids
+                item_ids.add(item["uid"])
+                assert item["status"] == "needs_action"
+            assert not hass.states.get(todo).attributes.get("supported_features", 0)
         assert len({entity_id(hass, entry) for entry in entries}) == len(targets)
         assert (
             len({entity for entry in deadline_entries for entity in deadline_entities(hass, entry)})
@@ -877,7 +1100,8 @@ async def live():
         )
         assert len({stock_entity(hass, entry) for entry in stock_entries}) == len(targets)
         assert len({shopping_entity(hass, entry) for entry in shopping_entries}) == len(targets)
-        for entry in entries + deadline_entries + stock_entries + shopping_entries:
+        assert len({shopping_entity(hass, entry) for entry in task_entries}) == len(targets)
+        for entry in entries + deadline_entries + stock_entries + shopping_entries + task_entries:
             assert await hass.config_entries.async_unload(entry.entry_id)
 
 

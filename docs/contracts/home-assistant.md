@@ -25,12 +25,23 @@ and multi-instance calls must explicitly choose it. Names are stable English ide
 | binary_sensor.domus_attention_required | Any authorized actionable household condition | bounded reason codes, never an unbounded record list |
 | calendar.domus_schedule | Planned occurrence windows and due-date markers | stable UID; actual completion is not substituted |
 | calendar.domus_completion_history | Optional separate actual-work timeline | completion UID and actual timestamp; explicit history label |
-| todo.domus_tasks | Supported task occurrence projection with stable item UID | read plus only explicitly implemented native features |
+| `todo.domus_tasks` | Implemented opt-in open household occurrences | Read-only titles, current task states and stable opaque occurrence identities. |
 | `todo.domus_shopping` | Implemented opt-in outstanding purchasing lines | Read-only names, quantities, units and stable opaque item identities. |
 
 Actual entity_ids are assigned by HA and may have channel/instance suffixes; clients discover them.
 Availability is unavailable when authoritative data cannot be read; empty successful collections remain empty success.
 State properties read cached projection data and do not perform blocking network calls.
+
+The [open-task list](../tasks/ha-open-tasks.md) reads the existing open-only
+occurrence selection in one household transaction. It includes draft, available,
+assigned, in-progress and blocked work. Completed, cancelled and skipped work
+leaves the list. Reopening an occurrence restores its item identity. Each
+occurrence retains its definition snapshot title through later definition edits.
+A complete snapshot contains up to 1,000 occurrences, including work beyond the
+first display page. A larger list is unavailable. A failed refresh hides cached
+items. The separate installation, channel and task-purpose grant authorizes this
+read. The entity advertises zero mutation features. Continue creating, assigning,
+completing and reviewing work through Domus.
 
 The [low-stock sensor](../tasks/ha-low-stock-sensor.md) shares the Overview total,
 which subtracts reservations and includes all qualifying products beyond the display limit.

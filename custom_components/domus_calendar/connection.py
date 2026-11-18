@@ -1,5 +1,6 @@
 """Validate the installation identity and permitted Home Assistant transports."""
 
+import json
 import re
 from uuid import UUID
 
@@ -19,6 +20,23 @@ class InvalidCredential(ProjectionUnavailable):
 
 class InvalidEndpoint(ProjectionUnavailable):
     """The endpoint is outside the permitted transport boundary."""
+
+
+def _object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    values = dict(pairs)
+    if len(values) != len(pairs):
+        raise ProjectionUnavailable
+    return values
+
+
+def projection_items(body: bytearray, *, item_limit: int) -> list[object]:
+    result = json.loads(body.decode("utf-8"), object_pairs_hook=_object)
+    if type(result) is not dict or set(result) != {"items"}:
+        raise ProjectionUnavailable
+    rows = result["items"]
+    if type(rows) is not list or len(rows) > item_limit:
+        raise ProjectionUnavailable
+    return rows
 
 
 def bearer_source(token: str, pattern: re.Pattern[str]) -> tuple[str, str]:

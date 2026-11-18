@@ -18,6 +18,7 @@ from .client import CalendarClient
 from .connection import InvalidCredential, InvalidEndpoint, ProjectionUnavailable
 from .count_client import CountClient
 from .shopping_client import SHOPPING, SHOPPING_TITLE, ShoppingClient
+from .task_client import TASKS, TASKS_TITLE, TaskClient
 
 
 class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,6 +46,15 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     client = ShoppingClient(session, url, token)
                     await client.read()
                     title = f"{SHOPPING_TITLE} ({client.channel})"
+                elif projection == TASKS:
+                    client = TaskClient(session, url, token)
+                    await client.read()
+                    name = (
+                        "Tareas abiertas de Domus"
+                        if self.hass.config.language.split("-", 1)[0].lower() == "es"
+                        else TASKS_TITLE
+                    )
+                    title = f"{name} ({client.channel})"
                 elif projection in COUNT_PROJECTIONS:
                     client = CountClient(session, url, token, projection)
                     await client.read()
@@ -62,7 +72,7 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(client.identity)
                 data = {CONF_URL: str(client.url), CONF_TOKEN: user_input[CONF_TOKEN]}
-                if projection == SHOPPING or projection in COUNT_PROJECTIONS:
+                if projection in (SHOPPING, TASKS) or projection in COUNT_PROJECTIONS:
                     data[CONF_PROJECTION] = projection
                 if entry is None:
                     self._abort_if_unique_id_configured()
@@ -79,7 +89,7 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
             fields = {
                 vol.Optional(CONF_PROJECTION, default=CALENDAR): SelectSelector(
                     SelectSelectorConfig(
-                        options=[CALENDAR, *COUNT_PROJECTIONS, SHOPPING],
+                        options=[CALENDAR, *COUNT_PROJECTIONS, SHOPPING, TASKS],
                         translation_key="projection",
                     )
                 ),
