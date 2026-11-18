@@ -1,6 +1,5 @@
 """Resolve the next five proposed daily times with the current household policy."""
 
-import re
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 
@@ -8,11 +7,10 @@ from domus.application.automation_preview import require_manual_automation
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.ports import Clock, Transactions
 from domus.application.recurrence_ports import RecurrenceTimes
+from domus.domain.automation import require_daily_time
 from domus.domain.errors import IntegrationUnavailable, InvalidInput
 from domus.domain.identity import HumanIdentity
 from domus.domain.recurrence_time import NominalTime, TimePolicy, TimeResolution
-
-DAILY_TIME_PATTERN = r"^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,8 +38,7 @@ class AutomationSchedulePreview:
     times: RecurrenceTimes
 
     def daily(self, requested: str) -> DailyAutomationTimes:
-        if re.fullmatch(DAILY_TIME_PATTERN, requested) is None:
-            raise InvalidInput("invalid_daily_automation_time")
+        require_daily_time(requested)
         minute = time.fromisoformat(requested)
         with self.transactions.read() as unit:
             home = self.scope.require(unit)

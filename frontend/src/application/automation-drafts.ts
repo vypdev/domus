@@ -2,6 +2,7 @@ import type {Revision} from '../domain/administration';
 import type {JournalContext} from '../domain/journal';
 import {taskText} from '../domain/tasks';
 import type {AutomationPreviewDraft} from './automation-preview';
+import {isDailyTime} from './automation-schedule-preview';
 import {EntryReadError} from './ports';
 import type {EntryEntropy, EntryRead} from './ports';
 
@@ -19,7 +20,12 @@ export interface DraftSummary {
 export type DraftCondition = Readonly<{kind: 'stock_below_minimum'; product_id: string}>
   | Readonly<{kind: 'not'; child: DraftCondition}>
   | Readonly<{kind: 'all' | 'any'; children: readonly DraftCondition[]}>;
+export type DraftTrigger = 'manual' | 'daily';
+export interface EditableAutomationRule extends AutomationPreviewDraft {
+  readonly dailyTime?: string;
+}
 export interface SavedAutomationDraft extends DraftSummary {
+  readonly dailyTime?: string;
   readonly condition: DraftCondition | null;
 }
 export interface DraftPage {
@@ -31,7 +37,7 @@ export interface DraftRequest {
   readonly scope: string;
   readonly ruleId: string | null;
   readonly revision: Revision | '0';
-  readonly rule: AutomationPreviewDraft;
+  readonly rule: EditableAutomationRule;
 }
 export type DraftOutcome = Readonly<{kind: 'committed' | 'historical'; id: string; revision: Revision; operationId: string}>
   | Readonly<{kind: 'conflict' | 'rejected' | 'missing'}>;
@@ -48,9 +54,10 @@ export interface AutomationDraftJournal {
   clear(request: DraftRequest): void;
 }
 
-type Notice = 'unavailable' | 'invalid_title' | 'uncertain' | 'rejected' | 'conflict' | 'saved' | 'historical';
+type Notice = 'unavailable' | 'invalid_title' | 'invalid_daily_time' | 'uncertain' | 'rejected' | 'conflict' | 'saved' | 'historical';
 interface ReadyDrafts {
   readonly state: 'ready';
+  readonly trigger: DraftTrigger;
   readonly page: DraftPage;
   readonly after: string | null;
   readonly selected: Readonly<{id: string; revision: Revision}> | null;
@@ -66,12 +73,13 @@ interface ReadyDrafts {
 }
 export type AutomationDraftView = ReadyDrafts | Readonly<{state: 'loading' | 'denied' | 'unavailable'}>;
 export type AutomationDraftIntent = Readonly<{type: 'open'; id: string}>
+  | Readonly<{type: 'trigger'; trigger: DraftTrigger}>
   | Readonly<{type: 'retry' | 'next' | 'first' | 'new' | 'save' | 'recover' | 'review' | 'rebase' | 'preview_saved'}>;
 
-function editable(draft: SavedAutomationDraft): AutomationPreviewDraft | null {
-  if (draft.condition === null) return {title: draft.title, productId: null};
-  return draft.condition.kind === 'stock_below_minimum'
-    ? {title: draft.title, productId: draft.condition.product_id} : null;
+function editable(draft: SavedAutomationDraft): EditableAutomationRule | null {
+  const {title, condition, dailyTime} = draft;
+  if (condition !== null && condition.kind !== 'stock_below_minimum') return null;
+  return {title, productId: condition?.product_id ?? null, ...(dailyTime === undefined ? {} : {dailyTime})};
 }
 
 export class AutomationDraftController {
@@ -82,7 +90,7 @@ export class AutomationDraftController {
   private pending: DraftRequest | null = null;
 
   constructor(private readonly server: AutomationDraftServer, private readonly journal: AutomationDraftJournal,
-    private readonly entropy: EntryEntropy, private readonly edit: (rule: AutomationPreviewDraft) => void,
+    private readonly entropy: EntryEntropy, private readonly edit: (rule: EditableAutomationRule) => void,
     private readonly publish: (view: AutomationDraftView | null) => void) {}
 
   bind(scope: DraftScope | null, visible = false): void {
@@ -148,7 +156,8 @@ export class AutomationDraftController {
       if (this.ready === null) {
         this.pending = this.journal.open(scope.key);
         const recover = this.pending;
-        this.ready = {state: 'ready', page, after, selected: recover?.ruleId == null ? null
+        this.ready = {state: 'ready', trigger: recover?.rule.dailyTime === undefined ? 'manual' : 'daily',
+          page, after, selected: recover?.ruleId == null ? null
           : {id: recover.ruleId, revision: recover.revision as Revision}, locked: null,
           competing: null, conflict: false, operationId: null, preview: null, busy: true, pending: recover !== null,
           readOnly: this.scope!.readOnly, notice: recover === null ? null : 'uncertain'};
@@ -161,7 +170,8 @@ export class AutomationDraftController {
     });
   }
 
-  async handle(intent: AutomationDraftIntent | undefined, input: AutomationPreviewDraft | null): Promise<void> {
+  async handle(intent: AutomationDraftIntent | undefined, input: AutomationPreviewDraft | null,
+    dailyTime = ''): Promise<void> {
     const scope = this.scope, ready = this.ready;
     if (intent === undefined || scope === null || !this.visible || this.owned !== null) return;
     if (intent.type === 'retry') {await this.list(scope, ready?.after ?? null); return;}
@@ -172,8 +182,10 @@ export class AutomationDraftController {
     if (this.pending !== null) return;
     if (intent.type === 'new') {
       this.edit({title: '', productId: null});
-      this.set({selected: null, locked: null, competing: null, conflict: false,
+      this.set({trigger: 'manual', selected: null, locked: null, competing: null, conflict: false,
         notice: null, preview: null, operationId: null});
+    } else if (intent.type === 'trigger' && ready.locked === null && !scope.readOnly) {
+      this.set({trigger: intent.trigger, notice: null});
     } else if (intent.type === 'open' && ready.page.drafts.some(draft => draft.id === intent.id)) {
       await this.open(scope, intent.id, false);
     } else if (intent.type === 'review' && ready.conflict && ready.selected !== null) {
@@ -188,7 +200,7 @@ export class AutomationDraftController {
         () => this.set({notice: 'unavailable'}));
     } else if (intent.type === 'save' && input !== null && !scope.readOnly
         && ready.locked === null && !ready.conflict) {
-      await this.save(scope, ready, input);
+      await this.save(scope, ready, input, dailyTime);
     }
   }
 
@@ -196,20 +208,25 @@ export class AutomationDraftController {
     await this.run(scope, this.server.reopen(scope, id), draft => {
       if (review) {this.set({competing: draft}); return;}
       const rule = editable(draft);
-      this.edit(rule ?? {title: draft.title, productId: null});
-      this.set({selected: draft, locked: rule === null ? draft : null, competing: null, conflict: false,
+      const {title, dailyTime} = draft;
+      this.edit(rule ?? {title, productId: null, ...(dailyTime === undefined ? {} : {dailyTime})});
+      this.set({trigger: dailyTime === undefined ? 'manual' : 'daily',
+        selected: draft, locked: rule === null ? draft : null, competing: null, conflict: false,
         notice: null, preview: null, operationId: null});
     }, () => this.set({notice: 'unavailable'}));
   }
 
-  private async save(scope: DraftScope, ready: ReadyDrafts, input: AutomationPreviewDraft): Promise<void> {
+  private async save(scope: DraftScope, ready: ReadyDrafts, input: AutomationPreviewDraft, dailyTime: string): Promise<void> {
     let title: string;
     try {title = taskText(input.title, 160, true);}
     catch {this.set({notice: 'invalid_title'}); return;}
+    const daily = ready.trigger === 'daily';
+    if (daily && !isDailyTime(dailyTime)) {this.set({notice: 'invalid_daily_time'}); return;}
     let request: DraftRequest;
     try {
       request = {key: this.entropy.requestKey(), scope: scope.key, ruleId: ready.selected?.id ?? null,
-        revision: ready.selected?.revision ?? '0', rule: {title, productId: input.productId}};
+        revision: ready.selected?.revision ?? '0',
+        rule: {title, productId: input.productId, ...(daily ? {dailyTime} : {})}};
       this.journal.save(request);
     } catch {this.set({notice: 'unavailable'}); return;}
     this.pending = request;

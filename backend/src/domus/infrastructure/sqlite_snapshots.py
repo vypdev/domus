@@ -229,7 +229,7 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
         if version >= 30:
             verify_inventory_locations(connection)
         if version >= 32:
-            verify_automation_drafts(connection)
+            verify_automation_drafts(connection, allow_daily=version >= 34)
         if version >= 33:
             verify_automation_controls(connection)
     except DomusError as error:

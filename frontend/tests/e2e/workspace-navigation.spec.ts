@@ -1473,6 +1473,40 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(execution.getByText('The stock condition did not match. No task was created.',{exact:true})).toBeVisible();
     await expect(execution.getByRole('link',{name:'Open created task'})).toHaveCount(0);
 
+    const trigger = drafts.getByRole('combobox',{name:'Trigger',exact:true});
+    await trigger.press('Enter');
+    await trigger.press('End');
+    await trigger.press('Enter');
+    await expect(drafts.getByText(/Daily drafts stay inactive/u)).toBeVisible();
+    let dailyKey = '';
+    await page.route(draftsURL, async route => {
+      if (route.request().method() !== 'POST') return route.continue();
+      dailyKey = (await route.request().allHeaders())['idempotency-key'];
+      expect(route.request().postDataJSON()).toMatchObject({
+        version:2,trigger:{kind:'daily',time:'07:30'},rule_id:rule.rule_id,expected_revision:'1',
+      });
+      const committed = await route.fetch();
+      expect(committed.ok(),await committed.text()).toBe(true);
+      await route.abort('failed');
+    });
+    await drafts.getByRole('button',{name:'Save draft',exact:true}).press('Enter');
+    const recoverDraft = drafts.getByRole('button',{name:'Check original save',exact:true});
+    await expect(recoverDraft).toBeEnabled();
+    expect(dailyKey).toMatch(/^req_[a-f0-9]{32}$/u);
+    await page.unroute(draftsURL);
+    await page.reload();
+    await expect(recoverDraft).toBeEnabled();
+    await expect(dailyField).toHaveValue('07:30');
+    await expect(dailyField).not.toBeEditable();
+    const dailyReceipt = page.waitForResponse(draftsURL + '/requests/' + dailyKey);
+    await recoverDraft.press('Enter');
+    expect((await dailyReceipt).ok()).toBe(true);
+    await expect(drafts.getByText('Draft saved.',{exact:true})).toBeVisible();
+    await expect(dailyField).toBeEditable();
+    await expect(execution.getByText('The latest daily draft remains inactive.',{exact:true})).toBeVisible();
+    await expect(execution.getByRole('button',{name:'Enable saved revision',exact:true})).toHaveCount(0);
+    await expect(run).toBeEnabled();
+
     await stockWrite('test-stock-change',{action:'inventory.adjust',product_id:product,quantity:'-1',reason:'Counted one less'});
     await page.getByRole('combobox',{name:'Language',exact:true}).selectOption('es');
     await page.setViewportSize({width:390,height:844});
@@ -1568,6 +1602,9 @@ for (const mode of ['native', 'standalone'] as const) {
     await tabs.getByRole('link',{name:'Hogar',exact:true}).tap();
     await expect(history.getByRole('listitem')).toHaveCount(0);
     await drafts.getByRole('button',{name:'Abrir ' + draftTitle,exact:true}).tap();
+    await expect(drafts.getByText(/Los borradores diarios permanecen inactivos/u)).toBeVisible();
+    await expect(schedule.getByRole('textbox',{name:'Hora de cada día',exact:true})).toHaveValue('07:30');
+    await drafts.screenshot({path:info.outputPath('daily-draft-es-narrow.png')});
     await history.getByRole('button',{name:'Mostrar historial',exact:true}).tap();
     await expect(history.getByRole('listitem')).toHaveCount(25);
     await drafts.getByRole('button',{name:'Abrir Inspect the fixture shelf',exact:true}).tap();

@@ -1,5 +1,6 @@
 /** Validate protected draft responses and correlate receipts to their original request. */
 import type {AutomationDraftServer, DraftCondition, DraftOutcome, DraftRequest, DraftScope, DraftSummary, SavedAutomationDraft} from '../application/automation-drafts';
+import {isDailyTime} from '../application/automation-schedule-preview';
 import {revisionValue} from '../domain/administration';
 import {taskText} from '../domain/tasks';
 import {manualRule} from './automation-preview-http';
@@ -79,20 +80,30 @@ export class HttpAutomationDrafts implements AutomationDraftServer {
       const row = fields(await this.network.get(BASE + '/' + identifier(id), scope.context, signal),
         [...STATUS, 'version', 'trigger', 'condition', 'action'], []);
       const fact = inactive(row);
-      const trigger = fields(row.trigger, ['kind'], []);
+      const version = integer(row.version, 1);
+      check(version === 1 || version === 2);
+      const trigger = version === 1 ? fields(row.trigger, ['kind'], []) : fields(row.trigger, ['kind', 'time'], []);
       const action = fields(row.action, ['kind', 'title'], []);
-      check(fact.id === id && integer(row.version, 1) === 1
-        && trigger.kind === 'manual' && action.kind === 'task.create');
-      return {...fact, title: taskText(action.title, 160, true),
+      check(fact.id === id && action.kind === 'task.create');
+      const draft = {...fact, title: taskText(action.title, 160, true),
         condition: row.condition === null ? null : condition(row.condition)};
+      if (version === 1) {
+        check(trigger.kind === 'manual');
+        return draft;
+      }
+      check(trigger.kind === 'daily' && isDailyTime(trigger.time));
+      return {...draft, dailyTime: trigger.time};
     });
   }
 
   send(scope: DraftScope, request: DraftRequest) {
     return this.network.owned<DraftOutcome>(async signal => {
       const token = csrf(await this.network.get('auth/csrf', scope.context, signal));
-      const body = JSON.stringify({...manualRule(request.rule),
-        rule_id: request.ruleId, expected_revision: request.revision});
+      const manual = manualRule(request.rule);
+      const {dailyTime} = request.rule;
+      const definition = dailyTime === undefined ? manual
+        : {...manual, version: 2, trigger: {kind: 'daily', time: dailyTime}};
+      const body = JSON.stringify({...definition, rule_id: request.ruleId, expected_revision: request.revision});
       const reply = await this.network.request(BASE, 'POST', scope.context, body, identifier(request.key), token, signal);
       if (reply.status === 200) return receipt(reply.value, scope, request);
       if ([404, 409, 422].includes(reply.status)) {

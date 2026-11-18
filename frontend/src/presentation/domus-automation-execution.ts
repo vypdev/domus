@@ -13,6 +13,7 @@ const COPY = {
   en: {
     heading: 'Manual automation', saved: 'Saved draft', revision: 'Revision',
     enabled: 'Enabled', inactive: 'Disabled', enable: 'Enable saved revision',
+    inactiveDaily: 'The latest daily draft remains inactive.',
     disable: 'Disable future runs', run: 'Run manually', cancel: 'Cancel',
     confirmEnable: 'Enable this revision', confirmDisable: 'Disable future runs',
     confirmRun: 'Run this revision', review: 'Confirm automation action',
@@ -32,6 +33,7 @@ const COPY = {
   es: {
     heading: 'Automatización manual', saved: 'Borrador guardado', revision: 'Revisión',
     enabled: 'Habilitada', inactive: 'Deshabilitada', enable: 'Habilitar revisión guardada',
+    inactiveDaily: 'El último borrador diario permanece inactivo.',
     disable: 'Deshabilitar futuras ejecuciones', run: 'Ejecutar manualmente', cancel: 'Cancelar',
     confirmEnable: 'Habilitar esta revisión', confirmDisable: 'Deshabilitar futuras ejecuciones',
     confirmRun: 'Ejecutar esta revisión', review: 'Confirmar acción de automatización',
@@ -106,16 +108,18 @@ export class DomusAutomationExecution extends LitElement {
   private configuration(view: AutomationExecutionView) {
     const configuration = view.configuration;
     if (configuration === null) return nothing;
-    const {latestRevision, latestTitle, control} = configuration;
+    const {latestRevision, latestTitle, control, latestManual} = configuration;
     const blocked = view.busy || view.pending || view.readOnly;
     const confirmation = view.confirmation;
     const enabled = control?.enabled === true;
     return html`<p>${this.text('saved')} · ${this.text('revision')} ${latestRevision} · ${latestTitle}</p>
       <p role="status">${enabled ? html`${this.text('enabled')} · ${this.text('revision')} ${control.ruleRevision} · ${control.title}`
         : this.text('inactive')}</p>
+      ${latestManual === false ? html`<p>${this.text('inactiveDaily')}</p>` : nothing}
       ${confirmation === null ? html`<div class="actions">
         ${enabled ? this.button('run', 'run', blocked, true) : nothing}
-        ${enabled && control.ruleRevision === latestRevision ? nothing : this.button('enable', 'enable', blocked, !enabled)}
+        ${latestManual === false || (enabled && control.ruleRevision === latestRevision)
+          ? nothing : this.button('enable', 'enable', blocked, !enabled)}
         ${enabled ? this.button('disable', 'disable', blocked) : nothing}
       </div>` : html`<section class="confirmation" aria-labelledby="automation-confirmation-title">
         <h3 id="automation-confirmation-title" tabindex="-1">${this.text('review')}</h3>

@@ -1,5 +1,6 @@
 """Bounded declarative rules and a pure explanation of proposed effects."""
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal
@@ -10,8 +11,36 @@ from domus.domain.storage import JsonDocument, JsonObject, JsonValue, validate_i
 from domus.domain.task_values import TaskContent
 
 AUTOMATION_RULE_VERSION = 1
+DAILY_AUTOMATION_RULE_VERSION = 2
 MAX_RULE_NODES = 64
 MAX_CONDITION_DEPTH = 8
+DAILY_TIME_PATTERN = r"^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+
+
+def require_daily_time(value: str) -> None:
+    if re.fullmatch(DAILY_TIME_PATTERN, value) is None:
+        raise InvalidInput("invalid_daily_automation_time")
+
+
+@dataclass(frozen=True, slots=True)
+class DailyTrigger:
+    time: str
+
+    def __post_init__(self) -> None:
+        require_daily_time(self.time)
+
+
+type AutomationTrigger = Literal["manual"] | DailyTrigger
+
+
+def _read_trigger(value: JsonValue) -> AutomationTrigger:
+    match value:
+        case {"kind": "manual", **extra} if not extra:
+            return "manual"
+        case {"kind": "daily", "time": str() as local_time, **extra} if not extra:
+            return DailyTrigger(local_time)
+        case _:
+            raise InvalidInput("invalid_automation_rule")
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,20 +110,26 @@ def _read_condition(value: JsonValue) -> Condition:
 @dataclass(frozen=True, slots=True)
 class AutomationRule:
     version: int
-    trigger: Literal["manual"]
+    trigger: AutomationTrigger
     condition: Condition | None
     task: TaskContent
 
     def __post_init__(self) -> None:
+        match self.trigger:
+            case "manual":
+                expected = AUTOMATION_RULE_VERSION
+            case DailyTrigger():
+                expected = DAILY_AUTOMATION_RULE_VERSION
+            case _:
+                raise InvalidInput("invalid_automation_rule")
         if (
             type(self.version) is not int
-            or self.version != AUTOMATION_RULE_VERSION
-            or self.trigger != "manual"
+            or self.version != expected
             or not isinstance(self.task, TaskContent)
         ):
             raise InvalidInput("invalid_automation_rule")
         pending = [] if self.condition is None else [(self.condition, 1)]
-        size = 2  # The manual trigger and the proposed action.
+        size = 2  # The trigger and the proposed action.
         while pending:
             condition, depth = pending.pop()
             if depth > MAX_CONDITION_DEPTH:
@@ -106,13 +141,18 @@ class AutomationRule:
             pending.extend((child, depth + 1) for child in reversed(children))
 
     def document(self) -> JsonDocument:
-        """Persist exactly what the version-one task proposal can represent."""
+        """Persist the closed definition of the proposed task."""
         if self.task != TaskContent(self.task.title):
             raise InvalidInput("invalid_automation_rule")
+        trigger = (
+            {"kind": "manual"}
+            if self.trigger == "manual"
+            else {"kind": "daily", "time": self.trigger.time}
+        )
         return JsonDocument.from_value(
             {
                 "version": self.version,
-                "trigger": {"kind": self.trigger},
+                "trigger": trigger,
                 "action": {"kind": "task.create", "title": self.task.title},
                 "condition": None if self.condition is None else _condition_value(self.condition),
             }
@@ -133,14 +173,14 @@ class AutomationRule:
         match document.decode():
             case {
                 "version": int() as version,
-                "trigger": {"kind": "manual", **trigger_extra},
+                "trigger": trigger,
                 "action": {"kind": "task.create", "title": str() as title, **action_extra},
                 "condition": condition,
                 **extra,
-            } if not (extra or trigger_extra or action_extra):
+            } if not (extra or action_extra):
                 return cls(
                     version,
-                    "manual",
+                    _read_trigger(trigger),
                     None if condition is None else _read_condition(condition),
                     TaskContent(title),
                 )
@@ -194,6 +234,8 @@ class AutomationSimulation:
 
 
 def simulate(rule: AutomationRule, below_minimum: Callable[[str], bool]) -> AutomationSimulation:
+    if rule.trigger != "manual":
+        raise InvalidInput("automation_requires_manual_trigger")
     decisions: list[ConditionDecision] = []
 
     def evaluate(condition: Condition, path: tuple[int, ...]) -> bool:

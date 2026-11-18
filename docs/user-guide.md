@@ -422,6 +422,20 @@ or second occurrence according to the household's repeated-time setting. Use
 **Try again** to refresh a failed preview with the same time. The preview
 leaves your saved automation rules and household records untouched.
 
+### Save an inactive daily draft
+
+Enter the proposed task title in **Automation preview** and choose **Daily**
+under **Trigger** in **Automation drafts**. Use **Daily schedule preview** to
+enter the time and check the five upcoming dates. **Save draft** records the
+time with the task proposal and its optional stock condition. Reopening the
+draft restores its saved time.
+
+Daily drafts remain inactive. A previously enabled manual revision keeps its
+original run and history controls. Use **Check original save** after an
+interrupted response. When another edit saved first, **Review latest revision**
+shows its trigger and saved time so you can review it before choosing whether
+to keep your own edit.
+
 ## Channels and privacy
 
 Stable is production; Edge is experimental and has separate data, credentials and HA identities.

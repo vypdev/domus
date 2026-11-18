@@ -332,3 +332,36 @@ test('the manual automation panel localizes exact confirmations, outcomes and ta
   await view({pending: false, notice: 'unavailable', result: null});
   expect(button('Volver a intentar')).toBeDefined();
 });
+
+test('a daily latest draft leaves the prior manual run control available', async () => {
+  const f = fixture(), controller = f.controller();
+  const saved = {...active, latestManual:false as const};
+  f.server.state.mockReturnValueOnce(settled(saved));
+  controller.bind(scope, selection);
+  await vi.waitFor(() => expect(f.last()?.configuration).toEqual(saved));
+  await controller.handle('enable');
+  expect(f.last()?.confirmation).toBeNull();
+  await controller.handle('run');
+  expect(f.last()?.confirmation?.command).toMatchObject({kind:'run',ruleRevision:one});
+  await controller.handle('cancel');
+
+  const element = document.createElement('domus-automation-execution');
+  element.view = f.last();
+  element.language = 'es';
+  document.body.append(element);
+  await element.updateComplete;
+  const root = element.shadowRoot!;
+  const labels = [...root.querySelectorAll('vyp-ha-button')].map(button => button.state?.label);
+  expect(root.textContent).toContain('El último borrador diario permanece inactivo.');
+  expect(labels).toContain('Ejecutar manualmente');
+  expect(labels).not.toContain('Habilitar revisión guardada');
+});
+
+test('execution HTTP keeps daily eligibility separate from the configured manual control', async () => {
+  const state = {rule_id:'rule',latest_revision:'2',latest_title:'Check supplies',latest_manual:false,
+    control:{rule_revision:'1',control_revision:'3',enabled:true,title:'Check the pantry'}};
+  const accepted = new HttpAutomationExecution(target, async route => response(route,state));
+  await expect(accepted.state(scope,'rule').result).resolves.toEqual({...active,latestManual:false});
+  const rejected = new HttpAutomationExecution(target, async route => response(route,{...state, latest_manual:true}));
+  await expect(rejected.state(scope,'rule').result).rejects.toMatchObject({code:'invalid_response'});
+});

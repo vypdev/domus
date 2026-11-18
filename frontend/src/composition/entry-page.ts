@@ -533,7 +533,10 @@ export function mountEntry(page: EntryPage): PageMount {
     const drafts = new AutomationDraftController(new HttpAutomationDrafts(source.target, browser.transport),
       new AutomationDraftSessionJournal({getItem:key => browser.storage().getItem(key),
         setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
-      new BrowserEntropy(browser.random), rule => automation.replaceDraft(rule), view => {
+      new BrowserEntropy(browser.random), rule => {
+        automation.replaceDraft(rule);
+        void dailyPreview.handle({type: 'time', value: rule.dailyTime ?? ''});
+      }, view => {
         element.automationDrafts = view;
         syncExecution(view);
       });
@@ -568,7 +571,8 @@ export function mountEntry(page: EntryPage): PageMount {
     }, {signal: widget.signal});
     element.addEventListener('domus-automation-draft-intent', event => {
       if (event.target !== element) return;
-      void drafts.handle((event as CustomEvent<AutomationDraftIntent>).detail, automation.draft());
+      void drafts.handle((event as CustomEvent<AutomationDraftIntent>).detail, automation.draft(),
+        element.automationSchedulePreview?.input);
     }, {signal: widget.signal});
     element.addEventListener('domus-automation-execution-intent', event => {
       if (event.target !== element) return;

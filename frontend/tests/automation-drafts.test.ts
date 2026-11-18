@@ -312,7 +312,7 @@ test('draft interface exposes localized saved revisions, recovery and explicit r
   element.addEventListener('domus-automation-draft-intent', event);
   await element.updateComplete;
   expect(element.shadowRoot!.textContent!.trim()).toBe('');
-  const ready: Extract<AutomationDraftView, {state: 'ready'}> = {state: 'ready', page: {drafts: [first], next: 'next'},
+  const ready: Extract<AutomationDraftView, {state: 'ready'}> = {state: 'ready', trigger: 'manual', page: {drafts: [first], next: 'next'},
     after: null, selected: first, locked: null, competing: secondWithGroup(), operationId: 'operation', preview: null,
     busy: false, pending: false, conflict: true, readOnly: false, notice: 'conflict'};
   element.view = ready;
@@ -328,7 +328,16 @@ test('draft interface exposes localized saved revisions, recovery and explicit r
   buttons.find(button => button.state?.label === 'Review latest revision')!
     .dispatchEvent(new CustomEvent('ha-press-request'));
   expect(event.mock.lastCall?.[0].detail).toEqual({type: 'review'});
+  const trigger = root.querySelector('vyp-ha-select')!;
+  trigger.dispatchEvent(new CustomEvent('ha-select-request', {detail:{value:'daily'}}));
+  expect(event.mock.lastCall?.[0].detail).toEqual({type:'trigger',trigger:'daily'});
+  trigger.dispatchEvent(new CustomEvent('ha-select-request', {detail:{value:'manual'}}));
+  expect(event.mock.lastCall?.[0].detail).toEqual({type:'trigger',trigger:'manual'});
   element.language = 'es';
+  element.view = {...ready,trigger:'daily',notice:'invalid_daily_time'};
+  await element.updateComplete;
+  expect(root.textContent).toContain('Los borradores diarios permanecen inactivos.');
+  expect(root.querySelector('vyp-ha-select')?.state?.options[1]?.label).toBe('Diario');
   element.view = {...ready, readOnly: true, busy: true, pending: true, notice: 'uncertain',
     locked: secondWithGroup(), preview: false, after: 'previous'};
   await element.updateComplete;
@@ -353,8 +362,78 @@ test('draft interface exposes localized saved revisions, recovery and explicit r
   element.view = {...ready, locked: secondWithGroup(), preview: true};
   await element.updateComplete;
   expect(root.textContent).toContain('Se crearía esta tarea');
-  element.view = {...ready, competing: {...second, condition: null}};
+  element.view = {...ready, competing: {...second, condition: null, dailyTime:'09:15'}};
   await element.updateComplete;
   expect(root.textContent).toContain('Sin condición de existencias');
+  expect(root.textContent).toContain('Diario · 09:15');
   function secondWithGroup(): SavedAutomationDraft {return {...second, condition: grouped};}
+});
+
+test('the daily draft keeps its exact time through validation, a lost save and reopening', async () => {
+  const {controller, server, journal, storage, edit, publish} = setup();
+  const firstVisit = controller();
+  firstVisit.bind(scope, true);
+  await vi.waitFor(() => expect(publish.mock.lastCall?.[0]).toMatchObject({trigger: 'manual', busy: false}));
+  await firstVisit.handle({type:'trigger',trigger:'daily'}, idea);
+  await firstVisit.handle({type:'save'}, idea, '24:00');
+  expect(server.send).not.toHaveBeenCalled();
+  expect(publish.mock.lastCall?.[0]).toMatchObject({trigger:'daily',notice:'invalid_daily_time'});
+  server.send.mockReturnValueOnce(failed());
+  await firstVisit.handle({type:'save'}, idea, '07:30');
+  const prior = journal.open(scope.key);
+  expect(prior?.rule).toEqual({...idea,dailyTime:'07:30'});
+  expect(publish.mock.lastCall?.[0]).toMatchObject({trigger:'daily',pending:true,notice:'uncertain'});
+  firstVisit.bind(null);
+  const reopened = controller();
+  reopened.bind(scope, true);
+  await vi.waitFor(() => expect(edit).toHaveBeenLastCalledWith({...idea,dailyTime:'07:30'}));
+  expect(publish.mock.lastCall?.[0]).toMatchObject({trigger:'daily',pending:true});
+  server.original.mockReturnValueOnce(settled({kind:'committed',id:first.id,revision:first.revision,operationId:'daily-op'}));
+  await reopened.handle({type:'recover'}, null);
+  expect(server.original).toHaveBeenLastCalledWith(scope, prior);
+  expect(journal.open(scope.key)).toBeNull();
+  expect(server.send).toHaveBeenCalledOnce();
+  server.reopen.mockReturnValueOnce(settled({...first, condition: {kind:'stock_below_minimum',product_id:'tea'},
+    dailyTime:'07:30'}));
+  await reopened.handle({type:'open',id:first.id}, null);
+  expect(edit).toHaveBeenLastCalledWith({...idea,dailyTime:'07:30'});
+  reopened.bind({...scope,readOnly:true}, true);
+  await reopened.handle({type:'trigger',trigger:'manual'}, null);
+  expect(publish.mock.lastCall?.[0]).toMatchObject({trigger:'daily'});
+  reopened.bind(scope, true);
+  server.reopen.mockReturnValueOnce(settled({...first,condition:grouped,dailyTime:'08:00'}));
+  await reopened.handle({type:'open',id:first.id}, null);
+  expect(edit).toHaveBeenLastCalledWith({title:first.title,productId:null,dailyTime:'08:00'});
+  await reopened.handle({type:'trigger',trigger:'manual'}, null);
+  expect(publish.mock.lastCall?.[0]).toMatchObject({trigger:'daily',locked:{dailyTime:'08:00'}});
+  await reopened.handle({type:'new'}, null);
+  expect(publish.mock.lastCall?.[0]).toMatchObject({trigger:'manual'});
+  storage.set(AUTOMATION_DRAFT_JOURNAL_KEY,JSON.stringify({...prior,rule:{...idea,dailyTime:730}}));
+  expect(() => journal.open(scope.key)).toThrow();
+});
+
+test('the HTTP draft adapter writes and reads only supported daily definitions', async () => {
+  let persisted: unknown = {...wire,version:2,trigger:{kind:'daily',time:'08:30'},condition:null};
+  const send = vi.fn(async (path: string, init: RequestInit) => {
+    if (path.endsWith('/csrf')) return response(path,{csrf_token:'c'.repeat(64)});
+    if (init.method === 'POST') return response(path,receipt);
+    return response(path,persisted);
+  });
+  const server = new HttpAutomationDrafts(target, send);
+  const command = {...request,rule:{...idea,dailyTime:'08:30'}};
+  await expect(server.send(scope,command).result).resolves.toMatchObject({kind:'committed',id:first.id});
+  expect(JSON.parse(String(send.mock.lastCall?.[1].body))).toEqual({
+    version:2,trigger:{kind:'daily',time:'08:30'},action:wire.action,
+    condition:{kind:'stock_below_minimum',product_id:'tea'},rule_id:null,expected_revision:'0',
+  });
+  await expect(server.reopen(scope,first.id).result).resolves.toEqual({...first,condition:null,dailyTime:'08:30'});
+  for (const wrong of [
+    {...wire,version:3}, {...wire,trigger:{kind:'other'}},
+    {...wire,version:2,trigger:{kind:'manual',time:'08:30'}},
+    {...wire,version:2,trigger:{kind:'daily',time:'24:00'}},
+    {...wire,version:2,trigger:{kind:'daily',time:'08:30',zone:'UTC'}},
+  ]) {
+    persisted = wrong;
+    await expect(server.reopen(scope,first.id).result).rejects.toMatchObject({code:'invalid_response'});
+  }
 });

@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "c55ff5e7c0d88d91ce05d9b2b886fef0c8b06f5b9dd6ab91424f9862d54cb24e",
-    "assets/index-BSWL2ugs.js": "76ec7e66b4b09fc891063b592773e80d07c43f5d3bd0501569d850bfeb611241",
+    ".vite/manifest.json": "daf007f71e459977685050b8df058681b2e0d210322239bfa05233627a1865d3",
+    "assets/index-B22CLM8q.js": "f47f4d2c05e424065a3535ea295d54410108df274c0f1b8c2a27725d3c928ef5",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "04f2e923a536ca16aead690e0cd00d689591abc404b3ad66bac82dfe9d1e1910"
+    "index.html": "8cc5cec730db94bb12efb2c1a59201e62a8b506cc36227ebca93efda26a986c7"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

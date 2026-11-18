@@ -2,7 +2,10 @@ import type {JournalContext} from '../domain/journal';
 import {EntryReadError} from './ports';
 import type {EntryRead} from './ports';
 
-export const DAILY_TIME = /^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/u;
+const DAILY_TIME = /^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/u;
+export function isDailyTime(value: unknown): value is string {
+  return typeof value === 'string' && value.length === 5 && DAILY_TIME.test(value);
+}
 export const DAILY_RESOLUTIONS = ['exact', 'gap_first_valid', 'fold_first', 'fold_second'] as const;
 
 export interface DailyAutomationTime {
@@ -63,7 +66,7 @@ export class AutomationSchedulePreviewController {
       return;
     }
     if (this.request !== null) return;
-    if (view.input.length !== 5 || !DAILY_TIME.test(view.input)) {
+    if (!isDailyTime(view.input)) {
       this.update({issue: 'invalid'});
       return;
     }
