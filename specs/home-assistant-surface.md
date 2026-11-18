@@ -309,3 +309,168 @@ These are internal implementation steps within the first integrated release; the
 Primary sources: [Copilot standard](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/README.md), [original template](https://github.com/vypdev/copilot/blob/f5e5a4cf9a80248994469cd88ad55eecab5b95ca/specs/_template.md), and the linked [reference investigation](../docs/reference-investigation.md).
 
 Confirmed owner choices and unresolved proposals are separated in [decisions](../docs/decisions.md). [Issue #2](https://github.com/vypdev/domus/issues/2) tracks the documentation foundation. The [adoption note](../docs/copilot-adoption.md) records the current catalog evidence limitation. Optional future depth remains explicitly deferred in the product vision; the gateway's installation and MCP internals are outside Domus scope.
+
+## Show low-stock products in Home Assistant
+
+- Status: Draft
+- Date: 2026-11-18
+- Catalog capability ID: home-assistant-surface
+- Owners: Domus maintainers
+- Scope: A private read-only native sensor for the Overview replenishment count
+- Required review gates: product UX, architecture, testing, documentation, security/operations
+- Open decisions blocking readiness: none for the bounded aggregate
+
+### 1. Executive summary
+
+Home Assistant displays the same number of products below their replenishment
+minimum as Domus Overview. A usable zero and an unavailable refresh stay
+distinct.
+
+### 2. Problem, current behavior, and evidence
+
+The Overview stock panel calculates low products from authoritative active
+stock and reservations. The native Domus companion currently supplies the
+calendar and task deadline counts. The Home Assistant surface contract
+already describes a low-stock sensor.
+
+### 3. Actors, surfaces, and terminology
+
+An installation administrator can opt into the narrowly scoped stock
+projection. The Home Assistant sensor consumes the technical projection;
+Domus members retain their own authorization for Overview and stock details.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+| --- | --- |
+| ha-stock-count-R01 | Reuse the complete authoritative Overview replenishment count, with active products, available stock after reservations and the same strict minimum comparison. |
+| ha-stock-count-R02 | Establish an opt-in separate installation/channel grant for the bounded count. Reject wrong, absent or revoked grants and preserve existing calendar and deadline behavior. |
+| ha-stock-count-R03 | Publish one native count with stable identity, correct zero and unavailable states, recovery after a valid read, and no private product attributes. |
+| ha-stock-count-R04 | Qualify supported deployments, current exact image architectures, disposable HA Core and a separately installed Edge candidate with scoped cleanup. |
+
+Inventory write services, identity changes, stock detail export and gateway
+changes have separate acceptance.
+
+### 5. Current versus proposed product journey
+
+Household members continue to use Overview for details. An administrator
+can connect a read-only sensor and see the replenishment count in Home
+Assistant. A failed refresh visibly reports unavailability.
+
+### 6. Functional behavior and state model
+
+Use current verified installation scope for a bounded projection. Count
+each eligible product once using the same threshold and reservation facts
+as Overview. Scope the native unique identity to installation and channel.
+Produce an integer count and bounded health evidence. Treat absent or failed
+protected reads as unavailable and resume on the next verified success.
+
+### 7. User-facing configuration
+
+The integration is opt-in per installation. The normal protected Overview
+path is unchanged. The technical stock grant is separate from the known
+calendar and deadline purposes.
+
+### 8. Clean Architecture design
+
+Reuse the application-owned replenishment count. The application resolves
+the technical authority for one read-only projection. The HTTP/HA adapters
+only map the count, identity and availability to their contracts. The
+companion uses the existing integration and owned cleanup lifecycle.
+
+### 9. UI/UX and content contract
+
+The native entity description and configuration are localized for English
+and Spanish. A valid zero remains distinguishable from temporary
+unavailability. Product names, per-product quantities and private household
+identities stay outside the sensor attributes.
+
+### 10. Failure, recovery, and cleanup
+
+A failed refresh preserves the installation and cannot create stock, task
+or purchase effects. Restore availability only after an authorized read.
+Remove only the temporary companion configuration, candidate and synthetic
+records created by verification, as applicable.
+
+### 11. Security, permissions, and privacy
+
+Use the established private listener boundary and a separate, narrowly
+scoped stock purpose. Validate installation and channel and reject replay
+against other purposes. Keep private credential strings outside logs,
+screenshots and API output. The projection never grants household member
+authority.
+
+### 12. Observability and operational UX
+
+The companion shows available or unavailable without exposing sensitive
+failure details. Configuration and recovery guidance explain purpose,
+channel identity, refresh and optional enabling.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+Preserve existing calendar and deadline installations and default disabled
+behavior. The stock count reads existing records and requires no schema
+migration. Qualify a pinned Edge package and avoid modifying Stable.
+
+### 14. Testing strategy and numeric budget
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+| --- | --- | --- |
+| Count | 2 | Full Overview parity, strict minimum, reservations and eligibility |
+| Authority | 2 | Scoped purpose and installation/channel, opt-in and boundaries |
+| Native entity | 2 | Identity and zero/unavailable recovery with bounded attributes |
+| Deployment | 1 | Current source images, both modes and scoped installed qualification |
+| Total | 7 | Distinct observable scenarios |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| ha-stock-count-C01 | Count | ha-stock-count-R01 | Count all eligible low products beyond the visible Overview page and verify the same total. |
+| ha-stock-count-C02 | Count | ha-stock-count-R01 | Check threshold equality, reservations, active eligibility and read-only effects through the shared query. |
+| ha-stock-count-C03 | Authority | ha-stock-count-R02 | Reject a missing, wrong-purpose, foreign-installation or cross-channel grant without exposing a stock count. |
+| ha-stock-count-C04 | Authority | ha-stock-count-R02 | Leave the optional endpoint disabled by default and verify existing calendar and deadline use with separate grants. |
+| ha-stock-count-C05 | Native entity | ha-stock-count-R03 | Verify stable identity through refresh and restart and absence of personal/product details. |
+| ha-stock-count-C06 | Native entity | ha-stock-count-R03 | In disposable HA Core show real zero, a failed or denied refresh as unavailable and a valid recovery. |
+| ha-stock-count-C07 | Deployment | ha-stock-count-R04 | Qualify both protected compositions and real image architectures, then verify and clean a separate Edge installation using synthetic data. |
+
+### 15. Documentation and discoverability
+
+| Path | Change |
+| --- | --- |
+| specs/home-assistant-surface.md | update |
+| docs/contracts/home-assistant.md | update |
+| docs/roadmap.md | update |
+| docs/installation-home-assistant.md | update |
+| docs/evidence/ha-low-stock-sensor-qualification.md | create |
+
+### 16. Acceptance scenarios
+
+Execute the seven section 14 scenarios and retain the qualifying calendar
+and deadline checks. Record the exact runtime and both whole-image CI and
+installed candidate evidence in the contributing PR.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+| --- | --- |
+| ha-stock-count-R01 | ha-stock-count-C01, ha-stock-count-C02 |
+| ha-stock-count-R02 | ha-stock-count-C03, ha-stock-count-C04 |
+| ha-stock-count-R03 | ha-stock-count-C05, ha-stock-count-C06 |
+| ha-stock-count-R04 | ha-stock-count-C07 |
+
+### 18. Implementation sequence
+
+Expose the shared bounded aggregate with narrow current authority. Add the
+companion sensor and optional site configuration. Exercise native
+integration, deployment images, installed Edge and cleanup.
+
+### 19. Definition of Done
+
+All acceptance cases pass at complete supported coverage. Exact installed
+evidence and cleanup are recorded. The merge passes destination CI and
+Branch Sync.
+
+### 20. References and decisions
+
+Use the proposed low-stock entity in `specs/home-assistant-surface.md`
+and `docs/contracts/home-assistant.md`. Preserve the existing Overview
+policy and private companion integration.
