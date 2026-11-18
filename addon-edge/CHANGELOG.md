@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.39
+
+- Review your previous manual automation runs from the saved rule, including the original task outcome and retained results from before restoration.
+
 ## 0.0.0-edge.38
 
 - Enable a saved manual automation revision, run it with an original receipt, and disable future runs.
