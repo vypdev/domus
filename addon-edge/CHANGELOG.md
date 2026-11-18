@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.38
+
+- Enable a saved manual automation revision, run it with an original receipt, and disable future runs.
+- Migrate SQLite to schema 33 while preserving saved draft revisions and receipts.
+
 ## 0.0.0-edge.37
 
 - Retry a draft conflict review without losing the local edit or saving over a stale revision.

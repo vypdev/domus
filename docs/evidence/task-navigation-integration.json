@@ -261,5 +261,16 @@
     },
     "requirements": "automation-drafts-R01 through automation-drafts-R04",
     "evidence": "automation-draft-qualification.md"
+  },
+  "manualAutomationExecution": {
+    "sourceCommit": "fee2e9695b5f7b648c38dbb550038614f30095d4",
+    "actualProductFiles": {
+      ".vite/manifest.json": "0668970d07960016c3d9d24807f6ffdbd3e9aad8fedf67b0e46745316e0d2982",
+      "assets/index-Bq58zfmH.js": "e662150cb70518dd642a80be62c0ad15bc8ef3fd54c9b12ba138ffbc9fb44356",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "be33a29f23894572c40532edb4128495f808ac8fb5b79b99f3a68a231a2949dc"
+    },
+    "requirements": "SDD-I120-U1-R1 through SDD-I120-U1-R6",
+    "evidence": "automation-execution-qualification.md"
   }
 }
