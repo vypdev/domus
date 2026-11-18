@@ -21,3 +21,13 @@ SQLite schema 34.
 
 Local disposable Core `2026.10.4` passed with all ten authored Python modules
 at 100% statement and branch coverage, covering 581 statements and 136 branches.
+
+The local backend campaign covered all 230 modules at 100%, including 17,865
+statements and 4,832 branches. The frontend passed 1,786 tests with 100% statements,
+branches, functions and lines. The compiled local Ingress and standalone journeys
+passed all 111 browser cases.
+
+The preparatory SDD CI run `44407258836` encountered an ARM64 browser-port collision
+with a local browser campaign on the shared host. That local campaign has finished.
+Further local entry-browser campaigns use the workflow's existing shared
+`/tmp/domus-ci-entry-browser.lock`. Final candidate CI verifies both architectures.
