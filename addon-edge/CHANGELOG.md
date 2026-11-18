@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.34
+
+- Match the automation draft API contract to the exact supported revision range.
+
 ## 0.0.0-edge.33
 
 - Save and reopen inactive manual automation drafts in Household settings.

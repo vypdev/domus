@@ -17,10 +17,12 @@ The Ingress walkthrough verified the Overview stock summary and replenishment in
 English and Spanish. The test app, its data and its temporary repository source were
 removed after verification. [Installed acceptance](https://github.com/vypdev/domus/pull/103#issuecomment-6797153928)
 
-Edge.33 uses SQLite schema 32. Keep a compatible image and
+The current Edge preview uses SQLite schema 32. Keep a compatible image and
 cold data backup before updating from an earlier schema. An additional Supervisor source
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.
+
+Edge.34 makes the draft API contract use the exact signed 64-bit revision range.
 
 Edge.33 [saves and reopens inactive automation drafts](evidence/automation-draft-qualification.md).
 Edits append revisions. An original-save receipt allows recovery after a lost response.
