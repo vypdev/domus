@@ -1,8 +1,9 @@
 /** Bounded same-origin Inventory reads and exact original-command recovery. */
 import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
+import type {ShoppingAttention} from '../application/shopping-attention';
 import type {StockAttention} from '../application/stock-attention';
-import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, signedQuantity, stockUnits} from '../domain/inventory';
+import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, shoppingItemKey, signedQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, InventoryCommand, InventoryReport, LocationStock, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement, StockTotals, StockTransfer, StorageLocation} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import {revisionValue} from '../domain/administration';
@@ -277,8 +278,23 @@ function shoppingList(value: unknown): ShoppingList {
   const row = fields(value, ['items','next_cursor'], []);
   check(Array.isArray(row.items) && row.items.length <= 25);
   const items = row.items.map(shoppingItem);
-  check(new Set(items.map(item => item.productId === null ? 'extra:' + item.extraId : 'product:' + item.productId)).size === items.length);
+  check(new Set(items.map(shoppingItemKey)).size === items.length);
   return {items, cursor:cursorValue(row.next_cursor)};
+}
+
+function shoppingAttention(value: unknown): ShoppingAttention {
+  const group = fields(value, ['total', 'items'], []);
+  const total = integer(group.total, 0);
+  check(Array.isArray(group.items) && group.items.length === Math.min(total, 25));
+  const items = group.items.map(value => {
+    const row = fields(value, ['product_id', 'extra_id', 'name', 'base_unit', 'total'], []);
+    const productId = nullableId(row.product_id), extraId = nullableId(row.extra_id);
+    const unit = choice(row.base_unit, BASE_UNITS), total = shoppingAmount(row.total, unit);
+    check(total !== '0' && (productId === null ? extraId !== null && unit === 'piece' : extraId === null));
+    return {productId, extraId, unit, total, name:text(row.name, 160)};
+  });
+  check(new Set(items.map(shoppingItemKey)).size === items.length);
+  return {total, items};
 }
 
 function shoppingSource(value: unknown, unit: BaseUnit): ShoppingSource {
@@ -413,6 +429,10 @@ export class HttpInventoryServer implements InventoryServer {
 
   stockAttention(context: JournalContext) {
     return this.network.owned(async signal => stockAttention(await this.network.get(BASE + '/stock-attention', context, signal)));
+  }
+
+  shoppingAttention(context: JournalContext) {
+    return this.network.owned(async signal => shoppingAttention(await this.network.get(BASE + '/shopping-attention', context, signal)));
   }
 
   read(scope: InventoryScope, cursor: string | null) {

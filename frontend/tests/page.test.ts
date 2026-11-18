@@ -33,6 +33,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   document.head.append(data); nodes.push(data);
   let phase = 'unconfigured', postRequests = 0, putRequests = 0;
   let taskOverviewDenied = false;
+  let shoppingItemPresent = false;
+  const shoppingItem = {product_id:'product',extra_id:null,name:'Salt',base_unit:'gram',total:'1.000001'};
   const originalAccess=JSON.parse(wire.active);
   let preferenceReceipt:Record<string,unknown>|null=null;
   let memberId:string=originalAccess.member.member_id, preferenceLocale:'en'|'es'|null=null, preferenceRevision=1, preferencesReadable=true;
@@ -92,6 +94,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       });
     }
     else if (route === 'inventory/stock-attention') raw = JSON.stringify({total:0,items:[]});
+    else if (route === 'inventory/shopping-attention') raw = JSON.stringify(shoppingItemPresent
+      ? {total:1,items:[shoppingItem]} : {total:0,items:[]});
     else if (route === 'family/overview') raw = JSON.stringify(timing ? timing.overview() : {
       period:{start:'2026-05-25',end:'2026-06-01'}, earned_minor:125,completed_count:3});
     else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
@@ -135,7 +139,9 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       sources:[],next_cursor:route.includes('cursor=')?null:'more-sources',
     });
     else if (route.startsWith('inventory/shopping-list?')) raw = JSON.stringify({
-      items:[],next_cursor:route.includes('cursor=')?null:'more-list',
+      items:shoppingItemPresent && route.includes('cursor=')
+        ? [{...shoppingItem,pantry:'1.000001',tasks:'0',manual:'0',attribution:null}] : [],
+      next_cursor:route.includes('cursor=')?null:'more-list',
     });
     else if (route.startsWith('inventory?')) raw = JSON.stringify({location_id:'pantry', may_manage:true, may_shop:true, may_request:true, products:[],
       next_cursor:route.includes('cursor=')?null:'inventory-next', locations:[]});
@@ -177,6 +183,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     const app = root.querySelector<DomusApp>('domus-app')!; await app?.updateComplete; return {mounted, app};};
   return {root, data, page, open, values, navigation, fetch, events, postRequests: () => postRequests,
     denyTaskOverview: () => {taskOverviewDenied = true;},
+    shoppingItem: (present: boolean) => {shoppingItemPresent = present;},
     putRequests:()=>putRequests,preferences:(locale:'en'|'es'|null,revision=1)=>{preferenceLocale=locale;preferenceRevision=revision;},
     member:(value:string)=>{memberId=value;},preferencesReadable:(value:boolean)=>{preferencesReadable=value;},
     phase: (value: string) => {phase = value;}};
@@ -840,6 +847,50 @@ test('Overview stock is independently available and retires with the verified ho
   f.page.location.href += '#inventory';
   f.events.dispatchEvent(new Event('hashchange'));
   expect(app.stockAttention).toBeNull();
+});
+
+test('Overview shopping retries and opens the current shared-list item beyond an empty candidate page', async () => {
+  const f = fixture(); f.phase('active'); f.denyTaskOverview();
+  const {app} = await f.open();
+  const summary = app.shadowRoot!.querySelector('domus-shopping-attention')!;
+  const readCount = () => f.fetch.mock.calls.filter(([path]) => path.endsWith('/inventory/shopping-attention')).length;
+  const retry = () => new Event('domus-shopping-attention-retry', {bubbles:true, composed:true});
+  const navigate = (fragment: string) => {
+    f.page.location.href = f.page.location.href.split('#')[0] + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  await vi.waitFor(() => expect(app.shoppingAttention).toMatchObject({state:'ready',data:{total:0}}));
+  const initialReads = readCount();
+  const unrelated = app.appendChild(document.createElement('div'));
+  unrelated.dispatchEvent(retry());
+  expect(readCount()).toBe(initialReads);
+  f.shoppingItem(true);
+  summary.dispatchEvent(retry());
+  await vi.waitFor(() => expect(app.shoppingAttention).toMatchObject({state:'ready',data:{total:1}}));
+  await summary.updateComplete;
+  const href = summary.shadowRoot!.querySelector('a')!.getAttribute('href')!;
+  navigate(href);
+  expect(app.workspaceDestination).toBe('inventory');
+  expect(app.shoppingAttention).toBeNull();
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus).toEqual({key:'product:product',found:true}));
+  const list = app.shadowRoot!.querySelector('domus-inventory')!.shadowRoot!
+    .querySelector('domus-shopping')!.shadowRoot!.querySelector('domus-shopping-list')!;
+  await list.updateComplete;
+  expect(list.shadowRoot!.activeElement?.textContent).toBe('Salt');
+
+  navigate('#inventory');
+  await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
+  expect(app.inventory?.shoppingFocus).toBeUndefined();
+  f.shoppingItem(false);
+  navigate(href);
+  await vi.waitFor(() => expect(app.inventory?.shoppingFocus?.found).toBe(false));
+  await list.updateComplete;
+  const currentList = app.shadowRoot!.querySelector('domus-inventory')!.shadowRoot!
+    .querySelector('domus-shopping')!.shadowRoot!.querySelector('domus-shopping-list')!;
+  await currentList.updateComplete;
+  expect(currentList.shadowRoot!.activeElement?.id).toBe('shopping-list-title');
+  expect(currentList.shadowRoot!.textContent).toContain('This item is no longer available to buy.');
+  expect(f.postRequests()).toBe(0);
 });
 
 test('the weekly Family summary retries its own read and retires on member and workspace changes', async () => {

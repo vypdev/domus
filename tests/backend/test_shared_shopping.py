@@ -67,6 +67,12 @@ def sources(product):
     return f"/{product}/sources"
 
 
+def attention(api, user=USER, **params):
+    return api.client.get(
+        INVENTORY + "/shopping-attention", headers=member_context(user), params=params
+    )
+
+
 def test_shared_list_exact_attribution_and_current_permissions(api):
     with api.store.write() as unit:
         for member, user, grants in (
@@ -163,6 +169,25 @@ def test_shared_list_exact_attribution_and_current_permissions(api):
         tracked_row["total"],
     ) == ("4", "0", "2.000002", "6.000002")
     assert free_row["attribution"]["author_alias"] == "Requester"
+    assert attention(api, REQUESTER).json() == {
+        "total": 2,
+        "items": [
+            {
+                "product_id": product,
+                "extra_id": None,
+                "name": "Rice",
+                "base_unit": "gram",
+                "total": "6.000002",
+            },
+            {
+                "product_id": None,
+                "extra_id": untracked,
+                "name": "Rice",
+                "base_unit": "piece",
+                "total": "1",
+            },
+        ],
+    }
     detail = view(api, sources(product), REQUESTER, limit=1).json()
     assert detail["next_cursor"] and detail["sources"][0]["kind"] != "task"
     more = view(api, sources(product), REQUESTER, limit=1, cursor=detail["next_cursor"]).json()
@@ -184,9 +209,13 @@ def test_shared_list_exact_attribution_and_current_permissions(api):
     assert command(api, "denied", "add-extra", user=VIEWER, **free).status_code == 403
     api.user(OUTSIDER)
     assert view(api, user=OUTSIDER).status_code == 403
+    denied = attention(api, OUTSIDER)
+    assert denied.status_code == 403
+    assert not {"total", "items"} & denied.json().keys()
     api.user(MANAGER)
     task_detail = view(api, sources(product), MANAGER).json()
     assert task_detail["item"]["tasks"] == "1.000001"
+    assert attention(api, MANAGER).json()["items"][0]["total"] == "7.000003"
     assert (
         next(source for source in task_detail["sources"] if source["kind"] == "task")["name"]
         == "Prepare dinner"
@@ -213,6 +242,49 @@ def test_shared_list_exact_attribution_and_current_permissions(api):
         unit.members.save(replace(requester, exceptions=(), revision=2), 1)
     assert original(api, "tracked", "add-extra", REQUESTER).status_code == 403
     assert command(api, "tracked", "add-extra", user=REQUESTER, **tracked).status_code == 403
+
+
+def test_shopping_attention_counts_beyond_one_page_without_covered_items(api):
+    api.user(USER, True)
+    assert attention(api).json() == {"total": 0, "items": []}
+    assert attention(api, limit=1).status_code == 422
+    covered = register(api, "covered", "Covered", "piece")
+    policy = post(
+        api,
+        "need",
+        "configure-replenishment",
+        product_id=covered,
+        minimum="1",
+        target="2",
+        expected_revision="0",
+    )
+    assert policy.status_code == 200, policy.text
+    purchase = command(api, "incoming", "purchase", product_id=covered, name=None, quantity="2")
+    assert purchase.status_code == 200, purchase.text
+    assert view(api).json()["items"][0]["total"] == "0"
+
+    expected = []
+    for index in range(27):
+        added = command(
+            api,
+            f"extra-{index}",
+            "add-extra",
+            product_id=None,
+            name="Batteries",
+            quantity=str(index + 1),
+        )
+        assert added.status_code == 200, added.text
+        expected.append(
+            {
+                "product_id": None,
+                "extra_id": added.json()["result"]["extra_id"],
+                "name": "Batteries",
+                "base_unit": "piece",
+                "total": str(index + 1),
+            }
+        )
+    assert attention(api).json() == {"total": 27, "items": expected[:25]}
+    assert view(api).json()["items"][0]["product_id"] == covered
 
 
 def queries(commands):

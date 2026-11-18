@@ -5,6 +5,7 @@ import {HttpAutomationPreview} from '../adapters/automation-preview-http';
 import {AutomationPreviewController} from '../application/automation-preview';
 import type {AutomationPreviewIntent} from '../application/automation-preview';
 import type {StockAttention} from '../application/stock-attention';
+import type {ShoppingAttention} from '../application/shopping-attention';
 import {HttpInventoryServer} from '../adapters/inventory-http';
 import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../adapters/inventory-journal';
 import {InventoryController} from '../application/inventory-controller';
@@ -217,6 +218,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let taskOverview: OverviewReadController<TaskOverview> | null = null;
   let automationPreview: AutomationPreviewController | null = null;
   let stockAttention: OverviewReadController<StockAttention> | null = null;
+  let shoppingAttention: OverviewReadController<ShoppingAttention> | null = null;
   let familyOverview: OverviewReadController<FamilyWeek> | null = null;
   let allocation: AllocationController | null = null;
   let calendar: CalendarController | null = null, review: RecurrenceReviewController | null = null;
@@ -225,7 +227,7 @@ export function mountEntry(page: EntryPage): PageMount {
   const dispose = () => {
     if (stopped) return;
     stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); error?.remove();
-    stockAttention?.bind(null); familyOverview?.bind(null);
+    stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
   mounts.set(doc, dispose);
@@ -235,7 +237,7 @@ export function mountEntry(page: EntryPage): PageMount {
   const fail = () => {
     if (stopped || error !== null) return;
     widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); app?.remove();
-    stockAttention?.bind(null); familyOverview?.bind(null);
+    stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
     const heading = doc.createElement('h1'), body = doc.createElement('p'), action = doc.createElement('p'), reload = doc.createElement('button');
@@ -397,10 +399,14 @@ export function mountEntry(page: EntryPage): PageMount {
     const syncInventory = () => {
       const entry = element.view;
       if (element.workspaceDestination === 'inventory' && entry?.phase === 'ready'
-          && entry.decision?.householdReadable && entry.session) {
+          && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.session) {
         const context = entry.session.context;
         const key = JSON.stringify([context.installationId, context.channel, context.subject]);
-        inventoryController.bind({key, context, readOnly:entry.decision.readOnly});
+        const authority = element.administration?.access;
+        const authorityKey = JSON.stringify([entry.household?.householdId, authority?.member?.memberId,
+          authority?.member?.revision, authority?.policyRevision]);
+        inventoryController.bind({key, context, readOnly:entry.decision.readOnly,
+          authorityKey, shoppingTarget:element.shoppingTarget});
       } else inventoryController.bind(null);
     };
     element.addEventListener('domus-inventory-intent', async event => {
@@ -441,7 +447,10 @@ export function mountEntry(page: EntryPage): PageMount {
     const stockController = new OverviewReadController(context => inventoryServer.stockAttention(context),
       view => {element.stockAttention = view;});
     stockAttention = stockController;
-    const syncStockAttention = () => {
+    const shoppingController = new OverviewReadController(context => inventoryServer.shoppingAttention(context),
+      view => {element.shoppingAttention = view;});
+    shoppingAttention = shoppingController;
+    const syncInventorySummaries = () => {
       const entry = element.view, destination = element.workspaceDestination;
       if ((destination === null || destination === 'overview') && entry?.phase === 'ready'
           && entry.notice !== 'context_changed' && entry.decision?.householdReadable && entry.session && entry.household) {
@@ -449,11 +458,19 @@ export function mountEntry(page: EntryPage): PageMount {
         const authority = element.administration?.access;
         const key = JSON.stringify([context.installationId, context.channel, context.subject, householdId, access,
           authority?.member?.memberId, authority?.member?.revision, authority?.policyRevision]);
-        stockController.bind({key, context});
-      } else stockController.bind(null);
+        const scope = {key, context};
+        stockController.bind(scope);
+        shoppingController.bind(scope);
+      } else {
+        stockController.bind(null);
+        shoppingController.bind(null);
+      }
     };
     element.addEventListener('domus-stock-attention-retry', event => {
       if (event.target === element) void stockController.refresh();
+    }, {signal: widget.signal});
+    element.addEventListener('domus-shopping-attention-retry', event => {
+      if (event.target === element) void shoppingController.refresh();
     }, {signal: widget.signal});
     const familySummary = new OverviewReadController(context => familyServer.overview(context),
       view => {element.familyOverview = view;});
@@ -493,14 +510,16 @@ export function mountEntry(page: EntryPage): PageMount {
     }, {signal: widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
+      element.shoppingTarget = /^#inventory-shopping\/((?:product|extra):[A-Za-z0-9][A-Za-z0-9_.:-]{0,127})$/u.exec(fragment)?.[1] ?? null;
       element.workspaceDestination = fragment === '#overview' ? 'overview' : fragment === '#household' ? 'household'
-        : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family' : fragment === '#inventory' ? 'inventory' : null;
-      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncAutomation(); syncStockAttention(); syncFamilyOverview();
+        : fragment === '#tasks' ? 'tasks' : fragment === '#calendar' ? 'calendar' : fragment === '#family' ? 'family'
+          : fragment === '#inventory' || element.shoppingTarget !== null ? 'inventory' : null;
+      syncCalendar(); syncReview(); syncFamily(); syncAllocation(); syncInventory(); syncOverview(); syncAutomation(); syncInventorySummaries(); syncFamilyOverview();
     };
     syncWorkspace();
     page.addEventListener('hashchange', syncWorkspace, {signal: widget.signal});
     const active = new EntryRuntime(source.target, browser, (view,administration,tasks) => {
-      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncAutomation();syncStockAttention();syncFamilyOverview();
+      element.view=view;element.administration=administration;element.tasks=tasks;syncCalendar();syncReview();syncFamily();syncAllocation();syncInventory();syncOverview();syncAutomation();syncInventorySummaries();syncFamilyOverview();
       const context=administration?.session?.context,member=administration?.access?.member;
       const contextKey=context?JSON.stringify([context.installationId,context.channel,context.subject]):null;
       const owner=contextKey!==null&&administration?.access?.state==='active'&&member?JSON.stringify([contextKey,member.memberId]):null;

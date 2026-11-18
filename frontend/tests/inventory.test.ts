@@ -1006,6 +1006,39 @@ test('shared Shopping loads pages only in scope and recovers requests with their
   expect(state()).toBeNull();
 });
 
+test('opening a shopping item retires incomplete pages, rejects cursor loops and never repeats a pending read', async () => {
+  const pages = await shoppingPages();
+  const publish = vi.fn<(state:InventoryState|null) => void>();
+  const list = vi.fn((_scope:InventoryScope,_cursor:string|null) => read(pages.shoppingList));
+  const app = new InventoryController({read:() => read(report),history:() => lost(),purchases:() => lost(),
+    purchaseReceipts:() => lost(),purchaseSessions:() => lost(),purchaseSession:() => lost(),
+    shoppingList:list,shoppingSources:() => lost(),send:() => lost(),original:() => lost()},
+    journal().journal,{requestKey:() => 'request'},publish);
+  const state = () => publish.mock.lastCall?.[0];
+  const target = {...scope,shoppingTarget:'product:missing'};
+  app.bind(target);
+  await vi.waitFor(() => expect(state()).toMatchObject({busy:false,notice:'unavailable',shoppingList:null}));
+  expect(list.mock.calls.map(([, cursor]) => cursor)).toEqual([null,'list-more']);
+
+  const page = Promise.withResolvers<typeof pages.shoppingList>();
+  const cancel = vi.fn();
+  list.mockReturnValueOnce({result:page.promise,cancel});
+  const pending = app.refresh();
+  await vi.waitFor(() => expect(list).toHaveBeenCalledTimes(3));
+  await app.refresh();
+  expect(list).toHaveBeenCalledTimes(3);
+  app.bind(null);
+  expect(cancel).toHaveBeenCalledOnce();
+  page.resolve(pages.shoppingList);
+  await pending;
+  expect(state()).toBeNull();
+
+  list.mockReturnValueOnce(lost());
+  app.bind(target);
+  await vi.waitFor(() => expect(state()).toMatchObject({busy:false,notice:'unavailable',shoppingList:null}));
+  expect(state()?.shoppingFocus).toBeUndefined();
+});
+
 test('shared Shopping renders bilingual per-source totals and controls for authorized users', async () => {
   const pages = await shoppingPages();
   const {node,root,events,submit} = component();

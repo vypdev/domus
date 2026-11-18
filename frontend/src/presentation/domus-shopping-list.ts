@@ -7,7 +7,7 @@ import {registerField} from '@vypdev/ha-ui/field';
 import type {FieldValueEvent} from '@vypdev/ha-ui/field';
 import {textFieldState} from '@vypdev/ha-ui/field-contracts';
 import type {InventoryState} from '../application/inventory-controller';
-import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, intakeQuantity, purchaseStoreName} from '../domain/inventory';
+import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, intakeQuantity, purchaseStoreName, shoppingItemKey} from '../domain/inventory';
 import type {BaseUnit, ExtraAttribution, InventoryCommand, SessionSelection, ShoppingItem, ShoppingSource} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
@@ -25,10 +25,6 @@ interface SessionDraft {
   readonly key: string;
   readonly item: ShoppingItem;
   readonly quantity: string;
-}
-
-function itemKey(item: ShoppingItem): string {
-  return item.productId === null ? 'extra:' + item.extraId : 'product:' + item.productId;
 }
 
 export class DomusShoppingList extends LitElement {
@@ -67,7 +63,13 @@ export class DomusShoppingList extends LitElement {
 
   protected updated(changed: PropertyValues<this>): void {
     if (!changed.has('view')) return;
-    const previous = changed.get('view'), {result, shoppingSources} = this.view;
+    const previous = changed.get('view'), {result, shoppingSources, shoppingFocus} = this.view;
+    if (shoppingFocus && shoppingFocus !== previous?.shoppingFocus) {
+      const selector = shoppingFocus.found
+        ? '[data-shopping-item="' + CSS.escape(shoppingFocus.key) + '"]'
+        : '#shopping-list-title';
+      this.renderRoot.querySelector<HTMLElement>(selector)?.focus();
+    }
     if (shoppingSources && shoppingSources.item.productId !== previous?.shoppingSources?.item.productId)
       this.renderRoot.querySelector<HTMLElement>('#shopping-sources-title')?.focus();
     if (result?.kind === 'committed' && result.shoppingAction === 'shopping.record-session' && result !== previous?.result) {
@@ -138,7 +140,7 @@ export class DomusShoppingList extends LitElement {
   }
 
   private addToSession(item: ShoppingItem): void {
-    const key = itemKey(item);
+    const key = shoppingItemKey(item);
     if (!this.canSelect(key)) return;
     this.sessionDraft = [...this.sessionDraft, {key,item,quantity:item.total}];
   }
@@ -207,7 +209,7 @@ export class DomusShoppingList extends LitElement {
   private item(item: ShoppingItem, mayClear: boolean, blocked: boolean) {
     const amount = (value: string) => this.amount(value, item.unit);
     return html`<li>
-      <strong>${item.name}</strong>
+      <strong data-shopping-item=${shoppingItemKey(item)} tabindex="-1">${item.name}</strong>
       <dl>
         <dt>${this.text('toBuy')}</dt><dd>${amount(item.total)}</dd>
         <dt>${this.text('pantrySource')}</dt><dd>${amount(item.pantry)}</dd>
@@ -215,7 +217,7 @@ export class DomusShoppingList extends LitElement {
         <dt>${this.text('manualSource')}</dt><dd>${amount(item.manual)}</dd>
       </dl>
       ${this.author(item.attribution)}
-      ${mayClear ? this.button('addToSession', blocked || !this.canSelect(itemKey(item)), () => this.addToSession(item)) : nothing}
+      ${mayClear ? this.button('addToSession', blocked || !this.canSelect(shoppingItemKey(item)), () => this.addToSession(item)) : nothing}
       ${item.productId !== null
         ? this.button('showSources', this.view.busy, {type:'shopping-sources', productId:item.productId})
         : mayClear ? this.clearButton(item.extraId!, blocked) : nothing}
@@ -243,7 +245,8 @@ export class DomusShoppingList extends LitElement {
     const blocked = busy || pending || scope.readOnly;
     const mayClear = report!.mayShop && !scope.readOnly;
     return html`<section aria-labelledby="shopping-list-title">
-      <h4 id="shopping-list-title">${this.text('sharedShoppingList')}</h4>
+      <h4 id="shopping-list-title" tabindex="-1">${this.text('sharedShoppingList')}</h4>
+      ${this.view.shoppingFocus?.found === false ? html`<p role="status">${this.text('shoppingSelectionMissing')}</p>` : nothing}
       ${shoppingList == null ? this.button('showShoppingList', busy, {type:'shopping-list'}) : html`
         ${report!.mayRequest && !scope.readOnly ? this.extraForm(blocked) : nothing}
         ${shoppingList.items.length === 0 ? html`<p>${this.text('emptyShoppingList')}</p>`

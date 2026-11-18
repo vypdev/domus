@@ -173,6 +173,14 @@ request**.
 
 ### Shared shopping list
 
+In **Overview**, **Items to buy** shows the exact number of outstanding items
+and the first 25 in shared-list order, with their quantities and units.
+Select an item to open **Inventory** and focus that row in the shared list.
+If the item has been covered or removed, Inventory opens the current list.
+After a load failure, use **Retry shopping summary** to refresh the count.
+In Spanish, these controls are **Artículos por comprar** and
+**Volver a cargar el resumen de compras**.
+
 In **Inventory**, choose **Show shared shopping list** in the Shopping card.
 Each Pantry product shows the amount to buy and the contribution from Pantry,
 Tasks and manual extras. Choose **Show shopping sources** to see the Task

@@ -222,6 +222,10 @@ export interface ShoppingItem {
   readonly attribution: ExtraAttribution | null;
 }
 
+export function shoppingItemKey(item: Pick<ShoppingItem, 'productId' | 'extraId'>): string {
+  return item.productId === null ? 'extra:' + item.extraId : 'product:' + item.productId;
+}
+
 export interface ShoppingList {
   readonly items: readonly ShoppingItem[];
   readonly cursor: string | null;

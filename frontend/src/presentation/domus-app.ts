@@ -14,6 +14,8 @@ import './domus-automation-preview';
 import type {AutomationPreviewView} from '../application/automation-preview';
 import './domus-stock-attention';
 import type {StockAttentionView} from '../application/stock-attention';
+import './domus-shopping-attention';
+import type {ShoppingAttentionView} from '../application/shopping-attention';
 import './domus-calendar';
 import './domus-family';
 import './domus-family-overview';
@@ -49,7 +51,7 @@ export type EntryIntent = Readonly<{type: 'refresh' | 'request_membership' | 'lo
 /** Owned rendering only; intents cross a semantic boundary and never grant command authority. */
 export class DomusApp extends LitElement {
   static properties = {inventory: {attribute:false}, rewards: {attribute:false}, allocation: {attribute:false}, family: {attribute:false}, familyScopeKey: {attribute:false}, familyToday: {attribute:false}, recurrenceReview: {attribute:false}, calendar: {attribute:false}, calendarPreference: {attribute:false}, calendarScopeKey: {attribute:false}, calendarToday: {attribute:false}, tasks: {attribute: false}, view: {attribute: false}, administration: {attribute:false}, deployment: {attribute: false}, language: {attribute: false},
-    taskOverview: {attribute: false}, automationPreview: {attribute: false}, stockAttention: {attribute: false}, familyOverview: {attribute: false},
+    taskOverview: {attribute: false}, automationPreview: {attribute: false}, stockAttention: {attribute: false}, shoppingAttention: {attribute: false}, familyOverview: {attribute: false},
     workspaceDestination: {attribute: false}, nameDraft: {state: true}, zoneDraft: {state: true}};
   static styles = styles;
   declare view: EntryView | null;
@@ -58,6 +60,7 @@ export class DomusApp extends LitElement {
   declare taskOverview: TaskOverviewView | null;
   declare automationPreview: AutomationPreviewView | null;
   declare stockAttention: StockAttentionView | null;
+  declare shoppingAttention: ShoppingAttentionView | null;
   declare familyOverview: FamilyOverviewView | null;
   declare calendar: CalendarView | null;
   declare family: FamilyView | null;
@@ -73,6 +76,7 @@ export class DomusApp extends LitElement {
   declare deployment: Deployment;
   declare language: Language;
   declare workspaceDestination: WorkspaceDestination | null;
+  shoppingTarget: string | null = null;
   private declare nameDraft: string;
   private declare zoneDraft: string;
   private draftScope: string | null = null;
@@ -82,7 +86,7 @@ export class DomusApp extends LitElement {
     this.recurrenceReview = null; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
     this.family = null; this.rewards = null; this.inventory = null; this.allocation = null; this.familyScopeKey = null; this.familyToday = DATE_MIN;
     this.workspaceDestination = null; this.taskOverview = null; this.automationPreview = null; this.nameDraft = ''; this.zoneDraft = '';
-    this.stockAttention = null; this.familyOverview = null;
+    this.stockAttention = null; this.shoppingAttention = null; this.familyOverview = null;
   }
   disconnectedCallback(): void {super.disconnectedCallback(); this.dispatchEvent(new Event('domus-detached'));}
   private text(key: MessageKey): string {return message(key, this.language);}
@@ -117,7 +121,8 @@ export class DomusApp extends LitElement {
   }
   private repeatWorkspaceSelection(event: NavigationSelectionEvent): void {
     const destination = this.workspaceDestination;
-    if (destination !== null && event.detail.kind === 'navigation' && event.detail.id === destination) {
+    if (destination !== null && this.shoppingTarget === null
+        && event.detail.kind === 'navigation' && event.detail.id === destination) {
       // A same-fragment activation has no hashchange. Keep native behavior for all other links.
       event.preventDefault();
       this.focusWorkspace(destination);
@@ -230,6 +235,7 @@ export class DomusApp extends LitElement {
         ${!closed && view?.busy ? html`<p class="busy" role="status">${this.text('busy')}</p>` : nothing}
         <domus-task-overview .view=${this.taskOverview} .language=${this.language}></domus-task-overview>
         <domus-stock-attention .view=${this.stockAttention} .language=${this.language}></domus-stock-attention>
+        <domus-shopping-attention .view=${this.shoppingAttention} .language=${this.language}></domus-shopping-attention>
         <domus-family-overview .view=${this.familyOverview} .language=${this.language}></domus-family-overview>
       </section>
       <section id="tasks" tabindex="-1" aria-label=${this.text('navigationTasks')}

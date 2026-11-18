@@ -1422,3 +1422,188 @@ Verify the installed Edge version and remove the disposable test data.
 The existing Shopping contract defines optional stores and purchase-session
 history under shopping-management-R6. Retain the published session and
 physical receipt cases.
+
+## Show items to buy on Overview
+
+- Status: Implementation in qualification
+- Catalog capability: shopping-management
+
+### 1. Executive summary
+
+Members can see the exact count of items still to be bought and the first 25 items in Overview, with their existing quantities and order. Selecting a row focuses that item in the shared list in Inventory. The summary uses the existing shared-list permissions and supports English and Spanish. Inventory remains the workspace for shopping details and history.
+
+### 2. Problem, current behavior, and evidence
+
+Issue #104 describes the current friction: members must open Inventory and request the full shared list to see what remains to buy. It asks Overview to surface the exact count and first 25 items, preserving the shared list's quantities, order and permissions, with navigation back to that list. The issue reports that the Overview roadmap calls for shopping attention; that statement is issue-provided context, not implementation evidence.
+
+The retained `specs/shopping-management.md` identifies itself as a prospective Draft and says no Domus application, public service or tests exist in its documented baseline. Its existing `shopping-management-R2` contract preserves demand origins and semantics. The Overview roadmap requires authoritative, permission-scoped projections and says unavailable or incomplete data must not be presented as zero or as a household total inferred from a partial page (`docs/roadmap.md`). The application experience contract prioritizes actionable dashboard information and forbids invented zero values on failed reads (`specs/application-experience.md`, `application-experience-R2`). These retained contracts constrain this delta; they do not verify a current shopping-list implementation or its ordering and quantity behavior. The issue's claims about the current Inventory interaction and existing list behavior remain to be verified during implementation.
+
+### 3. Actors, surfaces, and terminology
+
+The household member is the reader and navigator. Overview is the summary surface; Inventory remains the destination and owner of the full shared shopping list. “Still to be bought” means the items represented by the existing shared list for which shopping remains outstanding; the summary must use that list's established quantity, ordering and authorization semantics. Selecting an item in the summary opens the existing shared list in Inventory and focuses the list. English and Spanish are supported content languages, consistent with the application experience contract.
+
+### 4. Goals, non-goals, and fixed invariants
+
+Goals: show the exact outstanding-item count and the first 25 authorized items in existing list order with exact quantities; present the same authorized data in English and Spanish; and let a member open and focus the existing shared list in Inventory from a summary item.
+
+Non-goals: replacing or splitting the shared list; changing shopping requests, purchases, receipts, or their history; changing list ordering, quantity semantics, or permissions; and adding an independent Overview data source.
+
+Fixed invariants: the shared list remains authoritative. Overview must honor existing permissions and must not expose unauthorized items or counts. It must preserve the list's quantities and order. Unavailable or incomplete reads must not be rendered as a successful zero or complete household total, consistent with `docs/roadmap.md` and `specs/application-experience.md`. The summary is capped at 25 displayed items while its count remains exact for the authorized outstanding list.
+
+| Requirement | Behavior |
+| --- | --- |
+| SDD-I104-U1-R1 | Overview MUST show the exact count of items still to be bought and the first 25 items, using the existing shared shopping list's quantities and ordering under its existing permissions, with English and Spanish content. |
+| SDD-I104-U1-R2 | Each Overview shopping item MUST open the existing shared shopping list in Inventory and focus it. |
+
+### 5. Current versus proposed product journey
+
+| Stage | Current | Proposed | User/operator effect |
+|---|---|---|---|
+| Find outstanding shopping | A member opens Inventory and requests the full shared shopping list to see what remains to buy. | Overview presents the exact count of items still to be bought and the first 25 items in the existing shared list order, with their exact quantities. | Members can scan shopping needs without leaving Overview; the full list remains in Inventory. |
+| Check access and language | The list is read under existing shared-list permissions. | The Overview summary uses the same authorization and presents English or Spanish content. | The summary exposes only data the member is authorized to read. |
+| Continue shopping | The member locates an item in the shared list in Inventory. | Selecting an Overview item opens the existing shared list in Inventory and focuses it. | The member continues in the existing workspace for details, requests, purchases and receipt history. |
+
+Text equivalent: Overview reads the authorized shared-list data, shows its exact outstanding count and ordered first 25 items with quantities, then an item selection opens and focuses the existing list in Inventory. This is a read and navigation addition; it does not change shopping demand, purchase or receipt behavior in the retained owner `specs/shopping-management.md`.
+
+### 6. Functional behavior and state model
+
+The Overview summary MUST derive its count, displayed items, quantities and ordering from the existing shared shopping list. The count is the exact total of items still to be bought; the visible item subset is capped at the first 25 in the existing list order. It MUST NOT substitute a count of visible rows for the total. An authorized read presents the same authorized data in English and Spanish. Existing shared-list permissions remain authoritative; Overview MUST NOT widen access or reveal unauthorized list data.
+
+Each displayed item is an actionable entry to the existing shared list in Inventory. Selecting it opens that list and moves focus to it, so the member can continue with the full list and its existing workflows. If no items remain to be bought, the summary communicates that there are none rather than implying unavailable data. If the list read is unavailable or denied, the Overview MUST communicate unavailable or inaccessible data rather than display a false zero; retry or access recovery follows the existing application behavior.
+
+This delta adds a read-only Overview projection and a navigation action. It creates no new shopping state or mutation, and leaves the retained owner's demand, purchase, receipt, concurrency and recovery rules intact.
+
+### 7. User-facing configuration
+
+Not applicable. The summary has no user-facing configuration: the 25-item display limit, source ordering, quantities, language support and authorization behavior are fixed by this contract and the existing shared-list contract. No preference may weaken shared-list permissions or change the exact total.
+
+### 8. Clean Architecture design
+
+#### 8.1 Responsibilities and dependency direction
+
+| Boundary | Owns for this delta | Must not own |
+|---|---|---|
+| Domain and shared-list policy | Existing definitions of outstanding items, quantities, order and permissions | Overview-specific copies of shopping rules |
+| Application query | Read the authorized shared-list summary and provide the first 25 items plus exact total | Provider-specific DTOs or UI rendering |
+| Adapter/data boundary | Obtain existing shared-list data and map provider errors into the application's established outcomes | Recomputed or weakened authorization policy |
+| Presentation | Localized summary view model, accessible item actions and unavailable/empty states | Shopping mutations or client-only authorization |
+| Navigation entry | Open the existing Inventory shared list and focus the selected item | Creating a parallel list or alternate shopping workflow |
+
+The implementation must reuse the existing shared-list query and permission boundary. The summary's total and ordered subset must come from a consistent authorized read; truncating the displayed rows must not truncate the total. Presentation distinguishes empty from failed or denied reads, and navigation passes the selected existing item identity to the Inventory destination.
+
+#### 8.2 Contracts and trust boundaries
+
+The query input is the current authenticated member and household context from the existing application boundary. Its output contains only authorized outstanding-item data, exact quantities, existing order, and exact total. English and Spanish labels are presentation content; the underlying quantities and item ordering do not vary by locale. Item selection is untrusted presentation input and must be resolved against the current authorized list before navigation. Existing access checks remain authoritative on both summary read and destination.
+
+#### 8.3 Architecture constraints
+
+Keep the query read-only and reuse the existing list policy and data source. Verify that unauthorized data cannot enter the view model, the total remains exact when more than 25 items exist, and selecting an item reaches and focuses the same authorized list in Inventory. No selected-source evidence inspected here establishes a concrete verification invocation for these new UI behaviors; the implementation's checks and acceptance evidence remain to be specified.
+
+### 9. UI/UX and content contract
+
+This delta adds the shopping summary to the retained Overview experience in `specs/shopping-management.md`; it does not redefine the existing shared-list contract or its cases. The summary presents the exact count of items still to be bought and the first 25 items in existing shared-list order, with each item’s exact quantity. The full shared list remains the workspace for source details, requests, purchases, and receipt history. This follows the authoritative, permission-scoped projection rule in `application-experience-R2`.
+
+Use a localized heading and text labels for item names, quantities, and total count. English and Spanish must present the same authorized data and meaning. Each item is an accessible, keyboard-operable link with a visible focus indicator; selecting it opens the existing shared list in Inventory and focuses that item. Do not rely on color or position alone to communicate state or action. At narrow widths, keep names, quantities, and links readable without hiding the exact count. The count and list must represent the same authorized read; loading or incomplete data must not appear as a complete total.
+
+### 10. Failure, recovery, and cleanup
+
+On loading, authorization, or data-read failure, show a clear unavailable or access-denied state instead of a zero count or stale result presented as current. Retain the rest of Overview and provide a user-understandable retry when the read may recover. A retry must not mutate shopping demand, purchases, receipts, or the shared list. If the response cannot establish both the exact count and ordered first 25 items, identify the summary as unavailable or incomplete and do not present it as complete. Opening an item that no longer resolves in the shared list must leave the member in Inventory with a clear explanation and a safe route to the list; it must not silently select a different item.
+
+### 11. Security, permissions, and privacy
+
+The summary and item navigation use the existing shared-list authorization rules. The server remains authoritative for read access, including when opening Inventory; a visible Overview link or previously loaded item is not authorization. Return only item data the current member is permitted to read, and do not expose unauthorized names, quantities, or counts through the summary, errors, or navigation state. Recheck current access when resolving the destination so that revoked or changed permissions cannot be bypassed by a stale link. Treat list content as untrusted display data and render it as text, not executable markup.
+
+### 12. Observability and operational UX
+
+Show a loading state while the summary is being read, then either the authorized exact count and ordered first 25 items or a distinct unavailable/incomplete state. Do not substitute zero for a failed read or imply that the 25 displayed items are the entire list when more items remain. Operational diagnostics may distinguish authorization denial, unavailable data, and incomplete data, but must not include unauthorized item details. Retry feedback must make clear whether the summary has refreshed; repeated reads must not create shopping activity or duplicate notifications.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+This is an Overview projection and navigation delta over the retained shared shopping list. Existing list ordering, quantities, permissions, purchases, receipts, and demand records remain governed by the owning contract in `specs/shopping-management.md`; the summary introduces no list migration or new purchase state. Rollout must keep the existing Inventory list usable if the Overview summary is unavailable. Compatibility acceptance must confirm that opening a summary item reaches the existing shared list and focuses the corresponding item, while current permissions continue to govern both summary reads and destination access. Rollback may remove the summary entry point without altering shared-list records or history.
+
+### 14. Testing strategy and numeric budget
+
+Minimum: 3 distinct new cases, one for each observable refinement in the section 16 inventory. These augment and do not replace the retained shopping-management cases and budget in the immutable owner `specs/shopping-management.md`. The three new cases cover the exact count and ordered first 25 items with quantities and bilingual content, permission-scoped reads, and item selection that opens and focuses the shared list in Inventory. Cases are distinct only where their behavior differs; repeated runs do not add to the budget. This is a proposed budget, not evidence of executed verification. No concrete command invocation or prerequisite for SDK specification validation is established here; the invocation remains unverified.
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+|---|---:|---|
+| Overview shopping summary | 1 | Observable scenarios in the case inventory. |
+| Overview shopping authorization | 1 | Observable scenarios in the case inventory. |
+| Inventory navigation | 1 | Observable scenarios in the case inventory. |
+| Total | 3 | Distinct inventory cases; repeated executions do not add cases. |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| inventory1-C01 | Overview shopping summary | SDD-I104-U1-R1 | With shared-list items still to be bought, Overview shows their exact total and the first 25 items in the existing list order with exact quantities; the same authorized data is presented in English and Spanish. |
+| inventory1-C02 | Overview shopping authorization | SDD-I104-U1-R1 | With existing shared-list permissions varied, Overview exposes only the data the member is authorized to read and shows the exact count and ordered first 25 items for authorized reads. |
+| inventory1-C03 | Inventory navigation | SDD-I104-U1-R2 | Selecting an item from the Overview shopping summary opens the existing shared list in Inventory and moves focus to it. |
+
+### 15. Documentation and discoverability
+
+Update the existing member-facing Overview and shared-list guidance so members can find the exact remaining count, the visible ordered items and quantities, the language behavior, and the route to the shared list in Inventory. Keep the full list, requests, purchases and receipt history in the existing shared-list workspace. Update the existing owner `specs/shopping-management.md` and its catalog evidence consistently. The selected owner is the specification source for retained Shopping behavior; this delta adds only the Overview summary and focused navigation. The concrete publication and documentation validation invocation remains unverified.
+
+| Path | Change |
+| --- | --- |
+| specs/shopping-management.md | update |
+
+[specs/shopping-management.md](shopping-management.md)
+
+### 16. Acceptance scenarios
+
+The new observable acceptance inventory is defined by these three identities and assertions:
+
+- `inventory1-C01`: With items still to be bought, Overview presents the exact total and the first 25 items in existing shared-list order, with exact quantities; authorized data is presented in English and Spanish.
+- `inventory1-C02`: When shared-list permissions vary, Overview exposes only data the member may read; for authorized reads it presents the exact total and ordered first 25 items.
+- `inventory1-C03`: Selecting an item in the Overview summary opens the existing shared list in Inventory and moves focus to that list.
+
+These assertions extend the retained contract and cases in `specs/shopping-management.md`; they do not replace or redefine existing Shopping cases. Acceptance must verify observable results and authorization in the product surface. The inventory does not claim that implementation or tests have already run.
+
+### 17. Requirements traceability
+
+The two new requirements map to the concrete cases that exercise them: `SDD-I104-U1-R1` is exercised by `inventory1-C01` and `inventory1-C02`; `SDD-I104-U1-R2` is exercised by `inventory1-C03`. Retain all requirement and case identities and mappings in the immutable owner `specs/shopping-management.md`; this delta supplements that contract. Before publication, verify that the specification satisfies the required format; check internal and cross-document consistency; and verify reciprocal catalog ownership, paths and evidence against the generated view. These are required publication outcomes, not claims of completed checks. Their concrete invocation or prerequisite remains unverified.
+
+| Requirement | Cases |
+|---|---|
+| SDD-I104-U1-R1 | inventory1-C01, inventory1-C02 |
+| SDD-I104-U1-R2 | inventory1-C03 |
+
+### 18. Implementation sequence
+
+1. Review this delta with the retained owner contract in `specs/shopping-management.md` and resolve any readiness decisions there; this change adds an Overview projection and navigation to the existing shared list.
+2. Define the Overview read projection to use the existing shared-list quantities, ordering, and authorization. Keep source facts and permission decisions with their existing owners; do not create a second list or alter purchase, receipt, or inventory behavior.
+3. Add Overview presentation for the exact outstanding-item count and the first 25 items, including exact quantities. Provide equivalent English and Spanish content. Selecting an item opens the existing shared list in Inventory and focuses it.
+4. Add focused acceptance coverage for authorized and restricted reads, ordering, quantities, both locales, and item navigation/focus. Keep the existing shopping-management requirements and cases intact; the new inventory cases cover the Overview delta.
+5. Review the implemented experience for accessible names and focus behavior, then update the owner’s evidence and catalog only as part of the implementation change that establishes them.
+
+### 19. Definition of Done
+
+- [ ] The Overview shows the exact count of items still to be bought and no more than the first 25 items in existing shared-list order, with their exact quantities, in English and Spanish.
+- [ ] Reads respect existing shared-list permissions and expose only data the member may read; authorized results retain the specified count and ordering.
+- [ ] Selecting an Overview item opens the existing shared list in Inventory and moves focus to it.
+- [ ] The retained requirements and cases in `specs/shopping-management.md` remain intact, and every new requirement is exercised by its concrete acceptance cases; each case maps only to behavior it exercises.
+- [ ] The specification satisfies the repository’s required format.
+- [ ] Internal and cross-document consistency is checked, including reciprocal requirement and case mappings.
+- [ ] Reciprocal catalog ownership, paths, and evidence agree with the generated view.
+
+The selected `package.json` declares pnpm 10.34.0 and Node `>=24.20.0 <25`, but does not declare `validate:specifications` or `generate:specifications`. The documentation in `specs/README.md` names those invocations, but their implementations and prerequisites are not evidenced by the selected project declarations inspected for this delta. Therefore the concrete invocation and prerequisite for specification validation and catalog generation remain unverified; no command is a required completion step on that evidence alone. An implementation change must supply recorded verification for the stated format, consistency, and reciprocal catalog outcomes. Those outcomes are publication criteria, not evidence that a check has run or passed.
+
+### 20. References and decisions
+
+This is a bounded update to the immutable owner `specs/shopping-management.md`. Its existing requirements and cases remain authoritative for shared-list behavior, permissions, purchasing, receipt, and inventory invariants. The Overview priority context is `application-experience-R2` in `specs/application-experience.md`; this delta adds only the shopping summary and navigation behavior described for issue [#104](https://github.com/vypdev/domus/issues/104).
+
+The specification was prepared from revision `1331784a34cb7f6856ad8af95cc7098b0975d1c7`. Issue #104 defines the count, the 25-item subset, the existing ordering, quantities and permissions, the two locales and the focused Inventory destination.
+
+### Implementation evidence
+
+| Case | Executable check |
+| --- | --- |
+| `inventory1-C01` | [Shared shopping API tests](../tests/backend/test_shared_shopping.py) verify exact totals beyond 25, row order, covered demand and independent same-name extras in both HTTP compositions. The [summary browser tests](../frontend/tests/shopping-attention.test.ts) verify the 25-row limit, exact quantities and both locales. |
+| `inventory1-C02` | The same API tests verify that the summary excludes task demand for members without task-read permission and denies members outside the household. The summary browser tests verify inaccessible and incomplete response states. |
+| `inventory1-C03` | The [workspace composition test](../frontend/tests/page.test.ts) verifies focus across a sparse page. The [compiled workspace journey](../frontend/tests/e2e/workspace-navigation.spec.ts) exercises English keyboard and Spanish touch activation of existing items and the fallback after an item is removed. |
+
+Both [Ingress](../docs/contracts/native-household-api.openapi.json) and
+[standalone](../docs/contracts/household-api.openapi.json) publish
+`GET /api/v1/inventory/shopping-attention`. The query takes a single snapshot
+under the shared-list authorization boundary. The destination reads current
+authorized list pages and matches the selected identity. These reads use the
+existing storage schema and leave household records intact.

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.31",
-  "sourceCommit": "a8a28267808655f839b40e116aa8ed99c132390e",
-  "sourceArchiveSHA256": "f201a222d6fb376a488f1a4d09d148ac532cfbe4ab7a6a8b6675ee0dfcab4ee1",
+  "version": "0.0.0-edge.32",
+  "sourceCommit": "43bace9576b9468f789fe9975a3dd5fe427d83ae",
+  "sourceArchiveSHA256": "7ad1c19b3452f2be9f8385be113c7d5a1f7f1a74ee094c11ad99c2513732d0d4",
   "storageSchema": 31,
-  "wheelSHA256": "245525f6275d953d7d559ada1abb3ddb83ecdb65e331abec5f79ea9d711e903e",
+  "wheelSHA256": "7075e3aa3f8c085615a256a1eea73bdc55831d08590eb7c7b6904a3109bfb903",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -36,7 +36,7 @@
     "domus/application/identity_ports.py": "aebf50fc433fa1c77bacf2bb9e35fdde8c746069b567154de01eaf9980c49075",
     "domus/application/inventory.py": "0723c4697ca7668b1d3a66b33aa2fba65c0bf5179faee918b5f4a073ddfe5dc1",
     "domus/application/inventory_ports.py": "b0a04487925b2714702ce2737051b334949d7df09baa1e2ae29931b4c7df3d68",
-    "domus/application/inventory_queries.py": "b395a570fce3b924b2167e74a5943dce15655e49d975553b035883cb5a83ad50",
+    "domus/application/inventory_queries.py": "91b1f0652daf7100f7b2dbf1a6be4a82321db77157f7a5c927629a176b4da9ca",
     "domus/application/member_commands.py": "d3e93982d2e42d9a57771269ec0ccd4692fcd196189922bb09e7b0398b924649",
     "domus/application/member_profile_access.py": "c3af66244b9b10a43848e2422f9d662390f4ffd557440d9eae0e0a45d6e4b8a4",
     "domus/application/member_profile_commands.py": "cee8b699d2774056fe8620c22befb369193c2e3acec7fe861c4555540ffdbcc8",
@@ -69,7 +69,7 @@
     "domus/application/schedule_creation_policy.py": "56f43a6e29dfb41fefb85327e1828911cd9cebbd4ea484964fd52f92e9aff596",
     "domus/application/session_values.py": "f124c2405362cbd782394e69759ac2f88041910e771447eaf40c82ad3d993e50",
     "domus/application/sessions.py": "4e21d9b3bd917a18b8b996cc43757cd1a341a0a53d4ed2b3db77688f0fbf5a8c",
-    "domus/application/shopping_list.py": "0877fd48d3adbf9417e8c653fd01a9f9e9918ce574970abc6513e957ca860562",
+    "domus/application/shopping_list.py": "dee61c46664e53b5f80152f2a8afb354981c96a244e4e347cf736181c42449bf",
     "domus/application/shopping_ports.py": "b83355e9ed6a6f87cd865bd4fa1fbfc1df17205fabc0e0c86052bae73593662d",
     "domus/application/snapshots.py": "c4f0862f590d222711018de3b23a7155f5702375ce6ece7dd0e2170c86a22ca4",
     "domus/application/task_authorization.py": "abe17920d3131a5e1e27f9e2eff95ba152cd73463ec6cd9deca619c9009a9610",
@@ -157,7 +157,7 @@
     "domus/entrypoints/http_errors.py": "20b1a88494154178e002a98a03549b9223ab2432d2ab7291c4cc70b9e18011d6",
     "domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
     "domus/entrypoints/ingress_http.py": "f6557eb5481d132131f66ad7691e30c223c63a66a6f0ae5754c9fba3bc7f3626",
-    "domus/entrypoints/inventory_http.py": "a62ee56429988b15e9ac5903cc78dfa7ea38884e3c1aaa5efc2c6722829d0437",
+    "domus/entrypoints/inventory_http.py": "a58e114de6ff684f6d7d1a93f7f4cb316b8ffa60b0c662733df2c1fd70c2ab6e",
     "domus/entrypoints/native_http.py": "471e3485bbafb4ea6fb928f476169b3976cb2cf32f4f3c879564633619a06602",
     "domus/entrypoints/openapi.py": "01a3fab9e5890ebcc1fb9c70bce9ced43d45b9190afd134db7dd45e0c5eb28f1",
     "domus/entrypoints/point_allocation_http.py": "7339c88c083206c0778885b55793c80af219b15af7004c5a51d34dbc28f4da5c",
@@ -229,9 +229,9 @@
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
   "uiFiles": {
-    ".vite/manifest.json": "b2c7aa3cc80239f5af3a8a9fc3c256679cad699f001c378fb681e7b1cf941dd4",
+    ".vite/manifest.json": "8157d0110594f50f64ef9eaf26ccde2b9762d2ec1d9a65788015cef05d51be1e",
+    "assets/index-CK0b1_ig.js": "62063f545d4cd9609d9cc807e8eea8cf89587e904803de7ec44ef6fcc7dc3543",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DoJROSDp.js": "5c1124a7cce59dca9a3072e50c9c8b813876225d5e40aa9a01f29d246c9ac14a",
-    "index.html": "0c89407418941065cb218f15ae79e69f559b38982f52c9c1096e29afb2457ff4"
+    "index.html": "005c1c8afae3913690ee9e83248d4d23cc5775b2f14d14718e544ba696037616"
   }
 }

@@ -1,5 +1,5 @@
 /** Manage only current household scope and the original unresolved stock command. */
-import {inventoryCommand} from '../domain/inventory';
+import {inventoryCommand, shoppingItemKey} from '../domain/inventory';
 import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, PurchaseReceipts, Purchases, PurchaseSessionDetail, PurchaseSessions, ShoppingAction, ShoppingList, ShoppingSources} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import type {EntryEntropy, EntryRead} from './ports';
@@ -19,7 +19,13 @@ export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'i
   'invalid_shopping_session', 'invalid_shopping_store_name', 'shopping_session_missing'] as const;
 export type InventoryError = typeof INVENTORY_ERRORS[number] | 'rejected';
 
-export interface InventoryScope {readonly key: string; readonly context: JournalContext; readonly readOnly: boolean;}
+export interface InventoryScope {
+  readonly key: string;
+  readonly context: JournalContext;
+  readonly readOnly: boolean;
+  readonly shoppingTarget?: string | null;
+  readonly authorityKey?: string;
+}
 export interface InventoryRequest {readonly key: string; readonly scope: string; readonly command: InventoryCommand;}
 export type InventoryResult = Readonly<{
   kind: 'committed' | 'historical'; operationId: string; productId: string | null;
@@ -57,6 +63,7 @@ export interface InventoryState {
   readonly purchaseSession?: PurchaseSessionDetail | null;
   readonly shoppingList?: ShoppingList | null;
   readonly shoppingSources?: ShoppingSources | null;
+  readonly shoppingFocus?: {readonly key: string; readonly found: boolean};
   readonly pending: boolean;
   readonly busy: boolean;
   readonly result: InventoryResult | null;
@@ -82,7 +89,8 @@ export class InventoryController {
 
   bind(scope: InventoryScope | null): void {
     const previous = this.view?.scope;
-    if (scope?.key === previous?.key && scope?.readOnly === previous?.readOnly) return;
+    if (scope?.key === previous?.key && scope?.readOnly === previous?.readOnly
+        && scope?.shoppingTarget === previous?.shoppingTarget && scope?.authorityKey === previous?.authorityKey) return;
     this.owned?.cancel();
     this.owned = null;
     this.request = null;
@@ -109,8 +117,10 @@ export class InventoryController {
       await this.showPurchaseSession(state.purchaseSession.session.id);
     if (state?.purchaseReceipts && this.view?.scope === state.scope && this.view.purchaseReceipts)
       await this.showPurchaseReceipts(state.purchaseReceipts.purchase.id);
-    if (state?.shoppingList && this.view?.scope === state.scope && this.view.shoppingList)
-      await this.showShoppingList();
+    if (state && this.view?.scope === state.scope && this.view.report) {
+      if (state.scope.shoppingTarget) await this.openShoppingItem(state.scope, state.scope.shoppingTarget);
+      else if (state.shoppingList) await this.showShoppingList();
+    }
     if (state?.shoppingSources && this.view?.scope === state.scope && this.view.shoppingSources)
       await this.showShoppingSources(state.shoppingSources.item.productId!);
   }
@@ -178,6 +188,37 @@ export class InventoryController {
         notice:state.pending ? state.notice : null});
     }, 'unavailable');
     if (!loaded && this.view?.scope === state.scope) this.set({shoppingList:null, shoppingSources:null});
+  }
+
+  private async openShoppingItem(scope: InventoryScope, key: string): Promise<void> {
+    if (this.owned !== null) return;
+    this.set({shoppingList:null, shoppingSources:null, shoppingFocus:undefined});
+    const items: ShoppingList['items'][number][] = [];
+    const seen = new Set<string>();
+    let first: ShoppingList | null = null;
+    let cursor: string | null = null;
+    do {
+      let found = false;
+      const loaded = await this.run(this.server.shoppingList(scope, cursor), page => {
+        first ??= page;
+        items.push(...page.items);
+        found = page.items.some(item => item.total !== '0' && shoppingItemKey(item) === key);
+        cursor = page.cursor;
+      }, 'unavailable');
+      if (!loaded || this.view?.scope !== scope) return;
+      if (found) {
+        this.set({shoppingList:{items, cursor}, shoppingFocus:{key, found}});
+        return;
+      }
+      if (cursor !== null) {
+        if (seen.has(cursor)) {
+          this.set({notice:'unavailable'});
+          return;
+        }
+        seen.add(cursor);
+      }
+    } while (cursor !== null);
+    this.set({shoppingList:first, shoppingFocus:{key, found:false}});
   }
 
   async showShoppingSources(productId: string, more = false): Promise<void> {
