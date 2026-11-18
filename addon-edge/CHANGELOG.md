@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.36
+
+- Keep the draft editor locked while opening a saved rule or checking for an interrupted save.
+
 ## 0.0.0-edge.35
 
 - Show the latest saved condition when reviewing a conflicting draft revision.
