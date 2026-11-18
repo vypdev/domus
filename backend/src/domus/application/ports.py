@@ -37,6 +37,16 @@ class Receipts(Protocol):
     def get_operation(
         self, household_id: str, actor_id: str, operation_id: str
     ) -> Receipt | None: ...
+    def automation_run_page(
+        self,
+        household_id: str,
+        actor_id: str,
+        member_id: str,
+        rule_id: str,
+        *,
+        limit: int,
+        through: int,
+    ) -> tuple[tuple[int, Receipt], ...]: ...
     def add(self, receipt: Receipt) -> None: ...
 
 

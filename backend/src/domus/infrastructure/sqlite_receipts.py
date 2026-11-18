@@ -3,7 +3,7 @@
 import sqlite3
 from dataclasses import dataclass
 
-from domus.domain.errors import Conflict, InvalidInput
+from domus.domain.errors import Conflict, InvalidInput, StorageFailure
 from domus.domain.storage import CommandKey, JsonDocument, Receipt
 from domus.infrastructure.sqlite_history import SQLiteHistory
 
@@ -53,6 +53,38 @@ class SQLiteReceipts:
         if original is not None:
             return history.receipt(original.command, original)
         return history.operation(household_id, actor_id, operation_id)
+
+    def automation_run_page(
+        self,
+        household_id: str,
+        actor_id: str,
+        member_id: str,
+        rule_id: str,
+        *,
+        limit: int,
+        through: int,
+    ) -> tuple[tuple[int, Receipt], ...]:
+        scope = (household_id, actor_id, rule_id, member_id, through)
+        rows = self.connection.execute(
+            "SELECT r.operation_id,o.position,0 AS historical FROM receipts r "
+            "JOIN outbox o ON o.event_id=r.operation_id "
+            "WHERE r.household_id=? AND r.actor_id=? AND r.action='automation.run' "
+            "AND json_extract(r.result,'$.rule_id')=? AND json_extract(r.result,'$.member_id')=? "
+            "AND o.position<=? UNION ALL "
+            "SELECT operation_id,position,1 AS historical FROM retained_operations "
+            "WHERE household_id=? AND actor_id=? AND action='automation.run' AND current=0 "
+            "AND json_extract(document,'$.result.rule_id')=? "
+            "AND json_extract(document,'$.result.member_id')=? AND position<=? "
+            "ORDER BY position DESC LIMIT ?",
+            (*scope, *scope, limit),
+        ).fetchall()
+        page = []
+        for row in rows:
+            receipt = self.get_operation(household_id, actor_id, row["operation_id"])
+            if receipt is None or receipt.historical != bool(row["historical"]):
+                raise StorageFailure("invalid_retained_projection")
+            page.append((row["position"], receipt))
+        return tuple(page)
 
     def add(self, receipt: Receipt) -> None:
         if receipt.restoration is not None:

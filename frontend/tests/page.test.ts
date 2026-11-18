@@ -75,6 +75,10 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       rule_id:'saved-draft', latest_revision:'1', latest_title:automationTitle,
       control: manualEnabled ? {rule_revision:'1',control_revision:'1',enabled:true,title:automationTitle} : null,
     });
+    else if (route === 'automation/drafts/saved-draft/runs' && init.method === 'GET') raw = JSON.stringify({
+      rule_id:'saved-draft',next_cursor:null,items:[{operation_id:'run-operation',created_at:100,
+        rule_revision:'1',condition_matched:true,task_created:true,historical:false,task_occurrence_id:'work-1'}],
+    });
     else if (route === 'automation/drafts/saved-draft/runs') raw = JSON.stringify({
       state:'committed',archived_by:null,operation_id:'run-operation',created_at:100,
       result:{rule_id:'saved-draft',rule_revision:'1',control_revision:'1',member_id:memberId,
@@ -885,7 +889,9 @@ test('Household manual execution binds drafts, original outcomes and task naviga
   const preview = app.shadowRoot!.querySelector('domus-automation-preview')!;
   const drafts = app.shadowRoot!.querySelector('domus-automation-drafts')!;
   const execution = app.shadowRoot!.querySelector('domus-automation-execution')!;
+  const history = app.shadowRoot!.querySelector('domus-automation-run-history')!;
   const command = 'domus-automation-execution-intent';
+  const historyIntent = 'domus-automation-run-history-intent';
   const openTask = 'domus-automation-task-intent';
   dispatch(preview, 'domus-automation-preview-intent', {type:'title',value:'Check filters'});
   dispatch(drafts, 'domus-automation-draft-intent', {type:'save'});
@@ -909,6 +915,16 @@ test('Household manual execution binds drafts, original outcomes and task naviga
     result:{action:'run',taskOccurrenceId:'work-1'},busy:false,
   }));
 
+  const historyReads = () => f.fetch.mock.calls.filter(([path, init]) =>
+    path.endsWith('/automation/drafts/saved-draft/runs') && init.method === 'GET');
+  dispatch(other, historyIntent, 'open');
+  dispatch(history, historyIntent, 'invalid');
+  expect(historyReads()).toHaveLength(0);
+  dispatch(history, historyIntent, 'open');
+  await vi.waitFor(() => expect(app.automationRunHistory).toMatchObject({
+    phase:'ready',items:[{operationId:'run-operation',taskOccurrenceId:'work-1'}],
+  }));
+  expect(historyReads()).toHaveLength(1);
   dispatch(other, openTask, {type:'select',occurrenceId:'work-1'});
   dispatch(execution, openTask, {type:'refresh'});
   expect(f.navigation).toHaveLength(0);
@@ -918,6 +934,7 @@ test('Household manual execution binds drafts, original outcomes and task naviga
     path.endsWith('/tasks/occurrences/work-1'))).toBe(true));
   navigate('#tasks');
   expect(app.automationExecution).toBeNull();
+  expect(app.automationRunHistory).toBeNull();
 });
 
 test('Overview stock is independently available and retires with the verified household context', async () => {

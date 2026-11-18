@@ -10,6 +10,7 @@ from fastapi.params import Depends
 from domus.application.automation_drafts import AutomationDrafts
 from domus.application.automation_execution import AutomationExecution
 from domus.application.automation_preview import AutomationPreview
+from domus.application.automation_run_history import AutomationRunHistory
 from domus.application.calendar_commands import CalendarCommands
 from domus.application.calendar_queries import CalendarQueries
 from domus.application.family_queries import FamilyQueries, FamilyWeek
@@ -128,6 +129,7 @@ class TaskHTTPContext:
     automation: Callable[[], AutomationPreview]
     automation_drafts: AutomationDrafts
     automation_execution: AutomationExecution
+    automation_run_history: AutomationRunHistory
 
 
 def create_task_router(

@@ -1,5 +1,6 @@
 """Native HTTP binds HA Ingress to local sessions and the common household API."""
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated, Literal, cast
@@ -111,6 +112,10 @@ class _NativeBoundary(BoundedHTTP):
                         "/api/v1/inventory/purchases/",
                         "/api/v1/inventory/shopping-list/",
                     )
+                )
+                or re.fullmatch(
+                    r"/api/v1/automation/drafts/[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}/runs",
+                    scope["path"],
                 )
                 or scope["path"]
                 in (
