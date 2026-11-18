@@ -14,7 +14,9 @@ concurrency:
 jobs:
   issue-admission:
     name: Admit issue event
-    runs-on: ubuntu-latest
+    runs-on:
+      group: vypdev
+      labels: [self-hosted, codex, Linux]
     timeout-minutes: 5
     permissions:
       contents: read
@@ -25,7 +27,7 @@ jobs:
     steps:
       - name: Inspect native issue event
         id: inspect
-        uses: vypdev/copilot/issue-admission@v3
+        uses: vypdev/copilot/issue-admission@v3.10.13
         with:
           repository-locale: ${{ vars.REPOSITORY_LOCALE || 'en-US' }}
           issue-event-admission-mode: inspect
@@ -50,7 +52,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v5.1.0
         with:
           persist-credentials: false
 
@@ -59,7 +61,7 @@ jobs:
       # Declare reviewed versions in .copilot/verification-prerequisites.json.
       # Optional trusted-main setup: VERIFICATION_SETUP=true and .github/actions/copilot-verification-setup/action.yml.
       # https://docs.page/vypdev/copilot/security-operations/operations/verification#repository-verification-prerequisites
-      - uses: vypdev/copilot@v3
+      - uses: vypdev/copilot@v3.10.13
         id: copilot
         with:
           deploy-label: ${{ vars.DEPLOY_LABEL || 'deploy' }}
@@ -144,7 +146,7 @@ jobs:
         id: receipt
         if: ${{ success() && steps.copilot.outcome == 'success' && needs.issue-admission.outputs.receipt-key != '' }}
         continue-on-error: true
-        uses: vypdev/copilot/issue-admission@v3
+        uses: vypdev/copilot/issue-admission@v3.10.13
         with:
           repository-locale: ${{ vars.REPOSITORY_LOCALE || 'en-US' }}
           issue-event-admission-mode: record
@@ -156,7 +158,7 @@ jobs:
       - name: Retain successful reconciliation receipt
         if: ${{ steps.receipt.outputs.receipt-path != '' }}
         continue-on-error: true
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v5.0.0
         with:
           name: ${{ steps.receipt.outputs.receipt-name }}
           path: ${{ steps.receipt.outputs.receipt-path }}

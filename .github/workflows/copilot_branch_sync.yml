@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: vypdev/copilot@v3
+      - uses: vypdev/copilot@v3.10.13
         with:
           single-action: check_branch_sync_action
           token: ${{ secrets.PAT }}
