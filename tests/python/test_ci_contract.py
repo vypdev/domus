@@ -165,6 +165,23 @@ def test_every_installed_workflow_uses_complete_external_action_releases() -> No
                     )
 
 
+def test_installed_workflow_action_steps_have_reviewed_lockfile_resolutions() -> None:
+    lock = yaml.safe_load(WORKFLOW.with_name("actions.lock").read_text(encoding="utf-8"))
+    for path in INSTALLED_WORKFLOWS:
+        config = yaml.safe_load(path.read_text(encoding="utf-8"))
+        references = set()
+        for job in config["jobs"].values():
+            for step in job.get("steps", []):
+                reference = step.get("uses")
+                if reference is not None and not reference.startswith("./"):
+                    action, version = reference.rsplit("@", 1)
+                    references.add(f"{'/'.join(action.split('/')[:2]).lower()}@{version}")
+        relative = path.relative_to(ROOT).as_posix()
+        assert references == set(lock["workflows"][relative]), relative
+        for reference in references:
+            assert re.fullmatch(r"sha1-[a-f0-9]{40}", lock["dependencies"][reference]["commit"])
+
+
 def test_installed_workflow_jobs_use_self_hosted_runners_with_oidc_publication_on_github() -> None:
     for path in INSTALLED_WORKFLOWS:
         config = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)

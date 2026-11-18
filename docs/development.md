@@ -107,9 +107,12 @@ contracts and local documentation links for every branch push to this repository
 An internal pull request shows CI for its pushed head. Bring the head up to date with the target branch before merging.
 The self-hosted pool runs reviewed internal branches.
 Every installed workflow references complete action release versions, including Copilot consumer
-snapshots and reusable workflow calls. The CI action commits are recorded in
-`.github/workflows/actions.lock`. Run `gh actions-lock .github/workflows/ci_check.yml` after updating
-a CI action version. Package installs use their lockfiles.
+snapshots and reusable workflow calls. Installed action-step resolutions are recorded in
+`.github/workflows/actions.lock`. Run `gh actions-lock` after updating an action reference and
+`gh actions-lock --verify` to check coverage and provenance. GitHub enforces the recorded commits
+for onboarded workflows. Job-level reusable workflow calls retain their reviewed complete release
+tags and follow GitHub's separate reusable-workflow resolution, which the caller lockfile currently
+excludes. Package installs use their lockfiles.
 
 Installed coordination, admission, queue and credential-health jobs use the organization's
 `vypdev` self-hosted group with Linux labels. Reusable workflow calls pass the configured
