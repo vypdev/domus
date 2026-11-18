@@ -25,6 +25,7 @@ from domus.entrypoints.administration_http import AdministrationHTTPContext
 from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.ha_calendar_http import CALENDAR_DIGEST_ENV
 from domus.entrypoints.ha_deadline_http import DEADLINE_DIGEST_ENV
+from domus.entrypoints.ha_stock_http import STOCK_DIGEST_ENV
 from domus.entrypoints.http import HTTPSettings, create_app
 from domus.entrypoints.task_http import TaskHTTPContext
 from domus.entrypoints.ui_bundle import load_bundle
@@ -73,12 +74,18 @@ def create_owned_runtime(
     development_http: bool = False,
     ha_calendar_digest: str | None = None,
     ha_deadline_digest: str | None = None,
+    ha_stock_digest: str | None = None,
 ) -> AuthenticationRuntime:
     config = OAuthConfiguration(HAEndpoint(ha_origin), public_origin, development_http)
     storage = open_storage(data_directory, channel)
     try:
         runtime = _compose(
-            config, storage.installation, storage.database, ha_calendar_digest, ha_deadline_digest
+            config,
+            storage.installation,
+            storage.database,
+            ha_calendar_digest,
+            ha_deadline_digest,
+            ha_stock_digest,
         )
         runtime.storage = storage
         return runtime
@@ -96,6 +103,7 @@ def create_runtime(
     development_http: bool = False,
     ha_calendar_digest: str | None = None,
     ha_deadline_digest: str | None = None,
+    ha_stock_digest: str | None = None,
     database: Path | None = None,
 ) -> AuthenticationRuntime:
     installation = Installation(instance_id, channel)
@@ -105,7 +113,9 @@ def create_runtime(
         reject_owned_database(database)
         store = SQLiteDatabase(database, installation)
         store.initialize()
-    return _compose(config, installation, store, ha_calendar_digest, ha_deadline_digest)
+    return _compose(
+        config, installation, store, ha_calendar_digest, ha_deadline_digest, ha_stock_digest
+    )
 
 
 def _compose(
@@ -114,6 +124,7 @@ def _compose(
     store: SQLiteDatabase | None,
     ha_calendar_digest: str | None,
     ha_deadline_digest: str | None,
+    ha_stock_digest: str | None,
 ) -> AuthenticationRuntime:
     clock, entropy = MonotonicClock(), SecureEntropy()
     identity = StandaloneIdentity(
@@ -157,7 +168,12 @@ def _compose(
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
     )
     attach_ha_projections(
-        app, store, ha_calendar_digest, ha_deadline_digest, public_origin=config.public_origin
+        app,
+        store,
+        ha_calendar_digest,
+        ha_deadline_digest,
+        ha_stock_digest,
+        public_origin=config.public_origin,
     )
     worker = points = points_worker = None
     if store is not None:
@@ -209,6 +225,7 @@ def main(argv: list[str] | None = None) -> int:
                 development_http=args.development_http,
                 ha_calendar_digest=os.environ.get(CALENDAR_DIGEST_ENV),
                 ha_deadline_digest=os.environ.get(DEADLINE_DIGEST_ENV),
+                ha_stock_digest=os.environ.get(STOCK_DIGEST_ENV),
             )
         else:
             if not args.instance_id:
@@ -221,6 +238,7 @@ def main(argv: list[str] | None = None) -> int:
                 development_http=args.development_http,
                 ha_calendar_digest=os.environ.get(CALENDAR_DIGEST_ENV),
                 ha_deadline_digest=os.environ.get(DEADLINE_DIGEST_ENV),
+                ha_stock_digest=os.environ.get(STOCK_DIGEST_ENV),
                 database=args.database,
             )
     except DomusError as error:

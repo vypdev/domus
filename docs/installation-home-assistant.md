@@ -7,6 +7,10 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
+Edge.43 includes the optional [native low-stock sensor](tasks/ha-low-stock-sensor.md).
+Configure its separate installation grant when Home Assistant needs the Overview count.
+The app retains SQLite schema 34. [Qualification](evidence/ha-low-stock-sensor-qualification.md)
+
 Edge.23 was installed in a disposable `aarch64` Supervisor app on 2026-11-11.
 Ingress accepted the optional deadline setting and showed the two Overview
 counts in English and Spanish. The [qualification record](evidence/ha-deadline-sensors-qualification.md#installed-edge23)

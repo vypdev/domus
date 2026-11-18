@@ -15,3 +15,8 @@ configuration:
     description: >-
       Resumen SHA-256 opcional para los recuentos de vencimientos de solo lectura.
       Elimina el valor para desactivar el acceso y reinicia Domus tras cambiarlo.
+  ha_stock_digest:
+    name: Resumen del token de existencias bajas
+    description: >-
+      Resumen SHA-256 opcional para el recuento de productos con existencias bajas.
+      Reinicia Domus tras cambiarlo. Elimina el resumen y reinicia para revocar el acceso.

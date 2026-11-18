@@ -1,5 +1,6 @@
 """Project protected product stock and its append-only movement history."""
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 from domus.application.authorization import HouseholdAccess
@@ -22,6 +23,7 @@ from domus.domain.identity import HumanIdentity, Permission, allows, effective_r
 from domus.domain.inventory import (
     PANTRY,
     BaseUnit,
+    CatalogProduct,
     MovementKind,
     StockTransfer,
     StorageLocation,
@@ -80,6 +82,40 @@ class StockAttentionItem:
 class StockAttention:
     total: int
     items: tuple[StockAttentionItem, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class LowStockCount:
+    low_stock_products: int
+
+
+@dataclass(frozen=True, slots=True)
+class InstallationLowStock:
+    transactions: Transactions
+    scope: MaintenanceScope
+
+    def read(self) -> LowStockCount:
+        with self.transactions.read() as unit:
+            household = self.scope.require(unit)
+            total = sum(1 for _ in _low_stock_products(unit.inventory, household.household_id))
+            return LowStockCount(total)
+
+
+def _low_stock_products(
+    stock: InventoryRecords, home: str
+) -> Iterator[tuple[CatalogProduct, int, int]]:
+    after = ""
+    while products := stock.products(home, after, STOCK_ATTENTION_LIMIT):
+        for product in products:
+            available = stock.balance(home, product.reference_id) - stock.reserved(
+                home, product.reference_id
+            )
+            policy = stock.replenishment(home, product.product_id)
+            if policy.needed(available) > 0:
+                yield product, available, policy.minimum
+        if len(products) < STOCK_ATTENTION_LIMIT:
+            break
+        after = products[-1].product_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -420,32 +456,20 @@ class InventoryQueries:
             home, _, _ = self._access(
                 unit, "inventory-stock-attention-v1", STOCK_ATTENTION_LIMIT, None
             )
-            stock = unit.inventory
             total = 0
             items: list[StockAttentionItem] = []
-            after = ""
-            while products := stock.products(home, after, STOCK_ATTENTION_LIMIT):
-                for product in products:
-                    available = stock.balance(home, product.reference_id) - stock.reserved(
-                        home, product.reference_id
-                    )
-                    policy = stock.replenishment(home, product.product_id)
-                    if policy.needed(available) <= 0:
-                        continue
-                    total += 1
-                    if len(items) < STOCK_ATTENTION_LIMIT:
-                        items.append(
-                            StockAttentionItem(
-                                product.product_id,
-                                product.name,
-                                product.base_unit,
-                                stock_quantity(available),
-                                stock_quantity(policy.minimum),
-                            )
+            for product, available, minimum in _low_stock_products(unit.inventory, home):
+                total += 1
+                if len(items) < STOCK_ATTENTION_LIMIT:
+                    items.append(
+                        StockAttentionItem(
+                            product.product_id,
+                            product.name,
+                            product.base_unit,
+                            stock_quantity(available),
+                            stock_quantity(minimum),
                         )
-                if len(products) < STOCK_ATTENTION_LIMIT:
-                    break
-                after = products[-1].product_id
+                    )
             return StockAttention(total, tuple(items))
 
     def history(self, product_id: str, *, limit: int, cursor: str | None) -> MovementHistory:

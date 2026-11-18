@@ -25,10 +25,11 @@
   },
   "exceptions": {
     "calendar_unavailable": {"message": "Domus no pudo devolver un calendario completo para este intervalo."},
-    "deadlines_unavailable": {"message": "Domus no pudo devolver los recuentos de vencimientos."}
+    "deadlines_unavailable": {"message": "Domus no pudo devolver los recuentos de vencimientos."},
+    "stock_unavailable": {"message": "Domus no pudo devolver el recuento de productos con existencias bajas."}
   },
   "selector": {
-    "projection": {"options": {"calendar": "Calendario", "deadlines": "Recuentos de vencimientos"}}
+    "projection": {"options": {"calendar": "Calendario", "deadlines": "Recuentos de vencimientos", "stock": "Recuento de productos con existencias bajas"}}
   },
   "entity": {
     "calendar": {
@@ -39,7 +40,8 @@
     },
     "sensor": {
       "tasks_due_today": {"name": "Tareas de Domus que vencen hoy"},
-      "tasks_overdue": {"name": "Tareas atrasadas de Domus"}
+      "tasks_overdue": {"name": "Tareas atrasadas de Domus"},
+      "low_stock_products": {"name": "Productos de Domus con existencias bajas"}
     }
   }
 }

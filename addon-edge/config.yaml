@@ -38,3 +38,4 @@ schema:
     - url
   ha_calendar_digest: str?
   ha_deadline_digest: str?
+  ha_stock_digest: str?

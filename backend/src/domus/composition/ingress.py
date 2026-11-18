@@ -28,6 +28,7 @@ from domus.entrypoints.entry_context import EntryHTTPContext
 from domus.entrypoints.ha_calendar_http import CALENDAR_DIGEST_ENV
 from domus.entrypoints.ha_deadline_http import DEADLINE_DIGEST_ENV
 from domus.entrypoints.ha_projection_http import PROJECTION_PORT
+from domus.entrypoints.ha_stock_http import STOCK_DIGEST_ENV
 from domus.entrypoints.household_http import HouseholdHTTPContext
 from domus.entrypoints.ingress_http import create_ingress_app
 from domus.entrypoints.native_http import NativeHTTPContext, create_native_app
@@ -73,13 +74,19 @@ def create_owned_runtime(
     *,
     ha_calendar_digest: str | None = None,
     ha_deadline_digest: str | None = None,
+    ha_stock_digest: str | None = None,
 ) -> NativeRuntime:
     origins = PublicOrigins(public_origins).values
     identity = SupervisorIdentity(HomeAssistantWebSocket(HAEndpoint.supervisor()), token)
     storage = open_storage(data_directory, channel)
     try:
         runtime = _compose_business(
-            identity, storage.database, origins, ha_calendar_digest, ha_deadline_digest
+            identity,
+            storage.database,
+            origins,
+            ha_calendar_digest,
+            ha_deadline_digest,
+            ha_stock_digest,
         )
         runtime.storage = storage
         return runtime
@@ -97,6 +104,7 @@ def create_business_runtime(
     *,
     ha_calendar_digest: str | None = None,
     ha_deadline_digest: str | None = None,
+    ha_stock_digest: str | None = None,
 ) -> NativeRuntime:
     installation = Installation(instance_id, channel)
     origins = PublicOrigins(public_origins).values
@@ -104,7 +112,9 @@ def create_business_runtime(
     reject_owned_database(database)
     store = SQLiteDatabase(database, installation)
     store.initialize()
-    return _compose_business(identity, store, origins, ha_calendar_digest, ha_deadline_digest)
+    return _compose_business(
+        identity, store, origins, ha_calendar_digest, ha_deadline_digest, ha_stock_digest
+    )
 
 
 def _compose_business(
@@ -113,6 +123,7 @@ def _compose_business(
     origins: tuple[str, ...],
     ha_calendar_digest: str | None,
     ha_deadline_digest: str | None,
+    ha_stock_digest: str | None,
 ) -> NativeRuntime:
     clock, entropy = MonotonicClock(), SecureEntropy()
     sessions = IngressSessions(
@@ -162,7 +173,7 @@ def _compose_business(
         ui_bundle=load_bundle(Path(__file__).resolve().parents[1] / "ui"),
         ui_binding=ui_binding,
     )
-    attach_ha_projections(app, store, ha_calendar_digest, ha_deadline_digest)
+    attach_ha_projections(app, store, ha_calendar_digest, ha_deadline_digest, ha_stock_digest)
     worker = recurrence_worker(store, store.installation)
     bind_lifespan(app, worker)
     points = PointsConsumer(store, store.installation, utc)
@@ -216,7 +227,10 @@ def main(argv: list[str] | None = None) -> int:
     token = os.environ.pop("SUPERVISOR_TOKEN", "")
     calendar_digest = os.environ.pop(CALENDAR_DIGEST_ENV, None)
     deadline_digest = os.environ.pop(DEADLINE_DIGEST_ENV, None)
-    projections_enabled = calendar_digest is not None or deadline_digest is not None
+    stock_digest = os.environ.pop(STOCK_DIGEST_ENV, None)
+    projections_enabled = any(
+        digest is not None for digest in (calendar_digest, deadline_digest, stock_digest)
+    )
     runtime = None
     try:
         if args.data_directory is not None:
@@ -229,6 +243,7 @@ def main(argv: list[str] | None = None) -> int:
                 tuple(args.public_origin),
                 ha_calendar_digest=calendar_digest,
                 ha_deadline_digest=deadline_digest,
+                ha_stock_digest=stock_digest,
             )
             app = runtime.app
         elif args.database is not None:
@@ -242,6 +257,7 @@ def main(argv: list[str] | None = None) -> int:
                 tuple(args.public_origin),
                 ha_calendar_digest=calendar_digest,
                 ha_deadline_digest=deadline_digest,
+                ha_stock_digest=stock_digest,
             )
             app = runtime.app
         else:

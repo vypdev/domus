@@ -10,7 +10,9 @@ from test_shopping_http import command
 from test_task_commands import counts
 from test_task_runtime import api as api
 
+from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.inventory import InventoryCommands
+from domus.application.inventory_queries import InstallationLowStock
 from domus.domain.identity import (
     HumanIdentity,
     Member,
@@ -29,6 +31,11 @@ EMPTY = {"total": 0, "items": []}
 
 def read(api, user=USER, **params):
     return api.client.get(ROUTE, headers=member_context(user), params=params)
+
+
+def technical_count(api):
+    scope = MaintenanceScope(api.store.installation, "home")
+    return InstallationLowStock(api.store, scope).read().low_stock_products
 
 
 def configure(api, product, key, minimum="2", target="4"):
@@ -79,7 +86,7 @@ def test_stock_attention_respects_current_household_grants_and_actual_stock(api)
     assert (
         post(api, "attention-intake", "intake", product_id=product, quantity="2").status_code == 200
     )
-    assert read(api).json() == EMPTY
+    assert read(api).json() == EMPTY and technical_count(api) == 0
 
     reference = reserve(api, product)
     purchase = command(
@@ -101,6 +108,7 @@ def test_stock_attention_respects_current_household_grants_and_actual_stock(api)
     original = counts(api.store)
     assert read(api).json() == expected
     assert read(api).json() == expected
+    assert technical_count(api) == expected["total"]
     assert counts(api.store) == original
     with api.store.read() as unit:
         assert unit.inventory.balance("home", reference) == 2_000_000
@@ -154,7 +162,7 @@ def test_stock_attention_streams_exact_total_and_first_twenty_five_catalog_rows(
     response = read(api)
     assert response.status_code == 200, response.text
     summary = response.json()
-    assert summary["total"] == 27
+    assert summary["total"] == technical_count(api) == 27
     assert summary["items"] == [
         {
             "product_id": product,

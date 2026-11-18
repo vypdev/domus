@@ -13,10 +13,10 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util import dt as dt_util
 
-from . import CALENDAR, CONF_PROJECTION, DEADLINES, DOMAIN
+from . import CALENDAR, CONF_PROJECTION, COUNT_PROJECTIONS, DOMAIN
 from .client import CalendarClient
 from .connection import InvalidCredential, InvalidEndpoint, ProjectionUnavailable
-from .deadline_client import DeadlineClient
+from .count_client import CountClient
 
 
 class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -40,10 +40,10 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 session = async_get_clientsession(self.hass)
                 url, token = user_input[CONF_URL], user_input[CONF_TOKEN]
-                if projection == DEADLINES:
-                    client = DeadlineClient(session, url, token)
+                if projection in COUNT_PROJECTIONS:
+                    client = CountClient(session, url, token, projection)
                     await client.read()
-                    title = f"Domus task deadlines ({client.channel})"
+                    title = f"{COUNT_PROJECTIONS[projection]} ({client.channel})"
                 else:
                     client = CalendarClient(session, url, token)
                     await client.probe(dt_util.utcnow())
@@ -57,8 +57,8 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(client.identity)
                 data = {CONF_URL: str(client.url), CONF_TOKEN: user_input[CONF_TOKEN]}
-                if projection == DEADLINES:
-                    data[CONF_PROJECTION] = DEADLINES
+                if projection in COUNT_PROJECTIONS:
+                    data[CONF_PROJECTION] = projection
                 if entry is None:
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(title=title, data=data)
@@ -74,7 +74,7 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
             fields = {
                 vol.Optional(CONF_PROJECTION, default=CALENDAR): SelectSelector(
                     SelectSelectorConfig(
-                        options=[CALENDAR, DEADLINES], translation_key="projection"
+                        options=[CALENDAR, *COUNT_PROJECTIONS], translation_key="projection"
                     )
                 ),
                 **fields,

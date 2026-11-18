@@ -23,6 +23,7 @@ def test_repository_and_edge_manifest_offer_native_ha_entry_without_user_credent
         "public_origins": ["url"],
         "ha_calendar_digest": "str?",
         "ha_deadline_digest": "str?",
+        "ha_stock_digest": "str?",
     }
     assert manifest["breaking_versions"] == [
         "0.0.0-edge.2",
@@ -105,9 +106,11 @@ def test_native_options_explain_the_one_time_origin_configuration_without_a_new_
     for language in ("en", "es"):
         labels = yaml.safe_load((ROOT / f"addon-edge/translations/{language}.yaml").read_text())
         fields = labels["configuration"]
-        calendar, deadlines = fields["ha_calendar_digest"], fields["ha_deadline_digest"]
-        assert calendar["name"] != deadlines["name"]
-        assert all("SHA-256" in field["description"] for field in (calendar, deadlines))
+        projections = [
+            fields[f"ha_{purpose}_digest"] for purpose in ("calendar", "deadline", "stock")
+        ]
+        assert len({field["name"] for field in projections}) == 3
+        assert all("SHA-256" in field["description"] for field in projections)
 
 
 def test_edge_five_compatibility_recipe_is_frozen_and_not_a_discoverable_second_app() -> None:
