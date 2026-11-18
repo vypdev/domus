@@ -14,6 +14,7 @@ from domus.application.shopping_list import (
     ShoppingListView,
     ShoppingSourcesView,
     list_items,
+    outstanding_items,
     project,
     task_needs,
 )
@@ -644,25 +645,14 @@ class InventoryQueries:
             home, grants, _ = self._access(unit, "shopping-attention-v1", limit, None)
             total = 0
             items: list[ShoppingAttentionItem] = []
-            after = ""
-            while rows := unit.shopping.list_candidates(home, after, limit):
-                for item in list_items(unit, home, rows, include_tasks=grants.tasks):
-                    if item.total == "0":
-                        continue
-                    total += 1
-                    if len(items) < limit:
-                        items.append(
-                            ShoppingAttentionItem(
-                                item.product_id,
-                                item.extra_id,
-                                item.name,
-                                item.base_unit,
-                                item.total,
-                            )
+            for item in outstanding_items(unit, home, include_tasks=grants.tasks):
+                total += 1
+                if len(items) < limit:
+                    items.append(
+                        ShoppingAttentionItem(
+                            item.product_id, item.extra_id, item.name, item.base_unit, item.total
                         )
-                if len(rows) < limit:
-                    break
-                after = rows[-1][0]
+                    )
             return ShoppingAttention(total, tuple(items))
 
     def shopping_sources(

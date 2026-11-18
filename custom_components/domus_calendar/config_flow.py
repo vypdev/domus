@@ -17,6 +17,7 @@ from . import CALENDAR, CONF_PROJECTION, COUNT_PROJECTIONS, DOMAIN
 from .client import CalendarClient
 from .connection import InvalidCredential, InvalidEndpoint, ProjectionUnavailable
 from .count_client import CountClient
+from .shopping_client import SHOPPING, SHOPPING_TITLE, ShoppingClient
 
 
 class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -40,7 +41,11 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 session = async_get_clientsession(self.hass)
                 url, token = user_input[CONF_URL], user_input[CONF_TOKEN]
-                if projection in COUNT_PROJECTIONS:
+                if projection == SHOPPING:
+                    client = ShoppingClient(session, url, token)
+                    await client.read()
+                    title = f"{SHOPPING_TITLE} ({client.channel})"
+                elif projection in COUNT_PROJECTIONS:
                     client = CountClient(session, url, token, projection)
                     await client.read()
                     title = f"{COUNT_PROJECTIONS[projection]} ({client.channel})"
@@ -57,7 +62,7 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(client.identity)
                 data = {CONF_URL: str(client.url), CONF_TOKEN: user_input[CONF_TOKEN]}
-                if projection in COUNT_PROJECTIONS:
+                if projection == SHOPPING or projection in COUNT_PROJECTIONS:
                     data[CONF_PROJECTION] = projection
                 if entry is None:
                     self._abort_if_unique_id_configured()
@@ -74,7 +79,8 @@ class DomusCalendarFlow(config_entries.ConfigFlow, domain=DOMAIN):
             fields = {
                 vol.Optional(CONF_PROJECTION, default=CALENDAR): SelectSelector(
                     SelectSelectorConfig(
-                        options=[CALENDAR, *COUNT_PROJECTIONS], translation_key="projection"
+                        options=[CALENDAR, *COUNT_PROJECTIONS, SHOPPING],
+                        translation_key="projection",
                     )
                 ),
                 **fields,

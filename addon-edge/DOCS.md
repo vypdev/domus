@@ -18,7 +18,9 @@ the due-today and overdue task counts shown on Overview through a dedicated inst
 grant. Enable the [native deadline sensors](../docs/tasks/ha-deadline-sensors.md) using
 the optional `ha_deadline_digest` setting. The calendar uses its own
 `ha_calendar_digest` setting. The [low-stock sensor](../docs/tasks/ha-low-stock-sensor.md)
-uses `ha_stock_digest` to read the count from Overview. These opt-in projections share the
+uses `ha_stock_digest` to read the count from Overview. The
+[native shopping list](../docs/tasks/ha-shopping-list.md) uses `ha_shopping_digest`
+for outstanding items and quantities. These opt-in projections share the
 private app port `8100` and each requires its own installation grant.
 Enable a saved revision in Manual automation and confirm it before running.
 The run receipt links to its task when the stock condition matches. Check

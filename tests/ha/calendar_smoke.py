@@ -5,7 +5,7 @@ import json
 import os
 import sys
 import tempfile
-from contextlib import asynccontextmanager, nullcontext
+from contextlib import asynccontextmanager, nullcontext, suppress
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -13,9 +13,10 @@ from unittest.mock import patch
 from aiohttp import ClientConnectorCertificateError, web
 from homeassistant import bootstrap, loader
 from homeassistant.components.calendar import DATA_COMPONENT
+from homeassistant.components.todo import DATA_COMPONENT as TODO_COMPONENT
 from homeassistant.const import STATE_UNAVAILABLE, __version__
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_registry import async_get as entity_registry
 from homeassistant.helpers.translation import async_get_translations
@@ -36,10 +37,20 @@ DEADLINES_OTHER = f"{OTHER_UUID}.edge.deadlines.{'c' * 64}"
 STOCK_PATH = "/api/v1/ha/low-stock-products"
 STOCK_FIRST = f"{NATIVE_UUID}.edge.stock.{'a' * 64}"
 STOCK_ROTATED = f"{NATIVE_UUID}.edge.stock.{'b' * 64}"
+SHOPPING_PATH = "/api/v1/ha/shopping-list"
+SHOPPING_FIRST = f"{NATIVE_UUID}.edge.shopping.{'a' * 64}"
+SHOPPING_ROTATED = f"{NATIVE_UUID}.edge.shopping.{'b' * 64}"
+SHOPPING_ROWS = [
+    {"uid": "1" * 64, "name": "Tea filters", "quantity": "2", "unit": "piece"},
+    {"uid": "2" * 64, "name": "Harina", "quantity": "1.25", "unit": "gram"},
+    {"uid": "3" * 64, "name": "Oil", "quantity": "0.5", "unit": "millilitre"},
+]
+SHOPPING_NAMES = ("Tea filters · ×2", "Harina · 1.25 g", "Oil · 0.5 mL")
+SHOPPING_NAMES_ES = ("Tea filters · ×2", "Harina · 1,25 g", "Oil · 0,5 mL")
 
 
 @asynccontextmanager
-async def core(config_directory=None):
+async def core(config_directory=None, *, language="en"):
     directory = (
         tempfile.TemporaryDirectory() if config_directory is None else nullcontext(config_directory)
     )
@@ -51,8 +62,13 @@ async def core(config_directory=None):
         loader.async_setup(hass)
         result = await bootstrap.async_from_config_dict(
             {
-                "homeassistant": {"name": "Disposable calendar test", "time_zone": "Europe/Madrid"},
+                "homeassistant": {
+                    "name": "Disposable Domus test",
+                    "time_zone": "Europe/Madrid",
+                    "language": language,
+                },
                 "calendar": {},
+                "todo": {},
             },
             hass,
         )
@@ -92,6 +108,33 @@ def stock_entity(hass, entry):
     return entity_registry(hass).async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}.low_stock_products"
     )
+
+
+def shopping_entity(hass, entry):
+    return entity_registry(hass).async_get_entity_id("todo", DOMAIN, entry.unique_id)
+
+
+async def shopping_items(hass, entity):
+    result = await hass.services.async_call(
+        "todo", "get_items", {}, target={"entity_id": entity}, blocking=True, return_response=True
+    )
+    return result[entity]["items"]
+
+
+async def assert_shopping_items(hass, entity, names, uids):
+    state = hass.states.get(entity)
+    assert state.state == str(len(names))
+    assert not state.attributes.get("supported_features", 0)
+    items = await shopping_items(hass, entity)
+    assert items == [
+        {"summary": name, "uid": uid, "status": "needs_action"}
+        for name, uid in zip(names, uids, strict=True)
+    ]
+
+
+def assert_shopping_unavailable(hass, entity):
+    assert hass.states.get(entity).state == STATE_UNAVAILABLE
+    assert hass.data[TODO_COMPONENT].get_entity(entity).todo_items is None
 
 
 def assert_stock_state(hass, entity, expected):
@@ -148,6 +191,16 @@ class Fixture:
         self.stock_grant = STOCK_FIRST
         self.stock_body = b'{"low_stock_products":0}'
         self.stock_status = 200
+        self.shopping_grant = SHOPPING_FIRST
+        self.shopping_body = b'{"items":[]}'
+        self.shopping_status = 200
+
+    async def respond_shopping(self, request):
+        if request.headers.get("Authorization") != f"Bearer {self.shopping_grant}":
+            return web.Response(status=401)
+        return web.Response(
+            status=self.shopping_status, body=self.shopping_body, content_type="application/json"
+        )
 
     async def respond_stock(self, request):
         if request.headers.get("Authorization") != f"Bearer {self.stock_grant}":
@@ -245,6 +298,7 @@ async def fixtures():
     app.router.add_get(PATH, fixture.respond)
     app.router.add_get(DEADLINES_PATH, fixture.respond_deadlines)
     app.router.add_get(STOCK_PATH, fixture.respond_stock)
+    app.router.add_get(SHOPPING_PATH, fixture.respond_shopping)
     runner = web.AppRunner(app, access_log=None)
     await runner.setup()
     config = tempfile.TemporaryDirectory()
@@ -383,6 +437,7 @@ async def fixtures():
             assert state is None or state.state == "unavailable"
             entry_id, identity, sensors = await deadline_fixtures(hass, fixture)
             stock_entry, stock_identity, stock_id = await stock_fixtures(hass, fixture)
+            shopping = await shopping_fixtures(hass, fixture)
         process = await asyncio.create_subprocess_exec(
             sys.executable,
             __file__,
@@ -394,6 +449,7 @@ async def fixtures():
             stock_entry,
             stock_identity,
             stock_id,
+            *shopping,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
@@ -525,6 +581,7 @@ async def stock_fixtures(hass, fixture):
     assert coordinator.update_interval == timedelta(minutes=1)
     for malformed in (
         b'[["low_stock_products",1]]',
+        b'{"low_stock_products":',
         b'{"low_stock_products":1,"low_stock_products":2}',
         b'{"low_stock_products":1,"product":"private"}',
         b'{"low_stock_products":true}',
@@ -554,10 +611,136 @@ async def stock_fixtures(hass, fixture):
     return entry.entry_id, entry.unique_id, entity
 
 
+def shopping_body(rows):
+    return json.dumps({"items": rows}).encode()
+
+
+async def shopping_fixtures(hass, fixture):
+    rejected = await configure(hass, NATIVE, STOCK_FIRST, projection="shopping")
+    assert rejected["errors"] == {"token": "invalid_auth"}
+    first = await configure(hass, NATIVE, SHOPPING_FIRST, projection="shopping")
+    assert first["type"] == "create_entry", first.get("errors")
+    entry = first["result"]
+    await hass.async_block_till_done()
+    entity = shopping_entity(hass, entry)
+    assert entity == "todo.domus_shopping", entity
+    assert entry.unique_id == f"{NATIVE_UUID}.edge.shopping"
+    await assert_shopping_items(hass, entity, (), ())
+    duplicate = await configure(hass, NATIVE, SHOPPING_FIRST, projection="shopping")
+    assert duplicate["reason"] == "already_configured"
+
+    for locale, label, name in (
+        ("en", "Shared shopping list (read-only)", "Domus shopping list"),
+        (
+            "es",
+            "Lista de la compra compartida (solo lectura)",
+            "Lista de la compra de Domus",
+        ),
+    ):
+        selector = await async_get_translations(hass, locale, "selector", [DOMAIN])
+        assert selector[f"component.{DOMAIN}.selector.projection.options.shopping"] == label
+        labels = await async_get_translations(hass, locale, "entity", [DOMAIN])
+        assert labels[f"component.{DOMAIN}.entity.todo.shopping_list.name"] == name
+
+    coordinator = entry.runtime_data
+    assert coordinator.update_interval == timedelta(minutes=1)
+    native = hass.data[TODO_COMPONENT].get_entity(entity)
+    changes = []
+    unsubscribe = native.async_subscribe_updates(changes.append)
+    fixture.shopping_body = shopping_body(SHOPPING_ROWS)
+    await coordinator.async_refresh()
+    uids = tuple(row["uid"] for row in SHOPPING_ROWS)
+    await assert_shopping_items(hass, entity, SHOPPING_NAMES, uids)
+    assert [item.uid for item in changes[-1]] == list(uids)
+    for service, arguments in (
+        ("add_item", {"item": "private"}),
+        ("update_item", {"item": uids[0], "status": "completed"}),
+        ("remove_item", {"item": [uids[0]]}),
+    ):
+        with suppress(ServiceValidationError):
+            await hass.services.async_call(
+                "todo", service, arguments, target={"entity_id": entity}, blocking=True
+            )
+            raise AssertionError(f"A write was accepted by read-only {entity}: {service}")
+    await assert_shopping_items(hass, entity, SHOPPING_NAMES, uids)
+
+    fixture.shopping_body = shopping_body(
+        [{**SHOPPING_ROWS[0], "quantity": "3"}, *SHOPPING_ROWS[1:]]
+    )
+    await coordinator.async_refresh()
+    await assert_shopping_items(hass, entity, ("Tea filters · ×3", *SHOPPING_NAMES[1:]), uids)
+
+    fixture.shopping_grant = SHOPPING_ROTATED
+    await coordinator.async_refresh()
+    assert_shopping_unavailable(hass, entity)
+    assert changes[-1] is None
+    try:
+        await shopping_items(hass, entity)
+    except HomeAssistantError as error:
+        assert "did not match any entities" in str(error)
+    else:
+        raise AssertionError("A denied shopping list remained available through the read service")
+    unsubscribe()
+    fixture.shopping_body = shopping_body(SHOPPING_ROWS)
+
+    rotated = await configure(hass, NATIVE, SHOPPING_ROTATED, entry)
+    assert rotated["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert shopping_entity(hass, entry) == entity
+    await assert_shopping_items(hass, entity, SHOPPING_NAMES, uids)
+    coordinator = entry.runtime_data
+
+    row = SHOPPING_ROWS[0]
+    for malformed in (
+        b"[]",
+        b'{"items":[],"private":"detail"}',
+        b'{"items":[],"items":[]}',
+        b'{"items":{}}',
+        b'{"items":["\xff"]}',
+        b"[" * 2000 + b"]" * 2000,
+        b" " * 1_048_577,
+        shopping_body([row] * 1001),
+        shopping_body([[]]),
+        shopping_body([{"uid": row["uid"]}]),
+        shopping_body([{**row, "quantity": True}]),
+        shopping_body([{**row, "uid": "private"}]),
+        shopping_body([{**row, "name": " "}]),
+        shopping_body([{**row, "name": "x" * 161}]),
+        shopping_body([{**row, "name": "private\nname"}]),
+        shopping_body([{**row, "name": "\ud800"}]),
+        shopping_body([{**row, "quantity": "01"}]),
+        shopping_body([{**row, "quantity": "0"}]),
+        shopping_body([{**row, "unit": "unknown"}]),
+        shopping_body([{**row, "quantity": "0.5"}]),
+        shopping_body([row, row]),
+    ):
+        fixture.shopping_body = malformed
+        await coordinator.async_refresh()
+        assert_shopping_unavailable(hass, entity)
+    fixture.shopping_body = shopping_body(SHOPPING_ROWS)
+    fixture.shopping_status = 503
+    await coordinator.async_refresh()
+    assert_shopping_unavailable(hass, entity)
+    fixture.shopping_status = 200
+    await coordinator.async_refresh()
+    await assert_shopping_items(hass, entity, SHOPPING_NAMES, uids)
+    return entry.entry_id, entry.unique_id, entity
+
+
 async def verify_sensor_restart(
-    config, entry_id, identity, due, overdue, stock_entry, stock_identity, stock_id
+    config,
+    entry_id,
+    identity,
+    due,
+    overdue,
+    stock_entry,
+    stock_identity,
+    stock_id,
+    shopping_entry,
+    shopping_identity,
+    shopping_id,
 ):
-    async with core(config) as restarted:
+    async with core(config, language="es") as restarted:
         await restarted.async_block_till_done()
         restored = restarted.config_entries.async_get_entry(entry_id)
         assert restored.unique_id == identity
@@ -568,6 +751,13 @@ async def verify_sensor_restart(
         assert stock_entity(restarted, stock) == stock_id
         assert_stock_state(restarted, stock_id, "27")
         assert await restarted.config_entries.async_unload(stock_entry)
+        shopping = restarted.config_entries.async_get_entry(shopping_entry)
+        assert shopping.unique_id == shopping_identity
+        assert shopping_entity(restarted, shopping) == shopping_id
+        await assert_shopping_items(
+            restarted, shopping_id, SHOPPING_NAMES_ES, tuple(row["uid"] for row in SHOPPING_ROWS)
+        )
+        assert await restarted.config_entries.async_unload(shopping_entry)
 
 
 class suppress_expected_unavailable:
@@ -597,7 +787,8 @@ async def live():
         except ClientConnectorCertificateError:
             pass
         now = dt_util.now()
-        entries, deadline_entries, stock_entries, identities = [], [], [], set()
+        entries, deadline_entries, stock_entries, shopping_entries = [], [], [], []
+        identities, item_ids = set(), set()
         for target in targets:
             url, token, label = target["url"], target["token"], target["label"]
             other_channel = "stable" if label.endswith(" edge") else "edge"
@@ -642,6 +833,24 @@ async def live():
             identities.add(stock_entry.unique_id)
             await hass.async_block_till_done()
             assert_stock_state(hass, stock_entity(hass, stock_entry), "1")
+            async with session.get(
+                url + SHOPPING_PATH, headers={"Authorization": f"Bearer {target['stock']}"}
+            ) as denied:
+                assert denied.status == 401
+            shopping = await configure(hass, url, target["shopping"], projection="shopping")
+            assert shopping["type"] == "create_entry", shopping.get("errors")
+            shopping_entry = shopping["result"]
+            shopping_entries.append(shopping_entry)
+            assert shopping_entry.unique_id not in identities
+            identities.add(shopping_entry.unique_id)
+            await hass.async_block_till_done()
+            todo = shopping_entity(hass, shopping_entry)
+            items = await shopping_items(hass, todo)
+            assert len(items) == 1
+            uid = items[0]["uid"]
+            assert len(uid) == 64 and uid not in item_ids
+            item_ids.add(uid)
+            await assert_shopping_items(hass, todo, (f"{label} private product · ×3",), (uid,))
             for _ in range(20):
                 display = await events(hass, entity, now, now + timedelta(days=3))
                 if any(item["summary"] == f"{label} plan" for item in display):
@@ -667,7 +876,8 @@ async def live():
             == 8
         )
         assert len({stock_entity(hass, entry) for entry in stock_entries}) == len(targets)
-        for entry in entries + deadline_entries + stock_entries:
+        assert len({shopping_entity(hass, entry) for entry in shopping_entries}) == len(targets)
+        for entry in entries + deadline_entries + stock_entries + shopping_entries:
             assert await hass.config_entries.async_unload(entry.entry_id)
 
 

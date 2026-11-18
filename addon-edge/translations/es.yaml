@@ -20,3 +20,8 @@ configuration:
     description: >-
       Resumen SHA-256 opcional para el recuento de productos con existencias bajas.
       Reinicia Domus tras cambiarlo. Elimina el resumen y reinicia para revocar el acceso.
+  ha_shopping_digest:
+    name: Resumen del token de la lista de la compra
+    description: >-
+      Resumen SHA-256 opcional para la lista de la compra compartida. Home Assistant
+      puede leer nombres y cantidades. Reinicia Domus si cambias o eliminas el resumen.

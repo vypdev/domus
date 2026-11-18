@@ -20,3 +20,8 @@ configuration:
     description: >-
       Optional SHA-256 digest for the read-only low-stock product count. Remove the
       digest and restart Domus to revoke access. Restart after changing the digest.
+  ha_shopping_digest:
+    name: Shared shopping list grant digest
+    description: >-
+      Optional SHA-256 digest for the read-only shared shopping list. Home Assistant
+      can read item names and quantities. Restart Domus after changing or removing this digest.
