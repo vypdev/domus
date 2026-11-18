@@ -1,15 +1,14 @@
 import {afterEach, expect, test, vi} from 'vitest';
 import {HttpAutomationRunHistory} from '../src/adapters/automation-run-history-http';
-import type {DraftScope} from '../src/application/automation-drafts';
 import {AutomationRunHistoryController} from '../src/application/automation-run-history';
-import type {AutomationRun, AutomationRunHistoryServer, AutomationRunHistoryView, AutomationRunPage}
+import type {AutomationRun, AutomationRunHistoryScope, AutomationRunHistoryServer, AutomationRunHistoryView, AutomationRunPage}
   from '../src/application/automation-run-history';
 import {EntryReadError} from '../src/application/ports';
 import type {EntryRead} from '../src/application/ports';
 import {revisionValue} from '../src/domain/administration';
 import '../src/presentation/domus-automation-run-history';
 
-const scope: DraftScope = {key: 'home-owner', memberId: 'member', readOnly: false,
+const scope: AutomationRunHistoryScope = {key: 'home-owner', memberId: 'member', readOnly: false, authorization: 'member-1-policy-1',
   context: {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel: 'edge', subject: 'a'.repeat(32)}};
 const made: AutomationRun = {operationId: 'made', revision: revisionValue('1'), time: 1000,
   taskCreated: true, historical: false, taskOccurrenceId: 'task'};
@@ -108,6 +107,27 @@ test('scope and rule changes cancel stale results and current access denial clea
   expect(f.last()).toBeNull();
   f.history.bind(scope, 'rule', null);
   f.history.bind(null, null, null);
+});
+
+test('a verified access change retires an open history with the same member and rule', async () => {
+  const f = fixture();
+  f.history.bind(scope, 'rule', 'UTC');
+  await f.history.handle('open');
+  const pending = Promise.withResolvers<AutomationRunPage>();
+  const cancel = vi.fn();
+  f.page.mockReturnValueOnce({result: pending.promise, cancel});
+  const read = f.history.handle('older');
+  const updated = {...scope, authorization: 'member-2-policy-1'};
+  f.history.bind(updated, 'rule', 'UTC');
+  expect(f.last()).toMatchObject({phase: 'closed', items: []});
+  pending.resolve(older);
+  await read;
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(f.last()?.items).toEqual([]);
+  f.page.mockReturnValueOnce(failed(new EntryReadError('forbidden')));
+  await f.history.handle('open');
+  expect(f.page).toHaveBeenLastCalledWith(updated, 'rule', null);
+  expect(f.last()).toMatchObject({phase: 'denied', items: []});
 });
 
 const target = {origin: 'https://domus.local', applicationBase: '/', deployment: 'standalone'} as const;

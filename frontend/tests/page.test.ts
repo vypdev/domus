@@ -37,6 +37,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let automationTitle: string | null = null;
   const automationDraft = {rule_id:'saved-draft',revision:'1',state:'draft',enabled:false};
   let manualEnabled = false;
+  let memberRevision = 1, policyRevision = 1;
   const shoppingItem = {product_id:'product',extra_id:null,name:'Salt',base_unit:'gram',total:'1.000001'};
   const originalAccess=JSON.parse(wire.active);
   let preferenceReceipt:Record<string,unknown>|null=null;
@@ -48,7 +49,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     const route = path.slice(wire.endpoint.applicationBase.length + 'api/v1/'.length);
     let raw: string, status = 200;
     if (route === 'session') raw = phase === 'eligible' || phase === 'pending' ? wire.participantSession : sessionBody;
-    else if (route === 'authorization') raw = phase === 'active' ? JSON.stringify({...originalAccess,member:{...originalAccess.member,member_id:memberId},
+    else if (route === 'authorization') raw = phase === 'active' ? JSON.stringify({...originalAccess,policy_revision:policyRevision,
+      member:{...originalAccess.member,member_id:memberId,revision:memberRevision},
       permissions:originalAccess.permissions.filter((permission:string)=>preferencesReadable||permission!=='preferences.read')})
       : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
@@ -219,6 +221,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     denyTaskOverview: () => {taskOverviewDenied = true;},
     shoppingItem: (present: boolean) => {shoppingItemPresent = present;},
     putRequests:()=>putRequests,preferences:(locale:'en'|'es'|null,revision=1)=>{preferenceLocale=locale;preferenceRevision=revision;},
+    accessRevisions:(member: number, policy: number) => {memberRevision=member; policyRevision=policy;},
     member:(value:string)=>{memberId=value;},preferencesReadable:(value:boolean)=>{preferencesReadable=value;},
     phase: (value: string) => {phase = value;}};
 }
@@ -924,6 +927,11 @@ test('Household manual execution binds drafts, original outcomes and task naviga
   await vi.waitFor(() => expect(app.automationRunHistory).toMatchObject({
     phase:'ready',items:[{operationId:'run-operation',taskOccurrenceId:'work-1'}],
   }));
+  expect(historyReads()).toHaveLength(1);
+  f.accessRevisions(2, 1);
+  administrationIntent(app,{type:'refresh'});
+  await vi.waitFor(() => expect(app.administration?.access?.member?.revision).toBe('2'));
+  expect(app.automationRunHistory?.items ?? []).toEqual([]);
   expect(historyReads()).toHaveLength(1);
   dispatch(other, openTask, {type:'select',occurrenceId:'work-1'});
   dispatch(execution, openTask, {type:'refresh'});

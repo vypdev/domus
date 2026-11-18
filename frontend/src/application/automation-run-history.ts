@@ -26,7 +26,11 @@ export interface AutomationRunHistoryView {
   readonly timeZone: string;
 }
 
-type Selection = Readonly<{scope: DraftScope; ruleId: string; timeZone: string}>;
+export interface AutomationRunHistoryScope extends DraftScope {
+  readonly authorization: string;
+}
+
+type Selection = Readonly<{scope: AutomationRunHistoryScope; ruleId: string; timeZone: string}>;
 
 export class AutomationRunHistoryController {
   private selection: Selection | null = null;
@@ -38,13 +42,13 @@ export class AutomationRunHistoryController {
   constructor(private readonly server: AutomationRunHistoryServer,
     private readonly publish: (view: AutomationRunHistoryView | null) => void) {}
 
-  bind(scope: DraftScope | null, ruleId: string | null, timeZone: string | null): void {
+  bind(scope: AutomationRunHistoryScope | null, ruleId: string | null, timeZone: string | null): void {
     const previous = this.selection;
     if (scope === null || ruleId === null || timeZone === null) {
       this.selection = null;
       this.clear(null);
     } else if (previous?.scope.key !== scope.key || previous.scope.readOnly !== scope.readOnly
-      || previous.ruleId !== ruleId || previous.timeZone !== timeZone) {
+      || previous.scope.authorization !== scope.authorization || previous.ruleId !== ruleId || previous.timeZone !== timeZone) {
       this.selection = {scope, ruleId, timeZone};
       this.clear(timeZone);
     }

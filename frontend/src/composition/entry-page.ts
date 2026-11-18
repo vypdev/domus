@@ -10,7 +10,7 @@ import {AutomationDraftController} from '../application/automation-drafts';
 import type {AutomationDraftIntent, AutomationDraftView, DraftScope} from '../application/automation-drafts';
 import {HttpAutomationRunHistory} from '../adapters/automation-run-history-http';
 import {AutomationRunHistoryController} from '../application/automation-run-history';
-import type {AutomationRunHistoryIntent} from '../application/automation-run-history';
+import type {AutomationRunHistoryIntent, AutomationRunHistoryScope} from '../application/automation-run-history';
 import {HttpAutomationExecution} from '../adapters/automation-execution-http';
 import {AutomationExecutionSessionJournal} from '../adapters/automation-execution-journal';
 import {AutomationExecutionController} from '../application/automation-execution';
@@ -517,10 +517,11 @@ export function mountEntry(page: EntryPage): PageMount {
       view => {element.automationRunHistory = view;});
     automationRunHistory = runHistory;
     let executionScope: DraftScope | null = null;
+    let historyScope: AutomationRunHistoryScope | null = null;
     const syncExecution = (view: AutomationDraftView | null) => {
       const selected = view?.state === 'ready' ? view.selected : null;
       execution.bind(view?.state === 'ready' ? executionScope : null, selected);
-      runHistory.bind(executionScope, selected?.id ?? null, element.view?.household?.timeZone ?? null);
+      runHistory.bind(historyScope, selected?.id ?? null, element.view?.household?.timeZone ?? null);
     };
     const drafts = new AutomationDraftController(new HttpAutomationDrafts(source.target, browser.transport),
       new AutomationDraftSessionJournal({getItem:key => browser.storage().getItem(key),
@@ -531,19 +532,23 @@ export function mountEntry(page: EntryPage): PageMount {
       });
     automationDrafts = drafts;
     const syncAutomation = () => {
-      const entry = element.view, member = element.administration?.access?.member;
+      const entry = element.view, access = element.administration?.access, member = access?.member;
       if (entry?.phase === 'ready' && entry.notice !== 'context_changed' && entry.decision?.householdReadable
-          && entry.session && entry.household && member) {
+          && entry.session && entry.household && access && member) {
         const {context} = entry.session, {householdId} = entry.household;
         const key = JSON.stringify([context.installationId, context.channel, context.subject, householdId, member.memberId]);
         const visible = element.workspaceDestination === 'household', readOnly = entry.decision.readOnly;
         const draftScope = {key, context, memberId: member.memberId, readOnly};
         executionScope = visible ? draftScope : null;
+        const automationGrants = ['automations.configure', 'tasks.create', 'tasks.read']
+          .map(permission => access.permissions.includes(permission));
+        const authorization = JSON.stringify([member.revision, access.policyRevision, access.effectiveRole, ...automationGrants]);
+        historyScope = visible ? {...draftScope, authorization} : null;
         automation.bind({key, context, householdId, readOnly}, visible);
         drafts.bind(draftScope, visible);
         syncExecution(element.automationDrafts);
       } else {
-        executionScope = null;
+        executionScope = null; historyScope = null;
         automation.bind(null); drafts.bind(null); syncExecution(null);
       }
     };
