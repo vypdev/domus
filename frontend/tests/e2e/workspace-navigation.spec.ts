@@ -1264,7 +1264,14 @@ for (const mode of ['native', 'standalone'] as const) {
     await saveRuleEs.tap();
     await expect(drafts.getByText(/Otro guardado cambió este borrador/u)).toBeVisible();
     await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
-    await drafts.getByRole('button',{name:'Revisar la última revisión',exact:true}).tap();
+    const reviewRevisionEs = drafts.getByRole('button',{name:'Revisar la última revisión',exact:true});
+    await page.route(draftURL, route => route.abort('failed'), {times:1});
+    await reviewRevisionEs.tap();
+    await expect(drafts.getByText(/Los borradores de automatización no están disponibles/u)).toBeVisible();
+    await expect(reviewRevisionEs).toBeEnabled();
+    await expect(saveRuleEs).toBeDisabled();
+    await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
+    await reviewRevisionEs.tap();
     await expect(drafts.getByText('Revisar las compras de té · Revisión 3')).toBeVisible();
     await expect(drafts.getByText('Sin condición de existencias',{exact:true})).toBeVisible();
     await drafts.getByRole('button',{name:'Mantener mis cambios sobre la última revisión',exact:true}).tap();

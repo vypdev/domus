@@ -106,7 +106,7 @@ export class DomusAutomationDrafts extends LitElement {
   private controls(view: Ready) {
     const busy = view.busy || view.pending;
     return html`<div class="actions">
-      ${this.button('save', {type: 'save'}, busy || view.readOnly || !this.canEdit || view.locked !== null || view.notice === 'conflict')}
+      ${this.button('save', {type: 'save'}, busy || view.readOnly || !this.canEdit || view.locked !== null || view.conflict)}
       ${view.selected === null ? nothing : this.button('new', {type: 'new'}, busy || !this.canEdit)}
       ${view.pending ? this.button('recover', {type: 'recover'}, view.busy) : nothing}
     </div>
@@ -116,7 +116,7 @@ export class DomusAutomationDrafts extends LitElement {
     ${view.busy ? this.feedback('busy', true) : nothing}
     ${view.notice === null ? nothing : this.feedback(view.notice)}
     ${view.operationId === null ? nothing : html`<p>${this.text('operation')} <code>${view.operationId}</code></p>`}
-    ${view.notice === 'conflict' ? this.button('review', {type: 'review'}, busy) : nothing}
+    ${view.conflict ? this.button('review', {type: 'review'}, busy) : nothing}
     ${view.competing === null ? nothing : html`<div class="content">
       <p>${view.competing.title} · ${this.text('revision')} ${view.competing.revision}</p>
       ${view.competing.condition === null ? html`<p>${this.text('noCondition')}</p>`

@@ -67,6 +67,11 @@ test('open, page, edit and resolve conflicts while preserving entered values', a
   expect(publish).toHaveBeenLastCalledWith(expect.objectContaining({notice: 'conflict'}));
   await drafts.handle({type: 'save'}, dirty);
   expect(server.send).toHaveBeenCalledOnce();
+  server.reopen.mockReturnValueOnce(failed());
+  await drafts.handle({type: 'review'}, null);
+  expect(publish).toHaveBeenLastCalledWith(expect.objectContaining({notice: 'unavailable', conflict: true, competing: null}));
+  await drafts.handle({type: 'save'}, dirty);
+  expect(server.send).toHaveBeenCalledOnce();
   server.reopen.mockReturnValueOnce(settled({...second, condition: grouped}));
   await drafts.handle({type: 'review'}, null);
   await drafts.handle({type: 'rebase'}, null);
@@ -309,7 +314,7 @@ test('draft interface exposes localized inactive revisions, recovery and explici
   expect(element.shadowRoot!.textContent!.trim()).toBe('');
   const ready: Extract<AutomationDraftView, {state: 'ready'}> = {state: 'ready', page: {drafts: [first], next: 'next'},
     after: null, selected: first, locked: null, competing: secondWithGroup(), operationId: 'operation', preview: null,
-    busy: false, pending: false, readOnly: false, notice: 'conflict'};
+    busy: false, pending: false, conflict: true, readOnly: false, notice: 'conflict'};
   element.view = ready;
   element.canEdit = true;
   await element.updateComplete;

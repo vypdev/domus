@@ -56,6 +56,7 @@ interface ReadyDrafts {
   readonly selected: Readonly<{id: string; revision: Revision}> | null;
   readonly locked: SavedAutomationDraft | null;
   readonly competing: SavedAutomationDraft | null;
+  readonly conflict: boolean; // A read failure can replace the notice while saving stays blocked.
   readonly operationId: string | null;
   readonly preview: boolean | null;
   readonly busy: boolean;
@@ -149,7 +150,7 @@ export class AutomationDraftController {
         const recover = this.pending;
         this.ready = {state: 'ready', page, after, selected: recover?.ruleId == null ? null
           : {id: recover.ruleId, revision: recover.revision as Revision}, locked: null,
-          competing: null, operationId: null, preview: null, busy: true, pending: recover !== null,
+          competing: null, conflict: false, operationId: null, preview: null, busy: true, pending: recover !== null,
           readOnly: this.scope!.readOnly, notice: recover === null ? null : 'uncertain'};
         if (recover !== null) this.edit(recover.rule);
       }
@@ -171,20 +172,22 @@ export class AutomationDraftController {
     if (this.pending !== null) return;
     if (intent.type === 'new') {
       this.edit({title: '', productId: null});
-      this.set({selected: null, locked: null, competing: null, notice: null, preview: null, operationId: null});
+      this.set({selected: null, locked: null, competing: null, conflict: false,
+        notice: null, preview: null, operationId: null});
     } else if (intent.type === 'open' && ready.page.drafts.some(draft => draft.id === intent.id)) {
       await this.open(scope, intent.id, false);
-    } else if (intent.type === 'review' && ready.notice === 'conflict' && ready.selected !== null) {
+    } else if (intent.type === 'review' && ready.conflict && ready.selected !== null) {
+      this.set({competing: null, notice: 'conflict'});
       await this.open(scope, ready.selected.id, true);
     } else if (intent.type === 'rebase' && ready.competing !== null && !scope.readOnly) {
       const competing = ready.competing;
-      if (editable(competing) !== null) this.set({selected: competing, competing: null, notice: null});
+      if (editable(competing) !== null) this.set({selected: competing, competing: null, conflict: false, notice: null});
     } else if (intent.type === 'preview_saved' && ready.locked !== null) {
       this.set({notice: null, preview: null});
       await this.run(scope, this.server.previewSaved(scope, ready.locked), preview => this.set({preview}),
         () => this.set({notice: 'unavailable'}));
     } else if (intent.type === 'save' && input !== null && !scope.readOnly
-        && ready.locked === null && ready.notice !== 'conflict') {
+        && ready.locked === null && !ready.conflict) {
       await this.save(scope, ready, input);
     }
   }
@@ -194,7 +197,7 @@ export class AutomationDraftController {
       if (review) {this.set({competing: draft}); return;}
       const rule = editable(draft);
       this.edit(rule ?? {title: draft.title, productId: null});
-      this.set({selected: draft, locked: rule === null ? draft : null, competing: null,
+      this.set({selected: draft, locked: rule === null ? draft : null, competing: null, conflict: false,
         notice: null, preview: null, operationId: null});
     }, () => this.set({notice: 'unavailable'}));
   }
@@ -237,7 +240,7 @@ export class AutomationDraftController {
       } else if (outcome.kind === 'historical') {
         this.set({pending: false, selected: null, notice: 'historical', operationId: outcome.operationId});
         refresh = true;
-      } else this.set({pending: false, notice: outcome.kind});
+      } else this.set({pending: false, conflict: outcome.kind === 'conflict', notice: outcome.kind});
     }, () => this.set({notice: 'uncertain'}));
     if (refresh && this.visible && this.scope?.key === scope.key) await this.list(scope, null);
     return retry;

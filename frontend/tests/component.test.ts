@@ -84,7 +84,7 @@ test('automation editor waits for draft restoration and only unlocks when editin
   const {element, root} = await mount(view('active'));
   const preview = root.querySelector('domus-automation-preview')!;
   const ready = {state: 'ready', page: {drafts: [], next: null}, after: null, selected: null,
-    locked: null, competing: null, operationId: null, preview: null, busy: false, pending: false,
+    locked: null, competing: null, conflict: false, operationId: null, preview: null, busy: false, pending: false,
     readOnly: false, notice: null} satisfies AutomationDraftView;
   const states: [AutomationDraftView | null, boolean][] = [
     [null, false], [{state: 'loading'}, true], [{state: 'unavailable'}, true],
