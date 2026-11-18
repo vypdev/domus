@@ -1188,8 +1188,22 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.reload();
     await expect(page).toHaveURL(base + '#household');
     await page.getByRole('combobox',{name:/^(Language|Idioma)$/u}).selectOption('en');
+    const draftURL = draftsAPI + '/' + savedRule.rule_id;
+    const releaseOpen = Promise.withResolvers<void>();
+    await page.route(draftURL, async route => {
+      await releaseOpen.promise;
+      await route.continue();
+    }, {times:1});
+    await expect(title).toBeEditable();
     await openDraft.press('Enter');
+    try {
+      await expect(title).toBeDisabled();
+      await expect(stockCondition).toBeDisabled();
+    } finally {
+      releaseOpen.resolve();
+    }
     await expect(title).toHaveValue('Check the tea supplies');
+    await expect(title).toBeEditable();
     await expect(stockCondition).toContainText('Tea filters for preview');
 
     await page.getByLabel('Language',{exact:true}).selectOption('es');
@@ -1212,14 +1226,31 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(recoverDraft).toBeEnabled();
     expect(lostKey).toMatch(/^req_[a-f0-9]{32}$/u);
     await page.unroute(draftsAPI, loseResponse);
+    await page.route(draftsAPI, route => route.abort('failed'), {times:1});
     await page.reload();
-    await expect(recoverDraft).toBeEnabled();
+    await expect(drafts.getByText(/Automation drafts are unavailable|Los borradores de automatización no están disponibles/u)).toBeVisible();
     await page.getByRole('combobox',{name:/^(Language|Idioma)$/u}).selectOption('es');
+    await expect(spanishTitle).toBeDisabled();
+    const releaseList = Promise.withResolvers<void>();
+    await page.route(draftsAPI, async route => {
+      await releaseList.promise;
+      await route.continue();
+    }, {times:1});
+    await drafts.getByRole('button',{name:'Volver a intentar',exact:true}).tap();
+    try {
+      await expect(drafts.getByText('Cargando borradores de automatización…')).toBeVisible();
+      await expect(spanishTitle).toBeDisabled();
+    } finally {
+      releaseList.resolve();
+    }
+    await expect(recoverDraft).toBeEnabled();
+    await expect(spanishTitle).toBeDisabled();
     await expect(spanishTitle).toHaveValue('Preparar las provisiones de té');
     const receiptLookup = page.waitForResponse(draftsAPI + '/requests/' + lostKey);
     await recoverDraft.tap();
     expect((await receiptLookup).ok()).toBe(true);
     await expect(drafts.getByRole('status').filter({hasText:'Borrador actual'})).toHaveText(/Revisión 2/u);
+    await expect(spanishTitle).toBeEditable();
 
     const draftToken = await page.request.get(base + 'api/v1/auth/csrf', {headers:{'X-Domus-Context':contextHeader}});
     const competing = await page.request.post(draftsAPI, {headers:{

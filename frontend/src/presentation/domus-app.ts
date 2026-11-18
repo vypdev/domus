@@ -198,6 +198,10 @@ export class DomusApp extends LitElement {
   }
   protected render() {
     const view = this.view, closed = view?.phase === 'closed';
+    const drafts = this.automationDrafts;
+    // An initial list can restore an uncertain save, including after retrying a failed load.
+    const draftEditorLocked = drafts?.state === 'loading' || drafts?.state === 'unavailable'
+      || (drafts?.state === 'ready' && (drafts.busy || drafts.pending || drafts.locked !== null));
     const loading = view === null || view.phase === 'idle' || view.phase === 'loading' || view.phase === 'sending';
     const workspace = this.hasWorkspace();
     const decision = view?.decision, state = decision?.state ?? 'unavailable';
@@ -272,8 +276,8 @@ export class DomusApp extends LitElement {
       <div id="household" tabindex="-1" ?hidden=${!workspace || this.workspaceDestination !== 'household'} role=${workspace ? 'group' : nothing}
         aria-label=${workspace ? this.text('workspaceHousehold') : nothing}>
         <domus-automation-preview .view=${this.automationPreview} .language=${this.language}
-          .locked=${this.automationDrafts?.state === 'ready' && (this.automationDrafts.pending || this.automationDrafts.locked !== null)}></domus-automation-preview>
-        <domus-automation-drafts .view=${this.automationDrafts} .language=${this.language}
+          .locked=${draftEditorLocked}></domus-automation-preview>
+        <domus-automation-drafts .view=${drafts} .language=${this.language}
           .canEdit=${this.automationPreview?.state === 'ready' && this.automationPreview.busy === null}></domus-automation-drafts>
         <domus-administration .view=${this.administration} .language=${this.language}
           .pending=${view?.busy===true&&(decision?.state==='active'||this.administration!==null)}
