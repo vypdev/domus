@@ -8,6 +8,9 @@ import {HttpAutomationDrafts} from '../adapters/automation-draft-http';
 import {AUTOMATION_DRAFT_JOURNAL_KEY, AutomationDraftSessionJournal} from '../adapters/automation-draft-journal';
 import {AutomationDraftController} from '../application/automation-drafts';
 import type {AutomationDraftIntent, AutomationDraftView, DraftScope} from '../application/automation-drafts';
+import {HttpAutomationSchedulePreview} from '../adapters/automation-schedule-preview-http';
+import {AutomationSchedulePreviewController} from '../application/automation-schedule-preview';
+import type {SchedulePreviewIntent} from '../application/automation-schedule-preview';
 import {HttpAutomationRunHistory} from '../adapters/automation-run-history-http';
 import {AutomationRunHistoryController} from '../application/automation-run-history';
 import type {AutomationRunHistoryIntent, AutomationRunHistoryScope} from '../application/automation-run-history';
@@ -231,6 +234,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let automationDrafts: AutomationDraftController | null = null;
   let automationExecution: AutomationExecutionController | null = null;
   let automationRunHistory: AutomationRunHistoryController | null = null;
+  let automationSchedulePreview: AutomationSchedulePreviewController | null = null;
   let stockAttention: OverviewReadController<StockAttention> | null = null;
   let shoppingAttention: OverviewReadController<ShoppingAttention> | null = null;
   let familyOverview: OverviewReadController<FamilyWeek> | null = null;
@@ -240,7 +244,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); automationRunHistory?.bind(null, null, null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); automationRunHistory?.bind(null, null, null); automationSchedulePreview?.bind(null); error?.remove();
     stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
@@ -250,7 +254,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); automationRunHistory?.bind(null, null, null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); automationExecution?.bind(null, null); automationRunHistory?.bind(null, null, null); automationSchedulePreview?.bind(null); app?.remove();
     stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
@@ -516,6 +520,9 @@ export function mountEntry(page: EntryPage): PageMount {
     const runHistory = new AutomationRunHistoryController(new HttpAutomationRunHistory(source.target, browser.transport),
       view => {element.automationRunHistory = view;});
     automationRunHistory = runHistory;
+    const dailyPreview = new AutomationSchedulePreviewController(
+      new HttpAutomationSchedulePreview(source.target, browser.transport), view => {element.automationSchedulePreview = view;});
+    automationSchedulePreview = dailyPreview;
     let executionScope: DraftScope | null = null;
     let historyScope: AutomationRunHistoryScope | null = null;
     const syncExecution = (view: AutomationDraftView | null) => {
@@ -544,11 +551,14 @@ export function mountEntry(page: EntryPage): PageMount {
           .map(permission => access.permissions.includes(permission));
         const authorization = JSON.stringify([member.revision, access.policyRevision, access.effectiveRole, ...automationGrants]);
         historyScope = visible ? {...draftScope, authorization} : null;
+        dailyPreview.bind(visible ? {
+          key: JSON.stringify([key, authorization, entry.household.revision]), context, timeZone: entry.household.timeZone,
+        } : null);
         automation.bind({key, context, householdId, readOnly}, visible);
         drafts.bind(draftScope, visible);
         syncExecution(element.automationDrafts);
       } else {
-        executionScope = null; historyScope = null;
+        executionScope = null; historyScope = null; dailyPreview.bind(null);
         automation.bind(null); drafts.bind(null); syncExecution(null);
       }
     };
@@ -570,6 +580,12 @@ export function mountEntry(page: EntryPage): PageMount {
       if (event.target !== element) return;
       const intent = (event as CustomEvent<AutomationRunHistoryIntent>).detail;
       if (['open', 'close', 'older', 'latest', 'retry'].includes(intent)) void runHistory.handle(intent);
+    }, {signal: widget.signal});
+    element.addEventListener('domus-automation-schedule-preview-intent', event => {
+      if (event.target !== element) return;
+      const intent = (event as CustomEvent<SchedulePreviewIntent>).detail;
+      if (intent?.type === 'preview' || (intent?.type === 'time' && typeof intent.value === 'string' && intent.value.length <= 16))
+        void dailyPreview.handle(intent);
     }, {signal: widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;

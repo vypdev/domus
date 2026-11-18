@@ -59,8 +59,10 @@ acceptance of the installed recurrence experience remain open.
   and records one explicit run with the task it creates.
   [Manual run history](evidence/automation-run-history-qualification.md) lets the invoking member
   reopen their recorded run outcomes and follow a task that is currently accessible.
-  Scheduled and event triggers, multi-step
-  execution, the advanced editor and additional Domus-owned HA entities and services remain open.
+  The [daily schedule preview](evidence/daily-automation-preview-qualification.md) shows
+  five upcoming times using the household's time zone and daylight-saving policy.
+  Persisted scheduled triggers, background admission, event triggers, multi-step execution,
+  the advanced editor and additional Domus-owned HA entities and services remain open.
   The existing gateway is already integrated.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
   and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).

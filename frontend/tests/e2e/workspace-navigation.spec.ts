@@ -1431,6 +1431,26 @@ for (const mode of ['native', 'standalone'] as const) {
       if (item.url() === runsURL && item.method() === 'POST') requestedRuns++;
     });
 
+    const schedule = page.locator('domus-automation-schedule-preview');
+    const dailyField = schedule.getByRole('textbox',{name:'Time each day',exact:true});
+    const previewURL = base + 'api/v1/automation/schedule-preview?time=07%3A30';
+    const scheduleRequests: string[] = [];
+    page.on('request', request => {
+      if (request.url().includes('/automation/schedule-preview')) scheduleRequests.push(request.method());
+    });
+    await dailyField.fill('24:00');
+    await schedule.getByRole('button',{name:'Preview daily times',exact:true}).press('Enter');
+    await expect(schedule.getByText('Enter a time between 00:00 and 23:59.',{exact:true})).toBeVisible();
+    await expect(dailyField).toBeFocused();
+    expect(scheduleRequests).toEqual([]);
+    await dailyField.fill('07:30');
+    const previewRead = page.waitForResponse(previewURL);
+    await dailyField.press('Enter');
+    expect((await previewRead).ok()).toBe(true);
+    await expect(schedule.getByRole('listitem')).toHaveCount(5);
+    await expect(schedule.locator('time').first()).toHaveAttribute('datetime', /T07:30:00\.000Z$/u);
+    await schedule.screenshot({path:info.outputPath('daily-preview-en-wide.png')});
+
     const history = page.locator('domus-automation-run-history');
     await history.getByRole('button',{name:'Show run history',exact:true}).press('Enter');
     await expect(history.getByText('You have no manual runs for this rule.',{exact:true})).toBeVisible();
@@ -1457,6 +1477,17 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.getByRole('combobox',{name:'Language',exact:true}).selectOption('es');
     await page.setViewportSize({width:390,height:844});
     await page.emulateMedia({colorScheme:'dark'});
+    await page.route(previewURL, route => route.abort('failed'), {times:1});
+    await schedule.getByRole('button',{name:'Previsualizar horario diario',exact:true}).tap();
+    await expect(schedule.getByText('El horario diario no está disponible en este momento.',{exact:true})).toBeVisible();
+    await expect(schedule.getByRole('textbox',{name:'Hora de cada día',exact:true})).toHaveValue('07:30');
+    const nextPreview = page.waitForResponse(previewURL);
+    await schedule.getByRole('button',{name:'Volver a intentar',exact:true}).tap();
+    expect((await nextPreview).ok()).toBe(true);
+    await expect(schedule.getByRole('heading',{name:'Próximas cinco fechas',exact:true})).toBeVisible();
+    await expect(schedule.getByRole('listitem')).toHaveCount(5);
+    expect(scheduleRequests).toEqual(['GET','GET','GET']);
+    await schedule.screenshot({path:info.outputPath('daily-preview-es-narrow.png')});
     let exactKey = '', taskId = '';
     await page.route(runsURL, async route => {
       exactKey = (await route.request().allHeaders())['idempotency-key'];

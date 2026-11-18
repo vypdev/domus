@@ -1056,3 +1056,172 @@ household-automation-R7. Reuse the existing PageQuery limits and process-scoped
 five-minute TaskCursor, as recorded in the maintainer's first clarification
 answer. Use `.github/workflows/ci_check.yml` and the contributing PR's installed
 version evidence as recorded in the second clarification answer.
+
+## Preview daily automation run times
+
+- Status: Draft
+- Date: 2026-11-18
+- Catalog capability ID: household-automation
+- Owners: Domus maintainers
+- Scope: Protected preview of five upcoming times for a proposed daily trigger
+- Required review gates: product UX, architecture, testing, documentation, security/operations
+- Open decisions blocking readiness: none for the preview
+
+### 1. Executive summary
+
+An authorized household member can enter a time of day and see the next
+five resolved daily trigger times in the household's current time zone.
+
+### 2. Problem, current behavior, and evidence
+
+Domus can preview a manual task rule and show committed manual outcomes. A
+person choosing a future daily trigger cannot see how it behaves during a
+daylight-saving change. The existing pinned time resolver already defines
+the household recurrence policy in
+`backend/src/domus/infrastructure/recurrence_time.py`.
+
+### 3. Actors, surfaces, and terminology
+
+The authorized automation member opens the preview in Household settings.
+A requested time is a local hour and minute. The resolved time is the one
+actual instant selected by the existing household policy.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+| --- | --- |
+| daily-trigger-preview-R01 | Validate a single minute-precision local time and return exactly five upcoming daily instants, strictly after the current server instant. |
+| daily-trigger-preview-R02 | Use the verified household zone and pinned recurrence policy. Shift nonexistent time to the first valid instant and resolve repeated time according to the household choice. Show requested and resolved times when they differ. |
+| daily-trigger-preview-R03 | Recheck current household and automation authority. Keep the preview free of persistent writes, rule activation and task or stock effects. |
+| daily-trigger-preview-R04 | Provide available, invalid, unavailable and recoverable English and Spanish presentation with keyboard and touch. Preserve the entered value on a failed request. |
+| daily-trigger-preview-R05 | Qualify both HTTP compositions, both exact image architectures and a separately installed Edge candidate using synthetic data and scoped cleanup. |
+
+Persisting scheduled definitions, background admission, missed-run policy,
+rule execution and notification effects have separate acceptance.
+
+### 5. Current versus proposed product journey
+
+Open Household settings, enter a time, request a preview, and review the
+five dates. Use the zone and the explanation of any changed time to choose
+a daily schedule. Existing manual rule editors and controls remain available.
+
+### 6. Functional behavior and state model
+
+Resolve the current household time policy and clock in the protected
+application read. A time uses the ASCII format HH:mm from 00:00
+through 23:59. Enumerate days from the household's current local date and
+keep candidates whose resolved instant is strictly later than now.
+Return five ordered instants with local date, requested time, resolved
+local date/time and time-zone resolution when applicable. Keep enumeration
+bounded and fail safely when a date or pinned policy cannot be resolved.
+
+### 7. User-facing configuration
+
+Use the existing household time zone and first-or-second repeated time
+setting. The preview asks for the daily time only.
+
+### 8. Clean Architecture design
+
+The application uses the already pinned time-resolution port and current
+manual automation authority. Both HTTP compositions expose the same protected
+preview. Render exact server facts with shared ha-ui controls and localized
+messages; browser time-zone arithmetic cannot override those facts.
+
+### 9. UI/UX and content contract
+
+Label the field and display the current household zone. Show dates in
+chronological order and use readable labels for a shifted or repeated time.
+Present invalid input and a failed read with a clear recovery control.
+Retain the entered value during recovery and clear results when the
+selected household or current permission changes.
+
+### 10. Failure, recovery, and cleanup
+
+A failed calculation preserves the input and does not write anything.
+Retry repeats the read using fresh household time authority. Disposable
+installed verification removes only its own app, data and source.
+
+### 11. Security, permissions, and privacy
+
+Resolve session, installation, channel and household through trusted server
+context. The preview has the same protected household and manual
+automation access checks. The caller cannot supply a household ID, zone,
+execution principal or alternate calculation policy.
+
+### 12. Observability and operational UX
+
+Return bounded safe error codes. Show whether a repeated or skipped local
+time was resolved with the household policy. Do not log private inputs.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+The preview reads current time policy and does not change stored rule
+definitions. Verify both supported deployments and a pinned Edge candidate.
+Store recorded candidate results in the contributing pull request.
+
+### 14. Testing strategy and numeric budget
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+| --- | --- | --- |
+| Chronology | 1 | Current local date, strict boundaries and five future instants |
+| Time policy | 2 | Spring gap and autumn repeated times |
+| Authorization | 1 | Current grants, session scope and read-only effects |
+| Interaction | 1 | Localized input validation, recovery and accessible controls |
+| Deployment | 1 | Exact both-image CI and separately installed Edge |
+| Total | 6 | Distinct observable scenarios |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| daily-trigger-preview-C01 | Chronology | daily-trigger-preview-R01 | Preview before, exactly at, and after today's proposed local time. Verify exactly five strictly future instants in both compositions. |
+| daily-trigger-preview-C02 | Time policy | daily-trigger-preview-R02 | Preview a daily time missing during a spring transition. Show the requested time, first valid resolved time and correct UTC instant. |
+| daily-trigger-preview-C03 | Time policy | daily-trigger-preview-R02 | Preview a repeated autumn time under each household choice and verify the corresponding distinct instant and resolution label. |
+| daily-trigger-preview-C04 | Authorization | daily-trigger-preview-R03 | Reject foreign context or currently revoked permissions. Compare the stored rule, tasks, stock and receipt state before and after an authorized preview. |
+| daily-trigger-preview-C05 | Interaction | daily-trigger-preview-R04 | Use English keyboard and Spanish narrow touch to enter a time, recover from a temporary failed preview and review the reordered result only after an authorized read. |
+| daily-trigger-preview-C06 | Deployment | daily-trigger-preview-R05 | Verify both exact image architectures and both protected deployments, install the pinned Edge candidate in Home Assistant, exercise a valid preview and remove the disposable installation. |
+
+### 15. Documentation and discoverability
+
+| Path | Change |
+| --- | --- |
+| specs/household-automation.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/contracts/household-api.openapi.json | update |
+| docs/contracts/native-household-api.openapi.json | update |
+| backend/src/domus/infrastructure/recurrence_time.py | reference |
+| docs/evidence/daily-automation-preview-qualification.md | create |
+
+### 16. Acceptance scenarios
+
+Verify the six section 14 scenarios and retain all existing manual cases.
+Record exact source, deployment modes, test counts and installed evidence in
+the contributing pull request. Use the checked-in CI Check workflow and the
+existing fixture tooling.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+| --- | --- |
+| daily-trigger-preview-R01 | daily-trigger-preview-C01 |
+| daily-trigger-preview-R02 | daily-trigger-preview-C02, daily-trigger-preview-C03 |
+| daily-trigger-preview-R03 | daily-trigger-preview-C04 |
+| daily-trigger-preview-R04 | daily-trigger-preview-C05 |
+| daily-trigger-preview-R05 | daily-trigger-preview-C06 |
+
+### 18. Implementation sequence
+
+Add the bounded preview application service and shared route. Implement
+localized form, result and recovery states. Qualify the current source,
+both image architectures and the separate Edge installation.
+
+### 19. Definition of Done
+
+All six cases pass with complete supported coverage for the exact commit.
+The installed Edge candidate and scoped cleanup are verified. The source,
+contracts and evidence match and the merge is confirmed on develop.
+
+### 20. References and decisions
+
+Extend the owning `specs/household-automation.md` typed trigger and preview
+requirements. Preserve the current household repeated-time choice and pinned
+rules already used for recurrence.

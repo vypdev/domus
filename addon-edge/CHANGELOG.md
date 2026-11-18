@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.41
+
+- Preview five upcoming daily times with the household time zone and daylight-saving policy.
+
 ## 0.0.0-edge.40
 
 - Clear open manual run history when Domus observes a change to the member's current access.

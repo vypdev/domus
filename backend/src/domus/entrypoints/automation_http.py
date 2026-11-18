@@ -16,6 +16,7 @@ from domus.application.automation_execution import (
 )
 from domus.application.automation_preview import AutomationPreviewAccess
 from domus.application.automation_run_history import AutomationRunPage
+from domus.application.automation_schedule_preview import DAILY_TIME_PATTERN, DailyAutomationTimes
 from domus.domain.automation import (
     AUTOMATION_RULE_VERSION,
     MAX_RULE_NODES,
@@ -110,6 +111,10 @@ def _revision_pattern(*, allow_zero: bool) -> str:
     return "^(?:" + "|".join(alternatives) + ")$"
 
 
+class DailyAutomationQuery(StrictModel):
+    time: str = Field(pattern=DAILY_TIME_PATTERN, min_length=5, max_length=5)
+
+
 class AutomationDraftBody(AutomationPreviewBody):
     rule_id: Identifier | None
     expected_revision: str = Field(
@@ -189,6 +194,12 @@ def create_automation_router(
         request: Request, body: AutomationPreviewBody, query: Annotated[_EmptyQuery, Query()]
     ) -> AutomationSimulation:
         return context(request).automation().preview(body.domain())
+
+    @router.get("/schedule-preview", response_model=DailyAutomationTimes)
+    def daily_preview(
+        request: Request, query: Annotated[DailyAutomationQuery, Query()]
+    ) -> DailyAutomationTimes:
+        return context(request).automation_schedule().daily(query.time)
 
     @router.get("/drafts", response_model=DraftPage)
     def drafts(request: Request, query: Annotated[PageQuery, Query()]) -> DraftPage:

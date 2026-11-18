@@ -120,6 +120,7 @@ class _NativeBoundary(BoundedHTTP):
                 or scope["path"]
                 in (
                     "/api/v1/automation/drafts",
+                    "/api/v1/automation/schedule-preview",
                     "/api/v1/family",
                     "/api/v1/family/allocation",
                     "/api/v1/family/rewards",

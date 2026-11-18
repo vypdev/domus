@@ -2116,6 +2116,64 @@
         "title": "CreateTaskProposalBody",
         "type": "object"
       },
+      "DailyAutomationTime": {
+        "properties": {
+          "instant_ms": {
+            "title": "Instant Ms",
+            "type": "integer"
+          },
+          "offset_seconds": {
+            "title": "Offset Seconds",
+            "type": "integer"
+          },
+          "requested_date": {
+            "title": "Requested Date",
+            "type": "string"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/TimeResolution"
+          },
+          "resolved_local": {
+            "title": "Resolved Local",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requested_date",
+          "resolved_local",
+          "instant_ms",
+          "offset_seconds",
+          "resolution"
+        ],
+        "title": "DailyAutomationTime",
+        "type": "object"
+      },
+      "DailyAutomationTimes": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DailyAutomationTime"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "requested_time": {
+            "title": "Requested Time",
+            "type": "string"
+          },
+          "time_zone": {
+            "title": "Time Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "time_zone",
+          "requested_time",
+          "items"
+        ],
+        "title": "DailyAutomationTimes",
+        "type": "object"
+      },
       "DefinitionState": {
         "enum": [
           "draft",
@@ -10018,6 +10076,16 @@
         "title": "TimePolicy",
         "type": "object"
       },
+      "TimeResolution": {
+        "enum": [
+          "exact",
+          "fold_first",
+          "fold_second",
+          "gap_first_valid"
+        ],
+        "title": "TimeResolution",
+        "type": "string"
+      },
       "TransferBody": {
         "additionalProperties": false,
         "properties": {
@@ -14223,6 +14291,162 @@
           }
         ],
         "summary": "Access"
+      }
+    },
+    "/api/v1/automation/schedule-preview": {
+      "get": {
+        "operationId": "daily_preview_api_v1_automation_schedule_preview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "time",
+            "required": true,
+            "schema": {
+              "maxLength": 5,
+              "minLength": 5,
+              "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+              "title": "Time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyAutomationTimes"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Daily Preview"
       }
     },
     "/api/v1/family": {
