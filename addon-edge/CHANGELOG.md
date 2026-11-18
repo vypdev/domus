@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.33
+
+- Save and reopen inactive manual automation drafts in Household settings.
+- Preserve immutable revisions and recover a save after a lost response.
+- Migrate existing data to SQLite schema 32. Keep the compatible backup for rollback.
+
 ## 0.0.0-edge.32
 
 - Show the exact number of items still to buy and the first 25 shared-list items on Overview.

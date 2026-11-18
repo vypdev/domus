@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with a protected manual task automation preview, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
+  "scope": "Compiled household workspace with a protected manual task automation preview and inactive saved revisions, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "8157d0110594f50f64ef9eaf26ccde2b9762d2ec1d9a65788015cef05d51be1e",
-    "assets/index-CK0b1_ig.js": "62063f545d4cd9609d9cc807e8eea8cf89587e904803de7ec44ef6fcc7dc3543",
+    ".vite/manifest.json": "f9729b396ec94ef1fd1044eadfb6329d514d6827c4176adebb37ed84c12f8cbf",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "005c1c8afae3913690ee9e83248d4d23cc5775b2f14d14718e544ba696037616"
+    "assets/index-DHdzzXVk.js": "15a67c9daa808443c19c360500c3e32f03ab676843e86f0790d104e822ca787b",
+    "index.html": "c73514327a6f47a31bc1fea09f8e6578bef6dc014de5c365f06d2f2754464530"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -250,5 +250,16 @@
       "assets/index-dNVoGxPS.js": "e45db999a44ae5c37e304cddec83956b3ad5cc658661fb45ab9553154b204347",
       "index.html": "75559774732a85108416c5bfc6f4a855f144ebeffbc87f641f6ccea7cb13791e"
     }
+  },
+  "automationDrafts": {
+    "sourceCommit": "84f52d9c470db79a2f1e5818e8837c4b01e9799d",
+    "actualProductFiles": {
+      ".vite/manifest.json": "f9729b396ec94ef1fd1044eadfb6329d514d6827c4176adebb37ed84c12f8cbf",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DHdzzXVk.js": "15a67c9daa808443c19c360500c3e32f03ab676843e86f0790d104e822ca787b",
+      "index.html": "c73514327a6f47a31bc1fea09f8e6578bef6dc014de5c365f06d2f2754464530"
+    },
+    "requirements": "automation-drafts-R01 through automation-drafts-R04",
+    "evidence": "automation-draft-qualification.md"
   }
 }
