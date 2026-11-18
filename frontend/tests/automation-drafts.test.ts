@@ -316,6 +316,8 @@ test('draft interface exposes localized inactive revisions, recovery and explici
   const root = element.shadowRoot!;
   expect(root.textContent).toContain('Inactive');
   expect(root.textContent).toContain('operation');
+  expect(root.textContent).toContain('Any condition');
+  expect(root.textContent).toContain('Stock below minimum · milk');
   const buttons = [...root.querySelectorAll('vyp-ha-button')];
   expect(buttons[0].disabled).toBe(true);
   buttons.find(button => button.state?.label === 'Review latest revision')!
@@ -346,5 +348,8 @@ test('draft interface exposes localized inactive revisions, recovery and explici
   element.view = {...ready, locked: secondWithGroup(), preview: true};
   await element.updateComplete;
   expect(root.textContent).toContain('Se crearía esta tarea');
+  element.view = {...ready, competing: {...second, condition: null}};
+  await element.updateComplete;
+  expect(root.textContent).toContain('Sin condición de existencias');
   function secondWithGroup(): SavedAutomationDraft {return {...second, condition: grouped};}
 });

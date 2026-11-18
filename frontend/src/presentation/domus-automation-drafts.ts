@@ -24,6 +24,7 @@ const COPY = {
     saved: 'Draft saved.', historical: 'This save was processed before restoration. Review the current draft list.',
     recover: 'Check original save', review: 'Review latest revision', rebase: 'Keep edits on latest revision',
     current: 'Current draft', operation: 'Operation ID', busy: 'Checking automation drafts…',
+    noCondition: 'No stock condition',
     complex: 'This draft uses grouped conditions. You can open and preview the saved rule here.',
     product: 'Stock below minimum', all: 'All conditions', any: 'Any condition', not: 'Negated condition',
     preview_saved: 'Preview saved rule', wouldCreate: 'Would create this task', noAction: 'No task would be created',
@@ -43,6 +44,7 @@ const COPY = {
     saved: 'Borrador guardado.', historical: 'El guardado se procesó antes de la restauración. Revisa la lista actual de borradores.',
     recover: 'Consultar guardado original', review: 'Revisar la última revisión', rebase: 'Mantener mis cambios sobre la última revisión',
     current: 'Borrador actual', operation: 'Identificador de operación', busy: 'Consultando borradores…',
+    noCondition: 'Sin condición de existencias',
     complex: 'Este borrador usa condiciones agrupadas. Aquí puedes abrir y previsualizar la regla guardada.',
     product: 'Existencias por debajo del mínimo', all: 'Todas las condiciones', any: 'Cualquier condición', not: 'Negación de la condición',
     preview_saved: 'Previsualizar regla guardada', wouldCreate: 'Se crearía esta tarea', noAction: 'No se crearía ninguna tarea',
@@ -115,10 +117,12 @@ export class DomusAutomationDrafts extends LitElement {
     ${view.notice === null ? nothing : this.feedback(view.notice)}
     ${view.operationId === null ? nothing : html`<p>${this.text('operation')} <code>${view.operationId}</code></p>`}
     ${view.notice === 'conflict' ? this.button('review', {type: 'review'}, busy) : nothing}
-    ${view.competing === null ? nothing : html`<div class="actions">
+    ${view.competing === null ? nothing : html`<div class="content">
       <p>${view.competing.title} · ${this.text('revision')} ${view.competing.revision}</p>
-      ${this.button('rebase', {type: 'rebase'}, busy || view.readOnly || !this.canEdit
-        || (view.competing.condition !== null && view.competing.condition.kind !== 'stock_below_minimum'))}
+      ${view.competing.condition === null ? html`<p>${this.text('noCondition')}</p>`
+        : html`<ul>${this.describe(view.competing.condition)}</ul>`}
+      <div class="actions">${this.button('rebase', {type: 'rebase'}, busy || view.readOnly || !this.canEdit
+        || (view.competing.condition !== null && view.competing.condition.kind !== 'stock_below_minimum'))}</div>
     </div>`}
     ${view.locked === null ? nothing : html`<p><strong>${view.locked.title}</strong></p>
       <p>${this.text('complex')}</p>

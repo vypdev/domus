@@ -1226,7 +1226,7 @@ for (const mode of ['native', 'standalone'] as const) {
       Origin:origin, 'X-Domus-Context':contextHeader, 'X-CSRF-Token':(await draftToken.json()).csrf_token,
       'Idempotency-Key':'competing-draft-edit',
     }, data:{rule_id:savedRule.rule_id,expected_revision:'2',version:1,trigger:{kind:'manual'},
-      condition:{kind:'stock_below_minimum',product_id:previewProduct.product_id},
+      condition:null,
       action:{kind:'task.create',title:'Revisar las compras de té'}}});
     expect(competing.ok(), await competing.text()).toBe(true);
     await spanishTitle.fill('Comprar té para el hogar');
@@ -1235,8 +1235,11 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
     await drafts.getByRole('button',{name:'Revisar la última revisión',exact:true}).tap();
     await expect(drafts.getByText('Revisar las compras de té · Revisión 3')).toBeVisible();
+    await expect(drafts.getByText('Sin condición de existencias',{exact:true})).toBeVisible();
     await drafts.getByRole('button',{name:'Mantener mis cambios sobre la última revisión',exact:true}).tap();
     await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
+    await expect(rule.getByRole('combobox',{name:'Existencias por debajo del mínimo (opcional)'}))
+      .toContainText('Tea filters for preview');
     await saveRuleEs.tap();
     await expect(drafts.getByRole('status').filter({hasText:'Borrador actual'})).toHaveText(/Revisión 4/u);
     await expect(drafts.getByRole('article',{name:'Borradores de automatización'})).toHaveCSS('background-color','rgb(24, 36, 47)');

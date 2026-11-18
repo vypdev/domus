@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with a protected manual task automation preview and inactive saved revisions, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
   "actualProductFiles": {
-    ".vite/manifest.json": "f9729b396ec94ef1fd1044eadfb6329d514d6827c4176adebb37ed84c12f8cbf",
+    ".vite/manifest.json": "9737bf8d2866b7ae1630c9ef4125e5e6a556ba53fab93c41960bc08cced0a64a",
+    "assets/index-C47yORJ-.js": "a76e340686a77d0d8e9095e88bde1aa38934b3af657a243d21a8881a6be2afc3",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DHdzzXVk.js": "15a67c9daa808443c19c360500c3e32f03ab676843e86f0790d104e822ca787b",
-    "index.html": "c73514327a6f47a31bc1fea09f8e6578bef6dc014de5c365f06d2f2754464530"
+    "index.html": "8b6bbc8f04b184fa257fe68ec3baa7379638848768d7ba79d1b8f0d62e104c62"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
