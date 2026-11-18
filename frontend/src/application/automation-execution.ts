@@ -14,6 +14,7 @@ export interface AutomationConfiguration {
   readonly id: string;
   readonly latestRevision: Revision;
   readonly latestTitle: string;
+  readonly latestManual?: false;
   readonly control: ConfiguredAutomation | null;
 }
 
@@ -152,6 +153,7 @@ export class AutomationExecutionController {
   private prepare(intent: 'enable' | 'disable' | 'run', configuration: AutomationConfiguration): void {
     const {id: ruleId, latestRevision, latestTitle, control} = configuration;
     if (intent === 'enable') {
+      if (configuration.latestManual === false) return;
       this.confirmation = {title: latestTitle, command: {kind: 'configure', ruleId, ruleRevision: latestRevision,
         controlRevision: control?.controlRevision ?? '0', enabled: true}};
     } else if (control?.enabled) {

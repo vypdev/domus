@@ -35,6 +35,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let taskOverviewDenied = false;
   let shoppingItemPresent = false;
   let automationTitle: string | null = null;
+  let automationTime: string | null = null;
   const automationDraft = {rule_id:'saved-draft',revision:'1',state:'draft',enabled:false};
   let manualEnabled = false;
   let memberRevision = 1, policyRevision = 1;
@@ -64,7 +65,9 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       }),
     });
     else if (route === 'automation/drafts' && init.method === 'POST') {
-      automationTitle = JSON.parse(String(init.body)).action.title;
+      const definition = JSON.parse(String(init.body));
+      automationTitle = definition.action.title;
+      automationTime = definition.trigger.kind === 'daily' ? definition.trigger.time : null;
       raw = JSON.stringify({state:'committed', archived_by:null, operation_id:'saved-automation', created_at:100,
         result:{...automationDraft,member_id:memberId}, message:'Saved.',action_required:'Review.'});
     }
@@ -72,7 +75,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       drafts: automationTitle === null ? [] : [{...automationDraft,title:automationTitle}], next_cursor:null,
     });
     else if (route === 'automation/drafts/saved-draft') raw = JSON.stringify({
-      ...automationDraft, version:1, trigger:{kind:'manual'}, condition:null,
+      ...automationDraft, version:automationTime === null ? 1 : 2,
+      trigger:automationTime === null ? {kind:'manual'} : {kind:'daily',time:automationTime}, condition:null,
       action:{kind:'task.create',title:automationTitle},
     });
     else if (route === 'automation/drafts/saved-draft/execution' && init.method === 'POST') {
@@ -83,6 +87,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
     }
     else if (route === 'automation/drafts/saved-draft/execution') raw = JSON.stringify({
       rule_id:'saved-draft', latest_revision:'1', latest_title:automationTitle,
+      ...(automationTime === null ? {} : {latest_manual:false}),
       control: manualEnabled ? {rule_revision:'1',control_revision:'1',enabled:true,title:automationTitle} : null,
     });
     else if (route === 'automation/drafts/saved-draft/runs' && init.method === 'GET') raw = JSON.stringify({
@@ -951,6 +956,30 @@ test('Household manual execution binds drafts, original outcomes and task naviga
   navigate('#tasks');
   expect(app.automationExecution).toBeNull();
   expect(app.automationRunHistory).toBeNull();
+});
+
+test('the Household draft saves and reopens the exact time in its shared preview panel', async () => {
+  const f = fixture(); f.phase('active');
+  const {app} = await f.open();
+  f.page.location.href = f.page.location.href.split('#')[0] + '#household';
+  f.events.dispatchEvent(new Event('hashchange'));
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({state:'ready',trigger:'manual'}));
+  await vi.waitFor(() => expect(app.automationPreview).toMatchObject({state:'ready',busy:null}));
+  const root = app.shadowRoot!;
+  const emit = (selector: string, feature: string, detail: unknown) => root.querySelector(selector)!.dispatchEvent(
+    new CustomEvent('domus-automation-' + feature + '-intent',{detail,bubbles:true,composed:true}),
+  );
+  emit('domus-automation-preview','preview',{type:'title',value:'Daily fixture check'});
+  emit('domus-automation-drafts','draft',{type:'trigger',trigger:'daily'});
+  emit('domus-automation-schedule-preview','schedule-preview',{type:'time',value:'07:30'});
+  emit('domus-automation-drafts','draft',{type:'save'});
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({state:'ready',notice:'saved',busy:false}));
+  const post = f.fetch.mock.calls.find(([path,init]) => path.endsWith('/automation/drafts') && init.method === 'POST')!;
+  expect(JSON.parse(String(post[1].body))).toMatchObject({version:2,trigger:{kind:'daily',time:'07:30'}});
+  emit('domus-automation-schedule-preview','schedule-preview',{type:'time',value:'09:00'});
+  emit('domus-automation-drafts','draft',{type:'open',id:'saved-draft'});
+  await vi.waitFor(() => expect(app.automationSchedulePreview?.input).toBe('07:30'));
+  expect(app.automationDrafts).toMatchObject({state:'ready',trigger:'daily'});
 });
 
 test('Household daily preview binds verified authorization and accepts only its declared intents', async () => {

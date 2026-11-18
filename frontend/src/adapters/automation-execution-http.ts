@@ -18,17 +18,19 @@ function errorCode(value: unknown): string {
 }
 
 function configuration(value: unknown, id: string): AutomationConfiguration {
-  const row = fields(value, ['rule_id', 'latest_revision', 'latest_title', 'control'], []);
-  check(identifier(row.rule_id) === id);
+  const row = fields(value, ['rule_id', 'latest_revision', 'latest_title', 'control'], ['latest_manual']);
+  check(identifier(row.rule_id) === id && (row.latest_manual === undefined || row.latest_manual === false));
   const latestRevision = revisionValue(row.latest_revision);
   const latestTitle = taskText(row.latest_title, 160, true);
-  if (row.control === null) return {id, latestRevision, latestTitle, control: null};
+  const latest = {id, latestRevision, latestTitle,
+    ...(row.latest_manual === false ? {latestManual: false as const} : {})};
+  if (row.control === null) return {...latest, control: null};
   const info = fields(row.control, ['rule_revision', 'control_revision', 'enabled', 'title'], []);
   const ruleRevision = revisionValue(info.rule_revision);
   check(BigInt(ruleRevision) <= BigInt(latestRevision));
   const control = {ruleRevision, controlRevision: revisionValue(info.control_revision),
     enabled: boolean(info.enabled), title: taskText(info.title, 160, true)};
-  return {id, latestRevision, latestTitle, control};
+  return {...latest, control};
 }
 
 function receipt(value: unknown, scope: DraftScope, request: AutomationExecutionRequest): AutomationExecutionOutcome {

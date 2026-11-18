@@ -287,10 +287,14 @@ export class DomusApp extends LitElement {
         <domus-automation-preview .view=${this.automationPreview} .language=${this.language}
           .locked=${draftEditorLocked}></domus-automation-preview>
         <domus-automation-drafts .view=${drafts} .language=${this.language}
-          .canEdit=${this.automationPreview?.state === 'ready' && this.automationPreview.busy === null}></domus-automation-drafts>
+          .canEdit=${this.automationPreview?.state === 'ready' && this.automationPreview.busy === null}>
+          <domus-automation-schedule-preview slot="schedule" .view=${this.automationSchedulePreview}
+            .language=${this.language}
+            .timeLocked=${drafts?.state === 'ready' && drafts.trigger === 'daily' && draftEditorLocked}>
+          </domus-automation-schedule-preview>
+        </domus-automation-drafts>
         <domus-automation-execution .view=${this.automationExecution} .language=${this.language}></domus-automation-execution>
         <domus-automation-run-history .view=${this.automationRunHistory} .language=${this.language}></domus-automation-run-history>
-        <domus-automation-schedule-preview .view=${this.automationSchedulePreview} .language=${this.language}></domus-automation-schedule-preview>
         <domus-administration .view=${this.administration} .language=${this.language}
           .pending=${view?.busy===true&&(decision?.state==='active'||this.administration!==null)}
           .retired=${closed||view?.notice==='context_changed'||(view?.phase==='ready'&&decision?.state!=='active')}></domus-administration>

@@ -89,7 +89,7 @@ def test_runtime_migration_restoration_and_rollback_preserve_exact_outcomes(
     assert path.read_bytes() == original
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (33,)
+        assert db.execute("PRAGMA user_version").fetchone() == (34,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         assert {
             table: db.execute(f"SELECT * FROM {table}").fetchall() for table in tables
@@ -121,7 +121,7 @@ def test_runtime_migration_restoration_and_rollback_preserve_exact_outcomes(
     archive, target = tmp_path / "checkpoint", tmp_path / "prepared"
     snapshotter = SQLiteSnapshots(store, archive, installation, Clock())
     checkpoint = snapshotter.create("before-run")
-    assert checkpoint.schema_version == 33 and snapshotter.inspect() == checkpoint
+    assert checkpoint.schema_version == 34 and snapshotter.inspect() == checkpoint
     complete = execution.run("record-run", request)
     occurrence_id = complete.result.decode()["task_occurrence_id"]
     restarted = execution_service(SQLiteDatabase(path, installation))

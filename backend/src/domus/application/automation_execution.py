@@ -84,12 +84,15 @@ class AutomationExecutionState:
     latest_revision: int
     latest_title: str
     control: ConfiguredAutomation | None
+    latest_manual: bool
 
 
-def _saved_revision(unit: UnitOfWork, home: str, rule_id: str, revision: int) -> AutomationDraft:
+def _manual_revision(unit: UnitOfWork, home: str, rule_id: str, revision: int) -> AutomationDraft:
     draft = unit.automation_drafts.revision(home, rule_id, revision)
     if draft is None:
         raise NotFound("automation_draft_missing")
+    if draft.rule.trigger != "manual":
+        raise InvalidInput("automation_requires_manual_trigger")
     return draft
 
 
@@ -128,7 +131,7 @@ class AutomationExecution:
             control = unit.automation_controls.get(home, rule_id)
             configured = None
             if control is not None:
-                saved = _saved_revision(unit, home, rule_id, control.rule_revision)
+                saved = _manual_revision(unit, home, rule_id, control.rule_revision)
                 configured = ConfiguredAutomation(
                     control.rule_revision,
                     control.control_revision,
@@ -136,7 +139,11 @@ class AutomationExecution:
                     saved.rule.task.title,
                 )
             return AutomationExecutionState(
-                rule_id, draft.revision, draft.rule.task.title, configured
+                rule_id,
+                draft.revision,
+                draft.rule.task.title,
+                configured,
+                draft.rule.trigger == "manual",
             )
 
     def configure(self, key: str, request: ConfigureAutomation) -> Receipt:
@@ -149,7 +156,7 @@ class AutomationExecution:
             if request.expected_control_revision != current_revision:
                 raise Conflict("revision_conflict")
             if request.enabled:
-                draft = _saved_revision(unit, home, request.rule_id, request.rule_revision)
+                draft = _manual_revision(unit, home, request.rule_id, request.rule_revision)
                 for product_id in draft.rule.stock_products():
                     owned_product(unit, home, product_id)
             elif previous is None or not previous.enabled:
@@ -184,7 +191,7 @@ class AutomationExecution:
                 or control.rule_revision != request.rule_revision
             ):
                 raise Conflict("revision_conflict")
-            draft = _saved_revision(unit, home, control.rule_id, control.rule_revision)
+            draft = _manual_revision(unit, home, control.rule_id, control.rule_revision)
             condition_matched = evaluate_rule(unit, home, draft.rule).would_create
             run_id = self.identifiers.new()
             task = (

@@ -77,7 +77,7 @@ class SQLiteAutomationDrafts:
             raise Conflict("revision_conflict")
 
 
-def verify_automation_drafts(connection: sqlite3.Connection) -> None:
+def verify_automation_drafts(connection: sqlite3.Connection, *, allow_daily: bool) -> None:
     previous: tuple[str, str] | None = None
     revision = 0
     for row in connection.execute(
@@ -86,6 +86,10 @@ def verify_automation_drafts(connection: sqlite3.Connection) -> None:
         scope = row["household_id"], row["rule_id"]
         revision = revision + 1 if scope == previous else 1
         draft = _draft(row)
-        if draft.revision != revision or draft.rule.document().encoded != row["definition"]:
+        if (
+            draft.revision != revision
+            or draft.rule.document().encoded != row["definition"]
+            or (not allow_daily and draft.rule.trigger != "manual")
+        ):
             raise StorageFailure("invalid_automation_draft_record")
         previous = scope

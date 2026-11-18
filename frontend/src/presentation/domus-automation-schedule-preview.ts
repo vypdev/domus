@@ -38,7 +38,7 @@ const COPY = {
 } as const;
 
 export class DomusAutomationSchedulePreview extends LitElement {
-  static properties = {view: {attribute: false}, language: {attribute: false}};
+  static properties = {view: {attribute: false}, language: {attribute: false}, timeLocked: {attribute: false}};
   static styles = css`
     :host {display:block;--vyp-ha-surface:var(--surface);--vyp-ha-surface-raised:var(--surface);--vyp-ha-text:var(--text);
       --vyp-ha-text-secondary:var(--muted);--vyp-ha-border:var(--line);--vyp-ha-primary:var(--accent);
@@ -53,7 +53,8 @@ export class DomusAutomationSchedulePreview extends LitElement {
 
   declare view: SchedulePreviewView | null;
   declare language: Language;
-  constructor() {super(); this.view = null; this.language = 'en';}
+  declare timeLocked: boolean;
+  constructor() {super(); this.view = null; this.language = 'en'; this.timeLocked = false;}
 
   private intent(detail: SchedulePreviewIntent): void {
     this.dispatchEvent(new CustomEvent('domus-automation-schedule-preview-intent', {
@@ -91,7 +92,7 @@ export class DomusAutomationSchedulePreview extends LitElement {
         <p>${text.zone} · ${view.timeZone}</p>
         <vyp-ha-field .value=${view.input}
           .state=${textFieldState({label: text.time, description: text.format, required: true, maxLength: 16,
-            error: view.issue === 'invalid' ? text.invalid : ''})}
+            readOnly: this.timeLocked, error: view.issue === 'invalid' ? text.invalid : ''})}
           @ha-value-request=${(event: FieldValueEvent) => this.intent({type: 'time', value: event.detail.value})}></vyp-ha-field>
         <vyp-ha-button type="submit" ?disabled=${view.busy}
           .state=${buttonState({label: view.issue === 'unavailable' ? text.retry : text.preview, variant: 'primary'})}></vyp-ha-button>

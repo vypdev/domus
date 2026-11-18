@@ -113,7 +113,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 33
+SCHEMA_VERSION = 34
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -642,7 +642,7 @@ class SQLiteDatabase:
                         *(LOCATION_STATEMENTS if version < 30 else ()),
                         *((SHOPPING_SESSION_STORE_STATEMENT,) if version < 31 else ()),
                         *((AUTOMATION_DRAFT_STATEMENT,) if version < 32 else ()),
-                        AUTOMATION_CONTROL_STATEMENT,
+                        *((AUTOMATION_CONTROL_STATEMENT,) if version < 33 else ()),
                     )
                     for statement in migration:
                         connection.execute(statement)

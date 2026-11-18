@@ -6,6 +6,9 @@ import {registerCard} from '@vypdev/ha-ui/card';
 import {cardState} from '@vypdev/ha-ui/card-contracts';
 import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
+import {registerSelect} from '@vypdev/ha-ui/select';
+import type {SelectValueEvent} from '@vypdev/ha-ui/select';
+import {selectState} from '@vypdev/ha-ui/select-contracts';
 import type {AutomationDraftIntent, AutomationDraftView, DraftCondition} from '../application/automation-drafts';
 import type {Language} from './messages';
 
@@ -29,6 +32,9 @@ const COPY = {
     product: 'Stock below minimum', all: 'All conditions', any: 'Any condition', not: 'Negated condition',
     preview_saved: 'Preview saved rule', wouldCreate: 'Would create this task', noAction: 'No task would be created',
     readOnly: 'Saving drafts is unavailable in the current read-only session.',
+    trigger: 'Trigger', manual: 'Manual', daily: 'Daily',
+    inactiveDaily: 'Daily drafts stay inactive. Enter the saved time in the daily schedule preview.',
+    invalid_daily_time: 'Enter a daily time between 00:00 and 23:59 before saving.',
   },
   es: {
     heading: 'Borradores de automatización', loading: 'Cargando borradores de automatización…',
@@ -49,6 +55,9 @@ const COPY = {
     product: 'Existencias por debajo del mínimo', all: 'Todas las condiciones', any: 'Cualquier condición', not: 'Negación de la condición',
     preview_saved: 'Previsualizar regla guardada', wouldCreate: 'Se crearía esta tarea', noAction: 'No se crearía ninguna tarea',
     readOnly: 'El guardado de borradores no está disponible en esta sesión de solo lectura.',
+    trigger: 'Activador', manual: 'Manual', daily: 'Diario',
+    inactiveDaily: 'Los borradores diarios permanecen inactivos. Introduce la hora en la vista previa del horario diario.',
+    invalid_daily_time: 'Introduce una hora diaria entre las 00:00 y las 23:59 antes de guardar.',
   },
 } as const;
 
@@ -78,11 +87,15 @@ export class DomusAutomationDrafts extends LitElement {
 
   private text(key: CopyKey): string {return COPY[this.language][key];}
 
+  private intent(detail: AutomationDraftIntent): void {
+    this.dispatchEvent(new CustomEvent<AutomationDraftIntent>(
+      'domus-automation-draft-intent', {detail, bubbles: true, composed: true}));
+  }
+
   private button(key: CopyKey, intent: AutomationDraftIntent, disabled: boolean, title?: string) {
     const label = title === undefined ? this.text(key) : this.text(key) + ' ' + title.replace(/[\u007f-\u009f]/gu, '�');
     return html`<vyp-ha-button .state=${buttonState({label, variant: key === 'save' ? 'primary' : 'outlined'})}
-      ?disabled=${disabled} @ha-press-request=${() => this.dispatchEvent(new CustomEvent<AutomationDraftIntent>(
-        'domus-automation-draft-intent', {detail: intent, bubbles: true, composed: true}))}></vyp-ha-button>`;
+      ?disabled=${disabled} @ha-press-request=${() => this.intent(intent)}></vyp-ha-button>`;
   }
 
   private feedback(key: CopyKey, loading = false) {
@@ -105,8 +118,20 @@ export class DomusAutomationDrafts extends LitElement {
 
   private controls(view: Ready) {
     const busy = view.busy || view.pending;
-    return html`<div class="actions">
-      ${this.button('save', {type: 'save'}, busy || view.readOnly || !this.canEdit || view.locked !== null || view.conflict)}
+    const editBlocked = busy || view.readOnly || !this.canEdit || view.locked !== null;
+    return html`<vyp-ha-select .value=${view.trigger}
+      .state=${selectState({label: this.text('trigger'), clearable: false, options: [
+        {value: 'manual', label: this.text('manual')}, {value: 'daily', label: this.text('daily')},
+      ]})}
+      ?disabled=${editBlocked}
+      @ha-select-request=${(event: SelectValueEvent) => {
+        const trigger = event.detail.value === 'daily' ? 'daily' : 'manual';
+        this.intent({type: 'trigger', trigger});
+      }}></vyp-ha-select>
+    ${view.trigger === 'daily' ? html`<p>${this.text('inactiveDaily')}</p>` : nothing}
+    <slot name="schedule"></slot>
+    <div class="actions">
+      ${this.button('save', {type: 'save'}, editBlocked || view.conflict)}
       ${view.selected === null ? nothing : this.button('new', {type: 'new'}, busy || !this.canEdit)}
       ${view.pending ? this.button('recover', {type: 'recover'}, view.busy) : nothing}
     </div>
@@ -119,6 +144,8 @@ export class DomusAutomationDrafts extends LitElement {
     ${view.conflict ? this.button('review', {type: 'review'}, busy) : nothing}
     ${view.competing === null ? nothing : html`<div class="content">
       <p>${view.competing.title} · ${this.text('revision')} ${view.competing.revision}</p>
+      <p>${this.text('trigger')} · ${view.competing.dailyTime === undefined ? this.text('manual')
+        : html`${this.text('daily')} · ${view.competing.dailyTime}`}</p>
       ${view.competing.condition === null ? html`<p>${this.text('noCondition')}</p>`
         : html`<ul>${this.describe(view.competing.condition)}</ul>`}
       <div class="actions">${this.button('rebase', {type: 'rebase'}, busy || view.readOnly || !this.canEdit
@@ -143,15 +170,15 @@ export class DomusAutomationDrafts extends LitElement {
 
   protected render() {
     const view = this.view;
-    if (view === null) return nothing;
+    if (view === null) return html`<slot name="schedule"></slot>`;
     return html`<vyp-ha-card .state=${cardState({title: this.text('heading'), headingLevel: 2})}>
       <div class="content">${view.state === 'ready' ? this.controls(view)
-        : this.feedback(view.state, view.state === 'loading')}
+        : html`${this.feedback(view.state, view.state === 'loading')}<slot name="schedule"></slot>`}
       ${view.state === 'unavailable' ? this.button('retry', {type: 'retry'}, false) : nothing}</div>
     </vyp-ha-card>`;
   }
 }
 
-registerButton(); registerCard(); registerFeedback();
+registerButton(); registerCard(); registerFeedback(); registerSelect();
 customElements.define('domus-automation-drafts', DomusAutomationDrafts);
 declare global {interface HTMLElementTagNameMap {'domus-automation-drafts': DomusAutomationDrafts;}}

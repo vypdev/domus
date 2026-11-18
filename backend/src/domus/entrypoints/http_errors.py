@@ -167,6 +167,7 @@ PUBLIC_CODES = frozenset(
         "invalid_automation_rule",
         "automation_draft_missing",
         "automation_disabled",
+        "automation_requires_manual_trigger",
         "invalid_automation_condition",
         "automation_condition_depth",
         "automation_rule_node_limit",

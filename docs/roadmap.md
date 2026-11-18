@@ -61,8 +61,10 @@ acceptance of the installed recurrence experience remain open.
   reopen their recorded run outcomes and follow a task that is currently accessible.
   The [daily schedule preview](evidence/daily-automation-preview-qualification.md) shows
   five upcoming times using the household's time zone and daylight-saving policy.
-  Persisted scheduled triggers, background admission, event triggers, multi-step execution,
-  the advanced editor and additional Domus-owned HA entities and services remain open.
+  [Inactive daily drafts](evidence/daily-automation-drafts-qualification.md) persist the proposed
+  time with the task definition and preserve already-enabled manual revisions.
+  Scheduled admission, event triggers, multi-step execution, the advanced editor and additional
+  Domus-owned HA entities and services remain open.
   The existing gateway is already integrated.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
   and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).

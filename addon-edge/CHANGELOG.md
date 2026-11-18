@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.42
+
+- Save and reopen inactive daily drafts with the exact local time and original receipt.
+- Migrate SQLite to schema 34 and preserve the original enabled manual revision.
+
 ## 0.0.0-edge.41
 
 - Preview five upcoming daily times with the household time zone and daylight-saving policy.

@@ -83,7 +83,7 @@ test('a labeled setup form preserves exact draft values and emits only an explic
 test('automation editor waits for draft restoration and only unlocks when editing can resume', async () => {
   const {element, root} = await mount(view('active'));
   const preview = root.querySelector('domus-automation-preview')!;
-  const ready = {state: 'ready', page: {drafts: [], next: null}, after: null, selected: null,
+  const ready = {state: 'ready', trigger: 'manual', page: {drafts: [], next: null}, after: null, selected: null,
     locked: null, competing: null, conflict: false, operationId: null, preview: null, busy: false, pending: false,
     readOnly: false, notice: null} satisfies AutomationDraftView;
   const states: [AutomationDraftView | null, boolean][] = [
@@ -96,7 +96,15 @@ test('automation editor waits for draft restoration and only unlocks when editin
     element.automationDrafts = drafts;
     await element.updateComplete;
     expect(preview.locked).toBe(locked);
+    expect(root.querySelector('domus-automation-schedule-preview')!.timeLocked).toBe(false);
   }
+  const schedule = root.querySelector('domus-automation-schedule-preview')!;
+  element.automationDrafts = {...ready, trigger:'daily'};
+  await element.updateComplete;
+  expect(schedule.timeLocked).toBe(false);
+  element.automationDrafts = {...ready, trigger:'daily', pending:true};
+  await element.updateComplete;
+  expect(schedule.timeLocked).toBe(true);
 });
 test('validation focuses the associated first error, without focusing a hidden form in another state', async () => {
   const f = await mount(view()); f.element.view = view('unconfigured', {fields: ['name', 'time_zone']});
