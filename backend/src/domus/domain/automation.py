@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from typing import Literal
 
 from domus.domain.errors import InvalidInput
-from domus.domain.storage import validate_identifier
+from domus.domain.identity import validate_revision
+from domus.domain.storage import JsonDocument, JsonObject, JsonValue, validate_identifier
 from domus.domain.task_values import TaskContent
 
 AUTOMATION_RULE_VERSION = 1
@@ -50,6 +51,33 @@ def _children(condition: Condition) -> tuple[Condition, ...]:
     raise InvalidInput("invalid_automation_condition")
 
 
+def _condition_value(condition: Condition) -> JsonObject:
+    if isinstance(condition, StockCondition):
+        return {"kind": "stock_below_minimum", "product_id": condition.product_id}
+    if isinstance(condition, NegatedCondition):
+        return {"kind": "not", "child": _condition_value(condition.child)}
+    return {
+        "kind": condition.kind,
+        "children": [_condition_value(child) for child in condition.children],
+    }
+
+
+def _read_condition(value: JsonValue) -> Condition:
+    match value:
+        case {"kind": "stock_below_minimum", "product_id": str() as product, **extra} if not extra:
+            return StockCondition(product)
+        case {"kind": "not", "child": child, **extra} if not extra:
+            return NegatedCondition(_read_condition(child))
+        case {
+            "kind": ("all" | "any") as kind,
+            "children": list() as children,
+            **extra,
+        } if not extra:
+            return ConditionGroup(kind, tuple(_read_condition(child) for child in children))
+        case _:
+            raise InvalidInput("invalid_automation_condition")
+
+
 @dataclass(frozen=True, slots=True)
 class AutomationRule:
     version: int
@@ -76,6 +104,59 @@ class AutomationRule:
             if size + len(pending) + len(children) > MAX_RULE_NODES:
                 raise InvalidInput("automation_rule_node_limit")
             pending.extend((child, depth + 1) for child in reversed(children))
+
+    def document(self) -> JsonDocument:
+        """Persist exactly what the version-one task proposal can represent."""
+        if self.task != TaskContent(self.task.title):
+            raise InvalidInput("invalid_automation_rule")
+        return JsonDocument.from_value(
+            {
+                "version": self.version,
+                "trigger": {"kind": self.trigger},
+                "action": {"kind": "task.create", "title": self.task.title},
+                "condition": None if self.condition is None else _condition_value(self.condition),
+            }
+        )
+
+    def stock_products(self) -> tuple[str, ...]:
+        pending = [] if self.condition is None else [self.condition]
+        products: dict[str, None] = {}
+        while pending:
+            condition = pending.pop()
+            if isinstance(condition, StockCondition):
+                products[condition.product_id] = None
+            pending.extend(reversed(_children(condition)))
+        return tuple(products)
+
+    @classmethod
+    def from_document(cls, document: JsonDocument) -> AutomationRule:
+        match document.decode():
+            case {
+                "version": int() as version,
+                "trigger": {"kind": "manual", **trigger_extra},
+                "action": {"kind": "task.create", "title": str() as title, **action_extra},
+                "condition": condition,
+                **extra,
+            } if not (extra or trigger_extra or action_extra):
+                return cls(
+                    version,
+                    "manual",
+                    None if condition is None else _read_condition(condition),
+                    TaskContent(title),
+                )
+            case _:
+                raise InvalidInput("invalid_automation_rule")
+
+
+@dataclass(frozen=True, slots=True)
+class AutomationDraft:
+    rule_id: str
+    revision: int
+    rule: AutomationRule
+
+    def __post_init__(self) -> None:
+        validate_identifier(self.rule_id)
+        validate_revision(self.revision)
 
 
 @dataclass(frozen=True, slots=True)

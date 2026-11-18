@@ -19,6 +19,7 @@ class Change:
     result: JsonDocument
     audit_detail: JsonDocument
     event_payload: JsonDocument
+    requires_delivery: bool = True
 
 
 @dataclass
@@ -85,4 +86,8 @@ class AtomicCommands:
                 created_at,
             )
         )
+        if not change.requires_delivery:
+            # Restoration joins the receipt and audit to this envelope. Keep it
+            # out of the pending queue from the moment the transaction commits.
+            unit.outbox.acknowledge(operation_id)
         return receipt

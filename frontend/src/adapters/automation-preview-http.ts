@@ -6,6 +6,12 @@ import {csrf} from './http-values';
 import type {EntryEndpoint} from './http-values';
 import {boolean, check, fields, integer} from './json-values';
 
+export function manualRule(draft: AutomationPreviewDraft) {
+  return {version: 1, trigger: {kind: 'manual'},
+    condition: draft.productId === null ? null : {kind: 'stock_below_minimum', product_id: draft.productId},
+    action: {kind: 'task.create', title: draft.title}};
+}
+
 function proposed(value: unknown, draft: AutomationPreviewDraft): boolean {
   const result = fields(value, ['version', 'trigger', 'task_title', 'would_create', 'conditions'], []);
   check(integer(result.version, 1) === 1 && result.trigger === 'manual' && result.task_title === draft.title);
@@ -35,9 +41,7 @@ export class HttpAutomationPreview implements AutomationPreviewServer {
   preview(context: JournalContext, draft: AutomationPreviewDraft) {
     return this.network.owned(async signal => {
       const token = csrf(await this.network.get('auth/csrf', context, signal));
-      const body = JSON.stringify({version: 1, trigger: {kind: 'manual'},
-        condition: draft.productId === null ? null : {kind: 'stock_below_minimum', product_id: draft.productId},
-        action: {kind: 'task.create', title: draft.title}});
+      const body = JSON.stringify(manualRule(draft));
       const reply = await this.network.request('automation/preview', 'POST', context, body, null, token, signal);
       if (reply.status !== 200) readFailure(reply.status, reply.value);
       return proposed(reply.value, draft);

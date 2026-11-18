@@ -75,7 +75,7 @@ const COPY = {
 type CopyKey = keyof typeof COPY.en;
 
 export class DomusAutomationPreview extends LitElement {
-  static properties = {view: {attribute: false}, language: {attribute: false}};
+  static properties = {view: {attribute: false}, language: {attribute: false}, locked: {attribute: false}};
   static styles = css`
     :host {display:block;--vyp-ha-surface:var(--surface);--vyp-ha-surface-raised:var(--surface);--vyp-ha-text:var(--text);
       --vyp-ha-text-secondary:var(--muted);--vyp-ha-border:var(--line);--vyp-ha-primary:var(--accent);
@@ -91,8 +91,9 @@ export class DomusAutomationPreview extends LitElement {
 
   declare view: AutomationPreviewView | null;
   declare language: Language;
+  declare locked: boolean;
 
-  constructor() {super(); this.view = null; this.language = 'en';}
+  constructor() {super(); this.view = null; this.language = 'en'; this.locked = false;}
 
   private text(key: CopyKey): string {return COPY[this.language][key];}
 
@@ -119,7 +120,7 @@ export class DomusAutomationPreview extends LitElement {
   }
 
   private form(view: Extract<AutomationPreviewView, {state: 'ready'}>) {
-    const blocked = view.busy !== null;
+    const blocked = view.busy !== null || this.locked;
     const products = new Map(view.catalog.products.map(product => [product.id, product]));
     if (view.selected !== null) products.set(view.selected.id, view.selected);
     const options = Array.from(products.values(), product => ({

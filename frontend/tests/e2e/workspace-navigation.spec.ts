@@ -1160,6 +1160,80 @@ for (const mode of ['native', 'standalone'] as const) {
     expect(writes.slice(writeOffset)).toEqual(Array(5).fill('POST ' + previewAPI));
     expect(await definitions()).toEqual(beforePreview);
 
+    const drafts = page.locator('domus-automation-drafts');
+    const draftsAPI = base + 'api/v1/automation/drafts';
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await expect(drafts.getByText('Enter a task title above and save your first draft.')).toBeVisible();
+    const saving = page.waitForResponse(response => response.url() === draftsAPI && response.request().method() === 'POST');
+    await drafts.getByRole('button',{name:'Save draft',exact:true}).press('Enter');
+    const firstDraftSave = await saving;
+    expect(firstDraftSave.ok(), await firstDraftSave.text()).toBe(true);
+    const {result:savedRule} = await firstDraftSave.json();
+    expect(savedRule).toMatchObject({revision:'1',state:'draft',enabled:false});
+    const openDraft = drafts.getByRole('button',{name:'Open Check the tea supplies',exact:true});
+    await expect(openDraft).toBeEnabled();
+    await expect(drafts.getByRole('article',{name:'Automation drafts'})).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await drafts.screenshot({path:info.outputPath('automation-drafts-en-wide.png')});
+    await page.reload();
+    await expect(page).toHaveURL(base + '#household');
+    await page.getByRole('combobox',{name:/^(Language|Idioma)$/u}).selectOption('en');
+    await openDraft.press('Enter');
+    await expect(title).toHaveValue('Check the tea supplies');
+    await expect(stockCondition).toContainText('Tea filters for preview');
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    const spanishTitle = rule.getByRole('textbox',{name:'Título de la tarea propuesta',exact:true});
+    const saveRuleEs = drafts.getByRole('button',{name:'Guardar borrador',exact:true});
+    await spanishTitle.fill('Preparar las provisiones de té');
+    let lostKey = '';
+    const loseResponse = async (route: import('@playwright/test').Route) => {
+      if (route.request().method() !== 'POST') {await route.continue(); return;}
+      lostKey = (await route.request().allHeaders())['idempotency-key'];
+      const committed = await route.fetch();
+      expect(committed.ok(), await committed.text()).toBe(true);
+      await route.abort('failed');
+    };
+    await page.route(draftsAPI, loseResponse);
+    await saveRuleEs.tap();
+    const recoverDraft = drafts.getByRole('button',{name:/^(Check original save|Consultar guardado original)$/u});
+    await expect(recoverDraft).toBeEnabled();
+    expect(lostKey).toMatch(/^req_[a-f0-9]{32}$/u);
+    await page.unroute(draftsAPI, loseResponse);
+    await page.reload();
+    await expect(recoverDraft).toBeEnabled();
+    await page.getByRole('combobox',{name:/^(Language|Idioma)$/u}).selectOption('es');
+    await expect(spanishTitle).toHaveValue('Preparar las provisiones de té');
+    const receiptLookup = page.waitForResponse(draftsAPI + '/requests/' + lostKey);
+    await recoverDraft.tap();
+    expect((await receiptLookup).ok()).toBe(true);
+    await expect(drafts.getByRole('status').filter({hasText:'Borrador actual'})).toHaveText(/Revisión 2/u);
+
+    const draftToken = await page.request.get(base + 'api/v1/auth/csrf', {headers:{'X-Domus-Context':contextHeader}});
+    const competing = await page.request.post(draftsAPI, {headers:{
+      Origin:origin, 'X-Domus-Context':contextHeader, 'X-CSRF-Token':(await draftToken.json()).csrf_token,
+      'Idempotency-Key':'competing-draft-edit',
+    }, data:{rule_id:savedRule.rule_id,expected_revision:'2',version:1,trigger:{kind:'manual'},
+      condition:{kind:'stock_below_minimum',product_id:previewProduct.product_id},
+      action:{kind:'task.create',title:'Revisar las compras de té'}}});
+    expect(competing.ok(), await competing.text()).toBe(true);
+    await spanishTitle.fill('Comprar té para el hogar');
+    await saveRuleEs.tap();
+    await expect(drafts.getByText(/Otro guardado cambió este borrador/u)).toBeVisible();
+    await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
+    await drafts.getByRole('button',{name:'Revisar la última revisión',exact:true}).tap();
+    await expect(drafts.getByText('Revisar las compras de té · Revisión 3')).toBeVisible();
+    await drafts.getByRole('button',{name:'Mantener mis cambios sobre la última revisión',exact:true}).tap();
+    await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
+    await saveRuleEs.tap();
+    await expect(drafts.getByRole('status').filter({hasText:'Borrador actual'})).toHaveText(/Revisión 4/u);
+    await expect(drafts.getByRole('article',{name:'Borradores de automatización'})).toHaveCSS('background-color','rgb(24, 36, 47)');
+    await drafts.screenshot({path:info.outputPath('automation-drafts-es-narrow.png')});
+    expect(await definitions()).toEqual(beforePreview);
+
     const restock = await inventoryWrite('overview-restock-product', {
       action:'inventory.register-product', name:'Filters for the Overview', base_unit:'piece',
     });

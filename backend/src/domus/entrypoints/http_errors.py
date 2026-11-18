@@ -165,6 +165,7 @@ PUBLIC_CODES = frozenset(
         "inventory_unavailable",
         "invalid_inventory_unit",
         "invalid_automation_rule",
+        "automation_draft_missing",
         "invalid_automation_condition",
         "automation_condition_depth",
         "automation_rule_node_limit",

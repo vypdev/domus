@@ -4,6 +4,10 @@ import type {TaskOverview} from '../application/task-overview';
 import {HttpAutomationPreview} from '../adapters/automation-preview-http';
 import {AutomationPreviewController} from '../application/automation-preview';
 import type {AutomationPreviewIntent} from '../application/automation-preview';
+import {HttpAutomationDrafts} from '../adapters/automation-draft-http';
+import {AUTOMATION_DRAFT_JOURNAL_KEY, AutomationDraftSessionJournal} from '../adapters/automation-draft-journal';
+import {AutomationDraftController} from '../application/automation-drafts';
+import type {AutomationDraftIntent} from '../application/automation-drafts';
 import type {StockAttention} from '../application/stock-attention';
 import type {ShoppingAttention} from '../application/shopping-attention';
 import {HttpInventoryServer} from '../adapters/inventory-http';
@@ -217,6 +221,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let inventory: InventoryController | null = null;
   let taskOverview: OverviewReadController<TaskOverview> | null = null;
   let automationPreview: AutomationPreviewController | null = null;
+  let automationDrafts: AutomationDraftController | null = null;
   let stockAttention: OverviewReadController<StockAttention> | null = null;
   let shoppingAttention: OverviewReadController<ShoppingAttention> | null = null;
   let familyOverview: OverviewReadController<FamilyWeek> | null = null;
@@ -226,7 +231,7 @@ export function mountEntry(page: EntryPage): PageMount {
   let localeOwner:string|null=null,preferenceIdentity:string|null=null,hadPreference=false,temporaryLanguage=false,temporaryContext:string|null=null;
   const dispose = () => {
     if (stopped) return;
-    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); error?.remove();
+    stopped = true; widget.abort(); lifetime.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); error?.remove();
     stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     if (mounts.get(doc) === dispose) mounts.delete(doc);
   };
@@ -236,7 +241,7 @@ export function mountEntry(page: EntryPage): PageMount {
   }, {signal: lifetime.signal});
   const fail = () => {
     if (stopped || error !== null) return;
-    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); app?.remove();
+    widget.abort(); runtime?.dispose(); calendar?.bind(null); family?.bind(null); rewards?.bind(null); inventory?.bind(null); allocation?.bind(null); calendarPreference?.bind(null); review?.bind(null); taskOverview?.bind(null); automationPreview?.bind(null); automationDrafts?.bind(null); app?.remove();
     stockAttention?.bind(null); shoppingAttention?.bind(null); familyOverview?.bind(null);
     const locale = language(null, page.navigator.language); doc.documentElement.lang = locale;
     error = doc.createElement('main'); error.id = 'domus-entry-error';
@@ -494,19 +499,29 @@ export function mountEntry(page: EntryPage): PageMount {
     const automation = new AutomationPreviewController(new HttpAutomationPreview(source.target, browser.transport),
       inventoryServer, view => {element.automationPreview = view;});
     automationPreview = automation;
+    const drafts = new AutomationDraftController(new HttpAutomationDrafts(source.target, browser.transport),
+      new AutomationDraftSessionJournal({getItem:key => browser.storage().getItem(key),
+        setItem:(key,value) => browser.storage().setItem(key,value), removeItem:key => browser.storage().removeItem(key)}),
+      new BrowserEntropy(browser.random), rule => automation.replaceDraft(rule), view => {element.automationDrafts = view;});
+    automationDrafts = drafts;
     const syncAutomation = () => {
       const entry = element.view, member = element.administration?.access?.member;
       if (entry?.phase === 'ready' && entry.notice !== 'context_changed' && entry.decision?.householdReadable
           && entry.session && entry.household && member) {
         const {context} = entry.session, {householdId} = entry.household;
         const key = JSON.stringify([context.installationId, context.channel, context.subject, householdId, member.memberId]);
-        automation.bind({key, context, householdId, readOnly: entry.decision.readOnly},
-          element.workspaceDestination === 'household');
-      } else automation.bind(null);
+        const visible = element.workspaceDestination === 'household', readOnly = entry.decision.readOnly;
+        automation.bind({key, context, householdId, readOnly}, visible);
+        drafts.bind({key, context, memberId: member.memberId, readOnly}, visible);
+      } else {automation.bind(null); drafts.bind(null);}
     };
     element.addEventListener('domus-automation-preview-intent', event => {
       if (event.target !== element) return;
       void automation.handle((event as CustomEvent<AutomationPreviewIntent>).detail);
+    }, {signal: widget.signal});
+    element.addEventListener('domus-automation-draft-intent', event => {
+      if (event.target !== element) return;
+      void drafts.handle((event as CustomEvent<AutomationDraftIntent>).detail, automation.draft());
     }, {signal: widget.signal});
     const syncWorkspace = () => {
       const fragment = new URL(page.location.href).hash;
@@ -573,6 +588,7 @@ export function mountEntry(page: EntryPage): PageMount {
             storage.removeItem(INVENTORY_JOURNAL_KEY);
             storage.removeItem(CALENDAR_JOURNAL_KEY);
             storage.removeItem(RECURRENCE_JOURNAL_KEY);
+            storage.removeItem(AUTOMATION_DRAFT_JOURNAL_KEY);
             await signOut;
             break;
           }

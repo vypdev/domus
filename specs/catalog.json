@@ -1010,13 +1010,22 @@
       "code": [
         "backend/src/domus/domain/automation.py",
         "backend/src/domus/application/automation_preview.py",
+        "backend/src/domus/application/automation_drafts.py",
+        "backend/src/domus/infrastructure/sqlite_automation_drafts.py",
         "frontend/src/application/automation-preview.ts",
+        "frontend/src/application/automation-drafts.ts",
         "frontend/src/adapters/automation-preview-http.ts",
-        "frontend/src/presentation/domus-automation-preview.ts"
+        "frontend/src/adapters/automation-draft-http.ts",
+        "frontend/src/adapters/automation-draft-journal.ts",
+        "frontend/src/presentation/domus-automation-preview.ts",
+        "frontend/src/presentation/domus-automation-drafts.ts"
       ],
       "tests": [
         "tests/backend/test_automation_preview.py",
+        "tests/backend/test_automation_drafts.py",
+        "tests/backend/test_automation_draft_storage.py",
         "frontend/tests/automation-preview.test.ts",
+        "frontend/tests/automation-drafts.test.ts",
         "frontend/tests/page.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts"
       ],
@@ -1028,12 +1037,13 @@
         "docs/contracts/home-assistant.md",
         "docs/roadmap.md",
         "docs/evidence/automation-preview-qualification.md",
+        "docs/evidence/automation-draft-qualification.md",
         "docs/contracts/household-api.openapi.json",
         "docs/contracts/native-household-api.openapi.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: protected versioned manual task preview with optional current stock condition, typed validation and English/Spanish simple form",
+        "implementationEvidence": "partial: protected manual task preview and inactive drafts with immutable revisions, original-save recovery, current stock conditions and an English/Spanish editor",
         "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects.",
         "copilotChangesAllowed": false
       }
