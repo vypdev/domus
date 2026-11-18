@@ -20,6 +20,30 @@ const ready = (overrides: Partial<Extract<AutomationPreviewView, {state:'ready'}
   catalogUnavailable: false, busy: null, result: null, issue: null, ...overrides,
 });
 
+test('reopening a known draft preserves an off-page product until its label becomes available', async () => {
+  const catalog = deferred<InventoryReport>();
+  const read = vi.fn().mockReturnValueOnce(catalog).mockImplementationOnce(() => settled(page([coffee], null)));
+  const publish = vi.fn();
+  const controller = new AutomationPreviewController({access: () => settled(undefined),
+    preview: () => settled(true)}, {read}, publish);
+  expect(controller.draft()).toBeNull();
+  controller.bind(scope, true);
+  await vi.waitFor(() => expect(read).toHaveBeenCalledOnce());
+  controller.replaceDraft({title: 'Reopened', productId: 'coffee'});
+  expect(controller.draft()).toBeNull();
+  catalog.resolve(page([tea], 'next'));
+  await vi.waitFor(() => expect(controller.draft()).toEqual({title: 'Reopened', productId: 'coffee'}));
+  expect(publish.mock.lastCall?.[0].selected).toEqual({id: 'coffee', name: 'coffee'});
+  await controller.handle({type: 'next'});
+  expect(publish.mock.lastCall?.[0].selected).toEqual(coffee);
+  controller.replaceDraft({title: 'Another draft', productId: 'coffee'});
+  expect(publish.mock.lastCall?.[0].selected).toEqual(coffee);
+  controller.replaceDraft({title: '', productId: null});
+  expect(controller.draft()).toEqual({title: '', productId: null});
+  controller.bind(null);
+  expect(controller.draft()).toBeNull();
+});
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (error: unknown) => void;

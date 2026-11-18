@@ -47,6 +47,7 @@ export class AutomationPreviewController {
   private ready: ReadyPreview | null = null;
   private pending: EntryRead<unknown> | null = null;
   private granted = false;
+  private replacement: AutomationPreviewDraft | null = null;
 
   constructor(private readonly server: AutomationPreviewServer, private readonly inventory: Pick<InventoryServer, 'read'>,
     private readonly publish: (view: AutomationPreviewView | null) => void) {}
@@ -57,12 +58,23 @@ export class AutomationPreviewController {
     if (same && this.visible === visible) return;
     this.pending?.cancel();
     this.pending = null;
-    if (!same) this.ready = null;
+    if (!same) {this.ready = null; this.replacement = null;}
     this.scope = scope;
     this.visible = visible;
     this.granted = false;
     if (visible) void this.refresh();
     else this.publish(null);
+  }
+
+  draft(): AutomationPreviewDraft | null {
+    const ready = this.ready;
+    return this.visible && this.granted && ready?.busy === null
+      ? {title: ready.title, productId: ready.selected?.id ?? null} : null;
+  }
+
+  replaceDraft(draft: AutomationPreviewDraft): void {
+    this.replacement = draft;
+    if (this.ready !== null && this.pending === null) this.update(this.ready);
   }
 
   async handle(intent: AutomationPreviewIntent | undefined): Promise<void> {
@@ -89,6 +101,14 @@ export class AutomationPreviewController {
   }
 
   private update(view: ReadyPreview): void {
+    const draft = this.replacement;
+    if (draft !== null && view.busy === null) {
+      const selected = draft.productId === null ? null
+        : view.catalog.products.find(product => product.id === draft.productId)
+          ?? {id: draft.productId, name: draft.productId};
+      view = {...view, title: draft.title, selected, result: null, issue: null};
+      this.replacement = null;
+    }
     this.ready = view;
     this.publish(view);
   }
@@ -104,6 +124,7 @@ export class AutomationPreviewController {
       if (error instanceof EntryReadError && (error.code === 'forbidden' || error.code === 'authentication_required')) {
         this.granted = false;
         this.ready = null;
+        this.replacement = null;
         this.publish({state: 'denied'});
       } else failure();
       return;
@@ -133,7 +154,8 @@ export class AutomationPreviewController {
     this.update({...current, catalogUnavailable: false, busy: 'products', issue: null});
     await this.settle(this.inventory.read(this.scope!, after), report => {
       const products = report.products.map(({id, name}) => ({id, name}));
-      this.update({...current, catalog: {products, after, next: report.cursor}, catalogUnavailable: false, issue: null});
+      const selected = products.find(product => product.id === current.selected?.id) ?? current.selected;
+      this.update({...current, selected, catalog: {products, after, next: report.cursor}, catalogUnavailable: false, issue: null});
     }, () => this.update({...current, catalogUnavailable: true, issue: null}));
   }
 

@@ -1,8 +1,8 @@
 # The Supervisor builds this folder. Fetch only the reviewed immutable runtime and UI.
 FROM ghcr.io/astral-sh/uv:0.11.29@sha256:eb2843a1e56fd9e30c7276ce1a52cba86e64c7b385f5e3279a0e08e02dd058fc AS uv
 FROM python:3.14.6-slim-trixie@sha256:7bec7ddcddeff7975d6ba9b4be7dd6f6b2f55e7491539145e2978f7f97ce9144 AS source
-ARG DOMUS_SOURCE_COMMIT=43bace9576b9468f789fe9975a3dd5fe427d83ae
-ARG DOMUS_SOURCE_SHA256=7ad1c19b3452f2be9f8385be113c7d5a1f7f1a74ee094c11ad99c2513732d0d4
+ARG DOMUS_SOURCE_COMMIT=63890ace59d55ec76e0b9c3c7c832598eeeab7a1
+ARG DOMUS_SOURCE_SHA256=683f22b93d1e26d6145f51d005d8cfca1324f7d27425786050d1f54fc4cb9b9b
 ADD https://codeload.github.com/vypdev/domus/tar.gz/${DOMUS_SOURCE_COMMIT} /tmp/source.tar.gz
 RUN printf '%s  /tmp/source.tar.gz\n' "$DOMUS_SOURCE_SHA256" | sha256sum --check - \
     && mkdir /app \
@@ -24,9 +24,9 @@ RUN uv sync --frozen --no-dev --package domus-server --no-editable
 RUN .venv/bin/python -c "from pathlib import Path; import domus; from domus.entrypoints.ui_bundle import load_bundle; assert load_bundle(Path(domus.__file__).parent / 'ui') is not None"
 
 FROM python:3.14.6-slim-trixie@sha256:7bec7ddcddeff7975d6ba9b4be7dd6f6b2f55e7491539145e2978f7f97ce9144
-ARG BUILD_VERSION=0.0.0-edge.32
+ARG BUILD_VERSION=0.0.0-edge.37
 ARG BUILD_ARCH
-ARG DOMUS_SOURCE_COMMIT=43bace9576b9468f789fe9975a3dd5fe427d83ae
+ARG DOMUS_SOURCE_COMMIT=63890ace59d55ec76e0b9c3c7c832598eeeab7a1
 LABEL io.hass.type="app" \
       io.hass.version="${BUILD_VERSION}" \
       io.hass.arch="${BUILD_ARCH}" \

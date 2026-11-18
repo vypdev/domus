@@ -373,8 +373,15 @@ If the product list fails to load, you can preview without a stock condition or
 choose **Try again** to reload the list with your title intact.
 Your current household grants control access to the form.
 
+Choose **Save draft** under **Automation drafts** to keep the rule inactive.
+Choose **Open** beside a draft to load its latest revision. Saving edits appends a
+revision. **Review latest revision** shows a conflicting edit so you can decide
+whether to keep your own changes on the new revision. If the save could not be
+confirmed, choose **Check original save** to recover the operation without
+creating a duplicate. Grouped conditions are available to read and preview.
+
 The [automation specification](../specs/household-automation.md) describes the planned
-rule editors, enabling, execution history and Home Assistant operations.
+advanced editor, enabling, execution history and Home Assistant operations.
 
 ## Channels and privacy
 

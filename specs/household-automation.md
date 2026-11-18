@@ -466,3 +466,223 @@ and installed Edge evidence with scoped cleanup.
 ADR 0005 and household-automation-R1, R2 and R7 define one typed model and
 simulation without effects. Reuse the current automation configuration and
 task creation permissions and Inventory replenishment semantics.
+
+## Save and reopen household automation drafts
+
+- Status: Draft
+- Date: 2026-11-18
+- Catalog capability ID: household-automation
+- Owners: Domus maintainers
+- Scope: Durable inactive drafts for the existing manual task rule editor
+- Related issue: [Domus #118](https://github.com/vypdev/domus/issues/118)
+- Required review gates: product UX, architecture, testing, documentation, security/operations
+- Open decisions blocking readiness: none within the supported manual rule scope
+
+### 1. Executive summary
+
+A household administrator can save the manual rule they already preview, leave
+Household settings and reopen the saved definition with its exact values.
+An explicit edit adds a revision under the same rule identity. A saved draft
+cannot admit a run.
+
+### 2. Problem, current behavior, and evidence
+
+The manual preview delivered by [issue #98](https://github.com/vypdev/domus/issues/98)
+uses the current authorized stock facts. The current editor holds the draft in
+browser memory, which is lost after reload. The product roadmap requires a
+durable versioned definition before activation and execution can pin a revision.
+
+The selected base preserves the preview qualifier in
+`docs/evidence/automation-preview-qualification.md`, the closed rule model in
+`backend/src/domus/domain/automation.py`, and the UI state in
+`frontend/src/application/automation-preview.ts`. This is a prospective delta.
+
+### 3. Actors, surfaces, and terminology
+
+| Actor | Goal | Entry point | Visible surfaces |
+| --- | --- | --- | --- |
+| Household administrator with current configuration and task creation grants | Save, reopen, edit and preview the supported manual rule | Household settings | Draft list, editor and save status |
+| Household member without current grants | Use only permitted household views | Household settings | Permission feedback without rule details |
+
+A rule ID identifies the draft within one installation, channel and household.
+A revision is the immutable typed definition saved at a particular point.
+An original save receipt identifies the result of one scoped request.
+An inactive draft has no execution authority.
+
+### 4. Goals, non-goals, and fixed invariants
+
+| Requirement | Behavior |
+| --- | --- |
+| automation-drafts-R01 | Let a currently authorized household administrator save and reopen the exact validated manual rule under a stable identity. Saving and previewing leave execution inactive. |
+| automation-drafts-R02 | Keep immutable revisions, require the expected revision on replacement and recover the result of the original save without duplicating a draft or a revision. |
+| automation-drafts-R03 | Provide protected draft listing, editing and recoverable errors with English and Spanish keyboard and touch navigation. |
+| automation-drafts-R04 | Preserve existing data through migration and verify draft revisions and receipts through restart and restoration in the supported deployments. |
+
+Activation, live triggers, runs, advanced editing, external effects and
+distribution have separate acceptance. The server owns scope, resulting
+revision and status. No draft input grants permission or starts an effect.
+
+### 5. Current versus proposed product journey
+
+| Stage | Current | Proposed | User effect |
+| --- | --- | --- | --- |
+| Edit | Manual task rule exists only in the editor | Reuse the same editor and form values | The task title and optional stock predicate stay recognizable |
+| Save | Refresh loses the editor draft | Explicit save returns a revision | The notice identifies what was saved |
+| Reopen | Start over after leaving the view | Select a current draft in Household settings | Reopen the exact recorded data |
+| Edit again | Existing data is ephemeral | Save against the reopened revision | Preserve the old revision and show conflicts clearly |
+
+Text equivalent: edit and preview as needed, save the inactive rule, reopen it
+from the list, then explicitly save later changes as a new revision.
+
+### 6. Functional behavior and state model
+
+The first save records one stable identity and revision one. Reopening a saved
+item loads its latest authorized revision in the same editor. An edit uses
+the expected revision and appends one immutable revision. Creation and edit
+produce exactly one original-operation receipt. An identical replay returns
+the recorded result. Reusing a request identity for different input fails
+without writing. Conflicting edits preserve the draft and both users' results.
+
+The version-one definition carries one explicit manual trigger, one task
+proposal and the existing supported optional stock predicate. Save validation
+uses the existing typed rule and closed-schema policy. Older or unsupported
+content cannot be silently replaced by the simple form. Preview evaluates the
+loaded definition against current stock and remains available before saving.
+
+### 7. User-facing configuration
+
+The existing manual task title limit and product selection apply. The stock
+predicate is optional. Scope and enabled state come from the server.
+There is no new installation configuration. The draft list is bounded and a
+member can request the next page when more authorized drafts exist.
+
+### 8. Clean Architecture design
+
+The domain owns typed validation and immutable rule data. The application uses
+the existing household authorization and transaction boundaries to admit a
+save, validate owned product references, persist the revision and record the
+original result atomically. Protected read queries return only the current
+member's allowed drafts. SQLite implements storage and snapshot verification.
+The existing HTTP compositions map the same validated DTOs and safe outcomes.
+The browser owns the draft editor, localized view and exact original-request
+recovery. Keep storage and transport dependencies outside domain and
+application policy.
+
+### 9. UI/UX and content contract
+
+Show the draft list next to the existing editor in Household settings. An
+empty list invites the administrator to save the first draft. Saving shows a
+pending state and the resulting revision when confirmed. Treat a lost
+response as a recoverable original save. A revision conflict explains how
+to review the newer version and preserves unsaved input. A permission loss
+retires the user's saved data and editor. Localize list, states and recovery
+copy in English and Spanish. Provide visible focus, accessible controls and
+a readable narrow layout in light and dark modes.
+
+### 10. Failure, recovery, and cleanup
+
+Invalid input preserves the last valid revision. A failed or conflicting
+operation preserves the form and explains the next step. An uncertain save
+recovers through its original request identity. Revocation blocks recovery
+disclosure. Removing a disposable test installation removes only its own
+data and temporary repository source.
+
+### 11. Security, permissions, and privacy
+
+Resolve trusted installation, channel, household and member on the server.
+Apply current household read and automation configuration authority to list
+and reopen. Apply current write and relevant task permissions to saves.
+Reject foreign products without disclosing their data. A draft carries
+declarative data, with no raw command, URL, credential or principal override.
+Stable and Edge storage remain isolated.
+
+### 12. Observability and operational UX
+
+Show authoritative empty, pending, saved, conflict, denied and unavailable
+states. An operation reference supports original-save recovery. Diagnostics
+use safe codes and correlation identifiers without private rule data.
+Application and UI render exact saved revision and inactivity.
+
+### 13. Compatibility, migration, rollout, and rollback
+
+The storage change upgrades representative schema 31 and schema 20 data.
+Verify that existing household records, original-operation receipts and
+authorization remain consistent after migration. Verify restart and
+snapshot restoration of a saved rule and its immutable revisions. Preserve
+the earlier compatible image and data backup for rollback. Exercise Ingress,
+standalone, both architectures and a separately installed Edge candidate.
+
+### 14. Testing strategy and numeric budget
+
+| Area | Minimum distinct cases | Behaviors/risks covered |
+| --- | --- | --- |
+| Managing drafts | 2 | Exact round trip, revision conflicts and original replay |
+| Permission boundary | 1 | Current grants and owned references |
+| Preview | 1 | Current facts and inactive saves |
+| Interaction | 1 | Localized editor and recoverable conflicts |
+| Storage lifecycle | 1 | Migration, restart and restoration |
+| Deployment evidence | 1 | Both compositions and architectures plus installed Edge |
+| Total | 7 | Independently observable cases |
+
+| Case ID | Area | Requirements | Scenario |
+| --- | --- | --- | --- |
+| automation-drafts-C01 | Managing drafts | automation-drafts-R01 | Save the current manual rule, reload the workspace, reopen the recorded rule and compare the exact task proposal and stock predicate to the original input. The draft is inactive. |
+| automation-drafts-C02 | Permission boundary | automation-drafts-R01 | A revoked member or foreign household cannot list, read or save the draft. A malformed rule or foreign stock reference cannot replace a prior revision. |
+| automation-drafts-C03 | Managing drafts | automation-drafts-R02 | Two saves with the same expected revision yield one new revision and a conflict. Replaying an original request after a lost response returns its recorded result. Both immutable revisions remain available to storage verification. |
+| automation-drafts-C04 | Preview | automation-drafts-R01 | Preview a reopened draft using the current stock facts. Compare task, inventory, notification and outbox state before and after save and preview. |
+| automation-drafts-C05 | Interaction | automation-drafts-R03 | Use English desktop keyboard and Spanish narrow touch controls to save and reopen. A conflict or recoverable failure keeps the unsaved input and identifies the next action. |
+| automation-drafts-C06 | Storage lifecycle | automation-drafts-R04 | Upgrade representative schema 31 and 20 data, then verify a saved draft, exact revisions and its original receipt after restart and snapshot restoration. |
+| automation-drafts-C07 | Deployment evidence | automation-drafts-R03, automation-drafts-R04 | Prove the browser journey in Ingress and standalone, CI images for both architectures and an installed Edge candidate. Clean the disposable installation and data. |
+
+### 15. Documentation and discoverability
+
+| Path | Change |
+| --- | --- |
+| specs/household-automation.md | update |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/contracts/household-api.openapi.json | update |
+| docs/contracts/native-household-api.openapi.json | update |
+| docs/evidence/automation-preview-qualification.md | reference |
+
+Keep the catalog under the existing household-automation capability and
+record exact validation evidence in the contributing PR.
+
+### 16. Acceptance scenarios
+
+The seven scenarios in the section 14 inventory define acceptance for this
+increment. Existing automation engine and preview cases retain their scope.
+Validate the protected reads and same-key write recovery through both HTTP
+compositions. Run the browser cases in both languages and verify installed
+Edge behavior and scoped cleanup before merge.
+
+### 17. Requirements traceability
+
+| Requirement | Cases |
+| --- | --- |
+| automation-drafts-R01 | automation-drafts-C01, automation-drafts-C02, automation-drafts-C04 |
+| automation-drafts-R02 | automation-drafts-C03 |
+| automation-drafts-R03 | automation-drafts-C05, automation-drafts-C07 |
+| automation-drafts-R04 | automation-drafts-C06, automation-drafts-C07 |
+
+### 18. Implementation sequence
+
+Reuse the typed rule and protected access boundary. Add durable rule identity,
+immutable revisions and the original save receipt. Connect the existing
+editor and draft list. Exercise the storage migrations, original save
+recovery, browser journey and installed Edge candidate. Update the catalog
+and the user guide with verified evidence.
+
+### 19. Definition of Done
+
+- [ ] The seven acceptance cases pass.
+- [ ] Existing records, access and read-only preview behavior pass regression checks.
+- [ ] Authored runtime files retain complete coverage and architecture checks.
+- [ ] Both compositions and architectures pass and the installed Edge test is recorded with scoped cleanup.
+- [ ] Requirements, case mappings and catalog agree with the implemented increment.
+
+### 20. References and decisions
+
+[Domus #118](https://github.com/vypdev/domus/issues/118) defines the draft
+increment. The existing capability owns the rule model and later execution.
+The selected base is `d18391736d425fb7c6a80e44e30371fe12124ad1`.

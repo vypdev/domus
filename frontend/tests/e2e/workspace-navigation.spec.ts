@@ -302,10 +302,14 @@ for (const mode of ['native', 'standalone'] as const) {
     });
     const ledger = async () => {
       const result = await page.request.get(firstFamily.url(), {headers: {'X-Domus-Context': contextHeader}});
+      if (result.status() === 503) {
+        expect((await result.json()).code).toBe('storage_busy');
+        return null;
+      }
       expect(result.ok(), await result.text()).toBe(true);
       return result.json();
     };
-    await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(225);
+    await expect.poll(async () => (await ledger())?.available_minor, {timeout: 15_000}).toBe(225);
     const participation = overviewRegion.locator('domus-family-overview');
     await page.setViewportSize({width:390,height:844});
     await page.emulateMedia({colorScheme:'dark'});
@@ -345,7 +349,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await post('occurrences/' + seeded.occurrence_id + '/reopen', 'family-reopened', {
       expected_revision: done.revision, cycle_id: done.cycle.cycle_id, reason: 'Check the original work',
     });
-    await expect.poll(async () => (await ledger()).history.length, {timeout: 15_000}).toBe(2);
+    await expect.poll(async () => (await ledger())?.history.length, {timeout: 15_000}).toBe(2);
     await familyRegion.getByRole('button', {name: 'Actualizar', exact: true}).click();
     await expect(familyRegion.getByText('Reversión −2,25', {exact: true})).toBeVisible();
     await expect(familyRegion.getByText('Premio original', {exact: true})).toBeVisible();
@@ -373,7 +377,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(points.getByText('Actual total', {exact: true})).toBeVisible();
     await expect(points.getByText('2.25', {exact: true})).toBeVisible();
     await tasksRegion.getByRole('button', {name: 'Mark done now', exact: true}).click();
-    await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(300);
+    await expect.poll(async () => (await ledger())?.available_minor, {timeout: 15_000}).toBe(300);
     await family.click();
     const details = familyRegion.locator('ol li').first().locator('summary');
     await details.click();
@@ -401,13 +405,13 @@ for (const mode of ['native', 'standalone'] as const) {
     await rewards.getByRole('textbox', {name: 'Código de solicitud', exact: true}).fill(code!);
     await rewards.getByRole('button', {name: 'Aprobar solicitud'}).click();
     await expect(rewards.locator('li').filter({hasText: 'Aprobada para entrega'})).toBeVisible();
-    await expect.poll(async () => (await ledger()).reserved_minor).toBe(200);
+    await expect.poll(async () => (await ledger())?.reserved_minor).toBe(200);
     const latest = await (await page.request.get(base + 'api/v1/tasks/occurrences/' + seeded.occurrence_id,
       {headers: {'X-Domus-Context': contextHeader}})).json();
     await post('occurrences/' + seeded.occurrence_id + '/reopen', 'family-reward-hold', {
       expected_revision: latest.work.revision, cycle_id: latest.cycle.cycle_id, reason: 'Check the reward funding',
     });
-    await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(-200);
+    await expect.poll(async () => (await ledger())?.available_minor, {timeout: 15_000}).toBe(-200);
     await rewards.getByRole('button', {name: 'Actualizar recompensas'}).click();
     await expect(rewards.getByText('Puntos necesarios para cubrir las reservas activas 2,00')).toBeVisible();
     await page.getByLabel('Idioma', {exact: true}).selectOption('en');
@@ -422,10 +426,10 @@ for (const mode of ['native', 'standalone'] as const) {
     const earned = await post('occurrences/' + newCredit.occurrence_id + '/complete', 'family-reward-completed', {
       expected_revision: newCredit.revision, performer_ids: [member], performed_at: Date.now() - 500,
     });
-    await expect.poll(async () => (await ledger()).available_minor, {timeout: 15_000}).toBe(100);
+    await expect.poll(async () => (await ledger())?.available_minor, {timeout: 15_000}).toBe(100);
     await rewards.getByRole('button', {name: 'Refresh rewards'}).click();
     await expect(rewards.locator('li').filter({hasText: 'Approved for delivery'})).toBeVisible();
-    expect((await ledger()).spending_count).toBe(0);
+    await expect.poll(async () => (await ledger())?.spending_count).toBe(0);
     await rewards.getByRole('checkbox', {name: 'I delivered this reward'}).check();
     await rewards.getByRole('button', {name: 'Record delivery'}).click();
     await expect(rewards.locator('li').filter({hasText: 'Spending recorded'})).toBeVisible();
@@ -433,7 +437,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await post('occurrences/' + newCredit.occurrence_id + '/reopen', 'family-reward-negative', {
       expected_revision: earned.revision, cycle_id: earned.cycle.cycle_id, reason: 'Check the original work',
     });
-    await expect.poll(async () => (await ledger()).posted_minor, {timeout: 15_000}).toBe(-200);
+    await expect.poll(async () => (await ledger())?.posted_minor, {timeout: 15_000}).toBe(-200);
     await familyRegion.getByRole('button', {name: 'Refresh', exact: true}).click();
     await expect(familyRegion.getByText(/Task reversals can leave a negative posted balance/u)).toBeVisible();
     await page.getByLabel('Language', {exact: true}).selectOption('es');
@@ -1158,6 +1162,126 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(previsualizar).toHaveCSS('color','rgb(24, 36, 47)');
     await rule.screenshot({path:info.outputPath('automation-preview-es-narrow.png')});
     expect(writes.slice(writeOffset)).toEqual(Array(5).fill('POST ' + previewAPI));
+    expect(await definitions()).toEqual(beforePreview);
+
+    const drafts = page.locator('domus-automation-drafts');
+    const draftsAPI = base + 'api/v1/automation/drafts';
+    await page.getByLabel('Idioma',{exact:true}).selectOption('en');
+    await page.setViewportSize({width:1100,height:760});
+    await page.emulateMedia({colorScheme:'light'});
+    await expect(drafts.getByText('Enter a task title above and save your first draft.')).toBeVisible();
+    const saving = page.waitForResponse(response => response.url() === draftsAPI && response.request().method() === 'POST');
+    await drafts.getByRole('button',{name:'Save draft',exact:true}).press('Enter');
+    const firstDraftSave = await saving;
+    expect(firstDraftSave.status()).toBe(200);
+    const openDraft = drafts.getByRole('button',{name:'Open Check the tea supplies',exact:true});
+    await expect(openDraft).toBeEnabled();
+    const firstDraftKey = firstDraftSave.request().headers()['idempotency-key'];
+    const firstDraftReceipt = await page.request.get(draftsAPI + '/requests/' + firstDraftKey, {
+      headers: {'X-Domus-Context':contextHeader},
+    });
+    expect(firstDraftReceipt.ok(), await firstDraftReceipt.text()).toBe(true);
+    const {result:savedRule} = await firstDraftReceipt.json();
+    expect(savedRule).toMatchObject({revision:'1',state:'draft',enabled:false});
+    await expect(drafts.getByRole('article',{name:'Automation drafts'})).toHaveCSS('background-color','rgb(255, 255, 255)');
+    await drafts.screenshot({path:info.outputPath('automation-drafts-en-wide.png')});
+    await page.reload();
+    await expect(page).toHaveURL(base + '#household');
+    await page.getByRole('combobox',{name:/^(Language|Idioma)$/u}).selectOption('en');
+    const draftURL = draftsAPI + '/' + savedRule.rule_id;
+    const releaseOpen = Promise.withResolvers<void>();
+    await page.route(draftURL, async route => {
+      await releaseOpen.promise;
+      await route.continue();
+    }, {times:1});
+    await expect(title).toBeEditable();
+    await openDraft.press('Enter');
+    try {
+      await expect(title).toBeDisabled();
+      await expect(stockCondition).toBeDisabled();
+    } finally {
+      releaseOpen.resolve();
+    }
+    await expect(title).toHaveValue('Check the tea supplies');
+    await expect(title).toBeEditable();
+    await expect(stockCondition).toContainText('Tea filters for preview');
+
+    await page.getByLabel('Language',{exact:true}).selectOption('es');
+    await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:'dark'});
+    const spanishTitle = rule.getByRole('textbox',{name:'Título de la tarea propuesta',exact:true});
+    const saveRuleEs = drafts.getByRole('button',{name:'Guardar borrador',exact:true});
+    await spanishTitle.fill('Preparar las provisiones de té');
+    let lostKey = '';
+    const loseResponse = async (route: import('@playwright/test').Route) => {
+      if (route.request().method() !== 'POST') {await route.continue(); return;}
+      lostKey = (await route.request().allHeaders())['idempotency-key'];
+      const committed = await route.fetch();
+      expect(committed.ok(), await committed.text()).toBe(true);
+      await route.abort('failed');
+    };
+    await page.route(draftsAPI, loseResponse);
+    await saveRuleEs.tap();
+    const recoverDraft = drafts.getByRole('button',{name:/^(Check original save|Consultar guardado original)$/u});
+    await expect(recoverDraft).toBeEnabled();
+    expect(lostKey).toMatch(/^req_[a-f0-9]{32}$/u);
+    await page.unroute(draftsAPI, loseResponse);
+    await page.route(draftsAPI, route => route.abort('failed'), {times:1});
+    await page.reload();
+    await expect(drafts.getByText(/Automation drafts are unavailable|Los borradores de automatización no están disponibles/u)).toBeVisible();
+    await page.getByRole('combobox',{name:/^(Language|Idioma)$/u}).selectOption('es');
+    await expect(spanishTitle).toBeDisabled();
+    const releaseList = Promise.withResolvers<void>();
+    await page.route(draftsAPI, async route => {
+      await releaseList.promise;
+      await route.continue();
+    }, {times:1});
+    await drafts.getByRole('button',{name:'Volver a intentar',exact:true}).tap();
+    try {
+      await expect(drafts.getByText('Cargando borradores de automatización…')).toBeVisible();
+      await expect(spanishTitle).toBeDisabled();
+    } finally {
+      releaseList.resolve();
+    }
+    await expect(recoverDraft).toBeEnabled();
+    await expect(spanishTitle).toBeDisabled();
+    await expect(spanishTitle).toHaveValue('Preparar las provisiones de té');
+    const receiptLookup = page.waitForResponse(draftsAPI + '/requests/' + lostKey);
+    await recoverDraft.tap();
+    expect((await receiptLookup).ok()).toBe(true);
+    await expect(drafts.getByRole('status').filter({hasText:'Borrador actual'})).toHaveText(/Revisión 2/u);
+    await expect(spanishTitle).toBeEditable();
+
+    const draftToken = await page.request.get(base + 'api/v1/auth/csrf', {headers:{'X-Domus-Context':contextHeader}});
+    const competing = await page.request.post(draftsAPI, {headers:{
+      Origin:origin, 'X-Domus-Context':contextHeader, 'X-CSRF-Token':(await draftToken.json()).csrf_token,
+      'Idempotency-Key':'competing-draft-edit',
+    }, data:{rule_id:savedRule.rule_id,expected_revision:'2',version:1,trigger:{kind:'manual'},
+      condition:null,
+      action:{kind:'task.create',title:'Revisar las compras de té'}}});
+    expect(competing.ok(), await competing.text()).toBe(true);
+    await spanishTitle.fill('Comprar té para el hogar');
+    await saveRuleEs.tap();
+    await expect(drafts.getByText(/Otro guardado cambió este borrador/u)).toBeVisible();
+    await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
+    const reviewRevisionEs = drafts.getByRole('button',{name:'Revisar la última revisión',exact:true});
+    await page.route(draftURL, route => route.abort('failed'), {times:1});
+    await reviewRevisionEs.tap();
+    await expect(drafts.getByText(/Los borradores de automatización no están disponibles/u)).toBeVisible();
+    await expect(reviewRevisionEs).toBeEnabled();
+    await expect(saveRuleEs).toBeDisabled();
+    await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
+    await reviewRevisionEs.tap();
+    await expect(drafts.getByText('Revisar las compras de té · Revisión 3')).toBeVisible();
+    await expect(drafts.getByText('Sin condición de existencias',{exact:true})).toBeVisible();
+    await drafts.getByRole('button',{name:'Mantener mis cambios sobre la última revisión',exact:true}).tap();
+    await expect(spanishTitle).toHaveValue('Comprar té para el hogar');
+    await expect(rule.getByRole('combobox',{name:'Existencias por debajo del mínimo (opcional)'}))
+      .toContainText('Tea filters for preview');
+    await saveRuleEs.tap();
+    await expect(drafts.getByRole('status').filter({hasText:'Borrador actual'})).toHaveText(/Revisión 4/u);
+    await expect(drafts.getByRole('article',{name:'Borradores de automatización'})).toHaveCSS('background-color','rgb(24, 36, 47)');
+    await drafts.screenshot({path:info.outputPath('automation-drafts-es-narrow.png')});
     expect(await definitions()).toEqual(beforePreview);
 
     const restock = await inventoryWrite('overview-restock-product', {

@@ -53,8 +53,9 @@ acceptance of the installed recurrence experience remain open.
   archiving, lot and package management, barcodes and optional online lookup remain open.
 - M4 starts with the [manual automation preview](evidence/automation-preview-qualification.md)
   and includes the native Home Assistant calendar and [task deadline sensors](evidence/ha-deadline-sensors-qualification.md).
-  Household settings can simulate one task proposal against current stock. Durable rule storage,
-  enabling and execution, the advanced editor, a shared automation engine and additional Domus-owned
+  Household settings can simulate one task proposal against current stock and
+  [save and reopen inactive drafts with immutable revisions](evidence/automation-draft-qualification.md).
+  Enabling and execution, the advanced editor, a shared automation engine and additional Domus-owned
   HA entities and services remain open. The existing gateway is already integrated.
 - M5 includes the [assigned and unclaimed task summaries on Overview](evidence/overview-task-qualification.md)
   and the [due today and overdue summaries](evidence/overview-deadlines-qualification.md).

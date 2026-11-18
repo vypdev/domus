@@ -96,6 +96,7 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
     let release!:()=>void,arrived!:()=>void,count=0;
     const gate=new Promise<void>(resolve=>{release=resolve;}),ready=new Promise<void>(resolve=>{arrived=resolve;});
     const writes:{index:number;key:string;body:string|null;status:number;code:string|null}[]=[],lookups:string[]=[];
+    const unavailableAuthorization=new Set<number>();
     const pages=[page,other],names=['Independent house A','Independent house B'],horizons=[14,31];
     const folds=['second_instant','first_instant'];
     try{
@@ -110,6 +111,12 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       const before=await statistics(request,mode);
       for(const [index,candidate]of pages.entries()){
         candidate.on('request',item=>{if(item.url().includes('/administration/requests/')||item.url().includes('/operations/'))lookups.push(item.url());});
+        candidate.on('response',async response=>{
+          if(response.url()===base(mode)+'/api/v1/authorization'&&response.status()===503){
+            const body=await response.json();
+            if(body.code==='storage_busy')unavailableAuthorization.add(index);
+          }
+        });
         await candidate.route(base(mode)+'/api/v1/household',async route=>{
           if(route.request().method()!=='PUT')return route.continue();
           const original={index,key:route.request().headers()['idempotency-key'],body:route.request().postData()};
@@ -138,13 +145,18 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       const unavailable=widgets[loser.index].getByRole('status')
         .filter({has:pages[loser.index].getByRole('heading',{name:'Household administration',level:2,exact:true})})
         .getByText('The requested information is unavailable. Refresh or check the original request again.',{exact:true});
-      await expect(rejected.or(unavailable)).toBeVisible();
+      const householdUnavailable=pages[loser.index].getByRole('region',{name:'Household status unavailable',exact:true});
+      await expect(rejected.or(unavailable).or(householdUnavailable)).toBeVisible();
       const losingRecord=await pages[loser.index].evaluate(
         ({storage,key})=>JSON.parse(sessionStorage.getItem(storage)!).records.find((record:{key:string})=>record.key===key),
         {storage:journalKey,key:loser.key});
       expect(losingRecord).toMatchObject({key:loser.key,stage:'rejected',operationId:null});
-      if(await unavailable.isVisible()){
-        // A follow-up authorization read can also contend with the winning transaction.
+      if(await householdUnavailable.isVisible()){
+        // The entry workspace also refreshes authorization after the rejected write.
+        await expect.poll(()=>unavailableAuthorization.has(loser.index)).toBe(true);
+        await householdUnavailable.getByRole('button',{name:'Refresh status',exact:true}).click();
+        await expect(widgets[loser.index].getByRole('button',{name:'Edit household',exact:true})).toBeEnabled();
+      }else if(await unavailable.isVisible()){
         await widgets[loser.index].getByRole('button',{name:'Refresh administration',exact:true}).click();
         await expect(widgets[loser.index].getByRole('button',{name:'Edit household',exact:true})).toBeEnabled();
       }

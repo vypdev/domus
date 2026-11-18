@@ -34,6 +34,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let phase = 'unconfigured', postRequests = 0, putRequests = 0;
   let taskOverviewDenied = false;
   let shoppingItemPresent = false;
+  let automationTitle: string | null = null;
+  const automationDraft = {rule_id:'saved-draft',revision:'1',state:'draft',enabled:false};
   const shoppingItem = {product_id:'product',extra_id:null,name:'Salt',base_unit:'gram',total:'1.000001'};
   const originalAccess=JSON.parse(wire.active);
   let preferenceReceipt:Record<string,unknown>|null=null;
@@ -50,6 +52,18 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
     else if (route === 'automation/preview-access') raw = JSON.stringify({household_id: 'home'});
+    else if (route === 'automation/drafts' && init.method === 'POST') {
+      automationTitle = JSON.parse(String(init.body)).action.title;
+      raw = JSON.stringify({state:'committed', archived_by:null, operation_id:'saved-automation', created_at:100,
+        result:{...automationDraft,member_id:memberId}, message:'Saved.',action_required:'Review.'});
+    }
+    else if (route === 'automation/drafts') raw = JSON.stringify({
+      drafts: automationTitle === null ? [] : [{...automationDraft,title:automationTitle}], next_cursor:null,
+    });
+    else if (route === 'automation/drafts/saved-draft') raw = JSON.stringify({
+      ...automationDraft, version:1, trigger:{kind:'manual'}, condition:null,
+      action:{kind:'task.create',title:automationTitle},
+    });
     else if (route === 'automation/preview') raw = JSON.stringify({version:1, trigger:'manual',
       task_title:JSON.parse(String(init.body)).action.title, would_create:true, conditions:[]});
     else if (route === 'auth/logout') raw = JSON.stringify({state: 'logged_out', upstream_revoked: true,
@@ -798,6 +812,8 @@ test('Household automation binds the verified member and retires requests outsid
   const emit = (target: EventTarget, detail: unknown) =>
     target.dispatchEvent(new CustomEvent('domus-automation-preview-intent', {detail, bubbles:true, composed:true}));
   const requests = () => f.fetch.mock.calls.filter(([path]) => path.endsWith('/automation/preview'));
+  const saveDraft = (target: EventTarget) => target.dispatchEvent(
+    new CustomEvent('domus-automation-draft-intent', {detail:{type:'save'}, bubbles:true, composed:true}));
   expect(app.automationPreview).toBeNull();
   navigate('#household');
   await vi.waitFor(() => expect(app.automationPreview?.state).toBe('ready'));
@@ -812,6 +828,21 @@ test('Household automation binds the verified member and retires requests outsid
   emit(widget, {type:'preview'});
   await vi.waitFor(() => expect(app.automationPreview).toMatchObject({title:'Check lights',result:true}));
   expect(requests()).toHaveLength(1);
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({state:'ready',busy:false,pending:false}));
+  const drafts = app.shadowRoot!.querySelector('domus-automation-drafts')!;
+  saveDraft(unrelated);
+  expect(f.fetch.mock.calls.filter(([path, init]) => path.endsWith('/automation/drafts') && init.method === 'POST'))
+    .toHaveLength(0);
+  saveDraft(drafts);
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({notice:'saved',operationId:'saved-automation'}));
+  expect(f.fetch.mock.calls.filter(([path, init]) => path.endsWith('/automation/drafts') && init.method === 'POST'))
+    .toHaveLength(1);
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({busy:false,page:{drafts:[{id:'saved-draft'}]}}));
+  emit(widget, {type:'title',value:'Discard this edit'});
+  drafts.dispatchEvent(new CustomEvent('domus-automation-draft-intent', {
+    detail:{type:'open',id:'saved-draft'}, bubbles:true, composed:true,
+  }));
+  await vi.waitFor(() => expect(app.automationPreview).toMatchObject({title:'Check lights',result:null}));
   navigate('#overview');
   expect(app.automationPreview).toBeNull();
   emit(widget, {type:'preview'});

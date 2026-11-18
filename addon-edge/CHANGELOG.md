@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.0.0-edge.37
+
+- Retry a draft conflict review without losing the local edit or saving over a stale revision.
+
+## 0.0.0-edge.36
+
+- Keep the draft editor locked while opening a saved rule or checking for an interrupted save.
+
+## 0.0.0-edge.35
+
+- Show the latest saved condition when reviewing a conflicting draft revision.
+
+## 0.0.0-edge.34
+
+- Match the automation draft API contract to the exact supported revision range.
+
+## 0.0.0-edge.33
+
+- Save and reopen inactive manual automation drafts in Household settings.
+- Preserve immutable revisions and recover a save after a lost response.
+- Migrate existing data to SQLite schema 32. Keep the compatible backup for rollback.
+
 ## 0.0.0-edge.32
 
 - Show the exact number of items still to buy and the first 25 shared-list items on Overview.

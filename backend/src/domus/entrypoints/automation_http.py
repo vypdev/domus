@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.params import Depends
 from pydantic import Field
 
+from domus.application.automation_drafts import DraftPage, SaveDraft
 from domus.application.automation_preview import AutomationPreviewAccess
 from domus.domain.automation import (
     AUTOMATION_RULE_VERSION,
@@ -18,11 +19,18 @@ from domus.domain.automation import (
     NegatedCondition,
     StockCondition,
 )
+from domus.domain.identity import MAX_REVISION
 from domus.domain.task_values import TaskContent
-from domus.entrypoints.household_http import _EmptyQuery, _JSONRoute
+from domus.entrypoints.household_http import (
+    ReceiptResponse,
+    _EmptyQuery,
+    _JSONRoute,
+    _key,
+    _receipt,
+)
 from domus.entrypoints.http_contract import StrictModel
 from domus.entrypoints.recurrence_http import _require_context
-from domus.entrypoints.task_dto import Identifier
+from domus.entrypoints.task_dto import Identifier, PageQuery
 from domus.entrypoints.task_http import TaskHTTPContext
 
 
@@ -78,6 +86,37 @@ class AutomationPreviewBody(StrictModel):
         )
 
 
+def _draft_revision_pattern() -> str:
+    # JSON Schema applies a numeric maximum to numbers only. For a decimal
+    # string, match shorter values and each prefix that first falls below the limit.
+    maximum = str(MAX_REVISION)
+    alternatives = ["0", f"[1-9][0-9]{{0,{len(maximum) - 2}}}", maximum]
+    for index, digit in enumerate(maximum):
+        first_digit = 1 if index == 0 else 0
+        last_digit = int(digit) - 1
+        if first_digit <= last_digit:
+            remaining = len(maximum) - index - 1
+            alternatives.append(
+                f"{maximum[:index]}[{first_digit}-{last_digit}][0-9]{{{remaining}}}"
+            )
+    return "^(?:" + "|".join(alternatives) + ")$"
+
+
+class AutomationDraftBody(AutomationPreviewBody):
+    rule_id: Identifier | None
+    expected_revision: str = Field(
+        pattern=_draft_revision_pattern(),
+        description="Use zero to create a draft and a positive signed 64-bit revision to edit.",
+    )
+
+
+class AutomationDraftDetail(AutomationPreviewBody):
+    rule_id: Identifier
+    revision: str
+    state: Literal["draft"] = "draft"
+    enabled: Literal[False] = False
+
+
 def create_automation_router(
     context: Callable[[Request], TaskHTTPContext], *, security: Depends
 ) -> APIRouter:
@@ -105,5 +144,46 @@ def create_automation_router(
         request: Request, body: AutomationPreviewBody, query: Annotated[_EmptyQuery, Query()]
     ) -> AutomationSimulation:
         return context(request).automation().preview(body.domain())
+
+    @router.get("/drafts", response_model=DraftPage)
+    def drafts(request: Request, query: Annotated[PageQuery, Query()]) -> DraftPage:
+        return context(request).automation_drafts.list(limit=query.limit, cursor=query.cursor)
+
+    @router.get("/drafts/{rule_id}", response_model=AutomationDraftDetail)
+    def reopen(
+        request: Request, rule_id: Identifier, query: Annotated[_EmptyQuery, Query()]
+    ) -> AutomationDraftDetail:
+        draft = context(request).automation_drafts.reopen(rule_id)
+        return AutomationDraftDetail.model_validate(
+            {
+                **draft.rule.document().decode(),
+                "rule_id": draft.rule_id,
+                "revision": str(draft.revision),
+            }
+        )
+
+    @router.post(
+        "/drafts",
+        response_model=ReceiptResponse,
+        openapi_extra={
+            "parameters": [
+                {"name": name, "in": "header", "required": True, "schema": {"type": "string"}}
+                for name in ("Idempotency-Key", "Origin", "X-CSRF-Token")
+            ]
+        },
+    )
+    def save(
+        request: Request, body: AutomationDraftBody, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        receipt = context(request).automation_drafts.save(
+            _key(request), SaveDraft(body.rule_id, int(body.expected_revision), body.domain())
+        )
+        return _receipt(receipt)
+
+    @router.get("/drafts/requests/{key}", response_model=ReceiptResponse)
+    def original(
+        request: Request, key: Identifier, query: Annotated[_EmptyQuery, Query()]
+    ) -> ReceiptResponse:
+        return _receipt(context(request).automation_drafts.original(key))
 
     return router

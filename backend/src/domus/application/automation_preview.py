@@ -9,7 +9,21 @@ from domus.application.ports import Transactions, UnitOfWork
 from domus.application.task_authorization import TaskAccess
 from domus.domain.automation import AutomationRule, AutomationSimulation, simulate
 from domus.domain.errors import NotFound
-from domus.domain.identity import HumanIdentity, Permission
+from domus.domain.identity import HumanIdentity, Member, Permission
+from domus.domain.inventory import CatalogProduct
+
+
+def require_configuration(unit: UnitOfWork, home: str, human: HumanIdentity) -> Member:
+    access = HouseholdAccess(human)
+    access.require(unit, home, Permission.HOUSEHOLD_READ)
+    return access.require(unit, home, Permission.AUTOMATIONS_CONFIGURE)
+
+
+def owned_product(unit: UnitOfWork, home: str, product_id: str) -> CatalogProduct:
+    product = unit.inventory.product(home, product_id)
+    if product is None:
+        raise NotFound("inventory_product_missing")
+    return product
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,9 +39,7 @@ class AutomationPreview:
 
     def _require(self, unit: UnitOfWork) -> str:
         home = self.scope.require(unit).household_id
-        access = HouseholdAccess(self.human)
-        access.require(unit, home, Permission.HOUSEHOLD_READ)
-        access.require(unit, home, Permission.AUTOMATIONS_CONFIGURE)
+        require_configuration(unit, home, self.human)
         TaskAccess(self.human).require(unit, home, Permission.TASKS_CREATE)
         return home
 
@@ -42,9 +54,7 @@ class AutomationPreview:
 
             @cache
             def below_minimum(product_id: str) -> bool:
-                product = stock.product(home, product_id)
-                if product is None:
-                    raise NotFound("inventory_product_missing")
+                product = owned_product(unit, home, product_id)
                 available = stock.balance(home, product.reference_id) - stock.reserved(
                     home, product.reference_id
                 )

@@ -1,3 +1,4 @@
+import type {AutomationDraftView} from '../src/application/automation-drafts';
 import type {TaskView} from '../src/application/task-controller';
 import {revisionValue} from '../src/domain/administration';
 import {afterEach, expect, test} from 'vitest';
@@ -78,6 +79,24 @@ test('a labeled setup form preserves exact draft values and emits only an explic
   f.element.view = view(); await f.element.updateComplete;
   expect(f.root.querySelector<HTMLInputElement>('#name')!.value).toBe('  Family 🏠  ');
   expect(f.root.querySelector<HTMLInputElement>('#time_zone')!.value).toBe('Europe/Madrid');
+});
+test('automation editor waits for draft restoration and only unlocks when editing can resume', async () => {
+  const {element, root} = await mount(view('active'));
+  const preview = root.querySelector('domus-automation-preview')!;
+  const ready = {state: 'ready', page: {drafts: [], next: null}, after: null, selected: null,
+    locked: null, competing: null, conflict: false, operationId: null, preview: null, busy: false, pending: false,
+    readOnly: false, notice: null} satisfies AutomationDraftView;
+  const states: [AutomationDraftView | null, boolean][] = [
+    [null, false], [{state: 'loading'}, true], [{state: 'unavailable'}, true],
+    [{state: 'denied'}, false], [ready, false], [{...ready, busy: true}, true],
+    [{...ready, pending: true}, true],
+    [{...ready, locked: {id: 'draft', revision: revisionValue('1'), title: 'Restock', condition: null}}, true],
+  ];
+  for (const [drafts, locked] of states) {
+    element.automationDrafts = drafts;
+    await element.updateComplete;
+    expect(preview.locked).toBe(locked);
+  }
 });
 test('validation focuses the associated first error, without focusing a hidden form in another state', async () => {
   const f = await mount(view()); f.element.view = view('unconfigured', {fields: ['name', 'time_zone']});

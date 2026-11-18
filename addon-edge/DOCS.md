@@ -1,10 +1,15 @@
 # Installation and operation
 
-Edge 0.0.0-edge.31 packages the immutable runtime declared in
+Edge 0.0.0-edge.37 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
 see whether an optional stock condition matches. Preview leaves tasks and stock unchanged.
+Save the rule as an inactive draft to reopen its exact definition or append a revision.
+Use the original save receipt after an interrupted response. The editor
+waits while Domus checks for a pending save or opens a draft.
+Review the latest saved condition before keeping your edits after a conflict.
+If the latest revision fails to load, retry the review from the same draft.
 If the product list fails to load, the title-only preview remains available and
 the draft is preserved while reloading the list.
 People with task configuration permission can set optional base points when creating a task.
@@ -13,8 +18,8 @@ the due-today and overdue task counts shown on Overview through a dedicated inst
 grant. Enable the [native deadline sensors](../docs/tasks/ha-deadline-sensors.md) using
 the optional `ha_deadline_digest` setting. The calendar uses its own
 `ha_calendar_digest` setting. Both share the private app port `8100` when enabled.
-This preview retains SQLite schema 31. Edge.13 introduced that schema and is listed
-in `breaking_versions`. Keep a compatible image and stopped-app backup before
+Edge.33 introduces SQLite schema 32 and is listed in `breaking_versions`.
+Keep a compatible image and stopped-app backup before
 upgrading from an earlier schema. A binary that expects the earlier schema
 requires its compatible data backup.
 A separate Supervisor repository source creates an independent app and data

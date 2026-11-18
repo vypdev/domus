@@ -17,10 +17,21 @@ The Ingress walkthrough verified the Overview stock summary and replenishment in
 English and Spanish. The test app, its data and its temporary repository source were
 removed after verification. [Installed acceptance](https://github.com/vypdev/domus/pull/103#issuecomment-6797153928)
 
-The preview uses SQLite schema 31, introduced by Edge.13. Keep a compatible image and
+The current Edge preview uses SQLite schema 32. Keep a compatible image and
 cold data backup before updating from an earlier schema. An additional Supervisor source
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.
+
+Edge.37 keeps conflict review available when the latest draft revision fails to load.
+
+Edge.36 keeps the automation editor locked while opening a draft or checking an interrupted save.
+
+Edge.35 shows the latest saved condition when you review a conflicting draft revision.
+
+Edge.34 makes the draft API contract use the exact signed 64-bit revision range.
+
+Edge.33 [saves and reopens inactive automation drafts](evidence/automation-draft-qualification.md).
+Edits append revisions. An original-save receipt allows recovery after a lost response.
 
 Edge.32 adds the [Overview shopping summary](user-guide.md#shared-shopping-list).
 Open any displayed item to focus it in Inventory. The preview uses the current

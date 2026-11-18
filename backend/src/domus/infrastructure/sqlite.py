@@ -30,6 +30,11 @@ from domus.domain.storage import (
     OutboxEvent,
     validate_identifier,
 )
+from domus.infrastructure.sqlite_automation_drafts import (
+    AUTOMATION_DRAFT_STATEMENT,
+    AUTOMATION_DRAFT_TABLE,
+    SQLiteAutomationDrafts,
+)
 from domus.infrastructure.sqlite_calendar import SQLiteCalendar
 from domus.infrastructure.sqlite_calendar_preferences import (
     CALENDAR_PREFERENCE_STATEMENT,
@@ -103,7 +108,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 31
+SCHEMA_VERSION = 32
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -191,6 +196,7 @@ SCHEMA_STATEMENTS = (
     *SHOPPING_RECEIPT_RETURN_STATEMENTS,
     *LOCATION_STATEMENTS,
     SHOPPING_SESSION_STORE_STATEMENT,
+    AUTOMATION_DRAFT_STATEMENT,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -217,7 +223,8 @@ CANCELLATION_SCHEMA_TABLES = SESSION_SCHEMA_TABLES | {SHOPPING_CANCELLATION_TABL
 VOID_SCHEMA_TABLES = CANCELLATION_SCHEMA_TABLES | {SHOPPING_RECEIPT_VOID_TABLE}
 CORRECTION_SCHEMA_TABLES = VOID_SCHEMA_TABLES | {SHOPPING_RECEIPT_CORRECTION_TABLE}
 RETURN_SCHEMA_TABLES = CORRECTION_SCHEMA_TABLES | {SHOPPING_RECEIPT_RETURN_TABLE}
-TABLES = RETURN_SCHEMA_TABLES | LOCATION_TABLES
+LOCATION_SCHEMA_TABLES = RETURN_SCHEMA_TABLES | LOCATION_TABLES
+TABLES = LOCATION_SCHEMA_TABLES | {AUTOMATION_DRAFT_TABLE}
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -264,6 +271,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *(SHOPPING_RECEIPT_RETURN_STATEMENTS if version >= 29 else ()),
             *(LOCATION_STATEMENTS if version >= 30 else ()),
             *((SHOPPING_SESSION_STORE_STATEMENT,) if version >= 31 else ()),
+            *((AUTOMATION_DRAFT_STATEMENT,) if version >= 32 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -443,6 +451,7 @@ class SQLiteOutbox:
 
 class SQLiteUnit:
     def __init__(self, connection: sqlite3.Connection, installation: Installation) -> None:
+        self.automation_drafts = SQLiteAutomationDrafts(connection)
         self.recurrence = SQLiteRecurrences(connection, installation)
         self.calendar = SQLiteCalendar(connection)
         self.calendar_preferences = SQLiteCalendarPreferences(connection)
@@ -543,6 +552,8 @@ class SQLiteDatabase:
                 27: VOID_SCHEMA_TABLES,
                 28: CORRECTION_SCHEMA_TABLES,
                 29: RETURN_SCHEMA_TABLES,
+                30: LOCATION_SCHEMA_TABLES,
+                31: LOCATION_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -619,7 +630,8 @@ class SQLiteDatabase:
                         *(SHOPPING_RECEIPT_CORRECTION_STATEMENTS if version < 28 else ()),
                         *(SHOPPING_RECEIPT_RETURN_STATEMENTS if version < 29 else ()),
                         *(LOCATION_STATEMENTS if version < 30 else ()),
-                        SHOPPING_SESSION_STORE_STATEMENT,
+                        *((SHOPPING_SESSION_STORE_STATEMENT,) if version < 31 else ()),
+                        AUTOMATION_DRAFT_STATEMENT,
                     )
                     for statement in migration:
                         connection.execute(statement)
