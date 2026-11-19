@@ -45,3 +45,28 @@ seeding inventory data. The fixture now verifies `Retry-After`, retries the exac
 key and payload once, and retains the final success assertion. A deliberately
 held SQLite writer exercises that path, followed by an identical replay that
 returns the original result. Both protected journeys passed this regression.
+
+The preparatory amd64 run `44423343964` crossed UTC midnight between fixture
+seeding and the live Core deadline assertion. The original next-day deadline
+correctly became due today. The fixture now schedules its future deadline and
+recurrence two days ahead, within the same three-day calendar acceptance window.
+A controlled SQLite reproduction seeded at 23:59 UTC confirms that the original
+fixture changes from zero to one due-today item at 00:01, while the corrected
+fixture keeps zero due-today and one overdue item across that boundary. The exact
+Edge.46 packaged Core acceptance passed again after this fixture correction.
+
+Home Assistant separately installed and ran Edge.46 with runtime source
+`605eedbd688d35bbb6a69591e23a5d6b9a9acd84`. The synthetic household
+`Domus QA 137 Edge46` passed task creation, claiming, completion and reasoned
+reopening with English keyboard input and Spanish touch input at 390 by 844.
+Titles containing angle brackets and ampersands rendered as text. Both reopened
+tasks remained assigned after reloading. Captures confirm readable dark task
+allocation cards in both languages. The owner installation exercised the app and
+its optional task-digest configuration. Native entity grants and lifecycle were
+verified in the disposable Core compositions described above.
+
+Installed acceptance uses archive SHA-256
+`96686291b73e93052814c97eee5c52e3dd713236b102d15f8a673bd1c07be145`
+and wheel SHA-256
+`b6d01600af38c6bfa71e48367cef2a52d05a3420c3e3b5351ac53371ee5b8b3c`.
+The final PR records the temporary installation cleanup and final-head CI results.

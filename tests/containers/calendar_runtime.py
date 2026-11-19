@@ -51,8 +51,9 @@ def seed(channel, label):
         )
         tasks = TaskCommands(store, actor, clock, identifiers)
         created = tasks.create("fixture-task", CreateTask(TaskContent(f"{label} deadline")))
-        tomorrow = datetime.now(UTC) + timedelta(days=1)
-        due_at = int(tomorrow.timestamp() * 1000)
+        # Keep future work outside today when the emulated Core run crosses midnight.
+        future = datetime.now(UTC) + timedelta(days=2)
+        due_at = int(future.timestamp() * 1000)
         tasks.create_occurrence(
             "fixture-due",
             CreateTaskOccurrence(created.result.decode()["definition_id"], due_at=due_at),
@@ -62,7 +63,7 @@ def seed(channel, label):
             CreateTaskOccurrence(created.result.decode()["definition_id"], due_at=1),
         )
         times = PinnedRecurrenceTime()
-        rule = FixedPattern(NominalDate(tomorrow.date()), Frequency.DAILY, count=1)
+        rule = FixedPattern(NominalDate(future.date()), Frequency.DAILY, count=1)
         RecurrenceCommands(
             store,
             actor,
