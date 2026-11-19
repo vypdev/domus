@@ -54,17 +54,13 @@ Current server state and command checks govern every mutation; hints are not aut
 Publication completion requires that the specification satisfy the required format, that internal and cross-document consistency is checked, and that reciprocal catalog ownership, paths, and evidence agree with the generated view. These are publication constraints, not product goals or claims that checks have run.
 
 | Requirement | Behavior |
-| --- | --- |
-| SDD-I143-U4-R1 | The increment MUST follow the existing CI acceptance gates and preserve the configured self-hosted runner placement and full released action versions. |
-| SDD-I143-U6-R1 | Start transitions an assigned task to in_progress only when the current transition:in_progress hint is present. |
-| SDD-I143-U6-R2 | Block transitions an available, assigned, or in_progress task to blocked only when the current transition:blocked hint is present. |
-| SDD-I143-U6-R3 | Unblock transitions a blocked task to assigned when its current assignee set is nonempty, or to available when that set is empty; it requires the matching current transition:<target> hint. |
-| SDD-I143-U6-R4 | Start, block, and unblock preserve assignee identities and use current authorization: tasks.complete for in_progress, blocked, and assigned targets, and tasks.manage for available. |
-| SDD-I143-U7-R1 | Blocking requires meaningful valid multiline text within the existing 1000 Unicode code point maximum, validated with validate_task_text(multiline=True, required=True); preserve the exact valid submission, reject blank required reasons, invalid Unicode, and disallowed controls, and preserve a correctable draft across validation and recoverable failures. |
-| SDD-I143-U8-R1 | A start, block, or unblock action captures the selected occurrence identity, target, reason, and revision; refreshes current session, scope, task detail, and action hints through the existing controller path before admission; and never treats a stale hint as authority. |
-| SDD-I143-U8-R2 | On a changed revision or competing post-admission conflict, retain the proposed target and reason and show current facts; require explicit review followed by a separate deliberate save at the reviewed revision while the target remains permitted. |
-| SDD-I143-U8-R3 | When a target is unavailable, offer refresh or cancel and require a deliberate new choice; when authority is revoked, follow existing protected-view retirement behavior. |
-| SDD-I143-U8-R4 | Recheck current command authority and exact revision transactionally for direct writes. |
+|---|---|
+| task-progress-interface-R01 | Offer Start for the permitted assigned-to-in-progress transition. Offer Block for permitted available, assigned and in-progress work. Offer Unblock for blocked work, targeting assigned when assignees remain and available when empty, subject to the server's current allowed action. Display the saved reason. |
+| task-progress-interface-R02 | Enforce the existing state machine, human authority, household scope, exact selected revision and unchanged assignee identities. Current authority governs direct writes and original receipt disclosure. |
+| task-progress-interface-R03 | Require a meaningful valid blocking reason within the existing 1,000-code-point multiline bound. Preserve a correctable reason and show distinct invalid, denied, unavailable and conflict outcomes. |
+| task-progress-interface-R04 | Retain the captured task, target, reason and revision across a competing update. Show the current task and require explicit review before a fresh deliberate save. A newly unavailable target has an actionable cancellation or refresh path. |
+| task-progress-interface-R05 | Freeze the original command body, key and scope before sending. A lost response recovers the same operation after reload or restart and an exact replay adds no transition, history, points or stock effect. |
+| task-progress-interface-R06 | Provide English and Spanish keyboard and touch flows with clear labels, focus, cancellation, busy states, light/dark legibility and protected recovery. |
 
 ## 5. Current versus proposed product journey
 
@@ -175,30 +171,35 @@ Qualify the increment on supported ingress and standalone surfaces, English keyb
 
 ## 14. Testing strategy and numeric budget
 
-The minimum distinct-case budget is ten, with one case for each defined scenario in the host-maintained inventory; repeated executions do not increase the count. Cover the three state transitions and their current authorization, blocking-reason validation and draft retention, refreshed admission and stale-hint rejection, revision and competing-write review, unavailable targets and revoked authority, transactional command checks, and the configured CI acceptance gates. Exercise normal UI paths and direct writes, including invalid input, recovery after recoverable failure, and current versus historical task facts. The retained contracts and cases in `specs/household-tasks.md`, `specs/task-execution-foundation.md`, `specs/household-task-categories.md`, and `specs/task-assignment-interface.md` remain authoritative references; this companion does not redefine them. The selected project declares `pnpm@10.34.0` and Node `>=24.20.0 <25` in root `package.json`; frontend scripts are declared in `frontend/package.json`. `specs/README.md` names `pnpm run validate:specifications` and `pnpm run generate:specifications`, but the validator definitions and execution prerequisites were not inspected here. Their availability and scope therefore remain unverified. Do not treat a declaration as execution or passing evidence. Validate this specification’s required format and internal and cross-document consistency as outcomes; retain actual applicable product and CI acceptance evidence with its observed scope.
+Nine distinct cases cover progress, authority, reason validation, concurrent
+review, original recovery, rollback, browser use and persistence. Each supplied
+case retains its exact identity and observable assertions. Repeated executions
+add evidence for the same cases. The retained task owner cases remain in force.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
 |---|---:|---|
-| workflows/setup/schema | 1 | Observable scenarios in the case inventory. |
-| start | 1 | Observable scenarios in the case inventory. |
-| block | 1 | Observable scenarios in the case inventory. |
-| unblock | 2 | Observable scenarios in the case inventory. |
-| blocking reason | 1 | Observable scenarios in the case inventory. |
-| task-progress-interface | 4 | Observable scenarios in the case inventory. |
-| Total | 10 | Distinct inventory cases; repeated executions do not add cases. |
+| Progress journey | 1 | Observable scenarios in the case inventory. |
+| Available work | 1 | Observable scenarios in the case inventory. |
+| Authority and scope | 1 | Observable scenarios in the case inventory. |
+| Reason validation | 1 | Observable scenarios in the case inventory. |
+| State and concurrency | 1 | Observable scenarios in the case inventory. |
+| Original recovery | 1 | Observable scenarios in the case inventory. |
+| Failure and rollback | 1 | Observable scenarios in the case inventory. |
+| Browser acceptance | 1 | Observable scenarios in the case inventory. |
+| Persistence and integrated acceptance | 1 | Observable scenarios in the case inventory. |
+| Total | 9 | Distinct inventory cases; repeated executions do not add cases. |
 
 | Case ID | Area | Requirements | Scenario |
-| --- | --- | --- | --- |
-| inventory4-C01 | workflows/setup/schema | SDD-I143-U4-R1 | The increment's CI workflow retains the configured self-hosted placement and full released action versions, and its acceptance run exercises the existing task browser journeys and applicable container jobs. |
-| inventory6-C01 | start | SDD-I143-U6-R1, SDD-I143-U6-R4 | Starting an assigned task with the current transition:in_progress hint changes its state to in_progress, preserves assignee identities, and requires tasks.complete authority. |
-| inventory6-C02 | block | SDD-I143-U6-R2, SDD-I143-U6-R4 | Blocking an available, assigned, or in_progress task with the current transition:blocked hint changes its state to blocked, preserves assignee identities, and requires tasks.complete authority. |
-| inventory6-C03 | unblock | SDD-I143-U6-R3, SDD-I143-U6-R4 | Unblocking a blocked task with a nonempty current assignee set and transition:assigned hint changes its state to assigned, preserves assignee identities, and requires tasks.complete authority. |
-| inventory6-C04 | unblock | SDD-I143-U6-R3, SDD-I143-U6-R4 | Unblocking a blocked task with an empty current assignee set and transition:available hint changes its state to available and requires tasks.manage authority. |
-| inventory7-C01 | blocking reason | SDD-I143-U7-R1 | Submit valid multiline text and verify the exact text is saved as current state_reason and shown to permitted readers while blocked; verify blank, invalid Unicode, disallowed controls, and over-limit text are rejected, with the draft preserved for correction after validation and recoverable failure. |
-| inventory8-C01 | task-progress-interface | SDD-I143-U8-R1 | For start, block, and unblock, inspect the admitted action and confirm it records the selected occurrence identity, target, reason, and revision after the existing controller path refreshes current session, scope, task detail, and action hints; a stale hint alone does not admit the action. |
-| inventory8-C02 | task-progress-interface | SDD-I143-U8-R2 | Change the revision and separately create a competing post-admission conflict; each outcome retains the proposed target and reason and displays current facts, and saving is unavailable until explicit review followed by a separate deliberate save at the reviewed revision while the target is permitted. |
-| inventory8-C03 | task-progress-interface | SDD-I143-U8-R3 | Make the selected target unavailable and confirm refresh and cancel are offered and no replacement is selected without deliberate new choice; revoke authority and confirm the existing protected-view retirement behavior occurs. |
-| inventory8-C04 | task-progress-interface | SDD-I143-U8-R4 | Attempt direct writes with stale revision and with revoked or otherwise non-current command authority; each is rejected transactionally, while a write with current authority and exact revision is accepted. |
+|---|---|---|---|
+| task-progress-interface-C01 | Progress journey | task-progress-interface-R01, task-progress-interface-R02 | Start assigned work, block it with a saved reason and unblock it to assigned. Retain the same task and assignees while revisions advance once per accepted change. Show the current saved reason. |
+| task-progress-interface-C02 | Available work | task-progress-interface-R01, task-progress-interface-R02 | Block and unblock an unassigned task through its current permitted actions and return to available with an empty assignee set. Exercise an actor whose permissions expose only the valid existing targets. |
+| task-progress-interface-C03 | Authority and scope | task-progress-interface-R02 | Respect current task actions, role/member grants and revocation. Reject a foreign task and a newly denied direct write. Revoke the original transition authority and deny receipt disclosure in both compositions. |
+| task-progress-interface-C04 | Reason validation | task-progress-interface-R03 | Preserve exact multiline text and accept the existing bound. Reject blank required reasons, forbidden characters and over-bound Unicode text before a browser write and at the normal API boundary. Keep the correctable draft. |
+| task-progress-interface-C05 | State and concurrency | task-progress-interface-R02, task-progress-interface-R04 | Compete at one selected revision in two sessions. Retain the losing reason and target, display current facts and require explicit review before another save. A target that becomes unavailable requires a deliberate new decision. |
+| task-progress-interface-C06 | Original recovery | task-progress-interface-R05 | Commit a transition then lose its response. Reload, recover the frozen original operation and verify exact replay adds no history or effects. Reject key reuse with a different target or reason and retain earlier journal records. |
+| task-progress-interface-C07 | Failure and rollback | task-progress-interface-R02, task-progress-interface-R03, task-progress-interface-R05 | Inject a late transactional failure and observe unchanged task and absent receipt. Exercise unavailable reads, unknown responses and denied current authority with truthful feedback and retained recoverable input. |
+| task-progress-interface-C08 | Browser acceptance | task-progress-interface-R01, task-progress-interface-R04, task-progress-interface-R06 | Use English keyboard and Spanish 390 px touch through Ingress and standalone. Exercise start, reason validation, cancellation, block, conflict review and unblock, with focus and light/dark legibility. |
+| task-progress-interface-C09 | Persistence and integrated acceptance | task-progress-interface-R01, task-progress-interface-R02, task-progress-interface-R05, task-progress-interface-R06 | Restart and activate a compatible restore containing blocked work and its original receipt. Inspect retained reason and audit, then complete through the existing performer flow. Qualify both CPU images and the exact installed Edge candidate with scoped QA cleanup. |
 
 ## 15. Documentation and discoverability
 
@@ -216,38 +217,42 @@ Document the Tasks journey for starting assigned work, explaining a block, and d
 
 ## 16. Acceptance scenarios
 
-These are prospective acceptance outcomes, not claims of implementation or execution.
+1. Start assigned work, block it with a saved reason and unblock it to assigned. Retain the same task and assignees while revisions advance once per accepted change. Show the current saved reason. (task-progress-interface-C01)
 
-1. In Tasks, start an assigned task only when the current `transition:in_progress` hint is present. The state becomes `in_progress`, assignee identities remain unchanged, and current `tasks.complete` authority is required. (inventory6-C01)
-2. For available, assigned, or in-progress work, block only when the current `transition:blocked` hint is present. Preserve assignee identities and require `tasks.complete` authority for the blocked target. (inventory6-C02)
-3. Require meaningful multiline block text within the existing 1000 Unicode code-point maximum, validated with `validate_task_text(multiline=True, required=True)`. Preserve the exact accepted text as `state_reason` and show it as text to permitted readers while blocked. Reject blank required text, invalid Unicode, disallowed controls, and over-limit input; retain a correctable draft after validation or recoverable failure. (inventory7-C01)
-4. Unblock a task with current assignees to `assigned` only with `transition:assigned`; unblock one without assignees to `available` only with `transition:available`. Preserve assignee identities and enforce `tasks.complete` for the assigned target and `tasks.manage` for the available target. Start and unblock use the existing empty reason behavior; the historical block reason remains in its receipt and history. (inventory6-C03, inventory6-C04)
-5. For each action, capture the selected occurrence identity, target, reason, and revision. Refresh session, scope, task detail, and action hints through the existing controller path before admission. A stale hint alone never admits an action. (inventory8-C01)
-6. On changed revision and, separately, a competing post-admission conflict, retain the proposed target and reason and show current facts. Require explicit review and then a separate deliberate save at the reviewed revision while the target remains permitted. (inventory8-C02)
-7. If the target is unavailable, offer refresh or cancel and require a deliberate new choice without silently selecting a replacement. If authority is revoked, follow the existing protected-view retirement behavior. (inventory8-C03)
-8. Reject direct writes transactionally when command authority is revoked or otherwise not current, or the revision is not exact; accept a write with current authority and exact revision. (inventory8-C04)
-9. The increment retains the existing CI workflow’s configured self-hosted placement and full released action versions; its acceptance run exercises the existing task browser journeys and applicable container jobs. (inventory4-C01)
+2. Block and unblock an unassigned task through its current permitted actions and return to available with an empty assignee set. Exercise an actor whose permissions expose only the valid existing targets. (task-progress-interface-C02)
 
-The selected project’s current suite, installed Edge qualification, and complete supported-coverage evidence remain prospective acceptance evidence for this increment; this draft does not claim they have been run for it.
+3. Respect current task actions, role/member grants and revocation. Reject a foreign task and a newly denied direct write. Revoke the original transition authority and deny receipt disclosure in both compositions. (task-progress-interface-C03)
+
+4. Preserve exact multiline text and accept the existing bound. Reject blank required reasons, forbidden characters and over-bound Unicode text before a browser write and at the normal API boundary. Keep the correctable draft. (task-progress-interface-C04)
+
+5. Compete at one selected revision in two sessions. Retain the losing reason and target, display current facts and require explicit review before another save. A target that becomes unavailable requires a deliberate new decision. (task-progress-interface-C05)
+
+6. Commit a transition then lose its response. Reload, recover the frozen original operation and verify exact replay adds no history or effects. Reject key reuse with a different target or reason and retain earlier journal records. (task-progress-interface-C06)
+
+7. Inject a late transactional failure and observe unchanged task and absent receipt. Exercise unavailable reads, unknown responses and denied current authority with truthful feedback and retained recoverable input. (task-progress-interface-C07)
+
+8. Use English keyboard and Spanish 390 px touch through Ingress and standalone. Exercise start, reason validation, cancellation, block, conflict review and unblock, with focus and light/dark legibility. (task-progress-interface-C08)
+
+9. Restart and activate a compatible restore containing blocked work and its original receipt. Inspect retained reason and audit, then complete through the existing performer flow. Qualify both CPU images and the exact installed Edge candidate with scoped QA cleanup. (task-progress-interface-C09)
 
 ## 17. Requirements traceability
 
-The host-maintained traceability inventory maps each requirement only to cases that exercise it, reciprocally with the case definitions. Start state, current transition hint, assignee preservation, and `tasks.complete` authority map to inventory6-C01. Blocking state, hint, assignee preservation, and authority map to inventory6-C02. Unblock target selection from the current assignee set and target-specific hint and authority map to inventory6-C03 and inventory6-C04. Blocking-text validation, exact saved reason, permitted display, and correctable draft map to inventory7-C01. Refreshed action admission and rejection of stale hints map to inventory8-C01. Changed-revision and competing-write review map to inventory8-C02. Unavailable target handling and revoked-authority retirement map to inventory8-C03. Transactional current-authority and exact-revision enforcement maps to inventory8-C04. CI workflow placement, action versions, and acceptance-job coverage map to inventory4-C01. Existing owning case IDs remain references, never new definitions. Structural counts and reciprocal mappings establish inventory consistency only, not semantic completeness or executed acceptance.
-
-Publication acceptance must make all three outcomes observable: the specification satisfies the required format; internal and cross-document consistency is checked; and reciprocal catalog ownership, paths, and evidence agree with the generated view. These are publication constraints, not additional product goals or test cases. The concrete invocation and prerequisites for the specification and catalog validation outcomes remain unverified in the selected source.
+Each requirement maps reciprocally to the supplied cases that exercise it.
+The nine case identities and their scenario definitions come from issue #143.
+Earlier owning case identities retain their definitions and existing evidence.
 
 | Requirement | Cases |
 |---|---|
-| SDD-I143-U4-R1 | inventory4-C01 |
-| SDD-I143-U6-R1 | inventory6-C01 |
-| SDD-I143-U6-R2 | inventory6-C02 |
-| SDD-I143-U6-R3 | inventory6-C03, inventory6-C04 |
-| SDD-I143-U6-R4 | inventory6-C01, inventory6-C02, inventory6-C03, inventory6-C04 |
-| SDD-I143-U7-R1 | inventory7-C01 |
-| SDD-I143-U8-R1 | inventory8-C01 |
-| SDD-I143-U8-R2 | inventory8-C02 |
-| SDD-I143-U8-R3 | inventory8-C03 |
-| SDD-I143-U8-R4 | inventory8-C04 |
+| task-progress-interface-R01 | task-progress-interface-C01, task-progress-interface-C02, task-progress-interface-C08, task-progress-interface-C09 |
+| task-progress-interface-R02 | task-progress-interface-C01, task-progress-interface-C02, task-progress-interface-C03, task-progress-interface-C05, task-progress-interface-C07, task-progress-interface-C09 |
+| task-progress-interface-R03 | task-progress-interface-C04, task-progress-interface-C07 |
+| task-progress-interface-R04 | task-progress-interface-C05, task-progress-interface-C08 |
+| task-progress-interface-R05 | task-progress-interface-C06, task-progress-interface-C07, task-progress-interface-C09 |
+| task-progress-interface-R06 | task-progress-interface-C08, task-progress-interface-C09 |
+
+Publication requires the specification format, internal and cross-document
+consistency, and reciprocal catalog ownership, paths and generated evidence.
+Executed product acceptance is recorded with its actual scope.
 
 ## 18. Implementation sequence
 
