@@ -75,6 +75,7 @@ for (const mode of ['native', 'standalone'] as const) {
     });
     await review.getByRole('button', {name:'Confirm barcode association', exact:true}).press('Enter');
     await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeEnabled();
+    await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeFocused();
     await page.unroute(commands);
     await page.reload();
     const original = page.waitForResponse(base + 'api/v1/inventory/requests/inventory.link-barcode/' + originalKey);
@@ -82,6 +83,7 @@ for (const mode of ['native', 'standalone'] as const) {
     expect((await original).ok()).toBe(true);
     await expect(stock.getByText('Barcode associated.', {exact:false})).toBeVisible();
     await expect(stock.getByText('Product found QA barcode soap', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
     await expect(digits).toHaveValue(barcode);
     await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true}).locator('dd')).toHaveText(['0', '0', '0']);
     await stock.getByRole('button', {name:'Open product stock', exact:true}).press('Enter');
@@ -98,14 +100,18 @@ for (const mode of ['native', 'standalone'] as const) {
     await other.getByRole('button', {name:'Remove barcode association', exact:true}).press('Enter');
     await other.getByRole('button', {name:'Confirm barcode removal', exact:true}).press('Enter');
     await expect(other.getByText('Unlinked barcode in this household.', {exact:true})).toBeVisible();
+    await expect(other.locator('.barcode-result')).toBeFocused();
     await other.getByRole('button', {name:'Associate barcode with QA barcode tea', exact:true}).press('Enter');
     await other.getByRole('button', {name:'Confirm barcode association', exact:true}).press('Enter');
     await expect(other.getByText('Product found QA barcode tea', {exact:true})).toBeVisible();
+    await expect(other.locator('.barcode-result')).toBeFocused();
     const stale = page.waitForRequest(item => item.url() === commands && item.method() === 'POST');
+    await page.bringToFront();
     await oldReview.getByRole('button', {name:'Confirm barcode removal', exact:true}).press('Enter');
     expect((await stale).postDataJSON()).toMatchObject({action:'inventory.remove-barcode', barcode, association_id:associationId});
     await expect(stock.getByText('The association changed. Review the current product before confirming again.', {exact:true})).toBeVisible();
     await expect(stock.getByText('Product found QA barcode tea', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
     await expect(oldReview).toHaveCount(0);
     await stock.screenshot({path:info.outputPath('barcode-en-keyboard.png')});
     await peer.close();
@@ -131,6 +137,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await stock.getByRole('button', {name:'Eliminar asociación del código', exact:true}).tap();
     await stock.getByRole('button', {name:'Confirmar retirada del código', exact:true}).tap();
     await expect(stock.getByText('Código sin asociación en este hogar.', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
     await expect(spanish).toHaveValue('036000291452');
     await stock.screenshot({path:info.outputPath('barcode-es-touch.png')});
     expect(external).toEqual([]);
@@ -1702,6 +1709,8 @@ for (const mode of ['native', 'standalone'] as const) {
 
     await tabs.getByRole('link',{name:'Hogar',exact:true}).tap();
     await drafts.getByRole('button',{name:'Abrir ' + draftTitle,exact:true}).tap();
+    const disable = execution.getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true});
+    await expect(disable).toBeEnabled();
     await stockWrite('refill-for-later-no-task-runs',{action:'inventory.adjust',product_id:product,
       quantity:'2',reason:'Replenished for history test'});
     const token = await page.request.get(base + 'api/v1/auth/csrf', {headers:{'X-Domus-Context':contextHeader}});
@@ -1720,7 +1729,6 @@ for (const mode of ['native', 'standalone'] as const) {
       expect((await newer.json()).result.condition_matched).toBe(false);
     }
 
-    const disable = execution.getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true});
     await disable.tap();
     await execution.getByRole('region',{name:'Confirmar acción de automatización',exact:true})
       .getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true}).tap();

@@ -2202,6 +2202,63 @@ test('a submitted barcode search continues to its result or retry without reclai
   }
 });
 
+test('confirmed barcode writes and stale removal continue to the refreshed current result', async () => {
+  const foreground = vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+  const f = await barcodeComponent();
+  const loading: InventoryState = {...barcodeView, busy: true,
+    barcode: {code: barcodeCode, lookup: null, unavailable: false}};
+  const saved: InventoryResult = {kind: 'committed', operationId: 'barcode-saved', productId: 'product',
+    movement: null, barcodeSaved: {barcode: barcodeCode, linked: true}};
+  try {
+    await f.enter('036000291452');
+    f.submit(f.search()!);
+    await f.assign(barcodeView);
+    f.press('Associate barcode with Olive oil');
+    await f.node.updateComplete;
+    f.submit(f.root.querySelector<HTMLFormElement>('.barcode-review')!);
+    await f.assign(loading);
+    await f.assign({...barcodeView, pending: true, notice: 'uncertain'});
+    const recover = [...f.root.querySelectorAll('vyp-ha-button')]
+      .find(button => button.state.label === 'Recover original request');
+    expect(recover).toBeDefined();
+    expect(f.root.activeElement).toBe(recover);
+    await f.assign({...loading, result: saved});
+    await f.assign({...barcodeView, result: saved,
+      barcode: {code: barcodeCode, lookup: barcodeFound, unavailable: false}});
+    expect(f.root.activeElement).toBe(f.root.querySelector('.barcode-result'));
+
+    f.press('Remove barcode association');
+    await f.node.updateComplete;
+    f.submit(f.root.querySelector<HTMLFormElement>('.barcode-review')!);
+    await f.assign({...f.node.view!, busy: true});
+    const rejected: InventoryState = {...barcodeView,
+      barcode: {code: barcodeCode, lookup: barcodeFound, unavailable: false},
+      result: {kind: 'rejected', reason: 'inventory_barcode_changed', command: {
+        action: 'inventory.remove-barcode', barcode: barcodeCode, product_id: 'product', association_id: 'barcode-link',
+      }}};
+    f.node.view = rejected;
+    await f.node.updateComplete;
+    await f.assign({...loading, result: rejected.result});
+    await f.assign({...rejected, barcode: {code: barcodeCode, unavailable: false,
+      lookup: {...barcodeFound, product: {...barcodeFound.product!, name: 'Replacement', associationId: 'replacement'}}}});
+    expect(f.root.querySelector('.barcode-review')).toBeNull();
+    expect(f.root.activeElement).toBe(f.root.querySelector('.barcode-result'));
+    expect(f.root.activeElement!.textContent).toContain('Replacement');
+
+    f.press('Remove barcode association');
+    await f.node.updateComplete;
+    f.submit(f.root.querySelector<HTMLFormElement>('.barcode-review')!);
+    await f.assign(loading);
+    const removed = {...saved, operationId: 'barcode-removed', barcodeSaved: {barcode: barcodeCode, linked: false}};
+    await f.assign({...loading, result: removed});
+    await f.assign({...barcodeView, result: removed});
+    expect(f.root.activeElement).toBe(f.root.querySelector('.barcode-result'));
+    expect(f.root.activeElement!.textContent).toContain('Unlinked barcode');
+  } finally {
+    foreground.mockRestore();
+  }
+});
+
 test('barcode lookup selects an existing paginated product and reviews each association write', async () => {
   const f = await barcodeComponent();
   const registration = f.root.querySelector<HTMLFormElement>('.registration-form')!;

@@ -38,7 +38,7 @@ the old confirmation. Scope changes retire private facts and drafts.
 
 The complete backend campaign passes 5,569 tests with 100% statement and branch
 coverage globally and across all 231 authored modules. An independent source
-coverage audit accepts the report. The complete frontend campaign passes 1,928
+coverage audit accepts the report. The complete frontend campaign passes 1,929
 tests with all four metrics at 100% globally and per authored runtime file.
 All 121 compiled source journeys and 45 rebuilt catalog journeys pass, with zero
 skipped, unexpected or flaky results. The CPU image gate requires all 66 household
@@ -84,3 +84,25 @@ The four compiled UI files match the local and Linux builds. The normal local
 wheel matches the Linux wheel exactly. Schema 35 is retained.
 The actual-owner update, both CPU image campaigns and final same-head CI and
 review are tracked in the increment's pull request.
+
+## Confirmed write continuation
+
+Installed Edge.53 retains the household, products and association from Edge.52.
+English keyboard query continuation, real Tab navigation, cancelled review,
+two-tab stale removal and Spanish 390 px touch passed. A temporary offline read
+focused its explicit retry and retained all entered digits. Returning that tab
+to the network and retrying restored the current match.
+
+A confirmed removal then relinquished focus to the document body. Edge.54 will
+also continue focus after confirmed association writes and rejected stale removal,
+waiting for the refreshed current result. An unconfirmed barcode write continues
+to its original-request recovery control. Its regression covers accepted links,
+accepted removals and an intermediate obsolete view during conflict refresh.
+
+The Edge.53 package-head frontend campaign also exposed an unrelated fixture
+ordering race. Opening the selected automation draft read its execution state
+while the test immediately seeded stock and history through independent writes.
+The preserved trace reports a 503 `storage_busy` for that execution read and the
+interface offers its explicit retry. The test now waits for the current rule
+control before seeding later history. The existing write-concurrency and
+unavailable-read acceptance cases retain their original assertions.

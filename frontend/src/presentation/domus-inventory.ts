@@ -186,9 +186,13 @@ export class DomusInventory extends LitElement {
       if (result.kind === 'rejected') {
         if (result.command.action === 'inventory.configure-replenishment' && result.reason === 'revision_conflict')
           this.policyEditor = null;
-        if ('barcode' in result.command) this.barcodeReview = null;
+        if ('barcode' in result.command) {
+          this.barcodeReview = null;
+          this.barcodeFocusPending = true;
+        }
       } else if (result.barcodeSaved) {
         this.barcodeReview = null;
+        this.barcodeFocusPending = true;
         this.barcodeSubmitted = result.barcodeSaved.barcode;
         if (this.barcodeDraft === '') this.barcodeDraft = result.barcodeSaved.barcode;
       } else if (result.locationSaved) this.locationDraft = '';
@@ -205,14 +209,15 @@ export class DomusInventory extends LitElement {
   protected updated(changed: PropertyValues<this>): void {
     if (!changed.has('view')) return;
     if (this.barcodeFocusPending && !this.view!.busy) {
-      const owner = this.view;
-      const target = this.renderRoot.querySelector<HTMLElement>(this.barcodeState()?.unavailable
-        ? '.barcode-search-form vyp-ha-button' : '.barcode-result');
+      const owner = this.view!;
+      const target = this.renderRoot.querySelector<HTMLElement>(owner.pending
+        ? '.inventory-actions vyp-ha-button:last-child'
+        : this.barcodeState()?.unavailable ? '.barcode-search-form vyp-ha-button' : '.barcode-result');
       if (target) {
-        this.barcodeFocusPending = false;
         void this.updateComplete.then(() => {
-          if (this.view === owner && this.ownerDocument.hasFocus()
-            && this.ownerDocument.activeElement === this.ownerDocument.body) target.focus();
+          if (this.view !== owner) return;
+          this.barcodeFocusPending = false;
+          if (this.ownerDocument.hasFocus() && this.ownerDocument.activeElement === this.ownerDocument.body) target.focus();
         });
       }
     }
@@ -328,6 +333,7 @@ export class DomusInventory extends LitElement {
           @submit=${(event: SubmitEvent) => {
             event.preventDefault();
             if (blocked) return;
+            this.barcodeFocusPending = true;
             this.intent({type: 'submit', command: review.associationId === null
               ? {action: 'inventory.link-barcode', barcode: review.barcode, product_id: review.productId}
               : {action: 'inventory.remove-barcode', barcode: review.barcode,
@@ -698,7 +704,7 @@ export class DomusInventory extends LitElement {
           <p>${this.text('operation')} <code>${saved.operationId}</code></p>
           ${movement ? html`<p>${this.text('movement')} <code>${movement.movementId}</code></p>` : nothing}
         </details>`}
-      <div class="actions">${this.button('refresh', () => this.intent({type:'refresh'}), busy)}
+      <div class="actions inventory-actions">${this.button('refresh', () => this.intent({type:'refresh'}), busy)}
         ${pending ? this.button('recover', () => this.intent({type:'recover'}), busy) : nothing}</div>
       ${busy && report === null ? html`<p role="status">${this.text('loading')}</p>` : nothing}
       ${report === null ? nothing : html`
