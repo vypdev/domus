@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.49
+
+- Enable assignment saving after the selected household members change.
+- Explain unchanged selections and retain the guard when the same members are selected in a different order.
+
 ## 0.0.0-edge.48
 
 - Assign, replace and release planned task assignees through the Tasks workspace.

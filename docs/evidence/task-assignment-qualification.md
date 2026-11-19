@@ -45,30 +45,33 @@ audited per file. Architecture-specific CI and final review are tracked in
 
 ## Immutable candidate
 
-Edge.48 uses runtime source `95fff8ab5ff0a5a85872596447c314e365813d1b`.
+Edge.49 uses runtime source `0a95702a5f53911cc12c645bf7f6f2e8dcd626cd`.
 Its source archive SHA-256 is
-`c1b43ec66442834ca7f2093660ab6700ddc18dd31496ef982c0df564305faa5f`.
+`0fcb5041bdb95712545b0deb6aec3ed2d8f545289cd034537f0d70ae78a71989`.
 The measured Linux wheel SHA-256 is
-`498b3840ca22370da8a77822027d3332240e9c0d4e5827dcad8b7e122b329bfb`.
+`b8141fd740b17282129a072802782182ff14971827514e427be87546c20ce469`.
 All 231 Python modules match Git and the installed Linux builder. Its four
 compiled UI files also match the independently built local bundle.
 The [artifact declaration](../../addon-edge/artifact.json) records those exact bytes.
 
 The ARM64 image is
-`sha256:08f426df9f0bc9d0c3441eb0505b55a47fd0b507c5f3932d7e5952d94b296e9a`.
+`sha256:8d22fdce04f46fbd2567635e3f3d5a968f3788dc2d79efc8af1c0fd57aa78baf`.
 Nine actual-image cases passed, covering every declared Python/UI file, native
 authority and restart, private standalone delivery, an actual Edge.5 upgrade and
 restore, repeated SIGTERM cleanup, and all four real-Core deployment compositions.
-The four assignment browser journeys also passed against this exact installed
+The four assignment browser journeys also passed against this exact packaged
 image in Ingress and standalone, with English keyboard and Spanish native touch.
 
-The first CI campaign exposed a browser-test bootstrap race after standalone
+The earlier Edge.48 CI campaign exposed a browser-test bootstrap race after standalone
 restart. The test selected Spanish while authentication was still loading, then
 waited for Spanish navigation after the completed bootstrap selected English.
 The journey now waits for authenticated navigation before changing language.
-All four actual-image assignment journeys passed three consecutive repetitions.
+All four assignment journeys passed three consecutive repetitions against Edge.48.
+The corrected Edge.49 image passes the four journeys with the unchanged-selection
+assertions in 43.4 seconds. Its nine pinned-image cases pass in 104.58 seconds.
+Consult PR #142 for installed Edge.49 acceptance and the CI and review status.
 
-## Installed Home Assistant acceptance
+## Earlier Home Assistant Edge.48 acceptance
 
 Chrome verified installed version `0.0.0-edge.48` using the Action-managed issue
 branch and the synthetic household `Domus QA 141 Edge48`. English keyboard input
@@ -94,5 +97,5 @@ also leaves save disabled after explicit review.
 
 Seven component regressions reproduced the issue before the correction. The four
 compiled assignment journeys now check the initial unchanged state and changing
-the selection back to its original set. Edge.49 packaging and installed acceptance
-will qualify the correction independently of the earlier Edge.48 observation.
+the selection back to its original set. Edge.49 packages the correction, with its
+installed acceptance tracked in PR #142.
