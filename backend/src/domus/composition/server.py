@@ -286,6 +286,7 @@ def _run(argv: list[str] | None, begin_cleanup: Callable[[], None]) -> int:
             timeout_graceful_shutdown=10,
             h11_max_incomplete_event_size=65_536,
         )
+        return 0
     finally:
         begin_cleanup()
         if runtime is not None:
@@ -295,7 +296,6 @@ def _run(argv: list[str] | None, begin_cleanup: Callable[[], None]) -> int:
             )
             if unrevoked:
                 logging.getLogger("domus.auth").warning("ha_grants_not_revoked: %d", unrevoked)
-    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
