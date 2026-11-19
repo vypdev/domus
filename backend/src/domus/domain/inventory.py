@@ -17,6 +17,37 @@ MAX_LOCATION_NAME = 80
 MAX_NAMED_LOCATIONS = 32
 
 
+def canonical_gtin(value: str) -> str:
+    """Validate the printed GS1 identity before deriving its fourteen-digit key."""
+    if (
+        not isinstance(value, str)
+        or len(value) not in (8, 12, 13, 14)
+        or not value.isascii()
+        or not value.isdigit()
+    ):
+        raise InvalidInput("invalid_inventory_barcode")
+    weighted = sum(
+        int(digit) * (3 if index % 2 == 0 else 1)
+        for index, digit in enumerate(reversed(value[:-1]))
+    )
+    if (weighted + int(value[-1])) % 10:
+        raise InvalidInput("invalid_inventory_barcode")
+    return value.zfill(14)
+
+
+@dataclass(frozen=True, slots=True)
+class BarcodeAssociation:
+    barcode: str
+    association_id: str
+    product_id: str
+
+    def __post_init__(self) -> None:
+        if canonical_gtin(self.barcode) != self.barcode:
+            raise InvalidInput("invalid_inventory_barcode")
+        validate_identifier(self.association_id)
+        validate_identifier(self.product_id)
+
+
 class BaseUnit(StrEnum):
     PIECE = "piece"
     GRAM = "gram"

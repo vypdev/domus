@@ -15,6 +15,28 @@ export const MAX_PURCHASE_STORE_NAME = 160;
 export const MAX_LOCATION_NAME = 80;
 export const MAX_NAMED_LOCATIONS = 32;
 
+export function canonicalGtin(value: unknown): string {
+  if (typeof value !== 'string' || ![8, 12, 13, 14].includes(value.length) || /[^0-9]/u.test(value))
+    throw new Error('invalid_inventory_barcode');
+  let total = Number(value[value.length - 1]);
+  for (const [index, digit] of [...value.slice(0, -1)].reverse().entries())
+    total += Number(digit) * (index % 2 === 0 ? 3 : 1);
+  if (total % 10 !== 0) throw new Error('invalid_inventory_barcode');
+  return value.padStart(14, '0');
+}
+
+export interface BarcodeLookup {
+  readonly barcode: string;
+  readonly mayManage: boolean;
+  readonly product: Readonly<{
+    id: string;
+    referenceId: string;
+    associationId: string;
+    name: string;
+    unit: BaseUnit;
+  }> | null;
+}
+
 export interface SessionSelection {
   readonly product_id: string | null;
   readonly extra_id: string | null;
@@ -23,6 +45,8 @@ export interface SessionSelection {
 
 export type InventoryCommand =
   | Readonly<{action: 'inventory.register-product'; name: string; base_unit: BaseUnit}>
+  | Readonly<{action: 'inventory.link-barcode'; barcode: string; product_id: string}>
+  | Readonly<{action: 'inventory.remove-barcode'; barcode: string; product_id: string; association_id: string}>
   | Readonly<{action: 'inventory.add-location'; name: string}>
   | Readonly<{action: 'inventory.transfer'; product_id: string; source_location: string;
     destination_location: string; quantity: string}>
@@ -288,6 +312,12 @@ export function inventoryCommand(value: unknown): InventoryCommand {
     throw new Error('invalid_inventory_command');
   const record = value as Record<string, unknown>;
   const {action} = record;
+  if (action === 'inventory.link-barcode' && hasFields(record, ['action', 'barcode', 'product_id']))
+    return {action, barcode: canonicalGtin(record.barcode), product_id: taskIdentifier(record.product_id)};
+  if (action === 'inventory.remove-barcode'
+      && hasFields(record, ['action', 'barcode', 'product_id', 'association_id']))
+    return {action, barcode: canonicalGtin(record.barcode), product_id: taskIdentifier(record.product_id),
+      association_id: taskIdentifier(record.association_id)};
   if (action === 'inventory.add-location' && hasFields(record, ['action', 'name']))
     return {action, name: locationName(record.name)};
   if (action === 'inventory.transfer'

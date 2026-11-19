@@ -1066,6 +1066,69 @@
         "title": "AutomationSimulation",
         "type": "object"
       },
+      "BarcodeAssociation": {
+        "properties": {
+          "association_id": {
+            "title": "Association Id",
+            "type": "string"
+          },
+          "barcode": {
+            "title": "Barcode",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "barcode",
+          "association_id",
+          "product_id"
+        ],
+        "title": "BarcodeAssociation",
+        "type": "object"
+      },
+      "BarcodeLookup": {
+        "properties": {
+          "association": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BarcodeAssociation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "barcode": {
+            "title": "Barcode",
+            "type": "string"
+          },
+          "may_manage": {
+            "title": "May Manage",
+            "type": "boolean"
+          },
+          "product": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CatalogProduct"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "barcode",
+          "may_manage",
+          "association",
+          "product"
+        ],
+        "title": "BarcodeLookup",
+        "type": "object"
+      },
       "BaseUnit": {
         "enum": [
           "piece",
@@ -1438,6 +1501,8 @@
       "CatalogAction": {
         "enum": [
           "inventory.register-product",
+          "inventory.link-barcode",
+          "inventory.remove-barcode",
           "inventory.add-location",
           "inventory.transfer",
           "inventory.intake",
@@ -1457,6 +1522,33 @@
         ],
         "title": "CatalogAction",
         "type": "string"
+      },
+      "CatalogProduct": {
+        "properties": {
+          "base_unit": {
+            "$ref": "#/components/schemas/BaseUnit"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "reference_id": {
+            "title": "Reference Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "reference_id",
+          "name",
+          "base_unit"
+        ],
+        "title": "CatalogProduct",
+        "type": "object"
       },
       "CatalogReward": {
         "properties": {
@@ -3848,6 +3940,35 @@
             "type": "null"
           }
         ]
+      },
+      "LinkBarcodeBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.link-barcode",
+            "title": "Action",
+            "type": "string"
+          },
+          "barcode": {
+            "maxLength": 14,
+            "minLength": 8,
+            "pattern": "^[0-9]+$",
+            "title": "Barcode",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Product Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "barcode",
+          "product_id"
+        ],
+        "title": "LinkBarcodeBody",
+        "type": "object"
       },
       "LocationBody": {
         "additionalProperties": false,
@@ -6537,6 +6658,41 @@
           "interval_days"
         ],
         "title": "RelativeTaskBody",
+        "type": "object"
+      },
+      "RemoveBarcodeBody": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "inventory.remove-barcode",
+            "title": "Action",
+            "type": "string"
+          },
+          "association_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Association Id",
+            "type": "string"
+          },
+          "barcode": {
+            "maxLength": 14,
+            "minLength": 8,
+            "pattern": "^[0-9]+$",
+            "title": "Barcode",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+            "title": "Product Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "barcode",
+          "product_id",
+          "association_id"
+        ],
+        "title": "RemoveBarcodeBody",
         "type": "object"
       },
       "RenameCategoryBody": {
@@ -16830,6 +16986,162 @@
         "summary": "Catalog"
       }
     },
+    "/api/v1/inventory/barcode": {
+      "get": {
+        "operationId": "barcode_api_v1_inventory_barcode_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "barcode",
+            "required": true,
+            "schema": {
+              "maxLength": 14,
+              "minLength": 8,
+              "pattern": "^[0-9]+$",
+              "title": "Barcode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Domus-Context",
+            "required": true,
+            "schema": {
+              "title": "X-Domus-Context",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BarcodeLookup"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method Not Allowed"
+          },
+          "408": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Request Timeout"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "DomusSession": []
+          }
+        ],
+        "summary": "Barcode"
+      }
+    },
     "/api/v1/inventory/commands": {
       "post": {
         "operationId": "command_api_v1_inventory_commands_post",
@@ -16879,7 +17191,9 @@
                     "inventory.configure-replenishment": "#/components/schemas/ReplenishmentBody",
                     "inventory.correct-intake": "#/components/schemas/IntakeCorrectionBody",
                     "inventory.intake": "#/components/schemas/IntakeBody",
+                    "inventory.link-barcode": "#/components/schemas/LinkBarcodeBody",
                     "inventory.register-product": "#/components/schemas/ProductBody",
+                    "inventory.remove-barcode": "#/components/schemas/RemoveBarcodeBody",
                     "inventory.transfer": "#/components/schemas/TransferBody",
                     "shopping.add-extra": "#/components/schemas/AddExtraBody",
                     "shopping.cancel-balance": "#/components/schemas/CancelPurchaseBalanceBody",
@@ -16897,6 +17211,12 @@
                 "oneOf": [
                   {
                     "$ref": "#/components/schemas/ProductBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LinkBarcodeBody"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RemoveBarcodeBody"
                   },
                   {
                     "$ref": "#/components/schemas/LocationBody"

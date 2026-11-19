@@ -17,6 +17,7 @@ from domus.domain.inventory import (
     MAX_NAMED_LOCATIONS,
     MAX_STOCK_UNITS,
     PANTRY,
+    BarcodeAssociation,
     BaseUnit,
     CatalogProduct,
     EffectKind,
@@ -26,6 +27,7 @@ from domus.domain.inventory import (
     StockMovement,
     StockTransfer,
     StorageLocation,
+    canonical_gtin,
     stock_quantity,
     stock_units,
     validate_location_name,
@@ -141,6 +143,8 @@ class InventorySettlement:
 
 class CatalogAction(StrEnum):
     REGISTER = "inventory.register-product"
+    LINK_BARCODE = "inventory.link-barcode"
+    REMOVE_BARCODE = "inventory.remove-barcode"
     ADD_LOCATION = "inventory.add-location"
     TRANSFER = "inventory.transfer"
     INTAKE = "inventory.intake"
@@ -327,6 +331,34 @@ class InventoryCommands:
             return JsonDocument.from_value(asdict(location))
 
         return self._execute(CatalogAction.ADD_LOCATION.value, key, payload, apply)
+
+    def link_barcode(self, key: str, barcode: str, product_id: str) -> Receipt:
+        canonical = canonical_gtin(barcode)
+        validate_identifier(product_id)
+        payload = JsonDocument.from_value({"barcode": canonical, "product_id": product_id})
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            stock = unit.inventory
+            self._product(stock, product_id)
+            if stock.barcode(self.household_id, canonical) is not None:
+                raise Conflict("inventory_barcode_linked")
+            association = BarcodeAssociation(canonical, self.identifiers.new(), product_id)
+            stock.link_barcode(self.household_id, association)
+            return JsonDocument.from_value(asdict(association))
+
+        return self._execute(CatalogAction.LINK_BARCODE.value, key, payload, apply)
+
+    def remove_barcode(
+        self, key: str, barcode: str, product_id: str, association_id: str
+    ) -> Receipt:
+        association = BarcodeAssociation(canonical_gtin(barcode), association_id, product_id)
+        payload = JsonDocument.from_value(asdict(association))
+
+        def apply(unit: UnitOfWork, member: str, command: CommandKey) -> JsonDocument:
+            unit.inventory.remove_barcode(self.household_id, association)
+            return payload
+
+        return self._execute(CatalogAction.REMOVE_BARCODE.value, key, payload, apply)
 
     def transfer(
         self, key: str, product_id: str, source: str, destination: str, quantity: MaterialQuantity

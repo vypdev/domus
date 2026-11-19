@@ -9,6 +9,7 @@ from pydantic import Field
 
 from domus.application.inventory import CatalogAction
 from domus.application.inventory_queries import (
+    BarcodeLookup,
     InventoryView,
     MovementHistory,
     PhysicalReceiptsView,
@@ -48,6 +49,26 @@ class ProductBody(StrictModel):
 class LocationBody(StrictModel):
     action: Literal["inventory.add-location"]
     name: str = Field(min_length=1, max_length=MAX_LOCATION_NAME)
+
+
+Barcode = Annotated[str, Field(min_length=8, max_length=14, pattern=r"^[0-9]+$")]
+
+
+class BarcodeQuery(StrictModel):
+    barcode: Barcode
+
+
+class LinkBarcodeBody(StrictModel):
+    action: Literal["inventory.link-barcode"]
+    barcode: Barcode
+    product_id: Identifier
+
+
+class RemoveBarcodeBody(StrictModel):
+    action: Literal["inventory.remove-barcode"]
+    barcode: Barcode
+    product_id: Identifier
+    association_id: Identifier
 
 
 class TransferBody(StrictModel):
@@ -170,6 +191,8 @@ class ReturnReceiptBody(ReceiptCorrectionBody):
 
 CatalogBody = Annotated[
     ProductBody
+    | LinkBarcodeBody
+    | RemoveBarcodeBody
     | LocationBody
     | TransferBody
     | IntakeBody
@@ -202,6 +225,10 @@ def create_inventory_router(
     @router.get("", response_model=InventoryView)
     def catalog(request: Request, query: Annotated[PageQuery, Query()]) -> InventoryView:
         return context(request).inventory().report(limit=query.limit, cursor=query.cursor)
+
+    @router.get("/barcode", response_model=BarcodeLookup)
+    def barcode(request: Request, query: Annotated[BarcodeQuery, Query()]) -> BarcodeLookup:
+        return context(request).inventory().barcode(query.barcode)
 
     @router.get("/stock-attention", response_model=StockAttention)
     def stock_attention(request: Request, query: Annotated[_EmptyQuery, Query()]) -> StockAttention:
@@ -279,6 +306,12 @@ def create_inventory_router(
         inventory, key = context(request).inventory_commands, _key(request)
         if isinstance(body, ProductBody):
             receipt = inventory.register(key, body.name, body.base_unit)
+        elif isinstance(body, LinkBarcodeBody):
+            receipt = inventory.link_barcode(key, body.barcode, body.product_id)
+        elif isinstance(body, RemoveBarcodeBody):
+            receipt = inventory.remove_barcode(
+                key, body.barcode, body.product_id, body.association_id
+            )
         elif isinstance(body, LocationBody):
             receipt = inventory.add_location(key, body.name)
         elif isinstance(body, TransferBody):

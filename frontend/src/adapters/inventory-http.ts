@@ -3,8 +3,8 @@ import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
 import type {ShoppingAttention} from '../application/shopping-attention';
 import type {StockAttention} from '../application/stock-attention';
-import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, shoppingItemKey, signedQuantity, stockUnits} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, InventoryReport, LocationStock, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement, StockTotals, StockTransfer, StorageLocation} from '../domain/inventory';
+import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, canonicalGtin, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, shoppingItemKey, signedQuantity, stockUnits} from '../domain/inventory';
+import type {BarcodeLookup, BaseUnit, InventoryCommand, InventoryReport, LocationStock, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement, StockTotals, StockTransfer, StorageLocation} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import {revisionValue} from '../domain/administration';
 import {taskQuantity, taskTime} from '../domain/tasks';
@@ -15,6 +15,24 @@ import type {EntryEndpoint} from './http-values';
 import {boolean, check, choice, fields, identifier, integer, text} from './json-values';
 
 const BASE = 'inventory';
+
+function barcodeLookup(value: unknown, barcode: string): BarcodeLookup {
+  const row = fields(value, ['barcode', 'may_manage', 'association', 'product'], []);
+  check(row.barcode === barcode);
+  const mayManage = boolean(row.may_manage);
+  if (row.association === null) {
+    check(row.product === null);
+    return {barcode, mayManage, product: null};
+  }
+  const association = fields(row.association, ['barcode', 'association_id', 'product_id'], []);
+  const product = fields(row.product, ['product_id', 'reference_id', 'name', 'base_unit'], []);
+  check(association.barcode === barcode && product.product_id === association.product_id);
+  return {barcode, mayManage, product: {
+    id: identifier(product.product_id), referenceId: identifier(product.reference_id),
+    associationId: identifier(association.association_id), name: text(product.name, 160),
+    unit: choice(product.base_unit, BASE_UNITS),
+  }};
+}
 
 function replenishment(value: unknown, id: string, unit: ProductStock['unit'], available: string): Replenishment {
   const row = fields(value, ['source_id','minimum','target','revision','needed'], []);
@@ -326,6 +344,14 @@ function receipt(value: unknown, command: InventoryCommand): InventoryResult {
   if (row.archived_by !== null || kind === 'historical') identifier(row.archived_by);
   const operationId = identifier(row.operation_id);
   integer(row.created_at, 0);
+  if (command.action === 'inventory.link-barcode' || command.action === 'inventory.remove-barcode') {
+    const result = fields(row.result, ['barcode', 'association_id', 'product_id'], []);
+    const associationId = identifier(result.association_id);
+    check(result.barcode === command.barcode && result.product_id === command.product_id);
+    if (command.action === 'inventory.remove-barcode') check(associationId === command.association_id);
+    return {kind, operationId, productId: command.product_id, movement: null,
+      barcodeSaved: {barcode: command.barcode, linked: command.action === 'inventory.link-barcode'}};
+  }
   if (command.action === 'inventory.register-product') {
     const result = fields(row.result, ['product_id','name','base_unit'], []);
     check(result.name === command.name && result.base_unit === command.base_unit);
@@ -426,6 +452,14 @@ function pageQuery(cursor: string | null): string {
 export class HttpInventoryServer implements InventoryServer {
   private readonly network: BoundedHTTP;
   constructor(target: EntryEndpoint, transport: FetchTransport) {this.network = new BoundedHTTP(target, transport);}
+
+  barcode(scope: InventoryScope, value: string) {
+    const barcode = canonicalGtin(value);
+    return this.network.owned(async signal => {
+      const query = new URLSearchParams({barcode});
+      return barcodeLookup(await this.network.get(BASE + '/barcode?' + query, scope.context, signal), barcode);
+    });
+  }
 
   stockAttention(context: JournalContext) {
     return this.network.owned(async signal => stockAttention(await this.network.get(BASE + '/stock-attention', context, signal)));

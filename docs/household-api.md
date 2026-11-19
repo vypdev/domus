@@ -142,8 +142,7 @@ authority in the same read transaction; an old service instance is not a permiss
 Every write requires one `Origin` matching the configured public origin, one session-bound
 `X-CSRF-Token`, and one `Idempotency-Key`. Obtain CSRF from `/api/v1/auth/csrf`. Keys are 1–128
 characters, start with an ASCII letter/digit and otherwise use letters/digits, underscore, dot,
-colon or hyphen. Missing, duplicate and malformed keys are rejected. Every body includes the expected
-revision. Invalid types, unknown fields and protected permission overrides are rejected.
+colon or hyphen. Missing, duplicate and malformed keys are rejected. Revisioned commands include their reviewed concurrency precondition. Invalid types, unknown fields and protected permission overrides are rejected.
 
 Bodies must be UTF-8 JSON objects with `application/json` (optionally `charset=utf-8`). Duplicate JSON
 keys, nonfinite values, malformed encoding and excessive nesting cannot be silently normalized into a
@@ -176,6 +175,70 @@ consumed/canceled recovery cannot reuse an old approval under a new key. These a
 both synthetic fixtures and real offline activations in both HTTP compositions. The installation
 console exposes restore preparation/activation/resume; local Edge.3 image cases pass. Complete
 deployment and live acceptance remain pending.
+
+## Manual local barcode lookup
+
+Inventory accepts manually entered ASCII GTIN-8, GTIN-12, GTIN-13 and GTIN-14
+numbers under the [local barcode companion](../specs/stock-local-barcode.md).
+Validate the original length and GS1 check digit before padding the identity to
+14 characters. Preserve leading zeroes. GTIN-8 uses its printed GS1 identity.
+Queries and association commands resolve that canonical key within the verified
+current household.
+
+| Route or action | Result | Current authority |
+|---|---|---|
+| `GET /api/v1/inventory/barcode?barcode=036000291452` | Canonical barcode, management hint and nullable association/product | Household read |
+| `inventory.link-barcode` through `POST /api/v1/inventory/commands` | Canonical barcode, association ID and product ID | Inventory management |
+| `inventory.remove-barcode` through the same command route | Original removed association | Inventory management |
+| `GET /api/v1/inventory/requests/{action}/{key}` | Original own command receipt | Original action's current authority |
+
+A valid unlinked query succeeds with both `association` and `product` set to
+`null`. A found result includes the stable catalog product ID, reference ID,
+name and base unit, together with the association's own ID. Invalid text returns
+422. A service, storage or reachability failure is an unavailable read. The
+browser retains the entered text, retires previous match facts and offers an
+explicit read retry. Requests remain installation-local, including when external
+internet connectivity is absent.
+
+A link body contains `action`, `barcode` and `product_id`. Its product must belong
+to the current household. One canonical code can identify one product in that
+household. Competing links serialize through the existing atomic writer and
+household/code uniqueness constraint. An occupied code returns
+`inventory_barcode_linked`. The manager reviews and removes its current
+association before linking the code again.
+
+A removal body additionally contains `association_id` from the reviewed lookup.
+The write matches the household, canonical code, product and exact association
+ID. Every successful link receives a fresh association ID, including a link back
+to the same product. A stale removal returns `inventory_barcode_changed` and
+preserves the later association. The browser refreshes the current match for
+another deliberate review.
+
+Both writes use the existing origin, CSRF, idempotency, audit and outbox boundary.
+The canonical command payload binds the barcode and product, plus the reviewed
+association ID for removal. An equivalent printed form uses the same canonical
+payload. A lost successful reply can recover the original receipt. Current
+management authority is checked again for receipt access. Association changes
+and their receipts commit atomically, and a late failure rolls back both.
+Product IDs, quantities, reservations and movement history retain their domain
+identities.
+
+SQLite schema 35 adds an initially empty local association index. Upgrade
+qualification includes representative schema 34, 30 and 20 inventory. Compatible
+checkpoint activation preserves the index and its original receipts. Historical
+receipts retain the existing restoration warning, and current queries establish
+the association visible after restoration.
+
+The regression inventory maps `stock-local-barcode-C01` through
+`stock-local-barcode-C06` to the domain, HTTP and real SQLite migration,
+contention, rollback and activation cases in
+[`test_inventory_barcodes.py`](../tests/backend/test_inventory_barcodes.py) and
+[`test_inventory_barcode_http.py`](../tests/backend/test_inventory_barcode_http.py).
+Client command validation, protected response binding, journal replay, read retry
+and scope retirement are covered in
+[`inventory.test.ts`](../frontend/tests/inventory.test.ts) and the normal
+[`page composition`](../frontend/tests/page.test.ts). Browser and installed
+acceptance follow `stock-local-barcode-C07` and `stock-local-barcode-C08`.
 
 ## HA availability and remaining deployment work
 
