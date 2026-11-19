@@ -72,7 +72,7 @@ checks found and unlinked results, unavailable retry, retained input, moved focu
 background documents and retired view ownership. Both compiled barcode journeys
 require result focus and use the real next Tab to reach product selection.
 
-## Immutable Edge.53 candidate
+## Edge.53 candidate observation
 
 Edge.53 packages runtime source `465f780ee37275471a32238fafe7dfb5866dd478`.
 The source archive SHA-256 is
@@ -93,8 +93,7 @@ two-tab stale removal and Spanish 390 px touch passed. A temporary offline read
 focused its explicit retry and retained all entered digits. Returning that tab
 to the network and retrying restored the current match.
 
-A confirmed removal then relinquished focus to the document body. Edge.54 will
-also continue focus after confirmed association writes and rejected stale removal,
+A confirmed removal then relinquished focus to the document body. Edge.54 also continues focus after confirmed association writes and rejected stale removal,
 waiting for the refreshed current result. An unconfirmed barcode write continues
 to its original-request recovery control. Its regression covers accepted links,
 accepted removals and an intermediate obsolete view during conflict refresh.
@@ -121,3 +120,17 @@ loaded. Their original traces are retained. With HTTP/1.1, all 45 cases pass in
 two consecutive zero-retry campaigns. Barcode recovery now waits for the restored
 product projection and a valid captured original request key before reading the
 receipt. Both deployment journeys pass twice with the recovery focus assertion.
+
+## Immutable Edge.54 candidate
+
+Edge.54 packages runtime source `b2f9f48994d523e28c4584f583e1c929ecbc61b1`.
+The source archive SHA-256 is
+`23c9240e137ed578ee6e52b68e4318b3e0153ca2ad32940088f20635931c2918`.
+The independently measured Linux wheel SHA-256 is
+`b9e3fd518a611d7ef9cef215d23355e2bdce91e7a7b9a5ecdbf7653753eb2a07`.
+All 231 Python modules match Git, the wheel and the installed Linux builder.
+The four compiled UI files match the local and Linux builds. The normal local
+wheel matches the Linux wheel exactly. Schema 35 is retained.
+All 121 compiled source journeys pass in a complete zero-retry campaign.
+Installed-owner acceptance, both CPU image campaigns and final same-head CI and
+review are tracked in the increment's pull request.

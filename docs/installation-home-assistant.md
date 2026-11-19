@@ -13,6 +13,8 @@ or removal. A failed read offers a retry with the draft retained, and original
 request recovery handles an unconfirmed write.
 Edge.53 continues keyboard focus to the result or retry control after a submitted
 search.
+Edge.54 continues focus after confirmed barcode changes and moves it to original
+request recovery when a write response is unconfirmed.
 [Qualification](evidence/local-barcode-qualification.md)
 
 Edge.51 lets members start, block and unblock eligible work from Tasks. It keeps

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.54
+
+- Continue keyboard focus to the current barcode result after confirmed changes and stale-removal review.
+- Focus original-request recovery when an association write has an unconfirmed response.
+
 ## 0.0.0-edge.53
 
 - Continue keyboard focus to the barcode result or retry control after a submitted search.
