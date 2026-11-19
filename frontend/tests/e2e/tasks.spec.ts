@@ -681,8 +681,10 @@ for (const mode of ['native', 'standalone'] as const) {
           await page.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
           await page.getByRole('link', {name: 'Continue as fixture user', exact: true}).click();
         }
+        await page.getByRole('link', {name: /^(Tasks|Tareas)$/u, exact: true}).click();
+        await expect(page.locator('domus-tasks').getByRole('heading', {name: /^(Household tasks|Tareas del hogar)$/u})).toBeVisible();
         await page.getByRole('combobox', {name: /^(Language|Idioma)$/u}).selectOption(locale);
-        await page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true}).click();
+        await expect(page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true})).toBeVisible();
       };
       try {
         const tasks = await open(page, context, mode);
@@ -753,6 +755,7 @@ for (const mode of ['native', 'standalone'] as const) {
         const beforeConflict = writes.length;
         await activate(save); await expect(save).toBeDisabled(); await expect(reason).toHaveValue(explanation);
         await expect(tasks.getByText(t('Action unavailable', 'Acción no disponible'), {exact: true})).toBeVisible();
+        await expect(tasks.getByRole('listitem').filter({hasText: title})).toContainText(t('Blocked', 'Bloqueada'));
         expect(writes).toHaveLength(beforeConflict);
         await activate(tasks.getByRole('button', {name: t('Refresh current task', 'Actualizar tarea actual'), exact: true}));
         await expect(reason).toHaveValue(explanation); await activate(cancel);
@@ -774,6 +777,7 @@ for (const mode of ['native', 'standalone'] as const) {
         await activate(save);
         const review = tasks.getByRole('button', {name: t('Review current task', 'Revisar tarea actual'), exact: true});
         await expect(review).toBeFocused(); await expect(save).toBeDisabled(); await expect(reason).toHaveValue(explanation);
+        await expect(tasks.getByRole('listitem').filter({hasText: title})).toContainText(t('Available', 'Disponible'));
         expect(writes).toHaveLength(beforeReview);
         await activate(review); await expect(save).toBeFocused(); expect(writes).toHaveLength(beforeReview);
         await page.route(endpoint + '/transition', async route => {
@@ -787,6 +791,7 @@ for (const mode of ['native', 'standalone'] as const) {
         const retained = writes.at(-1)!;
         expect(JSON.parse(retained.body)).toEqual({expected_revision: 8, target: 'blocked', reason: explanation});
         await page.unroute(endpoint + '/transition'); await page.reload();
+        await expect(tasks.getByRole('heading', {name: 'Household tasks', exact: true})).toBeVisible();
         await page.getByRole('combobox', {name: 'Language', exact: true}).selectOption(locale);
         await activate(tasks.getByRole('button', {name: t('Check saved request', 'Comprobar solicitud guardada'), exact: true}).first());
         await expect(saved).toBeVisible(); await expect(tasks.locator('#task-blocked-reason')).toHaveText(explanation);

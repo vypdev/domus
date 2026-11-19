@@ -28,6 +28,45 @@ function fixture() {
   const controller = new TaskController('native', identity, server, journal, clock, entropy);
   return {controller, server, identity, session, storage, journal, clock, entropy, setNow: (value: number) => {now = value;}, advance: () => {now = 100000;}};
 }
+test.each([
+  {state: 'in_progress', revision: '2', allowedActions: ['transition:blocked'], notice: 'conflict'},
+  {state: 'blocked', revision: '2', allowedActions: ['transition:assigned'], notice: 'conflict'},
+  {state: 'assigned', revision: '1', allowedActions: [], notice: 'action_not_allowed'},
+] as const)('refused progress refreshes both list and selected $state facts before another decision', async current => {
+  const f = fixture();
+  const initial: TaskDetail = {...detail, state: 'assigned', assigneeIds: ['member-1'], allowedActions: ['transition:blocked']};
+  f.server.list.mockReturnValue(read({items: [initial], nextCursor: null}));
+  f.server.detail.mockReturnValue(read(initial));
+  await f.controller.refresh(); await f.controller.select('work-1');
+  const changed: TaskDetail = {...initial, state: current.state, revision: revisionValue(current.revision),
+    stateReason: current.state === 'blocked' ? 'A competing reason' : '', allowedActions: current.allowedActions};
+  f.server.list.mockReturnValue(read({items: [changed], nextCursor: null}));
+  f.server.detail.mockReturnValue(read(changed));
+  await f.controller.transition('work-1', revision, 'blocked', 'My retained reason');
+  expect(f.controller.view.notice).toBe(current.notice);
+  expect(f.controller.view.detail).toEqual(changed);
+  expect(f.controller.view.page?.items).toEqual([changed]);
+  expect(f.server.list).toHaveBeenCalledTimes(2);
+  expect(f.server.send).not.toHaveBeenCalled();
+  expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  expect(f.controller.view.records).toEqual([]);
+});
+
+test.each(['unavailable', 'forbidden'] as const)('a refused progress list refresh handles %s without stale list facts', async reason => {
+  const f = fixture();
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['transition:blocked']}));
+  await f.controller.refresh(); await f.controller.select('work-1');
+  const changed: TaskDetail = {...detail, state: 'in_progress', revision: revisionValue('2'), allowedActions: ['transition:blocked']};
+  f.server.detail.mockReturnValue(read(changed));
+  f.server.list.mockImplementationOnce(() => ({result: Promise.reject(new EntryReadError(reason)), cancel: vi.fn()}));
+  await f.controller.transition('work-1', revision, 'blocked', 'My retained reason');
+  expect(f.controller.view.notice).toBe(reason);
+  expect(f.controller.view.page).toBeNull();
+  expect(f.controller.view.detail).toEqual(reason === 'forbidden' ? null : changed);
+  expect(f.server.send).not.toHaveBeenCalled();
+  expect(f.entropy.requestKey).not.toHaveBeenCalled();
+});
+
 test('progress preserves a lost original and recovers once under current facts', async () => {
   const f = fixture();
   await f.controller.transition('work-1', revision, 'blocked', 'Waiting');

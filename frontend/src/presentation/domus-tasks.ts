@@ -71,8 +71,8 @@ export class DomusTasks extends LitElement {
     titleRequired: {state: true}, priorityDraft: {state: true}, reasonDraft: {state: true}, quantities: {state: true}, quantityError: {state: true}, createOpen: {state: true},
     scheduleKind: {state: true}, scheduleError: {state: true}, scheduleInput: {state: true}};
   static styles = [styles, css`:host {min-height:0;background:transparent;overflow-wrap:anywhere}.task-header {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-    .task-header h2 {font-size:1.6rem;margin:0} .task-layout {display:grid;gap:20px}.task-layout .card {margin:0}
-    .task-layout>div {display:grid;gap:20px;align-content:start} .new-task summary h3 {display:inline} .new-task form {margin-top:20px}
+    .task-header h2 {font-size:1.6rem;margin:0} .task-layout {display:grid;grid-template-columns:minmax(0,1fr);gap:20px}.task-layout .card {margin:0}
+    .task-layout>div {display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-content:start} .new-task summary h3 {display:inline} .new-task form {margin-top:20px}
     h3 {font-size:1.1rem;margin:0 0 16px} textarea {font:inherit;resize:vertical;width:100%;min-height:90px;border:1px solid var(--line);border-radius:10px;
     padding:10px 12px;background:var(--surface);color:var(--text)} .task-list {list-style:none;padding:0;margin:0}.task-list li {padding:14px 0;border-bottom:1px solid var(--line)}
     .task-link {border:0;border-radius:8px;padding:4px 0;text-align:start;font-weight:700}.task-meta {display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:.875rem}
@@ -92,7 +92,7 @@ export class DomusTasks extends LitElement {
     vyp-ha-button {--vyp-ha-button-height:44px}
     .progress {margin-block:24px}.progress h4 {margin-block:0 8px}.progress .field {margin-block:16px}
     .progress vyp-ha-feedback {margin-block:12px}.task-work-actions[hidden] {display:none}
-    @media(min-width:800px) {.task-layout {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.task-layout.single {grid-template-columns:1fr}}`];
+    @media(min-width:800px) {.task-layout {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.task-layout.single {grid-template-columns:minmax(0,1fr)}}`];
   declare allocation: AllocationView | null;
   declare administration: Pick<AdministrationView, 'phase' | 'access' | 'roster' | 'errors'> | null;
   declare participantNames: readonly ParticipantName[];

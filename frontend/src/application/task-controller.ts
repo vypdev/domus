@@ -150,7 +150,14 @@ export class TaskController {
       this.update({page: prior.page});
       if (this.state.readOnly) {this.update({notice: 'read_only'}); return;}
       if ('occurrenceId' in command) this.update({detail: await this.read(this.server.detail(command.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation)});
-      if (!this.accepted(command)) {if (this.state.notice !== 'conflict' && this.state.notice !== 'category_unavailable') this.update({notice: 'action_not_allowed'}); return;}
+      if (!this.accepted(command)) {
+        if (this.state.notice !== 'conflict' && this.state.notice !== 'category_unavailable') this.update({notice: 'action_not_allowed'});
+        if (command.action === 'task.transition') {
+          this.update({page: null});
+          await this.facts(generation, command.occurrenceId);
+        }
+        return;
+      }
       if (this.state.records === null) {this.update({notice: 'journal_unavailable'}); return;}
       if (this.state.records.some(item => item.stage === 'prepared' || item.stage === 'uncertain')) {this.update({notice: 'previous_request_unresolved'}); return;}
       let key: string;
