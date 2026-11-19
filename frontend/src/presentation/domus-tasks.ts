@@ -403,9 +403,11 @@ export class DomusTasks extends LitElement {
     const choices = discovery === 'ready' ? this.administration!.roster!.members.filter(row => row.member.status === 'active') : [];
     const stale = draft?.assigneeIds.filter(id => !choices.some(row => row.member.memberId === id)) ?? [];
     const needsReview = this.assignmentNeedsReview(work);
+    const unchanged = draft !== null
+      && JSON.stringify([...draft.assigneeIds].sort()) === JSON.stringify([...work.assigneeIds].sort());
     const requiresAssignee = work.state === 'in_progress' && draft?.assigneeIds.length === 0;
     const currentUnavailable = this.view!.notice === 'unavailable' || this.view!.notice === 'invalid_response';
-    const invalid = discovery !== 'ready' || stale.length > 0 || requiresAssignee || currentUnavailable;
+    const invalid = discovery !== 'ready' || stale.length > 0 || requiresAssignee || currentUnavailable || unchanged;
     return html`<section class="assignment" aria-labelledby="assignment-title"><h4 id="assignment-title">${this.text('assignmentTitle')}</h4>
       ${discovery === 'ready' ? html`<p>${work.assigneeIds.length ? work.assigneeIds.map(id => this.assignmentName(id)).join(', ') : this.text('assignmentEmpty')}</p>`
         : html`<p role="status">${this.text(discovery)}</p>`}
@@ -430,6 +432,7 @@ export class DomusTasks extends LitElement {
             aria-label=${this.text('assignmentRemove')}>${this.text('assignmentRemove')}</button></li>`)}</ul>` : nothing}
         ${requiresAssignee ? html`<p class="error" role="alert">${this.text('assignmentRequired')}</p>` : nothing}
         ${this.assignmentError ? html`<p class="error" role="alert">${this.text('assignmentInvalid')}</p>` : nothing}
+        ${unchanged && discovery === 'ready' && !needsReview ? html`<p class="help" role="status">${this.text('assignmentUnchanged')}</p>` : nothing}
         ${needsReview ? html`<p role="alert">${this.text('assignmentChanged')}</p><button id="assignment-review" type="button" ?disabled=${currentUnavailable} @click=${() => {
           this.assignmentDraft = Object.freeze({...draft, revision: work.revision}); this.submittedAssignment = null;
           this.assignmentFocus = invalid ? '#assignment-editor' : '#assignment-save';

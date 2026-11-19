@@ -55,6 +55,7 @@ actions your role allows. Use **Retry inventory summary** if the summary could n
 - Select a task to inspect it. **Claim task** assigns eligible work to your own verified membership. **Mark done now** records you as the performer at the current server-anchored time.
 - When task management is allowed, **Change assignment** opens the current planned
   assignees. Select up to 32 active household members and choose **Save assignment**.
+  Saving becomes available when the selected members differ from the current assignment.
   **Clear selection** prepares a release where the task state permits it. A task
   in progress needs at least one assignee. **Cancel** closes the editor.
   If someone else changes the task, your selection remains available. Use

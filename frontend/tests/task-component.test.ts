@@ -54,6 +54,37 @@ async function assignmentFixture(locale: 'en' | 'es' = 'en', patch: Partial<Task
 }
 
 test.each([
+  ['en', []], ['es', []],
+  ['en', ['peer']], ['es', ['peer']],
+  ['en', ['private-member-id', 'peer']], ['es', ['private-member-id', 'peer']],
+] as const)('%s unchanged assignment %j requires a different selection before saving', async (locale, assigneeIds) => {
+  const f = await assignmentFixture(locale, {assigneeIds, state: assigneeIds.length ? 'assigned' : 'available'});
+  const edit = locale === 'en' ? 'Change assignment' : 'Cambiar asignación';
+  const save = locale === 'en' ? 'Save assignment' : 'Guardar asignación';
+  f.button(edit).click(); await f.element.updateComplete;
+  expect(f.button(save).disabled).toBe(true);
+  expect(f.text()).toContain(locale === 'en' ? 'Choose a different assignment to save a change.'
+    : 'Elige una asignación diferente para guardar un cambio.');
+  f.root.querySelector('#assignment-editor')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  expect(f.intents).toEqual([]);
+  const selected = assigneeIds.some(id => id === 'private-member-id');
+  await f.select(0, !selected); expect(f.button(save).disabled).toBe(false);
+  await f.select(0, selected); expect(f.button(save).disabled).toBe(true);
+  expect(f.intents).toEqual([]);
+});
+
+test('reviewing a competing assignment equal to the retained selection requires a new change', async () => {
+  const f = await assignmentFixture(); f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true);
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2'), assigneeIds: ['private-member-id'], state: 'assigned'}});
+  await f.element.updateComplete;
+  f.button('Review current assignment').click(); await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(true);
+  f.root.querySelector('#assignment-editor')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  expect(f.intents).toEqual([]);
+});
+
+test.each([
   ['en', 'Change assignment', 'Save assignment', 'Cancel', 'Unassigned'],
   ['es', 'Cambiar asignación', 'Guardar asignación', 'Cancelar', 'Sin asignar'],
 ] as const)('%s assignment uses named ha-ui choices and explicit save or cancel', async (locale, edit, save, cancel, unassigned) => {
@@ -207,9 +238,11 @@ test('assignment focus survives a pending refresh and opens an unavailable roste
   f.button('Cancel').click(); await f.element.updateComplete;
   f.element.administration = assignmentRoster(); await f.element.updateComplete;
   f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true);
   f.button('Save assignment').click();
   f.element.view = view({detail: f.detail, notice: 'invalid_input'}); await f.element.updateComplete;
   expect(f.root.activeElement?.id).toBe('assignment-editor');
+  f.button('Clear selection').click(); await f.element.updateComplete;
   f.element.view = view({detail: {...f.detail, revision: revisionValue('2'), state: 'in_progress'}}); await f.element.updateComplete;
   f.button('Review current assignment').click(); await f.element.updateComplete;
   expect(f.root.activeElement?.id).toBe('assignment-editor');
@@ -273,13 +306,14 @@ test('an exhausted task revision retains the assignment editor when an earlier r
   const last = revisionValue('9223372036854775807');
   const f = await assignmentFixture('en', {revision: last, assigneeIds: ['peer']});
   f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true);
   f.button('Save assignment').click();
   f.element.view = view({detail: f.detail, outcome: {kind: 'receipt', action: 'task.assign', stage: 'committed',
     occurrenceId: 'work-1', operationId: 'last-operation', revision: last, state: 'assigned',
-    assigneeIds: ['peer'], cycle: null, archivedBy: null}});
+    assigneeIds: ['peer', 'private-member-id'], cycle: null, archivedBy: null}});
   await f.element.updateComplete;
   expect(f.root.querySelector('#assignment-editor')).not.toBeNull();
-  expect(f.intents[0]).toMatchObject({type: 'assign', revision: last, assigneeIds: ['peer']});
+  expect(f.intents[0]).toMatchObject({type: 'assign', revision: last, assigneeIds: ['peer', 'private-member-id']});
 });
 
 test('a denied assignee retains the selection and offers removal after the authorized roster changes', async () => {
@@ -294,6 +328,8 @@ test('a denied assignee retains the selection and offers removal after the autho
   expect(f.root.querySelector('[data-stale-assignee]')!.textContent).toContain('Helper & friend');
   expect(f.button('Save assignment').disabled).toBe(true);
   f.button('Remove unavailable member').click(); await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(true);
+  await f.select(0, true);
   expect(f.button('Save assignment').disabled).toBe(false);
 });
 test('usable task creation preserves literal input and emits one semantic intent', async () => {

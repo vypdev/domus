@@ -37,7 +37,7 @@ assignment, receipt and restoration formats. The selected ha-ui version is
 `0.1.0-next.2`.
 
 Current-source Chromium qualification passes all four new compiled journeys.
-The full frontend suite passes 1,833 cases with 100% of all four supported metrics
+The full frontend suite passes 1,840 cases with 100% of all four supported metrics
 globally and per authored runtime file. The backend passes 5,513 cases with 100%
 statement and branch coverage globally and across all 231 modules, independently
 audited per file. Architecture-specific CI and final review are tracked in
@@ -82,3 +82,17 @@ Both task identities persisted. The released desktop task retained revision 5
 and the assigned mobile task retained revision 4. Checking the saved assignment
 after restart recovered its recorded operation. The isolated-image SIGTERM cases
 also require a zero exit status.
+
+## Unchanged assignment correction
+
+Review found that saving the current selection reached the existing backend's
+`task_unchanged` conflict and showed current-version review unnecessarily. The
+editor now compares canonical member sets, disables an unchanged save and explains
+how to enable it in English and Spanish. Reordering the same selected members
+keeps that guard. A competing update that already applies the retained selection
+also leaves save disabled after explicit review.
+
+Seven component regressions reproduced the issue before the correction. The four
+compiled assignment journeys now check the initial unchanged state and changing
+the selection back to its original set. Edge.49 packaging and installed acceptance
+will qualify the correction independently of the earlier Edge.48 observation.

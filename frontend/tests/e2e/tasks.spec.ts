@@ -562,7 +562,12 @@ for (const mode of ['native', 'standalone'] as const) {
           if (locale === 'es') await target.tap();
           else {await target.focus(); await target.press('Space');}
         };
-        await activate(edit); await toggle(ownChoice); await toggle(peerChoice);
+        await activate(edit);
+        await expect(save).toBeDisabled();
+        await expect(tasks.getByText(t('Choose a different assignment to save a change.',
+          'Elige una asignación diferente para guardar un cambio.'), {exact: true})).toBeVisible();
+        expect(writes).toEqual([]);
+        await toggle(ownChoice); await toggle(peerChoice);
         await activate(tasks.getByRole('button', {name: t('Cancel', 'Cancelar'), exact: true}));
         expect(writes).toEqual([]);
         await activate(edit); await expect(ownChoice).not.toBeChecked();
@@ -572,7 +577,11 @@ for (const mode of ['native', 'standalone'] as const) {
         expect((await (await page.request.get(endpoint)).json()).work.assignee_ids.sort()).toEqual([ownerAccess.member_id, peerAccess.member_id].sort());
         expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'snapshot'}})).ok()).toBe(true);
 
-        await activate(edit); await toggle(ownChoice);
+        await activate(edit); await expect(save).toBeDisabled();
+        await toggle(ownChoice); await expect(save).toBeEnabled();
+        await toggle(ownChoice); await expect(save).toBeDisabled();
+        expect(writes).toHaveLength(1);
+        await toggle(ownChoice);
         const concurrent = await owner.newPage();
         await concurrent.goto(base(mode) + '/#tasks');
         const competing = concurrent.locator('domus-tasks');
