@@ -54,7 +54,7 @@ The wheel SHA-256 is
 The local ARM64 image is
 `sha256:fa0964010fe5b0420bed3268084e7080356b208852467e5cfb780541396085a3`.
 Its 231 Python files and four UI files match the
-[artifact declaration](../../addon-edge/artifact.json) exactly.
+[artifact declaration](https://github.com/vypdev/domus/blob/1237fbb9a8de2a4049056caef6f26f2be94e982a/addon-edge/artifact.json) exactly.
 
 The signal scope has 21 statements and two branches. The focused CLI campaign
 passed 28 cases, including the startup and listener-handoff regressions. The full

@@ -7,6 +7,30 @@ const complete = {action: 'task.complete', occurrenceId: 'work-1', payload: {
   expected_revision: revision, performer_ids: ['member-1'], performed_at: '9223372036854775807',
   material_usages: [{line_id: 'line-1', quantity: '3.333333'}]}};
 
+test.each([[], ['member-1'], Array.from({length: 32}, (_, index) => 'member-' + index)].map(assignee_ids => ({assignee_ids})))(
+  'assignment preserves and freezes the exact bounded selection %#', ({assignee_ids}) => {
+    const raw = {action: 'task.assign', occurrenceId: 'work-1', payload: {expected_revision: revision, assignee_ids}};
+    const value = taskCommand(raw);
+    expect(value).toEqual(raw);
+    if (value?.action !== 'task.assign') throw Error('missing assignment');
+    expect(Object.isFrozen(value.payload.assignee_ids)).toBe(true);
+    expect(value.payload.assignee_ids).not.toBe(assignee_ids);
+  });
+
+test.each([null, 'member-1', ['member-1', 'member-1'], ['../member'], [1], Array(1),
+  Array.from({length: 33}, (_, index) => 'member-' + index)].map(assignee_ids => ({assignee_ids})))(
+  'invalid assignment selection %# cannot become a command', ({assignee_ids}) => {
+    expect(taskCommand({action: 'task.assign', occurrenceId: 'work-1',
+      payload: {expected_revision: revision, assignee_ids}})).toBeUndefined();
+  });
+
+test('assignment rejects injected scope, omitted identities and unsafe revisions', () => {
+  const raw = {action: 'task.assign', occurrenceId: 'work-1', payload: {expected_revision: revision, assignee_ids: []}};
+  for (const value of [{...raw, householdId: 'foreign'}, {...raw, occurrenceId: '../work'},
+    {...raw, payload: {expected_revision: revision}}, {...raw, payload: {...raw.payload, expected_revision: 0}},
+    {...raw, payload: {...raw.payload, actor_id: 'other'}}]) expect(taskCommand(value)).toBeUndefined();
+});
+
 test('task creation preserves literal text and supplies no actor, household or permission', () => {
   const raw = {action: 'task.create', payload: {expected_revision: 0,
     title: '  Clean 🧹 <kitchen>  ', description: 'First\nthen\tsecond', priority: 'normal'}};

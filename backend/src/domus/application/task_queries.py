@@ -842,6 +842,7 @@ class TaskQueries:
         if action not in {
             "task.create",
             "task.claim",
+            "task.assign",
             "task.complete",
             "task.verify",
             "task.reopen",

@@ -231,6 +231,11 @@ class Fixture:
 
     def operator(self, action: str) -> None:
         # Real installation-console operations on disposable data only; never a product bypass.
+        if action == "restart":
+            self.runtime.close()
+            self.runtime = None
+            self.start()
+            return
         checkpoint = Path(self.directory.name) / "checkpoint"
         prepared = Path(self.directory.name) / "prepared"
         if action == "snapshot":

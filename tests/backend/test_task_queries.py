@@ -315,6 +315,7 @@ def test_own_operation_lookup_rechecks_original_authority_without_rerunning_prec
     if receipt.command.action in {
         "task.create",
         "task.claim",
+        "task.assign",
         "task.complete",
         "task.verify",
         "task.reopen",
@@ -637,7 +638,11 @@ def test_workspace_access_uses_current_task_grants_and_canonical_member(tmp_path
 
 @pytest.mark.parametrize(
     "action,permission",
-    [("claim", Permission.TASKS_CLAIM), ("complete", Permission.TASKS_COMPLETE)],
+    [
+        ("claim", Permission.TASKS_CLAIM),
+        ("complete", Permission.TASKS_COMPLETE),
+        ("assign", Permission.TASKS_MANAGE),
+    ],
 )
 def test_task_original_recovery_uses_current_task_grants_without_separate_operation_browsing(
     tmp_path, action, permission
@@ -648,18 +653,25 @@ def test_task_original_recovery_uses_current_task_grants_without_separate_operat
         unit.members.save(
             replace(
                 member,
-                exceptions=(PermissionRule(Permission.OPERATIONS_READ, False),),
+                exceptions=(
+                    PermissionRule(Permission.OPERATIONS_READ, False),
+                    *(
+                        (PermissionRule(Permission.TASKS_MANAGE, True),)
+                        if action == "assign"
+                        else ()
+                    ),
+                ),
                 revision=member.revision + 1,
             ),
             member.revision,
         )
     if action == "complete":
         child.claim("assign-to-self", ClaimTask(oid, 1))
-    result = (
-        child.claim("restricted-original", ClaimTask(oid, 1))
-        if action == "claim"
-        else perform(child, store, oid, ("child",), "restricted-original")
-    )
+        result = perform(child, store, oid, ("child",), "restricted-original")
+    elif action == "assign":
+        result = child.assign("restricted-original", AssignTask(oid, 1, ("child",)))
+    else:
+        result = child.claim("restricted-original", ClaimTask(oid, 1))
     query = queries(store, child.actor.current())
     before, allocated = state(store, oid), identifiers.count
     assert query.original(result.command.action, result.command.key).receipt == result
@@ -669,10 +681,11 @@ def test_task_original_recovery_uses_current_task_grants_without_separate_operat
         queries(store, commands.actor.current()).original(result.command.action, result.command.key)
     with store.write() as unit:
         member = unit.members.get("home", "child")
+        remaining = tuple(rule for rule in member.exceptions if rule.permission != permission)
         unit.members.save(
             replace(
                 member,
-                exceptions=(*member.exceptions, PermissionRule(permission, False)),
+                exceptions=(*remaining, PermissionRule(permission, False)),
                 revision=member.revision + 1,
             ),
             member.revision,

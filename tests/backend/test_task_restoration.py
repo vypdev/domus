@@ -91,14 +91,14 @@ def test_restore_keeps_original_task_state_and_retains_later_completion_as_proce
         again.close()
 
 
-@pytest.mark.parametrize("action", ["create", "claim"])
+@pytest.mark.parametrize("action", ["create", "claim", "assign"])
 def test_real_task_commands_return_historical_receipts_without_reapplying_restored_away_work(
     tmp_path: Path, action: str
 ) -> None:
     from test_task_commands import child_commands, resource
     from test_task_commands import fixture as task_fixture
 
-    from domus.application.task_commands import ClaimTask, CreateTask, TaskCommands
+    from domus.application.task_commands import AssignTask, ClaimTask, CreateTask, TaskCommands
     from domus.domain.task_values import TaskContent, TaskOverrides
 
     root, archive, target = tmp_path / "source", tmp_path / "checkpoint", tmp_path / "prepared"
@@ -107,7 +107,7 @@ def test_real_task_commands_return_historical_receipts_without_reapplying_restor
     identity_at(root, store.installation)
     create = CreateTask(TaskContent("Work"), overrides=TaskOverrides(point_value_minor=225))
     work_id = None
-    if action == "claim":
+    if action != "create":
         work_id = resource(commands.create("create", create))[1]
     checkpoint = SQLiteSnapshots(store, archive, store.installation, Clock()).create(
         "before-command"
@@ -116,10 +116,14 @@ def test_real_task_commands_return_historical_receipts_without_reapplying_restor
         request = create
         original = commands.create("create", request)
         proof = actor
-    else:
+    elif action == "claim":
         service, proof = child_commands(store, identifiers=identifiers)
         request = ClaimTask(work_id, 1)
         original = service.claim("claim", request)
+    else:
+        request = AssignTask(work_id, 1, ("child", "other"))
+        original = commands.assign("assign", request)
+        proof = actor
     count = identifiers.count
     SQLiteRestorations(store, archive, target, store.installation, Clock(), checkpoint).prepare(
         "restore-command"

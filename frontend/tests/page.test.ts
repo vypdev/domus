@@ -446,6 +446,9 @@ test('household-browser-C18: a signed-out language choice has no identity or mut
 test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
   {type: 'create', title: 'Task', description: '', priority: 'normal', householdId: 'forged'},
   {type: 'create', title: 'Task', description: '', priority: 'normal', basePointsMinor: '225'},
+  {type: 'assign', occurrenceId: 'work-1', revision: '1', assigneeIds: ['same', 'same']},
+  {type: 'assign', occurrenceId: 'work-1', revision: '1', assigneeIds: ['../foreign']},
+  {type: 'assign', occurrenceId: 'work-1', revision: '1', assigneeIds: [], householdId: 'foreign'},
   {type: 'create', title: 1, description: '', priority: 'normal'}, {type: 'create', title: 'Task', description: '', priority: 'future'},
   {type: 'complete', materialUsages: true}, {type: 'complete', materialUsages: [{line_id: 'line', quantity: '1.0'}]},
   {type: 'verify', decision: 'pending', reason: 'A'}, {type: 'reopen', reason: 1}, {type: 'select', occurrenceId: '../other'},
@@ -454,6 +457,8 @@ test.each([null, {}, [], {type: 'future'}, {type: 'refresh', actor: 'forged'},
 });
 test('closed task events preserve semantic user inputs and exact material quantities', () => {
   const inputs = [{type:'createCategory', label:'Garden'}, {type:'renameCategory', categoryId:'garden', revision:'9007199254740993', label:'Garden'},
+    {type: 'assign', occurrenceId: 'work-1', revision: '9007199254740993', assigneeIds: ['member-1', 'peer']},
+    {type: 'assign', occurrenceId: 'work-1', revision: '1', assigneeIds: []},
     {type:'archiveCategory', categoryId:'garden', revision:'9007199254740993'},
     {type:'create', title:'Clean', description:'', priority:'normal', categoryId:'garden'}, {type: 'refresh'}, {type: 'more'}, {type: 'claim'}, {type: 'select', occurrenceId: 'work-1'},
     {type: 'create', title: 'Clean', description: '', priority: 'normal', basePointsMinor: 0},
@@ -466,6 +471,7 @@ test('closed task events preserve semantic user inputs and exact material quanti
 test('the mounted task surface routes only owned semantic intents to its application controller', async () => {
   const f = fixture(); f.phase('active'); const {app} = await f.open(); expect(app.tasks?.access?.memberId).toBe('identity-1');
   const spies = {create: vi.spyOn(TaskController.prototype, 'create').mockResolvedValue(undefined),
+    assign: vi.spyOn(TaskController.prototype, 'assign').mockResolvedValue(undefined),
     createCategory: vi.spyOn(TaskController.prototype, 'createCategory').mockResolvedValue(undefined),
     renameCategory: vi.spyOn(TaskController.prototype, 'renameCategory').mockResolvedValue(undefined),
     archiveCategory: vi.spyOn(TaskController.prototype, 'archiveCategory').mockResolvedValue(undefined),
@@ -480,6 +486,8 @@ test('the mounted task surface routes only owned semantic intents to its applica
     send({type: 'create', title: 'Forged actor', description: '', priority: 'normal', actor: 'other'}); await Promise.resolve(); expect(spies.create).not.toHaveBeenCalled();
     const review = {occurrenceId:'work-1',revision:'1',performerIds:['identity-1','other'],fingerprint:'c'.repeat(64)};
     const cases: readonly [unknown, keyof typeof spies, readonly unknown[]][] = [
+      [{type: 'assign', occurrenceId: 'work-1', revision: '9007199254740993', assigneeIds: ['identity-1', 'other']},
+        'assign', ['work-1', '9007199254740993', ['identity-1', 'other']]],
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high'}, 'create', ['Clean', 'Wipe', 'high', undefined, undefined, undefined]],
       [{type: 'create', title: 'Clean', description: 'Wipe', priority: 'high',
         schedule: {kind: 'fixed', start: {kind: 'date', local: '2027-01-02'}, rrule: 'FREQ=WEEKLY'}},

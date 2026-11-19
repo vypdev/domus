@@ -97,7 +97,7 @@ from domus.entrypoints.task_response import (
 )
 
 TaskWorkspaceAction = Literal[
-    "task.create", "task.claim", "task.complete", "task.verify", "task.reopen"
+    "task.create", "task.claim", "task.assign", "task.complete", "task.verify", "task.reopen"
 ]
 
 

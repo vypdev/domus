@@ -9532,6 +9532,7 @@
             "enum": [
               "task.create",
               "task.claim",
+              "task.assign",
               "task.complete",
               "task.verify",
               "task.reopen"
@@ -31469,6 +31470,7 @@
               "enum": [
                 "task.create",
                 "task.claim",
+                "task.assign",
                 "task.complete",
                 "task.verify",
                 "task.reopen"

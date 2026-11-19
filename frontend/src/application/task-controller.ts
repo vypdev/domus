@@ -164,6 +164,8 @@ export class TaskController {
       }
       if (this.clock.now() >= this.state.session!.expiresAt) throw new EntryReadError('authentication_required');
       if (outcome.kind === 'receipt') await this.receiptFacts(command, outcome.occurrenceId, prior, generation);
+      if (command.action === 'task.assign' && outcome.kind === 'rejected' && outcome.reason === 'conflict')
+        await this.facts(generation, command.occurrenceId);
     });
   }
   private async receiptFacts(command: TaskCommand, occurrence: string | null, prior: State, generation: number): Promise<void> {
@@ -196,6 +198,12 @@ export class TaskController {
   claim(): Promise<void> {
     const work = this.state.detail;
     return work === null ? Promise.resolve() : this.execute({action: 'task.claim', occurrenceId: work.occurrenceId, payload: {expected_revision: work.revision}});
+  }
+  assign(occurrenceId: string, revision: Revision, assigneeIds: readonly string[]): Promise<void> {
+    const work = this.state.detail;
+    if (work === null) return Promise.resolve();
+    if (work.occurrenceId !== occurrenceId) {this.update({notice: 'conflict'}); return Promise.resolve();}
+    return this.execute({action: 'task.assign', occurrenceId, payload: {expected_revision: revision, assignee_ids: assigneeIds}});
   }
   complete(materialUsages: readonly TaskMaterialUsage[] | null, reviewed?: ReviewedAllocation): Promise<void> {
     const work = this.state.detail, member = this.state.access?.memberId;

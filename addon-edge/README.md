@@ -16,6 +16,13 @@ original outcome after an interruption and open the created task from its receip
 Edge.47 completes requested stops through explicit runtime cleanup. Restarting the
 app retains its installation identity and original household operations.
 
+Edge.48 lets task managers assign active household members, replace the selected
+people and release eligible work from Tasks. A competing update retains the draft
+for explicit review. Saved requests recover an interrupted assignment response.
+
+Edge.49 enables assignment saving after the selected members change and explains
+when the current selection already matches the task.
+
 This candidate uses SQLite schema 34. Keep a
 compatible image and cold data backup before upgrading a previous preview.
 See [installation and operation](DOCS.md) for the source pin and rollback

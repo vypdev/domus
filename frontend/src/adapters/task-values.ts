@@ -156,9 +156,13 @@ export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal,
   const result = fields(item.result, ['definition_id', 'definition_revision', 'occurrence_id', 'revision', 'state', 'assignee_ids', 'state_reason', 'prerequisite_ids', 'required_subtask_ids', ...pointFields],
     ['cycle', 'consumer_delivery', 'materials', 'compensates_cycle_id', 'dependency_review_required']);
   const occurrenceId = identifier(result.occurrence_id), revision = responseRevision(result.revision), state = choice(result.state, TASK_STATES);
-  identifier(result.definition_id); responseRevision(result.definition_revision); ids(result.assignee_ids); ids(result.prerequisite_ids, 64); ids(result.required_subtask_ids, 64);
+  identifier(result.definition_id); responseRevision(result.definition_revision);
+  const assigneeIds = ids(result.assignee_ids);
+  ids(result.prerequisite_ids, 64); ids(result.required_subtask_ids, 64);
   check(revision === (command.action === 'task.create' ? '1' : nextRevision(command.payload.expected_revision)));
   if (command.action !== 'task.create') check(command.occurrenceId === occurrenceId);
+  if (command.action === 'task.assign')
+    check(JSON.stringify([...assigneeIds].sort()) === JSON.stringify([...command.payload.assignee_ids].sort()));
   const savedCycle = Object.hasOwn(result, 'cycle') ? cycle(result.cycle, occurrenceId) : null;
   if (command.action === 'task.complete') {
     check(state === 'completed' && savedCycle !== null && savedCycle.performedAt === command.payload.performed_at
@@ -170,6 +174,7 @@ export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal,
     else check(result.compensates_cycle_id === command.payload.cycle_id && result.dependency_review_required === true);
   }
   return Object.freeze({kind: 'receipt', stage, action: command.action, operationId, occurrenceId, revision, state, cycle: savedCycle, archivedBy,
+    ...command.action === 'task.assign' ? {assigneeIds} : {},
     ...originalBasePoints(result.point_value_minor, basePoints)});
 }
 /** Only validated decimal lexemes bypass JSON's string quoting; arbitrary text always uses JSON.stringify. */

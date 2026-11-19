@@ -477,11 +477,12 @@
       "status": "proposed",
       "scope": "Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-11",
+      "lastVerified": "2026-11-19",
       "specs": [
         "specs/household-tasks.md",
         "specs/task-execution-foundation.md",
-        "specs/household-task-categories.md"
+        "specs/household-task-categories.md",
+        "specs/task-assignment-interface.md"
       ],
       "workflows": [
         ".github/workflows/ci_check.yml"
@@ -509,7 +510,9 @@
         "frontend/src/domain/tasks.ts",
         "frontend/src/application/task-controller.ts",
         "frontend/src/presentation/domus-tasks.ts",
-        "frontend/src/presentation/domus-task-overview.ts"
+        "frontend/src/presentation/domus-task-overview.ts",
+        "frontend/src/adapters/task-values.ts",
+        "frontend/src/adapters/task-journal.ts"
       ],
       "tests": [
         "tests/backend/test_task_values.py",
@@ -529,7 +532,13 @@
         "frontend/tests/task-overview.test.ts",
         "frontend/tests/task-http.test.ts",
         "frontend/tests/task-component.test.ts",
-        "frontend/tests/e2e/workspace-navigation.spec.ts"
+        "frontend/tests/e2e/workspace-navigation.spec.ts",
+        "tests/backend/test_task_queries.py",
+        "tests/backend/test_sqlite_task_history.py",
+        "frontend/tests/tasks.test.ts",
+        "frontend/tests/task-controller.test.ts",
+        "frontend/tests/task-journal.test.ts",
+        "frontend/tests/e2e/tasks.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -544,11 +553,12 @@
         "docs/evidence/overview-task-qualification.md",
         "docs/evidence/overview-deadlines-qualification.md",
         "docs/evidence/overview-maintenance-qualification.md",
-        "docs/evidence/task-base-points-qualification.md"
+        "docs/evidence/task-base-points-qualification.md",
+        "docs/evidence/task-assignment-qualification.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work; issue #100 adds bounded upcoming scheduled maintenance in the next seven local days",
+        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work; issue #100 adds bounded upcoming scheduled maintenance in the next seven local days; issue #141 connects authorized planned assignment, replacement/release, explicit conflict review and frozen original-request recovery to the Tasks workspace, with current-source English keyboard and Spanish touch acceptance in both deployment compositions",
         "blockingDecisions": "A34 prerequisite gating and A35 same-task points remainder rotation are owner-confirmed. Bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }
