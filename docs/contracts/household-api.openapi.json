@@ -3952,7 +3952,7 @@
           "barcode": {
             "maxLength": 14,
             "minLength": 8,
-            "pattern": "^[0-9]+$",
+            "pattern": "^(?:[0-9]{8}|[0-9]{12,14})$",
             "title": "Barcode",
             "type": "string"
           },
@@ -6676,7 +6676,7 @@
           "barcode": {
             "maxLength": 14,
             "minLength": 8,
-            "pattern": "^[0-9]+$",
+            "pattern": "^(?:[0-9]{8}|[0-9]{12,14})$",
             "title": "Barcode",
             "type": "string"
           },
@@ -16997,7 +16997,7 @@
             "schema": {
               "maxLength": 14,
               "minLength": 8,
-              "pattern": "^[0-9]+$",
+              "pattern": "^(?:[0-9]{8}|[0-9]{12,14})$",
               "title": "Barcode",
               "type": "string"
             }

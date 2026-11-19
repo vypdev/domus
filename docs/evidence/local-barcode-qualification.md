@@ -134,3 +134,22 @@ wheel matches the Linux wheel exactly. Schema 35 is retained.
 All 121 compiled source journeys pass in a complete zero-retry campaign.
 Installed-owner acceptance, both CPU image campaigns and final same-head CI and
 review are tracked in the increment's pull request.
+
+## Published shape and long-name review
+
+The HTTP annotation and both composed OpenAPI snapshots now restrict the
+printed shape to exactly 8, 12, 13 or 14 ASCII digits. The domain still checks
+the GS1 digit before canonicalization. A contract regression compares all three
+published barcode shapes with actual lookup admission in both deployments.
+The previous pattern reproduced six mismatches for 9-, 10- and 11-digit inputs.
+After the correction, all 30 focused HTTP and composed-snapshot cases pass.
+
+The long-name review finding was a false positive. The exact published ha-ui
+card already supplies inherited `overflow-wrap:anywhere`. Both compiled barcode
+journeys now register an unbroken 160-character product name and exercise its
+Spanish narrow-screen review and found result. Each has a client and scroll
+width of 324 px inside the 390 px viewport, with inherited wrapping retained.
+Both journeys pass without a Domus CSS change. Original screenshots and measured
+layout attachments are retained. The first diagnostic passed the layout checks
+but failed a new test expectation for light text color; the expectation was
+corrected to the existing `#172b3a` without changing application colors.

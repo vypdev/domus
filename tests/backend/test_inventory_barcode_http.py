@@ -1,5 +1,7 @@
 """Barcode admission uses both protected production HTTP compositions."""
 
+import re
+
 import pytest
 from test_inventory_catalog_http import INVENTORY, VIEWER, post, register
 from test_recurrence_http import USER
@@ -92,6 +94,25 @@ def test_invalid_code_never_queries_or_writes_a_link(api, monkeypatch, barcode):
     assert (
         post(api, "invalid", "link-barcode", barcode=barcode, product_id=product).status_code == 422
     )
+
+
+@pytest.mark.parametrize(
+    "barcode",
+    ["96385074", "036000291452", "0036000291452", "00036000291452", "0" * 9, "0" * 10, "0" * 11],
+)
+def test_published_barcode_shapes_match_runtime_accepted_lengths(api, barcode):
+    api.user(USER, True)
+    document = api.client.get("/api/v1/openapi.json").json()
+    parameters = document["paths"][INVENTORY + "/barcode"]["get"]["parameters"]
+    schemas = [next(item["schema"] for item in parameters if item["name"] == "barcode")]
+    schemas.extend(
+        document["components"]["schemas"][name]["properties"]["barcode"]
+        for name in ("LinkBarcodeBody", "RemoveBarcodeBody")
+    )
+    accepted = len(barcode) in (8, 12, 13, 14)
+    for schema in schemas:
+        assert bool(re.fullmatch(schema["pattern"], barcode)) is accepted
+    assert lookup(api, barcode).status_code == (200 if accepted else 422)
 
 
 def test_lookup_unavailability_is_distinct_and_read_retry_retains_the_same_key(api, monkeypatch):

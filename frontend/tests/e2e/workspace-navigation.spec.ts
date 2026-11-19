@@ -10,6 +10,7 @@ for (const mode of ['native', 'standalone'] as const) {
     const origin = `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;
     const base = origin + (mode === 'native' ? ingress : '') + '/';
     const barcode = '00036000291452';
+    const longName = 'QA91' + 'X'.repeat(156);
     const commands = base + 'api/v1/inventory/commands';
     const lookup = base + 'api/v1/inventory/barcode?barcode=' + barcode;
     const external: string[] = [];
@@ -37,7 +38,7 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.getByRole('button', {name:'Create household', exact:true}).press('Enter');
     await page.locator('vyp-ha-tabs').getByRole('link', {name:'Inventory', exact:true}).press('Enter');
     const stock = page.locator('domus-inventory');
-    for (const name of ['QA barcode soap', 'QA barcode tea']) {
+    for (const name of ['QA barcode soap', 'QA barcode tea', longName]) {
       await stock.getByRole('textbox', {name:'Product name', exact:true}).fill(name);
       await stock.getByRole('button', {name:'Register product', exact:true}).press('Enter');
       await expect(stock.getByRole('article', {name, exact:true})).toBeVisible();
@@ -143,6 +144,25 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(stock.locator('.barcode-result')).toBeFocused();
     await expect(spanish).toHaveValue('036000291452');
     await stock.screenshot({path:info.outputPath('barcode-es-touch.png')});
+    await stock.getByRole('button', {name:'Asociar código a ' + longName, exact:true}).tap();
+    const longReview = stock.getByRole('form', {name:'Revisar asociación del código', exact:true});
+    await expect(longReview).toContainText(longName);
+    await stock.screenshot({path:info.outputPath('barcode-long-name-review-es.png')});
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    const reviewLayout = await longReview.evaluate(element => ({clientWidth:element.clientWidth,
+      scrollWidth:element.scrollWidth, overflowWrap:getComputedStyle(element).overflowWrap}));
+    await longReview.getByRole('button', {name:'Confirmar asociación del código', exact:true}).tap();
+    await expect(stock.locator('.barcode-result')).toContainText(longName);
+    await expect(stock.locator('.barcode-result')).toBeFocused();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    const resultLayout = await stock.locator('.barcode-result').evaluate(element => ({clientWidth:element.clientWidth,
+      scrollWidth:element.scrollWidth, overflowWrap:getComputedStyle(element).overflowWrap}));
+    await info.attach('barcode-long-name-layout', {body:JSON.stringify({length:longName.length,
+      viewport:390, review:reviewLayout, result:resultLayout}), contentType:'application/json'});
+    await page.emulateMedia({colorScheme:'light', reducedMotion:'reduce'});
+    await expect(searchCard).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(searchCard).toHaveCSS('color', 'rgb(23, 43, 58)');
+    await stock.screenshot({path:info.outputPath('barcode-long-name-result-es.png')});
     expect(external).toEqual([]);
   });
 }

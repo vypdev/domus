@@ -51,7 +51,7 @@ class LocationBody(StrictModel):
     name: str = Field(min_length=1, max_length=MAX_LOCATION_NAME)
 
 
-Barcode = Annotated[str, Field(min_length=8, max_length=14, pattern=r"^[0-9]+$")]
+Barcode = Annotated[str, Field(min_length=8, max_length=14, pattern=r"^(?:[0-9]{8}|[0-9]{12,14})$")]
 
 
 class BarcodeQuery(StrictModel):
