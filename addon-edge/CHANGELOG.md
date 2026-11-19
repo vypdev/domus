@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.47
+
+- Complete explicit runtime cleanup when SIGTERM requests a stop.
+- Finish worker shutdown, identity disposal and installation-lease release before exiting successfully.
+
 ## 0.0.0-edge.46
 
 - Keep the points-allocation cards readable in dark mode when managing tasks and household defaults.

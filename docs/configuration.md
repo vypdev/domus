@@ -77,6 +77,12 @@ remain deployment gates. The server uses one worker because authentication state
 | Graceful server shutdown | Ten-second worker grace, then bounded owned-grant cleanup |
 | Remote shutdown cleanup | At most two five-second revoke operations; discard all local credentials |
 
+SIGTERM requests a normal process stop. For a running server, Uvicorn drains
+requests and stops ASGI-owned workers before the CLI completes explicit runtime
+cleanup. A completed requested stop exits with status zero. The CLI defers
+additional SIGTERM requests while cleanup settles and restores its previous
+signal handler on return. A cleanup failure propagates to the caller.
+
 These are implementation bounds subject to the outstanding package/operations review, not a claimed
 recovery-time SLA. [Protocol I/O bounds](ha-identity-protocol.md) are separately documented.
 

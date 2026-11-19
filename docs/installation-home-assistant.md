@@ -13,6 +13,8 @@ current states of all open household occurrences. The companion preserves
 existing configured projections. [Qualification](evidence/ha-open-tasks-qualification.md)
 
 Edge.46 keeps the points-allocation cards readable in dark mode when managing tasks.
+Edge.47 completes explicit runtime cleanup when Stop requests SIGTERM, including
+worker shutdown, identity disposal and installation-lease release.
 
 Edge.44 includes the [native shared shopping list](tasks/ha-shopping-list.md) with a dedicated
 installation grant and a read-only to-do entity.

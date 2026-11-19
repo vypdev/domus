@@ -4,6 +4,7 @@ import argparse
 import os
 import socket
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import cast
@@ -21,6 +22,7 @@ from domus.application.task_events import TaskEventSource
 from domus.composition.ha_projections import attach_ha_projections
 from domus.composition.household_administration import administration_services
 from domus.composition.recurrence import bind_lifespan, recurrence_worker
+from domus.composition.signals import graceful_termination
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
@@ -240,7 +242,7 @@ def _serve_ha_projections(app: FastAPI) -> None:
         uvicorn.Server(config).run(sockets=[ingress, projections])
 
 
-def main(argv: list[str] | None = None) -> int:
+def _run(argv: list[str] | None, begin_cleanup: Callable[[], None]) -> int:
     parser = argparse.ArgumentParser(description="Run Domus behind private Home Assistant Ingress.")
     parser.add_argument("--channel", required=True, choices=("stable", "edge"))
     data = parser.add_mutually_exclusive_group()
@@ -309,7 +311,7 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
-    try:
+    else:
         if projections_enabled:
             _serve_ha_projections(app)
         else:
@@ -329,8 +331,15 @@ def main(argv: list[str] | None = None) -> int:
                 h11_max_incomplete_event_size=65_536,
             )
     finally:
+        begin_cleanup()
         if runtime is not None:
             runtime.close()
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    with graceful_termination() as begin_cleanup:
+        return _run(argv, begin_cleanup)
     return 0
 
 

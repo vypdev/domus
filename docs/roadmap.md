@@ -23,6 +23,8 @@ With the recurrence and calendar implementation in develop:
 
 - M0: the specification foundation and decisions are recorded. Contracts continue to evolve with implementation evidence.
 - M1: HA identity/session, SQLite, recovery foundations, architecture checks and CI are implemented. Full standalone/Ingress, upgrade/restore and Stable production acceptance remains open.
+  The [process shutdown qualification](evidence/graceful-shutdown-qualification.md)
+  records explicit SIGTERM runtime cleanup in both CLI entrypoints.
 - M2 includes task creation, claiming, completion, review and reopening, previously exercised with English/Spanish and persisted task/preferences in the owner's Edge.9 through Ingress. PR #29 wires fixed and relative maintenance, durable cycle closure and successor generation/invalidation, reviewed schedule adoption and changes, protected calendar views, explicit exclusions/additions and private week-start preferences. Its authorized HA event projection shares calendar identities. Current source checks and historical installed observations are recorded separately in the [recurrence evidence](evidence/recurrence-lifecycle-calendar.json). PRs #33, #35, #37 and #39
 add household timing controls and the read-only native calendar. The
 [case qualification audit](evidence/recurrence-calendar-qualification.md) tracks the remaining

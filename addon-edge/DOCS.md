@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.46 packages the immutable runtime declared in
+Edge 0.0.0-edge.47 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -24,6 +24,11 @@ for outstanding items and quantities. The
 [open-task list](../docs/tasks/ha-open-tasks.md) uses `ha_tasks_digest` for
 the titles and current states of all open household occurrences. These projections share the
 private app port `8100` and each requires its own installation grant.
+
+Edge.47 completes explicit runtime cleanup when Home Assistant requests Stop.
+Workers finish before identity disposal and installation-lease release. Standalone
+shutdown reports its bounded delegated-grant cleanup result in the server log.
+
 Enable a saved revision in Manual automation and confirm it before running.
 The run receipt links to its task when the stock condition matches. Check
 the original request after an interrupted response. Show run history lists
