@@ -33,7 +33,14 @@ from domus.application.task_facts import (
 from domus.application.task_material_views import MaterialOutcome, material_outcome
 from domus.application.task_ports import TaskCursors, TaskOccurrenceGroup
 from domus.application.task_reviews import DependencyReviewView, review_cycle, review_items
-from domus.domain.errors import Conflict, Forbidden, InvalidInput, NotFound, StorageFailure
+from domus.domain.errors import (
+    Conflict,
+    Forbidden,
+    IntegrationUnavailable,
+    InvalidInput,
+    NotFound,
+    StorageFailure,
+)
 from domus.domain.identity import HumanIdentity, Permission, validate_revision
 from domus.domain.point_allocation import AllocationMode
 from domus.domain.recurrence_time import TimePolicy
@@ -62,6 +69,7 @@ from domus.domain.tasks import TaskCycle, TaskDefinition, TaskOccurrence
 
 OVERVIEW_LIMIT = 25
 OVERVIEW_MAINTENANCE_DAYS = 7
+HA_TASK_ITEM_LIMIT = 1000
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,6 +160,51 @@ class TaskOverview:
 class TaskDeadlineCounts:
     due_today: int
     overdue: int
+
+
+@dataclass(frozen=True, slots=True)
+class OpenTaskSnapshotItem:
+    uid: str
+    title: str
+    state: OccurrenceState
+
+
+@dataclass(frozen=True, slots=True)
+class OpenTaskSnapshot:
+    items: tuple[OpenTaskSnapshotItem, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class InstallationOpenTasks:
+    transactions: Transactions
+    scope: MaintenanceScope
+
+    def read(self) -> OpenTaskSnapshot:
+        installation = self.scope.installation
+        with self.transactions.read() as unit:
+            household = self.scope.require(unit)
+            items: list[OpenTaskSnapshotItem] = []
+            after: str | None = None
+            while batch := unit.tasks.occurrences(
+                household.household_id, open_only=True, limit=101, after=after
+            ):
+                for work in batch:
+                    if len(items) == HA_TASK_ITEM_LIMIT:
+                        raise IntegrationUnavailable("ha_task_list_capacity")
+                    identity = JsonDocument.from_value(
+                        {
+                            "installation": installation.instance_id,
+                            "channel": installation.channel,
+                            "occurrence": work.occurrence_id,
+                        }
+                    ).fingerprint
+                    items.append(
+                        OpenTaskSnapshotItem(
+                            identity, work.definition_snapshot.content.title, work.state
+                        )
+                    )
+                after = batch[-1].occurrence_id
+            return OpenTaskSnapshot(tuple(items))
 
 
 @dataclass(frozen=True, slots=True)

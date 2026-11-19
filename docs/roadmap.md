@@ -55,7 +55,8 @@ acceptance of the installed recurrence experience remain open.
   and includes the native Home Assistant calendar,
   [task deadline sensors](evidence/ha-deadline-sensors-qualification.md),
   [low-stock sensor](evidence/ha-low-stock-sensor-qualification.md) and
-  [read-only shopping list](evidence/ha-shopping-list-qualification.md).
+  [read-only shopping list](evidence/ha-shopping-list-qualification.md) and
+  [open household task list](evidence/ha-open-tasks-qualification.md).
   Household settings can simulate one task proposal against current stock and
   [save and reopen inactive drafts with immutable revisions](evidence/automation-draft-qualification.md).
   [Manual execution](evidence/automation-execution-qualification.md) pins the enabled draft revision

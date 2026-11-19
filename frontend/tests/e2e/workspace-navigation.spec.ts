@@ -360,6 +360,8 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.getByLabel('Language', {exact: true}).selectOption('es');
 
     const settings = familyRegion.locator('domus-allocation-settings');
+    await expect(settings.getByRole('article')).toHaveCSS('background-color', 'rgb(24, 36, 47)');
+    await expect(settings.getByRole('article')).toHaveCSS('color', 'rgb(237, 244, 250)');
     await settings.getByRole('combobox', {name: 'Política', exact: true}).selectOption('equal_share');
     await settings.getByRole('combobox', {name: 'Redondeo', exact: true}).selectOption('ceil');
     await settings.getByRole('button', {name: 'Guardar política', exact: true}).click();
@@ -367,6 +369,9 @@ for (const mode of ['native', 'standalone'] as const) {
     await tabs.getByRole('link', {name: 'Tareas', exact: true}).click();
     await tasksRegion.getByRole('button', {name: 'Actualizar tareas', exact: true}).click();
     await tasksRegion.getByRole('button', {name: 'Water plants', exact: true}).click();
+    const taskSettings = tasksRegion.locator('domus-allocation-settings');
+    await expect(taskSettings.getByRole('article')).toHaveCSS('background-color', 'rgb(24, 36, 47)');
+    await expect(taskSettings.getByRole('article')).toHaveCSS('color', 'rgb(237, 244, 250)');
     const points = tasksRegion.locator('domus-allocation-preview');
     await points.locator('summary').click();
     await points.getByRole('button', {name: 'Previsualizar puntos', exact: true}).click();
@@ -700,13 +705,24 @@ for (const mode of ['native', 'standalone'] as const) {
     expect(sessionCsrf.ok()).toBe(true);
     const sessionToken = (await sessionCsrf.json()).csrf_token;
     const inventoryWrite = async (key:string, data:object) => {
-      const response = await page.request.post(inventoryCommands, {data,headers:{
+      const options = {data,headers:{
         Origin:origin, 'X-Domus-Context':contextHeader, 'X-CSRF-Token':sessionToken, 'Idempotency-Key':key,
-      }});
+      }};
+      let response = await page.request.post(inventoryCommands, options);
+      if (response.status() === 503) {
+        expect((await response.json()).code).toBe('storage_busy');
+        expect(response.headers()['retry-after']).toBe('1');
+        expect((await request.post(origin + '/__fixture__/writer', {data:{action:'release'}})).ok()).toBe(true);
+        await new Promise<void>(resolve => setTimeout(resolve, 1000));
+        response = await page.request.post(inventoryCommands, options);
+      }
       expect(response.ok(), await response.text()).toBe(true);
       return (await response.json()).result;
     };
-    const flour = await inventoryWrite('session-flour', {action:'inventory.register-product',name:'Session flour',base_unit:'gram'});
+    expect((await request.post(origin + '/__fixture__/writer', {data:{action:'acquire'}})).ok()).toBe(true);
+    const flourRequest = {action:'inventory.register-product',name:'Session flour',base_unit:'gram'};
+    const flour = await inventoryWrite('session-flour', flourRequest);
+    expect(await inventoryWrite('session-flour', flourRequest)).toEqual(flour);
     await inventoryWrite('session-flour-policy', {action:'inventory.configure-replenishment',product_id:flour.product_id,
       minimum:'3',target:'3',expected_revision:'0'});
     await inventoryWrite('session-lemons', {action:'shopping.add-extra',product_id:null,name:'Session lemons',quantity:'2'});

@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.43 packages the immutable runtime declared in
+Edge 0.0.0-edge.46 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -20,7 +20,9 @@ the optional `ha_deadline_digest` setting. The calendar uses its own
 `ha_calendar_digest` setting. The [low-stock sensor](../docs/tasks/ha-low-stock-sensor.md)
 uses `ha_stock_digest` to read the count from Overview. The
 [native shopping list](../docs/tasks/ha-shopping-list.md) uses `ha_shopping_digest`
-for outstanding items and quantities. These opt-in projections share the
+for outstanding items and quantities. The
+[open-task list](../docs/tasks/ha-open-tasks.md) uses `ha_tasks_digest` for
+the titles and current states of all open household occurrences. These projections share the
 private app port `8100` and each requires its own installation grant.
 Enable a saved revision in Manual automation and confirm it before running.
 The run receipt links to its task when the stock condition matches. Check

@@ -14,6 +14,7 @@ from .client import CalendarClient, CalendarUnavailable, Projection
 from .connection import ProjectionUnavailable
 from .count_client import DEADLINES, STOCK, CountClient, CountPurpose
 from .shopping_client import SHOPPING, SHOPPING_TITLE, ShoppingClient, ShoppingItem
+from .task_client import TASKS, TASKS_TITLE, TaskClient, TaskItem
 
 DOMAIN = "domus_calendar"
 CONF_PROJECTION = "projection"
@@ -23,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 type DomusEntry = ConfigEntry[tuple[CalendarClient, DataUpdateCoordinator[Projection]]]
 type CountEntry = ConfigEntry[DataUpdateCoordinator[dict[str, int]]]
 type ShoppingEntry = ConfigEntry[DataUpdateCoordinator[tuple[ShoppingItem, ...]]]
+type TasksEntry = ConfigEntry[DataUpdateCoordinator[tuple[TaskItem, ...]]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -30,6 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     projection = entry.data.get(CONF_PROJECTION)
     if projection == SHOPPING:
         return await _setup_shopping(hass, entry)
+    if projection == TASKS:
+        return await _setup_tasks(hass, entry)
     if projection in COUNT_PROJECTIONS:
         return await _setup_counts(hass, entry, projection)
     client = CalendarClient(
@@ -113,10 +117,35 @@ async def _setup_shopping(hass: HomeAssistant, entry: ShoppingEntry) -> bool:
     return True
 
 
+async def _setup_tasks(hass: HomeAssistant, entry: TasksEntry) -> bool:
+    client = TaskClient(async_get_clientsession(hass), entry.data[CONF_URL], entry.data[CONF_TOKEN])
+
+    async def update() -> tuple[TaskItem, ...]:
+        try:
+            return await client.read()
+        except ProjectionUnavailable:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="tasks_unavailable"
+            ) from None
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=TASKS_TITLE,
+        config_entry=entry,
+        update_method=update,
+        update_interval=timedelta(minutes=1),
+    )
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.TODO])
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove the configured platform and shut down its scheduled refresh."""
     projection = entry.data.get(CONF_PROJECTION)
-    if projection == SHOPPING:
+    if projection in (SHOPPING, TASKS):
         platform = Platform.TODO
     elif projection in COUNT_PROJECTIONS:
         platform = Platform.SENSOR

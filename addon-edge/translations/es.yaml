@@ -25,3 +25,10 @@ configuration:
     description: >-
       Resumen SHA-256 opcional para la lista de la compra compartida. Home Assistant
       puede leer nombres y cantidades. Reinicia Domus si cambias o eliminas el resumen.
+  ha_tasks_digest:
+    name: Resumen del token de tareas abiertas
+    description: >-
+      Resumen SHA-256 opcional para la lista de tareas abiertas de solo lectura.
+      Quienes tengan acceso a la entidad de Home Assistant podrán leer títulos y
+      estados de todas las tareas abiertas del hogar. Reinicia Domus tras cambiar
+      o eliminar el resumen.

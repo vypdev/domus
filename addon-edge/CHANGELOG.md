@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.0-edge.46
+
+- Keep the points-allocation cards readable in dark mode when managing tasks and household defaults.
+
+## 0.0.0-edge.45
+
+- Show every open household task occurrence and its current state in a native read-only Home Assistant list.
+- Connect the task list with its own optional installation grant.
+
 ## 0.0.0-edge.44
 
 - Show the complete outstanding shared shopping list as a native read-only Home Assistant entity.

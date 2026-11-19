@@ -6,3 +6,4 @@ schema:
   ha_deadline_digest: str?
   ha_stock_digest: str?
   ha_shopping_digest: str?
+  ha_tasks_digest: str?

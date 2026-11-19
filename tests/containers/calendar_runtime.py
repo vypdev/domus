@@ -51,8 +51,9 @@ def seed(channel, label):
         )
         tasks = TaskCommands(store, actor, clock, identifiers)
         created = tasks.create("fixture-task", CreateTask(TaskContent(f"{label} deadline")))
-        tomorrow = datetime.now(UTC) + timedelta(days=1)
-        due_at = int(tomorrow.timestamp() * 1000)
+        # Keep future work outside today when the emulated Core run crosses midnight.
+        future = datetime.now(UTC) + timedelta(days=2)
+        due_at = int(future.timestamp() * 1000)
         tasks.create_occurrence(
             "fixture-due",
             CreateTaskOccurrence(created.result.decode()["definition_id"], due_at=due_at),
@@ -62,7 +63,7 @@ def seed(channel, label):
             CreateTaskOccurrence(created.result.decode()["definition_id"], due_at=1),
         )
         times = PinnedRecurrenceTime()
-        rule = FixedPattern(NominalDate(tomorrow.date()), Frequency.DAILY, count=1)
+        rule = FixedPattern(NominalDate(future.date()), Frequency.DAILY, count=1)
         RecurrenceCommands(
             store,
             actor,
@@ -120,6 +121,9 @@ def serve(mode, channel, host, config_path):
     shopping_digest = hashlib.sha256(
         f"{instance}.{channel}.shopping.{'a' * 64}".encode("ascii")
     ).hexdigest()
+    tasks_digest = hashlib.sha256(
+        f"{instance}.{channel}.tasks.{'b' * 64}".encode("ascii")
+    ).hexdigest()
     if mode == "native":
         config = json.loads(Path(config_path).read_text())
         options = {
@@ -128,6 +132,7 @@ def serve(mode, channel, host, config_path):
             "ha_deadline_digest": deadline_digest,
             "ha_stock_digest": stock_digest,
             "ha_shopping_digest": shopping_digest,
+            "ha_tasks_digest": tasks_digest,
         }
         Path("/data/options.json").write_text(json.dumps(options))
         launcher = "/app/.venv/bin/domus-ha-app"
@@ -151,6 +156,7 @@ def serve(mode, channel, host, config_path):
         ha_deadline_digest=deadline_digest,
         ha_stock_digest=stock_digest,
         ha_shopping_digest=shopping_digest,
+        ha_tasks_digest=tasks_digest,
     )
     try:
         uvicorn.run(

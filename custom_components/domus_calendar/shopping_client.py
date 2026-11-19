@@ -1,12 +1,17 @@
 """Read a complete bounded native shopping list for one Domus installation."""
 
-import json
 import re
 from dataclasses import dataclass
 
 from aiohttp import ClientSession
 
-from .connection import ProjectionUnavailable, bearer_source, connection_origin, read_projection
+from .connection import (
+    ProjectionUnavailable,
+    bearer_source,
+    connection_origin,
+    projection_items,
+    read_projection,
+)
 
 SHOPPING = "shopping"
 SHOPPING_TITLE = "Domus shopping list"
@@ -26,13 +31,6 @@ class ShoppingItem:
     name: str
     quantity: str
     unit: str
-
-
-def _object(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    values = dict(pairs)
-    if len(values) != len(pairs):
-        raise ProjectionUnavailable
-    return values
 
 
 def _item(value: object) -> ShoppingItem:
@@ -57,12 +55,7 @@ def _item(value: object) -> ShoppingItem:
 
 
 def _items(body: bytearray) -> tuple[ShoppingItem, ...]:
-    result = json.loads(body.decode("utf-8"), object_pairs_hook=_object)
-    if type(result) is not dict or set(result) != {"items"}:
-        raise ProjectionUnavailable
-    rows = result["items"]
-    if type(rows) is not list or len(rows) > _MAX_ITEMS:
-        raise ProjectionUnavailable
+    rows = projection_items(body, item_limit=_MAX_ITEMS)
     items = tuple(_item(row) for row in rows)
     if len({item.uid for item in items}) != len(items):
         raise ProjectionUnavailable

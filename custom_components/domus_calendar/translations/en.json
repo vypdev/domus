@@ -27,10 +27,11 @@
     "calendar_unavailable": {"message": "Domus could not return a complete calendar for this range."},
     "deadlines_unavailable": {"message": "Domus could not return the task deadline counts."},
     "shopping_unavailable": {"message": "Domus could not return the complete shared shopping list."},
+    "tasks_unavailable": {"message": "Domus could not return the complete open-task list."},
     "stock_unavailable": {"message": "Domus could not return the low-stock product count."}
   },
   "selector": {
-    "projection": {"options": {"calendar": "Calendar", "deadlines": "Task deadline counts", "stock": "Low-stock product count", "shopping": "Shared shopping list (read-only)"}}
+    "projection": {"options": {"calendar": "Calendar", "deadlines": "Task deadline counts", "stock": "Low-stock product count", "shopping": "Shared shopping list (read-only)", "tasks": "Open household tasks (read-only)"}}
   },
   "entity": {
     "calendar": {
@@ -39,7 +40,7 @@
         "state_attributes": {"projection_pending": {"name": "Projection pending"}}
       }
     },
-    "todo": {"shopping_list": {"name": "Domus shopping list"}},
+    "todo": {"shopping_list": {"name": "Domus shopping list"}, "open_tasks": {"name": "Domus open tasks"}},
     "sensor": {
       "tasks_due_today": {"name": "Domus tasks due today"},
       "tasks_overdue": {"name": "Domus overdue tasks"},

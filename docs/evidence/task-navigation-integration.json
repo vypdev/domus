@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes.",
   "actualProductFiles": {
-    ".vite/manifest.json": "daf007f71e459977685050b8df058681b2e0d210322239bfa05233627a1865d3",
-    "assets/index-B22CLM8q.js": "f47f4d2c05e424065a3535ea295d54410108df274c0f1b8c2a27725d3c928ef5",
+    ".vite/manifest.json": "857ddac99d888617f414cda4fbcedd4133a187b6d292750460dd8f66a732e588",
+    "assets/index-C5UQqRgD.js": "a7c554c95e87f2923fc82efcb873353ccf217241a0043375e9b58c09df6361fd",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "8cc5cec730db94bb12efb2c1a59201e62a8b506cc36227ebca93efda26a986c7"
+    "index.html": "d795e3f20dc09de365a1427689e9474dc1e7fa284c43664724902d96a1620c0d"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -305,5 +305,17 @@
     },
     "requirements": "daily-drafts-R01 through daily-drafts-R05",
     "evidence": "daily-automation-drafts-qualification.md"
+  },
+  "openTaskProjection": {
+    "sourceCommit": "605eedbd688d35bbb6a69591e23a5d6b9a9acd84",
+    "actualProductFiles": {
+      ".vite/manifest.json": "857ddac99d888617f414cda4fbcedd4133a187b6d292750460dd8f66a732e588",
+      "assets/index-C5UQqRgD.js": "a7c554c95e87f2923fc82efcb873353ccf217241a0043375e9b58c09df6361fd",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "index.html": "d795e3f20dc09de365a1427689e9474dc1e7fa284c43664724902d96a1620c0d"
+    },
+    "scope": "Compiled task workspace with readable household and task points-allocation cards during open-task list qualification.",
+    "requirements": "ha-open-tasks-C07",
+    "evidence": "ha-open-tasks-qualification.md"
   }
 }

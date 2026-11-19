@@ -14,6 +14,7 @@ from domus.entrypoints.ha_deadline_http import DEADLINE_DIGEST_ENV
 from domus.entrypoints.ha_projection_http import validate_digest
 from domus.entrypoints.ha_shopping_http import SHOPPING_DIGEST_ENV
 from domus.entrypoints.ha_stock_http import STOCK_DIGEST_ENV
+from domus.entrypoints.ha_tasks_http import TASKS_DIGEST_ENV
 from domus.infrastructure.ha_config import PublicOrigins
 from domus.infrastructure.ha_http import _secret
 
@@ -26,7 +27,7 @@ _DIRECTORY_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
 
 def _options(
     directory: int,
-) -> tuple[tuple[str, ...], str | None, str | None, str | None, str | None]:
+) -> tuple[tuple[str, ...], str | None, str | None, str | None, str | None, str | None]:
     descriptor = os.open(
         "options.json",
         os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
@@ -55,6 +56,7 @@ def _options(
             "ha_deadline_digest",
             "ha_stock_digest",
             "ha_shopping_digest",
+            "ha_tasks_digest",
         }
         or type(value.get("public_origins")) is not list
     ):
@@ -79,8 +81,13 @@ def _options(
         if "ha_shopping_digest" in value
         else None
     )
+    tasks_digest = (
+        validate_digest(cast(str, value["ha_tasks_digest"]), "invalid_ha_tasks_digest")
+        if "ha_tasks_digest" in value
+        else None
+    )
     origins = PublicOrigins(tuple(cast(list[str], value["public_origins"]))).values
-    return origins, calendar_digest, deadline_digest, stock_digest, shopping_digest
+    return origins, calendar_digest, deadline_digest, stock_digest, shopping_digest, tasks_digest
 
 
 def _provision(directory: int) -> None:
@@ -131,8 +138,8 @@ def _run(channel: str) -> None:
         info = os.fstat(directory)
         if info.st_uid != _ROOT_UID or stat.S_IMODE(info.st_mode) & 0o022:
             raise InvalidInput("unsafe_app_data_parent")
-        origins, calendar_digest, deadline_digest, stock_digest, shopping_digest = _options(
-            directory
+        origins, calendar_digest, deadline_digest, stock_digest, shopping_digest, tasks_digest = (
+            _options(directory)
         )
         _provision(directory)
     finally:
@@ -154,6 +161,7 @@ def _run(channel: str) -> None:
             **({DEADLINE_DIGEST_ENV: deadline_digest} if deadline_digest is not None else {}),
             **({STOCK_DIGEST_ENV: stock_digest} if stock_digest is not None else {}),
             **({SHOPPING_DIGEST_ENV: shopping_digest} if shopping_digest is not None else {}),
+            **({TASKS_DIGEST_ENV: tasks_digest} if tasks_digest is not None else {}),
         },
     )
 

@@ -310,6 +310,14 @@ Primary sources: [Copilot standard](https://github.com/vypdev/copilot/blob/f5e5a
 
 Confirmed owner choices and unresolved proposals are separated in [decisions](../docs/decisions.md). [Issue #2](https://github.com/vypdev/domus/issues/2) tracks the documentation foundation. The [adoption note](../docs/copilot-adoption.md) records the current catalog evidence limitation. Optional future depth remains explicitly deferred in the product vision; the gateway's installation and MCP internals are outside Domus scope.
 
+## Open household tasks in Home Assistant
+
+The companion [open household task list](home-assistant-todo-list.md) defines
+the seven bounded read-only occurrence scenarios. Its setup, grant and recovery
+journey are documented in the [open-task guide](../docs/tasks/ha-open-tasks.md).
+The [qualification record](../docs/evidence/ha-open-tasks-qualification.md)
+maps those cases to the backend, native Core and deployment checks.
+
 ## Show low-stock products in Home Assistant
 
 - Status: Draft
