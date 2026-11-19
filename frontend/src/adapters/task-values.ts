@@ -1,7 +1,7 @@
 /** Project the task wire contract into immutable UI facts, preserving exact integers. */
 import {nextRevision} from '../domain/administration';
 import {civilDate} from '../domain/civil-date';
-import {categoryLabel, isCategoryCommand, taskCommand, taskIdentifier, taskQuantity, taskText, TASK_PRIORITIES, TASK_STATES} from '../domain/tasks';
+import {categoryLabel, isCategoryCommand, taskCommand, taskIdentifier, taskQuantity, taskText, TASK_PRIORITIES, TASK_STATES, TASK_TEXT_LIMITS} from '../domain/tasks';
 import type {TaskCategoryCatalog, TaskCommand, TaskCycleSummary, TaskDetail, TaskPage, TaskReceipt, TaskSummary} from '../domain/tasks';
 import type {TaskOriginal, TaskRequest} from '../application/task-ports';
 import {boolean, check, choice, fields, identifier, invalid, responseInteger, responseRevision, text} from './json-values';
@@ -88,6 +88,7 @@ export function taskDetail(value: unknown, occurrenceId: string, householdId: st
   const current = item.cycle === null ? null : cycle(item.cycle, occurrenceId, householdId);
   check(base.currentCycleId === null || current?.cycleId === base.currentCycleId);
   return Object.freeze({...base, description: literal(content.description, 4000, false, true), priority: choice(content.priority, TASK_PRIORITIES),
+    ...base.state === 'blocked' ? {stateReason: literal(work.state_reason, TASK_TEXT_LIMITS.reason, true, true)} : {},
     allowedActions: Object.freeze(allowedActions), cycle: current, materials: Object.freeze(materials),
     ...item.completion_points === undefined ? {} : {completionPoints: choice(item.completion_points, ['automatic','manual','manager_required'] as const)},
     materialRecording: choice(rules.material_recording, ['review_on_completion', 'separate_recording']),
@@ -163,6 +164,9 @@ export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal,
   if (command.action !== 'task.create') check(command.occurrenceId === occurrenceId);
   if (command.action === 'task.assign')
     check(JSON.stringify([...assigneeIds].sort()) === JSON.stringify([...command.payload.assignee_ids].sort()));
+  if (command.action === 'task.transition')
+    check(state === command.payload.target
+      && literal(result.state_reason, TASK_TEXT_LIMITS.reason, state === 'blocked', true) === command.payload.reason);
   const savedCycle = Object.hasOwn(result, 'cycle') ? cycle(result.cycle, occurrenceId) : null;
   if (command.action === 'task.complete') {
     check(state === 'completed' && savedCycle !== null && savedCycle.performedAt === command.payload.performed_at
@@ -175,6 +179,7 @@ export function taskReceipt(value: unknown, request: TaskRequest | TaskOriginal,
   }
   return Object.freeze({kind: 'receipt', stage, action: command.action, operationId, occurrenceId, revision, state, cycle: savedCycle, archivedBy,
     ...command.action === 'task.assign' ? {assigneeIds} : {},
+    ...command.action === 'task.transition' ? {stateReason: command.payload.reason} : {},
     ...originalBasePoints(result.point_value_minor, basePoints)});
 }
 /** Only validated decimal lexemes bypass JSON's string quoting; arbitrary text always uses JSON.stringify. */

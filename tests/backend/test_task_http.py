@@ -102,6 +102,96 @@ def test_assignment_original_read_preserves_the_recorded_members_and_current_aut
     assert api.client.get(PREFIX + "/requests/task.assign/assign").status_code == 403
 
 
+def test_transition_original_preserves_reason_replay_and_current_authority(api):
+    created = create(api)
+    occurrence = created["result"]["occurrence_id"]
+    member = api.client.get("/api/v1/authorization").json()["member"]["member_id"]
+    checked(
+        api,
+        "put",
+        "/occurrences/" + occurrence + "/assignment",
+        {"expected_revision": 1, "assignee_ids": [member]},
+        "assign",
+    )
+    started = checked(
+        api,
+        "post",
+        "/occurrences/" + occurrence + "/transition",
+        {"expected_revision": 2, "target": "in_progress", "reason": ""},
+        "start",
+    )
+    body = {"expected_revision": 3, "target": "blocked", "reason": "Waiting for parts\n🧰"}
+    blocked = checked(api, "post", "/occurrences/" + occurrence + "/transition", body, "block")
+    current = api.client.get(PREFIX + "/occurrences/" + occurrence).json()
+    assert current["work"]["state"] == "blocked"
+    assert current["work"]["state_reason"] == body["reason"]
+    assert current["work"]["assignee_ids"] == [member]
+    original = api.client.get(PREFIX + "/requests/task.transition/start")
+    assert original.status_code == 200, original.text
+    assert original.json() == {
+        **started,
+        "delivery": "pending",
+        "action": "task.transition",
+        "command_key": "start",
+    }
+    recovered = api.client.get(PREFIX + "/requests/task.transition/block")
+    assert recovered.status_code == 200, recovered.text
+    assert recovered.json()["operation_id"] == blocked["operation_id"]
+    assert recovered.json()["result"]["state_reason"] == body["reason"]
+    history = api.client.get(PREFIX + "/occurrences/" + occurrence + "/history").json()
+    assert (
+        checked(api, "post", "/occurrences/" + occurrence + "/transition", body, "block") == blocked
+    )
+    changed = api.client.post(
+        PREFIX + "/occurrences/" + occurrence + "/transition",
+        json={**body, "reason": "A different obstacle"},
+        headers=api.headers("block"),
+    )
+    assert changed.status_code == 409
+    assert api.client.get(PREFIX + "/occurrences/" + occurrence).json() == current
+    assert api.client.get(PREFIX + "/occurrences/" + occurrence + "/history").json() == history
+    assert api.client.get(PREFIX + "/requests/task.transition/missing").status_code == 404
+    assert (
+        api.client.get(PREFIX + "/requests/task.transition/block?actor_id=other").status_code == 422
+    )
+    with api.store.write() as unit:
+        actor = unit.members.get("home", member)
+        unit.members.save(
+            replace(actor, role=Role.VIEWER, revision=actor.revision + 1), actor.revision
+        )
+    api.user("a" * 32)
+    assert api.client.get(PREFIX + "/requests/task.transition/block").status_code == 403
+
+
+@pytest.mark.parametrize("reason", [" \n\t", "A\x00B", "\ud800", "🧰" * 1001])
+def test_progress_reason_rejection_at_the_normal_http_boundary_is_inert(api, reason):
+    import json
+
+    occurrence = create(api)["result"]["occurrence_id"]
+    path = "/occurrences/" + occurrence
+    before = api.client.get(PREFIX + path).json()
+    history = api.client.get(PREFIX + path + "/history").json()
+    response = api.client.post(
+        PREFIX + path + "/transition",
+        content=json.dumps({"expected_revision": 1, "target": "blocked", "reason": reason}),
+        headers={**api.headers("invalid-progress"), "Content-Type": "application/json"},
+    )
+    assert response.status_code == 422
+    assert api.client.get(PREFIX + path).json() == before
+    assert api.client.get(PREFIX + path + "/history").json() == history
+    assert api.client.get(PREFIX + "/requests/task.transition/invalid-progress").status_code == 404
+
+
+def test_progress_http_accepts_and_recovers_the_exact_unicode_reason_bound(api):
+    occurrence = create(api)["result"]["occurrence_id"]
+    body = {"expected_revision": 1, "target": "blocked", "reason": "🧰" * 1000}
+    receipt = checked(api, "post", "/occurrences/" + occurrence + "/transition", body, "bound")
+    assert receipt["result"]["state_reason"] == body["reason"]
+    original = api.client.get(PREFIX + "/requests/task.transition/bound")
+    assert original.status_code == 200
+    assert original.json()["result"] == receipt["result"]
+
+
 @pytest.mark.parametrize("amount", [0, 225, 1_000_000])
 def test_configured_task_preserves_exact_amount_in_original_receipt(api, amount):
     body = {"title": "Inspect the filter", "overrides": {"point_value_minor": amount}}

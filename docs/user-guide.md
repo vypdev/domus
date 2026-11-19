@@ -61,6 +61,13 @@ actions your role allows. Use **Retry inventory summary** if the summary could n
   If someone else changes the task, your selection remains available. Use
   **Review current assignment**, then save deliberately. **Refresh assignment
   and members** reloads the current task and available people after a read failure.
+- **Start task** moves eligible assigned work into progress. **Block task** requires
+  a meaningful reason of up to 1000 characters. **Unblock task** returns work to
+  its existing assignees, or makes unassigned work available. Review the proposed
+  state and choose **Save progress**. **Cancel** closes the confirmation.
+  The saved reason remains visible while blocked. If the task changes, your
+  proposed action and reason remain available for **Review current task** and a
+  separate save. An unavailable action offers refresh and cancellation.
 - Restricted performers require adult approval by default. An authorized adult can approve or reject the current cycle; rejection and reopening require a reason. Reopening preserves the previous cycle and its verification evidence.
 - If a task already has linked materials, review its quantities before completion. Decimal input is converted exactly, including a comma separator, and the linked unit's precision is enforced. Zero means unused. Separate-recording tasks do not silently submit planned consumption.
 - A lost reply leaves a visible saved request. **Check saved request** reads its original result without sending another change. New changes remain blocked while an earlier request is unconfirmed. Resolved browser records can be dismissed without deleting server history.

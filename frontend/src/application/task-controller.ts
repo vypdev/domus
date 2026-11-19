@@ -1,7 +1,7 @@
 /** Task workflows coordinate current identity, durable original intents and server-owned actions. */
 import {JournalError} from '../domain/journal';
 import {isCategoryCommand, taskCommand, taskIdentifier} from '../domain/tasks';
-import type {TaskAccess, TaskCommand, TaskDetail, TaskMaterialUsage, TaskPage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
+import type {TaskAccess, TaskCommand, TaskDetail, TaskMaterialUsage, TaskPage, TaskPriority, TaskProgressTarget, TaskScheduleDraft} from '../domain/tasks';
 import {EntryReadError} from './ports';
 import type {Revision} from '../domain/administration';
 import type {ReviewedAllocation} from '../domain/point-allocation';
@@ -131,6 +131,7 @@ export class TaskController {
     const detail = this.state.detail!;
     if (detail.occurrenceId !== command.occurrenceId) return false;
     if (detail.revision !== command.payload.expected_revision) {this.update({notice: 'conflict'}); return false;}
+    if (command.action === 'task.transition') return detail.allowedActions.includes('transition:' + command.payload.target);
     const action = command.action === 'task.verify' ? command.payload.decision === 'approved' ? 'approve' : 'reject' : command.action.slice(5);
     return detail.allowedActions.includes(action);
   }
@@ -149,7 +150,14 @@ export class TaskController {
       this.update({page: prior.page});
       if (this.state.readOnly) {this.update({notice: 'read_only'}); return;}
       if ('occurrenceId' in command) this.update({detail: await this.read(this.server.detail(command.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation)});
-      if (!this.accepted(command)) {if (this.state.notice !== 'conflict' && this.state.notice !== 'category_unavailable') this.update({notice: 'action_not_allowed'}); return;}
+      if (!this.accepted(command)) {
+        if (this.state.notice !== 'conflict' && this.state.notice !== 'category_unavailable') this.update({notice: 'action_not_allowed'});
+        if (command.action === 'task.transition') {
+          this.update({page: null});
+          await this.facts(generation, command.occurrenceId);
+        }
+        return;
+      }
       if (this.state.records === null) {this.update({notice: 'journal_unavailable'}); return;}
       if (this.state.records.some(item => item.stage === 'prepared' || item.stage === 'uncertain')) {this.update({notice: 'previous_request_unresolved'}); return;}
       let key: string;
@@ -164,7 +172,8 @@ export class TaskController {
       }
       if (this.clock.now() >= this.state.session!.expiresAt) throw new EntryReadError('authentication_required');
       if (outcome.kind === 'receipt') await this.receiptFacts(command, outcome.occurrenceId, prior, generation);
-      if (command.action === 'task.assign' && outcome.kind === 'rejected' && outcome.reason === 'conflict')
+      if ((command.action === 'task.assign' || command.action === 'task.transition')
+          && outcome.kind === 'rejected' && outcome.reason === 'conflict')
         await this.facts(generation, command.occurrenceId);
     });
   }
@@ -204,6 +213,13 @@ export class TaskController {
     if (work === null) return Promise.resolve();
     if (work.occurrenceId !== occurrenceId) {this.update({notice: 'conflict'}); return Promise.resolve();}
     return this.execute({action: 'task.assign', occurrenceId, payload: {expected_revision: revision, assignee_ids: assigneeIds}});
+  }
+  transition(occurrenceId: string, revision: Revision, target: TaskProgressTarget, reason: string): Promise<void> {
+    const work = this.state.detail;
+    if (work === null) return Promise.resolve();
+    if (work.occurrenceId !== occurrenceId) {this.update({notice: 'conflict'}); return Promise.resolve();}
+    return this.execute({action: 'task.transition', occurrenceId,
+      payload: {expected_revision: revision, target, reason}});
   }
   complete(materialUsages: readonly TaskMaterialUsage[] | null, reviewed?: ReviewedAllocation): Promise<void> {
     const work = this.state.detail, member = this.state.access?.memberId;

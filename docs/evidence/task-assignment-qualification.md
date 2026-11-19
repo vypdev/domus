@@ -52,7 +52,7 @@ The measured Linux wheel SHA-256 is
 `b8141fd740b17282129a072802782182ff14971827514e427be87546c20ce469`.
 All 231 Python modules match Git and the installed Linux builder. Its four
 compiled UI files also match the independently built local bundle.
-The [artifact declaration](../../addon-edge/artifact.json) records those exact bytes.
+The [artifact declaration](https://github.com/vypdev/domus/blob/960431df0b682be6d97292837f11f9daf08faf12/addon-edge/artifact.json) records those exact bytes.
 
 The ARM64 image is
 `sha256:8d22fdce04f46fbd2567635e3f3d5a968f3788dc2d79efc8af1c0fd57aa78baf`.

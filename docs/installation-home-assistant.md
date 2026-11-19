@@ -7,6 +7,11 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
+Edge.51 lets members start, block and unblock eligible work from Tasks. It keeps
+the blocking reason through conflict review and original-request recovery.
+A competing progress update refreshes both the list and selected detail.
+[Qualification](evidence/task-progress-qualification.md)
+
 Edge.45 adds the [native open-task list](tasks/ha-open-tasks.md) with its own optional
 `ha_tasks_digest` grant. Home Assistant entity viewers can see the titles and
 current states of all open household occurrences. The companion preserves

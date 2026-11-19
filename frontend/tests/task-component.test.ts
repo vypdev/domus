@@ -1,11 +1,13 @@
 import {afterEach, expect, test} from 'vitest';
 import type {HaTextField} from '@vypdev/ha-ui/field';
 import type {HaCheckbox} from '@vypdev/ha-ui/checkbox';
+import type {HaButton} from '@vypdev/ha-ui/button';
+import type {HaFeedback} from '@vypdev/ha-ui/feedback';
 import type {AdministrationView} from '../src/application/administration-controller';
 import {taskInstant, taskMessage} from '../src/presentation/task-messages';
 import type {TaskRecord} from '../src/application/task-ports';
 import type {TaskView} from '../src/application/task-controller';
-import type {TaskDetail} from '../src/domain/tasks';
+import type {TaskDetail, TaskReceipt} from '../src/domain/tasks';
 import {revisionValue} from '../src/domain/administration';
 import type {DomusTasks, TaskIntent} from '../src/presentation/domus-tasks';
 import '../src/presentation/domus-tasks';
@@ -31,6 +33,305 @@ async function mount(value: TaskView | null = view(), locale: 'en' | 'es' = 'en'
   return {element, root, intents, button, input, text: () => root.textContent!};
 }
 
+async function progressFixture(locale: 'en' | 'es' = 'en', patch: Partial<TaskDetail> = {}) {
+  const detail: TaskDetail = {...work, state: 'assigned', assigneeIds: ['private-member-id'],
+    allowedActions: ['transition:in_progress', 'transition:blocked', 'complete'], ...patch};
+  const f = await mount(view({detail}), locale);
+  const button = async (label: string) => {
+    const found = [...f.root.querySelectorAll<HaButton>('vyp-ha-button')].find(item => item.state.label === label);
+    if (!found) throw new Error('Missing progress control ' + label);
+    await found.updateComplete;
+    return found;
+  };
+  const settle = async () => {
+    await f.element.updateComplete;
+    await Promise.all([...f.root.querySelectorAll<HaButton>('vyp-ha-button')].map(item => item.updateComplete));
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+  };
+  const press = async (label: string) => {(await button(label)).click(); await settle();};
+  return {...f, detail, progressButton: button, press, settle};
+}
+
+test.each([
+  ['en', 'Block task', 'Save progress', 'Cancel', 'Task progress saved'],
+  ['es', 'Bloquear tarea', 'Guardar progreso', 'Cancelar', 'Progreso de la tarea guardado'],
+] as const)('%s progress retains its exact reason and supports cancel, save and confirmation', async (locale, block, save, cancel, confirmed) => {
+  const f = await progressFixture(locale);
+  await f.press(block);
+  const reason = f.root.querySelector<HTMLTextAreaElement>('#task-progress-reason')!;
+  expect(f.root.activeElement).toBe(reason);
+  expect((await f.progressButton(save)).disabled).toBe(true);
+  await f.input('task-progress-reason', 'Waiting for <parts>\n🧰');
+  expect((await f.progressButton(save)).disabled).toBe(false);
+  await f.press(cancel);
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  expect(f.root.activeElement).toBe(await f.progressButton(block));
+  expect(f.intents).toEqual([]);
+  await f.press(block);
+  await f.input('task-progress-reason', 'Waiting for <parts>\n🧰');
+  await f.press(save);
+  expect(f.intents).toEqual([{type: 'transition', occurrenceId: 'work-1', revision,
+    target: 'blocked', reason: 'Waiting for <parts>\n🧰'}]);
+  f.element.view = view({phase: 'loading', busy: true});
+  await f.element.updateComplete;
+  const saved: TaskReceipt = {kind: 'receipt', stage: 'committed', action: 'task.transition',
+    occurrenceId: 'work-1', operationId: 'progress-op', revision: revisionValue('2'),
+    state: 'blocked', stateReason: 'Waiting for <parts>\n🧰', cycle: null, archivedBy: null};
+  f.element.view = view({detail: {...f.detail, state: 'blocked', revision: revisionValue('2'),
+    stateReason: saved.stateReason, allowedActions: ['transition:assigned']}, outcome: saved});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  expect(f.root.querySelector<HaFeedback>('#task-progress-result')?.state?.title).toBe(confirmed);
+  expect(f.root.querySelector('#task-blocked-reason')?.textContent).toBe(saved.stateReason);
+  expect(f.root.querySelector('img,script')).toBeNull();
+});
+
+test.each([
+  {state: 'assigned', assigneeIds: ['private-member-id'], target: 'in_progress', label: 'Start task'},
+  {state: 'blocked', assigneeIds: ['private-member-id'], target: 'assigned', label: 'Unblock task'},
+  {state: 'blocked', assigneeIds: [], target: 'available', label: 'Unblock task'},
+] as const)('$label confirms its $target target before emitting an exact progress command', async ({state, assigneeIds, target, label}) => {
+  const f = await progressFixture('en', {state, assigneeIds, stateReason: state === 'blocked' ? 'Waiting' : '',
+    allowedActions: ['transition:' + target]});
+  await f.press(label);
+  expect(f.intents).toEqual([]);
+  expect(f.root.querySelector('#task-progress-reason')).toBeNull();
+  expect(f.root.querySelector('#task-progress-version')?.textContent).toContain('1');
+  await f.press('Save progress');
+  expect(f.intents).toEqual([{type: 'transition', occurrenceId: 'work-1', revision, target, reason: ''}]);
+});
+
+test('progress validates meaningful text and Unicode bounds before any intent', async () => {
+  const f = await progressFixture();
+  await f.press('Block task');
+  const form = f.root.querySelector<HTMLFormElement>('#task-progress-editor')!;
+  form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  await f.settle();
+  expect(f.intents).toEqual([]);
+  expect(f.root.activeElement).toBe(f.root.querySelector('#task-progress-reason'));
+  expect(f.root.querySelector('[role="alert"]')?.textContent).toContain('Enter a valid reason');
+  for (const reason of [' \n\t', 'A\u0000B', '\ud800', '🧰'.repeat(1001)]) {
+    await f.input('task-progress-reason', reason);
+    expect((await f.progressButton('Save progress')).disabled).toBe(true);
+    form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+    expect(f.intents).toEqual([]);
+  }
+  await f.input('task-progress-reason', '🧰'.repeat(1000));
+  expect((await f.progressButton('Save progress')).disabled).toBe(false);
+  await f.press('Save progress');
+  expect(f.intents[0]).toMatchObject({target: 'blocked', reason: '🧰'.repeat(1000)});
+});
+
+test('a competing progress change retains the reason and requires separate review and save', async () => {
+  const f = await progressFixture();
+  await f.press('Block task');
+  await f.input('task-progress-reason', 'My retained reason');
+  await f.press('Save progress');
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2'), assigneeIds: ['peer']},
+    outcome: {kind: 'rejected', reason: 'conflict', correlationId: 'safe-conflict'}});
+  await f.element.updateComplete;
+  expect((f.root.querySelector('#task-progress-reason') as HTMLTextAreaElement).value).toBe('My retained reason');
+  expect((await f.progressButton('Save progress')).disabled).toBe(true);
+  expect(f.intents).toHaveLength(1);
+  await f.press('Review current task');
+  expect(f.root.activeElement).toBe(await f.progressButton('Save progress'));
+  expect((await f.progressButton('Save progress')).disabled).toBe(false);
+  expect(f.intents).toHaveLength(1);
+  await f.press('Save progress');
+  expect(f.intents[1]).toEqual({type: 'transition', occurrenceId: 'work-1', revision: '2',
+    target: 'blocked', reason: 'My retained reason'});
+});
+
+test('an unavailable progress target retains the proposal and offers refresh or cancellation', async () => {
+  const f = await progressFixture();
+  await f.press('Block task');
+  await f.input('task-progress-reason', 'My retained reason');
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2'), state: 'blocked',
+    stateReason: 'The other member blocked it', allowedActions: ['transition:assigned']}});
+  await f.element.updateComplete;
+  expect((await f.progressButton('Save progress')).disabled).toBe(true);
+  expect(f.root.querySelector<HaFeedback>('#task-progress-unavailable')?.state?.message).toContain('This action is unavailable');
+  expect((f.root.querySelector('#task-progress-reason') as HTMLTextAreaElement).value).toBe('My retained reason');
+  await f.press('Refresh current task');
+  expect(f.intents).toEqual([{type: 'refresh'}]);
+  await f.press('Cancel');
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  expect(f.root.querySelector('#task-blocked-reason')?.textContent).toBe('The other member blocked it');
+});
+
+test('recoverable loading preserves a progress draft while scope retirement clears it', async () => {
+  const f = await progressFixture();
+  await f.press('Block task');
+  await f.input('task-progress-reason', 'A retained explanation');
+  f.element.view = view({phase: 'loading', busy: true});
+  await f.element.updateComplete;
+  f.element.view = view({detail: f.detail, notice: 'unavailable'});
+  await f.element.updateComplete;
+  expect((f.root.querySelector('#task-progress-reason') as HTMLTextAreaElement).value).toBe('A retained explanation');
+  f.element.view = view({detail: f.detail, scopeKey: 'different-household'});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  expect(f.intents).toEqual([]);
+});
+
+test.each([
+  {state: 'available', assigneeIds: [], allowedActions: ['transition:in_progress']},
+  {state: 'assigned', assigneeIds: ['private-member-id'], allowedActions: []},
+  {state: 'blocked', assigneeIds: ['private-member-id'], allowedActions: ['transition:available']},
+  {state: 'completed', assigneeIds: ['private-member-id'], allowedActions: ['transition:blocked']},
+] as const)('progress state and matching hint are both required %#', async patch => {
+  const f = await progressFixture('en', {...patch, stateReason: 'Saved explanation'});
+  expect(f.root.querySelectorAll('#task-progress-actions vyp-ha-button')).toHaveLength(0);
+});
+
+test('read-only access disables offered progress controls', async () => {
+  const f = await progressFixture();
+  f.element.view = view({detail: f.detail, readOnly: true});
+  await f.element.updateComplete;
+  expect((await f.progressButton('Start task')).disabled).toBe(true);
+  expect((await f.progressButton('Block task')).disabled).toBe(true);
+  await f.press('Block task');
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  expect(f.intents).toEqual([]);
+});
+
+test('a blocking reason remains readable and inert without mutation authority', async () => {
+  const reason = 'Waiting for <img src=x onerror=alert(1)>\n🧰';
+  const f = await progressFixture('en', {state: 'blocked', stateReason: reason, allowedActions: []});
+  expect(f.root.querySelector('#task-blocked-reason')?.textContent).toBe(reason);
+  expect(f.root.querySelector('img,script')).toBeNull();
+});
+
+test('only the matching submitted progress receipt closes the editor at int64 precision', async () => {
+  const captured = revisionValue('9223372036854775806');
+  const next = revisionValue('9223372036854775807');
+  const f = await progressFixture('en', {revision: captured});
+  await f.press('Block task');
+  await f.input('task-progress-reason', 'Waiting');
+  await f.press('Save progress');
+  const saved: TaskReceipt = {kind: 'receipt', stage: 'committed', action: 'task.transition', operationId: 'progress-op',
+    occurrenceId: 'work-1', revision: next, state: 'blocked', stateReason: 'Waiting', cycle: null, archivedBy: null};
+  for (const patch of [
+    {stage: 'historical', archivedBy: 'restore-op'},
+    {occurrenceId: 'different-task'},
+    {revision: captured},
+    {state: 'in_progress'},
+    {stateReason: 'Different reason'},
+  ] satisfies Partial<TaskReceipt>[]) {
+    f.element.view = view({detail: f.detail, outcome: {...saved, ...patch}});
+    await f.element.updateComplete;
+    expect(f.root.querySelector('#task-progress-editor')).not.toBeNull();
+  }
+  f.element.view = view({detail: {...f.detail, revision: next, state: 'blocked', stateReason: 'Waiting', allowedActions: []}, outcome: saved});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+});
+
+
+test('a same-revision server conflict needs one explicit review and a separate save', async () => {
+  const f = await progressFixture();
+  await f.press('Start task'); await f.press('Save progress');
+  const conflict = {kind: 'rejected', reason: 'conflict', correlationId: 'safe-conflict'} as const;
+  f.element.view = view({detail: f.detail, outcome: conflict}); await f.settle();
+  expect((await f.progressButton('Save progress')).disabled).toBe(true);
+  expect(f.root.activeElement).toBe(await f.progressButton('Review current task'));
+  f.element.view = view({detail: f.detail, outcome: conflict}); await f.settle();
+  await f.press('Review current task');
+  expect(f.intents).toHaveLength(1);
+  expect((await f.progressButton('Save progress')).disabled).toBe(false);
+  await f.press('Save progress'); expect(f.intents).toHaveLength(2);
+});
+
+test('reviewing a changed blank blocking draft returns focus to its required reason', async () => {
+  const f = await progressFixture();
+  await f.press('Block task');
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2')}}); await f.settle();
+  await f.press('Review current task');
+  expect(f.root.activeElement).toBe(f.root.querySelector('#task-progress-reason'));
+  expect((await f.progressButton('Save progress')).disabled).toBe(true);
+  expect(f.intents).toEqual([]);
+});
+
+test('start confirmation survives unavailable reads and task selection retires its proposal', async () => {
+  const f = await progressFixture();
+  await f.press('Start task');
+  f.element.view = view({phase: 'loading', busy: true}); await f.settle();
+  f.element.view = view({detail: f.detail, notice: 'unavailable'}); await f.settle();
+  expect(f.root.activeElement).toBe(await f.progressButton('Save progress'));
+  f.element.view = view({detail: {...f.detail, occurrenceId: 'different-task'}}); await f.settle();
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  expect(f.intents).toEqual([]);
+});
+
+test('progress event handlers reject retired controls and state changes before rendering', async () => {
+  const f = await progressFixture();
+  const trigger = await f.progressButton('Block task');
+  const press = (control: Element) => control.dispatchEvent(new CustomEvent('ha-press-request'));
+  f.element.view = view({detail: null}); press(trigger); await f.settle();
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  f.element.view = view({detail: f.detail}); await f.settle();
+  const current = await f.progressButton('Block task');
+  f.element.view = view({detail: f.detail, readOnly: true}); press(current); await f.settle();
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  f.element.view = view({detail: f.detail}); await f.settle();
+  const unavailable = await f.progressButton('Block task');
+  f.element.view = view({detail: {...f.detail, allowedActions: []}}); press(unavailable); await f.settle();
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  f.element.view = view({detail: f.detail}); await f.settle();
+  await f.press('Block task'); await f.input('task-progress-reason', 'Keep this draft');
+  const form = f.root.querySelector<HTMLFormElement>('#task-progress-editor')!;
+  const reason = f.root.querySelector<HTMLTextAreaElement>('#task-progress-reason')!;
+  const submit = () => form.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  f.element.view = view({detail: f.detail, readOnly: true});
+  reason.value = 'Ignore this stale input'; reason.dispatchEvent(new InputEvent('input')); submit(); await f.settle();
+  f.element.view = view({detail: f.detail}); await f.settle();
+  expect(reason.value).toBe('Keep this draft');
+  f.element.view = view({detail: null}); submit(); await f.settle();
+  f.element.view = view({detail: f.detail}); await f.settle();
+  f.element.view = view({detail: {...f.detail, occurrenceId: 'another-task'}}); submit(); await f.settle();
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+  submit(); reason.dispatchEvent(new InputEvent('input')); await f.settle();
+  expect(f.intents).toEqual([]);
+});
+
+test('a target revoked at the same revision cannot be submitted or reviewed by a stale control', async () => {
+  const f = await progressFixture();
+  await f.press('Block task'); await f.input('task-progress-reason', 'Waiting');
+  const form = f.root.querySelector<HTMLFormElement>('#task-progress-editor')!;
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2')}}); await f.settle();
+  const review = await f.progressButton('Review current task');
+  const press = () => review.dispatchEvent(new CustomEvent('ha-press-request'));
+  f.element.view = view({detail: null}); press();
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2')}, readOnly: true}); press();
+  f.element.view = view({detail: {...f.detail, occurrenceId: 'other-task'}}); press();
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2'), allowedActions: []}}); press(); await f.settle();
+  form.dispatchEvent(new SubmitEvent('submit', {cancelable: true})); await f.settle();
+  expect(f.root.activeElement).toBe(form);
+  f.element.view = view({detail: {...f.detail, allowedActions: []}}); await f.settle();
+  form.dispatchEvent(new SubmitEvent('submit', {cancelable: true})); await f.settle();
+  expect(f.intents).toEqual([]);
+  await f.press('Cancel'); press(); await f.settle();
+  expect(f.root.querySelector('#task-progress-editor')).toBeNull();
+});
+
+test('a pending focus survives a temporarily absent detail without focusing detached controls', async () => {
+  const f = await progressFixture();
+  const trigger = await f.progressButton('Start task');
+  trigger.dispatchEvent(new CustomEvent('ha-press-request'));
+  f.element.view = view({detail: null}); await f.settle();
+  f.element.view = view({detail: f.detail}); await f.settle();
+  expect(f.root.activeElement).toBe(await f.progressButton('Save progress'));
+  (await f.progressButton('Cancel')).dispatchEvent(new CustomEvent('ha-press-request'));
+  await f.element.updateComplete;
+  f.element.remove(); await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+  expect(f.intents).toEqual([]);
+});
+
+test('a blocked legacy detail has a readable missing-reason fallback', async () => {
+  const f = await progressFixture('en', {state: 'blocked', stateReason: undefined, allowedActions: []});
+  expect(f.root.querySelector('#task-blocked-reason')?.textContent).toBe('The blocking reason is unavailable.');
+});
+
 function assignmentRoster(): Pick<AdministrationView, 'phase' | 'access' | 'roster' | 'errors'> {
   const member = {memberId: 'private-member-id', haUserId: context.subject, role: 'adult' as const,
     status: 'active' as const, revision, exceptions: []};
@@ -52,6 +353,22 @@ async function assignmentFixture(locale: 'en' | 'es' = 'en', patch: Partial<Task
   };
   return {...f, detail, select};
 }
+
+test('progress confirmation preserves an assignment draft while hiding its competing action', async () => {
+  const f = await assignmentFixture('en', {allowedActions: ['assign', 'transition:blocked', 'complete']});
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true);
+  const editor = f.root.querySelector('#assignment-editor');
+  const trigger = f.root.querySelector<HaButton>('#task-progress-blocked')!;
+  await trigger.updateComplete; trigger.click(); await f.element.updateComplete;
+  expect(f.root.querySelector('.task-work-actions')?.hasAttribute('hidden')).toBe(true);
+  expect(f.root.querySelector('#assignment-editor')).toBe(editor);
+  const cancel = [...f.root.querySelectorAll<HaButton>('vyp-ha-button')].find(button => button.state.label === 'Cancel')!;
+  await cancel.updateComplete; cancel.click(); await f.element.updateComplete;
+  expect(f.root.querySelector('.task-work-actions')?.hasAttribute('hidden')).toBe(false);
+  expect(f.root.querySelector<HaCheckbox>('vyp-ha-checkbox')?.checked).toBe(true);
+  expect(f.intents).toEqual([]);
+});
 
 test.each([
   ['en', []], ['es', []],

@@ -649,3 +649,191 @@ for (const mode of ['native', 'standalone'] as const) {
     });
   }
 }
+
+for (const mode of ['native', 'standalone'] as const) {
+  for (const locale of ['en', 'es'] as const) {
+    test(`progress reason, conflict, recovery and restart in ${mode} ${locale}`, async ({browser, request}, info) => {
+      test.setTimeout(75_000);
+      expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
+      const context = await browser.newContext({viewport: {width: locale === 'es' ? 390 : 1280, height: 844}, hasTouch: locale === 'es'});
+      const page = await context.newPage();
+      const t = (english: string, spanish: string) => locale === 'en' ? english : spanish;
+      const contrast = (element: Locator, backgroundProperty: string | null = null) => element.evaluate((node, property) => {
+        const style = getComputedStyle(node);
+        const luminance = (color: string) => {
+          const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+          const context = canvas.getContext('2d')!; context.fillStyle = color; context.fillRect(0, 0, 1, 1);
+          const channels = [...context.getImageData(0, 0, 1, 1).data].slice(0, 3).map(value => {
+            const channel = value / 255; return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+        };
+        const foreground = luminance(style.color);
+        const background = luminance(property === null ? style.backgroundColor : style.getPropertyValue(property));
+        return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+      }, backgroundProperty);
+      const activate = async (target: Locator) => {
+        if (locale === 'es') await target.tap();
+        else {await target.focus(); await target.press('Enter');}
+      };
+      const signIn = async () => {
+        if (mode === 'standalone') {
+          await page.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
+          await page.getByRole('link', {name: 'Continue as fixture user', exact: true}).click();
+        }
+        await page.getByRole('link', {name: /^(Tasks|Tareas)$/u, exact: true}).click();
+        await expect(page.locator('domus-tasks').getByRole('heading', {name: /^(Household tasks|Tareas del hogar)$/u})).toBeVisible();
+        await page.getByRole('combobox', {name: /^(Language|Idioma)$/u}).selectOption(locale);
+        await expect(page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true})).toBeVisible();
+      };
+      try {
+        const tasks = await open(page, context, mode);
+        await page.getByRole('combobox', {name: 'Language', exact: true}).selectOption(locale);
+        const title = 'Progress <kitchen> 🧰';
+        await tasks.getByLabel(t('Title', 'Título'), {exact: true}).fill(title);
+        await activate(tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}));
+        await expect(tasks.getByRole('heading', {name: title, exact: true})).toBeVisible();
+        const list = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json();
+        const id = list.items.find((item: {title: string}) => item.title === title).occurrence_id;
+        const endpoint = base(mode) + '/api/v1/tasks/occurrences/' + id;
+        const writes: {key: string; body: string; context: string}[] = [];
+        page.on('request', item => {
+          if (item.method() === 'POST' && item.url() === endpoint + '/transition')
+            writes.push({key: item.headers()['idempotency-key'], body: item.postData()!, context: item.headers()['x-domus-context']});
+        });
+        const block = tasks.getByRole('button', {name: t('Block task', 'Bloquear tarea'), exact: true});
+        const unblock = tasks.getByRole('button', {name: t('Unblock task', 'Desbloquear tarea'), exact: true});
+        const save = tasks.getByRole('button', {name: t('Save progress', 'Guardar progreso'), exact: true});
+        const reason = tasks.getByRole('textbox', {name: t('Reason for blocking', 'Motivo del bloqueo'), exact: true});
+        const saved = tasks.getByText(t('Task progress saved', 'Progreso de la tarea guardado'), {exact: true});
+        const cancel = tasks.getByRole('button', {name: t('Cancel', 'Cancelar'), exact: true});
+        const edit = tasks.getByRole('button', {name: t('Change assignment', 'Cambiar asignación'), exact: true});
+        const assign = tasks.getByRole('button', {name: t('Save assignment', 'Guardar asignación'), exact: true});
+        const current = async () => (await (await page.request.get(endpoint)).json()).work;
+        const explanation = 'Waiting for <parts> & help\n🧰';
+        await activate(block); await expect(reason).toBeFocused(); await expect(save).toBeDisabled();
+        await reason.fill(' \n\t'); await expect(save).toBeDisabled();
+        await reason.fill('A'.repeat(1001)); await expect(save).toBeDisabled();
+        await reason.fill(explanation);
+        for (const colorScheme of ['light', 'dark'] as const) {
+          await page.emulateMedia({colorScheme});
+          await expect.poll(() => contrast(tasks.getByRole('article', {name: t('Block task', 'Bloquear tarea'), exact: true}))).toBeGreaterThanOrEqual(4.5);
+          await expect.poll(() => contrast(save, '--vyp-ha-primary')).toBeGreaterThanOrEqual(4.5);
+          await page.screenshot({path: info.outputPath('progress-editor-' + mode + '-' + locale + '-' + colorScheme + '.png'), fullPage: true});
+        }
+        await activate(cancel); await expect(block).toBeFocused();
+        for (const colorScheme of ['light', 'dark'] as const) {
+          await page.emulateMedia({colorScheme});
+          await expect.poll(() => contrast(tasks.locator('domus-allocation-settings').getByRole('article'))).toBeGreaterThanOrEqual(4.5);
+          await expect.poll(() => contrast(tasks.locator('domus-allocation-settings').getByRole('button',
+            {name: t('Save policy', 'Guardar política'), exact: true}), '--vyp-ha-primary')).toBeGreaterThanOrEqual(4.5);
+        }
+        expect(writes).toEqual([]);
+        await activate(block); await reason.fill(explanation); await activate(save); await expect(saved).toBeVisible();
+        expect(await current()).toMatchObject({revision: 2, state: 'blocked', state_reason: explanation, assignee_ids: []});
+        await expect(tasks.locator('#task-blocked-reason')).toHaveText(explanation);
+        await activate(unblock); await activate(save); await expect(block).toBeVisible();
+        expect(await current()).toMatchObject({revision: 3, state: 'available', state_reason: '', assignee_ids: []});
+        await activate(edit);
+        const own = tasks.getByRole('checkbox', {name: 'Fictional account a', exact: true});
+        if (locale === 'es') await own.tap(); else {await own.focus(); await own.press('Space');}
+        await activate(assign); await expect(edit).toBeVisible();
+        const assignees = (await current()).assignee_ids;
+        await activate(tasks.getByRole('button', {name: t('Start task', 'Iniciar tarea'), exact: true}));
+        await activate(save); await expect(block).toBeVisible();
+        expect(await current()).toMatchObject({revision: 5, state: 'in_progress', assignee_ids: assignees});
+
+        await activate(block); await reason.fill(explanation);
+        const concurrent = await context.newPage(); await concurrent.goto(base(mode) + '/#tasks');
+        const competing = concurrent.locator('domus-tasks');
+        await competing.getByRole('button', {name: title, exact: true}).click();
+        await competing.getByRole('button', {name: 'Block task', exact: true}).click();
+        await competing.getByRole('textbox', {name: 'Reason for blocking', exact: true}).fill('Another member blocked it');
+        await competing.getByRole('button', {name: 'Save progress', exact: true}).click();
+        await expect(competing.getByText('Task progress saved', {exact: true})).toBeVisible();
+        await concurrent.close();
+        const beforeConflict = writes.length;
+        await activate(save); await expect(save).toBeDisabled(); await expect(reason).toHaveValue(explanation);
+        await expect(tasks.getByText(t('Action unavailable', 'Acción no disponible'), {exact: true})).toBeVisible();
+        await expect(tasks.getByRole('listitem').filter({hasText: title})).toContainText(t('Blocked', 'Bloqueada'));
+        expect(writes).toHaveLength(beforeConflict);
+        await activate(tasks.getByRole('button', {name: t('Refresh current task', 'Actualizar tarea actual'), exact: true}));
+        await expect(reason).toHaveValue(explanation); await activate(cancel);
+        await expect(tasks.locator('#task-blocked-reason')).toHaveText('Another member blocked it');
+        await activate(unblock); await activate(save); await expect(block).toBeVisible();
+        expect(await current()).toMatchObject({revision: 7, state: 'assigned', assignee_ids: assignees});
+        expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'snapshot'}})).ok()).toBe(true);
+
+        await activate(block); await reason.fill(explanation);
+        const second = await context.newPage(); await second.goto(base(mode) + '/#tasks');
+        const other = second.locator('domus-tasks');
+        await other.getByRole('button', {name: title, exact: true}).click();
+        await other.getByRole('button', {name: 'Change assignment', exact: true}).click();
+        await other.getByRole('button', {name: 'Clear selection', exact: true}).click();
+        await other.getByRole('button', {name: 'Save assignment', exact: true}).click();
+        await expect(other.getByRole('heading', {name: 'Assignment saved', exact: true})).toBeVisible();
+        await second.close();
+        const beforeReview = writes.length;
+        await activate(save);
+        const review = tasks.getByRole('button', {name: t('Review current task', 'Revisar tarea actual'), exact: true});
+        await expect(review).toBeFocused(); await expect(save).toBeDisabled(); await expect(reason).toHaveValue(explanation);
+        await expect(tasks.getByRole('listitem').filter({hasText: title})).toContainText(t('Available', 'Disponible'));
+        expect(writes).toHaveLength(beforeReview);
+        await activate(review); await expect(save).toBeFocused(); expect(writes).toHaveLength(beforeReview);
+        await page.route(endpoint + '/transition', async route => {
+          const committed = await route.fetch({maxRetries: 0, maxRedirects: 0}); expect(committed.status()).toBe(200);
+          await route.abort('connectionreset');
+        });
+        await activate(save);
+        await expect(tasks.getByRole('heading', {name: t('Result not confirmed', 'Resultado sin confirmar'), exact: true})).toBeVisible();
+        await expect(reason).toHaveValue(explanation); await expect(save).toBeDisabled();
+        expect(writes).toHaveLength(beforeReview + 1);
+        const retained = writes.at(-1)!;
+        expect(JSON.parse(retained.body)).toEqual({expected_revision: 8, target: 'blocked', reason: explanation});
+        await page.unroute(endpoint + '/transition'); await page.reload();
+        await expect(tasks.getByRole('heading', {name: 'Household tasks', exact: true})).toBeVisible();
+        await page.getByRole('combobox', {name: 'Language', exact: true}).selectOption(locale);
+        await activate(tasks.getByRole('button', {name: t('Check saved request', 'Comprobar solicitud guardada'), exact: true}).first());
+        await expect(saved).toBeVisible(); await expect(tasks.locator('#task-blocked-reason')).toHaveText(explanation);
+        const originalUrl = base(mode) + '/api/v1/tasks/requests/task.transition/' + retained.key;
+        const original = await (await page.request.get(originalUrl)).json();
+        expect(original).toMatchObject({state: 'committed', result: {revision: 9, state: 'blocked', state_reason: explanation, assignee_ids: []}});
+        const before = await (await request.get(origin(mode) + '/__fixture__/stats')).json();
+        const csrf = await (await page.request.get(base(mode) + '/api/v1/auth/csrf')).json();
+        const headers = {'Content-Type': 'application/json', Origin: origin(mode), 'X-CSRF-Token': csrf.csrf_token,
+          'Idempotency-Key': retained.key, 'X-Domus-Context': retained.context};
+        const replay = await page.request.post(endpoint + '/transition', {data: retained.body, headers});
+        expect(replay.status()).toBe(200); expect((await replay.json()).operation_id).toBe(original.operation_id);
+        const changed = await page.request.post(endpoint + '/transition', {data: {...JSON.parse(retained.body), reason: 'Changed'}, headers});
+        expect(changed.status()).toBe(409);
+        expect((await (await request.get(origin(mode) + '/__fixture__/stats')).json()).counts).toEqual(before.counts);
+        await page.emulateMedia({colorScheme: 'dark'});
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        await page.screenshot({path: info.outputPath('progress-' + mode + '-' + locale + '-dark.png'), fullPage: true});
+        expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'restart'}})).ok()).toBe(true);
+        await page.reload(); await signIn(); await activate(tasks.getByRole('button', {name: title, exact: true}));
+        await expect(tasks.locator('#task-blocked-reason')).toHaveText(explanation);
+        expect(await (await page.request.get(originalUrl)).json()).toMatchObject({operation_id: original.operation_id, result: original.result});
+        await activate(tasks.getByText(t('Saved requests', 'Solicitudes guardadas'), {exact: true}));
+        await activate(tasks.getByRole('button', {name: t('Dismiss saved request', 'Descartar solicitud guardada'), exact: true}).first());
+        await activate(unblock); await activate(save); await expect(block).toBeVisible();
+        await activate(tasks.getByRole('button', {name: t('Mark done now', 'Marcar como hecha ahora'), exact: true}));
+        await expect(tasks.getByText(t('No approval required', 'No necesita aprobación'), {exact: true})).toBeVisible();
+        expect((await (await page.request.get(endpoint)).json()).cycle.performers).toHaveLength(1);
+        expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'restore'}})).ok()).toBe(true);
+        await page.reload(); await signIn();
+        const restored = await (await page.request.get(originalUrl)).json();
+        expect(restored).toMatchObject({state: 'historical', operation_id: original.operation_id, result: original.result});
+        expect(await current()).toMatchObject({revision: 7, state: 'assigned', assignee_ids: assignees});
+        const beforeRestoreReplay = await (await request.get(origin(mode) + '/__fixture__/stats')).json();
+        const nextCsrf = await (await page.request.get(base(mode) + '/api/v1/auth/csrf')).json();
+        const historical = await page.request.post(endpoint + '/transition', {data: retained.body,
+          headers: {...headers, 'X-CSRF-Token': nextCsrf.csrf_token}});
+        expect(historical.status()).toBe(200); expect(await historical.json()).toMatchObject({state: 'historical', operation_id: original.operation_id});
+        expect((await (await request.get(origin(mode) + '/__fixture__/stats')).json()).counts).toEqual(beforeRestoreReplay.counts);
+        await info.attach('progress-operation-evidence', {body: JSON.stringify({mode, locale, writes, original: original.operation_id,
+          restartRevision: 9, restoredRevision: 7, assignees}), contentType: 'application/json'});
+      } finally {await context.close();}
+    });
+  }
+}

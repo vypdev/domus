@@ -50,6 +50,69 @@ function fixture(mode: 'native' | 'standalone' = 'standalone') {
 }
 afterEach(() => vi.useRealTimers());
 
+test.each((['native', 'standalone'] as const).flatMap(mode =>
+  (['in_progress', 'blocked', 'assigned', 'available'] as const).map(target => ({mode, target}))))(
+  '$mode progress to $target binds its exact original state and reason', async ({mode, target}) => {
+    const f = fixture(mode);
+    const reason = target === 'blocked' ? 'Waiting for parts\n🧰' : '';
+    const command = taskCommand({action: 'task.transition', occurrenceId: 'work-1',
+      payload: {expected_revision: REV, target, reason}})!;
+    const request = {key: 'progress-key', command};
+    const saved = {...receipt(1), result: {...receipt(1).result,
+      state: target, state_reason: reason, assignee_ids: target === 'available' ? [] : ['member-1']}};
+    f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)})).mockResolvedValueOnce(reply(saved));
+    expect(await f.server.send(request, context)).toMatchObject({
+      kind: 'receipt', action: 'task.transition', revision: NEXT, state: target, stateReason: reason});
+    const [path, init] = f.transport.mock.calls[1];
+    expect(path).toBe(f.target.applicationBase + 'api/v1/tasks/occurrences/work-1/transition');
+    expect(init.method).toBe('POST');
+    expect(init.body).toBe('{"expected_revision":' + REV + ',"target":' + JSON.stringify(target)
+      + ',"reason":' + JSON.stringify(reason) + '}');
+    expect(new Headers(init.headers).get('Idempotency-Key')).toBe('progress-key');
+    f.transport.mockResolvedValueOnce(reply({...saved,
+      action: 'task.transition', command_key: 'progress-key', delivery: 'pending'}));
+    expect(await f.server.original({...request, operationId: 'op-1'}, context).result)
+      .toMatchObject({kind: 'receipt', state: target, stateReason: reason});
+    expect(f.transport.mock.calls[2][0]).toBe(f.target.applicationBase
+      + 'api/v1/tasks/requests/task.transition/progress-key');
+  });
+
+test.each([
+  {state: 'in_progress'},
+  {state_reason: 'A different reason'},
+  {occurrence_id: 'another-task'},
+  {revision: REV},
+])('a progress receipt with a different bound fact %# remains uncertain', async changes => {
+  const f = fixture();
+  const command = taskCommand({action: 'task.transition', occurrenceId: 'work-1',
+    payload: {expected_revision: REV, target: 'blocked', reason: 'Waiting'}})!;
+  const saved = {...receipt(1), result: {...receipt(1).result, state: 'blocked', state_reason: 'Waiting', ...changes}};
+  f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)})).mockResolvedValueOnce(reply(saved));
+  expect(await f.server.send({key: 'progress-key', command}, context)).toEqual({kind: 'uncertain'});
+  f.transport.mockResolvedValueOnce(reply({...saved,
+    action: 'task.transition', command_key: 'progress-key', delivery: 'pending'}));
+  await expect(f.server.original({key: 'progress-key', command, operationId: 'op-1'}, context).result)
+    .rejects.toThrow('invalid_response');
+});
+
+test('task detail preserves the exact current blocking reason', async () => {
+  const f = fixture();
+  const raw = detail();
+  raw.work.state = 'blocked';
+  raw.work.state_reason = 'Waiting for <parts>\n🧰';
+  f.transport.mockResolvedValueOnce(reply(raw));
+  expect(await f.server.detail('work-1', 'home', context).result)
+    .toMatchObject({state: 'blocked', stateReason: raw.work.state_reason});
+});
+
+test.each([null, 1, '', ' \n\t', '\u0000Invalid', '\ud800', '🧰'.repeat(1001)])(
+  'invalid current blocking reason %# is rejected', async state_reason => {
+    const f = fixture();
+    const raw = detail();
+    f.transport.mockResolvedValueOnce(reply({...raw, work: {...raw.work, state: 'blocked', state_reason}}));
+    await expect(f.server.detail('work-1', 'home', context).result).rejects.toThrow('invalid_response');
+  });
+
 test.each(['native', 'standalone'] as const)('%s assignment uses PUT and binds the original assignee set', async mode => {
   const f = fixture(mode);
   const command = taskCommand({action: 'task.assign', occurrenceId: 'work-1',

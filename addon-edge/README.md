@@ -23,7 +23,12 @@ for explicit review. Saved requests recover an interrupted assignment response.
 Edge.49 enables assignment saving after the selected members change and explains
 when the current selection already matches the task.
 
+Edge.50 adds Start, Block and Unblock to Tasks, with a required blocking reason,
+explicit conflict review and recovery of the original progress request.
+Edge.51 refreshes both the list and detail after a competing progress update and
+keeps the mobile task layout within the available width.
+
 This candidate uses SQLite schema 34. Keep a
 compatible image and cold data backup before upgrading a previous preview.
-See [installation and operation](DOCS.md) for the source pin and rollback
+See [installation and operation](https://github.com/vypdev/domus/blob/ac843a9a5c23d411ff11dcbd83d32256af2f5daa/addon-edge/DOCS.md) for the source pin and rollback
 instructions.

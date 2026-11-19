@@ -482,7 +482,8 @@
         "specs/household-tasks.md",
         "specs/task-execution-foundation.md",
         "specs/household-task-categories.md",
-        "specs/task-assignment-interface.md"
+        "specs/task-assignment-interface.md",
+        "specs/task-progress-interface.md"
       ],
       "workflows": [
         ".github/workflows/ci_check.yml"

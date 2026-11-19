@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.49 packages the immutable runtime declared in
+Edge 0.0.0-edge.51 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -30,6 +30,13 @@ household members and **Save assignment** to confirm a changed selection. The ed
 explains when the chosen members already match the current assignment. Clearing it
 prepares a state-permitted release. A competing update retains the draft for
 explicit review. **Check saved request** recovers an interrupted assignment.
+
+In Tasks, **Start task**, **Block task** and **Unblock task** confirm the currently
+permitted progress change before **Save progress**. Blocking requires a reason
+within 1000 characters and shows that saved reason beside the blocked task.
+A competing update retains your proposal for **Review current task** and a
+separate save. The list and selected detail refresh together after a competing
+progress update. **Check saved request** recovers an interrupted progress change.
 
 Edge.47 completes explicit runtime cleanup when Home Assistant requests Stop.
 Workers finish before identity disposal and installation-lease release. Standalone
