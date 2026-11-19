@@ -36,18 +36,31 @@ signal disposition on return.
 | Identity cleanup | A disposable standalone provider supplies three synthetic grants. Every local session is removed before remote cleanup. Exactly two revocations are attempted, including one unavailable response, and the reported result is one confirmed and two unconfirmed grants. |
 | Persistent state | Two restarts retain the installation identity and the exact original task operation and result. |
 | Interrupted composition | Unit regressions stop native and standalone composition after storage opens and verify that the same installation can be reopened. |
+| Listener handoff | Unit regressions request termination after runtime creation and before the listener starts. Both compositions close the constructed runtime. |
 | Error reporting | Listener errors, keyboard interruption and cleanup failures propagate through the signal scope, which restores the original handler. Configuration-error tests cover invalid startup input. |
 
 The new actual-image regression fails against immutable Edge.46 because SIGTERM
-skips explicit close. A local working-tree ARM64 image then passed all four
-regression cases, including twelve requested stops and eight restarts. This
-working build is identified separately from the immutable installed candidate.
+skips explicit close. The corrected immutable Edge.47 ARM64 image passed all four
+regression cases, including twelve requested stops and eight restarts. All four
+pinned-package checks passed, covering every Python and UI file, native authority
+and restart, private standalone delivery, and an actual Edge.5 upgrade and restore.
+The separate real-Core case passed all four packaged deployment compositions.
 
-The signal scope has 21 statements and two branches, all covered by the focused
-backend campaign. The local full campaign passed 5,505 cases with all 231 authored
-modules at 100% statement and branch coverage, covering 17,900 statements and
-4,834 branches. The independent per-file audit passed. A focused 26-case CLI
-campaign also passed the two interrupted-composition cases added afterward.
+The immutable runtime source is `6e35e7e97926753adea78e40b9669f4fd2a01d54`.
+Its source archive SHA-256 is
+`d1bfb1c259bcf87c3531da91ed7faebf75272c66f24ec69c05ab357f5bbd88dc`.
+The wheel SHA-256 is
+`7695249a943695ab603f753c4976cd0d953dd6c3e945e0bba61ec7960423a12c`.
+The local ARM64 image is
+`sha256:fa0964010fe5b0420bed3268084e7080356b208852467e5cfb780541396085a3`.
+Its 231 Python files and four UI files match the
+[artifact declaration](../../addon-edge/artifact.json) exactly.
+
+The signal scope has 21 statements and two branches. The focused CLI campaign
+passed 28 cases, including the startup and listener-handoff regressions. The full
+backend campaign passed 5,509 cases with all 231 authored modules at 100% statement
+and branch coverage, covering 17,900 statements and 4,832 branches. The independent
+source and per-file audit passed.
 Architecture and tooling passed 237 cases, strict mypy passed all 231 source files,
 and Ruff and documentation checks passed.
 

@@ -13,6 +13,9 @@ retains immutable revisions and lets you check the original save after a lost re
 Edge.38 enables an exact saved revision for an explicit manual run. Check the
 original outcome after an interruption and open the created task from its receipt.
 
+Edge.47 completes requested stops through explicit runtime cleanup. Restarting the
+app retains its installation identity and original household operations.
+
 This candidate uses SQLite schema 34. Keep a
 compatible image and cold data backup before upgrading a previous preview.
 See [installation and operation](DOCS.md) for the source pin and rollback
