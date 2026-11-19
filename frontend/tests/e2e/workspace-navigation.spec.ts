@@ -1212,9 +1212,20 @@ for (const mode of ['native', 'standalone'] as const) {
     expect((await dueDetail).ok()).toBe(true);
     await expect(tasksRegion.getByRole('heading',{name:'Read the water meter',exact:true})).toBeFocused();
 
+    // A detail response precedes the owning household's final access reconciliation.
+    const settledHousehold = page.getByRole('button', {
+      name:/^(Close this view|Cerrar esta vista|Sign out of Domus|Cerrar sesión en Domus)$/u,
+    });
+    await expect(settledHousehold).toBeEnabled({timeout:15_000});
     const scheduled = await request.post(origin + '/__fixture__/calendar-review');
     expect(scheduled.ok()).toBe(true);
     const {title:maintenanceTitle, future:maintenanceId, new_date:maintenanceDay} = await scheduled.json();
+    // Preparation also completes and approves past work. Await its real asynchronous projection.
+    await expect.poll(async () => {
+      const ready = await request.get(origin + '/__fixture__/points-ready');
+      expect(ready.ok()).toBe(true);
+      return ready.json();
+    }, {timeout:15_000}).toEqual({ready:true, worker_running:true});
     const maintenanceURL = base + 'api/v1/tasks/occurrences/' + maintenanceId;
     const label = (locale: 'en' | 'es', state: string) => {
       const deadline = new Intl.DateTimeFormat(locale,
@@ -1236,6 +1247,7 @@ for (const mode of ['native', 'standalone'] as const) {
     expect((await keyboardDetail).ok()).toBe(true);
     await expect(tasksRegion).toBeFocused();
     await expect(tasksRegion.getByRole('heading',{name:maintenanceTitle,exact:true})).toBeVisible();
+    await expect(settledHousehold).toBeEnabled({timeout:15_000});
 
     await page.getByLabel('Language',{exact:true}).selectOption('es');
     await page.setViewportSize({width:390,height:844});
@@ -1249,6 +1261,7 @@ for (const mode of ['native', 'standalone'] as const) {
     expect((await touchDetail).ok()).toBe(true);
     await expect(tasksRegion).toBeFocused();
     await expect(tasksRegion.getByRole('heading',{name:maintenanceTitle,exact:true})).toBeVisible();
+    await expect(settledHousehold).toBeEnabled({timeout:15_000});
 
     await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
     await unclaimedItem.tap();

@@ -192,3 +192,23 @@ documented time budget; the Edge.55 runtime and immutable package pins remain
 unchanged. The complete local campaign after the refinement passes all 121
 cases with no skipped, unexpected or flaky results and zero retries. Final
 same-head qualification is recorded in the pull request.
+
+The subsequent source campaign passed 120 cases, then an Overview-to-Tasks
+navigation lost its household projection after two authorization reads returned
+503 `storage_busy`. Its original trace, error response bodies, screenshot and
+report remain retained. The unchanged standalone journey passed an isolated
+repeat in 51.7 seconds. The calendar fixture prepares completed and approved
+past work as well as the future occurrence used by this navigation.
+
+The fixture now exposes a read-only projection-readiness observation. Before
+the navigation assertions, both composed journeys wait until the actual Points
+consumer has processed the seeded lifecycle events and its worker is still
+running. They also await the owning household's access reconciliation rather
+than treating the first successful task-detail response as its completion.
+This neither advances a fake consumer nor pauses a production worker;
+all task states, authorization checks, normal unavailable-state behavior and
+existing journey assertions remain. The trace establishes storage contention,
+but does not independently identify which transaction owned the writer.
+Both complete workspace journeys pass after this preparation change, with no
+skipped, unexpected or flaky results and zero retries. Final same-head CI still
+repeats the full source, catalog and actual-image qualification.
