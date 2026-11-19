@@ -11,6 +11,8 @@ Edge.52 finds products from manually entered barcode digits in Inventory.
 Managers review the chosen product and code before confirming an association
 or removal. A failed read offers a retry with the draft retained, and original
 request recovery handles an unconfirmed write.
+Edge.53 continues keyboard focus to the result or retry control after a submitted
+search.
 [Qualification](evidence/local-barcode-qualification.md)
 
 Edge.51 lets members start, block and unblock eligible work from Tasks. It keeps

@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.52 packages the immutable runtime declared in
+Edge 0.0.0-edge.53 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -44,7 +44,8 @@ valid check digit. A match offers **Open product stock**. An inventory manager
 can choose a Pantry product, review its code and confirm the association.
 Review and remove the current association before choosing a replacement.
 Use **Retry barcode lookup** after an unavailable read or **Recover original
-request** after an unconfirmed write.
+request** after an unconfirmed write. A submitted search continues keyboard
+focus to its result or retry control when the read finishes.
 
 Edge.52 uses SQLite schema 35 and is listed in `breaking_versions`.
 Keep a compatible image together with its cold schema-34 data for rollback.

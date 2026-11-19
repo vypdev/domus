@@ -48,7 +48,7 @@ SQLite schema 35 adds the local association index. Keep the previous compatible
 image together with its cold schema-34 state for rollback. Compatible schema-35
 restoration retains current associations and original historical evidence.
 
-## Immutable candidate
+## Edge.52 observation
 
 Edge.52 packages runtime source `3751c4e1650f5de5433bcbefe228260c0b07753b`.
 The source archive SHA-256 is
@@ -67,7 +67,20 @@ and review are tracked in the increment's pull request. [PR #145](https://github
 
 The installed Edge.52 candidate reproduced loss of keyboard focus after a
 successful lookup. Its disabled input relinquished focus to the document body.
-Edge.53 will carry the correction and repeat installed acceptance. The regression
+Edge.53 carries the correction and requires repeated installed acceptance. The regression
 checks found and unlinked results, unavailable retry, retained input, moved focus,
 background documents and retired view ownership. Both compiled barcode journeys
 require result focus and use the real next Tab to reach product selection.
+
+## Immutable Edge.53 candidate
+
+Edge.53 packages runtime source `465f780ee37275471a32238fafe7dfb5866dd478`.
+The source archive SHA-256 is
+`7d9bc569a0cdb962ad205037eea159cc7bbe3317aa03a00454b83bf00c4839e4`.
+The independently measured Linux wheel SHA-256 is
+`7a47e346cc62887c02b501ce93a0f0c94e01e2c627e3bd838aaac02e0bddbae2`.
+All 231 Python modules match Git, the wheel and the installed Linux builder.
+The four compiled UI files match the local and Linux builds. The normal local
+wheel matches the Linux wheel exactly. Schema 35 is retained.
+The actual-owner update, both CPU image campaigns and final same-head CI and
+review are tracked in the increment's pull request.

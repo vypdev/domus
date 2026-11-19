@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.53
+
+- Continue keyboard focus to the barcode result or retry control after a submitted search.
+- Preserve focus that has moved to another control while the lookup is running.
+
 ## 0.0.0-edge.52
 
 - Find a local household product from its printed GTIN barcode digits.
