@@ -76,3 +76,9 @@ SIGTERM cleanup and all four real-Core deployment compositions. Eight task
 browser journeys pass against this exact image, covering assignment and progress
 in Ingress and standalone with English keyboard and Spanish narrow native touch.
 Installed-owner acceptance and final same-head CI and review remain pending.
+
+The first package-head CI caught a stale current-bundle fingerprint in the
+navigation evidence manifest. The normal wheel acceptance reproduced the
+failure. Its current-file declaration now matches the independently measured
+Edge.50 bundle, and the unchanged wheel/asset/license acceptance passes. The
+immutable runtime source, archive, wheel and image retain their measured bytes.

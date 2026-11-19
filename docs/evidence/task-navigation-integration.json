@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request.",
   "actualProductFiles": {
-    ".vite/manifest.json": "f4fdf822c622f2e96f1b01bf5c1cdbec895eb99b7fc118f8d4df54e4fd7d87b0",
-    "assets/index-BYTTreHd.js": "2eb864558eeff849ff8abb5aaab2409a1c6589ba3dc4d7cb09385ab9175fc001",
+    "index.html": "7caf0d28770d33b3d8084c738bac659043ba69c6f86a722c4308429b5a6b997f",
+    "assets/index-C1gOKYfz.js": "b7f2d6f8856ecd7f7904e05e5605ea704daf6caf619ad3e68ffe91ec35cf5cc5",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "eb9cf14a75ac42e824649a406b7d388978547a14d2d712251b92663b6954532b"
+    ".vite/manifest.json": "b1d23f56b0795ea3ac0c178314c1f92940ede03ab1c7be06fbc738fa132ab60e"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
