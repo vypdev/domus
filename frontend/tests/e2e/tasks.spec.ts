@@ -694,7 +694,11 @@ for (const mode of ['native', 'standalone'] as const) {
         await page.getByRole('combobox', {name: 'Language', exact: true}).selectOption(locale);
         const title = 'Progress <kitchen> 🧰';
         await tasks.getByLabel(t('Title', 'Título'), {exact: true}).fill(title);
+        // Await this transaction within the existing HTTP bound before checking its projection.
+        const creation = page.waitForResponse(response => response.request().method() === 'POST'
+          && response.url() === base(mode) + '/api/v1/tasks/definitions', {timeout: 15_000});
         await activate(tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}));
+        expect((await creation).status()).toBe(200);
         await expect(tasks.getByRole('heading', {name: title, exact: true})).toBeVisible();
         const list = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json();
         const id = list.items.find((item: {title: string}) => item.title === title).occurrence_id;

@@ -171,3 +171,24 @@ Installed Home Assistant observations remain a separate acceptance record; this
 local image ID is not an assertion about the Supervisor image. Both exact CPU
 campaigns, installed acceptance and final same-head review are tracked in the
 increment's pull request.
+
+## Final package CI diagnostics
+
+The initial Edge.55 package campaign passed both 66-case actual-image suites,
+while its source frontend campaign passed 119 cases and failed two time bounds.
+The progress case checked its heading after five seconds while the original
+creation POST was still pending. It now explicitly requires that same POST to
+return HTTP 200 within the existing 15-second transport bound before checking
+the projection. The complete standalone workspace journey exhausted its
+75-second case budget during a preview retry, after earlier task creation alone
+took 8.87 seconds. Its case budget is now 120 seconds; the suite remains bounded
+at 900 seconds with zero retries and every existing assertion retained.
+
+Both unchanged failing cases passed in an isolated 63.87-second diagnostic
+before these harness refinements. That repeat does not establish the cause of
+the slower server responses. The original CI log, report, two traces and failure
+screenshots remain retained. These changes affect test coordination and its
+documented time budget; the Edge.55 runtime and immutable package pins remain
+unchanged. The complete local campaign after the refinement passes all 121
+cases with no skipped, unexpected or flaky results and zero retries. Final
+same-head qualification is recorded in the pull request.

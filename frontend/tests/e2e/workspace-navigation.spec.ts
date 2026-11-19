@@ -169,7 +169,8 @@ for (const mode of ['native', 'standalone'] as const) {
 
 for (const mode of ['native', 'standalone'] as const) {
   test(`shared workspace navigation in ${mode}`, async ({page, context, request}, info) => {
-    test.setTimeout(75_000);
+    // This complete workspace journey includes several domains and retained screenshots.
+    test.setTimeout(120_000);
     const origin = `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;
     const base = origin + (mode === 'native' ? ingress : '') + '/';
     if (process.env.DOMUS_BROWSER_IMAGE) {
