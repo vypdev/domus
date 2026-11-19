@@ -106,3 +106,18 @@ The preserved trace reports a 503 `storage_busy` for that execution read and the
 interface offers its explicit retry. The test now waits for the current rule
 control before seeding later history. The existing write-concurrency and
 unavailable-read acceptance cases retain their original assertions.
+
+A complete local campaign reached its 600-second suite deadline after 113 passing
+cases. Its assignment fixture also chose Spanish before reloaded preferences
+finished hydrating, then waited for a Spanish recovery control while the interface
+was in English. The fixture now waits for the loaded Tasks heading before choosing
+the locale. Assignment journeys use the existing progress journey's 75-second
+bound, and the complete 121-case suite has a 900-second bound for shared runners.
+All case assertions and the zero-retry policy remain applicable.
+
+The static catalog server uses HTTP/1.1 persistent connections. Two earlier local
+catalog campaigns lost JavaScript resource connections before their stories
+loaded. Their original traces are retained. With HTTP/1.1, all 45 cases pass in
+two consecutive zero-retry campaigns. Barcode recovery now waits for the restored
+product projection and a valid captured original request key before reading the
+receipt. Both deployment journeys pass twice with the recovery focus assertion.

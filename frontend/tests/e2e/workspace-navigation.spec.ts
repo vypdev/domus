@@ -67,7 +67,7 @@ for (const mode of ['native', 'standalone'] as const) {
     let associationId = '';
     await page.route(commands, async route => {
       expect(route.request().postDataJSON()).toMatchObject({action:'inventory.link-barcode', barcode});
-      originalKey = route.request().headers()['idempotency-key'];
+      originalKey = (await route.request().allHeaders())['idempotency-key'];
       const committed = await route.fetch({maxRetries:0, maxRedirects:0});
       expect(committed.ok()).toBe(true);
       associationId = (await committed.json()).result.association_id;
@@ -76,8 +76,11 @@ for (const mode of ['native', 'standalone'] as const) {
     await review.getByRole('button', {name:'Confirm barcode association', exact:true}).press('Enter');
     await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeEnabled();
     await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeFocused();
+    expect(originalKey).toMatch(/^req_[a-f0-9]{32}$/u);
     await page.unroute(commands);
     await page.reload();
+    await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true})).toBeVisible();
+    await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeEnabled();
     const original = page.waitForResponse(base + 'api/v1/inventory/requests/inventory.link-barcode/' + originalKey);
     await stock.getByRole('button', {name:'Recover original request', exact:true}).press('Enter');
     expect((await original).ok()).toBe(true);
