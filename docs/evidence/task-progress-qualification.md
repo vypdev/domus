@@ -55,8 +55,8 @@ resolved creation request before reaching the fixed eight-record journal
 capacity. It retains the original transition receipt for restart and restoration.
 The complete source campaign passes all 119 compiled browser journeys without
 skips, unexpected results or flaky outcomes. The rebuilt catalog passes all
-45 journeys. Both CPU image campaigns and the immutable installed Edge candidate
-are being qualified before readiness.
+45 journeys. The CPU image campaigns and immutable installed-owner acceptance
+are tracked in [PR #144](https://github.com/vypdev/domus/pull/144).
 
 ## Immutable candidate
 
@@ -75,7 +75,8 @@ restart, standalone delivery, an actual Edge.5 upgrade and restore, repeated
 SIGTERM cleanup and all four real-Core deployment compositions. Eight task
 browser journeys pass against this exact image, covering assignment and progress
 in Ingress and standalone with English keyboard and Spanish narrow native touch.
-Installed-owner acceptance and final same-head CI and review remain pending.
+Installed-owner acceptance and final same-head CI and review are recorded in
+[PR #144](https://github.com/vypdev/domus/pull/144).
 
 The first package-head CI caught a stale current-bundle fingerprint in the
 navigation evidence manifest. The normal wheel acceptance reproduced the

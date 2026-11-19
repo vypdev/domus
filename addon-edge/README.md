@@ -28,5 +28,5 @@ explicit conflict review and recovery of the original progress request.
 
 This candidate uses SQLite schema 34. Keep a
 compatible image and cold data backup before upgrading a previous preview.
-See [installation and operation](DOCS.md) for the source pin and rollback
+See [installation and operation](https://github.com/vypdev/domus/blob/867dda725fbbf71ce3ce064dc20358674109679d/addon-edge/DOCS.md) for the source pin and rollback
 instructions.
