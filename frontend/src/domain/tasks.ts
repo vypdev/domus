@@ -36,6 +36,12 @@ export function taskBasePointAmount(value: unknown): number {
   return value;
 }
 export interface TaskMaterialUsage {readonly line_id: string; readonly quantity: string;}
+export function taskAssignees(value: unknown): readonly string[] {
+  requireValue(Array.isArray(value) && value.length <= 32);
+  const ids = Array.from(value, taskIdentifier);
+  requireValue(new Set(ids).size === ids.length);
+  return Object.freeze(ids);
+}
 export const TASK_STATES = ['draft', 'available', 'assigned', 'in_progress', 'blocked', 'completed', 'cancelled', 'skipped'] as const;
 export type TaskState = typeof TASK_STATES[number];
 export const TASK_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
@@ -70,6 +76,7 @@ export type TaskCommand = CategoryCommand |
   Readonly<{action: 'task.create'; payload: Readonly<{expected_revision: 0; title: string; description: string; priority: TaskPriority;
     category_id?: string; schedule?: TaskSchedule; overrides?: TaskCreationOverrides}>}>
   | Readonly<{action: 'task.claim'; occurrenceId: string; payload: Readonly<{expected_revision: Revision}>}>
+  | Readonly<{action: 'task.assign'; occurrenceId: string; payload: Readonly<{expected_revision: Revision; assignee_ids: readonly string[]}>}>
   | Readonly<{action: 'task.complete'; occurrenceId: string; payload: Readonly<{expected_revision: Revision;
     performer_ids: readonly string[]; performed_at: string; material_usages: readonly TaskMaterialUsage[] | null;
     allocation_fingerprint?: string; manual_shares?: readonly ManualShare[]}>}>
@@ -159,6 +166,11 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
         }})});
     }
     const occurrenceId = taskIdentifier(item.occurrenceId);
+    if (action === 'task.assign') {
+      const body = fields(item.payload, ['expected_revision', 'assignee_ids']);
+      return Object.freeze({action, occurrenceId, payload: Object.freeze({expected_revision: revisionValue(body.expected_revision),
+        assignee_ids: taskAssignees(body.assignee_ids)})});
+    }
     if (action === 'task.claim') {
       const body = fields(item.payload, ['expected_revision']);
       return Object.freeze({action, occurrenceId, payload: Object.freeze({expected_revision: revisionValue(body.expected_revision)})});
@@ -223,4 +235,5 @@ export interface TaskReceipt {
   readonly state: TaskState | 'active' | 'archived'; readonly cycle: TaskCycleSummary | null;
   readonly archivedBy: string | null;
   readonly basePointsMinor?: number;
+  readonly assigneeIds?: readonly string[];
 }

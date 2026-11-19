@@ -53,6 +53,13 @@ actions your role allows. Use **Retry inventory summary** if the summary could n
   each participant full points at whole-point precision, use a whole amount or ask a points manager
   to select two decimal places. Check **Family** after completing the task for posted points.
 - Select a task to inspect it. **Claim task** assigns eligible work to your own verified membership. **Mark done now** records you as the performer at the current server-anchored time.
+- When task management is allowed, **Change assignment** opens the current planned
+  assignees. Select up to 32 active household members and choose **Save assignment**.
+  **Clear selection** prepares a release where the task state permits it. A task
+  in progress needs at least one assignee. **Cancel** closes the editor.
+  If someone else changes the task, your selection remains available. Use
+  **Review current assignment**, then save deliberately. **Refresh assignment
+  and members** reloads the current task and available people after a read failure.
 - Restricted performers require adult approval by default. An authorized adult can approve or reject the current cycle; rejection and reopening require a reason. Reopening preserves the previous cycle and its verification evidence.
 - If a task already has linked materials, review its quantities before completion. Decimal input is converted exactly, including a comma separator, and the linked unit's precision is enforced. Zero means unused. Separate-recording tasks do not silently submit planned consumption.
 - A lost reply leaves a visible saved request. **Check saved request** reads its original result without sending another change. New changes remain blocked while an earlier request is unconfirmed. Resolved browser records can be dismissed without deleting server history.

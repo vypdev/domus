@@ -1,8 +1,11 @@
 import {afterEach, expect, test} from 'vitest';
 import type {HaTextField} from '@vypdev/ha-ui/field';
+import type {HaCheckbox} from '@vypdev/ha-ui/checkbox';
+import type {AdministrationView} from '../src/application/administration-controller';
 import {taskInstant, taskMessage} from '../src/presentation/task-messages';
 import type {TaskRecord} from '../src/application/task-ports';
 import type {TaskView} from '../src/application/task-controller';
+import type {TaskDetail} from '../src/domain/tasks';
 import {revisionValue} from '../src/domain/administration';
 import type {DomusTasks, TaskIntent} from '../src/presentation/domus-tasks';
 import '../src/presentation/domus-tasks';
@@ -27,6 +30,272 @@ async function mount(value: TaskView | null = view(), locale: 'en' | 'es' = 'en'
     field.value = value; field.dispatchEvent(new InputEvent('input', {bubbles: true})); await element.updateComplete;};
   return {element, root, intents, button, input, text: () => root.textContent!};
 }
+
+function assignmentRoster(): Pick<AdministrationView, 'phase' | 'access' | 'roster' | 'errors'> {
+  const member = {memberId: 'private-member-id', haUserId: context.subject, role: 'adult' as const,
+    status: 'active' as const, revision, exceptions: []};
+  return {phase: 'ready', access: {state: 'active', setupAllowed: false, enrollmentAllowed: false,
+    member, effectiveRole: 'adult', policyRevision: revision, permissions: ['members.read']}, errors: {},
+    roster: {directoryState: 'available', members: ['private-member-id', 'peer'].map((id, index) => ({
+      member: {...member, memberId: id}, presentation: {memberId: id, alias: index === 0 ? 'Owner <name>' : null, revision},
+      metadata: {state: 'available', name: index === 0 ? 'Provider owner' : 'Helper & friend', avatarState: 'unavailable'}}))}};
+}
+async function assignmentFixture(locale: 'en' | 'es' = 'en', patch: Partial<TaskDetail> = {}) {
+  const detail = {...work, allowedActions: ['assign'], ...patch};
+  const f = await mount(view({detail}), locale);
+  f.element.administration = assignmentRoster(); await f.element.updateComplete;
+  const select = async (index: number, checked: boolean) => {
+    const choice = f.root.querySelectorAll<HaCheckbox>('vyp-ha-checkbox')[index];
+    await choice.updateComplete;
+    choice.dispatchEvent(new CustomEvent('ha-check-request', {detail: {checked, reason: 'change'}, bubbles: true, composed: true, cancelable: true}));
+    await f.element.updateComplete;
+  };
+  return {...f, detail, select};
+}
+
+test.each([
+  ['en', 'Change assignment', 'Save assignment', 'Cancel', 'Unassigned'],
+  ['es', 'Cambiar asignación', 'Guardar asignación', 'Cancelar', 'Sin asignar'],
+] as const)('%s assignment uses named ha-ui choices and explicit save or cancel', async (locale, edit, save, cancel, unassigned) => {
+  const f = await assignmentFixture(locale);
+  expect(f.text()).toContain(unassigned);
+  f.button(edit).click(); await f.element.updateComplete;
+  const choices = f.root.querySelectorAll<HaCheckbox>('vyp-ha-checkbox');
+  await choices[0].updateComplete;
+  expect(choices[0].state.label).toBe('Owner <name>');
+  expect(choices[1].state.label).toBe('Helper & friend');
+  expect(f.root.querySelector('img,script')).toBeNull();
+  expect(f.root.activeElement).toBe(choices[0]);
+  await f.select(0, true); await f.select(1, true);
+  f.button(save).click();
+  expect(f.intents).toEqual([{type: 'assign', occurrenceId: 'work-1', revision, assigneeIds: ['private-member-id', 'peer']}]);
+  f.element.view = view({phase: 'loading', busy: true}); await f.element.updateComplete;
+  f.element.view = view({detail: f.detail, notice: 'unavailable'}); await f.element.updateComplete;
+  expect([...f.root.querySelectorAll<HaCheckbox>('vyp-ha-checkbox')].map(choice => choice.checked)).toEqual([true, true]);
+  f.button(cancel).click(); await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).toBeNull();
+  expect(f.root.activeElement).toBe(f.button(edit));
+  f.button(edit).click(); await f.element.updateComplete;
+  expect([...f.root.querySelectorAll<HaCheckbox>('vyp-ha-checkbox')].map(choice => choice.checked)).toEqual([false, false]);
+});
+
+test('assignment conflict retains the draft and requires review of the current revision before another save', async () => {
+  const f = await assignmentFixture(); f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true); f.button('Save assignment').click();
+  const changed = {...f.detail, revision: revisionValue('2'), assigneeIds: ['peer']};
+  f.element.view = view({detail: changed, notice: 'conflict'}); await f.element.updateComplete;
+  expect(f.root.querySelector<HaCheckbox>('vyp-ha-checkbox')!.checked).toBe(true);
+  expect(f.button('Save assignment').disabled).toBe(true);
+  expect(f.root.activeElement).toBe(f.button('Review current assignment'));
+  f.button('Review current assignment').click(); await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(false);
+  f.button('Save assignment').click();
+  expect(f.intents[1]).toEqual({type: 'assign', occurrenceId: 'work-1', revision: '2', assigneeIds: ['private-member-id']});
+  f.element.view = view({detail: {...changed, revision: revisionValue('3'), assigneeIds: ['private-member-id']}, outcome: {
+    kind: 'receipt', action: 'task.assign', stage: 'committed', operationId: 'assignment-op', occurrenceId: 'work-1',
+    revision: revisionValue('3'), state: 'assigned', assigneeIds: ['private-member-id'], cycle: null, archivedBy: null}});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).toBeNull();
+  expect(f.text()).toContain('Assignment saved');
+});
+
+test('assignment release follows the current task state and stale members require correction', async () => {
+  const f = await assignmentFixture('en', {assigneeIds: ['peer']});
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  f.button('Clear selection').click(); await f.element.updateComplete;
+  f.button('Save assignment').click();
+  expect(f.intents[0]).toMatchObject({type: 'assign', assigneeIds: []});
+  f.element.view = view({detail: {...f.detail, state: 'in_progress'}}); await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(true);
+  expect(f.text()).toContain('An in-progress task needs at least one assignee.');
+  await f.select(0, true);
+  const roster = assignmentRoster();
+  f.element.administration = {...roster, roster: {...roster.roster!, members: roster.roster!.members.slice(1)}};
+  await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(true);
+  expect(f.text()).toContain('Remove unavailable members or refresh the choices.');
+  f.button('Remove unavailable member').click(); await f.element.updateComplete;
+  expect(f.root.querySelector('[data-stale-assignee]')).toBeNull();
+});
+
+test.each(['loading', 'empty', 'unavailable', 'denied', 'permission', 'missing'] as const)(
+  'assignment discovery %s has distinct feedback and preserves a recoverable selection', async state => {
+    const f = await assignmentFixture(); f.button('Change assignment').click(); await f.element.updateComplete;
+    await f.select(0, true);
+    const roster = assignmentRoster();
+    f.element.administration = state === 'missing' ? null : {...roster,
+      ...state === 'loading' ? {phase: 'loading' as const, roster: null} : {},
+      ...state === 'empty' ? {roster: {...roster.roster!, members: []}} : {},
+      ...state === 'unavailable' ? {roster: null, errors: {roster: 'unavailable' as const}} : {},
+      ...state === 'denied' ? {roster: null, errors: {roster: 'forbidden' as const}} : {},
+      ...state === 'permission' ? {roster: null, access: {...roster.access!, permissions: []}} : {}};
+    await f.element.updateComplete;
+    const expected = state === 'loading' || state === 'missing' ? 'Loading household members'
+      : state === 'empty' ? 'No active household members are available.' : state === 'unavailable'
+        ? 'Household members could not be loaded.' : 'Your current access does not allow viewing household members.';
+    expect(f.text()).toContain(expected);
+    expect(f.button('Save assignment').disabled).toBe(true);
+    f.button('Refresh assignment and members').click();
+    expect(f.intents).toEqual([{type: 'refresh'}]);
+    f.element.administration = roster; await f.element.updateComplete;
+    expect(f.root.querySelector<HaCheckbox>('vyp-ha-checkbox')!.checked).toBe(true);
+  });
+
+test('assignment controls follow current actions and scoped retirement clears their draft', async () => {
+  const ordinary = await mount(view({detail: work}));
+  expect(ordinary.button('Change assignment')).toBeUndefined();
+  const f = await assignmentFixture(); f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true);
+  f.element.view = view({detail: f.detail, scopeKey: 'different-household'}); await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).toBeNull();
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  f.element.retired = true; await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).toBeNull();
+});
+
+test('assignment choices retain canonical IDs when provider names are unavailable and enforce the 32-member bound', async () => {
+  const f = await assignmentFixture(); const roster = assignmentRoster(), member = roster.roster!.members[0];
+  f.element.administration = {...roster, roster: {directoryState: 'denied', members: Array.from({length: 33}, (_, index) => ({
+    ...member, member: {...member.member, memberId: 'member-' + index},
+    presentation: {...member.presentation, memberId: 'member-' + index, alias: null},
+    metadata: {...member.metadata, state: 'denied', name: null}}))}};
+  await f.element.updateComplete;
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  for (let index = 0; index < 32; index++) await f.select(index, true);
+  const choices = f.root.querySelectorAll<HaCheckbox>('vyp-ha-checkbox');
+  expect(choices[0].state.label).toBe('Household member member-0');
+  expect(choices[32].disabled).toBe(true); expect(choices[0].disabled).toBe(false);
+  await f.select(32, true);
+  expect(f.text()).toContain('Choose up to 32 different household members.');
+  f.button('Save assignment').click();
+  expect(f.intents[0]).toMatchObject({type: 'assign', assigneeIds: Array.from({length: 32}, (_, index) => 'member-' + index)});
+  await f.select(0, false); await f.select(32, true);
+  expect(f.text()).not.toContain('Choose up to 32 different household members.');
+  f.element.view = view({detail: f.detail, records: [{key: 'pending', command: {action: 'task.assign', occurrenceId: 'work-1',
+    payload: {expected_revision: revision, assignee_ids: ['member-1']}}, scope: {context, householdId: 'private-home-id', memberId: 'private-member-id'},
+    createdAt: 1000, expiresAt: 3601000, stage: 'uncertain', operationId: null}]});
+  await f.element.updateComplete;
+  await f.select(1, false); f.button('Save assignment').click();
+  f.root.querySelector('#assignment-editor')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  expect(f.intents).toHaveLength(1);
+});
+
+test('assignment editor retires on another task or revoked action and guards uncertain or stale submits', async () => {
+  const f = await assignmentFixture(); f.button('Change assignment').click(); await f.element.updateComplete;
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2')}}); await f.element.updateComplete;
+  f.root.querySelector('#assignment-editor')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  expect(f.intents).toEqual([]);
+  f.button('Review current assignment').click(); await f.element.updateComplete;
+  f.element.view = view({detail: {...f.detail, occurrenceId: 'other-work'}}); await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).toBeNull();
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  f.element.view = view({detail: {...f.detail, occurrenceId: 'other-work', allowedActions: []}}); await f.element.updateComplete;
+  expect(f.root.querySelector('#assignment-editor')).toBeNull();
+  expect(f.button('Change assignment')).toBeUndefined();
+});
+
+test('assignment focus survives a pending refresh and opens an unavailable roster at the editor', async () => {
+  const f = await assignmentFixture();
+  f.button('Change assignment').click();
+  f.element.view = view({phase: 'loading', busy: true}); await f.element.updateComplete;
+  expect(f.root.querySelector('#assignment-editor')).toBeNull();
+  f.element.administration = null;
+  f.element.view = view({detail: f.detail}); await f.element.updateComplete;
+  expect(f.root.activeElement?.id).toBe('assignment-editor');
+  f.root.querySelector('#assignment-editor')!.dispatchEvent(new SubmitEvent('submit', {cancelable: true}));
+  expect(f.intents).toEqual([]);
+  f.button('Cancel').click(); await f.element.updateComplete;
+  f.element.administration = assignmentRoster(); await f.element.updateComplete;
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  f.button('Save assignment').click();
+  f.element.view = view({detail: f.detail, notice: 'invalid_input'}); await f.element.updateComplete;
+  expect(f.root.activeElement?.id).toBe('assignment-editor');
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2'), state: 'in_progress'}}); await f.element.updateComplete;
+  f.button('Review current assignment').click(); await f.element.updateComplete;
+  expect(f.root.activeElement?.id).toBe('assignment-editor');
+  expect(f.button('Save assignment').disabled).toBe(true);
+});
+
+test('a retained older assignment receipt cannot close a newer submitted editor', async () => {
+  const receipt = {kind: 'receipt' as const, stage: 'committed' as const, action: 'task.assign' as const,
+    occurrenceId: 'work-1', operationId: 'older-op', revision: revisionValue('2'), state: 'assigned' as const,
+    cycle: null, archivedBy: null, assigneeIds: ['peer']};
+  const f = await assignmentFixture('en', {revision: revisionValue('2'), assigneeIds: ['peer']});
+  f.element.view = view({detail: f.detail, outcome: receipt}); await f.element.updateComplete;
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true); f.button('Save assignment').click();
+  f.element.view = view({detail: f.detail, outcome: receipt}); await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).not.toBeNull();
+  f.element.view = view({detail: f.detail, outcome: {...receipt, assigneeIds: undefined}}); await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).not.toBeNull();
+  const matchingIds = ['peer', 'private-member-id'];
+  f.element.view = view({detail: f.detail, outcome: {...receipt, assigneeIds: matchingIds}}); await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).not.toBeNull();
+  const alreadyRead = {...receipt, revision: revisionValue('3'), assigneeIds: matchingIds};
+  f.element.view = view({detail: f.detail, outcome: alreadyRead});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).toBeNull();
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  f.button('Save assignment').click();
+  f.element.view = view({detail: f.detail, outcome: alreadyRead}); await f.element.updateComplete;
+  expect(f.root.querySelector('vyp-ha-checkbox')).not.toBeNull();
+});
+
+test('a rejected assignment keeps the draft and an unresolved conflict requires deliberate review', async () => {
+  const f = await assignmentFixture(); f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true); f.button('Save assignment').click();
+  f.element.view = view({detail: f.detail, outcome: {kind: 'rejected', reason: 'invalid_input', correlationId: 'safe-invalid'}});
+  await f.element.updateComplete;
+  expect(f.root.querySelector<HaCheckbox>('vyp-ha-checkbox')!.checked).toBe(true);
+  expect(f.button('Review current assignment')).toBeUndefined();
+  f.element.view = view({detail: f.detail, outcome: {kind: 'rejected', reason: 'conflict', correlationId: 'safe-conflict'}});
+  await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(true);
+  f.button('Review current assignment').click(); await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(false);
+});
+
+test.each(['unavailable', 'invalid_response'] as const)('assignment conflict with a %s current read requires a refresh', async notice => {
+  const f = await assignmentFixture(); f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(0, true); f.button('Save assignment').click();
+  f.element.view = view({detail: f.detail, notice, outcome: {kind: 'rejected', reason: 'conflict', correlationId: 'safe-conflict'}});
+  await f.element.updateComplete;
+  expect(f.button('Review current assignment').disabled).toBe(true);
+  expect(f.button('Save assignment').disabled).toBe(true);
+  f.button('Refresh assignment and members').click();
+  expect(f.intents.at(-1)).toEqual({type: 'refresh'});
+  f.element.view = view({detail: {...f.detail, revision: revisionValue('2')}}); await f.element.updateComplete;
+  f.button('Review current assignment').click(); await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(false);
+});
+
+test('an exhausted task revision retains the assignment editor when an earlier receipt is recovered', async () => {
+  const last = revisionValue('9223372036854775807');
+  const f = await assignmentFixture('en', {revision: last, assigneeIds: ['peer']});
+  f.button('Change assignment').click(); await f.element.updateComplete;
+  f.button('Save assignment').click();
+  f.element.view = view({detail: f.detail, outcome: {kind: 'receipt', action: 'task.assign', stage: 'committed',
+    occurrenceId: 'work-1', operationId: 'last-operation', revision: last, state: 'assigned',
+    assigneeIds: ['peer'], cycle: null, archivedBy: null}});
+  await f.element.updateComplete;
+  expect(f.root.querySelector('#assignment-editor')).not.toBeNull();
+  expect(f.intents[0]).toMatchObject({type: 'assign', revision: last, assigneeIds: ['peer']});
+});
+
+test('a denied assignee retains the selection and offers removal after the authorized roster changes', async () => {
+  const f = await assignmentFixture(); f.button('Change assignment').click(); await f.element.updateComplete;
+  await f.select(1, true); f.button('Save assignment').click();
+  const roster = assignmentRoster();
+  f.element.administration = {...roster, roster: {...roster.roster!, members: roster.roster!.members.map(row =>
+    row.member.memberId === 'peer' ? {...row, member: {...row.member, status: 'suspended'}} : row)}};
+  f.element.view = view({detail: f.detail, outcome: {kind: 'rejected', reason: 'assignees_unavailable', correlationId: 'safe-member'}});
+  await f.element.updateComplete;
+  expect(f.text()).toContain('Some selected members are unavailable.');
+  expect(f.root.querySelector('[data-stale-assignee]')!.textContent).toContain('Helper & friend');
+  expect(f.button('Save assignment').disabled).toBe(true);
+  f.button('Remove unavailable member').click(); await f.element.updateComplete;
+  expect(f.button('Save assignment').disabled).toBe(false);
+});
 test('usable task creation preserves literal input and emits one semantic intent', async () => {
   const f = await mount(); expect(f.root.querySelector<HTMLSelectElement>('#task-priority')!.value).toBe('normal');
   await f.input('task-title', '  Clean 🧹  '); await f.input('task-description', 'Wipe then dry');

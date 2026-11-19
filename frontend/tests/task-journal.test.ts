@@ -10,6 +10,19 @@ function fixture() {
   const storage: OwnedStorage = {getItem: key => data.get(key) ?? null, setItem: (key, value) => {data.set(key, value);}, removeItem: key => {data.delete(key);}};
   return {data, storage, journal: new TaskSessionJournal(storage)};
 }
+test('assignment and older creation originals coexist across reload with frozen identities', () => {
+  const f = fixture(); f.journal.open(scope, 100);
+  f.journal.prepare('older-create', command, 100);
+  const assignment = taskCommand({action: 'task.assign', occurrenceId: 'work-1',
+    payload: {expected_revision: '9007199254740993', assignee_ids: ['member-2', 'member-1']}})!;
+  f.journal.prepare('assignment', assignment, 101);
+  f.journal.record('assignment', 'uncertain', null, 102);
+  const records = new TaskSessionJournal(f.storage).open(scope, 103);
+  expect(records[0].command).toEqual(command);
+  expect(records[1]).toMatchObject({key: 'assignment', scope, stage: 'uncertain', command: assignment});
+  expect(Object.isFrozen((records[1].command.payload as {assignee_ids: readonly string[]}).assignee_ids)).toBe(true);
+  expect(f.journal.open({...scope, householdId: 'foreign'}, 104)).toEqual([]);
+});
 test('task originals survive a reload without changing key, text, scope, stage or expiry', () => {
   const f = fixture(); expect(f.journal.open(scope, 100)).toEqual([]);
   const original = f.journal.prepare('original', command, 101)[0];

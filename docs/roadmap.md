@@ -32,6 +32,8 @@ implementation, verification and packaging gates. The Family increments now cove
 [Base points during task creation](evidence/task-base-points-qualification.md) lets task
 configurators set the exact amount used by the existing award rules. Full task editors and owner
 acceptance of the installed recurrence experience remain open.
+The [assignment interface](evidence/task-assignment-qualification.md) adds planned
+assignees, replacement and release with explicit conflict review and original-request recovery.
 - M3 starts with the [protected product catalog and stock
   intake](evidence/inventory-catalog-qualification.md), followed by [movement history, adjustments
   and intake reversals](evidence/inventory-movement-qualification.md) and [minimum and target

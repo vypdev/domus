@@ -4,9 +4,13 @@ import type {PropertyValues} from 'lit';
 import {registerField} from '@vypdev/ha-ui/field';
 import type {FieldValueEvent} from '@vypdev/ha-ui/field';
 import {textFieldState} from '@vypdev/ha-ui/field-contracts';
+import {registerCheckbox} from '@vypdev/ha-ui/checkbox';
+import type {CheckboxChangeEvent} from '@vypdev/ha-ui/checkbox';
+import {checkboxChangeDetail, checkboxState} from '@vypdev/ha-ui/checkbox-contracts';
+import type {AdministrationView} from '../application/administration-controller';
 import type {TaskView} from '../application/task-controller';
 import type {TaskRecord} from '../application/task-ports';
-import {categoryLabel, hasTaskText, taskQuantity, taskScheduleDraft, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
+import {categoryLabel, hasTaskText, taskAssignees, taskQuantity, taskScheduleDraft, TASK_PRIORITIES, TASK_TEXT_LIMITS} from '../domain/tasks';
 import type {Revision} from '../domain/administration';
 import type {TaskCategory, TaskDetail, TaskMaterialUsage, TaskPriority, TaskScheduleDraft} from '../domain/tasks';
 import {language} from './messages';
@@ -22,6 +26,7 @@ import './domus-allocation-preview';
 import './domus-allocation-settings';
 export type TaskIntent = Readonly<{type: 'refresh' | 'more' | 'claim'}>
   | Readonly<{type: 'select'; occurrenceId: string}>
+  | Readonly<{type: 'assign'; occurrenceId: string; revision: Revision; assigneeIds: readonly string[]}>
   | Readonly<{type: 'create'; title: string; description: string; priority: TaskPriority;
     categoryId?: string; schedule?: TaskScheduleDraft; basePointsMinor?: number}>
   | Readonly<{type: 'createCategory'; label: string}>
@@ -33,6 +38,7 @@ export type TaskIntent = Readonly<{type: 'refresh' | 'more' | 'claim'}>
   | Readonly<{type: 'recover' | 'dismiss'; key: string}>;
 const EMPTY_SCHEDULE_FIELDS = Object.freeze({date: '', time: '', rule: '', interval: '30', visibility: 'at_completion'});
 type ScheduleFields = {[Field in keyof typeof EMPTY_SCHEDULE_FIELDS]: string};
+type AssignmentDraft = Readonly<{occurrenceId: string; revision: Revision; assigneeIds: readonly string[]}>;
 function validCategoryLabel(value: string): boolean {
   try {categoryLabel(value); return true;} catch {return false;}
 }
@@ -46,7 +52,8 @@ function quantityInput(value: string, precision: number): string | null {
 }
 /** Render only verified task facts; emitted intents never select an actor or grant a permission. */
 export class DomusTasks extends LitElement {
-  static properties = {allocation: {attribute: false}, participantNames: {attribute: false}, view: {attribute: false}, retired: {attribute: false}, language: {attribute: false}, titleDraft: {state: true}, descriptionDraft: {state: true},
+  static properties = {administration: {attribute: false}, assignmentDraft: {state: true}, assignmentError: {state: true},
+    allocation: {attribute: false}, participantNames: {attribute: false}, view: {attribute: false}, retired: {attribute: false}, language: {attribute: false}, titleDraft: {state: true}, descriptionDraft: {state: true},
     categoryDraft: {state: true}, categoryName: {state: true}, categoryEdit: {state: true}, manageOpen: {state: true},
     basePointsDraft: {state: true}, basePointsError: {state: true},
     titleRequired: {state: true}, priorityDraft: {state: true}, reasonDraft: {state: true}, quantities: {state: true}, quantityError: {state: true}, createOpen: {state: true},
@@ -61,8 +68,15 @@ export class DomusTasks extends LitElement {
     #task-base-points {--vyp-ha-surface:var(--canvas);--vyp-ha-border:var(--line);
       --vyp-ha-text:var(--text);--vyp-ha-text-secondary:var(--muted);
       --vyp-ha-primary:var(--accent);--vyp-ha-danger:var(--warning)}
+    .assignment {margin:24px 0}.assignment h4 {margin:0 0 8px}.assignment fieldset {margin-top:16px}
+    .assignment-choices {display:grid;gap:4px;max-height:320px;overflow:auto;padding:12px}
+    .assignment-choices vyp-ha-checkbox {min-height:44px;display:grid;align-content:center;
+      --vyp-ha-text:var(--text);--vyp-ha-font-family:inherit;--ha-checkbox-border-color:var(--muted);
+      --ha-checkbox-background-color-hover:var(--canvas);--ha-checkbox-checked-background-color:var(--accent);
+      --ha-checkbox-checked-background-color-hover:var(--accent);--wa-focus-ring:solid 2px var(--accent)}
     @media(min-width:800px) {.task-layout {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.task-layout.single {grid-template-columns:1fr}}`];
   declare allocation: AllocationView | null;
+  declare administration: Pick<AdministrationView, 'phase' | 'access' | 'roster' | 'errors'> | null;
   declare participantNames: readonly ParticipantName[];
   declare view: TaskView | null;
   declare retired: boolean;
@@ -88,12 +102,17 @@ export class DomusTasks extends LitElement {
   private draftScope: string | null = null;
   private detailKey: string | null = null;
   private submittedDraft: string | null = null;
-  private lastForm: 'create' | 'review' | 'category' = 'create';
+  private declare assignmentDraft: AssignmentDraft | null;
+  private declare assignmentError: boolean;
+  private submittedAssignment: AssignmentDraft | null = null;
+  private assignmentFocus: string | null = null;
+  private lastForm: 'create' | 'review' | 'category' | 'assignment' = 'create';
   private focusDetail = false;
   constructor() {super(); this.allocation = null; this.participantNames = []; this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = '';
     this.priorityDraft = 'normal'; this.scheduleKind = 'manual'; this.scheduleError = false; this.scheduleInput = EMPTY_SCHEDULE_FIELDS;
     this.createOpen = false; this.reasonDraft = ''; this.quantities = {}; this.quantityError = null;
     this.basePointsDraft = ''; this.basePointsError = null;
+    this.administration = null; this.assignmentDraft = null; this.assignmentError = false;
     this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.manageOpen = false;}
   private text(key: TaskMessageKey): string {return taskMessage(key, this.language);}
   private get blocked(): boolean {return this.view?.busy !== false || this.view.readOnly || this.view.records === null
@@ -106,6 +125,7 @@ export class DomusTasks extends LitElement {
       this.basePointsDraft, this.scheduleKind, this.scheduleInput]);
   }
   private reset(): void {
+    this.assignmentDraft = null; this.submittedAssignment = null; this.assignmentFocus = null; this.assignmentError = false;
     this.categoryDraft = ''; this.categoryName = ''; this.categoryEdit = null; this.submittedCategory = null; this.manageOpen = false;
     this.createOpen = false; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = ''; this.priorityDraft = 'normal'; this.reasonDraft = '';
     this.basePointsDraft = ''; this.basePointsError = null;
@@ -120,9 +140,21 @@ export class DomusTasks extends LitElement {
       || next != null && this.draftScope !== null && next !== this.draftScope) this.reset();
     if (next != null) this.draftScope = next;
     const detail = this.view?.detail, key = detail ? JSON.stringify([next, detail.occurrenceId, detail.revision]) : null;
+    if (detail && this.assignmentDraft && (detail.occurrenceId !== this.assignmentDraft.occurrenceId || !detail.allowedActions.includes('assign'))) {
+      this.assignmentDraft = null; this.submittedAssignment = null; this.assignmentFocus = null;
+    }
+    if (detail && this.assignmentDraft && key !== this.detailKey && this.assignmentNeedsReview(detail))
+      this.assignmentFocus = '#assignment-review';
     if (key !== null && key !== this.detailKey) {this.focusDetail = this.view?.phase === 'ready'; this.detailKey = key; this.reasonDraft = ''; this.quantityError = null;
       this.quantities = Object.fromEntries(detail!.materials.map(item => [item.lineId, item.plannedQuantity]));}
     const outcome = this.view?.outcome;
+    if (outcome?.kind === 'receipt' && outcome.stage === 'committed' && outcome.action === 'task.assign'
+        && outcome.occurrenceId === this.assignmentDraft?.occurrenceId && this.assignmentDraft === this.submittedAssignment
+        && outcome.assigneeIds !== undefined
+        && JSON.stringify([...outcome.assigneeIds].sort()) === JSON.stringify([...this.assignmentDraft.assigneeIds].sort())
+        && BigInt(outcome.revision) === BigInt(this.assignmentDraft.revision) + 1n && outcome !== changed.get('view')?.outcome) {
+      this.assignmentDraft = null; this.submittedAssignment = null; this.assignmentError = false; this.assignmentFocus = '#assignment-edit';
+    }
     if (outcome?.kind === 'rejected' && outcome.reason === 'points_precision_two_required'
         && outcome !== changed.get('view')?.outcome) this.basePointsError = 'notice_points_precision_two_required';
     if (outcome?.kind === 'receipt' && outcome.stage === 'committed' && outcome.action === this.submittedCategory?.action
@@ -140,7 +172,13 @@ export class DomusTasks extends LitElement {
     this.lang = language(this.language, 'en');
     if (this.focusDetail) {this.focusDetail = false; this.shadowRoot?.querySelector<HTMLElement>('#selected-task-title')?.focus();}
     if (changed.has('view') && this.view?.notice === 'invalid_input')
-      this.shadowRoot?.querySelector<HTMLElement>(this.lastForm === 'create' ? '#task-title' : this.lastForm === 'category' ? '#task-category-label' : '#task-reason')?.focus();
+      this.shadowRoot?.querySelector<HTMLElement>(this.lastForm === 'create' ? '#task-title' : this.lastForm === 'category' ? '#task-category-label'
+        : this.lastForm === 'assignment' ? '#assignment-editor' : '#task-reason')?.focus();
+    if (this.assignmentFocus !== null) {
+      const target = this.renderRoot.querySelector<HTMLElement>(this.assignmentFocus)
+        ?? this.renderRoot.querySelector<HTMLElement>('#assignment-editor');
+      if (target) {this.assignmentFocus = null; queueMicrotask(() => target.focus());}
+    }
     if (changed.has('view') && this.view?.notice === 'category_unavailable')
       this.renderRoot.querySelector<HTMLSelectElement>('#task-category')?.focus();
     const outcome = this.view?.outcome;
@@ -151,7 +189,7 @@ export class DomusTasks extends LitElement {
   disconnectedCallback(): void {super.disconnectedCallback(); this.reset();}
   private intent(detail: TaskIntent): void {
     if (this.retired || this.view?.phase !== 'ready' || this.view.busy) return;
-    if (['create', 'createCategory', 'renameCategory', 'archiveCategory', 'claim', 'complete', 'verify', 'reopen'].includes(detail.type) && this.blocked) return;
+    if (['create', 'createCategory', 'renameCategory', 'archiveCategory', 'claim', 'assign', 'complete', 'verify', 'reopen'].includes(detail.type) && this.blocked) return;
     this.dispatchEvent(new CustomEvent<TaskIntent>('domus-task-intent', {detail: Object.freeze(detail), bubbles: true, composed: true}));
   }
   private scheduleDraft(form: HTMLFormElement): TaskScheduleDraft | undefined {
@@ -333,6 +371,78 @@ export class DomusTasks extends LitElement {
     }
     this.quantityError = null; this.intent({type: 'complete', materialUsages, ...reviewed === undefined ? {} : {reviewed}});
   }
+  private get assignmentDiscovery(): 'ready' | 'assignmentLoading' | 'assignmentDenied' | 'assignmentUnavailable' {
+    const current = this.administration;
+    if (current === null || current.phase === 'idle' || current.phase === 'loading' || current.phase === 'sending') return 'assignmentLoading';
+    if (!current.access?.permissions.includes('members.read') || current.errors.roster === 'forbidden') return 'assignmentDenied';
+    if (current.errors.roster !== undefined || current.roster === null) return 'assignmentUnavailable';
+    return 'ready';
+  }
+  private assignmentName(id: string): string {
+    const row = this.administration!.roster!.members.find(row => row.member.memberId === id);
+    return row?.presentation.alias ?? row?.metadata.name ?? this.text('assignmentUnnamed') + ' ' + id;
+  }
+  private assignmentNeedsReview(work: TaskDetail): boolean {
+    if (this.assignmentDraft === null) return false;
+    const outcome = this.view!.outcome;
+    return this.assignmentDraft.revision !== work.revision
+      || this.submittedAssignment !== null && outcome?.kind === 'rejected' && outcome.reason === 'conflict';
+  }
+  private chooseAssignee(id: string, event: CheckboxChangeEvent): void {
+    if (this.blocked || this.assignmentDraft === null || this.assignmentDiscovery !== 'ready') return;
+    try {
+      const {checked} = checkboxChangeDetail(event.detail);
+      const ids = this.assignmentDraft.assigneeIds.filter(selected => selected !== id);
+      this.assignmentDraft = Object.freeze({...this.assignmentDraft, assigneeIds: taskAssignees(checked ? [...ids, id] : ids)});
+      this.assignmentError = false;
+    } catch {event.preventDefault(); this.assignmentError = true;}
+  }
+  private assignment(work: TaskDetail) {
+    if (!work.allowedActions.includes('assign')) return nothing;
+    const discovery = this.assignmentDiscovery, draft = this.assignmentDraft;
+    const choices = discovery === 'ready' ? this.administration!.roster!.members.filter(row => row.member.status === 'active') : [];
+    const stale = draft?.assigneeIds.filter(id => !choices.some(row => row.member.memberId === id)) ?? [];
+    const needsReview = this.assignmentNeedsReview(work);
+    const requiresAssignee = work.state === 'in_progress' && draft?.assigneeIds.length === 0;
+    const currentUnavailable = this.view!.notice === 'unavailable' || this.view!.notice === 'invalid_response';
+    const invalid = discovery !== 'ready' || stale.length > 0 || requiresAssignee || currentUnavailable;
+    return html`<section class="assignment" aria-labelledby="assignment-title"><h4 id="assignment-title">${this.text('assignmentTitle')}</h4>
+      ${discovery === 'ready' ? html`<p>${work.assigneeIds.length ? work.assigneeIds.map(id => this.assignmentName(id)).join(', ') : this.text('assignmentEmpty')}</p>`
+        : html`<p role="status">${this.text(discovery)}</p>`}
+      ${draft === null ? html`<button id="assignment-edit" type="button" ?disabled=${this.blocked} @click=${() => {
+        this.assignmentDraft = Object.freeze({occurrenceId: work.occurrenceId, revision: work.revision, assigneeIds: taskAssignees(work.assigneeIds)});
+        this.assignmentError = false; this.assignmentFocus = 'vyp-ha-checkbox';
+      }}>${this.text('assignmentEdit')}</button>` : html`<form id="assignment-editor" aria-labelledby="assignment-title" tabindex="-1" novalidate @submit=${(event: SubmitEvent) => {
+        event.preventDefault();
+        if (this.blocked || invalid || needsReview) return;
+        this.lastForm = 'assignment'; this.submittedAssignment = draft;
+        this.intent({type: 'assign', occurrenceId: draft.occurrenceId, revision: draft.revision, assigneeIds: draft.assigneeIds});
+      }}><fieldset ?disabled=${this.blocked}><legend>${this.text('assignmentChoose')}</legend>
+        <p class="help">${this.text('assignmentHelp')} (${draft.assigneeIds.length}/32)</p>
+        ${discovery !== 'ready' ? nothing : choices.length === 0 ? html`<p role="status">${this.text('assignmentNoMembers')}</p>`
+          : html`<div class="assignment-choices">${choices.map(({member}) => html`<vyp-ha-checkbox
+            .state=${checkboxState({label: this.assignmentName(member.memberId)})} .checked=${draft.assigneeIds.includes(member.memberId)}
+            .disabled=${this.blocked || draft.assigneeIds.length >= 32 && !draft.assigneeIds.includes(member.memberId)}
+            @ha-check-request=${(event: CheckboxChangeEvent) => this.chooseAssignee(member.memberId, event)}></vyp-ha-checkbox>`)}</div>`}
+        ${discovery === 'ready' && stale.length ? html`<p class="error" role="alert">${this.text('assignmentStale')}</p>
+          <ul>${stale.map(id => html`<li data-stale-assignee>${this.assignmentName(id)} <button type="button"
+            @click=${() => {this.assignmentDraft = Object.freeze({...draft, assigneeIds: Object.freeze(draft.assigneeIds.filter(selected => selected !== id))});}}
+            aria-label=${this.text('assignmentRemove')}>${this.text('assignmentRemove')}</button></li>`)}</ul>` : nothing}
+        ${requiresAssignee ? html`<p class="error" role="alert">${this.text('assignmentRequired')}</p>` : nothing}
+        ${this.assignmentError ? html`<p class="error" role="alert">${this.text('assignmentInvalid')}</p>` : nothing}
+        ${needsReview ? html`<p role="alert">${this.text('assignmentChanged')}</p><button id="assignment-review" type="button" ?disabled=${currentUnavailable} @click=${() => {
+          this.assignmentDraft = Object.freeze({...draft, revision: work.revision}); this.submittedAssignment = null;
+          this.assignmentFocus = invalid ? '#assignment-editor' : '#assignment-save';
+        }}>${this.text('assignmentReview')}</button>` : nothing}
+        <div class="actions"><button id="assignment-save" class="primary" type="submit" ?disabled=${this.blocked || invalid || needsReview}>${this.text('assignmentSave')}</button>
+          <button type="button" ?disabled=${draft.assigneeIds.length === 0} @click=${() => {
+            this.assignmentDraft = Object.freeze({...draft, assigneeIds: Object.freeze([])}); this.assignmentError = false;
+          }}>${this.text('assignmentClear')}</button></div></fieldset>
+        <div class="actions"><button type="button" ?disabled=${this.view!.busy} @click=${() => this.intent({type: 'refresh'})}>${this.text('assignmentRefresh')}</button>
+          <button type="button" @click=${() => {
+            this.assignmentDraft = null; this.submittedAssignment = null; this.assignmentError = false; this.assignmentFocus = '#assignment-edit';
+          }}>${this.text('assignmentCancel')}</button></div></form>`}</section>`;
+  }
   private workDetail() {
     const work = this.view!.detail!;
     const allocation = this.allocationFor(work);
@@ -346,6 +456,7 @@ export class DomusTasks extends LitElement {
         <small>${this.text('performed')}: ${taskInstant(work.cycle.performedAt, this.language)}</small></p>` : nothing}
       ${work.dependencyReviewRequired ? html`<p class="note warning" role="status">${this.text('dependencyReview')}</p>` : nothing}
       ${work.pendingMaterials ? html`<p class="note warning" role="status">${this.text('pendingMaterials')}</p>` : nothing}
+      ${this.assignment(work)}
       ${work.allowedActions.includes('claim') ? html`<div class="actions"><button ?disabled=${this.blocked} @click=${() => this.intent({type: 'claim'})}>${this.text('claim')}</button></div>` : nothing}
       ${work.completionPoints === 'manager_required' ? html`<p class="note" role="status">${this.text('manualPointsManager')}</p>` : nothing}
       ${work.allowedActions.includes('complete') ? html`<form id="complete-form" class="task-fields" novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.complete();}}>
@@ -381,9 +492,10 @@ export class DomusTasks extends LitElement {
   private outcome() {
     const result = this.view!.outcome; if (result === null) return nothing;
     const kind = result.kind === 'receipt' ? result.stage === 'committed' ? 'saved' : 'historical' : result.kind;
-    const body = kind === 'saved' && result.kind === 'receipt' && result.state === 'active' ? 'scheduleSaved' : `${kind}Body` as const;
+    const assignmentSaved = kind === 'saved' && result.kind === 'receipt' && result.action === 'task.assign';
+    const body = assignmentSaved ? 'assignmentSavedBody' : kind === 'saved' && result.kind === 'receipt' && result.state === 'active' ? 'scheduleSaved' : `${kind}Body` as const;
     const precisionRequired = result.kind === 'rejected' && result.reason === 'points_precision_two_required';
-    return html`<section class="note" role="status"><h3>${this.text(kind)}</h3>
+    return html`<section class="note" role="status"><h3>${this.text(assignmentSaved ? 'assignmentSaved' : kind)}</h3>
       ${precisionRequired ? nothing : html`<p>${this.text(body)}</p>`}
       ${result.kind === 'rejected' && !precisionRequired ? html`<p>${this.text(`notice_${result.reason}`)}</p>` : nothing}
       ${result.kind === 'receipt' && result.basePointsMinor !== undefined ? html`<dl><dt>${this.text('basePoints')}</dt>
@@ -417,5 +529,6 @@ export class DomusTasks extends LitElement {
   }
 }
 registerField();
+registerCheckbox();
 customElements.define('domus-tasks', DomusTasks);
 declare global {interface HTMLElementTagNameMap {'domus-tasks': DomusTasks;}}

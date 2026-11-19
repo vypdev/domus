@@ -257,7 +257,7 @@ export class DomusApp extends LitElement {
       </section>
       <section id="tasks" tabindex="-1" aria-label=${this.text('navigationTasks')}
         ?hidden=${!workspace || this.workspaceDestination !== 'tasks'}>
-        <domus-tasks .view=${this.tasks} .language=${this.language} .participantNames=${taskNames}
+        <domus-tasks .view=${this.tasks} .language=${this.language} .participantNames=${taskNames} .administration=${this.administration}
           .allocation=${this.workspaceDestination === 'tasks' ? this.allocation : null}
           .retired=${closed || view?.notice === 'context_changed' || view?.phase === 'ready' && decision?.state !== 'active'}></domus-tasks>
         <domus-recurrence-review .view=${this.recurrenceReview} .language=${this.language}></domus-recurrence-review>

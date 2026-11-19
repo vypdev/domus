@@ -21,7 +21,7 @@ function route(command: TaskCommand): string {
     const item = 'tasks/categories/' + command.categoryId;
     return command.action === 'task.category.archive' ? item + '/archive' : item;
   }
-  const action = command.action.slice(5);
+  const action = command.action === 'task.assign' ? 'assignment' : command.action.slice(5);
   return 'tasks/occurrences/' + command.occurrenceId + '/' + action;
 }
 const ASSIGNED_STATES = ['assigned', 'in_progress', 'blocked'] as const;
@@ -126,15 +126,18 @@ export class HttpTaskServer implements TaskServer {
         const body = taskCommandBody(input.command);
         if (signal.aborted) throw new EntryReadError('unavailable');
         posted = true;
-        const method = input.command.action === 'task.category.rename' ? 'PUT' : 'POST';
+        const method = input.command.action === 'task.category.rename' || input.command.action === 'task.assign' ? 'PUT' : 'POST';
         const reply = await this.network.request(route(input.command), method, expected, body, input.key, token, signal);
         if (reply.status === 200) return taskReceipt(reply.value, input, false);
         if ([401,403,409,422,503].includes(reply.status)) {
           const correlationId = failure(reply.value);
           const precisionRequired = reply.status === 422 && input.command.action === 'task.create'
             && (reply.value as {code: unknown}).code === 'points_precision_two_required';
+          const assigneesUnavailable = reply.status === 403 && input.command.action === 'task.assign'
+            && (reply.value as {code: unknown}).code === 'task_assignee_denied';
           return Object.freeze({kind: 'rejected' as const,
-            reason: precisionRequired ? 'points_precision_two_required' as const : reason(reply.status), correlationId});
+            reason: precisionRequired ? 'points_precision_two_required' as const
+              : assigneesUnavailable ? 'assignees_unavailable' as const : reason(reply.status), correlationId});
         }
       } catch {/* An unbound or missing reply cannot establish absence of the committed effect. */}
       return Object.freeze({kind: 'uncertain' as const});

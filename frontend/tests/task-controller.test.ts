@@ -28,6 +28,92 @@ function fixture() {
   const controller = new TaskController('native', identity, server, journal, clock, entropy);
   return {controller, server, identity, session, storage, journal, clock, entropy, setNow: (value: number) => {now = value;}, advance: () => {now = 100000;}};
 }
+test('assignment refreshes current authority and preserves a lost original across recovery', async () => {
+  const f = fixture(); await f.controller.refresh();
+  await f.controller.assign('work-1', revision, ['member-2']);
+  expect(f.server.send).not.toHaveBeenCalled();
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['assign']}));
+  await f.controller.select('work-1');
+  f.server.send.mockResolvedValueOnce({kind: 'uncertain'});
+  await f.controller.assign('work-1', revision, ['member-2', 'member-1']);
+  const request = f.server.send.mock.calls[0][0];
+  expect(request).toEqual({key: 'key-1', command: {action: 'task.assign', occurrenceId: 'work-1',
+    payload: {expected_revision: revision, assignee_ids: ['member-2', 'member-1']}}});
+  await f.controller.assign('work-1', revision, []);
+  expect(f.controller.view.notice).toBe('previous_request_unresolved');
+  f.server.original.mockReturnValue(read({...saved, action: 'task.assign', assigneeIds: ['member-2', 'member-1']}));
+  await f.controller.recover('key-1');
+  expect(f.server.original).toHaveBeenCalledWith({...request, operationId: null}, context);
+  expect(f.server.send).toHaveBeenCalledOnce();
+});
+
+test('assignment conflict shows fresh details and requires a deliberate current revision', async () => {
+  const f = fixture(); await f.controller.refresh();
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['assign']}));
+  await f.controller.select('work-1');
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['assign'], revision: revisionValue('2'), assigneeIds: ['peer']}));
+  await f.controller.assign('work-1', revision, ['member-1']);
+  expect(f.controller.view.notice).toBe('conflict');
+  expect(f.controller.view.detail?.assigneeIds).toEqual(['peer']);
+  expect(f.server.send).not.toHaveBeenCalled();
+  await f.controller.assign('other-work', revisionValue('2'), []);
+  expect(f.server.send).not.toHaveBeenCalled();
+  f.server.send.mockImplementationOnce(async () => {
+    f.server.detail.mockReturnValue(read({...detail, allowedActions: ['assign'], revision: revisionValue('3'), assigneeIds: ['peer-2']}));
+    return {kind: 'rejected', reason: 'conflict', correlationId: 'conflict-safe'};
+  });
+  await f.controller.assign('work-1', revisionValue('2'), ['member-1']);
+  expect(f.controller.view.outcome).toMatchObject({kind: 'rejected', reason: 'conflict'});
+  expect(f.controller.view.detail?.revision).toBe('3');
+  expect(f.controller.view.detail?.assigneeIds).toEqual(['peer-2']);
+  await f.controller.assign('work-1', revisionValue('3'), []);
+  expect(f.server.send.mock.calls[1][0].command).toMatchObject({payload: {expected_revision: '3', assignee_ids: []}});
+});
+
+test('assignment denial, revoked action and changed household cannot send a new effect', async () => {
+  const f = fixture(); await f.controller.refresh(); await f.controller.select('work-1');
+  await f.controller.assign('work-1', revision, ['member-1']);
+  expect(f.controller.view.notice).toBe('action_not_allowed');
+  expect(f.server.send).not.toHaveBeenCalled();
+  f.server.access.mockReturnValue(read({...f.controller.view.access!, householdId: 'foreign'}));
+  await f.controller.assign('work-1', revision, ['member-1']);
+  expect(f.controller.view.notice).toBe('context_changed');
+  expect(f.server.send).not.toHaveBeenCalled();
+});
+
+test('a failed assignment conflict read retains the rejected original until a fresh task can be reviewed', async () => {
+  const f = fixture(); await f.controller.refresh();
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['assign']}));
+  await f.controller.select('work-1');
+  f.server.send.mockImplementationOnce(async () => {
+    f.server.detail.mockReturnValue({result: Promise.reject(new EntryReadError('unavailable')), cancel: vi.fn()});
+    return {kind: 'rejected', reason: 'conflict', correlationId: 'safe-conflict'};
+  });
+  await f.controller.assign('work-1', revision, ['member-1']);
+  expect(f.controller.view.notice).toBe('unavailable');
+  expect(f.controller.view.outcome).toMatchObject({kind: 'rejected', reason: 'conflict'});
+  const original = f.controller.view.records![0];
+  expect(original).toMatchObject({key: 'key-1', stage: 'rejected', command: {payload: {expected_revision: '1', assignee_ids: ['member-1']}}});
+  f.server.detail.mockReturnValue(read({...detail, revision: revisionValue('2'), assigneeIds: ['peer'], allowedActions: ['assign']}));
+  await f.controller.refresh();
+  expect(f.controller.view.notice).toBeNull();
+  expect(f.controller.view.detail?.revision).toBe('2');
+  expect(f.controller.view.records![0]).toEqual(original);
+  expect(f.server.send).toHaveBeenCalledOnce();
+});
+
+test('an unavailable assignee keeps the authorized task and rejected selection available for correction', async () => {
+  const f = fixture(); await f.controller.refresh();
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['assign']}));
+  await f.controller.select('work-1');
+  f.server.send.mockResolvedValueOnce({kind: 'rejected', reason: 'assignees_unavailable', correlationId: 'safe-member'});
+  await f.controller.assign('work-1', revision, ['stale-member']);
+  expect(f.controller.view.detail?.occurrenceId).toBe('work-1');
+  expect(f.controller.view.outcome).toMatchObject({kind: 'rejected', reason: 'assignees_unavailable'});
+  expect(f.controller.view.records![0]).toMatchObject({stage: 'rejected', command: {payload: {assignee_ids: ['stale-member']}}});
+  await f.controller.assign('work-1', revision, ['member-1']);
+  expect(f.server.send.mock.calls[1][0]).toMatchObject({key: 'key-2', command: {payload: {expected_revision: revision, assignee_ids: ['member-1']}}});
+});
 test('a real task workspace loads under fresh identity and creates title-only work with a saved original', async () => {
   const f = fixture(); await f.controller.refresh(); expect(f.controller.view.page?.items[0].title).toBe('Clean 🧹');
   await f.controller.create('  New task 🧹  ', '', 'normal');

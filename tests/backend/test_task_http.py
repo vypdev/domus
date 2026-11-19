@@ -68,6 +68,40 @@ def test_title_only_create_detail_history_and_own_operation_replay(api):
     assert "ha_user_id" not in history.text and "payload_fingerprint" not in history.text
 
 
+def test_assignment_original_read_preserves_the_recorded_members_and_current_authority(api):
+    created = create(api)
+    occurrence = created["result"]["occurrence_id"]
+    member = api.client.get("/api/v1/authorization").json()["member"]["member_id"]
+    body = {"expected_revision": 1, "assignee_ids": [member]}
+    denied = api.client.put(
+        PREFIX + "/occurrences/" + occurrence + "/assignment",
+        json={**body, "assignee_ids": ["foreign-member"]},
+        headers=api.headers("foreign-assignment"),
+    )
+    assert denied.status_code == 403 and denied.json()["code"] == "task_assignee_denied"
+    assert api.client.get(PREFIX + "/occurrences/" + occurrence).json()["work"]["revision"] == 1
+    assigned = checked(api, "put", "/occurrences/" + occurrence + "/assignment", body, "assign")
+    before = api.client.get(PREFIX + "/occurrences/" + occurrence).json()
+    original = api.client.get(PREFIX + "/requests/task.assign/assign")
+    assert original.status_code == 200, original.text
+    assert original.json() == {
+        **assigned,
+        "delivery": "pending",
+        "action": "task.assign",
+        "command_key": "assign",
+    }
+    assert api.client.get(PREFIX + "/occurrences/" + occurrence).json() == before
+    assert api.client.get(PREFIX + "/requests/task.assign/missing").status_code == 404
+    assert api.client.get(PREFIX + "/requests/task.assign/assign?actor_id=other").status_code == 422
+    with api.store.write() as unit:
+        current = unit.members.get("home", member)
+        unit.members.save(
+            replace(current, role=Role.VIEWER, revision=current.revision + 1), current.revision
+        )
+    api.user("a" * 32)
+    assert api.client.get(PREFIX + "/requests/task.assign/assign").status_code == 403
+
+
 @pytest.mark.parametrize("amount", [0, 225, 1_000_000])
 def test_configured_task_preserves_exact_amount_in_original_receipt(api, amount):
     body = {"title": "Inspect the filter", "overrides": {"point_value_minor": amount}}

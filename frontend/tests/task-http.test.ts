@@ -50,6 +50,55 @@ function fixture(mode: 'native' | 'standalone' = 'standalone') {
 }
 afterEach(() => vi.useRealTimers());
 
+test.each(['native', 'standalone'] as const)('%s assignment uses PUT and binds the original assignee set', async mode => {
+  const f = fixture(mode);
+  const command = taskCommand({action: 'task.assign', occurrenceId: 'work-1',
+    payload: {expected_revision: REV, assignee_ids: ['member-2', 'member-1']}})!;
+  const request = {key: 'assignment-key', command};
+  const saved = {...receipt(1), result: {...receipt(1).result, assignee_ids: ['member-1', 'member-2']}};
+  f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)})).mockResolvedValueOnce(reply(saved));
+  expect(await f.server.send(request, context)).toMatchObject({kind: 'receipt', action: 'task.assign',
+    revision: NEXT, assigneeIds: ['member-1', 'member-2']});
+  const [path, init] = f.transport.mock.calls[1];
+  expect(path).toBe(f.target.applicationBase + 'api/v1/tasks/occurrences/work-1/assignment');
+  expect(init.method).toBe('PUT');
+  expect(init.body).toBe('{"expected_revision":' + REV + ',"assignee_ids":["member-2","member-1"]}');
+  expect(new Headers(init.headers).get('Idempotency-Key')).toBe('assignment-key');
+  const original = {...saved, action: 'task.assign', command_key: 'assignment-key', delivery: 'pending'};
+  f.transport.mockResolvedValueOnce(reply(original));
+  expect(await f.server.original({...request, operationId: 'op-1'}, context).result)
+    .toMatchObject({kind: 'receipt', assigneeIds: ['member-1', 'member-2']});
+  expect(f.transport.mock.calls[2][0]).toBe(f.target.applicationBase + 'api/v1/tasks/requests/task.assign/assignment-key');
+  f.transport.mockResolvedValueOnce(reply({...original, result: {...saved.result, assignee_ids: ['member-1']}}));
+  await expect(f.server.original({...request, operationId: 'op-1'}, context).result).rejects.toThrow('invalid_response');
+  f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)})).mockResolvedValueOnce(reply({...saved,
+    result: {...saved.result, assignee_ids: ['member-1']}}));
+  expect(await f.server.send(request, context)).toEqual({kind: 'uncertain'});
+});
+
+test('assignment release confirms an empty assignee set', async () => {
+  const f = fixture();
+  const command = taskCommand({action: 'task.assign', occurrenceId: 'work-1', payload: {expected_revision: REV, assignee_ids: []}})!;
+  f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)})).mockResolvedValueOnce(reply({...receipt(1),
+    result: {...receipt(1).result, state: 'available', assignee_ids: []}}));
+  expect(await f.server.send({key: 'release-key', command}, context))
+    .toMatchObject({kind: 'receipt', state: 'available', assigneeIds: []});
+});
+
+test.each([
+  [403, 'task_assignee_denied', true, 'assignees_unavailable'],
+  [403, 'permission_denied', true, 'forbidden'],
+  [422, 'task_assignee_denied', true, 'invalid_input'],
+  [403, 'task_assignee_denied', false, 'forbidden'],
+] as const)('assignment rejection %s/%s retains only its safe semantic outcome', async (status, code, assignment, expected) => {
+  const f = fixture();
+  const command = assignment ? taskCommand({action: 'task.assign', occurrenceId: 'work-1',
+    payload: {expected_revision: REV, assignee_ids: ['member-1']}})! : commands[0];
+  f.transport.mockResolvedValueOnce(reply({csrf_token: 'c'.repeat(64)})).mockResolvedValueOnce(failure(status, code));
+  expect(await f.server.send({key: 'selection-key', command}, context))
+    .toEqual({kind: 'rejected', reason: expected, correlationId: 'cor_safe'});
+});
+
 test.each(['fixed', 'relative'] as const)('scheduled %s task uses exact policy and recovers the original operation', async kind => {
   const f = fixture();
   const rawPolicy = {zone: 'Europe/Madrid', data_identity: 'tzdata:2026.6/iana:2026f',

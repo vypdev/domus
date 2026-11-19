@@ -65,7 +65,7 @@ import {language, message} from '../presentation/messages';
 import type {DomusApp, EntryIntent} from '../presentation/domus-app';
 import {revisionValue} from '../domain/administration';
 import type {TaskIntent} from '../presentation/domus-tasks';
-import {taskBasePointAmount, taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
+import {taskAssignees, taskBasePointAmount, taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
 import type {TaskPriority} from '../domain/tasks';
 import type {AdministrationIntent} from '../presentation/domus-administration';
 import {administrationCommand} from '../domain/administration-commands';
@@ -134,8 +134,12 @@ function reviewedAllocation(value: unknown): ReviewedAllocation {
 
 export function decodeTaskIntent(value: unknown): TaskIntent | null {
   try {
-    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor']);
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor', 'assigneeIds']);
     const type = item.type;
+    if (type === 'assign') {
+      fields(value, ['type', 'occurrenceId', 'revision', 'assigneeIds'], []);
+      return {type, occurrenceId: identifier(item.occurrenceId), revision: revisionValue(item.revision), assigneeIds: taskAssignees(item.assigneeIds)};
+    }
     if (type === 'create') {
       fields(value, ['type', 'title', 'description', 'priority'], ['schedule', 'categoryId', 'basePointsMinor']);
       check(typeof item.title === 'string' && typeof item.description === 'string' && typeof item.priority === 'string'
@@ -706,6 +710,7 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'renameCategory': await active.taskWork(controller => controller.renameCategory(intent.categoryId, intent.revision, intent.label)); break;
           case 'archiveCategory': await active.taskWork(controller => controller.archiveCategory(intent.categoryId, intent.revision)); break;
           case 'claim': await active.taskWork(controller => controller.claim()); break;
+          case 'assign': await active.taskWork(controller => controller.assign(intent.occurrenceId, intent.revision, intent.assigneeIds)); break;
           case 'complete':
             await active.taskWork(controller => controller.complete(intent.materialUsages, ...intent.reviewed === undefined ? [] : [intent.reviewed]));
             break;

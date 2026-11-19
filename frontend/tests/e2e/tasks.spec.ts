@@ -485,3 +485,156 @@ for (const mode of ['native', 'standalone'] as const) {
     });
   }
 }
+
+for (const mode of ['native', 'standalone'] as const) {
+  for (const locale of ['en', 'es'] as const) {
+    test(`assignment review, recovery and restart in ${mode} ${locale}`, async ({browser, request}, info) => {
+      expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
+      const owner = await browser.newContext({viewport: {width: locale === 'es' ? 390 : 1280, height: 844}, hasTouch: locale === 'es'});
+      const peer = await browser.newContext();
+      const page = await owner.newPage(), participant = await peer.newPage();
+      const subject = mode === 'native' ? 'c' : 'b';
+      const t = (english: string, spanish: string) => locale === 'en' ? english : spanish;
+      const activate = async (target: Locator) => {
+        if (locale === 'es') await target.tap();
+        else {await target.focus(); await target.press('Enter');}
+      };
+      const signIn = async () => {
+        if (mode === 'standalone') {
+          await page.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
+          await page.getByRole('link', {name: 'Continue as fixture user', exact: true}).click();
+        }
+        await page.getByRole('combobox', {name: /^(Language|Idioma)$/u}).selectOption(locale);
+        await page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true}).click();
+      };
+      try {
+        const tasks = await open(page, owner, mode);
+        await page.getByRole('link', {name: 'Household', exact: true}).click();
+        const administration = page.locator('domus-administration');
+        await administration.getByRole('button', {name: 'Edit access rules', exact: true}).click();
+        await administration.getByLabel('HA administrator mapping', {exact: true}).selectOption('selected_ha_user');
+        await administration.getByLabel('Target Home Assistant account', {exact: true}).selectOption('a'.repeat(32));
+        await saveAdministration(administration);
+        if (mode === 'native') await peer.addCookies([{name: 'ingress_session', value: 'e'.repeat(128), domain: '127.0.0.1', path: '/', httpOnly: true, sameSite: 'Strict'}]);
+        else await request.post(origin(mode) + '/__fixture__/identity', {data: {subject: subject.repeat(32)}});
+        await participant.goto(base(mode) + '/');
+        if (mode === 'standalone') {
+          await participant.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
+          await participant.getByRole('link', {name: 'Continue as fixture user', exact: true}).click();
+        }
+        await participant.getByRole('button', {name: 'Request membership', exact: true}).click();
+        await expect(participant.getByRole('heading', {name: 'Membership pending', exact: true})).toBeVisible();
+        if (mode === 'standalone') await request.post(origin(mode) + '/__fixture__/identity', {data: {subject: 'a'.repeat(32)}});
+        await administration.getByRole('button', {name: 'Refresh administration', exact: true}).click();
+        await administration.getByRole('button', {name: 'Manage participant: Fictional account ' + subject, exact: true}).click();
+        await administration.getByLabel('Membership status', {exact: true}).selectOption('active');
+        await administration.getByRole('button', {name: 'Review changes', exact: true}).click();
+        await administration.getByRole('checkbox', {name: 'Approve household access', exact: true}).check();
+        await administration.getByRole('button', {name: 'Review changes', exact: true}).click();
+        await administration.getByRole('button', {name: 'Save changes', exact: true}).click();
+        await expect(administration.getByRole('heading', {name: 'Original request processed', exact: true})).toBeVisible();
+        await administration.getByRole('button', {name: 'Close editor', exact: true}).click();
+        await participant.getByRole('button', {name: 'Refresh status', exact: true}).click();
+        await participant.getByRole('link', {name: 'Tasks', exact: true}).click();
+        const ownerAccess = await (await page.request.get(base(mode) + '/api/v1/tasks/access')).json();
+        const peerAccess = await (await participant.request.get(base(mode) + '/api/v1/tasks/access')).json();
+        await page.getByRole('combobox', {name: 'Language', exact: true}).selectOption(locale);
+        await page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true}).click();
+        const title = 'Assign <kitchen> & help';
+        await tasks.getByLabel(t('Title', 'Título'), {exact: true}).fill(title);
+        await activate(tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}));
+        await expect(tasks.getByRole('heading', {name: title, exact: true})).toBeVisible();
+        const list = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json();
+        const id = list.items.find((item: {title: string}) => item.title === title).occurrence_id;
+        const endpoint = base(mode) + '/api/v1/tasks/occurrences/' + id;
+        const writes: {key: string; body: string; context: string}[] = [];
+        page.on('request', item => {
+          if (item.method() === 'PUT' && item.url() === endpoint + '/assignment')
+            writes.push({key: item.headers()['idempotency-key'], body: item.postData()!, context: item.headers()['x-domus-context']});
+        });
+        const edit = tasks.getByRole('button', {name: t('Change assignment', 'Cambiar asignación'), exact: true});
+        const save = tasks.getByRole('button', {name: t('Save assignment', 'Guardar asignación'), exact: true});
+        const ownChoice = tasks.getByRole('checkbox', {name: 'Fictional account a', exact: true});
+        const peerChoice = tasks.getByRole('checkbox', {name: 'Fictional account ' + subject, exact: true});
+        const toggle = async (target: Locator) => {
+          if (locale === 'es') await target.tap();
+          else {await target.focus(); await target.press('Space');}
+        };
+        await activate(edit); await toggle(ownChoice); await toggle(peerChoice);
+        await activate(tasks.getByRole('button', {name: t('Cancel', 'Cancelar'), exact: true}));
+        expect(writes).toEqual([]);
+        await activate(edit); await expect(ownChoice).not.toBeChecked();
+        await toggle(ownChoice); await toggle(peerChoice); await activate(save);
+        await expect(tasks.getByRole('heading', {name: t('Assignment saved', 'Asignación guardada'), exact: true})).toBeVisible();
+        expect(JSON.parse(writes[0].body)).toEqual({expected_revision: 1, assignee_ids: [ownerAccess.member_id, peerAccess.member_id]});
+        expect((await (await page.request.get(endpoint)).json()).work.assignee_ids.sort()).toEqual([ownerAccess.member_id, peerAccess.member_id].sort());
+        expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'snapshot'}})).ok()).toBe(true);
+
+        await activate(edit); await toggle(ownChoice);
+        const concurrent = await owner.newPage();
+        await concurrent.goto(base(mode) + '/#tasks');
+        const competing = concurrent.locator('domus-tasks');
+        await competing.getByRole('button', {name: title, exact: true}).click();
+        await competing.getByRole('button', {name: 'Change assignment', exact: true}).click();
+        await competing.getByRole('checkbox', {name: 'Fictional account ' + subject, exact: true}).uncheck();
+        await competing.getByRole('button', {name: 'Save assignment', exact: true}).click();
+        await expect(competing.getByRole('heading', {name: 'Assignment saved', exact: true})).toBeVisible();
+        await concurrent.close();
+        await activate(save);
+        const review = tasks.getByRole('button', {name: t('Review current assignment', 'Revisar asignación actual'), exact: true});
+        await expect(review).toBeVisible(); await expect(save).toBeDisabled();
+        await expect(ownChoice).not.toBeChecked(); await expect(peerChoice).toBeChecked();
+        expect(writes).toHaveLength(1);
+        await activate(review); await activate(save);
+        await expect(edit).toBeVisible(); expect(JSON.parse(writes[1].body).expected_revision).toBe(3);
+
+        await activate(edit); await activate(tasks.getByRole('button', {name: t('Clear selection', 'Borrar selección'), exact: true}));
+        await page.route(endpoint + '/assignment', async route => {
+          const committed = await route.fetch({maxRetries: 0, maxRedirects: 0}); expect(committed.status()).toBe(200);
+          await route.abort('connectionreset');
+        });
+        await activate(save);
+        await expect(tasks.getByRole('heading', {name: t('Result not confirmed', 'Resultado sin confirmar'), exact: true})).toBeVisible();
+        await expect(save).toBeDisabled(); expect(writes).toHaveLength(3);
+        const released = writes[2]; expect(JSON.parse(released.body)).toEqual({expected_revision: 4, assignee_ids: []});
+        await page.unroute(endpoint + '/assignment'); await page.reload();
+        await page.getByRole('combobox', {name: 'Language', exact: true}).selectOption(locale);
+        await activate(tasks.getByRole('button', {name: t('Check saved request', 'Comprobar solicitud guardada'), exact: true}).first());
+        await expect(tasks.getByRole('heading', {name: t('Assignment saved', 'Asignación guardada'), exact: true})).toBeVisible();
+        expect(writes).toHaveLength(3);
+        const original = await (await page.request.get(base(mode) + '/api/v1/tasks/requests/task.assign/' + released.key)).json();
+        expect(original).toMatchObject({state: 'committed', result: {assignee_ids: [], revision: 5, state: 'available'}});
+        await expect(tasks.locator('.assignment')).toContainText(t('Unassigned', 'Sin asignar'));
+        await activate(edit); await toggle(peerChoice); await activate(save); await expect(edit).toBeVisible();
+        const retained = writes[3];
+        const operation = await (await page.request.get(base(mode) + '/api/v1/tasks/requests/task.assign/' + retained.key)).json();
+        expect(operation.result).toMatchObject({assignee_ids: [peerAccess.member_id], revision: 6});
+        await page.screenshot({path: info.outputPath('assignment-' + mode + '-' + locale + '.png'), fullPage: true});
+        expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'restart'}})).ok()).toBe(true);
+        await page.reload(); await signIn(); await activate(tasks.getByRole('button', {name: title, exact: true}));
+        expect((await (await page.request.get(endpoint)).json()).work).toMatchObject({revision: 6, assignee_ids: [peerAccess.member_id]});
+        expect(await (await page.request.get(base(mode) + '/api/v1/tasks/requests/task.assign/' + retained.key)).json())
+          .toMatchObject({operation_id: operation.operation_id, result: operation.result});
+        await activate(tasks.getByRole('button', {name: t('Mark done now', 'Marcar como hecha ahora'), exact: true}));
+        await expect(tasks.getByText(t('No approval required', 'No necesita aprobación'), {exact: true})).toBeVisible();
+        const completed = await (await page.request.get(endpoint)).json();
+        expect(completed.cycle.performers.map((item: {member_id: string}) => item.member_id)).toEqual([ownerAccess.member_id]);
+        expect(completed.work.assignee_ids).toEqual([peerAccess.member_id]);
+
+        expect((await request.post(origin(mode) + '/__fixture__/operator', {data: {action: 'restore'}})).ok()).toBe(true);
+        await page.reload(); await signIn();
+        const before = await (await request.get(origin(mode) + '/__fixture__/stats')).json();
+        const csrf = await (await page.request.get(base(mode) + '/api/v1/auth/csrf')).json();
+        const replay = await page.request.put(endpoint + '/assignment', {data: retained.body, headers: {'Content-Type': 'application/json', Origin: origin(mode),
+          'X-CSRF-Token': csrf.csrf_token, 'Idempotency-Key': retained.key, 'X-Domus-Context': retained.context}});
+        expect(replay.status()).toBe(200);
+        expect(await replay.json()).toMatchObject({state: 'historical', operation_id: operation.operation_id, result: operation.result});
+        expect((await (await page.request.get(endpoint)).json()).work).toMatchObject({revision: 2, state: 'assigned'});
+        expect((await (await page.request.get(endpoint)).json()).work.assignee_ids.sort()).toEqual([ownerAccess.member_id, peerAccess.member_id].sort());
+        expect((await (await request.get(origin(mode) + '/__fixture__/stats')).json()).counts).toEqual(before.counts);
+        await info.attach('assignment-operation-evidence', {body: JSON.stringify({mode, locale, writes, operationId: operation.operation_id,
+          originalRelease: original.operation_id, restartRevision: 6, restoredRevision: 2, performerId: ownerAccess.member_id}), contentType: 'application/json'});
+      } finally {await peer.close(); await owner.close();}
+    });
+  }
+}
