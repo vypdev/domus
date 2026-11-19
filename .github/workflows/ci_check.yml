@@ -163,7 +163,7 @@ jobs:
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       CI: "1"
     steps:
