@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.55
+
+- Align barcode HTTP validation and published API schemas with the supported printed GTIN lengths.
+
 ## 0.0.0-edge.54
 
 - Continue keyboard focus to the current barcode result after confirmed changes and stale-removal review.

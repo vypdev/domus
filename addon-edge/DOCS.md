@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.54 packages the immutable runtime declared in
+Edge 0.0.0-edge.55 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -48,6 +48,9 @@ request** after an unconfirmed write. A submitted search continues keyboard
 focus to its result or retry control when the read finishes. After a confirmed
 change, focus continues to the current result. If a write reply is unconfirmed,
 focus continues to **Recover original request**.
+
+Edge.55 aligns HTTP validation and the published API shapes with the supported
+printed barcode lengths. It retains schema 35 and the compatible Edge.54 data.
 
 Edge.52 uses SQLite schema 35 and is listed in `breaking_versions`.
 Keep a compatible image together with its cold schema-34 data for rollback.

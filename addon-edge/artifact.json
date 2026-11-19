@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.54",
-  "sourceCommit": "b2f9f48994d523e28c4584f583e1c929ecbc61b1",
-  "sourceArchiveSHA256": "23c9240e137ed578ee6e52b68e4318b3e0153ca2ad32940088f20635931c2918",
+  "version": "0.0.0-edge.55",
+  "sourceCommit": "e8e93fe892babc0263808848c3bd24c8aea9d2c2",
+  "sourceArchiveSHA256": "eca392d17f93d6eb25006b78a5690f25680b09f8c625feb0ec8093dbb7bbc4a5",
   "storageSchema": 35,
-  "wheelSHA256": "b9e3fd518a611d7ef9cef215d23355e2bdce91e7a7b9a5ecdbf7653753eb2a07",
+  "wheelSHA256": "35262f4448e6ddeee76882e6096b5f8fb666a1cbd043bdce1068f24574d284fb",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -165,7 +165,7 @@
     "domus/entrypoints/http_errors.py": "c4f3d19889750bca29a13aee7528299883782e50a5ae3378e691d79e8faf7ded",
     "domus/entrypoints/ingress_boundary.py": "1aa1d684b8625464b5d36d272f71d94b4cd32b84819ff8765a821c9a722f8f28",
     "domus/entrypoints/ingress_http.py": "f6557eb5481d132131f66ad7691e30c223c63a66a6f0ae5754c9fba3bc7f3626",
-    "domus/entrypoints/inventory_http.py": "507873935dc9ed813c189b47a7ddc581802ceae854f555533e1e94a4046bb34d",
+    "domus/entrypoints/inventory_http.py": "719e2c3a0d70a42cb4b3c42f8941841ea8e87ca5745c3fba94657226390142b3",
     "domus/entrypoints/native_http.py": "6c4471c6468b64d9f38e1c74e0338fae9eaf0dbbf73ba8b93a9f868317a220fc",
     "domus/entrypoints/openapi.py": "01a3fab9e5890ebcc1fb9c70bce9ced43d45b9190afd134db7dd45e0c5eb28f1",
     "domus/entrypoints/point_allocation_http.py": "7339c88c083206c0778885b55793c80af219b15af7004c5a51d34dbc28f4da5c",

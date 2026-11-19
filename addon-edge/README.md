@@ -38,6 +38,9 @@ submitted search.
 Edge.54 continues keyboard focus after confirmed barcode changes and moves it to
 original-request recovery when a write response is unconfirmed.
 
+Edge.55 aligns barcode HTTP validation and published API schemas with the same
+supported printed lengths.
+
 This candidate uses SQLite schema 35. Keep a
 compatible image and cold data backup before upgrading a previous preview.
 See [installation and operation](https://github.com/vypdev/domus/blob/develop/addon-edge/DOCS.md) for the source pin and rollback

@@ -36,7 +36,7 @@ the old confirmation. Scope changes retire private facts and drafts.
 | stock-local-barcode-C07 | Ingress and standalone journeys exercise English desktop keyboard, Spanish 390 px touch, light and dark themes, focus, malformed input, selection, confirmation, current conflicts and explicit read retry. [Compiled journeys](../../frontend/tests/e2e/workspace-navigation.spec.ts) |
 | stock-local-barcode-C08 | The immutable Edge candidate requires both CPU image campaigns and installed-owner acceptance. The increment's pull request records their measured source identities and outcomes. |
 
-The complete backend campaign passes 5,569 tests with 100% statement and branch
+The complete backend campaign passes 5,583 tests with 100% statement and branch
 coverage globally and across all 231 authored modules. An independent source
 coverage audit accepts the report. The complete frontend campaign passes 1,929
 tests with all four metrics at 100% globally and per authored runtime file.
@@ -153,3 +153,21 @@ Both journeys pass without a Domus CSS change. Original screenshots and measured
 layout attachments are retained. The first diagnostic passed the layout checks
 but failed a new test expectation for light text color; the expectation was
 corrected to the existing `#172b3a` without changing application colors.
+
+## Immutable Edge.55 candidate
+
+Edge.55 packages the reviewed HTTP contract refinement from runtime source
+`e8e93fe892babc0263808848c3bd24c8aea9d2c2`. Its source archive SHA-256 is
+`eca392d17f93d6eb25006b78a5690f25680b09f8c625feb0ec8093dbb7bbc4a5`.
+The normal and independently measured Linux wheels share SHA-256
+`35262f4448e6ddeee76882e6096b5f8fb666a1cbd043bdce1068f24574d284fb`.
+All 231 Python modules match Git, the wheel, installed Linux builder and final
+image. All four UI files match the accepted Edge.54 bytes. Only the HTTP barcode
+annotation changes between those runtime sources. Schema 35 is retained.
+
+The measured local ARM64 image is
+`sha256:e0cb412274443805bef5b8f72150c8c4c9c2d0b1b3c1399f31eebb5cfe081fb0`.
+Installed Home Assistant observations remain a separate acceptance record; this
+local image ID is not an assertion about the Supervisor image. Both exact CPU
+campaigns, installed acceptance and final same-head review are tracked in the
+increment's pull request.
