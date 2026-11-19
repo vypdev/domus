@@ -3,7 +3,7 @@
 from dataclasses import replace
 
 import pytest
-from test_task_commands import child_commands, fixture, resource
+from test_task_commands import child_commands, counts, fixture, resource
 
 from domus.application.task_commands import (
     AssignTask,
@@ -245,6 +245,55 @@ def test_failure_between_real_cycle_and_occurrence_writes_rolls_back_every_fact(
     with pytest.raises(StorageFailure):
         getattr(service, action)("failed", request)
     assert state(store, occurrence_id) == before
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        OccurrenceState.IN_PROGRESS,
+        OccurrenceState.BLOCKED,
+        OccurrenceState.ASSIGNED,
+        OccurrenceState.AVAILABLE,
+    ],
+)
+def test_late_progress_write_failure_rolls_back_and_the_original_key_can_retry(
+    tmp_path, monkeypatch, target
+):
+    commands, _, store, occurrence_id, _, _ = prepared(
+        tmp_path, assign=target is not OccurrenceState.AVAILABLE
+    )
+    if target in {OccurrenceState.ASSIGNED, OccurrenceState.AVAILABLE}:
+        work, _ = work_at(store, occurrence_id)
+        commands.transition(
+            "block-first",
+            TransitionTask(occurrence_id, work.revision, OccurrenceState.BLOCKED, "Waiting"),
+        )
+    work, _ = work_at(store, occurrence_id)
+    request = TransitionTask(
+        occurrence_id,
+        work.revision,
+        target,
+        "Waiting\n🧰" if target is OccurrenceState.BLOCKED else "",
+    )
+    before, before_counts = state(store, occurrence_id), counts(store)
+    original = SQLiteTasks.save_occurrence
+
+    def fail(self, value, expected_revision):
+        original(self, value, expected_revision)
+        raise StorageFailure("injected_progress_failure")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteTasks, "save_occurrence", fail)
+        with pytest.raises(StorageFailure, match="injected_progress_failure"):
+            commands.transition("retry-progress", request)
+    assert state(store, occurrence_id) == before
+    assert counts(store) == before_counts
+    receipt = commands.transition("retry-progress", request)
+    after = state(store, occurrence_id)
+    assert after[0].state is target and after[0].revision == work.revision + 1
+    assert after[0].assignee_ids == work.assignee_ids
+    assert commands.transition("retry-progress", request) == receipt
+    assert state(store, occurrence_id) == after
 
 
 def link(store, occurrence_id, required, subtasks=()):

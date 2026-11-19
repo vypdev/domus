@@ -65,7 +65,7 @@ import {language, message} from '../presentation/messages';
 import type {DomusApp, EntryIntent} from '../presentation/domus-app';
 import {revisionValue} from '../domain/administration';
 import type {TaskIntent} from '../presentation/domus-tasks';
-import {taskAssignees, taskBasePointAmount, taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
+import {taskAssignees, taskBasePointAmount, taskCommand, taskQuantity, taskScheduleDraft, TASK_PRIORITIES} from '../domain/tasks';
 import type {TaskPriority} from '../domain/tasks';
 import type {AdministrationIntent} from '../presentation/domus-administration';
 import {administrationCommand} from '../domain/administration-commands';
@@ -134,11 +134,19 @@ function reviewedAllocation(value: unknown): ReviewedAllocation {
 
 export function decodeTaskIntent(value: unknown): TaskIntent | null {
   try {
-    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor', 'assigneeIds']);
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor', 'assigneeIds', 'target']);
     const type = item.type;
     if (type === 'assign') {
       fields(value, ['type', 'occurrenceId', 'revision', 'assigneeIds'], []);
       return {type, occurrenceId: identifier(item.occurrenceId), revision: revisionValue(item.revision), assigneeIds: taskAssignees(item.assigneeIds)};
+    }
+    if (type === 'transition') {
+      fields(value, ['type', 'occurrenceId', 'revision', 'target', 'reason'], []);
+      const command = taskCommand({action: 'task.transition', occurrenceId: item.occurrenceId,
+        payload: {expected_revision: item.revision, target: item.target, reason: item.reason}});
+      check(command?.action === 'task.transition');
+      return {type, occurrenceId: command.occurrenceId, revision: command.payload.expected_revision,
+        target: command.payload.target, reason: command.payload.reason};
     }
     if (type === 'create') {
       fields(value, ['type', 'title', 'description', 'priority'], ['schedule', 'categoryId', 'basePointsMinor']);
@@ -711,6 +719,8 @@ export function mountEntry(page: EntryPage): PageMount {
           case 'archiveCategory': await active.taskWork(controller => controller.archiveCategory(intent.categoryId, intent.revision)); break;
           case 'claim': await active.taskWork(controller => controller.claim()); break;
           case 'assign': await active.taskWork(controller => controller.assign(intent.occurrenceId, intent.revision, intent.assigneeIds)); break;
+          case 'transition': await active.taskWork(controller => controller.transition(
+            intent.occurrenceId, intent.revision, intent.target, intent.reason)); break;
           case 'complete':
             await active.taskWork(controller => controller.complete(intent.materialUsages, ...intent.reviewed === undefined ? [] : [intent.reviewed]));
             break;

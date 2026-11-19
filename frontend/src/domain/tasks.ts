@@ -44,6 +44,8 @@ export function taskAssignees(value: unknown): readonly string[] {
 }
 export const TASK_STATES = ['draft', 'available', 'assigned', 'in_progress', 'blocked', 'completed', 'cancelled', 'skipped'] as const;
 export type TaskState = typeof TASK_STATES[number];
+export const TASK_PROGRESS_TARGETS = ['in_progress', 'blocked', 'assigned', 'available'] as const;
+export type TaskProgressTarget = typeof TASK_PROGRESS_TARGETS[number];
 export const TASK_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
 export type TaskPriority = typeof TASK_PRIORITIES[number];
 type ScheduledStart = Readonly<{kind: 'date' | 'time'; local: string}>;
@@ -77,6 +79,8 @@ export type TaskCommand = CategoryCommand |
     category_id?: string; schedule?: TaskSchedule; overrides?: TaskCreationOverrides}>}>
   | Readonly<{action: 'task.claim'; occurrenceId: string; payload: Readonly<{expected_revision: Revision}>}>
   | Readonly<{action: 'task.assign'; occurrenceId: string; payload: Readonly<{expected_revision: Revision; assignee_ids: readonly string[]}>}>
+  | Readonly<{action: 'task.transition'; occurrenceId: string; payload: Readonly<{
+    expected_revision: Revision; target: TaskProgressTarget; reason: string}>}>
   | Readonly<{action: 'task.complete'; occurrenceId: string; payload: Readonly<{expected_revision: Revision;
     performer_ids: readonly string[]; performed_at: string; material_usages: readonly TaskMaterialUsage[] | null;
     allocation_fingerprint?: string; manual_shares?: readonly ManualShare[]}>}>
@@ -171,6 +175,14 @@ export function taskCommand(value: unknown): TaskCommand | undefined {
       return Object.freeze({action, occurrenceId, payload: Object.freeze({expected_revision: revisionValue(body.expected_revision),
         assignee_ids: taskAssignees(body.assignee_ids)})});
     }
+    if (action === 'task.transition') {
+      const body = fields(item.payload, ['expected_revision', 'target', 'reason']);
+      const target = choice(body.target, TASK_PROGRESS_TARGETS);
+      const reason = taskText(body.reason, TASK_TEXT_LIMITS.reason, target === 'blocked', true);
+      requireValue(target === 'blocked' || reason === '');
+      return Object.freeze({action, occurrenceId, payload: Object.freeze({
+        expected_revision: revisionValue(body.expected_revision), target, reason})});
+    }
     if (action === 'task.claim') {
       const body = fields(item.payload, ['expected_revision']);
       return Object.freeze({action, occurrenceId, payload: Object.freeze({expected_revision: revisionValue(body.expected_revision)})});
@@ -215,6 +227,7 @@ export interface TaskCycleSummary {
 }
 export interface TaskDetail extends TaskSummary {
   readonly description: string; readonly priority: TaskPriority; readonly allowedActions: readonly string[];
+  readonly stateReason?: string;
   readonly completionPoints?: 'automatic' | 'manual' | 'manager_required';
   readonly cycle: TaskCycleSummary | null; readonly materials: readonly TaskMaterial[];
   readonly materialRecording: 'review_on_completion' | 'separate_recording';
@@ -236,4 +249,5 @@ export interface TaskReceipt {
   readonly archivedBy: string | null;
   readonly basePointsMinor?: number;
   readonly assigneeIds?: readonly string[];
+  readonly stateReason?: string;
 }

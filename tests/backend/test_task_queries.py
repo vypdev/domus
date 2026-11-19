@@ -316,6 +316,7 @@ def test_own_operation_lookup_rechecks_original_authority_without_rerunning_prec
         "task.create",
         "task.claim",
         "task.assign",
+        "task.transition",
         "task.complete",
         "task.verify",
         "task.reopen",

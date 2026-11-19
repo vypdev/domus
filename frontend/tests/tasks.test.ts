@@ -7,6 +7,54 @@ const complete = {action: 'task.complete', occurrenceId: 'work-1', payload: {
   expected_revision: revision, performer_ids: ['member-1'], performed_at: '9223372036854775807',
   material_usages: [{line_id: 'line-1', quantity: '3.333333'}]}};
 
+test.each([
+  {target: 'in_progress', reason: ''},
+  {target: 'blocked', reason: '  Waiting for parts\nThen inspect\t🧰  '},
+  {target: 'assigned', reason: ''},
+  {target: 'available', reason: ''},
+  {target: 'blocked', reason: '🧰'.repeat(1000)},
+])('progress command preserves the selected target and exact bounded reason %#', ({target, reason}) => {
+  const raw = {action: 'task.transition', occurrenceId: 'work-1',
+    payload: {expected_revision: revision, target, reason}};
+  const value = taskCommand(raw);
+  expect(value).toEqual(raw);
+  expect(value).not.toBe(raw);
+  expect(Object.isFrozen(value)).toBe(true);
+  expect(Object.isFrozen(value?.payload)).toBe(true);
+});
+
+test.each([
+  {target: 'completed', reason: ''},
+  {target: 'draft', reason: ''},
+  {target: 'cancelled', reason: 'Cancel'},
+  {target: 'skipped', reason: 'Skip'},
+  {target: 'future', reason: ''},
+  {target: 'in_progress', reason: 'Unexpected reason'},
+  {target: 'assigned', reason: 'Unexpected reason'},
+  {target: 'available', reason: 'Unexpected reason'},
+  {target: 'blocked', reason: ''},
+  {target: 'blocked', reason: ' \n\t\u0085'},
+  {target: 'blocked', reason: '\u0000Invalid'},
+  {target: 'blocked', reason: '\ud800'},
+  {target: 'blocked', reason: '🧰'.repeat(1001)},
+])('invalid progress input cannot become a command %#', payload => {
+  expect(taskCommand({action: 'task.transition', occurrenceId: 'work-1',
+    payload: {expected_revision: revision, ...payload}})).toBeUndefined();
+});
+
+test('progress rejects altered scope, unknown fields, omitted reason and invalid revision', () => {
+  const raw = {action: 'task.transition', occurrenceId: 'work-1',
+    payload: {expected_revision: revision, target: 'blocked', reason: 'Waiting'}};
+  for (const value of [
+    {...raw, actor: 'other'},
+    {...raw, occurrenceId: '../work'},
+    {...raw, payload: {...raw.payload, actor_id: 'other'}},
+    {...raw, payload: {expected_revision: revision, target: 'blocked'}},
+    {...raw, payload: {...raw.payload, expected_revision: 1}},
+    {...raw, payload: {...raw.payload, expected_revision: '01'}},
+  ]) expect(taskCommand(value)).toBeUndefined();
+});
+
 test.each([[], ['member-1'], Array.from({length: 32}, (_, index) => 'member-' + index)].map(assignee_ids => ({assignee_ids})))(
   'assignment preserves and freezes the exact bounded selection %#', ({assignee_ids}) => {
     const raw = {action: 'task.assign', occurrenceId: 'work-1', payload: {expected_revision: revision, assignee_ids}};

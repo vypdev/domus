@@ -10,6 +10,25 @@ function fixture() {
   const storage: OwnedStorage = {getItem: key => data.get(key) ?? null, setItem: (key, value) => {data.set(key, value);}, removeItem: key => {data.delete(key);}};
   return {data, storage, journal: new TaskSessionJournal(storage)};
 }
+test('progress and prior creation and assignment requests coexist with their frozen bodies', () => {
+  const f = fixture();
+  f.journal.open(scope, 100);
+  f.journal.prepare('create', command, 100);
+  f.journal.record('create', 'committed', 'create-operation', 101);
+  const assignment = taskCommand({action: 'task.assign', occurrenceId: 'work-1',
+    payload: {expected_revision: '1', assignee_ids: ['member-1']}})!;
+  f.journal.prepare('assignment', assignment, 102);
+  f.journal.record('assignment', 'committed', 'assignment-operation', 103);
+  const progress = taskCommand({action: 'task.transition', occurrenceId: 'work-1',
+    payload: {expected_revision: '9007199254740993', target: 'blocked', reason: 'Waiting\n🧰'}})!;
+  f.journal.prepare('progress', progress, 104);
+  f.journal.record('progress', 'uncertain', null, 105);
+  const reopened = new TaskSessionJournal(f.storage).open(scope, 106);
+  expect(reopened.map(record => record.command)).toEqual([command, assignment, progress]);
+  expect(reopened[2]).toMatchObject({key: 'progress', scope, stage: 'uncertain', operationId: null});
+  expect(Object.isFrozen(reopened[2].command.payload)).toBe(true);
+  expect(new TaskSessionJournal(f.storage).open({...scope, memberId: 'other'}, 107)).toEqual([]);
+});
 test('assignment and older creation originals coexist across reload with frozen identities', () => {
   const f = fixture(); f.journal.open(scope, 100);
   f.journal.prepare('older-create', command, 100);

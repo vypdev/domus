@@ -28,6 +28,79 @@ function fixture() {
   const controller = new TaskController('native', identity, server, journal, clock, entropy);
   return {controller, server, identity, session, storage, journal, clock, entropy, setNow: (value: number) => {now = value;}, advance: () => {now = 100000;}};
 }
+test('progress preserves a lost original and recovers once under current facts', async () => {
+  const f = fixture();
+  await f.controller.transition('work-1', revision, 'blocked', 'Waiting');
+  expect(f.server.send).not.toHaveBeenCalled();
+  await f.controller.refresh();
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['transition:blocked']}));
+  await f.controller.select('work-1');
+  f.server.send.mockImplementationOnce(async () => {
+    f.server.detail.mockReturnValue(read({...detail, revision: revisionValue('2'), state: 'blocked',
+      stateReason: 'Waiting', allowedActions: ['transition:available']}));
+    return {kind: 'uncertain'};
+  });
+  await f.controller.transition('work-1', revision, 'blocked', 'Waiting');
+  const original = f.server.send.mock.calls[0][0];
+  expect(original).toEqual({key: 'key-1', command: {action: 'task.transition', occurrenceId: 'work-1',
+    payload: {expected_revision: revision, target: 'blocked', reason: 'Waiting'}}});
+  expect(f.controller.view.records?.[0]).toMatchObject({stage: 'uncertain', command: original.command});
+  await f.controller.transition('work-1', revisionValue('2'), 'available', '');
+  expect(f.controller.view.notice).toBe('previous_request_unresolved');
+  f.server.original.mockReturnValue(read({...saved, action: 'task.transition', revision: revisionValue('2'),
+    state: 'blocked', stateReason: 'Waiting'}));
+  await f.controller.recover('key-1');
+  expect(f.server.original).toHaveBeenCalledWith({...original, operationId: null}, context);
+  expect(f.server.send).toHaveBeenCalledOnce();
+  expect(f.controller.view.detail).toMatchObject({state: 'blocked', revision: '2', stateReason: 'Waiting'});
+});
+
+test('progress conflict retains its selected target and shows refreshed competing facts', async () => {
+  const f = fixture();
+  await f.controller.refresh();
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['transition:blocked']}));
+  await f.controller.select('work-1');
+  f.server.detail.mockReturnValue(read({...detail, revision: revisionValue('2'), allowedActions: ['transition:blocked']}));
+  await f.controller.transition('work-1', revision, 'blocked', 'My reason');
+  expect(f.controller.view.notice).toBe('conflict');
+  expect(f.controller.view.detail?.revision).toBe('2');
+  expect(f.server.send).not.toHaveBeenCalled();
+  await f.controller.transition('another-task', revisionValue('2'), 'blocked', 'My reason');
+  expect(f.server.send).not.toHaveBeenCalled();
+  f.server.send.mockImplementationOnce(async () => {
+    f.server.detail.mockReturnValue(read({...detail, revision: revisionValue('3'), state: 'blocked',
+      stateReason: 'A competing reason', allowedActions: ['transition:available']}));
+    return {kind: 'rejected', reason: 'conflict', correlationId: 'safe-conflict'};
+  });
+  await f.controller.transition('work-1', revisionValue('2'), 'blocked', 'My reason');
+  expect(f.controller.view.outcome).toMatchObject({kind: 'rejected', reason: 'conflict'});
+  expect(f.controller.view.detail).toMatchObject({state: 'blocked', revision: '3', stateReason: 'A competing reason'});
+  expect(f.controller.view.records?.[0]).toMatchObject({command: {
+    payload: {expected_revision: '2', target: 'blocked', reason: 'My reason'}}});
+});
+
+test('progress uses current hints, scope and command denial before further disclosure', async () => {
+  const f = fixture();
+  await f.controller.refresh();
+  await f.controller.select('work-1');
+  await f.controller.transition('work-1', revision, 'blocked', 'Waiting');
+  expect(f.controller.view.notice).toBe('action_not_allowed');
+  expect(f.server.send).not.toHaveBeenCalled();
+  f.server.detail.mockReturnValue(read({...detail, allowedActions: ['transition:blocked']}));
+  await f.controller.select('work-1');
+  f.server.send.mockResolvedValueOnce({kind: 'rejected', reason: 'forbidden', correlationId: 'safe-denial'});
+  await f.controller.transition('work-1', revision, 'blocked', 'Waiting');
+  expect(f.controller.view.notice).toBe('forbidden');
+  expect(f.controller.view.detail).toBeNull();
+  expect(f.controller.view.records).toBeNull();
+  await f.controller.refresh();
+  await f.controller.select('work-1');
+  f.server.access.mockReturnValue(read({...f.controller.view.access!, householdId: 'foreign'}));
+  await f.controller.transition('work-1', revision, 'blocked', 'Waiting');
+  expect(f.controller.view.notice).toBe('context_changed');
+  expect(f.server.send).toHaveBeenCalledOnce();
+});
+
 test('assignment refreshes current authority and preserves a lost original across recovery', async () => {
   const f = fixture(); await f.controller.refresh();
   await f.controller.assign('work-1', revision, ['member-2']);

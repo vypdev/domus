@@ -843,6 +843,7 @@ class TaskQueries:
             "task.create",
             "task.claim",
             "task.assign",
+            "task.transition",
             "task.complete",
             "task.verify",
             "task.reopen",
