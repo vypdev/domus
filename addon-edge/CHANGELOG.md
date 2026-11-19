@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.48
+
+- Assign, replace and release planned task assignees through the Tasks workspace.
+- Retain selected household members while reviewing a competing update or correcting unavailable choices.
+- Recover the original recorded assignment after an interrupted response.
+
 ## 0.0.0-edge.47
 
 - Complete explicit runtime cleanup when SIGTERM requests a stop.

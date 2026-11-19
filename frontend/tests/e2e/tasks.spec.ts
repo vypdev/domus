@@ -288,6 +288,7 @@ for (const mode of ['native', 'standalone'] as const) test.describe('tasks ' + m
       await participant.getByRole('link', {name: 'Tasks', exact: true}).click();
       const memberTasks = participant.locator('domus-tasks'); await memberTasks.getByRole('button', {name: title, exact: true}).click();
       await expect(memberTasks.getByRole('button', {name: 'Create task', exact: true})).toHaveCount(0);
+      await expect(memberTasks.getByRole('button', {name: 'Change assignment', exact: true})).toHaveCount(0);
       await memberTasks.getByRole('button', {name: 'Claim task', exact: true}).click();
       await memberTasks.locator('summary').filter({hasText: 'Saved requests'}).click();
       await memberTasks.getByRole('button', {name: 'Dismiss saved request', exact: true}).click();

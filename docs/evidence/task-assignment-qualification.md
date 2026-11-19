@@ -38,5 +38,24 @@ assignment, receipt and restoration formats. The selected ha-ui version is
 
 Current-source Chromium qualification passes all four new compiled journeys.
 The full frontend suite passes 1,833 cases with 100% of all four supported metrics
-globally and per authored runtime file. Immutable candidate packaging, both image
-architectures, installed Edge acceptance and exact-head PR gates are pending.
+globally and per authored runtime file. Both image architectures, installed Edge
+acceptance and exact-head PR gates are pending.
+
+## Immutable candidate
+
+Edge.48 uses runtime source `95fff8ab5ff0a5a85872596447c314e365813d1b`.
+Its source archive SHA-256 is
+`c1b43ec66442834ca7f2093660ab6700ddc18dd31496ef982c0df564305faa5f`.
+The measured Linux wheel SHA-256 is
+`498b3840ca22370da8a77822027d3332240e9c0d4e5827dcad8b7e122b329bfb`.
+All 231 Python modules match Git and the installed Linux builder. Its four
+compiled UI files also match the independently built local bundle.
+The [artifact declaration](../../addon-edge/artifact.json) records those exact bytes.
+
+The ARM64 image is
+`sha256:08f426df9f0bc9d0c3441eb0505b55a47fd0b507c5f3932d7e5952d94b296e9a`.
+Nine actual-image cases passed, covering every declared Python/UI file, native
+authority and restart, private standalone delivery, an actual Edge.5 upgrade and
+restore, repeated SIGTERM cleanup, and all four real-Core deployment compositions.
+The four assignment browser journeys also passed against this exact installed
+image in Ingress and standalone, with English keyboard and Spanish native touch.
