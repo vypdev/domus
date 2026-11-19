@@ -16,6 +16,9 @@ The field preserves malformed input for correction. An unlinked result leads to
 the existing paginated Pantry cards. A manager chooses a product, reviews its name
 and code, then separately confirms. A found product opens its existing stock
 detail. An unavailable read retains the draft and offers an explicit retry.
+A submitted search continues keyboard focus to its result or retry control once
+the read finishes. A current view owns that continuation and preserves focus
+that the user has moved elsewhere.
 
 Association writes use the existing atomic commands, journal, original receipts,
 current grants, CSRF and origin checks. A lost successful response recovers its
@@ -35,7 +38,7 @@ the old confirmation. Scope changes retire private facts and drafts.
 
 The complete backend campaign passes 5,569 tests with 100% statement and branch
 coverage globally and across all 231 authored modules. An independent source
-coverage audit accepts the report. The complete frontend campaign passes 1,927
+coverage audit accepts the report. The complete frontend campaign passes 1,928
 tests with all four metrics at 100% globally and per authored runtime file.
 All 121 compiled source journeys and 45 rebuilt catalog journeys pass, with zero
 skipped, unexpected or flaky results. The CPU image gate requires all 66 household
@@ -59,3 +62,12 @@ those measured bytes. [Edge artifact](../../addon-edge/artifact.json)
 
 Both CPU image campaigns, installed-owner acceptance and final same-head CI
 and review are tracked in the increment's pull request. [PR #145](https://github.com/vypdev/domus/pull/145)
+
+## Installed keyboard correction
+
+The installed Edge.52 candidate reproduced loss of keyboard focus after a
+successful lookup. Its disabled input relinquished focus to the document body.
+Edge.53 will carry the correction and repeat installed acceptance. The regression
+checks found and unlinked results, unavailable retry, retained input, moved focus,
+background documents and retired view ownership. Both compiled barcode journeys
+require result focus and use the real next Tab to reach product selection.

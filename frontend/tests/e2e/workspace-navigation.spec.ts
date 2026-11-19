@@ -53,8 +53,11 @@ for (const mode of ['native', 'standalone'] as const) {
     await digits.fill('036000291452');
     await digits.press('Enter');
     await expect(stock.getByText('Unlinked barcode in this household.', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
     const firstProduct = stock.locator('.products > article').first();
-    await stock.getByRole('link', {name:'Choose a product in Pantry below.', exact:true}).press('Enter');
+    await page.keyboard.press('Tab');
+    await expect(stock.getByRole('link', {name:'Choose a product in Pantry below.', exact:true})).toBeFocused();
+    await page.keyboard.press('Enter');
     await expect(firstProduct).toBeFocused();
     await stock.getByRole('button', {name:'Associate barcode with QA barcode soap', exact:true}).press('Enter');
     const review = stock.getByRole('form', {name:'Review barcode association', exact:true});
@@ -121,8 +124,10 @@ for (const mode of ['native', 'standalone'] as const) {
     await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
     await expect(stock.getByText('La búsqueda local del código no está disponible. Reintenta la búsqueda o actualiza Inventario.', {exact:true})).toBeVisible();
     await expect(spanish).toHaveValue('036000291452');
+    await expect(stock.getByRole('button', {name:'Reintentar búsqueda del código', exact:true})).toBeFocused();
     await stock.getByRole('button', {name:'Reintentar búsqueda del código', exact:true}).tap();
     await expect(stock.getByText('Producto encontrado QA barcode tea', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
     await stock.getByRole('button', {name:'Eliminar asociación del código', exact:true}).tap();
     await stock.getByRole('button', {name:'Confirmar retirada del código', exact:true}).tap();
     await expect(stock.getByText('Código sin asociación en este hogar.', {exact:true})).toBeVisible();

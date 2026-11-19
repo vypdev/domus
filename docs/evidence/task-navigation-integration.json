@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests.",
   "actualProductFiles": {
-    ".vite/manifest.json": "20fb5f3930922339ac18f422befcad26d39a3e48168ae034bdd075c858d933a8",
-    "assets/index-CNI5WB-O.js": "b394b8038910cc30dfc0b92a864641bad49d25edaa8392273fc0a91951950c28",
+    ".vite/manifest.json": "9954a8b26e1ed88f36de286a7b1184d5d6f92efe076221a9b8395684e77c2955",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "d4bd63a737c246f3511c31685acdd1e1ec0e012ed82f3c1ac42878d52159c7ef"
+    "assets/index-g4W3QIWH.js": "57539f4a01ab4e0162da779f058a4d9206a9309cd82c9b123499f6981ff7c48c",
+    "index.html": "9ac902d7ffb0a2dde0b9e66ce277bd837f388e6355af52cd01367e363e52e10c"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",

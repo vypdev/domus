@@ -104,7 +104,7 @@ export class DomusInventory extends LitElement {
     .history {scroll-margin-block-start:68px}
     .history-content, .location-content, .location-balances {display:grid;gap:12px}
     .barcode-content, .barcode-review {display:grid;gap:12px;min-width:0}
-    .barcode-review {scroll-margin-block-start:68px}
+    .barcode-review, .barcode-result {scroll-margin-block-start:68px}
     .location-balances {grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
     .location-stock {border:1px solid var(--line);border-radius:8px;padding:12px;overflow-wrap:anywhere}
     .location-stock h5 {font-size:inherit;margin:0 0 8px}
@@ -132,6 +132,7 @@ export class DomusInventory extends LitElement {
   private declare barcodeSubmitted: string | null;
   private declare barcodeInvalid: boolean;
   private declare barcodeReview: BarcodeReview | null;
+  private barcodeFocusPending = false;
 
   constructor() {
     super();
@@ -172,6 +173,7 @@ export class DomusInventory extends LitElement {
       this.barcodeSubmitted = null;
       this.barcodeInvalid = false;
       this.barcodeReview = null;
+      this.barcodeFocusPending = false;
     }
     if (previous?.barcode?.lookup !== current?.barcode?.lookup || current?.report?.mayManage !== true)
       this.barcodeReview = null;
@@ -202,6 +204,18 @@ export class DomusInventory extends LitElement {
 
   protected updated(changed: PropertyValues<this>): void {
     if (!changed.has('view')) return;
+    if (this.barcodeFocusPending && !this.view!.busy) {
+      const owner = this.view;
+      const target = this.renderRoot.querySelector<HTMLElement>(this.barcodeState()?.unavailable
+        ? '.barcode-search-form vyp-ha-button' : '.barcode-result');
+      if (target) {
+        this.barcodeFocusPending = false;
+        void this.updateComplete.then(() => {
+          if (this.view === owner && this.ownerDocument.hasFocus()
+            && this.ownerDocument.activeElement === this.ownerDocument.body) target.focus();
+        });
+      }
+    }
     const product = this.view?.history?.productId;
     if (product && product !== changed.get('view')?.history?.productId)
       this.renderRoot.querySelector<HTMLElement>('.history')?.focus();
@@ -270,11 +284,13 @@ export class DomusInventory extends LitElement {
           } catch {
             this.barcodeInvalid = true;
             this.barcodeSubmitted = null;
+            this.barcodeFocusPending = false;
             void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.barcode-content vyp-ha-field')?.focus());
             return;
           }
           this.barcodeInvalid = false;
           this.barcodeReview = null;
+          this.barcodeFocusPending = true;
           this.intent({type: 'barcode', barcode: this.barcodeSubmitted});
         }}>
           <vyp-ha-field .value=${this.barcodeDraft} .name=${'barcode'} ?disabled=${busy || this.view!.pending}
@@ -286,6 +302,7 @@ export class DomusInventory extends LitElement {
               this.barcodeSubmitted = null;
               this.barcodeInvalid = false;
               this.barcodeReview = null;
+              this.barcodeFocusPending = false;
             }}></vyp-ha-field>
           ${this.submitButton(search?.unavailable ? 'barcodeRetry' : 'barcodeSearch', busy || this.view!.pending)}
         </form>
@@ -293,14 +310,14 @@ export class DomusInventory extends LitElement {
           .state=${feedbackState({kind: 'loading', message: this.text('barcodeLoading')})}></vyp-ha-feedback>` : nothing}
         ${search?.unavailable ? html`<vyp-ha-feedback
           .state=${feedbackState({kind: 'notice', tone: 'warning', message: this.text('barcodeUnavailable')})}></vyp-ha-feedback>` : nothing}
-        ${lookup && product === null ? html`<p role="status">${this.text('barcodeUnlinked')}</p>
+        ${lookup && product === null ? html`<p class="barcode-result" role="status" tabindex="-1">${this.text('barcodeUnlinked')}</p>
           ${manage && lookup.mayManage ? firstProduct ? html`<a href=${'#product-' + firstProduct.id}
             @click=${(event: MouseEvent) => {
               event.preventDefault();
               this.renderRoot.querySelector<HTMLElement>('article[id="product-' + firstProduct.id + '"]')?.focus();
             }}>${this.text('barcodeChooseProduct')}</a>` : html`<p>${this.text('barcodeRegisterProduct')}</p>` : nothing}` : nothing}
         ${lookup && (!manage || !lookup.mayManage) ? html`<p>${this.text('barcodeManagerRequired')}</p>` : nothing}
-        ${product ? html`<p role="status">${this.text('barcodeFound')} <strong>${product.name}</strong></p>
+        ${product ? html`<p class="barcode-result" role="status" tabindex="-1">${this.text('barcodeFound')} <strong>${product.name}</strong></p>
           <div class="actions">
             ${this.button('barcodeViewStock', () => this.intent({type: 'history', productId: product.id}), busy)}
             ${manage && lookup!.mayManage && review === null

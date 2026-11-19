@@ -2143,6 +2143,65 @@ async function barcodeComponent(language: 'en' | 'es' = 'en') {
   return {...f, field, search, assign, enter};
 }
 
+test('a submitted barcode search continues to its result or retry without reclaiming moved focus', async () => {
+  const foreground = vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+  const f = await barcodeComponent();
+  const loading: InventoryState = {...barcodeView, busy: true,
+    barcode: {code: barcodeCode, lookup: null, unavailable: false}};
+  const begin = async () => {
+    await f.enter('036000291452');
+    f.field()!.focus();
+    f.submit(f.search()!);
+    await f.assign(loading);
+    expect(document.activeElement).toBe(document.body);
+  };
+  try {
+    for (const lookup of [barcodeUnlinked, barcodeFound]) {
+      await begin();
+      await f.assign({...barcodeView, barcode: {code: barcodeCode, lookup, unavailable: false}});
+      const result = f.root.querySelector('.barcode-result');
+      expect(result).not.toBeNull();
+      expect(f.root.activeElement).toBe(result);
+      expect(f.field()!.value).toBe('036000291452');
+    }
+    await begin();
+    await f.assign({...loading, busy: false});
+    expect(document.activeElement).toBe(document.body);
+    await f.assign({...loading, busy: false, barcode: {code: barcodeCode, lookup: null, unavailable: true}});
+    const retry = f.search()!.querySelector('vyp-ha-button')!;
+    await retry.updateComplete;
+    expect(f.root.activeElement).toBe(retry);
+    expect(retry.shadowRoot!.activeElement).toBe(retry.shadowRoot!.querySelector('button'));
+
+    await begin();
+    const moved = document.createElement('button');
+    moved.textContent = 'Another workspace action';
+    document.body.append(moved);
+    mounted.push(moved);
+    moved.focus();
+    await f.assign(barcodeView);
+    expect(document.activeElement).toBe(moved);
+
+    await begin();
+    foreground.mockReturnValue(false);
+    await f.assign(barcodeView);
+    expect(document.activeElement).toBe(document.body);
+    foreground.mockReturnValue(true);
+    await f.assign({...barcodeView});
+    expect(document.activeElement).toBe(document.body);
+
+    await begin();
+    f.node.view = barcodeView;
+    await f.node.updateComplete;
+    f.node.view = {...barcodeView, scope: {...scope, key: 'retired-household'}};
+    await f.node.updateComplete;
+    expect(document.activeElement).toBe(document.body);
+    expect(f.field()!.value).toBe('');
+  } finally {
+    foreground.mockRestore();
+  }
+});
+
 test('barcode lookup selects an existing paginated product and reviews each association write', async () => {
   const f = await barcodeComponent();
   const registration = f.root.querySelector<HTMLFormElement>('.registration-form')!;
