@@ -53,8 +53,10 @@ assignees, replacement and release with explicit conflict review and original-re
   return](evidence/physical-receipt-return-qualification.md) records the withdrawal of a received
   item from a closed purchase. The [storage locations and transfers
   increment](evidence/stock-location-transfer-qualification.md) shows the stock at each location and
-  records a move as two linked ledger entries. Multiple lists, prices, refunds, location editing and
-  archiving, lot and package management, barcodes and optional online lookup remain open.
+  records a move as two linked ledger entries. [Manual local barcode
+  lookup](evidence/local-barcode-qualification.md) finds a household product from printed digits
+  and lets managers review its association or removal. Multiple lists, prices, refunds, location
+  editing and archiving, lot and package management and optional online lookup remain open.
 - M4 starts with the [manual automation preview](evidence/automation-preview-qualification.md)
   and includes the native Home Assistant calendar,
   [task deadline sensors](evidence/ha-deadline-sensors-qualification.md),
