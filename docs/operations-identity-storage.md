@@ -46,6 +46,12 @@ bounded remote revocations. Its counters describe owned records handled during t
 an enumeration of every authorization retained by HA. A failed or unknown remote cleanup never
 restores Domus access; HA profile authorization management remains available to the account owner.
 
+The native and standalone CLI entrypoints complete their explicit runtime close
+when SIGTERM requests a stop. Worker shutdown precedes identity disposal and
+installation-lease release. Further SIGTERM requests are deferred during this
+cleanup. The [process shutdown qualification](evidence/graceful-shutdown-qualification.md)
+records real signals, bounded delegated-grant cleanup and restart evidence.
+
 The CLI disables access/query logging. With normal info logging enabled, auth_runtime_stopped reports
 only revoked/unconfirmed counts. No token, browser nonce, actor name or callback code appears there.
 Controlled live tests must identify source/channel/versions, obtain the required HA consent and

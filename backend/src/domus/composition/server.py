@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from domus.composition.ha_projections import attach_ha_projections
 from domus.composition.household import standalone_context
 from domus.composition.household_administration import administration_services
 from domus.composition.recurrence import bind_lifespan, recurrence_worker
+from domus.composition.signals import graceful_termination
 from domus.composition.tasks import task_contexts, task_event_source
 from domus.domain.errors import DomusError, InvalidInput
 from domus.domain.storage import Installation
@@ -211,7 +213,7 @@ def _compose(
     )
 
 
-def main(argv: list[str] | None = None) -> int:
+def _run(argv: list[str] | None, begin_cleanup: Callable[[], None]) -> int:
     parser = argparse.ArgumentParser(
         description="Run Domus standalone; --data-directory manages persistent household data."
     )
@@ -284,12 +286,19 @@ def main(argv: list[str] | None = None) -> int:
             h11_max_incomplete_event_size=65_536,
         )
     finally:
+        begin_cleanup()
         revoked, unrevoked = runtime.close()
         logging.getLogger("domus.auth").info(
             "auth_runtime_stopped revoked=%d unconfirmed=%d", revoked, unrevoked
         )
         if unrevoked:
             logging.getLogger("domus.auth").warning("ha_grants_not_revoked: %d", unrevoked)
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    with graceful_termination() as begin_cleanup:
+        return _run(argv, begin_cleanup)
     return 0
 
 
