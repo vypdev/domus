@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.50
+
+- Start, block and unblock eligible work from Tasks with an explicit confirmation.
+- Preserve blocking reasons through conflicts and interrupted responses, with original-request recovery.
+- Keep task primary actions readable in light and dark themes.
+
 ## 0.0.0-edge.49
 
 - Enable assignment saving after the selected household members change.

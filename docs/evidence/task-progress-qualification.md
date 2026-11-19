@@ -57,3 +57,22 @@ The complete source campaign passes all 119 compiled browser journeys without
 skips, unexpected results or flaky outcomes. The rebuilt catalog passes all
 45 journeys. Both CPU image campaigns and the immutable installed Edge candidate
 are being qualified before readiness.
+
+## Immutable candidate
+
+Edge.50 packages runtime source `cec2d43e79cea9f45f4586354d97c5a1ac847570`.
+The source archive SHA-256 is
+`a98f912b04586488cc4e116892db60efb7848a7cc15536fd585f514386502aab`.
+The independently measured Linux wheel SHA-256 is
+`a6df90b4b5704b02db20537d0b76b8cb4ed25875167e1293a8a96ea771b4d49b`.
+All 231 Python modules match Git, the wheel and the installed Linux builder.
+The four compiled UI files match the local and Linux builds. The
+[artifact declaration](../../addon-edge/artifact.json) records those exact bytes.
+The ARM64 image is
+`sha256:746bb6b63641f07ce436cd66c16bffa89ddf887244856dfd5c176b201e9a502b`.
+Nine actual-image cases pass, covering all declared bytes, native authority and
+restart, standalone delivery, an actual Edge.5 upgrade and restore, repeated
+SIGTERM cleanup and all four real-Core deployment compositions. Eight task
+browser journeys pass against this exact image, covering assignment and progress
+in Ingress and standalone with English keyboard and Spanish narrow native touch.
+Installed-owner acceptance and final same-head CI and review remain pending.
