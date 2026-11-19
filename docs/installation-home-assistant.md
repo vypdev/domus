@@ -7,6 +7,12 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
+Edge.52 finds products from manually entered barcode digits in Inventory.
+Managers review the chosen product and code before confirming an association
+or removal. A failed read offers a retry with the draft retained, and original
+request recovery handles an unconfirmed write.
+[Qualification](evidence/local-barcode-qualification.md)
+
 Edge.51 lets members start, block and unblock eligible work from Tasks. It keeps
 the blocking reason through conflict review and original-request recovery.
 A competing progress update refreshes both the list and selected detail.
@@ -39,7 +45,7 @@ The Ingress walkthrough verified the Overview stock summary and replenishment in
 English and Spanish. The test app, its data and its temporary repository source were
 removed after verification. [Installed acceptance](https://github.com/vypdev/domus/pull/103#issuecomment-6797153928)
 
-The current Edge preview uses SQLite schema 34. Keep a compatible image and
+The current Edge preview uses SQLite schema 35. Keep a compatible image and
 cold data backup before updating from an earlier schema. An additional Supervisor source
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.0-edge.52
+
+- Find a local household product from its printed GTIN barcode digits.
+- Review a product association or removal before confirming, with current conflict recovery.
+- Retain entered digits through failed reads and recover original writes after interruption.
+- Migrate inventory from supported earlier schemas to schema 35. Keep the previous compatible image and cold data checkpoint for rollback.
+
 ## 0.0.0-edge.51
 
 - Refresh the task list and selected detail together after a competing progress update.

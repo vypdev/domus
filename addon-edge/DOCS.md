@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.51 packages the immutable runtime declared in
+Edge 0.0.0-edge.52 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -37,6 +37,17 @@ within 1000 characters and shows that saved reason beside the blocked task.
 A competing update retains your proposal for **Review current task** and a
 separate save. The list and selected detail refresh together after a competing
 progress update. **Check saved request** recovers an interrupted progress change.
+
+In Inventory, enter the digits below a barcode and choose **Find product**.
+Keep leading zeroes. Supported GTIN values have 8, 12, 13 or 14 digits with a
+valid check digit. A match offers **Open product stock**. An inventory manager
+can choose a Pantry product, review its code and confirm the association.
+Review and remove the current association before choosing a replacement.
+Use **Retry barcode lookup** after an unavailable read or **Recover original
+request** after an unconfirmed write.
+
+Edge.52 uses SQLite schema 35 and is listed in `breaking_versions`.
+Keep a compatible image together with its cold schema-34 data for rollback.
 
 Edge.47 completes explicit runtime cleanup when Home Assistant requests Stop.
 Workers finish before identity disposal and installation-lease release. Standalone

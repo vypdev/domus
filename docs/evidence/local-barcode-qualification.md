@@ -44,3 +44,18 @@ journeys on each architecture, including the two new barcode journeys.
 SQLite schema 35 adds the local association index. Keep the previous compatible
 image together with its cold schema-34 state for rollback. Compatible schema-35
 restoration retains current associations and original historical evidence.
+
+## Immutable candidate
+
+Edge.52 packages runtime source `3751c4e1650f5de5433bcbefe228260c0b07753b`.
+The source archive SHA-256 is
+`db5d9e29761e7ab22e79bd04c51e6d4e26eac73a303eeb8c64cdaa330b0fcb9d`.
+The independently measured Linux wheel SHA-256 is
+`2038b6218c8b2f5371e4cd5797a03af1274b9de8c17b698a69e3d59bb5969975`.
+All 231 Python modules match Git, the wheel and the installed Linux builder.
+The four compiled UI files match the local and Linux builds, and the normal
+local wheel matches the Linux wheel exactly. The artifact declaration records
+those measured bytes. [Edge artifact](../../addon-edge/artifact.json)
+
+Both CPU image campaigns, installed-owner acceptance and final same-head CI
+and review are tracked in the increment's pull request. [PR #145](https://github.com/vypdev/domus/pull/145)
