@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.51
+
+- Refresh the task list and selected detail together after a competing progress update.
+- Preserve the proposed blocking reason while reviewing current facts.
+- Keep the mobile task layout within the available width across system fonts.
+
 ## 0.0.0-edge.50
 
 - Start, block and unblock eligible work from Tasks with an explicit confirmation.

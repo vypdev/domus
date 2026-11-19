@@ -30,13 +30,13 @@ readable. Storage schema 34 and the persisted transition format are retained.
 | task-progress-interface-C02 | The compiled journeys block available work, return it to available and verify an empty assignee set. The retained [execution command tests](../../tests/backend/test_task_execution_commands.py) cover current target-specific grants. |
 | task-progress-interface-C03 | The [HTTP recovery regression](../../tests/backend/test_task_http.py) exercises both compositions and denies original disclosure after role revocation. The retained [query tests](../../tests/backend/test_task_queries.py) verify recorded authority, scope and transition target. |
 | task-progress-interface-C04 | The [domain tests](../../frontend/tests/tasks.test.ts), component tests and [normal page decoder tests](../../frontend/tests/page.test.ts) reject blank, invalid Unicode, controls and over-bound reasons. The compiled journey checks correction and exact saved multiline text. The retained backend validators enforce the same bound. |
-| task-progress-interface-C05 | Two browser tabs compete at one revision. The losing editor retains its reason. A still-permitted target requires explicit current review and a separate save. An unavailable target requires refresh or cancellation. The [controller tests](../../frontend/tests/task-controller.test.ts) include a conflict after preflight. |
+| task-progress-interface-C05 | Two browser tabs compete at one revision. The losing editor retains its reason. A still-permitted target requires explicit current review and a separate save. An unavailable target requires refresh or cancellation. The [controller tests](../../frontend/tests/task-controller.test.ts) include a conflict after preflight, refreshed list and selected facts after refused admission, and truthful retirement of stale list facts when the refresh fails. |
 | task-progress-interface-C06 | The compiled journey commits a transition and drops its response. Reload recovers the same original operation. Exact replay preserves counts and changed key payload conflicts. [Transport tests](../../frontend/tests/task-http.test.ts) reject mismatched receipts. [Journal tests](../../frontend/tests/task-journal.test.ts) retain progress alongside older entries. |
 | task-progress-interface-C07 | Four execution command tests inject failure after an actual occurrence write, verify rollback of state and evidence, and retry the same original key successfully. Controller and component tests preserve correctable input across unavailable, denied and uncertain outcomes. |
 | task-progress-interface-C08 | Four compiled journeys cover Ingress and standalone with English desktop keyboard and Spanish 390 px native touch. Component tests assert reason, review, cancellation and recovery focus, public ha-ui controls and inert text. |
 | task-progress-interface-C09 | The compiled journey restarts the composed runtime, checks its saved reason and original operation, completes work, then restores an earlier checkpoint. Original replay returns the historical operation and leaves the restored current task and evidence counts unchanged. |
 
-The local frontend campaign passes 1,912 tests with all four coverage metrics at
+The local frontend campaign passes 1,917 tests with all four coverage metrics at
 100% globally and per authored runtime file. The independent specification SDK
 accepts all nine supplied cases, reciprocal requirements and retained owners.
 The complete backend campaign passes 5,515 tests with 100% statement and branch
@@ -60,26 +60,30 @@ are tracked in [PR #144](https://github.com/vypdev/domus/pull/144).
 
 ## Immutable candidate
 
-Edge.50 packages runtime source `cec2d43e79cea9f45f4586354d97c5a1ac847570`.
+Edge.51 packages runtime source `4f79b75d65835037a51b51e3742cd372bc45edfe`.
 The source archive SHA-256 is
-`a98f912b04586488cc4e116892db60efb7848a7cc15536fd585f514386502aab`.
+`b57247ac5e62686f8ff42b1ac71cbcde5e47ea54ff873b543077db0102e865dc`.
 The independently measured Linux wheel SHA-256 is
-`a6df90b4b5704b02db20537d0b76b8cb4ed25875167e1293a8a96ea771b4d49b`.
+`3fe64c5c5d4d21d6c65538f276bf18805c44d04d084db57d964599b36d48ff0f`.
 All 231 Python modules match Git, the wheel and the installed Linux builder.
-The four compiled UI files match the local and Linux builds. The
+The four compiled UI files match the local and Linux builds, and the normal
+local wheel matches the Linux wheel exactly. The
 [artifact declaration](../../addon-edge/artifact.json) records those exact bytes.
-The ARM64 image is
-`sha256:746bb6b63641f07ce436cd66c16bffa89ddf887244856dfd5c176b201e9a502b`.
-Nine actual-image cases pass, covering all declared bytes, native authority and
-restart, standalone delivery, an actual Edge.5 upgrade and restore, repeated
-SIGTERM cleanup and all four real-Core deployment compositions. Eight task
-browser journeys pass against this exact image, covering assignment and progress
-in Ingress and standalone with English keyboard and Spanish narrow native touch.
-Installed-owner acceptance and final same-head CI and review are recorded in
-[PR #144](https://github.com/vypdev/domus/pull/144).
+Actual-image cases, installed-owner acceptance and final same-head CI and review
+are recorded in [PR #144](https://github.com/vypdev/domus/pull/144).
+
+The installed Edge.50 two-tab journey exposed a stale list after refused progress
+admission while the selected detail already reflected the competing update.
+Five controller regressions and four compiled journeys reproduced that behavior.
+Edge.51 refreshes the list and selected detail through the existing facts query.
+A failed list read clears stale rows and preserves the truthful failure state.
+The immutable Edge.50 archive, wheel and image retain their measured bytes.
 
 The first package-head CI caught a stale current-bundle fingerprint in the
 navigation evidence manifest. The normal wheel acceptance reproduced the
-failure. Its current-file declaration now matches the independently measured
-Edge.50 bundle, and the unchanged wheel/asset/license acceptance passes. The
-immutable runtime source, archive, wheel and image retain their measured bytes.
+failure. The current-file declaration now matches the measured Edge.51 bundle,
+and the wheel, asset and license acceptance passes. The Linux mobile campaign
+also exposed an intrinsic grid width exceeding the narrow viewport. The task
+columns now use a zero-minimum track. Reload journeys wait for the composed
+workspace before choosing the test language, including the standalone sign-in
+return through Overview.

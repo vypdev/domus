@@ -25,6 +25,8 @@ when the current selection already matches the task.
 
 Edge.50 adds Start, Block and Unblock to Tasks, with a required blocking reason,
 explicit conflict review and recovery of the original progress request.
+Edge.51 refreshes both the list and detail after a competing progress update and
+keeps the mobile task layout within the available width.
 
 This candidate uses SQLite schema 34. Keep a
 compatible image and cold data backup before upgrading a previous preview.
