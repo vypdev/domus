@@ -129,6 +129,35 @@ def test_unexpected_errors_propagate_and_restore_the_original_handler(failure):
     assert signal.getsignal(signal.SIGTERM) is before
 
 
+@pytest.mark.parametrize("native", [False, True])
+def test_sigterm_after_runtime_creation_closes_it_before_the_listener_starts(
+    tmp_path, monkeypatch, native
+):
+    before = signal.getsignal(signal.SIGTERM)
+    closed = []
+
+    class Runtime:
+        @property
+        def app(self):
+            request_termination()
+
+        def close(self):
+            closed.append(True)
+            return 0, 0
+
+    module = ingress if native else server
+    monkeypatch.setattr(module, "create_owned_runtime", lambda *args, **kwargs: Runtime())
+    monkeypatch.setenv("SUPERVISOR_TOKEN", "fixture-supervisor-token")
+    arguments = ["--channel", "edge", "--data-directory", str(tmp_path)]
+    if native:
+        arguments += ["--public-origin", "http://homeassistant.local:8123"]
+    else:
+        arguments += ["--ha-url", "https://ha.example", "--public-origin", "https://domus.example"]
+    assert module.main(arguments) == 0
+    assert closed == [True]
+    assert signal.getsignal(signal.SIGTERM) is before
+
+
 def test_cleanup_error_remains_visible_after_a_requested_stop():
     from domus.composition.signals import graceful_termination
 

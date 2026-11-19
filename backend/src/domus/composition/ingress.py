@@ -311,7 +311,7 @@ def _run(argv: list[str] | None, begin_cleanup: Callable[[], None]) -> int:
             file=sys.stderr,
         )
         return 2
-    try:
+    else:
         if projections_enabled:
             _serve_ha_projections(app)
         else:

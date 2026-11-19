@@ -230,6 +230,7 @@ def _run(argv: list[str] | None, begin_cleanup: Callable[[], None]) -> int:
     )
     data.add_argument("--data-directory", type=Path, help="Existing private 0700 data directory.")
     args = parser.parse_args(argv)
+    runtime = None
     try:
         if not 1 <= args.port <= 65535:
             raise InvalidInput("invalid_bind_port")
@@ -269,7 +270,7 @@ def _run(argv: list[str] | None, begin_cleanup: Callable[[], None]) -> int:
     except DomusError as error:
         print(f"Configuration rejected: {error.code}", file=sys.stderr)
         return 2
-    try:
+    else:
         uvicorn.run(
             runtime.app,
             host=args.host,
@@ -287,12 +288,13 @@ def _run(argv: list[str] | None, begin_cleanup: Callable[[], None]) -> int:
         )
     finally:
         begin_cleanup()
-        revoked, unrevoked = runtime.close()
-        logging.getLogger("domus.auth").info(
-            "auth_runtime_stopped revoked=%d unconfirmed=%d", revoked, unrevoked
-        )
-        if unrevoked:
-            logging.getLogger("domus.auth").warning("ha_grants_not_revoked: %d", unrevoked)
+        if runtime is not None:
+            revoked, unrevoked = runtime.close()
+            logging.getLogger("domus.auth").info(
+                "auth_runtime_stopped revoked=%d unconfirmed=%d", revoked, unrevoked
+            )
+            if unrevoked:
+                logging.getLogger("domus.auth").warning("ha_grants_not_revoked: %d", unrevoked)
     return 0
 
 
