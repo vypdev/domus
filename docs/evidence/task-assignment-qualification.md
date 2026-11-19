@@ -38,8 +38,10 @@ assignment, receipt and restoration formats. The selected ha-ui version is
 
 Current-source Chromium qualification passes all four new compiled journeys.
 The full frontend suite passes 1,833 cases with 100% of all four supported metrics
-globally and per authored runtime file. Both image architectures, installed Edge
-acceptance and exact-head PR gates are pending.
+globally and per authored runtime file. The backend passes 5,513 cases with 100%
+statement and branch coverage globally and across all 231 modules, independently
+audited per file. Architecture-specific CI and final review are tracked in
+[PR #142](https://github.com/vypdev/domus/pull/142).
 
 ## Immutable candidate
 
@@ -59,3 +61,24 @@ authority and restart, private standalone delivery, an actual Edge.5 upgrade and
 restore, repeated SIGTERM cleanup, and all four real-Core deployment compositions.
 The four assignment browser journeys also passed against this exact installed
 image in Ingress and standalone, with English keyboard and Spanish native touch.
+
+The first CI campaign exposed a browser-test bootstrap race after standalone
+restart. The test selected Spanish while authentication was still loading, then
+waited for Spanish navigation after the completed bootstrap selected English.
+The journey now waits for authenticated navigation before changing language.
+All four actual-image assignment journeys passed three consecutive repetitions.
+
+## Installed Home Assistant acceptance
+
+Chrome verified installed version `0.0.0-edge.48` using the Action-managed issue
+branch and the synthetic household `Domus QA 141 Edge48`. English keyboard input
+assigned a task, retained an empty draft across two competing updates, focused
+explicit current-assignment review and deliberately released the task. The
+390 px Spanish touch journey assigned, cancelled an edit, released and reassigned
+another task. Dark-theme text, focus and the assignment controls were legible.
+
+The app stopped with Home Assistant's `Detenido` state and restarted successfully.
+Both task identities persisted. The released desktop task retained revision 5
+and the assigned mobile task retained revision 4. Checking the saved assignment
+after restart recovered its recorded operation. The isolated-image SIGTERM cases
+also require a zero exit status.

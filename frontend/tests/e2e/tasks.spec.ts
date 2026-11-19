@@ -505,6 +505,7 @@ for (const mode of ['native', 'standalone'] as const) {
           await page.getByRole('button', {name: 'Sign in with Home Assistant', exact: true}).click();
           await page.getByRole('link', {name: 'Continue as fixture user', exact: true}).click();
         }
+        await expect(page.getByRole('link', {name: 'Tasks', exact: true})).toBeVisible();
         await page.getByRole('combobox', {name: /^(Language|Idioma)$/u}).selectOption(locale);
         await page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true}).click();
       };
