@@ -3,6 +3,7 @@ import {canonicalGtin, inventoryCommand, shoppingItemKey} from '../domain/invent
 import type {BarcodeLookup, BaseUnit, InventoryCommand, InventoryReport, MovementHistory, PurchaseReceipts, Purchases, PurchaseSessionDetail, PurchaseSessions, ShoppingAction, ShoppingList, ShoppingSources} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import type {EntryEntropy, EntryRead} from './ports';
+import {EntryReadError} from './ports';
 
 export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'invalid_request',
   'invalid_inventory_barcode', 'inventory_barcode_linked', 'inventory_barcode_changed',
@@ -140,7 +141,7 @@ export class InventoryController {
     const loaded = await this.run(this.server.barcode(state.scope, code), lookup => {
       this.set({barcode: {code, lookup, unavailable: false}});
     }, state.pending ? state.notice : null);
-    if (!loaded && this.view?.scope === state.scope)
+    if (!loaded && this.view?.scope === state.scope && this.view.report !== null)
       this.set({barcode: {code, lookup: null, unavailable: true}});
   }
 
@@ -352,8 +353,14 @@ export class InventoryController {
       if (this.owned !== owned) return false;
       use(value);
       return true;
-    } catch {
-      if (this.owned === owned) this.set({notice});
+    } catch (error) {
+      if (this.owned === owned) {
+        if (error instanceof EntryReadError && (error.code === 'authentication_required' || error.code === 'forbidden'))
+          this.set({report:null, history:null, purchases:null, purchaseReceipts:null,
+            shoppingList:null, shoppingSources:null, purchaseSessions:null, purchaseSession:null,
+            shoppingFocus:undefined, barcode:null, result:null, notice:this.view!.pending ? 'uncertain' : 'unavailable'});
+        else this.set({notice});
+      }
       return false;
     } finally {
       if (this.owned === owned) {

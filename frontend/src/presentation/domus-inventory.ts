@@ -212,7 +212,8 @@ export class DomusInventory extends LitElement {
       const owner = this.view!;
       const target = this.renderRoot.querySelector<HTMLElement>(owner.pending
         ? '.inventory-actions vyp-ha-button:last-child'
-        : this.barcodeState()?.unavailable ? '.barcode-search-form vyp-ha-button' : '.barcode-result');
+        : owner.report === null ? '.inventory-actions vyp-ha-button:first-child'
+          : this.barcodeState()?.unavailable ? '.barcode-search-form vyp-ha-button' : '.barcode-result');
       if (target) {
         void this.updateComplete.then(() => {
           if (this.view !== owner) return;

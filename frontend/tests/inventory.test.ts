@@ -2064,6 +2064,42 @@ test('barcode query failure retires old facts and supports an explicit read retr
   expect(f.current()?.report).toBeNull();
 });
 
+test.each((['native', 'standalone'] as const).flatMap(mode =>
+  [401, 403, 503].map(status => ({mode, status}))))(
+  'barcode HTTP $status in $mode retires rejected access but preserves recoverable unavailable reads', async ({mode, status}) => {
+  const f = controller(), app = f.controller;
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await app.showHistory('product');
+  await app.showPurchases();
+  await app.showPurchaseReceipts('purchase');
+  const server = http([[status, failure('permission_denied')]], mode).server;
+  f.barcodes.mockImplementationOnce((current, value) => server.barcode(current, value));
+  await app.showBarcode('036000291452');
+  const {node, root} = component();
+  node.view = f.current()!;
+  await node.updateComplete;
+  if (status === 503) {
+    expect(f.current()?.report).toEqual(report);
+    expect(f.current()?.barcode).toMatchObject({lookup: null, unavailable: true});
+    expect(root.textContent).toContain(register.name);
+  } else {
+    expect(f.current()).toMatchObject({report: null, history: null, purchases: null,
+      purchaseReceipts: null, barcode: null, result: null, notice: 'unavailable'});
+    expect(root.textContent).not.toContain(register.name);
+    expect(root.querySelector('.registration-form')).toBeNull();
+    expect(root.querySelector('.barcode-search-form')).toBeNull();
+    await app.submit(register);
+    expect(f.send).not.toHaveBeenCalled();
+    await app.showBarcode('036000291452');
+    expect(f.barcodes).toHaveBeenCalledOnce();
+  }
+  await app.refresh();
+  expect(f.current()?.report).toEqual(report);
+  await app.showBarcode('036000291452');
+  expect(f.current()?.barcode?.lookup?.barcode).toBe('00036000291452');
+});
+
 test('retired barcode reads cannot populate another household scope', async () => {
   const f = controller(), app = f.controller;
   app.bind(scope);
@@ -2080,6 +2116,24 @@ test('retired barcode reads cannot populate another household scope', async () =
   await reading;
   expect(cancel).toHaveBeenCalledOnce();
   expect(f.current()?.barcode).toBeUndefined();
+});
+
+test('barcode access rejection preserves an unresolved original command without retaining private facts', async () => {
+  const f = controller(), app = f.controller;
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  const command = {action:'inventory.link-barcode',barcode:'00036000291452',product_id:'product'} as const;
+  f.send.mockReturnValueOnce(lost());
+  await app.submit(command);
+  const original = f.journal.open(scope.key);
+  f.barcodes.mockImplementationOnce((current, value) =>
+    http([[403, failure('permission_denied')]]).server.barcode(current, value));
+  await app.showBarcode(command.barcode);
+  expect(f.current()).toMatchObject({report:null, barcode:null, pending:true, notice:'uncertain'});
+  expect(f.journal.open(scope.key)).toEqual(original);
+  expect(f.send).toHaveBeenCalledOnce();
+  await app.refresh();
+  expect(f.current()).toMatchObject({report, pending:true, notice:'uncertain'});
 });
 
 test('lost barcode writes recover their original receipt and refresh current association facts', async () => {
@@ -2172,6 +2226,14 @@ test('a submitted barcode search continues to its result or retry without reclai
     await retry.updateComplete;
     expect(f.root.activeElement).toBe(retry);
     expect(retry.shadowRoot!.activeElement).toBe(retry.shadowRoot!.querySelector('button'));
+
+    await begin();
+    await f.assign({...initial, notice: 'unavailable'});
+    const refresh = f.root.querySelector('.inventory-actions vyp-ha-button')!;
+    await refresh.updateComplete;
+    expect(f.root.activeElement).toBe(refresh);
+    await f.assign(barcodeView);
+    expect(f.field()!.value).toBe('036000291452');
 
     await begin();
     const moved = document.createElement('button');

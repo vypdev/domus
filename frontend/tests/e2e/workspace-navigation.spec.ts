@@ -163,6 +163,24 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(searchCard).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     await expect(searchCard).toHaveCSS('color', 'rgb(23, 43, 58)');
     await stock.screenshot({path:info.outputPath('barcode-long-name-result-es.png')});
+    for (const status of [401, 403]) {
+      await page.route(lookup, route => route.fulfill({status, contentType:'application/json',
+        headers:{'Cache-Control':'no-store'}, body:JSON.stringify({state:'blocked',
+          code:status === 401 ? 'authentication_required' : 'permission_denied',
+          message:'Access rejected.', action_required:'Review current access.', correlation_id:'cor_barcode_access'})}), {times:1});
+      await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
+      await expect(stock.getByText('El inventario no está disponible. Actualiza para consultar el stock.', {exact:true})).toBeVisible();
+      await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true})).toHaveCount(0);
+      await expect(stock.locator('.registration-form, .barcode-search-form, .barcode-review, .history')).toHaveCount(0);
+      const refresh = stock.getByRole('button', {name:'Actualizar inventario', exact:true});
+      await expect(refresh).toBeFocused();
+      await stock.screenshot({path:info.outputPath('barcode-access-' + status + '-es.png')});
+      await refresh.tap();
+      await expect(spanish).toHaveValue('036000291452');
+      await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true})).toBeVisible();
+      await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
+      await expect(stock.locator('.barcode-result')).toContainText(longName);
+    }
     expect(external).toEqual([]);
   });
 }

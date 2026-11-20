@@ -212,3 +212,40 @@ but does not independently identify which transaction owned the writer.
 Both complete workspace journeys pass after this preparation change, with no
 skipped, unexpected or flaky results and zero retries. Final same-head CI still
 repeats the full source, catalog and actual-image qualification.
+
+
+## Rejected-access review correction
+
+The final `52ab6e1` review found that a barcode HTTP 401 or 403 retired the
+lookup result but retained the previously loaded catalog. The Inventory adapter
+correctly distinguished rejected access from unavailable transport; its controller
+had erased that distinction. Four new regressions reproduced the retained private
+report across both HTTP compositions. The two corresponding HTTP 503 controls
+passed with the existing retry behavior.
+
+The shared Inventory read boundary now retires loaded product, history, shopping,
+association and receipt facts after current authentication or authorization is
+rejected. Management controls disappear, and another barcode query or write cannot
+use the old report. A current explicit refresh must authorize a new report.
+An unresolved original command stays in its journal without another POST.
+Transient unavailable reads retain the input and their normal explicit retry.
+
+A submitted barcode lookup that loses its report continues focus to Refresh
+inventory. Both full barcode journeys exercise 401 and 403, verify removal of
+private product/history and management views, then refresh current authorized
+state and reuse the entered digits. Original screenshots distinguish each status.
+Both compositions pass these complete journeys without retries; all eight native
+specification cases and their identities remain unchanged. A new immutable Edge
+candidate, exact CPU campaigns and installed acceptance are required for this UI
+change; the previously accepted Edge.55 remains historical evidence and rollback.
+
+The corrected interface passes 1,936 unit cases, with all four coverage metrics
+at 100% globally and per authored file and the independent audit passing.
+The first normal-wheel check correctly rejected the previous Edge.55 bundle
+fingerprints. The integration receipt now records the newly measured four-file
+bundle and retains the previous bytes as its accepted historical input.
+
+The final corrected source campaign passes all 121 journeys in 364.896745
+seconds, with zero skipped, unexpected or flaky results. The rebuilt catalog
+passes all 45 cases in 29.439194 seconds under the same zero-retry policy.
+The normal wheel contract passes with the current bundle fingerprints.
