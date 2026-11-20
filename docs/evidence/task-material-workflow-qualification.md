@@ -71,6 +71,15 @@ At superseded head `0ae97b252a5aba4e6a86ee76b4602aa5ce4600c4`, the full backend 
 
 The next CI orders the complete frontend job after the backend campaign to remove that overlap while preserving every assertion, deadline, test, coverage threshold and independent gate. All 186 Python tooling tests pass at 100% statement/branch coverage. Backend runtime bytes are unchanged. The final immutable Edge.63 must separately qualify catalog/history retention inside Home Assistant and pass final-head whole source and both image campaigns. Review, scoped cleanup, merge and destination receipts remain recorded in PR #151. Edge.62's successful native recovery/stock observations are retained as upgrade evidence, not substituted for the new UI behavior.
 
+## Immutable Edge.63 build
+
+- Runtime source: `0f9101b285b7528b801126fb3fa4318e9cc4fd90`.
+- Source archive SHA-256: `fe003b4238bf2d5b0b00f84b3b6e58f793a040ee1599278797ddcb8388b1a718`.
+- Wheel SHA-256: `6675744e12bbc983d9c512b5296854a8e01d03219cdfa7cd0fb520d50c2ca8e5`.
+- Local Linux ARM64 image: `sha256:ee70884fef01cdf9c869eca986e5df64285dfe6ee26d2d085d6d0ec233f38586`.
+
+All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. The Python runtime is byte-identical to Edge.62. Normal local and Linux wheel bytes match; source, version and architecture labels pass. SQLite remains schema 35. Actual Edge.63 catalog/history retention and upgrade observations, final exact-head whole/source/both-CPU CI, review, scoped cleanup, merge and destination receipts belong to PR #151 as independent gates. Build identity and earlier-head passes do not imply those outcomes.
+
 ## Superseded immutable Edge.62 build
 
 - Runtime source: `b1313f3a91c8d992495d30c2a04714df81afad4e`.

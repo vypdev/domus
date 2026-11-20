@@ -605,6 +605,20 @@
       "amd64BrowserPassed": 70,
       "arm64": "cancelled after source correction ready",
       "limit": "Pending writes and fixture reset deadlines observed; underlying cause unproven; no product exception applies."
+    },
+    "runtimeSource": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
+    "immutableCandidate": {
+      "version": "0.0.0-edge.63",
+      "sourceCommit": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
+      "sourceArchiveSHA256": "fe003b4238bf2d5b0b00f84b3b6e58f793a040ee1599278797ddcb8388b1a718",
+      "wheelSHA256": "6675744e12bbc983d9c512b5296854a8e01d03219cdfa7cd0fb520d50c2ca8e5",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:ee70884fef01cdf9c869eca986e5df64285dfe6ee26d2d085d6d0ec233f38586",
+      "pythonByteIdenticalToEdge62": true,
+      "status": "Immutable build qualified. Final-head whole/source/both CPU CI, actual installed Edge63 catalog/history retention, review, scoped cleanup and destination receipts remain separate gates in PR151."
     }
   }
 }

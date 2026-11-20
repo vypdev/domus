@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "0.0.0-edge.62",
-  "sourceCommit": "b1313f3a91c8d992495d30c2a04714df81afad4e",
-  "sourceArchiveSHA256": "3c720ae9603121b085fcb59004da2b35740ff2ad84310d4e28ec394a25b03a5c",
+  "version": "0.0.0-edge.63",
+  "sourceCommit": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
+  "sourceArchiveSHA256": "fe003b4238bf2d5b0b00f84b3b6e58f793a040ee1599278797ddcb8388b1a718",
   "storageSchema": 35,
-  "wheelSHA256": "7929b6385f690a6a59fb89d5130251af81a7f58a0250997b0101f45d66825cd1",
+  "wheelSHA256": "6675744e12bbc983d9c512b5296854a8e01d03219cdfa7cd0fb520d50c2ca8e5",
   "pythonFiles": {
     "domus/__init__.py": "7182c88b92234b4328f94497f4e70222d4390d8093e4b62893dfa78ac5530ac6",
     "domus/application/__init__.py": "1e8c0c87bf2a8ca947112543070583c0cc55d9d40b56eab0d86ed59a4ec1e82c",
@@ -239,9 +239,9 @@
     "domus/infrastructure/task_materials.py": "d5d2934e36f290c7bf44b473392f014eab8749f1f3b3d26a3402079e65d2818f"
   },
   "uiFiles": {
-    ".vite/manifest.json": "418733593ea583e40e94d2db17e2d848d45233daacb8da8c58eb2790587f9bd0",
+    ".vite/manifest.json": "998b3a51746f0784dc567bae1d308206b9add3944eb626dea149bcbea6bce69a",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-RwLxcDDN.js": "5ba07d88306a0741f152598ac38db30feb078e8d9120eff51562376629b67f47",
-    "index.html": "ce894ea1b2a68a93629a00a814a9471294f52eb950b2dc89139638139a989add"
+    "assets/index-DeF0wQmP.js": "5bb606c3aa124815de2c808cfff0a8a952c81466cc3431035d8f0c62cf272eff",
+    "index.html": "c1927f7b98fe93824e71fa48b376899bc15d219c9dadddc893a982cdd4803a75"
   }
 }

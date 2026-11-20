@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.63
+
+- Keep displayed earlier material usage when opening, refreshing or paging material choices.
+- Preserve the next closed completion while preparing an unrelated task plan.
+
 ## 0.0.0-edge.62
 
 - Keep the focused read-recovery control visible below fixed navigation inside Home Assistant.
