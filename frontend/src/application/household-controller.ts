@@ -80,7 +80,7 @@ export class HouseholdController {
     if (entry.decision?.state === 'authentication_required'
         || (administration?.session === null && administration.notice === 'authentication_required')
         || this.taskCurrent?.view.notice === 'authentication_required') {
-      this.generation++; this.notice = null; this.entry.expire(); this.retire(); return;
+      this.expire(); return;
     }
     if (entry.phase === 'ready' && entry.decision?.state !== 'active') {this.notice = null; this.retire(); return;}
     if (this.visible && !this.matched()) {this.visible = false; this.notice = 'context_changed';}
@@ -165,6 +165,11 @@ export class HouseholdController {
         this.visible = false; this.notice = 'context_changed';
       }
     }, false);
+  }
+  /** Retire shared proof and owned views, preserving journals for deliberate reauthentication. */
+  expire(): void {
+    if (this.closed) return;
+    this.generation++; this.notice = null; this.entry.expire(); this.retire();
   }
   async logout(): Promise<void> {
     if (this.closed || this.view.busy) return;

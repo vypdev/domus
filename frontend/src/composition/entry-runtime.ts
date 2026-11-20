@@ -15,6 +15,7 @@ import {endpoint} from '../adapters/http-values';
 import type {EntryEndpoint} from '../adapters/http-values';
 import {SessionJournal} from '../adapters/session-journal';
 import type {OwnedStorage} from '../adapters/session-journal';
+import type {JournalContext} from '../domain/journal';
 import {AdministrationSessionJournal} from '../adapters/administration-journal';
 import {HttpAdministrationServer} from '../adapters/administration-http';
 
@@ -64,6 +65,16 @@ export class EntryRuntime {
   get administration(): AdministrationView | null {return this.current.controller.administration;}
   get tasks(): TaskView | null {return this.current.controller.tasks;}
   get serverTime(): number {return this.current.clock.now();}
+  /** A rejected request may retire only the exact proof that owned its send. */
+  authenticationRejection(context: JournalContext, signal: AbortSignal): (() => void) | undefined {
+    const owned = this.current, proof = this.view.session;
+    if (!this.active || proof === null || proof.context.installationId !== context.installationId
+        || proof.context.channel !== context.channel || proof.context.subject !== context.subject) return undefined;
+    return () => {
+      if (!this.active || signal.aborted || this.current !== owned || this.view.session !== proof) return;
+      owned.controller.expire(); this.publish(); this.later();
+    };
+  }
   taskWork(work: (controller: TaskController) => Promise<void>): Promise<void> {return this.perform(controller => controller.taskWork(work));}
   private publish(): void {
     try {this.changed(this.view, this.administration, this.tasks);} catch {/* A renderer failure cannot change authority or interrupt resource cleanup. */}

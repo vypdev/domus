@@ -94,6 +94,35 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone') {
 }
 async function settle() {for (let i = 0; i < 200; i++) await Promise.resolve();}
 
+test('ENTRY-02/05/16: secondary rejection belongs to one live proof, context and request lifetime', async () => {
+  const f = fixture(), signal = new AbortController();
+  const context = JSON.parse(f.wire.session).ha_user_id;
+  const expected = {installationId:JSON.parse(f.wire.session).context.installation_id, channel:'edge' as const, subject:context};
+  expect(f.runtime.authenticationRejection(expected, signal.signal)).toBeUndefined();
+  f.phase('active'); await f.runtime.start();
+  for (const patch of [{installationId:'other'}, {channel:'stable' as const}, {subject:'other'}])
+    expect(f.runtime.authenticationRejection({...expected, ...patch}, signal.signal)).toBeUndefined();
+  const cancelled = f.runtime.authenticationRejection(expected, signal.signal)!;
+  signal.abort(); cancelled(); expect(f.runtime.view.session).not.toBeNull();
+  const currentSignal = new AbortController().signal;
+  const olderProof = f.runtime.authenticationRejection(expected, currentSignal)!;
+  await f.runtime.refresh(); const newer = f.runtime.view.session;
+  olderProof(); expect(f.runtime.view.session).toBe(newer);
+  const olderOwner = f.runtime.authenticationRejection(expected, currentSignal)!;
+  f.browser.events.dispatchEvent(new PageTransitionEvent('pagehide', {persisted:true}));
+  olderOwner(); expect(f.runtime.view.phase).toBe('closed');
+  f.browser.events.dispatchEvent(new PageTransitionEvent('pageshow', {persisted:true}));
+  await settle(); const restored = f.runtime.view.session;
+  expect(restored).not.toBeNull(); olderOwner(); expect(f.runtime.view.session).toBe(restored);
+  const rejected = f.runtime.authenticationRejection(expected, currentSignal)!;
+  const calls = f.transport.mock.calls.length;
+  rejected(); expect(f.runtime.view.session).toBeNull(); expect(f.runtime.administration).toBeNull();
+  expect(f.runtime.view.decision?.state).toBe('authentication_required');
+  expect(f.runtime.authenticationRejection(expected, currentSignal)).toBeUndefined();
+  rejected(); expect(f.transport).toHaveBeenCalledTimes(calls);
+  f.runtime.dispose(); rejected(); expect(f.runtime.view.phase).toBe('closed');
+});
+
 test('composition opens once, publishes loading/verified views and performs no business write', async () => {
   const f = fixture(); expect(f.runtime.view.phase).toBe('idle');
   const opening = f.runtime.start(); expect(f.views[0].phase).toBe('loading');

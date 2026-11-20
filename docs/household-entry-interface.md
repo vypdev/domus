@@ -133,6 +133,14 @@ rejects redirects, foreign response URLs, opaque responses and unsupported perso
 or caching. Bound reads, operation queries and commands carry exactly one verified context assertion.
 No host message, query hint or API body selects an endpoint or actor.
 
+A valid protected HTTP 401 also retires the shared entry proof when it arrives through a secondary
+workspace reader or command. Domus removes household/workspace facts and focuses the deployment's
+existing verification action. It obtains no fresh proof and sends no replacement command automatically.
+The bounded original request remains available after deliberate identical-context verification.
+Granular HTTP 403 and technical unavailability retain their existing scoped recovery behavior.
+See the [shared entry rejection qualification](evidence/shared-entry-authentication-qualification.md)
+for the accepted case mapping and response ownership rules.
+
 Each logical operation has one 15-second deadline across its requests and streamed decoding. Abort
 both cancels owned I/O and settles the caller independently of provider cooperation; late preflight
 continuations cannot send another request. Body readers/listeners/timers are released. Native fetch

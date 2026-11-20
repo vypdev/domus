@@ -41,7 +41,16 @@ original-request recovery when a write response is unconfirmed.
 Edge.55 aligns barcode HTTP validation and published API schemas with the same
 supported printed lengths.
 
-Edge.56 retires loaded Inventory data when current access is rejected and focuses Refresh inventory. An authorized refresh preserves the entered barcode digits. This candidate uses SQLite schema 35. Keep a
+Edge.56 retires loaded Inventory data when current access is rejected and focuses
+Refresh inventory. An authorized refresh preserves the entered barcode digits.
+
+Edge.57 hides all household information when the current session is rejected and
+focuses **Reopen Domus**. Existing records and original requests are retained.
+After verifying access, recover an interrupted request explicitly; reopening the
+interface never repeats it automatically. Granular permission denials still offer
+the corresponding workspace's current recovery action.
+
+This candidate uses SQLite schema 35. Keep a
 compatible image and cold data backup before upgrading a previous preview.
 See [installation and operation](https://github.com/vypdev/domus/blob/develop/addon-edge/DOCS.md) for the source pin and rollback
 instructions.

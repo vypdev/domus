@@ -165,6 +165,16 @@ test('HADB-01: administration authentication failure retires both views without 
   expect(f.controller.view.decision?.state).toBe('authentication_required'); expect(f.controller.view.session).toBeNull();
   expect(f.entryServer.session).toHaveBeenCalledOnce();
 });
+test('ENTRY-02/05/06: shared expiry retires every owner, preserves frozen journals and cannot reopen a closed lifetime', async () => {
+  const f = fixture(); await f.controller.refresh(); f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.submitAdministration(command);
+  const raw = f.values.get(ADMINISTRATION_JOURNAL_KEY), calls = f.entryServer.session.mock.calls.length;
+  expect(raw).toBeDefined(); f.controller.expire();
+  expect(f.controller.view.session).toBeNull(); expect(f.controller.administration).toBeNull();
+  expect(f.values.get(ADMINISTRATION_JOURNAL_KEY)).toBe(raw);
+  expect(f.entryServer.session).toHaveBeenCalledTimes(calls);
+  f.controller.close(); f.controller.expire(); expect(f.controller.view.phase).toBe('closed');
+});
 test('HADB-01/C04: the earlier entry lease expires during administration collection without automatic reverification', async () => {
   const f = fixture(), waiting = deferred<typeof own>(); f.server.preferences.mockReturnValueOnce(waiting);
   f.identity.session.mockReturnValue(read({...f.proof, expiresAt: 20_000}));
