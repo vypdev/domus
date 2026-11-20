@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.66 packages the immutable runtime declared in
+Edge 0.0.0-edge.67 packages the immutable runtime declared in
 [artifact.json](artifact.json). In Tasks, **Add materials** plans existing Pantry products
 for ordinary, fixed and relative creation. Review actual quantities with their displayed units,
 including zero for unused materials. Each result shows confirmed, unused or pending consumption

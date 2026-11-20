@@ -161,6 +161,15 @@ Two real native/standalone HTTP reds complete exactly to that limit and reproduc
 
 Installed Edge.66 independently passes the current-cycle/history scenario through Home Assistant. A fresh synthetic household has one piece product and one task. Two English keyboard completions/reopenings and a third actual Spanish 390 px touch completion retain three distinct pending intents. Stock stays zero until one reviewed intake raises it to one; the current intent remains pending. With the first closed page open, one explicit current settlement posts one piece, keeps the same historical intent and Next control, and preserves Done/performed facts. Actual Spanish 390 px touch opens the other original closed completion; both earlier usages remain pending. Final stock is zero, with one intake and one task-consumption movement. The focused outcome clears fixed navigation. The fresh settlement observation records one POST without a gap; an earlier debugger window was truncated, so no session-wide write total is qualified. Current native lost-reply injection is not claimed. The [installed acceptance receipt](https://github.com/vypdev/domus/pull/151#issuecomment-7039956857) records the exact installed source and limits. Edge.66 is stopped and frozen while its fresh exact cleanup confirmation is pending. Its successful native UI observation does not waive the new backend finding or accept an unbuilt later candidate.
 
+## Immutable Edge.67 build
+
+- Runtime source: `00f8cd0e40aee8d02a907619635e30ebd7e8f54d`.
+- Source archive SHA-256: `70419905b5704196b031b9e11bd4361f9d69eee90786fd61514f46d2cda6523d`.
+- Wheel SHA-256: `b49e89191c297e6022de62cf99bde4074caa3829d8f113e09a235ea4cc27780f`.
+- Local Linux ARM64 image: `sha256:9b8b53a61f48c1bf4297d8041d63a59668a4575660a341c148e5fee1ccce8b91`.
+
+All 231 Python modules and four compiled UI files match the published archive, normal local/Linux wheel, installed builder and final image. Only `domus/application/task_queries.py` changes from Edge.66; all UI bytes are identical to its installed current-cycle/history qualification. Schema remains 35 and source/version/architecture labels pass. This is build identity, not current installed acceptance. Complete exact final-pin backend/global-per-file coverage, whole source/both-CPU CI, review and native Edge.67 acceptance remain required. The stopped Edge.66 installation remains frozen while its exact cleanup confirmation is pending.
+
 ## Superseded immutable Edge.64 build
 
 - Runtime source: `530a609f0a9490bccd7f3f2cd8598ec590689166`.

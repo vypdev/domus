@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.67
+
+- Keep current material settlement available when the task itself cannot accept another revision.
+- Leave revision-dependent task actions disabled at their existing limit.
+
 ## 0.0.0-edge.66
 
 - Preserve the displayed earlier material usage and its next page when settling the current completion.

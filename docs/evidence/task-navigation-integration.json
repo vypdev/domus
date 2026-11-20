@@ -448,7 +448,7 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "The max-occurrence-revision hint finding reproduces in both actualHTTPcompositions and passes265directed tests after a one-line backend correction. CompiledUI remains byte-identical to native-qualified66. A new immutable runtime candidate and exact final-head complete backend/globalcoverage, productCI/review and installedacceptance remain required.",
+    "sourceState": "Published runtime 00f8cd0 fixes the material hint at the maximum occurrence revision. Both real HTTP regressions and all 265 directed tests pass. The immutable Edge.67 build changes only TaskQueries; all four UI assets match installed Edge.66. Final complete backend coverage, CI/review and installed Edge.67 acceptance are required. Installed Edge.66 remains stopped pending exact cleanup confirmation.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "reviewCorrections": {
       "pullRequest": 151,
@@ -637,7 +637,7 @@
       "arm64": "cancelled after source correction ready",
       "limit": "Pending writes and fixture reset deadlines observed; underlying cause unproven; no product exception applies."
     },
-    "runtimeSource": "d50d25eaba5b012db21e212a451b27c36c0937c2",
+    "runtimeSource": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d",
     "runtimeSourceBeforeMaterialFocusCorrection": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
     "supersededCandidate63": {
       "version": "0.0.0-edge.63",
@@ -690,18 +690,21 @@
       "final65Gates": "required"
     },
     "immutableCandidate": {
-      "version": "0.0.0-edge.66",
-      "sourceCommit": "d50d25eaba5b012db21e212a451b27c36c0937c2",
-      "sourceArchiveSHA256": "e81dfc8bd90a673086fd52d014b11c6a86e764b60188046a0d5f56faa831bb03",
-      "wheelSHA256": "81a67ca3a7ac4e8cc905068942383f7df481c197cede48140f1f0642990a2f5a",
+      "version": "0.0.0-edge.67",
+      "sourceCommit": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d",
+      "sourceArchiveSHA256": "70419905b5704196b031b9e11bd4361f9d69eee90786fd61514f46d2cda6523d",
+      "wheelSHA256": "b49e89191c297e6022de62cf99bde4074caa3829d8f113e09a235ea4cc27780f",
       "storageSchema": 35,
       "pythonFiles": 231,
+      "changedPythonFilesFrom66": [
+        "domus/application/task_queries.py"
+      ],
       "uiFiles": 4,
+      "UIByteIdenticalToNative66": true,
       "archiveWheelInstalledEquality": "passed",
       "normalLocalLinuxWheelEquality": "passed",
-      "pythonByteIdenticalToEdge65": true,
-      "imageId": "sha256:378b5c118dd1a80ca86e2f9a497036591cedcb20ed0d6d072851ae075e3f4c81",
-      "status": "Immutable build identity passed; installed current-cycle/history acceptance and exact final-pin full CI/review remain required."
+      "imageId": "sha256:9b8b53a61f48c1bf4297d8041d63a59668a4575660a341c148e5fee1ccce8b91",
+      "status": "Immutable build identity passed; installed Edge.67 acceptance and full final-pin backend coverage, product CI and review remain mandatory."
     },
     "installedEdge65": {
       "version": "0.0.0-edge.65",
@@ -861,13 +864,13 @@
       "syntheticProducts": 1,
       "syntheticTasks": 1,
       "completionCycles": 3,
-      "nativeCurrentSettlement": "PASS one explicit current intent POST; same displayed historical intent/Next retained, then actualES390touch opens the other original closed completion.",
+      "nativeCurrentSettlement": "PASS: one explicit current intent POST retains the displayed historical intent and Next control; Spanish touch at 390 px opens the other original closed completion.",
       "finalStock": [
         "0",
         "0",
         "0"
       ],
-      "movements": "One intake and one taskconsumption linked to the sameoccurrence.",
+      "movements": "One intake and one task consumption linked to the same occurrence.",
       "focus": {
         "focused": true,
         "top": 457.109375,
@@ -876,8 +879,22 @@
       },
       "receipt": "https://github.com/vypdev/domus/pull/151#issuecomment-7039956857",
       "stopped": true,
-      "cleanup": "Pending fresh exact owner confirmation for66/app58e9a17f and its one source; do not upgrade this installation while pending.",
-      "limitations": "Native current direct settlement; lostreply/original recovery remains a separate sourcejourney observation. Earlier debugger window truncated; only fresh currentsettlement window write total is qualified."
+      "cleanup": "Pending fresh exact owner confirmation for Edge.66, app 58e9a17f and its one source; keep this installation frozen.",
+      "limitations": "Native direct settlement; lost-reply/original recovery is a separate source journey observation. An earlier debugger window was truncated; only the fresh current settlement window write total is qualified."
+    },
+    "precedingCandidate66": {
+      "version": "0.0.0-edge.66",
+      "sourceCommit": "d50d25eaba5b012db21e212a451b27c36c0937c2",
+      "sourceArchiveSHA256": "e81dfc8bd90a673086fd52d014b11c6a86e764b60188046a0d5f56faa831bb03",
+      "wheelSHA256": "81a67ca3a7ac4e8cc905068942383f7df481c197cede48140f1f0642990a2f5a",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "normalLocalLinuxWheelEquality": "passed",
+      "pythonByteIdenticalToEdge65": true,
+      "imageId": "sha256:378b5c118dd1a80ca86e2f9a497036591cedcb20ed0d6d072851ae075e3f4c81",
+      "status": "Immutable build identity passed; installed current-cycle/history acceptance and exact final-pin full CI/review remain required."
     }
   }
 }
