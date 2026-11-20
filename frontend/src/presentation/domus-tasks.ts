@@ -263,7 +263,11 @@ export class DomusTasks extends LitElement {
             ? component.renderRoot.querySelector<HTMLElement>('vyp-ha-field, h4')
             : component.renderRoot.querySelector<HTMLElement>('vyp-ha-select') ?? component.renderRoot.querySelector<HTMLElement>('vyp-ha-button');
           const root = this.renderRoot as ShadowRoot, focused = root.activeElement;
-          requestAnimationFrame(() => {if (target?.isConnected && root.activeElement === focused) target.focus();});
+          requestAnimationFrame(() => {
+            if (target?.isConnected && root.activeElement === focused) {
+              target.focus(); target.scrollIntoView({block: 'center', inline: 'nearest'});
+            }
+          });
         });
       }
     }

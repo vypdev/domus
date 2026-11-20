@@ -241,6 +241,12 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await activate(outcomes.getByRole('button',{name:t('Record actual usage','Registrar consumo real'),exact:true}));
     await expect(outcomes.getByText(t('Not used · no stock movement','Sin utilizar · sin movimiento de existencias'),{exact:true})).toBeVisible();
     await expect(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true})).toHaveCount(0);
+    const recordedHeading=outcomes.getByRole('heading',{name:t('Material consumption','Consumo de materiales'),exact:true});
+    await expect(recordedHeading).toBeFocused();
+    const recordedBounds=await recordedHeading.boundingBox();
+    const recordedNavigation=await page.getByRole('navigation',{name:t('Household navigation','Navegación del hogar'),exact:true}).boundingBox();
+    expect(recordedBounds).not.toBeNull();expect(recordedNavigation).not.toBeNull();
+    expect(recordedBounds!.y,'The focused material outcome must clear the sticky navigation').toBeGreaterThanOrEqual(recordedNavigation!.y+recordedNavigation!.height);
     await outcomes.screenshot({path:info.outputPath('material-zero-recorded-'+locale+'.png')});
     const scheduled:Record<string,any>[]=[];
     for(const kind of ['fixed','relative'] as const){

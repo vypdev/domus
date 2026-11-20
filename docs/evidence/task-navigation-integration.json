@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "e002ce3251bce7ac8351b11d2902309187a332cf7c763cb38992d77e9ca9f648",
-    "assets/index-CPnLf2I7.js": "c3864de7ffd8e5ade8c7169a83a6caba0419a1a99c05d7910d232c0defdff1e6",
+    ".vite/manifest.json": "7920777afe0e1d01704c8e1ecbdcdb9ffbff973709fe8e0a003be339e18336a3",
+    "assets/index-BNSPQT9z.js": "5b4142f452ee3460450437ca19b57d3025bf5021dadb9c36a7909c995f163968",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "7b0f043b5410f40ac375959722086e26bd8939b1d0d84a75bbe092d5e30f3f62"
+    "index.html": "efe9e685b64a734a23cd640ae31e83f6e4b468fd5f9c5d80c57da107630b5c9e"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -448,7 +448,7 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Combined focus/history corrections pass 2,070 frontend tests with full coverage, strict types and four rebuilt material journeys in 53.8 seconds. A separate complete 125-case campaign passed on the preceding focus-only UI. All 46 rebuilt catalog cases also pass. Immutable Edge.64, installed acceptance and exact-head whole CI/review remain mandatory.",
+    "sourceState": "Centered-focus correction passes 2,070 frontend tests at full coverage, strict types, all four rebuilt material journeys in42.6s and46catalog cases. Native64 original settlement screenshot shows actualHA clipping despite raw-source bounds passing. Immutable65 installed C09/focus and final exact-head whole/source/both-CPU CI/review remain mandatory.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "reviewCorrections": {
       "pullRequest": 151,
@@ -456,7 +456,7 @@
       "frontendCoverage": "100% all four metrics globally and per file across all 110 runtime files",
       "directedBackendMaterialTests": 117,
       "closedCycleHistory": "explicit bounded read; original cycle and intent revision; current permission on settlement",
-      "sourceAcceptance": "All four combined-runtime material journeys pass in 53.8 seconds with two failed read/recovery boundaries each, zero skipped/flaky/unexpected/retries. A preceding focus-only UI passed all 125 cases in 496.2 seconds; the final whole CI must execute the complete inventory again. All 46 final rebuilt catalog cases pass.",
+      "sourceAcceptance": "Final centered-focus2070frontend all110files/fourmetrics100%, types,4expandedmaterial journeys42.6s and46rebuiltcatalog pass. Final full125source/70perCPU same-head CI and current immutable65nativeC09/visiblefocus still required.",
       "backendTests": 5635,
       "backendStatements": 18045,
       "backendBranches": 4876,
@@ -482,10 +482,10 @@
         "retries": 0
       },
       "frontendCounts": {
-        "statements": 8807,
+        "statements": 8808,
         "branches": 7896,
         "functions": 1915,
-        "lines": 6395
+        "lines": 6397
       },
       "readRecoveryVisibility": "Center the focused Refresh tasks control so the actual HA iframe sticky navigation cannot cover it; keep repeated local editing focus unchanged.",
       "catalogReadHistoryRetention": "Same-scope catalog reload, paging and failure preserve selected closed-cycle history and its continuation; three direct regressions fail before the fix and pass after.",
@@ -510,6 +510,17 @@
         "durationMs": 53800.962999999996,
         "readsFailedPerJourney": 2,
         "extraDomainWrites": 0
+      },
+      "materialOutcomeFocusVisibility": "Guarded deferred material focus centers its current target. All four rebuilt journeys pass42.6s with focused result heading below navigation. Raw64source also passed these assertions42.4s; original realHA64settlement screenshot is the negative clipping evidence, requiring independent installed65 verification.",
+      "plannerPublicationReview": "Verified false positive oncc: EntryRuntime.materialDraft\u2192perform\u2192publish\u2192composition callback already passes a fresh TaskView after synchronous mutation and promise settlement. Source/realUI proofreply4643831425; normal thread resolution PRRT_kwDOVa5AKs66B--f.",
+      "visibleMaterialFocusJourneys": {
+        "expected": 4,
+        "unexpected": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0,
+        "durationMs": 42573.161,
+        "nativeBoundary": "Actual HomeAssistant clipping is not reproduced in the raw64source windows; native65 independently verifies it."
       }
     },
     "runtimeSourceBeforeReview": "514258c9adbd54d938e28fd65a901764a89799cc",
@@ -651,7 +662,7 @@
       "originalTraceRetained": true,
       "productWaiver": false
     },
-    "immutableCandidate": {
+    "supersededCandidate64": {
       "version": "0.0.0-edge.64",
       "sourceCommit": "530a609f0a9490bccd7f3f2cd8598ec590689166",
       "sourceArchiveSHA256": "380f4a071e81e2004edfb34a15e099a6d20cbcc27d3fd8f0e0652f6c1b2e3dd1",
@@ -661,8 +672,22 @@
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
       "pythonByteIdenticalToEdge63": true,
-      "status": "Archive, normal/local/Linux wheel, builder and final image bytes and source/version/architecture labels qualified. Actual installed64, final exact-head whole/source/both-CPU CI, review and scoped cleanup remain independent gates in PR151.",
+      "status": "Native64 full C09 domain workflow passed with4distinct writes and9tasks, plus read-only recovery. Original material-outcome focus was partly hidden by fixed navigation;65required before merge.64fullCI still running, not final acceptance.",
       "imageId": "sha256:bfe831f24e8ba53007041b3f8c8df277cac35fe15b67de97644377817242e7ec"
+    },
+    "precedingFullProductCI64": {
+      "head": "cc74e8cf90bdeee517f65a36a701f511ac7583dd",
+      "run": 44752737565,
+      "backendTests": 5635,
+      "backendDurationSeconds": 1598.56,
+      "backendRuntimeFiles": 231,
+      "backendCoverage": "100% statement/branch globally/perfile and independent gate passed",
+      "amd64BrowserPassed": 70,
+      "amd64BrowserDurationMs": 430848.332,
+      "wholeWorkflow": "Cancelled after native visible-focus defect and validated centering correction; report pass and job/workflow conclusion remain separate.",
+      "arm64": "cancelled/not qualified",
+      "frontend": "cancelled/not qualified",
+      "final65Gates": "required"
     }
   }
 }
