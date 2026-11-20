@@ -41,6 +41,15 @@ Two further valid review findings are corrected before acceptance. Historical se
 
 All 2,051 frontend tests pass, with all 110 runtime files and all four metrics at 100% (8,795 statements, 7,884 branches, 1,915 functions and 6,387 lines). Both TypeScript checks and the independent coverage/fixture checks pass. Backend runtime bytes are unchanged since the complete 5,635-test pass. The existing four material browser journeys now exercise two closed pending completions, recovery of one settlement, continuation to the other cycle, a distinct second settlement and unchanged reopened work. All four reproduce the missing continuation against the independently verified Edge.59 wheel, then pass against the rebuilt correction in 49.9 seconds with zero retries, skipped or flaky cases. English uses keyboard input and Spanish uses actual 390 px touch in both native and standalone compositions. Original reports, representative traces and continuation screenshots are retained. A new immutable installed candidate and final-head whole CI remain required; the source inventory stays 125 and each image inventory stays 70.
 
+## Immutable Edge.60 build
+
+- Runtime source: `41c5c75c8c5549fc4d9142f86db600e6a76530da`.
+- Source archive SHA-256: `f6c73df97481cf90a7d140b3739d6716c5da28289dced4b6283a0888eee7f992`.
+- Wheel SHA-256: `97f358d6d76a30b47ca062f479aec7c3fc639694387acdcc0034cdea3e38aff2`.
+- Local Linux ARM64 image: `sha256:24281d34e20ce4ea60871daeb856962984ab3e456df83ebb827f4fd8369e6156`.
+
+All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. Normal local and Linux wheel bytes match independently; source, version and architecture labels pass. SQLite stays schema 35. This is build identity evidence. Final-head whole CI/review, both new CPU functional/browser campaigns and native upgrade acceptance remain required before merge. The existing synthetic Edge.59 household, products and two closed pending cycles are reserved for the same-installation upgrade test.
+
 ## Superseded Edge.59 build and partial native qualification
 
 - Runtime source: `f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9`.

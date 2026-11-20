@@ -448,20 +448,20 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Continuation and independent accepted-fixture digest corrected. All 2051 frontend tests pass at 100% in all four metrics; the four expanded two-cycle journeys reproduce the old failure then pass after rebuild. Backend runtime unchanged from 5635 complete pass. Final-head whole CI, both new CPU images and installed acceptance remain pending.",
+    "sourceState": "Published corrected runtime 41c5c75; 2051 frontend tests at 100% in all four metrics and four expanded two-cycle journeys pass after reproducing the old defect. Backend unchanged from complete 5635-test pass. New CPU campaigns and native upgrade acceptance remain required.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
-    "runtimeSource": "f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9",
+    "runtimeSource": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
     "immutableCandidate": {
-      "version": "0.0.0-edge.59",
-      "sourceCommit": "f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9",
-      "sourceArchiveSHA256": "f78570f13f0d7679d21835ed361757fcb69052024c186e24b7300520b8eea82a",
-      "wheelSHA256": "ec3f66257983e0cfc92f83a94ec2d541ec4e84ca098323518153d43f8f2e5916",
+      "version": "0.0.0-edge.60",
+      "sourceCommit": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
+      "sourceArchiveSHA256": "f6c73df97481cf90a7d140b3739d6716c5da28289dced4b6283a0888eee7f992",
+      "wheelSHA256": "97f358d6d76a30b47ca062f479aec7c3fc639694387acdcc0034cdea3e38aff2",
       "storageSchema": 35,
       "pythonFiles": 231,
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
-      "imageId": "sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535",
-      "status": "Superseded by continuation correction; native59 retains two exact closed pending cycles for upgrade acceptance."
+      "imageId": "sha256:24281d34e20ce4ea60871daeb856962984ab3e456df83ebb827f4fd8369e6156",
+      "status": "Build qualified; final-head CI/review, both CPU functional/browser campaigns and native upgrade acceptance pending."
     },
     "reviewCorrections": {
       "pullRequest": 151,
@@ -514,6 +514,18 @@
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
       "status": "Superseded before installed acceptance by two genuine review recovery corrections. Runnable58 exports/images retired after retaining original build receipts."
+    },
+    "supersededCandidate59": {
+      "version": "0.0.0-edge.59",
+      "sourceCommit": "f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9",
+      "sourceArchiveSHA256": "f78570f13f0d7679d21835ed361757fcb69052024c186e24b7300520b8eea82a",
+      "wheelSHA256": "ec3f66257983e0cfc92f83a94ec2d541ec4e84ca098323518153d43f8f2e5916",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535",
+      "status": "Superseded by continuation correction. Both CPU reports pass 70 journeys; native59 data retained for same-installation upgrade qualification."
     }
   }
 }

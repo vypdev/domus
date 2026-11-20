@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.60
+
+- Keep the next closed completion reachable after settling earlier material usage.
+- Preserve this continuation when recovering the original settlement after an interrupted reply.
+- Retain the original cycle and intent identities without changing the reopened task.
+
 ## 0.0.0-edge.59
 
 - Keep earlier material usage visible and explicitly recoverable after reopening a task.
