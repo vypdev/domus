@@ -5,8 +5,190 @@ test.use({hasTouch: true});
 const ingress = '/api/hassio_ingress/fixture_domus_supervisor_1234567890';
 
 for (const mode of ['native', 'standalone'] as const) {
+  test(`local barcode lookup and reviewed association recovery in ${mode}`, async ({page, context, request}, info) => {
+    test.setTimeout(50_000);
+    const origin = `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;
+    const base = origin + (mode === 'native' ? ingress : '') + '/';
+    const barcode = '00036000291452';
+    const longName = 'QA91' + 'X'.repeat(156);
+    const commands = base + 'api/v1/inventory/commands';
+    const lookup = base + 'api/v1/inventory/barcode?barcode=' + barcode;
+    const external: string[] = [];
+    await context.route('**/*', route => {
+      if (new URL(route.request().url()).origin === origin) return route.continue();
+      external.push(route.request().url());
+      return route.abort('internetdisconnected');
+    });
+    if (process.env.DOMUS_BROWSER_IMAGE) {
+      const image = await request.get(origin + '/__fixture__/image');
+      expect(image.ok()).toBe(true);
+      expect(await image.json()).toEqual({source_commit:process.env.DOMUS_TEST_SOURCE_COMMIT,
+        architecture:process.env.DOMUS_TEST_ARCH, image_id:expect.stringMatching(/^sha256:[a-f0-9]{64}$/u), mode});
+    }
+    expect((await request.post(origin + '/__fixture__/reset')).ok()).toBe(true);
+    if (mode === 'native') await context.addCookies([{name:'ingress_session', value:'f'.repeat(128),
+      domain:'127.0.0.1', path:'/', httpOnly:true, sameSite:'Strict'}]);
+    await page.goto(base + '#household');
+    if (mode === 'standalone') {
+      await page.getByRole('button', {name:'Sign in with Home Assistant', exact:true}).press('Enter');
+      await page.getByRole('link', {name:'Continue as fixture user', exact:true}).press('Enter');
+    }
+    await page.getByRole('textbox', {name:'Household name', exact:true}).fill('Barcode QA household');
+    await page.getByRole('textbox', {name:'Timezone', exact:true}).fill('UTC');
+    await page.getByRole('button', {name:'Create household', exact:true}).press('Enter');
+    await page.locator('vyp-ha-tabs').getByRole('link', {name:'Inventory', exact:true}).press('Enter');
+    const stock = page.locator('domus-inventory');
+    for (const name of ['QA barcode soap', 'QA barcode tea', longName]) {
+      await stock.getByRole('textbox', {name:'Product name', exact:true}).fill(name);
+      await stock.getByRole('button', {name:'Register product', exact:true}).press('Enter');
+      await expect(stock.getByRole('article', {name, exact:true})).toBeVisible();
+    }
+    const digits = stock.getByRole('textbox', {name:'Digits below the barcode', exact:true});
+    await expect(digits).toHaveAttribute('type', 'text');
+    await expect(digits).toHaveAttribute('inputmode', 'numeric');
+    await digits.fill(barcode + '0');
+    await digits.press('Enter');
+    await expect(digits).toHaveValue(barcode + '0');
+    await expect(digits).toBeFocused();
+    await expect(stock.getByText('Enter 8, 12, 13 or 14 printed digits with a valid check digit.')).toBeVisible();
+    await digits.fill('036000291452');
+    await digits.press('Enter');
+    await expect(stock.getByText('Unlinked barcode in this household.', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
+    const firstProduct = stock.locator('.products > article').first();
+    await page.keyboard.press('Tab');
+    await expect(stock.getByRole('link', {name:'Choose a product in Pantry below.', exact:true})).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(firstProduct).toBeFocused();
+    await stock.getByRole('button', {name:'Associate barcode with QA barcode soap', exact:true}).press('Enter');
+    const review = stock.getByRole('form', {name:'Review barcode association', exact:true});
+    await expect(review).toBeFocused();
+    await expect(review).toContainText(barcode);
+    let originalKey = '';
+    let associationId = '';
+    await page.route(commands, async route => {
+      expect(route.request().postDataJSON()).toMatchObject({action:'inventory.link-barcode', barcode});
+      originalKey = (await route.request().allHeaders())['idempotency-key'];
+      const committed = await route.fetch({maxRetries:0, maxRedirects:0});
+      expect(committed.ok()).toBe(true);
+      associationId = (await committed.json()).result.association_id;
+      await route.abort('connectionclosed');
+    });
+    await review.getByRole('button', {name:'Confirm barcode association', exact:true}).press('Enter');
+    await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeEnabled();
+    await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeFocused();
+    expect(originalKey).toMatch(/^req_[a-f0-9]{32}$/u);
+    await page.unroute(commands);
+    await page.reload();
+    await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true})).toBeVisible();
+    await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeEnabled();
+    const original = page.waitForResponse(base + 'api/v1/inventory/requests/inventory.link-barcode/' + originalKey);
+    await stock.getByRole('button', {name:'Recover original request', exact:true}).press('Enter');
+    expect((await original).ok()).toBe(true);
+    await expect(stock.getByText('Barcode associated.', {exact:false})).toBeVisible();
+    await expect(stock.getByText('Product found QA barcode soap', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
+    await expect(digits).toHaveValue(barcode);
+    await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true}).locator('dd')).toHaveText(['0', '0', '0']);
+    await stock.getByRole('button', {name:'Open product stock', exact:true}).press('Enter');
+    await expect(stock.getByRole('region', {name:'Movement history · QA barcode soap', exact:true})).toBeFocused();
+    await stock.getByRole('button', {name:'Remove barcode association', exact:true}).press('Enter');
+    const oldReview = stock.getByRole('form', {name:'Review barcode removal', exact:true});
+    await expect(oldReview).toBeFocused();
+
+    const peer = await context.newPage();
+    await peer.goto(base + '#inventory');
+    const other = peer.locator('domus-inventory');
+    await other.getByRole('textbox', {name:'Digits below the barcode', exact:true}).fill('036000291452');
+    await other.getByRole('button', {name:'Find product', exact:true}).press('Enter');
+    await other.getByRole('button', {name:'Remove barcode association', exact:true}).press('Enter');
+    await other.getByRole('button', {name:'Confirm barcode removal', exact:true}).press('Enter');
+    await expect(other.getByText('Unlinked barcode in this household.', {exact:true})).toBeVisible();
+    await expect(other.locator('.barcode-result')).toBeFocused();
+    await other.getByRole('button', {name:'Associate barcode with QA barcode tea', exact:true}).press('Enter');
+    await other.getByRole('button', {name:'Confirm barcode association', exact:true}).press('Enter');
+    await expect(other.getByText('Product found QA barcode tea', {exact:true})).toBeVisible();
+    await expect(other.locator('.barcode-result')).toBeFocused();
+    const stale = page.waitForRequest(item => item.url() === commands && item.method() === 'POST');
+    await page.bringToFront();
+    await oldReview.getByRole('button', {name:'Confirm barcode removal', exact:true}).press('Enter');
+    expect((await stale).postDataJSON()).toMatchObject({action:'inventory.remove-barcode', barcode, association_id:associationId});
+    await expect(stock.getByText('The association changed. Review the current product before confirming again.', {exact:true})).toBeVisible();
+    await expect(stock.getByText('Product found QA barcode tea', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
+    await expect(oldReview).toHaveCount(0);
+    await stock.screenshot({path:info.outputPath('barcode-en-keyboard.png')});
+    await peer.close();
+
+    await page.setViewportSize({width:390, height:844});
+    await page.emulateMedia({colorScheme:'dark', reducedMotion:'reduce'});
+    await page.getByRole('combobox', {name:'Language', exact:true}).selectOption('es');
+    const spanish = stock.getByRole('textbox', {name:'Dígitos bajo el código de barras', exact:true});
+    const searchCard = stock.getByRole('article', {name:'Buscar producto por código de barras', exact:true});
+    await expect(searchCard).toHaveCSS('background-color', 'rgb(24, 36, 47)');
+    await expect(searchCard).toHaveCSS('color', 'rgb(237, 244, 250)');
+    await expect(stock.getByRole('button', {name:'Buscar producto', exact:true})).toHaveCSS('color', 'rgb(24, 36, 47)');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await spanish.fill('036000291452');
+    await page.route(lookup, route => route.abort('failed'), {times:1});
+    await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
+    await expect(stock.getByText('La búsqueda local del código no está disponible. Reintenta la búsqueda o actualiza Inventario.', {exact:true})).toBeVisible();
+    await expect(spanish).toHaveValue('036000291452');
+    await expect(stock.getByRole('button', {name:'Reintentar búsqueda del código', exact:true})).toBeFocused();
+    await stock.getByRole('button', {name:'Reintentar búsqueda del código', exact:true}).tap();
+    await expect(stock.getByText('Producto encontrado QA barcode tea', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
+    await stock.getByRole('button', {name:'Eliminar asociación del código', exact:true}).tap();
+    await stock.getByRole('button', {name:'Confirmar retirada del código', exact:true}).tap();
+    await expect(stock.getByText('Código sin asociación en este hogar.', {exact:true})).toBeVisible();
+    await expect(stock.locator('.barcode-result')).toBeFocused();
+    await expect(spanish).toHaveValue('036000291452');
+    await stock.screenshot({path:info.outputPath('barcode-es-touch.png')});
+    await stock.getByRole('button', {name:'Asociar código a ' + longName, exact:true}).tap();
+    const longReview = stock.getByRole('form', {name:'Revisar asociación del código', exact:true});
+    await expect(longReview).toContainText(longName);
+    await stock.screenshot({path:info.outputPath('barcode-long-name-review-es.png')});
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    const reviewLayout = await longReview.evaluate(element => ({clientWidth:element.clientWidth,
+      scrollWidth:element.scrollWidth, overflowWrap:getComputedStyle(element).overflowWrap}));
+    await longReview.getByRole('button', {name:'Confirmar asociación del código', exact:true}).tap();
+    await expect(stock.locator('.barcode-result')).toContainText(longName);
+    await expect(stock.locator('.barcode-result')).toBeFocused();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    const resultLayout = await stock.locator('.barcode-result').evaluate(element => ({clientWidth:element.clientWidth,
+      scrollWidth:element.scrollWidth, overflowWrap:getComputedStyle(element).overflowWrap}));
+    await info.attach('barcode-long-name-layout', {body:JSON.stringify({length:longName.length,
+      viewport:390, review:reviewLayout, result:resultLayout}), contentType:'application/json'});
+    await page.emulateMedia({colorScheme:'light', reducedMotion:'reduce'});
+    await expect(searchCard).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(searchCard).toHaveCSS('color', 'rgb(23, 43, 58)');
+    await stock.screenshot({path:info.outputPath('barcode-long-name-result-es.png')});
+    for (const status of [401, 403]) {
+      await page.route(lookup, route => route.fulfill({status, contentType:'application/json',
+        headers:{'Cache-Control':'no-store'}, body:JSON.stringify({state:'blocked',
+          code:status === 401 ? 'authentication_required' : 'permission_denied',
+          message:'Access rejected.', action_required:'Review current access.', correlation_id:'cor_barcode_access'})}), {times:1});
+      await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
+      await expect(stock.getByText('El inventario no está disponible. Actualiza para consultar el stock.', {exact:true})).toBeVisible();
+      await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true})).toHaveCount(0);
+      await expect(stock.locator('.registration-form, .barcode-search-form, .barcode-review, .history')).toHaveCount(0);
+      const refresh = stock.getByRole('button', {name:'Actualizar inventario', exact:true});
+      await expect(refresh).toBeFocused();
+      await stock.screenshot({path:info.outputPath('barcode-access-' + status + '-es.png')});
+      await refresh.tap();
+      await expect(spanish).toHaveValue('036000291452');
+      await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true})).toBeVisible();
+      await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
+      await expect(stock.locator('.barcode-result')).toContainText(longName);
+    }
+    expect(external).toEqual([]);
+  });
+}
+
+for (const mode of ['native', 'standalone'] as const) {
   test(`shared workspace navigation in ${mode}`, async ({page, context, request}, info) => {
-    test.setTimeout(75_000);
+    // This complete workspace journey includes several domains and retained screenshots.
+    test.setTimeout(120_000);
     const origin = `http://127.0.0.1:${mode === 'native' ? 56174 : 56175}`;
     const base = origin + (mode === 'native' ? ingress : '') + '/';
     if (process.env.DOMUS_BROWSER_IMAGE) {
@@ -1048,9 +1230,20 @@ for (const mode of ['native', 'standalone'] as const) {
     expect((await dueDetail).ok()).toBe(true);
     await expect(tasksRegion.getByRole('heading',{name:'Read the water meter',exact:true})).toBeFocused();
 
+    // A detail response precedes the owning household's final access reconciliation.
+    const settledHousehold = page.getByRole('button', {
+      name:/^(Close this view|Cerrar esta vista|Sign out of Domus|Cerrar sesión en Domus)$/u,
+    });
+    await expect(settledHousehold).toBeEnabled({timeout:15_000});
     const scheduled = await request.post(origin + '/__fixture__/calendar-review');
     expect(scheduled.ok()).toBe(true);
     const {title:maintenanceTitle, future:maintenanceId, new_date:maintenanceDay} = await scheduled.json();
+    // Preparation also completes and approves past work. Await its real asynchronous projection.
+    await expect.poll(async () => {
+      const ready = await request.get(origin + '/__fixture__/points-ready');
+      expect(ready.ok()).toBe(true);
+      return ready.json();
+    }, {timeout:15_000}).toEqual({ready:true, worker_running:true});
     const maintenanceURL = base + 'api/v1/tasks/occurrences/' + maintenanceId;
     const label = (locale: 'en' | 'es', state: string) => {
       const deadline = new Intl.DateTimeFormat(locale,
@@ -1072,6 +1265,7 @@ for (const mode of ['native', 'standalone'] as const) {
     expect((await keyboardDetail).ok()).toBe(true);
     await expect(tasksRegion).toBeFocused();
     await expect(tasksRegion.getByRole('heading',{name:maintenanceTitle,exact:true})).toBeVisible();
+    await expect(settledHousehold).toBeEnabled({timeout:15_000});
 
     await page.getByLabel('Language',{exact:true}).selectOption('es');
     await page.setViewportSize({width:390,height:844});
@@ -1085,6 +1279,7 @@ for (const mode of ['native', 'standalone'] as const) {
     expect((await touchDetail).ok()).toBe(true);
     await expect(tasksRegion).toBeFocused();
     await expect(tasksRegion.getByRole('heading',{name:maintenanceTitle,exact:true})).toBeVisible();
+    await expect(settledHousehold).toBeEnabled({timeout:15_000});
 
     await tabs.getByRole('link',{name:'Inicio',exact:true}).tap();
     await unclaimedItem.tap();
@@ -1569,6 +1764,8 @@ for (const mode of ['native', 'standalone'] as const) {
 
     await tabs.getByRole('link',{name:'Hogar',exact:true}).tap();
     await drafts.getByRole('button',{name:'Abrir ' + draftTitle,exact:true}).tap();
+    const disable = execution.getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true});
+    await expect(disable).toBeEnabled();
     await stockWrite('refill-for-later-no-task-runs',{action:'inventory.adjust',product_id:product,
       quantity:'2',reason:'Replenished for history test'});
     const token = await page.request.get(base + 'api/v1/auth/csrf', {headers:{'X-Domus-Context':contextHeader}});
@@ -1587,7 +1784,6 @@ for (const mode of ['native', 'standalone'] as const) {
       expect((await newer.json()).result.condition_matched).toBe(false);
     }
 
-    const disable = execution.getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true});
     await disable.tap();
     await execution.getByRole('region',{name:'Confirmar acción de automatización',exact:true})
       .getByRole('button',{name:'Deshabilitar futuras ejecuciones',exact:true}).tap();

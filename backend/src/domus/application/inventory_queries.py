@@ -23,11 +23,13 @@ from domus.domain.errors import NotFound
 from domus.domain.identity import HumanIdentity, Permission, allows, effective_role
 from domus.domain.inventory import (
     PANTRY,
+    BarcodeAssociation,
     BaseUnit,
     CatalogProduct,
     MovementKind,
     StockTransfer,
     StorageLocation,
+    canonical_gtin,
     stock_quantity,
 )
 from domus.domain.shopping import Purchase, PurchaseReceipt, PurchaseSession
@@ -88,6 +90,14 @@ class StockAttention:
 @dataclass(frozen=True, slots=True)
 class LowStockCount:
     low_stock_products: int
+
+
+@dataclass(frozen=True, slots=True)
+class BarcodeLookup:
+    barcode: str
+    may_manage: bool
+    association: BarcodeAssociation | None
+    product: CatalogProduct | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -368,6 +378,18 @@ class InventoryQueries:
     scope: MaintenanceScope
     human: HumanIdentity
     cursors: TaskCursors
+
+    def barcode(self, value: str) -> BarcodeLookup:
+        canonical = canonical_gtin(value)
+        with self.store.read() as unit:
+            home, grants, _ = self._access(unit, "inventory-barcode-v1", 1, None)
+            association = unit.inventory.barcode(home, canonical)
+            product = (
+                None
+                if association is None
+                else unit.inventory.product(home, association.product_id)
+            )
+            return BarcodeLookup(canonical, grants.manage, association, product)
 
     def _access(
         self, unit: UnitOfWork, query: str, limit: int, product_id: str | None

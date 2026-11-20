@@ -38,7 +38,7 @@ from domus.application.task_requests import (
     VerifyTask,
 )
 from domus.composition import admin, ingress, server
-from domus.domain.errors import Forbidden, IdentityRejected, IdentityUnavailable
+from domus.domain.errors import Forbidden, IdentityRejected, IdentityUnavailable, StorageBusy
 from domus.domain.identity import HumanIdentity
 from domus.domain.nominal_recurrence import CalendarNominalExpansion
 from domus.domain.recurrence_rule_text import parse_fixed_pattern
@@ -319,6 +319,24 @@ class Fixture:
             "new_date": final.date().isoformat(),
         }
 
+    def points_ready(self) -> dict:
+        """Observe real projection progress without advancing or pausing its worker."""
+        worker = self.runtime.points_worker
+        assert worker is not None and self.runtime.storage is not None
+        ready = False
+        try:
+            with self.runtime.storage.database.read() as unit:
+                home = unit.households.current()
+                if home is not None:
+                    ready = not unit.tasks.lifecycle_events(
+                        home.household_id,
+                        limit=1,
+                        after=unit.points.position(home.household_id),
+                    )
+        except StorageBusy:
+            pass  # A live projection can temporarily own the writer during fixture preparation.
+        return {"ready": ready, "worker_running": worker.is_running}
+
     def stats(self) -> dict:
         with sqlite3.connect(f"file:{self.database}?mode=ro", uri=True) as connection:
             counts = {
@@ -359,6 +377,8 @@ class Fixture:
             response = JSONResponse(self.stats())
         elif path == "/__fixture__/calendar-review" and request.method == "POST":
             response = JSONResponse(self.seed_calendar_review())
+        elif path == "/__fixture__/points-ready" and request.method == "GET":
+            response = JSONResponse(self.points_ready())
         elif path == "/__fixture__/operator" and request.method == "POST":
             values = await request.json()
             assert set(values) == {"action"}

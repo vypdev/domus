@@ -44,6 +44,7 @@ from domus.infrastructure.sqlite_history import (
     verify_history,
 )
 from domus.infrastructure.sqlite_inventory import (
+    verify_inventory_barcodes,
     verify_inventory_catalog,
     verify_inventory_locations,
     verify_inventory_records,
@@ -232,6 +233,8 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
             verify_automation_drafts(connection, allow_daily=version >= 34)
         if version >= 33:
             verify_automation_controls(connection)
+        if version >= 35:
+            verify_inventory_barcodes(connection)
     except DomusError as error:
         raise DatabaseRejected("invalid_snapshot_records") from error
 

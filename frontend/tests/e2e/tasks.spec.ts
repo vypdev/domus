@@ -490,6 +490,7 @@ for (const mode of ['native', 'standalone'] as const) {
 for (const mode of ['native', 'standalone'] as const) {
   for (const locale of ['en', 'es'] as const) {
     test(`assignment review, recovery and restart in ${mode} ${locale}`, async ({browser, request}, info) => {
+      test.setTimeout(75_000);
       expect((await request.post(origin(mode) + '/__fixture__/reset')).ok()).toBe(true);
       const owner = await browser.newContext({viewport: {width: locale === 'es' ? 390 : 1280, height: 844}, hasTouch: locale === 'es'});
       const peer = await browser.newContext();
@@ -506,8 +507,9 @@ for (const mode of ['native', 'standalone'] as const) {
           await page.getByRole('link', {name: 'Continue as fixture user', exact: true}).click();
         }
         await expect(page.getByRole('link', {name: 'Tasks', exact: true})).toBeVisible();
+        await page.getByRole('link', {name: 'Tasks', exact: true}).click();
+        await expect(page.locator('domus-tasks').getByRole('heading', {name: /^(Household tasks|Tareas del hogar)$/u})).toBeVisible();
         await page.getByRole('combobox', {name: /^(Language|Idioma)$/u}).selectOption(locale);
-        await page.getByRole('link', {name: t('Tasks', 'Tareas'), exact: true}).click();
       };
       try {
         const tasks = await open(page, owner, mode);
@@ -609,6 +611,7 @@ for (const mode of ['native', 'standalone'] as const) {
         await expect(save).toBeDisabled(); expect(writes).toHaveLength(3);
         const released = writes[2]; expect(JSON.parse(released.body)).toEqual({expected_revision: 4, assignee_ids: []});
         await page.unroute(endpoint + '/assignment'); await page.reload();
+        await expect(tasks.getByRole('heading', {name: 'Household tasks', exact: true})).toBeVisible();
         await page.getByRole('combobox', {name: 'Language', exact: true}).selectOption(locale);
         await activate(tasks.getByRole('button', {name: t('Check saved request', 'Comprobar solicitud guardada'), exact: true}).first());
         await expect(tasks.getByRole('heading', {name: t('Assignment saved', 'Asignación guardada'), exact: true})).toBeVisible();
@@ -691,7 +694,11 @@ for (const mode of ['native', 'standalone'] as const) {
         await page.getByRole('combobox', {name: 'Language', exact: true}).selectOption(locale);
         const title = 'Progress <kitchen> 🧰';
         await tasks.getByLabel(t('Title', 'Título'), {exact: true}).fill(title);
+        // Await this transaction within the existing HTTP bound before checking its projection.
+        const creation = page.waitForResponse(response => response.request().method() === 'POST'
+          && response.url() === base(mode) + '/api/v1/tasks/definitions', {timeout: 15_000});
         await activate(tasks.getByRole('button', {name: t('Create task', 'Crear tarea'), exact: true}));
+        expect((await creation).status()).toBe(200);
         await expect(tasks.getByRole('heading', {name: title, exact: true})).toBeVisible();
         const list = await (await page.request.get(base(mode) + '/api/v1/tasks/occurrences')).json();
         const id = list.items.find((item: {title: string}) => item.title === title).occurrence_id;

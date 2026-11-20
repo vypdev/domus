@@ -111,11 +111,11 @@ for(const mode of ['native','standalone'] as const)test.describe('administration
       const before=await statistics(request,mode);
       for(const [index,candidate]of pages.entries()){
         candidate.on('request',item=>{if(item.url().includes('/administration/requests/')||item.url().includes('/operations/'))lookups.push(item.url());});
-        candidate.on('response',async response=>{
-          if(response.url()===base(mode)+'/api/v1/authorization'&&response.status()===503){
-            const body=await response.json();
-            if(body.code==='storage_busy')unavailableAuthorization.add(index);
-          }
+        await candidate.route(base(mode)+'/api/v1/authorization',async route=>{
+          const upstream=await route.fetch({maxRetries:0,maxRedirects:0}),body=await upstream.body();
+          if(upstream.status()===503&&JSON.parse(body.toString('utf8')).code==='storage_busy')
+            unavailableAuthorization.add(index);
+          await route.fulfill({response:upstream,body});
         });
         await candidate.route(base(mode)+'/api/v1/household',async route=>{
           if(route.request().method()!=='PUT')return route.continue();

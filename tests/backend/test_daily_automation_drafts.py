@@ -223,9 +223,12 @@ def test_daily_definition_after_migration_restart_and_restore(
 
     legacy_manual = None
     if version == 33:
+        # Construct the historical control-table migration before running its commands.
+        with closing(sqlite3.connect(path, autocommit=True)) as db:
+            db.execute(storage.AUTOMATION_CONTROL_STATEMENT)
+            db.execute("PRAGMA user_version=33")
         with monkeypatch.context() as previous:
             previous.setattr(storage, "SCHEMA_VERSION", 33)
-            store.initialize(require_existing=True)
             legacy_manual = draft_service(store).save(
                 "legacy-manual",
                 SaveDraft(None, 0, AutomationRule(1, "manual", None, TaskContent("Legacy manual"))),
@@ -244,7 +247,7 @@ def test_daily_definition_after_migration_restart_and_restore(
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
         db.row_factory = sqlite3.Row
-        assert _verify_database(db, store, previous=False) == 34
+        assert _verify_database(db, store, previous=False) == 35
         assert (
             db.execute("SELECT * FROM inventory_products ORDER BY product_id").fetchall()
             == original_products

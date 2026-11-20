@@ -132,6 +132,28 @@ key prevents a second stock entry, including after reload. A historical receipt
 can be viewed after restoring a backup. Check the current recorded stock before
 making another request.
 
+### Find a product by its printed barcode
+
+In **Inventory**, enter the digits below the barcode and choose **Find product**.
+Keep leading zeroes. Supported numbers have 8, 12, 13 or 14 digits and a valid
+check digit. A match offers **Open product stock**. The lookup uses your current
+household's local catalog and works with external internet access unavailable.
+
+For an unlinked code, an inventory manager chooses a product from the Pantry
+cards below. Use **Show more products** as needed. Choose **Associate barcode
+with** that product, review its name and barcode, then choose **Confirm barcode
+association**. Register the product first if it is absent from the catalog.
+
+To change an association, choose **Remove barcode association**, review and
+confirm the removal, then choose the replacement product. If someone changes
+the association first, review the refreshed match before confirming again.
+Use **Retry barcode lookup** after an unavailable read. The entered digits stay
+in the field. A lost write response offers **Recover original request**, including
+after reloading the same tab.
+
+In Spanish, the main controls are **Buscar producto**, **Asociar código a**,
+**Confirmar asociación del código** and **Reintentar búsqueda del código**.
+
 ### Movement history and corrections
 
 Choose **Show movement history** on a product. Each entry shows its signed

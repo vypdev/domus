@@ -142,6 +142,9 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
         upcoming_maintenance: {total: 0, items: []},
       });
     }
+    else if (route === 'inventory/barcode?barcode=00036000291452') raw = JSON.stringify({
+      barcode:'00036000291452',may_manage:true,association:null,product:null,
+    });
     else if (route === 'inventory/stock-attention') raw = JSON.stringify({total:0,items:[]});
     else if (route === 'inventory/shopping-attention') raw = JSON.stringify(shoppingItemPresent
       ? {total:1,items:[shoppingItem]} : {total:0,items:[]});
@@ -836,6 +839,12 @@ test('Inventory owns the current protected destination and accepts only closed u
   expect(decodeInventoryIntent({type:'purchase-session',sessionId:'../outside'})).toBeNull();
   expect(decodeInventoryIntent({type:'purchase-receipts',purchaseId:'../outside'})).toBeNull();
   expect(decodeInventoryIntent({type:'submit',command:{action:'inventory.intake',product_id:'product',quantity:'1',location:'foreign'}})).toBeNull();
+  expect(decodeInventoryIntent({type:'barcode',barcode:'036000291452'})).toEqual({type:'barcode',barcode:'00036000291452'});
+  expect(decodeInventoryIntent({type:'barcode',barcode:'96385075'})).toBeNull();
+  expect(decodeInventoryIntent({type:'barcode',barcode:'036000291452',household:'foreign'})).toBeNull();
+  emit({type:'barcode',barcode:'036000291452'});
+  await vi.waitFor(() => expect(app.inventory?.barcode?.lookup?.barcode).toBe('00036000291452'));
+  expect(app.inventory?.barcode?.lookup?.product).toBeNull();
   navigate('#tasks');
   expect(app.inventory).toBeNull();
 });

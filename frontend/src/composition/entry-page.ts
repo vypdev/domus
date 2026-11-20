@@ -23,7 +23,7 @@ import type {ShoppingAttention} from '../application/shopping-attention';
 import {HttpInventoryServer} from '../adapters/inventory-http';
 import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../adapters/inventory-journal';
 import {InventoryController} from '../application/inventory-controller';
-import {inventoryCommand} from '../domain/inventory';
+import {canonicalGtin, inventoryCommand} from '../domain/inventory';
 import type {InventoryIntent} from '../presentation/domus-inventory';
 import {HttpRewardsServer} from '../adapters/reward-http';
 import {REWARD_JOURNAL_KEY, RewardsSessionJournal} from '../adapters/reward-journal';
@@ -219,7 +219,8 @@ export function decodeReviewIntent(value: unknown): ReviewIntent | null {
 
 export function decodeInventoryIntent(value: unknown): InventoryIntent | null {
   try {
-    const {type} = fields(value, ['type'], ['command', 'productId', 'purchaseId', 'sessionId']);
+    const {type} = fields(value, ['type'], ['command', 'productId', 'purchaseId', 'sessionId', 'barcode']);
+    if (type === 'barcode') return {type, barcode:canonicalGtin(fields(value, ['type','barcode'], []).barcode)};
     if (type === 'submit') return {type, command: inventoryCommand(fields(value, ['type','command'], []).command)};
     if (type === 'history' || type === 'shopping-sources') return {type, productId: identifier(fields(value, ['type','productId'], []).productId)};
     if (type === 'purchase-receipts') return {type, purchaseId: identifier(fields(value, ['type','purchaseId'], []).purchaseId)};
@@ -445,6 +446,7 @@ export function mountEntry(page: EntryPage): PageMount {
       if (intent?.type === 'refresh') await inventoryController.refresh();
       if (intent?.type === 'more') await inventoryController.more();
       if (intent?.type === 'recover') await inventoryController.recover();
+      if (intent?.type === 'barcode') await inventoryController.showBarcode(intent.barcode);
       if (intent?.type === 'history') await inventoryController.showHistory(intent.productId);
       if (intent?.type === 'more-history') await inventoryController.moreHistory();
       if (intent?.type === 'close-history') inventoryController.closeHistory();

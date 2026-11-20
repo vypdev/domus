@@ -14,7 +14,7 @@ import {selectState} from '@vypdev/ha-ui/select-contracts';
 import {registerFeedback} from '@vypdev/ha-ui/feedback';
 import {feedbackState} from '@vypdev/ha-ui/feedback-contracts';
 import type {InventoryError, InventoryState} from '../application/inventory-controller';
-import {BASE_UNITS, MAX_LOCATION_NAME, STOCK_REASON_LIMIT, adjustmentQuantity, intakeQuantity, locationName, policyQuantity, stockUnits} from '../domain/inventory';
+import {BASE_UNITS, MAX_LOCATION_NAME, STOCK_REASON_LIMIT, adjustmentQuantity, canonicalGtin, intakeQuantity, locationName, policyQuantity, stockUnits} from '../domain/inventory';
 import type {BaseUnit, MovementHistory, ProductStock, ReplenishmentRevision, StockMovement, StockTotals, StorageLocation} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
@@ -26,6 +26,7 @@ import {instant} from './messages';
 import type {Language} from './messages';
 
 export type InventoryIntent = {readonly type: 'refresh' | 'more' | 'recover' | 'more-history' | 'close-history'}
+  | {readonly type: 'barcode'; readonly barcode: string}
   | {readonly type: 'history'; readonly productId: string}
   | ShoppingIntent | ShoppingListIntent;
 
@@ -70,12 +71,20 @@ interface PolicyEditor {
   readonly error: 'invalidQuantity' | 'invalid_replenishment_bounds' | null;
 }
 
+interface BarcodeReview {
+  readonly barcode: string;
+  readonly productId: string;
+  readonly productName: string;
+  readonly associationId: string | null;
+}
+
 export class DomusInventory extends LitElement {
   static properties = {
     view: {attribute:false}, language: {attribute:false}, nameDraft: {state:true}, unit: {state:true},
     selected: {state:true}, amount: {state:true}, review: {state:true}, invalid: {state:true},
     editor: {state:true}, reason: {state:true}, adjustment: {state:true},
     policyEditor: {state:true}, locationDraft: {state:true}, locationInvalid: {state:true}, transferDraft: {state:true},
+    barcodeDraft: {state:true}, barcodeSubmitted: {state:true}, barcodeInvalid: {state:true}, barcodeReview: {state:true},
   };
 
   static styles = css`
@@ -94,6 +103,8 @@ export class DomusInventory extends LitElement {
     li {overflow-wrap:anywhere;border-block-start:1px solid var(--line);padding-block-start:12px}
     .history {scroll-margin-block-start:68px}
     .history-content, .location-content, .location-balances {display:grid;gap:12px}
+    .barcode-content, .barcode-review {display:grid;gap:12px;min-width:0}
+    .barcode-review, .barcode-result {scroll-margin-block-start:68px}
     .location-balances {grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
     .location-stock {border:1px solid var(--line);border-radius:8px;padding:12px;overflow-wrap:anywhere}
     .location-stock h5 {font-size:inherit;margin:0 0 8px}
@@ -117,6 +128,11 @@ export class DomusInventory extends LitElement {
   private declare locationDraft: string;
   private declare locationInvalid: boolean;
   private declare transferDraft: TransferDraft | null;
+  private declare barcodeDraft: string;
+  private declare barcodeSubmitted: string | null;
+  private declare barcodeInvalid: boolean;
+  private declare barcodeReview: BarcodeReview | null;
+  private barcodeFocusPending = false;
 
   constructor() {
     super();
@@ -135,6 +151,10 @@ export class DomusInventory extends LitElement {
     this.locationDraft = '';
     this.locationInvalid = false;
     this.transferDraft = null;
+    this.barcodeDraft = '';
+    this.barcodeSubmitted = null;
+    this.barcodeInvalid = false;
+    this.barcodeReview = null;
   }
 
   protected willUpdate(changed: PropertyValues<this>): void {
@@ -149,7 +169,14 @@ export class DomusInventory extends LitElement {
       this.locationDraft = '';
       this.locationInvalid = false;
       this.transferDraft = null;
+      this.barcodeDraft = '';
+      this.barcodeSubmitted = null;
+      this.barcodeInvalid = false;
+      this.barcodeReview = null;
+      this.barcodeFocusPending = false;
     }
+    if (previous?.barcode?.lookup !== current?.barcode?.lookup || current?.report?.mayManage !== true)
+      this.barcodeReview = null;
     if (previous?.history?.productId !== current?.history?.productId) {
       this.editor = null;
       if (current?.history && current.history.productId !== this.transferDraft?.productId) this.transferDraft = null;
@@ -159,6 +186,15 @@ export class DomusInventory extends LitElement {
       if (result.kind === 'rejected') {
         if (result.command.action === 'inventory.configure-replenishment' && result.reason === 'revision_conflict')
           this.policyEditor = null;
+        if ('barcode' in result.command) {
+          this.barcodeReview = null;
+          this.barcodeFocusPending = true;
+        }
+      } else if (result.barcodeSaved) {
+        this.barcodeReview = null;
+        this.barcodeFocusPending = true;
+        this.barcodeSubmitted = result.barcodeSaved.barcode;
+        if (this.barcodeDraft === '') this.barcodeDraft = result.barcodeSaved.barcode;
       } else if (result.locationSaved) this.locationDraft = '';
       else if (result.replenishmentSaved) this.policyEditor = null;
       else if (result.movement === null) {
@@ -172,6 +208,20 @@ export class DomusInventory extends LitElement {
 
   protected updated(changed: PropertyValues<this>): void {
     if (!changed.has('view')) return;
+    if (this.barcodeFocusPending && !this.view!.busy) {
+      const owner = this.view!;
+      const target = this.renderRoot.querySelector<HTMLElement>(owner.pending
+        ? '.inventory-actions vyp-ha-button:last-child'
+        : owner.report === null ? '.inventory-actions vyp-ha-button:first-child'
+          : this.barcodeState()?.unavailable ? '.barcode-search-form vyp-ha-button' : '.barcode-result');
+      if (target) {
+        void this.updateComplete.then(() => {
+          if (this.view !== owner) return;
+          this.barcodeFocusPending = false;
+          if (this.ownerDocument.hasFocus() && this.ownerDocument.activeElement === this.ownerDocument.body) target.focus();
+        });
+      }
+    }
     const product = this.view?.history?.productId;
     if (product && product !== changed.get('view')?.history?.productId)
       this.renderRoot.querySelector<HTMLElement>('.history')?.focus();
@@ -212,10 +262,102 @@ export class DomusInventory extends LitElement {
     return html`<p role="alert" id=${id}>${this.text(key)}</p>`;
   }
 
+  private barcodeState() {
+    const search = this.view?.barcode;
+    return search && search.code === this.barcodeSubmitted ? search : null;
+  }
+
+  private beginBarcodeReview(productId: string, productName: string, associationId: string | null): void {
+    const lookup = this.barcodeState()?.lookup;
+    if (!lookup?.mayManage || this.view?.report?.mayManage !== true || this.view.scope.readOnly) return;
+    this.barcodeReview = {barcode: lookup.barcode, productId, productName, associationId};
+    void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.barcode-review')?.focus());
+  }
+
+  private barcodeSearch(manage: boolean, busy: boolean, blocked: boolean) {
+    const search = this.barcodeState();
+    const lookup = search?.lookup;
+    const product = lookup?.product;
+    const review = this.barcodeReview;
+    const firstProduct = this.view!.report!.products[0];
+    return html`<vyp-ha-card .state=${cardState({title: this.text('barcodeTitle'), headingLevel: 3})}>
+      <div class="barcode-content">
+        <form class="barcode-search-form" aria-label=${this.text('barcodeTitle')} novalidate @submit=${(event: SubmitEvent) => {
+          event.preventDefault();
+          if (busy || this.view!.pending) return;
+          try {
+            this.barcodeSubmitted = canonicalGtin(this.barcodeDraft);
+          } catch {
+            this.barcodeInvalid = true;
+            this.barcodeSubmitted = null;
+            this.barcodeFocusPending = false;
+            void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.barcode-content vyp-ha-field')?.focus());
+            return;
+          }
+          this.barcodeInvalid = false;
+          this.barcodeReview = null;
+          this.barcodeFocusPending = true;
+          this.intent({type: 'barcode', barcode: this.barcodeSubmitted});
+        }}>
+          <vyp-ha-field .value=${this.barcodeDraft} .name=${'barcode'} ?disabled=${busy || this.view!.pending}
+            .state=${textFieldState({label: this.text('barcodeNumber'), inputMode: 'numeric', required: true,
+              maxLength: 64, description: this.text('barcodeHelp'), requiredMessage: this.text('barcodeRequired'),
+              error: this.barcodeInvalid ? this.text('invalid_inventory_barcode') : ''})}
+            @ha-value-request=${(event: FieldValueEvent) => {
+              this.barcodeDraft = event.detail.value;
+              this.barcodeSubmitted = null;
+              this.barcodeInvalid = false;
+              this.barcodeReview = null;
+              this.barcodeFocusPending = false;
+            }}></vyp-ha-field>
+          ${this.submitButton(search?.unavailable ? 'barcodeRetry' : 'barcodeSearch', busy || this.view!.pending)}
+        </form>
+        ${search && lookup === null && !search.unavailable ? html`<vyp-ha-feedback
+          .state=${feedbackState({kind: 'loading', message: this.text('barcodeLoading')})}></vyp-ha-feedback>` : nothing}
+        ${search?.unavailable ? html`<vyp-ha-feedback
+          .state=${feedbackState({kind: 'notice', tone: 'warning', message: this.text('barcodeUnavailable')})}></vyp-ha-feedback>` : nothing}
+        ${lookup && product === null ? html`<p class="barcode-result" role="status" tabindex="-1">${this.text('barcodeUnlinked')}</p>
+          ${manage && lookup.mayManage ? firstProduct ? html`<a href=${'#product-' + firstProduct.id}
+            @click=${(event: MouseEvent) => {
+              event.preventDefault();
+              this.renderRoot.querySelector<HTMLElement>('article[id="product-' + firstProduct.id + '"]')?.focus();
+            }}>${this.text('barcodeChooseProduct')}</a>` : html`<p>${this.text('barcodeRegisterProduct')}</p>` : nothing}` : nothing}
+        ${lookup && (!manage || !lookup.mayManage) ? html`<p>${this.text('barcodeManagerRequired')}</p>` : nothing}
+        ${product ? html`<p class="barcode-result" role="status" tabindex="-1">${this.text('barcodeFound')} <strong>${product.name}</strong></p>
+          <div class="actions">
+            ${this.button('barcodeViewStock', () => this.intent({type: 'history', productId: product.id}), busy)}
+            ${manage && lookup!.mayManage && review === null
+              ? this.button('barcodeRemove', () => this.beginBarcodeReview(product.id, product.name, product.associationId), blocked) : nothing}
+          </div>` : nothing}
+        ${review ? html`<form class="barcode-review" tabindex="-1"
+          aria-label=${this.text(review.associationId === null ? 'barcodeReviewLink' : 'barcodeReviewRemove')}
+          @submit=${(event: SubmitEvent) => {
+            event.preventDefault();
+            if (blocked) return;
+            this.barcodeFocusPending = true;
+            this.intent({type: 'submit', command: review.associationId === null
+              ? {action: 'inventory.link-barcode', barcode: review.barcode, product_id: review.productId}
+              : {action: 'inventory.remove-barcode', barcode: review.barcode,
+                product_id: review.productId, association_id: review.associationId}});
+          }}>
+          <p><strong>${review.productName}</strong> · <code>${review.barcode}</code></p>
+          <p>${this.text(review.associationId === null ? 'barcodeLinkReview' : 'barcodeRemoveReview')}</p>
+          <div class="actions">
+            ${this.submitButton(review.associationId === null ? 'barcodeConfirmLink' : 'barcodeConfirmRemove', blocked)}
+            ${this.button('cancel', () => {
+              this.barcodeReview = null;
+              void this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>('.barcode-content vyp-ha-field')?.focus());
+            }, blocked)}
+          </div>
+        </form>` : nothing}
+      </div>
+    </vyp-ha-card>`;
+  }
+
   private registration(blocked: boolean) {
     const invalid = this.invalid === 'name';
     return html`<vyp-ha-card .state=${cardState({title:this.text('register'), headingLevel:3})}>
-      <form novalidate @submit=${(event: SubmitEvent) => {
+      <form class="registration-form" aria-label=${this.text('register')} novalidate @submit=${(event: SubmitEvent) => {
         event.preventDefault();
         if (blocked) return;
         try {taskText(this.nameDraft, 160, true);} catch {this.invalid = 'name'; return;}
@@ -503,6 +645,7 @@ export class DomusInventory extends LitElement {
 
   private product(product: ProductStock, manage: boolean, busy: boolean, blocked: boolean) {
     const policy = product.replenishment, editor = this.policyEditor;
+    const barcode = this.barcodeState()?.lookup;
     return html`<article tabindex="-1" id=${'product-' + product.id} aria-labelledby=${'name-' + product.id}>
       <h3 id=${'name-' + product.id}>${product.name}</h3>
       <p>${this.text('unit')} · ${this.text(product.unit)}</p>
@@ -517,6 +660,9 @@ export class DomusInventory extends LitElement {
         <p>${this.text('outstandingPurchase')} · ${this.quantity(product.outstandingPurchase)} ${this.text(product.unit)}</p>
         <p>${this.text('shoppingNeeded')} · ${this.quantity(product.shoppingNeeded)} ${this.text(product.unit)}</p>`}
       <div class="actions">
+        ${manage && barcode?.mayManage && barcode.product === null ? html`<vyp-ha-button
+          .state=${buttonState({label: this.text('barcodeLink') + ' ' + product.name, variant: 'outlined'})}
+          ?disabled=${blocked} @ha-press-request=${() => this.beginBarcodeReview(product.id, product.name, null)}></vyp-ha-button>` : nothing}
         ${this.button('showHistory', () => this.intent({type:'history', productId:product.id}), busy)}
         ${manage && this.view!.report!.locations.length > 0
           ? this.button('moveStock', () => this.beginTransfer(product.id), blocked) : nothing}
@@ -545,7 +691,10 @@ export class DomusInventory extends LitElement {
         .state=${feedbackState({kind:'notice', tone:'warning', message:this.text(message)})}></vyp-ha-feedback>`}
       ${saved === null ? nothing : html`<p role="status">${this.text(saved.kind === 'historical'
         ? 'historical' : movement ? MOVEMENT_SAVED[movement.action] : saved.shoppingAction
-          ? SHOPPING_SAVED[saved.shoppingAction] : saved.replenishmentSaved ? 'replenishmentSaved' : saved.locationSaved ? 'locationSaved' : 'registered')}
+          ? SHOPPING_SAVED[saved.shoppingAction] : saved.barcodeSaved
+            ? saved.barcodeSaved.linked ? 'barcodeLinkedSaved' : 'barcodeRemovedSaved'
+            : saved.replenishmentSaved ? 'replenishmentSaved' : saved.locationSaved ? 'locationSaved' : 'registered')}
+        ${saved.barcodeSaved ? html`<code>${saved.barcodeSaved.barcode}</code>` : nothing}
         ${movement ? html`${this.quantity(movement.quantity)} ${this.unitLabel(movement.unit, movement.quantity)}` : nothing}</p>
         ${report?.products.some(product => product.id === saved.productId) ? html`<a href=${'#product-' + saved.productId}
           @click=${(event: MouseEvent) => {
@@ -556,10 +705,11 @@ export class DomusInventory extends LitElement {
           <p>${this.text('operation')} <code>${saved.operationId}</code></p>
           ${movement ? html`<p>${this.text('movement')} <code>${movement.movementId}</code></p>` : nothing}
         </details>`}
-      <div class="actions">${this.button('refresh', () => this.intent({type:'refresh'}), busy)}
+      <div class="actions inventory-actions">${this.button('refresh', () => this.intent({type:'refresh'}), busy)}
         ${pending ? this.button('recover', () => this.intent({type:'recover'}), busy) : nothing}</div>
       ${busy && report === null ? html`<p role="status">${this.text('loading')}</p>` : nothing}
       ${report === null ? nothing : html`
+        ${this.barcodeSearch(manage, busy, blocked)}
         ${manage ? this.registration(blocked) : nothing}
         ${this.locations(report.locations, manage, blocked)}
         <vyp-ha-card .state=${cardState({title:this.text('pantry'), headingLevel:3})}>

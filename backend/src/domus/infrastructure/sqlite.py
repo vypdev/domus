@@ -48,6 +48,8 @@ from domus.infrastructure.sqlite_calendar_preferences import (
 from domus.infrastructure.sqlite_history import HISTORY_STATEMENTS, SQLiteHistory
 from domus.infrastructure.sqlite_identity import SQLiteMembers, SQLitePolicies
 from domus.infrastructure.sqlite_inventory import (
+    BARCODE_STATEMENT,
+    BARCODE_TABLE,
     CATALOG_STATEMENTS,
     CATALOG_TABLES,
     INVENTORY_STATEMENTS,
@@ -113,7 +115,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 34
+SCHEMA_VERSION = 35
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -203,6 +205,7 @@ SCHEMA_STATEMENTS = (
     SHOPPING_SESSION_STORE_STATEMENT,
     AUTOMATION_DRAFT_STATEMENT,
     AUTOMATION_CONTROL_STATEMENT,
+    BARCODE_STATEMENT,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -231,7 +234,8 @@ CORRECTION_SCHEMA_TABLES = VOID_SCHEMA_TABLES | {SHOPPING_RECEIPT_CORRECTION_TAB
 RETURN_SCHEMA_TABLES = CORRECTION_SCHEMA_TABLES | {SHOPPING_RECEIPT_RETURN_TABLE}
 LOCATION_SCHEMA_TABLES = RETURN_SCHEMA_TABLES | LOCATION_TABLES
 DRAFT_SCHEMA_TABLES = LOCATION_SCHEMA_TABLES | {AUTOMATION_DRAFT_TABLE}
-TABLES = DRAFT_SCHEMA_TABLES | {AUTOMATION_CONTROL_TABLE}
+CONTROL_SCHEMA_TABLES = DRAFT_SCHEMA_TABLES | {AUTOMATION_CONTROL_TABLE}
+TABLES = CONTROL_SCHEMA_TABLES | {BARCODE_TABLE}
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -280,6 +284,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *((SHOPPING_SESSION_STORE_STATEMENT,) if version >= 31 else ()),
             *((AUTOMATION_DRAFT_STATEMENT,) if version >= 32 else ()),
             *((AUTOMATION_CONTROL_STATEMENT,) if version >= 33 else ()),
+            *((BARCODE_STATEMENT,) if version >= 35 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -564,6 +569,8 @@ class SQLiteDatabase:
                 30: LOCATION_SCHEMA_TABLES,
                 31: LOCATION_SCHEMA_TABLES,
                 32: DRAFT_SCHEMA_TABLES,
+                33: CONTROL_SCHEMA_TABLES,
+                34: CONTROL_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -643,6 +650,7 @@ class SQLiteDatabase:
                         *((SHOPPING_SESSION_STORE_STATEMENT,) if version < 31 else ()),
                         *((AUTOMATION_DRAFT_STATEMENT,) if version < 32 else ()),
                         *((AUTOMATION_CONTROL_STATEMENT,) if version < 33 else ()),
+                        *((BARCODE_STATEMENT,) if version < 35 else ()),
                     )
                     for statement in migration:
                         connection.execute(statement)

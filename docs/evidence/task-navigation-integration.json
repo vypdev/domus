@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests.",
   "actualProductFiles": {
-    ".vite/manifest.json": "5cc6cb5d72390640c8e281eba20c9ff8c782c7f5c6e103ff39a6257fde28b74b",
+    ".vite/manifest.json": "4cbe45655f8d01448745d65ff235df5645464430192d5b95059f8ffa108525f2",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-lAPOs-kN.js": "1696cc56f023da1760f9147d175e64caa65baa08be89024a85761776b88b38ff",
-    "index.html": "c9110bf2ef5b3294a64e67513f27b7f5baee3a999344590d479c5b15ff95ac33"
+    "assets/index-_Wife6Ef.js": "159d5ad4f52250dc9a68aafcbf2ee418b97ad7504684869a36fdeec751ee2fb6",
+    "index.html": "6534890312bfa5f4c7a2b8a9b5705eba0be7cd5d38982544dfe743ca99e66dd2"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -317,5 +317,16 @@
     "scope": "Compiled task workspace with readable household and task points-allocation cards during open-task list qualification.",
     "requirements": "ha-open-tasks-C07",
     "evidence": "ha-open-tasks-qualification.md"
+  },
+  "barcodeBeforeRejectedAccessReview": {
+    "sourceCommit": "e8e93fe892babc0263808848c3bd24c8aea9d2c2",
+    "actualProductFiles": {
+      ".vite/manifest.json": "d0c30babfcbb32c3d008981d04c56745d8be171fdfff8724137a3bed98732ba8",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DOg1mB8K.js": "d6231483e8ba95c3eecfd923c04c8abafadcd7c15ce146cbb50bdcadcededfd6",
+      "index.html": "9a0eb467ea4afb8ab10d3df9ffcf4d2b31b188c6ec6e5d3c20206d86224ee9b7"
+    },
+    "scope": "Accepted Edge.55 runtime before retiring retained Inventory facts after current access rejection.",
+    "evidence": "local-barcode-qualification.md"
   }
 }

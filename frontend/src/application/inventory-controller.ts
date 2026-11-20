@@ -1,10 +1,12 @@
 /** Manage only current household scope and the original unresolved stock command. */
-import {inventoryCommand, shoppingItemKey} from '../domain/inventory';
-import type {BaseUnit, InventoryCommand, InventoryReport, MovementHistory, PurchaseReceipts, Purchases, PurchaseSessionDetail, PurchaseSessions, ShoppingAction, ShoppingList, ShoppingSources} from '../domain/inventory';
+import {canonicalGtin, inventoryCommand, shoppingItemKey} from '../domain/inventory';
+import type {BarcodeLookup, BaseUnit, InventoryCommand, InventoryReport, MovementHistory, PurchaseReceipts, Purchases, PurchaseSessionDetail, PurchaseSessions, ShoppingAction, ShoppingList, ShoppingSources} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import type {EntryEntropy, EntryRead} from './ports';
+import {EntryReadError} from './ports';
 
 export const INVENTORY_ERRORS = ['permission_denied', 'idempotency_conflict', 'invalid_request',
+  'invalid_inventory_barcode', 'inventory_barcode_linked', 'inventory_barcode_changed',
   'invalid_inventory_location_name', 'inventory_location_exists', 'inventory_location_limit',
   'inventory_location_missing', 'inventory_same_location',
   'invalid_task_text', 'invalid_inventory_unit', 'invalid_inventory_receipt', 'invalid_material_quantity',
@@ -31,12 +33,14 @@ export type InventoryResult = Readonly<{
   kind: 'committed' | 'historical'; operationId: string; productId: string | null;
   replenishmentSaved?: true;
   locationSaved?: true;
+  barcodeSaved?: Readonly<{barcode: string; linked: boolean}>;
   shoppingAction?: ShoppingAction;
   sessionId?: string;
   movement: Readonly<{movementId: string; quantity: string; unit: BaseUnit;
     action: 'inventory.intake' | 'inventory.adjust' | 'inventory.correct-intake' | 'inventory.transfer'}> | null;
 }> | Readonly<{kind: 'rejected'; reason: InventoryError; command: InventoryCommand}>;
 export interface InventoryServer {
+  barcode(scope: InventoryScope, value: string): EntryRead<BarcodeLookup>;
   read(scope: InventoryScope, cursor: string | null): EntryRead<InventoryReport>;
   history(scope: InventoryScope, productId: string, cursor: string | null): EntryRead<MovementHistory>;
   purchases(scope: InventoryScope, cursor: string | null): EntryRead<Purchases>;
@@ -57,6 +61,7 @@ export interface InventoryState {
   readonly scope: InventoryScope;
   readonly report: InventoryReport | null;
   readonly history: MovementHistory | null;
+  readonly barcode?: Readonly<{code: string; lookup: BarcodeLookup | null; unavailable: boolean}> | null;
   readonly purchases?: Purchases | null;
   readonly purchaseReceipts?: PurchaseReceipts | null;
   readonly purchaseSessions?: PurchaseSessions | null;
@@ -123,6 +128,21 @@ export class InventoryController {
     }
     if (state?.shoppingSources && this.view?.scope === state.scope && this.view.shoppingSources)
       await this.showShoppingSources(state.shoppingSources.item.productId!);
+    if (state?.barcode && this.view?.scope === state.scope && this.view.report)
+      await this.showBarcode(state.barcode.code);
+  }
+
+  async showBarcode(value: string): Promise<void> {
+    const state = this.view;
+    if (state === null || state.report === null || this.owned !== null) return;
+    let code: string;
+    try {code = canonicalGtin(value);} catch {return;}
+    this.set({barcode: {code, lookup: null, unavailable: false}});
+    const loaded = await this.run(this.server.barcode(state.scope, code), lookup => {
+      this.set({barcode: {code, lookup, unavailable: false}});
+    }, state.pending ? state.notice : null);
+    if (!loaded && this.view?.scope === state.scope && this.view.report !== null)
+      this.set({barcode: {code, lookup: null, unavailable: true}});
   }
 
   async showHistory(productId: string): Promise<void> {await this.loadHistory(productId, null);}
@@ -278,7 +298,7 @@ export class InventoryController {
     }, 'unavailable');
     if (!loaded && this.view?.scope === state.scope)
       this.set({report:null, history:null, purchases:null, purchaseReceipts:null,
-        shoppingList:null, shoppingSources:null, purchaseSessions:null, purchaseSession:null});
+        shoppingList:null, shoppingSources:null, purchaseSessions:null, purchaseSession:null, barcode:null});
   }
 
   private async loadPurchases(cursor: string | null): Promise<void> {
@@ -320,10 +340,12 @@ export class InventoryController {
     this.journal.clear(request);
     this.request = null;
     this.set({pending: false, notice: null, result});
+    if ('barcode' in request.command)
+      this.set({barcode: {code: request.command.barcode, lookup: null, unavailable: false}});
   }
 
   private async run<T>(owned: EntryRead<T>, use: (value: T) => void,
-    notice: 'unavailable' | 'uncertain'): Promise<boolean> {
+    notice: 'unavailable' | 'uncertain' | null): Promise<boolean> {
     this.owned = owned;
     this.set({busy: true});
     try {
@@ -331,8 +353,14 @@ export class InventoryController {
       if (this.owned !== owned) return false;
       use(value);
       return true;
-    } catch {
-      if (this.owned === owned) this.set({notice});
+    } catch (error) {
+      if (this.owned === owned) {
+        if (error instanceof EntryReadError && (error.code === 'authentication_required' || error.code === 'forbidden'))
+          this.set({report:null, history:null, purchases:null, purchaseReceipts:null,
+            shoppingList:null, shoppingSources:null, purchaseSessions:null, purchaseSession:null,
+            shoppingFocus:undefined, barcode:null, result:null, notice:this.view!.pending ? 'uncertain' : 'unavailable'});
+        else this.set({notice});
+      }
       return false;
     } finally {
       if (this.owned === owned) {

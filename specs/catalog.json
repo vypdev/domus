@@ -791,7 +791,8 @@
       "owner": "Domus maintainers (review assignment pending)",
       "lastVerified": "2026-11-11",
       "specs": [
-        "specs/household-inventory.md"
+        "specs/household-inventory.md",
+        "specs/stock-local-barcode.md"
       ],
       "workflows": [],
       "entrypoints": [

@@ -10,6 +10,7 @@ from domus.domain.inventory import (
     MAX_NAMED_LOCATIONS,
     MAX_STOCK_UNITS,
     PANTRY,
+    BarcodeAssociation,
     BaseUnit,
     CatalogProduct,
     EffectKind,
@@ -99,6 +100,16 @@ CATALOG_STATEMENTS = (
     "PRIMARY KEY(household_id,product_id), UNIQUE(household_id,reference_id), "
     "FOREIGN KEY(household_id,reference_id) "
     "REFERENCES inventory_materials(household_id,reference_id)) STRICT",
+)
+
+BARCODE_TABLE = "inventory_barcodes"
+BARCODE_STATEMENT = (
+    "CREATE TABLE inventory_barcodes(household_id TEXT NOT NULL, barcode TEXT NOT NULL "
+    "CHECK(length(barcode)=14 AND barcode NOT GLOB '*[^0-9]*'), "
+    "association_id TEXT NOT NULL, product_id TEXT NOT NULL, "
+    "PRIMARY KEY(household_id,barcode), UNIQUE(household_id,association_id), "
+    "FOREIGN KEY(household_id,product_id) "
+    "REFERENCES inventory_products(household_id,product_id)) STRICT"
 )
 
 REPLENISHMENT_STATEMENT = (
@@ -197,6 +208,28 @@ def _movement(row: sqlite3.Row) -> StockMovement:
 @dataclass(frozen=True, slots=True)
 class SQLiteInventory:
     connection: sqlite3.Connection
+
+    def barcode(self, home: str, barcode: str) -> BarcodeAssociation | None:
+        row = self.connection.execute(
+            "SELECT barcode,association_id,product_id FROM inventory_barcodes "
+            "WHERE household_id=? AND barcode=?",
+            (home, barcode),
+        ).fetchone()
+        return None if row is None else BarcodeAssociation(*row)
+
+    def link_barcode(self, home: str, value: BarcodeAssociation) -> None:
+        self.connection.execute(
+            "INSERT INTO inventory_barcodes VALUES (?,?,?,?)", (home, *astuple(value))
+        )
+
+    def remove_barcode(self, home: str, value: BarcodeAssociation) -> None:
+        removed = self.connection.execute(
+            "DELETE FROM inventory_barcodes WHERE household_id=? AND barcode=? "
+            "AND association_id=? AND product_id=?",
+            (home, *astuple(value)),
+        )
+        if removed.rowcount != 1:
+            raise Conflict("inventory_barcode_changed")
 
     def add_product(self, home: str, product: CatalogProduct) -> None:
         self.connection.execute(
@@ -504,6 +537,13 @@ def verify_inventory_catalog(connection: sqlite3.Connection) -> None:
         home = row["household_id"]
         if stock.material(home, product.reference_id) != product.binding(home):
             raise StorageFailure("invalid_inventory_catalog_binding")
+
+
+def verify_inventory_barcodes(connection: sqlite3.Connection) -> None:
+    for row in connection.execute(
+        "SELECT barcode,association_id,product_id FROM inventory_barcodes"
+    ):
+        BarcodeAssociation(*row)
 
 
 def verify_replenishment(connection: sqlite3.Connection) -> None:

@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.0.0-edge.56
+
+- Retire loaded Inventory data and management controls when current access is rejected.
+- Continue a rejected barcode search to Refresh inventory, preserving the input for an authorized retry.
+
+## 0.0.0-edge.55
+
+- Align barcode HTTP validation and published API schemas with the supported printed GTIN lengths.
+
+## 0.0.0-edge.54
+
+- Continue keyboard focus to the current barcode result after confirmed changes and stale-removal review.
+- Focus original-request recovery when an association write has an unconfirmed response.
+
+## 0.0.0-edge.53
+
+- Continue keyboard focus to the barcode result or retry control after a submitted search.
+- Preserve focus that has moved to another control while the lookup is running.
+
+## 0.0.0-edge.52
+
+- Find a local household product from its printed GTIN barcode digits.
+- Review a product association or removal before confirming, with current conflict recovery.
+- Retain entered digits through failed reads and recover original writes after interruption.
+- Migrate inventory from supported earlier schemas to schema 35. Keep the previous compatible image and cold data checkpoint for rollback.
+
 ## 0.0.0-edge.51
 
 - Refresh the task list and selected detail together after a competing progress update.

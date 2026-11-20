@@ -1,12 +1,13 @@
 import {afterEach, expect, test, vi} from 'vitest';
+import type {HaTextField} from '@vypdev/ha-ui/field';
 import {HttpInventoryServer} from '../src/adapters/inventory-http';
 import {INVENTORY_JOURNAL_KEY, InventorySessionJournal} from '../src/adapters/inventory-journal';
 import {InventoryController} from '../src/application/inventory-controller';
 import type {InventoryRequest, InventoryResult, InventoryScope, InventoryState} from '../src/application/inventory-controller';
 import type {EntryRead} from '../src/application/ports';
-import {adjustmentQuantity, intakeQuantity, inventoryCommand} from '../src/domain/inventory';
+import {adjustmentQuantity, canonicalGtin, intakeQuantity, inventoryCommand} from '../src/domain/inventory';
 import {revisionValue} from '../src/domain/administration';
-import type {InventoryReport, MovementHistory, Purchase, PurchaseReceipts, Purchases, PurchaseSessions, PurchaseSessionDetail} from '../src/domain/inventory';
+import type {BarcodeLookup, InventoryReport, MovementHistory, Purchase, PurchaseReceipts, Purchases, PurchaseSessions, PurchaseSessionDetail} from '../src/domain/inventory';
 import '../src/presentation/domus-inventory';
 import corpus from './fixtures/entry-wire.json';
 
@@ -282,14 +283,16 @@ function controller() {
   const load = vi.fn((): EntryRead<InventoryReport> => read(report));
   const send = vi.fn((_scope: InventoryScope, _request: InventoryRequest): EntryRead<InventoryResult> => read(committed));
   const original = vi.fn((_scope: InventoryScope, _request: InventoryRequest): EntryRead<InventoryResult|null> => read(null));
+  const barcodes = vi.fn((_scope: InventoryScope, _code: string): EntryRead<BarcodeLookup> =>
+    read({barcode:'00036000291452',mayManage:true,product:null}));
   const movements = vi.fn((_scope: InventoryScope, _product: string, _cursor: string|null): EntryRead<MovementHistory> => read(history));
   const buys = vi.fn((_scope: InventoryScope, _cursor: string|null): EntryRead<Purchases> => read(purchases));
   const arrivals = vi.fn((_scope: InventoryScope, _id:string, _cursor: string|null): EntryRead<PurchaseReceipts> => read(purchaseReceipts));
-  const controller = new InventoryController({read:load,history:movements,purchases:buys,purchaseReceipts:arrivals,
+  const controller = new InventoryController({barcode:barcodes,read:load,history:movements,purchases:buys,purchaseReceipts:arrivals,
     purchaseSessions:() => lost(),purchaseSession:() => lost(),shoppingList:() => lost(),shoppingSources:() => lost(),send,original},
     local.journal,{requestKey:() => request.key},publish);
   const current = () => publish.mock.lastCall?.[0];
-  return {...local, controller, load, movements, buys, arrivals, send, original, current};
+  return {...local, controller, load, barcodes, movements, buys, arrivals, send, original, current};
 }
 
 test('shopping reads and writes stay within the current authorized session and use original recovery', async () => {
@@ -627,14 +630,14 @@ test('inventory exposes scoped empty, read-only and failure states with accessib
   node.view = {...initial,report:{...report,mayManage:false,products:[],cursor:null}};
   await node.updateComplete;
   expect(root.textContent).toContain('There are no registered products.');
-  expect(root.querySelector('form')).toBeNull();
+  expect(root.querySelector<HTMLFormElement>('.registration-form')).toBeNull();
   node.view = {...initial,scope:{...scope,readOnly:true},report};
   await node.updateComplete;
-  expect(root.querySelector('form')).toBeNull();
+  expect(root.querySelector<HTMLFormElement>('.registration-form')).toBeNull();
   node.view = {...initial,report};
   await node.updateComplete;
   press('Show more products');
-  const registration = root.querySelector('form')!;
+  const registration = root.querySelector<HTMLFormElement>('.registration-form')!;
   submit(registration);
   await node.updateComplete;
   expect(registration.querySelector('[role=alert]')?.textContent).toContain('Enter a product name');
@@ -949,7 +952,7 @@ test('shared Shopping loads pages only in scope and recovers requests with their
   const sources = vi.fn((_scope:InventoryScope,_id:string,_cursor:string|null) => read(pages.shoppingSources));
   const send = vi.fn((_scope:InventoryScope,_request:InventoryRequest):EntryRead<InventoryResult> => lost());
   const original = vi.fn((_scope:InventoryScope,_request:InventoryRequest):EntryRead<InventoryResult|null> => read(null));
-  const app = new InventoryController({read:load,history:() => lost(),purchases:() => lost(),
+  const app = new InventoryController({barcode:() => lost(),read:load,history:() => lost(),purchases:() => lost(),
     purchaseReceipts:() => lost(),purchaseSessions:() => lost(),purchaseSession:() => lost(),
     shoppingList:list,shoppingSources:sources,send,original},
     local.journal,{requestKey:() => 'extra-operation'},publish);
@@ -1010,7 +1013,7 @@ test('opening a shopping item retires incomplete pages, rejects cursor loops and
   const pages = await shoppingPages();
   const publish = vi.fn<(state:InventoryState|null) => void>();
   const list = vi.fn((_scope:InventoryScope,_cursor:string|null) => read(pages.shoppingList));
-  const app = new InventoryController({read:() => read(report),history:() => lost(),purchases:() => lost(),
+  const app = new InventoryController({barcode:() => lost(),read:() => read(report),history:() => lost(),purchases:() => lost(),
     purchaseReceipts:() => lost(),purchaseSessions:() => lost(),purchaseSession:() => lost(),
     shoppingList:list,shoppingSources:() => lost(),send:() => lost(),original:() => lost()},
     journal().journal,{requestKey:() => 'request'},publish);
@@ -1195,7 +1198,7 @@ test('session history stays in scope and opens independent per-item receipts aft
   const arrivals = vi.fn((_scope:InventoryScope,_id:string,_cursor:string|null) => read(purchaseReceipts));
   const send = vi.fn((_scope:InventoryScope,_request:InventoryRequest):EntryRead<InventoryResult> => lost());
   const original = vi.fn((_scope:InventoryScope,_request:InventoryRequest) => read(sessionSaved));
-  const app = new InventoryController({read:load,history:() => lost(),purchases:() => lost(),
+  const app = new InventoryController({barcode:() => lost(),read:load,history:() => lost(),purchases:() => lost(),
     purchaseReceipts:arrivals,purchaseSessions:sessions,purchaseSession:session,shoppingList:() => lost(),
     shoppingSources:() => lost(),send,original},local.journal,{requestKey:() => 'session-operation'},publish);
   const state = () => publish.mock.lastCall?.[0];
@@ -1972,4 +1975,492 @@ test('the shared location and transfer controls retain drafts through rejection 
   expect(root.textContent).toContain('Otro movimiento del traslado');
   press('Cerrar historial de movimientos');
   expect(events.mock.lastCall?.[0].detail).toEqual({type:'close-history'});
+});
+
+
+test('printed GTINs validate before padding and keep exact canonical command identities', () => {
+  for (const value of ['96385074', '036000291452', '0036000291452', '00036000291452']) {
+    expect(canonicalGtin(value)).toBe(value.padStart(14, '0'));
+    const wrongDigit = value.slice(0, -1) + String((Number(value.at(-1)) + 1) % 10);
+    expect(() => canonicalGtin(wrongDigit)).toThrow('invalid_inventory_barcode');
+  }
+  for (const value of [null, undefined, 36000291452, {}, [], '', '1234567', '0'.repeat(9),
+    '0'.repeat(10), '0'.repeat(11), '0'.repeat(15), ' 96385074', '96385074 ', '96385074\n', '９６３８５０７４', '9638507x'])
+    expect(() => canonicalGtin(value)).toThrow('invalid_inventory_barcode');
+  const link = inventoryCommand({action: 'inventory.link-barcode', barcode: '036000291452', product_id: 'product'});
+  const remove = inventoryCommand({action: 'inventory.remove-barcode', barcode: '0036000291452', product_id: 'product', association_id: 'link'});
+  expect(link).toEqual({action: 'inventory.link-barcode', barcode: '00036000291452', product_id: 'product'});
+  expect(remove).toEqual({...link, action: 'inventory.remove-barcode', association_id: 'link'});
+  const local = journal().journal;
+  for (const command of [link, remove, intake]) {
+    const operation = {...request, command};
+    local.save(operation);
+    expect(local.open(scope.key)).toEqual(operation);
+    local.clear(operation);
+  }
+  for (const command of [{...link, extra: true}, {...remove, association_id: ''},
+    {action: 'inventory.remove-barcode', barcode: '00036000291452', product_id: 'product'}])
+    expect(() => inventoryCommand(command)).toThrow();
+});
+
+test.each(['native', 'standalone'] as const)('barcode reads bind canonical identity and product in %s', async deployment => {
+  const barcode = '00036000291452';
+  const association = {barcode, association_id: 'link', product_id: 'product'};
+  const product = {product_id: 'product', reference_id: 'reference', name: 'Soap', base_unit: 'piece'};
+  const found = {barcode, may_manage: true, association, product};
+  const absent = {...found, may_manage: false, association: null, product: null};
+  const {server, fetch} = http([[200, found], [200, absent]], deployment);
+  expect(await server.barcode(scope, '036000291452').result).toEqual({barcode, mayManage: true,
+    product: {id: 'product', referenceId: 'reference', associationId: 'link', name: 'Soap', unit: 'piece'}});
+  expect(await server.barcode(scope, barcode).result).toEqual({barcode, mayManage: false, product: null});
+  expect(fetch.mock.calls[0][0]).toContain('inventory/barcode?barcode=00036000291452');
+  for (const invalid of [null, {...found, barcode: '96385074'}, {...found, may_manage: 'true'},
+    {...found, association: null}, {...found, product: null},
+    {...found, association: {...association, barcode: '96385074'}},
+    {...found, association: {...association, product_id: 'foreign'}},
+    {...found, product: {...product, reference_id: ''}}, {...found, product: {...product, base_unit: 'litre'}}])
+    await expect(http([[200, invalid]], deployment).server.barcode(scope, barcode).result).rejects.toMatchObject({code: 'invalid_response'});
+  expect(() => server.barcode(scope, '96385075')).toThrow('invalid_inventory_barcode');
+});
+
+test('barcode original receipts match the exact frozen association command', async () => {
+  const barcode = '00036000291452';
+  const saved = {barcode, association_id: 'link', product_id: 'product'};
+  for (const action of ['inventory.link-barcode', 'inventory.remove-barcode'] as const) {
+    const command = inventoryCommand(action === 'inventory.link-barcode'
+      ? {action, barcode, product_id: 'product'} : {action, ...saved});
+    const operation = {...request, command};
+    const {server} = http([[200, receipt(saved)], [200, receipt(saved, 'historical')]]);
+    expect(await server.original(scope, operation).result).toMatchObject({kind: 'committed',
+      productId: 'product', movement: null, barcodeSaved: {barcode, linked: action === 'inventory.link-barcode'}});
+    expect(await server.original(scope, operation).result).toMatchObject({kind: 'historical'});
+    for (const invalid of [{...saved, barcode: '96385074'}, {...saved, product_id: 'other'}, {...saved, association_id: ''}])
+      await expect(http([[200, receipt(invalid)]]).server.original(scope, operation).result).rejects.toMatchObject({code: 'invalid_response'});
+    if (action === 'inventory.remove-barcode')
+      await expect(http([[200, receipt({...saved, association_id: 'new-link'})]]).server.original(scope, operation).result).rejects.toMatchObject({code: 'invalid_response'});
+  }
+});
+
+
+test('barcode query failure retires old facts and supports an explicit read retry', async () => {
+  const f = controller(), app = f.controller;
+  await app.showBarcode('036000291452');
+  app.bind(scope);
+  await app.showBarcode('036000291452');
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await app.showBarcode('96385075');
+  expect(f.barcodes).not.toHaveBeenCalled();
+  await app.showBarcode('036000291452');
+  expect(f.current()?.barcode).toEqual({code:'00036000291452',lookup:{barcode:'00036000291452',mayManage:true,product:null},unavailable:false});
+  f.barcodes.mockReturnValueOnce(lost());
+  await app.showBarcode('036000291452');
+  expect(f.current()?.barcode).toEqual({code:'00036000291452',lookup:null,unavailable:true});
+  await app.showBarcode('036000291452');
+  expect(f.current()?.barcode?.unavailable).toBe(false);
+  expect(f.current()?.barcode?.lookup?.barcode).toBe('00036000291452');
+  f.load.mockReturnValueOnce(lost());
+  await app.refresh();
+  expect(f.current()?.barcode).toBeNull();
+  expect(f.current()?.report).toBeNull();
+});
+
+test.each((['native', 'standalone'] as const).flatMap(mode =>
+  [401, 403, 503].map(status => ({mode, status}))))(
+  'barcode HTTP $status in $mode retires rejected access but preserves recoverable unavailable reads', async ({mode, status}) => {
+  const f = controller(), app = f.controller;
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await app.showHistory('product');
+  await app.showPurchases();
+  await app.showPurchaseReceipts('purchase');
+  const server = http([[status, failure('permission_denied')]], mode).server;
+  f.barcodes.mockImplementationOnce((current, value) => server.barcode(current, value));
+  await app.showBarcode('036000291452');
+  const {node, root} = component();
+  node.view = f.current()!;
+  await node.updateComplete;
+  if (status === 503) {
+    expect(f.current()?.report).toEqual(report);
+    expect(f.current()?.barcode).toMatchObject({lookup: null, unavailable: true});
+    expect(root.textContent).toContain(register.name);
+  } else {
+    expect(f.current()).toMatchObject({report: null, history: null, purchases: null,
+      purchaseReceipts: null, barcode: null, result: null, notice: 'unavailable'});
+    expect(root.textContent).not.toContain(register.name);
+    expect(root.querySelector('.registration-form')).toBeNull();
+    expect(root.querySelector('.barcode-search-form')).toBeNull();
+    await app.submit(register);
+    expect(f.send).not.toHaveBeenCalled();
+    await app.showBarcode('036000291452');
+    expect(f.barcodes).toHaveBeenCalledOnce();
+  }
+  await app.refresh();
+  expect(f.current()?.report).toEqual(report);
+  await app.showBarcode('036000291452');
+  expect(f.current()?.barcode?.lookup?.barcode).toBe('00036000291452');
+});
+
+test('retired barcode reads cannot populate another household scope', async () => {
+  const f = controller(), app = f.controller;
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  let resolve!: (value: BarcodeLookup) => void;
+  const cancel = vi.fn();
+  f.barcodes.mockReturnValueOnce({result:new Promise(done => {resolve=done;}),cancel});
+  const reading = app.showBarcode('036000291452');
+  await app.showBarcode('036000291452');
+  expect(f.barcodes).toHaveBeenCalledOnce();
+  app.bind({...scope,key:'different-home'});
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  resolve({barcode:'00036000291452',mayManage:true,product:null});
+  await reading;
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(f.current()?.barcode).toBeUndefined();
+});
+
+test('barcode access rejection preserves an unresolved original command without retaining private facts', async () => {
+  const f = controller(), app = f.controller;
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  const command = {action:'inventory.link-barcode',barcode:'00036000291452',product_id:'product'} as const;
+  f.send.mockReturnValueOnce(lost());
+  await app.submit(command);
+  const original = f.journal.open(scope.key);
+  f.barcodes.mockImplementationOnce((current, value) =>
+    http([[403, failure('permission_denied')]]).server.barcode(current, value));
+  await app.showBarcode(command.barcode);
+  expect(f.current()).toMatchObject({report:null, barcode:null, pending:true, notice:'uncertain'});
+  expect(f.journal.open(scope.key)).toEqual(original);
+  expect(f.send).toHaveBeenCalledOnce();
+  await app.refresh();
+  expect(f.current()).toMatchObject({report, pending:true, notice:'uncertain'});
+});
+
+test('lost barcode writes recover their original receipt and refresh current association facts', async () => {
+  const f = controller(), app = f.controller;
+  const barcode = '00036000291452';
+  const link = {action:'inventory.link-barcode',barcode,product_id:'product'} as const;
+  const found: BarcodeLookup = {barcode,mayManage:true,
+    product:{id:'product',referenceId:'reference',associationId:'link',name:'Soap',unit:'piece'}};
+  app.bind(scope);
+  await vi.waitFor(() => expect(f.current()?.busy).toBe(false));
+  await app.showBarcode(barcode);
+  f.send.mockReturnValueOnce(lost());
+  await app.submit(link);
+  expect(f.current()).toMatchObject({pending:true,notice:'uncertain'});
+  f.barcodes.mockReturnValueOnce(lost());
+  await app.showBarcode(barcode);
+  expect(f.current()).toMatchObject({pending:true,notice:'uncertain',barcode:{code:barcode,lookup:null,unavailable:true}});
+  f.original.mockReturnValueOnce(read({kind:'committed',operationId:'original-link',productId:'product',
+    movement:null,barcodeSaved:{barcode,linked:true}}));
+  f.barcodes.mockReturnValueOnce(read(found));
+  await app.recover();
+  expect(f.current()).toMatchObject({pending:false,notice:null,barcode:{code:barcode,lookup:found,unavailable:false}});
+  expect(f.journal.open(scope.key)).toBeNull();
+  f.send.mockReturnValueOnce(read({kind:'rejected',reason:'inventory_barcode_changed',
+    command:{action:'inventory.remove-barcode',barcode,product_id:'product',association_id:'link'}}));
+  f.barcodes.mockReturnValueOnce(read({...found,product:{...found.product!,associationId:'new-link'}}));
+  await app.submit({action:'inventory.remove-barcode',barcode,product_id:'product',association_id:'link'});
+  expect(f.current()?.result?.kind).toBe('rejected');
+  expect(f.current()?.barcode?.lookup?.product?.associationId).toBe('new-link');
+});
+
+
+const barcodeCode = '00036000291452';
+const barcodeUnlinked: BarcodeLookup = {barcode: barcodeCode, mayManage: true, product: null};
+const barcodeFound: BarcodeLookup = {barcode: barcodeCode, mayManage: true, product: {
+  id: 'product', referenceId: 'reference', name: 'Olive oil', unit: 'millilitre', associationId: 'barcode-link',
+}};
+const barcodeView: InventoryState = {...initial, report,
+  barcode: {code: barcodeCode, lookup: barcodeUnlinked, unavailable: false}};
+
+async function barcodeComponent(language: 'en' | 'es' = 'en') {
+  const f = component();
+  const field = () => f.root.querySelector<HaTextField>('.barcode-content vyp-ha-field');
+  const search = () => f.root.querySelector<HTMLFormElement>('.barcode-search-form');
+  const assign = async (view: InventoryState | null) => {
+    f.node.view = view;
+    await f.node.updateComplete;
+    await field()?.updateComplete;
+  };
+  const enter = async (value: string) => {
+    const control = field()!;
+    await control.updateComplete;
+    const input = control.shadowRoot!.querySelector('input')!;
+    input.value = value;
+    input.dispatchEvent(new InputEvent('input', {bubbles: true, composed: true}));
+    await f.node.updateComplete;
+    await control.updateComplete;
+  };
+  f.node.language = language;
+  await assign({...initial, report});
+  return {...f, field, search, assign, enter};
+}
+
+test('a submitted barcode search continues to its result or retry without reclaiming moved focus', async () => {
+  const foreground = vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+  const f = await barcodeComponent();
+  const loading: InventoryState = {...barcodeView, busy: true,
+    barcode: {code: barcodeCode, lookup: null, unavailable: false}};
+  const begin = async () => {
+    await f.enter('036000291452');
+    f.field()!.focus();
+    f.submit(f.search()!);
+    await f.assign(loading);
+    expect(document.activeElement).toBe(document.body);
+  };
+  try {
+    for (const lookup of [barcodeUnlinked, barcodeFound]) {
+      await begin();
+      await f.assign({...barcodeView, barcode: {code: barcodeCode, lookup, unavailable: false}});
+      const result = f.root.querySelector('.barcode-result');
+      expect(result).not.toBeNull();
+      expect(f.root.activeElement).toBe(result);
+      expect(f.field()!.value).toBe('036000291452');
+    }
+    await begin();
+    await f.assign({...loading, busy: false});
+    expect(document.activeElement).toBe(document.body);
+    await f.assign({...loading, busy: false, barcode: {code: barcodeCode, lookup: null, unavailable: true}});
+    const retry = f.search()!.querySelector('vyp-ha-button')!;
+    await retry.updateComplete;
+    expect(f.root.activeElement).toBe(retry);
+    expect(retry.shadowRoot!.activeElement).toBe(retry.shadowRoot!.querySelector('button'));
+
+    await begin();
+    await f.assign({...initial, notice: 'unavailable'});
+    const refresh = f.root.querySelector('.inventory-actions')!.querySelector('vyp-ha-button')!;
+    await refresh.updateComplete;
+    expect(f.root.activeElement).toBe(refresh);
+    await f.assign(barcodeView);
+    expect(f.field()!.value).toBe('036000291452');
+
+    await begin();
+    const moved = document.createElement('button');
+    moved.textContent = 'Another workspace action';
+    document.body.append(moved);
+    mounted.push(moved);
+    moved.focus();
+    await f.assign(barcodeView);
+    expect(document.activeElement).toBe(moved);
+
+    await begin();
+    foreground.mockReturnValue(false);
+    await f.assign(barcodeView);
+    expect(document.activeElement).toBe(document.body);
+    foreground.mockReturnValue(true);
+    await f.assign({...barcodeView});
+    expect(document.activeElement).toBe(document.body);
+
+    await begin();
+    f.node.view = barcodeView;
+    await f.node.updateComplete;
+    f.node.view = {...barcodeView, scope: {...scope, key: 'retired-household'}};
+    await f.node.updateComplete;
+    expect(document.activeElement).toBe(document.body);
+    expect(f.field()!.value).toBe('');
+  } finally {
+    foreground.mockRestore();
+  }
+});
+
+test('confirmed barcode writes and stale removal continue to the refreshed current result', async () => {
+  const foreground = vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+  const f = await barcodeComponent();
+  const loading: InventoryState = {...barcodeView, busy: true,
+    barcode: {code: barcodeCode, lookup: null, unavailable: false}};
+  const saved: InventoryResult = {kind: 'committed', operationId: 'barcode-saved', productId: 'product',
+    movement: null, barcodeSaved: {barcode: barcodeCode, linked: true}};
+  try {
+    await f.enter('036000291452');
+    f.submit(f.search()!);
+    await f.assign(barcodeView);
+    f.press('Associate barcode with Olive oil');
+    await f.node.updateComplete;
+    f.submit(f.root.querySelector<HTMLFormElement>('.barcode-review')!);
+    await f.assign(loading);
+    await f.assign({...barcodeView, pending: true, notice: 'uncertain'});
+    const recover = [...f.root.querySelectorAll('vyp-ha-button')]
+      .find(button => button.state.label === 'Recover original request');
+    expect(recover).toBeDefined();
+    expect(f.root.activeElement).toBe(recover);
+    await f.assign({...loading, result: saved});
+    await f.assign({...barcodeView, result: saved,
+      barcode: {code: barcodeCode, lookup: barcodeFound, unavailable: false}});
+    expect(f.root.activeElement).toBe(f.root.querySelector('.barcode-result'));
+
+    f.press('Remove barcode association');
+    await f.node.updateComplete;
+    f.submit(f.root.querySelector<HTMLFormElement>('.barcode-review')!);
+    await f.assign({...f.node.view!, busy: true});
+    const rejected: InventoryState = {...barcodeView,
+      barcode: {code: barcodeCode, lookup: barcodeFound, unavailable: false},
+      result: {kind: 'rejected', reason: 'inventory_barcode_changed', command: {
+        action: 'inventory.remove-barcode', barcode: barcodeCode, product_id: 'product', association_id: 'barcode-link',
+      }}};
+    f.node.view = rejected;
+    await f.node.updateComplete;
+    await f.assign({...loading, result: rejected.result});
+    await f.assign({...rejected, barcode: {code: barcodeCode, unavailable: false,
+      lookup: {...barcodeFound, product: {...barcodeFound.product!, name: 'Replacement', associationId: 'replacement'}}}});
+    expect(f.root.querySelector('.barcode-review')).toBeNull();
+    expect(f.root.activeElement).toBe(f.root.querySelector('.barcode-result'));
+    expect(f.root.activeElement!.textContent).toContain('Replacement');
+
+    f.press('Remove barcode association');
+    await f.node.updateComplete;
+    f.submit(f.root.querySelector<HTMLFormElement>('.barcode-review')!);
+    await f.assign(loading);
+    const removed = {...saved, operationId: 'barcode-removed', barcodeSaved: {barcode: barcodeCode, linked: false}};
+    await f.assign({...loading, result: removed});
+    await f.assign({...barcodeView, result: removed});
+    expect(f.root.activeElement).toBe(f.root.querySelector('.barcode-result'));
+    expect(f.root.activeElement!.textContent).toContain('Unlinked barcode');
+  } finally {
+    foreground.mockRestore();
+  }
+});
+
+test('barcode lookup selects an existing paginated product and reviews each association write', async () => {
+  const f = await barcodeComponent();
+  const registration = f.root.querySelector<HTMLFormElement>('.registration-form')!;
+  f.input(registration, 'Preserved product draft');
+  await f.enter('036000291452');
+  expect(f.field()!.state.inputMode).toBe('numeric');
+  expect(f.field()!.shadowRoot!.querySelector('input')!.type).toBe('text');
+  f.submit(f.search()!);
+  expect(f.events.mock.lastCall?.[0].detail).toEqual({type: 'barcode', barcode: barcodeCode});
+  await f.assign(barcodeView);
+  expect(f.root.textContent).toContain('Unlinked barcode in this household.');
+  f.root.querySelector<HTMLAnchorElement>('.barcode-content a')!.click();
+  expect((f.root.activeElement as HTMLElement).id).toBe('product-product');
+  f.press('Associate barcode with Olive oil');
+  await f.node.updateComplete;
+  const review = () => f.root.querySelector<HTMLFormElement>('.barcode-review');
+  expect(review()!.textContent).toContain('Olive oil');
+  expect(review()!.textContent).toContain(barcodeCode);
+  expect(review()!.getAttribute('aria-label')).toBe('Review barcode association');
+  expect(f.root.activeElement).toBe(review());
+  f.submit(review()!);
+  expect(f.events.mock.lastCall?.[0].detail).toEqual({type: 'submit', command: {
+    action: 'inventory.link-barcode', barcode: barcodeCode, product_id: 'product',
+  }});
+  const linked: InventoryResult = {kind: 'committed', operationId: 'linked', productId: 'product',
+    movement: null, barcodeSaved: {barcode: barcodeCode, linked: true}};
+  const found: InventoryState = {...barcodeView, result: linked,
+    barcode: {code: barcodeCode, lookup: barcodeFound, unavailable: false}};
+  await f.assign(found);
+  expect(f.root.textContent).toContain('Barcode associated.');
+  expect(f.root.querySelector<HTMLInputElement>('.registration-form input')!.value).toBe('Preserved product draft');
+  expect(f.field()!.value).toBe('036000291452');
+  f.press('Open product stock');
+  expect(f.events.mock.lastCall?.[0].detail).toEqual({type: 'history', productId: 'product'});
+  f.press('Remove barcode association');
+  await f.node.updateComplete;
+  expect(review()!.getAttribute('aria-label')).toBe('Review barcode removal');
+  f.submit(review()!);
+  expect(f.events.mock.lastCall?.[0].detail).toEqual({type: 'submit', command: {
+    action: 'inventory.remove-barcode', barcode: barcodeCode, product_id: 'product', association_id: 'barcode-link',
+  }});
+  await f.assign({...barcodeView, result: {...linked, operationId: 'removed', barcodeSaved: {barcode: barcodeCode, linked: false}}});
+  expect(f.root.textContent).toContain('Barcode association removed.');
+  expect(review()).toBeNull();
+  await f.enter('');
+  await f.assign({...found, result: {...linked, operationId: 'recovered'}});
+  expect(f.field()!.value).toBe(barcodeCode);
+  await f.assign({...found, result: {...linked, kind: 'historical'}});
+  expect(f.root.textContent).toContain('before restoration');
+});
+
+test('barcode drafts retain malformed input and retire unavailable or obsolete match facts', async () => {
+  const f = await barcodeComponent('es');
+  const invalid = barcodeCode + '0';
+  await f.enter(invalid);
+  f.submit(f.search()!);
+  await f.node.updateComplete;
+  await f.field()!.updateComplete;
+  expect(f.events).not.toHaveBeenCalled();
+  expect(f.field()!.value).toBe(invalid);
+  expect(f.field()!.state.error).toContain('dígito de control');
+  expect(f.field()!.shadowRoot!.activeElement).toBe(f.field()!.shadowRoot!.querySelector('input'));
+  await f.enter('036000291452');
+  f.submit(f.search()!);
+  const loading = {...barcodeView, barcode: {code: barcodeCode, lookup: null, unavailable: false}};
+  await f.assign(loading);
+  expect(f.root.querySelector('vyp-ha-feedback')!.state!.kind).toBe('loading');
+  await f.assign({...loading, barcode: {code: barcodeCode, lookup: null, unavailable: true}});
+  expect(f.root.querySelector('vyp-ha-feedback')!.state!.message).toContain('búsqueda local');
+  expect(f.field()!.value).toBe('036000291452');
+  expect([...f.root.querySelectorAll('vyp-ha-button')].map(button => button.state.label)).toContain('Reintentar búsqueda del código');
+  f.submit(f.search()!);
+  expect(f.events.mock.lastCall?.[0].detail).toEqual({type: 'barcode', barcode: barcodeCode});
+  await f.assign({...barcodeView, report: {...report, products: []}});
+  expect(f.root.textContent).toContain('Registra un producto abajo');
+  await f.assign(barcodeView);
+  f.press('Asociar código a Olive oil');
+  await f.node.updateComplete;
+  f.press('Cancelar');
+  await f.node.updateComplete;
+  expect(f.root.querySelector('.barcode-review')).toBeNull();
+  expect(f.field()!.shadowRoot!.activeElement).toBe(f.field()!.shadowRoot!.querySelector('input'));
+  await f.enter('96385074');
+  expect(f.root.textContent).not.toContain('Código sin asociación');
+  await f.assign({...barcodeView, scope: {...scope, key: 'another-household'}});
+  expect(f.field()!.value).toBe('');
+  const orphan = [...f.root.querySelectorAll('vyp-ha-button')].find(button => button.state.label === 'Asociar código a Olive oil');
+  expect(orphan).toBeUndefined();
+  await f.assign(null);
+  expect(f.root.textContent).toBe('');
+});
+
+test('barcode controls honor current grants, pending work and changed association identities', async () => {
+  const f = await barcodeComponent();
+  await f.enter('036000291452');
+  f.submit(f.search()!);
+  await f.assign(barcodeView);
+  const retired = [...f.root.querySelectorAll('vyp-ha-button')].find(button => button.state.label === 'Associate barcode with Olive oil')!;
+  for (const partial of [{busy: true}, {pending: true}]) {
+    await f.assign({...barcodeView, ...partial});
+    const before = f.events.mock.calls.length;
+    f.submit(f.search()!);
+    expect(f.events).toHaveBeenCalledTimes(before);
+    expect(f.field()!.disabled).toBe(true);
+  }
+  await f.assign(barcodeView);
+  f.press('Associate barcode with Olive oil');
+  await f.node.updateComplete;
+  await f.assign({...barcodeView, pending: true});
+  const before = f.events.mock.calls.length;
+  f.submit(f.root.querySelector<HTMLFormElement>('.barcode-review')!);
+  expect(f.events).toHaveBeenCalledTimes(before);
+  await f.assign({...barcodeView, result: {kind: 'rejected', reason: 'inventory_barcode_linked',
+    command: {action: 'inventory.link-barcode', barcode: barcodeCode, product_id: 'product'}}});
+  expect(f.root.querySelector('.barcode-review')).toBeNull();
+  for (const grant of [
+    {...barcodeView, report: {...report, mayManage: false}},
+    {...barcodeView, barcode: {code: barcodeCode, lookup: {...barcodeUnlinked, mayManage: false}, unavailable: false}},
+    {...barcodeView, scope: {...scope, readOnly: true}},
+  ]) {
+    await f.assign(grant);
+    retired.dispatchEvent(new Event('ha-press-request'));
+    await f.node.updateComplete;
+    expect(f.root.querySelector('.barcode-review')).toBeNull();
+    expect(f.root.textContent).toContain('An inventory manager can change barcode associations.');
+    expect([...f.root.querySelectorAll('vyp-ha-button')].some(button => button.state.label.startsWith('Associate barcode with'))).toBe(false);
+  }
+  await f.assign({...barcodeView, barcode: {code: barcodeCode, lookup: barcodeFound, unavailable: false}});
+  f.press('Remove barcode association');
+  await f.node.updateComplete;
+  await f.assign({...barcodeView, result: {kind: 'rejected', reason: 'inventory_barcode_changed', command: {
+    action: 'inventory.remove-barcode', barcode: barcodeCode, product_id: 'product', association_id: 'barcode-link',
+  }}, barcode: {code: barcodeCode, lookup: {...barcodeFound, product: {...barcodeFound.product!, associationId: 'new-link'}}, unavailable: false}});
+  expect(f.root.querySelector('.barcode-review')).toBeNull();
+  f.press('Remove barcode association');
+  await f.node.updateComplete;
+  f.submit(f.root.querySelector<HTMLFormElement>('.barcode-review')!);
+  expect(f.events.mock.lastCall?.[0].detail.command.association_id).toBe('new-link');
+  await f.assign({...initial, report});
+  retired.dispatchEvent(new Event('ha-press-request'));
+  await f.node.updateComplete;
+  expect(f.root.querySelector('.barcode-review')).toBeNull();
 });
