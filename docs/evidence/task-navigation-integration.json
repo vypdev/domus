@@ -1079,5 +1079,74 @@
         "runtimeUiPinUnchanged": true
       }
     }
+  },
+  "sourceBrowserStorageIsolation": {
+    "precedingHead": "5560638b763bea29a3c379b83b6a63a49f8f0e8a",
+    "originalCI": {
+      "run": 44824718426,
+      "job": 136614598853,
+      "artifact": 14678685345,
+      "passed": 116,
+      "failed": 6,
+      "notRun": 3,
+      "globalLimitMs": 1200000,
+      "catalogExecuted": false
+    },
+    "observations": {
+      "errorBodies": "storage_busy on calendar/current-access reads",
+      "matchingUnconfirmedWriteServer200Ms": [
+        7558.3,
+        10125.8,
+        18743.3
+      ],
+      "fiveSecondSetupWatchdog": "SQLite._transaction COMMIT",
+      "physicalHostCause": "Not established; no syscall or continuous-duration inference."
+    },
+    "correction": {
+      "scope": "Only source browser disposable databases; private job-owned Linux tmpfs parent and guarded always-cleanup. Ordinary default retained.",
+      "unchanged": [
+        "Production storage and timeout",
+        "125 original cases, individual deadlines, global limit and zero retries",
+        "Backend, both images and installed persistent-storage validation",
+        "231 Python/four UI runtime files and immutable68 pin",
+        "Full selected SDD, case identities and accepted Edge57 fixture"
+      ]
+    },
+    "localSource": {
+      "platform": "Darwin",
+      "stats": {
+        "startTime": "2026-11-20T23:26:42.731Z",
+        "duration": 448163.50999999995,
+        "expected": 125,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "singlePassedAttemptAtRetryZero": true,
+      "retainedOriginals": 59,
+      "privateParentRetiredAfterServicesClosed": true,
+      "targetLinuxWholeSuiteClaimed": false
+    },
+    "linuxProbe": {
+      "platform": "Linux",
+      "filesystem": "tmpfs",
+      "realFileSQLiteFullSynchronousCommitAndConnectionRestart": true,
+      "ownPrivateRootRetired": true,
+      "unrelatedSyntheticSentinelUnchanged": true,
+      "destructiveInputsRejected": [
+        "wrong prefix",
+        "symbolic root",
+        "non-private mode",
+        "nested git",
+        "different owner"
+      ],
+      "noHostDirectoriesOrNetworkMounted": true,
+      "exactWorkflowPrepareBashSyntaxPassed": true,
+      "exactCleanupPythonSyntaxPassed": true,
+      "cleanupSourceSHA256": "aaa99a7a9df1fa64901f053f3e55008050077441ddeba078efcae4af4e32050c",
+      "ephemeralContainerAutomaticallyRetired": true,
+      "cleanupGuardsSurvivePythonOptimization": true
+    },
+    "finalAcceptance": "New same-head whole productCI, review and destination gates required; no product failure waiver."
   }
 }

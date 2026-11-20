@@ -187,7 +187,10 @@ class Fixture:
             self.runtime.close()
         if self.directory is not None:
             self.directory.cleanup()
-        self.directory = tempfile.TemporaryDirectory(prefix=f"domus-entry-browser-{self.mode}-")
+        self.directory = tempfile.TemporaryDirectory(
+            prefix=f"domus-entry-browser-{self.mode}-",
+            dir=os.environ.get("DOMUS_BROWSER_FIXTURE_ROOT"),
+        )
         parent = Path(self.directory.name)
         # Own fixtures use the actual private directory contract, including BSD group inheritance.
         os.chown(parent, -1, os.getegid())
