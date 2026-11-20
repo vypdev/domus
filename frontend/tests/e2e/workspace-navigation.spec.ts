@@ -106,16 +106,31 @@ for (const mode of ['native', 'standalone'] as const) {
     await page.reload();
     await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true})).toBeVisible();
     await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeEnabled();
-    const original = page.waitForResponse(base + 'api/v1/inventory/requests/inventory.link-barcode/' + originalKey);
+    const originalPath = base + 'api/v1/inventory/requests/inventory.link-barcode/' + originalKey;
+    const recoveredReceipts: unknown[] = [];
+    // Retain actual upstream bytes before delivery; Chromium may retire the browser
+    // response after the application consumes it and reconciles the owned request.
+    await page.route(originalPath, async route => {
+      expect(route.request().method()).toBe('GET');
+      const upstream = await route.fetch({maxRetries:0, maxRedirects:0});
+      expect(upstream.status()).toBe(200);
+      const body = await upstream.body();
+      recoveredReceipts.push(JSON.parse(body.toString('utf8')));
+      await info.attach('barcode-original-receipt', {body, contentType:'application/json'});
+      await route.fulfill({response:upstream, body});
+    });
+    const original = page.waitForResponse(originalPath);
     await stock.getByRole('button', {name:'Recover original request', exact:true}).press('Enter');
     const recovered = await original;
     expect(recovered.ok()).toBe(true);
-    expect(await recovered.json()).toMatchObject({operation_id:operationId, result:{association_id:associationId}});
+    expect(recoveredReceipts).toEqual([expect.objectContaining({operation_id:operationId,
+      result:expect.objectContaining({association_id:associationId})})]);
     expect(associationPosts).toBe(1);
     await expect(stock.getByText('Barcode associated.', {exact:false})).toBeVisible();
     await expect(stock.getByText('Product found QA barcode soap', {exact:true})).toBeVisible();
     await expect(stock.locator('.barcode-result')).toBeFocused();
     await expect(digits).toHaveValue(barcode);
+    await page.unroute(originalPath);
     await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true}).locator('dd')).toHaveText(['0', '0', '0']);
     await stock.getByRole('button', {name:'Open product stock', exact:true}).press('Enter');
     await expect(stock.getByRole('region', {name:'Movement history · QA barcode soap', exact:true})).toBeFocused();
