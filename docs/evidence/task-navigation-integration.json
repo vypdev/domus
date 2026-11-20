@@ -512,7 +512,7 @@
         "extraDomainWrites": 0
       },
       "materialOutcomeFocusVisibility": "Guarded deferred material focus centers its current target. All four rebuilt journeys pass42.6s with focused result heading below navigation. Raw64source also passed these assertions42.4s; original realHA64settlement screenshot is the negative clipping evidence, requiring independent installed65 verification.",
-      "plannerPublicationReview": "Verified false positive oncc: EntryRuntime.materialDraft\u2192perform\u2192publish\u2192composition callback already passes a fresh TaskView after synchronous mutation and promise settlement. Source/realUI proofreply4643831425; normal thread resolution PRRT_kwDOVa5AKs66B--f.",
+      "plannerPublicationReview": "Verified false positive oncc: EntryRuntime.materialDraft→perform→publish→composition callback already passes a fresh TaskView after synchronous mutation and promise settlement. Source/realUI proofreply4643831425; normal thread resolution PRRT_kwDOVa5AKs66B--f.",
       "visibleMaterialFocusJourneys": {
         "expected": 4,
         "unexpected": 0,
@@ -699,8 +699,56 @@
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
       "pythonByteIdenticalToEdge64": true,
-      "status": "Archive, normal/local/Linux wheel, builder and final image bytes and labels qualified. Actual installed65currentC09/visiblefocus and complete final-head whole/source/both-CPU CI/review remain independent gates.",
+      "status": "Build identity and actual installed65 C09/visible-focus acceptance pass. Complete exact-head whole/source/both-CPU CI/review remain required after the worker-observation test correction.",
       "imageId": "sha256:6e4a7b017ddc24a2ebdfb392ff5e5c64dfdfc0fb4fcf0d2b250e2dab3d2e3e0e"
+    },
+    "installedEdge65": {
+      "version": "0.0.0-edge.65",
+      "runtimeSource": "c57879a992cd75c8c8b2ea0de41a25f509afed06",
+      "originalPackagingHead": "543ba3a2e848b2b528eee58107ac451fdfda9368",
+      "updateFrom": "0.0.0-edge.64",
+      "retainedPreviousWorkItems": 9,
+      "finalWorkItems": 10,
+      "products": 3,
+      "distinctWrites": 4,
+      "duplicateWrites": 0,
+      "finalStockPreserved": true,
+      "currentC09": "PASS EN keyboard creation, ES390actual touch completion, pending shortage, reviewed intake and one explicit settlement; exact same intent.",
+      "outcomeFocus": {
+        "focused": true,
+        "top": 457.109375,
+        "bottom": 482.703125,
+        "viewport": 940,
+        "navigationBottom": 56
+      },
+      "stopped": true,
+      "overridesRestored": true,
+      "receipt": "https://github.com/vypdev/domus/pull/151#issuecomment-7039956857",
+      "privateOriginals": "Retained locally; no native pagination or additional current-version failure-injection claim."
+    },
+    "packagedWorkerObservation": {
+      "originalRun": 44759701840,
+      "originalHead": "543ba3a2e848b2b528eee58107ac451fdfda9368",
+      "failedJob": 136368654155,
+      "originalContainerPasses": 49,
+      "originalContainerFailures": 1,
+      "originalFailure": "standalone second-lifetime recurrence_unavailable; underlying exception not retained and cause not established",
+      "originalBrowserCasesExecuted": 0,
+      "boundedUnchangedDiagnosticPasses": {
+        "arm64Modes": 2,
+        "amd64Modes": 2,
+        "extraStandaloneAMD64": 6
+      },
+      "independentTypedBusyReds": 2,
+      "correction": "Signal a real completed tick; allow only the production worker to recover a typed StorageBusy; other exceptions still fail with safe identity.",
+      "originalDeadlineSeconds": 10,
+      "productionPollSeconds": 5,
+      "actualAMD64Cases": 4,
+      "actualAMD64Seconds": 47.88,
+      "actualARM64Cases": 4,
+      "actualARM64Seconds": 38.09,
+      "runtimeAndPinUnchanged": true,
+      "finalExactHeadCIAndReview": "required"
     }
   }
 }
