@@ -59,6 +59,15 @@ That native mobile original-check path also exposed an occlusion: the focused Re
 
 Recovery now explicitly centers the focused control in the viewport. The four expanded material journeys pass in 42.0 seconds with zero retries, skipped, flaky or unexpected cases. All 46 rebuilt catalog cases also pass with zero skipped, flaky or unexpected cases. They additionally check a known committed original, one failed follow-up read, no repeated creation POST, the unrelated retained plan and a focused control below the sticky navigation. Further typing keeps its field focused. Strict types and all 2,060 frontend tests pass; all four metrics remain 100% across all 110 files (8,805 statements, 7,894 branches, 1,915 functions and 6,394 lines). The final immutable Edge.62 and its actual Home Assistant occlusion/upgrade/usage qualification remain separate gates in PR #151, together with exact-head whole CI, both CPU campaigns, review and scoped cleanup.
 
+## Immutable Edge.62 build
+
+- Runtime source: `b1313f3a91c8d992495d30c2a04714df81afad4e`.
+- Source archive SHA-256: `3c720ae9603121b085fcb59004da2b35740ff2ad84310d4e28ec394a25b03a5c`.
+- Wheel SHA-256: `7929b6385f690a6a59fb89d5130251af81a7f58a0250997b0101f45d66825cd1`.
+- Local Linux ARM64 image: `sha256:d501b294eedba158e87ec3252e8b7fa6fc26b3f15726c1aa15f6817c8970d089`.
+
+All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. Normal local and Linux wheel bytes match independently; source, version and architecture labels pass. SQLite remains schema 35. Installed Edge.62 upgrade/recovery/usage qualification, final exact-head whole source and both CPU campaigns, review, scoped cleanup, merge and destination receipts are recorded in PR #151 as separate gates. Build identity does not imply those outcomes.
+
 ## Superseded immutable Edge.61 build
 
 - Runtime source: `829800fd9ad7cfe70aa81d44da71ce4896bbd77c`.

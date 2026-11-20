@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.61 packages the immutable runtime declared in
+Edge 0.0.0-edge.62 packages the immutable runtime declared in
 [artifact.json](artifact.json). In Tasks, **Add materials** plans existing Pantry products
 for ordinary, fixed and relative creation. Review actual quantities with their displayed units,
 including zero for unused materials. Each result shows confirmed, unused or pending consumption
@@ -15,7 +15,8 @@ After settling a closed completion, **Next closed completion** remains available
 another page exists, including after recovering an interrupted settlement.
 A committed creation clears its submitted material plan before any follow-up read.
 If that read fails, use the focused **Refresh tasks** control. A later unrelated plan
-is preserved when checking the already saved creation.
+is preserved when checking the already saved creation. The focused recovery control
+remains visible below fixed navigation, even with a long draft open.
 
 If a protected response rejects your session, Domus hides
 household information and offers **Reopen Domus**. Existing records and original requests

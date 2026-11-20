@@ -577,6 +577,19 @@
       "imageId": "sha256:4a608cc1d1f67a5f2c886780175155a7964f651b1e667017bc3e6bdc71a193d8",
       "status": "Superseded before acceptance: native original-check recovery focus was covered by the sticky navigation despite preserved draft and zero repeated POSTs."
     },
-    "runtimeSourceBeforeVisibleFocusCorrection": "829800fd9ad7cfe70aa81d44da71ce4896bbd77c"
+    "runtimeSourceBeforeVisibleFocusCorrection": "829800fd9ad7cfe70aa81d44da71ce4896bbd77c",
+    "runtimeSource": "b1313f3a91c8d992495d30c2a04714df81afad4e",
+    "immutableCandidate": {
+      "version": "0.0.0-edge.62",
+      "sourceCommit": "b1313f3a91c8d992495d30c2a04714df81afad4e",
+      "sourceArchiveSHA256": "3c720ae9603121b085fcb59004da2b35740ff2ad84310d4e28ec394a25b03a5c",
+      "wheelSHA256": "7929b6385f690a6a59fb89d5130251af81a7f58a0250997b0101f45d66825cd1",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:d501b294eedba158e87ec3252e8b7fa6fc26b3f15726c1aa15f6817c8970d089",
+      "status": "Immutable build qualified. Final exact-head whole/source/both CPU CI, installed Edge62 occlusion/upgrade acceptance, review, scoped cleanup and destination verification remain separate gates in PR151."
+    }
   }
 }

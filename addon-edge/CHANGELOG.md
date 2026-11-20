@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.62
+
+- Keep the focused read-recovery control visible below fixed navigation inside Home Assistant.
+- Preserve an unrelated open material draft while checking an already saved creation.
+
 ## 0.0.0-edge.61
 
 - Clear the submitted material plan when creation is committed, even if reading the result fails.
