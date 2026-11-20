@@ -53,3 +53,12 @@ Only Edge installation is authorized. Stable/distribution acceptance remains ope
 - All 121 composed source journeys and 45 catalog journeys pass with zero skips, unexpected results or retries. The two strengthened barcode journeys recover the exact original operation after shared proof expiry.
 - All 42 Node policy and 51 architecture cases, plus documentation checks, pass.
 - Original reports, coverage, failure log and 14 barcode/entry screenshots are retained separately from generated build outputs. Both actual-image jobs and installed corrected Edge acceptance remain pending at this checkpoint.
+
+## Immutable Edge.57 checkpoint
+
+- Runtime source: `272b5e8436588b5fab090622d19298371a6dc33c`.
+- Source archive SHA-256: `352f69ca646ad276454e6bcb442fa8a3fa1f81826e55bf3daeb3a7c8ba957aad`.
+- Wheel SHA-256: `f5a1075d1313eebc01534b8a6aba6116e27c6b15bb2ae7a5b04d31962fcc2ea0`.
+- Local final ARM64 image: `sha256:fe9dfa9521a3737408a8ac7ebb97de05c1b7c884c733764958943f4f3da286ca`.
+- All 231 Python modules and four UI resources match the Git/archive, wheel, Linux builder and final local image; the normal local and Linux wheels match byte for byte. Version/source labels are checked independently.
+- Storage schema remains 35. This local ARM64 inspection is separate from both CI architecture campaigns and the Supervisor-installed candidate, which remain pending.

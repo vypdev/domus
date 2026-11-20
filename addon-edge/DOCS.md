@@ -1,7 +1,10 @@
 # Installation and operation
 
-Edge 0.0.0-edge.56 packages the immutable runtime declared in
-[artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
+Edge 0.0.0-edge.57 packages the immutable runtime declared in
+[artifact.json](artifact.json). If a protected response rejects your session, Domus hides
+household information and offers **Reopen Domus**. Existing records and original requests
+are retained. After verifying your access, recover an interrupted request explicitly;
+opening the interface never repeats it automatically. Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
 see whether an optional stock condition matches. Preview leaves tasks and stock unchanged.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.57
+
+- Remove shared household/workspace facts when a protected response rejects the current session.
+- Focus access verification and retain original requests for deliberate recovery without duplicate writes.
+- Fence cancelled or retired responses from newly verified sessions.
+
 ## 0.0.0-edge.56
 
 - Retire loaded Inventory data and management controls when current access is rejected.
