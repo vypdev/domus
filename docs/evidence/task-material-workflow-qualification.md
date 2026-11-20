@@ -51,6 +51,15 @@ The actual Edge.60 wheel reproduces stale material retention in all four real ma
 
 The shared Linux backend CI previously exceeded its 25-minute budget at 83%, without a completed coverage report. Its timeout is now 40 minutes; no tests, thresholds or independent gates are removed. All 186 Python tooling tests pass with 100% statement/branch coverage across the same five modules. A fresh immutable Edge.61, installed recovery qualification, exact-head whole CI and both CPU campaigns remain mandatory. Their final receipts and scoped cleanup are recorded in PR #151 rather than starting another source build just to append observations.
 
+## Immutable Edge.61 build
+
+- Runtime source: `829800fd9ad7cfe70aa81d44da71ce4896bbd77c`.
+- Source archive SHA-256: `68a46fd337af68aca0d1182e02c3e5e811f1b65165404d1e57646214b83cd661`.
+- Wheel SHA-256: `e0cefaf2ce7a91d401f3dded60ce5090e3d50554f42dce42b274125653233796`.
+- Local Linux ARM64 image: `sha256:4a608cc1d1f67a5f2c886780175155a7964f651b1e667017bc3e6bdc71a193d8`.
+
+All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. Normal local and Linux wheel bytes match independently; source, version and architecture labels pass. SQLite remains schema 35. This is build identity only. The final exact-head whole source and both CPU campaigns, installed upgrade/recovery acceptance, review, scoped synthetic cleanup, merge and destination receipts belong to PR #151 and remain independent gates.
+
 ## Superseded immutable Edge.60 build
 
 - Runtime source: `41c5c75c8c5549fc4d9142f86db600e6a76530da`.

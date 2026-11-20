@@ -563,6 +563,19 @@
       "screenshotsAndReceipts": "Private local evidence; not uploaded",
       "limits": "Native scheduled consumption is not claimed; separate 48 HTTP cases cover initial/successor effects. Exact-head CI/review and scoped cleanup remain required."
     },
-    "runtimeSourceBeforePostReadCorrection": "41c5c75c8c5549fc4d9142f86db600e6a76530da"
+    "runtimeSourceBeforePostReadCorrection": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
+    "runtimeSource": "829800fd9ad7cfe70aa81d44da71ce4896bbd77c",
+    "immutableCandidate": {
+      "version": "0.0.0-edge.61",
+      "sourceCommit": "829800fd9ad7cfe70aa81d44da71ce4896bbd77c",
+      "sourceArchiveSHA256": "68a46fd337af68aca0d1182e02c3e5e811f1b65165404d1e57646214b83cd661",
+      "wheelSHA256": "e0cefaf2ce7a91d401f3dded60ce5090e3d50554f42dce42b274125653233796",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:4a608cc1d1f67a5f2c886780175155a7964f651b1e667017bc3e6bdc71a193d8",
+      "status": "Immutable build qualified. Installed Edge61 acceptance and final exact-head whole/source/both CPU CI, review, scoped cleanup and destination verification remain separate gates in PR151."
+    }
   }
 }

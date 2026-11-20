@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.61
+
+- Clear the submitted material plan when creation is committed, even if reading the result fails.
+- Preserve a later unrelated plan when checking an already saved creation.
+- Focus Refresh tasks after a failed post-create read and retain focus while editing the next draft.
+
 ## 0.0.0-edge.60
 
 - Keep the next closed completion reachable after settling earlier material usage.
