@@ -973,7 +973,27 @@
         "unexpected": 0,
         "flaky": 0
       },
-      "newImmutableCandidate": "Edge.68 required; not yet built/published/installed",
+      "newImmutableCandidate": {
+        "version": "0.0.0-edge.68",
+        "runtimeSource": "1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180",
+        "sourceArchiveSHA256": "8d056c469217666f472e3578ebd1c74017b433a36d6ec4271e8713eb79b91cc9",
+        "wheelSHA256": "02dc09c81c4248102d3ec1a6a0f9c7dfaac3ec072a41c54b49c8d7716c971d6e",
+        "pythonFiles": 231,
+        "uiFiles": 4,
+        "archiveWheelInstalledBuilderEquality": "passed",
+        "localFinalImage": {
+          "candidate": "0.0.0-edge.68",
+          "runtimeSource": "1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180",
+          "imageTag": "domus-150-edge68:pinned",
+          "imageId": "sha256:b296a0aaea746400bf3a5592f5e397d382df022f9616d8d3b87e93f8f7ebd2f8",
+          "architecture": "arm64",
+          "pythonFiles": 231,
+          "uiFiles": 4,
+          "archiveWheelInstalledEquality": "passed",
+          "versionAndSourceLabels": "passed"
+        },
+        "native": "required; not yet qualified"
+      },
       "fullCurrentHeadGates": "required; no old product failure or valid finding waived",
       "strictTypes": "both pass",
       "independentCoverageAndAcceptedFixture": "2/2 pass",

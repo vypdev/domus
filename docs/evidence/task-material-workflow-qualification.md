@@ -270,6 +270,15 @@ The final complete frontend passes 2,087 tests in 44 files, covering all 110 run
 
 The prior Edge.67 installed C09 and its exact-head 52-container/70-browser campaigns on each CPU remain historical qualification of that immutable candidate. Its separately confirmed QA cleanup, and Edge.66 cleanup, are complete. These new UI bytes require immutable Edge.68 archive/wheel/installed-image identity, installed acceptance, final same-head complete product CI and review, followed by destination gates. All 46 catalog cases also pass in 28,598.680 ms, with zero retries, skipped or flaky cases. The rebuilt wheel contains the same four compiled UI files.
 
+## Immutable Edge.68 candidate
+
+- Runtime source: `1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180`.
+- Source archive SHA-256: `8d056c469217666f472e3578ebd1c74017b433a36d6ec4271e8713eb79b91cc9`.
+- Wheel SHA-256: `02dc09c81c4248102d3ec1a6a0f9c7dfaac3ec072a41c54b49c8d7716c971d6e`.
+- Storage schema: 35, unchanged.
+
+All 231 Python modules agree between the source, downloaded archive, built wheel and Linux builder. All four compiled UI files agree between the local build, wheel and installed builder, and the local/Linux wheel bytes match. The current package tests require these exact reviewed coordinates; the original Edge.3 and Edge.5 compatibility recipes remain frozen. The local final ARM64 image `sha256:b296a0aaea746400bf3a5592f5e397d382df022f9616d8d3b87e93f8f7ebd2f8` also matches all 231 Python and four UI files; its architecture, Edge.68 version and runtime-source labels are verified. Installed acceptance, complete same-head product CI/review on both CPUs and destination gates remain required and are recorded in PR #151.
+
 ## Compatibility and operational limits
 
 The browser-journal regression executes the actual preceding Edge.57 storage adapter and controller, bundled from accepted source `272b5e8436588b5fab090622d19298371a6dc33c`. The checked-in fixture records its eight original module digests and bundle digest. Ordinary material creation, scheduled material creation and material settlement each retain seven readable legacy originals and one new original in real browser session storage. The preceding closed decoder refuses the new shape without changing the stored bytes; its controller blocks new writes while the journal is unreadable. Re-upgrade recovers all eight exact originals with their scope, stage and expiry. Capacity does not discard an unconfirmed original, and only an explicitly resolved record can be dismissed.

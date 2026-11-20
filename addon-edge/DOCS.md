@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.67 packages the immutable runtime declared in
+Edge 0.0.0-edge.68 packages the immutable runtime declared in
 [artifact.json](artifact.json). In Tasks, **Add materials** plans existing Pantry products
 for ordinary, fixed and relative creation. Review actual quantities with their displayed units,
 including zero for unused materials. Each result shows confirmed, unused or pending consumption
@@ -22,6 +22,12 @@ material choices preserves the displayed earlier completion and its next page.
 A transient detail or history read failure retains the selected task, displayed completion and
 continuation for an explicit retry. Deferred material focus respects a newer keyboard target and keeps its result visible
 below fixed navigation.
+
+If material access is denied before selection, the empty planner explains access review and
+**Refresh tasks**. Removing the retained plan or its last unavailable line preserves the task
+text and returns focus to the title when no material control is available. A temporary
+closed-cycle read failure before settlement keeps the displayed earlier usage and its next
+page; retry explicitly. A denied session still hides private task and history facts.
 
 If a protected response rejects your session, Domus hides
 household information and offers **Reopen Domus**. Existing records and original requests

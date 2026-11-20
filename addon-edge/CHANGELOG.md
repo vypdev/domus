@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.0-edge.68
+
+- Explain denied material access even before any product is selected.
+- Return focus to the retained task title when clearing an unavailable material plan.
+- Keep earlier usage and its next page after a temporary settlement preflight failure.
+
 ## 0.0.0-edge.67
 
 - Keep current material settlement available when the task itself cannot accept another revision.
