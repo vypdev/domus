@@ -1,0 +1,43 @@
+{
+  "repository": "vypdev/domus",
+  "sourceCommit": "272b5e8436588b5fab090622d19298371a6dc33c",
+  "acceptedWheelSHA256": "f5a1075d1313eebc01534b8a6aba6116e27c6b15bb2ae7a5b04d31962fcc2ea0",
+  "purpose": "Execute the actual previous client journal adapter and controller to qualify fail-closed rollback and re-upgrade independently of SQLite. This does not claim a whole-application browser rollback.",
+  "generator": "Vite 8.3.5 library build, es2023, ES module, no minification; git archive of sourceCommit/frontend/src; generated re-export entry below; normalize diagnostic source-path comments only.",
+  "generatedEntry": "export {TaskSessionJournal,TASK_JOURNAL_KEY} from \"./adapters/task-journal.ts\";\nexport {TaskController} from \"./application/task-controller.ts\";\n",
+  "bundleSHA256": "71cb56c659d28703ab9ba557c9e9ae972a88645132a601939760372aa54d0d31",
+  "sourceFiles": [
+    {
+      "path": "frontend/src/adapters/task-journal.ts",
+      "sha256": "8b1b5a7d300c7bb12655989a3c0f58e373ceca1f32683982b82aaf7fbac63963"
+    },
+    {
+      "path": "frontend/src/application/ports.ts",
+      "sha256": "0ceac47de2fe6f0d886704051803325ba9b0a221409d05f818c9c04ee1828d6e"
+    },
+    {
+      "path": "frontend/src/application/task-controller.ts",
+      "sha256": "e1a2394f08ae2a5642fa9da2d84b1ff6b069285cd0934f78fcd02b6e261b254b"
+    },
+    {
+      "path": "frontend/src/domain/administration.ts",
+      "sha256": "913ebcffc8bb97ea3f70913d2abd0eebb608bee6db12ec314345a2adf2fa21d4"
+    },
+    {
+      "path": "frontend/src/domain/civil-date.ts",
+      "sha256": "5f1d08a171a715f791e333d68df4db191d1d26872f1b75644d052f017cf3e4f7"
+    },
+    {
+      "path": "frontend/src/domain/journal.ts",
+      "sha256": "bc3472ef8c8ac424bf318939d135b420c731614b21fe50617241643a5fce3354"
+    },
+    {
+      "path": "frontend/src/domain/point-allocation.ts",
+      "sha256": "86f3e7347cfe91c9e3b2fe8552358ff23e97819cce3ec5d13f6fb6384ff66411"
+    },
+    {
+      "path": "frontend/src/domain/tasks.ts",
+      "sha256": "2efadb8a1812f68f9a8eb4db572fa382861e635219d021db66c2c571d239613a"
+    }
+  ]
+}

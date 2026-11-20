@@ -33,6 +33,93 @@ async function mount(value: TaskView | null = view(), locale: 'en' | 'es' = 'en'
   return {element, root, intents, button, input, text: () => root.textContent!};
 }
 
+test('optional plan intents survive read loading and block a stale plan without losing task text', async () => {
+  const plan = {open:false,busy:false,canLink:true,readOnly:false,rows:[],choices:[],cursor:null,notice:null} as const;
+  const f = await mount(view({page:{items:[],nextCursor:null},materialPlan:plan}));
+  await f.input('task-title','Retain this material task');
+  const component = () => f.root.querySelector('domus-task-material-plan')!;
+  await component().updateComplete;
+  const open = component().shadowRoot!.querySelector<HaButton>('vyp-ha-button')!;
+  await open.updateComplete; open.click();
+  expect(f.intents.at(-1)).toEqual({type:'materialPlan',action:'load'});
+  f.element.view=view({phase:'loading',busy:true,access:null,materialPlan:plan}); await f.element.updateComplete;
+  f.element.view=view({page:{items:[],nextCursor:null},materialPlan:{...plan,open:true,notice:'unavailable'}});
+  await f.element.updateComplete; await component().updateComplete; await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+  const retry=component().shadowRoot!.querySelector<HaButton>('vyp-ha-button')!;
+  await retry.updateComplete; retry.click();
+  expect(f.intents.at(-1)).toEqual({type:'materialPlan',action:'load'});
+  const choice={referenceId:'soap',name:'Soap',unit:'piece' as const};
+  const loaded={...plan,open:true,choices:[choice]};
+  f.element.view=view({page:{items:[],nextCursor:null},materialPlan:loaded}); await f.element.updateComplete;
+  await component().updateComplete; await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+  expect(f.root.querySelector<HTMLInputElement>('#task-title')!.value).toBe('Retain this material task');
+  const select=component().shadowRoot!.querySelector('vyp-ha-select')!;
+  select.dispatchEvent(new CustomEvent('ha-select-request',{detail:{value:'soap'}}));
+  expect(f.intents.at(-1)).toEqual({type:'materialPlan',action:'add',referenceId:'soap'});
+  const row={referenceId:'soap',input:'1',choice};
+  f.element.view=view({page:{items:[],nextCursor:null},materialPlan:{...loaded,rows:[row]}});
+  await f.element.updateComplete; await component().updateComplete; await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+  const field=component().shadowRoot!.querySelector<HaTextField>('vyp-ha-field')!;
+  field.dispatchEvent(new CustomEvent('ha-value-request',{detail:{value:'0'}}));
+  expect(f.intents.at(-1)).toEqual({type:'materialPlan',action:'edit',referenceId:'soap',input:'0'});
+  f.element.view=view({page:{items:[],nextCursor:null},materialPlan:{...loaded,rows:[{...row,input:'0'}]}}); await f.element.updateComplete;
+  f.button('Create task').click(); expect(f.intents.at(-1)).toMatchObject({type:'create',title:'Retain this material task'});
+  f.element.view=view({page:{items:[],nextCursor:null},materialPlan:{...loaded,rows:[{...row,input:'0.25',choice:{...choice,unit:'millilitre'}}]}}); await f.element.updateComplete;
+  expect(f.button('Create task').disabled).toBe(false);
+  f.element.view=view({page:{items:[],nextCursor:null},materialPlan:{...loaded,canLink:false,rows:[{...row,choice:null}]}}); await f.element.updateComplete;
+  expect(f.button('Create task').disabled).toBe(true);
+  f.root.querySelector<HTMLFormElement>('details.new-task form')!.dispatchEvent(new SubmitEvent('submit',{cancelable:true}));
+  expect(f.root.querySelector<HTMLInputElement>('#task-title')!.value).toBe('Retain this material task');
+  await component().updateComplete;
+  const remove=[...component().shadowRoot!.querySelectorAll<HaButton>('vyp-ha-button')].find(button=>button.state.label==='Remove material')!;
+  await remove.updateComplete; remove.click(); expect(f.intents.at(-1)).toEqual({type:'materialPlan',action:'remove',referenceId:'soap'});
+  f.element.view=view({page:{items:[],nextCursor:null},materialPlan:{...loaded,rows:[]}}); await f.element.updateComplete;
+  f.element.remove(); await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+});
+
+test('starting a material read before native toggle delivery preserves the newly opened task editor', async () => {
+  const plan={open:false,busy:false,canLink:true,readOnly:false,rows:[],choices:[],cursor:null,notice:null} as const;
+  const f=await mount(view({materialPlan:plan}));
+  const details=f.root.querySelector<HTMLDetailsElement>('details.new-task')!;
+  const component=f.root.querySelector('domus-task-material-plan')!;await component.updateComplete;
+  details.open=true;
+  component.dispatchEvent(new CustomEvent('domus-material-plan-intent',{detail:{action:'load'},bubbles:true,composed:true}));
+  f.element.view=view({phase:'loading',busy:true,access:null});await f.element.updateComplete;
+  f.element.view=view({materialPlan:{...plan,open:true,notice:'unavailable'}});await f.element.updateComplete;
+  expect(f.root.querySelector<HTMLDetailsElement>('details.new-task')!.open).toBe(true);
+});
+
+test('missing material drafts survive a granular rejection and per-line success has a material-specific receipt', async () => {
+  const material={intentId:'intent-1',cycleId:'cycle-1',lineId:'line-1',revision:revisionValue('7'),effectRevision:'1',submittedQuantity:null,
+    quantity:null,state:'pending_recording' as const,pendingReason:'actual_quantity_required',confirmedQuantity:null,confirmedEffectRevision:null,movementId:null,postedAt:null};
+  const detail:TaskDetail={...work,state:'completed',currentCycleId:'cycle-1',
+    cycle:{cycleId:'cycle-1',verification:'pending',performedAt:'100',performerIds:['private-member-id']},
+    materials:[{lineId:'line-1',label:'Soap',plannedQuantity:'2',precision:0,unitId:'piece',locationId:'pantry'}],materialOutcomes:[material],
+    pendingMaterials:true,allowedActions:['materials.settle']};
+  const f=await mount(view({detail}));
+  const component=()=>f.root.querySelector('domus-task-material-outcomes')!;
+  await component().updateComplete;
+  const fields=()=>[...component().shadowRoot!.querySelectorAll<HaTextField>('vyp-ha-field')];
+  fields()[0].dispatchEvent(new CustomEvent('ha-value-request',{detail:{value:'0'}}));
+  await f.element.updateComplete; await component().updateComplete;
+  fields()[1].dispatchEvent(new CustomEvent('ha-value-request',{detail:{value:'Nothing used'}}));
+  await f.element.updateComplete; await component().updateComplete;
+  let save=component().shadowRoot!.querySelector<HaButton>('vyp-ha-button')!; await save.updateComplete; save.click();
+  expect(f.intents.at(-1)).toEqual({type:'settleMaterial',occurrenceId:'work-1',intentId:'intent-1',cycleId:'cycle-1',revision:'7',quantity:'0',reason:'Nothing used'});
+  f.element.view=view({phase:'loading',busy:true,access:null,detail:null}); await f.element.updateComplete;
+  f.element.view=view({detail,outcome:{kind:'rejected',reason:'forbidden',correlationId:'cor_material'}}); await f.element.updateComplete; await component().updateComplete;
+  expect(fields().map(field=>field.value)).toEqual(['0','Nothing used']);
+  await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+  save=component().shadowRoot!.querySelector<HaButton>('vyp-ha-button')!; await save.updateComplete; save.click();
+  f.element.view=view({detail:null,notice:'unavailable'}); await f.element.updateComplete;
+  const unused={...material,revision:revisionValue('8'),quantity:'0',state:'not_used' as const,pendingReason:null};
+  const receipt:TaskReceipt={kind:'receipt',stage:'committed',action:'task.material.settle',operationId:'material-op',occurrenceId:work.occurrenceId,
+    intentId:'intent-1',cycle:detail.cycle!,material:unused,archivedBy:null};
+  f.element.view=view({detail:{...detail,materialOutcomes:[unused],pendingMaterials:false},outcome:receipt}); await f.element.updateComplete;
+  await component().updateComplete; await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+  expect(f.text()).toContain('Material request recorded.'); expect(f.root.querySelector('#task-base-points')).toBeNull();
+});
+
 async function progressFixture(locale: 'en' | 'es' = 'en', patch: Partial<TaskDetail> = {}) {
   const detail: TaskDetail = {...work, state: 'assigned', assigneeIds: ['private-member-id'],
     allowedActions: ['transition:in_progress', 'transition:blocked', 'complete'], ...patch};

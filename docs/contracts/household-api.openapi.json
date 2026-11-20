@@ -8498,6 +8498,21 @@
             "title": "Description",
             "type": "string"
           },
+          "materials": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MaterialSelectionBody"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Materials"
+          },
           "overrides": {
             "anyOf": [
               {
@@ -9730,7 +9745,8 @@
               "task.transition",
               "task.complete",
               "task.verify",
-              "task.reopen"
+              "task.reopen",
+              "task.material.settle"
             ],
             "title": "Action",
             "type": "string"
@@ -10296,6 +10312,11 @@
           },
           "can_create": {
             "title": "Can Create",
+            "type": "boolean"
+          },
+          "can_link_materials": {
+            "default": false,
+            "title": "Can Link Materials",
             "type": "boolean"
           },
           "can_manage_points": {
@@ -32154,7 +32175,8 @@
                 "task.transition",
                 "task.complete",
                 "task.verify",
-                "task.reopen"
+                "task.reopen",
+                "task.material.settle"
               ],
               "title": "Action",
               "type": "string"

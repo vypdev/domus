@@ -36,6 +36,9 @@ configurators set the exact amount used by the existing award rules. Full task e
 acceptance of the installed recurrence experience remain open.
 The [assignment interface](evidence/task-assignment-qualification.md) adds planned
 assignees, replacement and release with explicit conflict review and original-request recovery.
+The [task material workflow](evidence/task-material-workflow-qualification.md) connects optional
+Pantry plans, actual-use review and explicit pending-usage recovery. Its qualification record
+distinguishes completed source checks from the remaining installed and merge gates.
 - M3 starts with the [protected product catalog and stock
   intake](evidence/inventory-catalog-qualification.md), followed by [movement history, adjustments
   and intake reversals](evidence/inventory-movement-qualification.md) and [minimum and target

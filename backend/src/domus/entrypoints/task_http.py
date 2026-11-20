@@ -104,6 +104,7 @@ TaskWorkspaceAction = Literal[
     "task.complete",
     "task.verify",
     "task.reopen",
+    "task.material.settle",
 ]
 
 

@@ -7,6 +7,28 @@ const complete = {action: 'task.complete', occurrenceId: 'work-1', payload: {
   expected_revision: revision, performer_ids: ['member-1'], performed_at: '9223372036854775807',
   material_usages: [{line_id: 'line-1', quantity: '3.333333'}]}};
 
+test('material creation preserves zero, exact units of quantity and the entire immutable plan', () => {
+  const payload = {expected_revision: 0, title: 'Clean', description: '', priority: 'normal'};
+  const materials = [{reference_id: 'soap', planned_quantity: '0'}, {reference_id: 'tea', planned_quantity: '1.000001'}];
+  const value = taskCommand({action: 'task.create', payload: {...payload, materials}});
+  expect(value).toEqual({action: 'task.create', payload: {...payload, materials}});
+  expect(Object.isFrozen((value?.payload as {materials: unknown}).materials)).toBe(true);
+  for (const invalid of [null, Array(1), [...materials, materials[0]], Array.from({length: 33}, (_, i) => ({reference_id: 'p' + i, planned_quantity: '1'})),
+    [{...materials[0], label: 'forged'}], [{...materials[0], planned_quantity: '1.0'}], [{...materials[0], planned_quantity: 1}]])
+    expect(taskCommand({action: 'task.create', payload: {...payload, materials: invalid}})).toBeUndefined();
+});
+
+test('settlement uses the intent revision and cannot inject Inventory targets or a dismissal', () => {
+  const raw = {action: 'task.material.settle', occurrenceId: 'work-1', intentId: 'intent-1',
+    payload: {expected_revision: revision, cycle_id: 'cycle-1', action: 'post', reason: ''}};
+  expect(taskCommand(raw)).toEqual(raw);
+  const correction = {...raw, payload: {...raw.payload, action: 'correct', quantity: '0', reason: 'Not used'}};
+  expect(taskCommand(correction)).toEqual(correction);
+  for (const invalid of [{...raw, intentId: '../bad'}, {...raw, payload: {...raw.payload, action: 'dismiss'}},
+    {...raw, payload: {...raw.payload, quantity: '1'}}, {...correction, payload: {...correction.payload, reason: ''}},
+    {...raw, payload: {...raw.payload, product_id: 'other'}}]) expect(taskCommand(invalid)).toBeUndefined();
+});
+
 test.each([
   {target: 'in_progress', reason: ''},
   {target: 'blocked', reason: '  Waiting for parts\nThen inspect\t🧰  '},

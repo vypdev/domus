@@ -2,9 +2,52 @@ import {expect, test} from 'vitest';
 import {TaskSessionJournal, TASK_JOURNAL_KEY} from '../src/adapters/task-journal';
 import type {OwnedStorage} from '../src/adapters/session-journal';
 import {taskCommand} from '../src/domain/tasks';
+import {TaskSessionJournal as Edge57Journal, TaskController as Edge57Controller,
+  TASK_JOURNAL_KEY as EDGE57_KEY} from './fixtures/edge57-task-journal.mjs';
+import {vi} from 'vitest';
+import type {TaskServer} from '../src/application/task-ports';
 const context = {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel: 'edge' as const, subject: 'a'.repeat(32)};
 const scope = {context, householdId: 'home', memberId: 'member-1'};
 const command = taskCommand({action: 'task.create', payload: {expected_revision: 0, title: '  Clean 🧹  ', description: '', priority: 'normal'}})!;
+
+test.each(['ordinary-materials','scheduled-materials','settlement'])(
+  'actual Edge.57 client preserves opaque %s bytes and blocks writes until re-upgrade', async kind => {
+    expect(EDGE57_KEY).toBe(TASK_JOURNAL_KEY);
+    const key='domus-150-owned-rollback-'+kind+':'+TASK_JOURNAL_KEY;
+    const storage:OwnedStorage={getItem:name=>sessionStorage.getItem('domus-150-owned-rollback-'+kind+':'+name),
+      setItem:(name,value)=>sessionStorage.setItem('domus-150-owned-rollback-'+kind+':'+name,value),
+      removeItem:name=>sessionStorage.removeItem('domus-150-owned-rollback-'+kind+':'+name)};
+    expect(sessionStorage.getItem(key)).toBeNull();
+    try {
+      const journal=new TaskSessionJournal(storage);journal.open(scope,100);
+      for(let i=0;i<7;i++){journal.prepare('legacy-'+i,command,101+i*2);journal.record('legacy-'+i,'committed','legacy-operation-'+i,102+i*2);}
+      const legacy=new Edge57Journal(storage).open(scope,200);
+      expect(legacy).toHaveLength(7);journal.open(scope,201);
+      const current=kind==='settlement'?taskCommand({action:'task.material.settle',occurrenceId:'work-1',intentId:'intent-1',
+        payload:{expected_revision:'7',cycle_id:'cycle-1',action:'correct',quantity:'0',reason:'Initially unrecorded'}})!
+        :taskCommand({...command,payload:{...command.payload,materials:[{reference_id:'soap-reference',planned_quantity:'1.25'}],
+          ...kind==='scheduled-materials'?{schedule:{draft:{kind:'fixed',start:{kind:'date',local:'2027-01-02'},rrule:'FREQ=DAILY'},
+            policy:{zone:'UTC',data_identity:'tzdata:2026.6/iana:2026f',repeated_time:'first_instant',revision:'1'}}}:{}}})!;
+      expect(current).toBeDefined();journal.prepare('material-original',current,202);journal.record('material-original','uncertain',null,203);
+      const raw=sessionStorage.getItem(key);
+      expect(()=>new Edge57Journal(storage).open(scope,204)).toThrow('invalid_journal');
+      expect(sessionStorage.getItem(key)).toBe(raw);
+      const read=<T>(value:T)=>({result:Promise.resolve(value),cancel:vi.fn()});
+      const server:TaskServer={access:()=>read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:false}),
+        list:()=>read({items:[],nextCursor:null}),detail:vi.fn(),original:vi.fn(),send:vi.fn()};
+      const prior=new Edge57Controller('native',{session:()=>read({context,deployment:'native',access:'full',serverTime:1000,expiresAt:100000,householdApiAvailable:true})},
+        server,new Edge57Journal(storage),{anchor:()=>{},now:()=>1000},{requestKey:vi.fn()});
+      await prior.refresh();expect(prior.view.records).toBeNull();expect(prior.view.notice).toBe('journal_unavailable');
+      await prior.create('Must remain blocked','','normal');expect(server.send).not.toHaveBeenCalled();prior.close();
+      expect(sessionStorage.getItem(key)).toBe(raw);
+      const upgraded=new TaskSessionJournal(storage),records=upgraded.open(scope,1001);
+      expect(records.slice(0,7)).toEqual(legacy);expect(records[7]).toMatchObject({key:'material-original',command:current,stage:'uncertain',operationId:null,createdAt:202,expiresAt:3600202});
+      expect(()=>upgraded.prepare('ninth',command,1002)).toThrow('journal_capacity');
+      upgraded.open(scope,1003);expect(()=>upgraded.forget('material-original',1004)).toThrow('unresolved_request');
+      upgraded.open(scope,1005);expect(upgraded.record('material-original','historical','material-operation',1006)[7].command).toEqual(current);
+      upgraded.forget('legacy-0',1007);expect(upgraded.prepare('after-explicit-dismissal',command,1008)).toHaveLength(8);
+    } finally {sessionStorage.removeItem(key);}
+  });
 function fixture() {
   const data = new Map<string, string>();
   const storage: OwnedStorage = {getItem: key => data.get(key) ?? null, setItem: (key, value) => {data.set(key, value);}, removeItem: key => {data.delete(key);}};

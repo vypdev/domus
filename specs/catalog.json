@@ -477,7 +477,7 @@
       "status": "proposed",
       "scope": "Members create and perform household responsibilities with explicit assignments, actual performers and history. A recurring definition survives completion of each individual occurrence.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-19",
+      "lastVerified": "2026-11-20",
       "specs": [
         "specs/household-tasks.md",
         "specs/task-execution-foundation.md",
@@ -513,7 +513,13 @@
         "frontend/src/presentation/domus-tasks.ts",
         "frontend/src/presentation/domus-task-overview.ts",
         "frontend/src/adapters/task-values.ts",
-        "frontend/src/adapters/task-journal.ts"
+        "frontend/src/adapters/task-journal.ts",
+        "frontend/src/application/task-material-planning.ts",
+        "frontend/src/presentation/domus-task-material-plan.ts",
+        "frontend/src/presentation/domus-task-material-outcomes.ts",
+        "frontend/src/presentation/task-material-messages.ts",
+        "backend/src/domus/application/recurrence_ports.py",
+        "backend/src/domus/infrastructure/sqlite_recurrence.py"
       ],
       "tests": [
         "tests/backend/test_task_values.py",
@@ -539,7 +545,14 @@
         "frontend/tests/tasks.test.ts",
         "frontend/tests/task-controller.test.ts",
         "frontend/tests/task-journal.test.ts",
-        "frontend/tests/e2e/tasks.spec.ts"
+        "frontend/tests/e2e/tasks.spec.ts",
+        "frontend/tests/task-material-planning.test.ts",
+        "frontend/tests/task-material-components.test.ts",
+        "frontend/tests/fixtures/edge57-task-journal.mjs",
+        "frontend/tests/fixtures/edge57-task-journal.provenance.json",
+        "frontend/tests/e2e/catalog.spec.ts",
+        "tests/backend/test_task_material_http.py",
+        "tests/backend/test_task_material_settlement.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -555,11 +568,15 @@
         "docs/evidence/overview-deadlines-qualification.md",
         "docs/evidence/overview-maintenance-qualification.md",
         "docs/evidence/task-base-points-qualification.md",
-        "docs/evidence/task-assignment-qualification.md"
+        "docs/evidence/task-assignment-qualification.md",
+        "docs/evidence/task-material-workflow-qualification.md",
+        "docs/roadmap.md",
+        "docs/contracts/household-api.openapi.json",
+        "docs/contracts/native-household-api.openapi.json"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work; issue #100 adds bounded upcoming scheduled maintenance in the next seven local days; issue #141 connects authorized planned assignment, replacement/release, explicit conflict review and frozen original-request recovery to the Tasks workspace, with current-source English keyboard and Spanish touch acceptance in both deployment compositions",
+        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work; issue #100 adds bounded upcoming scheduled maintenance in the next seven local days; issue #141 connects authorized planned assignment, replacement/release, explicit conflict review and frozen original-request recovery to the Tasks workspace, with current-source English keyboard and Spanish touch acceptance in both deployment compositions; issue #150 connects optional ordinary/fixed/relative Pantry plans, authoritative per-line consumption outcomes, explicit pending settlement and missing actual quantities. Source unit/HTTP qualification and actual preceding journal/controller rollback checks are recorded separately from pending published-component adoption, complete entry/catalog journeys, image, installed Edge and merge gates in the material workflow qualification",
         "blockingDecisions": "A34 prerequisite gating and A35 same-task points remainder rotation are owner-confirmed. Bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }

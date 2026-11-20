@@ -7,6 +7,7 @@ import {EntryReadError} from '../src/application/ports';
 import type {TaskAccess, TaskDetail, TaskReceipt, TaskScheduleDraft} from '../src/domain/tasks';
 import type {VerifiedEntrySession} from '../src/application/ports';
 import type {TaskServer} from '../src/application/task-ports';
+import type {InventoryServer} from '../src/application/inventory-controller';
 const context = {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel: 'edge' as const, subject: 'a'.repeat(32)};
 const revision = revisionValue('1');
 const detail: TaskDetail = {occurrenceId: 'work-1', definitionId: 'def-1', definitionRevision: revision, title: 'Clean 🧹',
@@ -14,18 +15,18 @@ const detail: TaskDetail = {occurrenceId: 'work-1', definitionId: 'def-1', defin
   allowedActions: ['claim', 'complete'], cycle: null, materials: [], materialRecording: 'review_on_completion', dependencyReviewRequired: false, pendingMaterials: false};
 const saved: TaskReceipt = {kind: 'receipt', stage: 'committed', action: 'task.create', operationId: 'op-1', occurrenceId: 'work-1', revision, state: 'available', cycle: null, archivedBy: null};
 const read = <T>(value: T) => ({result: Promise.resolve(value), cancel: vi.fn()});
-function fixture() {
+function fixture(catalog?: Pick<InventoryServer, 'read'>) {
   let now = 1000, sequence = 0;
   const storage = new Map<string, string>();
   const session = {context, deployment: 'native' as const, access: 'full' as 'full' | 'read_only', serverTime: now, expiresAt: 100000, householdApiAvailable: true};
   const identity = {session: vi.fn(() => read<VerifiedEntrySession | null>(session))};
   const server = {access: vi.fn(() => read<TaskAccess>({householdId: 'home', memberId: 'member-1', canCreate: true, canReviewSchedule: true})),
     list: vi.fn(() => read({items: [detail], nextCursor: null as string | null})), detail: vi.fn(() => read(detail)),
-    original: vi.fn(() => read(saved)), send: vi.fn<TaskServer['send']>(async () => saved)};
+    original: vi.fn<TaskServer['original']>(() => read(saved)), send: vi.fn<TaskServer['send']>(async () => saved)};
   const journal = new TaskSessionJournal({getItem: key => storage.get(key) ?? null, setItem: (key, value) => {storage.set(key, value);}, removeItem: key => {storage.delete(key);}});
   const clock = {anchor: vi.fn((value: number) => {now = value;}), now: vi.fn(() => now)};
   const entropy = {requestKey: vi.fn(() => 'key-' + ++sequence)};
-  const controller = new TaskController('native', identity, server, journal, clock, entropy);
+  const controller = new TaskController('native', identity, server, journal, clock, entropy, catalog);
   return {controller, server, identity, session, storage, journal, clock, entropy, setNow: (value: number) => {now = value;}, advance: () => {now = 100000;}};
 }
 test.each([
@@ -532,4 +533,113 @@ test('reviewed completion rejects a different task revision and keeps manual sha
     performer_ids: reviewed.performerIds, allocation_fingerprint: reviewed.fingerprint, manual_shares: reviewed.manualShares,
   }});
   expect(f.controller.view.records?.[0].stage).toBe('uncertain');
+});
+
+function pendingMaterialWork(): TaskDetail {
+  return {...detail, state:'completed', revision:revisionValue('42'), currentCycleId:'cycle-1',
+    cycle:{cycleId:'cycle-1',verification:'pending',performedAt:'100',performerIds:['member-1']}, allowedActions:['materials.settle'],
+    materials:[{lineId:'line-1',label:'Soap',plannedQuantity:'2',precision:6,unitId:'millilitre',locationId:'pantry'}], pendingMaterials:true,
+    materialOutcomes:[{intentId:'intent-1',cycleId:'cycle-1',lineId:'line-1',revision:revisionValue('7'),effectRevision:'1',
+      submittedQuantity:'2',quantity:'2',state:'pending_regularization',pendingReason:'insufficient_stock',
+      confirmedQuantity:null,confirmedEffectRevision:null,movementId:null,postedAt:null}]};
+}
+function materialReceipt(work: TaskDetail): TaskReceipt {
+  return {kind:'receipt',stage:'committed',action:'task.material.settle',operationId:'material-operation',occurrenceId:work.occurrenceId,
+    intentId:'intent-1',cycle:work.cycle!,material:work.materialOutcomes![0],archivedBy:null};
+}
+test('settlement journals the intent revision, retains a lost reply and recovers by original read without another send', async () => {
+  const f=fixture(), current=pendingMaterialWork();
+  f.server.detail.mockReturnValue(read(current)); await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('42'));
+  expect(f.controller.view.notice).toBe('conflict'); expect(f.server.send).not.toHaveBeenCalled();
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'));
+  const request=f.server.send.mock.calls[0][0];
+  expect(request.command).toEqual({action:'task.material.settle',occurrenceId:'work-1',intentId:'intent-1',
+    payload:{expected_revision:'7',cycle_id:'cycle-1',action:'post',reason:''}});
+  expect(f.controller.view.records?.[0]).toMatchObject({command:request.command,stage:'uncertain'});
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'));
+  expect(f.server.send).toHaveBeenCalledOnce();
+  f.server.original.mockReturnValueOnce(read(materialReceipt(current)));
+  await f.controller.recover(request.key);
+  expect(f.server.original).toHaveBeenCalledWith({...request,operationId:null},context);
+  expect(f.controller.view.records?.[0]).toMatchObject({stage:'committed',operationId:'material-operation'});
+  expect(f.controller.view.outcome).not.toHaveProperty('revision'); expect(f.server.send).toHaveBeenCalledOnce();
+});
+test.each(['missing','cycle','denied','posted','known_quantity','other_work'])(
+  'settlement rejects %s selectors before preparing or sending new work', async kind => {
+    const f=fixture(); let current=pendingMaterialWork();
+    if (kind==='denied') current={...current,allowedActions:[]};
+    if (kind==='posted') current={...current,materialOutcomes:current.materialOutcomes!.map(value=>({...value,state:'posted' as const}))};
+    f.server.detail.mockReturnValue(read(current)); await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+    await f.controller.settleMaterial(kind==='other_work'?'elsewhere':current.occurrenceId,kind==='missing'?'unknown':'intent-1',
+      kind==='cycle'?'other-cycle':'cycle-1',revisionValue('7'),...kind==='known_quantity'?['1','Initial recording'] as const:[]);
+    expect(f.server.send).not.toHaveBeenCalled(); expect(f.entropy.requestKey).not.toHaveBeenCalled();
+  });
+test('initial missing quantity recording uses explicit zero and reason through the existing correction command', async () => {
+  const f=fixture(), current=pendingMaterialWork();
+  const pending={...current,materialOutcomes:current.materialOutcomes!.map(value=>({...value,state:'pending_recording' as const,quantity:null}))};
+  f.server.detail.mockReturnValue(read(pending)); await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+  f.server.send.mockResolvedValueOnce(materialReceipt(pending));
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'),'0','Nothing used');
+  expect(f.server.send.mock.calls[0][0].command).toMatchObject({payload:{expected_revision:'7',action:'correct',quantity:'0',reason:'Nothing used'}});
+  expect(f.controller.view.detail?.cycle).toEqual(current.cycle);
+});
+test('granular material denial retains readable work and never resends after access refresh', async () => {
+  const f=fixture(), current=pendingMaterialWork(); f.server.detail.mockReturnValue(read(current));
+  await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+  f.server.send.mockResolvedValueOnce({kind:'rejected',reason:'forbidden',correlationId:'cor_material'});
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'));
+  expect(f.controller.view.detail).toEqual(current); expect(f.controller.view.access?.memberId).toBe('member-1');
+  expect(f.controller.view.notice).toBeNull(); expect(f.controller.view.records?.[0].stage).toBe('rejected');
+  expect(f.controller.view.outcome).toMatchObject({reason:'forbidden'}); expect(f.server.send).toHaveBeenCalledOnce();
+});
+test('identity changed during a material denial retires prior private work and draft', async () => {
+  const f=fixture(),current=pendingMaterialWork(); f.server.detail.mockReturnValue(read(current));
+  await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+  f.server.send.mockImplementationOnce(async()=>{f.server.access.mockReturnValue(read({householdId:'other',memberId:'other',canCreate:true,canReviewSchedule:false}));
+    return {kind:'rejected',reason:'forbidden',correlationId:null};});
+  await f.controller.settleMaterial(current.occurrenceId,'intent-1','cycle-1',revisionValue('7'));
+  expect(f.controller.view.notice).toBe('context_changed'); expect(f.controller.view.detail).toBeNull();
+});
+test('a material plan freezes exact intent across an uncertain creation while ordinary title-only creation does not read Inventory', async () => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Soap',unit:'millilitre',recorded:'0',reserved:'0',available:'0',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog); f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  await f.controller.refresh(); await f.controller.create('Title only','','normal'); expect(catalog.read).not.toHaveBeenCalled();
+  await f.controller.materialPlan('load'); await f.controller.materialPlan('add','soap-reference');
+  await f.controller.materialPlan('edit','soap-reference','1,25');
+  await f.controller.materialPlan('edit','soap-reference','invalid');
+  await f.controller.create('Invalid plan retained','','normal'); expect(f.controller.view.notice).toBe('invalid_input');
+  await f.controller.materialPlan('edit','soap-reference','1,25');
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'}); await f.controller.create('Planned','','normal');
+  const request=f.server.send.mock.calls[1][0];
+  expect(request.command).toMatchObject({action:'task.create',payload:{materials:[{reference_id:'soap-reference',planned_quantity:'1.25'}]}});
+  await f.controller.materialPlan('edit','soap-reference','0');
+  expect(f.controller.view.records?.[1].command).toEqual(request.command);
+  f.server.original.mockReturnValueOnce(read(saved)); await f.controller.recover(request.key);
+  expect(f.server.send).toHaveBeenCalledTimes(2); expect(f.controller.view.materialPlan?.rows[0].input).toBe('0');
+  await f.controller.materialPlan('remove','soap-reference'); expect(f.controller.view.materialPlan?.rows).toEqual([]);
+  await f.controller.materialPlan('clear');
+  await f.controller.materialPlan('more');
+  await f.controller.materialPlan('add','unknown');
+  f.server.access.mockReturnValue(read({householdId:'other-home',memberId:'other',canCreate:true,canReviewSchedule:false,canLinkMaterials:true}));
+  await f.controller.materialPlan('load'); expect(f.controller.view.notice).toBe('context_changed');
+  f.controller.close(); await f.controller.materialPlan('load');
+});
+
+test('a denied material-bearing creation retains the opaque plan with no previously selected occurrence', async () => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Private soap',unit:'piece',recorded:'0',reserved:'0',available:'0',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog);
+  const access={householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true};
+  f.server.access.mockReturnValue(read(access)); await f.controller.refresh();
+  await f.controller.materialPlan('load'); await f.controller.materialPlan('add','soap-reference');
+  f.server.send.mockImplementationOnce(async()=>{f.server.access.mockReturnValue(read({...access,canLinkMaterials:false}));
+    return {kind:'rejected',reason:'forbidden',correlationId:null};});
+  await f.controller.create('Keep my task','','normal');
+  expect(f.controller.view.detail).toBeNull(); expect(f.controller.view.materialPlan?.rows).toEqual([{referenceId:'soap-reference',input:'1',choice:null}]);
+  expect(f.controller.view.materialPlan?.notice).toBe('forbidden'); expect(f.controller.view.notice).toBeNull();
 });

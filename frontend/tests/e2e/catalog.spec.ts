@@ -259,7 +259,7 @@ test(`household-admin-C57: maximum Unicode roster remains readable and keeps its
 });
 
 
-for (const example of ['available', 'loading', 'empty', 'pending-approval', 'read-only', 'spanish']) {
+for (const example of ['available', 'loading', 'empty', 'pending-approval', 'read-only', 'spanish', 'materials']) {
   test(`built task ${example} supports both languages without contacting an API`, async ({page}) => {
     const errors: string[] = [], foreign: string[] = [], api: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -272,6 +272,15 @@ for (const example of ['available', 'loading', 'empty', 'pending-approval', 'rea
       const widget = page.locator('domus-tasks'); await expect(widget.getByRole('heading', {name: locale === 'es' ? 'Tareas' : 'Tasks', exact: true})).toBeVisible();
       await expect(widget).toHaveAttribute('lang', locale);
       if (example === 'pending-approval') await expect(widget.getByText(locale === 'es' ? 'Pendiente de aprobación' : 'Pending approval', {exact: true})).toBeVisible();
+      if (example === 'materials') {
+        for (const name of locale === 'es' ? ['Consumo contabilizado','Sin utilizar · sin movimiento de existencias','Requiere revisión de Inventario']
+          : ['Consumption confirmed','Not used · no stock movement','Inventory review required'])
+          await expect(widget.getByRole('status').filter({hasText:name})).toBeVisible();
+        await expect(widget.getByRole('button',{name:locale==='es'?'Contabilizar consumo pendiente':'Settle pending usage',exact:true})).toBeEnabled();
+        await widget.locator('.new-task > summary').click();
+        await expect(widget.getByRole('combobox',{name:locale==='es'?'Producto de Despensa':'Pantry product',exact:true})).toBeVisible();
+        await expect(widget.getByRole('textbox',{name:locale==='es'?'Cantidad prevista':'Planned quantity',exact:true})).toHaveValue('1.25');
+      }
       if (example === 'read-only') {await widget.locator('.new-task > summary').click();
         await expect(widget.getByRole('button', {name: locale === 'es' ? 'Crear tarea' : 'Create task', exact: true})).toBeDisabled();}
     }

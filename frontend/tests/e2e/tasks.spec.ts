@@ -25,6 +25,170 @@ async function saveAdministration(widget: Locator) {
   await expect(widget.getByRole('heading', {name: 'Original request processed', exact: true})).toBeVisible();
   await widget.getByRole('button', {name: 'Close editor', exact: true}).click();
 }
+
+for (const mode of ['native','standalone'] as const) for (const locale of ['en','es'] as const) {
+  test.describe(`material workflow ${mode} ${locale}`, () => {
+  test.use({hasTouch:locale==='es',viewport:{width:locale==='es'?390:1280,height:844}});
+  test(`plan, review and explicitly reconcile materials in ${mode} ${locale}`, async ({page,context,request}, info) => {
+    test.setTimeout(180_000);
+    const t=(en:string,es:string)=>locale==='en'?en:es;
+    const activate=async(control:Locator)=>{await expect(control).toBeVisible();await expect(control).toBeEnabled();
+      if(locale==='es')await control.tap();else await control.press('Enter');};
+    if(locale==='es') await page.setViewportSize({width:390,height:844});
+    await page.emulateMedia({colorScheme:locale==='es'?'dark':'light'});
+    expect((await request.post(origin(mode)+'/__fixture__/reset')).ok()).toBe(true);
+    const setup=page.waitForRequest(value=>value.url()===base(mode)+'/api/v1/household'&&value.method()==='POST');
+    let catalogReads=0;
+    page.on('request',value=>{if(new URL(value.url()).pathname===(mode==='native'?prefix:'')+'/api/v1/inventory'&&value.method()==='GET')catalogReads++;});
+    const tasks=await open(page,context,mode);
+    const setupHeaders=await(await setup).allHeaders();
+    const headers={'X-Domus-Context':setupHeaders['x-domus-context'],'X-CSRF-Token':setupHeaders['x-csrf-token'],Origin:origin(mode)};
+    const api=base(mode)+'/api/v1/';
+    const write=async(key:string,body:unknown,path='inventory/commands',method:'post'|'put'='post')=>{
+      const response=await page.request[method](api+path,{headers:{...headers,'Idempotency-Key':key},data:body});
+      expect(response.status(),await response.text()).toBe(200);return (await response.json()).result;
+    };
+    if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
+    const title=tasks.getByRole('textbox',{name:t('Title','Título'),exact:true});
+    await title.fill('QA 150 title only'); await activate(tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:'QA 150 title only',exact:true})).toBeVisible();
+    expect(catalogReads).toBe(0);
+    for(let i=0;i<28;i++)await write('material-product-'+i,{action:'inventory.register-product',name:'QA 150 product '+String(i).padStart(2,'0'),base_unit:i<2?'millilitre':'piece'});
+    const firstResponse=await page.request.get(api+'inventory?limit=25',{headers}); expect(firstResponse.ok()).toBe(true);
+    const first=await firstResponse.json(); expect(first.products).toHaveLength(25); expect(first.next_cursor).toBeTruthy();
+    const lastResponse=await page.request.get(api+'inventory?limit=25&cursor='+encodeURIComponent(first.next_cursor),{headers}); expect(lastResponse.ok()).toBe(true);
+    const last=await lastResponse.json(); expect(last.products).toHaveLength(3);
+    const [used,unused]=first.products.filter((value:{base_unit:string})=>value.base_unit==='piece');
+    const short=last.products[0];
+    await write('initial-used',{action:'inventory.intake',product_id:used.product_id,quantity:'5'});
+    await write('initial-unused',{action:'inventory.intake',product_id:unused.product_id,quantity:'5'});
+    const expand=async()=>{if(!await title.isVisible())await activate(tasks.getByRole('heading',{name:t('New task','Nueva tarea'),exact:true}).locator('..'));};
+    await expand(); await title.fill('QA 150 material workflow');
+    const description=tasks.getByRole('textbox',{name:t('Description','Descripción'),exact:true});await description.fill('Retain this draft across optional catalog failure');
+    const plan=tasks.locator('domus-task-material-plan');
+    await page.route(api+'inventory?limit=25',route=>route.abort('failed'),{times:1});
+    await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await expect(plan.getByRole('alert')).toContainText(t('could not be loaded','No se han podido cargar'));
+    await expect(title).toHaveValue('QA 150 material workflow');await expect(description).toHaveValue('Retain this draft across optional catalog failure');
+    await activate(plan.getByRole('button',{name:t('Refresh material choices','Actualizar materiales disponibles'),exact:true}));
+    const combo=plan.getByRole('combobox',{name:t('Pantry product','Producto de Despensa'),exact:true});await expect(combo).toBeFocused();
+    const choose=async(name:string)=>{await activate(combo); const option=plan.getByRole('option').filter({hasText:name});
+      if(locale==='es')await option.tap();else{
+        const target=await option.getAttribute('id');await combo.press('Home');
+        const count=await plan.getByRole('option').count();
+        for(let index=0;index<count&&await combo.getAttribute('aria-activedescendant')!==target;index++)await combo.press('ArrowDown');
+        await expect(combo).toHaveAttribute('aria-activedescendant',target!);await combo.press('Enter');
+      }
+      await expect(plan.locator('li').last().getByText(name,{exact:true})).toBeVisible();
+      await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last()).toBeFocused();};
+    await choose(used.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
+    await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
+    await expect(title).toHaveValue('QA 150 material workflow');
+    await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await choose(used.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
+    await choose(unused.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
+    await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
+    await choose(short.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
+    await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true})).toHaveCount(3);
+    await plan.screenshot({path:info.outputPath('material-plan-'+locale+'.png')});
+    let creations=0,creationKey='',creationBody:Record<string,any>|null=null;
+    await page.route(api+'tasks/definitions',async route=>{
+      creations++;creationKey=route.request().headers()['idempotency-key'];
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);
+      creationBody=await response.json();await route.abort('connectionreset');
+    });
+    await activate(tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:t('Result not confirmed','Resultado sin confirmar'),exact:true})).toBeVisible();
+    await page.unroute(api+'tasks/definitions');await page.reload();
+    await expect(tasks.getByRole('button',{name:'QA 150 material workflow',exact:true})).toBeVisible();
+    if(locale==='es')await page.getByLabel('Language',{exact:true}).selectOption('es');
+    const originals:Record<string,any>[]=[];
+    await page.route(api+'tasks/requests/task.create/'+creationKey,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(response.status()).toBe(200);originals.push(await response.json());await route.fulfill({response});});
+    await activate(tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).first());
+    await expect(tasks.getByRole('heading',{name:'QA 150 material workflow',exact:true})).toBeVisible();
+    expect(creations).toBe(1);expect(originals).toHaveLength(1);expect(originals[0].operation_id).toBe(creationBody!.operation_id);
+    const oid=creationBody!.result.occurrence_id;
+    await tasks.getByLabel(used.name,{exact:true}).fill('1');await tasks.getByLabel(unused.name,{exact:true}).fill('0');await tasks.getByLabel(short.name,{exact:true}).fill('1');
+    await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
+    const outcomes=tasks.locator('domus-task-material-outcomes');
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toBeVisible();
+    await expect(outcomes.getByText(t('Not used · no stock movement','Sin utilizar · sin movimiento de existencias'),{exact:true})).toBeVisible();
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    for(const colorScheme of ['light','dark'] as const){await page.emulateMedia({colorScheme});await outcomes.screenshot({path:info.outputPath('material-outcomes-'+locale+'-'+colorScheme+'.png')});}
+    const readWork=async()=>{const response=await page.request.get(api+'tasks/occurrences/'+oid,{headers});expect(response.ok()).toBe(true);return response.json();};
+    const before=await readWork(), pending=before.materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect(before.work.state).toBe('completed');expect(before.materials.map((value:{state:string})=>value.state).sort()).toEqual(['not_used','pending_regularization','posted']);
+    await write('refill-shortfall',{action:'inventory.intake',product_id:short.product_id,quantity:'5'});
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+    expect((await readWork()).materials.find((value:{intent_id:string})=>value.intent_id===pending.intent_id).state).toBe('pending_regularization');
+    let settlements=0,settlementKey='',settlementBody:Record<string,any>|null=null;
+    await page.route(api+'tasks/occurrences/'+oid+'/materials/'+pending.intent_id+'/settlement',async route=>{
+      settlements++;settlementKey=route.request().headers()['idempotency-key'];expect(route.request().postDataJSON().expected_revision).toBe(pending.revision);
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);settlementBody=await response.json();await route.abort('connectionreset');});
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:t('Result not confirmed','Resultado sin confirmar'),exact:true})).toBeVisible();
+    const settlementOriginals:Record<string,any>[]=[];
+    await page.route(api+'tasks/requests/task.material.settle/'+settlementKey,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});
+      expect(response.status()).toBe(200);settlementOriginals.push(await response.json());await route.fulfill({response});});
+    await activate(tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).first());
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(2);
+    expect(settlements).toBe(1);expect(settlementOriginals).toHaveLength(1);expect(settlementOriginals[0].operation_id).toBe(settlementBody!.operation_id);
+    const after=await readWork();expect(after.work.revision).toBe(before.work.revision);expect(after.cycle.cycle_id).toBe(before.cycle.cycle_id);
+    expect(after.materials.find((value:{intent_id:string})=>value.intent_id===pending.intent_id)).toMatchObject({line_id:pending.line_id,confirmed_quantity:'1',movement_id:settlementBody!.result.material.movement_id});
+    await info.attach('creation-original',{body:JSON.stringify({committed:creationBody,original:originals[0]}),contentType:'application/json'});
+    await info.attach('settlement-original',{body:JSON.stringify({committed:settlementBody,original:settlementOriginals[0]}),contentType:'application/json'});
+    const policyReply=await page.request.get(api+'tasks/policy',{headers}), policy=await policyReply.json();
+    await write('separate-recording-policy',{expected_revision:policy.revision,rules:{...policy.rules,material_recording:'separate_recording'}},'tasks/policy','put');
+    await expand();await title.fill('QA 150 missing actual quantity');
+    await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));await choose(used.name);
+    await activate(tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:'QA 150 missing actual quantity',exact:true})).toBeVisible();
+    await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
+    await expect(outcomes.getByText(t('Actual quantity not recorded','Cantidad utilizada sin registrar'),{exact:true})).toBeVisible();
+    await outcomes.getByRole('textbox',{name:t('Actual quantity','Cantidad utilizada'),exact:true}).fill('0');
+    await outcomes.getByRole('textbox',{name:t('Reason for recording','Motivo del registro'),exact:true}).fill('QA 150 nothing used');
+    await activate(outcomes.getByRole('button',{name:t('Record actual usage','Registrar consumo real'),exact:true}));
+    await expect(outcomes.getByText(t('Not used · no stock movement','Sin utilizar · sin movimiento de existencias'),{exact:true})).toBeVisible();
+    await expect(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true})).toHaveCount(0);
+    await outcomes.screenshot({path:info.outputPath('material-zero-recorded-'+locale+'.png')});
+    const scheduled:Record<string,any>[]=[];
+    for(const kind of ['fixed','relative'] as const){
+      await expand();await title.fill('QA 150 '+kind+' material plan');
+      await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+      const decimal=[...first.products,...last.products].find((value:{base_unit:string})=>value.base_unit==='millilitre');
+      const product=kind==='fixed'?used:decimal;
+      if(!first.products.some((value:{product_id:string})=>value.product_id===product.product_id))await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
+      await choose(product.name);
+      await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill(kind==='fixed'?'2':locale==='es'?'1,25':'1.25');
+      await tasks.getByRole('combobox',{name:t('Scheduling','Programación'),exact:true}).selectOption(kind);
+      await tasks.getByLabel(t('First date','Primera fecha'),{exact:true}).fill(new Date(Date.now()+30*86_400_000).toISOString().slice(0,10));
+      if(kind==='fixed')await tasks.getByLabel(t('Recurrence rule','Regla de recurrencia'),{exact:true}).fill('FREQ=DAILY;COUNT=2');
+      const path=api+'tasks/recurrence/creation/'+kind;
+      await page.route(path,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);scheduled.push(await response.json());await route.fulfill({response});});
+      const create=tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true});
+      if(kind==='relative'){
+        await activate(create);await expect(tasks.getByRole('alert')).toContainText(t('make room','espacio'));
+        await expect(title).toHaveValue('QA 150 relative material plan');
+        await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true})).toHaveValue(locale==='es'?'1,25':'1.25');
+        await activate(tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')}));
+        await activate(tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true}).first());
+      }
+      await activate(create);
+      await expect.poll(()=>scheduled.length).toBe(kind==='fixed'?1:2);
+      await expect(tasks.getByText(t('The schedule was saved. Its first task will appear when recurrence processing runs.',
+        'Se ha guardado la programación. La primera tarea aparecerá cuando se procese la recurrencia.'),{exact:true})).toBeVisible();
+      await expect(title).not.toBeVisible();
+      const receipt=scheduled.at(-1)!;
+      const definition=await page.request.get(api+'tasks/definitions/'+receipt.result.definition_id,{headers});expect(definition.ok()).toBe(true);
+      const saved=await definition.json();expect(saved.materials).toHaveLength(1);expect(saved.materials[0]).toMatchObject({planned_quantity:kind==='fixed'?'2':'1.25',binding:{reference_id:product.reference_id,unit_id:product.base_unit,location_id:'pantry'}});
+      await page.unroute(path);
+    }
+    await info.attach('scheduled-material-originals',{body:JSON.stringify(scheduled),contentType:'application/json'});
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  });
+  });
+}
 for (const mode of ['native', 'standalone'] as const) {
   for (const locale of ['en', 'es'] as const) {
     test(`category recovery, filter and stale draft in ${mode} ${locale}`, async ({page, context, request}) => {

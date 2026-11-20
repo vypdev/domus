@@ -162,6 +162,25 @@ An identical key/payload returns its stored result. Same key/different payload i
 A transport timeout can leave outcome unknown; look up/replay the original key instead of using a new one.
 Schemas reject unknown mutation fields. Mutating a stale revision never overwrites newer household work.
 
+## Protected Tasks material interface
+
+The implemented Ingress and standalone HTTP compositions accept optional material selections
+on ordinary, fixed and relative task creation. Each selection carries only a server-owned
+`reference_id` and exact `planned_quantity`; the server resolves its unit, precision and Pantry
+source. The workspace's `can_link_materials` is a current discovery hint, requiring both catalog
+read access and the existing linking authority. It does not replace mutation authorization.
+
+Task detail exposes authoritative material outcomes and the current `materials.settle` action
+hint. `POST /api/v1/tasks/occurrences/{occurrence}/materials/{intent}/settlement` uses the retained
+intent revision, cycle and original command key. The UI supports deliberate pending settlement
+and the first recording of a missing actual quantity with a reason. Its receipt describes the
+material result; it does not invent a new occurrence revision, completion cycle or point award.
+`GET /api/v1/tasks/requests/task.material.settle/{key}` recovers the exact original without another
+POST and rechecks current authority. Scheduled creation originals retain the material-linking
+authorization required by the original durable request, including after a definition changes
+or compatible state is restored. The generated [standalone](household-api.openapi.json) and
+[Ingress](native-household-api.openapi.json) contracts describe the actual routes and schemas.
+
 ## Family allocation
 
 Ingress and standalone use the same protected Family routes. The current

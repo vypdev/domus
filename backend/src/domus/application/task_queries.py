@@ -20,8 +20,10 @@ from domus.application.task_authorization import (
     TaskAccess,
     TaskActor,
     TaskCommandAuthorization,
+    TaskMaterialAccess,
     recorded_authorization,
     recorded_request,
+    recorded_schedule_authorization,
 )
 from domus.application.task_category_commands import CategoryCatalog, category_catalog
 from domus.application.task_facts import (
@@ -89,6 +91,7 @@ class TaskWorkspaceView:
     can_manage_points: bool
     schedule_policy: TimePolicy | None = None
     can_configure: bool = False
+    can_link_materials: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -806,6 +809,17 @@ class TaskQueries:
                 if can_create and self.schedule_data_identity is not None
                 else None,
                 can_configure=catalog.can_manage,
+                can_link_materials=can_create
+                and _possible(
+                    lambda: HouseholdAccess(self.human).require(
+                        unit, self.household_id, Permission.HOUSEHOLD_READ
+                    )
+                )
+                and _possible(
+                    lambda: TaskMaterialAccess(
+                        TaskAccess(self.human), unit, self.household_id
+                    ).link_actor(self.household_id)
+                ),
             )
 
     def _operation_access(self, unit: UnitOfWork) -> None:
@@ -847,6 +861,7 @@ class TaskQueries:
             "task.complete",
             "task.verify",
             "task.reopen",
+            "task.material.settle",
         }:
             raise Forbidden("permission_denied")
         command = CommandKey(self.household_id, self.human.ha_user_id, action, key)
@@ -867,7 +882,13 @@ class TaskQueries:
             receipt = unit.receipts.get(command)
             if receipt is None:
                 raise NotFound("operation_missing")
-            return OperationView(receipt, unit.outbox.delivered(receipt.operation_id) is True)
+            row = unit.recurrence.creation(command)
+            if row is None or replace(receipt, restoration=None) != row.evidence.receipt:
+                raise StorageFailure("invalid_recurrence_operation")
+            recorded_schedule_authorization(TaskAccess(self.human), row.evidence).require(
+                command, unit
+            )
+            return OperationView(receipt, row.evidence.delivered)
 
     def _actions(
         self,
@@ -931,4 +952,16 @@ class TaskQueries:
                 result.extend(("approve", "reject"))
             if manage:
                 result.append("reopen")
+        if cycle is not None:
+            pending = tuple(
+                value
+                for value in cycle_materials(unit, work, cycle)
+                if value.pending_reason is not None
+            )
+            if pending and _possible(
+                lambda: TaskMaterialAccess(access, unit, self.household_id).require(
+                    pending[0], MaterialAction.POST
+                )
+            ):
+                result.append("materials.settle")
         return tuple(result)

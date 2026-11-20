@@ -47,6 +47,15 @@ actions your role allows. Use **Retry inventory summary** if the summary could n
 ## Task workspace
 
 - In **Tasks**, open **New task**, enter a title, optional instructions and priority, then choose **Create task**. The title-only flow creates actual work, not a schedule draft.
+- If your current access allows linking Pantry products, choose **Add materials** in the creation
+  form. Choose a product, then **Add to plan**. **More products** shows the next bounded page;
+  selected lines remain in your plan. Edit quantities using the displayed units: pieces use whole
+  amounts, while grams and millilitres allow up to six decimal places. A comma decimal separator
+  is accepted. Zero means none planned. You can remove individual lines or **Remove material plan**.
+  The same plan is available for ordinary, fixed and relative tasks. Planning does not consume stock.
+  A failed choice read retains the draft; use **Refresh material choices** to review current products.
+  If access changes, private choices disappear and creation waits for you to review or explicitly
+  remove the retained plan. Creating a task with only a title remains available under task creation access.
 - If you can configure tasks, use **Base points (optional)** to set the amount for this task. Leave it
   empty to use the household default. Enter 0 to 10,000 points with up to two decimal places. The
   saved amount appears with the creation result. If the household conserves total points or gives
@@ -70,6 +79,14 @@ actions your role allows. Use **Retry inventory summary** if the summary could n
   separate save. An unavailable action offers refresh and cancellation.
 - Restricted performers require adult approval by default. An authorized adult can approve or reject the current cycle; rejection and reopening require a reason. Reopening preserves the previous cycle and its verification evidence.
 - If a task already has linked materials, review its quantities before completion. Decimal input is converted exactly, including a comma separator, and the linked unit's precision is enforced. Zero means unused. Separate-recording tasks do not silently submit planned consumption.
+- After completion, **Material consumption** shows each product separately, with its planned and
+  actual quantity, unit, source and confirmed consumption. An unused zero has no stock movement.
+  Task completion, approval and points remain separate from a pending material result. Replenishing
+  stock or restoring access does not settle usage automatically. Follow the pending explanation,
+  review Inventory if needed, then choose **Settle pending usage** when authorized. For an existing
+  task whose actual quantity has not been recorded, enter that quantity and a reason, then choose
+  **Record actual usage**. A concurrent change retains your draft and requires **Review current usage**
+  before a deliberate save. This interface does not edit consumption that has already posted.
 - A lost reply leaves a visible saved request. **Check saved request** reads its original result without sending another change. New changes remain blocked while an earlier request is unconfirmed. Resolved browser records can be dismissed without deleting server history.
 - **Household** opens identity, participants, preferences and access settings. Task IDs, revisions and resolved recovery records stay in optional details. A saved language preference applies to both workspaces.
 

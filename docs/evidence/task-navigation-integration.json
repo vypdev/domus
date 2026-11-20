@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "8f5d87774c27251fc4131850032e3b13e4c65dd122132c9dab6a28caf2ab5ccf",
+    ".vite/manifest.json": "166e0548fb44d82e0a3dfe4dab2cb9bf1d57fc9bc06dc6376a94e2aafb178fc7",
+    "assets/index-CPWTCZC7.js": "764e84c72daee17e701a12d943b82bb91175773ca1bcadcbb380e495d1ef5628",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DBLG-WGl.js": "3d2859452f2495cbce0025559d5f46b9ac2fe5aa3eb71409f7cb08abb93f23fd",
-    "index.html": "1d17cd326424ec6b6c918b288fc14d96aebff53181f83da6aa39c3924a5585aa"
+    "index.html": "0a7cffb10f5296da2c796c014a3eb9ff6685ba301525a8125c89552b7587b1d7"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -419,5 +419,36 @@
     "qualification": "docs/evidence/shared-entry-authentication-qualification.md",
     "correction": "The first source/package CI attempts caught this current UI evidence map still describing Edge56. Update it to the independently compared Git/archive, local/Linux wheel and final57 image bytes; retain the original failing job logs. Runtime and immutable candidate remain unchanged.",
     "boundary": "Current local proof; required same-head CI and installed candidate acceptance remain separate."
+  },
+  "preTaskMaterialWorkflow": {
+    "sourceCommit": "272b5e8436588b5fab090622d19298371a6dc33c",
+    "scope": "Accepted Edge.57 interface before task material planning and explicit settlement. The subsequent barcode observation correction changed tests only.",
+    "actualProductFiles": {
+      ".vite/manifest.json": "8f5d87774c27251fc4131850032e3b13e4c65dd122132c9dab6a28caf2ab5ccf",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DBLG-WGl.js": "3d2859452f2495cbce0025559d5f46b9ac2fe5aa3eb71409f7cb08abb93f23fd",
+      "index.html": "1d17cd326424ec6b6c918b288fc14d96aebff53181f83da6aa39c3924a5585aa"
+    }
+  },
+  "taskMaterialWorkflowQualification": {
+    "issue": "https://github.com/vypdev/domus/issues/150",
+    "admissionCommit": "1e1a25e5076661a6dd2e368cad153100fb4c04e8",
+    "cases": "task-material-planning-C01 through task-material-planning-C12",
+    "haUiVersion": "0.1.0-next.4",
+    "haUiProductionCommit": "b73562365fcca645555e82cf0638c69bd0d24efd",
+    "haUiPublicationRun": 44699421594,
+    "haUiPublicationAttempt": 6,
+    "fivePublishedArchiveHashesVerified": true,
+    "frontendTests": 2016,
+    "frontendRuntimeFiles": 110,
+    "frontendCoverage": "100% globally and per file for all four metrics",
+    "backendTests": 5625,
+    "backendRuntimeModules": 231,
+    "backendCoverage": "100% statement and branch globally and per file; independent gate passed",
+    "entryBrowserTests": 125,
+    "catalogBrowserTests": 46,
+    "materialsBrowserCombinationsPassed": 4,
+    "sourceState": "Qualified implementation working tree after the native SDD commit; final immutable Edge and image acceptance remain separate gates.",
+    "qualification": "docs/evidence/task-material-workflow-qualification.md"
   }
 }

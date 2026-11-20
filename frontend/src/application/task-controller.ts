@@ -8,6 +8,9 @@ import type {ReviewedAllocation} from '../domain/point-allocation';
 import type {Deployment} from '../domain/entry';
 import type {EntryClock, EntryEntropy, EntryRead, EntryServer, VerifiedEntrySession} from './ports';
 import type {TaskCommandResult, TaskJournalPort, TaskJournalScope, TaskRecord, TaskServer} from './task-ports';
+import type {InventoryServer} from './inventory-controller';
+import {TaskMaterialPlanning} from './task-material-planning';
+import type {TaskMaterialPlanView} from './task-material-planning';
 
 export type TaskNotice = 'authentication_required' | 'forbidden' | 'unavailable' | 'invalid_response'
   | 'invalid_input' | 'conflict' | 'read_only' | 'journal_unavailable' | 'context_changed'
@@ -19,7 +22,7 @@ interface State {
   readonly page: TaskPage | null; readonly detail: TaskDetail | null;
   readonly records: readonly TaskRecord[] | null; readonly outcome: TaskCommandResult | null; readonly notice: TaskNotice | null;
 }
-export type TaskView = Readonly<State & {busy: boolean}>;
+export type TaskView = Readonly<State & {busy: boolean; materialPlan?: TaskMaterialPlanView | null}>;
 function blank(phase: State['phase']): State {
   return Object.freeze({phase, session: null, access: null, scopeKey: null, readOnly: true,
     page: null, detail: null, records: null, outcome: null, notice: null});
@@ -38,10 +41,13 @@ export class TaskController {
   private running = false;
   private closed = false;
   private readonly reads = new Set<EntryRead<unknown>>();
+  private readonly planning: TaskMaterialPlanning | null;
   constructor(private readonly deployment: Deployment, private readonly identity: Pick<EntryServer, 'session'>,
     private readonly server: TaskServer, private readonly journal: TaskJournalPort,
-    private readonly clock: EntryClock, private readonly entropy: EntryEntropy) {}
-  get view(): TaskView {return Object.freeze({...this.state, busy: this.running});}
+    private readonly clock: EntryClock, private readonly entropy: EntryEntropy, catalog?: Pick<InventoryServer, 'read'>) {
+    this.planning = catalog === undefined ? null : new TaskMaterialPlanning(catalog);
+  }
+  get view(): TaskView {return Object.freeze({...this.state, busy: this.running, materialPlan: this.planning?.view ?? null});}
   private update(patch: Partial<State>): void {this.state = Object.freeze({...this.state, ...patch});}
   private invalidate(): number {
     this.generation++; const owned = [...this.reads]; this.reads.clear();
@@ -72,6 +78,7 @@ export class TaskController {
     let records: readonly TaskRecord[] | null = null;
     try {records = this.journal.open(selected, this.clock.now());} catch {/* Reads remain available; writes require confirmed storage. */}
     this.update({access, scopeKey: scopeKey(selected), records, notice: records === null ? 'journal_unavailable' : null});
+    this.planning?.bind({key: scopeKey(selected), context: session.context, readOnly: source.access !== 'full', canLink: access.canLinkMaterials === true});
   }
   private async run(work: (prior: State, generation: number) => Promise<void>): Promise<void> {
     if (this.closed || this.running) return;
@@ -80,7 +87,9 @@ export class TaskController {
     catch (error) {
       if (generation !== this.generation || this.closed || error === retired) return;
       const notice = error instanceof EntryReadError ? error.code : 'unavailable';
-      if (notice === 'authentication_required' || notice === 'forbidden') this.state = Object.freeze({...blank('ready'), notice});
+      if (notice === 'authentication_required' || notice === 'forbidden') {
+        this.planning?.bind(null); this.state = Object.freeze({...blank('ready'), notice});
+      }
       else this.update({notice});
     } finally {
       if (generation === this.generation && !this.closed) {this.running = false; this.update({phase: 'ready'});}
@@ -119,7 +128,8 @@ export class TaskController {
     if (command.action === 'task.create') {
       if (command.payload.category_id !== undefined && !access.categoryCatalog?.categories.some(item => item.id === command.payload.category_id))
         {this.update({notice: 'category_unavailable'}); return false;}
-      return access.canCreate && (command.payload.overrides === undefined || access.canConfigure === true);
+      return access.canCreate && (command.payload.overrides === undefined || access.canConfigure === true)
+        && (command.payload.materials === undefined || access.canLinkMaterials === true);
     }
     if (isCategoryCommand(command)) {
       if (!access.categoryCatalog?.canManage) return false;
@@ -130,6 +140,13 @@ export class TaskController {
     }
     const detail = this.state.detail!;
     if (detail.occurrenceId !== command.occurrenceId) return false;
+    if (command.action === 'task.material.settle') {
+      const value = detail.materialOutcomes?.find(item => item.intentId === command.intentId && item.cycleId === command.payload.cycle_id);
+      if (!value || value.revision !== command.payload.expected_revision) {this.update({notice: 'conflict'}); return false;}
+      return detail.allowedActions.includes('materials.settle') && value.state.startsWith('pending_')
+        && (command.payload.action === 'post' ? value.quantity !== null
+          : value.state === 'pending_recording' && value.quantity === null && value.confirmedQuantity === null);
+    }
     if (detail.revision !== command.payload.expected_revision) {this.update({notice: 'conflict'}); return false;}
     if (command.action === 'task.transition') return detail.allowedActions.includes('transition:' + command.payload.target);
     const action = command.action === 'task.verify' ? command.payload.decision === 'approved' ? 'approve' : 'reject' : command.action.slice(5);
@@ -168,10 +185,18 @@ export class TaskController {
       if (this.closed || generation !== this.generation) return;
       this.save(key, outcome);
       if (outcome.kind === 'rejected' && (outcome.reason === 'authentication_required' || outcome.reason === 'forbidden')) {
-        this.state = Object.freeze({...blank('ready'), notice: outcome.reason}); return;
+        if (outcome.reason === 'forbidden' && (command.action === 'task.material.settle'
+            || command.action === 'task.create' && command.payload.materials !== undefined)) {
+          await this.fresh(generation);
+          if (this.state.scopeKey !== prior.scopeKey) {this.planning?.bind(null); this.state = Object.freeze({...blank('ready'), notice: 'context_changed'}); return;}
+          await this.facts(generation, prior.detail?.occurrenceId ?? null);
+          return;
+        }
+        this.planning?.bind(null); this.state = Object.freeze({...blank('ready'), notice: outcome.reason}); return;
       }
       if (this.clock.now() >= this.state.session!.expiresAt) throw new EntryReadError('authentication_required');
       if (outcome.kind === 'receipt') await this.receiptFacts(command, outcome.occurrenceId, prior, generation);
+      if (outcome.kind === 'receipt' && outcome.stage === 'committed' && command.action === 'task.create') this.planning?.clear();
       if ((command.action === 'task.assign' || command.action === 'task.transition')
           && outcome.kind === 'rejected' && outcome.reason === 'conflict')
         await this.facts(generation, command.occurrenceId);
@@ -190,10 +215,31 @@ export class TaskController {
     await this.facts(generation, occurrence);
   }
   create(title: unknown, description: unknown, priority: TaskPriority, draft?: TaskScheduleDraft, categoryId?: string, basePointsMinor?: number): Promise<void> {
+    const materials = this.planning?.selections();
+    if (materials === null) {this.update({notice: 'invalid_input'}); return Promise.resolve();}
     const schedule = draft === undefined ? {} : {schedule: {draft, policy: this.state.access?.schedulePolicy}};
     return this.execute({action: 'task.create', payload: {expected_revision: 0, title, description, priority, ...schedule,
+      ...materials === undefined ? {} : {materials},
       ...categoryId === undefined ? {} : {category_id: categoryId},
       ...basePointsMinor === undefined ? {} : {overrides: {point_value_minor: basePointsMinor}}}});
+  }
+  materialPlan(action: 'load' | 'more' | 'add' | 'edit' | 'remove' | 'clear', referenceId = '', input = ''): Promise<void> {
+    if (this.closed || this.running || this.planning === null) return Promise.resolve();
+    if (action === 'add') this.planning.add(referenceId);
+    else if (action === 'edit') this.planning.edit(referenceId, input);
+    else if (action === 'remove') this.planning.remove(referenceId);
+    else if (action === 'clear') this.planning.clear();
+    else return this.run(async prior => {
+      if (this.state.scopeKey !== prior.scopeKey) {this.update({notice: 'context_changed'}); return;}
+      this.update({page: prior.page, detail: prior.detail, outcome: prior.outcome});
+      await this.planning!.load(action === 'more');
+    });
+    return Promise.resolve();
+  }
+  settleMaterial(occurrenceId: string, intentId: string, cycleId: string, revision: Revision, quantity?: string, reason = ''): Promise<void> {
+    return this.execute({action: 'task.material.settle', occurrenceId, intentId, payload: {
+      expected_revision: revision, cycle_id: cycleId,
+      ...quantity === undefined ? {action: 'post', reason: ''} : {action: 'correct', quantity, reason}}});
   }
   createCategory(label: string): Promise<void> {
     return this.execute({action: 'task.category.create', payload: {expected_revision: 0, label}});
@@ -274,7 +320,7 @@ export class TaskController {
         return;
       }
     } catch {/* Unknown time cannot extend the lease. */}
-    this.invalidate(); this.running = false; this.state = Object.freeze({...blank('ready'), notice: 'authentication_required'});
+    this.invalidate(); this.planning?.bind(null); this.running = false; this.state = Object.freeze({...blank('ready'), notice: 'authentication_required'});
   }
-  close(): void {this.closed = true; this.invalidate(); this.running = false; this.state = blank('closed');}
+  close(): void {this.closed = true; this.planning?.bind(null); this.invalidate(); this.running = false; this.state = blank('closed');}
 }
