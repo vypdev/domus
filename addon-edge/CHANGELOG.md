@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.66
+
+- Preserve the displayed earlier material usage and its next page when settling the current completion.
+- Keep that history continuation when recovering the original settlement after a lost reply.
+
 ## 0.0.0-edge.65
 
 - Keep focused material choices and outcomes visible below fixed navigation.

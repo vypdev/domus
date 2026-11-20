@@ -144,6 +144,15 @@ All 2,077 frontend tests pass, with all 110 runtime files at 100% in all four me
 
 The intermediate browser observer failures are retained separately: immediate assertions preceded asynchronous reads, and an independently fetched page minted a different time-signed cursor. The final observer waits for the actual UI response and validates its exact retained continuation; there is no product retry or deadline increase. The old Edge.65 native acceptance does not accept this new UI. A new immutable Edge candidate, installed current-cycle/history acceptance, exact final-head whole/source/both-CPU CI and review remain required before merge. The complete selected SDD and accepted Edge.57 compatibility bundle are unchanged.
 
+## Immutable Edge.66 build
+
+- Runtime source: `d50d25eaba5b012db21e212a451b27c36c0937c2`.
+- Source archive SHA-256: `e81dfc8bd90a673086fd52d014b11c6a86e764b60188046a0d5f56faa831bb03`.
+- Wheel SHA-256: `81a67ca3a7ac4e8cc905068942383f7df481c197cede48140f1f0642990a2f5a`.
+- Local Linux ARM64 image: `sha256:378b5c118dd1a80ca86e2f9a497036591cedcb20ed0d6d072851ae075e3f4c81`.
+
+All 231 Python modules and four compiled UI files match the published archive, normal local/Linux wheel, installed builder and final image. Python runtime bytes match Edge.65 and storage remains schema 35. Version, architecture and source labels pass. This immutable candidate contains the current-cycle history correction; its installed Home Assistant acceptance, whole exact final-pin source/both-CPU CI and review remain required. Edge.65's earlier native acceptance and green product CI remain separate observations.
+
 ## Superseded immutable Edge.64 build
 
 - Runtime source: `530a609f0a9490bccd7f3f2cd8598ec590689166`.

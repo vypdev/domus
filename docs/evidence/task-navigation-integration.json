@@ -448,7 +448,7 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Current-cycle settlement correction passes all2,077 frontend tests, 110 runtime files at100% all four metrics, strict types, four expanded native/standalone EN keyboard/ES390touch material journeys and46catalog cases. New immutable Edge candidate, installed acceptance and exact final-head CI/review remain required.",
+    "sourceState": "Published runtime d50d25e validates2077unit/110all100, four expanded materialjourneys,46catalog,types,wheel,independentgates. Immutable66 archive/wheel/Linuxbuilder/finalPython andUI bytes match. Installed66/current-cycle/history and exact final-pin CI/review remain required.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "reviewCorrections": {
       "pullRequest": 151,
@@ -637,7 +637,7 @@
       "arm64": "cancelled after source correction ready",
       "limit": "Pending writes and fixture reset deadlines observed; underlying cause unproven; no product exception applies."
     },
-    "runtimeSource": "c57879a992cd75c8c8b2ea0de41a25f509afed06",
+    "runtimeSource": "d50d25eaba5b012db21e212a451b27c36c0937c2",
     "runtimeSourceBeforeMaterialFocusCorrection": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
     "supersededCandidate63": {
       "version": "0.0.0-edge.63",
@@ -690,17 +690,18 @@
       "final65Gates": "required"
     },
     "immutableCandidate": {
-      "version": "0.0.0-edge.65",
-      "sourceCommit": "c57879a992cd75c8c8b2ea0de41a25f509afed06",
-      "sourceArchiveSHA256": "7e88ebd81eb0d247b0d9f2a226f91f8049a0c5a2dac72d3abb86e0af34cfc663",
-      "wheelSHA256": "b70a8dee635a1a0526ea4400686422869ccee816ac513f8b7570f600d2fba522",
+      "version": "0.0.0-edge.66",
+      "sourceCommit": "d50d25eaba5b012db21e212a451b27c36c0937c2",
+      "sourceArchiveSHA256": "e81dfc8bd90a673086fd52d014b11c6a86e764b60188046a0d5f56faa831bb03",
+      "wheelSHA256": "81a67ca3a7ac4e8cc905068942383f7df481c197cede48140f1f0642990a2f5a",
       "storageSchema": 35,
       "pythonFiles": 231,
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
-      "pythonByteIdenticalToEdge64": true,
-      "status": "Build identity and actual installed65 C09/visible-focus acceptance pass. Complete exact-head whole/source/both-CPU CI/review remain required after the worker-observation test correction.",
-      "imageId": "sha256:6e4a7b017ddc24a2ebdfb392ff5e5c64dfdfc0fb4fcf0d2b250e2dab3d2e3e0e"
+      "normalLocalLinuxWheelEquality": "passed",
+      "pythonByteIdenticalToEdge65": true,
+      "imageId": "sha256:378b5c118dd1a80ca86e2f9a497036591cedcb20ed0d6d072851ae075e3f4c81",
+      "status": "Immutable build identity passed; installed current-cycle/history acceptance and exact final-pin full CI/review remain required."
     },
     "installedEdge65": {
       "version": "0.0.0-edge.65",
@@ -827,6 +828,19 @@
       ],
       "inventory": "Same125source/70image cases; all four existing material journeys expanded, zero retries and unchanged individual deadlines.",
       "newInstalledCandidate": "Required; native Edge65 acceptance does not cover this new UI."
+    },
+    "precedingCandidate65": {
+      "version": "0.0.0-edge.65",
+      "sourceCommit": "c57879a992cd75c8c8b2ea0de41a25f509afed06",
+      "sourceArchiveSHA256": "7e88ebd81eb0d247b0d9f2a226f91f8049a0c5a2dac72d3abb86e0af34cfc663",
+      "wheelSHA256": "b70a8dee635a1a0526ea4400686422869ccee816ac513f8b7570f600d2fba522",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "pythonByteIdenticalToEdge64": true,
+      "status": "Build identity and actual installed65 C09/visible-focus acceptance pass. Complete exact-head whole/source/both-CPU CI/review remain required after the worker-observation test correction.",
+      "imageId": "sha256:6e4a7b017ddc24a2ebdfb392ff5e5c64dfdfc0fb4fcf0d2b250e2dab3d2e3e0e"
     }
   }
 }
