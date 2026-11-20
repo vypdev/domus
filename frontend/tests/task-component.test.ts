@@ -33,6 +33,31 @@ async function mount(value: TaskView | null = view(), locale: 'en' | 'es' = 'en'
   return {element, root, intents, button, input, text: () => root.textContent!};
 }
 
+test.each(['en','es'] as const)('%s missing post-create facts focus recovery once and preserve later draft editing', async locale => {
+  const f=await mount(view({notice:'unavailable'}),locale);
+  expect(f.root.activeElement).toBe(f.button(locale==='en'?'Refresh tasks':'Actualizar tareas'));
+  f.root.querySelector<HTMLElement>('details.new-task summary')!.click();
+  await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));await f.element.updateComplete;
+  await f.input('task-title','A new retained draft');
+  const title=f.root.querySelector<HTMLInputElement>('#task-title')!;title.focus();
+  f.element.view=view({notice:'unavailable'});await f.element.updateComplete;
+  expect(f.root.activeElement).toBe(title);expect(title.value).toBe('A new retained draft');
+});
+
+test('a failed read with a selected task keeps its current detail focus', async () => {
+  const f=await mount(view({detail:work}));const heading=f.root.querySelector<HTMLElement>('#selected-task-title')!;heading.focus();
+  f.element.view=view({detail:work,notice:'unavailable'});await f.element.updateComplete;
+  expect(f.root.activeElement).toBe(heading);
+});
+
+test('retired task data cannot move focus to a read recovery control', async () => {
+  const f=await mount();const outside=document.createElement('button');outside.textContent='Outside task view';document.body.append(outside);
+  try {
+    outside.focus();f.element.retired=true;f.element.view=view({notice:'unavailable'});await f.element.updateComplete;
+    expect(document.activeElement).toBe(outside);
+  } finally {outside.remove();}
+});
+
 test('optional plan intents survive read loading and block a stale plan without losing task text', async () => {
   const plan = {open:false,busy:false,canLink:true,readOnly:false,rows:[],choices:[],cursor:null,notice:null} as const;
   const f = await mount(view({page:{items:[],nextCursor:null},materialPlan:plan}));

@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "e86b4b61dabdcf31524b090d8a4ddc4e88d305aefbd7003d8d7d7fe6f1cd91bb",
-    "assets/index-C9a5kfNV.js": "57fd92ee352fb8793c1ad369d193baddca60c0bee17140893e69fe48fc89e408",
+    ".vite/manifest.json": "7afe48d1a5cab4cd31344feb74e6bf34d56594e6ed9d0a197ee87c5917716008",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "b35392c986153504107ef88aba7c1fc57e69bbdcfd9ef763880f84466a577ee4"
+    "assets/index-gU-Bje34.js": "17a6b27c16d6e7f276d0e228fa7daac7efda83ee76098043138d0fb8a0e05d2b",
+    "index.html": "fd47b45a4e7b023cdc16e9a0020f5a37ec1fabdf5787d4c8c3f0e69fc68710a6"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -439,7 +439,7 @@
     "haUiPublicationRun": 44699421594,
     "haUiPublicationAttempt": 6,
     "fivePublishedArchiveHashesVerified": true,
-    "frontendTests": 2051,
+    "frontendTests": 2060,
     "frontendRuntimeFiles": 110,
     "frontendCoverage": "100% globally and per file for all four metrics",
     "backendTests": 5635,
@@ -448,28 +448,15 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Published corrected runtime 41c5c75; 2051 frontend tests at 100% in all four metrics and four expanded two-cycle journeys pass after reproducing the old defect. Backend unchanged from complete 5635-test pass. New CPU campaigns and native upgrade acceptance remain required.",
+    "sourceState": "The post-commit read correction passes 2060 frontend tests with all four metrics at 100%, all four real material journeys and all 46 rebuilt catalog cases. Backend runtime is unchanged from the complete 5635-test pass. A fresh Edge61 installed receipt, exact-head whole CI, both CPU campaigns, review and scoped cleanup are recorded in PR151 and remain gates.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
-    "runtimeSource": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
-    "immutableCandidate": {
-      "version": "0.0.0-edge.60",
-      "sourceCommit": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
-      "sourceArchiveSHA256": "f6c73df97481cf90a7d140b3739d6716c5da28289dced4b6283a0888eee7f992",
-      "wheelSHA256": "97f358d6d76a30b47ca062f479aec7c3fc639694387acdcc0034cdea3e38aff2",
-      "storageSchema": 35,
-      "pythonFiles": 231,
-      "uiFiles": 4,
-      "archiveWheelInstalledEquality": "passed",
-      "imageId": "sha256:24281d34e20ce4ea60871daeb856962984ab3e456df83ebb827f4fd8369e6156",
-      "status": "Immutable build and separate native Edge60 upgrade/planning/settlement qualified; final exact-head whole CI, both CPU campaigns, review and scoped cleanup remain gates recorded in PR151."
-    },
     "reviewCorrections": {
       "pullRequest": 151,
-      "frontendTests": 2051,
+      "frontendTests": 2060,
       "frontendCoverage": "100% all four metrics globally and per file across all 110 runtime files",
       "directedBackendMaterialTests": 117,
       "closedCycleHistory": "explicit bounded read; original cycle and intent revision; current permission on settlement",
-      "sourceAcceptance": "121 baseline source cases pass; all four expanded material cases pass after correcting observer/capacity expectations. All 46 catalog cases pass. Both CPU and installed acceptance pending.",
+      "sourceAcceptance": "All four latest rebuilt material journeys pass with zero retries/skipped/flaky/unexpected; all 46 rebuilt catalog cases pass. Final-head complete 125-source and 70-per-CPU campaigns and installed Edge61 remain gates.",
       "backendTests": 5635,
       "backendStatements": 18045,
       "backendBranches": 4876,
@@ -484,6 +471,21 @@
         "skipped": 0,
         "flaky": 0,
         "retries": 0
+      },
+      "postCommittedReadFailure": "Clear the submitted planner after storing the committed receipt and before list/detail reads; preserve a later unrelated plan when checking an already known committed creation.",
+      "readRecoveryFocus": "Focus visible Refresh tasks once when post-create facts are unavailable; preserve subsequent typing and selected-detail focus; retired views cannot move focus.",
+      "postReadMaterialJourneys": {
+        "redOnVerifiedEdge60": 4,
+        "greenAfterRebuild": 4,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0
+      },
+      "frontendCounts": {
+        "statements": 8803,
+        "branches": 7894,
+        "functions": 1915,
+        "lines": 6392
       }
     },
     "runtimeSourceBeforeReview": "514258c9adbd54d938e28fd65a901764a89799cc",
@@ -527,7 +529,19 @@
       "imageId": "sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535",
       "status": "Superseded by continuation correction. Both CPU reports pass 70 journeys; native59 data retained for same-installation upgrade qualification."
     },
-    "nativeQualification": {
+    "supersededCandidate60": {
+      "version": "0.0.0-edge.60",
+      "sourceCommit": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
+      "sourceArchiveSHA256": "f6c73df97481cf90a7d140b3739d6716c5da28289dced4b6283a0888eee7f992",
+      "wheelSHA256": "97f358d6d76a30b47ca062f479aec7c3fc639694387acdcc0034cdea3e38aff2",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "imageId": "sha256:24281d34e20ce4ea60871daeb856962984ab3e456df83ebb827f4fd8369e6156",
+      "status": "Superseded by committed-creation post-read and recovery-focus corrections; prior native qualification does not accept the final source."
+    },
+    "supersededNativeQualification60": {
       "version": "0.0.0-edge.60",
       "runtimeSource": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
       "packagingHeadAtInstall": "ca7599096821f3a27ecf8999651eaa18ed392a52",
@@ -548,6 +562,7 @@
       "temporaryBrowserOverridesRestored": true,
       "screenshotsAndReceipts": "Private local evidence; not uploaded",
       "limits": "Native scheduled consumption is not claimed; separate 48 HTTP cases cover initial/successor effects. Exact-head CI/review and scoped cleanup remain required."
-    }
+    },
+    "runtimeSourceBeforePostReadCorrection": "41c5c75c8c5549fc4d9142f86db600e6a76530da"
   }
 }

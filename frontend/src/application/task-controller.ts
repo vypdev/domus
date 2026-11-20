@@ -188,6 +188,7 @@ export class TaskController {
       const outcome = await this.server.send({key, command}, this.state.session!.context);
       if (this.closed || generation !== this.generation) return;
       this.save(key, outcome);
+      if (outcome.kind === 'receipt' && outcome.stage === 'committed' && command.action === 'task.create') this.planning?.clear();
       if (outcome.kind === 'rejected' && (outcome.reason === 'authentication_required' || outcome.reason === 'forbidden')) {
         if (outcome.reason === 'forbidden' && (command.action === 'task.material.settle'
             || command.action === 'task.create' && command.payload.materials !== undefined)) {
@@ -200,7 +201,6 @@ export class TaskController {
       }
       if (this.clock.now() >= this.state.session!.expiresAt) throw new EntryReadError('authentication_required');
       if (outcome.kind === 'receipt') await this.receiptFacts(command, outcome.occurrenceId, prior, generation);
-      if (outcome.kind === 'receipt' && outcome.stage === 'committed' && command.action === 'task.create') this.planning?.clear();
       if ((command.action === 'task.assign' || command.action === 'task.transition')
           && outcome.kind === 'rejected' && outcome.reason === 'conflict')
         await this.facts(generation, command.occurrenceId);
@@ -324,7 +324,7 @@ export class TaskController {
       this.update({page: prior.page});
       const outcome = await this.read(this.server.original({key, command: current.command, operationId: current.operationId}, this.state.session!.context), generation);
       this.save(key, outcome);
-      if (outcome.stage === 'committed' && current.command.action === 'task.create') this.planning?.clear();
+      if (outcome.stage === 'committed' && current.command.action === 'task.create' && current.stage !== 'committed') this.planning?.clear();
       await this.receiptFacts(current.command, outcome.occurrenceId, prior, generation);
     });
   }

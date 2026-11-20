@@ -645,6 +645,60 @@ test('a denied material-bearing creation retains the opaque plan with no previou
   expect(f.controller.view.materialPlan?.notice).toBe('forbidden'); expect(f.controller.view.notice).toBeNull();
 });
 
+test.each(['list','detail'] as const)('a committed material creation retires its plan even when the follow-up %s read fails', async failed => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Soap',unit:'millilitre',recorded:'5',reserved:'0',available:'5',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog);f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  await f.controller.refresh();await f.controller.materialPlan('load');await f.controller.materialPlan('add','soap-reference');
+  await f.controller.materialPlan('edit','soap-reference','1,25');
+  const fail=()=>({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+  if(failed==='list')f.server.list.mockImplementationOnce(fail);else f.server.detail.mockImplementationOnce(fail);
+  await f.controller.create('Committed material task','','normal');
+  expect(f.controller.view.notice).toBe('unavailable');expect(f.controller.view.outcome).toEqual(saved);
+  expect(f.controller.view.records?.[0].stage).toBe('committed');expect(f.controller.view.materialPlan?.rows).toEqual([]);
+  await f.controller.create('Unrelated title-only task','','normal');
+  expect(f.server.send).toHaveBeenCalledTimes(2);
+  expect(f.server.send.mock.calls[0][0].command).toMatchObject({payload:{materials:[{reference_id:'soap-reference',planned_quantity:'1.25'}]}});
+  expect(f.server.send.mock.calls[1][0].command).toMatchObject({action:'task.create',payload:{title:'Unrelated title-only task'}});
+  expect(f.server.send.mock.calls[1][0].command.payload).not.toHaveProperty('materials');
+});
+
+test.each(['list','detail'] as const)('original recovery retires the committed material plan before a failed %s refresh', async failed => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Soap',unit:'millilitre',recorded:'5',reserved:'0',available:'5',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog);f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  await f.controller.refresh();await f.controller.materialPlan('load');await f.controller.materialPlan('add','soap-reference');
+  f.server.send.mockResolvedValueOnce({kind:'uncertain'});await f.controller.create('Lost creation reply','','normal');
+  const request=f.server.send.mock.calls[0][0];
+  const fail=()=>({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+  if(failed==='list')f.server.list.mockImplementationOnce(fail);else f.server.detail.mockImplementationOnce(fail);
+  await f.controller.recover(request.key);
+  expect(f.controller.view.notice).toBe('unavailable');expect(f.controller.view.records?.[0].stage).toBe('committed');
+  expect(f.controller.view.materialPlan?.rows).toEqual([]);expect(f.server.send).toHaveBeenCalledOnce();
+  await f.controller.create('Next title-only task','','normal');
+  expect(f.server.send).toHaveBeenCalledTimes(2);expect(f.server.send.mock.calls[1][0].command.payload).not.toHaveProperty('materials');
+});
+
+test('checking an already committed creation preserves a new material draft', async () => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({mayManage:true,mayShop:true,mayRequest:true,cursor:null,locations:[],products:[{
+    id:'soap',referenceId:'soap-reference',name:'Soap',unit:'millilitre',recorded:'5',reserved:'0',available:'5',shoppingNeeded:'0',outstandingPurchase:'0',
+    replenishment:{sourceId:'minimum',minimum:'0',target:'0',revision:'0',needed:'0'}}]}))};
+  const f=fixture(catalog);f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  await f.controller.refresh();await f.controller.create('First recorded task','','normal');
+  const request=f.server.send.mock.calls[0][0];
+  await f.controller.materialPlan('load');await f.controller.materialPlan('add','soap-reference');
+  await f.controller.materialPlan('edit','soap-reference','2,75');
+  const draft=f.controller.view.materialPlan?.rows;
+  await f.controller.recover(request.key);
+  expect(f.controller.view.records?.[0].stage).toBe('committed');expect(f.controller.view.materialPlan?.rows).toEqual(draft);
+  expect(f.server.send).toHaveBeenCalledOnce();
+  await f.controller.create('A new task with its own plan','','normal');
+  expect(f.server.send).toHaveBeenCalledTimes(2);
+  expect(f.server.send.mock.calls[1][0].command).toMatchObject({payload:{materials:[{reference_id:'soap-reference',planned_quantity:'2.75'}]}});
+});
+
 function historicalMaterial() {
   const current = pendingMaterialWork();
   return {cycle:current.cycle!,closedAt:'200',materialOutcomes:current.materialOutcomes!,allowedActions:['materials.settle']};

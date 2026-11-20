@@ -1,6 +1,6 @@
 # Task material workflow qualification (#150)
 
-Qualification snapshot: source and native Edge.60 observations are recorded below. Final exact-head CI/review, scoped cleanup and merge receipts belong to [PR #151](https://github.com/vypdev/domus/pull/151); they remain gates and are not implied by an earlier build or test report.
+Qualification snapshot: the latest source correction and superseded native Edge.60 observations are recorded below. Final exact-head CI/review, scoped cleanup and merge receipts belong to [PR #151](https://github.com/vypdev/domus/pull/151); they remain gates and are not implied by an earlier build or test report.
 
 ## Scope and preserved contracts
 
@@ -41,7 +41,17 @@ Two further valid review findings are corrected before acceptance. Historical se
 
 All 2,051 frontend tests pass, with all 110 runtime files and all four metrics at 100% (8,795 statements, 7,884 branches, 1,915 functions and 6,387 lines). Both TypeScript checks and the independent coverage/fixture checks pass. Backend runtime bytes are unchanged since the complete 5,635-test pass. The existing four material browser journeys now exercise two closed pending completions, recovery of one settlement, continuation to the other cycle, a distinct second settlement and unchanged reopened work. All four reproduce the missing continuation against the independently verified Edge.59 wheel, then pass against the rebuilt correction in 49.9 seconds with zero retries, skipped or flaky cases. English uses keyboard input and Spanish uses actual 390 px touch in both native and standalone compositions. Original reports, representative traces and continuation screenshots are retained. A new immutable installed candidate and final-head whole CI remain required; the source inventory stays 125 and each image inventory stays 70.
 
-## Immutable Edge.60 build
+## Committed creation followed by failed reads
+
+The final review reproduced another genuine recovery gap: a normal committed creation saved its original receipt, but cleared the submitted material plan only after follow-up list/detail reads. A failed read therefore left that plan available to an unrelated next creation. The controller now retires the submitted plan immediately after saving the committed receipt, before either read. Original GET recovery also retires a newly confirmed creation before reading its facts. Checking an already known committed creation preserves a subsequently prepared unrelated plan.
+
+Five controller regressions cover direct and original-GET list/detail failure plus preservation of the unrelated later draft. Four component cases check recovery focus in both languages, repeated draft publication, existing task detail focus and retired views. When the failed post-create read removes task detail, the visible Refresh tasks control receives focus once. Subsequent draft editing keeps its focus.
+
+The actual Edge.60 wheel reproduces stale material retention in all four real material journeys. After rebuilding, all four pass in 38.0 seconds with zero retries, skipped, flaky or unexpected cases. They inject one failed post-commit list GET, verify the retained committed receipt and empty next planner, exercise the visible recovery control, then continue the complete two-cycle settlement and scheduled-creation path. An intermediate observer race and a separate missing-focus failure retain their original failed reports; neither is represented as a passing campaign. Strict types, all 2,060 frontend tests and all 46 rebuilt catalog cases pass. All 110 runtime files and all four coverage metrics remain 100%: 8,803 statements, 7,894 branches, 1,915 functions and 6,392 lines. Backend runtime bytes remain unchanged from the complete 5,635-test pass.
+
+The shared Linux backend CI previously exceeded its 25-minute budget at 83%, without a completed coverage report. Its timeout is now 40 minutes; no tests, thresholds or independent gates are removed. All 186 Python tooling tests pass with 100% statement/branch coverage across the same five modules. A fresh immutable Edge.61, installed recovery qualification, exact-head whole CI and both CPU campaigns remain mandatory. Their final receipts and scoped cleanup are recorded in PR #151 rather than starting another source build just to append observations.
+
+## Superseded immutable Edge.60 build
 
 - Runtime source: `41c5c75c8c5549fc4d9142f86db600e6a76530da`.
 - Source archive SHA-256: `f6c73df97481cf90a7d140b3739d6716c5da28289dced4b6283a0888eee7f992`.
@@ -50,7 +60,7 @@ All 2,051 frontend tests pass, with all 110 runtime files and all four metrics a
 
 All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. Normal local and Linux wheel bytes match independently; source, version and architecture labels pass. SQLite stays schema 35. These comparisons establish build identity. Final-head whole CI/review, both CPU functional/browser campaigns and installed acceptance are separate gates. The native upgrade below uses the retained synthetic Edge.59 household, products and two closed pending cycles.
 
-## Installed Edge.60 qualification
+## Superseded installed Edge.60 qualification
 
 Home Assistant independently reported installed version `0.0.0-edge.60` after upgrading the existing stopped synthetic Edge.59 installation. The household, product units, stock and both closed cycles' original intent identities survived. Before either deliberate settlement, Soap still had 13.75 mL, Cleaner five pieces and Tea five pieces, and both old intents remained pending. English keyboard settlement of the first cycle retained **Next closed completion**. Spanish settlement on the next page posted the distinct second intent while the current task remained reopened/available. Soap ended at 7.75 mL, Cleaner at four pieces and unused Tea at five pieces.
 
@@ -104,7 +114,7 @@ This table maps the selected case identities to executable checks. Source checks
 | C05 | Planner retirement and denied-choice tests, the catalog-read revocation HTTP test, scheduled-original current-grant tests and the settlement authorization tests distinguish catalog discovery, linking, task-scoped actual use and current original disclosure. |
 | C06, C07 | Scheduled late-write rollback/retry, corrupt durable-proof rejection, real adapter restart and actual saved-state activation in `tests/backend/test_schedule_creation_http.py`; retained historical settlement recovery in `tests/backend/test_task_material_settlement.py`; exact frozen requests and the actual preceding journal/controller rollback cases in `frontend/tests/task-journal.test.ts`. |
 | C08 | EN/ES component tests and all four passing native/standalone source journeys cover keyboard, Spanish touch, retained drafts, failed choice reads and both themes using published ha-ui next.4. `frontend/tests/e2e/catalog.spec.ts` also checks the fictional creation-plan and material-outcome story without API calls. |
-| C09 | Installed immutable Edge.60 upgrade/usage/planning qualification is recorded above. Final-head image/whole CI and scoped synthetic installation/data/source removal remain gates recorded in PR #151. Unit tests and build identity do not substitute for the native observation. |
+| C09 | The superseded installed Edge.60 qualification is recorded above; the final Edge.61 recovery/upgrade receipt belongs to PR #151. Final-head image/whole CI and scoped synthetic installation/data/source removal remain gates recorded in PR #151. Unit tests and build identity do not substitute for the native observation. |
 | C11 | `tests/backend/test_task_material_settlement.py` covers intent revision conflicts, changed-key payloads, current denial, late rollback and original lost-reply recovery. Frontend controller/HTTP tests retain and recover the exact request; the source journey checks that refill alone does not settle and that a deliberate lost-reply settlement sends one POST. The added closed-cycle query/HTTP/controller cases preserve pending usage after reopening, fence its original intent revision and leave the reopened work unchanged; the four expanded source journeys execute the closed-cycle path and lost settlement reply in both deployments/locales. The full source run and focused correction are reported separately above. |
 | C12 | EN/ES actual-recording component tests retain zero/reason and require current intent review. Controller/HTTP and actual backend settlement tests validate permission, precision and zero without a movement. The source journey uses the existing separate-recording policy without adding a policy editor. |
 

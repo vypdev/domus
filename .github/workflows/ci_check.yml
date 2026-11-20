@@ -44,7 +44,8 @@ jobs:
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]
-    timeout-minutes: 25
+    # The complete suite exceeded 25 minutes on a shared Linux host.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7.0.1
         with:

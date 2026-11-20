@@ -63,7 +63,12 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     const short=last.products[0];
     await write('initial-used',{action:'inventory.intake',product_id:used.product_id,quantity:'5'});
     await write('initial-unused',{action:'inventory.intake',product_id:unused.product_id,quantity:'5'});
-    const expand=async()=>{if(!await title.isVisible())await activate(tasks.getByRole('heading',{name:t('New task','Nueva tarea'),exact:true}).locator('..'));};
+    const expand=async()=>{
+      const summary=tasks.getByRole('heading',{name:t('New task','Nueva tarea'),exact:true}).locator('..');
+      await expect(summary).toBeVisible();
+      if(!await title.isVisible())await activate(summary);
+      await expect(title).toBeVisible();
+    };
     await expand(); await title.fill('QA 150 material workflow');
     const description=tasks.getByRole('textbox',{name:t('Description','Descripción'),exact:true});await description.fill('Retain this draft across optional catalog failure');
     const plan=tasks.locator('domus-task-material-plan');
@@ -234,6 +239,10 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
         if(!await tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true}).first().isVisible()) await activate(tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')}));
         await activate(tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true}).first());
       }
+      let failedPostCreateReads=0;
+      if(kind==='fixed')await page.route(api+'tasks/occurrences?limit=25',route=>{
+        failedPostCreateReads++;return route.abort('failed');
+      },{times:1});
       await activate(create);
       await expect.poll(()=>scheduled.length).toBe(kind==='fixed'?1:2);
       await expect(tasks.getByText(t('The schedule was saved. Its first task will appear when recurrence processing runs.',
@@ -243,6 +252,17 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
       const definition=await page.request.get(api+'tasks/definitions/'+receipt.result.definition_id,{headers});expect(definition.ok()).toBe(true);
       const saved=await definition.json();expect(saved.materials).toHaveLength(1);expect(saved.materials[0]).toMatchObject({planned_quantity:kind==='fixed'?'2':'1.25',binding:{reference_id:product.reference_id,unit_id:product.base_unit,location_id:'pantry'}});
       await page.unroute(path);
+      if(kind==='fixed'){
+        await expect.poll(()=>failedPostCreateReads).toBe(1);
+        await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+        await expect(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true})).toBeFocused();
+        await expect(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true})).toBeInViewport();
+        await page.screenshot({path:info.outputPath('post-create-read-recovery-'+locale+'.png')});
+        await expand();await expect(title).toHaveValue('');await expect(plan.locator('li')).toHaveCount(0);
+        await expect(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true})).toBeVisible();
+        await plan.screenshot({path:info.outputPath('committed-plan-retired-after-read-failure-'+locale+'.png')});
+        await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+      }
     }
     await info.attach('scheduled-material-originals',{body:JSON.stringify(scheduled),contentType:'application/json'});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
