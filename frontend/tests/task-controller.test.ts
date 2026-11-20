@@ -703,6 +703,23 @@ function historicalMaterial() {
   const current = pendingMaterialWork();
   return {cycle:current.cycle!,closedAt:'200',materialOutcomes:current.materialOutcomes!,allowedActions:['materials.settle']};
 }
+test.each(['load','more','failure'] as const)('catalog reads retain the displayed material history and cursor: %s', async operation => {
+  const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({
+    mayManage:true,mayShop:true,mayRequest:true,cursor:'next-products',locations:[],products:[]}))};
+  const f=fixture(catalog), old=historicalMaterial(), current={...pendingMaterialWork(),state:'available' as const,
+    currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  f.server.access.mockReturnValue(read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:true,canLinkMaterials:true}));
+  f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');
+  await f.controller.materialPlan('load');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));
+  await f.controller.materialHistory();const prior=f.controller.view.materialHistory;
+  if(operation==='failure')vi.mocked(catalog.read).mockReturnValueOnce({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+  await f.controller.materialPlan(operation==='more'?'more':'load');
+  expect(f.controller.view.detail).toEqual(current);
+  expect(f.controller.view.materialHistory).toEqual(prior);
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('next-closed-cycle');
+  expect(f.server.send).not.toHaveBeenCalled();
+});
 test('closed-cycle usage is paged explicitly and settles against a fresh intent without changing current work', async () => {
   const f=fixture(), old=historicalMaterial(), current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
   await f.controller.materialHistory(); await f.controller.materialHistory(true); expect(f.server.materialHistory).not.toHaveBeenCalled();

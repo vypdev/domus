@@ -256,7 +256,7 @@ export class TaskController {
     else if (action === 'clear') this.planning.clear();
     else return this.run(async prior => {
       if (this.state.scopeKey !== prior.scopeKey) {this.update({notice: 'context_changed'}); return;}
-      this.update({page: prior.page, detail: prior.detail, outcome: prior.outcome});
+      this.update({page: prior.page, detail: prior.detail, materialHistory: prior.materialHistory, outcome: prior.outcome});
       await this.planning!.load(action === 'more');
     });
     return Promise.resolve();

@@ -161,6 +161,8 @@ jobs:
 
   frontend:
     name: Frontend application
+    # Keep browser fixture writes separate from the complete backend campaign.
+    needs: backend
     runs-on:
       group: vypdev
       labels: [self-hosted, codex, Linux]

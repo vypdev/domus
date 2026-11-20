@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "418733593ea583e40e94d2db17e2d848d45233daacb8da8c58eb2790587f9bd0",
+    ".vite/manifest.json": "998b3a51746f0784dc567bae1d308206b9add3944eb626dea149bcbea6bce69a",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-RwLxcDDN.js": "5ba07d88306a0741f152598ac38db30feb078e8d9120eff51562376629b67f47",
-    "index.html": "ce894ea1b2a68a93629a00a814a9471294f52eb950b2dc89139638139a989add"
+    "assets/index-DeF0wQmP.js": "5bb606c3aa124815de2c808cfff0a8a952c81466cc3431035d8f0c62cf272eff",
+    "index.html": "c1927f7b98fe93824e71fa48b376899bc15d219c9dadddc893a982cdd4803a75"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -439,7 +439,7 @@
     "haUiPublicationRun": 44699421594,
     "haUiPublicationAttempt": 6,
     "fivePublishedArchiveHashesVerified": true,
-    "frontendTests": 2060,
+    "frontendTests": 2063,
     "frontendRuntimeFiles": 110,
     "frontendCoverage": "100% globally and per file for all four metrics",
     "backendTests": 5635,
@@ -448,11 +448,11 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "All2060 frontend tests retain100% of all four metrics; four full expanded material journeys pass in42.0s, including known-original draft retention and unobscured focus. Backend runtime remains unchanged from5635 tests. Immutable62 and native occlusion qualification, final whole/source/both CPU CI, review and cleanup remain gates in PR151.",
+    "sourceState": "Latest catalog/history correction: 2,063 frontend tests at 100% across 110 files, four expanded real material journeys in 43.3 seconds and 46 rebuilt catalog cases pass. Backend runtime remains unchanged. Final Edge.63 installed catalog/history, exact-head whole/source/both CPU CI, review and scoped cleanup remain mandatory in PR #151.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "reviewCorrections": {
       "pullRequest": 151,
-      "frontendTests": 2060,
+      "frontendTests": 2063,
       "frontendCoverage": "100% all four metrics globally and per file across all 110 runtime files",
       "directedBackendMaterialTests": 117,
       "closedCycleHistory": "explicit bounded read; original cycle and intent revision; current permission on settlement",
@@ -487,7 +487,10 @@
         "functions": 1915,
         "lines": 6394
       },
-      "readRecoveryVisibility": "Center the focused Refresh tasks control so the actual HA iframe sticky navigation cannot cover it; keep repeated local editing focus unchanged."
+      "readRecoveryVisibility": "Center the focused Refresh tasks control so the actual HA iframe sticky navigation cannot cover it; keep repeated local editing focus unchanged.",
+      "catalogReadHistoryRetention": "Same-scope catalog reload, paging and failure preserve selected closed-cycle history and its continuation; three direct regressions fail before the fix and pass after.",
+      "savedRequestObserver": "Read the native details.open state before toggling; no dismissal/count assertion is removed.",
+      "reopenedHistoryGuard": "Verified false positive: frontend planned materials derive from the frozen definition snapshot; current material outcomes are a separate field. Normal thread resolution and proof are linked in PR151."
     },
     "runtimeSourceBeforeReview": "514258c9adbd54d938e28fd65a901764a89799cc",
     "sourceEntryCampaigns": {
@@ -578,8 +581,8 @@
       "status": "Superseded before acceptance: native original-check recovery focus was covered by the sticky navigation despite preserved draft and zero repeated POSTs."
     },
     "runtimeSourceBeforeVisibleFocusCorrection": "829800fd9ad7cfe70aa81d44da71ce4896bbd77c",
-    "runtimeSource": "b1313f3a91c8d992495d30c2a04714df81afad4e",
-    "immutableCandidate": {
+    "runtimeSourceBeforeCatalogRetention": "b1313f3a91c8d992495d30c2a04714df81afad4e",
+    "supersededCandidate62": {
       "version": "0.0.0-edge.62",
       "sourceCommit": "b1313f3a91c8d992495d30c2a04714df81afad4e",
       "sourceArchiveSHA256": "3c720ae9603121b085fcb59004da2b35740ff2ad84310d4e28ec394a25b03a5c",
@@ -589,7 +592,19 @@
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
       "imageId": "sha256:d501b294eedba158e87ec3252e8b7fa6fc26b3f15726c1aa15f6817c8970d089",
-      "status": "Immutable build qualified. Final exact-head whole/source/both CPU CI, installed Edge62 occlusion/upgrade acceptance, review, scoped cleanup and destination verification remain separate gates in PR151."
+      "status": "Native62 upgrade/recovery/explicit-stock-cycle passed, then superseded before PR acceptance by the valid catalog-read history-retention correction. Final62 source entry failed3existing standalone preconditions; full backend and70amd64 cases passed. ARM was cancelled after the correction was ready."
+    },
+    "precedingFullSourceCI62": {
+      "head": "0ae97b252a5aba4e6a86ee76b4602aa5ce4600c4",
+      "run": 44736515798,
+      "frontendEntryPassed": 122,
+      "frontendEntryFailed": 3,
+      "catalog": "not run after entry failure",
+      "backendTests": 5635,
+      "backendDurationSeconds": 1563.15,
+      "amd64BrowserPassed": 70,
+      "arm64": "cancelled after source correction ready",
+      "limit": "Pending writes and fixture reset deadlines observed; underlying cause unproven; no product exception applies."
     }
   }
 }

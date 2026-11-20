@@ -147,6 +147,17 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     const firstPage=await pageResponse.json();expect(firstPage.items).toHaveLength(1);expect(firstPage.next_cursor).toBeTruthy();
     const pending=firstPage.items[0].materials.find((value:{state:string})=>value.state==='pending_regularization');
     expect([firstPending.intent_id,secondPending.intent_id]).toContain(pending.intent_id);
+    await expand();await title.fill('QA 150 catalog read retains earlier usage');
+    await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await choose(used.name);
+    await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).fill('3');
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
+    await title.fill('');await activate(tasks.getByRole('heading',{name:t('New task','Nueva tarea'),exact:true}).locator('..'));
     const postedBefore=firstPage.items[0].materials.filter((value:{state:string})=>value.state==='posted').length;
     await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('closed-material-usage-'+locale+'.png')});
     let settlements=0,settlementKey='',settlementBody:Record<string,any>|null=null;
@@ -189,12 +200,16 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     // Explicitly retire three resolved originals; unconfirmed entries are never evicted.
     const dismiss=tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true});
     const savedRequests=tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')});
+    const openSavedRequests=async()=>{
+      await expect(savedRequests).toBeVisible();
+      if(!await savedRequests.locator('..').evaluate(element=>(element as HTMLDetailsElement).open))await activate(savedRequests);
+    };
     for(let index=0;index<3;index++){
       await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
-      await activate(savedRequests);await expect(dismiss).toHaveCount(8-index);await activate(dismiss.first());
+      await openSavedRequests();await expect(dismiss).toHaveCount(8-index);await activate(dismiss.first());
     }
     await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
-    await activate(savedRequests);await expect(dismiss).toHaveCount(5);
+    await openSavedRequests();await expect(dismiss).toHaveCount(5);
     outcomes=tasks.locator('domus-task-material-outcomes').first();
     const policyReply=await page.request.get(api+'tasks/policy',{headers}), policy=await policyReply.json();
     await write('separate-recording-policy',{expected_revision:policy.revision,rules:{...policy.rules,material_recording:'separate_recording'}},'tasks/policy','put');
