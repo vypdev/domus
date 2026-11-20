@@ -262,6 +262,32 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
         await expect(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true})).toBeVisible();
         await plan.screenshot({path:info.outputPath('committed-plan-retired-after-read-failure-'+locale+'.png')});
         await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+        await expand();await title.fill('QA 150 unrelated retained draft');
+        await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+        await choose(product.name);
+        const laterQuantity=plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true});
+        await laterQuantity.fill('3');
+        let originalChecks=0,failedOriginalReads=0;
+        const originalPath=api+'tasks/recurrence/creation/requests/recurrence.fixed.create/*';
+        await page.route(originalPath,route=>{originalChecks++;expect(route.request().method()).toBe('GET');return route.continue();});
+        await page.route(api+'tasks/occurrences?limit=25',route=>{failedOriginalReads++;return route.abort('failed');},{times:1});
+        const savedCheck=tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).last();
+        if(!await savedCheck.isVisible())await activate(tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')}));
+        await activate(savedCheck);
+        await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+        expect(originalChecks).toBe(1);expect(failedOriginalReads).toBe(1);expect(scheduled).toHaveLength(1);
+        await expect(title).toHaveValue('QA 150 unrelated retained draft');await expect(laterQuantity).toHaveValue('3');
+        const recovery=tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true});
+        await expect(recovery).toBeFocused();
+        await page.screenshot({path:info.outputPath('long-draft-original-read-recovery-'+locale+'.png')});
+        const recoveryBounds=await recovery.boundingBox();
+        const navigationBounds=await page.getByRole('navigation',{name:t('Household navigation','Navegación del hogar'),exact:true}).boundingBox();
+        expect(recoveryBounds).not.toBeNull();expect(navigationBounds).not.toBeNull();
+        expect(recoveryBounds!.y,'The focused recovery control must clear the sticky navigation').toBeGreaterThanOrEqual(navigationBounds!.y+navigationBounds!.height);
+        await laterQuantity.fill('4');await expect(laterQuantity).toBeFocused();
+        await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
+        await page.unroute(originalPath);
+        await activate(recovery);
       }
     }
     await info.attach('scheduled-material-originals',{body:JSON.stringify(scheduled),contentType:'application/json'});

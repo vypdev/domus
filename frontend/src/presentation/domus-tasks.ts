@@ -220,7 +220,9 @@ export class DomusTasks extends LitElement {
     if (changed.has('view') && current?.phase === 'ready' && current.notice === 'unavailable'
         && current.detail === null && changed.get('view')?.notice !== 'unavailable') {
       this.focusDetail = false; this.assignmentFocus = null; this.progressFocus = null; this.materialFocus = null;
-      this.renderRoot.querySelector<HTMLButtonElement>('.task-header button')!.focus();
+      const recovery = this.renderRoot.querySelector<HTMLButtonElement>('.task-header button')!;
+      recovery.focus();
+      recovery.scrollIntoView({block: 'center', inline: 'nearest', behavior: 'instant'});
       return;
     }
     if (this.focusDetail) {this.focusDetail = false; this.shadowRoot?.querySelector<HTMLElement>('#selected-task-title')?.focus();}
