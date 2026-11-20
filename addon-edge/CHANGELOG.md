@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0-edge.65
+
+- Keep focused material choices and outcomes visible below fixed navigation.
+
 ## 0.0.0-edge.64
 
 - Respect a newer keyboard target when a material control has a pending focus continuation.

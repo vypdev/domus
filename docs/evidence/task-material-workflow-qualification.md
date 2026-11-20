@@ -95,6 +95,15 @@ The original final settlement screenshot also shows a genuine visible-focus limi
 
 The exact Edge.64 review's separate stale-planner claim is a verified false positive: EntryRuntime.materialDraft invokes perform, which publishes immediately after the synchronous mutation and again after its promise settles. The callback assigns the freshly read TaskView to the presentation. Real source journeys and installed creation/edit/clear observations verify the displayed rows and submitted plan. The [source-linked reply](https://github.com/vypdev/domus/pull/151#discussion_r4643831425) records the existing path; its thread was resolved through normal controls. No source workaround or product-check waiver is used for that claim.
 
+## Immutable Edge.65 build
+
+- Runtime source: `c57879a992cd75c8c8b2ea0de41a25f509afed06`.
+- Source archive SHA-256: `7e88ebd81eb0d247b0d9f2a226f91f8049a0c5a2dac72d3abb86e0af34cfc663`.
+- Wheel SHA-256: `b70a8dee635a1a0526ea4400686422869ccee816ac513f8b7570f600d2fba522`.
+- Local Linux ARM64 image: `sha256:6e4a7b017ddc24a2ebdfb392ff5e5c64dfdfc0fb4fcf0d2b250e2dab3d2e3e0e`.
+
+All 231 Python modules and four compiled UI files match the published archive, normal/local/Linux wheel, installed builder and final image. The Python runtime is byte-identical to Edge.64, and source/version/architecture labels pass. SQLite remains schema 35. This is immutable build identity evidence. Actual installed Edge.65 must independently complete C09 and verify the focused material outcome below Home Assistant navigation, followed by final exact-head whole/source/both-CPU CI, review, scoped cleanup, ordinary merge and destination receipts in PR #151.
+
 ## Superseded immutable Edge.64 build
 
 - Runtime source: `530a609f0a9490bccd7f3f2cd8598ec590689166`.

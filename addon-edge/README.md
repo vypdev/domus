@@ -3,7 +3,7 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
-Edge.64 lets Tasks plan existing Pantry materials for ordinary, fixed and relative
+Edge.65 lets Tasks plan existing Pantry materials for ordinary, fixed and relative
 creation, review per-line usage and explicitly settle pending consumption. Reopening
 retains each completion's earlier usage. **Next closed completion** remains available
 after settlement or original-request recovery, without changing the reopened task.
@@ -14,6 +14,7 @@ navigation, including when a long creation draft remains open. Opening, refreshi
 or paging material choices preserves the earlier usage and next completion being reviewed.
 A temporary history-read failure keeps the selected task and its continuation available for retry.
 A later keyboard action keeps focus when a material control has a pending focus continuation.
+Focused material choices and outcomes stay visible below fixed navigation.
 
 Edge.32 shows the outstanding shopping count and the first 25 rows in Overview.
 Select a row to open the matching item in the shared list in Inventory.
