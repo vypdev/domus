@@ -170,6 +170,14 @@ Installed Edge.66 independently passes the current-cycle/history scenario throug
 
 All 231 Python modules and four compiled UI files match the published archive, normal local/Linux wheel, installed builder and final image. Only `domus/application/task_queries.py` changes from Edge.66; all UI bytes are identical to its installed current-cycle/history qualification. Schema remains 35 and source/version/architecture labels pass. This is build identity, not current installed acceptance. Complete exact final-pin backend/global-per-file coverage, whole source/both-CPU CI, review and native Edge.67 acceptance remain required. The stopped Edge.66 installation remains frozen while its exact cleanup confirmation is pending.
 
+## Preserve the package pin and the bounded writer outcome
+
+The original `529a6ef` backend job `136515952675` finishes 5,631 passes and four failures in 1,770.14 seconds. Three package assertions still pin Edge.65 while the manifest/artifact were advanced to Edge.66; their version, runtime and archive expectations are now explicitly updated to verified Edge.67. The published Edge.3/5 recipes and historical evidence stay frozen. The fourth failure is typed StorageBusy while entering a real SQLite writer in the preferences race. The original hidden SQLite statement/detail is not retained. Coverage consequently misses the revision-conflict statement/branch in member profile commands, and the original 99.99% result is not accepted.
+
+Two independent held-writer SQLite cases reproduce the Conflict-only test assumption; the two ordinary races pass. The observer now records a typed busy losing request, joins both threads, checks that exact original is absent and explicitly invokes only the same key/payload, which conflicts with the committed winner. The winner's original read and replay agree; exactly one receipt, audit and outbox entry remain. Both ordinary races remain, with two added deterministic held-writer variants. The production 250 ms busy timeout, original five-second barrier, real concurrent connections and all single-winner/atomic evidence assertions remain. No production retry or sleep is added. All 88 profile/package tests pass; all 80 profile cases independently cover all 60 statements/eight branches of the actual member profile command module at 100%. Full final-head global/per-file coverage remains required.
+
+These are test/qualification corrections. Immutable Edge.67 application, UI, archive, wheel and pin bytes remain unchanged. The original CI failures and coverage are retained separately; no product failure is waived. A fresh exact-head whole CI and review must qualify the final test-only commit.
+
 ## Superseded immutable Edge.64 build
 
 - Runtime source: `530a609f0a9490bccd7f3f2cd8598ec590689166`.

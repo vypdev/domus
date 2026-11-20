@@ -895,6 +895,28 @@
       "pythonByteIdenticalToEdge65": true,
       "imageId": "sha256:378b5c118dd1a80ca86e2f9a497036591cedcb20ed0d6d072851ae075e3f4c81",
       "status": "Immutable build identity passed; installed current-cycle/history acceptance and exact final-pin full CI/review remain required."
+    },
+    "packageAndWriterObserverCorrection": {
+      "originalHead": "529a6ef8bcba122caf7365b0ee03a09f4ef6289d",
+      "job": 136515952675,
+      "originalPassed": 5631,
+      "originalFailed": 4,
+      "originalSeconds": 1770.14,
+      "package": "Three stale Edge.65 assertions updated to verified Edge.67 version, source and checksum; frozen historical recipes retained.",
+      "writer": "Typed busy entering the SQLite writer; original lower-level statement/detail is not inferred. Two actual held-writer cases reproduce the observer assumption; normal races remain.",
+      "correction": "After both writers finish, explicitly check the same original and retry only that key/payload. Busy loser conflicts; winner original/replay match; exactly one receipt/audit/outbox.",
+      "productionTimeoutMs": 250,
+      "barrierSeconds": 5,
+      "ordinaryAndHeldRaceCases": 4,
+      "directedProfileAndPackagePasses": 88,
+      "scopedCommandCoverage": {
+        "cases": 80,
+        "statements": 60,
+        "branches": 8,
+        "all100": true
+      },
+      "runtimeUIAndPinUnchanged": true,
+      "fullFinalHeadCIAndCoverage": "required"
     }
   }
 }
