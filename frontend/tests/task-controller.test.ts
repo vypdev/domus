@@ -21,7 +21,7 @@ function fixture(catalog?: Pick<InventoryServer, 'read'>) {
   const session = {context, deployment: 'native' as const, access: 'full' as 'full' | 'read_only', serverTime: now, expiresAt: 100000, householdApiAvailable: true};
   const identity = {session: vi.fn(() => read<VerifiedEntrySession | null>(session))};
   const server = {access: vi.fn(() => read<TaskAccess>({householdId: 'home', memberId: 'member-1', canCreate: true, canReviewSchedule: true})),
-    list: vi.fn(() => read({items: [detail], nextCursor: null as string | null})), detail: vi.fn(() => read(detail)),
+    list: vi.fn(() => read({items: [detail], nextCursor: null as string | null})), detail: vi.fn<TaskServer['detail']>(() => read(detail)),
     materialHistory:vi.fn<TaskServer['materialHistory']>(()=>read({items:[],nextCursor:null})), materialCycle:vi.fn<TaskServer['materialCycle']>(),
     original: vi.fn<TaskServer['original']>(() => read(saved)), send: vi.fn<TaskServer['send']>(async () => saved)};
   const journal = new TaskSessionJournal({getItem: key => storage.get(key) ?? null, setItem: (key, value) => {storage.set(key, value);}, removeItem: key => {storage.delete(key);}});
@@ -658,7 +658,7 @@ test('closed-cycle usage is paged explicitly and settles against a fresh intent 
   await f.controller.materialHistory();
   expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home',null,context);
   expect(f.controller.view.materialHistory?.items[0]).toEqual(old);
-  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:null}));
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'later-page'}));
   await f.controller.materialHistory(true); expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home','next-page',context);
   f.server.materialCycle.mockReturnValue(read(old));
   f.server.send.mockResolvedValueOnce({kind:'uncertain'});
@@ -670,6 +670,13 @@ test('closed-cycle usage is paged explicitly and settles against a fresh intent 
   await f.controller.recover(request.key);
   expect(f.server.send).toHaveBeenCalledOnce(); expect(f.controller.view.detail).toEqual(current);
   expect(f.controller.view.materialHistory?.items[0]).toEqual(old);
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('later-page');
+  const later={...old,cycle:{...old.cycle,cycleId:'later-cycle'},
+    materialOutcomes:old.materialOutcomes.map(value=>({...value,cycleId:'later-cycle',intentId:'later-intent'}))};
+  f.server.materialHistory.mockReturnValueOnce(read({items:[later],nextCursor:null}));
+  await f.controller.materialHistory(true);
+  expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home','later-page',context);
+  expect(f.controller.view.materialHistory?.items[0].cycle.cycleId).toBe('later-cycle');
 });
 test.each(['denied','stale','open','unavailable'] as const)('historical usage %s is checked before preparing a command', async kind => {
   const f=fixture(), old=historicalMaterial();
@@ -702,4 +709,35 @@ test('a failed historical read retains current task facts and a retry explicitly
   await f.controller.materialHistory(); expect(f.controller.view.detail).toEqual(current); expect(f.controller.view.notice).toBe('unavailable');
   f.server.materialHistory.mockReturnValueOnce(read({items:[],nextCursor:null})); await f.controller.materialHistory(false);
   expect(f.controller.view.materialHistory?.items).toEqual([]); expect(f.server.send).not.toHaveBeenCalled();
+});
+
+test('a committed historical settlement retains the next closed-cycle page', async () => {
+  const f=fixture(), old=historicalMaterial();
+  const current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));await f.controller.materialHistory();
+  f.server.materialCycle.mockReturnValue(read(old));f.server.send.mockResolvedValueOnce(materialReceipt(pendingMaterialWork()));
+  await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  expect(f.controller.view.records?.[0].stage).toBe('committed');
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('next-closed-cycle');
+  expect(f.controller.view.detail).toEqual(current);
+});
+test.each([false,true])('original recovery cannot attach an unrelated history continuation (different work: %s)', async differentWork => {
+  const f=fixture(), old=historicalMaterial();
+  const current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  const other={...current,occurrenceId:'other-work'};
+  f.server.detail.mockImplementation(id=>read(id==='work-1'?current:other));
+  await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialCycle.mockReturnValue(read(old));f.server.send.mockResolvedValueOnce({kind:'uncertain'});
+  await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+  const request=f.server.send.mock.calls[0][0];
+  await f.controller.select(differentWork?'other-work':'work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[{...old,cycle:{...old.cycle,cycleId:'other-cycle'},
+    materialOutcomes:old.materialOutcomes.map(value=>({...value,cycleId:'other-cycle',intentId:'other-intent'}))}],nextCursor:'other-work-cursor'}));
+  await f.controller.materialHistory();
+  f.server.original.mockReturnValueOnce(read(materialReceipt(pendingMaterialWork())));await f.controller.recover(request.key);
+  expect(f.controller.view.detail?.occurrenceId).toBe('work-1');
+  expect(f.controller.view.materialHistory?.nextCursor).toBeNull();
+  expect(f.controller.view.materialHistory?.items[0].cycle.cycleId).toBe('cycle-1');
+  expect(f.server.send).toHaveBeenCalledOnce();
 });

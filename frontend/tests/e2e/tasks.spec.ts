@@ -118,19 +118,31 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
     for(const colorScheme of ['light','dark'] as const){await page.emulateMedia({colorScheme});await outcomes.screenshot({path:info.outputPath('material-outcomes-'+locale+'-'+colorScheme+'.png')});}
     const readWork=async()=>{const response=await page.request.get(api+'tasks/occurrences/'+oid,{headers});expect(response.ok()).toBe(true);return response.json();};
-    const before=await readWork(), pending=before.materials.find((value:{state:string})=>value.state==='pending_regularization');
+    const before=await readWork(), firstPending=before.materials.find((value:{state:string})=>value.state==='pending_regularization');
     expect(before.work.state).toBe('completed');expect(before.materials.map((value:{state:string})=>value.state).sort()).toEqual(['not_used','pending_regularization','posted']);
-    await write('refill-shortfall',{action:'inventory.intake',product_id:short.product_id,quantity:'5'});
-    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
-    expect((await readWork()).materials.find((value:{intent_id:string})=>value.intent_id===pending.intent_id).state).toBe('pending_regularization');
-    await tasks.getByLabel(t('Reason','Motivo'),{exact:true}).fill('QA 150 repeat while keeping original pending usage');
-    await activate(tasks.getByRole('button',{name:t('Reopen task','Reabrir tarea'),exact:true}));
-    await expect(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true})).toBeVisible();
+    const reopen=async(reason:string)=>{
+      await tasks.getByLabel(t('Reason','Motivo'),{exact:true}).fill(reason);
+      await activate(tasks.getByRole('button',{name:t('Reopen task','Reabrir tarea'),exact:true}));
+      await expect(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true})).toBeVisible();
+    };
+    await reopen('QA 150 retain the first pending completion');
+    await tasks.getByLabel(used.name,{exact:true}).fill('0');await tasks.getByLabel(unused.name,{exact:true}).fill('0');await tasks.getByLabel(short.name,{exact:true}).fill('1');
+    await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    const second=await readWork(), secondPending=second.materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect(second.cycle.cycle_id).not.toBe(before.cycle.cycle_id);expect(secondPending.intent_id).not.toBe(firstPending.intent_id);
+    await reopen('QA 150 retain the second pending completion');
     const reopened=await readWork();expect(reopened.work.state).toBe('available');expect(reopened.cycle).toBeNull();expect(reopened.materials).toEqual([]);
+    await write('refill-shortfall',{action:'inventory.intake',product_id:short.product_id,quantity:'5'});
     await activate(tasks.getByRole('button',{name:t('Review earlier usage','Revisar consumos anteriores'),exact:true}));
     await expect(tasks.getByRole('heading',{name:t('Earlier material usage','Consumos anteriores'),exact:true})).toBeFocused();
     outcomes=tasks.locator('#material-history-heading').locator('..').locator('domus-task-material-outcomes');
     await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    const pageResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/material-history?limit=1',{headers});expect(pageResponse.ok()).toBe(true);
+    const firstPage=await pageResponse.json();expect(firstPage.items).toHaveLength(1);expect(firstPage.next_cursor).toBeTruthy();
+    const pending=firstPage.items[0].materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect([firstPending.intent_id,secondPending.intent_id]).toContain(pending.intent_id);
+    const postedBefore=firstPage.items[0].materials.filter((value:{state:string})=>value.state==='posted').length;
     await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('closed-material-usage-'+locale+'.png')});
     let settlements=0,settlementKey='',settlementBody:Record<string,any>|null=null;
     await page.route(api+'tasks/occurrences/'+oid+'/materials/'+pending.intent_id+'/settlement',async route=>{
@@ -142,14 +154,42 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await page.route(api+'tasks/requests/task.material.settle/'+settlementKey,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});
       expect(response.status()).toBe(200);settlementOriginals.push(await response.json());await route.fulfill({response});});
     await activate(tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).first());
-    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(2);
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(postedBefore+1);
     expect(settlements).toBe(1);expect(settlementOriginals).toHaveLength(1);expect(settlementOriginals[0].operation_id).toBe(settlementBody!.operation_id);
-    const after=await readWork();expect(after).toEqual(reopened);
+    expect(await readWork()).toEqual(reopened);
     const historyResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/materials?cycle_id='+pending.cycle_id,{headers});expect(historyResponse.ok()).toBe(true);
-    const history=await historyResponse.json();expect(history.cycle.cycle_id).toBe(before.cycle.cycle_id);expect(history.cycle.closed_at).not.toBeNull();
+    const history=await historyResponse.json();expect(history.cycle.cycle_id).toBe(pending.cycle_id);expect(history.cycle.closed_at).not.toBeNull();
     expect(history.materials.find((value:{intent_id:string})=>value.intent_id===pending.intent_id)).toMatchObject({line_id:pending.line_id,confirmed_quantity:'1',movement_id:settlementBody!.result.material.movement_id});
+    const moreHistory=tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true});
+    await expect(moreHistory).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('recovered-material-continuation-'+locale+'.png')});
+    await activate(moreHistory);
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    const laterResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/material-history?limit=1&cursor='+encodeURIComponent(firstPage.next_cursor),{headers});expect(laterResponse.ok()).toBe(true);
+    const laterPage=await laterResponse.json();expect(laterPage.items).toHaveLength(1);expect(laterPage.next_cursor).toBeNull();
+    const laterPending=laterPage.items[0].materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect(laterPending.intent_id).not.toBe(pending.intent_id);
+    expect(new Set([pending.cycle_id,laterPending.cycle_id])).toEqual(new Set([before.cycle.cycle_id,second.cycle.cycle_id]));
+    const laterPosted=laterPage.items[0].materials.filter((value:{state:string})=>value.state==='posted').length;
+    let laterSends=0,laterBody:Record<string,any>|null=null;
+    await page.route(api+'tasks/occurrences/'+oid+'/materials/'+laterPending.intent_id+'/settlement',async route=>{
+      laterSends++;const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);laterBody=await response.json();await route.fulfill({response});});
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(laterPosted+1);
+    expect(laterSends).toBe(1);expect(laterBody!.result.material.movement_id).not.toBe(settlementBody!.result.material.movement_id);expect(await readWork()).toEqual(reopened);
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('second-closed-material-settled-'+locale+'.png')});
     await info.attach('creation-original',{body:JSON.stringify({committed:creationBody,original:originals[0]}),contentType:'application/json'});
     await info.attach('settlement-original',{body:JSON.stringify({committed:settlementBody,original:settlementOriginals[0]}),contentType:'application/json'});
+    await info.attach('closed-material-pages',{body:JSON.stringify({firstPage,laterPage,laterBody}),contentType:'application/json'});
+    // Explicitly retire three resolved originals; unconfirmed entries are never evicted.
+    const dismiss=tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true});
+    const savedRequests=tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')});
+    for(let index=0;index<3;index++){
+      await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+      await activate(savedRequests);await expect(dismiss).toHaveCount(8-index);await activate(dismiss.first());
+    }
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+    await activate(savedRequests);await expect(dismiss).toHaveCount(5);
     outcomes=tasks.locator('domus-task-material-outcomes').first();
     const policyReply=await page.request.get(api+'tasks/policy',{headers}), policy=await policyReply.json();
     await write('separate-recording-policy',{expected_revision:policy.revision,rules:{...policy.rules,material_recording:'separate_recording'}},'tasks/policy','put');

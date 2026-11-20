@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "fb67323bfda4412132218222bd9b91511d31edff5b194626e731da214c76d44e",
-    "assets/index-BiUg4l6U.js": "a7d5f7dc7dd9a94cd630f5a2a8bbd14fff0999a355fcfe18f8d032ed2875ab6f",
+    ".vite/manifest.json": "e86b4b61dabdcf31524b090d8a4ddc4e88d305aefbd7003d8d7d7fe6f1cd91bb",
+    "assets/index-C9a5kfNV.js": "57fd92ee352fb8793c1ad369d193baddca60c0bee17140893e69fe48fc89e408",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "57eeaa5a6a003aa4da769ebaac5f982a6a861d2e86f9cd139e4d477b178f7443"
+    "index.html": "b35392c986153504107ef88aba7c1fc57e69bbdcfd9ef763880f84466a577ee4"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -439,7 +439,7 @@
     "haUiPublicationRun": 44699421594,
     "haUiPublicationAttempt": 6,
     "fivePublishedArchiveHashesVerified": true,
-    "frontendTests": 2048,
+    "frontendTests": 2051,
     "frontendRuntimeFiles": 110,
     "frontendCoverage": "100% globally and per file for all four metrics",
     "backendTests": 5635,
@@ -448,7 +448,7 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Published corrected runtime f5eb3b2; complete backend (5,635) and frontend (2,048) pass. The 121 baseline and four expanded source cases, plus 46 catalog cases, pass across the recorded campaigns. Final-head CI must execute the complete inventory; both CPU and installed acceptance remain pending.",
+    "sourceState": "Continuation and independent accepted-fixture digest corrected. All 2051 frontend tests pass at 100% in all four metrics; the four expanded two-cycle journeys reproduce the old failure then pass after rebuild. Backend runtime unchanged from 5635 complete pass. Final-head whole CI, both new CPU images and installed acceptance remain pending.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "runtimeSource": "f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9",
     "immutableCandidate": {
@@ -461,11 +461,11 @@
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
       "imageId": "sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535",
-      "status": "Build qualified; both CPU functional/browser campaigns and separately installed acceptance pending."
+      "status": "Superseded by continuation correction; native59 retains two exact closed pending cycles for upgrade acceptance."
     },
     "reviewCorrections": {
       "pullRequest": 151,
-      "frontendTests": 2048,
+      "frontendTests": 2051,
       "frontendCoverage": "100% all four metrics globally and per file across all 110 runtime files",
       "directedBackendMaterialTests": 117,
       "closedCycleHistory": "explicit bounded read; original cycle and intent revision; current permission on settlement",
@@ -475,7 +475,16 @@
       "backendBranches": 4876,
       "backendIndependentGate": "passed",
       "localDraftEditing": "Same focused field retained; no new household/session proof reads; current expiry still retires drafts.",
-      "plannedCompletionLocale": "Exact canonical quantity rendered with comma in Spanish; unit singular/plural matches quantity."
+      "plannedCompletionLocale": "Exact canonical quantity rendered with comma in Spanish; unit singular/plural matches quantity.",
+      "closedCycleContinuation": "Same-work, same-displayed-cycle continuation survives direct settlement and original GET recovery; unrelated work/page continuation is not inherited.",
+      "acceptedFixtureIdentity": "Bundle bytes and provenance independently equal the literal accepted Edge57 SHA256.",
+      "twoCycleMaterialJourneys": {
+        "redOnVerifiedEdge59": 4,
+        "greenAfterRebuild": 4,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0
+      }
     },
     "runtimeSourceBeforeReview": "514258c9adbd54d938e28fd65a901764a89799cc",
     "sourceEntryCampaigns": {

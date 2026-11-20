@@ -1,6 +1,6 @@
 # Task material workflow qualification (#150)
 
-Status: implementation and qualification in progress. No complete acceptance, installed Edge result or merge is claimed here yet.
+Status: implementation and qualification in progress. Partial installed observations are recorded below; complete acceptance and merge remain pending.
 
 ## Scope and preserved contracts
 
@@ -35,7 +35,13 @@ The full PR review also identified household proof refreshes on each local mater
 
 The Edge.58 build below was never installed or accepted. It is superseded by these runtime corrections. Its two Docker images, stopped wheel-only container (no volumes), source archive and wheel were retired after preserving original build/identity receipts; accepted Edge.57 and rollback Edge.56 remain protected. A newly numbered immutable candidate must pass both CPU campaigns and installed acceptance before merge.
 
-## Immutable Edge.59 build
+## Follow-up review: closed-cycle continuation and fixture identity
+
+Two further valid review findings are corrected before acceptance. Historical settlement now retains the displayed page's continuation when the refreshed cycle belongs to the same work and page. This applies both to a direct committed reply and to original GET recovery after a lost reply. Recovery from a different work or an unrelated cycle does not inherit that page's continuation. The compatibility-fixture check now compares both the original bundle bytes and their provenance against the independently accepted literal digest; editing both adjacent files cannot redefine the accepted identity.
+
+All 2,051 frontend tests pass, with all 110 runtime files and all four metrics at 100% (8,795 statements, 7,884 branches, 1,915 functions and 6,387 lines). Both TypeScript checks and the independent coverage/fixture checks pass. Backend runtime bytes are unchanged since the complete 5,635-test pass. The existing four material browser journeys now exercise two closed pending completions, recovery of one settlement, continuation to the other cycle, a distinct second settlement and unchanged reopened work. All four reproduce the missing continuation against the independently verified Edge.59 wheel, then pass against the rebuilt correction in 49.9 seconds with zero retries, skipped or flaky cases. English uses keyboard input and Spanish uses actual 390 px touch in both native and standalone compositions. Original reports, representative traces and continuation screenshots are retained. A new immutable installed candidate and final-head whole CI remain required; the source inventory stays 125 and each image inventory stays 70.
+
+## Superseded Edge.59 build and partial native qualification
 
 - Runtime source: `f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9`.
 - Source archive SHA-256: `f78570f13f0d7679d21835ed361757fcb69052024c186e24b7300520b8eea82a`.
@@ -43,6 +49,10 @@ The Edge.58 build below was never installed or accepted. It is superseded by the
 - Local Linux ARM64 image: `sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535`.
 
 All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. The independently built normal local and Linux wheel bytes also match. Source/version/architecture labels pass, and SQLite stays schema 35. The installer pin changes only packaging, eight package-test expectations and qualification records; it does not change the qualified runtime bytes. This establishes immutable build identity, not either CPU functional/browser acceptance or the separately installed Home Assistant test. Those and final-head CI/review remain required before merge.
+
+At packaging head `515d47a9007dff5dff93c5524a7864fcc810ad1a`, the official frontend job subsequently passed the complete 125 entry journeys and 46 catalog cases, with zero skipped, flaky or unexpected cases and all four coverage metrics at 100%. Its original artifact/report is retained separately from the earlier split local campaigns. The backend and both image jobs also passed. The original amd64 and ARM64 reports each confirm 70 passing actual-image journeys, with zero skipped, flaky or unexpected cases. These results precede the continuation correction and do not qualify its final head.
+
+Edge.59 was independently installed and its native version verified in Home Assistant. Its synthetic household has an ordinary three-material task with exact decimal planning, posted, unused and insufficient-stock outcomes, two subsequently reopened completions and distinct unchanged intent identities. English keyboard editing preserves focus; 390 px Spanish completion was exercised by actual emulated touch, with readable light/dark outcomes and no horizontal overflow. Refill leaves both historical intents pending. A later coordinate touch intended for reopening instead saved the synthetic task's point policy; the cause was not independently established. The household policy was restored and verified before semantic-keyboard reopening. This does not claim successful touch reopening. The same synthetic data is retained for the next candidate's upgrade/continuation test. Edge.59 is superseded by the follow-up review corrections above and is not accepted for merge.
 
 ## Superseded unaccepted Edge.58 build
 

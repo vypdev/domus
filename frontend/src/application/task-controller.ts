@@ -170,7 +170,7 @@ export class TaskController {
       this.update({page: prior.page});
       if (this.state.readOnly) {this.update({notice: 'read_only'}); return;}
       if ('occurrenceId' in command) this.update({detail: await this.read(this.server.detail(command.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation)});
-      if (command.action === 'task.material.settle') await this.materialFacts(command.payload.cycle_id, generation);
+      if (command.action === 'task.material.settle') await this.materialFacts(command.payload.cycle_id, generation, prior);
       if (!this.accepted(command)) {
         if (this.state.notice !== 'conflict' && this.state.notice !== 'category_unavailable') this.update({notice: 'action_not_allowed'});
         if (command.action === 'task.transition') {
@@ -217,14 +217,16 @@ export class TaskController {
       return;
     }
     await this.facts(generation, occurrence);
-    if (command.action === 'task.material.settle') await this.materialFacts(command.payload.cycle_id, generation);
+    if (command.action === 'task.material.settle') await this.materialFacts(command.payload.cycle_id, generation, prior);
   }
-  private async materialFacts(cycleId: string, generation: number): Promise<void> {
+  private async materialFacts(cycleId: string, generation: number, prior: State): Promise<void> {
     const work = this.state.detail!;
     if (work.currentCycleId === cycleId) return;
     const value = await this.read(this.server.materialCycle(work, this.state.access!.householdId, cycleId, this.state.session!.context), generation);
     if (value.closedAt === null) throw new EntryReadError('invalid_response');
-    this.update({materialHistory:Object.freeze({items:Object.freeze([value]),nextCursor:null})});
+    const history = prior.detail?.occurrenceId === work.occurrenceId ? prior.materialHistory : null;
+    const nextCursor = history?.items.some(item => item.cycle.cycleId === cycleId) ? history.nextCursor : null;
+    this.update({materialHistory:Object.freeze({items:Object.freeze([value]),nextCursor})});
   }
   materialHistory(more = false): Promise<void> {
     const selected = this.state.detail, cursor = more ? this.state.materialHistory?.nextCursor : null;
