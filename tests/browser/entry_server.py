@@ -558,6 +558,9 @@ def main() -> None:
     parser.add_argument("--origin-port", type=int)
     args = parser.parse_args()
     image = os.environ.get("DOMUS_BROWSER_IMAGE")
+    print(
+        f"fixture_bootstrap begin mode={args.mode} image={bool(image)}", file=sys.stderr, flush=True
+    )
     if image:
         from image_bridge import ImageBridge
 
@@ -572,6 +575,7 @@ def main() -> None:
     else:
         fixture = Fixture(args.mode, args.port, args.origin_port)
     try:
+        print(f"fixture_bootstrap serving mode={args.mode}", file=sys.stderr, flush=True)
         uvicorn.run(
             observe_http(fixture, args.mode, PREFIX),
             host="127.0.0.1",

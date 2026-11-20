@@ -130,6 +130,8 @@ After both old CPU producers terminate, the corrected single-file fixture also p
 
 The a298 review covers all 68 changed files in ten completed partitions and reports one six-decimal finding. It is source-verified as a false positive: `[0-9]{0,5}[1-9]` accepts six fractional digits. The actual frontend accepts `0.123456` and normalizes `0,123456` without rounding; the backend independently accepts six and rejects seven. All 234 existing task/domain/planner/component tests pass, including six-place creation plans and EN/ES completion controls. The [source-linked proof](https://github.com/vypdev/domus/pull/151#discussion_r4645917160) and normal thread resolution are separate from the genuine image-fixture dependency correction. No product quantity contract, guidance or runtime changes for that finding.
 
+The same a298 Linux frontend also passes all 2,070 unit cases and complete coverage, then fails its fixture readiness before any source journey. That host-side startup cause is not established by the CI log, which retains no underlying traceback; it is not inferred from the separate image-copy regression. The fixture is now self-contained in both targets. Each mode also retains its startup stderr under `frontend/test-results/entry-server-logs/`, with safe begin/serving milestones, so an import or initialization failure remains available even when Playwright cannot finish startup. Existing startup/test deadlines, original errors and the complete inventories remain gates.
+
 ## Superseded immutable Edge.64 build
 
 - Runtime source: `530a609f0a9490bccd7f3f2cd8598ec590689166`.
