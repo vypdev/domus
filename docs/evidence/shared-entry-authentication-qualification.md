@@ -62,3 +62,9 @@ Only Edge installation is authorized. Stable/distribution acceptance remains ope
 - Local final ARM64 image: `sha256:fe9dfa9521a3737408a8ac7ebb97de05c1b7c884c733764958943f4f3da286ca`.
 - All 231 Python modules and four UI resources match the Git/archive, wheel, Linux builder and final local image; the normal local and Linux wheels match byte for byte. Version/source labels are checked independently.
 - Storage schema remains 35. This local ARM64 inspection is separate from both CI architecture campaigns and the Supervisor-installed candidate, which remain pending.
+
+The first required wheel gate detected that the current UI evidence map in
+[task-navigation-integration.json](task-navigation-integration.json) still described Edge.56.
+The map is now updated from the independently matched Edge.57 bytes, with the previous map retained.
+The complete wheel/asset/license and fixture-exclusion guard passes locally. This evidence correction
+changes no runtime, archive, wheel or candidate version; the original two CI job logs are retained.

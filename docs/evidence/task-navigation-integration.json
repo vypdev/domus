@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests.",
   "actualProductFiles": {
-    ".vite/manifest.json": "4cbe45655f8d01448745d65ff235df5645464430192d5b95059f8ffa108525f2",
+    ".vite/manifest.json": "8f5d87774c27251fc4131850032e3b13e4c65dd122132c9dab6a28caf2ab5ccf",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-_Wife6Ef.js": "159d5ad4f52250dc9a68aafcbf2ee418b97ad7504684869a36fdeec751ee2fb6",
-    "index.html": "6534890312bfa5f4c7a2b8a9b5705eba0be7cd5d38982544dfe743ca99e66dd2"
+    "assets/index-DBLG-WGl.js": "3d2859452f2495cbce0025559d5f46b9ac2fe5aa3eb71409f7cb08abb93f23fd",
+    "index.html": "1d17cd326424ec6b6c918b288fc14d96aebff53181f83da6aa39c3924a5585aa"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -328,5 +328,96 @@
     },
     "scope": "Accepted Edge.55 runtime before retiring retained Inventory facts after current access rejection.",
     "evidence": "local-barcode-qualification.md"
+  },
+  "beforeSharedEntryAuthentication": {
+    "actualProductFiles": {
+      ".vite/manifest.json": "4cbe45655f8d01448745d65ff235df5645464430192d5b95059f8ffa108525f2",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-_Wife6Ef.js": "159d5ad4f52250dc9a68aafcbf2ee418b97ad7504684869a36fdeec751ee2fb6",
+      "index.html": "6534890312bfa5f4c7a2b8a9b5705eba0be7cd5d38982544dfe743ca99e66dd2"
+    },
+    "localValidation": {
+      "commit": "9a10d8114869be754962953903e773fe8e12c723",
+      "frontendTests": 1513,
+      "frontendCoverage": "100% of all four metrics globally and per authored file",
+      "compiledBrowserTests": 101,
+      "wheelAssetAndLicenseVerification": "passed",
+      "imageBrowserJourneysPerArchitecture": 46,
+      "images": {
+        "amd64": "sha256:927f67d3ab6cd725ad3e2cef703220fd28d9b71dc5e16da544a489a89120e9d3",
+        "aarch64": "sha256:f3ab2379a5b8103354cdb3adc539cf8a04b79bd77f3802be3e09fc732968efa8"
+      },
+      "imageScope": "Local source images and exact package/listener bytes in both CPUs. Browser fixtures exercised Ingress and standalone, English and Spanish, native links, keyboard focus, Back/Forward and current-authorized task recovery.",
+      "managedBranchReconciliation": "https://github.com/vypdev/domus/actions/runs/42284834425/job/128122841461",
+      "scope": "These observations cover the navigation integration source only. Later lifecycle changes require independent current-head evidence.",
+      "actualProductFiles": {
+        ".vite/manifest.json": "76044b3a0e114bbde7a14d4e3169710ce681f6ce444dda188690064f8fd9bf00",
+        "assets/index-CHPRUong.js": "11e23c908c896da224b72a9cc03b841bbab6da89c392f86bb9d09f8faeb47e6c",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "index.html": "0cbcf5d61efb00d3afabf6204ce8480d4648a1d0eb4e8556d0730c90a437878d"
+      }
+    },
+    "source": "Previous current UI map at merged base2ba (Edge56). localValidation is older navigation history and remains unchanged."
+  },
+  "sharedEntryAuthentication": {
+    "issue": 146,
+    "pullRequest": 147,
+    "runtimeSource": "272b5e8436588b5fab090622d19298371a6dc33c",
+    "candidateVersion": "0.0.0-edge.57",
+    "archiveSHA256": "352f69ca646ad276454e6bcb442fa8a3fa1f81826e55bf3daeb3a7c8ba957aad",
+    "wheelSHA256": "f5a1075d1313eebc01534b8a6aba6116e27c6b15bb2ae7a5b04d31962fcc2ea0",
+    "sourceBrowser": {
+      "startTime": "2026-11-20T02:27:43.327Z",
+      "duration": 366227.126,
+      "expected": 121,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "catalogBrowser": {
+      "startTime": "2026-11-20T02:29:33.213Z",
+      "duration": 29807.200999999997,
+      "expected": 45,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "unitCases": 1951,
+    "coverageFiles": 106,
+    "coverage": {
+      "lines": {
+        "total": 6115,
+        "covered": 6115,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 8375,
+        "covered": 8375,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1813,
+        "covered": 1813,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 7404,
+        "covered": 7404,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branchesTrue": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "qualification": "docs/evidence/shared-entry-authentication-qualification.md",
+    "correction": "The first source/package CI attempts caught this current UI evidence map still describing Edge56. Update it to the independently compared Git/archive, local/Linux wheel and final57 image bytes; retain the original failing job logs. Runtime and immutable candidate remain unchanged.",
+    "boundary": "Current local proof; required same-head CI and installed candidate acceptance remain separate."
   }
 }
