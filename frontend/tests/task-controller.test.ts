@@ -573,8 +573,19 @@ test.each(['missing','cycle','denied','posted','known_quantity','other_work'])(
     if (kind==='denied') current={...current,allowedActions:[]};
     if (kind==='posted') current={...current,materialOutcomes:current.materialOutcomes!.map(value=>({...value,state:'posted' as const}))};
     f.server.detail.mockReturnValue(read(current)); await f.controller.refresh(); await f.controller.select(current.occurrenceId);
+    if(kind==='cycle')f.server.materialCycle.mockReturnValue(read({
+      cycle:{...current.cycle!,cycleId:'other-cycle',performedAt:'50'},closedAt:'75',
+      materialOutcomes:current.materialOutcomes!.map(value=>({...value,cycleId:'other-cycle',intentId:'other-intent'})),
+      allowedActions:['materials.settle'],
+    }));
     await f.controller.settleMaterial(kind==='other_work'?'elsewhere':current.occurrenceId,kind==='missing'?'unknown':'intent-1',
       kind==='cycle'?'other-cycle':'cycle-1',revisionValue('7'),...kind==='known_quantity'?['1','Initial recording'] as const:[]);
+    if(kind==='cycle'){
+      expect(f.controller.view.notice).toBe('conflict');
+      expect(f.server.materialCycle).toHaveBeenLastCalledWith(current,'home','other-cycle',context);
+      expect(f.controller.view.materialHistory?.items[0]).toMatchObject({cycle:{cycleId:'other-cycle'},
+        materialOutcomes:[{intentId:'other-intent',cycleId:'other-cycle'}]});
+    }
     expect(f.server.send).not.toHaveBeenCalled(); expect(f.entropy.requestKey).not.toHaveBeenCalled();
   });
 test('initial missing quantity recording uses explicit zero and reason through the existing correction command', async () => {

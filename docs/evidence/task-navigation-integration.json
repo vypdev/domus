@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "8f5c096ee4ca02e11b83751d79782b1785c44de4306c1e21e40933ed9185f440",
+    ".vite/manifest.json": "33f919694394f10251d2051a202daf6c35fc2f2563d86cf995e581aa5d7342c0",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-CpMbFZoj.js": "c9f5ef260d3d57fd6feb886dd27355f30190124149a0dd26a701bc3a9b4216a7",
-    "index.html": "44d9e535e10755a21db8b1d2cec7e575ed5585d61b7a9cac951112202f493f9c"
+    "assets/index-D_4X6e61.js": "2c5991f6e2e11640e8ad64855d31096f2d0380345127406a3254dafb24181bcb",
+    "index.html": "474234aaae0ad24f0bcc19a0fa81136a1798a6956bbb56a6b6bf87d0591fc359"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -998,7 +998,86 @@
       "strictTypes": "both pass",
       "independentCoverageAndAcceptedFixture": "2/2 pass",
       "wheelUiEquality": "four files match actual wheel",
-      "authoredPythonUnchangedFrom": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d"
+      "authoredPythonUnchangedFrom": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d",
+      "precedingUIInventory": {
+        "candidate": "0.0.0-edge.67",
+        "runtimeSource": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d",
+        "packagingHead": "b4410b076b315cd05277f92e2a153d4cc2490d5b",
+        "files": {
+          ".vite/manifest.json": "8f5c096ee4ca02e11b83751d79782b1785c44de4306c1e21e40933ed9185f440",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "assets/index-CpMbFZoj.js": "c9f5ef260d3d57fd6feb886dd27355f30190124149a0dd26a701bc3a9b4216a7",
+          "index.html": "44d9e535e10755a21db8b1d2cec7e575ed5585d61b7a9cac951112202f493f9c"
+        },
+        "historicalOnly": true
+      },
+      "currentUIInventoryCorrection": {
+        "failedHead": "db76d144326a64d606275a8379491d91e7089aa3",
+        "failedJob": 136574884334,
+        "containerPassed": 51,
+        "containerFailed": 1,
+        "browserExecuted": 0,
+        "cause": "Current document inventory still recorded preceding67 UI bytes. Actual amd64 returned set equals68 immutable source/artifact/wheel/finalARM64 exactly. Preserve previous67 map as historical; update current map without changing the live-byte assertion.",
+        "packageGuardRed": {
+          "passed": 7,
+          "failed": 1
+        },
+        "currentFiles": {
+          "index.html": "474234aaae0ad24f0bcc19a0fa81136a1798a6956bbb56a6b6bf87d0591fc359",
+          ".vite/manifest.json": "33f919694394f10251d2051a202daf6c35fc2f2563d86cf995e581aa5d7342c0",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "assets/index-D_4X6e61.js": "2c5991f6e2e11640e8ad64855d31096f2d0380345127406a3254dafb24181bcb"
+        },
+        "runtimeUiPinUnchanged": true,
+        "imageDeliveryRecheck": {
+          "passed": 1,
+          "durationSeconds": 4.36,
+          "actualImage": "sha256:b296a0aaea746400bf3a5592f5e397d382df022f9616d8d3b87e93f8f7ebd2f8"
+        },
+        "packageGuardGreen": 8,
+        "allSuccessorHeadGates": "required; previous failed product campaign cancelled, no failure waived",
+        "actualWheelAcceptance": "passed",
+        "rootPolicy": {
+          "tests": 42,
+          "modules": 2,
+          "allFourMetrics": 100
+        }
+      },
+      "installed68": {
+        "status": "PASS; stopped; fresh exact permanent-cleanup answer pending",
+        "runtime": "1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180",
+        "packaging": "db76d144326a64d606275a8379491d91e7089aa3",
+        "household": "Domus QA 150 Edge68",
+        "products": 1,
+        "tasks": 1,
+        "completions": 2,
+        "reopenings": 2,
+        "realTouch390pxSpanish": true,
+        "failedHistoricalRead": "Only exact own-occurrence GET; scope cleared before retry. Complete request window has no writes; same history/cursor remains.",
+        "deliberateRetryPosts": 1,
+        "sameHistoricalCycleAndPerformedReopenedTimes": true,
+        "otherPendingHistoryReachedByTouch": true,
+        "finalStock": [
+          "0",
+          "0",
+          "0"
+        ],
+        "movementRows": 2,
+        "movement": "domus_8TITHGz1EQi4n86G5gpjHJRPkaMoIy5v",
+        "occurrence": "domus_hwrEYYqHqpl7OiiPTqiTCegyre6OF2xg",
+        "overridesRestored": true,
+        "limitations": "No native role-change or lost-write-reply claim. Those boundaries are independently source-qualified."
+      },
+      "wrongCycleSelectorObserver": {
+        "finding": 4648108884,
+        "reviewHead": "db76d144326a64d606275a8379491d91e7089aa3",
+        "red": "1actual selector-conflict assertion fails with unavailable before fixture correction",
+        "fix": "Valid earlier closed-cycle response/different intent; assert requested cycle, selector conflict and no key/send instead of exiting on undefined mock.",
+        "allFrontendTests": 2087,
+        "allRuntimeModules": 110,
+        "allFourCoverageMetrics": 100,
+        "runtimeUiPinUnchanged": true
+      }
     }
   }
 }

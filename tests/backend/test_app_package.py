@@ -156,6 +156,10 @@ def test_edge_artifact_declares_exact_reviewed_runtime_without_rebinding_histori
     for field in ["sourceArchiveSHA256", "wheelSHA256"]:
         assert re.fullmatch("[a-f0-9]{64}", artifact[field])
     assert len(artifact["pythonFiles"]) == 231 and len(artifact["uiFiles"]) == 4
+    current_ui = json.loads((ROOT / "docs/evidence/task-navigation-integration.json").read_text())[
+        "actualProductFiles"
+    ]
+    assert current_ui == artifact["uiFiles"]
     for name, digest in artifact["pythonFiles"].items():
         assert re.fullmatch(r"domus/(?:[A-Za-z0-9_]+/)*[A-Za-z0-9_]+\.py", name)
         assert re.fullmatch("[a-f0-9]{64}", digest)
