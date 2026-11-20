@@ -1,6 +1,6 @@
 # Task material workflow qualification (#150)
 
-Status: implementation and qualification in progress. Partial installed observations are recorded below; complete acceptance and merge remain pending.
+Qualification snapshot: source and native Edge.60 observations are recorded below. Final exact-head CI/review, scoped cleanup and merge receipts belong to [PR #151](https://github.com/vypdev/domus/pull/151); they remain gates and are not implied by an earlier build or test report.
 
 ## Scope and preserved contracts
 
@@ -48,7 +48,17 @@ All 2,051 frontend tests pass, with all 110 runtime files and all four metrics a
 - Wheel SHA-256: `97f358d6d76a30b47ca062f479aec7c3fc639694387acdcc0034cdea3e38aff2`.
 - Local Linux ARM64 image: `sha256:24281d34e20ce4ea60871daeb856962984ab3e456df83ebb827f4fd8369e6156`.
 
-All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. Normal local and Linux wheel bytes match independently; source, version and architecture labels pass. SQLite stays schema 35. This is build identity evidence. Final-head whole CI/review, both new CPU functional/browser campaigns and native upgrade acceptance remain required before merge. The existing synthetic Edge.59 household, products and two closed pending cycles are reserved for the same-installation upgrade test.
+All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. Normal local and Linux wheel bytes match independently; source, version and architecture labels pass. SQLite stays schema 35. These comparisons establish build identity. Final-head whole CI/review, both CPU functional/browser campaigns and installed acceptance are separate gates. The native upgrade below uses the retained synthetic Edge.59 household, products and two closed pending cycles.
+
+## Installed Edge.60 qualification
+
+Home Assistant independently reported installed version `0.0.0-edge.60` after upgrading the existing stopped synthetic Edge.59 installation. The household, product units, stock and both closed cycles' original intent identities survived. Before either deliberate settlement, Soap still had 13.75 mL, Cleaner five pieces and Tea five pieces, and both old intents remained pending. English keyboard settlement of the first cycle retained **Next closed completion**. Spanish settlement on the next page posted the distinct second intent while the current task remained reopened/available. Soap ended at 7.75 mL, Cleaner at four pieces and unused Tea at five pieces.
+
+Native fixed creation stored two planned Cleaner pieces. Both materialized fixed occurrences retained that plan. Relative creation stored 1.25 mL of Soap, and its first materialized task displayed the exact Spanish `1,25` planned quantity. Each typed decimal character retained focus. The relative creation used actual emulated touch on the visible mobile submit button, with fresh button/frame bounds. These scheduled cases used a second fresh tab in the same dedicated group, retaining every original request in the recovery tab; no journal entry was discarded to make room. Native scheduled completion/successor consumption is not claimed here: the 48 real HTTP scheduled-creation cases separately qualify those server effects in both compositions.
+
+At 390 by 844 CSS pixels, main client and scroll widths both measured 390. The material editor and policy card were checked with visible focus in light and dark themes. Immediate captures during theme changes sample the card's documented 300 ms background transition; subsequent same-task computed colors and original screenshots verify its settled readable appearance. The earlier Edge.59 coordinate-touch mistake and its restored household-policy state remain recorded in the Edge.59 section; it is not represented as successful touch reopening.
+
+The app was stopped after qualification, and temporary touch/theme/viewport overrides were restored. Private screenshots and original native receipts remain local. Final current-head source/image CI, review with no valid findings, authorized removal of this synthetic installation/data/source and normal merge/destination verification remain required. Earlier Edge.59 CPU reports are not substituted for the Edge.60 image gates.
 
 ## Superseded Edge.59 build and partial native qualification
 
@@ -84,17 +94,17 @@ Local entry browser fixtures share ports 56174 and 56175 with Mac image campaign
 
 ## Case evidence map
 
-This table maps the selected case identities to executable checks. A source check does not substitute for the pending deployed acceptance in C09.
+This table maps the selected case identities to executable checks. Source checks and the separately deployed observations in C09 remain distinct evidence.
 
 | Selected cases | Concrete evidence and remaining qualification |
 | --- | --- |
 | C01, C02 | `frontend/tests/task-material-planning.test.ts` exercises title-only/no-read creation, later pages, exact zero and decimal input, duplicate rejection and the 32-line bound. `frontend/tests/tasks.test.ts` and the existing protected material HTTP cases check the canonical command and server validation. |
 | C03, C10 | `frontend/tests/task-material-components.test.ts` checks separate posted, unused and pending results with server-owned unit/source labels. `tests/backend/test_task_material_http.py` exercises actual completion, replay and immutable original snapshots in both HTTP compositions. All four complete source material journeys pass with the published select correction. |
-| C04 | `tests/backend/test_schedule_creation_http.py` covers both creation mappings, exact current-authorized originals, and initial/successor snapshots without repeated material effects. `frontend/tests/e2e/tasks.spec.ts` creates fixed piece and relative decimal plans through the interface in the passing complete source campaign. Both image campaigns remain required. |
+| C04 | `tests/backend/test_schedule_creation_http.py` covers both creation mappings, exact current-authorized originals, and initial/successor snapshots without repeated material effects. The expanded source journeys create fixed piece and relative decimal plans. Installed Edge.60 independently preserves two fixed occurrence plans and the first relative decimal plan; native scheduled consumption is not inferred. Both final image campaigns remain gates. |
 | C05 | Planner retirement and denied-choice tests, the catalog-read revocation HTTP test, scheduled-original current-grant tests and the settlement authorization tests distinguish catalog discovery, linking, task-scoped actual use and current original disclosure. |
 | C06, C07 | Scheduled late-write rollback/retry, corrupt durable-proof rejection, real adapter restart and actual saved-state activation in `tests/backend/test_schedule_creation_http.py`; retained historical settlement recovery in `tests/backend/test_task_material_settlement.py`; exact frozen requests and the actual preceding journal/controller rollback cases in `frontend/tests/task-journal.test.ts`. |
 | C08 | EN/ES component tests and all four passing native/standalone source journeys cover keyboard, Spanish touch, retained drafts, failed choice reads and both themes using published ha-ui next.4. `frontend/tests/e2e/catalog.spec.ts` also checks the fictional creation-plan and material-outcome story without API calls. |
-| C09 | Pending: both image architecture campaigns and a separately installed immutable Edge candidate, followed by scoped removal of its synthetic installation/data. No installed result is claimed by unit tests or a local wheel build. |
+| C09 | Installed immutable Edge.60 upgrade/usage/planning qualification is recorded above. Final-head image/whole CI and scoped synthetic installation/data/source removal remain gates recorded in PR #151. Unit tests and build identity do not substitute for the native observation. |
 | C11 | `tests/backend/test_task_material_settlement.py` covers intent revision conflicts, changed-key payloads, current denial, late rollback and original lost-reply recovery. Frontend controller/HTTP tests retain and recover the exact request; the source journey checks that refill alone does not settle and that a deliberate lost-reply settlement sends one POST. The added closed-cycle query/HTTP/controller cases preserve pending usage after reopening, fence its original intent revision and leave the reopened work unchanged; the four expanded source journeys execute the closed-cycle path and lost settlement reply in both deployments/locales. The full source run and focused correction are reported separately above. |
 | C12 | EN/ES actual-recording component tests retain zero/reason and require current intent review. Controller/HTTP and actual backend settlement tests validate permission, precision and zero without a movement. The source journey uses the existing separate-recording policy without adding a policy editor. |
 

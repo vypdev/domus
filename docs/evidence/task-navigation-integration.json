@@ -461,7 +461,7 @@
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
       "imageId": "sha256:24281d34e20ce4ea60871daeb856962984ab3e456df83ebb827f4fd8369e6156",
-      "status": "Build qualified; final-head CI/review, both CPU functional/browser campaigns and native upgrade acceptance pending."
+      "status": "Immutable build and separate native Edge60 upgrade/planning/settlement qualified; final exact-head whole CI, both CPU campaigns, review and scoped cleanup remain gates recorded in PR151."
     },
     "reviewCorrections": {
       "pullRequest": 151,
@@ -526,6 +526,28 @@
       "archiveWheelInstalledEquality": "passed",
       "imageId": "sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535",
       "status": "Superseded by continuation correction. Both CPU reports pass 70 journeys; native59 data retained for same-installation upgrade qualification."
+    },
+    "nativeQualification": {
+      "version": "0.0.0-edge.60",
+      "runtimeSource": "41c5c75c8c5549fc4d9142f86db600e6a76530da",
+      "packagingHeadAtInstall": "ca7599096821f3a27ecf8999651eaa18ed392a52",
+      "upgradedFrom": "0.0.0-edge.59",
+      "originalCycleIntentIdentitiesRetained": true,
+      "nextPageAfterCommittedSettlement": true,
+      "currentReopenedWorkUnchanged": true,
+      "finalStock": {
+        "soapMillilitres": "7.75",
+        "cleanerPieces": "4",
+        "teaPieces": "5"
+      },
+      "fixedInitialAndSecondPlanPieces": "2",
+      "relativeInitialPlanMillilitres": "1.25",
+      "input": "EN/ES keyboard; actual emulated touch relative creation; 390x844 mobile; light/dark steady-state and visible focus",
+      "originalRequestsPreservedAcrossTwoTabs": true,
+      "stoppedAfterQualification": true,
+      "temporaryBrowserOverridesRestored": true,
+      "screenshotsAndReceipts": "Private local evidence; not uploaded",
+      "limits": "Native scheduled consumption is not claimed; separate 48 HTTP cases cover initial/successor effects. Exact-head CI/review and scoped cleanup remain required."
     }
   }
 }
