@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.0-edge.59
+
+- Keep earlier material usage visible and explicitly recoverable after reopening a task.
+- Clear the submitted material plan after recovering a committed task creation.
+- Keep quantity edits focused without reloading household proof on each keystroke.
+- Show exact planned completion decimals with the Spanish separator.
+- Include optional Pantry plans, per-line outcomes and published ha-ui next.4 from the unaccepted Edge.58 preview.
+
 ## 0.0.0-edge.58
 
 - Plan Pantry materials during ordinary, fixed and relative task creation.

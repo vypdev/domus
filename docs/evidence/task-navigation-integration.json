@@ -448,19 +448,20 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Review-corrected source qualified: complete backend/frontend and121 baseline and four expanded source entry cases. The original failed aggregate is retained separately; final-head CI must run all 125. No CPU or installed acceptance yet.",
+    "sourceState": "Published corrected runtime f5eb3b2; complete backend (5,635) and frontend (2,048) pass. The 121 baseline and four expanded source cases, plus 46 catalog cases, pass across the recorded campaigns. Final-head CI must execute the complete inventory; both CPU and installed acceptance remain pending.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
-    "runtimeSource": "514258c9adbd54d938e28fd65a901764a89799cc",
+    "runtimeSource": "f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9",
     "immutableCandidate": {
-      "version": "0.0.0-edge.58",
-      "sourceCommit": "514258c9adbd54d938e28fd65a901764a89799cc",
-      "sourceArchiveSHA256": "91835d1b4632ddce683b217ec0b282552e3b2c13dc232d96b65c3599ecd00200",
-      "wheelSHA256": "f3fd2b92b73e84211a2fbf2552ea6176bacfaaa12eadf2b488223d207597d3a3",
+      "version": "0.0.0-edge.59",
+      "sourceCommit": "f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9",
+      "sourceArchiveSHA256": "f78570f13f0d7679d21835ed361757fcb69052024c186e24b7300520b8eea82a",
+      "wheelSHA256": "ec3f66257983e0cfc92f83a94ec2d541ec4e84ca098323518153d43f8f2e5916",
       "storageSchema": 35,
       "pythonFiles": 231,
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
-      "status": "Superseded before installed acceptance by two genuine review recovery corrections. Runnable58 exports/images retired after retaining original build receipts."
+      "imageId": "sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535",
+      "status": "Build qualified; both CPU functional/browser campaigns and separately installed acceptance pending."
     },
     "reviewCorrections": {
       "pullRequest": 151,
@@ -493,6 +494,17 @@
       },
       "distinctSuccessfulCases": 125,
       "exactHeadWholeCI": "required"
+    },
+    "supersededUnacceptedCandidate58": {
+      "version": "0.0.0-edge.58",
+      "sourceCommit": "514258c9adbd54d938e28fd65a901764a89799cc",
+      "sourceArchiveSHA256": "91835d1b4632ddce683b217ec0b282552e3b2c13dc232d96b65c3599ecd00200",
+      "wheelSHA256": "f3fd2b92b73e84211a2fbf2552ea6176bacfaaa12eadf2b488223d207597d3a3",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "status": "Superseded before installed acceptance by two genuine review recovery corrections. Runnable58 exports/images retired after retaining original build receipts."
     }
   }
 }

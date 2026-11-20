@@ -35,6 +35,15 @@ The full PR review also identified household proof refreshes on each local mater
 
 The Edge.58 build below was never installed or accepted. It is superseded by these runtime corrections. Its two Docker images, stopped wheel-only container (no volumes), source archive and wheel were retired after preserving original build/identity receipts; accepted Edge.57 and rollback Edge.56 remain protected. A newly numbered immutable candidate must pass both CPU campaigns and installed acceptance before merge.
 
+## Immutable Edge.59 build
+
+- Runtime source: `f5eb3b2cf14d43cda6d00a12a52767c2b6d83fc9`.
+- Source archive SHA-256: `f78570f13f0d7679d21835ed361757fcb69052024c186e24b7300520b8eea82a`.
+- Wheel SHA-256: `ec3f66257983e0cfc92f83a94ec2d541ec4e84ca098323518153d43f8f2e5916`.
+- Local Linux ARM64 image: `sha256:c7ee196657d3e622a0e455347676d04196c0594a61d69ac1265d672af24ed535`.
+
+All 231 Python modules and four compiled UI files match the published source archive, wheel, installed builder and final image. The independently built normal local and Linux wheel bytes also match. Source/version/architecture labels pass, and SQLite stays schema 35. The installer pin changes only packaging, eight package-test expectations and qualification records; it does not change the qualified runtime bytes. This establishes immutable build identity, not either CPU functional/browser acceptance or the separately installed Home Assistant test. Those and final-head CI/review remain required before merge.
+
 ## Superseded unaccepted Edge.58 build
 
 - Runtime source: `514258c9adbd54d938e28fd65a901764a89799cc`.
