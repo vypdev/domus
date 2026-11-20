@@ -34,7 +34,7 @@ test.each(['ordinary-materials','scheduled-materials','settlement'])(
       expect(sessionStorage.getItem(key)).toBe(raw);
       const read=<T>(value:T)=>({result:Promise.resolve(value),cancel:vi.fn()});
       const server:TaskServer={access:()=>read({householdId:'home',memberId:'member-1',canCreate:true,canReviewSchedule:false}),
-        list:()=>read({items:[],nextCursor:null}),detail:vi.fn(),original:vi.fn(),send:vi.fn()};
+        list:()=>read({items:[],nextCursor:null}),detail:vi.fn(),materialHistory:vi.fn(),materialCycle:vi.fn(),original:vi.fn(),send:vi.fn()};
       const prior=new Edge57Controller('native',{session:()=>read({context,deployment:'native',access:'full',serverTime:1000,expiresAt:100000,householdApiAvailable:true})},
         server,new Edge57Journal(storage),{anchor:()=>{},now:()=>1000},{requestKey:vi.fn()});
       await prior.refresh();expect(prior.view.records).toBeNull();expect(prior.view.notice).toBe('journal_unavailable');

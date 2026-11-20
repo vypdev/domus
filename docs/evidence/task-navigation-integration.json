@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "166e0548fb44d82e0a3dfe4dab2cb9bf1d57fc9bc06dc6376a94e2aafb178fc7",
-    "assets/index-CPWTCZC7.js": "764e84c72daee17e701a12d943b82bb91175773ca1bcadcbb380e495d1ef5628",
+    ".vite/manifest.json": "fb67323bfda4412132218222bd9b91511d31edff5b194626e731da214c76d44e",
+    "assets/index-BiUg4l6U.js": "a7d5f7dc7dd9a94cd630f5a2a8bbd14fff0999a355fcfe18f8d032ed2875ab6f",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "0a7cffb10f5296da2c796c014a3eb9ff6685ba301525a8125c89552b7587b1d7"
+    "index.html": "57eeaa5a6a003aa4da769ebaac5f982a6a861d2e86f9cd139e4d477b178f7443"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -439,16 +439,16 @@
     "haUiPublicationRun": 44699421594,
     "haUiPublicationAttempt": 6,
     "fivePublishedArchiveHashesVerified": true,
-    "frontendTests": 2016,
+    "frontendTests": 2048,
     "frontendRuntimeFiles": 110,
     "frontendCoverage": "100% globally and per file for all four metrics",
-    "backendTests": 5625,
+    "backendTests": 5635,
     "backendRuntimeModules": 231,
     "backendCoverage": "100% statement and branch globally and per file; independent gate passed",
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Qualified runtime source committed independently from the immutable installer metadata.",
+    "sourceState": "Review-corrected source qualified: complete backend/frontend and121 baseline and four expanded source entry cases. The original failed aggregate is retained separately; final-head CI must run all 125. No CPU or installed acceptance yet.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "runtimeSource": "514258c9adbd54d938e28fd65a901764a89799cc",
     "immutableCandidate": {
@@ -460,7 +460,39 @@
       "pythonFiles": 231,
       "uiFiles": 4,
       "archiveWheelInstalledEquality": "passed",
-      "status": "Build qualified; CPU functional/browser and separately installed acceptance remain pending."
+      "status": "Superseded before installed acceptance by two genuine review recovery corrections. Runnable58 exports/images retired after retaining original build receipts."
+    },
+    "reviewCorrections": {
+      "pullRequest": 151,
+      "frontendTests": 2048,
+      "frontendCoverage": "100% all four metrics globally and per file across all 110 runtime files",
+      "directedBackendMaterialTests": 117,
+      "closedCycleHistory": "explicit bounded read; original cycle and intent revision; current permission on settlement",
+      "sourceAcceptance": "121 baseline source cases pass; all four expanded material cases pass after correcting observer/capacity expectations. All 46 catalog cases pass. Both CPU and installed acceptance pending.",
+      "backendTests": 5635,
+      "backendStatements": 18045,
+      "backendBranches": 4876,
+      "backendIndependentGate": "passed",
+      "localDraftEditing": "Same focused field retained; no new household/session proof reads; current expiry still retires drafts.",
+      "plannedCompletionLocale": "Exact canonical quantity rendered with comma in Spanish; unit singular/plural matches quantity."
+    },
+    "runtimeSourceBeforeReview": "514258c9adbd54d938e28fd65a901764a89799cc",
+    "sourceEntryCampaigns": {
+      "baseline": {
+        "expected": 121,
+        "unexpected": 4,
+        "skipped": 0,
+        "flaky": 0,
+        "limitation": "Four expanded cases corrected only their asynchronous observation and explicit resolved journal capacity dismissal; original failed report preserved."
+      },
+      "focusedExpandedMaterials": {
+        "expected": 4,
+        "unexpected": 0,
+        "skipped": 0,
+        "flaky": 0
+      },
+      "distinctSuccessfulCases": 125,
+      "exactHeadWholeCI": "required"
     }
   }
 }

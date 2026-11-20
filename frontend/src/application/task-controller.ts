@@ -1,7 +1,7 @@
 /** Task workflows coordinate current identity, durable original intents and server-owned actions. */
 import {JournalError} from '../domain/journal';
 import {isCategoryCommand, taskCommand, taskIdentifier} from '../domain/tasks';
-import type {TaskAccess, TaskCommand, TaskDetail, TaskMaterialUsage, TaskPage, TaskPriority, TaskProgressTarget, TaskScheduleDraft} from '../domain/tasks';
+import type {TaskAccess, TaskCommand, TaskDetail, TaskMaterialUsage, TaskPage, TaskPriority, TaskProgressTarget, TaskScheduleDraft, TaskMaterialHistory} from '../domain/tasks';
 import {EntryReadError} from './ports';
 import type {Revision} from '../domain/administration';
 import type {ReviewedAllocation} from '../domain/point-allocation';
@@ -20,12 +20,13 @@ interface State {
   readonly session: VerifiedEntrySession | null; readonly access: TaskAccess | null;
   readonly scopeKey: string | null; readonly readOnly: boolean;
   readonly page: TaskPage | null; readonly detail: TaskDetail | null;
+  readonly materialHistory: TaskMaterialHistory | null;
   readonly records: readonly TaskRecord[] | null; readonly outcome: TaskCommandResult | null; readonly notice: TaskNotice | null;
 }
 export type TaskView = Readonly<State & {busy: boolean; materialPlan?: TaskMaterialPlanView | null}>;
 function blank(phase: State['phase']): State {
   return Object.freeze({phase, session: null, access: null, scopeKey: null, readOnly: true,
-    page: null, detail: null, records: null, outcome: null, notice: null});
+    page: null, detail: null, materialHistory: null, records: null, outcome: null, notice: null});
 }
 function scope(session: VerifiedEntrySession, access: TaskAccess): TaskJournalScope {
   return Object.freeze({context: session.context, householdId: access.householdId, memberId: access.memberId});
@@ -141,9 +142,11 @@ export class TaskController {
     const detail = this.state.detail!;
     if (detail.occurrenceId !== command.occurrenceId) return false;
     if (command.action === 'task.material.settle') {
-      const value = detail.materialOutcomes?.find(item => item.intentId === command.intentId && item.cycleId === command.payload.cycle_id);
+      const historical = this.state.materialHistory?.items.find(item => item.cycle.cycleId === command.payload.cycle_id);
+      const values = historical?.materialOutcomes ?? detail.materialOutcomes;
+      const value = values?.find(item => item.intentId === command.intentId && item.cycleId === command.payload.cycle_id);
       if (!value || value.revision !== command.payload.expected_revision) {this.update({notice: 'conflict'}); return false;}
-      return detail.allowedActions.includes('materials.settle') && value.state.startsWith('pending_')
+      return (historical?.allowedActions ?? detail.allowedActions).includes('materials.settle') && value.state.startsWith('pending_')
         && (command.payload.action === 'post' ? value.quantity !== null
           : value.state === 'pending_recording' && value.quantity === null && value.confirmedQuantity === null);
     }
@@ -167,6 +170,7 @@ export class TaskController {
       this.update({page: prior.page});
       if (this.state.readOnly) {this.update({notice: 'read_only'}); return;}
       if ('occurrenceId' in command) this.update({detail: await this.read(this.server.detail(command.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation)});
+      if (command.action === 'task.material.settle') await this.materialFacts(command.payload.cycle_id, generation);
       if (!this.accepted(command)) {
         if (this.state.notice !== 'conflict' && this.state.notice !== 'category_unavailable') this.update({notice: 'action_not_allowed'});
         if (command.action === 'task.transition') {
@@ -213,6 +217,25 @@ export class TaskController {
       return;
     }
     await this.facts(generation, occurrence);
+    if (command.action === 'task.material.settle') await this.materialFacts(command.payload.cycle_id, generation);
+  }
+  private async materialFacts(cycleId: string, generation: number): Promise<void> {
+    const work = this.state.detail!;
+    if (work.currentCycleId === cycleId) return;
+    const value = await this.read(this.server.materialCycle(work, this.state.access!.householdId, cycleId, this.state.session!.context), generation);
+    if (value.closedAt === null) throw new EntryReadError('invalid_response');
+    this.update({materialHistory:Object.freeze({items:Object.freeze([value]),nextCursor:null})});
+  }
+  materialHistory(more = false): Promise<void> {
+    const selected = this.state.detail, cursor = more ? this.state.materialHistory?.nextCursor : null;
+    if (selected === null || more && !cursor) return Promise.resolve();
+    return this.run(async (prior, generation) => {
+      if (this.state.scopeKey !== prior.scopeKey) {this.update({notice:'context_changed'}); return;}
+      this.update({page:prior.page, outcome:prior.outcome});
+      const work = await this.read(this.server.detail(selected.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation);
+      this.update({detail:work});
+      this.update({materialHistory:await this.read(this.server.materialHistory(work, this.state.access!.householdId, cursor ?? null, this.state.session!.context), generation)});
+    });
   }
   create(title: unknown, description: unknown, priority: TaskPriority, draft?: TaskScheduleDraft, categoryId?: string, basePointsMinor?: number): Promise<void> {
     const materials = this.planning?.selections();
@@ -298,7 +321,9 @@ export class TaskController {
       if (current === undefined || JSON.stringify(current) !== JSON.stringify(original)) {this.update({notice: 'request_changed'}); return;}
       this.update({page: prior.page});
       const outcome = await this.read(this.server.original({key, command: current.command, operationId: current.operationId}, this.state.session!.context), generation);
-      this.save(key, outcome); await this.receiptFacts(current.command, outcome.occurrenceId, prior, generation);
+      this.save(key, outcome);
+      if (outcome.stage === 'committed' && current.command.action === 'task.create') this.planning?.clear();
+      await this.receiptFacts(current.command, outcome.occurrenceId, prior, generation);
     });
   }
   dismiss(key: string): Promise<void> {

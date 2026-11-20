@@ -135,8 +135,9 @@ function reviewedAllocation(value: unknown): ReviewedAllocation {
 
 export function decodeTaskIntent(value: unknown): TaskIntent | null {
   try {
-    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor', 'assigneeIds', 'target', 'action', 'referenceId', 'input', 'intentId', 'cycleId', 'quantity']);
+    const item = fields(value, ['type'], ['title', 'description', 'priority', 'schedule', 'occurrenceId', 'materialUsages', 'decision', 'reason', 'key', 'categoryId', 'label', 'revision', 'reviewed', 'basePointsMinor', 'assigneeIds', 'target', 'action', 'referenceId', 'input', 'intentId', 'cycleId', 'quantity', 'more']);
     const type = item.type;
+    if (type === 'materialHistory') {fields(value,['type','more'],[]); check(typeof item.more === 'boolean'); return {type,more:item.more};}
     if (type === 'materialPlan') {
       const action = item.action;
       if (action === 'load' || action === 'more' || action === 'clear') {fields(value, ['type','action'], []); return {type,action};}
@@ -733,8 +734,11 @@ export function mountEntry(page: EntryPage): PageMount {
       try {
         const intent = decodeTaskIntent((event as CustomEvent<unknown>).detail); if (intent === null) return;
         switch (intent.type) {
-          case 'materialPlan': await active.taskWork(controller => controller.materialPlan(intent.action,
-            'referenceId' in intent ? intent.referenceId : '', 'input' in intent ? intent.input : '')); break;
+          case 'materialHistory': await active.taskWork(controller => controller.materialHistory(intent.more)); break;
+          case 'materialPlan':
+            if (intent.action === 'load' || intent.action === 'more') await active.taskWork(controller => controller.materialPlan(intent.action));
+            else await active.materialDraft(intent.action, 'referenceId' in intent ? intent.referenceId : '', 'input' in intent ? intent.input : '');
+            break;
           case 'settleMaterial': await active.taskWork(controller => controller.settleMaterial(
             intent.occurrenceId, intent.intentId, intent.cycleId, intent.revision, intent.quantity, intent.reason)); break;
           case 'refresh': await active.refresh(); break;

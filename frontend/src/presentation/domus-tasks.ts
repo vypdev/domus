@@ -36,6 +36,7 @@ import type {MaterialPlanIntent} from './domus-task-material-plan';
 import type {MaterialRecordingDrafts, MaterialSettlementIntent} from './domus-task-material-outcomes';
 import {materialMessage, materialSource, materialUnit} from './task-material-messages';
 export type TaskIntent = Readonly<{type: 'refresh' | 'more' | 'claim'}>
+  | Readonly<{type:'materialHistory'; more:boolean}>
   | Readonly<{type:'materialPlan'} & MaterialPlanIntent>
   | Readonly<{type:'settleMaterial'} & MaterialSettlementIntent>
   | Readonly<{type: 'select'; occurrenceId: string}>
@@ -128,7 +129,7 @@ export class DomusTasks extends LitElement {
   private declare progressError: boolean;
   private submittedProgress: ProgressDraft | null = null;
   private progressFocus: string | null = null;
-  private materialFocus: 'choices' | 'last-row' | 'outcomes' | null = null;
+  private materialFocus: 'choices' | 'last-row' | 'outcomes' | 'history' | null = null;
   private lastForm: 'create' | 'review' | 'category' | 'assignment' | 'progress' | 'material' = 'create';
   private focusDetail = false;
   constructor() {super(); this.allocation = null; this.participantNames = []; this.view = null; this.retired = false; this.language = 'en'; this.titleDraft = ''; this.titleRequired = false; this.descriptionDraft = '';
@@ -244,8 +245,9 @@ export class DomusTasks extends LitElement {
     if (this.materialFocus !== null && this.view?.phase === 'ready') {
       const focus = this.materialFocus;
       this.materialFocus = null;
+      if (focus === 'history') this.renderRoot.querySelector<HTMLElement>('#material-history-heading')?.focus();
       const component = this.renderRoot.querySelector<LitElement>(focus === 'outcomes' ? 'domus-task-material-outcomes' : 'domus-task-material-plan');
-      if (component) {
+      if (focus !== 'history' && component) {
         void component.updateComplete.then(() => {
           const fields = component.renderRoot.querySelectorAll<HTMLElement>('vyp-ha-field');
           const target = focus === 'last-row' ? fields.item(fields.length - 1) : focus === 'outcomes'
@@ -658,6 +660,25 @@ export class DomusTasks extends LitElement {
         }} @domus-material-settlement-intent=${(event: CustomEvent<MaterialSettlementIntent>) => {
           event.stopPropagation(); this.lastForm = 'material'; this.materialFocus = 'outcomes'; this.intent({type:'settleMaterial', ...event.detail});
         }}></domus-task-material-outcomes>
+      ${work.materials.length ? html`<section aria-labelledby="material-history-heading"><h4 id="material-history-heading" tabindex="-1">${materialMessage('history',this.language)}</h4>
+        <p>${materialMessage('historyHelp',this.language)}</p>
+        <vyp-ha-button .state=${buttonState({label:materialMessage('historyLoad',this.language)})} ?disabled=${this.view!.busy}
+          @click=${() => {this.materialFocus='history'; this.intent({type:'materialHistory',more:false});}}></vyp-ha-button>
+        ${this.view!.materialHistory?.items.map(value => html`<section><h5>${materialMessage('completion',this.language)}: ${taskInstant(value.cycle.performedAt,this.language)}</h5>
+          <p>${materialMessage('closed',this.language)}: ${taskInstant(value.closedAt!,this.language)}</p>
+          <domus-task-material-outcomes .work=${{...work,cycle:value.cycle,materialOutcomes:value.materialOutcomes,allowedActions:value.allowedActions}}
+            .drafts=${this.materialDrafts} .disabled=${this.blocked} .language=${this.language}
+            @domus-material-recording-draft=${(event: CustomEvent<{intentId:string;draft:MaterialRecordingDrafts[string]}>) => {
+              event.stopPropagation(); this.materialDrafts = {...this.materialDrafts,[event.detail.intentId]:event.detail.draft};
+            }} @domus-material-settlement-intent=${(event: CustomEvent<MaterialSettlementIntent>) => {
+              event.stopPropagation(); this.lastForm='material'; this.materialFocus='history'; this.intent({type:'settleMaterial',...event.detail});
+            }}></domus-task-material-outcomes>
+        </section>`)}
+        ${this.view!.materialHistory?.items.length === 0 ? html`<p role="status">${materialMessage('historyEmpty',this.language)}</p>` : nothing}
+        ${this.view!.materialHistory?.nextCursor ? html`<vyp-ha-button
+          .state=${buttonState({label:materialMessage('historyMore',this.language)})} ?disabled=${this.view!.busy}
+          @click=${() => {this.materialFocus='history'; this.intent({type:'materialHistory',more:true});}}></vyp-ha-button>` : nothing}
+      </section>` : nothing}
       ${this.progress(work)}
       <div class="task-work-actions" ?hidden=${this.progressDraft !== null}>
       ${this.assignment(work)}
@@ -666,8 +687,8 @@ export class DomusTasks extends LitElement {
       ${work.allowedActions.includes('complete') ? html`<form id="complete-form" class="task-fields" novalidate @submit=${(event: SubmitEvent) => {event.preventDefault(); this.complete();}}>
         <p>${this.text('completionHelp')}</p>${work.materials.length ? work.materialRecording === 'review_on_completion' ? html`<fieldset><legend>${this.text('materials')}</legend>
           <p class="help">${this.text('quantityHelp')}</p>${work.materials.map((material, index) => html`<div class="material"><label for=${'material-' + index}>${material.label || this.text('quantity')}</label>
-            <p>${materialUnit(material.unitId, this.language)} · ${materialSource(material.locationId, this.language)}
-              · ${materialMessage('planned', this.language)}: ${material.plannedQuantity}</p>
+            <p>${materialUnit(material.unitId, this.language, material.plannedQuantity)} · ${materialSource(material.locationId, this.language)}
+              · ${materialMessage('planned', this.language)}: ${this.language === 'es' ? material.plannedQuantity.replace('.', ',') : material.plannedQuantity}</p>
             <input id=${'material-' + index} inputmode="decimal" type="text" maxlength="64" .value=${live(this.quantities[material.lineId] ?? '')}
               ?disabled=${this.view!.busy} aria-invalid=${this.quantityError === material.lineId ? 'true' : 'false'} aria-describedby=${this.quantityError === material.lineId ? 'quantity-error' : 'quantity-help'}
               @input=${(event: InputEvent) => {this.quantities = {...this.quantities, [material.lineId]: (event.target as HTMLInputElement).value}; this.quantityError = null;}}>

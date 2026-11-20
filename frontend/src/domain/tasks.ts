@@ -271,6 +271,13 @@ export interface TaskCycleSummary {
   readonly cycleId: string; readonly verification: 'none' | 'pending' | 'approved' | 'rejected';
   readonly performedAt: string; readonly performerIds: readonly string[];
 }
+export interface TaskMaterialCycle {
+  readonly cycle: TaskCycleSummary; readonly closedAt: string | null;
+  readonly materialOutcomes: readonly TaskMaterialOutcome[]; readonly allowedActions: readonly string[];
+}
+export interface TaskMaterialHistory {
+  readonly items: readonly TaskMaterialCycle[]; readonly nextCursor: string | null;
+}
 export interface TaskDetail extends TaskSummary {
   readonly description: string; readonly priority: TaskPriority; readonly allowedActions: readonly string[];
   readonly stateReason?: string;

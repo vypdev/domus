@@ -87,6 +87,9 @@ actions your role allows. Use **Retry inventory summary** if the summary could n
   task whose actual quantity has not been recorded, enter that quantity and a reason, then choose
   **Record actual usage**. A concurrent change retains your draft and requires **Review current usage**
   before a deliberate save. This interface does not edit consumption that has already posted.
+  After reopening, choose **Review earlier usage** to inspect each closed completion, including
+  pending consumption. **Next closed completion** advances one bounded page. Settlement still names
+  the original cycle and rechecks current authority; it does not complete or approve the reopened task.
 - A lost reply leaves a visible saved request. **Check saved request** reads its original result without sending another change. New changes remain blocked while an earlier request is unconfirmed. Resolved browser records can be dismissed without deleting server history.
 - **Household** opens identity, participants, preferences and access settings. Task IDs, revisions and resolved recovery records stay in optional details. A saved language preference applies to both workspaces.
 

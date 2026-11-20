@@ -341,6 +341,7 @@ class TaskMaterialsView:
     occurrence_id: str
     cycle: TaskCycle
     materials: tuple[MaterialOutcome, ...]
+    allowed_actions: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -684,7 +685,62 @@ class TaskQueries:
                 occurrence_id,
                 cycle,
                 tuple(material_outcome(value) for value in cycle_materials(unit, work, cycle)),
+                self._material_actions(unit, work, cycle),
             )
+
+    def material_history(
+        self, occurrence_id: str, *, limit: int = 1, cursor: str | None = None
+    ) -> TaskPage[TaskMaterialsView]:
+        with self.transactions.read() as unit:
+            self._read(unit)
+            validate_identifier(occurrence_id)
+            if type(limit) is not int or not 1 <= limit <= 5:
+                raise InvalidInput("invalid_page_size")
+            binding, after = self._context(
+                "material_history",
+                limit,
+                JsonDocument.from_value({"occurrence_id": occurrence_id}),
+                cursor,
+            )
+            work = unit.tasks.occurrence(self.household_id, occurrence_id)
+            if work is None:
+                raise NotFound("task_occurrence_missing")
+            # At most one current cycle can occur in this indexed, bounded batch.
+            rows = unit.tasks.cycles(self.household_id, occurrence_id, limit=limit + 2, after=after)
+            closed = tuple(value for value in rows if value.cycle_id != work.current_cycle_id)
+            if any(value.closed_at is None for value in closed):
+                raise StorageFailure("invalid_task_cycle")
+            page = self._page(closed, limit, binding, lambda value: value.cycle_id)
+            return TaskPage(
+                tuple(
+                    TaskMaterialsView(
+                        occurrence_id,
+                        cycle,
+                        tuple(
+                            material_outcome(value) for value in cycle_materials(unit, work, cycle)
+                        ),
+                        self._material_actions(unit, work, cycle),
+                    )
+                    for cycle in page.items
+                ),
+                page.next_cursor,
+            )
+
+    def _material_actions(
+        self, unit: UnitOfWork, work: TaskOccurrence, cycle: TaskCycle
+    ) -> tuple[str, ...]:
+        pending = tuple(
+            value
+            for value in cycle_materials(unit, work, cycle)
+            if value.pending_reason is not None
+        )
+        if pending and _possible(
+            lambda: TaskMaterialAccess(TaskAccess(self.human), unit, self.household_id).require(
+                pending[0], MaterialAction.POST
+            )
+        ):
+            return ("materials.settle",)
+        return ()
 
     def history(
         self, occurrence_id: str, *, limit: int = 25, cursor: str | None = None
@@ -953,15 +1009,5 @@ class TaskQueries:
             if manage:
                 result.append("reopen")
         if cycle is not None:
-            pending = tuple(
-                value
-                for value in cycle_materials(unit, work, cycle)
-                if value.pending_reason is not None
-            )
-            if pending and _possible(
-                lambda: TaskMaterialAccess(access, unit, self.household_id).require(
-                    pending[0], MaterialAction.POST
-                )
-            ):
-                result.append("materials.settle")
+            result.extend(self._material_actions(unit, work, cycle))
         return tuple(result)

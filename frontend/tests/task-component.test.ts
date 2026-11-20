@@ -19,7 +19,7 @@ const context = {installationId: '01234567-89ab-cdef-0123-456789abcdef', channel
 function view(patch: Partial<TaskView> = {}): TaskView {
   return {phase: 'ready', busy: false, session: {context, deployment: 'native', access: 'full', serverTime: 1000, expiresAt: 100000, householdApiAvailable: true},
     access: {householdId: 'private-home-id', memberId: 'private-member-id', canCreate: true, canReviewSchedule: true}, scopeKey: 'same-verified-scope',
-    readOnly: false, page: {items: [work], nextCursor: null}, detail: null, records: [], outcome: null, notice: null, ...patch};
+    readOnly: false, page: {items: [work], nextCursor: null}, detail: null, materialHistory:null, records: [], outcome: null, notice: null, ...patch};
 }
 const mounted: DomusTasks[] = [];
 afterEach(() => {for (const element of mounted.splice(0)) element.remove();});
@@ -1205,4 +1205,46 @@ test.each(['en', 'es'] as const)('manual allocation gives a non-manager a locali
   const f = await mount(view({detail: {...work, allowedActions: ['claim'], completionPoints: 'manager_required'}}), locale);
   expect(f.root.querySelector('#complete-form')).toBeNull();
   expect(f.text()).toContain(locale === 'en' ? 'Ask a points administrator to record this work' : 'Pide a un administrador de puntos que registre el trabajo');
+});
+
+test.each(['en','es'] as const)('%s earlier usage keeps explicit actions, reason drafts, navigation and keyboard focus after reopening', async language => {
+  const material={intentId:'old-intent',cycleId:'old-cycle',lineId:'line-1',revision, effectRevision:'1',submittedQuantity:null,quantity:null,
+    state:'pending_recording' as const,pendingReason:'actual_quantity_required',confirmedQuantity:null,confirmedEffectRevision:null,movementId:null,postedAt:null};
+  const current:TaskDetail={...work,materials:[{lineId:'line-1',label:'QA Soap',plannedQuantity:'2',precision:0,unitId:'piece',locationId:'pantry'}]};
+  const group={cycle:{cycleId:'old-cycle',verification:'none' as const,performedAt:'100',performerIds:['private-member-id']},closedAt:'200',materialOutcomes:[material],allowedActions:['materials.settle']};
+  const f=await mount(view({detail:current}),language);
+  const t=(en:string,es:string)=>language==='en'?en:es;
+  const pressHistory=async(label:string)=>{const button=[...f.root.querySelectorAll<HaButton>('vyp-ha-button')].find(item=>item.state.label===label)!;
+    await button.updateComplete;button.click();await f.element.updateComplete;};
+  await pressHistory(t('Review earlier usage','Revisar consumos anteriores'));
+  expect(f.intents.at(-1)).toEqual({type:'materialHistory',more:false});
+  f.element.view=view({phase:'loading',busy:true});await f.element.updateComplete;
+  f.element.view=view({detail:current,materialHistory:{items:[group],nextCursor:'next'}});await f.element.updateComplete;
+  expect(f.root.activeElement).toBe(f.root.querySelector('#material-history-heading'));
+  const history=f.root.querySelector('#material-history-heading')!.parentElement!;
+  const component=history.querySelector('domus-task-material-outcomes')!;await component.updateComplete;
+  const fields=component.shadowRoot!.querySelectorAll<HaTextField>('vyp-ha-field');
+  fields[0].dispatchEvent(new CustomEvent('ha-value-request',{detail:{value:'0'}}));
+  await f.element.updateComplete;await component.updateComplete;
+  fields[1].dispatchEvent(new CustomEvent('ha-value-request',{detail:{value:'QA nothing used'}}));
+  await f.element.updateComplete;await component.updateComplete;
+  const save=component.shadowRoot!.querySelector<HaButton>('vyp-ha-button')!;await save.updateComplete;save.click();
+  expect(f.intents.at(-1)).toMatchObject({type:'settleMaterial',occurrenceId:'work-1',cycleId:'old-cycle',intentId:'old-intent',quantity:'0',reason:'QA nothing used'});
+  f.element.view=view({phase:'loading',busy:true});await f.element.updateComplete;
+  f.element.view=view({detail:current,materialHistory:{items:[group],nextCursor:'next'},notice:'unavailable'});await f.element.updateComplete;
+  expect(f.root.activeElement).toBe(f.root.querySelector('#material-history-heading'));
+  const restored=f.root.querySelector('#material-history-heading')!.parentElement!.querySelector('domus-task-material-outcomes')!;await restored.updateComplete;
+  expect(restored.shadowRoot!.querySelector<HaTextField>('vyp-ha-field')!.value).toBe('0');
+  await pressHistory(t('Next closed completion','Siguiente realización cerrada'));
+  expect(f.intents.at(-1)).toEqual({type:'materialHistory',more:true});
+  f.element.view=view({detail:current,materialHistory:{items:[],nextCursor:null}});await f.element.updateComplete;
+  expect(f.text()).toContain(t('No earlier completions.','No hay realizaciones anteriores.'));
+});
+
+test.each(['en','es'] as const)('%s completion review localizes exact planned decimal quantities without changing the command', async locale => {
+  const f=await mount(view({detail:{...work,materials:[{lineId:'soap',label:'QA Soap',plannedQuantity:'1.25',precision:6,unitId:'millilitre',locationId:'pantry'}]}}),locale);
+  const form=f.root.querySelector('#complete-form')!;
+  expect(form.textContent).toContain((locale==='es'?'Cantidad prevista: 1,25':'Planned quantity: 1.25'));
+  form.dispatchEvent(new SubmitEvent('submit',{cancelable:true}));
+  expect(f.intents.at(-1)).toMatchObject({type:'complete',materialUsages:[{line_id:'soap',quantity:'1.25'}]});
 });

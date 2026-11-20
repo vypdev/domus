@@ -380,3 +380,82 @@ def test_malformed_consumer_result_rolls_back_even_child_sql_under_actual_http(
     detail = api.client.get(path).json()
     assert detail["cycle"] is None and detail["materials"] == []
     assert len(inventory.settlements) == 1 and not inventory.movements()
+
+
+def test_closed_material_history_exposes_original_pending_usage_and_explicit_settlement(
+    api, inventory
+):
+    inventory.pending = MaterialPendingReason.STOCK_SHORTAGE
+    created = create(api, materials=[selection()])
+    oid = created["result"]["occurrence_id"]
+    path = PREFIX + "/occurrences/" + oid
+    line = api.client.get(path).json()["work"]["definition_snapshot"]["materials"][0]
+    completed = complete(
+        api, created, {"material_usages": [{"line_id": line["line_id"], "quantity": "2"}]}
+    ).json()
+    pending = completed["result"]["materials"][0]
+    assert api.client.get(path + "/material-history").json() == {"items": [], "next_cursor": None}
+    checked(
+        api,
+        "post",
+        "/occurrences/" + oid + "/reopen",
+        {
+            "expected_revision": 2,
+            "cycle_id": pending["cycle_id"],
+            "reason": "Repeat without returning stock",
+        },
+        "reopen",
+    )
+    original_work = api.client.get(path).json()
+    assert original_work["cycle"] is None and original_work["materials"] == []
+    history = api.client.get(path + "/material-history").json()
+    assert len(history["items"]) == 1 and history["next_cursor"] is None
+    selected = history["items"][0]
+    assert (
+        selected["cycle"]["cycle_id"] == pending["cycle_id"]
+        and selected["cycle"]["closed_at"] is not None
+    )
+    assert selected["materials"][0]["intent_id"] == pending["intent_id"]
+    assert selected["allowed_actions"] == ["materials.settle"]
+    assert not inventory.movements()
+    inventory.pending = None
+    payload = {
+        "expected_revision": pending["revision"],
+        "cycle_id": pending["cycle_id"],
+        "action": "post",
+    }
+    settled = checked(
+        api,
+        "post",
+        "/occurrences/" + oid + "/materials/" + pending["intent_id"] + "/settlement",
+        payload,
+        "settle-closed",
+    )
+    assert settled["result"]["material"]["state"] == "posted"
+    assert (
+        checked(
+            api,
+            "post",
+            "/occurrences/" + oid + "/materials/" + pending["intent_id"] + "/settlement",
+            payload,
+            "settle-closed",
+        )
+        == settled
+    )
+    assert api.client.get(path).json() == original_work
+    refreshed = api.client.get(path + "/material-history").json()["items"][0]
+    assert (
+        refreshed["materials"][0]["confirmed_quantity"] == "2"
+        and refreshed["allowed_actions"] == []
+    )
+    assert len(inventory.movements()) == 1
+    for query in [{"limit": 6}, {"limit": 0}, {"actor_id": "forged"}]:
+        assert api.client.get(path + "/material-history", params=query).status_code == 422
+    assert api.client.get(PREFIX + "/occurrences/missing/material-history").status_code == 404
+    with api.store.write() as unit:
+        person = unit.members.list("home")[0]
+        unit.members.save(
+            replace(person, exceptions=(PermissionRule(Permission.TASKS_READ, False),), revision=2),
+            1,
+        )
+    assert api.client.get(path + "/material-history").status_code == 403

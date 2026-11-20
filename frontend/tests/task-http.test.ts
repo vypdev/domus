@@ -2,6 +2,7 @@ import {afterEach, expect, test, vi} from 'vitest';
 import {HTTP_TIMEOUT_MS} from '../src/adapters/http-transport';
 import {HttpTaskServer} from '../src/adapters/task-http';
 import {taskCommand} from '../src/domain/tasks';
+import {revisionValue} from '../src/domain/administration';
 import type {TaskCommand} from '../src/domain/tasks';
 import type {JournalContext} from '../src/domain/journal';
 
@@ -583,4 +584,54 @@ test('Overview rejects malformed, ambiguous and duplicate deadline rows', async 
   await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
   f.transport.mockResolvedValueOnce(reply({...emptyOverview, upcoming_maintenance: {total: 1, items: []}}));
   await expect(f.server.overview(context).result).rejects.toMatchObject({code: 'invalid_response'});
+});
+
+function materialHistoryWire() {
+  return {occurrence_id:'work-1',cycle:{...cycle(),closed_at:'$revision'},materials:[materialReceipt().result.material],allowed_actions:['materials.settle']};
+}
+function historyWork() {
+  return {occurrenceId:'work-1',definitionId:'definition-1',definitionRevision:revisionValue('1'),title:'QA Soap',description:'',priority:'normal' as const,
+    state:'available' as const,revision:revisionValue('3'),assigneeIds:[],dueAt:null,currentCycleId:null,cycle:null,allowedActions:[],
+    materials:[{lineId:'line-1',label:'Soap',plannedQuantity:'2',precision:0,unitId:'piece',locationId:'pantry'}],
+    materialRecording:'review_on_completion' as const,dependencyReviewRequired:false,pendingMaterials:false};
+}
+test.each(['native','standalone'] as const)('%s historical usage preserves its original cycle and requests one bounded page', async mode => {
+  const f=fixture(mode), work=historyWork(), wire=materialHistoryWire();
+  for (const cursor of [null,'opaque-cursor']) {
+    f.transport.mockResolvedValueOnce(reply({items:[wire],next_cursor:cursor}));
+    const result=await f.server.materialHistory(work,'home',cursor,context).result;
+    expect(result).toMatchObject({items:[{cycle:{cycleId:'cycle-1'},closedAt:REV,materialOutcomes:[{intentId:'intent-1',lineId:'line-1'}]}],nextCursor:cursor});
+    expect(f.transport.mock.calls.at(-1)![0]).toBe(f.target.applicationBase+'api/v1/tasks/occurrences/work-1/material-history?limit=1'+(cursor?'&cursor='+cursor:''));
+  }
+  f.transport.mockResolvedValueOnce(reply(wire));
+  expect((await f.server.materialCycle(work,'home','cycle-1',context).result).allowedActions).toEqual(['materials.settle']);
+  expect(f.transport.mock.calls.at(-1)![0]).toBe(f.target.applicationBase+'api/v1/tasks/occurrences/work-1/materials?cycle_id=cycle-1');
+  f.transport.mockResolvedValueOnce(reply({items:[],next_cursor:null}));
+  expect((await f.server.materialHistory(work,'home',null,context).result).items).toEqual([]);
+  expect(f.transport.mock.calls.every(call=>call[1].method==='GET')).toBe(true);
+  await expect(f.server.materialHistory(work,'home','',context).result).rejects.toThrow('invalid_response');
+  await expect(f.server.materialHistory(work,'home','x'.repeat(513),context).result).rejects.toThrow('invalid_response');
+});
+test.each(['work','home','cycle','open','line','duplicate_intent','duplicate_line','action','count','cursor','closed_time'] as const)(
+  'historical material %s substitution cannot enter a current task projection', async kind => {
+    const f=fixture(), wire=materialHistoryWire();
+    const raw:Record<string,any>={items:[wire],next_cursor:null};
+    if(kind==='work')wire.occurrence_id='foreign';
+    if(kind==='home')wire.cycle.household_id='foreign';
+    if(kind==='cycle')wire.materials[0].cycle_id='foreign';
+    if(kind==='open')wire.cycle.closed_at=null as unknown as string;
+    if(kind==='line')wire.materials[0].line_id='foreign';
+    if(kind==='duplicate_intent')wire.materials.push({...wire.materials[0]});
+    if(kind==='duplicate_line')wire.materials.push({...wire.materials[0],intent_id:'other'});
+    if(kind==='action')wire.allowed_actions=['complete'];
+    if(kind==='count')raw.items.push({...wire});
+    if(kind==='cursor')raw.next_cursor='';
+    if(kind==='closed_time')wire.cycle.closed_at='invalid';
+    f.transport.mockResolvedValueOnce(reply(raw));
+    await expect(f.server.materialHistory(historyWork(),'home',null,context).result).rejects.toThrow('invalid_response');
+  });
+test('direct material cycle lookup rejects another valid cycle even when its outcomes agree', async () => {
+  const f=fixture(), wire=materialHistoryWire();
+  f.transport.mockResolvedValueOnce(reply(wire));
+  await expect(f.server.materialCycle(historyWork(),'home','other-cycle',context).result).rejects.toThrow('invalid_response');
 });

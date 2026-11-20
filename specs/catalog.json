@@ -519,7 +519,11 @@
         "frontend/src/presentation/domus-task-material-outcomes.ts",
         "frontend/src/presentation/task-material-messages.ts",
         "backend/src/domus/application/recurrence_ports.py",
-        "backend/src/domus/infrastructure/sqlite_recurrence.py"
+        "backend/src/domus/infrastructure/sqlite_recurrence.py",
+        "backend/src/domus/entrypoints/task_dto.py",
+        "frontend/src/application/task-ports.ts",
+        "frontend/src/application/household-controller.ts",
+        "frontend/src/composition/entry-runtime.ts"
       ],
       "tests": [
         "tests/backend/test_task_values.py",
@@ -552,7 +556,10 @@
         "frontend/tests/fixtures/edge57-task-journal.provenance.json",
         "frontend/tests/e2e/catalog.spec.ts",
         "tests/backend/test_task_material_http.py",
-        "tests/backend/test_task_material_settlement.py"
+        "tests/backend/test_task_material_settlement.py",
+        "tests/backend/test_task_material_queries.py",
+        "frontend/tests/household-controller.test.ts",
+        "frontend/tests/page.test.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -576,7 +583,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work; issue #100 adds bounded upcoming scheduled maintenance in the next seven local days; issue #141 connects authorized planned assignment, replacement/release, explicit conflict review and frozen original-request recovery to the Tasks workspace, with current-source English keyboard and Spanish touch acceptance in both deployment compositions; issue #150 connects optional ordinary/fixed/relative Pantry plans, authoritative per-line consumption outcomes, explicit pending settlement and missing actual quantities. Source qualification uses published ha-ui next.4 with 5625 backend and 2016 frontend tests at complete required per-file/global coverage, all 125 entry and 46 catalog journeys, and actual preceding journal/controller rollback checks. Both CPU image campaigns, installed immutable Edge.58 acceptance and merge gates remain separate in the material workflow qualification",
+        "implementationEvidence": "partial: task lifecycle/rules, schema-5 storage/restore, shared current authority, typed requests and durable lifecycle/policy/definition/occurrence/dependency editors; 2044 whole-backend tests, 5741 statements and 1624 branches at 100%; public queries/history/HTTP and actual material/consumer/review projections remain incomplete; protected Overview summary exercised in compiled native and standalone browser journeys with exact authorized group counts and task detail navigation; issue #96 adds effective timed and date-only deadlines for due today and overdue work; issue #100 adds bounded upcoming scheduled maintenance in the next seven local days; issue #141 connects authorized planned assignment, replacement/release, explicit conflict review and frozen original-request recovery to the Tasks workspace, with current-source English keyboard and Spanish touch acceptance in both deployment compositions; issue #150 connects optional ordinary/fixed/relative Pantry plans, authoritative per-line consumption outcomes, explicit pending settlement and missing actual quantities. Source qualification uses published ha-ui next.4 with 5625 backend and 2016 frontend tests at complete required per-file/global coverage, all 125 entry and 46 catalog journeys, and actual preceding journal/controller rollback checks. Review adds bounded closed-cycle material history and committed-creation planner retirement, with 117 directed backend material cases and 2041 frontend tests at complete required coverage. The corrected whole backend passes 5,635 tests with complete coverage across all 231 modules. All 125 distinct source entry cases pass across the 121-case baseline and four focused expanded cases; the original failed report is retained separately. All 46 catalog cases pass. Both CPU image campaigns, installed immutable Edge acceptance and exact-head merge gates remain separate in the material workflow qualification The final PR review also corrects local material draft updates to retain the focused field without household proof reads, and localizes planned completion decimals in Spanish; final frontend qualification passes 2,048 tests at complete coverage.",
         "blockingDecisions": "A34 prerequisite gating and A35 same-task points remainder rotation are owner-confirmed. Bounded queries/history/APIs, material intents/settlement, dependency-review projection and actual Inventory/Points/recurrence consumers, task UI and deployment acceptance remain implementation gates; first-release advanced task-type review remains separate.",
         "copilotChangesAllowed": false
       }
@@ -795,7 +802,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item\u2019s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
         "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and refunds have separate acceptance.",
         "copilotChangesAllowed": false
       }

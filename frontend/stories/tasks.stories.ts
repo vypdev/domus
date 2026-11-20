@@ -33,7 +33,7 @@ function fixture(example: Example): TaskView | null {
     access: {householdId: 'fictional-home', memberId: 'fictional-member', canCreate: true, canReviewSchedule: true, canLinkMaterials:materials}, scopeKey: 'fictional-verified-scope', readOnly: example === 'read_only',
     ...(materials ? {materialPlan:{open:true,busy:false,canLink:true,readOnly:false,
       rows:[{referenceId:choice.referenceId,input:'1.25',choice}],choices:[choice],cursor:null,notice:null}} : {}),
-    page: {items: example === 'empty' ? [] : [work], nextCursor: null}, detail: example === 'empty' ? null : work, records: [], outcome: null, notice: null};
+    page: {items: example === 'empty' ? [] : [work], nextCursor: null}, detail: example === 'empty' ? null : work, materialHistory:null, records: [], outcome: null, notice: null};
 }
 const meta: Meta<Arguments> = {title: 'Domus/Tasks', args: {language: 'en', example: 'available'},
   argTypes: {language: {control: 'inline-radio', options: ['en', 'es']}, example: {control: false}},

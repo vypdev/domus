@@ -78,6 +78,9 @@ export class EntryRuntime {
     };
   }
   taskWork(work: (controller: TaskController) => Promise<void>): Promise<void> {return this.perform(controller => controller.taskWork(work));}
+  materialDraft(action: 'add' | 'edit' | 'remove' | 'clear', referenceId = '', input = ''): Promise<void> {
+    return this.perform(controller => controller.materialDraft(action, referenceId, input));
+  }
   private publish(): void {
     try {this.changed(this.view, this.administration, this.tasks);} catch {/* A renderer failure cannot change authority or interrupt resource cleanup. */}
   }

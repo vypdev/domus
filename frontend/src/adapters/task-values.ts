@@ -2,7 +2,7 @@
 import {nextRevision} from '../domain/administration';
 import {civilDate} from '../domain/civil-date';
 import {categoryLabel, isCategoryCommand, taskCommand, taskIdentifier, taskQuantity, taskText, TASK_PRIORITIES, TASK_STATES, TASK_TEXT_LIMITS, TASK_MATERIAL_STATES} from '../domain/tasks';
-import type {TaskCategoryCatalog, TaskCommand, TaskCycleSummary, TaskDetail, TaskMaterialOutcome, TaskPage, TaskReceipt, TaskSummary} from '../domain/tasks';
+import type {TaskCategoryCatalog, TaskCommand, TaskCycleSummary, TaskDetail, TaskMaterialOutcome, TaskPage, TaskReceipt, TaskSummary, TaskMaterialCycle, TaskMaterialHistory} from '../domain/tasks';
 import type {TaskOriginal, TaskRequest} from '../application/task-ports';
 import {boolean, check, choice, fields, identifier, invalid, responseInteger, responseRevision, text} from './json-values';
 
@@ -112,6 +112,28 @@ export function taskMaterialOutcome(raw: unknown): TaskMaterialOutcome {
     confirmedQuantity: nullableQuantity(value.confirmed_quantity),
     confirmedEffectRevision: value.confirmed_effect_revision === null ? null : responseRevision(value.confirmed_effect_revision),
     postedAt: nullableTime(value.posted_at)});
+}
+export function taskMaterialCycle(raw: unknown, work: TaskDetail, householdId: string, expectedCycleId?: string): TaskMaterialCycle {
+  const value = fields(raw, ['occurrence_id','cycle','materials','allowed_actions'], []);
+  check(identifier(value.occurrence_id) === work.occurrenceId);
+  const selected = cycle(value.cycle, work.occurrenceId, householdId);
+  check(expectedCycleId === undefined || selected.cycleId === expectedCycleId);
+  const closedAt = nullableTime((value.cycle as {closed_at:unknown}).closed_at);
+  check(Array.isArray(value.materials) && value.materials.length <= 32);
+  const outcomes = value.materials.map(taskMaterialOutcome);
+  check(new Set(outcomes.map(item => item.intentId)).size === outcomes.length
+    && new Set(outcomes.map(item => item.lineId)).size === outcomes.length);
+  check(outcomes.every(item => item.cycleId === selected.cycleId && work.materials.some(line => line.lineId === item.lineId)));
+  check(Array.isArray(value.allowed_actions) && value.allowed_actions.length <= 1);
+  const allowedActions = value.allowed_actions.map(item => choice(item, ['materials.settle'] as const));
+  return Object.freeze({cycle:selected, closedAt, materialOutcomes:Object.freeze(outcomes), allowedActions:Object.freeze(allowedActions)});
+}
+export function taskMaterialHistory(raw: unknown, work: TaskDetail, householdId: string): TaskMaterialHistory {
+  const value = fields(raw, ['items','next_cursor'], []);
+  check(Array.isArray(value.items) && value.items.length <= 1);
+  const items = value.items.map(item => taskMaterialCycle(item, work, householdId));
+  check(items.every(item => item.closedAt !== null));
+  return Object.freeze({items:Object.freeze(items), nextCursor:value.next_cursor === null ? null : text(value.next_cursor,512)});
 }
 function category(value: unknown) {
   const row = fields(value, ['category_id', 'household_id', 'label', 'revision', 'archived'], []);

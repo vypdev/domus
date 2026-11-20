@@ -1,4 +1,4 @@
-import type {TaskAccess, TaskCommand, TaskDetail, TaskPage, TaskReceipt} from '../domain/tasks';
+import type {TaskAccess, TaskCommand, TaskDetail, TaskPage, TaskReceipt, TaskMaterialCycle, TaskMaterialHistory} from '../domain/tasks';
 import type {JournalContext} from '../domain/journal';
 import type {CommandResult, EntryRead} from './ports';
 
@@ -10,6 +10,8 @@ export interface TaskServer {
   access(expected: JournalContext): EntryRead<TaskAccess>;
   list(expected: JournalContext, cursor: string | null): EntryRead<TaskPage>;
   detail(occurrenceId: string, householdId: string, expected: JournalContext): EntryRead<TaskDetail>;
+  materialHistory(work: TaskDetail, householdId: string, cursor: string | null, expected: JournalContext): EntryRead<TaskMaterialHistory>;
+  materialCycle(work: TaskDetail, householdId: string, cycleId: string, expected: JournalContext): EntryRead<TaskMaterialCycle>;
   original(request: TaskOriginal, expected: JournalContext): EntryRead<TaskReceipt>;
   send(request: TaskRequest, expected: JournalContext): Promise<TaskCommandResult>;
 }

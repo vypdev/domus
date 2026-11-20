@@ -1,5 +1,7 @@
 import type {Language} from './messages';
 const en = {
+  history:'Earlier material usage', historyHelp:'Reopening does not cancel or return earlier usage. Review each closed completion separately.',
+  historyLoad:'Review earlier usage', historyMore:'Next closed completion', historyEmpty:'No earlier completions.', completion:'Performed', closed:'Reopened',
   plan: 'Materials (optional)', planHelp: 'Plan Pantry products for this task. Planning does not consume stock. You can create a task with only a title.',
   open: 'Add materials', product: 'Pantry product', choose: 'Choose a product', add: 'Add to plan', more: 'More products', refresh: 'Refresh material choices',
   planned: 'Planned quantity', actual: 'Actual quantity', confirmed: 'Confirmed consumption', pendingTotal: 'Total awaiting confirmation',
@@ -25,6 +27,8 @@ const en = {
   saved: 'Material request recorded. The result below shows whether Inventory confirmed it.',
 };
 const es: typeof en = {
+  history:'Consumos anteriores', historyHelp:'Reabrir no cancela ni devuelve el consumo anterior. Revisa cada realización cerrada por separado.',
+  historyLoad:'Revisar consumos anteriores', historyMore:'Siguiente realización cerrada', historyEmpty:'No hay realizaciones anteriores.', completion:'Realizada', closed:'Reabierta',
   plan: 'Materiales (opcional)', planHelp: 'Planifica productos de Despensa para esta tarea. Planificar no consume existencias. Puedes crear la tarea solo con un título.',
   open: 'Añadir materiales', product: 'Producto de Despensa', choose: 'Elige un producto', add: 'Añadir al plan', more: 'Más productos', refresh: 'Actualizar materiales disponibles',
   planned: 'Cantidad prevista', actual: 'Cantidad utilizada', confirmed: 'Consumo contabilizado', pendingTotal: 'Total pendiente de confirmar',

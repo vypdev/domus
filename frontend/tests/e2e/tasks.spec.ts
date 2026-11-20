@@ -38,7 +38,8 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await page.emulateMedia({colorScheme:locale==='es'?'dark':'light'});
     expect((await request.post(origin(mode)+'/__fixture__/reset')).ok()).toBe(true);
     const setup=page.waitForRequest(value=>value.url()===base(mode)+'/api/v1/household'&&value.method()==='POST');
-    let catalogReads=0;
+    let catalogReads=0, proofReads=0;
+    page.on('request',value=>{const path=new URL(value.url()).pathname;if(value.method()==='GET'&&(path.endsWith('/auth/session')||path.endsWith('/household')))proofReads++;});
     page.on('request',value=>{if(new URL(value.url()).pathname===(mode==='native'?prefix:'')+'/api/v1/inventory'&&value.method()==='GET')catalogReads++;});
     const tasks=await open(page,context,mode);
     const setupHeaders=await(await setup).allHeaders();
@@ -111,7 +112,7 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     const oid=creationBody!.result.occurrence_id;
     await tasks.getByLabel(used.name,{exact:true}).fill('1');await tasks.getByLabel(unused.name,{exact:true}).fill('0');await tasks.getByLabel(short.name,{exact:true}).fill('1');
     await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
-    const outcomes=tasks.locator('domus-task-material-outcomes');
+    let outcomes=tasks.locator('domus-task-material-outcomes').first();
     await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toBeVisible();
     await expect(outcomes.getByText(t('Not used · no stock movement','Sin utilizar · sin movimiento de existencias'),{exact:true})).toBeVisible();
     await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
@@ -122,6 +123,15 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await write('refill-shortfall',{action:'inventory.intake',product_id:short.product_id,quantity:'5'});
     await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
     expect((await readWork()).materials.find((value:{intent_id:string})=>value.intent_id===pending.intent_id).state).toBe('pending_regularization');
+    await tasks.getByLabel(t('Reason','Motivo'),{exact:true}).fill('QA 150 repeat while keeping original pending usage');
+    await activate(tasks.getByRole('button',{name:t('Reopen task','Reabrir tarea'),exact:true}));
+    await expect(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true})).toBeVisible();
+    const reopened=await readWork();expect(reopened.work.state).toBe('available');expect(reopened.cycle).toBeNull();expect(reopened.materials).toEqual([]);
+    await activate(tasks.getByRole('button',{name:t('Review earlier usage','Revisar consumos anteriores'),exact:true}));
+    await expect(tasks.getByRole('heading',{name:t('Earlier material usage','Consumos anteriores'),exact:true})).toBeFocused();
+    outcomes=tasks.locator('#material-history-heading').locator('..').locator('domus-task-material-outcomes');
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('closed-material-usage-'+locale+'.png')});
     let settlements=0,settlementKey='',settlementBody:Record<string,any>|null=null;
     await page.route(api+'tasks/occurrences/'+oid+'/materials/'+pending.intent_id+'/settlement',async route=>{
       settlements++;settlementKey=route.request().headers()['idempotency-key'];expect(route.request().postDataJSON().expected_revision).toBe(pending.revision);
@@ -134,10 +144,13 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await activate(tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).first());
     await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(2);
     expect(settlements).toBe(1);expect(settlementOriginals).toHaveLength(1);expect(settlementOriginals[0].operation_id).toBe(settlementBody!.operation_id);
-    const after=await readWork();expect(after.work.revision).toBe(before.work.revision);expect(after.cycle.cycle_id).toBe(before.cycle.cycle_id);
-    expect(after.materials.find((value:{intent_id:string})=>value.intent_id===pending.intent_id)).toMatchObject({line_id:pending.line_id,confirmed_quantity:'1',movement_id:settlementBody!.result.material.movement_id});
+    const after=await readWork();expect(after).toEqual(reopened);
+    const historyResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/materials?cycle_id='+pending.cycle_id,{headers});expect(historyResponse.ok()).toBe(true);
+    const history=await historyResponse.json();expect(history.cycle.cycle_id).toBe(before.cycle.cycle_id);expect(history.cycle.closed_at).not.toBeNull();
+    expect(history.materials.find((value:{intent_id:string})=>value.intent_id===pending.intent_id)).toMatchObject({line_id:pending.line_id,confirmed_quantity:'1',movement_id:settlementBody!.result.material.movement_id});
     await info.attach('creation-original',{body:JSON.stringify({committed:creationBody,original:originals[0]}),contentType:'application/json'});
     await info.attach('settlement-original',{body:JSON.stringify({committed:settlementBody,original:settlementOriginals[0]}),contentType:'application/json'});
+    outcomes=tasks.locator('domus-task-material-outcomes').first();
     const policyReply=await page.request.get(api+'tasks/policy',{headers}), policy=await policyReply.json();
     await write('separate-recording-policy',{expected_revision:policy.revision,rules:{...policy.rules,material_recording:'separate_recording'}},'tasks/policy','put');
     await expand();await title.fill('QA 150 missing actual quantity');
@@ -160,18 +173,25 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
       const product=kind==='fixed'?used:decimal;
       if(!first.products.some((value:{product_id:string})=>value.product_id===product.product_id))await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
       await choose(product.name);
-      await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill(kind==='fixed'?'2':locale==='es'?'1,25':'1.25');
+      const quantityField=plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last();
+      const field=await quantityField.elementHandle(), reads=proofReads;
+      await quantityField.fill('');
+      await quantityField.pressSequentially(kind==='fixed'?'2':locale==='es'?'1,25':'1.25');
+      await expect(quantityField).toBeFocused();
+      expect(await quantityField.evaluate((current,original)=>current===original,field)).toBe(true);
+      expect(proofReads).toBe(reads);
       await tasks.getByRole('combobox',{name:t('Scheduling','Programación'),exact:true}).selectOption(kind);
       await tasks.getByLabel(t('First date','Primera fecha'),{exact:true}).fill(new Date(Date.now()+30*86_400_000).toISOString().slice(0,10));
       if(kind==='fixed')await tasks.getByLabel(t('Recurrence rule','Regla de recurrencia'),{exact:true}).fill('FREQ=DAILY;COUNT=2');
       const path=api+'tasks/recurrence/creation/'+kind;
       await page.route(path,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);scheduled.push(await response.json());await route.fulfill({response});});
       const create=tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true});
-      if(kind==='relative'){
+      {
+        // The added reopening fills the eight-record journal before either scheduled creation.
         await activate(create);await expect(tasks.getByRole('alert')).toContainText(t('make room','espacio'));
-        await expect(title).toHaveValue('QA 150 relative material plan');
-        await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true})).toHaveValue(locale==='es'?'1,25':'1.25');
-        await activate(tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')}));
+        await expect(title).toHaveValue('QA 150 '+kind+' material plan');
+        await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true})).toHaveValue(kind==='fixed'?'2':locale==='es'?'1,25':'1.25');
+        if(!await tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true}).first().isVisible()) await activate(tasks.locator('summary').filter({hasText:new RegExp('^'+t('Saved requests','Solicitudes guardadas')+'$')}));
         await activate(tasks.getByRole('button',{name:t('Dismiss saved request','Descartar solicitud guardada'),exact:true}).first());
       }
       await activate(create);
