@@ -93,6 +93,7 @@ export class DomusApp extends LitElement {
   private declare zoneDraft: string;
   private draftScope: string | null = null;
   private focusDestination: WorkspaceDestination | null = null;
+  private authenticationFocus = false;
   constructor() {
     super(); this.view = null; this.administration = null; this.tasks = null; this.deployment = 'standalone'; this.language = 'en';
     this.recurrenceReview = null; this.calendar = null; this.calendarPreference = null; this.calendarScopeKey = null; this.calendarToday = DATE_MIN;
@@ -110,7 +111,12 @@ export class DomusApp extends LitElement {
     if (!changed.has('view')) return;
     const context = this.view?.session?.context;
     const scope = context ? `${context.installationId}:${context.channel}:${context.subject}` : null;
-    if (this.view?.phase === 'closed' || (scope !== null && this.draftScope !== null && scope !== this.draftScope)) {
+    const authenticationRequired = this.view?.decision?.state === 'authentication_required';
+    if (authenticationRequired && (changed.get('view') as EntryView | null | undefined)?.session)
+      this.authenticationFocus = true;
+    else if (!authenticationRequired) this.authenticationFocus = false;
+    if (this.view?.phase === 'closed' || authenticationRequired
+        || (scope !== null && this.draftScope !== null && scope !== this.draftScope)) {
       this.nameDraft = ''; this.zoneDraft = ''; this.draftScope = null;
     }
     if (this.view?.phase !== 'closed' && scope !== null) this.draftScope = scope;
@@ -119,6 +125,10 @@ export class DomusApp extends LitElement {
     this.lang = this.language;
     if (changed.has('view') && this.view?.fields.length)
       this.shadowRoot?.querySelector<HTMLInputElement>('#' + this.view.fields[0])?.focus();
+    if (this.authenticationFocus && !this.view!.busy) {
+      this.renderRoot.querySelector<HTMLButtonElement>('#overview > .actions > .primary')!.focus();
+      this.authenticationFocus = false;
+    }
     const destination = this.hasWorkspace() ? this.workspaceDestination : null;
     if (destination !== this.focusDestination) {
       this.focusDestination = destination;

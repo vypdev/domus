@@ -849,6 +849,87 @@ test('Inventory owns the current protected destination and accepts only closed u
   expect(app.inventory).toBeNull();
 });
 
+test.each(['native', 'standalone'] as const)('ENTRY-02/05: %s secondary authentication rejection retires shared proof without automatic verification', async mode => {
+  const f = fixture(mode); f.phase('active'); const {app} = await f.open();
+  f.page.location.href += '#inventory';
+  f.events.dispatchEvent(new Event('hashchange'));
+  await vi.waitFor(() => expect(app.inventory?.report?.cursor).toBe('inventory-next'));
+  expect(app.view?.household?.name).toBe('Home 🏠');
+  const original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (!path.includes('/api/v1/inventory/barcode?')) return original(path, init);
+    const response = new Response(JSON.stringify({state:'blocked', code:'authentication_required',
+      message:'Current access rejected.', action_required:'Verify current access.', correlation_id:'cor_entry_rejected'}),
+    {status:401, headers:{'Content-Type':'application/json', 'Cache-Control':'no-store'}});
+    Object.defineProperty(response, 'url', {value:corpus[mode].endpoint.origin + path}); return response;
+  });
+  const before = f.fetch.mock.calls.length;
+  app.dispatchEvent(new CustomEvent('domus-inventory-intent',
+    {detail:{type:'barcode', barcode:'036000291452'}, bubbles:true, composed:true}));
+  await vi.waitFor(() => expect(app.inventory?.busy).not.toBe(true));
+  expect(app.view?.session).toBeNull();
+  expect(app.view?.decision?.state).toBe('authentication_required');
+  expect(app.view?.household).toBeNull(); expect(app.administration).toBeNull(); expect(app.tasks).toBeNull();
+  expect(app.inventory).toBeNull();
+  await app.updateComplete;
+  expect(app.shadowRoot!.textContent).not.toContain('Home 🏠');
+  expect(app.shadowRoot!.textContent).not.toContain('Current verified access');
+  expect(app.shadowRoot!.activeElement?.textContent).toBe(mode === 'native' ? 'Reopen Domus' : 'Sign in with Home Assistant');
+  expect(f.fetch.mock.calls.slice(before).map(([path]) => path.split('/api/v1/')[1]))
+    .toEqual(['inventory/barcode?barcode=00036000291452']);
+});
+
+test.each([403, 503, 'malformed401'] as const)('ENTRY-02/05: secondary %s retains verified shared proof and its bounded recovery policy', async status => {
+  const f = fixture(); f.phase('active'); const {app} = await f.open();
+  f.page.location.href += '#inventory'; f.events.dispatchEvent(new Event('hashchange'));
+  await vi.waitFor(() => expect(app.inventory?.report).not.toBeNull());
+  const proof = app.view!.session, original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (!path.includes('/api/v1/inventory/barcode?')) return original(path, init);
+    const response = new Response(JSON.stringify(status === 'malformed401' ? {state:'blocked'} : {
+      state:'blocked', code:status === 403 ? 'permission_denied' : 'unavailable', message:'Read unavailable.',
+      action_required:'Review current access.', correlation_id:'cor_entry_read'}),
+    {status:status === 'malformed401' ? 401 : status, headers:{'Content-Type':'application/json', 'Cache-Control':'no-store'}});
+    Object.defineProperty(response, 'url', {value:corpus.standalone.endpoint.origin + path}); return response;
+  });
+  const calls = f.fetch.mock.calls.length;
+  app.dispatchEvent(new CustomEvent('domus-inventory-intent',
+    {detail:{type:'barcode', barcode:'036000291452'}, bubbles:true, composed:true}));
+  await vi.waitFor(() => expect(app.inventory?.busy).toBe(false));
+  expect(app.view?.session).toBe(proof); expect(app.view?.household?.name).toBe('Home 🏠');
+  expect(app.administration).not.toBeNull();
+  if (status === 403) expect(app.inventory?.report).toBeNull();
+  else expect(app.inventory?.report).not.toBeNull();
+  expect(f.fetch).toHaveBeenCalledTimes(calls + 1);
+});
+
+test.each(['native', 'standalone'] as const)('ENTRY-02/06: %s protected command rejection preserves its original request through deliberate reauthentication', async mode => {
+  const f = fixture(mode); f.phase('active'); const {app} = await f.open();
+  f.page.location.href += '#inventory'; f.events.dispatchEvent(new Event('hashchange'));
+  await vi.waitFor(() => expect(app.inventory?.report?.mayManage).toBe(true));
+  const original = f.fetch.getMockImplementation()!;
+  f.fetch.mockImplementation(async (path, init) => {
+    if (!path.endsWith('/api/v1/inventory/commands')) return original(path, init);
+    const reply = new Response(JSON.stringify({state:'blocked', code:'authentication_required',
+      message:'Session rejected.', action_required:'Verify current access.', correlation_id:'cor_command_entry'}),
+    {status:401, headers:{'Content-Type':'application/json', 'Cache-Control':'no-store'}});
+    Object.defineProperty(reply, 'url', {value:corpus[mode].endpoint.origin + path}); return reply;
+  });
+  const calls = f.fetch.mock.calls.length;
+  app.dispatchEvent(new CustomEvent('domus-inventory-intent', {detail:{type:'submit',
+    command:{action:'inventory.register-product', name:'Retained original', base_unit:'gram'}}, bubbles:true, composed:true}));
+  await vi.waitFor(() => expect(app.view?.decision?.state).toBe('authentication_required'));
+  const raw = f.values.get(INVENTORY_JOURNAL_KEY);
+  expect(raw).toBeDefined(); expect(raw).toContain('Retained original');
+  expect(app.inventory).toBeNull(); expect(app.view?.household).toBeNull();
+  expect(f.fetch.mock.calls.slice(calls).map(([path, init]) => init.method + ' ' + path.split('/api/v1/')[1]))
+    .toEqual(['GET auth/csrf', 'POST inventory/commands']);
+  f.fetch.mockImplementation(original); intent(app, {type:'refresh'});
+  await vi.waitFor(() => expect(app.inventory?.pending).toBe(true));
+  expect(app.view?.session).not.toBeNull(); expect(f.values.get(INVENTORY_JOURNAL_KEY)).toBe(raw);
+  expect(f.fetch.mock.calls.slice(calls).filter(([, init]) => init.method === 'POST')).toHaveLength(1);
+});
+
 test('Overview summary dispatches an authorized detail read through the Tasks workspace', async () => {
   const f = fixture(); f.phase('active');
   const {app} = await f.open();

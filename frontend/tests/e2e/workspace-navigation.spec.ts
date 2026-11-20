@@ -66,12 +66,16 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(review).toContainText(barcode);
     let originalKey = '';
     let associationId = '';
+    let operationId = '';
+    let associationPosts = 0;
+    page.on('request', item => {if (item.url() === commands && item.method() === 'POST') associationPosts++;});
     await page.route(commands, async route => {
       expect(route.request().postDataJSON()).toMatchObject({action:'inventory.link-barcode', barcode});
       originalKey = (await route.request().allHeaders())['idempotency-key'];
       const committed = await route.fetch({maxRetries:0, maxRedirects:0});
       expect(committed.ok()).toBe(true);
-      associationId = (await committed.json()).result.association_id;
+      const receipt = await committed.json();
+      associationId = receipt.result.association_id; operationId = receipt.operation_id;
       await route.abort('connectionclosed');
     });
     await review.getByRole('button', {name:'Confirm barcode association', exact:true}).press('Enter');
@@ -79,12 +83,35 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeFocused();
     expect(originalKey).toMatch(/^req_[a-f0-9]{32}$/u);
     await page.unroute(commands);
+    const rejectedReads: string[] = [];
+    const observeRejection = (item: import('@playwright/test').Request) => {
+      if (item.url().startsWith(base + 'api/v1/')) rejectedReads.push(item.method() + ' ' + item.url().slice((base + 'api/v1/').length));
+    };
+    page.on('request', observeRejection);
+    await page.route(base + 'api/v1/inventory?limit=25', route => route.fulfill({status:401,
+      contentType:'application/json', headers:{'Cache-Control':'no-store'}, body:JSON.stringify({
+        state:'blocked', code:'authentication_required', message:'Access rejected.',
+        action_required:'Verify current access.', correlation_id:'cor_original_entry'})}), {times:1});
+    await stock.getByRole('button', {name:'Refresh inventory', exact:true}).press('Enter');
+    await expect(page.getByRole('heading', {name:'Verify your access', exact:true})).toBeVisible();
+    await expect(stock).not.toBeVisible();
+    await expect(page.getByText('Barcode QA household', {exact:true})).toHaveCount(0);
+    await expect(page.getByText('Current verified access', {exact:true})).toHaveCount(0);
+    await expect(page.locator('.workspace-nav')).toHaveCount(0);
+    await expect(page.getByRole('button', {name:mode === 'native' ? 'Reopen Domus' : 'Sign in with Home Assistant', exact:true})).toBeFocused();
+    expect(rejectedReads).toEqual(['GET inventory?limit=25']);
+    expect(associationPosts).toBe(1);
+    await page.screenshot({path:info.outputPath('barcode-authentication-expired-en.png')});
+    page.off('request', observeRejection);
     await page.reload();
     await expect(stock.getByRole('article', {name:'QA barcode soap', exact:true})).toBeVisible();
     await expect(stock.getByRole('button', {name:'Recover original request', exact:true})).toBeEnabled();
     const original = page.waitForResponse(base + 'api/v1/inventory/requests/inventory.link-barcode/' + originalKey);
     await stock.getByRole('button', {name:'Recover original request', exact:true}).press('Enter');
-    expect((await original).ok()).toBe(true);
+    const recovered = await original;
+    expect(recovered.ok()).toBe(true);
+    expect(await recovered.json()).toMatchObject({operation_id:operationId, result:{association_id:associationId}});
+    expect(associationPosts).toBe(1);
     await expect(stock.getByText('Barcode associated.', {exact:false})).toBeVisible();
     await expect(stock.getByText('Product found QA barcode soap', {exact:true})).toBeVisible();
     await expect(stock.locator('.barcode-result')).toBeFocused();
@@ -163,10 +190,10 @@ for (const mode of ['native', 'standalone'] as const) {
     await expect(searchCard).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     await expect(searchCard).toHaveCSS('color', 'rgb(23, 43, 58)');
     await stock.screenshot({path:info.outputPath('barcode-long-name-result-es.png')});
-    for (const status of [401, 403]) {
+    for (const status of [403]) {
       await page.route(lookup, route => route.fulfill({status, contentType:'application/json',
         headers:{'Cache-Control':'no-store'}, body:JSON.stringify({state:'blocked',
-          code:status === 401 ? 'authentication_required' : 'permission_denied',
+          code:'permission_denied',
           message:'Access rejected.', action_required:'Review current access.', correlation_id:'cor_barcode_access'})}), {times:1});
       await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
       await expect(stock.getByText('El inventario no está disponible. Actualiza para consultar el stock.', {exact:true})).toBeVisible();
@@ -181,6 +208,20 @@ for (const mode of ['native', 'standalone'] as const) {
       await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
       await expect(stock.locator('.barcode-result')).toContainText(longName);
     }
+    await page.route(lookup, route => route.fulfill({status:401, contentType:'application/json',
+      headers:{'Cache-Control':'no-store'}, body:JSON.stringify({state:'blocked', code:'authentication_required',
+        message:'Access rejected.', action_required:'Verify current access.', correlation_id:'cor_mobile_entry'})}), {times:1});
+    await stock.getByRole('button', {name:'Buscar producto', exact:true}).tap();
+    await expect(page.getByRole('heading', {name:'Verify your access', exact:true})).toBeVisible();
+    await expect(stock).not.toBeVisible();
+    await expect(page.getByText('Barcode QA household', {exact:true})).toHaveCount(0);
+    await expect(page.getByText('Current verified access', {exact:true})).toHaveCount(0);
+    await expect(page.getByRole('button', {name:mode === 'native' ? 'Reopen Domus' : 'Sign in with Home Assistant', exact:true})).toBeFocused();
+    // The retired member's temporary locale is cleared; a new signed-out choice stays presentation-only.
+    await page.getByRole('combobox', {name:'Language', exact:true}).selectOption('es');
+    await expect(page.getByRole('heading', {name:'Verifica tu acceso', exact:true})).toBeVisible();
+    await expect(page.getByRole('button', {name:mode === 'native' ? 'Volver a abrir Domus' : 'Iniciar sesión con Home Assistant', exact:true})).toBeEnabled();
+    await page.screenshot({path:info.outputPath('barcode-authentication-expired-es.png')});
     expect(external).toEqual([]);
   });
 }

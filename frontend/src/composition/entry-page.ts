@@ -58,6 +58,7 @@ import type {CalendarIntent} from '../presentation/domus-calendar';
 import {bootstrap} from '../adapters/bootstrap';
 import {check, fields, identifier} from '../adapters/http-values';
 import type {FetchTransport} from '../adapters/http';
+import type {JournalContext} from '../domain/journal';
 import type {OwnedStorage} from '../adapters/session-journal';
 import {EntryRuntime} from './entry-runtime';
 import type {EntryBrowser} from './entry-runtime';
@@ -288,7 +289,9 @@ export function mountEntry(page: EntryPage): PageMount {
     const element = doc.createElement('domus-app'); app = element;
     element.language = language(null, page.navigator.language); element.deployment = source.target.deployment;
     doc.documentElement.lang = element.language;
-    const browser: EntryBrowser = {transport: (path, init) => page.fetch(path, init), storage: () => page.sessionStorage,
+    const transport: FetchTransport = Object.assign((path: string, init: RequestInit) => page.fetch(path, init),
+      {authenticationRejection: (context: JournalContext, signal: AbortSignal) => runtime?.authenticationRejection(context, signal)});
+    const browser: EntryBrowser = {transport, storage: () => page.sessionStorage,
       elapsed: () => page.performance.now(), random: bytes => page.crypto.getRandomValues(bytes),
       navigate: path => page.location.assign(path), events: page, visibility: doc,
       schedule: (tick, delay) => {const id = page.setTimeout(tick, delay); return () => page.clearTimeout(id);}};

@@ -39,6 +39,29 @@ const setupCommand = {key: 'original-key', action: 'setup' as const, payload: {n
   time_zone: 'UTC', expected_revision: 0 as const, mapping_mode: 'all_ha_administrators' as const}};
 afterEach(() => {vi.useRealTimers();});
 
+test.each([401, 403, 503])('ENTRY-02/05: protected POST %s reports only validated authentication rejection to its captured owner', async status => {
+  const f = fixture(), rejected = vi.fn(), capture = vi.fn(() => rejected);
+  Object.assign(f.network, {authenticationRejection:capture});
+  f.transport.mockResolvedValueOnce(response({csrf_token:'c'.repeat(64)})).mockResolvedValueOnce(blocked(status));
+  expect(await f.server.send(setupCommand, context)).toMatchObject({kind:'rejected'});
+  expect(capture).toHaveBeenCalledTimes(2);
+  expect(capture).toHaveBeenLastCalledWith(context, expect.any(AbortSignal));
+  expect(rejected).toHaveBeenCalledTimes(status === 401 ? 1 : 0);
+  expect(f.transport).toHaveBeenCalledTimes(2);
+});
+
+test.each(['unbound', 'malformed', 'foreign'] as const)('ENTRY-02/05: %s response cannot retire a bound document proof', async mode => {
+  const f = fixture(), rejected = vi.fn(), capture = vi.fn(() => rejected);
+  Object.assign(f.network, {authenticationRejection:capture});
+  const reply = mode === 'malformed' ? response({state:'blocked'}, 401) : blocked(401);
+  if (mode === 'foreign') Object.defineProperty(reply, 'url', {value:'https://foreign.example/api/v1/authorization'});
+  f.transport.mockResolvedValueOnce(reply);
+  if (mode === 'unbound') {
+    expect(await f.server.session().result).toBeNull(); expect(capture).not.toHaveBeenCalled();
+  } else await expect(f.server.authorization(context).result).rejects.toThrow('invalid_response');
+  expect(rejected).not.toHaveBeenCalled(); expect(f.transport).toHaveBeenCalledOnce();
+});
+
 test('C02/C20: standalone session exposes only strictly decoded proof and makes one read', async () => {
   const f = fixture(); const proof = await f.server.session().result;
   expect(proof).toEqual({context, deployment: 'standalone', access: 'full', serverTime: 1000,

@@ -8,7 +8,11 @@ import {administrationJSON, ROSTER_MAX_BYTES} from './json-values';
 
 export const HTTP_TIMEOUT_MS = 15_000;
 export const HTTP_MAX_BYTES = 65_536;
-export type FetchTransport = (path: string, init: RequestInit) => Promise<Response>;
+export interface FetchTransport {
+  (path: string, init: RequestInit): Promise<Response>;
+  /** Capture the current document proof owner before sending, never from a later response. */
+  authenticationRejection?(context: JournalContext, signal: AbortSignal): (() => void) | undefined;
+}
 export function reason(status: number): ReadFault | 'conflict' | 'invalid_input' {
   switch (status) {
     case 401: return 'authentication_required';
@@ -79,9 +83,13 @@ export class BoundedHTTP {
     if (token !== null) headers.set('X-CSRF-Token', token);
     if (key !== null) headers.set('Idempotency-Key', key);
     const transport = this.transport;
+    const rejectAuthentication = expected === null ? undefined : transport.authenticationRejection?.(expected, signal);
     const response = await transport(path, {method, headers, body, signal,
       mode: 'same-origin', credentials: 'same-origin', redirect: 'error', cache: 'no-store', referrerPolicy: 'no-referrer'});
     const value = await consume(response, this.target.origin + path, signal, maximumBytes);
+    if (response.status === 401 && rejectAuthentication !== undefined) {
+      wire.failure(value); rejectAuthentication();
+    }
     return {status: response.status, value};
   }
   async get(route: string, expected: JournalContext | null, signal: AbortSignal, budget: 'standard' | 'roster' = 'standard') {
