@@ -2229,7 +2229,7 @@ test('a submitted barcode search continues to its result or retry without reclai
 
     await begin();
     await f.assign({...initial, notice: 'unavailable'});
-    const refresh = f.root.querySelector('.inventory-actions vyp-ha-button')!;
+    const refresh = f.root.querySelector('.inventory-actions')!.querySelector('vyp-ha-button')!;
     await refresh.updateComplete;
     expect(f.root.activeElement).toBe(refresh);
     await f.assign(barcodeView);

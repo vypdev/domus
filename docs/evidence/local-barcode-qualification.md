@@ -249,3 +249,29 @@ The final corrected source campaign passes all 121 journeys in 364.896745
 seconds, with zero skipped, unexpected or flaky results. The rebuilt catalog
 passes all 45 cases in 29.439194 seconds under the same zero-retry policy.
 The normal wheel contract passes with the current bundle fingerprints.
+
+## Immutable Edge.56 candidate
+
+Edge.56 packages the rejected-access correction from runtime source
+`1c7b3f0b52ff25a29b9fa884ad4912fd576f98e7`. Its source archive SHA-256 is
+`3a805018aea499f703cbe84b5576be1a9b0b50cd2d666bf7adacfaba04b35e54`.
+The normal and independently measured Linux wheels share SHA-256
+`3a37f907e928c6a0ada988cfc27db0460d153a182ab8d95a2be753afb8ae742d`.
+All 231 Python modules remain identical to Edge.55 and match Git/archive,
+wheel and installed Linux builder. All four compiled UI files match the
+current integration receipt and both wheel builds. Schema 35 and its
+compatibility boundary remain unchanged. Exact final-image measurements,
+installed Home Assistant acceptance and same-head CI/review remain separate
+required observations in the increment pull request.
+
+The locally measured final ARM64 image is
+`sha256:444a5e58a0bae3d34276679f866cfea2442d3958fd8e0c9641a4248269773950`. Its 231 Python and four UI files match the
+source archive, wheel and installed builder. This local ID does not claim
+the separately built Supervisor image has the same Docker identity.
+
+The source-commit CI rejected an untyped generic Element in the new focus
+assertion. The local command had continued after its strict type-check failure;
+the original local and CI logs are retained. Selecting the registered button
+through its literal tag preserves its element type without changing the
+assertion or runtime. The package-head validation uses checked subprocesses,
+so any prerequisite failure stops the remaining pipeline.

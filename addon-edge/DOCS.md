@@ -1,6 +1,6 @@
 # Installation and operation
 
-Edge 0.0.0-edge.55 packages the immutable runtime declared in
+Edge 0.0.0-edge.56 packages the immutable runtime declared in
 [artifact.json](artifact.json). Overview shows the signed-in member's completed tasks and
 posted earned points for the current Family week. Open Family for the full report.
 In Household settings, authorized members can preview a manual task proposal and
@@ -51,6 +51,11 @@ focus continues to **Recover original request**.
 
 Edge.55 aligns HTTP validation and the published API shapes with the supported
 printed barcode lengths. It retains schema 35 and the compatible Edge.54 data.
+
+Edge.56 hides the loaded catalog, history and management controls when current
+access is rejected. The submitted barcode search focuses **Refresh inventory**.
+Refresh checks current access before showing stock again and retains the entered
+digits. An unresolved original write remains available for recovery.
 
 Edge.52 uses SQLite schema 35 and is listed in `breaking_versions`.
 Keep a compatible image together with its cold schema-34 data for rollback.

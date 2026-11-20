@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.56
+
+- Retire loaded Inventory data and management controls when current access is rejected.
+- Continue a rejected barcode search to Refresh inventory, preserving the input for an authorized retry.
+
 ## 0.0.0-edge.55
 
 - Align barcode HTTP validation and published API schemas with the supported printed GTIN lengths.
