@@ -228,6 +228,65 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
     await openSavedRequests();await expect(dismiss).toHaveCount(5);
     outcomes=tasks.locator('domus-task-material-outcomes').first();
+    // Settling the current completion must preserve the selected closed page and its cursor.
+    await activate(savedRequests);
+    await tasks.getByLabel(used.name,{exact:true}).fill('0');await tasks.getByLabel(unused.name,{exact:true}).fill('0');await tasks.getByLabel(short.name,{exact:true}).fill('4');
+    await activate(tasks.getByRole('button',{name:t('Mark done now','Marcar como hecha ahora'),exact:true}));
+    await expect(outcomes.getByText(t('Inventory review required','Requiere revisión de Inventario'),{exact:true})).toBeVisible();
+    const currentBefore=await readWork(), currentPending=currentBefore.materials.find((value:{state:string})=>value.state==='pending_regularization');
+    expect(currentBefore.work.state).toBe('completed');
+    expect([before.cycle.cycle_id,second.cycle.cycle_id]).not.toContain(currentPending.cycle_id);
+    await write('current-cycle-refill',{action:'inventory.intake',product_id:short.product_id,quantity:'4'});
+    const closedPageReply=page.waitForResponse(response=>response.url()===api+'tasks/occurrences/'+oid+'/material-history?limit=1'&&response.request().method()==='GET');
+    await activate(tasks.getByRole('button',{name:t('Review earlier usage','Revisar consumos anteriores'),exact:true}));
+    const closedResponse=await closedPageReply;expect(closedResponse.ok()).toBe(true);
+    const selectedClosed=await closedResponse.json();expect(selectedClosed.items).toHaveLength(1);expect(selectedClosed.next_cursor).toBeTruthy();
+    const closedOutcomes=tasks.locator('#material-history-heading').locator('..').locator('domus-task-material-outcomes');
+    await expect(closedOutcomes.locator('li')).toHaveCount(selectedClosed.items[0].materials.length);
+    const displayedHistoryIds=()=>closedOutcomes.locator('li').evaluateAll(elements=>elements.map(element=>element.getAttribute('data-material-intent')));
+    await expect.poll(displayedHistoryIds).toEqual(selectedClosed.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    let currentSends=0,currentKey='',currentBody:Record<string,any>|null=null;
+    await page.route(api+'tasks/occurrences/'+oid+'/materials/'+currentPending.intent_id+'/settlement',async route=>{
+      currentSends++;currentKey=route.request().headers()['idempotency-key'];
+      expect(route.request().postDataJSON()).toMatchObject({expected_revision:currentPending.revision});
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);currentBody=await response.json();
+      if(mode==='standalone')await route.abort('connectionreset');else await route.fulfill({response});
+    });
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    const currentOriginals:Record<string,any>[]=[];
+    if(mode==='standalone'){
+      await expect(tasks.getByRole('heading',{name:t('Result not confirmed','Resultado sin confirmar'),exact:true})).toBeVisible();
+      await page.route(api+'tasks/requests/task.material.settle/'+currentKey,async route=>{const response=await route.fetch({maxRetries:0,maxRedirects:0});
+        expect(response.status()).toBe(200);currentOriginals.push(await response.json());await route.fulfill({response});});
+      await activate(tasks.getByRole('button',{name:t('Check saved request','Comprobar solicitud guardada'),exact:true}).first());
+      await expect.poll(()=>currentOriginals.length).toBe(1);expect(currentOriginals[0].operation_id).toBe(currentBody!.operation_id);
+    }
+    await expect(outcomes.getByRole('status').filter({hasText:new RegExp('^'+t('Consumption confirmed','Consumo contabilizado')+'$')})).toHaveCount(1);
+    const currentAfter=await readWork();expect(currentAfter.work).toEqual(currentBefore.work);expect(currentAfter.cycle).toEqual(currentBefore.cycle);
+    expect(currentAfter.materials.find((value:{intent_id:string})=>value.intent_id===currentPending.intent_id)).toMatchObject({quantity:'4',confirmed_quantity:'4',state:'posted',movement_id:currentBody!.result.material.movement_id});
+    expect(currentSends).toBe(1);
+    await expect(closedOutcomes.locator('li')).toHaveCount(selectedClosed.items[0].materials.length);
+    await expect.poll(displayedHistoryIds).toEqual(selectedClosed.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    await expect(moreHistory).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('current-settlement-retains-closed-page-'+locale+'.png')});
+    let continuationReads=0;
+    await page.route(api+'tasks/occurrences/'+oid+'/material-history?limit=1&cursor='+encodeURIComponent(selectedClosed.next_cursor),route=>{continuationReads++;return route.continue();},{times:1});
+    await activate(moreHistory);await expect.poll(()=>continuationReads).toBe(1);
+    const continuedResponse=await page.request.get(api+'tasks/occurrences/'+oid+'/material-history?limit=1&cursor='+encodeURIComponent(selectedClosed.next_cursor),{headers});expect(continuedResponse.ok()).toBe(true);
+    const continuedClosed=await continuedResponse.json();expect(continuedClosed.items).toHaveLength(1);expect(continuedClosed.next_cursor).toBeNull();
+    expect(continuedClosed.items[0].cycle.cycle_id).not.toBe(selectedClosed.items[0].cycle.cycle_id);
+    expect(new Set([selectedClosed.items[0].cycle.cycle_id,continuedClosed.items[0].cycle.cycle_id])).toEqual(new Set([before.cycle.cycle_id,second.cycle.cycle_id]));
+    await expect(closedOutcomes.locator('li')).toHaveCount(continuedClosed.items[0].materials.length);
+    await expect.poll(displayedHistoryIds).toEqual(continuedClosed.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    expect(currentSends).toBe(1);
+    await info.attach('current-settlement-preserves-closed-history',{body:JSON.stringify({currentBefore,currentAfter,selectedClosed,continuedClosed,committed:currentBody,originals:currentOriginals}),contentType:'application/json'});
+    // Retire these two resolved requests explicitly, retaining the capacity checks below.
+    for(let index=0;index<2;index++){
+      await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+      await openSavedRequests();await expect(dismiss).toHaveCount(7-index);await activate(dismiss.first());
+    }
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));
+    await openSavedRequests();await expect(dismiss).toHaveCount(5);
     const policyReply=await page.request.get(api+'tasks/policy',{headers}), policy=await policyReply.json();
     await write('separate-recording-policy',{expected_revision:policy.revision,rules:{...policy.rules,material_recording:'separate_recording'}},'tasks/policy','put');
     await expand();await title.fill('QA 150 missing actual quantity');

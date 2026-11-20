@@ -51,11 +51,12 @@ function fixture(mode: 'native' | 'standalone' = 'standalone') {
 }
 
 function materialReceipt(action = 'post', quantity = '2') {
+  const corrected=action==='correct',effectRevision=corrected?2:1;
   return {...receipt(2), result:{...receipt(2).result, revision:'$revision', material_action:action,
-    material:{intent_id:'intent-1',cycle_id:'cycle-1',line_id:'line-1',revision:8,effect_revision:1,
-      submitted_quantity:action==='correct'?null:quantity, quantity, state:quantity==='0'?'not_used':'posted',
+    material:{intent_id:'intent-1',cycle_id:'cycle-1',line_id:'line-1',revision:corrected&&quantity!=='0'?9:8,effect_revision:effectRevision,
+      submitted_quantity:corrected?null:quantity, quantity, state:quantity==='0'?'not_used':corrected?'corrected':'posted',
       pending_reason:null,movement_id:quantity==='0'?null:'movement-1',message:'Saved.',action_required:null,
-      confirmed_quantity:quantity==='0'?null:quantity,confirmed_effect_revision:quantity==='0'?null:1,posted_at:quantity==='0'?null:100},
+      confirmed_quantity:quantity==='0'?null:quantity,confirmed_effect_revision:quantity==='0'?null:effectRevision,posted_at:quantity==='0'?null:100},
     material_source:{household_id:'home',occurrence_id:'work-1',cycle_id:'cycle-1',intent_id:'intent-1',line_id:'line-1',
       definition_revision:1,performer_ids:['member-1']}}};
 }
@@ -69,6 +70,7 @@ test.each(['native','standalone'] as const)('%s material post and initial zero r
     f.transport.mockResolvedValueOnce(reply({csrf_token:'a'.repeat(64)})).mockResolvedValueOnce(reply(raw));
     const saved=await f.server.send(request,context);
     expect(saved).toMatchObject({kind:'receipt',action:'task.material.settle',intentId:'intent-1',material:{revision:'8',quantity:action==='post'?'2':'0'}});
+    expect(saved).toMatchObject({material:{effectRevision:action==='correct'?'2':'1'}});
     expect(saved).not.toHaveProperty('revision'); expect(saved).not.toHaveProperty('state');
     const [path,init]=f.transport.mock.calls.at(-1)!;
     expect(path).toBe(f.target.applicationBase+'api/v1/tasks/occurrences/work-1/materials/intent-1/settlement');
@@ -79,12 +81,11 @@ test.each(['native','standalone'] as const)('%s material post and initial zero r
     expect(f.transport.mock.calls.at(-1)![0]).toBe(f.target.applicationBase+'api/v1/tasks/requests/task.material.settle/original-key');
   }
 });
-test.each(['intent','cycle','line','revision','scope_occurrence','scope_cycle','scope_intent','scope_line','definition','performers','home','cycle_definition','action','consumer','quantity'])(
-  'a material receipt with substituted %s cannot confirm an uncertain write', async kind => {
-    const f=fixture(), raw=materialReceipt();
+test.each(['matching','intent','cycle','line','revision','scope_occurrence','scope_cycle','scope_intent','scope_line','definition','performers','home','cycle_definition','action','consumer','quantity'])(
+  'a material correction receipt validates the %s case against the original command', async kind => {
+    const f=fixture(), raw=materialReceipt('correct');
     const request={key:'original-key',command:taskCommand({action:'task.material.settle',occurrenceId:'work-1',intentId:'intent-1',
       payload:{expected_revision:'7',cycle_id:'cycle-1',action:'correct',quantity:'2',reason:'Initial actual use'}})!};
-    raw.result.material_action='correct';
     const value=raw.result;
     if(kind==='intent')value.material.intent_id='other';
     if(kind==='cycle')value.material.cycle_id='other';
@@ -102,7 +103,9 @@ test.each(['intent','cycle','line','revision','scope_occurrence','scope_cycle','
     if(kind==='consumer')value.consumer_delivery='confirmed';
     if(kind==='quantity')value.material.quantity='3';
     f.transport.mockResolvedValueOnce(reply({csrf_token:'a'.repeat(64)})).mockResolvedValueOnce(reply(raw));
-    expect(await f.server.send(request,context)).toEqual({kind:'uncertain'});
+    const result=await f.server.send(request,context);
+    if(kind==='matching')expect(result).toMatchObject({kind:'receipt',material:{revision:'9',effectRevision:'2',submittedQuantity:null,quantity:'2',state:'corrected'}});
+    else expect(result).toEqual({kind:'uncertain'});
     expect(f.transport).toHaveBeenCalledTimes(2);
   });
 test('the current linking hint is an explicit server boolean and malformed outcome quantities are rejected', async () => {

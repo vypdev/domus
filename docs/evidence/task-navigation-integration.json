@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "7920777afe0e1d01704c8e1ecbdcdb9ffbff973709fe8e0a003be339e18336a3",
-    "assets/index-BNSPQT9z.js": "5b4142f452ee3460450437ca19b57d3025bf5021dadb9c36a7909c995f163968",
+    ".vite/manifest.json": "8f5c096ee4ca02e11b83751d79782b1785c44de4306c1e21e40933ed9185f440",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "index.html": "efe9e685b64a734a23cd640ae31e83f6e4b468fd5f9c5d80c57da107630b5c9e"
+    "assets/index-CpMbFZoj.js": "c9f5ef260d3d57fd6feb886dd27355f30190124149a0dd26a701bc3a9b4216a7",
+    "index.html": "44d9e535e10755a21db8b1d2cec7e575ed5585d61b7a9cac951112202f493f9c"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -439,7 +439,7 @@
     "haUiPublicationRun": 44699421594,
     "haUiPublicationAttempt": 6,
     "fivePublishedArchiveHashesVerified": true,
-    "frontendTests": 2070,
+    "frontendTests": 2077,
     "frontendRuntimeFiles": 110,
     "frontendCoverage": "100% globally and per file for all four metrics",
     "backendTests": 5635,
@@ -448,7 +448,7 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Centered-focus correction passes 2,070 frontend tests at full coverage, strict types, all four rebuilt material journeys in42.6s and46catalog cases. Native64 original settlement screenshot shows actualHA clipping despite raw-source bounds passing. Immutable65 installed C09/focus and final exact-head whole/source/both-CPU CI/review remain mandatory.",
+    "sourceState": "Current-cycle settlement correction passes all2,077 frontend tests, 110 runtime files at100% all four metrics, strict types, four expanded native/standalone EN keyboard/ES390touch material journeys and46catalog cases. New immutable Edge candidate, installed acceptance and exact final-head CI/review remain required.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "reviewCorrections": {
       "pullRequest": 151,
@@ -512,7 +512,7 @@
         "extraDomainWrites": 0
       },
       "materialOutcomeFocusVisibility": "Guarded deferred material focus centers its current target. All four rebuilt journeys pass42.6s with focused result heading below navigation. Raw64source also passed these assertions42.4s; original realHA64settlement screenshot is the negative clipping evidence, requiring independent installed65 verification.",
-      "plannerPublicationReview": "Verified false positive oncc: EntryRuntime.materialDraft→perform→publish→composition callback already passes a fresh TaskView after synchronous mutation and promise settlement. Source/realUI proofreply4643831425; normal thread resolution PRRT_kwDOVa5AKs66B--f.",
+      "plannerPublicationReview": "Verified false positive oncc: EntryRuntime.materialDraft\u2192perform\u2192publish\u2192composition callback already passes a fresh TaskView after synchronous mutation and promise settlement. Source/realUI proofreply4643831425; normal thread resolution PRRT_kwDOVa5AKs66B--f.",
       "visibleMaterialFocusJourneys": {
         "expected": 4,
         "unexpected": 0,
@@ -749,6 +749,84 @@
       "actualARM64Seconds": 38.09,
       "runtimeAndPinUnchanged": true,
       "finalExactHeadCIAndReview": "required"
+    },
+    "precedingFullProductCI65": {
+      "head": "24c046a1c770f5aee22ef7ef1215fac4a122fc45",
+      "run": 44790571363,
+      "all10ProductJobs": "success",
+      "branchSync": 44790571545,
+      "branchSyncConclusion": "success",
+      "backendTests": 5635,
+      "backendSeconds": 1406.82,
+      "sourceEntryCases": 125,
+      "catalogCases": 46,
+      "containerCasesEachCPU": 52,
+      "imageBrowserCasesEachCPU": 70,
+      "review": "Two new valid findings; corrected by the current source, so this historical green product head is not merge-accepted."
+    },
+    "currentCycleHistoryCorrection": {
+      "findings": [
+        4646361743,
+        4646361752
+      ],
+      "domainFixture": "Initial correction increments effect revision1to2; zero is not_used at intent revision8 with no movement, positive confirmation is corrected at intent revision9/effect2. Actual backend domain execution verifies these facts.",
+      "controller": "Preserve the same selected occurrence closed-history page/cursor for a current-cycle settlement before send and after direct/original receipt. Fresh access and scope checks remain; denial and abandoned selection cannot restore private history.",
+      "unitRegressionReds": 2,
+      "newControllerCases": 6,
+      "newMatchingCorrectionBaseline": 1,
+      "frontendTests": 2077,
+      "runtimeFiles": 110,
+      "coverage": {
+        "lines": {
+          "total": 6397,
+          "covered": 6397,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 8809,
+          "covered": 8809,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 1915,
+          "covered": 1915,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 7896,
+          "covered": 7896,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "oldCompiledEdge65BrowserRed": "One real native English current settlement loses all3displayed historical lines after posting4; unchanged work/cycle and one send verified before failure.",
+      "correctedBrowser": {
+        "startTime": "2026-11-20T19:19:44.296Z",
+        "duration": 54764.116,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "catalog": {
+        "startTime": "2026-11-20T19:16:35.637Z",
+        "duration": 30617.576999999997,
+        "expected": 46,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "packaging": "One actual wheel acceptance plus both independent frontend coverage/accepted-fixture checks pass.",
+      "caseScope": [
+        "task-material-planning-C08",
+        "task-material-planning-C11",
+        "task-material-planning-C12"
+      ],
+      "inventory": "Same125source/70image cases; all four existing material journeys expanded, zero retries and unchanged individual deadlines.",
+      "newInstalledCandidate": "Required; native Edge65 acceptance does not cover this new UI."
     }
   }
 }
