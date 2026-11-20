@@ -956,7 +956,7 @@ class TaskQueries:
         cycle: TaskCycle | None,
     ) -> tuple[str, ...]:
         if work.revision == 2**63 - 1:
-            return ()
+            return () if cycle is None else self._material_actions(unit, work, cycle)
         access = TaskAccess(self.human)
         result = []
         manage = _possible(

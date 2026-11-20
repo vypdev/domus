@@ -459,3 +459,60 @@ def test_closed_material_history_exposes_original_pending_usage_and_explicit_set
             1,
         )
     assert api.client.get(path + "/material-history").status_code == 403
+
+
+def test_exhausted_work_revision_keeps_independent_current_material_settlement(api, inventory):
+    from domus.infrastructure.sqlite_task_records import occurrence_document
+
+    maximum = 2**63 - 1
+    inventory.pending = MaterialPendingReason.STOCK_SHORTAGE
+    created = create(api, materials=[selection()])
+    oid = created["result"]["occurrence_id"]
+    path = PREFIX + "/occurrences/" + oid
+    with api.store.read() as unit:
+        work = unit.tasks.occurrence("home", oid)
+    near_limit = replace(work, revision=maximum - 1)
+    with api.store._connection() as connection:
+        connection.execute(
+            "UPDATE task_occurrences SET revision=?,document=? WHERE occurrence_id=?",
+            (near_limit.revision, occurrence_document(near_limit).encoded, oid),
+        )
+    line = api.client.get(path).json()["work"]["definition_snapshot"]["materials"][0]
+    member = api.client.get("/api/v1/members").json()["members"][0]["member_id"]
+    completed = checked(
+        api,
+        "post",
+        "/occurrences/" + oid + "/complete",
+        {
+            "expected_revision": maximum - 1,
+            "performer_ids": [member],
+            "performed_at": 90,
+            "material_usages": [{"line_id": line["line_id"], "quantity": "2"}],
+        },
+        "complete-at-limit",
+    )
+    assert completed["result"]["revision"] == maximum
+    before = api.client.get(path).json()
+    assert before["work"]["revision"] == maximum
+    pending = before["materials"][0]
+    assert pending["state"] == "pending_regularization" and not inventory.movements()
+    assert api.client.get(path + "/material-history").json() == {"items": [], "next_cursor": None}
+    inventory.pending = None
+    payload = {
+        "expected_revision": pending["revision"],
+        "cycle_id": pending["cycle_id"],
+        "action": "post",
+    }
+    route = "/occurrences/" + oid + "/materials/" + pending["intent_id"] + "/settlement"
+    settled = checked(api, "post", route, payload, "settle-at-work-limit")
+    assert settled["result"]["material"]["state"] == "posted"
+    assert checked(api, "post", route, payload, "settle-at-work-limit") == settled
+    original = api.client.get(PREFIX + "/requests/task.material.settle/settle-at-work-limit")
+    assert (
+        original.status_code == 200 and original.json()["operation_id"] == settled["operation_id"]
+    )
+    after = api.client.get(path).json()
+    assert after["work"] == before["work"] and after["cycle"] == before["cycle"]
+    assert after["materials"][0]["confirmed_quantity"] == "2"
+    assert after["allowed_actions"] == [] and len(inventory.movements()) == 1
+    assert before["allowed_actions"] == ["materials.settle"]

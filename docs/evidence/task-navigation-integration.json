@@ -448,7 +448,7 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Published runtime d50d25e validates2077unit/110all100, four expanded materialjourneys,46catalog,types,wheel,independentgates. Immutable66 archive/wheel/Linuxbuilder/finalPython andUI bytes match. Installed66/current-cycle/history and exact final-pin CI/review remain required.",
+    "sourceState": "The max-occurrence-revision hint finding reproduces in both actualHTTPcompositions and passes265directed tests after a one-line backend correction. CompiledUI remains byte-identical to native-qualified66. A new immutable runtime candidate and exact final-head complete backend/globalcoverage, productCI/review and installedacceptance remain required.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "reviewCorrections": {
       "pullRequest": 151,
@@ -841,6 +841,43 @@
       "pythonByteIdenticalToEdge64": true,
       "status": "Build identity and actual installed65 C09/visible-focus acceptance pass. Complete exact-head whole/source/both-CPU CI/review remain required after the worker-observation test correction.",
       "imageId": "sha256:6e4a7b017ddc24a2ebdfb392ff5e5c64dfdfc0fb4fcf0d2b250e2dab3d2e3e0e"
+    },
+    "maximumWorkRevisionMaterialHint": {
+      "finding": 4646939608,
+      "reviewHead": "529a6ef8bcba122caf7365b0ee03a09f4ef6289d",
+      "reviewFiles": 67,
+      "reviewPartitions": 11,
+      "actualHTTPRegressionReds": 2,
+      "directedPasses": 265,
+      "sourceChange": "Only the exhausted-occurrence branch now returns the existing independent current-material hints; revision-dependent task actions stay disabled.",
+      "proof": "Each real composition completes max-1 to max, keeps its current pending material out of closed history, settles/replays/reads original exactly once without changing work/cycle, and advertises only materials.settle before posting.",
+      "uiByteIdenticalToEdge66": true,
+      "fullBackendGlobalCoverage": "Required on final exact-headCI; no local full-backend acceptance claimed for the new source."
+    },
+    "installedEdge66": {
+      "runtimeSource": "d50d25eaba5b012db21e212a451b27c36c0937c2",
+      "packagingHead": "529a6ef8bcba122caf7365b0ee03a09f4ef6289d",
+      "freshInstallation": true,
+      "syntheticProducts": 1,
+      "syntheticTasks": 1,
+      "completionCycles": 3,
+      "nativeCurrentSettlement": "PASS one explicit current intent POST; same displayed historical intent/Next retained, then actualES390touch opens the other original closed completion.",
+      "finalStock": [
+        "0",
+        "0",
+        "0"
+      ],
+      "movements": "One intake and one taskconsumption linked to the sameoccurrence.",
+      "focus": {
+        "focused": true,
+        "top": 457.109375,
+        "bottom": 482.703125,
+        "viewport": 940
+      },
+      "receipt": "https://github.com/vypdev/domus/pull/151#issuecomment-7039956857",
+      "stopped": true,
+      "cleanup": "Pending fresh exact owner confirmation for66/app58e9a17f and its one source; do not upgrade this installation while pending.",
+      "limitations": "Native current direct settlement; lostreply/original recovery remains a separate sourcejourney observation. Earlier debugger window truncated; only fresh currentsettlement window write total is qualified."
     }
   }
 }
