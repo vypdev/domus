@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "998b3a51746f0784dc567bae1d308206b9add3944eb626dea149bcbea6bce69a",
+    ".vite/manifest.json": "e002ce3251bce7ac8351b11d2902309187a332cf7c763cb38992d77e9ca9f648",
+    "assets/index-CPnLf2I7.js": "c3864de7ffd8e5ade8c7169a83a6caba0419a1a99c05d7910d232c0defdff1e6",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DeF0wQmP.js": "5bb606c3aa124815de2c808cfff0a8a952c81466cc3431035d8f0c62cf272eff",
-    "index.html": "c1927f7b98fe93824e71fa48b376899bc15d219c9dadddc893a982cdd4803a75"
+    "index.html": "7b0f043b5410f40ac375959722086e26bd8939b1d0d84a75bbe092d5e30f3f62"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -439,7 +439,7 @@
     "haUiPublicationRun": 44699421594,
     "haUiPublicationAttempt": 6,
     "fivePublishedArchiveHashesVerified": true,
-    "frontendTests": 2063,
+    "frontendTests": 2070,
     "frontendRuntimeFiles": 110,
     "frontendCoverage": "100% globally and per file for all four metrics",
     "backendTests": 5635,
@@ -448,15 +448,15 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Latest catalog/history correction: 2,063 frontend tests at 100% across 110 files, four expanded real material journeys in 43.3 seconds and 46 rebuilt catalog cases pass. Backend runtime remains unchanged. Final Edge.63 installed catalog/history, exact-head whole/source/both CPU CI, review and scoped cleanup remain mandatory in PR #151.",
+    "sourceState": "Combined focus/history corrections pass 2,070 frontend tests with full coverage, strict types and four rebuilt material journeys in 53.8 seconds. A separate complete 125-case campaign passed on the preceding focus-only UI. All 46 rebuilt catalog cases also pass. Immutable Edge.64, installed acceptance and exact-head whole CI/review remain mandatory.",
     "qualification": "docs/evidence/task-material-workflow-qualification.md",
     "reviewCorrections": {
       "pullRequest": 151,
-      "frontendTests": 2063,
+      "frontendTests": 2070,
       "frontendCoverage": "100% all four metrics globally and per file across all 110 runtime files",
       "directedBackendMaterialTests": 117,
       "closedCycleHistory": "explicit bounded read; original cycle and intent revision; current permission on settlement",
-      "sourceAcceptance": "All four latest rebuilt material journeys pass with zero retries/skipped/flaky/unexpected; all 46 rebuilt catalog cases pass. Final-head complete 125-source and 70-per-CPU campaigns and installed Edge61 remain gates.",
+      "sourceAcceptance": "All four combined-runtime material journeys pass in 53.8 seconds with two failed read/recovery boundaries each, zero skipped/flaky/unexpected/retries. A preceding focus-only UI passed all 125 cases in 496.2 seconds; the final whole CI must execute the complete inventory again. All 46 final rebuilt catalog cases pass.",
       "backendTests": 5635,
       "backendStatements": 18045,
       "backendBranches": 4876,
@@ -482,15 +482,35 @@
         "retries": 0
       },
       "frontendCounts": {
-        "statements": 8805,
-        "branches": 7894,
+        "statements": 8807,
+        "branches": 7896,
         "functions": 1915,
-        "lines": 6394
+        "lines": 6395
       },
       "readRecoveryVisibility": "Center the focused Refresh tasks control so the actual HA iframe sticky navigation cannot cover it; keep repeated local editing focus unchanged.",
       "catalogReadHistoryRetention": "Same-scope catalog reload, paging and failure preserve selected closed-cycle history and its continuation; three direct regressions fail before the fix and pass after.",
       "savedRequestObserver": "Read the native details.open state before toggling; no dismissal/count assertion is removed.",
-      "reopenedHistoryGuard": "Verified false positive: frontend planned materials derive from the frozen definition snapshot; current material outcomes are a separate field. Normal thread resolution and proof are linked in PR151."
+      "reopenedHistoryGuard": "Verified false positive: frontend planned materials derive from the frozen definition snapshot; current material outcomes are a separate field. Normal thread resolution and proof are linked in PR151.",
+      "deferredMaterialFocus": "A pending animation-frame continuation respects a newer keyboard target. Two deterministic EN/ES regressions fail before the guard and pass after; no assertions or deadlines removed.",
+      "historyReadFailureRetention": "Same-scope transient detail/reload/paging failure retains prior selected work, displayed cycle and opaque continuation.3genuine reds now pass;2current denial cases still retire every private fact; retry reads original cursor; no writes.",
+      "wholeSourceAfterFocusCorrection": {
+        "expected": 125,
+        "unexpected": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "durationMs": 496224.208,
+        "scope": "Complete campaign before companion history-read retention correction; original report and exact compiled UI hashes retained separately."
+      },
+      "combinedHistoryFailureJourneys": {
+        "expected": 4,
+        "unexpected": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retries": 0,
+        "durationMs": 53800.962999999996,
+        "readsFailedPerJourney": 2,
+        "extraDomainWrites": 0
+      }
     },
     "runtimeSourceBeforeReview": "514258c9adbd54d938e28fd65a901764a89799cc",
     "sourceEntryCampaigns": {
@@ -607,7 +627,8 @@
       "limit": "Pending writes and fixture reset deadlines observed; underlying cause unproven; no product exception applies."
     },
     "runtimeSource": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
-    "immutableCandidate": {
+    "runtimeSourceBeforeMaterialFocusCorrection": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
+    "supersededCandidate63": {
       "version": "0.0.0-edge.63",
       "sourceCommit": "0f9101b285b7528b801126fb3fa4318e9cc4fd90",
       "sourceArchiveSHA256": "fe003b4238bf2d5b0b00f84b3b6e58f793a040ee1599278797ddcb8388b1a718",
@@ -618,7 +639,17 @@
       "archiveWheelInstalledEquality": "passed",
       "imageId": "sha256:ee70884fef01cdf9c869eca986e5df64285dfe6ee26d2d085d6d0ec233f38586",
       "pythonByteIdenticalToEdge62": true,
-      "status": "Immutable build qualified. Final-head whole/source/both CPU CI, actual installed Edge63 catalog/history retention, review, scoped cleanup and destination receipts remain separate gates in PR151."
+      "status": "Native63 catalog/history upgrade qualification passed, but exact-head amd64 failed69/70 and exposed a deferred-focus defect. Backend/ARM cancelled after corrected2065unit gate; no product waiver."
+    },
+    "precedingImageCI63": {
+      "head": "cf473cdebd23a58664b725d8a8d1fa02b79bf141",
+      "run": 44744514387,
+      "amd64BrowserPassed": 69,
+      "amd64BrowserFailed": 1,
+      "backend": "cancelled after valid focus correction ready",
+      "arm64": "cancelled after valid focus correction ready",
+      "originalTraceRetained": true,
+      "productWaiver": false
     }
   }
 }

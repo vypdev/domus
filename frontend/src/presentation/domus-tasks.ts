@@ -262,7 +262,8 @@ export class DomusTasks extends LitElement {
           const target = focus === 'last-row' ? fields.item(fields.length - 1) : focus === 'outcomes'
             ? component.renderRoot.querySelector<HTMLElement>('vyp-ha-field, h4')
             : component.renderRoot.querySelector<HTMLElement>('vyp-ha-select') ?? component.renderRoot.querySelector<HTMLElement>('vyp-ha-button');
-          requestAnimationFrame(() => {if (target?.isConnected) target.focus();});
+          const root = this.renderRoot as ShadowRoot, focused = root.activeElement;
+          requestAnimationFrame(() => {if (target?.isConnected && root.activeElement === focused) target.focus();});
         });
       }
     }

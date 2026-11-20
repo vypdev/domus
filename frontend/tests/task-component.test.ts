@@ -1,4 +1,4 @@
-import {afterEach, expect, test} from 'vitest';
+import {afterEach, expect, test, vi} from 'vitest';
 import type {HaTextField} from '@vypdev/ha-ui/field';
 import type {HaCheckbox} from '@vypdev/ha-ui/checkbox';
 import type {HaButton} from '@vypdev/ha-ui/button';
@@ -112,6 +112,26 @@ test('starting a material read before native toggle delivery preserves the newly
   f.element.view=view({phase:'loading',busy:true,access:null});await f.element.updateComplete;
   f.element.view=view({materialPlan:{...plan,open:true,notice:'unavailable'}});await f.element.updateComplete;
   expect(f.root.querySelector<HTMLDetailsElement>('details.new-task')!.open).toBe(true);
+});
+
+test.each(['en','es'] as const)('%s deferred material focus respects a newer keyboard target', async locale => {
+  const choice={referenceId:'soap',name:'Soap',unit:'piece' as const};
+  const plan={open:true,busy:false,canLink:true,readOnly:false,rows:[{referenceId:'soap',input:'4',choice}],choices:[choice],cursor:null,notice:null} as const;
+  const f=await mount(view({materialPlan:plan}),locale);
+  const component=f.root.querySelector('domus-task-material-plan')!;await component.updateComplete;
+  const clear=component.shadowRoot!.querySelector<HaButton>('vyp-ha-button')!;await clear.updateComplete;clear.focus();
+  const callbacks:FrameRequestCallback[]=[];
+  const frames=vi.spyOn(window,'requestAnimationFrame').mockImplementation(callback=>{callbacks.push(callback);return callbacks.length;});
+  try {
+    clear.click();expect(f.intents.at(-1)).toEqual({type:'materialPlan',action:'clear'});
+    f.element.view=view({materialPlan:{...plan,open:false,rows:[]}});
+    await f.element.updateComplete;await component.updateComplete;await Promise.resolve();
+    expect(callbacks.length).toBeGreaterThan(0);
+    const refresh=f.button(locale==='en'?'Refresh tasks':'Actualizar tareas');refresh.focus();
+    for(const callback of callbacks.splice(0))callback(performance.now());
+    expect(f.root.activeElement).toBe(refresh);
+    expect(f.intents).toEqual([{type:'materialPlan',action:'clear'}]);
+  } finally {frames.mockRestore();}
 });
 
 test('missing material drafts survive a granular rejection and per-line success has a material-specific receipt', async () => {

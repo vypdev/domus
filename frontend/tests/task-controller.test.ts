@@ -703,6 +703,31 @@ function historicalMaterial() {
   const current = pendingMaterialWork();
   return {cycle:current.cycle!,closedAt:'200',materialOutcomes:current.materialOutcomes!,allowedActions:['materials.settle']};
 }
+test.each(['detail','reload','more'] as const)('failed material-history %s retains the selected facts and original continuation', async operation => {
+  const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+  f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));await f.controller.materialHistory();
+  const prior=f.controller.view;
+  const failure={result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()};
+  if(operation==='detail')f.server.detail.mockReturnValueOnce(failure);else f.server.materialHistory.mockReturnValueOnce(failure);
+  await f.controller.materialHistory(operation==='more');
+  expect(f.controller.view.notice).toBe('unavailable');expect(f.controller.view.detail).toEqual(current);
+  expect(f.controller.view.page).toEqual(prior.page);expect(f.controller.view.materialHistory).toEqual(prior.materialHistory);
+  expect(f.controller.view.materialHistory?.nextCursor).toBe('next-closed-cycle');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[],nextCursor:null}));await f.controller.materialHistory(true);
+  expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home','next-closed-cycle',context);
+  expect(f.controller.view.materialHistory).toEqual({items:[],nextCursor:null});expect(f.server.send).not.toHaveBeenCalled();
+});
+test.each(['detail','history'] as const)('a current material-history %s denial retires the prior private facts', async operation => {
+  const f=fixture(),old=historicalMaterial();
+  f.server.detail.mockReturnValue(read(pendingMaterialWork()));await f.controller.refresh();await f.controller.select('work-1');
+  f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));await f.controller.materialHistory();
+  const failure={result:Promise.reject(new EntryReadError('forbidden')),cancel:vi.fn()};
+  if(operation==='detail')f.server.detail.mockReturnValueOnce(failure);else f.server.materialHistory.mockReturnValueOnce(failure);
+  await f.controller.materialHistory(true);
+  expect(f.controller.view.notice).toBe('forbidden');expect(f.controller.view.detail).toBeNull();
+  expect(f.controller.view.materialHistory).toBeNull();expect(f.controller.view.page).toBeNull();expect(f.server.send).not.toHaveBeenCalled();
+});
 test.each(['load','more','failure'] as const)('catalog reads retain the displayed material history and cursor: %s', async operation => {
   const catalog:Pick<InventoryServer,'read'>={read:vi.fn<InventoryServer['read']>(()=>read({
     mayManage:true,mayShop:true,mayRequest:true,cursor:'next-products',locations:[],products:[]}))};

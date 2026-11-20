@@ -233,7 +233,7 @@ export class TaskController {
     if (selected === null || more && !cursor) return Promise.resolve();
     return this.run(async (prior, generation) => {
       if (this.state.scopeKey !== prior.scopeKey) {this.update({notice:'context_changed'}); return;}
-      this.update({page:prior.page, outcome:prior.outcome});
+      this.update({page:prior.page, detail:prior.detail, materialHistory:prior.materialHistory, outcome:prior.outcome});
       const work = await this.read(this.server.detail(selected.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation);
       this.update({detail:work});
       this.update({materialHistory:await this.read(this.server.materialHistory(work, this.state.access!.householdId, cursor ?? null, this.state.session!.context), generation)});

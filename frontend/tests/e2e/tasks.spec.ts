@@ -147,6 +147,23 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     const firstPage=await pageResponse.json();expect(firstPage.items).toHaveLength(1);expect(firstPage.next_cursor).toBeTruthy();
     const pending=firstPage.items[0].materials.find((value:{state:string})=>value.state==='pending_regularization');
     expect([firstPending.intent_id,secondPending.intent_id]).toContain(pending.intent_id);
+    for(const failure of [
+      {path:api+'tasks/occurrences/'+oid,button:t('Review earlier usage','Revisar consumos anteriores')},
+      {path:api+'tasks/occurrences/'+oid+'/material-history?limit=1&cursor=*',button:t('Next closed completion','Siguiente realización cerrada')},
+    ]){
+      let failedReads=0;
+      await page.route(failure.path,route=>{failedReads++;expect(route.request().method()).toBe('GET');return route.abort('failed');},{times:1});
+      await activate(tasks.getByRole('button',{name:failure.button,exact:true}));
+      await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+      expect(failedReads).toBe(1);
+      await expect(tasks.getByRole('heading',{name:'QA 150 material workflow',exact:true})).toBeVisible();
+      await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+      expect(await outcomes.locator('li').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-material-intent')))).toEqual(
+        firstPage.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+      await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    }
+    await activate(tasks.getByRole('button',{name:t('Review earlier usage','Revisar consumos anteriores'),exact:true}));
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
     await expand();await title.fill('QA 150 catalog read retains earlier usage');
     await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
     await choose(used.name);
