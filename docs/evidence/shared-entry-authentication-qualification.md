@@ -68,3 +68,33 @@ The first required wheel gate detected that the current UI evidence map in
 The map is now updated from the independently matched Edge.57 bytes, with the previous map retained.
 The complete wheel/asset/license and fixture-exclusion guard passes locally. This evidence correction
 changes no runtime, archive, wheel or candidate version; the original two CI job logs are retained.
+
+## Reviewed PR and post-merge qualification
+
+PR [#147](https://github.com/vypdev/domus/pull/147) passed all checks at
+`66dd70a7965bfee7088ba7da8312cdba7d46f2bb`: 5,583 backend cases with all 231 modules at
+100% supported coverage, all source/catalog journeys and all 66 journeys on each actual
+amd64 and ARM64 image. The amd64 image executed under emulation on the self-hosted Apple
+Silicon runner; this is not physical x64 hardware acceptance. Installed immutable Edge.57
+also passed the separate original-request, shared-401, granular-403, keyboard/touch,
+theme/locale and stop/start persistence checks with owned synthetic data.
+
+The exact merged tree at `10e153a32937ef1bfd5b81adfc6dc8929d9ea220` passed Branch Sync,
+backend and source checks, but its amd64 browser campaign passed 65 of 66 journeys.
+The standalone barcode case failed while reading `Response.json()` from Chromium after
+the application had already displayed the recovered association. The retained trace
+records HTTP 200 followed by `net::ERR_ABORTED`; the browser cancellation trigger is not
+independently established. The original report, trace, failure screenshot and job log
+are retained. That failed CI is not treated as an accepted baseline.
+
+Issue [#148](https://github.com/vypdev/domus/issues/148) corrects only this test observation.
+The exact original GET now uses Playwright's documented
+[upstream fetch and unchanged fulfillment](https://playwright.dev/docs/api/class-route#route-fetch)
+to retain the real receipt bytes before delivery, with redirects and retries disabled.
+It still requires one recovered receipt, the same operation and association, one association
+POST, and all existing UI/focus, authentication, granular-denial and stale-association checks.
+No case is removed or retried, and runtime, packaging, schema and Edge.57 bytes are unchanged.
+Both protected source journeys and complete same-head CI remain required for this correction.
+The two corrected local source journeys pass in 12.8 seconds with no skips, unexpected
+results or retries. Both original receipt bodies and 14 screenshots are retained. Runtime
+and catalog types, documentation links and the rebuilt UI byte comparison also pass.
