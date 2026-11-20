@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.64
+
+- Respect a newer keyboard target when a material control has a pending focus continuation.
+- Retain the selected task, earlier usage and next page after a transient history-read failure.
+
 ## 0.0.0-edge.63
 
 - Keep displayed earlier material usage when opening, refreshing or paging material choices.

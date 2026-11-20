@@ -87,6 +87,15 @@ The final Edge.63 review correctly identified a second failure boundary: history
 
 All 2,070 frontend tests pass with all four coverage metrics still 100% across all 110 runtime files (8,807 statements, 7,896 branches, 1,915 functions and 6,395 lines). The selected SDD remains byte-identical. The catalog's stale final count is corrected to this actual current qualification. Both strict TypeScript checks pass. The final combined UI passes all four rebuilt material journeys in 53.8 seconds with zero skipped, flaky, unexpected or retried cases. Each now fails one detail GET and one continuation GET deliberately, retains the selected pane and exact historical intent IDs/next page, then explicitly recovers. No extra domain writes or journal dismissals are added. All 46 rebuilt catalog cases also pass with zero skipped, flaky or unexpected cases. Immutable Edge.64, installed acceptance and whole exact-head source/both-CPU CI/review remain required; review fixes do not waive product gates.
 
+## Immutable Edge.64 build
+
+- Runtime source: `530a609f0a9490bccd7f3f2cd8598ec590689166`.
+- Source archive SHA-256: `380f4a071e81e2004edfb34a15e099a6d20cbcc27d3fd8f0e0652f6c1b2e3dd1`.
+- Wheel SHA-256: `541f831d5716308349567cbf2e3be8780c60ae9ca6330007c1528bc1d41126f6`.
+- Local Linux ARM64 image: `sha256:bfe831f24e8ba53007041b3f8c8df277cac35fe15b67de97644377817242e7ec`.
+
+All 231 Python modules and four compiled UI files match the published archive, wheel, installed Linux builder and final image. Normal local and Linux wheel bytes match. The Python runtime is byte-identical to Edge.63, and source/version/architecture labels pass. SQLite remains schema 35. The installer pin changes packaging, eight package-test expectations and qualification metadata only. Actual installed Edge.64 recovery/focus acceptance, final exact-head whole/source/both-CPU CI, review, scoped cleanup, merge and destination receipts remain independent gates recorded in PR #151.
+
 ## Superseded immutable Edge.63 build
 
 - Runtime source: `0f9101b285b7528b801126fb3fa4318e9cc4fd90`.

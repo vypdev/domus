@@ -15,7 +15,7 @@ def test_repository_and_edge_manifest_offer_native_ha_entry_without_user_credent
     manifest = yaml.safe_load((ROOT / "addon-edge/config.yaml").read_text())
     assert repository["url"] == "https://github.com/vypdev/domus"
     assert manifest["slug"] == "domus_edge" and manifest["stage"] == "experimental"
-    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.63"
+    assert manifest["boot"] == "manual" and manifest["version"] == "0.0.0-edge.64"
     assert manifest["ingress"] is True and manifest["ingress_port"] == 8099
     assert manifest["panel_admin"] is False and manifest["homeassistant_api"] is True
     assert manifest["options"] == {"public_origins": []}
@@ -65,15 +65,15 @@ def test_build_pins_source_checksum_bases_lock_and_nonroot_native_entrypoint() -
     commits = re.findall(r"^ARG DOMUS_SOURCE_COMMIT=(\w+)$", source, re.MULTILINE)
     assert len(commits) == 2 and len(set(commits)) == 1
     assert re.fullmatch(r"[a-f0-9]{40}", commits[0])
-    assert commits[0] == "0f9101b285b7528b801126fb3fa4318e9cc4fd90"
+    assert commits[0] == "530a609f0a9490bccd7f3f2cd8598ec590689166"
     assert (
-        "DOMUS_SOURCE_SHA256=fe003b4238bf2d5b0b00f84b3b6e58f793a040ee1599278797ddcb8388b1a718"
+        "DOMUS_SOURCE_SHA256=380f4a071e81e2004edfb34a15e099a6d20cbcc27d3fd8f0e0652f6c1b2e3dd1"
         in source
     )
-    assert "ARG BUILD_VERSION=0.0.0-edge.63" in source
+    assert "ARG BUILD_VERSION=0.0.0-edge.64" in source
     candidate = json.loads((ROOT / "addon-edge/artifact.json").read_text())
     assert candidate["sourceCommit"] == commits[0]
-    assert candidate["version"] == "0.0.0-edge.63"
+    assert candidate["version"] == "0.0.0-edge.64"
     assert "DOMUS_SOURCE_SHA256=" + candidate["sourceArchiveSHA256"] in source
     assert re.search(r"^ARG DOMUS_SOURCE_SHA256=[a-f0-9]{64}$", source, re.MULTILINE)
     assert "sha256sum --check" in source
@@ -150,8 +150,8 @@ def test_edge_artifact_declares_exact_reviewed_runtime_without_rebinding_histori
         "pythonFiles",
         "uiFiles",
     }
-    assert artifact["schemaVersion"] == 1 and artifact["version"] == "0.0.0-edge.63"
-    assert artifact["sourceCommit"] == "0f9101b285b7528b801126fb3fa4318e9cc4fd90"
+    assert artifact["schemaVersion"] == 1 and artifact["version"] == "0.0.0-edge.64"
+    assert artifact["sourceCommit"] == "530a609f0a9490bccd7f3f2cd8598ec590689166"
     assert artifact["storageSchema"] == 35
     for field in ["sourceArchiveSHA256", "wheelSHA256"]:
         assert re.fullmatch("[a-f0-9]{64}", artifact[field])
