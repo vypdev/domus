@@ -505,9 +505,11 @@ def main() -> None:
         fixture.start()
     else:
         fixture = Fixture(args.mode, args.port, args.origin_port)
+    from http_observation import observe_http
+
     try:
         uvicorn.run(
-            fixture,
+            observe_http(fixture, args.mode, PREFIX),
             host="127.0.0.1",
             port=args.port,
             access_log=False,

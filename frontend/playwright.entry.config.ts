@@ -2,8 +2,9 @@ import {defineConfig} from '@playwright/test';
 
 export default defineConfig({
   testDir: 'tests/e2e', testMatch: ['entry.spec.ts','administration.spec.ts','tasks.spec.ts','workspace-navigation.spec.ts'], forbidOnly: true, retries: 0, workers: 1,
-  // Include both workspace journeys, fixture startup and cleanup on slower self-hosted runners.
-  globalTimeout: 900_000, outputDir: 'test-results/entry-artifacts',
+  // The serial 125-case inventory exhausted 15 minutes on self-hosted CI. Keep each
+  // test/expectation deadline and zero retries; allow the whole inventory to finish.
+  globalTimeout: 1_200_000, outputDir: 'test-results/entry-artifacts',
   reporter: [['list'], ['json', {outputFile: 'test-results/entry-results.json'}]],
   // Playwright normally disables BFCache. Exercise the real production page lifecycle instead.
   use: {headless: true, launchOptions: {ignoreDefaultArgs: ['--disable-back-forward-cache']},
