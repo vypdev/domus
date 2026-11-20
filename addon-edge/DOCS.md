@@ -1,7 +1,15 @@
 # Installation and operation
 
-Edge 0.0.0-edge.57 packages the immutable runtime declared in
-[artifact.json](artifact.json). If a protected response rejects your session, Domus hides
+Edge 0.0.0-edge.58 packages the immutable runtime declared in
+[artifact.json](artifact.json). In Tasks, **Add materials** plans existing Pantry products
+for ordinary, fixed and relative creation. Review actual quantities with their displayed units,
+including zero for unused materials. Each result shows confirmed, unused or pending consumption
+separately from task completion and points. After reviewing stock or access, choose
+**Settle pending usage** explicitly. Existing separate-recording tasks offer **Record actual usage**
+with a quantity and reason. Failed reads, competing changes and interrupted replies retain the
+draft or exact original request for deliberate recovery.
+
+If a protected response rejects your session, Domus hides
 household information and offers **Reopen Domus**. Existing records and original requests
 are retained. After verifying your access, recover an interrupted request explicitly;
 opening the interface never repeats it automatically. Overview shows the signed-in member's completed tasks and

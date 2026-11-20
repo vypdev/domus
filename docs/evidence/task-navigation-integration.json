@@ -448,7 +448,19 @@
     "entryBrowserTests": 125,
     "catalogBrowserTests": 46,
     "materialsBrowserCombinationsPassed": 4,
-    "sourceState": "Qualified implementation working tree after the native SDD commit; final immutable Edge and image acceptance remain separate gates.",
-    "qualification": "docs/evidence/task-material-workflow-qualification.md"
+    "sourceState": "Qualified runtime source committed independently from the immutable installer metadata.",
+    "qualification": "docs/evidence/task-material-workflow-qualification.md",
+    "runtimeSource": "514258c9adbd54d938e28fd65a901764a89799cc",
+    "immutableCandidate": {
+      "version": "0.0.0-edge.58",
+      "sourceCommit": "514258c9adbd54d938e28fd65a901764a89799cc",
+      "sourceArchiveSHA256": "91835d1b4632ddce683b217ec0b282552e3b2c13dc232d96b65c3599ecd00200",
+      "wheelSHA256": "f3fd2b92b73e84211a2fbf2552ea6176bacfaaa12eadf2b488223d207597d3a3",
+      "storageSchema": 35,
+      "pythonFiles": 231,
+      "uiFiles": 4,
+      "archiveWheelInstalledEquality": "passed",
+      "status": "Build qualified; CPU functional/browser and separately installed acceptance remain pending."
+    }
   }
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.0-edge.58
+
+- Plan Pantry materials during ordinary, fixed and relative task creation.
+- Show per-line actual consumption and explicitly settle pending usage or record a missing quantity.
+- Retain drafts and exact original requests across failures, conflicts and recovery.
+- Use published ha-ui next.4 so long mobile product menus preserve their scroll position.
+
 ## 0.0.0-edge.57
 
 - Remove shared household/workspace facts when a protected response rejects the current session.

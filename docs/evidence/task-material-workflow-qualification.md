@@ -25,6 +25,17 @@ These are distinct observations, not a claim of full SDD acceptance. Both actual
 
 The independent Playwright inventories enumerate the executed 125 source entry and 46 catalog cases, and 70 image entry cases per architecture. The image count is an inventory at this stage and does not assert that either image campaign executed or passed.
 
+## Immutable Edge.58 build
+
+- Runtime source: `514258c9adbd54d938e28fd65a901764a89799cc`.
+- Source archive SHA-256: `91835d1b4632ddce683b217ec0b282552e3b2c13dc232d96b65c3599ecd00200`.
+- Wheel SHA-256: `f3fd2b92b73e84211a2fbf2552ea6176bacfaaa12eadf2b488223d207597d3a3`.
+- Local Linux ARM64 image: `sha256:4f45b662fbf0d61df5851160cb19701c975b032734f14eb44773a9218a61a4eb`.
+
+All 231 tracked Python modules match the downloaded archive, built wheel and installed builder/final image. All four independently inventoried local UI assets match the Linux build, wheel and installed image. The normal local and Linux wheel bytes also match. The final image's architecture, Edge.58 version and source labels are verified. This is build and identity evidence; both CPU functional/browser campaigns and a separate Home Assistant installation remain required.
+
+The initial source CI caught a stale contract assertion that still named and expected 66 image journeys. The assertion now requires the independently inventoried 70, preserving all checks for skipped, flaky and unexpected cases. All 186 Python tooling tests pass with 100% statement/branch coverage (214 statements and 98 branches), and the eight updated installer-package tests pass. This changes the CI contract and packaging metadata; the pinned runtime Python and UI bytes remain unchanged. Final-head CI is still required before merge.
+
 ## Compatibility and operational limits
 
 The browser-journal regression executes the actual preceding Edge.57 storage adapter and controller, bundled from accepted source `272b5e8436588b5fab090622d19298371a6dc33c`. The checked-in fixture records its eight original module digests and bundle digest. Ordinary material creation, scheduled material creation and material settlement each retain seven readable legacy originals and one new original in real browser session storage. The preceding closed decoder refuses the new shape without changing the stored bytes; its controller blocks new writes while the journal is unreadable. Re-upgrade recovers all eight exact originals with their scope, stage and expiry. Capacity does not discard an unconfirmed original, and only an explicitly resolved record can be dismissed.
