@@ -90,6 +90,30 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await choose(used.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
     await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
     await expect(title).toHaveValue('QA 150 material workflow');
+    const denyCatalogOnce=()=>page.route(api+'inventory?limit=25',async route=>{
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);
+      const catalog=await response.json();
+      // Model an authoritative read that no longer grants Inventory management.
+      await route.fulfill({response,json:{...catalog,may_manage:false}});
+    },{times:1});
+    await denyCatalogOnce();await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await expect(plan.getByRole('alert')).toContainText(t('No material plan has been added','No se ha añadido ningún plan de materiales'));
+    await expect(combo).toHaveCount(0);await expect(title).toHaveValue('QA 150 material workflow');
+    await expect(plan.getByRole('button',{name:t('Refresh material choices','Actualizar materiales disponibles'),exact:true})).toBeDisabled();
+    await plan.screenshot({path:info.outputPath('empty-denied-material-plan-'+locale+'.png')});
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));await expand();
+    await activate(plan.getByRole('button',{name:t('Refresh material choices','Actualizar materiales disponibles'),exact:true}));
+    await choose(used.name);await denyCatalogOnce();
+    await activate(plan.getByRole('button',{name:t('Refresh material choices','Actualizar materiales disponibles'),exact:true}));
+    await expect(plan.getByRole('alert')).toContainText(t('Private choices are hidden','Las opciones privadas están ocultas'));
+    await expect(plan.getByText(used.name,{exact:true})).toHaveCount(0);
+    await activate(plan.getByRole('button',{name:t('Remove material plan','Quitar plan de materiales'),exact:true}));
+    await expect(title).toBeFocused();await expect(title).toBeInViewport();
+    await expect(title).toHaveValue('QA 150 material workflow');
+    await expect(description).toHaveValue('Retain this draft across optional catalog failure');
+    await expect(tasks.getByRole('button',{name:t('Create task','Crear tarea'),exact:true})).toBeEnabled();
+    await page.screenshot({path:info.outputPath('denied-plan-cleared-title-focus-'+locale+'.png')});
+    await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));await expand();
     await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
     await choose(used.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
     await choose(unused.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
@@ -181,6 +205,18 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await page.route(api+'tasks/occurrences/'+oid+'/materials/'+pending.intent_id+'/settlement',async route=>{
       settlements++;settlementKey=route.request().headers()['idempotency-key'];expect(route.request().postDataJSON().expected_revision).toBe(pending.revision);
       const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);settlementBody=await response.json();await route.abort('connectionreset');});
+    let failedPreflightReads=0;
+    await page.route(api+'tasks/occurrences/'+oid+'/materials?cycle_id='+encodeURIComponent(pending.cycle_id),route=>{
+      failedPreflightReads++;expect(route.request().method()).toBe('GET');return route.abort('failed');
+    },{times:1});
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+    expect(failedPreflightReads).toBe(1);expect(settlements).toBe(0);expect(await readWork()).toEqual(reopened);
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    expect(await outcomes.locator('li').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-material-intent')))).toEqual(
+      firstPage.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('historical-preflight-retains-closed-page-'+locale+'.png')});
     await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
     await expect(tasks.getByRole('heading',{name:t('Result not confirmed','Resultado sin confirmar'),exact:true})).toBeVisible();
     const settlementOriginals:Record<string,any>[]=[];

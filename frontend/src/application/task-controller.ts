@@ -222,7 +222,8 @@ export class TaskController {
   private async materialFacts(cycleId: string, generation: number, prior: State): Promise<void> {
     const work = this.state.detail!;
     const history = prior.detail?.occurrenceId === work.occurrenceId ? prior.materialHistory : null;
-    if (work.currentCycleId === cycleId) {this.update({materialHistory: history}); return;}
+    this.update({materialHistory: history});
+    if (work.currentCycleId === cycleId) return;
     const value = await this.read(this.server.materialCycle(work, this.state.access!.householdId, cycleId, this.state.session!.context), generation);
     if (value.closedAt === null) throw new EntryReadError('invalid_response');
     const nextCursor = history?.items.some(item => item.cycle.cycleId === cycleId) ? history.nextCursor : null;

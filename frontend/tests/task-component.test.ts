@@ -5,6 +5,7 @@ import type {HaButton} from '@vypdev/ha-ui/button';
 import type {HaFeedback} from '@vypdev/ha-ui/feedback';
 import type {AdministrationView} from '../src/application/administration-controller';
 import {taskInstant, taskMessage} from '../src/presentation/task-messages';
+import {materialMessage} from '../src/presentation/task-material-messages';
 import type {TaskRecord} from '../src/application/task-ports';
 import type {TaskView} from '../src/application/task-controller';
 import type {TaskDetail, TaskReceipt} from '../src/domain/tasks';
@@ -79,6 +80,7 @@ test('optional plan intents survive read loading and block a stale plan without 
   await component().updateComplete; await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
   expect(f.root.querySelector<HTMLInputElement>('#task-title')!.value).toBe('Retain this material task');
   const select=component().shadowRoot!.querySelector('vyp-ha-select')!;
+  expect(component().shadowRoot!.activeElement).toBe(select);
   select.dispatchEvent(new CustomEvent('ha-select-request',{detail:{value:'soap'}}));
   expect(f.intents.at(-1)).toEqual({type:'materialPlan',action:'add',referenceId:'soap'});
   const row={referenceId:'soap',input:'1',choice};
@@ -132,6 +134,28 @@ test.each(['en','es'] as const)('%s deferred material focus respects a newer key
     expect(f.root.activeElement).toBe(refresh);
     expect(f.intents).toEqual([{type:'materialPlan',action:'clear'}]);
   } finally {frames.mockRestore();}
+});
+
+test.each(['en','es'] as const)('%s clearing or removing the last denied material returns focus to the retained task title', async locale => {
+  for(const action of ['clear','remove'] as const){
+    const plan={open:true,busy:false,canLink:false,readOnly:false,notice:'forbidden',
+      rows:[{referenceId:'soap',input:'4',choice:null}],choices:[],cursor:null} as const;
+    const f=await mount(view({materialPlan:plan}),locale);
+    f.root.querySelector<HTMLElement>('details.new-task summary')!.click();
+    await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));await f.element.updateComplete;
+    await f.input('task-title','Keep this title without materials');
+    const component=f.root.querySelector('domus-task-material-plan')!;await component.updateComplete;
+    const control=[...component.shadowRoot!.querySelectorAll<HaButton>('vyp-ha-button')]
+      .find(button=>button.state.label===materialMessage(action,locale))!;
+    await control.updateComplete;control.focus();control.click();
+    expect(f.intents.at(-1)).toMatchObject({type:'materialPlan',action});
+    f.element.view=view({materialPlan:{...plan,open:false,rows:[],notice:null}});
+    await f.element.updateComplete;await component.updateComplete;
+    await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+    const title=f.root.querySelector<HTMLInputElement>('#task-title')!;
+    expect(f.root.activeElement).toBe(title);expect(title.value).toBe('Keep this title without materials');
+    expect(f.button(locale==='en'?'Create task':'Crear tarea').disabled).toBe(false);
+  }
 });
 
 test('missing material drafts survive a granular rejection and per-line success has a material-specific receipt', async () => {

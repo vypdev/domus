@@ -703,6 +703,48 @@ function historicalMaterial() {
   const current = pendingMaterialWork();
   return {cycle:current.cycle!,closedAt:'200',materialOutcomes:current.materialOutcomes!,allowedActions:['materials.settle']};
 }
+test.each(['unavailable','invalid_response','forbidden','authentication_required'] as const)(
+  'a historical settlement preflight %s retains recoverable history and retires denied private facts',async reason=>{
+    const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,
+      currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+    f.server.list.mockReturnValue(read({items:[current],nextCursor:null}));f.server.detail.mockReturnValue(read(current));
+    await f.controller.refresh();await f.controller.select('work-1');
+    f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));
+    await f.controller.materialHistory();const prior=f.controller.view;
+    f.server.materialCycle.mockReturnValueOnce({result:Promise.reject(new EntryReadError(reason)),cancel:vi.fn()});
+    await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+    const denied=reason==='forbidden'||reason==='authentication_required';
+    expect(f.controller.view.notice).toBe(reason);
+    expect(f.controller.view.materialHistory).toEqual(denied?null:prior.materialHistory);
+    expect(f.controller.view.detail).toEqual(denied?null:current);
+    expect(f.server.send).not.toHaveBeenCalled();expect(f.entropy.requestKey).not.toHaveBeenCalled();
+    if(!denied){
+      f.server.materialHistory.mockReturnValueOnce(read({items:[],nextCursor:null}));await f.controller.materialHistory(true);
+      expect(f.server.materialHistory).toHaveBeenLastCalledWith(current,'home','next-closed-cycle',context);
+    }
+  });
+test.each(['committed','recovered'] as const)(
+  '%s historical settlement retains history when reading the saved line is temporarily unavailable',async path=>{
+    const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,
+      currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
+    f.server.list.mockReturnValue(read({items:[current],nextCursor:null}));f.server.detail.mockReturnValue(read(current));
+    await f.controller.refresh();await f.controller.select('work-1');
+    f.server.materialHistory.mockReturnValueOnce(read({items:[old],nextCursor:'next-closed-cycle'}));
+    await f.controller.materialHistory();const prior=f.controller.view.materialHistory;
+    f.server.materialCycle.mockReturnValue(read(old));
+    const failed=()=>({result:Promise.reject(new EntryReadError('unavailable')),cancel:vi.fn()});
+    if(path==='committed')f.server.materialCycle.mockReturnValueOnce(read(old)).mockReturnValueOnce(failed());
+    f.server.send.mockResolvedValueOnce(path==='recovered'?{kind:'uncertain'}:materialReceipt(pendingMaterialWork()));
+    await f.controller.settleMaterial('work-1','intent-1','cycle-1',revisionValue('7'));
+    const request=f.server.send.mock.calls[0][0];
+    if(path==='recovered'){
+      f.server.materialCycle.mockReturnValueOnce(failed());
+      f.server.original.mockReturnValueOnce(read(materialReceipt(pendingMaterialWork())));await f.controller.recover(request.key);
+    }
+    expect(f.controller.view.notice).toBe('unavailable');expect(f.controller.view.materialHistory).toEqual(prior);
+    expect(f.controller.view.detail).toEqual(current);expect(f.controller.view.records?.[0].stage).toBe('committed');
+    expect(f.server.send).toHaveBeenCalledOnce();
+  });
 test.each(['detail','reload','more'] as const)('failed material-history %s retains the selected facts and original continuation', async operation => {
   const f=fixture(),old=historicalMaterial(),current={...pendingMaterialWork(),state:'available' as const,currentCycleId:null,cycle:null,materialOutcomes:[],allowedActions:['complete']};
   f.server.detail.mockReturnValue(read(current));await f.controller.refresh();await f.controller.select('work-1');

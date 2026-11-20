@@ -917,6 +917,68 @@
       },
       "runtimeUIAndPinUnchanged": true,
       "fullFinalHeadCIAndCoverage": "required"
+    },
+    "permissionHistoryFocusReview": {
+      "reviewHead": "0184af9b313906a9b1110190ae17fd1390129599",
+      "findings": [
+        4647608334,
+        4647608360,
+        4647608368
+      ],
+      "valid": true,
+      "sourceFixes": "Empty denied plan notice/recovery, enabled select/button then title focus fallback, same-work history before closed-cycle await; current denial still retires private proof.",
+      "cases": [
+        "task-material-planning-C05",
+        "task-material-planning-C08",
+        "task-material-planning-C11"
+      ],
+      "directedRed": {
+        "failed": 7,
+        "passed": 3
+      },
+      "directedGreen": 236,
+      "frontendTests": 2087,
+      "runtimeModules": 110,
+      "coverage": {
+        "statements": [
+          8809,
+          8809
+        ],
+        "branches": [
+          7903,
+          7903
+        ],
+        "functions": [
+          1915,
+          1915
+        ],
+        "lines": [
+          6398,
+          6398
+        ]
+      },
+      "expandedJourneys": {
+        "passed": 4,
+        "durationMs": 51848.688,
+        "retries": 0,
+        "flaky": 0,
+        "skipped": 0
+      },
+      "initialCorrectionRegression": "Four unchanged combo-focus assertions caught combined-selector document order; corrected with separate queries, originals preserved.",
+      "catalog": {
+        "startTime": "2026-11-20T21:09:19.567Z",
+        "duration": 28598.68,
+        "expected": 46,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "newImmutableCandidate": "Edge.68 required; not yet built/published/installed",
+      "fullCurrentHeadGates": "required; no old product failure or valid finding waived",
+      "strictTypes": "both pass",
+      "independentCoverageAndAcceptedFixture": "2/2 pass",
+      "wheelUiEquality": "four files match actual wheel",
+      "authoredPythonUnchangedFrom": "00f8cd0e40aee8d02a907619635e30ebd7e8f54d"
     }
   }
 }

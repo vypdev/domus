@@ -78,6 +78,15 @@ test('plan limits, empty catalog, loading and unavailable states retain a clear 
   element.disabled=true; await element.updateComplete;
   expect(element.shadowRoot!.querySelector<HaTextField>('vyp-ha-field')!.disabled).toBe(true);
 });
+test.each(['en','es'] as const)('%s an empty denied plan explains the loss of linking access', async language => {
+  const element=document.createElement('domus-task-material-plan');element.language=language;
+  element.view={...initial,open:true,canLink:false,notice:'forbidden'};
+  document.body.append(element);mounted.push(element);await element.updateComplete;
+  expect(element.shadowRoot!.querySelector('[role="alert"]')?.textContent).toBe(materialMessage('forbiddenEmpty',language));
+  expect(element.shadowRoot!.querySelector('vyp-ha-select')).toBeNull();
+  const refresh=element.shadowRoot!.querySelector<HaButton>('vyp-ha-button')!;
+  await refresh.updateComplete;expect(refresh.disabled).toBe(true);
+});
 test.each(['en','es'] as const)('%s actual recording retains zero and reason, and requires review of a concurrent intent revision', async language => {
   const element = document.createElement('domus-task-material-outcomes'); element.language=language; element.work=work([material()]);
   const settled: MaterialSettlementIntent[] = [];

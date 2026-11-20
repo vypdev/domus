@@ -30,7 +30,7 @@ export class DomusTaskMaterialPlan extends LitElement {
   }
   protected render() {
     const view = this.view;
-    if (view === null || !view.canLink && view.rows.length === 0) return nothing;
+    if (view === null || !view.canLink && view.rows.length === 0 && view.notice === null) return nothing;
     const blocked = this.disabled || view.busy || view.readOnly;
     return html`<section aria-labelledby="material-plan-heading" aria-busy=${view.busy}><h4 id="material-plan-heading">${this.text('plan')}</h4>
       <p>${this.text('planHelp')}</p>
@@ -48,7 +48,7 @@ export class DomusTaskMaterialPlan extends LitElement {
               disabled:view.rows.some(row => row.referenceId === choice.referenceId)}))})}
           @ha-select-request=${(event: SelectValueEvent) => {if (typeof event.detail.value === 'string') this.intent({action:'add', referenceId:event.detail.value});}}
           ></vyp-ha-select>` : view.notice === null && !view.busy ? html`<p>${this.text('empty')}</p>` : nothing}`}
-      ${view.notice ? html`<p role="alert">${this.text(view.notice)}</p>` : nothing}
+      ${view.notice ? html`<p role="alert">${this.text(view.notice === 'forbidden' && view.rows.length === 0 ? 'forbiddenEmpty' : view.notice)}</p>` : nothing}
       <ul>${view.rows.map((row, index) => {
         const precision = row.choice?.unit === 'piece' ? 0 : 6;
         const invalid = row.choice !== null && taskQuantityInput(row.input, precision) === null;
