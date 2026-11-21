@@ -1199,6 +1199,168 @@
         }
       },
       "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088"
+    },
+    "catalogPagingReview": {
+      "reviewHead": "874a1ec91000b082e239f3a942b52f6d2fe3c849",
+      "finding": 4649589154,
+      "valid": true,
+      "sourceFix": "Explicit more appends earlier current-scope choices; fresh refresh replaces and retires stale selected labels. Existing cancellation/denial fences and25-per-read/32planline bounds remain.",
+      "cases": [
+        "task-material-planning-C02",
+        "task-material-planning-C05",
+        "task-material-planning-C08"
+      ],
+      "directedRed": {
+        "failed": 1,
+        "passed": 17
+      },
+      "directedGreen": 18,
+      "allFrontendCases": 2100,
+      "runtimeModules": 110,
+      "coverage": {
+        "lines": {
+          "total": 6401,
+          "covered": 6401,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 8811,
+          "covered": 8811,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 1915,
+          "covered": 1915,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 7909,
+          "covered": 7909,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branchesTrue": {
+          "total": 0,
+          "covered": 0,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "strictTypes": "both pass",
+      "independentCoverageAndAcceptedFixture": "2/2pass",
+      "expandedOriginalJourneys": {
+        "startTime": "2026-11-21T01:47:39.315Z",
+        "duration": 60890.632,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "newCandidate": "0.0.0-edge.70",
+      "finalGates": "New immutable identity, installed upgrade, final same-head full productCI/review/BranchSync and destination acceptance required.",
+      "compiledOld69Red": {
+        "failed": 4,
+        "durationMs": 729537.159,
+        "retries": 0,
+        "failure": "Earlier unselected products absent afterMore; original selector waits hit180stestdeadline. Full trace/report/screenshot originals retained."
+      },
+      "catalog": {
+        "startTime": "2026-11-21T01:47:40.906Z",
+        "duration": 30373.429,
+        "expected": 46,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "newCompiledUIFiles": {
+        "index.html": "749973a568f77ddc6d3b381f1682bfbb42741670276eb865ab0dc7b2982b94d5",
+        "assets/index-CAYlPSUq.js": "36491fe471fdf5acf97d0063a85beda9c061a2876ec36db04887a5f68b569b45",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        ".vite/manifest.json": "fc24a51943fdb802972e4dc81a2e3e64c885a561739e309b5334ceba2f0ee8a3"
+      },
+      "wheelUIEquality": "four files equal",
+      "originalClosedBodyRetention": "All4raw upstream page bodies retained in full original report; no reread/retry/substitution.",
+      "sourceState": "Local correction qualified; new70immutablebuild/native/finalCI/review anddestination stillrequired."
+    },
+    "installedEdge69": {
+      "version": "0.0.0-edge.69",
+      "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088",
+      "packagingHead": "874a1ec91000b082e239f3a942b52f6d2fe3c849",
+      "exactVersionAndFirstStart": "passed; local public origin saved beforehand",
+      "products": 2,
+      "taskCompletions": 3,
+      "reopenings": 3,
+      "stockMovements": {
+        "intakes": 2,
+        "consumptions": 2
+      },
+      "finalStock": [
+        "0",
+        "0",
+        "0"
+      ],
+      "initialGuardProbe": "XHR continued instead of failed; one normal explicit settlement committed, not accepted as fault retention. Original preserved.",
+      "qualifiedDetailFailure": {
+        "failedOwnGET": 1,
+        "posts": 0,
+        "selectedPageAndEnabledCursorRetained": true,
+        "availableTaskRetained": true
+      },
+      "explicitRetry": {
+        "posts": 1,
+        "confirmedQuantity": "1",
+        "currentWorkAndCycleUnchanged": true,
+        "historicalCycleFieldsUnchanged": true,
+        "selectedIntentAndCursorRetained": true
+      },
+      "mobileTouch": {
+        "locale": "es",
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "originalCursorGETs": 1,
+        "posts": 0,
+        "reachedDistinctPendingIntent": true,
+        "mainClientWidth": 390,
+        "mainScrollWidth": 390
+      },
+      "observerLimit": "A network gaps recorded; no full A campaign completeness claim. Critical B windows independently complete. Totals verified in actual visible movement UI.",
+      "overrides": "cleared; English restored",
+      "state": "stopped; owned data/journals retained for normal successor upgrade",
+      "nativePaging": "not claimed; isolated28product source and both images qualify this boundary",
+      "finalAcceptance": "Head69 not accepted: valid paging finding and actual backend failure remain."
+    },
+    "automationDraftConcurrencyObserver": {
+      "failedHead": "874a1ec91000b082e239f3a942b52f6d2fe3c849",
+      "run": 44846296332,
+      "job": 136666718134,
+      "passed": 5638,
+      "failed": 1,
+      "actualFailure": "Concurrent standalone loser503/storage_busy; expected409/revision_conflict. Winner200/revision2 assertion passed. Exact SQLite stage/physical cause not inferred.",
+      "coverage": {
+        "modules": 231,
+        "statements": 18045,
+        "branches": 4876,
+        "all100": true
+      },
+      "forcedRed": {
+        "failed": 2,
+        "passed": 2,
+        "productionBusyMs": 250
+      },
+      "directedGreen": 4,
+      "wholeDraftAndContentionQualification": {
+        "passed": 25,
+        "seconds": 7.79
+      },
+      "assertions": "Busy loser has no receipt; after both contenders finish, explicit exact frozen original retry must409. Exact winner replay, initial original, changed-payload refusal,2immutable revisions,1newaudit,no task/stock/points/pendingdelivery effects.",
+      "productionTimeoutAndAutomaticRetryPolicyUnchanged": true,
+      "owningAutomationCase": "automation-drafts-C03 unchanged",
+      "expectedNextFullBackendCount": 5641,
+      "fullNewHeadBackend": "required"
     }
   },
   "sourceBrowserStorageIsolation": {

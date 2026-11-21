@@ -54,7 +54,8 @@ export class TaskMaterialPlanning {
       const report = await request.result;
       if (this.read !== request || this.scope?.key !== scope.key) return;
       if (!report.mayManage) {this.retire(); this.set({canLink: false, notice: 'forbidden'}); return;}
-      const choices = Object.freeze(report.products.map(({referenceId, name, unit}) => Object.freeze({referenceId, name, unit})));
+      const choices = Object.freeze([...(more ? this.state.choices : []),
+        ...report.products.map(({referenceId, name, unit}) => Object.freeze({referenceId, name, unit}))]);
       this.set({choices, cursor: report.cursor, rows: Object.freeze(this.state.rows.map(row =>
         Object.freeze({...row, choice: choices.find(choice => choice.referenceId === row.referenceId) ?? row.choice})))});
     } catch (error) {

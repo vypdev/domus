@@ -33,6 +33,44 @@ test('title-only creation does not read Inventory; later pages retain all exact 
   planner.remove('later'); expect(planner.view.rows).toHaveLength(1);
   planner.clear(); expect(planner.view.open).toBe(false); expect(planner.selections()).toBeUndefined();
 });
+test('browsing more catalog pages keeps earlier unselected products available for a mixed plan', async () => {
+  const {read, planner} = fixture(); planner.bind(scope);
+  read.mockReturnValueOnce({result:Promise.resolve(report(['first'], 'second')), cancel:vi.fn()});
+  await planner.load();
+  read.mockReturnValueOnce({result:Promise.resolve(report(['second'], 'third')), cancel:vi.fn()});
+  await planner.load(true);
+  read.mockReturnValueOnce({result:Promise.resolve(report(['third'], null, 'piece')), cancel:vi.fn()});
+  await planner.load(true);
+  expect(read.mock.calls.map(([, cursor]) => cursor)).toEqual([null, 'second', 'third']);
+  planner.add('first'); planner.edit('first', '0,000001');
+  planner.add('third'); planner.edit('third', '2');
+  planner.add('second'); planner.edit('second', '0');
+  expect(planner.selections()).toEqual([{reference_id:'first', planned_quantity:'0.000001'},
+    {reference_id:'third', planned_quantity:'2'}, {reference_id:'second', planned_quantity:'0'}]);
+  expect(planner.view.choices.map(choice=>choice.referenceId)).toEqual(['first','second','third']);
+  read.mockReturnValueOnce({result:Promise.resolve(report(['replacement'])), cancel:vi.fn()});
+  await planner.load();
+  expect(planner.view.choices.map(choice=>choice.referenceId)).toEqual(['replacement']);
+  expect(planner.view.rows.map(row=>row.choice)).toEqual([null,null,null]);
+  expect(planner.selections()).toBeNull();
+});
+test.each(['unavailable','invalid_response','forbidden','authentication_required'] as const)(
+  'a further catalog page %s preserves recoverable choices and retires denied private labels',async reason=>{
+    const {read, planner} = fixture(); planner.bind(scope);
+    read.mockReturnValueOnce({result:Promise.resolve(report(['first'], 'next')), cancel:vi.fn()});
+    await planner.load(); planner.add('first'); planner.edit('first', '2.000001');
+    const prior=planner.view, key=planner.draftKey;
+    read.mockReturnValueOnce({result:Promise.reject(new EntryReadError(reason)),cancel:vi.fn()});
+    await planner.load(true);
+    const denied=reason==='forbidden'||reason==='authentication_required';
+    expect(planner.draftKey).toBe(key); expect(planner.view.busy).toBe(false);
+    expect(planner.view.notice).toBe(denied?'forbidden':'unavailable');
+    expect(planner.view.choices).toEqual(denied?[]:prior.choices);
+    expect(planner.view.cursor).toBe(denied?null:'next');
+    expect(planner.view.rows).toEqual(denied?[{referenceId:'first',input:'2.000001',choice:null}]:prior.rows);
+    expect(planner.selections()).toEqual(denied?null:[{reference_id:'first',planned_quantity:'2.000001'}]);
+    expect(read.mock.calls.map(([, cursor])=>cursor)).toEqual([null,'next']);
+  });
 test('grant loss hides labels and retains opaque intent until explicit removal or current catalog review', async () => {
   const {read, planner} = fixture(); planner.bind(scope);
   read.mockReturnValueOnce({result:Promise.resolve(report(['private'])), cancel:vi.fn()});

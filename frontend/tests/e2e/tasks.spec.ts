@@ -115,9 +115,9 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await page.screenshot({path:info.outputPath('denied-plan-cleared-title-focus-'+locale+'.png')});
     await activate(tasks.getByRole('button',{name:t('Refresh tasks','Actualizar tareas'),exact:true}));await expand();
     await activate(plan.getByRole('button',{name:t('Add materials','Añadir materiales'),exact:true}));
+    await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
     await choose(used.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
     await choose(unused.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
-    await activate(plan.getByRole('button',{name:t('More products','Más productos'),exact:true}));
     await choose(short.name);await plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true}).last().fill('2');
     await expect(plan.getByRole('textbox',{name:t('Planned quantity','Cantidad prevista'),exact:true})).toHaveCount(3);
     await plan.screenshot({path:info.outputPath('material-plan-'+locale+'.png')});
