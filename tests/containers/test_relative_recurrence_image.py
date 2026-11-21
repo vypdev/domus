@@ -48,7 +48,7 @@ from domus.infrastructure.sqlite import SCHEMA_VERSION
 MODE = sys.argv[1]
 FIRST_POLL_BUSY = sys.argv[2] == 'True'
 ORIGIN = 'https://domus.fixture'
-assert SCHEMA_VERSION == 36
+assert SCHEMA_VERSION == 37
 
 class FixtureHuman:
     def current(self):

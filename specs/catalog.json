@@ -745,7 +745,9 @@
         "specs/shopping-management.md",
         "specs/shopping-manual-annotations.md"
       ],
-      "workflows": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
       "entrypoints": [
         "backend/src/domus/entrypoints/inventory_http.py"
       ],
@@ -760,7 +762,15 @@
         "frontend/src/presentation/domus-shopping-list.ts",
         "frontend/src/application/shopping-attention.ts",
         "frontend/src/adapters/inventory-http.ts",
-        "frontend/src/presentation/domus-shopping-attention.ts"
+        "frontend/src/presentation/domus-shopping-attention.ts",
+        "backend/src/domus/domain/shopping_annotations.py",
+        "backend/src/domus/application/shopping_annotations.py",
+        "frontend/src/domain/inventory.ts",
+        "frontend/src/application/inventory-controller.ts",
+        "frontend/src/adapters/inventory-journal.ts",
+        "frontend/src/presentation/domus-inventory.ts",
+        "frontend/src/presentation/inventory-messages.ts",
+        "frontend/stories/shopping.stories.ts"
       ],
       "tests": [
         "tests/backend/test_shopping_http.py",
@@ -782,7 +792,21 @@
         "frontend/tests/inventory.test.ts",
         "frontend/tests/e2e/workspace-navigation.spec.ts",
         "frontend/tests/shopping-attention.test.ts",
-        "frontend/tests/page.test.ts"
+        "frontend/tests/page.test.ts",
+        "tests/backend/test_shopping_annotations.py",
+        "tests/backend/test_shopping_annotations_http.py",
+        "tests/fixtures/sqlite/generate_v36_shopping_annotations_source.py",
+        "tests/fixtures/sqlite/v36-shopping-annotations-source.sql",
+        "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json",
+        "frontend/tests/shopping-annotations.test.ts",
+        "frontend/tests/fixtures/edge72-inventory-journal.mjs",
+        "frontend/tests/fixtures/edge72-inventory-journal.d.mts",
+        "frontend/tests/fixtures/edge72-inventory-journal.provenance.json",
+        "frontend/tests/e2e/catalog.spec.ts",
+        "tests/containers/shopping_annotations_runtime.py",
+        "tests/containers/test_shopping_annotations_image.py",
+        "tests/fixtures/schema36-app/Dockerfile",
+        "frontend/tests/e2e/shopping-annotations.spec.ts"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -799,7 +823,9 @@
         "docs/evidence/physical-receipt-return-qualification.md",
         "docs/evidence/purchase-session-store-qualification.md",
         "docs/contracts/household-api.openapi.json",
-        "docs/contracts/native-household-api.openapi.json"
+        "docs/contracts/native-household-api.openapi.json",
+        "docs/evidence/shopping-manual-annotations-qualification.md",
+        "docs/evidence/shopping-manual-annotations.json"
       ],
       "readiness": {
         "state": "draft",

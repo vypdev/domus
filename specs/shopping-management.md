@@ -76,6 +76,8 @@ ShoppingList, Demand(source_type, source_id, product_or_free_text, amount, unit,
 
 The owner confirmed on 2026-10-29 that manual requests are additional by default and automatic stock/material demands consolidate without counting the same requirement twice. Consolidation retains each source and its coverage semantics; matching names alone do not establish overlap. If an automatic four-unit demand already covers a reserved task material, that same material is not added again; a manual extra of two still raises the purchase requirement to six. Distinct independent material needs remain additive. This rule does not silently relabel a manual extra as an automatic threshold.
 
+The bounded companion in `specs/shopping-manual-annotations.md` defines notes and priority on individual manual extras: a literal note of at most 1,000 Unicode codepoints and `low`, `normal`, `high` or `urgent` priority, defaulting to empty and `normal`. A tracked product keeps these values on each attributed manual source; a free-text extra keeps its own. Consolidated and automatic demands do not synthesize an annotation, and quantity arithmetic, ordering and existing authority are unchanged. Its ten fresh cases and staged qualification map are separate from the retained owner inventory; this increment does not complete multiple lists, overlap policy, prices or the broader Shopping capability.
+
 ### 6.2 States and alternatives
 
 Demand open -> planned -> satisfied or cancelled. Purchase planned -> purchased -> partially_received -> received. Stock posting is a separate durable step tied to each receipt line; a received tracked product is pending stock until posting succeeds. Nontracked items finish at receipt without inventory records.

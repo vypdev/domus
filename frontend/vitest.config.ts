@@ -8,6 +8,7 @@ export default defineConfig({optimizeDeps: {include: [
   '@vypdev/ha-ui/card-contracts', '@vypdev/ha-ui/card', '@vypdev/ha-ui/button-contracts', '@vypdev/ha-ui/button',
   '@vypdev/ha-ui/feedback-contracts', '@vypdev/ha-ui/feedback',
   '@vypdev/ha-ui/field-contracts', '@vypdev/ha-ui/field',
+  '@vypdev/ha-ui/textarea-contracts', '@vypdev/ha-ui/textarea',
   '@vypdev/ha-ui/select-contracts', '@vypdev/ha-ui/select',
   '@vypdev/ha-ui/checkbox-contracts', '@vypdev/ha-ui/checkbox',
 ]}, test: {

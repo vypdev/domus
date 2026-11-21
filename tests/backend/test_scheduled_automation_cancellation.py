@@ -144,7 +144,7 @@ def test_revoking_a_restored_queue_preserves_its_actual_historical_task_instead_
             == "created"
         )
         with restored.database._connection() as connection:
-            assert _verify_database(connection, restored.database, previous=False) == 36
+            assert _verify_database(connection, restored.database, previous=False) == 37
     finally:
         restored.close()
 

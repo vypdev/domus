@@ -6,9 +6,15 @@ import {buttonState} from '@vypdev/ha-ui/button-contracts';
 import {registerField} from '@vypdev/ha-ui/field';
 import type {FieldValueEvent} from '@vypdev/ha-ui/field';
 import {textFieldState} from '@vypdev/ha-ui/field-contracts';
+import {registerTextArea} from '@vypdev/ha-ui/textarea';
+import type {TextAreaValueEvent} from '@vypdev/ha-ui/textarea';
+import {textAreaState, textAreaValue, textAreaValueDetail} from '@vypdev/ha-ui/textarea-contracts';
+import {registerSelect} from '@vypdev/ha-ui/select';
+import type {SelectValueEvent} from '@vypdev/ha-ui/select';
+import {selectState, selectValueDetail} from '@vypdev/ha-ui/select-contracts';
 import type {InventoryState} from '../application/inventory-controller';
-import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, intakeQuantity, purchaseStoreName, shoppingItemKey} from '../domain/inventory';
-import type {BaseUnit, ExtraAttribution, InventoryCommand, SessionSelection, ShoppingItem, ShoppingSource} from '../domain/inventory';
+import {MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MAX_SHOPPING_NOTE_CODEPOINTS, SHOPPING_PRIORITIES, intakeQuantity, purchaseStoreName, shoppingItemKey, shoppingPriority, shoppingNote} from '../domain/inventory';
+import type {BaseUnit, ExtraAttribution, InventoryCommand, SessionSelection, ShoppingAnnotation, ShoppingItem, ShoppingPriority, ShoppingSource} from '../domain/inventory';
 import {taskText} from '../domain/tasks';
 import {inventoryMessage, inventoryUnitMessage} from './inventory-messages';
 import type {InventoryMessage} from './inventory-messages';
@@ -20,6 +26,7 @@ export type ShoppingListIntent = {readonly type: 'shopping-list' | 'more-shoppin
   | {readonly type: 'submit'; readonly command: InventoryCommand};
 
 const SOURCE_LABELS = {pantry:'pantrySource', task:'taskSource', extra:'manualSource'} as const;
+const PRIORITY_LABELS = {low:'priorityLow', normal:'priorityNormal', high:'priorityHigh', urgent:'priorityUrgent'} as const;
 
 interface SessionDraft {
   readonly key: string;
@@ -29,7 +36,7 @@ interface SessionDraft {
 
 export class DomusShoppingList extends LitElement {
   static properties = {view:{attribute:false}, language:{attribute:false}, selected:{state:true}, error:{state:true},
-    sessionDraft:{state:true}, sessionStoreDraft:{state:true}, sessionError:{state:true}};
+    sessionDraft:{state:true}, sessionStoreDraft:{state:true}, sessionError:{state:true}, extraPriority:{state:true}, extraNote:{state:true}};
 
   static styles = css`
     section, form, label, li {display:grid;gap:8px}
@@ -41,21 +48,29 @@ export class DomusShoppingList extends LitElement {
     input,select {font:inherit;color:inherit;background:var(--surface);padding:8px;border:1px solid var(--line);
       border-radius:8px;min-width:0}
     li {overflow-wrap:anywhere}
+    .manual-note {white-space:pre-wrap}
+    #shopping-extra-note, #shopping-extra-priority {--vyp-ha-danger:var(--warning)}
     :focus-visible {outline:3px solid var(--accent);outline-offset:3px}
   `;
 
   declare view: InventoryState;
   declare language: Language;
   private declare selected: string;
-  private declare error: 'invalidName' | 'invalidQuantity' | null;
+  private declare error: 'invalidName' | 'invalidQuantity' | 'invalid_shopping_priority' | 'invalid_shopping_note' | null;
+  private declare extraPriority: ShoppingPriority;
+  private declare extraNote: string;
   private declare sessionDraft: readonly SessionDraft[];
   private declare sessionStoreDraft: string;
   private declare sessionError: string | null;
+  private extraRevision = 0;
+  private extraSubmission: {scope: string; form: HTMLFormElement; revision: number; fingerprint: string} | null = null;
 
   constructor() {
     super();
     this.selected = '';
     this.error = null;
+    this.extraPriority = 'normal';
+    this.extraNote = '';
     this.sessionDraft = [];
     this.sessionStoreDraft = '';
     this.sessionError = null;
@@ -77,11 +92,38 @@ export class DomusShoppingList extends LitElement {
       this.sessionStoreDraft = '';
       this.sessionError = null;
     }
-    if (result?.kind === 'committed' && result.shoppingAction === 'shopping.add-extra' && result !== previous?.result) {
-      this.selected = '';
-      this.error = null;
-      this.renderRoot.querySelector<HTMLFormElement>('#shopping-extra-form')?.reset();
+    const extraResult = (result?.kind === 'rejected' ? result.command.action : result?.shoppingAction) === 'shopping.add-extra';
+    if (extraResult && result !== previous?.result) {
+      const submitted = this.extraSubmission;
+      this.extraSubmission = null;
+      const form = this.renderRoot.querySelector<HTMLFormElement>('#shopping-extra-form');
+      // Recovering another operation must not erase a new draft, even if its text happens to match.
+      if (result?.kind === 'committed' && submitted !== null && submitted.scope === this.view.scope.key
+          && submitted.form === form && submitted.revision === this.extraRevision
+          && submitted.fingerprint === this.extraFingerprint(form)) {
+        this.selected = '';
+        this.extraPriority = 'normal';
+        this.extraNote = '';
+        this.error = null;
+        form.reset();
+      }
     }
+  }
+
+  private noteInsertion(event: InputEvent, blocked: boolean): void {
+    if (blocked) return;
+    const inserted = event.data ?? event.dataTransfer?.getData('text/plain') ?? null;
+    if (inserted === null) return;
+    try {textAreaValue(inserted);}
+    catch {event.preventDefault(); this.error = 'invalid_shopping_note';}
+  }
+
+  private extraFingerprint(form: HTMLFormElement): string {
+    // Successful FormData entries disappear while a request disables its controls.
+    // Ownership tracks entered values, independently of that temporary disabled state.
+    return JSON.stringify([this.selected, this.extraPriority, this.extraNote,
+      form.querySelector<HTMLInputElement>('input[name="name"]')?.value ?? null,
+      form.querySelector<HTMLInputElement>('input[name="quantity"]')!.value]);
   }
 
   private text(key: InventoryMessage): string {return inventoryMessage(key, this.language);}
@@ -105,7 +147,8 @@ export class DomusShoppingList extends LitElement {
     const product = products.find(item => item.id === this.selected);
     const unit = product?.unit ?? 'piece';
     const error = this.error;
-    return html`<form id="shopping-extra-form" novalidate @submit=${(event: SubmitEvent) => {
+    return html`<form id="shopping-extra-form" novalidate @input=${() => {this.extraRevision++;}}
+      @submit=${(event: SubmitEvent) => {
       event.preventDefault();
       if (blocked) return;
       const fields = new FormData(event.currentTarget as HTMLFormElement);
@@ -116,11 +159,22 @@ export class DomusShoppingList extends LitElement {
         try {name = taskText(fields.get('name'), 160, true);}
         catch {this.error = 'invalidName'; return;}
       }
+      let note: string;
+      try {note = shoppingNote(this.extraNote);}
+      catch {
+        this.error = 'invalid_shopping_note';
+        this.renderRoot.querySelector<HTMLElement>('#shopping-extra-note')?.focus();
+        return;
+      }
       this.error = null;
-      this.intent({type:'submit', command:{action:'shopping.add-extra', product_id:product?.id ?? null, name, quantity}});
+      const form = event.currentTarget as HTMLFormElement;
+      this.extraSubmission = {scope:this.view.scope.key, form, revision:this.extraRevision,
+        fingerprint:this.extraFingerprint(form)};
+      this.intent({type:'submit', command:{action:'shopping.add-extra', product_id:product?.id ?? null, name, quantity, note,
+        priority:this.extraPriority}});
     }}>
       <label>${this.text('extraItem')}<select .value=${this.selected} ?disabled=${blocked}
-        @change=${(event: Event) => {this.selected = (event.target as HTMLSelectElement).value; this.error = null;}}>
+        @change=${(event: Event) => {this.selected = (event.target as HTMLSelectElement).value; this.error = null; this.extraRevision++;}}>
         <option value="">${this.text('freeItem')}</option>
         ${products.map(item => html`<option value=${item.id}>${item.name}</option>`)}
       </select></label>
@@ -130,6 +184,34 @@ export class DomusShoppingList extends LitElement {
         <input name="quantity" inputmode="decimal" maxlength="20" ?disabled=${blocked}
           aria-invalid=${error === 'invalidQuantity'} aria-describedby="shopping-extra-error">
       </label>
+      <vyp-ha-textarea id="shopping-extra-note" .name=${'note'} .value=${this.extraNote} .defaultValue=${''}
+        ?disabled=${blocked} .state=${textAreaState({label:this.text('extraNoteOptional'),
+          description:this.text('extraNoteHelp'), maxLength:MAX_SHOPPING_NOTE_CODEPOINTS,
+          tooLongMessage:this.text('invalid_shopping_note'), error:error === 'invalid_shopping_note' ? this.text(error) : ''})}
+        @beforeinput=${(event: InputEvent) => this.noteInsertion(event, blocked)}
+        @input=${(event: InputEvent) => this.noteInsertion(event, blocked)}
+        @ha-value-request=${(event: TextAreaValueEvent) => {
+          if (blocked) return;
+          try {this.extraNote = textAreaValueDetail(event.detail).value;}
+          catch {this.error = 'invalid_shopping_note'; return;}
+          this.extraRevision++;
+          // Reveal the domain error before blur can shift the touch submit target.
+          try {
+            shoppingNote(this.extraNote);
+            if (this.error === 'invalid_shopping_note') this.error = null;
+          } catch {this.error = 'invalid_shopping_note';}
+        }}></vyp-ha-textarea>
+      <vyp-ha-select id="shopping-extra-priority" .name=${'priority'} .value=${this.extraPriority} .defaultValue=${'normal'}
+        ?disabled=${blocked} .state=${selectState({label:this.text('extraPriority'), clearable:false,
+          options:SHOPPING_PRIORITIES.map(value => ({value,label:this.text(PRIORITY_LABELS[value])})),
+          error:error === 'invalid_shopping_priority' ? this.text(error) : ''})}
+        @ha-select-request=${(event: SelectValueEvent) => {
+          if (blocked) return;
+          try {this.extraPriority = shoppingPriority(selectValueDetail(event.detail).value);}
+          catch {this.error = 'invalid_shopping_priority'; return;}
+          this.extraRevision++;
+          if (this.error === 'invalid_shopping_priority') this.error = null;
+        }}></vyp-ha-select>
       <span id="shopping-extra-error" role="alert">${error === null ? nothing : this.text(error)}</span>
       ${this.button('addExtra', blocked)}
     </form>`;
@@ -206,6 +288,14 @@ export class DomusShoppingList extends LitElement {
     return this.button('clearExtra', blocked, {type:'submit',command:{action:'shopping.clear-extra',extra_id:extraId}});
   }
 
+  private annotation(value: ShoppingAnnotation | null | undefined) {
+    if (value == null) return nothing;
+    return html`<div class="manual-annotation">
+      <p>${this.text('extraPriority')}: ${this.text(PRIORITY_LABELS[value.priority])}</p>
+      ${value.note === '' ? nothing : html`<p>${this.text('requestNote')}</p><p class="manual-note">${value.note}</p>`}
+    </div>`;
+  }
+
   private item(item: ShoppingItem, mayClear: boolean, blocked: boolean) {
     const amount = (value: string) => this.amount(value, item.unit);
     return html`<li>
@@ -217,6 +307,7 @@ export class DomusShoppingList extends LitElement {
         <dt>${this.text('manualSource')}</dt><dd>${amount(item.manual)}</dd>
       </dl>
       ${this.author(item.attribution)}
+      ${item.productId === null ? this.annotation(item.annotation) : nothing}
       ${mayClear ? this.button('addToSession', blocked || !this.canSelect(shoppingItemKey(item)), () => this.addToSession(item)) : nothing}
       ${item.productId !== null
         ? this.button('showSources', this.view.busy, {type:'shopping-sources', productId:item.productId})
@@ -229,13 +320,14 @@ export class DomusShoppingList extends LitElement {
     return html`<li>
       <strong>${this.text(SOURCE_LABELS[source.kind])} · ${source.name}</strong>
       <dl>
-        <dt>${this.text('quantity')}</dt><dd>${amount(source.quantity)}</dd>
+        <dt>${this.text('requestedQuantity')}</dt><dd>${amount(source.quantity)}</dd>
         <dt>${this.text('reserved')}</dt><dd>${amount(source.reserved)}</dd>
         <dt>${this.text('fromStock')}</dt><dd>${amount(source.stock)}</dd>
         <dt>${this.text('fromIncoming')}</dt><dd>${amount(source.incoming)}</dd>
         <dt>${this.text('toBuy')}</dt><dd>${amount(source.toBuy)}</dd>
       </dl>
       ${this.author(source.attribution)}
+      ${source.kind === 'extra' ? this.annotation(source.annotation) : nothing}
       ${mayClear && source.kind === 'extra' ? this.clearButton(source.originId, blocked) : nothing}
     </li>`;
   }
@@ -266,6 +358,8 @@ export class DomusShoppingList extends LitElement {
 
 registerButton();
 registerField();
+registerSelect();
+registerTextArea();
 customElements.define('domus-shopping-list', DomusShoppingList);
 
 declare global {

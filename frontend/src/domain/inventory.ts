@@ -14,6 +14,24 @@ export const MAX_SESSION_ITEMS = 16;
 export const MAX_PURCHASE_STORE_NAME = 160;
 export const MAX_LOCATION_NAME = 80;
 export const MAX_NAMED_LOCATIONS = 32;
+export const MAX_SHOPPING_NOTE_CODEPOINTS = 1000;
+export const SHOPPING_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
+export type ShoppingPriority = typeof SHOPPING_PRIORITIES[number];
+export interface ShoppingAnnotation {readonly note: string; readonly priority: ShoppingPriority;}
+
+/** Literal request notes preserve whitespace and count Unicode codepoints, not UTF-16 units. */
+export function shoppingNote(value: unknown): string {
+  if (typeof value !== 'string' || !value.isWellFormed() || Array.from(value).length > MAX_SHOPPING_NOTE_CODEPOINTS
+      || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(value))
+    throw new Error('invalid_shopping_note');
+  return value;
+}
+
+export function shoppingPriority(value: unknown): ShoppingPriority {
+  if (typeof value !== 'string' || !SHOPPING_PRIORITIES.includes(value as ShoppingPriority))
+    throw new Error('invalid_shopping_priority');
+  return value as ShoppingPriority;
+}
 
 export function canonicalGtin(value: unknown): string {
   if (typeof value !== 'string' || ![8, 12, 13, 14].includes(value.length) || /[^0-9]/u.test(value))
@@ -56,7 +74,8 @@ export type InventoryCommand =
   | Readonly<{action: 'inventory.configure-replenishment'; product_id: string; minimum: string;
     target: string; expected_revision: ReplenishmentRevision}>
   | Readonly<{action: 'shopping.purchase'; product_id: string | null; name: string | null; quantity: string}>
-  | Readonly<{action: 'shopping.add-extra'; product_id: string | null; name: string | null; quantity: string}>
+  | Readonly<{action: 'shopping.add-extra'; product_id: string | null; name: string | null; quantity: string;
+    note?: string; priority?: ShoppingPriority}>
   | Readonly<{action: 'shopping.receive'; purchase_id: string; quantity: string; expected_revision: Revision}>
   | Readonly<{action: 'shopping.cancel-balance'; purchase_id: string; reason: string; expected_revision: Revision}>
   | Readonly<{action: 'shopping.void-receipt'; purchase_id: string; receipt_id: string; reason: string;
@@ -244,6 +263,8 @@ export interface ShoppingItem {
   readonly manual: string;
   readonly total: string;
   readonly attribution: ExtraAttribution | null;
+  /** Only an individual free-text extra carries an annotation; aggregates never synthesize one. */
+  readonly annotation?: ShoppingAnnotation | null;
 }
 
 export function shoppingItemKey(item: Pick<ShoppingItem, 'productId' | 'extraId'>): string {
@@ -268,6 +289,7 @@ export interface ShoppingSource {
   readonly incoming: string;
   readonly toBuy: string;
   readonly attribution: ExtraAttribution | null;
+  readonly annotation?: ShoppingAnnotation | null;
 }
 
 export interface ShoppingSources {
@@ -355,12 +377,20 @@ export function inventoryCommand(value: unknown): InventoryCommand {
     return {action, product_id: taskIdentifier(record.product_id), minimum: taskQuantity(record.minimum),
       target: taskQuantity(record.target), expected_revision: replenishmentRevision(record.expected_revision)};
   }
-  if ((action === 'shopping.purchase' || action === 'shopping.add-extra')
-      && hasFields(record, ['action','product_id','name','quantity'])) {
+  const shoppingKeys = ['action','product_id','name','quantity'];
+  if (action === 'shopping.add-extra') {
+    if (Object.hasOwn(record, 'note')) shoppingKeys.push('note');
+    if (Object.hasOwn(record, 'priority')) shoppingKeys.push('priority');
+  }
+  if ((action === 'shopping.purchase' || action === 'shopping.add-extra') && hasFields(record, shoppingKeys)) {
     const product_id = record.product_id === null ? null : taskIdentifier(record.product_id);
     const name = record.name === null ? null : taskText(record.name, 160, true);
-    if ((product_id === null) !== (name === null))
-      return {action, product_id, name, quantity: positiveQuantity(record.quantity)};
+    if ((product_id === null) !== (name === null)) {
+      const base = {action, product_id, name, quantity: positiveQuantity(record.quantity)} as const;
+      // Omitted annotations keep the exact legacy command and idempotency fingerprint.
+      return {...base, ...(Object.hasOwn(record, 'note') ? {note:shoppingNote(record.note)} : {}),
+        ...(Object.hasOwn(record, 'priority') ? {priority:shoppingPriority(record.priority)} : {})};
+    }
   }
   if (action === 'shopping.receive' && hasFields(record, ['action','purchase_id','quantity','expected_revision'])) {
     return {action, purchase_id:taskIdentifier(record.purchase_id), quantity:positiveQuantity(record.quantity),

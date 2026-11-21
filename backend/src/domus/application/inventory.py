@@ -43,6 +43,7 @@ from domus.domain.shopping import (
     PurchaseSession,
     SessionSelection,
 )
+from domus.domain.shopping_annotations import ShoppingAnnotation
 from domus.domain.shopping_needs import ShoppingExtra
 from domus.domain.storage import CommandKey, JsonDocument, Receipt, validate_identifier
 from domus.domain.task_material_values import (
@@ -716,9 +717,22 @@ class InventoryCommands:
         return self._execute(CatalogAction.RECORD_SESSION.value, key, payload, apply)
 
     def add_extra(
-        self, key: str, product_id: str | None, name: str | None, quantity: MaterialQuantity
+        self,
+        key: str,
+        product_id: str | None,
+        name: str | None,
+        quantity: MaterialQuantity,
+        *,
+        annotation: ShoppingAnnotation | None = None,
     ) -> Receipt:
         payload = _shopping_item(product_id, name, quantity)
+        if annotation is not None:
+            if not isinstance(annotation, ShoppingAnnotation):
+                raise InvalidInput("invalid_shopping_annotation")
+            payload = JsonDocument.from_value(
+                payload.decode() | {"note": annotation.note, "priority": annotation.priority.value}
+            )
+        effective_annotation = ShoppingAnnotation() if annotation is None else annotation
 
         def apply(unit: UnitOfWork, member: str, _command: CommandKey) -> JsonDocument:
             if product_id is None:
@@ -735,6 +749,7 @@ class InventoryCommands:
                 _shopping_quantity(quantity, base_unit),
                 member,
                 self.clock.now(),
+                annotation=effective_annotation,
             )
             unit.shopping.add_extra(self.household_id, extra)
             return JsonDocument.from_value({"extra_id": extra.extra_id})

@@ -193,3 +193,17 @@ def test_previous_schema35_image_recipe_remains_the_exact_qualified_edge70() -> 
     assert not any(
         (folder / name).exists() for name in ["config.yaml", "config.yml", "config.json"]
     )
+
+
+def test_previous_schema36_image_recipe_remains_the_exact_qualified_edge72() -> None:
+    folder = ROOT / "tests/fixtures/schema36-app"
+    recipe = (folder / "Dockerfile").read_bytes()
+    assert (
+        hashlib.sha256(recipe).hexdigest()
+        == "70385e666924138c1a5608398e4d73b4c10f64b7e56c28da610e2ae7bd2c5bf3"
+    )
+    assert b"ARG BUILD_VERSION=0.0.0-edge.72" in recipe
+    assert b"ARG DOMUS_SOURCE_COMMIT=31553dda1f3782b916c16b13818154cdc66ec520" in recipe
+    assert not any(
+        (folder / name).exists() for name in ["config.yaml", "config.yml", "config.json"]
+    )

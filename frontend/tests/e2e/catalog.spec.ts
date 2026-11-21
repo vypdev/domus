@@ -1,4 +1,6 @@
 import {expect, test} from '@playwright/test';
+import type {Locator} from '@playwright/test';
+import {inventoryMessage} from '../../src/presentation/inventory-messages';
 import {message} from '../../src/presentation/messages';
 import type {MessageKey} from '../../src/presentation/messages';
 import type {DomusApp} from '../../src/presentation/domus-app';
@@ -6,6 +8,131 @@ import type {DomusAdministration} from '../../src/presentation/domus-administrat
 import type {DomusAutomationDaily} from '../../src/presentation/domus-automation-daily';
 
 const origin = 'http://127.0.0.1:56173';
+
+async function readableContrast(locator:Locator):Promise<number>{
+  const colors=await locator.evaluate(element=>{
+    const foreground=getComputedStyle(element).color;let current:Element|null=element,background='';
+    while(current!==null){
+      const style=getComputedStyle(current);
+      if(style.backgroundColor!=='rgba(0, 0, 0, 0)'&&style.backgroundColor!=='transparent'){background=style.backgroundColor;break;}
+      const root=current.getRootNode();current=(current as HTMLElement).assignedSlot??current.parentElement??(root instanceof ShadowRoot?root.host:null);
+    }
+    return{foreground,background};
+  });
+  const luminance=(rgb:string)=>{const channels=rgb.match(/[\d.]+/gu)!.slice(0,3).map(Number).map(value=>{
+    const v=value/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});return channels[0]*.2126+channels[1]*.7152+channels[2]*.0722;};
+  const fore=luminance(colors.foreground),back=luminance(colors.background);
+  return(Math.max(fore,back)+.05)/(Math.min(fore,back)+.05);
+}
+const shoppingUrl = (example:string,locale:string,deployment:string) => origin
+  + '/iframe.html?id=domus-manual-shopping-annotations--'+example+'&viewMode=story&args='
+  + encodeURIComponent(`language:${locale};deployment:${deployment}`);
+
+for (const example of ['default','reader','read-only','uncertain','rejected','long-note','empty','spanish']) {
+  test('shopping catalog '+example+' preserves separate annotated requests in both entry modes',async ({page}) => {
+    const errors:string[]=[],unexpected:string[]=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.route('**/*',async route=>{
+      const request=new URL(route.request().url());
+      if(request.origin!==origin||request.pathname.includes('/api/')){unexpected.push(request.pathname);await route.abort();}
+      else await route.continue();
+    });
+    for(const [locale,deployment] of [['en','native'],['en','standalone'],['es','native'],['es','standalone']] as const){
+      await page.goto(shoppingUrl(example,locale,deployment));
+      const shared=page.locator('domus-shopping-list');
+      await expect(shared.getByRole('heading',{name:locale==='es'?'Lista compartida de compras':'Shared shopping list',exact:true})).toBeVisible();
+      const priority=shared.getByRole('combobox',{name:locale==='es'?'Prioridad':'Priority',exact:true});
+      const note=shared.getByRole('textbox',{name:locale==='es'?'Nota (opcional)':'Note (optional)',exact:true});
+      if(['reader','read-only'].includes(example)){await expect(priority).toHaveCount(0);await expect(note).toHaveCount(0);}
+      else if(example==='uncertain'){await expect(priority).toBeDisabled();await expect(note).toBeDisabled();}
+      else{await expect(priority).toBeEnabled();await expect(note).toBeEnabled();}
+      if(example==='empty')await expect(shared.locator('.manual-annotation')).toHaveCount(0);
+      else{
+        await expect(shared.locator('.manual-annotation')).toHaveCount(3);
+        await expect(shared.getByText(locale==='es'?'Cantidad solicitada':'Requested quantity',{exact:true})).toHaveCount(3);
+        for(const label of locale==='es'?['Prioridad: Urgente','Prioridad: Alta','Prioridad: Baja']:['Priority: Urgent','Priority: High','Priority: Low'])
+          await expect(shared.getByText(label,{exact:true})).toBeVisible();
+        const notes=await shared.locator('.manual-note').allTextContents();
+        expect(notes[1]).toBe('Breakfast tea\nLoose leaves 😀');
+        expect(notes[2]).toBe('Keep this separate from the breakfast request.');
+        await expect(shared.locator('.manual-note b')).toHaveCount(0);
+        if(example==='long-note')expect(Array.from(notes[0]).length).toBe(1000);
+        else expect(notes[0]).toContain('<b>Tea</b>');
+      }
+      if(example==='rejected')await expect(page.getByText(locale==='es'
+        ?'Tus permisos actuales no permiten añadir solicitudes de compra. Pide a una persona administradora del hogar que revise tu acceso.'
+        :'Your current permissions do not allow adding shopping requests. Ask a household administrator to review your access.',{exact:true})).toBeVisible();
+    }
+    expect(errors).toEqual([]);expect(unexpected).toEqual([]);
+  });
+}
+
+test('shopping catalog keyboard selection submits the exact priority and entered quantity',async ({page})=>{
+  await page.goto(shoppingUrl('default','en','native'));
+  const shared=page.locator('domus-shopping-list');
+  await shared.evaluate(element=>{
+    const state=window as unknown as {shoppingIntents:unknown[]};state.shoppingIntents=[];
+    element.addEventListener('domus-inventory-intent',event=>state.shoppingIntents.push((event as CustomEvent).detail));
+  });
+  await shared.getByRole('textbox',{name:'Extra item name',exact:true}).fill('Fictional keyboard tea');
+  await shared.getByRole('textbox',{name:/^Extra quantity/u}).fill('2');
+  const note=shared.getByRole('textbox',{name:'Note (optional)',exact:true});
+  await note.pressSequentially('First');await note.press('Enter');await note.pressSequentially('Second');
+  await page.keyboard.insertText('\t😀');await expect(note).toHaveValue('First\nSecond\t😀');
+  expect(await page.evaluate(()=>(window as unknown as {shoppingIntents:unknown[]}).shoppingIntents)).toEqual([]);
+  const priority=shared.getByRole('combobox',{name:'Priority',exact:true});
+  await priority.focus();await page.keyboard.press('End');await page.keyboard.press('Enter');
+  await expect(priority).toContainText('Urgent');
+  const save=shared.getByRole('button',{name:'Add manual extra',exact:true});
+  await save.focus();await page.keyboard.press('Enter');
+  await expect.poll(()=>page.evaluate(()=>(window as unknown as {shoppingIntents:unknown[]}).shoppingIntents)).toEqual([
+    {type:'submit',command:{action:'shopping.add-extra',product_id:null,name:'Fictional keyboard tea',quantity:'2',note:'First\nSecond\t😀',priority:'urgent'}},
+  ]);
+});
+
+test.describe('shopping mobile catalog',()=>{
+  test.use({hasTouch:true,viewport:{width:390,height:844}});
+  for(const locale of ['en','es'])test('shopping touch, literal notes and readable themes in '+locale,async ({page})=>{
+    for(const colorScheme of ['light','dark'] as const){
+      await page.emulateMedia({colorScheme,reducedMotion:'reduce'});
+      await page.goto(shoppingUrl('default',locale,'standalone'));
+      const shared=page.locator('domus-shopping-list');
+      const priority=shared.getByRole('combobox',{name:locale==='es'?'Prioridad':'Priority',exact:true});
+      await priority.tap();await shared.getByRole('option',{name:locale==='es'?'Alta':'High',exact:true}).tap();
+      await expect(priority).toContainText(locale==='es'?'Alta':'High');
+      const bounds=await priority.boundingBox();expect(bounds!.height).toBeGreaterThanOrEqual(44);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      expect(await readableContrast(shared.locator('.manual-note').first())).toBeGreaterThanOrEqual(4.5);
+      await shared.evaluate(element=>{
+        const state=window as unknown as {shoppingIntents:unknown[]};state.shoppingIntents=[];
+        element.addEventListener('domus-inventory-intent',event=>state.shoppingIntents.push((event as CustomEvent).detail));
+      });
+      await shared.getByRole('textbox',{name:locale==='es'?'Nombre del extra':'Extra item name',exact:true}).fill('Fictional touch tea');
+      await shared.getByRole('textbox',{name:new RegExp('^'+(locale==='es'?'Cantidad del extra':'Extra quantity'),'u')}).fill('1');
+      const note=shared.getByRole('textbox',{name:locale==='es'?'Nota (opcional)':'Note (optional)',exact:true});
+      await note.tap();await note.fill('😀'.repeat(1001));
+      const save=shared.getByRole('button',{name:locale==='es'?'Añadir extra manual':'Add manual extra',exact:true});
+      const field=shared.locator('vyp-ha-textarea');
+      const error=field.getByText(inventoryMessage('invalid_shopping_note',locale==='es'?'es':'en'),{exact:true});
+      // Validation must be visible before the touch starts, keeping its target stable.
+      await expect(error).toBeVisible();
+      await save.tap();await expect(note).toHaveValue('😀'.repeat(1001));await expect(note).toBeFocused();
+      await expect(error).toBeVisible();expect(await readableContrast(error)).toBeGreaterThanOrEqual(4.5);
+      expect(await readableContrast(note)).toBeGreaterThanOrEqual(4.5);
+      expect(await readableContrast(field.locator('[part="help"]'))).toBeGreaterThanOrEqual(4.5);
+      expect(await page.evaluate(()=>(window as unknown as {shoppingIntents:unknown[]}).shoppingIntents)).toEqual([]);
+      await page.screenshot({path:`test-results/shopping-note-error-${locale}-390-${colorScheme}.png`,fullPage:true});
+      await note.fill('Touch\n\t😀');await note.press('Enter');await expect(error).toHaveCount(0);
+      await save.tap();
+      await expect.poll(()=>page.evaluate(()=>(window as unknown as {shoppingIntents:unknown[]}).shoppingIntents)).toEqual([
+        {type:'submit',command:{action:'shopping.add-extra',product_id:null,name:'Fictional touch tea',quantity:'1',note:'Touch\n\t😀\n',priority:'high'}},
+      ]);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      await page.screenshot({path:`test-results/shopping-${locale}-390-${colorScheme}.png`,fullPage:true});
+    }
+  });
+});
+
 const dailyUrl = (example: string, locale: string, deployment: string) => origin
   + '/iframe.html?id=domus-daily-automations--' + example + '&viewMode=story&args='
   + encodeURIComponent(`language:${locale};deployment:${deployment}`);

@@ -220,6 +220,7 @@ def test_new_runtime_sources_require_an_explicit_coverage_scope() -> None:
         "frontend/stories/calendar.stories.ts",
         "frontend/stories/tasks.stories.ts",
         "frontend/stories/automation-daily.stories.ts",
+        "frontend/stories/shopping.stories.ts",
         "frontend/playwright.config.ts",
         "frontend/playwright.entry.config.ts",
         "frontend/vite.config.ts",
@@ -417,7 +418,8 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     }
     assert (
         "playwright.entry.config.ts tests/e2e/administration.spec.ts tests/e2e/tasks.spec.ts"
-        " tests/e2e/workspace-navigation.spec.ts" in actual["run"]
+        " tests/e2e/workspace-navigation.spec.ts tests/e2e/shopping-annotations.spec.ts"
+        in actual["run"]
     )
     assert actual["run"].startswith("lockf -k -t 600 /tmp/domus-ci-entry-browser.lock ")
     assert "--grep" not in actual["run"]
@@ -428,10 +430,10 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     audit = next(
         step
         for step in steps
-        if step.get("name") == "Require all seventy actual-image household journeys"
+        if step.get("name") == "Require all seventy-four actual-image household journeys"
     )
     assert all(field in audit["run"] for field in ["expected", "unexpected", "skipped", "flaky"])
-    assert "expected']==70" in audit["run"]
+    assert "expected']==74" in audit["run"]
     cleanup = next(
         step for step in steps if step.get("name") == "Require no surviving image browser fixtures"
     )
@@ -443,6 +445,24 @@ def test_both_cpu_images_run_all_actual_household_browser_journeys() -> None:
     assert images["if"] == "${{ always() }}"
     assert 'image="$DOMUS_IMAGE_PREFIX:$name"' in images["run"]
     assert 'docker image rm "$image"' in images["run"]
+
+
+def test_both_cpu_images_require_and_retire_the_actual_schema36_rollback_pair() -> None:
+    steps = workflow()["jobs"]["containers"]["steps"]
+    build = next(
+        step
+        for step in steps
+        if step.get("name") == "Build the immutable previous schema-36 shopping application"
+    )
+    assert '--platform "$DOCKER_DEFAULT_PLATFORM"' in build["run"]
+    assert '-t "$DOMUS_IMAGE_PREFIX:schema36" tests/fixtures/schema36-app' in build["run"]
+    verify = next(
+        step for step in steps if step.get("name") == "Verify the real image, listener and cleanup"
+    )
+    assert verify["env"]["DOMUS_SCHEMA36_IMAGE"] == "${{ env.DOMUS_IMAGE_PREFIX }}:schema36"
+    assert steps.index(build) < steps.index(verify)
+    cleanup = next(step for step in steps if step.get("name") == "Remove this job's image tags")
+    assert "schema35 schema36" in cleanup["run"]
 
 
 def test_both_cpu_images_require_the_immutable_schema9_application_rollback_pair() -> None:

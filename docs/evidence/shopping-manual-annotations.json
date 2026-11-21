@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "issue": 157,
+  "status": "source qualified; immutable candidate and installed acceptance pending",
+  "currentSource": {
+    "storageSchema": 37,
+    "pythonFiles": 250,
+    "actualProductFiles": {
+      ".vite/manifest.json": "e2c258c7f08d8ba5223ce00c56e773204a87d44aac47e152c9f32968f77126c9",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DeTOJyVp.js": "24a5221e3e9fcbc58a17f91dbd2d17225b5fc07ec985e216fbb19dbfed70fbbe",
+      "index.html": "fb06a78159cebcd880a7dc25bfe82fda96ef3ae33703284d530516528a9d1e72"
+    },
+    "haUi": "0.1.0-next.5",
+    "publicCoreTarSHA256": "2d591dcc2fbfcb9222632a03befba6b3de604115e760eda2dfbcdbc1d91d8f41",
+    "all172PublishedCoreFilesMatchInstalledPackage": true
+  },
+  "sourceQualification": {
+    "backend": {
+      "tests": 5919,
+      "runtimeFiles": 250,
+      "statements": 19235,
+      "branches": 5160,
+      "globalAndPerFileCoverage": 100,
+      "scope": "Complete source suite excluding the ten app-package static checks, which require the new immutable candidate."
+    },
+    "frontend": {
+      "tests": 2164,
+      "runtimeFiles": 119,
+      "statements": 9384,
+      "branches": 8557,
+      "functions": 2009,
+      "lines": 6826,
+      "allFourMetricsGlobalAndPerFile": 100
+    },
+    "catalog": {
+      "tests": 68,
+      "stories": 45,
+      "shoppingStories": 8,
+      "modes": [
+        "native",
+        "standalone"
+      ],
+      "locales": [
+        "en",
+        "es"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "touchViewport": 390,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0,
+      "actualErrorHelpAndInputContrastAtLeast": 4.5,
+      "touchCorrection": "Validate the note while editing so an error revealed on blur cannot move the Save button before the touch click."
+    },
+    "focusedProtectedHttp": {
+      "tests": 4,
+      "modes": [
+        "native",
+        "standalone"
+      ],
+      "locales": [
+        "en",
+        "es"
+      ],
+      "actualCompiledApplication": true,
+      "originalCommittedReplyRecovery": true,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0
+    },
+    "nodePolicy": {
+      "tests": 42,
+      "allFourCoverageMetrics": 100
+    },
+    "compiledBrowser": {
+      "tests": 129,
+      "modes": [
+        "native",
+        "standalone"
+      ],
+      "stats": {
+        "startTime": "2026-11-21T22:24:45.043Z",
+        "duration": 448017.355,
+        "expected": 129,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "retries": 0
+    },
+    "pythonTooling": {
+      "tests": 187,
+      "globalAndPerFileCoverage": 100
+    },
+    "pythonArchitecture": {
+      "tests": 51
+    },
+    "wheelBundleCases": 1
+  },
+  "previousRuntime": {
+    "version": "0.0.0-edge.72",
+    "sourceCommit": "31553dda1f3782b916c16b13818154cdc66ec520",
+    "storageSchema": 36,
+    "recipe": "tests/fixtures/schema36-app/Dockerfile",
+    "recipeSHA256": "70385e666924138c1a5608398e4d73b4c10f64b7e56c28da610e2ae7bd2c5bf3",
+    "journalFixture": "frontend/tests/fixtures/edge72-inventory-journal.provenance.json",
+    "databaseFixture": "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json"
+  },
+  "pendingGates": [
+    "Immutable source archive and wheel plus ten static app-package contracts",
+    "All 62 container and 74 actual-image browser cases in each CPU architecture",
+    "Installed native Edge acceptance and scoped cleanup",
+    "Final PR same-head CI, review and Branch Sync; normal merge, destination checks and native issue closure"
+  ],
+  "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
+  "recordedAt": "2026-11-21T22:32:33.754515+00:00"
+}

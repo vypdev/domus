@@ -683,8 +683,9 @@ export class DomusInventory extends LitElement {
     const saved = result !== null && result.kind !== 'rejected' ? result : null;
     const movement = saved?.movement;
     const message = result?.kind === 'rejected'
-      ? result.reason === 'inventory_stock_capacity' && result.command.action === 'shopping.post-receipt'
-        ? 'shoppingPostingCapacity' : result.reason
+      ? result.reason === 'permission_denied' && result.command.action === 'shopping.add-extra'
+        ? 'shoppingRequestDenied' : result.reason === 'inventory_stock_capacity' && result.command.action === 'shopping.post-receipt'
+          ? 'shoppingPostingCapacity' : result.reason
       : notice;
     return html`<h2>${this.text('title')}</h2>
       ${message === null ? nothing : html`<vyp-ha-feedback

@@ -252,6 +252,19 @@ stock, reservations and purchases recalculate automatic needs. Extras stay on
 the list until a manager clears them. Use **Recover original request** if an
 add or clear response is lost.
 
+Each manual request can include **Note (optional)** and a **Priority**: Low,
+Normal, High or Urgent. Normal is the default. A note can contain up to 1,000
+Unicode characters, including emoji, line breaks and tabs. Its spacing is kept
+and its text is displayed literally. The note and priority belong to that
+request: tracked products show them on each manual source, while a free-text
+extra shows its own. They do not change quantities or the list order.
+
+If validation fails, correct the indicated field and submit again; the other
+fields stay filled. After an uncertain response, recover the original request
+before making another one. Checking an earlier result does not clear an
+unrelated draft. In Spanish the fields are **Nota (opcional)** and **Prioridad**,
+with Baja, Normal, Alta and Urgente as the choices.
+
 ### Purchase sessions
 
 In the shared shopping list, a shopping manager can choose **Add to purchase

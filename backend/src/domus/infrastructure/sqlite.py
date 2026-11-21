@@ -84,6 +84,7 @@ from domus.infrastructure.sqlite_recurrence_schema import (
 )
 from domus.infrastructure.sqlite_rewards import REWARD_STATEMENTS, REWARD_TABLES, SQLiteRewards
 from domus.infrastructure.sqlite_shopping import (
+    SHOPPING_ANNOTATION_STATEMENTS,
     SHOPPING_CANCELLATION_STATEMENTS,
     SHOPPING_CANCELLATION_TABLE,
     SHOPPING_EXTRA_STATEMENTS,
@@ -120,7 +121,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 36
+SCHEMA_VERSION = 37
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -212,6 +213,7 @@ SCHEMA_STATEMENTS = (
     AUTOMATION_CONTROL_STATEMENT,
     BARCODE_STATEMENT,
     *SCHEDULED_AUTOMATION_STATEMENTS,
+    *SHOPPING_ANNOTATION_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -293,6 +295,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *((AUTOMATION_CONTROL_STATEMENT,) if version >= 33 else ()),
             *((BARCODE_STATEMENT,) if version >= 35 else ()),
             *(SCHEDULED_AUTOMATION_STATEMENTS if version >= 36 else ()),
+            *(SHOPPING_ANNOTATION_STATEMENTS if version >= 37 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -662,6 +665,7 @@ class SQLiteDatabase:
                         *((AUTOMATION_CONTROL_STATEMENT,) if version < 33 else ()),
                         *((BARCODE_STATEMENT,) if version < 35 else ()),
                         *(SCHEDULED_AUTOMATION_STATEMENTS if version < 36 else ()),
+                        *(SHOPPING_ANNOTATION_STATEMENTS if version < 37 else ()),
                     )
                     for statement in migration:
                         connection.execute(statement)

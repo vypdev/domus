@@ -7,6 +7,12 @@ from domus.application.authorization import HouseholdAccess
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.inventory_ports import InventoryRecords
 from domus.application.ports import Transactions, UnitOfWork
+from domus.application.shopping_annotations import (
+    AnnotatedShoppingListView,
+    AnnotatedShoppingSourcesView,
+    annotate_list,
+    annotate_sources,
+)
 from domus.application.shopping_list import (
     SHOPPING_ATTENTION_LIMIT,
     ShoppingAttention,
@@ -652,14 +658,28 @@ class InventoryQueries:
 
     def shopping_list(self, *, limit: int, cursor: str | None) -> ShoppingListView:
         with self.store.read() as unit:
-            home, grants, binding = self._access(unit, "shopping-list-v1", limit, None)
-            after = "" if cursor is None else self.cursors.decode(binding, cursor)
-            rows = unit.shopping.list_candidates(home, after, limit + 1)
-            next_cursor = (
-                self.cursors.encode(binding, rows[limit - 1][0]) if len(rows) > limit else None
+            return self._shopping_list_page(unit, limit, cursor, "shopping-list-v1")[1]
+
+    def annotated_shopping_list(
+        self, *, limit: int, cursor: str | None
+    ) -> AnnotatedShoppingListView:
+        with self.store.read() as unit:
+            home, page = self._shopping_list_page(
+                unit, limit, cursor, "shopping-list-annotations-v1"
             )
-            items = list_items(unit, home, rows[:limit], include_tasks=grants.tasks)
-            return ShoppingListView(items, next_cursor)
+            return annotate_list(unit, home, page)
+
+    def _shopping_list_page(
+        self, unit: UnitOfWork, limit: int, cursor: str | None, query: str
+    ) -> tuple[str, ShoppingListView]:
+        home, grants, binding = self._access(unit, query, limit, None)
+        after = "" if cursor is None else self.cursors.decode(binding, cursor)
+        rows = unit.shopping.list_candidates(home, after, limit + 1)
+        next_cursor = (
+            self.cursors.encode(binding, rows[limit - 1][0]) if len(rows) > limit else None
+        )
+        items = list_items(unit, home, rows[:limit], include_tasks=grants.tasks)
+        return home, ShoppingListView(items, next_cursor)
 
     def shopping_attention(self) -> ShoppingAttention:
         limit = SHOPPING_ATTENTION_LIMIT
@@ -681,26 +701,40 @@ class InventoryQueries:
         self, product_id: str, *, limit: int, cursor: str | None
     ) -> ShoppingSourcesView:
         with self.store.read() as unit:
-            home, grants, binding = self._access(unit, "shopping-sources-v1", limit, product_id)
-            product = unit.inventory.product(home, product_id)
-            if product is None:
-                raise NotFound("inventory_product_missing")
-            task_sources = task_needs(unit, home, (product,)) if grants.tasks else {}
-            projected = project(
-                unit, home, product, tuple(task_sources.get(product.reference_id, ()))
+            return self._shopping_sources_page(
+                unit, product_id, limit, cursor, "shopping-sources-v1"
+            )[1]
+
+    def annotated_shopping_sources(
+        self, product_id: str, *, limit: int, cursor: str | None
+    ) -> AnnotatedShoppingSourcesView:
+        with self.store.read() as unit:
+            home, page = self._shopping_sources_page(
+                unit, product_id, limit, cursor, "shopping-source-annotations-v1"
             )
-            after = "" if cursor is None else self.cursors.decode(binding, cursor)
-            sources = sorted(
-                (source for source in projected.sources if source.source_id > after),
-                key=lambda source: source.source_id,
-            )
-            next_cursor = (
-                self.cursors.encode(binding, sources[limit - 1].source_id)
-                if len(sources) > limit
-                else None
-            )
-            return ShoppingSourcesView(
-                projected.item,
-                tuple(projected.view(unit, home, source) for source in sources[:limit]),
-                next_cursor,
-            )
+            return annotate_sources(unit, home, page)
+
+    def _shopping_sources_page(
+        self, unit: UnitOfWork, product_id: str, limit: int, cursor: str | None, query: str
+    ) -> tuple[str, ShoppingSourcesView]:
+        home, grants, binding = self._access(unit, query, limit, product_id)
+        product = unit.inventory.product(home, product_id)
+        if product is None:
+            raise NotFound("inventory_product_missing")
+        task_sources = task_needs(unit, home, (product,)) if grants.tasks else {}
+        projected = project(unit, home, product, tuple(task_sources.get(product.reference_id, ())))
+        after = "" if cursor is None else self.cursors.decode(binding, cursor)
+        sources = sorted(
+            (source for source in projected.sources if source.source_id > after),
+            key=lambda source: source.source_id,
+        )
+        next_cursor = (
+            self.cursors.encode(binding, sources[limit - 1].source_id)
+            if len(sources) > limit
+            else None
+        )
+        return home, ShoppingSourcesView(
+            projected.item,
+            tuple(projected.view(unit, home, source) for source in sources[:limit]),
+            next_cursor,
+        )

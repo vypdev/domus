@@ -17,6 +17,16 @@ CALENDAR_RANGE_GUIDANCE = (
     f"Choose valid calendar dates up to {MAX_CALENDAR_DAYS} days apart. The end date is exclusive."
 )
 
+SHOPPING_ANNOTATION_GUIDANCE = {
+    "invalid_shopping_note": (
+        "Review the Shopping note. Use at most 1,000 characters with valid line breaks and tabs. "
+        "Unsupported control characters are not allowed. No extra was saved."
+    ),
+    "invalid_shopping_priority": (
+        "Review the Shopping priority. Choose low, normal, high or urgent. No extra was saved."
+    ),
+}
+
 PUBLIC_CODES = frozenset(
     {
         "session_required",
@@ -195,6 +205,9 @@ PUBLIC_CODES = frozenset(
         "inventory_correction_requires_intake",
         "inventory_intake_corrected",
         "invalid_shopping_item",
+        "invalid_shopping_note",
+        "invalid_shopping_priority",
+        "invalid_shopping_annotation",
         "invalid_shopping_session",
         "invalid_shopping_store_name",
         "shopping_session_missing",

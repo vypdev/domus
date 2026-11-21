@@ -348,12 +348,14 @@ def test_schema_26_upgrade_restart_and_activated_restore(tmp_path, monkeypatch):
     assert path.read_bytes() == original_bytes
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (36,)
+        assert db.execute("PRAGMA user_version").fetchone() == (37,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in existing.items():
             actual = db.execute("SELECT * FROM " + table).fetchall()
             if table in ("inventory_movements", "shopping_sessions"):
                 rows = [(*row, None) for row in rows]
+            if table == "shopping_extras":
+                rows = [(*row, "", "normal") for row in rows]
             assert actual == rows
         assert db.execute("SELECT * FROM shopping_receipt_voids").fetchall() == []
     identity_at(root, installation)

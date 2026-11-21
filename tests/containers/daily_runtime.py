@@ -62,7 +62,7 @@ async def wait_for(predicate):
 
 
 def exercise(mode, restart_admitted):
-    assert SCHEMA_VERSION == 36
+    assert SCHEMA_VERSION == 37
     clock, actor, identifiers = Clock(), Actor(), SecureIdentifiers()
     planner = DailyAutomationPlanner(PinnedRecurrenceTime())
 

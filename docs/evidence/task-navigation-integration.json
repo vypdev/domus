@@ -3,12 +3,12 @@
   "historicalTaskHead": "8c0a36c0b9804bdaf33a301a4dc85ae3dc12ee21",
   "developParent": "5b7bdcdee3a9e98d6669bfd34ce750ae30a8c775",
   "command": "pnpm build:frontend",
-  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery. Daily tasks use deliberately reviewed rule-owned grants, approved timing, durable scheduled outcomes, explicit adoption/revocation and original-control recovery.",
+  "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery. Daily tasks use deliberately reviewed rule-owned grants, approved timing, durable scheduled outcomes, explicit adoption/revocation and original-control recovery. Manual shopping requests retain a literal optional note and an independently localized priority per source, with exact original-command recovery and later-draft retention.",
   "actualProductFiles": {
-    "index.html": "93be7638218dc6df7c41607011c05cb92dd65e847cc2aafb37d644a688776ed8",
-    ".vite/manifest.json": "66da83527af9a540dc97c982f65c05c3d72d8b5e03e24eab03ab48e0a07b556c",
+    ".vite/manifest.json": "e2c258c7f08d8ba5223ce00c56e773204a87d44aac47e152c9f32968f77126c9",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-DL0JDusj.js": "8aa8aa4853ec1d40b06e3d902d98b898d4c9d87526313efb5af3768e1dfac25d"
+    "assets/index-DeTOJyVp.js": "24a5221e3e9fcbc58a17f91dbd2d17225b5fc07ec985e216fbb19dbfed70fbbe",
+    "index.html": "fb06a78159cebcd880a7dc25bfe82fda96ef3ae33703284d530516528a9d1e72"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -512,7 +512,7 @@
         "extraDomainWrites": 0
       },
       "materialOutcomeFocusVisibility": "Guarded deferred material focus centers its current target. All four rebuilt journeys pass42.6s with focused result heading below navigation. Raw64source also passed these assertions42.4s; original realHA64settlement screenshot is the negative clipping evidence, requiring independent installed65 verification.",
-      "plannerPublicationReview": "Verified false positive oncc: EntryRuntime.materialDraft\u2192perform\u2192publish\u2192composition callback already passes a fresh TaskView after synchronous mutation and promise settlement. Source/realUI proofreply4643831425; normal thread resolution PRRT_kwDOVa5AKs66B--f.",
+      "plannerPublicationReview": "Verified false positive oncc: EntryRuntime.materialDraft→perform→publish→composition callback already passes a fresh TaskView after synchronous mutation and promise settlement. Source/realUI proofreply4643831425; normal thread resolution PRRT_kwDOVa5AKs66B--f.",
       "visibleMaterialFocusJourneys": {
         "expected": 4,
         "unexpected": 0,
@@ -1517,5 +1517,22 @@
     "version": "0.0.0-edge.72",
     "qualification": "docs/evidence/daily-automation-execution-qualification.md",
     "scope": "Current source UI identity independently matched against wheel and actual local arm64 image. Both final CI architectures and installed acceptance are separate required gates."
+  },
+  "preShoppingManualAnnotations": {
+    "sourceCommit": "31553dda1f3782b916c16b13818154cdc66ec520",
+    "version": "0.0.0-edge.72",
+    "scope": "Accepted Edge.72 daily-automation interface before manual shopping notes and priority. Historical bytes are preserved independently of the current source bundle.",
+    "actualProductFiles": {
+      "index.html": "93be7638218dc6df7c41607011c05cb92dd65e847cc2aafb37d644a688776ed8",
+      ".vite/manifest.json": "66da83527af9a540dc97c982f65c05c3d72d8b5e03e24eab03ab48e0a07b556c",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DL0JDusj.js": "8aa8aa4853ec1d40b06e3d902d98b898d4c9d87526313efb5af3768e1dfac25d"
+    }
+  },
+  "shoppingManualAnnotationsQualification": {
+    "issue": 157,
+    "qualification": "docs/evidence/shopping-manual-annotations-qualification.md",
+    "record": "docs/evidence/shopping-manual-annotations.json",
+    "scope": "Current compiled source bytes. Immutable candidate, both CPU images, installed acceptance and final exact-head checks remain independent pending gates."
   }
 }

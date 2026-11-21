@@ -3,7 +3,7 @@ import {INVENTORY_ERRORS} from '../application/inventory-controller';
 import type {InventoryError, InventoryRequest, InventoryResult, InventoryScope, InventoryServer} from '../application/inventory-controller';
 import type {ShoppingAttention} from '../application/shopping-attention';
 import type {StockAttention} from '../application/stock-attention';
-import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, canonicalGtin, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, shoppingItemKey, signedQuantity, stockUnits} from '../domain/inventory';
+import {BASE_UNITS, MAX_LOCATION_NAME, MAX_NAMED_LOCATIONS, MAX_SESSION_ITEMS, MIN_SESSION_ITEMS, MOVEMENT_KINDS, SHOPPING_SOURCE_KINDS, STOCK_REASON_LIMIT, canonicalGtin, inventoryCommand, positiveQuantity, purchaseStoreName, replenishmentRevision, shoppingItemKey, shoppingNote, shoppingPriority, signedQuantity, stockUnits} from '../domain/inventory';
 import type {BarcodeLookup, BaseUnit, InventoryCommand, InventoryReport, LocationStock, MovementHistory, ProductStock, Purchase, PurchaseCancellation, Purchases, PurchaseReceipts, PurchaseSession, PurchaseSessionDetail, PurchaseSessions, Replenishment, ShoppingItem, ShoppingList, ShoppingSource, ShoppingSources, StockMovement, StockTotals, StockTransfer, StorageLocation} from '../domain/inventory';
 import type {JournalContext} from '../domain/journal';
 import {revisionValue} from '../domain/administration';
@@ -12,7 +12,7 @@ import {BoundedHTTP} from './http-transport';
 import type {FetchTransport} from './http-transport';
 import {csrf, failure} from './http-values';
 import type {EntryEndpoint} from './http-values';
-import {boolean, check, choice, fields, identifier, integer, text} from './json-values';
+import {boolean, check, choice, fields, identifier, integer, text, invalid} from './json-values';
 
 const BASE = 'inventory';
 
@@ -295,9 +295,19 @@ function shoppingItem(value: unknown): ShoppingItem {
 function shoppingList(value: unknown): ShoppingList {
   const row = fields(value, ['items','next_cursor'], []);
   check(Array.isArray(row.items) && row.items.length <= 25);
-  const items = row.items.map(shoppingItem);
+  const items = row.items.map(value => {
+    const wrapper = fields(value, ['item','annotation'], []), item = shoppingItem(wrapper.item);
+    return {...item, annotation:shoppingAnnotation(wrapper.annotation, item.extraId !== null)};
+  });
   check(new Set(items.map(shoppingItemKey)).size === items.length);
   return {items, cursor:cursorValue(row.next_cursor)};
+}
+
+function shoppingAnnotation(value: unknown, required: boolean) {
+  if (!required) {check(value === null); return null;}
+  const annotation = fields(value, ['note','priority'], []);
+  try {return {note:shoppingNote(annotation.note), priority:shoppingPriority(annotation.priority)};}
+  catch {return invalid();}
 }
 
 function shoppingAttention(value: unknown): ShoppingAttention {
@@ -333,7 +343,10 @@ function shoppingSources(value: unknown, productId: string): ShoppingSources {
   const row = fields(value, ['item','sources','next_cursor'], []);
   const item = shoppingItem(row.item);
   check(item.productId === productId && Array.isArray(row.sources) && row.sources.length <= 25);
-  const items = row.sources.map(source => shoppingSource(source, item.unit));
+  const items = row.sources.map(value => {
+    const wrapper = fields(value, ['source','annotation'], []), source = shoppingSource(wrapper.source, item.unit);
+    return {...source, annotation:shoppingAnnotation(wrapper.annotation, source.kind === 'extra')};
+  });
   check(new Set(items.map(source => source.id)).size === items.length);
   return {item, items, cursor:cursorValue(row.next_cursor)};
 }
@@ -510,14 +523,14 @@ export class HttpInventoryServer implements InventoryServer {
 
   shoppingList(scope: InventoryScope, cursor: string | null) {
     return this.network.owned(async signal => {
-      return shoppingList(await this.network.get(BASE + '/shopping-list' + pageQuery(cursor), scope.context, signal));
+      return shoppingList(await this.network.get(BASE + '/shopping-list/annotated' + pageQuery(cursor), scope.context, signal, 'shopping'));
     });
   }
 
   shoppingSources(scope: InventoryScope, productId: string, cursor: string | null) {
     return this.network.owned(async signal => {
-      const route = BASE + '/shopping-list/' + identifier(productId) + '/sources' + pageQuery(cursor);
-      return shoppingSources(await this.network.get(route, scope.context, signal), productId);
+      const route = BASE + '/shopping-list/' + identifier(productId) + '/sources/annotated' + pageQuery(cursor);
+      return shoppingSources(await this.network.get(route, scope.context, signal, 'shopping'), productId);
     });
   }
 

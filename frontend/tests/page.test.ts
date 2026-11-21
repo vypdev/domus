@@ -234,14 +234,14 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
         received:'0',remaining:'2',pending_stock:'0',cancelled:'0',revision:'1',member_id:'member',author_alias:null,created_at:'100'};
       raw = JSON.stringify({session,items:[item,{...item,purchase_id:'b',name:'Bread'}]});
     }
-    else if (route.startsWith('inventory/shopping-list/product/sources?')) raw = JSON.stringify({
+    else if (route.startsWith('inventory/shopping-list/product/sources/annotated?')) raw = JSON.stringify({
       item:{product_id:'product',extra_id:null,name:'Salt',base_unit:'gram',pantry:'0',
         tasks:'0',manual:'0',total:'0',attribution:null},
       sources:[],next_cursor:route.includes('cursor=')?null:'more-sources',
     });
-    else if (route.startsWith('inventory/shopping-list?')) raw = JSON.stringify({
+    else if (route.startsWith('inventory/shopping-list/annotated?')) raw = JSON.stringify({
       items:shoppingItemPresent && route.includes('cursor=')
-        ? [{...shoppingItem,pantry:'1.000001',tasks:'0',manual:'0',attribution:null}] : [],
+        ? [{item:{...shoppingItem,pantry:'1.000001',tasks:'0',manual:'0',attribution:null},annotation:null}] : [],
       next_cursor:route.includes('cursor=')?null:'more-list',
     });
     else if (route.startsWith('inventory?')) raw = JSON.stringify({location_id:'pantry', may_manage:true, may_shop:true, may_request:true, products:[],

@@ -1,6 +1,6 @@
 # Add notes and priority to manual shopping requests
 
-- Status: Draft
+- Status: Implementation in progress; image and installed acceptance pending
 - Catalog capability: shopping-management
 
 ## 1. Executive summary
@@ -8,6 +8,8 @@
 This bounded increment lets a household member add a plain-text note and priority to a manual extra for a catalog product or free-text item. The note defaults to empty; priority defaults to normal, with low, normal, high, and urgent available. Each request keeps its own annotation and attribution. Annotations remain inert display text and do not change quantities or the existing consolidation rules.
 
 Member selects a product or enters a free-text item -> enters optional note and priority -> submits the existing manual-extra command -> sees the annotation with that request’s source details.
+
+Implementation checkpoint (2026-11-21): schema-37 storage, protected annotated reads, client recovery and the complete note/priority form are source-tested. The exact public ha-ui `0.1.0-next.5` cohort is published, pinned and byte-verified in Domus. The current paths, executed evidence and outstanding package/image/installed gates are recorded in `docs/evidence/shopping-manual-annotations-qualification.md`. The selected-source limitations below describe native admission before these changes; they are not a current implementation inventory.
 
 ## 2. Problem, current behavior, and evidence
 
@@ -184,11 +186,11 @@ Publication acceptance must explicitly observe all three outcomes: the specifica
 
 ## 15. Documentation and discoverability
 
-This companion records only the manual-request note and priority increment for the existing Shopping capability. Keep `specs/shopping-management.md` as the owning contract and retain its requirements, cases, aliases and reverse mappings. The companion is a prospective create at `specs/shopping-manual-annotations.md`; that path is not asserted to exist in the selected source. Its inventory supplies the single navigation source for the host to project links. Link the companion from the Shopping catalog and reconcile the catalog’s ownership, paths and evidence with its generated view.
+This companion records only the manual-request note and priority increment for the existing Shopping capability. Keep `specs/shopping-management.md` as the owning contract and retain its requirements, cases, aliases and reverse mappings. The companion was created at `specs/shopping-manual-annotations.md` by verified native admission; its original prospective-create inventory is historical. Its inventory supplies the single navigation source for the host to project links. Link the companion from the Shopping catalog and reconcile the catalog’s ownership, paths and evidence with its generated view.
 
 Update the owning contract, qualification map, user documentation and closed HTTP contracts to describe the delivered increment while preserving their existing identities and reverse mappings. User guidance should explain optional notes, the normal-priority default, the four priorities, the 1,000-codepoint limit, inert text rendering and how independent requests appear in source details. Include English and Spanish labels, defaults, limits and actionable validation. Operator and contributor guidance should explain replay behavior, compatibility for existing clients and receipts, and the evidence for migration, recovery and atomic effects. Distinguish completed evidence for this bounded increment from evidence still needed for the broader Shopping capability.
 
-The selected catalog registers evidence paths but is not a complete file inventory. No concrete qualification-map, user-documentation, or closed HTTP-contract path for this increment is asserted here; their selected-source locations and update evidence remain unverified.
+The selected catalog registers evidence paths but is not a complete file inventory. The current increment is registered in `docs/evidence/shopping-manual-annotations-qualification.md`, `docs/user-guide.md`, `docs/operations.md` and both closed HTTP snapshots in `docs/contracts/household-api.openapi.json` and `docs/contracts/native-household-api.openapi.json`. Final candidate-linked acceptance remains pending.
 
 | Path | Change |
 | --- | --- |
@@ -261,8 +263,8 @@ Each requirement must map only to inventory cases that exercise its behavior. Th
 
 Primary source: [Issue #157](https://github.com/vypdev/domus/issues/157). The bounded change is one part of the existing `shopping-management-R1` contract; retain the immutable owner `specs/shopping-management.md` and its cases rather than restating or replacing them.
 
-The prospective companion is `specs/shopping-manual-annotations.md`. The selected catalog view registers `shopping-management` with `specs/shopping-management.md`; this draft therefore requires reciprocal companion ownership and evidence to be added and checked in the generated view. The selected repository standard is `specs/README.md` and its template is `specs/_template.md`.
+The companion is `specs/shopping-manual-annotations.md`. The current catalog registers it alongside `specs/shopping-management.md` under the retained `shopping-management` owner; the generated view has been regenerated and validated with the retained catalog SDK. The selected repository standard is `specs/README.md` and its template is `specs/_template.md`.
 
 Confirmed scope decisions: annotations belong to each manual source; defaults are an empty note and normal priority; priorities are low, normal, high, and urgent; notes are limited to 1,000 Unicode codepoints and render as inert text. Editing existing extras, multiple-list management, money and currency, replacing blocked work for issue #154, and resolving the pending owner decision for issue #90 are outside this increment. Distribution releases and Stable deployment are also outside scope.
 
-The root `package.json` declares pnpm 10.34.0 and does not declare the specification validation or generation scripts named in `specs/README.md`. Their executable definitions and prerequisites were not verified; the concrete invocation remains unverified. No command execution or implementation acceptance is claimed.
+The root `package.json` declares pnpm 10.34.0 and does not declare the specification validation or generation scripts named in `specs/README.md`. Those missing script wrappers remain unavailable. The retained catalog SDK public `main(["--write"], explicitRepositoryRoot)` and `main([], explicitRepositoryRoot)` entry points have instead been executed with Node 24.20.0 against this repository; validation passes for all eleven capabilities. The qualification map separates observed source checks from the pending compiled/UI/image/installed gates.
