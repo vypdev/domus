@@ -802,7 +802,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item\u2019s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
         "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and refunds have separate acceptance.",
         "copilotChangesAllowed": false
       }
@@ -1036,7 +1036,8 @@
       "owner": "Domus maintainers (review assignment pending)",
       "lastVerified": "2026-11-11",
       "specs": [
-        "specs/household-automation.md"
+        "specs/household-automation.md",
+        "specs/automation-scheduled-execution.md"
       ],
       "workflows": [],
       "entrypoints": [
