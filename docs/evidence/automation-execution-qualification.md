@@ -58,3 +58,6 @@ With the corrected observations, all ten race cases passed. The complete command
 file and existing storage-contention HTTP tests then passed all 36 cases. These
 local results do not substitute for the complete CI and review of the contributing
 commit or the exact destination commit after its normal merge.
+
+The independently exposed direct-command observer is recorded in the
+[member activation contention qualification](member-activation-contention-qualification.md).
