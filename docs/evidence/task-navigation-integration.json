@@ -1533,6 +1533,8 @@
     "issue": 157,
     "qualification": "docs/evidence/shopping-manual-annotations-qualification.md",
     "record": "docs/evidence/shopping-manual-annotations.json",
-    "scope": "Current compiled source bytes. Immutable candidate, both CPU images, installed acceptance and final exact-head checks remain independent pending gates."
+    "scope": "Current source and wheel UI byte identity. Both actual CPU campaigns, installed acceptance and final exact-head checks remain separate pending gates.",
+    "sourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
+    "version": "0.0.0-edge.73"
   }
 }
