@@ -3,7 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from pathlib import Path
-from threading import Barrier
+from threading import Barrier, Event
 from types import SimpleNamespace
 
 import pytest
@@ -29,7 +29,9 @@ from domus.domain.identity import (
     Role,
     allows,
 )
+from domus.domain.storage import CommandKey, Receipt
 from domus.infrastructure.sqlite import SQLiteDatabase
+from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 
 
 def configured(tmp_path: Path, mode: MappingMode = MappingMode.ALL) -> tuple:
@@ -471,30 +473,111 @@ def test_archived_member_reactivation_is_explicit_and_preserves_ha_linkage_and_h
         assert len(unit.audit.entries("home")) == len(unit.outbox.pending()) == 7
 
 
+@pytest.mark.parametrize("held_writer", [False, True])
 def test_two_identical_concurrent_activations_have_one_effect_and_the_same_receipt(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, held_writer: bool
 ) -> None:
     commands, store, _, directory, member_id = configured(tmp_path)
     gate = Barrier(2)
+    entered, release = Event(), Event()
+    key = "activate"
+    request = UpdateMember(member_id, 1, Role.ADULT, MemberStatus.ACTIVE)
+    command = CommandKey("home", "ha_admin", "member.update", key)
+
+    def state() -> tuple:
+        with store.read() as unit:
+            return (
+                unit.members.list("home"),
+                unit.policies.get("home"),
+                unit.audit.entries("home"),
+                unit.outbox.pending(),
+                unit.receipts.get(command),
+            )
+
+    before = state()
+    assert before[-1] is None
+    if held_writer:
+        add = SQLiteReceipts.add
+
+        def held_add(repository: SQLiteReceipts, receipt: Receipt) -> None:
+            add(repository, receipt)
+            if receipt.command == command:
+                assert repository.connection.in_transaction
+                assert repository.connection.execute("PRAGMA busy_timeout").fetchone()[0] == 250
+                entered.set()
+                assert release.wait(timeout=5)
+
+        monkeypatch.setattr(SQLiteReceipts, "add", held_add)
 
     class ConcurrentDirectory:
+        def __init__(self, contender: int) -> None:
+            self.contender = contender
+
         def get(self, user_id: str) -> HumanIdentity:
             human = directory.people[user_id]
             gate.wait(timeout=3)
+            if held_writer and self.contender == 2:
+                assert entered.wait(timeout=5)
             return human
 
-    def activate(_: int) -> object:
+    def activate(contender: int) -> object:
         actor = SimpleNamespace(current=lambda: directory.people["ha_admin"])
         service = MemberCommands(
-            store, actor, ConcurrentDirectory(), commands.clock, commands.identifiers
+            store, actor, ConcurrentDirectory(contender), commands.clock, commands.identifiers
         )
-        return service.update(
-            "activate", UpdateMember(member_id, 1, Role.ADULT, MemberStatus.ACTIVE)
-        )
+        try:
+            return service.update(key, request)
+        except StorageBusy as error:
+            return error
+        finally:
+            if held_writer and contender == 2:
+                release.set()
 
     with ThreadPoolExecutor(max_workers=2) as workers:
         results = list(workers.map(activate, (1, 2)))
+    assert all(isinstance(result, Receipt | StorageBusy) for result in results)
+    temporary = [result for result in results if isinstance(result, StorageBusy)]
+    assert len(temporary) <= 1
+    if held_writer:
+        assert len(temporary) == 1
+    accepted = next(result for result in results if isinstance(result, Receipt))
+    assert accepted.command == command
+    assert accepted.payload_fingerprint == request.document().fingerprint
+    assert accepted.result.decode() == {
+        "member_id": member_id,
+        "revision": 2,
+        "status": "active",
+        "role": "adult",
+    }
+    after = state()
+    assert after[0] == tuple(
+        replace(member, role=Role.ADULT, status=MemberStatus.ACTIVE, revision=2)
+        if member.member_id == member_id
+        else member
+        for member in before[0]
+    )
+    assert after[1] == before[1]
+    assert after[2][:-1] == before[2] and len(after[2]) == len(before[2]) + 1 == 3
+    assert after[3][:-1] == before[3] and len(after[3]) == len(before[3]) + 1 == 3
+    assert after[2][-1].command == command
+    assert after[2][-1].operation_id == after[3][-1].event_id == accepted.operation_id
+    assert after[3][-1].event_type == "member.update"
+    assert after[3][-1].payload == accepted.result
+    assert after[4] == accepted
+    completed = []
+    for result in results:
+        if isinstance(result, StorageBusy):
+            assert result.code == "storage_busy"
+            # Both calls finished. Retry only this frozen original once.
+            result = commands.update(key, request)
+        assert result == accepted
+        assert state() == after
+        completed.append(result)
+    results = completed
     assert results[0] == results[1]
     with store.read() as unit:
         assert unit.members.get("home", member_id).revision == 2
         assert len(unit.audit.entries("home")) == len(unit.outbox.pending()) == 3
+    with pytest.raises(Conflict, match="idempotency_conflict"):
+        commands.update(key, replace(request, role=Role.RESTRICTED))
+    assert state() == after
