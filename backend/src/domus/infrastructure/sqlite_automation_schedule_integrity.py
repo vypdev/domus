@@ -56,6 +56,7 @@ def verify_scheduled_automations(
             ScheduledOutcome.CREATED,
             ScheduledOutcome.NO_TASK,
             ScheduledOutcome.DENIED,
+            ScheduledOutcome.CANCELLED,
         ):
             if effect is None or receipt_run(effect) != run:
                 raise StorageFailure("invalid_daily_automation_outcome_proof")

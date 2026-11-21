@@ -11,7 +11,12 @@ from domus.application.automation_scheduled_authority import (
     RUN_SCHEDULED_AUTOMATION,
     ScheduledRuleAuthority,
 )
-from domus.application.automation_scheduled_documents import receipt_run, run_document
+from domus.application.automation_scheduled_cancellation import ScheduledCancellations
+from domus.application.automation_scheduled_documents import (
+    matching_run,
+    run_document,
+    scheduled_payload,
+)
 from domus.application.automation_scheduled_planning import DailyAutomationPlanner
 from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_materialization import MaintenanceScope
@@ -117,25 +122,12 @@ class ScheduledAutomationExecution:
     def _payload(self, run: ScheduledAutomationRun) -> JsonDocument:
         # Policy and grant changes cannot give one immutable rule/date a second
         # identity. The original receipt retains its complete admitted snapshot.
-        return JsonDocument.from_value(
-            {
-                "version": 1,
-                "rule": run.grant.draft.rule.document().encoded,
-                "nominal_date": run.planned.nominal.local.date().isoformat(),
-            }
-        )
+        return scheduled_payload(run)
 
     def _outcome(
         self, receipt: Receipt, expected: ScheduledAutomationRun
     ) -> ScheduledAutomationRun:
-        actual = receipt_run(receipt)
-        if (
-            actual.key != expected.key
-            or actual.grant.principal != expected.grant.principal
-            or actual.grant.draft != expected.grant.draft
-        ):
-            raise StorageFailure("invalid_daily_automation_outcome")
-        return actual
+        return matching_run(receipt, expected)
 
     def admit(
         self, rule_id: str, *, should_continue: Callable[[], bool] = lambda: True
@@ -169,8 +161,6 @@ class ScheduledAutomationExecution:
                 if existing is None:
                     proof = cast(Receipt, original if original is not None else admitted)
                     retained = self._outcome(proof, run)
-                    if retained.outcome is ScheduledOutcome.QUEUED:
-                        retained = retained.finish(ScheduledOutcome.CANCELLED, self.clock.now())
                     queued = replace(
                         retained,
                         outcome=ScheduledOutcome.QUEUED,
@@ -179,7 +169,12 @@ class ScheduledAutomationExecution:
                         task_occurrence_id=None,
                     )
                     unit.scheduled_automations.admit(queued)
-                    unit.scheduled_automations.finish(retained)
+                    if retained.outcome is ScheduledOutcome.QUEUED:
+                        ScheduledCancellations(
+                            self.transactions, self.scope, self.clock, self.identifiers
+                        ).one(unit, queued)
+                    else:
+                        unit.scheduled_automations.finish(retained)
                 self._advance(unit, schedule)
                 return ScheduledAutomationStep("retained", rule_id, run.key, original or admitted)
 
@@ -217,10 +212,11 @@ class ScheduledAutomationExecution:
             try:
                 authority.require(command, unit)
             except Forbidden:
-                unit.scheduled_automations.finish(
-                    run.finish(ScheduledOutcome.CANCELLED, self.clock.now())
-                )
-                return ScheduledAutomationStep("cancelled", rule_id, trigger_key)
+                receipt = ScheduledCancellations(
+                    self.transactions, self.scope, self.clock, self.identifiers
+                ).one(unit, run)
+                actual = self._outcome(receipt, run)
+                return ScheduledAutomationStep(actual.outcome.value, rule_id, trigger_key, receipt)
 
             def apply(target: UnitOfWork) -> Change:
                 conditions: list[JsonValue] = []

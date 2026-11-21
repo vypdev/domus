@@ -8,10 +8,10 @@ editor are not completed by this increment.
 
 ## Verification identity and limits
 
-The local full backend campaign passed 5,849 tests against 247 independently
-inventoried runtime modules, with all 19,101 statements and 5,146 branches covered.
-Four subsequently added deterministic serialization-order cases pass in the
-27-test execution file without changing runtime code. The full frontend campaign
+The local full backend campaign passed 5,867 tests against 248 independently
+inventoried runtime modules, with all 19,137 statements and 5,148 branches covered.
+This includes deterministic writer-order races and terminal cancellation proofs
+through all four retirement paths, actual restoration and compatible rollback. The full frontend campaign
 passes 2,134 tests across 48 files: all 119 runtime files satisfy all four coverage
 metrics (9,296 statements, 8,489 branches, 1,996 functions and 6,760 lines).
 Both Python architecture configurations, Ruff and backend mypy also pass.
@@ -29,14 +29,22 @@ separate installed acceptance remain publication gates. Their results must be
 recorded before this qualification is treated as complete. No prior Edge.70 result
 qualifies the new schema-36 runtime.
 
-The [Edge.71 package receipt](daily-automation-execution.json) pins source
-`3aa4934d549e20db42ed8adb9a15a3445df084d6`. All 996 archive files match that
-published Git tree. The built wheel contains 247 Python modules and four UI files;
-the actual local ARM64 image matches every product file byte. Its five daily-worker
-and authentic schema35 compatibility cases pass, as do three pinned native/standalone
-listener, restart and bundle cases. The separate fresh installed Edge.70 baseline has
-Manual1 enabled, Daily2 inactive and one original task/run, ready for the Edge.71 upgrade.
-This baseline does not establish installed Edge.71 acceptance or final amd64 CI.
+The first source CI exposed a stale product-bundle identity in the navigation
+receipt: wheel and both CPU images contained the same newly compiled files, but
+the byte guards still expected the previous bundle. That identity must advance
+with the newly qualified immutable artifact; the exact byte comparisons remain
+required. Source CI is not accepted until those guards and every other suite pass.
+
+Review also reproduced a restoration defect in all four cancellation paths:
+disable, regrant, switch to manual and current-grant rejection. An admitted
+checkpoint could restore an enabled binding after its queued run had been
+cancelled. Cancellation now commits the trigger's original terminal receipt,
+audit and acknowledged outbox in the same writer as its control and queue change.
+Actual checkpoint activation and compatible rollback must retain that result.
+An existing committed task outcome wins over a later cancellation attempt.
+The dedicated cancellation and restore cases and full current-source coverage pass;
+new immutable images and installed acceptance remain required. Edge.71 was
+withheld without installation after this finding.
 
 ## Concrete case map
 
@@ -50,6 +58,7 @@ The short suite names refer to these actual sources:
 - `authority`: [narrow rule authority](../../tests/backend/test_scheduled_rule_authority.py).
 - `storage`: [SQLite storage and migration](../../tests/backend/test_scheduled_automation_storage.py).
 - `restore`: [actual snapshot activation and rollback](../../tests/backend/test_daily_automation_restoration.py).
+- `cancellation`: [terminal proof, authority and atomic rollback](../../tests/backend/test_scheduled_automation_cancellation.py).
 - `history`: [scoped history](../../tests/backend/test_daily_automation_history.py).
 - `http`: [both protected HTTP compositions](../../tests/backend/test_daily_automation_http.py).
 - `controller`: [frontend control/recovery](../../frontend/tests/automation-daily-controller.test.ts).
@@ -68,7 +77,7 @@ The short suite names refer to these actual sources:
 | inventory3-C02 | `control::test_grant_creation_rechecks_current_permissions_before_original_lookup`; authority rejects non-task commands and expanded task payloads. |
 | inventory3-C03 | `execution::test_disable_serializes_with_the_atomic_task_effect_and_retains_actual_outcome`; authority rechecks disable/regrant/revision/scope before an effect or original lookup. |
 | inventory3-C04 | `control::test_saving_a_new_draft_never_rebinds_the_existing_grant`; `http::test_switching_manual_and_daily_revisions_fences_the_real_composed_worker`. |
-| inventory3-C05 | `restore::test_actual_restore_preserves_outcomes_and_compatible_rollback_without_a_second_task`; real reopen retains admitted work and current authority. |
+| inventory3-C05 | `restore::test_actual_restore_preserves_outcomes_and_compatible_rollback_without_a_second_task`; `restore::test_restore_after_admission_cannot_resume_a_run_cancelled_after_the_checkpoint` covers all four cancellation paths through actual activation and rollback. |
 | inventory4-C01 | `control::test_household_timing_change_keeps_approved_policy_until_explicit_reviewed_adoption`. |
 | inventory4-C02 | The same control test compares both policies and requires the exact reviewed occurrence; controller, view and transport verify deliberate adoption and closed timing proofs. |
 | inventory4-C03 | `execution::test_policy_adoption_keeps_an_admitted_runs_original_timing_and_effect`; nominal-frontier tests prevent suppressed dates returning after adoption. |
@@ -86,14 +95,14 @@ The short suite names refer to these actual sources:
 | scheduled-execution-C11 | Execution injects outer-run receipt failure; authority injects task outbox failure. Both preserve the queue and roll back task facts for an identical retry. |
 | scheduled-execution-C12 | `execution::test_startup_suppression_racing_live_admission_has_one_durable_disposition` forces both real writer serialization orders. |
 | scheduled-execution-C13 | `execution::test_disable_racing_admission_fences_new_work_or_requires_a_current_revision_review` forces both orders and cancels a reviewed admitted queue. |
-| scheduled-execution-C14 | `control::test_disable_cancels_queued_work_and_reenable_uses_a_new_grant_and_future_time`. |
+| scheduled-execution-C14 | `control::test_disable_cancels_queued_work_and_reenable_uses_a_new_grant_and_future_time`; `cancellation::test_cancellation_proof_and_control_share_one_writer_and_roll_back_together` injects failure at both receipt and outer-control boundaries. |
 | scheduled-execution-C15 | HTTP and transport reject extra/duplicate queries, numeric revisions, missing context/CSRF and expanded or mismatched reviewed times. Both OpenAPI documents are checked against actual compositions. |
 | scheduled-execution-C16 | Control originals preserve immutable keys and bodies; transport/controller and compiled journey recover one committed enable without another POST. |
 | scheduled-execution-C17 | History validates signed scoped cursor pages and rejects invalid bounds, expired/foreign positions and broken retained projections; history UI preserves a failed page for retry. |
 | scheduled-execution-C18 | Storage migrates the genuine captured schema-35 fixture, comparing every prior table/column/row; enabled manual1, inactive daily2 and original task/receipts remain. |
 | scheduled-execution-C19 | The same storage test independently migrates the schema-20 SQL source and preserves all prior rows. |
 | scheduled-execution-C20 | The storage test injects invalid DDL after the first new statement, asserts byte-identical old data, then verifies a supported complete retry. |
-| scheduled-execution-C21 | Restore exercises real checkpoint preparation, activation and compatible rollback before/after admission and after completed outcomes, without redelivery. |
+| scheduled-execution-C21 | Restore exercises real checkpoint preparation, activation and compatible rollback before/after admission and after completed or cancelled outcomes, without redelivery. Cancellation rejects a checkpoint without its exact terminal proof and retains a historical created-task result instead of relabelling it. |
 | scheduled-execution-C22 | Compatibility image builds immutable Edge.70/schema35, snapshots its old data, upgrades it, requires old-launcher refusal without file changes and starts the protected cold old pair. Actual image execution is a separate gate. |
 | scheduled-execution-C23 | HTTP verifies current configuration access without task-create can discover an enabled daily1 after latest manual2, although manual invocation is denied; daily revocation succeeds. Composed frontend covers the same capability boundary. |
 | scheduled-execution-C24 | HTTP rejects forged identity/grant fields; strict rule codecs reject executable/unknown definitions; authority and integrity reject foreign installation/channel/household facts before effects or disclosure. |
@@ -124,8 +133,9 @@ previous Edge.70 recipe, outside Supervisor discovery; it is never advanced with
 current artifact declaration.
 
 Schema 36 adds the daily schedule and scheduled-run tables and retained-history
-index. No draft is activated by migration. Restore retains original facts but
-never turns an old queued admission into live work. The startup cursor records
+index. No draft is activated by migration. Restore retains valid admitted work,
+projects any historical terminal receipt and never resumes cancelled work or
+redelivers a committed task. The startup cursor records
 skipped nominal dates, including dates coalesced by a time-zone change. A future
 adoption or new grant cannot resurrect them.
 

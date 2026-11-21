@@ -7,13 +7,6 @@ Install Domus Edge through the durable Supervisor repository source
 offered by Supervisor to the artifact declaration. It records the preview version,
 source commit, source archive and installed file hashes. [Edge artifact](../addon-edge/artifact.json)
 
-The Edge.71 candidate adds reviewed daily task grants and durable execution with
-SQLite schema36. It preserves schema35 manual controls, inactive daily drafts and
-original receipts, and schema20 migration remains qualified. Keep the prior compatible
-image and cold data copy together. The [daily qualification map](evidence/daily-automation-execution-qualification.md)
-separates source checks, actual CPU images and the installed candidate's acceptance;
-its pending gates must be completed before treating Edge.71 as a verified installation.
-
 Edge.52 finds products from manually entered barcode digits in Inventory.
 Managers review the chosen product and code before confirming an association
 or removal. A failed read offers a retry with the draft retained, and original
@@ -58,7 +51,7 @@ The Ingress walkthrough verified the Overview stock summary and replenishment in
 English and Spanish. The test app, its data and its temporary repository source were
 removed after verification. [Installed acceptance](https://github.com/vypdev/domus/pull/103#issuecomment-6797153928)
 
-The current Edge candidate uses SQLite schema 36. Keep a compatible image and
+The current Edge preview uses SQLite schema 35. Keep a compatible image and
 cold data backup before updating from an earlier schema. An additional Supervisor source
 creates an independent app and data directory. Use the [installation steps](#installation-journey)
 for the selected source and check the installed version before opening it.

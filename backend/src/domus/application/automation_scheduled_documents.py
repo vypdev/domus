@@ -198,3 +198,25 @@ def receipt_run(receipt: Receipt) -> ScheduledAutomationRun:
     ):
         raise StorageFailure("invalid_daily_automation_outcome")
     return value
+
+
+def scheduled_payload(run: ScheduledAutomationRun) -> JsonDocument:
+    """One immutable rule/date identity survives grant and timing changes."""
+    return JsonDocument.from_value(
+        {
+            "version": 1,
+            "rule": run.grant.draft.rule.document().encoded,
+            "nominal_date": run.planned.nominal.local.date().isoformat(),
+        }
+    )
+
+
+def matching_run(receipt: Receipt, expected: ScheduledAutomationRun) -> ScheduledAutomationRun:
+    actual = receipt_run(receipt)
+    if (
+        actual.key != expected.key
+        or actual.grant.principal != expected.grant.principal
+        or actual.grant.draft != expected.grant.draft
+    ):
+        raise StorageFailure("invalid_daily_automation_outcome")
+    return actual

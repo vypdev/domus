@@ -1090,7 +1090,8 @@
         "frontend/src/application/automation-daily-history.ts",
         "frontend/src/application/automation-daily.ts",
         "frontend/src/presentation/domus-automation-daily-history.ts",
-        "frontend/src/presentation/domus-automation-daily.ts"
+        "frontend/src/presentation/domus-automation-daily.ts",
+        "backend/src/domus/application/automation_scheduled_cancellation.py"
       ],
       "tests": [
         "tests/backend/test_automation_preview.py",
@@ -1125,6 +1126,7 @@
         "tests/fixtures/sqlite/generate_v35_daily_automation_source.py",
         "tests/fixtures/sqlite/v35-daily-automation-source.provenance.json",
         "tests/fixtures/sqlite/v35-daily-automation-source.sql",
+        "tests/backend/test_scheduled_automation_cancellation.py",
         "tests/backend/test_app_package.py"
       ],
       "documentation": [
@@ -1140,12 +1142,11 @@
         "docs/contracts/native-household-api.openapi.json",
         "docs/evidence/automation-execution-qualification.md",
         "docs/evidence/daily-automation-execution-qualification.md",
-        "docs/development.md",
-        "docs/evidence/daily-automation-execution.json"
+        "docs/development.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: protected manual preview/execution/history and immutable daily drafts; rule-owned daily grants, durable admission/effects/history, startup suppression, explicit timing adoption, schema35/20 migration and source-browser recovery are implemented and locally qualified; exact CPU image and installed Edge155 acceptance pending",
+        "implementationEvidence": "partial: protected manual preview/execution/history and immutable daily drafts; rule-owned daily grants, durable admission/effects/history, startup suppression, explicit timing adoption, schema35/20 migration and source-browser recovery are implemented and locally qualified; terminal cancellation receipts survive actual restoration and rollback; exact CPU image and installed Edge155 acceptance pending",
         "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects.",
         "copilotChangesAllowed": false
       }

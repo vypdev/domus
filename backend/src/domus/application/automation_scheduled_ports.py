@@ -26,7 +26,6 @@ class ScheduledAutomationRecords(Protocol):
         limit: int = 100,
         after: tuple[int, str] | None = None,
     ) -> tuple[ScheduledAutomationRun, ...]: ...
-    def cancel_pending(self, household_id: str, rule_id: str, at: int) -> int: ...
     def history(
         self,
         household_id: str,

@@ -7,17 +7,20 @@ from contextlib import closing
 from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from test_automation_scheduling_values import run, schedule
 from test_task_commands import fixture
 
+from domus.application.automation_scheduled_cancellation import ScheduledCancellations
 from domus.application.automation_scheduled_documents import (
     read_run,
     read_schedule,
     run_document,
     schedule_document,
 )
+from domus.application.fixed_materialization import MaintenanceScope
 from domus.domain.automation import AutomationControl
 from domus.domain.automation_scheduling import ScheduledOutcome
 from domus.domain.errors import Conflict, DatabaseRejected, InvalidInput, StorageFailure
@@ -159,16 +162,22 @@ def test_outcomes_and_cursor_update_roll_back_with_the_callers_writer(tmp_path):
 def test_disabling_cancels_only_queued_work_and_history_paginates_without_reordering(tmp_path):
     store, _, first = source(tmp_path)
     second = following(first)
+    cancellations = ScheduledCancellations(
+        store,
+        MaintenanceScope(store.installation, "home"),
+        Mock(now=Mock(return_value=second.admitted_at)),
+        Mock(new=Mock(return_value="cancel-storage-operation")),
+    )
     with store.write() as unit:
         records = unit.scheduled_automations
         records.admit(first)
         records.admit(second)
         completed = first.finish(ScheduledOutcome.NO_TASK, first.admitted_at)
         records.finish(completed)
-        assert records.cancel_pending("home", "daily", second.admitted_at) == 1
+        assert cancellations.pending(unit, "daily") == 1
         cancelled = records.run("home", second.key)
         assert cancelled.outcome is ScheduledOutcome.CANCELLED
-        assert records.cancel_pending("home", "daily", second.admitted_at) == 0
+        assert cancellations.pending(unit, "daily") == 0
         assert records.history("home", "daily", limit=1) == (cancelled,)
         assert records.history("home", "daily", before=(cancelled.admitted_at, cancelled.key)) == (
             completed,

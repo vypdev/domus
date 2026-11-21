@@ -1,14 +1,5 @@
 # Changelog
 
-## 0.0.0-edge.71
-
-- Enable an explicitly reviewed saved daily task with a narrow household-rule grant.
-- Admit scheduled work durably, create tasks without a human session and show actual daily outcomes.
-- Recover original controls after lost responses or reload without duplicating a grant or task.
-- Keep approved household timing until explicit adoption; skip offline unadmitted times and retain admitted work.
-- Preserve enabled daily controls after a new manual draft or loss of task-create permission, including revocation.
-- Upgrade supported schema35/20 data to schema36. Rollback requires the protected compatible image/data pair.
-
 ## 0.0.0-edge.70
 
 - Keep earlier products selectable while browsing additional material catalog pages.

@@ -9,6 +9,7 @@ from domus.application.automation_preview import (
     evaluate_rule,
     owned_product,
 )
+from domus.application.automation_scheduled_cancellation import ScheduledCancellations
 from domus.application.commands import AtomicCommands, Change
 from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.identity_ports import CurrentHuman
@@ -178,9 +179,9 @@ class AutomationExecution:
                 if prior_draft is None:
                     raise StorageFailure("invalid_automation_control_source")
                 if isinstance(prior_draft.rule.trigger, DailyTrigger):
-                    unit.scheduled_automations.cancel_pending(
-                        home, request.rule_id, self.clock.now()
-                    )
+                    ScheduledCancellations(
+                        self.transactions, self.scope, self.clock, self.identifiers
+                    ).pending(unit, request.rule_id)
             unit.automation_controls.save(home, control, current_revision)
             result = _control_result(control)
             fact = JsonDocument.from_value(result)

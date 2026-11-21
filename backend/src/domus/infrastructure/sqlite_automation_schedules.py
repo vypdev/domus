@@ -222,14 +222,6 @@ class SQLiteScheduledAutomations:
             )
         )
 
-    def cancel_pending(self, household_id: str, rule_id: str, at: int) -> int:
-        values = self.pending(household_id, rule_id=rule_id, limit=101)
-        if len(values) > 100:
-            raise StorageFailure("invalid_daily_automation_queue")
-        for value in values:
-            self.finish(value.finish(ScheduledOutcome.CANCELLED, at))
-        return len(values)
-
     def history(
         self,
         household_id: str,

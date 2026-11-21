@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import cast
 
 from domus.application.automation_preview import owned_product, require_configuration
+from domus.application.automation_scheduled_cancellation import ScheduledCancellations
 from domus.application.automation_scheduled_documents import planned_document
 from domus.application.automation_scheduled_planning import DailyAutomationPlanner
 from domus.application.commands import AtomicCommands, Change
@@ -327,9 +328,9 @@ class DailyAutomationControl:
                 revision=1 if previous is None else previous.revision + 1,
             )
             control = AutomationControl(request.rule_id, request.rule_revision, revision, True)
-            unit.scheduled_automations.cancel_pending(
-                self.scope.household_id, request.rule_id, self.clock.now()
-            )
+            ScheduledCancellations(
+                self.transactions, self.scope, self.clock, self.identifiers
+            ).pending(unit, request.rule_id)
             unit.automation_controls.save(
                 self.scope.household_id, control, request.expected_control_revision
             )
@@ -364,9 +365,9 @@ class DailyAutomationControl:
             updated = replace(
                 schedule, control_revision=control.control_revision, revision=schedule.revision + 1
             )
-            unit.scheduled_automations.cancel_pending(
-                self.scope.household_id, request.rule_id, self.clock.now()
-            )
+            ScheduledCancellations(
+                self.transactions, self.scope, self.clock, self.identifiers
+            ).pending(unit, request.rule_id)
             unit.automation_controls.save(
                 self.scope.household_id, control, previous.control_revision
             )

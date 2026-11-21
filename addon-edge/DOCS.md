@@ -1,21 +1,7 @@
 # Installation and operation
 
-Edge 0.0.0-edge.71 packages the immutable runtime declared in
-[artifact.json](artifact.json). In Household, save a Daily draft, review its exact
-task, conditions and next five resolved times, then explicitly grant daily execution.
-This rule-owned permission does not depend on its activating member remaining present.
-The worker runs without an open browser. **Check original daily request** recovers an
-interrupted enable, disable or timing adoption, including after reload. **Show daily
-history** distinguishes actual task creation from unmet conditions, waiting, cancelled
-or denied work. New household timing is adopted only after explicit review.
-Offline unadmitted times are skipped; admitted work keeps its original facts.
-Schema36 preserves prior manual controls, inactive daily drafts and receipts.
-Edge.71 is a breaking-version boundary: retain the compatible prior image and a cold
-private-data copy. An older image refuses upgraded data; restoring a household snapshot
-does not downgrade that data. Exact image and installed acceptance are recorded in the
-[daily qualification](../docs/evidence/daily-automation-execution-qualification.md).
-
-In Tasks, **Add materials** plans existing Pantry products
+Edge 0.0.0-edge.70 packages the immutable runtime declared in
+[artifact.json](artifact.json). In Tasks, **Add materials** plans existing Pantry products
 for ordinary, fixed and relative creation. Review actual quantities with their displayed units,
 including zero for unused materials. **More products** keeps earlier choices available while you browse later pages.
 Refreshing material choices checks the catalog again and retains draft quantities. Each result shows confirmed, unused or pending consumption

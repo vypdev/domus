@@ -5,6 +5,7 @@ import sqlite3
 from contextlib import closing
 from dataclasses import replace
 from datetime import timedelta
+from unittest.mock import Mock
 
 import pytest
 from test_daily_automation_control import setup
@@ -12,9 +13,11 @@ from test_daily_automation_execution import due, enabled
 from test_scheduled_automation_storage import source
 
 from domus.application.automation_scheduled_authority import RUN_SCHEDULED_AUTOMATION
+from domus.application.automation_scheduled_cancellation import ScheduledCancellations
 from domus.application.automation_scheduled_control import ReviewedDailyRequest
 from domus.application.automation_scheduled_documents import read_run, run_document
 from domus.application.automation_scheduled_execution import ScheduledAutomationExecution
+from domus.application.fixed_materialization import MaintenanceScope
 from domus.application.inventory import InventoryCommands
 from domus.domain.automation import StockCondition
 from domus.domain.automation_scheduling import ScheduledOutcome
@@ -174,7 +177,9 @@ def test_an_over_capacity_corrupt_queue_is_not_partly_cancelled(tmp_path):
                 replace(first, planned=planned, admitted_at=planned.instant_ms)
             )
         with pytest.raises(StorageFailure, match="invalid_daily_automation_queue"):
-            unit.scheduled_automations.cancel_pending("home", "daily", planned.instant_ms)
+            ScheduledCancellations(
+                store, MaintenanceScope(store.installation, "home"), Mock(), Mock()
+            ).pending(unit, "daily")
         assert unit.scheduled_automations.pending_count("home") == 101
 
 

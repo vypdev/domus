@@ -52,10 +52,17 @@ control results recover by their original request key; do not create a replaceme
 request to discover whether a change committed. A committed task or control receipt
 remains successful when a following read fails.
 
+Cancelling an admitted trigger commits its terminal original receipt, audit and
+acknowledged outbox with the queue/control change in one writer. This applies to
+disablement, a replacement grant, a switch to manual and worker rejection of a
+stale grant. Restoring an earlier admitted checkpoint cannot resume that cancelled
+trigger. An original task outcome is retained if it committed before cancellation.
+
 SQLite schema 36 adds daily schedules/grants and scheduled runs while preserving
 schema-35 manual controls, inactive daily drafts and original receipts. Migration
 from representative schema 35 and 20 data is transactional. Snapshot activation
-retains history without redelivery; a historical queued admission is not live work.
+retains valid admitted work and projects original terminal outcomes without
+redelivery. A historical queued admission alone cannot resume cancelled work.
 An older incompatible image must refuse the upgraded database before mutation.
 Rollback uses a protected compatible image and cold private-data copy together;
 never relabel the schema header or run an old image against upgraded data.

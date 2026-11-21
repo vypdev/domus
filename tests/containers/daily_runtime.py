@@ -31,6 +31,9 @@ from domus.domain.task_values import TaskContent
 from domus.infrastructure.application_runtime import SecureIdentifiers, TimeZoneCatalog
 from domus.infrastructure.recurrence_time import PinnedRecurrenceTime
 from domus.infrastructure.sqlite import SCHEMA_VERSION
+from domus.infrastructure.sqlite_activation import SQLiteActivation
+from domus.infrastructure.sqlite_restoration import SQLiteRestorations
+from domus.infrastructure.sqlite_snapshots import SQLiteSnapshots
 
 
 class Clock:
@@ -200,6 +203,76 @@ def exercise(mode, restart_admitted):
                 and current.schedule.grant.principal == approved.grant.principal
             )
             assert current.schedule.next_time.instant_ms > approved.next_time.instant_ms
+            # Capture an actual admitted queue, cancel it afterwards, then let the
+            # ordinary owned worker encounter the restored enabled checkpoint.
+            with TemporaryDirectory(prefix="daily-cancelled-restore-image-") as recovery:
+                manager = service(runtime)
+                manager.enable(
+                    "restore-enable",
+                    ReviewedDailyRequest(
+                        "daily",
+                        1,
+                        current.control.control_revision,
+                        current.schedule.revision,
+                        current.proposed_times[0],
+                    ),
+                )
+                selected = manager.review("daily", 1).schedule
+                clock.value = selected.next_time.instant_ms + 1
+                store = runtime.storage.database
+                engine = ScheduledAutomationExecution(
+                    store, manager.scope, clock, identifiers, planner, clock.value - 60_001
+                )
+                admitted = engine.admit("daily")
+                assert admitted.status == "admitted"
+                archive, target = Path(recovery) / "checkpoint", Path(recovery) / "prepared"
+                checkpoint = SQLiteSnapshots(store, archive, store.installation, clock).create(
+                    "queued"
+                )
+                current = manager.review("daily", 1)
+                manager.disable(
+                    "restore-disable",
+                    DailyControlRequest(
+                        "daily", 1, current.control.control_revision, current.schedule.revision
+                    ),
+                )
+                with store.read() as unit:
+                    cancelled = unit.scheduled_automations.run("home", admitted.trigger_key)
+                    assert cancelled.outcome is ScheduledOutcome.CANCELLED
+                SQLiteRestorations(
+                    store, archive, target, store.installation, clock, checkpoint
+                ).prepare("restore-cancelled")
+                runtime.close()
+                assert (
+                    SQLiteActivation(root, store.installation, clock, target).activate().state
+                    == "active"
+                )
+                actor.available = False
+                runtime = owned(root)
+                with runtime.storage.database.read() as unit:
+                    assert (
+                        unit.scheduled_automations.run("home", admitted.trigger_key).outcome
+                        is ScheduledOutcome.QUEUED
+                    )
+
+                def reconciled():
+                    with runtime.storage.database.read() as unit:
+                        return not unit.scheduled_automations.pending("home")
+
+                async def restored_lifetime():
+                    async with runtime.app.router.lifespan_context(runtime.app):
+                        await wait_for(reconciled)
+                        assert runtime.automation_worker.is_running
+                        assert runtime.automation_worker.last_failure is None
+                        with runtime.storage.database.read() as unit:
+                            assert (
+                                unit.scheduled_automations.run("home", admitted.trigger_key)
+                                == cancelled
+                            )
+                            assert len(unit.tasks.definitions("home")) == 2
+                    assert not runtime.automation_worker.is_running
+
+                asyncio.run(restored_lifetime())
         finally:
             runtime.close()
     print(
@@ -211,6 +284,7 @@ def exercise(mode, restart_admitted):
                 "manual_tasks": 1,
                 "worker_joined": True,
                 "revoked_without_redelivery": True,
+                "cancelled_checkpoint_restored_without_a_task": True,
             }
         )
     )

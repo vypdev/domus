@@ -32,3 +32,4 @@ def test_packaged_daily_worker_owns_effects_restart_revocation_and_shutdown(
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert '"daily_tasks": 1' in result.stdout and '"worker_joined": true' in result.stdout
+    assert '"cancelled_checkpoint_restored_without_a_task": true' in result.stdout
