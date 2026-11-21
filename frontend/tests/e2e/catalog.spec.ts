@@ -46,6 +46,12 @@ for (const example of ['default','reader','read-only','uncertain','rejected','lo
       if(['reader','read-only'].includes(example)){await expect(priority).toHaveCount(0);await expect(note).toHaveCount(0);}
       else if(example==='uncertain'){await expect(priority).toBeDisabled();await expect(note).toBeDisabled();}
       else{await expect(priority).toBeEnabled();await expect(note).toBeEnabled();}
+      if(!['reader','read-only'].includes(example)){
+        const labelFont=await shared.locator('vyp-ha-select [part="label"]').evaluate(element=>getComputedStyle(element).fontFamily);
+        const noteFont=await note.evaluate(element=>getComputedStyle(element).fontFamily);
+        expect(labelFont).toMatch(/system-ui|sans-serif/u);
+        expect(labelFont).toBe(noteFont);
+      }
       if(example==='empty')await expect(shared.locator('.manual-annotation')).toHaveCount(0);
       else{
         await expect(shared.locator('.manual-annotation')).toHaveCount(3);

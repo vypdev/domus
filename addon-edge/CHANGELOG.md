@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.74
+
+- Keep shopping note and priority labels in the household interface's font with a generic fallback.
+- Preserve the same schema-37 data, annotations and original requests as Edge.73.
+
 ## 0.0.0-edge.73
 
 - Retain an optional literal multiline note and priority on each manual shopping request.

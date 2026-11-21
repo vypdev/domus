@@ -49,7 +49,10 @@ export class DomusShoppingList extends LitElement {
       border-radius:8px;min-width:0}
     li {overflow-wrap:anywhere}
     .manual-note {white-space:pre-wrap}
-    #shopping-extra-note, #shopping-extra-priority {--vyp-ha-danger:var(--warning)}
+    #shopping-extra-note, #shopping-extra-priority {
+      --vyp-ha-danger:var(--warning);
+      --vyp-ha-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+    }
     :focus-visible {outline:3px solid var(--accent);outline-offset:3px}
   `;
 

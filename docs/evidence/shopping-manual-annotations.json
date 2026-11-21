@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
   "issue": 157,
-  "status": "immutable source and wheel qualified; CPU images and installed acceptance pending",
+  "status": "Typography correction source2164/catalog68 qualified; immutable Edge.74 and current source entry pending",
   "currentSource": {
     "storageSchema": 37,
     "pythonFiles": 250,
     "actualProductFiles": {
-      ".vite/manifest.json": "e2c258c7f08d8ba5223ce00c56e773204a87d44aac47e152c9f32968f77126c9",
+      ".vite/manifest.json": "248c607d7318af6d9de2d3a73d2e6d0491ec6c688baa6c9c19684b55c5207e54",
+      "assets/index-BCQLqeBf.js": "aed08b45049fce52b1c8524acb9291393dd530d9bab4aad7d9dbef5c2ffd40e3",
       "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-      "assets/index-DeTOJyVp.js": "24a5221e3e9fcbc58a17f91dbd2d17225b5fc07ec985e216fbb19dbfed70fbbe",
-      "index.html": "fb06a78159cebcd880a7dc25bfe82fda96ef3ae33703284d530516528a9d1e72"
+      "index.html": "61074d02ad26af270347817f5f02b36e3d3fc535dfcdaa56806ddfc5b4657aff"
     },
     "haUi": "0.1.0-next.5",
     "publicCoreTarSHA256": "2d591dcc2fbfcb9222632a03befba6b3de604115e760eda2dfbcdbc1d91d8f41",
@@ -76,22 +76,6 @@
       "tests": 42,
       "allFourCoverageMetrics": 100
     },
-    "compiledBrowser": {
-      "tests": 129,
-      "modes": [
-        "native",
-        "standalone"
-      ],
-      "stats": {
-        "startTime": "2026-11-21T22:24:45.043Z",
-        "duration": 448017.355,
-        "expected": 129,
-        "skipped": 0,
-        "unexpected": 0,
-        "flaky": 0
-      },
-      "retries": 0
-    },
     "pythonTooling": {
       "tests": 187,
       "globalAndPerFileCoverage": 100
@@ -112,12 +96,14 @@
     "databaseFixture": "tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json"
   },
   "pendingGates": [
+    "Complete129-case source entry campaign in final-head CI; the local repeat stopped before any case because an active Actions fixture already owned the required ports.",
+    "Immutable Edge.74 source archive, wheel and ten static app-package contracts",
     "All 62 container and 74 actual-image browser cases in each CPU architecture",
     "Installed native Edge acceptance and scoped cleanup",
     "Final PR same-head CI, review and Branch Sync; normal merge, destination checks and native issue closure"
   ],
   "limits": "Source, actual CPU images and installed Home Assistant observations are separate. Broader Shopping capability, Domus distribution and Stable are not declared complete.",
-  "recordedAt": "2026-11-21T22:34:36.834215+00:00",
+  "recordedAt": "2026-11-21T23:01:56.166452+00:00",
   "sourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
   "currentPackage": {
     "version": "0.0.0-edge.73",
@@ -137,5 +123,72 @@
     "allTrackedGitBlobsMatch": true,
     "all250WheelRuntimeFilesMatchArchive": true,
     "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091"
+  },
+  "priorCandidate73": {
+    "sourceCommit": "dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091",
+    "package": {
+      "version": "0.0.0-edge.73",
+      "sourceArchiveSHA256": "6bd2f0ed107c25387ad0b6f9187b56fa4ab59563c92b6dcb976638d10709ac48",
+      "wheelSHA256": "84d3cb13e302b674258a1c846ecc2b02752226f3e7864cf643a3453a39e64924",
+      "storageSchema": 37,
+      "pythonFiles": 250,
+      "actualProductFiles": {
+        "index.html": "fb06a78159cebcd880a7dc25bfe82fda96ef3ae33703284d530516528a9d1e72",
+        ".vite/manifest.json": "e2c258c7f08d8ba5223ce00c56e773204a87d44aac47e152c9f32968f77126c9",
+        "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+        "assets/index-DeTOJyVp.js": "24a5221e3e9fcbc58a17f91dbd2d17225b5fc07ec985e216fbb19dbfed70fbbe"
+      }
+    },
+    "sourceArchiveQualification": {
+      "trackedFiles": 1018,
+      "allTrackedGitBlobsMatch": true,
+      "all250WheelRuntimeFilesMatchArchive": true,
+      "canonicalURL": "https://codeload.github.com/vypdev/domus/tar.gz/dcd22b0ec6e27f896e58e00e9b3b5ba4cf8dd091"
+    },
+    "compiledBrowser": {
+      "tests": 129,
+      "modes": [
+        "native",
+        "standalone"
+      ],
+      "stats": {
+        "startTime": "2026-11-21T22:24:45.043Z",
+        "duration": 448017.355,
+        "expected": 129,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "retries": 0
+    },
+    "localArm64Image": {
+      "imageId": "sha256:d130338f55f090530ad3b583b10b70679cf153ecbc1c0084e2146f4cf8d5dfa8",
+      "selectedTests": 9,
+      "sourceSchemas": [
+        20,
+        36
+      ],
+      "all250PythonAndFourUIFilesMatchWheel": true,
+      "actualEdge72CheckpointRollback": true
+    },
+    "installedBaseline": {
+      "app": "09730007_domus_edge",
+      "household": "Domus QA 157 Edge73",
+      "product": "QA 157 Edge73 Tea",
+      "manualExtras": 1,
+      "quantity": "2",
+      "note": "First line\nSecond\t\ud83d\ude00 <b>literal</b>",
+      "priority": "urgent",
+      "stock": 0,
+      "nativeInvalid1001RetainsValueAndFocus": true,
+      "stopped": true,
+      "status": "Partial baseline; the priority label font has no generic fallback and is corrected before final installed acceptance."
+    }
+  },
+  "typographyCorrection": {
+    "publicToken": "--vyp-ha-font-family",
+    "scope": "Note and priority controls only; existing Domus body font stack, no library renderer or dependency change.",
+    "red": "Actual installed Edge.73 label computed family Roboto with no generic fallback; note/body/control fonts differed. Source catalog reproduced the missing generic fallback.",
+    "verified": "All 68 catalog cases pass; visible priority labels have a generic fallback and match the note field in both modes/locales."
   }
 }

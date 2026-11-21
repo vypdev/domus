@@ -14,6 +14,16 @@ package files match the independently downloaded public tarball. The
 the compiled source bytes and separates the pending immutable package,
 CPU-image and installed acceptance gates.
 
+The installed Edge.73 baseline rejects and retains a 1,001-character note with
+focus returned to the field, then saves a literal multiline/tab/emoji note with
+Urgent priority and unchanged zero stock. Visual review also found that the
+priority label's named font had no generic fallback. The correction scopes the
+published font token to the two annotation controls, matching Domus's existing
+body font stack. Its actual catalog regression failed before the correction;
+all 2,164 frontend tests and 68 catalog cases pass afterward. The previous
+73 bytes and observations remain historical in the JSON record. Current full
+entry, immutable Edge.74 and installed upgrade acceptance remain pending.
+
 | Native case | Evidence and current outcome |
 | --- | --- |
 | `shopping-manual-annotations-C01` | The [domain/storage tests](../../tests/backend/test_shopping_annotations.py), [both protected HTTP compositions](../../tests/backend/test_shopping_annotations_http.py) and [client contracts](../../frontend/tests/shopping-annotations.test.ts) exercise empty/omitted defaults, all four priorities, exact quantities, 1,000 supplementary characters, literal CR/LF/tab and prohibited controls. The four [compiled HTTP journeys](../../frontend/tests/e2e/shopping-annotations.spec.ts) pass with actual note entry, native Enter, correction, literal HTML text, supplementary characters and independent requests. Installed acceptance remains pending. |
@@ -25,7 +35,7 @@ CPU-image and installed acceptance gates.
 | `shopping-manual-annotations-C07` | Independent writers race duplicate and changed requests. Failures after extra, receipt, audit and outbox writes roll back the entire operation; retry then commits once. Quantities, stock and purchase facts retain their original semantics. |
 | `shopping-manual-annotations-C08` | The [genuine schema-36 fixture](../../tests/fixtures/sqlite/v36-shopping-annotations-source.provenance.json) was captured through the actual previous runtime before the schema changed. Focused schema-36/schema-20 migration, failed second ALTER, reopen, actual snapshot activation and historical receipt tests pass. Final candidate/image compatible rollback remains pending. |
 | `shopping-manual-annotations-C09` | The companion retains its eight native requirement IDs, ten case IDs and reciprocal ownership. API snapshots describe the additive annotated wrappers; legacy response shapes remain unchanged. The retained catalog SDK regenerated and validated the actual view for all eleven capabilities. Final candidate-linked qualification remains pending. |
-| `shopping-manual-annotations-C10` | Frontend: 2,164 tests pass with 100% global/per-file coverage across all four metrics, including all 119 runtime files. The whole backend source campaign passes 5,919 tests with 100% statement/branch coverage globally and per file across all 250 runtime modules. All 42 Node policy tests pass with full coverage. All 129 protected compiled entry cases pass with zero skipped, unexpected or flaky results and zero retries; the four new note/recovery journeys are included. All 187 tooling tests and 51 Python architecture checks pass; the new wheel passes its actual bundle/license inclusion check. The public source archive matches all 1,018 tracked Git blobs and all 250 wheel runtime files. All ten static app-package contracts pass for pinned Edge.73/schema 37. Both CPU images, native Edge acceptance and scoped cleanup remain pending. Distribution and Stable are outside this increment. |
+| `shopping-manual-annotations-C10` | Frontend after the typography correction: 2,164 tests pass with 100% global/per-file coverage across all four metrics and all 119 runtime files; the 68 catalog cases pass. The unchanged backend has 5,919 source tests with 100% statement/branch coverage globally and per file across all 250 runtime modules. The 42 Node policy tests, 187 tooling tests and 51 Python architecture checks pass. The prior Edge.73 source passed all 129 protected compiled entry cases, with zero skipped, unexpected, flaky or retried cases, and all ten static package contracts plus its actual wheel bundle/license check. Its public archive matched all 1,018 Git blobs and all 250 wheel runtime files. Its local ARM64 image passed nine byte, migration, restart, restoration, rollback and listener cases. Current complete entry execution remains required in final-head CI; the local repeat stopped before any case because an active Actions image fixture owned its ports. Immutable Edge.74, both final CPU campaigns, installed acceptance and scoped cleanup remain pending. Distribution and Stable are outside this increment. |
 
 The original failed draft regressions demonstrated that an earlier outcome
 could reset another form. The correction binds a submission to its scope,

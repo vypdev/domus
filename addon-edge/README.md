@@ -3,6 +3,9 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.74 keeps the note and priority labels aligned with the household interface's
+typography, including when a named font is unavailable.
+
 Edge.73 lets each manual shopping request keep an optional plain-text note and
 a Low, Normal, High or Urgent priority. Notes accept up to 1,000 Unicode
 characters, including multiple lines. Source details retain each request's own
