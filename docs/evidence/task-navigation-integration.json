@@ -5,10 +5,10 @@
   "command": "pnpm build:frontend",
   "scope": "Compiled household workspace with protected manual automation preview, saved revisions, explicit runs and scoped run history, daily schedule previews and inactive daily drafts, upcoming maintenance, due today, overdue, assigned and unclaimed task summaries, products below their replenishment minimum, outstanding shopping items, weekly Family participation, optional task base points, native deadline sensor integration, protected Pantry, shared Shopping, purchase sessions with an optional store, receipt corrections, physical returns, stock locations, transfers and original operation recovery in English and Spanish. Points-allocation cards inherit the shared raised surface in both color schemes. The Tasks workspace supports planned task assignment, state-permitted release, retained conflict selections and original assignment-request recovery. The Tasks workspace also confirms Start, Block and Unblock, retains a bounded blocking reason through explicit current-task review and recovers the original progress request. Inventory supports manually entered local GTIN lookup, explicit product association and removal review, stale-association recovery and retained original barcode requests. Tasks supports optional Pantry material plans during ordinary, fixed and relative creation, exact actual-use review, independent per-line consumption outcomes and explicit pending-usage recovery.",
   "actualProductFiles": {
-    ".vite/manifest.json": "33f919694394f10251d2051a202daf6c35fc2f2563d86cf995e581aa5d7342c0",
+    ".vite/manifest.json": "8e343a1d46667db1778219d10b6f1dd6cb89784eeadc45605758b7d764409eb7",
+    "assets/index-C07fSFmw.js": "c1aa565f547d3be1a1fbe3b7e7092a3c02fa466fecd2046ccaa7b1ca79c5d585",
     "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
-    "assets/index-D_4X6e61.js": "2c5991f6e2e11640e8ad64855d31096f2d0380345127406a3254dafb24181bcb",
-    "index.html": "474234aaae0ad24f0bcc19a0fa81136a1798a6956bbb56a6b6bf87d0591fc359"
+    "index.html": "d77374eba867d93ac7b180a16adfe571fb4d4712916973fa4918fb421ab5c020"
   },
   "localValidation": {
     "commit": "9a10d8114869be754962953903e773fe8e12c723",
@@ -1162,7 +1162,43 @@
       },
       "newCandidate": "0.0.0-edge.69",
       "native": "required; not yet built or installed",
-      "finalSameHeadGates": "required; valid findings and product failures are not waived"
+      "finalSameHeadGates": "required; valid findings and product failures are not waived",
+      "precedingUIInventory": {
+        "candidate": "0.0.0-edge.68",
+        "runtimeSource": "1b7eaabacdb4b8e54e1c8ead8eaf5ab2405a7180",
+        "files": {
+          ".vite/manifest.json": "33f919694394f10251d2051a202daf6c35fc2f2563d86cf995e581aa5d7342c0",
+          "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+          "assets/index-D_4X6e61.js": "2c5991f6e2e11640e8ad64855d31096f2d0380345127406a3254dafb24181bcb",
+          "index.html": "474234aaae0ad24f0bcc19a0fa81136a1798a6956bbb56a6b6bf87d0591fc359"
+        },
+        "historicalOnly": true
+      },
+      "newImmutableCandidate": {
+        "schemaVersion": 1,
+        "version": "0.0.0-edge.69",
+        "sourceCommit": "0d0b4b5b10a58937f30c079618a3ecd3ca568088",
+        "sourceArchiveSHA256": "5697c6d9578c963888d5b8d343c7df1cde9afbbf0e5cbe6858ed28aad02a10ad",
+        "storageSchema": 35,
+        "wheelSHA256": "5a3bae82b601303743277299db99331251b762444ee66c2669fddad4f5e87e77",
+        "pythonFiles": 231,
+        "uiFiles": 4,
+        "archiveWheelInstalledBuilderEquality": "passed",
+        "normalLocalLinuxWheelEquality": "passed",
+        "native": "required; not yet installed",
+        "localFinalImage": {
+          "candidate": "0.0.0-edge.69",
+          "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088",
+          "imageTag": "domus-150-edge69:pinned",
+          "imageId": "sha256:ef33ad8e28474ce32928fa1b70bde8f819e760f4af1a11dfb276eb8861bd251f",
+          "architecture": "arm64",
+          "pythonFiles": 231,
+          "uiFiles": 4,
+          "archiveWheelInstalledEquality": "passed",
+          "versionAndSourceLabels": "passed"
+        }
+      },
+      "runtimeSource": "0d0b4b5b10a58937f30c079618a3ecd3ca568088"
     }
   },
   "sourceBrowserStorageIsolation": {

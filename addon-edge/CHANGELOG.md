@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.0-edge.69
+
+- Keep the selected task and earlier material usage when the first settlement detail read fails.
+- Preserve the next closed completion without preparing or sending a consumption write.
+
 ## 0.0.0-edge.68
 
 - Explain denied material access even before any product is selected.

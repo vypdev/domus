@@ -317,6 +317,15 @@ The preceding Linux source campaign executes all 125 cases in 671,893.569 ms: 12
 
 Selected C05, C08 and C11, the owning SDD, all twelve case identities and the accepted compatibility bytes remain unchanged. These new runtime bytes require immutable Edge.69 identity, fresh installed acceptance, final same-head complete product CI/review and destination verification. Edge.68's installed observation remains historical and its stopped QA installation is retained while its exact cleanup confirmation is pending.
 
+## Immutable Edge.69 candidate
+
+- Runtime source: `0d0b4b5b10a58937f30c079618a3ecd3ca568088`.
+- Source archive SHA-256: `5697c6d9578c963888d5b8d343c7df1cde9afbbf0e5cbe6858ed28aad02a10ad`.
+- Wheel SHA-256: `5a3bae82b601303743277299db99331251b762444ee66c2669fddad4f5e87e77`.
+- Storage schema: 35, unchanged.
+
+All 231 Python modules agree between the source, downloaded archive, built wheel and Linux builder. All four newly compiled UI files agree between the local build, wheel and installed builder; normal local and Linux wheel bytes match. The current product inventory is updated atomically to those four exact files, preserving Edge.68's inventory as historical evidence. The package expectations name the same exact source, archive and version. The final local ARM64 image `sha256:ef33ad8e28474ce32928fa1b70bde8f819e760f4af1a11dfb276eb8861bd251f` also matches all 231 Python and four UI files, with verified source, version and architecture labels. Fresh installed acceptance, final same-head complete product CI/review and destination gates remain independent requirements.
+
 ## Compatibility and operational limits
 
 The browser-journal regression executes the actual preceding Edge.57 storage adapter and controller, bundled from accepted source `272b5e8436588b5fab090622d19298371a6dc33c`. The checked-in fixture records its eight original module digests and bundle digest. Ordinary material creation, scheduled material creation and material settlement each retain seven readable legacy originals and one new original in real browser session storage. The preceding closed decoder refuses the new shape without changing the stored bytes; its controller blocks new writes while the journal is unreadable. Re-upgrade recovers all eight exact originals with their scope, stage and expiry. Capacity does not discard an unconfirmed original, and only an explicitly resolved record can be dismissed.

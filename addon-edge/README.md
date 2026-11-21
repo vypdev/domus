@@ -3,7 +3,7 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
-Edge.68 lets Tasks plan existing Pantry materials for ordinary, fixed and relative
+Edge.69 lets Tasks plan existing Pantry materials for ordinary, fixed and relative
 creation, review per-line usage and explicitly settle pending consumption. Reopening
 retains each completion's earlier usage. **Next closed completion** remains available
 after settlement or original-request recovery, without changing the reopened task.
@@ -19,7 +19,7 @@ Settling the current completion also preserves the earlier usage page and its ne
 
 A denied material catalog explains how to recover even when the plan is empty.
 Clearing a retained denied plan returns focus to the task title and preserves its text.
-A temporary closed-cycle read failure before settlement retains the earlier usage and next page;
+A temporary initial task-detail or closed-cycle read failure before settlement retains the earlier usage and next page;
 no consumption is submitted until you explicitly retry.
 
 Edge.32 shows the outstanding shopping count and the first 25 rows in Overview.
