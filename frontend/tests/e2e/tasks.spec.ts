@@ -205,6 +205,18 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     await page.route(api+'tasks/occurrences/'+oid+'/materials/'+pending.intent_id+'/settlement',async route=>{
       settlements++;settlementKey=route.request().headers()['idempotency-key'];expect(route.request().postDataJSON().expected_revision).toBe(pending.revision);
       const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);settlementBody=await response.json();await route.abort('connectionreset');});
+    let failedDetailReads=0;
+    await page.route(api+'tasks/occurrences/'+oid,route=>{
+      failedDetailReads++;expect(route.request().method()).toBe('GET');return route.abort('failed');
+    },{times:1});
+    await activate(outcomes.getByRole('button',{name:t('Settle pending usage','Contabilizar consumo pendiente'),exact:true}));
+    await expect(tasks.getByRole('alert')).toContainText(t('Tasks could not be loaded','No se han podido cargar las tareas'));
+    expect(failedDetailReads).toBe(1);expect(settlements).toBe(0);expect(await readWork()).toEqual(reopened);
+    await expect(outcomes.locator('li')).toHaveCount(firstPage.items[0].materials.length);
+    expect(await outcomes.locator('li').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-material-intent')))).toEqual(
+      firstPage.items[0].materials.map((value:{intent_id:string})=>value.intent_id));
+    await expect(tasks.getByRole('button',{name:t('Next closed completion','Siguiente realización cerrada'),exact:true})).toBeVisible();
+    await tasks.locator('#material-history-heading').locator('..').screenshot({path:info.outputPath('detail-preflight-retains-closed-page-'+locale+'.png')});
     let failedPreflightReads=0;
     await page.route(api+'tasks/occurrences/'+oid+'/materials?cycle_id='+encodeURIComponent(pending.cycle_id),route=>{
       failedPreflightReads++;expect(route.request().method()).toBe('GET');return route.abort('failed');
@@ -273,10 +285,17 @@ for (const mode of ['native','standalone'] as const) for (const locale of ['en',
     expect(currentBefore.work.state).toBe('completed');
     expect([before.cycle.cycle_id,second.cycle.cycle_id]).not.toContain(currentPending.cycle_id);
     await write('current-cycle-refill',{action:'inventory.intake',product_id:short.product_id,quantity:'4'});
-    const closedPageReply=page.waitForResponse(response=>response.url()===api+'tasks/occurrences/'+oid+'/material-history?limit=1'&&response.request().method()==='GET');
+    const closedPages:{body:Buffer;value:Record<string,any>}[]=[];
+    await page.route(api+'tasks/occurrences/'+oid+'/material-history?limit=1',async route=>{
+      expect(route.request().method()).toBe('GET');
+      const response=await route.fetch({maxRetries:0,maxRedirects:0});expect(response.status()).toBe(200);
+      const body=await response.body();closedPages.push({body,value:JSON.parse(body.toString('utf8'))});
+      await route.fulfill({response,body});
+    },{times:1});
     await activate(tasks.getByRole('button',{name:t('Review earlier usage','Revisar consumos anteriores'),exact:true}));
-    const closedResponse=await closedPageReply;expect(closedResponse.ok()).toBe(true);
-    const selectedClosed=await closedResponse.json();expect(selectedClosed.items).toHaveLength(1);expect(selectedClosed.next_cursor).toBeTruthy();
+    await expect.poll(()=>closedPages.length).toBe(1);
+    const selectedClosed=closedPages[0].value;expect(selectedClosed.items).toHaveLength(1);expect(selectedClosed.next_cursor).toBeTruthy();
+    await info.attach('selected-closed-history-original',{body:closedPages[0].body,contentType:'application/json'});
     const closedOutcomes=tasks.locator('#material-history-heading').locator('..').locator('domus-task-material-outcomes');
     await expect(closedOutcomes.locator('li')).toHaveCount(selectedClosed.items[0].materials.length);
     const displayedHistoryIds=()=>closedOutcomes.locator('li').evaluateAll(elements=>elements.map(element=>element.getAttribute('data-material-intent')));

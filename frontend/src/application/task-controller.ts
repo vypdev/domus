@@ -169,6 +169,8 @@ export class TaskController {
       if (this.state.scopeKey !== prior.scopeKey) {this.update({notice: 'context_changed'}); return;}
       this.update({page: prior.page});
       if (this.state.readOnly) {this.update({notice: 'read_only'}); return;}
+      if (command.action === 'task.material.settle' && prior.detail?.occurrenceId === command.occurrenceId)
+        this.update({detail: prior.detail, materialHistory: prior.materialHistory});
       if ('occurrenceId' in command) this.update({detail: await this.read(this.server.detail(command.occurrenceId, this.state.access!.householdId, this.state.session!.context), generation)});
       if (command.action === 'task.material.settle') await this.materialFacts(command.payload.cycle_id, generation, prior);
       if (!this.accepted(command)) {
