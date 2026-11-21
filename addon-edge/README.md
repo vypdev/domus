@@ -3,6 +3,14 @@
 Development preview of Domus installed as a Home Assistant app. Open it through
 HA's Open Web UI using your existing Home Assistant session.
 
+Edge.71 enables saved daily task automations after reviewing the exact revision,
+conditions and timing. The narrow permission belongs to the household rule and
+continues without an open browser or its activating member. Daily history shows
+actual tasks, unmet conditions and cancelled work. Recover interrupted controls
+by checking the original daily request. Household timing changes retain the approved
+schedule until explicit adoption; times missed while stopped are skipped, while
+already admitted work is preserved. Disable future work without removing prior tasks.
+
 Edge.70 lets Tasks plan existing Pantry materials for ordinary, fixed and relative
 creation, review per-line usage and explicitly settle pending consumption. Reopening
 retains each completion's earlier usage. **More products** keeps earlier catalog choices available
@@ -70,7 +78,7 @@ After verifying access, recover an interrupted request explicitly; reopening the
 interface never repeats it automatically. Granular permission denials still offer
 the corresponding workspace's current recovery action.
 
-This candidate uses SQLite schema 35. Keep a
+This candidate uses SQLite schema 36. Keep a
 compatible image and cold data backup before upgrading a previous preview.
 See [installation and operation](https://github.com/vypdev/domus/blob/develop/addon-edge/DOCS.md) for the source pin and rollback
 instructions.

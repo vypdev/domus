@@ -1124,7 +1124,8 @@
         "tests/fixtures/schema35-app/Dockerfile",
         "tests/fixtures/sqlite/generate_v35_daily_automation_source.py",
         "tests/fixtures/sqlite/v35-daily-automation-source.provenance.json",
-        "tests/fixtures/sqlite/v35-daily-automation-source.sql"
+        "tests/fixtures/sqlite/v35-daily-automation-source.sql",
+        "tests/backend/test_app_package.py"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -1139,7 +1140,8 @@
         "docs/contracts/native-household-api.openapi.json",
         "docs/evidence/automation-execution-qualification.md",
         "docs/evidence/daily-automation-execution-qualification.md",
-        "docs/development.md"
+        "docs/development.md",
+        "docs/evidence/daily-automation-execution.json"
       ],
       "readiness": {
         "state": "draft",

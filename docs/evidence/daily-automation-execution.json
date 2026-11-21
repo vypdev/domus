@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "issue": 155,
+  "sourceCommit": "3aa4934d549e20db42ed8adb9a15a3445df084d6",
+  "currentPackage": {
+    "version": "0.0.0-edge.71",
+    "sourceArchiveSHA256": "94ed07e09c4ad57be347ba22b02afa1a8f593e8ad7dfeb0f4f83c04a85512f28",
+    "wheelSHA256": "4a2e12062704dc6b5e15d14e1d3d81bd9a70252959e0cf1ec0aff8b2cf7e0883",
+    "storageSchema": 36,
+    "pythonFiles": 247,
+    "actualProductFiles": {
+      ".vite/manifest.json": "66da83527af9a540dc97c982f65c05c3d72d8b5e03e24eab03ab48e0a07b556c",
+      "assets/index-CjJnHZzV.css": "0f2c8c2e31576c0b64fe60373150f09390dafb896df6c07777b2a220ad430e48",
+      "assets/index-DL0JDusj.js": "8aa8aa4853ec1d40b06e3d902d98b898d4c9d87526313efb5af3768e1dfac25d",
+      "index.html": "93be7638218dc6df7c41607011c05cb92dd65e847cc2aafb37d644a688776ed8"
+    }
+  },
+  "localQualification": {
+    "backend": {
+      "tests": 5849,
+      "additionalWriterOrderCases": 4,
+      "runtimeFiles": 247,
+      "statements": 19101,
+      "branches": 5146,
+      "coverageGlobalAndPerFile": 100
+    },
+    "frontend": {
+      "tests": 2134,
+      "runtimeFiles": 119,
+      "statements": 9296,
+      "branches": 8489,
+      "functions": 1996,
+      "lines": 6760,
+      "allMetricsGlobalAndPerFile": 100
+    },
+    "sourceCompiledBrowser": {
+      "tests": 125,
+      "skipped": 0,
+      "flaky": 0,
+      "retries": 0
+    },
+    "catalog": {
+      "tests": 57,
+      "stories": 37,
+      "dailyStories": 8,
+      "skipped": 0,
+      "flaky": 0
+    },
+    "pythonTooling": 186,
+    "nodePolicy": 42,
+    "arm64Image": {
+      "imageId": "sha256:7f573ff64804890595ef0692ac3e49a64706d3c113d8c83baeee594731877fae",
+      "sourceCommit": "3aa4934d549e20db42ed8adb9a15a3445df084d6",
+      "all247PythonAnd4UIFilesMatchWheel": true,
+      "workerAndSchema35CompatibilityCases": 5,
+      "nativeStandaloneListenerAndExactBundleCases": 3
+    },
+    "packageContractCases": 9
+  },
+  "pendingGates": [
+    "Final PR exact-head product CI including actual amd64 and aarch64",
+    "Final PR review and Branch Sync",
+    "Separately identified installed Edge71 daily execution at naturally upcoming time, revocation and cleanup",
+    "Normal merge, destination all product CI/Branch Sync and native issue closure"
+  ],
+  "limits": "Local source, catalog and image observations are distinct. Prior Edge70 installed acceptance does not qualify155; this does not declare the remaining automation owner complete.",
+  "installedBaseline": {
+    "app": "5c3e40a5_domus_edge",
+    "version": "0.0.0-edge.70",
+    "household": "Domus QA 155 Edge70",
+    "manualEnabledRevision": 1,
+    "latestInactiveDailyRevision": 2,
+    "dailyTime": "07:30",
+    "manualTasks": 1,
+    "manualHistoryItems": 1,
+    "upgradeTo71": "pending",
+    "limits": "Fresh synthetic native baseline through documented public UI. Not installed71 acceptance. No private HA state/API or shared clock mutation."
+  }
+}

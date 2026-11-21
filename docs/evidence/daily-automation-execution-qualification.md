@@ -29,6 +29,15 @@ separate installed acceptance remain publication gates. Their results must be
 recorded before this qualification is treated as complete. No prior Edge.70 result
 qualifies the new schema-36 runtime.
 
+The [Edge.71 package receipt](daily-automation-execution.json) pins source
+`3aa4934d549e20db42ed8adb9a15a3445df084d6`. All 996 archive files match that
+published Git tree. The built wheel contains 247 Python modules and four UI files;
+the actual local ARM64 image matches every product file byte. Its five daily-worker
+and authentic schema35 compatibility cases pass, as do three pinned native/standalone
+listener, restart and bundle cases. The separate fresh installed Edge.70 baseline has
+Manual1 enabled, Daily2 inactive and one original task/run, ready for the Edge.71 upgrade.
+This baseline does not establish installed Edge.71 acceptance or final amd64 CI.
+
 ## Concrete case map
 
 Each of the 48 specification cases appears once below. Parameterized clock,
