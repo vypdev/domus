@@ -14,6 +14,7 @@ from test_task_runtime import api as api
 from domus.application.automation_execution import RUN_AUTOMATION, SET_AUTOMATION_CONTROL
 from domus.domain.errors import StorageFailure
 from domus.domain.identity import MAX_REVISION, MemberStatus, Permission, PermissionRule
+from domus.infrastructure.sqlite_automation_drafts import SQLiteAutomationDrafts
 from domus.infrastructure.sqlite_receipts import SQLiteReceipts
 
 REQUESTS = "/api/v1/automation/execution/requests"
@@ -81,6 +82,35 @@ def busy(response):
 def audit(api):
     with api.store.read() as unit:
         return unit.audit.entries("home")
+
+
+def test_missing_enabled_source_never_becomes_an_empty_status_or_a_successful_revision_switch(
+    api, monkeypatch
+):
+    rule_id = initial_draft(api)
+    result(configure(api, rule_id, "enable"))
+    result(save(api, "next-revision", rule_id=rule_id, revision="1", action=ACTION, condition=None))
+    before = effects(api), audit(api)
+    real = SQLiteAutomationDrafts.revision
+
+    def missing(repository, home, selected, revision):
+        return (
+            None
+            if selected == rule_id and revision == 1
+            else real(repository, home, selected, revision)
+        )
+
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteAutomationDrafts, "revision", missing)
+        denied(read(api, f"{DRAFTS}/{rule_id}/execution"), 500, "internal_error")
+        denied(
+            configure(api, rule_id, "broken-switch", revision="2", expected="1"),
+            500,
+            "internal_error",
+        )
+    assert (effects(api), audit(api)) == before
+    assert read(api, f"{REQUESTS}/configure/broken-switch").status_code == 404
+    assert read(api, f"{DRAFTS}/{rule_id}/execution").json()["control"]["rule_revision"] == "1"
 
 
 def one_task_effect(api, before, execution):

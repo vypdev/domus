@@ -21,6 +21,7 @@ from domus.entrypoints.administration_http import (
     create_administration_router,
 )
 from domus.entrypoints.automation_http import create_automation_router
+from domus.entrypoints.automation_scheduled_http import create_daily_automation_router
 from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryHTTPContext
 from domus.entrypoints.family_http import create_family_router
@@ -114,7 +115,8 @@ class _NativeBoundary(BoundedHTTP):
                     )
                 )
                 or re.fullmatch(
-                    r"/api/v1/automation/drafts/[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}/runs",
+                    r"/api/v1/automation/drafts/[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}/"
+                    r"(?:runs|daily(?:/runs)?)",
                     scope["path"],
                 )
                 or scope["path"]
@@ -265,6 +267,7 @@ def create_native_app(
         app.include_router(create_reward_router(task_context, security=Depends(security)))
         app.include_router(create_inventory_router(task_context, security=Depends(security)))
         app.include_router(create_automation_router(task_context, security=Depends(security)))
+        app.include_router(create_daily_automation_router(task_context, security=Depends(security)))
         app.include_router(create_family_router(task_context, security=Depends(security)))
     if administration_context is not None:
         app.include_router(

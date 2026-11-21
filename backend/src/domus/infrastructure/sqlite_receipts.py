@@ -108,3 +108,41 @@ class SQLiteReceipts:
                 receipt.created_at,
             ),
         )
+
+    def archived_scheduled_runs(
+        self,
+        household_id: str,
+        principal: str,
+        *,
+        before: tuple[int, str] | None,
+        limit: int,
+    ) -> tuple[Receipt, ...]:
+        position = (
+            ""
+            if before is None
+            else (" AND (json_extract(h.document,'$.result.run.admitted_at'),h.command_key)<(?,?)")
+        )
+        after: tuple[object, ...] = () if before is None else before
+        rows = self.connection.execute(
+            "SELECT h.operation_id FROM retained_operations h "
+            "WHERE h.household_id=? AND h.actor_id=? AND h.current=0 "
+            "AND h.action IN ('automation.scheduled.admit','automation.scheduled.run') "
+            "AND (h.action='automation.scheduled.run' OR ("
+            "NOT EXISTS(SELECT 1 FROM retained_operations r WHERE r.household_id=h.household_id "
+            "AND r.actor_id=h.actor_id AND r.command_key=h.command_key "
+            "AND r.action='automation.scheduled.run') AND "
+            "NOT EXISTS(SELECT 1 FROM receipts r WHERE r.household_id=h.household_id "
+            "AND r.actor_id=h.actor_id AND r.command_key=h.command_key "
+            "AND r.action='automation.scheduled.run')))"
+            + position
+            + " ORDER BY json_extract(h.document,'$.result.run.admitted_at') DESC,"
+            "h.command_key DESC LIMIT ?",
+            (household_id, principal, *after, limit),
+        ).fetchall()
+        result = []
+        for row in rows:
+            receipt = self.get_operation(household_id, principal, row["operation_id"])
+            if receipt is None or not receipt.historical:
+                raise StorageFailure("invalid_retained_projection")
+            result.append(receipt)
+        return tuple(result)

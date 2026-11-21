@@ -1,5 +1,14 @@
 # Development foundation
 
+The daily automation increment is mapped in the [qualification guide](evidence/daily-automation-execution-qualification.md).
+Run the full backend suite and `domus-check backend-coverage` with the independent source inventory;
+run `pnpm check:frontend`, `pnpm test:frontend`, both compiled entry compositions and the built catalog.
+The existing self-hosted image matrix also builds the frozen schema-35 recipe in
+`tests/fixtures/schema35-app` for genuine prior-reader refusal and protected-pair recovery.
+`tests/containers/daily_runtime.py` observes the actual owned worker with a test-only clock;
+it is never packaged. Installed Edge acceptance uses a naturally upcoming minute and the
+ordinary worker. Keep image, source-browser and installed Home Assistant evidence distinct.
+
 The product [household entry model](household-entry-interface.md) has its own required Chromium and
 complete-source coverage gate: `pnpm check:frontend` and `pnpm test:frontend`. It is separate from the
 fictional framework fixture below. The rendered product entry UI remains incomplete.

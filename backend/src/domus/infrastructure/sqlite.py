@@ -40,6 +40,11 @@ from domus.infrastructure.sqlite_automation_drafts import (
     AUTOMATION_DRAFT_TABLE,
     SQLiteAutomationDrafts,
 )
+from domus.infrastructure.sqlite_automation_schedule_schema import (
+    SCHEDULED_AUTOMATION_STATEMENTS,
+    SCHEDULED_AUTOMATION_TABLES,
+)
+from domus.infrastructure.sqlite_automation_schedules import SQLiteScheduledAutomations
 from domus.infrastructure.sqlite_calendar import SQLiteCalendar
 from domus.infrastructure.sqlite_calendar_preferences import (
     CALENDAR_PREFERENCE_STATEMENT,
@@ -115,7 +120,7 @@ from domus.infrastructure.sqlite_task_schema import (
 )
 from domus.infrastructure.sqlite_tasks import SQLiteTasks
 
-SCHEMA_VERSION = 35
+SCHEMA_VERSION = 36
 APPLICATION_ID = 0x444F4D55
 BASE_STATEMENTS = (
     "CREATE TABLE installation(singleton INTEGER PRIMARY KEY CHECK(singleton=1), "
@@ -206,6 +211,7 @@ SCHEMA_STATEMENTS = (
     AUTOMATION_DRAFT_STATEMENT,
     AUTOMATION_CONTROL_STATEMENT,
     BARCODE_STATEMENT,
+    *SCHEDULED_AUTOMATION_STATEMENTS,
 )
 BASE_TABLES = {"installation", "households", "receipts", "audit", "outbox"}
 IDENTITY_TABLES = BASE_TABLES | {"members", "household_policy"}
@@ -235,7 +241,8 @@ RETURN_SCHEMA_TABLES = CORRECTION_SCHEMA_TABLES | {SHOPPING_RECEIPT_RETURN_TABLE
 LOCATION_SCHEMA_TABLES = RETURN_SCHEMA_TABLES | LOCATION_TABLES
 DRAFT_SCHEMA_TABLES = LOCATION_SCHEMA_TABLES | {AUTOMATION_DRAFT_TABLE}
 CONTROL_SCHEMA_TABLES = DRAFT_SCHEMA_TABLES | {AUTOMATION_CONTROL_TABLE}
-TABLES = CONTROL_SCHEMA_TABLES | {BARCODE_TABLE}
+BARCODE_SCHEMA_TABLES = CONTROL_SCHEMA_TABLES | {BARCODE_TABLE}
+TABLES = BARCODE_SCHEMA_TABLES | SCHEDULED_AUTOMATION_TABLES
 
 
 def _schema(connection: sqlite3.Connection) -> tuple[tuple[str, str], ...]:
@@ -285,6 +292,7 @@ def _expected_schema(version: int) -> tuple[tuple[str, str], ...]:
             *((AUTOMATION_DRAFT_STATEMENT,) if version >= 32 else ()),
             *((AUTOMATION_CONTROL_STATEMENT,) if version >= 33 else ()),
             *((BARCODE_STATEMENT,) if version >= 35 else ()),
+            *(SCHEDULED_AUTOMATION_STATEMENTS if version >= 36 else ()),
         )
         for statement in statements:
             connection.execute(statement)
@@ -466,6 +474,7 @@ class SQLiteUnit:
     def __init__(self, connection: sqlite3.Connection, installation: Installation) -> None:
         self.automation_controls = SQLiteAutomationControls(connection)
         self.automation_drafts = SQLiteAutomationDrafts(connection)
+        self.scheduled_automations = SQLiteScheduledAutomations(connection, installation)
         self.recurrence = SQLiteRecurrences(connection, installation)
         self.calendar = SQLiteCalendar(connection)
         self.calendar_preferences = SQLiteCalendarPreferences(connection)
@@ -571,6 +580,7 @@ class SQLiteDatabase:
                 32: DRAFT_SCHEMA_TABLES,
                 33: CONTROL_SCHEMA_TABLES,
                 34: CONTROL_SCHEMA_TABLES,
+                35: BARCODE_SCHEMA_TABLES,
             }.get(version, TABLES)
             if application_id != APPLICATION_ID or objects != expected_tables:
                 raise DatabaseRejected("unrelated_database")
@@ -651,6 +661,7 @@ class SQLiteDatabase:
                         *((AUTOMATION_DRAFT_STATEMENT,) if version < 32 else ()),
                         *((AUTOMATION_CONTROL_STATEMENT,) if version < 33 else ()),
                         *((BARCODE_STATEMENT,) if version < 35 else ()),
+                        *(SCHEDULED_AUTOMATION_STATEMENTS if version < 36 else ()),
                     )
                     for statement in migration:
                         connection.execute(statement)

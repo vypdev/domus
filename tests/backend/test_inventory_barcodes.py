@@ -178,8 +178,13 @@ def test_upgrade_atomicity_and_compatible_activation_keep_links_and_originals(
         _, store, commands = setup(root)
         register(commands)
         with closing(sqlite3.connect(store.path, autocommit=True)) as db:
+            # Derive the complete v34 shape, rather than only changing its version header.
+            db.execute("DROP TABLE automation_scheduled_runs")
+            db.execute("DROP TABLE automation_daily_schedules")
+            db.execute("DROP INDEX retained_scheduled_history")
             db.execute("DROP TABLE inventory_barcodes")
             db.execute("PRAGMA user_version=34")
+            assert store._inspect(db, allow_previous=True) == 34
     else:
         source = (
             "v20-inventory-history-source.sql" if version == 20 else "v30-purchase-store-source.sql"
@@ -211,7 +216,7 @@ def test_upgrade_atomicity_and_compatible_activation_keep_links_and_originals(
     assert store.path.read_bytes() == original
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(store.path)) as db:
-        assert db.execute("PRAGMA user_version").fetchone() == (35,)
+        assert db.execute("PRAGMA user_version").fetchone() == (36,)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
         for table, rows in before.items():
             current = db.execute("SELECT * FROM " + table).fetchall()

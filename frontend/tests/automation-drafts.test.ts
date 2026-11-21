@@ -94,6 +94,57 @@ test('open, page, edit and resolve conflicts while preserving entered values', a
   expect(publish).toHaveBeenLastCalledWith(expect.objectContaining({notice: 'unavailable'}));
 });
 
+test('authority refresh rechecks the saved selection, keeps config-only reads and retires denied or stale facts', async () => {
+  const f = setup(), drafts = f.controller();
+  const last = () => f.publish.mock.lastCall?.[0] as AutomationDraftView | null;
+  drafts.bind({...scope, authorization: 'policy-1'}, true);
+  await vi.waitFor(() => expect(last()).toMatchObject({state: 'ready', busy: false}));
+  f.server.reopen.mockReturnValue(settled({...first, dailyTime: '07:30', condition: null}));
+  await drafts.handle({type: 'open', id: first.id}, null);
+  const delayed = deferred<DraftPage>();
+  f.server.list.mockReturnValueOnce(delayed);
+  drafts.bind({...scope, authorization: 'policy-2'}, true);
+  expect(last()).toEqual({state: 'loading'});
+  f.server.list.mockReturnValueOnce(settled({...f.page, maySave: false}));
+  drafts.bind({...scope, authorization: 'policy-3'}, true);
+  delayed.resolve({drafts: [{...first, title: 'Stale private title'}], next: null});
+  await vi.waitFor(() => expect(last()).toMatchObject({state: 'ready', busy: false, readOnly: true,
+    selected: {id: first.id, revision: first.revision, dailyTime: '07:30'}, page: {maySave: false}}));
+  expect(delayed.cancel).toHaveBeenCalledOnce();
+  await drafts.handle({type: 'save'}, idea, '07:30');
+  expect(f.server.send).not.toHaveBeenCalled();
+  await drafts.handle({type: 'open', id: first.id}, null);
+  expect(f.server.reopen).toHaveBeenCalledTimes(2);
+  f.server.list.mockReturnValueOnce(failed(new EntryReadError('forbidden')));
+  drafts.bind({...scope, authorization: 'policy-4'}, true);
+  await vi.waitFor(() => expect(last()).toEqual({state: 'denied'}));
+  expect(f.edit).toHaveBeenLastCalledWith({title: '', productId: null});
+  drafts.bind({...scope, authorization: 'policy-5'}, true);
+  await vi.waitFor(() => expect(last()).toMatchObject({state: 'ready', busy: false, selected: null}));
+});
+
+test('a grouped daily revision remains an exact daily rule and is never coerced to manual simulation', async () => {
+  const f = setup(), drafts = f.controller();
+  const daily: SavedAutomationDraft = {...first, condition: grouped, dailyTime: '07:30'};
+  f.server.reopen.mockReturnValueOnce(settled(daily));
+  drafts.bind(scope, true);
+  await vi.waitFor(() => expect(f.publish).toHaveBeenLastCalledWith(expect.objectContaining({state: 'ready', busy: false})));
+  await drafts.handle({type: 'open', id: first.id}, null);
+  await drafts.handle({type: 'preview_saved'}, null);
+  expect(f.server.previewSaved).not.toHaveBeenCalled();
+  const current = f.publish.mock.lastCall![0] as AutomationDraftView;
+  const element = document.createElement('domus-automation-drafts'); element.view = current;
+  document.body.append(element); await element.updateComplete;
+  expect(element.shadowRoot!.textContent).toContain('Review its daily schedule and execution permission below.');
+  expect([...element.shadowRoot!.querySelectorAll('vyp-ha-button')].some(button => button.state.label === 'Preview saved rule')).toBe(false);
+  const transport = vi.fn();
+  const server = new HttpAutomationDrafts({origin: 'https://domus.example', deployment: 'standalone', applicationBase: '/'}, transport);
+  await expect(server.previewSaved(scope, daily).result).rejects.toMatchObject({code: 'invalid_response'});
+  expect(transport).not.toHaveBeenCalled();
+  element.language = 'es'; await element.updateComplete;
+  expect(element.shadowRoot!.textContent).toContain('Revisa su horario diario y su permiso de ejecución más abajo.');
+});
+
 test('recover an uncertain save after reload with its exact key and retire denied details', async () => {
   const {server, controller, journal, edit, publish} = setup();
   const drafting = controller();
@@ -336,14 +387,14 @@ test('draft interface exposes localized saved revisions, recovery and explicit r
   element.language = 'es';
   element.view = {...ready,trigger:'daily',notice:'invalid_daily_time'};
   await element.updateComplete;
-  expect(root.textContent).toContain('Los borradores diarios permanecen inactivos.');
+  expect(root.textContent).toContain('Guardar un borrador diario no lo habilita ni sustituye una revisión habilitada.');
   expect(root.querySelector('vyp-ha-select')?.state?.options[1]?.label).toBe('Diario');
   element.view = {...ready, readOnly: true, busy: true, pending: true, notice: 'uncertain',
     locked: secondWithGroup(), preview: false, after: 'previous'};
   await element.updateComplete;
   expect(root.textContent).toContain('Cualquier condición');
   expect(root.textContent).toContain('No se crearía ninguna tarea');
-  expect(root.textContent).toContain('sesión de solo lectura');
+  expect(root.textContent).toContain('permiso para crear tareas');
   for (const state of ['loading', 'denied', 'unavailable'] as const) {
     element.view = {state};
     await element.updateComplete;

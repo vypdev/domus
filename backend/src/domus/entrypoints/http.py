@@ -31,6 +31,7 @@ from domus.entrypoints.administration_http import (
     create_administration_router,
 )
 from domus.entrypoints.automation_http import create_automation_router
+from domus.entrypoints.automation_scheduled_http import create_daily_automation_router
 from domus.entrypoints.bounded_http import BoundedHTTP
 from domus.entrypoints.entry_context import CONTEXT_HEADER, EntryContextResponse, EntryHTTPContext
 from domus.entrypoints.family_http import create_family_router
@@ -442,6 +443,7 @@ def create_app(
         app.include_router(create_reward_router(tasks, security=session_security))
         app.include_router(create_inventory_router(tasks, security=session_security))
         app.include_router(create_automation_router(tasks, security=session_security))
+        app.include_router(create_daily_automation_router(tasks, security=session_security))
         app.include_router(create_family_router(tasks, security=session_security))
     attach_ui(app, ui_bundle, "standalone", lambda request: None)
     return app

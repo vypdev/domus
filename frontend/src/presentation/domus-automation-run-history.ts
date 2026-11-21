@@ -35,7 +35,7 @@ const COPY = {
 export class DomusAutomationRunHistory extends LitElement {
   static properties = {view: {attribute: false}, language: {attribute: false}};
   static styles = css`
-    :host {display:block;--vyp-ha-surface:var(--surface);--vyp-ha-text:var(--text);--vyp-ha-text-secondary:var(--muted);
+    :host {display:block;--vyp-ha-surface:var(--surface);--vyp-ha-surface-raised:var(--surface);--vyp-ha-text:var(--text);--vyp-ha-text-secondary:var(--muted);
       --vyp-ha-border:var(--line);--vyp-ha-primary:var(--accent);--vyp-ha-on-accent:var(--surface);
       --vyp-ha-focus-ring:3px solid var(--accent)}
     vyp-ha-card {margin-block-end:16px}

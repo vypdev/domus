@@ -8,6 +8,7 @@ export interface ConfiguredAutomation {
   readonly controlRevision: Revision;
   readonly enabled: boolean;
   readonly title: string;
+  readonly trigger?: 'daily';
 }
 
 export interface AutomationConfiguration {
@@ -73,7 +74,7 @@ export class AutomationExecutionController {
     private readonly entropy: EntryEntropy, private readonly publish: (view: AutomationExecutionView | null) => void) {}
 
   bind(scope: DraftScope | null, selection: DraftSelection | null): void {
-    const sameScope = this.scope?.key === scope?.key;
+    const sameScope = this.scope?.key === scope?.key && this.scope?.authorization === scope?.authorization;
     const sameSelection = this.selection?.id === selection?.id && this.selection?.revision === selection?.revision;
     const priorReadOnly = this.scope?.readOnly;
     this.scope = scope;
@@ -156,7 +157,7 @@ export class AutomationExecutionController {
       if (configuration.latestManual === false) return;
       this.confirmation = {title: latestTitle, command: {kind: 'configure', ruleId, ruleRevision: latestRevision,
         controlRevision: control?.controlRevision ?? '0', enabled: true}};
-    } else if (control?.enabled) {
+    } else if (control?.enabled && control.trigger !== 'daily') {
       const {ruleRevision, controlRevision, title} = control;
       this.confirmation = {title, command: intent === 'run'
         ? {kind: 'run', ruleId, ruleRevision, controlRevision}

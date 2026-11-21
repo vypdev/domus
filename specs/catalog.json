@@ -802,7 +802,7 @@
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item’s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
+        "implementationEvidence": "Issue #74 qualifies one-item purchasing, physical receiving and Pantry posting. Issue #76 qualifies the shared list, exact source coverage and manual extra lifecycle. Issue #78 qualifies grouped purchase sessions and per-item receipt progress. Issue #80 qualifies attributed cancellation of an item\u2019s unreceived balance and recalculation of incoming supply. Issue #82 qualifies attributed voids of pending tracked receipts and correction of the receipt balance. Issue #84 qualifies linked corrections of receipts already posted to Pantry. Issue #86 qualifies physical returns from fully received and posted purchase items. Issue #94 qualifies optional store names on purchase sessions with protected history and original-operation recovery. Issue #104 maps the exact Overview count, authorized list projection and focused navigation to inventory1-C01 through inventory1-C03 in the shopping specification.",
         "blockingDecisions": "Multiple lists, manual overlap, purchase allocation to individual sources, pricing and refunds have separate acceptance.",
         "copilotChangesAllowed": false
       }
@@ -1034,16 +1034,19 @@
       "status": "proposed",
       "scope": "Simple/default and optional advanced editors share one durable declarative automation engine in the first release, invoking authorized household commands with replay-safe execution and visible traces.",
       "owner": "Domus maintainers (review assignment pending)",
-      "lastVerified": "2026-11-11",
+      "lastVerified": "2026-11-21",
       "specs": [
         "specs/household-automation.md",
         "specs/automation-scheduled-execution.md"
       ],
-      "workflows": [],
+      "workflows": [
+        ".github/workflows/ci_check.yml"
+      ],
       "entrypoints": [
         "backend/src/domus/entrypoints/automation_http.py",
         "frontend/src/composition/entry-page.ts",
-        "frontend/src/presentation/domus-app.ts"
+        "frontend/src/presentation/domus-app.ts",
+        "backend/src/domus/entrypoints/automation_scheduled_http.py"
       ],
       "code": [
         "backend/src/domus/domain/automation.py",
@@ -1062,7 +1065,32 @@
         "frontend/src/application/automation-execution.ts",
         "frontend/src/adapters/automation-execution-http.ts",
         "frontend/src/adapters/automation-execution-journal.ts",
-        "frontend/src/presentation/domus-automation-execution.ts"
+        "frontend/src/presentation/domus-automation-execution.ts",
+        "backend/src/domus/application/automation_scheduled_authority.py",
+        "backend/src/domus/application/automation_scheduled_control.py",
+        "backend/src/domus/application/automation_scheduled_documents.py",
+        "backend/src/domus/application/automation_scheduled_execution.py",
+        "backend/src/domus/application/automation_scheduled_history.py",
+        "backend/src/domus/application/automation_scheduled_planning.py",
+        "backend/src/domus/application/automation_scheduled_ports.py",
+        "backend/src/domus/application/automation_scheduled_runner.py",
+        "backend/src/domus/application/task_changes.py",
+        "backend/src/domus/application/task_creation_command.py",
+        "backend/src/domus/composition/automation.py",
+        "backend/src/domus/domain/automation_scheduling.py",
+        "backend/src/domus/entrypoints/automation_scheduled_http.py",
+        "backend/src/domus/infrastructure/sqlite_automation_schedule_integrity.py",
+        "backend/src/domus/infrastructure/sqlite_automation_schedule_schema.py",
+        "backend/src/domus/infrastructure/sqlite_automation_schedules.py",
+        "frontend/src/adapters/automation-condition-values.ts",
+        "frontend/src/adapters/automation-daily-history-http.ts",
+        "frontend/src/adapters/automation-daily-http.ts",
+        "frontend/src/adapters/automation-daily-journal.ts",
+        "frontend/src/adapters/automation-daily-values.ts",
+        "frontend/src/application/automation-daily-history.ts",
+        "frontend/src/application/automation-daily.ts",
+        "frontend/src/presentation/domus-automation-daily-history.ts",
+        "frontend/src/presentation/domus-automation-daily.ts"
       ],
       "tests": [
         "tests/backend/test_automation_preview.py",
@@ -1074,7 +1102,29 @@
         "frontend/tests/e2e/workspace-navigation.spec.ts",
         "tests/backend/test_automation_execution.py",
         "tests/backend/test_automation_execution_storage.py",
-        "frontend/tests/automation-execution.test.ts"
+        "frontend/tests/automation-execution.test.ts",
+        "frontend/tests/automation-daily-controller.test.ts",
+        "frontend/tests/automation-daily-fixtures.ts",
+        "frontend/tests/automation-daily-history.test.ts",
+        "frontend/tests/automation-daily-http.test.ts",
+        "frontend/tests/automation-daily-view.test.ts",
+        "tests/backend/test_automation_scheduling_values.py",
+        "tests/backend/test_daily_automation_control.py",
+        "tests/backend/test_daily_automation_execution.py",
+        "tests/backend/test_daily_automation_history.py",
+        "tests/backend/test_daily_automation_http.py",
+        "tests/backend/test_daily_automation_planning.py",
+        "tests/backend/test_daily_automation_restoration.py",
+        "tests/backend/test_daily_automation_runner.py",
+        "tests/backend/test_scheduled_automation_integrity.py",
+        "tests/backend/test_scheduled_automation_storage.py",
+        "tests/backend/test_scheduled_rule_authority.py",
+        "tests/containers/daily_runtime.py",
+        "tests/containers/test_daily_automation_image.py",
+        "tests/fixtures/schema35-app/Dockerfile",
+        "tests/fixtures/sqlite/generate_v35_daily_automation_source.py",
+        "tests/fixtures/sqlite/v35-daily-automation-source.provenance.json",
+        "tests/fixtures/sqlite/v35-daily-automation-source.sql"
       ],
       "documentation": [
         "docs/product-vision.md",
@@ -1087,11 +1137,13 @@
         "docs/evidence/automation-draft-qualification.md",
         "docs/contracts/household-api.openapi.json",
         "docs/contracts/native-household-api.openapi.json",
-        "docs/evidence/automation-execution-qualification.md"
+        "docs/evidence/automation-execution-qualification.md",
+        "docs/evidence/daily-automation-execution-qualification.md",
+        "docs/development.md"
       ],
       "readiness": {
         "state": "draft",
-        "implementationEvidence": "partial: protected manual preview, immutable inactive drafts, exact-revision manual execution, atomic task and run receipts, disable admission control, and English/Spanish recovery",
+        "implementationEvidence": "partial: protected manual preview/execution/history and immutable daily drafts; rule-owned daily grants, durable admission/effects/history, startup suppression, explicit timing adoption, schema35/20 migration and source-browser recovery are implemented and locally qualified; exact CPU image and installed Edge155 acceptance pending",
         "blockingDecisions": "Detailed DSL/action catalog, numeric resource limits, external-effect receipts and supported HA/browser evidence. The owner confirmed both editors, one engine and disablement that stops new runs/later steps while retaining already-started atomic commands and effects.",
         "copilotChangesAllowed": false
       }

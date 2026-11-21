@@ -2,11 +2,33 @@
 
 import runpy
 import sys
+from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from domus.composition import ingress
+
+
+def test_legacy_native_runtime_construction_closes_all_original_resources_without_a_scheduler():
+    order = []
+
+    def resource(name):
+        item = Mock()
+        item.close.side_effect = lambda: order.append(name)
+        return item
+
+    runtime = ingress.NativeRuntime(
+        app=Mock(),
+        sessions=resource("sessions"),
+        recurrence=resource("recurrence"),
+        points=Mock(),
+        points_worker=resource("points"),
+        storage=resource("storage"),
+    )
+    assert runtime.automation_worker is None
+    runtime.close()
+    assert order == ["points", "recurrence", "sessions", "storage"]
 
 
 def test_composition_exposes_only_loopback_process_health_without_upstream_calls() -> None:

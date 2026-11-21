@@ -13,6 +13,7 @@ import type {DomusApp} from '../src/presentation/domus-app';
 import type {DomusAdministration} from '../src/presentation/domus-administration';
 import {ENTRY_JOURNAL_KEY} from '../src/adapters/session-journal';
 import corpus from './fixtures/entry-wire.json';
+import {inactive as dailyInactive, times as dailyTimes, wireReview as dailyReviewWire, wireTime as dailyTimeWire} from './automation-daily-fixtures';
 
 const dispose: (() => void)[] = [], nodes: Element[] = [];
 afterEach(() => {
@@ -37,7 +38,24 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   let automationTitle: string | null = null;
   let automationTime: string | null = null;
   const automationDraft = {rule_id:'saved-draft',revision:'1',state:'draft',enabled:false};
+  const automationDefinitions = new Map<string, {title: string; time: string | null}>();
   let manualEnabled = false;
+  let dailyEnabled = false, dailyControlRevision = 0, dailyScheduleRevision = 0;
+  let dailyLoseReply = false, automationTaskCreate = true;
+  const dailyOriginals = new Map<string, object>();
+  let dailyRuleRevision = revisionValue('1');
+  const dailyPolicy = {...dailyTimes[0].policy, zone: JSON.parse(household).time_zone};
+  const dailyPlanned = dailyTimes.map(item => ({...item, policy: dailyPolicy, offsetSeconds: 0}));
+  const dailyRevision = (value: number) => value === 0 ? '0' as const : revisionValue(String(value));
+  const dailyReview = (revision = automationDraft.revision) => ({...dailyInactive, ruleId: 'saved-draft', ruleRevision: revisionValue(revision),
+    title: automationDefinitions.get(revision)!.title, requestedTime: automationDefinitions.get(revision)!.time ?? '07:30', mayEnable: automationTaskCreate,
+    controlRevision: dailyRevision(dailyControlRevision), scheduleRevision: dailyRevision(dailyScheduleRevision),
+    enabled: dailyEnabled, activeTrigger: dailyEnabled ? 'daily' as const : manualEnabled ? 'manual' as const : null,
+    activeRevision: dailyEnabled ? dailyRuleRevision : manualEnabled ? revisionValue(automationDraft.revision) : null,
+    activeTitle: dailyEnabled ? automationDefinitions.get(dailyRuleRevision)!.title : manualEnabled ? automationTitle : null,
+    approvedPolicy: dailyScheduleRevision > 0 ? dailyPolicy : null, proposedPolicy: dailyPolicy,
+    approvedTimes: dailyScheduleRevision > 0 ? dailyPlanned : null, proposedTimes: dailyPlanned,
+    next: dailyScheduleRevision > 0 ? dailyPlanned[0] : null});
   let memberRevision = 1, policyRevision = 1;
   const shoppingItem = {product_id:'product',extra_id:null,name:'Salt',base_unit:'gram',total:'1.000001'};
   const originalAccess=JSON.parse(wire.active);
@@ -55,7 +73,29 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       permissions:originalAccess.permissions.filter((permission:string)=>preferencesReadable||permission!=='preferences.read')})
       : phase === 'eligible' ? wire.eligible : phase === 'pending' ? wire.pending : wire.unconfigured;
     else if (route === 'auth/csrf') raw = JSON.stringify({csrf_token: 'c'.repeat(64)});
-    else if (route === 'automation/preview-access') raw = JSON.stringify({household_id: 'home'});
+    else if (route === 'automation/preview-access') {
+      status = automationTaskCreate ? 200 : 403;
+      raw = JSON.stringify(automationTaskCreate ? {household_id: 'home'}
+        : {state:'blocked',code:'permission_denied',message:'Denied.',action_required:'Review permissions.',correlation_id:'cor_automation'});
+    }
+    else if (route.startsWith('automation/drafts/saved-draft/daily?revision='))
+      raw = JSON.stringify(dailyReviewWire(dailyReview(new URLSearchParams(route.split('?')[1]).get('revision')!)));
+    else if (route === 'automation/drafts/saved-draft/daily/active') raw = JSON.stringify(dailyEnabled ? dailyReviewWire(dailyReview(dailyRuleRevision)) : null);
+    else if (route === 'automation/drafts/saved-draft/daily/runs') raw = JSON.stringify({rule_id: 'saved-draft', items: [], next_cursor: null});
+    else if (route.startsWith('automation/daily/requests/')) raw = JSON.stringify(dailyOriginals.get(route.slice('automation/daily/requests/'.length)));
+    else if (route.startsWith('automation/drafts/saved-draft/daily/') && init.method === 'POST') {
+      const action = route.split('/').at(-1)!;
+      if (action === 'enable') dailyRuleRevision = revisionValue(JSON.parse(String(init.body)).rule_revision);
+      dailyEnabled = action !== 'disable'; manualEnabled = false; dailyControlRevision++; dailyScheduleRevision++;
+      const receipt = {state: 'committed', archived_by: null, operation_id: 'daily-' + dailyControlRevision, created_at: 100,
+        result: {rule_id: 'saved-draft', rule_revision: dailyRuleRevision, control_revision: String(dailyControlRevision),
+          schedule_revision: String(dailyScheduleRevision), enabled: dailyEnabled, grant_id: 'daily-grant', member_id: memberId,
+          approved_next: dailyTimeWire(dailyPlanned[0], true)}, message: 'Recorded.', action_required: 'Review.'};
+      const key = new Headers(init.headers).get('Idempotency-Key')!;
+      dailyOriginals.set(action + '/' + key, receipt);
+      if (dailyLoseReply) {dailyLoseReply = false; throw new Error('Committed daily response lost');}
+      raw = JSON.stringify(receipt);
+    }
     else if (route === 'automation/schedule-preview?time=07%3A30') raw = JSON.stringify({
       time_zone:JSON.parse(household).time_zone, requested_time:'07:30',
       items:Array.from({length:5}, (_, index) => {
@@ -68,11 +108,14 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       const definition = JSON.parse(String(init.body));
       automationTitle = definition.action.title;
       automationTime = definition.trigger.kind === 'daily' ? definition.trigger.time : null;
+      automationDraft.revision = String(BigInt(definition.expected_revision) + 1n);
+      automationDefinitions.set(automationDraft.revision, {title: automationTitle!, time: automationTime});
       raw = JSON.stringify({state:'committed', archived_by:null, operation_id:'saved-automation', created_at:100,
         result:{...automationDraft,member_id:memberId}, message:'Saved.',action_required:'Review.'});
     }
     else if (route === 'automation/drafts') raw = JSON.stringify({
       drafts: automationTitle === null ? [] : [{...automationDraft,title:automationTitle}], next_cursor:null,
+      ...(automationTaskCreate ? {} : {may_save: false}),
     });
     else if (route === 'automation/drafts/saved-draft') raw = JSON.stringify({
       ...automationDraft, version:automationTime === null ? 1 : 2,
@@ -85,11 +128,17 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
         result:{rule_id:'saved-draft',rule_revision:'1',control_revision:'1',enabled:manualEnabled,member_id:memberId},
         message:'Enabled.',action_required:'Review.'});
     }
-    else if (route === 'automation/drafts/saved-draft/execution') raw = JSON.stringify({
-      rule_id:'saved-draft', latest_revision:'1', latest_title:automationTitle,
+    else if (route === 'automation/drafts/saved-draft/execution') {
+      status = automationTaskCreate ? 200 : 403;
+      raw = JSON.stringify(automationTaskCreate ? {
+      rule_id:'saved-draft', latest_revision:automationDraft.revision, latest_title:automationTitle,
       ...(automationTime === null ? {} : {latest_manual:false}),
-      control: manualEnabled ? {rule_revision:'1',control_revision:'1',enabled:true,title:automationTitle} : null,
-    });
+      control: dailyScheduleRevision > 0
+        ? {rule_revision:dailyRuleRevision,control_revision:String(dailyControlRevision),enabled:dailyEnabled,
+          title:automationDefinitions.get(dailyRuleRevision)!.title,trigger:'daily'}
+        : manualEnabled ? {rule_revision:'1',control_revision:'1',enabled:true,title:automationTitle} : null,
+      } : {state:'blocked',code:'permission_denied',message:'Denied.',action_required:'Review permissions.',correlation_id:'cor_manual'});
+    }
     else if (route === 'automation/drafts/saved-draft/runs' && init.method === 'GET') raw = JSON.stringify({
       rule_id:'saved-draft',next_cursor:null,items:[{operation_id:'run-operation',created_at:100,
         rule_revision:'1',condition_matched:true,task_created:true,historical:false,task_occurrence_id:'work-1'}],
@@ -150,7 +199,7 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
       ? {total:1,items:[shoppingItem]} : {total:0,items:[]});
     else if (route === 'family/overview') raw = JSON.stringify(timing ? timing.overview() : {
       period:{start:'2026-05-25',end:'2026-06-01'}, earned_minor:125,completed_count:3});
-    else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:true,can_review_schedule:canReview,
+    else if (route==='tasks/access') raw=JSON.stringify({household_id:'home',member_id:memberId,can_create:automationTaskCreate,can_review_schedule:canReview,
       can_manage_points:canManagePoints,can_record_for_others:canManagePoints});
     else if (route === 'family/allocation' || route.startsWith('family/allocation?')) raw = JSON.stringify({household:null,override:null});
     else if (route === 'family/rewards/commands' && init.method === 'POST') {
@@ -234,6 +283,8 @@ function fixture(deployment: 'native' | 'standalone' = 'standalone', locale = 'e
   const open = async () => {const mounted = mountEntry(page); dispose.push(mounted.dispose); await mounted.ready;
     const app = root.querySelector<DomusApp>('domus-app')!; await app?.updateComplete; return {mounted, app};};
   return {root, data, page, open, values, navigation, fetch, events, postRequests: () => postRequests,
+    dailyLoseReply: () => {dailyLoseReply = true;},
+    automationTaskCreate: (allowed: boolean) => {automationTaskCreate = allowed; memberRevision++;},
     denyTaskOverview: () => {taskOverviewDenied = true;},
     shoppingItem: (present: boolean) => {shoppingItemPresent = present;},
     putRequests:()=>putRequests,preferences:(locale:'en'|'es'|null,revision=1)=>{preferenceLocale=locale;preferenceRevision=revision;},
@@ -1113,6 +1164,96 @@ test('the Household draft saves and reopens the exact time in its shared preview
   emit('domus-automation-drafts','draft',{type:'open',id:'saved-draft'});
   await vi.waitFor(() => expect(app.automationSchedulePreview?.input).toBe('07:30'));
   expect(app.automationDrafts).toMatchObject({state:'ready',trigger:'daily'});
+});
+
+test.each(['native', 'standalone'] as const)('daily grants in %s preserve original recovery and current management without task-create permission', async mode => {
+  const f = fixture(mode); f.phase('active');
+  const {app} = await f.open();
+  const navigate = (fragment: string) => {
+    f.page.location.href = f.page.location.href.split('#')[0] + fragment;
+    f.events.dispatchEvent(new Event('hashchange'));
+  };
+  navigate('#household');
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({state: 'ready', busy: false}));
+  await vi.waitFor(() => expect(app.automationPreview).toMatchObject({state: 'ready', busy: null}));
+  const root = app.shadowRoot!;
+  const emit = (selector: string, feature: string, detail: unknown) => root.querySelector(selector)!.dispatchEvent(
+    new CustomEvent('domus-automation-' + feature + '-intent', {detail, bubbles: true, composed: true}));
+  emit('domus-automation-preview', 'preview', {type: 'title', value: 'Daily exact saved task'});
+  emit('domus-automation-drafts', 'draft', {type: 'trigger', trigger: 'daily'});
+  emit('domus-automation-schedule-preview', 'schedule-preview', {type: 'time', value: '07:30'});
+  expect(app.automationDaily).toBeNull(); // Unsaved daily editing cannot configure a rule.
+  emit('domus-automation-drafts', 'draft', {type: 'save'});
+  await vi.waitFor(() => expect(app.automationDaily).toMatchObject({busy: false,
+    review: {ruleRevision: '1', requestedTime: '07:30', enabled: false}}));
+  // Changing unsaved fields does not silently replace the immutable reviewed definition.
+  emit('domus-automation-preview', 'preview', {type: 'title', value: 'Unsaved replacement title'});
+  emit('domus-automation-drafts', 'draft', {type: 'trigger', trigger: 'manual'});
+  emit('domus-automation-schedule-preview', 'schedule-preview', {type: 'time', value: '09:00'});
+  expect(app.automationDaily?.review?.title).toBe('Daily exact saved task');
+  const writes = () => f.fetch.mock.calls.filter(([path, init]) => path.includes('/daily/') && init.method === 'POST');
+  emit('domus-automation-daily', 'daily', 'invalid');
+  emit('domus-automation-daily-history', 'daily-history', 'invalid');
+  const other = document.createElement('span'); app.append(other);
+  other.dispatchEvent(new CustomEvent('domus-automation-daily-intent', {detail: 'enable', bubbles: true}));
+  other.dispatchEvent(new CustomEvent('domus-automation-daily-history-intent', {detail: 'open', bubbles: true}));
+  expect(app.automationDaily?.confirmation).toBeNull();
+  emit('domus-automation-daily', 'daily', 'enable');
+  expect(app.automationDaily?.confirmation).toMatchObject({ruleRevision: '1', reviewed: {nominal: '2026-11-22T07:30:00'}});
+  f.dailyLoseReply();
+  emit('domus-automation-daily', 'daily', 'confirm');
+  await vi.waitFor(() => expect(app.automationDaily).toMatchObject({notice: 'uncertain', pending: true, busy: false}));
+  expect(writes()).toHaveLength(1);
+  const sent = writes()[0], originalBody = String(sent[1].body), key = new Headers(sent[1].headers).get('Idempotency-Key');
+  emit('domus-automation-execution', 'execution', 'enable');
+  expect(app.automationExecution?.confirmation).toBeNull();
+  navigate('#overview'); expect(app.automationDaily).toBeNull();
+  navigate('#household');
+  await vi.waitFor(() => expect(app.automationDaily).toMatchObject({pending: true, busy: false}));
+  emit('domus-automation-daily', 'daily', 'recover');
+  await vi.waitFor(() => expect(app.automationDaily).toMatchObject({pending: false, busy: false,
+    result: {action: 'enable', operationId: 'daily-1'}, review: {enabled: true}}));
+  expect(writes()).toHaveLength(1); expect(String(writes()[0][1].body)).toBe(originalBody);
+  expect(f.fetch.mock.calls.some(([path]) => path.endsWith('/automation/daily/requests/enable/' + key))).toBe(true);
+  await vi.waitFor(() => expect(app.automationExecution?.configuration?.control).toMatchObject({trigger: 'daily', enabled: true}));
+  await vi.waitFor(() => expect(app.automationPreview).toMatchObject({state: 'ready', busy: null}));
+  emit('domus-automation-preview', 'preview', {type: 'title', value: 'Manual revision after daily enable'});
+  emit('domus-automation-drafts', 'draft', {type: 'trigger', trigger: 'manual'});
+  emit('domus-automation-drafts', 'draft', {type: 'save'});
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({state: 'ready', busy: false,
+    trigger: 'manual', selected: {revision: '2'}}));
+  await vi.waitFor(() => expect(app.automationDaily).toMatchObject({busy: false,
+    review: {ruleRevision: '1', title: 'Daily exact saved task', enabled: true}}));
+  f.automationTaskCreate(false);
+  intent(app, {type: 'refresh'});
+  await vi.waitFor(() => expect(app.automationDrafts).toMatchObject({state: 'ready', readOnly: true, busy: false}));
+  // A full entry refresh retires the former selection; config-only readers can reopen it.
+  await app.updateComplete;
+  const draftPanel = root.querySelector('domus-automation-drafts')!;
+  await draftPanel.updateComplete;
+  const openSaved = [...draftPanel.shadowRoot!.querySelectorAll('vyp-ha-button')]
+    .find(button => button.state.label === 'Open Manual revision after daily enable')!;
+  await openSaved.updateComplete;
+  expect(openSaved.disabled).toBe(false);
+  openSaved.click();
+  await vi.waitFor(() => expect(app.automationDaily).toMatchObject({busy: false, readOnly: false,
+    review: {ruleRevision: '1', enabled: true, mayEnable: false}}));
+  await vi.waitFor(() => expect(app.automationExecution?.notice).toBe('denied'));
+  expect(app.automationDrafts).toMatchObject({state: 'ready', readOnly: true});
+  emit('domus-automation-daily', 'daily', 'disable');
+  expect(app.automationDaily?.confirmation?.kind).toBe('disable');
+  emit('domus-automation-daily', 'daily', 'confirm');
+  await vi.waitFor(() => expect(app.automationDaily).toMatchObject({busy: false,
+    result: {kind: 'committed', action: 'disable', ruleRevision: '1'}, review: null, pending: false, notice: null}));
+  expect(writes()).toHaveLength(2);
+  emit('domus-automation-daily', 'daily', 'enable');
+  expect(app.automationDaily?.confirmation).toBeNull();
+  emit('domus-automation-daily-history', 'daily-history', 'open');
+  await vi.waitFor(() => expect(app.automationDailyHistory).toMatchObject({phase: 'ready', items: []}));
+  emit('domus-automation-daily-history', 'daily-history', 'close');
+  expect(app.automationDailyHistory?.phase).toBe('closed');
+  navigate('#tasks');
+  expect(app.automationDaily).toBeNull(); expect(app.automationDailyHistory).toBeNull();
 });
 
 test('Household daily preview binds verified authorization and accepts only its declared intents', async () => {

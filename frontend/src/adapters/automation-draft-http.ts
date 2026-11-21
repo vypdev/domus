@@ -1,5 +1,5 @@
 /** Validate protected draft responses and correlate receipts to their original request. */
-import type {AutomationDraftServer, DraftCondition, DraftOutcome, DraftRequest, DraftScope, DraftSummary, SavedAutomationDraft} from '../application/automation-drafts';
+import type {AutomationDraftServer, DraftOutcome, DraftRequest, DraftScope, DraftSummary, SavedAutomationDraft} from '../application/automation-drafts';
 import {isDailyTime} from '../application/automation-schedule-preview';
 import {revisionValue} from '../domain/administration';
 import {taskText} from '../domain/tasks';
@@ -10,6 +10,7 @@ import {csrf, failure} from './http-values';
 import type {EntryEndpoint} from './http-values';
 import {boolean, check, choice, fields, identifier, integer, text} from './json-values';
 import type {Fields} from './json-values';
+import {draftCondition} from './automation-condition-values';
 
 const BASE = 'automation/drafts';
 const STATUS = ['rule_id', 'revision', 'state', 'enabled'] as const;
@@ -27,22 +28,6 @@ function inactive(row: Fields) {
 function summary(value: unknown): DraftSummary {
   const row = fields(value, [...STATUS, 'title'], []);
   return {...inactive(row), title: taskText(row.title, 160, true)};
-}
-
-function condition(value: unknown): DraftCondition {
-  const row = fields(value, ['kind'], ['child', 'children', 'product_id']);
-  switch (choice(row.kind, ['stock_below_minimum', 'not', 'all', 'any'] as const)) {
-    case 'stock_below_minimum':
-      return {kind: 'stock_below_minimum', product_id: identifier(fields(row, ['kind', 'product_id'], []).product_id)};
-    case 'not':
-      return {kind: 'not', child: condition(fields(row, ['kind', 'child'], []).child)};
-    case 'all':
-    case 'any': {
-      const {children} = fields(row, ['kind', 'children'], []);
-      check(Array.isArray(children) && children.length > 0 && children.length <= 62);
-      return {kind: row.kind as 'all' | 'any', children: children.map(condition)};
-    }
-  }
 }
 
 function receipt(value: unknown, scope: DraftScope, request: DraftRequest): DraftOutcome {
@@ -67,11 +52,13 @@ export class HttpAutomationDrafts implements AutomationDraftServer {
   list(scope: DraftScope, after: string | null) {
     return this.network.owned(async signal => {
       const route = after === null ? BASE : BASE + '?cursor=' + encodeURIComponent(after);
-      const page = fields(await this.network.get(route, scope.context, signal), ['drafts', 'next_cursor'], []);
+      const page = fields(await this.network.get(route, scope.context, signal), ['drafts', 'next_cursor'], ['may_save']);
+      check(page.may_save === undefined || page.may_save === false);
       check(Array.isArray(page.drafts) && page.drafts.length <= 25);
       const drafts = page.drafts.map(summary);
       check(new Set(drafts.map(draft => draft.id)).size === drafts.length);
-      return {drafts, next: page.next_cursor === null ? null : text(page.next_cursor, 512)};
+      return {drafts, next: page.next_cursor === null ? null : text(page.next_cursor, 512),
+        ...(page.may_save === false ? {maySave: false as const} : {})};
     });
   }
 
@@ -86,7 +73,7 @@ export class HttpAutomationDrafts implements AutomationDraftServer {
       const action = fields(row.action, ['kind', 'title'], []);
       check(fact.id === id && action.kind === 'task.create');
       const draft = {...fact, title: taskText(action.title, 160, true),
-        condition: row.condition === null ? null : condition(row.condition)};
+        condition: draftCondition(row.condition)};
       if (version === 1) {
         check(trigger.kind === 'manual');
         return draft;
@@ -116,6 +103,7 @@ export class HttpAutomationDrafts implements AutomationDraftServer {
 
   previewSaved(scope: DraftScope, draft: SavedAutomationDraft) {
     return this.network.owned(async signal => {
+      check(draft.dailyTime === undefined);
       const token = csrf(await this.network.get('auth/csrf', scope.context, signal));
       const body = JSON.stringify({...manualRule({title: draft.title, productId: null}), condition: draft.condition});
       const reply = await this.network.request('automation/preview', 'POST', scope.context, body, null, token, signal);

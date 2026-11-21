@@ -3,6 +3,7 @@
 from contextlib import AbstractContextManager
 from typing import Protocol
 
+from domus.application.automation_scheduled_ports import ScheduledAutomationRecords
 from domus.application.inventory_ports import InventoryRecords
 from domus.application.member_profile_ports import MemberPreferencesRepository, MemberPresentations
 from domus.application.point_allocation_ports import PointAllocations
@@ -48,6 +49,14 @@ class Receipts(Protocol):
         through: int,
     ) -> tuple[tuple[int, Receipt], ...]: ...
     def add(self, receipt: Receipt) -> None: ...
+    def archived_scheduled_runs(
+        self,
+        household_id: str,
+        principal: str,
+        *,
+        before: tuple[int, str] | None,
+        limit: int,
+    ) -> tuple[Receipt, ...]: ...
 
 
 class Members(Protocol):
@@ -128,6 +137,9 @@ class AutomationControls(Protocol):
 
 
 class UnitOfWork(Protocol):
+    @property
+    def scheduled_automations(self) -> ScheduledAutomationRecords: ...
+
     @property
     def automation_controls(self) -> AutomationControls: ...
 

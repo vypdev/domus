@@ -39,6 +39,7 @@ from domus.infrastructure.sqlite import (
 )
 from domus.infrastructure.sqlite_automation_controls import verify_automation_controls
 from domus.infrastructure.sqlite_automation_drafts import verify_automation_drafts
+from domus.infrastructure.sqlite_automation_schedule_integrity import verify_scheduled_automations
 from domus.infrastructure.sqlite_history import (
     last_committed_at,
     verify_history,
@@ -235,6 +236,8 @@ def _records(connection: sqlite3.Connection, version: int, installation: Install
             verify_automation_controls(connection)
         if version >= 35:
             verify_inventory_barcodes(connection)
+        if version >= 36:
+            verify_scheduled_automations(connection, installation)
     except DomusError as error:
         raise DatabaseRejected("invalid_snapshot_records") from error
 

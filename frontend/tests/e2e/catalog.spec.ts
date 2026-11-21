@@ -3,8 +3,102 @@ import {message} from '../../src/presentation/messages';
 import type {MessageKey} from '../../src/presentation/messages';
 import type {DomusApp} from '../../src/presentation/domus-app';
 import type {DomusAdministration} from '../../src/presentation/domus-administration';
+import type {DomusAutomationDaily} from '../../src/presentation/domus-automation-daily';
 
 const origin = 'http://127.0.0.1:56173';
+const dailyUrl = (example: string, locale: string, deployment: string) => origin
+  + '/iframe.html?id=domus-daily-automations--' + example + '&viewMode=story&args='
+  + encodeURIComponent(`language:${locale};deployment:${deployment}`);
+
+for (const example of ['review', 'enabled', 'timing-changed', 'timing-unavailable', 'no-task-create', 'uncertain', 'history', 'spanish']) {
+  test('daily catalog ' + example + ' preserves localized rule authority in both entry modes', async ({page}) => {
+    const errors: string[] = [], unexpected: string[] = [];
+    page.on('pageerror', error => {errors.push(error.message);});
+    await page.route('**/*', async route => {
+      const request = new URL(route.request().url());
+      if (request.origin !== origin || request.pathname.includes('/api/')) {
+        unexpected.push(route.request().url()); await route.abort();
+      } else await route.continue();
+    });
+    for (const [locale, mode] of [['en', 'native'], ['es', 'native'], ['en', 'standalone'], ['es', 'standalone']]) {
+      await page.goto(dailyUrl(example, locale, mode));
+      const app = page.locator('domus-app');
+      await expect(app).toHaveAttribute('lang', locale);
+      await expect(page.getByText('Fictional daily automation state.', {exact: false})).toBeVisible();
+      await expect(app.getByRole('heading', {level: 2, name: example === 'history'
+        ? locale === 'es' ? 'Historial de ejecuciones diarias' : 'Daily run history'
+        : locale === 'es' ? 'Automatización diaria' : 'Daily automation', exact: true})).toBeVisible();
+      if (example === 'timing-unavailable' || example === 'no-task-create')
+        await expect(app.getByRole('button', {name: locale === 'es' ? 'Deshabilitar automatización diaria' : 'Disable daily automation', exact: true})).toBeEnabled();
+      if (example === 'uncertain')
+        await expect(app.getByRole('button', {name: locale === 'es' ? 'Consultar solicitud diaria original' : 'Check original daily request', exact: true})).toBeEnabled();
+      if (example === 'history') {
+        await expect(app.getByText(locale === 'es' ? 'Esta admisión histórica no es trabajo pendiente actual.'
+          : 'This historical admission is not current queued work.', {exact: true})).toBeVisible();
+        await expect(app.getByRole('link', {name: locale === 'es' ? 'Abrir tarea creada' : 'Open created task', exact: true})).toHaveCount(1);
+      }
+    }
+    expect(errors).toEqual([]); expect(unexpected).toEqual([]);
+  });
+}
+
+test('daily catalog keyboard confirmation restores focus and emits only the explicit user intent', async ({page}) => {
+  await page.goto(dailyUrl('review', 'en', 'native'));
+  const widget = page.locator('domus-automation-daily');
+  await widget.evaluate(element => {
+    const state = window as unknown as {dailyIntents: string[]}; state.dailyIntents = [];
+    element.addEventListener('domus-automation-daily-intent', event => state.dailyIntents.push((event as CustomEvent<string>).detail));
+  });
+  const enable = widget.getByRole('button', {name: 'Enable this daily revision', exact: true});
+  await enable.focus(); await page.keyboard.press('Enter');
+  await widget.evaluate(element => {
+    const component = element as DomusAutomationDaily, view = component.view!, review = view.review!;
+    component.view = {...view, confirmation: {kind: 'enable', ruleId: review.ruleId, ruleRevision: review.ruleRevision,
+      controlRevision: review.controlRevision, scheduleRevision: review.scheduleRevision, reviewed: review.proposedTimes[0]}};
+  });
+  await expect(widget.getByRole('heading', {name: 'Confirm daily automation', exact: true})).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(widget.getByRole('button', {name: 'Confirm', exact: true})).toBeFocused();
+  await page.keyboard.press('Tab'); await page.keyboard.press('Enter');
+  await widget.evaluate(element => {const component = element as DomusAutomationDaily;
+    component.view = {...component.view!, confirmation: null};});
+  await expect(enable).toBeFocused();
+  expect(await page.evaluate(() => (window as unknown as {dailyIntents: string[]}).dailyIntents)).toEqual(['enable', 'cancel']);
+});
+
+test.describe('daily mobile catalog', () => {
+  test.use({hasTouch: true, viewport: {width: 390, height: 844}});
+  for (const locale of ['en', 'es']) test('daily touch, focus and contrast in ' + locale, async ({page}) => {
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({colorScheme, reducedMotion: 'reduce'});
+      await page.goto(dailyUrl('review', locale, 'standalone'));
+      const widget = page.locator('domus-automation-daily');
+      const enable = widget.getByRole('button', {name: locale === 'es' ? 'Habilitar esta revisión diaria' : 'Enable this daily revision', exact: true});
+      await expect(enable).toBeVisible();
+      await widget.getByText(locale === 'es' ? 'Próximas cinco fechas' : 'Next five times', {exact: true}).click();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      const colors = await widget.evaluate(element => {
+        const button = element.shadowRoot!.querySelector('vyp-ha-button')!;
+        const surface = button.shadowRoot!.querySelector('[part="surface"]')!;
+        const style = getComputedStyle(surface);
+        return {foreground: style.color, background: style.backgroundColor};
+      });
+      const luminance = (rgb: string) => {
+        const values = rgb.match(/[\d.]+/gu)!.slice(0, 3).map(Number).map(value => {
+          const v = value / 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+        });
+        return values[0] * .2126 + values[1] * .7152 + values[2] * .0722;
+      };
+      const fore = luminance(colors.foreground), back = luminance(colors.background);
+      expect((Math.max(fore, back) + .05) / (Math.min(fore, back) + .05)).toBeGreaterThanOrEqual(4.5);
+      await widget.evaluate(element => {const state = window as unknown as {dailyTap: string | null}; state.dailyTap = null;
+        element.addEventListener('domus-automation-daily-intent', event => {state.dailyTap = (event as CustomEvent<string>).detail;});});
+      await enable.tap();
+      expect(await page.evaluate(() => (window as unknown as {dailyTap: string | null}).dailyTap)).toBe('enable');
+      await page.screenshot({path: `test-results/daily-${locale}-390-${colorScheme}.png`, fullPage: true});
+    }
+  });
+});
 test.beforeAll(async ({browser}) => {console.info('Catalog Chromium version: ' + browser.version());});
 const examples: readonly [string, MessageKey][] = [
   ['loading', 'loading'], ['setup', 'state_unconfigured'], ['joining', 'state_not_enrolled'],

@@ -1,7 +1,13 @@
 # Enable daily task automations with durable scheduled execution
 
-- Status: Draft
+- Status: Implementation in progress
 - Catalog capability: household-automation
+- Date: 2026-11-21
+- Owners: Domus maintainers
+- Scope: Complete daily single-task scheduled execution, scoped grants, recovery and timing adoption
+- Related issue: https://github.com/vypdev/domus/issues/155
+- Required review gates: product UX, architecture, testing, documentation, security/operations
+- Open decisions blocking readiness: none; actual owner decisions are recorded in issue155
 
 ## 1. Executive summary
 
@@ -79,6 +85,14 @@ This increment does not add event triggers, additional action types, multi-step,
 | SDD-I155-U4-R2 | Show the approved policy, proposed household policy, and their upcoming resolved times, including relevant gap and repeated-time differences; deliberate adoption confirms the current rule/control revision and newly reviewed policy. |
 | SDD-I155-U4-R3 | Keep already admitted runs bound to their original timing, snapshots, and outcomes; adoption affects only future eligible triggers and does not rewrite earlier work or replay missed or cancelled triggers. |
 | SDD-I155-U4-R4 | When the approved policy cannot be verified or resolved, expose that unavailable or review state without silently substituting the new policy. |
+| scheduled-execution-R01 | Reviewed daily enablement MUST bind the exact immutable Daily revision, current narrow grant, control and timing proof; saving or previewing a draft does not enable it. Existing manual controls, original outcomes and inactive definitions retain their contracts. |
+| scheduled-execution-R02 | Daily eligibility MUST use the existing recurrence time port, exact minute input, approved pinned policy and stable nominal identity, including gaps, repetitions and date/clock discontinuities. Startup skips only offline unadmitted times and continues strictly in the future; ordinary in-process delay remains eligible. |
+| scheduled-execution-R03 | Each eligible daily trigger MUST durably admit one run and cursor outcome, evaluate the existing condition semantics and either record no task or invoke the owning authorized task-creation use case with its ordinary validation, receipt, audit and outbox. |
+| scheduled-execution-R04 | Admissions and task/run outcomes MUST be duplicate-safe and atomic across concurrent workers, retries and crash windows. Disablement and revocation fence new admissions/effects, retain already-started atomic outcomes, and re-enabling never resumes cancelled work. |
+| scheduled-execution-R05 | Protected daily commands and queries MUST use strict typed contracts, current scoped authority, exact revisions and immutable original requests. Recovery cannot replace the original key or body; committed success remains success when following reads fail, and rejected private scope retires its facts. |
+| scheduled-execution-R06 | The complete enable, disable, policy adoption, status, history and recovery journey MUST preserve recoverable input and focus, distinguish real outcomes and unavailable data, and support English/Spanish keyboard and 390 px touch in both themes and compositions with the exact published ha-ui dependency. |
+| scheduled-execution-R07 | Migration from actual schema35 and20, restart, snapshot activation, restoration and compatible rollback MUST preserve old manual/daily definitions, receipts and current bindings without historical redelivery; incompatible readers fail before mutation and owned workers stop before storage is released. |
+| scheduled-execution-R08 | The complete 48-case minimum and retained owner obligations MUST have real traceable evidence, full global/per-file supported coverage, executable architecture/schema/catalog checks, both exact image architectures and separately observed immutable Edge acceptance with scoped cleanup; remaining M4 scope stays explicit. |
 
 ## 5. Current versus proposed product journey
 
@@ -103,6 +117,8 @@ The rule owns a Domus non-human grant independently of the activating person. Gr
 Saving a draft leaves the grant unchanged. Explicitly switching the enabled revision retires the previous binding and requires deliberate grant creation for the new revision. A household, installation, or channel change that invalidates the binding prevents execution. Restart and restoration revalidate the persisted grant and binding, retain valid rule-owned identity, and preserve receipt and cursor provenance. They do not redeliver committed effects or automatically resume cancelled work.
 
 ### 6.2 Timing and trigger boundaries
+
+Within one immutable rule revision, the durable nominal frontier includes dates omitted at startup and dates coalesced to one resolved instant. Enabling that revision again or adopting another policy cannot make those dates eligible again; planning starts strictly after both that frontier and the current instant.
 
 Daily triggers use the reviewed pinned time zone and recurrence-resolution policy. A household timing change alone neither switches policy nor pauses an otherwise resolvable approved schedule. Adoption changes only future eligible trigger resolution. Already admitted runs retain original timing, snapshots, and outcomes; adoption does not rewrite prior work or replay missed or cancelled triggers. If the approved policy cannot be verified or resolved, the schedule exposes an unavailable or review state and never silently substitutes the proposed household policy.
 
@@ -162,23 +178,32 @@ Show bounded, inspectable trigger, run, step, cursor, timing-policy, decision, a
 
 ## 13. Compatibility, migration, rollout, and rollback
 
-Preserve existing manual definitions, controls, runs, history, immutable daily drafts, and receipts. The new scheduler and grant lifecycle must not arm an inactive draft or reinterpret a daily revision as a manual trigger. Qualify compatibility from SQLite schema 35 and schema 20, including old manual/daily drafts and receipts, enabled controls, new grants/cursors/queued runs, restart, actual restoration, and protected rollback. Revalidate persisted grants and bindings on restart/restore; retain historical outcomes and provenance without automatic redelivery or resumption of cancelled work. Older incompatible runtimes must fail before mutation; rollback requires a compatible protected database/image pair. Keep Stable and Edge data, grants, cursors, and credentials isolated. Qualify both compositions, exact amd64 and aarch64 images, and a separately identified installed Edge candidate with owned data and scoped cleanup; actual installed execution uses a naturally upcoming time and ordinary worker. No workflow change is selected. Before publication, the specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. The concrete invocation/prerequisite for specification-format, consistency, and catalog publication checks remains unverified in the selected source; command-free verification must provide those observable outcomes. Do not treat generic maintainer acceptance or review alone as a substitute.
+Preserve existing manual definitions, controls, runs, history, immutable daily drafts, and receipts. The new scheduler and grant lifecycle must not arm an inactive draft or reinterpret a daily revision as a manual trigger. Qualify compatibility from SQLite schema 35 and schema 20, including old manual/daily drafts and receipts, enabled controls, new grants/cursors/queued runs, restart, actual restoration, and protected rollback. Revalidate persisted grants and bindings on restart/restore; retain historical outcomes and provenance without automatic redelivery or resumption of cancelled work. Older incompatible runtimes must fail before mutation; rollback requires a compatible protected database/image pair. Keep Stable and Edge data, grants, cursors, and credentials isolated. Qualify both compositions, exact amd64 and aarch64 images, and a separately identified installed Edge candidate with owned data and scoped cleanup; actual installed execution uses a naturally upcoming time and ordinary worker. The existing self-hosted image matrix also builds the frozen schema-35 application for authentic prior-reader and protected-pair checks. Before publication, the specification satisfies the required format; internal and cross-document consistency is checked; reciprocal catalog ownership, paths, and evidence agree with the generated view. The concrete invocation/prerequisite for specification-format, consistency, and catalog publication checks remains unverified in the selected source; command-free verification must provide those observable outcomes. Do not treat generic maintainer acceptance or review alone as a substitute.
 
 ## 14. Testing strategy and numeric budget
 
-Plan at least 48 distinct behavior cases for this delta, in addition to the immutable retained owner’s obligations. This is a prospective minimum, not executed evidence. The new inventory defines nine concrete cases: five covering rule-owned grants, authorization and scope, enablement and revocation, draft and revision switching, and restart/restoration; and four covering pinned timing, policy review and adoption, admitted-run stability, and unresolved policy. Exercise the concrete assertions in each case without counting repeated locale, composition, architecture, or CPU executions as additional distinct cases.
+Plan at least 48 distinct behavior cases for this delta, in addition to the immutable retained owner's obligations. This is a prospective minimum, not executed evidence. The nine Action-published case rows are retained verbatim; 39 additional cases cover actual scheduled execution, startup cutoff, atomic recovery, compatibility, privacy and complete user journeys. Each case counts once. Repeated locale, composition or CPU executions do not inflate the count.
 
-The broader risk-derived floor is six domain and trigger/time-planning cases; twelve state, application, idempotency, and race cases; four adapter/provider-contract cases; six schema, migration, restart, and restoration cases; eight security and rule-principal cases; eight UI, UX, localization, and sanitization cases; and four integration, image, and installed Edge cases. Workflow/setup changes have a floor of zero because no workflow change is selected. Split these areas further when needed to cover every normative clause. Retain 100% global and per-file backend statement and branch coverage, all four frontend metrics, executable architecture boundaries, strict schemas, both compiled compositions, amd64 and ARM64, and native Edge UX. Use deterministic clocks and IDs and failure injection for policy, crash, and race behavior. Installed daily execution uses a naturally upcoming time and the ordinary worker, never a shared Home Assistant clock or private store mutation. Distribution/Stable remains outside authorization. These targets and planned cases do not demonstrate execution or acceptance.
+For the broad risk inventory, the retained timing-continuation case contributes to domain planning; enable/revoke, draft/switch and admitted-run retention contribute to state; unresolved policy contributes to adapters; the retained restart/restore case contributes to recovery; grant ownership and grant authorization contribute to security; policy review contributes to UI. Together with the added rows this gives 6 domain, 12 state, 4 adapter, 6 schema/recovery, 8 security, 8 UI and 4 integration cases. Retained canonical area labels stay unchanged below. Every normative clause still needs observable verification, including the entire retained owner inventory.
+
+Retain 100% global and per-file backend statement/branch coverage, all four frontend metrics, executable architecture boundaries, strict schemas, both compiled compositions, amd64/ARM64 and separately observed native Edge UX. Use deterministic clocks/IDs and failure injection, not real waits for unit cases. Installed daily execution uses a naturally upcoming time and ordinary worker, never a shared Home Assistant clock or private store mutation. The existing self-hosted matrix gains the frozen schema-35 compatibility image; distribution/Stable remains outside authorization. These targets do not claim execution or acceptance.
 
 | Area | Minimum distinct cases | Behaviors/risks covered |
-|---|---:|---|
-| Grant ownership | 1 | Observable scenarios in the case inventory. |
-| Grant authorization and scope | 1 | Observable scenarios in the case inventory. |
-| Enablement and revocation | 1 | Observable scenarios in the case inventory. |
-| Draft and revision switch | 1 | Observable scenarios in the case inventory. |
-| Restart and restoration | 1 | Observable scenarios in the case inventory. |
-| timing-policy | 4 | Observable scenarios in the case inventory. |
-| Total | 9 | Distinct inventory cases; repeated executions do not add cases. |
+| --- | ---: | --- |
+| Grant ownership | 1 | Observable assertions in the matching case rows. |
+| Grant authorization and scope | 1 | Observable assertions in the matching case rows. |
+| Enablement and revocation | 1 | Observable assertions in the matching case rows. |
+| Draft and revision switch | 1 | Observable assertions in the matching case rows. |
+| Restart and restoration | 1 | Observable assertions in the matching case rows. |
+| timing-policy | 4 | Observable assertions in the matching case rows. |
+| Domain and trigger planning | 5 | Observable assertions in the matching case rows. |
+| State and idempotency | 9 | Observable assertions in the matching case rows. |
+| Adapter contracts | 3 | Observable assertions in the matching case rows. |
+| Schema and recovery | 5 | Observable assertions in the matching case rows. |
+| Security and principals | 6 | Observable assertions in the matching case rows. |
+| UI and localization | 7 | Observable assertions in the matching case rows. |
+| Integration and packaging | 4 | Observable assertions in the matching case rows. |
+| **Total** | **48** | Distinct inventory cases; no repeated execution counted twice. |
 
 | Case ID | Area | Requirements | Scenario |
 | --- | --- | --- | --- |
@@ -191,6 +216,45 @@ The broader risk-derived floor is six domain and trigger/time-planning cases; tw
 | inventory4-C02 | timing-policy | SDD-I155-U4-R2 | The review view displays both policies and their upcoming resolved times, identifies relevant gap or repeated-time differences, and requires confirmation of the current rule/control revision and newly reviewed policy to adopt. |
 | inventory4-C03 | timing-policy | SDD-I155-U4-R3 | After adoption, an already admitted run retains its original timing, snapshots, and outcome; earlier work is unchanged and missed or cancelled triggers are not replayed, while only future eligible triggers use the adopted policy. |
 | inventory4-C04 | timing-policy | SDD-I155-U4-R4 | When the approved policy cannot be verified or resolved, the schedule exposes an unavailable or review state and does not use the proposed household policy as a silent substitute. |
+| scheduled-execution-C01 | Domain and trigger planning | scheduled-execution-R02 | Enable before, exactly at and after a daily minute; the first reviewed occurrence is strictly after enablement and later eligible days preserve nominal identity. |
+| scheduled-execution-C02 | Domain and trigger planning | scheduled-execution-R02 | Resolve a spring-gap daily time to the first valid instant using the approved policy, with the requested and resolved values visible and no duplicate occurrence. |
+| scheduled-execution-C03 | Domain and trigger planning | scheduled-execution-R02 | Resolve an autumn repeated time under each approved occurrence choice; admit only its selected instant and retain the choice in provenance. |
+| scheduled-execution-C04 | Domain and trigger planning | scheduled-execution-R02 | Cross a skipped local date and a backward clock movement without duplicating a resolved daily trigger or rewinding admitted cursor identity. |
+| scheduled-execution-C05 | Domain and trigger planning | scheduled-execution-R02 | Distinguish startup cutoff suppression from an ordinary late in-process tick; retain already admitted work and select the next strictly future offline time. |
+| scheduled-execution-C06 | State and idempotency | scheduled-execution-R03 | An eligible true-condition trigger produces one ordinary task definition/occurrence, task receipt, audit/outbox and scheduled outcome with stable linkage. |
+| scheduled-execution-C07 | State and idempotency | scheduled-execution-R03 | A false condition persists one inspectable no-task outcome and advances the trigger without creating a task, task receipt or fabricated stock/point effect. |
+| scheduled-execution-C08 | State and idempotency | scheduled-execution-R03, scheduled-execution-R04 | Two concurrent workers contend for the same trigger; exact recovery establishes one admission, one effective task and the same original outcome. |
+| scheduled-execution-C09 | State and idempotency | scheduled-execution-R04 | Inject failure before durable cursor/admission commit; no orphan grant/run/trigger remains and an exact retry has one effect. |
+| scheduled-execution-C10 | State and idempotency | scheduled-execution-R04, scheduled-execution-R07 | Crash after admission but before the task effect; restart retains that admitted work and processes it once under current grant/control rather than applying startup suppression to it. |
+| scheduled-execution-C11 | State and idempotency | scheduled-execution-R03, scheduled-execution-R04 | Inject failure during task or outer-run receipt commit; the shared writer rolls back all effects and evidence, and exact retry commits one linked result. |
+| scheduled-execution-C12 | State and idempotency | scheduled-execution-R02, scheduled-execution-R04 | Race startup suppression against another worker admission; one durable disposition wins, with admitted work retained and skipped ranges never reinterpreted. |
+| scheduled-execution-C13 | State and idempotency | scheduled-execution-R04 | Race disablement against trigger admission; nothing new is admitted after disablement and an already admitted disposition is reconciled truthfully. |
+| scheduled-execution-C14 | State and idempotency | scheduled-execution-R01, scheduled-execution-R04 | Disable with queued work then re-enable a reviewed revision; only future eligible triggers may run and the old cancelled queue never resumes. |
+| scheduled-execution-C15 | Adapter contracts | scheduled-execution-R05 | Protected daily read/review/enable/revoke/adopt transport validates exact scoped routes, revision/time facts, CSRF and typed responses; unknown or mismatched fields fail closed. |
+| scheduled-execution-C16 | Adapter contracts | scheduled-execution-R05 | Lose a committed control reply and recover its exact key, body, revision, grant/control identity and operation; a changed body under that key is rejected. |
+| scheduled-execution-C17 | Adapter contracts | scheduled-execution-R05 | Page bounded scheduled history with current context binding; malformed, expired or foreign cursors and unavailable data never become fabricated empty history. |
+| scheduled-execution-C18 | Schema and recovery | scheduled-execution-R07 | Migrate the actual captured35 fixture with enabled manual revision1, latest inactive Daily revision2, another inactive Daily, disabled control, task and original receipts; retain all prior rows. |
+| scheduled-execution-C19 | Schema and recovery | scheduled-execution-R07 | Migrate the independent schema20 source with representative household, task and inventory facts, then create a valid daily control without relabeling a current schema. |
+| scheduled-execution-C20 | Schema and recovery | scheduled-execution-R07 | Inject failure in new DDL or compatibility validation; the previous35 database remains intact and a supported retry migrates completely. |
+| scheduled-execution-C21 | Schema and recovery | scheduled-execution-R04, scheduled-execution-R07 | Activate and roll back real snapshots containing daily grants, cursors, queued and completed runs; retained historical receipts are inspectable and never redeliver tasks. |
+| scheduled-execution-C22 | Schema and recovery | scheduled-execution-R07 | The authentic previous35 reader rejects the upgraded database before mutation; a compatible protected image/database pair restores the previous supported state. |
+| scheduled-execution-C23 | Security and principals | scheduled-execution-R05 | A current automation administrator who lacks task-create cannot grant that effect but can revoke its existing grant; current read/original authority remains explicit. |
+| scheduled-execution-C24 | Security and principals | scheduled-execution-R05 | Forged HTTP identity, rule-grant metadata, executable expressions or cross-installation/channel/household claims fail before queue mutation, private reads or task creation. |
+| scheduled-execution-C25 | Security and principals | scheduled-execution-R03 | A valid rule-owned grant executes without an interactive human session and after its activator loses membership/permission; its task principal never inherits that person's role. |
+| scheduled-execution-C26 | Security and principals | scheduled-execution-R03, scheduled-execution-R05 | A queued effect attempting a different rule/revision/payload or configuration/material action exceeds its narrow task grant and is denied before domain effects. |
+| scheduled-execution-C27 | Security and principals | scheduled-execution-R03, scheduled-execution-R05 | Condition reads are limited to the reviewed rule's owned product references; forged or changed scope cannot reveal unrelated household stock. |
+| scheduled-execution-C28 | Security and principals | scheduled-execution-R05, scheduled-execution-R06 | Authentication, household, installation or channel rejection retires matching private controls/history/original facts; late callbacks cannot re-expose them in a new scope. |
+| scheduled-execution-C29 | UI and localization | scheduled-execution-R01, scheduled-execution-R06 | Complete reviewed daily enablement by English keyboard with clear grant meaning, selected revision, one primary action and visible focus; preserve existing manual interaction. |
+| scheduled-execution-C30 | UI and localization | scheduled-execution-R06 | Use Spanish390 px real touch in light and dark with readable long/inert titles, reachable controls, visible status and no horizontal overflow. |
+| scheduled-execution-C31 | UI and localization | scheduled-execution-R05, scheduled-execution-R06 | A stale control or saved revision requires explicit current review while retaining entered values; no conflicting enable silently replaces the grant. |
+| scheduled-execution-C32 | UI and localization | scheduled-execution-R05, scheduled-execution-R06 | Reload during uncertain control outcome and check the frozen original; preserve exact recovery bytes and do not clear a later unrelated draft. |
+| scheduled-execution-C33 | UI and localization | scheduled-execution-R05, scheduled-execution-R06 | After a committed task/control result, fail the following read; keep recorded success and offer a read-only retry without another mutation. |
+| scheduled-execution-C34 | UI and localization | scheduled-execution-R06 | Render task-created, condition-false, startup-suppressed, denied and unavailable outcomes from their real facts; distinguish manual/scheduled and authorized current task links. |
+| scheduled-execution-C35 | UI and localization | scheduled-execution-R05, scheduled-execution-R06 | Cancel policy adoption or fail/retry its review; approved timing continues and proposed values remain recoverable, with current revision confirmation before deliberate adoption. |
+| scheduled-execution-C36 | Integration and packaging | scheduled-execution-R03, scheduled-execution-R04, scheduled-execution-R07 | Both protected compositions own an actual daily worker and persistent store, execute eligible task work and disable it, and join owned workers before releasing storage on normal close/SIGTERM. |
+| scheduled-execution-C37 | Integration and packaging | scheduled-execution-R03, scheduled-execution-R08 | Actual compiled amd64 and ARM64 images expose the daily workflow, ordinary task/receipt effects, preserved manual controls and bounded worker startup/stop behavior. |
+| scheduled-execution-C38 | Integration and packaging | scheduled-execution-R06, scheduled-execution-R08 | Install the immutable Edge candidate, select a naturally upcoming minute, observe the ordinary scheduled worker create its task, disable future work and record owned-data cleanup with fresh consent. |
+| scheduled-execution-C39 | Integration and packaging | scheduled-execution-R08 | Register the actual new runtime in executable dependency, schema, bundle and catalog guards; verify exact source/image identities and complete supported coverage without weakened scope or credentials in bundles. |
 
 ## 15. Documentation and discoverability
 
@@ -201,6 +265,12 @@ Keep the daily draft and preview contracts in `specs/household-automation.md` in
 | Path | Change |
 | --- | --- |
 | specs/automation-scheduled-execution.md | create |
+| specs/household-automation.md | update with reciprocal companion reference; preserve every prior byte |
+| docs/roadmap.md | update |
+| docs/user-guide.md | update |
+| docs/contracts/household-api.openapi.json | update |
+| docs/contracts/native-household-api.openapi.json | update |
+| docs/evidence/daily-automation-execution-qualification.md | create |
 
 [specs/automation-scheduled-execution.md](automation-scheduled-execution.md)
 
@@ -222,8 +292,10 @@ Map the five grant requirements to the supplied grant cases by exercised behavio
 
 Map the four timing-policy requirements to their concrete cases: continued use of the reviewed pinned policy and explicit adoption to `inventory4-C01`; comparison, resolved-time differences, and adoption confirmation to `inventory4-C02`; preservation of admitted work and future-only adoption without replay to `inventory4-C03`; and unavailable/review behavior without silent substitution to `inventory4-C04`. Existing owner requirements and cases remain references in the immutable `specs/household-automation.md`; they are not redefined here. This mapping shows structural coverage only, not semantic completeness or executed acceptance. Publication validation must establish that the specification satisfies the required format, internal and cross-document consistency is checked, and reciprocal catalog ownership, paths, and evidence agree with the generated view; the concrete invocation and prerequisite remain unverified.
 
+The expanded core requirements cover the full scheduled workflow, startup disposition, exact original recovery, compatibility and deployment gates in addition to the published principal/timing refinements. The following table is the exact reverse of all48case requirement cells. Concrete test/evidence paths and measured outcomes accompany implementation; a planned row is not a passing result.
+
 | Requirement | Cases |
-|---|---|
+| --- | --- |
 | SDD-I155-U3-R1 | inventory3-C01 |
 | SDD-I155-U3-R2 | inventory3-C02 |
 | SDD-I155-U3-R3 | inventory3-C03 |
@@ -233,6 +305,14 @@ Map the four timing-policy requirements to their concrete cases: continued use o
 | SDD-I155-U4-R2 | inventory4-C02 |
 | SDD-I155-U4-R3 | inventory4-C03 |
 | SDD-I155-U4-R4 | inventory4-C04 |
+| scheduled-execution-R02 | scheduled-execution-C01, scheduled-execution-C02, scheduled-execution-C03, scheduled-execution-C04, scheduled-execution-C05, scheduled-execution-C12 |
+| scheduled-execution-R03 | scheduled-execution-C06, scheduled-execution-C07, scheduled-execution-C08, scheduled-execution-C11, scheduled-execution-C25, scheduled-execution-C26, scheduled-execution-C27, scheduled-execution-C36, scheduled-execution-C37 |
+| scheduled-execution-R04 | scheduled-execution-C08, scheduled-execution-C09, scheduled-execution-C10, scheduled-execution-C11, scheduled-execution-C12, scheduled-execution-C13, scheduled-execution-C14, scheduled-execution-C21, scheduled-execution-C36 |
+| scheduled-execution-R07 | scheduled-execution-C10, scheduled-execution-C18, scheduled-execution-C19, scheduled-execution-C20, scheduled-execution-C21, scheduled-execution-C22, scheduled-execution-C36 |
+| scheduled-execution-R01 | scheduled-execution-C14, scheduled-execution-C29 |
+| scheduled-execution-R05 | scheduled-execution-C15, scheduled-execution-C16, scheduled-execution-C17, scheduled-execution-C23, scheduled-execution-C24, scheduled-execution-C26, scheduled-execution-C27, scheduled-execution-C28, scheduled-execution-C31, scheduled-execution-C32, scheduled-execution-C33, scheduled-execution-C35 |
+| scheduled-execution-R06 | scheduled-execution-C28, scheduled-execution-C29, scheduled-execution-C30, scheduled-execution-C31, scheduled-execution-C32, scheduled-execution-C33, scheduled-execution-C34, scheduled-execution-C35, scheduled-execution-C38 |
+| scheduled-execution-R08 | scheduled-execution-C37, scheduled-execution-C38, scheduled-execution-C39 |
 
 ## 18. Implementation sequence
 
@@ -241,7 +321,9 @@ Map the four timing-policy requirements to their concrete cases: continued use o
 3. Add durable grant, trigger identity, eligible-time cursor, admission, run, and step outcomes. Serialize disablement with admission and effects; deduplicate across workers and retries; record false-condition no-task outcomes; preserve actual command receipts and history. On startup, suppress due-but-unadmitted times from while Domus was stopped, persist an inspectable bounded cursor/suppression fact, and continue at the first strictly future time. Do not apply that startup rule to ordinary in-process worker delay, discard admitted work or committed receipts, or automatically resume cancelled work after re-enable or restoration.
 4. Route task effects through the ordinary authorized task-creation use case and enforce the rule-owned, narrowly scoped grant and current binding at every admission and effect. Extend the protected compositions, storage compatibility, restart, restoration, and protected rollback behavior without changing the existing manual and inactive-draft contracts.
 5. Build the reviewed enablement and timing-policy adoption flow, upcoming-time comparison, status and history presentation, recovery states, and accessible English/Spanish interaction. Show actual task success separately from failed following reads, and distinguish unavailable data from empty history. Use the exact published ha-ui version already consumed by Domus; qualify keyboard use, 390 px touch, both themes, and both compositions.
-6. Complete the prospective risk floor of 48 distinct behavior cases in addition to the retained owner obligations; split coverage further when needed to trace every normative clause. Use deterministic clocks and IDs and failure injection. Qualify actual scheduled task creation and disablement across both compositions and exact amd64/ARM64 images, plus a separately identified installed Edge candidate with owned data and scoped cleanup. Do not use a shared Home Assistant clock or private store mutation for installed execution. Keep coverage, architecture, compatibility, documentation, and human UX evidence alongside implementation; no workflow change is selected.
+6. Complete the prospective risk floor of 48 distinct behavior cases in addition to the retained owner obligations; split coverage further when needed to trace every normative clause. Use deterministic clocks and IDs and failure injection. Qualify actual scheduled task creation and disablement across both compositions and exact amd64/ARM64 images, plus a separately identified installed Edge candidate with owned data and scoped cleanup. Do not use a shared Home Assistant clock or private store mutation for installed execution. Keep coverage, architecture, compatibility, documentation, and human UX evidence alongside implementation; the existing self-hosted matrix adds only the frozen schema-35 compatibility image, preserving placement and required gates.
+
+Local implementation and executed source checks are recorded in the [48-case qualification map](../docs/evidence/daily-automation-execution-qualification.md). This includes concrete repository invocations and distinguishes the remaining exact-image and installed Edge gates. The earlier selected-source statements describe the admission evidence available before implementation; they do not replace these executed results.
 
 ## 19. Definition of Done
 
@@ -256,7 +338,7 @@ Map the four timing-policy requirements to their concrete cases: continued use o
 
 ## 20. References and decisions
 
-- The retained owner and shared rule, execution, preview, draft, run-history, and inactive-draft contracts are in `specs/household-automation.md`. This companion adds only durable daily scheduled execution and its reviewed rule-owned grant and timing-policy adoption behavior; it does not rewrite the owner or make inactive drafts executable.
+- The retained owner and shared rule, execution, preview, draft, run-history, and inactive-draft contracts are in `specs/household-automation.md`. This companion adds only durable daily scheduled execution and its reviewed rule-owned grant and timing-policy adoption behavior; it does not rewrite the owner or implicitly arm a saved inactive draft.
 - The single-engine decision is documented in `docs/adr/0005-one-automation-engine.md`. Existing daily timing and task-command context is in `backend/src/domus/application/automation_schedule_preview.py`, `backend/src/domus/application/recurrence_ports.py`, `backend/src/domus/application/task_commands.py`, and `backend/src/domus/application/task_authorization.py`. Existing rule, manual execution, preview, and draft implementations are in `backend/src/domus/domain/automation.py`, `backend/src/domus/application/automation_execution.py`, `backend/src/domus/application/automation_preview.py`, and `backend/src/domus/application/automation_drafts.py`. These paths establish current context, not implementation or acceptance of this proposal.
 - The selected tree’s storage compatibility and qualification context is recorded by the retained inactive-draft contract and `docs/evidence/daily-automation-drafts-qualification.md`; the roadmap context is in `docs/roadmap.md`. The owner-selected startup policy is to skip daily times that became due while Domus was stopped and were not durably admitted, then continue with the next strictly future time. This does not authorize dropping admitted work or committed effects, or skipping ordinary in-process worker delay.
-- The principal grant lifecycle and pinned timing-policy adoption requirements in this delta are explicit. The issue reports no published native SDD question ID; do not invent one. Any genuinely unresolved readiness decision must remain explicit and block readiness rather than be silently defaulted. External HA automations, preview-only or queue-only delivery, a second scheduler/evaluator, event triggers, additional action types, multi-step/wait/parallel execution, and the advanced editor remain outside this increment. Preserve the existing workflow gates; no workflow change is selected.
+- The principal grant lifecycle and pinned timing-policy adoption requirements in this delta are explicit. The actual principal and timing answers are recorded in issue155 comment7060260479; the startup decision is recorded in the issue body and comment7060095129. Preserve their semantic identity and all published requirement/case IDs. Any genuinely unresolved readiness decision must remain explicit and block readiness rather than be silently defaulted. External HA automations, preview-only or queue-only delivery, a second scheduler/evaluator, event triggers, additional action types, multi-step/wait/parallel execution, and the advanced editor remain outside this increment. Preserve the existing workflow gates; the existing self-hosted matrix adds only the frozen schema-35 compatibility image, preserving placement and required gates.

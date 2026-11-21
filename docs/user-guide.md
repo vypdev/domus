@@ -487,11 +487,54 @@ enter the time and check the five upcoming dates. **Save draft** records the
 time with the task proposal and its optional stock condition. Reopening the
 draft restores its saved time.
 
-Daily drafts remain inactive. A previously enabled manual revision keeps its
-original run and history controls. Use **Check original save** after an
+Saving a daily draft leaves the existing enabled revision unchanged. A previously
+enabled manual revision keeps its original run and history controls. Use **Check original save** after an
 interrupted response. When another edit saved first, **Review latest revision**
 shows its trigger and saved time so you can review it before choosing whether
 to keep your own edit.
+
+### Enable and manage a daily task
+
+Open a saved Daily draft and find **Daily automation**. Review the saved task,
+conditions, revision and five upcoming times, then choose **Enable this daily
+revision** and **Confirm**. Unsaved edits do not change that reviewed revision.
+Enabling replaces any enabled revision of the same rule.
+
+```mermaid
+flowchart LR
+  Save[Save Daily draft] --> Review[Review task and timing]
+  Review --> Enable[Confirm daily permission]
+  Enable --> Run[Domus checks each eligible day]
+  Run --> History[Review daily history and task]
+```
+
+The permission belongs to the household rule. The rule keeps running if the
+person who enabled it leaves or loses permission. Creating or renewing that
+permission requires automation administration and task creation. An automation
+administrator can still disable an enabled rule without permission to create
+tasks. The browser can be closed while Domus runs the rule.
+
+If the result is unknown, choose **Check original daily request**, including after
+reloading. A recovered success keeps its original rule and operation reference.
+**Refresh daily review** reads its current state without enabling it again. Your
+other unsaved draft is preserved; open the saved rule explicitly to edit it.
+
+Choose **Show daily history** to distinguish an admitted run that is still waiting,
+a created task, an unmet condition, a cancelled run and a denied run. **Open created
+task** is available only when that task exists in the current data and you can read
+it. A failed history read offers **Try again**; it does not mean no runs exist.
+Records from before restoration are labelled and never activate old work.
+
+Times missed while Domus is stopped are skipped. Work already admitted is kept.
+Changing the household time zone or repeated-time setting leaves the approved
+schedule in use. **Review new household timing** compares both policies and their
+resolved dates before explicit adoption. An unavailable approved policy cannot
+silently switch to another policy.
+
+Choose **Disable daily automation** and confirm to stop new effects and waiting
+runs. Existing tasks and history remain. Saving a later manual draft does not
+hide the enabled daily rule or change its grant. Re-enabling uses a newly reviewed
+future time and does not resume a cancelled queue.
 
 ## Channels and privacy
 

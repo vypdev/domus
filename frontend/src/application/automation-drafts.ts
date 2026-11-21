@@ -11,6 +11,7 @@ export interface DraftScope {
   readonly context: JournalContext;
   readonly memberId: string;
   readonly readOnly: boolean;
+  readonly authorization?: string;
 }
 export interface DraftSummary {
   readonly id: string;
@@ -31,6 +32,7 @@ export interface SavedAutomationDraft extends DraftSummary {
 export interface DraftPage {
   readonly drafts: readonly DraftSummary[];
   readonly next: string | null;
+  readonly maySave?: false;
 }
 export interface DraftRequest {
   readonly key: string;
@@ -60,7 +62,7 @@ interface ReadyDrafts {
   readonly trigger: DraftTrigger;
   readonly page: DraftPage;
   readonly after: string | null;
-  readonly selected: Readonly<{id: string; revision: Revision}> | null;
+  readonly selected: Readonly<{id: string; revision: Revision; dailyTime?: string}> | null;
   readonly locked: SavedAutomationDraft | null;
   readonly competing: SavedAutomationDraft | null;
   readonly conflict: boolean; // A read failure can replace the notice while saving stays blocked.
@@ -88,6 +90,7 @@ export class AutomationDraftController {
   private ready: ReadyDrafts | null = null;
   private owned: EntryRead<unknown> | null = null;
   private pending: DraftRequest | null = null;
+  private retainedSelection: ReadyDrafts['selected'] = null;
 
   constructor(private readonly server: AutomationDraftServer, private readonly journal: AutomationDraftJournal,
     private readonly entropy: EntryEntropy, private readonly edit: (rule: EditableAutomationRule) => void,
@@ -98,12 +101,16 @@ export class AutomationDraftController {
     visible = scope !== null && visible;
     const same = prior?.key === scope?.key;
     this.scope = scope;
-    if (same && this.visible === visible) {
-      if (this.ready !== null && scope !== null && prior?.readOnly !== scope.readOnly) this.set({readOnly: scope.readOnly});
+    const sameAuthority = prior?.authorization === scope?.authorization;
+    if (same && sameAuthority && this.visible === visible) {
+      if (this.ready !== null && scope !== null && prior?.readOnly !== scope.readOnly)
+        this.set({readOnly: scope.readOnly || this.ready.page.maySave === false});
       return;
     }
     this.cancel();
-    if (!same) {
+    if (!same) this.retainedSelection = null;
+    else if (!sameAuthority && this.ready !== null) this.retainedSelection = this.ready.selected;
+    if (!same || !sameAuthority) {
       this.ready = null;
       this.pending = null;
     }
@@ -125,6 +132,7 @@ export class AutomationDraftController {
 
   private retire(scope: DraftScope): void {
     this.ready = null;
+    this.retainedSelection = null;
     this.pending = null;
     try {
       const saved = this.journal.open(scope.key);
@@ -156,14 +164,16 @@ export class AutomationDraftController {
       if (this.ready === null) {
         this.pending = this.journal.open(scope.key);
         const recover = this.pending;
-        this.ready = {state: 'ready', trigger: recover?.rule.dailyTime === undefined ? 'manual' : 'daily',
-          page, after, selected: recover?.ruleId == null ? null
-          : {id: recover.ruleId, revision: recover.revision as Revision}, locked: null,
+        const selected = recover?.ruleId == null ? this.retainedSelection
+          : {id: recover.ruleId, revision: recover.revision as Revision};
+        this.retainedSelection = null;
+        this.ready = {state: 'ready', trigger: (recover?.rule.dailyTime ?? selected?.dailyTime) === undefined ? 'manual' : 'daily',
+          page, after, selected, locked: null,
           competing: null, conflict: false, operationId: null, preview: null, busy: true, pending: recover !== null,
-          readOnly: this.scope!.readOnly, notice: recover === null ? null : 'uncertain'};
+          readOnly: this.scope!.readOnly || page.maySave === false, notice: recover === null ? null : 'uncertain'};
         if (recover !== null) this.edit(recover.rule);
       }
-      this.set({page, after});
+      this.set({page, after, readOnly: this.scope!.readOnly || page.maySave === false});
     }, () => {
       if (this.ready === null) this.publish({state: 'unavailable'});
       else this.set({notice: 'unavailable'});
@@ -184,21 +194,21 @@ export class AutomationDraftController {
       this.edit({title: '', productId: null});
       this.set({trigger: 'manual', selected: null, locked: null, competing: null, conflict: false,
         notice: null, preview: null, operationId: null});
-    } else if (intent.type === 'trigger' && ready.locked === null && !scope.readOnly) {
+    } else if (intent.type === 'trigger' && ready.locked === null && !ready.readOnly) {
       this.set({trigger: intent.trigger, notice: null});
     } else if (intent.type === 'open' && ready.page.drafts.some(draft => draft.id === intent.id)) {
       await this.open(scope, intent.id, false);
     } else if (intent.type === 'review' && ready.conflict && ready.selected !== null) {
       this.set({competing: null, notice: 'conflict'});
       await this.open(scope, ready.selected.id, true);
-    } else if (intent.type === 'rebase' && ready.competing !== null && !scope.readOnly) {
+    } else if (intent.type === 'rebase' && ready.competing !== null && !ready.readOnly) {
       const competing = ready.competing;
       if (editable(competing) !== null) this.set({selected: competing, competing: null, conflict: false, notice: null});
-    } else if (intent.type === 'preview_saved' && ready.locked !== null) {
+    } else if (intent.type === 'preview_saved' && ready.locked !== null && ready.locked.dailyTime === undefined) {
       this.set({notice: null, preview: null});
       await this.run(scope, this.server.previewSaved(scope, ready.locked), preview => this.set({preview}),
         () => this.set({notice: 'unavailable'}));
-    } else if (intent.type === 'save' && input !== null && !scope.readOnly
+    } else if (intent.type === 'save' && input !== null && !ready.readOnly
         && ready.locked === null && !ready.conflict) {
       await this.save(scope, ready, input, dailyTime);
     }
@@ -238,7 +248,7 @@ export class AutomationDraftController {
     const request = this.pending;
     if (request === null) return;
     const original = await this.send(scope, request, this.server.original(scope, request));
-    if (original && this.pending === request && !this.scope?.readOnly) {
+    if (original && this.pending === request && this.ready?.readOnly === false) {
       await this.send(scope, request, this.server.send(scope, request));
     }
   }
@@ -251,7 +261,8 @@ export class AutomationDraftController {
       this.journal.clear(request);
       this.pending = null;
       if (outcome.kind === 'committed') {
-        this.set({pending: false, selected: {id: outcome.id, revision: outcome.revision}, notice: 'saved',
+        this.set({pending: false, selected: {id: outcome.id, revision: outcome.revision,
+          ...(request.rule.dailyTime === undefined ? {} : {dailyTime: request.rule.dailyTime})}, notice: 'saved',
           operationId: outcome.operationId, competing: null});
         refresh = true;
       } else if (outcome.kind === 'historical') {

@@ -17,6 +17,8 @@ const selection = {id: 'rule', revision: two};
 const inactive: AutomationConfiguration = {id: 'rule', latestRevision: two, latestTitle: 'Check supplies', control: null};
 const active: AutomationConfiguration = {...inactive,
   control: {ruleRevision: one, controlRevision: three, enabled: true, title: 'Check the pantry'}};
+const scheduled: AutomationConfiguration = {...active,
+  control: {...active.control!, trigger: 'daily'}};
 const enabled: AutomationExecutionResult = {kind: 'committed', action: 'configure',
   operationId: 'enable-operation', ruleRevision: two, enabled: true};
 const madeTask: AutomationExecutionResult = {kind: 'committed', action: 'run', operationId: 'run-operation',
@@ -43,6 +45,47 @@ function fixture() {
   const last = () => publish.mock.lastCall?.[0] as AutomationExecutionView | null;
   return {storage, journal, server, publish, controller, last};
 }
+
+test('a daily binding cannot be manually run or disabled through manual confirmation', async () => {
+  const f = fixture(), owner = f.controller();
+  f.server.state.mockReturnValue(settled(scheduled));
+  owner.bind(scope, selection);
+  await vi.waitFor(() => expect(f.last()?.configuration).toEqual(scheduled));
+  await owner.handle('run');
+  await owner.handle('disable');
+  expect(f.last()?.confirmation).toBeNull();
+  expect(f.server.send).not.toHaveBeenCalled();
+  await owner.handle('enable');
+  expect(f.last()?.confirmation?.command).toMatchObject({kind: 'configure', enabled: true, ruleRevision: two});
+});
+
+test('transport recognizes a daily control without interpreting an unknown trigger as manual', async () => {
+  const state = {rule_id: 'rule', latest_revision: '2', latest_title: 'Check supplies',
+    control: {rule_revision: '1', control_revision: '3', enabled: true, title: 'Check the pantry', trigger: 'daily'}};
+  const server = new HttpAutomationExecution(target, async route => response(route, state));
+  await expect(server.state(scope, 'rule').result).resolves.toEqual(scheduled);
+  const foreign = new HttpAutomationExecution(target, async route => response(route,
+    {...state, control: {...state.control, trigger: 'administrator'}}));
+  await expect(foreign.state(scope, 'rule').result).rejects.toThrow();
+});
+
+test('daily status stays truthful in both languages and does not offer manual execution', async () => {
+  const element = document.createElement('domus-automation-execution');
+  element.view = {configuration: {...scheduled, latestManual: false}, confirmation: null, result: null,
+    notice: null, busy: false, pending: false, readOnly: false};
+  document.body.append(element);
+  await element.updateComplete;
+  const labels = () => [...element.shadowRoot!.querySelectorAll('vyp-ha-button')].map(node => node.state?.label);
+  expect(element.shadowRoot!.textContent).toContain('Daily schedule enabled');
+  expect(element.shadowRoot!.textContent).not.toContain('daily draft remains inactive');
+  expect(labels()).not.toContain('Run manually');
+  expect(labels()).not.toContain('Disable future runs');
+  element.language = 'es';
+  await element.updateComplete;
+  expect(element.shadowRoot!.textContent).toContain('Programación diaria habilitada');
+  expect(labels()).not.toContain('Ejecutar manualmente');
+  element.remove();
+});
 
 test('explicitly confirms a saved revision and separately identifies the enabled revision', async () => {
   const f = fixture(), owner = f.controller();

@@ -247,7 +247,7 @@ def test_daily_definition_after_migration_restart_and_restore(
     store.initialize(require_existing=True)
     with closing(sqlite3.connect(path)) as db:
         db.row_factory = sqlite3.Row
-        assert _verify_database(db, store, previous=False) == 35
+        assert _verify_database(db, store, previous=False) == storage.SCHEMA_VERSION
         assert (
             db.execute("SELECT * FROM inventory_products ORDER BY product_id").fetchall()
             == original_products

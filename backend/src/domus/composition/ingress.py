@@ -12,6 +12,7 @@ from typing import cast
 import uvicorn
 from fastapi import FastAPI, Request
 
+from domus.application.automation_scheduled_runner import DailyAutomationTick
 from domus.application.household_commands import HouseholdCommands
 from domus.application.household_queries import HouseholdQueries
 from domus.application.member_commands import MemberCommands
@@ -19,6 +20,7 @@ from domus.application.points import PointsConsumer
 from domus.application.policy_commands import PolicyCommands
 from domus.application.recovery_commands import RecoveryCommands, RecoveryQueries
 from domus.application.task_events import TaskEventSource
+from domus.composition.automation import automation_worker
 from domus.composition.ha_projections import attach_ha_projections
 from domus.composition.household_administration import administration_services
 from domus.composition.recurrence import bind_lifespan, recurrence_worker
@@ -59,8 +61,13 @@ class NativeRuntime:
     points_worker: MaintenanceWorker[int] = field(repr=False)
     storage: OwnedStorage | None = field(default=None, repr=False)
     task_events: TaskEventSource | None = field(default=None, repr=False)
+    automation_worker: MaintenanceWorker[DailyAutomationTick] | None = field(
+        default=None, repr=False
+    )
 
     def close(self) -> None:
+        if self.automation_worker is not None:
+            self.automation_worker.close()
         self.points_worker.close()
         self.recurrence.close()
         try:
@@ -206,6 +213,8 @@ def _compose_business(
     points = PointsConsumer(store, store.installation, utc)
     points_worker = MaintenanceWorker(points.tick, "points")
     bind_lifespan(app, points_worker)
+    automations = automation_worker(store, store.installation)
+    bind_lifespan(app, automations)
     return NativeRuntime(
         app,
         sessions,
@@ -213,6 +222,7 @@ def _compose_business(
         points,
         points_worker,
         task_events=task_event_source(store, store.installation),
+        automation_worker=automations,
     )
 
 
